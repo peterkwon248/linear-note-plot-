@@ -21,6 +21,7 @@ import { SlidersHorizontal } from "@phosphor-icons/react/dist/ssr/SlidersHorizon
 import { Stack } from "@phosphor-icons/react/dist/ssr/Stack"
 import { CaretDown } from "@phosphor-icons/react/dist/ssr/CaretDown"
 import { Check as PhCheck } from "@phosphor-icons/react/dist/ssr/Check"
+import { Minus } from "@phosphor-icons/react/dist/ssr/Minus"
 import { EyeSlash } from "@phosphor-icons/react/dist/ssr/EyeSlash"
 import { BookmarkSimple } from "@phosphor-icons/react/dist/ssr/BookmarkSimple"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
@@ -146,6 +147,9 @@ export function LabelsView() {
   const [displayPopoverOpen, setDisplayPopoverOpen] = useState(false)
   const [labelSortBy, setLabelSortBy] = useState<"name-asc" | "name-desc" | "count-desc" | "count-asc">("name-asc")
   const [hideEmptyLabels, setHideEmptyLabels] = useState(false)
+  const [colorPickerOpenId, setColorPickerOpenId] = useState<string | null>(null)
+  const [contextMenuLabelId, setContextMenuLabelId] = useState<string | null>(null)
+  const clickTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   // View engine for label detail mode (must be called unconditionally)
   const labelExtras = useMemo(() => ({ labelId: selectedLabelId ?? undefined }), [selectedLabelId])
@@ -251,7 +255,55 @@ export function LabelsView() {
     setEditingId(null)
     setEditName("")
     setEditColor("")
+    setColorPickerOpenId(null)
   }
+
+  const startEdit = useCallback((label: Label) => {
+    setEditingId(label.id)
+    setEditName(label.name)
+    setEditColor(label.color)
+  }, [])
+
+  const handleNameClick = useCallback((label: Label, e: React.MouseEvent) => {
+    e.stopPropagation()
+    if (clickTimerRef.current) {
+      clearTimeout(clickTimerRef.current)
+      clickTimerRef.current = null
+      setSelectedLabelId(label.id)
+      return
+    }
+    clickTimerRef.current = setTimeout(() => {
+      clickTimerRef.current = null
+      startEdit(label)
+    }, 200)
+  }, [startEdit])
+
+  const handleColorDotClick = useCallback((label: Label, e: React.MouseEvent) => {
+    e.stopPropagation()
+    setColorPickerOpenId(label.id)
+  }, [])
+
+  // Quick color change (no rename mode) — used by dot click and FAB Recolor
+  const handleQuickColorChange = useCallback((labelId: string, color: string) => {
+    updateLabel(labelId, { color })
+  }, [updateLabel])
+
+  const handleFabRename = useCallback(() => {
+    const id = Array.from(checkedLabels)[0]
+    const label = labels.find((l) => l.id === id)
+    if (label) {
+      setCheckedLabels(new Set())
+      startEdit(label)
+    }
+  }, [checkedLabels, labels, startEdit])
+
+  const handleFabRecolor = useCallback(() => {
+    const id = Array.from(checkedLabels)[0]
+    if (id) {
+      setCheckedLabels(new Set())
+      setColorPickerOpenId(id)
+    }
+  }, [checkedLabels])
 
   const handleEditKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter") handleEditSubmit()
@@ -259,6 +311,19 @@ export function LabelsView() {
       setEditingId(null)
       setEditName("")
     }
+  }
+
+  // Persist color change immediately so popover clicks can't be lost to onBlur races
+  const handleEditColorChange = (color: string) => {
+    setEditColor(color)
+    if (editingId) updateLabel(editingId, { color })
+  }
+
+  // Don't submit on blur if focus moved into the color picker popover
+  const handleEditBlur = (e: React.FocusEvent<HTMLInputElement>) => {
+    const next = e.relatedTarget as HTMLElement | null
+    if (next?.closest("[data-radix-popper-content-wrapper]")) return
+    handleEditSubmit()
   }
 
   // Format relative time
@@ -604,16 +669,29 @@ export function LabelsView() {
               </div>
             ) : (
               <div>
-                {/* Header row */}
-                <div className="flex items-center gap-3 border-b border-border-subtle px-6 py-2">
-                  <button
+                {/* Header row (PR #230 pattern, Notes-aligned) */}
+                <div
+                  data-header-row
+                  className="sticky top-0 z-10 flex items-center gap-3 border-b border-border-subtle bg-background px-6 py-2.5"
+                >
+                  <div
                     onClick={toggleAll}
-                    className="flex h-4 w-4 shrink-0 items-center justify-center rounded border border-border transition-colors hover:border-foreground/50"
+                    className={cn(
+                      "h-4 w-4 shrink-0 rounded-[4px] border flex items-center justify-center cursor-pointer transition-colors shadow-sm",
+                      checkedLabels.size === sortedLabels.length && sortedLabels.length > 0
+                        ? "bg-accent border-accent"
+                        : checkedLabels.size > 0
+                          ? "bg-accent/50 border-accent"
+                          : "bg-card border-zinc-400 dark:border-zinc-600 hover:border-zinc-500 dark:hover:border-zinc-500"
+                    )}
                   >
                     {checkedLabels.size === sortedLabels.length && sortedLabels.length > 0 && (
-                      <div className="h-2 w-2 rounded-sm bg-accent" />
+                      <PhCheck size={10} weight="bold" className="text-accent-foreground" />
                     )}
-                  </button>
+                    {checkedLabels.size > 0 && checkedLabels.size < sortedLabels.length && (
+                      <Minus size={10} weight="regular" className="text-accent-foreground" />
+                    )}
+                  </div>
                   <button
                     className="flex flex-1 items-center gap-1 text-left text-note font-medium text-muted-foreground transition-colors hover:text-foreground"
                     onClick={() => setLabelSortBy(labelSortBy === "name-asc" ? "name-desc" : "name-asc")}
@@ -651,84 +729,134 @@ export function LabelsView() {
 
                 {sortedLabels.map((label, index) => {
                   const isEditing = editingId === label.id
+                  const dotColor = isEditing ? editColor : label.color
                   return (
-                    <div
-                      key={label.id}
-                      data-label-index={index}
-                      className={`flex items-start gap-3 px-6 py-2.5 transition-colors group cursor-default${
-                        checkedLabels.has(label.id) ? " bg-accent/10" : " hover:bg-hover-bg"
-                      }`}
-                      onClick={(e) => {
-                        if ((e.target as HTMLElement).closest('button, input, [data-no-drag]')) return
-                        if (isEditing) return
-                        handleRowClick(label.id, index, e)
-                      }}
-                    >
-                      <button
-                        onClick={(e) => { e.stopPropagation(); toggleCheck(label.id) }}
-                        className={cn(
-                          "flex h-4 w-4 shrink-0 items-center justify-center rounded-[4px] border transition-colors mt-0.5 shadow-sm",
-                          checkedLabels.has(label.id)
-                            ? "bg-accent border-accent text-accent-foreground"
-                            : "bg-card border-zinc-400 dark:border-zinc-600 hover:border-zinc-500"
-                        )}
-                      >
-                        {checkedLabels.has(label.id) && (
-                          <PhCheck size={10} weight="bold" />
-                        )}
-                      </button>
-                      <span
-                        className="w-3 h-3 rounded-sm shrink-0 mt-0.5"
-                        style={{ backgroundColor: isEditing ? editColor : label.color }}
-                      />
-                      {isEditing ? (
-                        <div className="flex-1 space-y-2">
-                          <input
-                            ref={editInputRef}
-                            type="text"
-                            value={editName}
-                            onChange={(e) => setEditName(e.target.value)}
-                            onKeyDown={handleEditKeyDown}
-                            onBlur={handleEditSubmit}
-                            className="h-7 w-full max-w-xs rounded border border-border bg-background px-2 text-note text-foreground focus:outline-none focus:ring-1 focus:ring-accent"
-                          />
-                          <ColorPickerGrid value={editColor} onChange={setEditColor} />
-                        </div>
-                      ) : (
-                        <button
-                          onClick={(e) => { e.stopPropagation(); setSelectedLabelId(label.id) }}
-                          className="flex-1 text-left text-ui text-foreground hover:text-accent transition-colors"
+                    <ContextMenu key={label.id} onOpenChange={(open) => {
+                      if (open) setContextMenuLabelId(label.id)
+                      else setContextMenuLabelId(null)
+                    }}>
+                      <ContextMenuTrigger asChild>
+                        <div
+                          data-label-index={index}
+                          className={`flex items-start gap-3 px-6 py-2.5 transition-colors group cursor-default${
+                            checkedLabels.has(label.id) ? " bg-accent/10" : " hover:bg-hover-bg"
+                          }`}
+                          onClick={(e) => {
+                            if ((e.target as HTMLElement).closest('button, input, [data-no-drag]')) return
+                            if (isEditing) return
+                            handleRowClick(label.id, index, e)
+                          }}
                         >
-                          {label.name}
-                        </button>
-                      )}
-                      {!isEditing && (
-                        <>
-                          <span className="w-16 text-right text-note text-muted-foreground tabular-nums self-center">
-                            {labelCounts[label.id] || 0}
-                          </span>
-                          <div className="w-16 flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation()
-                                setEditingId(label.id)
-                                setEditName(label.name)
-                                setEditColor(label.color)
-                              }}
-                              className="flex items-center justify-center h-6 w-6 rounded hover:bg-hover-bg text-muted-foreground hover:text-foreground transition-colors"
+                          <button
+                            onClick={(e) => { e.stopPropagation(); toggleCheck(label.id) }}
+                            className={cn(
+                              "flex h-4 w-4 shrink-0 items-center justify-center rounded-[4px] border transition-colors mt-0.5 shadow-sm",
+                              checkedLabels.has(label.id)
+                                ? "bg-accent border-accent text-accent-foreground"
+                                : "bg-card border-zinc-400 dark:border-zinc-600 hover:border-zinc-500"
+                            )}
+                          >
+                            {checkedLabels.has(label.id) && (
+                              <PhCheck size={10} weight="bold" />
+                            )}
+                          </button>
+
+                          {/* Color dot — always a popover trigger */}
+                          <Popover
+                            open={colorPickerOpenId === label.id}
+                            onOpenChange={(open) => {
+                              if (!open) setColorPickerOpenId(null)
+                            }}
+                          >
+                            <PopoverTrigger asChild>
+                              <button
+                                onClick={(e) => handleColorDotClick(label, e)}
+                                className="h-3 w-3 rounded-full shrink-0 mt-0.5 ring-1 ring-black/5 dark:ring-white/10 hover:ring-2 hover:ring-foreground/20 transition-all cursor-pointer"
+                                style={{ backgroundColor: dotColor }}
+                                title="Change color"
+                                type="button"
+                              />
+                            </PopoverTrigger>
+                            <PopoverContent
+                              className="w-[280px] p-3"
+                              align="start"
+                              sideOffset={6}
+                              onClick={(e) => e.stopPropagation()}
+                              onOpenAutoFocus={(e) => e.preventDefault()}
                             >
-                              <PencilSimple size={12} weight="regular" />
-                            </button>
+                              <ColorPickerGrid
+                                value={dotColor}
+                                onChange={(color) => {
+                                  if (isEditing) handleEditColorChange(color)
+                                  else handleQuickColorChange(label.id, color)
+                                }}
+                              />
+                            </PopoverContent>
+                          </Popover>
+
+                          {/* Name — click to rename, double-click to navigate */}
+                          {isEditing ? (
+                            <div className="flex-1 flex items-center gap-2">
+                              <input
+                                ref={editInputRef}
+                                type="text"
+                                value={editName}
+                                onChange={(e) => setEditName(e.target.value)}
+                                onKeyDown={handleEditKeyDown}
+                                onBlur={handleEditBlur}
+                                onClick={(e) => e.stopPropagation()}
+                                className="flex-1 h-7 max-w-md rounded-md border border-border bg-card px-2.5 text-note text-foreground focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-colors"
+                                placeholder="Label name"
+                              />
+                            </div>
+                          ) : (
                             <button
-                              onClick={(e) => { e.stopPropagation(); deleteLabel(label.id) }}
-                              className="flex items-center justify-center h-6 w-6 rounded hover:bg-red-400/10 text-muted-foreground hover:text-red-400 transition-colors"
+                              onClick={(e) => handleNameClick(label, e)}
+                              className="flex-1 text-left text-ui text-foreground hover:text-accent transition-colors"
+                              title="Click to rename · Double-click to view notes"
                             >
-                              <Trash size={12} weight="regular" />
+                              {label.name}
                             </button>
-                          </div>
-                        </>
-                      )}
-                    </div>
+                          )}
+
+                          {!isEditing && (
+                            <span className="w-16 text-right text-note text-muted-foreground tabular-nums self-center">
+                              {labelCounts[label.id] || 0}
+                            </span>
+                          )}
+                        </div>
+                      </ContextMenuTrigger>
+                      <ContextMenuContent className="w-48">
+                        <ContextMenuItem
+                          onClick={() => startEdit(label)}
+                          className="text-note"
+                        >
+                          <PencilSimple className="mr-2 text-muted-foreground" size={14} weight="regular" />
+                          Rename
+                        </ContextMenuItem>
+                        <ContextMenuItem
+                          onClick={() => setColorPickerOpenId(label.id)}
+                          className="text-note"
+                        >
+                          <span className="mr-2 h-3 w-3 shrink-0 rounded-full inline-block" style={{ backgroundColor: label.color }} />
+                          Change color
+                        </ContextMenuItem>
+                        <ContextMenuItem
+                          onClick={() => setSelectedLabelId(label.id)}
+                          className="text-note"
+                        >
+                          <Stack className="mr-2 text-muted-foreground" size={14} weight="regular" />
+                          View notes
+                        </ContextMenuItem>
+                        <ContextMenuItem
+                          onClick={() => deleteLabel(label.id)}
+                          className="text-note text-destructive focus:text-destructive"
+                        >
+                          <Trash className="mr-2" size={14} weight="regular" />
+                          Delete
+                        </ContextMenuItem>
+                      </ContextMenuContent>
+                    </ContextMenu>
                   )
                 })}
               </div>
@@ -745,9 +873,7 @@ export function LabelsView() {
         </ContextMenuTrigger>
         <ContextMenuContent className="w-48">
           <ContextMenuItem
-            onClick={() => {
-              setCreating(true)
-            }}
+            onClick={() => setCreating(true)}
             className="text-note"
           >
             <PhPlus className="mr-2 text-muted-foreground" size={16} weight="regular" />
@@ -758,24 +884,42 @@ export function LabelsView() {
 
       {/* Floating action bar */}
       {checkedLabels.size > 0 && (
-        <div className="fixed bottom-6 left-1/2 z-30 -translate-x-1/2 rounded-lg border border-border bg-card shadow-lg animate-in slide-in-from-bottom-4 fade-in duration-200">
-          <div className="flex items-center gap-1 px-4 py-2.5">
-            <div className="flex items-center gap-1.5 px-1.5">
-              <Lightning className="text-accent" size={16} weight="regular" />
-              <span className="text-ui font-medium text-foreground whitespace-nowrap">
-                {checkedLabels.size} selected
-              </span>
-              <button
-                onClick={() => setCheckedLabels(new Set())}
-                className="rounded-md p-0.5 text-muted-foreground transition-colors hover:bg-hover-bg hover:text-foreground"
-              >
-                <PhX size={16} weight="regular" />
-              </button>
-            </div>
-            <div className="mx-1.5 h-7 w-px bg-border" />
+        <div className="fixed bottom-6 left-1/2 z-50 -translate-x-1/2 animate-in slide-in-from-bottom-4 fade-in duration-200">
+          <div className="flex items-center gap-1 rounded-xl border border-border bg-surface-overlay px-4 py-2.5 shadow-[0_8px_32px_rgba(0,0,0,0.4)]">
+            <button
+              onClick={() => setCheckedLabels(new Set())}
+              className="mr-1 flex items-center gap-1.5 rounded-md px-2 py-1.5 text-2xs font-medium text-muted-foreground hover:bg-active-bg transition-colors"
+            >
+              <Lightning size={14} weight="fill" className="text-accent" />
+              {checkedLabels.size} selected
+              <PhX size={12} weight="regular" className="ml-0.5 text-muted-foreground/70" />
+            </button>
+            <div className="h-7 w-px bg-border mx-1.5" />
+            {checkedLabels.size === 1 && (
+              <>
+                <button
+                  onClick={handleFabRename}
+                  className="inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-2xs font-medium text-foreground hover:bg-hover-bg transition-colors"
+                >
+                  <PencilSimple size={14} weight="regular" /> Rename
+                </button>
+                <button
+                  onClick={handleFabRecolor}
+                  className="inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-2xs font-medium text-foreground hover:bg-hover-bg transition-colors"
+                >
+                  {(() => {
+                    const id = Array.from(checkedLabels)[0]
+                    const lbl = labels.find((l) => l.id === id)
+                    return <span className="h-3 w-3 rounded-full shrink-0" style={{ backgroundColor: lbl?.color ?? "#6b7280" }} />
+                  })()}
+                  Recolor
+                </button>
+                <div className="h-7 w-px bg-border mx-0.5" />
+              </>
+            )}
             <button
               onClick={handleDeleteChecked}
-              className="inline-flex items-center gap-1 rounded-md bg-destructive/10 px-3 py-2 text-ui font-medium text-destructive transition-colors hover:bg-destructive/20"
+              className="inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-2xs font-medium text-destructive hover:bg-destructive/10 transition-colors"
             >
               <Trash size={16} weight="regular" /> Delete
             </button>

@@ -13,6 +13,7 @@ import { createWorkflowSlice } from "./slices/workflow"
 import { createFoldersSlice } from "./slices/folders"
 import { createTagsSlice } from "./slices/tags"
 import { createLabelsSlice } from "./slices/labels"
+import { createStickersSlice } from "./slices/stickers"
 import { createThreadSlice } from "./slices/thinking"
 import { createMapsSlice } from "./slices/maps"
 import { createUISlice } from "./slices/ui"
@@ -47,6 +48,7 @@ export const usePlotStore = create<PlotState>()(
         folders: SEED_FOLDERS,
         tags: SEED_TAGS,
         labels: SEED_LABELS,
+        stickers: [],
 
         activeView: { type: "all" } as const,
         selectedNoteId: null,
@@ -104,6 +106,7 @@ export const usePlotStore = create<PlotState>()(
         ...createFoldersSlice(set),
         ...createTagsSlice(set),
         ...createLabelsSlice(set),
+        ...createStickersSlice(set, get),
         ...createThreadSlice(set, get, appendEvent),
         ...createMapsSlice(set),
         ...createRelationsSlice(set, get, appendEvent),
@@ -239,7 +242,7 @@ export const usePlotStore = create<PlotState>()(
     },
     {
       name: "plot-store",
-      version: 96,
+      version: 100,
       storage: createIDBStorage<PlotState>(),
       partialize: (state) => {
         // eslint-disable-next-line @typescript-eslint/no-unused-vars

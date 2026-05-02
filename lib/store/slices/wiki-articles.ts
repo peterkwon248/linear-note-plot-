@@ -16,6 +16,9 @@ export function createWikiArticlesSlice(set: Set, get: Get) {
       aliases?: string[]
       tags?: string[]
       blocks?: WikiBlock[]
+      /** Optional folder containment — set when created from inside a
+       *  folder page so the new article is automatically a member. */
+      folderId?: string | null
     }) => {
       const id = genId()
       const blocks = partial.blocks ?? [
@@ -33,6 +36,7 @@ export function createWikiArticlesSlice(set: Set, get: Get) {
         blocks,
         sectionIndex: buildSectionIndex(blocks),
         tags: partial.tags ?? [],
+        folderId: partial.folderId ?? null,
         linksOut: extractLinksFromWikiBlocks(blocks),
         reads: 0,
         createdAt: now(),

@@ -301,6 +301,38 @@ function matchesRule(note: Note, rule: FilterRule, extras?: Pick<PipelineExtras,
       return operator === "eq" ? inWiki === target : inWiki !== target
     }
 
+    case "connectedTo": {
+      // value format: "<targetNoteId>:<direction>" — direction ∈ both/in/out
+      // Self-match: target note itself doesn't appear in its own results.
+      // Bidirectional graph data:
+      //   - linksOut (note → other):  note.linksOut: string[]
+      //   - backlinks (other → note): extras.backlinksMap.get(noteId)
+      const [targetId, dirRaw] = value.split(":")
+      if (!targetId) return true
+      if (note.id === targetId) return false  // exclude self
+      const direction = (dirRaw === "in" || dirRaw === "out") ? dirRaw : "both"
+
+      // Outgoing from `note`: does `note` reference `targetId`?
+      const noteLinksOut = (note as any).linksOut as string[] | undefined
+      const noteRefersToTarget = Array.isArray(noteLinksOut) && noteLinksOut.includes(targetId)
+
+      // Incoming to `note`: does `targetId` reference `note`? Use backlinksMap
+      // for O(1) lookup if available; otherwise fall back to scanning.
+      const targetBacklinks = extras?.backlinksMap?.get(targetId)
+      const targetRefersToNote = Array.isArray(targetBacklinks)
+        ? targetBacklinks.includes(note.id)
+        : false
+
+      let connected = false
+      switch (direction) {
+        case "in":  connected = noteRefersToTarget;  break  // note → target (note IS a backlinker of target)
+        case "out": connected = targetRefersToNote;  break  // target → note (note is REFERENCED BY target)
+        case "both":
+        default:    connected = noteRefersToTarget || targetRefersToNote
+      }
+      return operator === "eq" ? connected : !connected
+    }
+
     case "reviewAt": {
       if (!note.reviewAt) return operator === "eq" ? false : true
       const noteTime = new Date(note.reviewAt).getTime()

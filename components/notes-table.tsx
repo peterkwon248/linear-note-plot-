@@ -1026,6 +1026,13 @@ export function NotesTable({
           onRemoveFilter={removeFilter}
           onClearAll={() => updateViewState({ filters: [] })}
           onSetFilters={(filters) => updateViewState({ filters })}
+          onUpdateFilter={(idx, rule) => {
+            // Replace the rule at index — used by inline-editable chips
+            // (currently only connectedTo direction toggle, more to follow).
+            const next = [...(viewState.filters ?? [])]
+            next[idx] = rule
+            updateViewState({ filters: next })
+          }}
         />
 
         {/* ── Sort order chip (Linear-style 3-part: key | value | × ) ── */}
@@ -1295,6 +1302,26 @@ export function NotesTable({
                               onRemind={(isoDate) => { setReminder(item.note.id, isoDate); toast("Reminder set") }}
                               onMergeWith={() => setMergePickerOpen(true, item.note.id)}
                               onLinkWith={() => setLinkPickerOpen(true, item.note.id)}
+                              onShowConnected={(direction) => {
+                                // Replace any existing connectedTo rule (one connection
+                                // filter at a time keeps results predictable) and add
+                                // the new one. Toast confirms so the user knows the
+                                // filter was applied.
+                                const otherRules = (viewState.filters ?? []).filter(
+                                  (r) => r.field !== "connectedTo"
+                                )
+                                updateViewState({
+                                  filters: [
+                                    ...otherRules,
+                                    { field: "connectedTo", operator: "eq", value: `${item.note.id}:${direction}` },
+                                  ],
+                                })
+                                const dirLabel =
+                                  direction === "in" ? "backlinks" :
+                                  direction === "out" ? "links out" :
+                                  "both directions"
+                                toast(`Filtering: connected to "${item.note.title || "Untitled"}" (${dirLabel})`)
+                              }}
                               showCardPreview={false}
                               groupBy={viewState.groupBy}
                               parentTitle={item.note.parentNoteId ? notesById?.get(item.note.parentNoteId)?.title : undefined}
@@ -1411,6 +1438,10 @@ interface NoteRowProps {
   onMoveBack: () => void
   onRemind: (isoDate: string) => void
   onMergeWith: () => void
+  /** Show only notes connected to this one (in/out/both). Sets a
+   *  `connectedTo` filter rule so the user can sift backlinks/refs in
+   *  place without leaving the Notes view. */
+  onShowConnected: (direction: "both" | "in" | "out") => void
   onLinkWith: () => void
   showCardPreview?: boolean
   groupBy?: string
@@ -1494,6 +1525,7 @@ function NoteRowInner({
   onMoveBack,
   onRemind,
   onMergeWith,
+  onShowConnected,
   onLinkWith,
   showCardPreview,
   groupBy,
@@ -1828,6 +1860,81 @@ function NoteRowInner({
           <PhLink className="mr-2 text-muted-foreground" size={16} weight="regular" />
           Link to...
         </ContextMenuItem>
+
+        {/* ── Show connected (in-place backlinks/refs filter) ── *
+         * Filter the current Notes view to only entities connected to this
+         * note. Default = both directions. Sub-options for backlinks
+         * (incoming refs) or links-out (outgoing refs) only. */}
+        <ContextMenuSub>
+          <ContextMenuSubTrigger className="text-note">
+            <PhLink className="mr-2 text-muted-foreground" size={16} weight="regular" />
+            Show connected
+          </ContextMenuSubTrigger>
+          <ContextMenuSubContent className="w-44">
+            <ContextMenuItem onClick={() => onShowConnected("both")} className="text-note">
+              <span className="mr-2 text-muted-foreground">↔</span> Both directions
+            </ContextMenuItem>
+            <ContextMenuItem onClick={() => onShowConnected("in")} className="text-note">
+              <span className="mr-2 text-muted-foreground">←</span> Backlinks only
+            </ContextMenuItem>
+            <ContextMenuItem onClick={() => onShowConnected("out")} className="text-note">
+              <span className="mr-2 text-muted-foreground">→</span> Links out only
+            </ContextMenuItem>
+          </ContextMenuSubContent>
+        </ContextMenuSub>
+
+        {/* ── Move to folder ── *
+         * Folders in Plot are global containers — they hold both notes and
+         * wiki articles. Submenu lists all folders + a "No folder" option to
+         * unset, mirroring the sidebar's folder-picker UX. */}
+        <ContextMenuSub>
+          <ContextMenuSubTrigger className="text-note">
+            <FolderOpen className="mr-2 text-muted-foreground" size={16} weight="regular" />
+            Move to folder
+          </ContextMenuSubTrigger>
+          <ContextMenuSubContent className="w-48">
+            <ContextMenuItem
+              onClick={() => onSetFolder("")}
+              className={`text-note ${!note.folderId ? "font-medium" : ""}`}
+            >
+              <span className="text-muted-foreground">No folder</span>
+              {!note.folderId && <PhCheck className="ml-auto text-accent" size={14} weight="bold" />}
+            </ContextMenuItem>
+            {folders.length > 0 && <ContextMenuSeparator />}
+            {folders.map((f) => (
+              <ContextMenuItem
+                key={f.id}
+                onClick={() => onSetFolder(f.id)}
+                className={`text-note ${note.folderId === f.id ? "font-medium" : ""}`}
+              >
+                <span className="h-2 w-2 rounded-full mr-2 shrink-0" style={{ backgroundColor: f.color }} />
+                <span className="truncate">{f.name}</span>
+                {note.folderId === f.id && <PhCheck className="ml-auto text-accent shrink-0" size={14} weight="bold" />}
+              </ContextMenuItem>
+            ))}
+            <ContextMenuSeparator />
+            {/* Inline folder creation — saves a trip to the sidebar.
+                Uses a native prompt for now (kept dependency-free). The
+                FolderPicker dialog is on the roadmap for a richer flow. */}
+            <ContextMenuItem
+              onClick={() => {
+                const name = window.prompt("New folder name:")?.trim()
+                if (!name) return
+                // Cycle through a small palette so a brand-new folder
+                // gets a distinguishable color from existing ones.
+                const palette = ["#f97316", "#3b82f6", "#22c55e", "#a855f7", "#ec4899", "#14b8a6", "#eab308"]
+                const color = palette[folders.length % palette.length]
+                const newId = usePlotStore.getState().createFolder(name, color)
+                onSetFolder(newId)
+              }}
+              className="text-note text-muted-foreground hover:text-foreground"
+            >
+              <PhPlus className="mr-2" size={14} weight="bold" />
+              New folder…
+            </ContextMenuItem>
+          </ContextMenuSubContent>
+        </ContextMenuSub>
+
         <ContextMenuSeparator />
         <ContextMenuItem onClick={() => usePlotStore.getState().openInSecondary(note.id)} className="text-note">
           <SplitHorizontal className="mr-2 text-muted-foreground" size={16} weight="regular" />

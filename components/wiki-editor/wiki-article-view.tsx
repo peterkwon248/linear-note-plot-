@@ -24,6 +24,9 @@ import { setActiveCategoryView } from "@/lib/wiki-view-mode"
 import { setActiveRoute } from "@/lib/table-route"
 import { useWikiBlockActions } from "@/hooks/use-wiki-block-actions"
 import { WikiBreadcrumb } from "./wiki-breadcrumb"
+import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "@/components/ui/resizable"
+import type { ImperativePanelGroupHandle } from "react-resizable-panels"
+import { fontScalesToStyle, emScale } from "@/lib/wiki-font-scales"
 import {
   DndContext,
   DragOverlay,
@@ -469,12 +472,60 @@ export function WikiArticleView({ articleId, editable = false, preview = false, 
     return count
   }
 
+  const showTOCRail     = !preview
+  // Infobox panel is always present (parallels TOC) so layout stays stable
+  // and the resize handle is reachable. Empty + read-only shows a subtle hint.
+  const showInfoboxRail = !preview
+  const hasInfoboxContent = (article.infobox?.length ?? 0) > 0
+  // Default sizes — sum to 100. When a side panel is hidden the content
+  // takes its share so the layout stays balanced.
+  const tocDefault     = showTOCRail     ? 16 : 0
+  const infoboxDefault = showInfoboxRail ? 22 : 0
+  const contentDefault = 100 - tocDefault - infoboxDefault
+
+  const panelGroupRef = useRef<ImperativePanelGroupHandle>(null)
+
+  // Listen for layout reset broadcasts (fired from the font-size popover).
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const detail = (e as CustomEvent).detail
+      if (detail?.articleId && detail.articleId !== articleId) return
+      const sizes: number[] = []
+      if (showTOCRail) sizes.push(tocDefault)
+      sizes.push(contentDefault)
+      if (showInfoboxRail) sizes.push(infoboxDefault)
+      panelGroupRef.current?.setLayout(sizes)
+    }
+    window.addEventListener("plot:reset-wiki-layout", handler as EventListener)
+    return () => window.removeEventListener("plot:reset-wiki-layout", handler as EventListener)
+  }, [articleId, showTOCRail, showInfoboxRail, tocDefault, contentDefault, infoboxDefault])
+
   const outerContent = (
-    <div className="flex flex-1 min-h-0 overflow-hidden" style={fontSize ? { fontSize: `${fontSize}em` } : undefined}>
-      {/* TOC Sidebar */}
-      {!preview && <aside className="min-w-[160px] max-w-[240px] w-auto shrink overflow-y-auto border-r border-border-subtle px-3 py-4 hidden xl:block">
+    <ResizablePanelGroup
+      ref={panelGroupRef}
+      direction="horizontal"
+      autoSaveId={`wiki-article-${articleId}-layout`}
+      className="flex-1 min-h-0 overflow-hidden"
+      style={{
+        ...(fontSize ? { fontSize: `${fontSize}em` } : {}),
+        ...fontScalesToStyle(article.fontScales),
+      }}
+    >
+      {/* TOC Sidebar — resizable, hidden below xl */}
+      {showTOCRail && (
+        <>
+          <ResizablePanel
+            defaultSize={tocDefault}
+            minSize={10}
+            maxSize={28}
+            className="hidden xl:block"
+          >
+            <aside className="h-full overflow-y-auto border-r border-border-subtle px-3 py-4">
         <div className="sticky top-0">
-          <h4 className="text-[1em] text-muted-foreground/65 font-semibold mb-2.5 pl-2">
+          <h4
+            className="text-foreground font-bold mb-2.5 pl-2"
+            style={{ fontSize: emScale(1, "meta") }}
+          >
             Contents
           </h4>
           {tocSections.length > 0 ? (
@@ -488,21 +539,32 @@ export function WikiArticleView({ articleId, editable = false, preview = false, 
                       block: "start",
                     })
                   }}
-                  className="flex w-full items-center gap-1.5 rounded-md px-2 py-1 text-left text-[1em] text-muted-foreground hover:bg-hover-bg hover:text-foreground transition-colors duration-100"
-                  style={{ paddingLeft: `${(s.level - 2) * 12 + 8}px` }}
+                  className="flex w-full items-start gap-1.5 rounded-md px-2 py-1 text-left text-foreground/75 hover:bg-hover-bg hover:text-foreground transition-colors duration-100"
+                  style={{
+                    paddingLeft: `${(s.level - 2) * 12 + 8}px`,
+                    fontSize: emScale(1, "meta"),
+                  }}
                 >
-                  <span className="shrink-0 text-accent/70 font-medium text-[1em]">{s.number}.</span>
-                  <span>{s.title}</span>
+                  <span className="shrink-0 text-accent font-medium mt-px">{s.number}.</span>
+                  <span className="break-words leading-snug">{s.title}</span>
                 </button>
               ))}
             </nav>
           ) : (
-            <p className="px-2 text-[0.8125em] text-muted-foreground/70">No sections yet</p>
+            <p
+              className="px-2 text-muted-foreground/70"
+              style={{ fontSize: emScale(0.8125, "meta") }}
+            >No sections yet</p>
           )}
         </div>
-      </aside>}
+            </aside>
+          </ResizablePanel>
+          <ResizableHandle withHandle className="hidden xl:flex" />
+        </>
+      )}
 
       {/* Blocks Content */}
+      <ResizablePanel defaultSize={contentDefault} minSize={30} className="flex flex-col">
       <div className="flex-1 overflow-y-auto flex flex-col" id="wiki-article-scroll-container">
         <div className={cn("px-8 py-6 pb-40 space-y-1 flex-1", !preview && (article.contentAlign === "center" ? "max-w-4xl mx-auto" : "max-w-[780px]"))}>
           {/* Breadcrumb (parent hierarchy) */}
@@ -519,10 +581,11 @@ export function WikiArticleView({ articleId, editable = false, preview = false, 
                 }
               }}
               onKeyDown={(e) => { if (e.key === "Enter") (e.target as HTMLInputElement).blur() }}
-              className="text-[1.75em] font-bold text-foreground mb-1 bg-transparent outline-none border-b border-transparent hover:border-accent/30 focus:border-accent/50 w-full transition-colors"
+              className="font-bold text-foreground mb-1 bg-transparent outline-none border-b border-transparent hover:border-accent/30 focus:border-accent/50 w-full transition-colors"
+              style={{ fontSize: emScale(1.75, "title") }}
             />
           ) : (
-            <h1 className="text-[1.75em] font-bold text-foreground mb-1">
+            <h1 className="font-bold text-foreground mb-1" style={{ fontSize: emScale(1.75, "title") }}>
               {article.title}
             </h1>
           )}
@@ -716,46 +779,72 @@ export function WikiArticleView({ articleId, editable = false, preview = false, 
         )}
       </div>
 
-      {/* Infobox Right Panel — Wikipedia style 3-column */}
-      {!preview && ((article.infobox?.length ?? 0) > 0 || editable) && (
-        <aside className="w-[260px] shrink-0 overflow-y-auto border-l border-border-subtle px-4 py-6 hidden xl:block">
-          <div className="sticky top-0">
-            <WikiInfobox
-              noteId={article.id}
-              kind="wiki"
-              entries={article.infobox}
-              editable={editable}
-              headerColor={article.infoboxHeaderColor ?? null}
-              onHeaderColorChange={
-                editable
-                  ? (color) =>
-                      usePlotStore
-                        .getState()
-                        .updateWikiArticle(article.id, { infoboxHeaderColor: color })
-                  : undefined
-              }
-              preset={article.infoboxPreset ?? "custom"}
-              onPresetChange={
-                editable
-                  ? (preset, seed) => {
-                      const def = INFOBOX_PRESETS.find((p) => p.preset === preset)
-                      usePlotStore.getState().updateWikiArticle(article.id, {
-                        infobox: seed,
-                        infoboxPreset: preset,
-                        // Apply preset's default header color when swapping to a non-custom preset
-                        // and the user hasn't customized the header color yet (or is on custom).
-                        ...(preset !== "custom" && def?.defaultHeaderColor !== undefined
-                          ? { infoboxHeaderColor: def.defaultHeaderColor }
-                          : {}),
-                      })
-                    }
-                  : undefined
-              }
-            />
-          </div>
-        </aside>
-      )}
+      </ResizablePanel>
 
+      {/* Infobox Right Panel — Wikipedia style 3-column, resizable */}
+      {showInfoboxRail && (
+        <>
+          <ResizableHandle withHandle className="hidden xl:flex" />
+          <ResizablePanel
+            defaultSize={infoboxDefault}
+            minSize={15}
+            maxSize={40}
+            className="hidden xl:block"
+          >
+            <aside className="h-full overflow-y-auto border-l border-border-subtle px-4 py-6">
+              <div className="sticky top-0">
+                {hasInfoboxContent || editable ? (
+                  <WikiInfobox
+                    noteId={article.id}
+                    kind="wiki"
+                    entries={article.infobox}
+                    editable={editable}
+                    headerColor={article.infoboxHeaderColor ?? null}
+                    onHeaderColorChange={
+                      editable
+                        ? (color) =>
+                            usePlotStore
+                              .getState()
+                              .updateWikiArticle(article.id, { infoboxHeaderColor: color })
+                        : undefined
+                    }
+                    preset={article.infoboxPreset ?? "custom"}
+                    onPresetChange={
+                      editable
+                        ? (preset, seed) => {
+                            const def = INFOBOX_PRESETS.find((p) => p.preset === preset)
+                            usePlotStore.getState().updateWikiArticle(article.id, {
+                              infobox: seed,
+                              infoboxPreset: preset,
+                              // Apply preset's default header color when swapping to a non-custom preset
+                              // and the user hasn't customized the header color yet (or is on custom).
+                              ...(preset !== "custom" && def?.defaultHeaderColor !== undefined
+                                ? { infoboxHeaderColor: def.defaultHeaderColor }
+                                : {}),
+                            })
+                          }
+                        : undefined
+                    }
+                  />
+                ) : (
+                  <div className="rounded-lg border border-dashed border-border bg-secondary/30 px-3 py-6 text-center">
+                    <p className="text-xs font-medium text-foreground/85 mb-1">No infobox</p>
+                    <p className="text-2xs text-muted-foreground">
+                      Edit this article to add structured data.
+                    </p>
+                  </div>
+                )}
+              </div>
+            </aside>
+          </ResizablePanel>
+        </>
+      )}
+    </ResizablePanelGroup>
+  )
+
+  // Dialogs render in portals — keep them out of the resizable layout.
+  const dialogs = (
+    <>
       <UrlInputDialog
         open={urlBlockDialog.open}
         mode="link"
@@ -782,7 +871,7 @@ export function WikiArticleView({ articleId, editable = false, preview = false, 
         excludeIds={embedWikiExcludeIds}
         onSelect={handleEmbedWikiSelect}
       />
-    </div>
+    </>
   )
 
   // Wrap with DndContext when editable so drop zone in sidebar works
@@ -796,6 +885,7 @@ export function WikiArticleView({ articleId, editable = false, preview = false, 
         onDragOver={handleDragOver}
       >
         {outerContent}
+        {dialogs}
 
         <FloatingDragDropBar
           isDragging={isDragging}
@@ -867,7 +957,12 @@ export function WikiArticleView({ articleId, editable = false, preview = false, 
     )
   }
 
-  return outerContent
+  return (
+    <>
+      {outerContent}
+      {dialogs}
+    </>
+  )
 }
 
 /* ── InlineCategoryTags — shown below title in article body ── */

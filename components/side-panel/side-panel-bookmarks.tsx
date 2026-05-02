@@ -14,6 +14,7 @@ import { extractAnchorsFromContentJson } from "@/lib/anchor-utils"
 import { navigateToWikiArticle } from "@/lib/wiki-article-nav"
 import type { GlobalBookmark } from "@/lib/types"
 import { cn } from "@/lib/utils"
+import { SPACE_COLORS } from "@/lib/colors"
 
 type BookmarkFilter = "all" | "note" | "wiki"
 
@@ -173,19 +174,15 @@ export function SidePanelBookmarks() {
                     <BookOpen
                       size={13}
                       weight="fill"
-                      className={cn(
-                        "mt-0.5 flex-shrink-0",
-                        isDeleted ? "text-muted-foreground/60" : "text-amber-500",
-                      )}
+                      className="mt-0.5 flex-shrink-0"
+                      style={{ color: isDeleted ? "var(--muted-foreground)" : SPACE_COLORS.wiki }}
                     />
                   ) : (
                     <MapPin
                       size={13}
                       weight="fill"
-                      className={cn(
-                        "mt-0.5 flex-shrink-0",
-                        isDeleted ? "text-muted-foreground/60" : "text-accent",
-                      )}
+                      className="mt-0.5 flex-shrink-0"
+                      style={{ color: isDeleted ? "var(--muted-foreground)" : SPACE_COLORS.notes }}
                     />
                   )}
                   <div className="flex-1 min-w-0">
@@ -202,10 +199,8 @@ export function SidePanelBookmarks() {
                     </span>
                     <span className="flex items-center gap-1 text-2xs text-muted-foreground">
                       <span
-                        className={cn(
-                          "uppercase tracking-wider font-semibold text-[9px]",
-                          kind === "wiki" ? "text-amber-400/70" : "text-accent/70",
-                        )}
+                        className="uppercase tracking-wider font-semibold text-[9px]"
+                        style={{ color: kind === "wiki" ? SPACE_COLORS.wiki : SPACE_COLORS.notes }}
                       >
                         {kind}
                       </span>

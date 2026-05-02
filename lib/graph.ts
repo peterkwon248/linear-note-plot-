@@ -1,4 +1,5 @@
 import type { Note, NoteStatus, Relation, RelationType } from "./types"
+import { FORCE_CONFIG, SIM_CONFIG, classifyTier, TAG_NODE_MIN_USAGE } from "./graph/ontology-graph-config"
 
 /* ── Ontology graph ──────────────────────────────── */
 
@@ -21,6 +22,16 @@ export interface OntologyNode {
   isWiki: boolean
   nodeType: "note" | "wiki" | "tag"
   tagColor?: string  // only for tag nodes
+  // Group-by membership fields. Used to compute graph hulls based on
+  // user-defined groupings (Display popover → Group by).
+  // - tags: noteId or wikiId tags (for "Group by Tag" — unified)
+  // - folderId: noteId or wikiId folder (for "Group by Folder" — unified)
+  // - categoryIds: wiki article categoryIds (for "Group by Category" — wiki only)
+  // - stickerIds: cross-entity sticker membership (for "Group by Sticker" — unified)
+  tags?: string[]
+  folderId?: string | null
+  categoryIds?: string[]
+  stickerIds?: string[]
 }
 
 export interface OntologyGraph {
@@ -35,6 +46,12 @@ export interface ForceConfig {
   linkDistance: number
   collisionRadius: number
   ticks: number
+  // Phase 2 additions — config-driven tuning. Optional for back-compat
+  // until worker/client also adopt them.
+  linkStrength?: number
+  centerStrength?: number
+  distanceMax?: number
+  collisionPadding?: number
 }
 
 export interface OntologyGraphData {
@@ -45,13 +62,26 @@ export interface OntologyGraphData {
 
 /**
  * Compute force simulation parameters based on node count.
+ *
+ * All values come from `lib/graph/ontology-graph-config.ts` — see that file
+ * for source citations (Obsidian / d3-force / vasturiano defaults).
  */
 export function computeForceConfig(nodeCount: number): ForceConfig {
-  const chargeStrength = nodeCount > 100 ? -80 : nodeCount > 30 ? -120 : nodeCount > 15 ? -180 : -250
-  const linkDistance = nodeCount > 100 ? 40 : nodeCount > 30 ? 50 : nodeCount > 15 ? 60 : 80
-  const collisionRadius = nodeCount > 30 ? 20 : nodeCount > 15 ? 25 : 30
-  const ticks = Math.max(120, Math.min(300, nodeCount * 4))
-  return { chargeStrength, linkDistance, collisionRadius, ticks }
+  const tier = classifyTier(nodeCount)
+  const f = FORCE_CONFIG[tier]
+  // collisionRadius derived from average expected node size + collisionPadding.
+  // Worker still uses a single number, so we approximate with NODE_SIZE.max + pad.
+  const approxNodeR = 10 + f.collisionPadding * 2 // Phase-2 calibration target
+  return {
+    chargeStrength: f.chargeStrength,
+    linkDistance: f.linkDistance,
+    collisionRadius: approxNodeR,
+    ticks: SIM_CONFIG.warmupTicks,
+    linkStrength: f.linkStrength,
+    centerStrength: f.centerStrength,
+    distanceMax: f.distanceMax,
+    collisionPadding: f.collisionPadding,
+  }
 }
 
 /**
@@ -63,7 +93,19 @@ export function buildOntologyGraphData(
   notes: Note[],
   relations: Relation[],
   tags?: Array<{ id: string; name: string; color: string }>,
-  wikiArticles?: Array<{ id: string; title: string; aliases: string[]; parentArticleId?: string | null; noteIds?: string[] }>,
+  wikiArticles?: Array<{
+    id: string
+    title: string
+    aliases: string[]
+    parentArticleId?: string | null
+    noteIds?: string[]
+    // Group-by source fields (mirror WikiArticle). Optional so existing
+    // call sites that pass minimal data still compile.
+    tags?: string[]
+    categoryIds?: string[]
+    folderId?: string | null
+    stickerIds?: string[]
+  }>,
 ): OntologyGraphData {
   if (notes.length === 0) return { nodeData: [], edges: [], forceConfig: computeForceConfig(0) }
 
@@ -142,10 +184,13 @@ export function buildOntologyGraphData(
       labelId: n.labelId,
       isWiki,
       nodeType,
+      tags: n.tags,
+      folderId: n.folderId,
+      stickerIds: n.stickerIds,
     }
   })
 
-  // 5. Tag nodes — only tags used in 5+ notes
+  // 5. Tag nodes — only tags used in TAG_NODE_MIN_USAGE+ notes
   if (tags && tags.length > 0) {
     const tagUsageCount = new Map<string, number>()
     const notesByTag = new Map<string, string[]>()
@@ -161,7 +206,7 @@ export function buildOntologyGraphData(
 
     for (const tag of tags) {
       const usageCount = tagUsageCount.get(tag.id) ?? 0
-      if (usageCount < 5) continue
+      if (usageCount < TAG_NODE_MIN_USAGE) continue
 
       const tagNodeId = `tag:${tag.id}`
       const noteIds = notesByTag.get(tag.id) ?? []
@@ -202,6 +247,10 @@ export function buildOntologyGraphData(
         labelId: null,
         isWiki: true,
         nodeType: "wiki",
+        tags: wa.tags,
+        folderId: wa.folderId ?? null,
+        categoryIds: wa.categoryIds,
+        stickerIds: wa.stickerIds,
       })
     }
 

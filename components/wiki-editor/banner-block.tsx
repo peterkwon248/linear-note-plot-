@@ -21,6 +21,7 @@ import {
   type BannerIconKey,
 } from "@/components/editor/nodes/banner-block-node"
 import type { DraggableSyntheticListeners } from "@dnd-kit/core"
+import { useTintedBg } from "@/lib/tinted-bg"
 
 /**
  * Wiki-tier Banner block.
@@ -88,7 +89,9 @@ export function WikiBannerBlock({
   const bgStyle    = resolveBannerBgStyle(bgStyleAttr)
   const sizeStyles = BANNER_SIZE_STYLES[size]
   const Icon       = resolveBannerIcon(iconKey)
-  const visual     = computeBannerVisual(bgStyle, bgColor, bgColorEnd)
+  const renderedBgColor    = useTintedBg(bgColor) ?? bgColor
+  const renderedBgColorEnd = useTintedBg(bgColorEnd) ?? bgColorEnd
+  const visual     = computeBannerVisual(bgStyle, renderedBgColor, renderedBgColorEnd)
 
   const hasCustomization = !!bgColor
     || iconKey !== "megaphone"

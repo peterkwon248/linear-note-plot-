@@ -26,6 +26,7 @@ import { Books } from "@phosphor-icons/react/dist/ssr/Books"
 import { BookOpen } from "@phosphor-icons/react/dist/ssr/BookOpen"
 import { SidebarSimple } from "@phosphor-icons/react/dist/ssr/SidebarSimple"
 import { useSettingsStore } from "@/lib/settings-store"
+import { SPACE_COLORS } from "@/lib/colors"
 
 /* ── Space definitions ──────────────────────────────── */
 
@@ -88,7 +89,7 @@ export function ActivityBar() {
             <TooltipTrigger asChild>
               <button
                 onClick={() => setSidebarCollapsed(false)}
-                className="flex h-9 w-9 items-center justify-center rounded-lg text-foreground/70 transition-colors hover:bg-hover-bg hover:text-foreground"
+                className="flex h-9 w-9 items-center justify-center rounded-lg text-foreground/85 dark:text-foreground/70 transition-colors hover:bg-hover-bg hover:text-foreground"
                 aria-label="Open sidebar"
               >
                 <SidebarSimple size={20} />
@@ -111,14 +112,18 @@ export function ActivityBar() {
                   className={cn(
                     "relative flex h-9 w-9 items-center justify-center rounded-lg transition-all duration-150",
                     isActive
-                      ? "bg-active-bg-strong text-foreground"
-                      : "text-foreground/60 hover:bg-hover-bg hover:text-foreground"
+                      ? "bg-active-bg-strong"
+                      : "text-foreground/80 dark:text-foreground/60 hover:bg-hover-bg hover:text-foreground"
                   )}
+                  style={isActive && id in SPACE_COLORS ? { color: SPACE_COLORS[id as keyof typeof SPACE_COLORS] } : undefined}
                   aria-label={label}
                 >
                   <Icon size={20} />
                   {isActive && (
-                    <div className="absolute left-0 top-1/2 h-4 w-0.5 -translate-y-1/2 rounded-full bg-foreground" />
+                    <div
+                      className="absolute left-0 top-1/2 h-4 w-0.5 -translate-y-1/2 rounded-full"
+                      style={{ backgroundColor: id in SPACE_COLORS ? SPACE_COLORS[id as keyof typeof SPACE_COLORS] : "currentColor" }}
+                    />
                   )}
                 </button>
               </TooltipTrigger>
@@ -142,7 +147,7 @@ export function ActivityBar() {
           <TooltipTrigger asChild>
             <button
               onClick={toggleTheme}
-              className="flex h-9 w-9 items-center justify-center rounded-lg text-foreground/60 transition-colors hover:bg-hover-bg hover:text-foreground"
+              className="flex h-9 w-9 items-center justify-center rounded-lg text-foreground/80 dark:text-foreground/60 transition-colors hover:bg-hover-bg hover:text-foreground"
               aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
             >
               {theme === "dark" ? <IconSun size={20} /> : <IconMoon size={20} />}

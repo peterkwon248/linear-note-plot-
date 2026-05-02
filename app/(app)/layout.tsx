@@ -72,8 +72,17 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   }, [pathname])
 
   const activeRoute = useActiveRoute()
-  const isTableView = activeRoute !== null && TABLE_VIEW_ROUTES.includes(activeRoute)
-  const isViewRoute = activeRoute !== null && VIEW_ROUTES.includes(activeRoute)
+  // Dynamic param routes (/folder/[id], /label/[id], /tag/[id]) used to
+  // redirect to /notes; the new folder detail page renders its own UI
+  // under `children`. When pathname is on a dynamic route, force
+  // isFallback so the NotesTableView/etc. don't sit on top of it.
+  const isOnDynamicRoute =
+    pathname?.startsWith("/folder/") ||
+    pathname?.startsWith("/label/") ||
+    pathname?.startsWith("/tag/") ||
+    false
+  const isTableView = !isOnDynamicRoute && activeRoute !== null && TABLE_VIEW_ROUTES.includes(activeRoute)
+  const isViewRoute = !isOnDynamicRoute && activeRoute !== null && VIEW_ROUTES.includes(activeRoute)
   const isFallback = !isTableView && !isViewRoute
 
   // Split state — covers both editor split and view-mode split

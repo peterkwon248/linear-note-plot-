@@ -1,5 +1,204 @@
 # Plot Project Memory
 
+## 🚀 2026-05-01 ~ 2026-05-02 세션 — Light Mode + Ontology 대규모 재설계 + Group by Hull + Sticker entity + Dashboard 3분할 (단일 PR 누적)
+
+**범위**: 12개 큰 작업이 한 PR에 누적.
+
+### 핵심 결정 1: "그래프 hull = 사용자 group by"
+
+이전 멘탈모델 분열 ("Notes는 Group by, Ontology는 BFS 자동")을 깨고 통합. **Ontology = Notes/Wiki와 동일 view-engine**의 그래프 시각화 모드일 뿐.
+
+### 핵심 결정 2: Sticker — 새 1급 entity
+
+라벨/카테고리/태그가 의미 충돌 없이 분리되어 있는 상태에서 "임의 묶음" 슬롯이 비어있었음. Sticker가 그걸 채움:
+
+| Entity | 대상 | 의미 |
+|---|---|---|
+| Label | 노트 only | 색 분류 (Linear 라벨) |
+| WikiCategory | 위키 only | 분류 트리 (DAG) |
+| Tag | 양쪽 | 주제/맥락 (`#zettelkasten`) |
+| **Sticker** | **양쪽** | **임의 묶음 마커** (포스트잇) |
+
+### 핵심 결정 3: 온톨로지 3분할
+
+- **Graph** — 시각화 ("내 지식 구조가 어떻게 생겼지?")
+- **Insights** — 행동 유발 ("내가 뭘 해야 하지?")
+- **Dashboard** — raw stats, "사브메트릭스" ("내 지식 베이스 디테일이 궁금하다")
+
+Stats(사이드바)는 stats에 충실, 행동 유발은 Insights로 분리.
+
+### 새 데이터 모델 (v98 → v100)
+- `WikiCategory.color: string`
+- `WikiArticle.folderId?: string | null`
+- `Sticker` interface 신규 + Note/WikiArticle.stickerIds (multi)
+- 신규 slice: `lib/store/slices/stickers.ts` (CRUD + bulkAddSticker)
+- `OntologyNode.tags/folderId/categoryIds/stickerIds` — group by lookup
+- `GroupBy` 타입: `tag` / `category` / `connections` / `sticker` 추가
+- `ViewMode`에 `dashboard` 추가
+- v99: 카테고리 자동 색, v100: stickers: [] 보장
+
+### 새 컴포넌트
+- `components/ontology/node-context-menu.tsx` — 우클릭 메뉴 + 인라인 스티커 생성 (Linear quick-add 패턴) + 색 picker (생성 시 + 기존 스티커 변경)
+- `components/ontology/ontology-dashboard-panel.tsx` — Volume/Connectivity/Health/Hubs/Tag frequency 섹션 (placeholder 수준, 다음 PR에서 확장)
+
+### Hull 색 = entity 색 (자동 동기화)
+| Group by | 색 출처 | 사용자 변경 |
+|---|---|---|
+| Sticker | `sticker.color` | ✅ 우클릭 메뉴 dot 클릭 (G8) |
+| Label | `label.color` | ✅ 라벨 페이지 |
+| Tag | `tag.color` | ✅ 태그 페이지 |
+| Folder | `folder.color` | ✅ 폴더 시스템 |
+| Wiki Category | `category.color` | (사이드바 UI는 다음 PR) |
+| Status | NOTE_STATUS_HEX | ❌ 시스템 의미 보존 |
+| Connections (legacy) | 알고리즘 기반 | ❌ entity 없음 |
+
+→ Hull 색 변경 = entity 색 변경. 일관성 유지.
+
+### Hull 인터랙티브
+- hull = 블록 = 안의 노드들의 그룹 핸들
+- `mousedown` → 멤버 multi-select + 첫 멤버 drag 트리거 → 그룹 이동
+- `click` → 그룹 선택만
+- `contextmenu` → 메뉴 (해당 그룹 전체 대상)
+
+### 다중 선택 + Hull 드래그 (Mac Finder/Linear 패턴)
+- **Ctrl/Cmd+click** = 노드 toggle (in/out)
+- **Shift+click** = 노드 add (toggle X — 추가만)
+- **Shift+drag** = marquee (영역 선택)
+- 좌상단 hint: 선택 0개=단축키 안내(Kbd badge), 선택 시=카운트 + ✕
+
+### Hull 드래그 부드럽게 (drag jitter 해소)
+이전: 드래그 중 매 tick마다 hull path 재계산 → "꿈틀거림" + 사라졌다 다시 생기는 느낌.
+신규: 드래그 시작 시 hull path 모양 freeze + SVG `transform=translate(dx,dy)`로 통째 이동. 멤버 노드들은 기존 group-drag 로직으로 동일 delta 적용. 드래그 종료 시 transform 해제 + 자연스러운 hull 재계산 (멤버 위치가 동일 delta로 이동했으므로 점프 없음).
+
+### 연결 끊기 (시각 필터, 데이터 보존)
+- ViewState에 `hiddenEdgeIds` / `hiddenEdgeKinds` / `isolatedNodeIds` 추가
+- 우클릭 메뉴 액션: **Hide connections** (선택 노드의 모든 엣지 숨김) / **Isolate** (선택만 풀 opacity, 나머지 dim) / **Show all** (복원)
+- 좌상단 amber 인디케이터: "N hidden · M isolated · Show all"
+- visibleEdges 계산: filter pass + hiddenEdgeIdSet/hiddenEdgeKindSet 차단 + isolation 모드면 양 endpoint 모두 isolated이어야 통과
+- 엣지 직접 우클릭은 다음 PR (path hit-area overlay 필요)
+- Display popover edge type 세분화 (showWikilinks/relations/tags 토글)도 다음 PR
+
+### Ontology 사이드바 진입점 재설계 (Wiki/Library 패턴)
+이전: More 섹션에 Insights만, Dashboard는 별도 button. Overview 클릭해도 그래프로 안 돌아감.
+신규: **Graph / Insights / Dashboard 셋 다 상단 navigation NavLink** (Wiki/Library와 동일 패턴). NavLink에 `onClickOverride` prop 추가 — 라우트는 모두 /ontology이지만 클릭 시 `plot:set-ontology-tab` 이벤트 fire → ontology-view에서 viewMode 전환 (graph layout/positions 보존).
+
+### 범례 라이트모드 가시성
+이전: 텍스트 색이 status별 (cyan #22d3ee 등) → 라이트 배경에서 거의 안 보임.
+신규: 텍스트는 통일된 `#1e293b` (slate-800) + font-weight 500. Color 정보는 swatch (circle/hexagon)에서만 표시. Linear status badge 패턴.
+
+### Stats 재구조 (Notes/Wiki 큰 카드 + 호버 tooltip)
+이전: 작은 row만 (Nodes 9 / Edges 13) — 정보 부족.
+신규: **Notes/Wiki 큰 숫자 카드** (grid-2col, font-semibold, 16px). 호버 시 native title로 status breakdown + 노트 제목 미리보기 8개. 행마다 `cursor-help` + 의미 설명. 푸터에 `N edges → Dashboard` 포인터.
+
+### Filter chip 인라인 편집 (Step A — connectedTo direction만)
+**3단계 로드맵**:
+- Step A (이번 PR): connectedTo chip의 direction Popover 토글 (Both/In/Out)
+- Step B (다음 PR): 모든 chip의 value 인라인 편집 (Status/Folder/Label 등)
+- Step C (별도 PRD): chip의 Field 자체 swap (Connected → Status로 변경, value reset)
+
+**구현**:
+- FilterChipBar에 optional `onUpdateFilter?: (idx, rule) => void` prop
+- chip render 시 `field === "connectedTo"` && `onUpdateFilter` 있으면 value를 PopoverTrigger button으로 wrap
+- Popover 안: 3가지 옵션 (Both / Backlinks only / Links out only) + 현재 선택 ✓
+- notes-table, notes-board에서 wire (next + idx replace)
+
+**왜 Step A부터?**: Connection 필터는 사용자가 자주 방향 바꾸는 use case. 매번 우클릭 → submenu 가는 게 귀찮음. value 토글만 인라인이어도 핵심 가치 충족.
+
+### 폴더 인라인 생성 (3개 진입점)
+- **노트 우클릭** Move to folder → "+ New folder…" → window.prompt → 즉시 생성 + 자동 부여
+- **위키 row 메뉴** FolderPickerSubmenu → "+ New folder…" 동일 흐름
+- **multi-select 플로팅바** Folder popover → "+ New folder…" → bulk apply
+- `createFolder` slice가 생성된 ID 반환하도록 변경 (void → string). type signature 동기화. palette 색 7개 cycle.
+
+### Connection 필터 (in-place backlink/links 필터)
+**핵심**: Ontology 그래프 가지 않고도 노트/위키 뷰 안에서 "이 노트와 연결된 entity만" 필터링.
+
+**데이터 모델**:
+- FilterField에 `connectedTo` 추가
+- value 포맷: `<targetId>:<direction>` (direction = both | in | out)
+- type ConnectionDirection export
+
+**Filter 로직**:
+- Notes (`lib/view-engine/filter.ts`): `note.linksOut` (this→target) + `extras.backlinksMap.get(targetId)` (target→this)로 양방향 처리. 자기 자신 제외
+- Wiki (`lib/view-engine/wiki-list-pipeline.ts`): wiki linksOut가 titles라 `allArticles` extras 추가, title + aliases 매칭으로 양방향 체크
+
+**UI**:
+- 노트 우클릭 메뉴 → ContextMenuSub "Show connected" (Both / Backlinks only / Links out only)
+- 위키 row 메뉴 → ShowConnectedSubmenu (FolderPickerSubmenu와 동일 인라인 expand-to-list 패턴)
+- Filter chip 표시: `Connected · "노트 제목" (↔ both)`. formatFilterChip에 connectedTo 처리 추가
+- 적용 시 토스트로 확인 알림
+
+**3방향 토글 분리**:
+- Both: 양방향 (default, 가장 직관)
+- In (Backlinks): 이 노트를 참조하는 다른 entity만
+- Out (Links out): 이 노트가 참조하는 다른 entity만
+
+**Out of scope (다음 PR)**:
+- 사이드 패널 Connections 탭 강화 (sortable + clickable list)
+- Filter popover에 Connection 카테고리 (노트 picker로 직접 선택 — 우클릭 진입으로 충분히 커버됨)
+
+### 다크모드 엣지 색 강화
+EDGE_STYLE.alpha 값이 다크가 라이트보다 *낮게* 설정돼 있어 다크 모드 그래프에서 엣지가 거의 안 보였음. 수정:
+- alphaRelation: dark 0.12 → 0.38 (light 0.30 유지)
+- alphaWikilink: dark 0.08 → 0.30 (light 0.22 유지)
+- alphaTag: dark 0.06 → 0.22 (light 0.16 유지)
+다크 모드 가시성 ~3× 개선.
+
+### 사이드바 Insights/Dashboard 아이콘 분리
+이전: 둘 다 `IconInsight` (sparkle) — 시각적 구별 불가.
+신규: Insights = `IconInsight` 유지 / Dashboard = `ChartBar` (이미 import되어 있던 컴포넌트).
+
+### 폴더 = 글로벌 컨테이너 (노트+위키 공유)
+**핵심 결정**: v99에서 이미 노트+위키 둘 다 folderId 가질 수 있게 데이터 모델 확장됐으나 UI는 노트만 표시. 이번에 UI까지 통합 완성.
+
+**이름 결정 — Folder 유지**:
+- Notion에는 "폴더" 자체가 없고 (Page hierarchy), Notion이 "Space"를 다른 의미로 사용 (Teamspace)
+- 진짜 폴더 메타포 사용 앱: Apple Notes / Obsidian / Logseq / Evernote(Notebook)
+- 친숙도 ★★★★★ + 노트앱 세계에서 폴더는 자연스러운 컨테이너
+- 이름 변경 없이 의미만 확장 (학습 비용 0)
+
+**구현**:
+- 노트 row 우클릭 → "Move to folder" 서브메뉴 (Radix ContextMenuSub)
+- 노트 플로팅바 → Folder popover 버튼 (bulk batchUpdateNotes)
+- 위키 row 메뉴 → FolderPickerSubmenu 컴포넌트 (인라인 expand-to-list)
+- 폴더 detail 페이지 `/folder/[id]` 완전 재작성 — 두 섹션 (Wiki / Notes) + "+ Add" 드롭다운
+- 사이드바 폴더 카운트 = noteCount + wikiCount 합산
+- layout.tsx 라우팅 fix — pathname `/folder/` 등은 isFallback 강제 (children 표시)
+- createWikiArticle에 folderId? 필드 추가
+- 위키 detail panel folder 셀렉터는 다음 PR
+
+**Out of scope (다음 PR)**:
+- 위키 detail panel에 폴더 셀렉터 (UI 영역 큼)
+- 노트 detail panel folder display 정리
+- 폴더 안에서 노트/위키 sort + group by
+
+### 가시성 fix
+- 위키 hex `#8b5cf6` → `#7c3aed` (더 진한 violet)
+- light fillOpacity wiki 0.33 → 0.55, strokeWidth 2.0 → 2.4
+- HULL light/dark 분기 (light fillOpacity 0.04 → 0.10, strokeOpacity 0.12 → 0.32)
+- 범례 theme-aware (light = 흰 배경 + slate 텍스트)
+
+### Phase 7 버그 fix
+- `showViewMode` prop 누락 → ontology-view에서 Graph/Insights 토글 안 보였음. 1줄 수정.
+
+### Stats 재설계 (Health → Stats)
+- Density 삭제 (추상)
+- Top hub: 숫자 → 노트 제목 표시
+- 행동 유발 메트릭(Orphans/Untagged/Wiki coverage/Most linked)은 위, 단순 카운트(N nodes · N edges)는 푸터
+
+### Display popover 정리
+- Ontology View Mode 섹션 제거 (Graph/Insights/Dashboard는 사이드바 진입)
+
+### Out of scope (다음 PR)
+- 사이드바 Stickers 섹션 + /stickers 페이지 관리 UI
+- 카테고리 사이드바 색 dot + Change color
+- 위키 폴더 입력 UI
+- Dashboard 추가 섹션 (time series, distribution, cluster analysis)
+- 모바일 long press + 하단 액션바
+- Phase 8 (계층 시각화), Phase 5 (Layout Switcher)
+
+---
+
 ## 🚀 2026-04-30 야간 ~ 2026-05-01 새벽 세션 — Linear-style 필터/디자인 종합 개편 + 라이트모드 가시성 일괄 강화 + Ontology 그래프 통합 (PR #229~#232 4건 머지)
 
 **범위**: 디자인/UX 종합 정비. Linear 필터 칩 패턴 + 필터 mismatch 수정 + Notes Index + 라이트모드 가시성 일괄 강화 + Ontology 그래프 WikiArticle 통합

@@ -6,12 +6,13 @@ import * as ResizablePrimitive from 'react-resizable-panels'
 import { cn } from '@/lib/utils'
 import { DotsSixVertical as DotsSixVerticalIcon } from "@phosphor-icons/react/dist/ssr/DotsSixVertical"
 
-function ResizablePanelGroup({
-  className,
-  ...props
-}: React.ComponentProps<typeof ResizablePrimitive.PanelGroup>) {
+const ResizablePanelGroup = React.forwardRef<
+  ResizablePrimitive.ImperativePanelGroupHandle,
+  React.ComponentProps<typeof ResizablePrimitive.PanelGroup>
+>(function ResizablePanelGroup({ className, ...props }, ref) {
   return (
     <ResizablePrimitive.PanelGroup
+      ref={ref}
       data-slot="resizable-panel-group"
       className={cn(
         'flex h-full w-full data-[panel-group-direction=vertical]:flex-col',
@@ -20,7 +21,7 @@ function ResizablePanelGroup({
       {...props}
     />
   )
-}
+})
 
 const ResizablePanel = React.forwardRef<
   ResizablePrimitive.ImperativePanelHandle,

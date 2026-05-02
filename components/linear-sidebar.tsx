@@ -35,6 +35,7 @@ import { ArrowRight } from "@phosphor-icons/react/dist/ssr/ArrowRight"
 import { Folders } from "@phosphor-icons/react/dist/ssr/Folders"
 import { SidebarSimple } from "@phosphor-icons/react/dist/ssr/SidebarSimple"
 import { ChartBar } from "@phosphor-icons/react/dist/ssr/ChartBar"
+import { Graph } from "@phosphor-icons/react/dist/ssr/Graph"
 import { ChartPie } from "@phosphor-icons/react/dist/ssr/ChartPie"
 import { CheckSquare as CheckSquareIcon } from "@phosphor-icons/react/dist/ssr/CheckSquare"
 import { Books } from "@phosphor-icons/react/dist/ssr/Books"
@@ -45,10 +46,11 @@ import { Paperclip } from "@phosphor-icons/react/dist/ssr/Paperclip"
 import { setWikiCategoryFilter } from "@/lib/wiki-category-filter"
 import { ALL_SIDEBAR_ROUTES, setActiveRoute, getActiveRoute, setActiveFolderId, setActiveTagId, setActiveLabelId, useActiveRoute, useActiveFolderId, useActiveTagId, useActiveLabelId, useActiveSpace, setActiveViewId, useActiveViewId, routeGoBack, routeGoForward } from "@/lib/table-route"
 import type { Note, NoteStatus, ActivitySpace } from "@/lib/types"
+import { cn } from "@/lib/utils"
 import { useKnowledgeMetrics } from "@/hooks/use-knowledge-metrics"
 type PanelContent = Record<string, unknown>
 import { setViewDragData, setNoteDragData } from "@/lib/drag-helpers"
-import { StatusIcon } from "@/components/status-icon"
+import { StatusShapeIcon } from "@/components/status-icon"
 import { ColorPickerGrid } from "@/components/color-picker-grid"
 import {
   ContextMenu,
@@ -71,6 +73,7 @@ function NavLink({
   badge,
   active,
   dragContent,
+  onClickOverride,
 }: {
   href: string
   icon: React.ReactNode
@@ -79,6 +82,10 @@ function NavLink({
   badge?: { count: number; color: string }
   active?: boolean
   dragContent?: PanelContent
+  /** When provided, bypass the default route-push behavior. Used by
+   *  Ontology mode tabs (Graph/Insights/Dashboard) which all live at
+   *  /ontology and switch via custom event instead of URL change. */
+  onClickOverride?: () => void
 }) {
   const router = useRouter()
   const setNoteId = usePlotStore((s) => s.setSelectedNoteId)
@@ -124,6 +131,10 @@ function NavLink({
     return (
       <button
         onClick={() => {
+          if (onClickOverride) {
+            onClickOverride()
+            return
+          }
           setNoteId(null)
           if (href === "/notes" || href === "/inbox") {
             setActiveFolderId(null)
@@ -156,6 +167,9 @@ function NavLink({
     </Link>
   )
 }
+
+// NodeTypeToggleSection removed in Phase 7 — node type filtering now lives
+// in the Display popover (driven by GRAPH_VIEW_CONFIG.displayConfig.toggles).
 
 function Section({
   title,
@@ -224,6 +238,7 @@ export function LinearSidebar() {
   const router = useRouter()
   const openNote = usePlotStore((s) => s.openNote)
   const notes = usePlotStore((s) => s.notes)
+  const wikiArticles = usePlotStore((s) => s.wikiArticles)
   const folders = usePlotStore((s) => s.folders)
   const createFolder = usePlotStore((s) => s.createFolder)
   const accessFolder = usePlotStore((s) => s.accessFolder)
@@ -632,8 +647,13 @@ export function LinearSidebar() {
     )
   }
 
-  const notesInFolder = (folderId: string) =>
-    notes.filter((n) => n.folderId === folderId && !n.trashed).length
+  // Folder = global container (notes + wiki articles). Sidebar count
+  // sums both so the user sees the true content of each folder at a glance.
+  const notesInFolder = (folderId: string) => {
+    const noteCount = notes.filter((n) => n.folderId === folderId && !n.trashed).length
+    const wikiCount = wikiArticles.filter((w) => w.folderId === folderId).length
+    return noteCount + wikiCount
+  }
 
   return (
     <aside className="flex h-full w-full shrink-0 flex-col bg-sidebar-bg border-r border-sidebar-border select-none overflow-hidden">
@@ -915,8 +935,8 @@ export function LinearSidebar() {
                     onClick={(e) => openNote(item.id, { forceNewTab: e.ctrlKey || e.metaKey })}
                     className="nav-item group flex w-full items-center gap-2.5 rounded-md px-2.5 py-1.5 text-ui transition-colors text-sidebar-foreground hover:bg-sidebar-hover hover:text-sidebar-hover-text"
                   >
-                    <span className="flex shrink-0 items-center justify-center w-5 h-5 text-sidebar-muted">
-                      <StatusIcon status={item.status} />
+                    <span className="flex shrink-0 items-center justify-center w-5 h-5">
+                      <StatusShapeIcon status={item.status} size={14} />
                     </span>
                     <span className="truncate text-left flex-1">{item.title || "Untitled"}</span>
                   </button>
@@ -935,8 +955,8 @@ export function LinearSidebar() {
                     onClick={(e) => openNote(item.id, { forceNewTab: e.ctrlKey || e.metaKey })}
                     className="nav-item group flex w-full items-center gap-2.5 rounded-md px-2.5 py-1.5 text-ui transition-colors text-sidebar-foreground hover:bg-sidebar-hover hover:text-sidebar-hover-text"
                   >
-                    <span className="flex shrink-0 items-center justify-center w-5 h-5 text-sidebar-muted">
-                      <StatusIcon status={item.status} />
+                    <span className="flex shrink-0 items-center justify-center w-5 h-5">
+                      <StatusShapeIcon status={item.status} size={14} />
                     </span>
                     <span className="truncate text-left flex-1">{item.title}</span>
                   </button>
@@ -1147,39 +1167,80 @@ export function LinearSidebar() {
         {/* ── Ontology (Graph) Context ──────────────── */}
         {activeSpace === "ontology" && (
           <>
+            {/* Ontology has 3 modes — Graph (default visual), Insights
+                (action prompts), Dashboard (raw stats). All three live at
+                /ontology and switch via `plot:set-ontology-tab` event so
+                the graph layout/positions are preserved across mode flips.
+                Following Wiki/Library pattern: each mode is a top-level
+                NavLink, none buried in More. */}
             <div className="space-y-px">
-              <NavLink
-                href="/ontology"
-                icon={<ChartBar size={20} weight="light" />}
-                label="Overview"
-                count={allNotesCount > 0 ? allNotesCount : undefined}
-                active={isActive("/ontology")}
-                dragContent={{ type: "ontology" }}
-              />
+              {(() => {
+                const isOnOntology = pathname?.startsWith("/ontology") ?? false
+                const currentMode = isOnOntology
+                  ? (() => {
+                      try {
+                        const vs = (usePlotStore.getState() as any).viewStateByContext?.graph
+                        return vs?.viewMode === "insights" ? "insights" :
+                               vs?.viewMode === "dashboard" ? "dashboard" : "graph"
+                      } catch { return "graph" }
+                    })()
+                  : null
+                const switchMode = (tab: "graph" | "insights" | "dashboard") => {
+                  if (!isOnOntology) {
+                    router.push("/ontology")
+                    // Defer the tab event — page mounts then handler will pick it up.
+                    setTimeout(() => {
+                      window.dispatchEvent(
+                        new CustomEvent("plot:set-ontology-tab", { detail: { tab } })
+                      )
+                    }, 50)
+                  } else {
+                    window.dispatchEvent(
+                      new CustomEvent("plot:set-ontology-tab", { detail: { tab } })
+                    )
+                  }
+                }
+                return (
+                  <>
+                    <NavLink
+                      href="/ontology"
+                      icon={<Graph size={20} weight="regular" />}
+                      label="Graph"
+                      count={allNotesCount > 0 ? allNotesCount : undefined}
+                      active={isOnOntology && currentMode === "graph"}
+                      dragContent={{ type: "ontology" }}
+                      onClickOverride={() => switchMode("graph")}
+                    />
+                    <NavLink
+                      href="/ontology"
+                      icon={<IconInsight size={20} />}
+                      label="Insights"
+                      active={isOnOntology && currentMode === "insights"}
+                      onClickOverride={() => switchMode("insights")}
+                    />
+                    <NavLink
+                      href="/ontology"
+                      icon={<ChartBar size={20} weight="regular" />}
+                      label="Dashboard"
+                      active={isOnOntology && currentMode === "dashboard"}
+                      onClickOverride={() => switchMode("dashboard")}
+                    />
+                  </>
+                )
+              })()}
             </div>
 
-            {/* Node Types legend */}
-            <Section title="Node Types">
-              <div className="flex flex-col gap-1 px-2.5">
-                {[
-                  { label: "Inbox", bg: "bg-chart-2" },
-                  { label: "Capture", bg: "bg-chart-3" },
-                  { label: "Permanent", bg: "bg-chart-5" },
-                  { label: "Wiki", bg: "bg-wiki-complete" },
-                ].map((item) => (
-                  <div key={item.label} className="flex items-center gap-2 text-2xs">
-                    <span className={`h-2 w-2 rounded-full ${item.bg}`} />
-                    <span className="text-sidebar-foreground">{item.label}</span>
-                  </div>
-                ))}
-              </div>
-            </Section>
+            {/* Node Types removed in Phase 7 — moved into Display popover */}
 
             {/* Ontology Views */}
             {renderViewsSection("ontology", "/ontology")}
 
-            {/* Graph Health — shares useKnowledgeMetrics with the Insights tab */}
-            <Section title="Health">
+            {/* Graph Stats — at-a-glance quantities + actionable rates.
+                Counts (Notes / Wiki) sit at the top, sized large enough to
+                read in one glance. Rates (Orphans / Untagged / Coverage)
+                follow as small rows. Hover any row for a contextual tip
+                (full Dashboard has the deep breakdown). */}
+            <Section title="Stats">
               {(() => {
                 const m = knowledgeMetrics
                 const orphanCount = Math.round(m.orphanRate * m.totalNotes)
@@ -1190,24 +1251,54 @@ export function LinearSidebar() {
                     : 0
                 const orphanPct = Math.round(m.orphanRate * 100)
                 const tagPct = Math.round(m.tagCoverage * 100)
+                const untaggedPct = 100 - tagPct
+                const untaggedCount = Math.round((1 - m.tagCoverage) * m.totalNotes)
+                const hubName = hubLeader?.title ?? hubLeader?.id ?? "—"
+                const hubDisplay = hubName.length > 16 ? hubName.slice(0, 14) + "…" : hubName
+
+                // Status breakdown for tooltips (preview note titles)
+                const liveNotes = notes.filter((n: any) => !n.trashed)
+                const inboxNotes = liveNotes.filter((n: any) => n.status === "inbox")
+                const captureNotes = liveNotes.filter((n: any) => n.status === "capture")
+                const permanentNotes = liveNotes.filter((n: any) => n.status === "permanent")
+                const orphanNotes = liveNotes.filter((n: any) =>
+                  !(n.linksOut?.length || 0) && !((n as any).backlinks?.length || 0)
+                )
+                const untaggedNotes = liveNotes.filter((n: any) => !n.tags || n.tags.length === 0)
+
+                // Helper: list up to N titles for a tooltip
+                const previewTitles = (arr: any[], max = 8) => {
+                  if (arr.length === 0) return ""
+                  const shown = arr.slice(0, max).map((n) => `• ${n.title || "Untitled"}`).join("\n")
+                  const more = arr.length > max ? `\n… and ${arr.length - max} more` : ""
+                  return "\n\n" + shown + more
+                }
 
                 return (
                   <div className="flex flex-col gap-2 px-2.5">
-                    <div className="flex items-center justify-between text-2xs">
-                      <span className="text-sidebar-muted">Nodes</span>
-                      <span className="text-sidebar-foreground tabular-nums">{m.totalNotes}</span>
+                    {/* ── Counts: large, primary visual weight ── */}
+                    <div className="grid grid-cols-2 gap-2 mb-1">
+                      <div
+                        className="rounded-md border border-sidebar-border-subtle bg-sidebar-card/30 px-2 py-1.5 cursor-help"
+                        title={`${m.totalNotes} notes total — Inbox ${inboxNotes.length} / Capture ${captureNotes.length} / Permanent ${permanentNotes.length}${previewTitles(liveNotes)}`}
+                      >
+                        <div className="text-[10px] text-sidebar-muted uppercase tracking-wide">Notes</div>
+                        <div className="text-base font-semibold tabular-nums leading-tight">{m.totalNotes}</div>
+                      </div>
+                      <div
+                        className="rounded-md border border-sidebar-border-subtle bg-sidebar-card/30 px-2 py-1.5 cursor-help"
+                        title={`${m.totalWiki} wiki articles${previewTitles(wikiArticles?.filter((w: any) => !w.trashed) ?? [])}`}
+                      >
+                        <div className="text-[10px] text-sidebar-muted uppercase tracking-wide">Wiki</div>
+                        <div className="text-base font-semibold tabular-nums leading-tight">{m.totalWiki}</div>
+                      </div>
                     </div>
-                    <div className="flex items-center justify-between text-2xs">
-                      <span className="text-sidebar-muted">Edges</span>
-                      <span className="text-sidebar-foreground tabular-nums">{m.totalEdges}</span>
-                    </div>
-                    <div className="flex items-center justify-between text-2xs">
-                      <span className="text-sidebar-muted">Density</span>
-                      <span className="text-sidebar-foreground tabular-nums">
-                        {m.linkDensity.toFixed(1)}
-                      </span>
-                    </div>
-                    <div className="flex items-center justify-between text-2xs">
+
+                    {/* ── Rates: action-driving metrics, small rows ── */}
+                    <div
+                      className="flex items-center justify-between text-2xs cursor-help"
+                      title={`Notes with no incoming or outgoing connections.${previewTitles(orphanNotes)}`}
+                    >
                       <span className="text-sidebar-muted">Orphans</span>
                       <span
                         className={`tabular-nums ${
@@ -1217,34 +1308,52 @@ export function LinearSidebar() {
                         {orphanCount} · {orphanPct}%
                       </span>
                     </div>
-                    <div className="flex items-center justify-between text-2xs">
-                      <span className="text-sidebar-muted">Tagged</span>
-                      <span className="text-sidebar-foreground tabular-nums">{tagPct}%</span>
-                    </div>
-                    <div className="flex items-center justify-between text-2xs">
-                      <span className="text-sidebar-muted">Top hub</span>
-                      <span className="text-sidebar-foreground tabular-nums">
-                        {hubLeader ? hubLeader.backlinks : 0}
+                    <div
+                      className="flex items-center justify-between text-2xs cursor-help"
+                      title={`${untaggedCount} notes without any tag.${previewTitles(untaggedNotes)}`}
+                    >
+                      <span className="text-sidebar-muted">Untagged</span>
+                      <span className={`tabular-nums ${untaggedPct > 0 ? "text-chart-3" : "text-sidebar-foreground"}`}>
+                        {untaggedPct}%
                       </span>
                     </div>
-                    <div className="flex items-center justify-between text-2xs">
-                      <span className="text-sidebar-muted">Wiki Coverage</span>
+                    <div
+                      className="flex items-center justify-between text-2xs cursor-help"
+                      title="% of notes that have been promoted to a wiki article. Higher = more knowledge codified."
+                    >
+                      <span className="text-sidebar-muted">Wiki coverage</span>
                       <span className="text-sidebar-foreground tabular-nums">{wikiPercent}%</span>
+                    </div>
+                    <div
+                      className="flex items-center justify-between text-2xs cursor-help"
+                      title={hubLeader ? `${hubName} — ${hubLeader.backlinks} connections (the hub of your graph).` : "No hub yet — add some links."}
+                    >
+                      <span className="text-sidebar-muted">Most linked</span>
+                      <span className="text-sidebar-foreground truncate ml-2">
+                        {hubDisplay}
+                      </span>
+                    </div>
+
+                    {/* ── Footer: edge count + dashboard pointer ── */}
+                    <div
+                      className="flex items-center justify-between text-2xs pt-1 border-t border-sidebar-border-subtle cursor-help"
+                      title={`${m.totalEdges} total connections across notes and wiki articles. See Dashboard for breakdown by edge kind.`}
+                    >
+                      <span className="text-sidebar-muted text-[10px] tabular-nums">
+                        {m.totalEdges} edges
+                      </span>
+                      <span className="text-sidebar-muted text-[10px]">
+                        →&nbsp;Dashboard
+                      </span>
                     </div>
                   </div>
                 )
               })()}
             </Section>
 
-            {/* More */}
-            <Section title="More">
-              <NavLink
-                href="/graph-insights"
-                icon={<IconInsight size={20} />}
-                label="Insights"
-                active={isActive("/graph-insights")}
-              />
-            </Section>
+            {/* More — Graph/Insights/Dashboard moved to the top-level nav
+                (Wiki/Library pattern), so this section now only houses
+                future "More" items. Removed for now to avoid an empty box. */}
           </>
         )}
 

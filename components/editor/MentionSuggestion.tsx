@@ -55,6 +55,15 @@ const categoryLabels: Record<MentionItem["mentionType"], string> = {
   reference: "References",
 }
 
+// Symbolic color per category — matches global SPACE_COLORS / ENTITY_COLORS.
+const categoryColors: Record<MentionItem["mentionType"], string | undefined> = {
+  date:      undefined,            // neutral
+  note:      "#06b6d4",            // SPACE_COLORS.notes
+  wiki:      "#8b5cf6",            // SPACE_COLORS.wiki
+  tag:       "#6b7280",            // ENTITY_COLORS.tag
+  reference: "#3b82f6",            // ENTITY_COLORS.reference
+}
+
 const categoryOrder: MentionItem["mentionType"][] = ["date", "note", "wiki", "tag", "reference"]
 
 // ── Dropdown Component ────────────────────────────────────────────────────────
@@ -124,7 +133,10 @@ const MentionList = forwardRef<MentionListRef, MentionListProps>(
           {grouped.map((group) => (
             <div key={group.type}>
               <div className="px-2 py-0.5">
-                <span className="text-2xs font-semibold uppercase tracking-wider text-muted-foreground/60">
+                <span
+                  className="text-2xs font-semibold uppercase tracking-wider"
+                  style={{ color: categoryColors[group.type] ?? "var(--muted-foreground)" }}
+                >
                   {categoryLabels[group.type]}
                 </span>
               </div>

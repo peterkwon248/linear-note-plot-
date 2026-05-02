@@ -506,7 +506,7 @@ export function NavboxBlock({
                   onChange={(e) => onUpdate({ navboxTitle: e.target.value })}
                   placeholder="Navbox title"
                   className={cn(
-                    "w-full bg-transparent text-center text-base font-semibold tracking-tight outline-none placeholder:text-muted-foreground/70 placeholder:font-normal",
+                    "w-full bg-transparent text-center text-[calc(1em*var(--scale-misc,1))] font-semibold tracking-tight outline-none placeholder:text-muted-foreground/70 placeholder:font-normal",
                     headerFgClass || "text-foreground",
                   )}
                 />
@@ -515,7 +515,7 @@ export function NavboxBlock({
                   onClick={handleCategoryHeaderClick}
                   title="Open category page"
                   className={cn(
-                    "text-base font-semibold tracking-tight truncate hover:underline transition-colors",
+                    "text-[calc(1em*var(--scale-misc,1))] font-semibold tracking-tight truncate hover:underline transition-colors",
                     headerFgClass || "text-foreground",
                   )}
                 >
@@ -524,7 +524,7 @@ export function NavboxBlock({
               ) : (
                 <span
                   className={cn(
-                    "text-base font-semibold tracking-tight truncate",
+                    "text-[calc(1em*var(--scale-misc,1))] font-semibold tracking-tight truncate",
                     headerFgClass || "text-foreground",
                   )}
                 >
@@ -696,7 +696,7 @@ export function NavboxBlock({
               onClick={() => toggleBoxCollapsed()}
               className="w-full flex items-center justify-center gap-1 py-1 text-[10px] tracking-wide text-muted-foreground/60 hover:text-foreground hover:bg-hover-bg transition-colors border-b border-border-subtle"
             >
-              {boxCollapsed ? "[펼치기]" : "[접기]"}
+              {boxCollapsed ? "[Expand]" : "[Collapse]"}
             </button>
           )}
 

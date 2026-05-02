@@ -1,4 +1,4 @@
-import type { Note, NoteBody, Folder, Tag, Label, NoteTemplate, ActiveView, NoteEvent, Thread, AutopilotRule, AutopilotLogEntry, Relation, RelationType, Attachment, CoOccurrence, RelationSuggestion, WikiClusterSuggestion, WikiInfoboxEntry, WikiCollectionItem, SavedView, WikiArticle, WikiBlock, WikiCategory, Reference, GlobalBookmark, Comment, CommentAnchor } from "../types"
+import type { Note, NoteBody, Folder, Tag, Label, Sticker, NoteTemplate, ActiveView, NoteEvent, Thread, AutopilotRule, AutopilotLogEntry, Relation, RelationType, Attachment, CoOccurrence, RelationSuggestion, WikiClusterSuggestion, WikiInfoboxEntry, WikiCollectionItem, SavedView, WikiArticle, WikiBlock, WikiCategory, Reference, GlobalBookmark, Comment, CommentAnchor } from "../types"
 import type { SRSState, SRSRating } from "@/lib/srs"
 import type { ViewState, ViewContextKey } from "../view-engine/types"
 import type { WorkspaceTab } from "../workspace/types"
@@ -38,6 +38,7 @@ export interface PlotState {
   folders: Folder[]
   tags: Tag[]
   labels: Label[]
+  stickers: Sticker[]
   editorState: EditorState
 
   // ── UI State ──
@@ -177,7 +178,7 @@ export interface PlotState {
   createNoteFromTemplate: (templateId: string) => string
 
   // ── Folders ──
-  createFolder: (name: string, color: string, opts?: Partial<Folder>) => void
+  createFolder: (name: string, color: string, opts?: Partial<Folder>) => string
   updateFolder: (id: string, updates: Partial<Folder>) => void
   deleteFolder: (id: string) => void
   accessFolder: (id: string) => void
@@ -199,6 +200,19 @@ export interface PlotState {
   restoreLabel: (id: string) => void
   permanentlyDeleteLabel: (id: string) => void
   setNoteLabel: (noteId: string, labelId: string | null) => void
+
+  // ── Stickers (cross-entity grouping marker) ──
+  createSticker: (name: string, color?: string) => string
+  updateSticker: (id: string, updates: Partial<Pick<Sticker, "name" | "color">>) => void
+  deleteSticker: (id: string) => void
+  restoreSticker: (id: string) => void
+  permanentlyDeleteSticker: (id: string) => void
+  addNoteSticker: (noteId: string, stickerId: string) => void
+  removeNoteSticker: (noteId: string, stickerId: string) => void
+  addWikiSticker: (wikiId: string, stickerId: string) => void
+  removeWikiSticker: (wikiId: string, stickerId: string) => void
+  /** Bulk apply: entityIds use "wiki:<id>" prefix for wikis, bare for notes. */
+  bulkAddSticker: (entityIds: string[], stickerId: string) => void
 
   // ── UI Actions ──
   setActiveView: (view: ActiveView) => void
@@ -270,7 +284,7 @@ export interface PlotState {
   setArticleCategories: (articleId: string, categoryIds: string[]) => void
 
   // ── Wiki Articles (Assembly Model) ──
-  createWikiArticle: (partial: { title: string; aliases?: string[]; tags?: string[]; blocks?: WikiBlock[] }) => string
+  createWikiArticle: (partial: { title: string; aliases?: string[]; tags?: string[]; blocks?: WikiBlock[]; folderId?: string | null }) => string
   updateWikiArticle: (articleId: string, patch: Partial<Omit<WikiArticle, "id" | "createdAt">>) => void
   addArticleReference: (articleId: string, referenceId: string) => void
   removeArticleReference: (articleId: string, referenceId: string) => void

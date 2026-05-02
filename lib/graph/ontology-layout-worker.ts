@@ -10,6 +10,7 @@ import {
   type SimulationNodeDatum,
   type SimulationLinkDatum,
 } from "d3-force"
+import { CLUSTER_LAYOUT } from "./ontology-graph-config"
 
 interface WorkerNode extends SimulationNodeDatum {
   id: string
@@ -27,6 +28,10 @@ interface ForceConfig {
   linkDistance: number
   collisionRadius: number
   ticks: number
+  // Phase 2 additions
+  linkStrength?: number
+  centerStrength?: number
+  distanceMax?: number
 }
 
 type InMessage = {
@@ -65,13 +70,13 @@ self.onmessage = (e: MessageEvent<InMessage>) => {
         })
         .filter(Boolean) as SimulationLinkDatum<WorkerNode>[]
 
-      const { chargeStrength, linkDistance, collisionRadius, ticks } = msg.config
+      const { chargeStrength, linkDistance, collisionRadius, ticks, linkStrength, centerStrength, distanceMax } = msg.config
 
       // Compute cluster targets based on labelId
       // Assign each unique label a position on a circle
       const labelIds = [...new Set(simNodes.map((n) => n.labelId).filter(Boolean))] as string[]
       const clusterTargets = new Map<string, { x: number; y: number }>()
-      const clusterRadius = Math.max(150, simNodes.length * 3)
+      const clusterRadius = Math.max(CLUSTER_LAYOUT.baseRadius, simNodes.length * CLUSTER_LAYOUT.perNodeMultiplier)
       labelIds.forEach((lid, i) => {
         const angle = (2 * Math.PI * i) / Math.max(labelIds.length, 1)
         clusterTargets.set(lid, {
@@ -82,13 +87,16 @@ self.onmessage = (e: MessageEvent<InMessage>) => {
 
       const hasLabels = labelIds.length >= 2
 
+      const linkF = forceLink<WorkerNode, SimulationLinkDatum<WorkerNode>>(simLinks).distance(linkDistance)
+      if (linkStrength !== undefined) linkF.strength(linkStrength)
+
+      const chargeF = forceManyBody<WorkerNode>().strength(chargeStrength)
+      if (distanceMax !== undefined) chargeF.distanceMax(distanceMax)
+
       const sim = forceSimulation<WorkerNode>(simNodes)
-        .force(
-          "link",
-          forceLink<WorkerNode, SimulationLinkDatum<WorkerNode>>(simLinks).distance(linkDistance)
-        )
-        .force("charge", forceManyBody().strength(chargeStrength))
-        .force("center", forceCenter(0, 0))
+        .force("link", linkF)
+        .force("charge", chargeF)
+        .force("center", forceCenter(0, 0).strength(centerStrength ?? 1))
         .force("collide", forceCollide(collisionRadius))
 
       // Add clustering forces only when multiple labels exist
@@ -97,11 +105,11 @@ self.onmessage = (e: MessageEvent<InMessage>) => {
           .force("clusterX", forceX<WorkerNode>((d) => {
             const target = d.labelId ? clusterTargets.get(d.labelId) : null
             return target?.x ?? 0
-          }).strength(0.15))
+          }).strength(CLUSTER_LAYOUT.forceStrength))
           .force("clusterY", forceY<WorkerNode>((d) => {
             const target = d.labelId ? clusterTargets.get(d.labelId) : null
             return target?.y ?? 0
-          }).strength(0.15))
+          }).strength(CLUSTER_LAYOUT.forceStrength))
       }
 
       sim.stop()

@@ -41,12 +41,23 @@ import { Paperclip } from "@phosphor-icons/react/dist/ssr/Paperclip"
 import { BookOpenText } from "@phosphor-icons/react/dist/ssr/BookOpenText"
 import { Quotes } from "@phosphor-icons/react/dist/ssr/Quotes"
 import { UploadSimple } from "@phosphor-icons/react/dist/ssr/UploadSimple"
+import { Image as PhImage } from "@phosphor-icons/react/dist/ssr/Image"
 import { cn } from "@/lib/utils"
 import { useActiveRoute, setActiveRoute } from "@/lib/table-route"
 import { usePaneActiveRoute } from "@/components/workspace/pane-context"
 import { pickColor } from "@/components/note-fields"
 import { persistAttachmentBlob } from "@/lib/store/helpers"
-import type { Reference } from "@/lib/types"
+import type { Reference, Attachment } from "@/lib/types"
+import { STATUS_COLORS } from "@/lib/colors"
+
+/* ── File size formatter ─────────────────────────── */
+function formatFileSize(bytes: number): string {
+  if (!bytes || bytes < 0) return "—"
+  if (bytes < 1024) return `${bytes} B`
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
+  if (bytes < 1024 * 1024 * 1024) return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
+  return `${(bytes / (1024 * 1024 * 1024)).toFixed(1)} GB`
+}
 
 /* ── Types ────────────────────────────────────────── */
 
@@ -74,12 +85,12 @@ function QuickFilterButton({
         "flex items-center gap-1 px-2 py-0.5 rounded-md text-2xs font-medium transition-colors",
         active
           ? "bg-accent/10 text-accent"
-          : "text-muted-foreground/70 hover:text-foreground hover:bg-hover-bg"
+          : "text-muted-foreground hover:text-foreground hover:bg-hover-bg"
       )}
     >
       {label}
       {count !== undefined && (
-        <span className="text-muted-foreground/70">{count}</span>
+        <span className="text-muted-foreground tabular-nums">{count}</span>
       )}
     </button>
   )
@@ -109,7 +120,7 @@ function QuickFilterBar({
   toggleFieldKey: (key: string) => void
 }) {
   return (
-    <div className="flex items-center gap-1.5 px-5 py-1.5 border-b border-border/30">
+    <div className="flex items-center gap-1.5 px-5 py-1.5 border-b border-border-subtle">
       <QuickFilterButton
         label="All"
         active={quickFilter === "all"}
@@ -226,7 +237,7 @@ function ReferenceRow({
             {/* Icon */}
             <FileText
               weight="duotone"
-              className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground/60"
+              className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground"
             />
             <div className="min-w-0 flex-1">
               <div className="flex items-center justify-between gap-3">
@@ -235,19 +246,19 @@ function ReferenceRow({
                 </span>
                 <div className="flex items-center gap-2 shrink-0">
                   {fieldCount > 0 && (
-                    <span className="inline-flex items-center rounded-full bg-secondary/40 px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground/60">
+                    <span className="inline-flex items-center rounded-full bg-secondary/60 px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground tabular-nums">
                       {fieldCount}
                     </span>
                   )}
                   {timeAgo && (
-                    <span className="text-2xs text-muted-foreground/70 whitespace-nowrap">
+                    <span className="text-2xs text-muted-foreground whitespace-nowrap tabular-nums">
                       {timeAgo}
                     </span>
                   )}
                 </div>
               </div>
               {ref_.content && (
-                <div className="mt-0.5 truncate text-2xs text-muted-foreground/70">
+                <div className="mt-0.5 truncate text-2xs text-muted-foreground">
                   {ref_.content}
                 </div>
               )}
@@ -282,12 +293,12 @@ function ReferenceRow({
 function EmptyReferences({ onCreate }: { onCreate: () => void }) {
   return (
     <div className="flex h-full flex-col items-center justify-center gap-3 px-6 text-center">
-      <Quotes weight="regular" className="h-12 w-12 text-muted-foreground/60" />
+      <Quotes weight="regular" className="h-12 w-12 text-muted-foreground" />
       <div>
-        <p className="text-note font-medium text-muted-foreground/60">
+        <p className="text-note font-medium text-foreground">
           No references yet
         </p>
-        <p className="mt-1 text-2xs text-muted-foreground/70 max-w-[280px]">
+        <p className="mt-1 text-2xs text-muted-foreground max-w-[280px]">
           References are reusable sources linked to your footnotes.
           Create one to get started.
         </p>
@@ -308,8 +319,8 @@ function EmptyReferences({ onCreate }: { onCreate: () => void }) {
 function SearchEmpty({ query }: { query: string }) {
   return (
     <div className="flex flex-col items-center justify-center gap-2 px-6 py-16 text-center">
-      <Quotes weight="regular" className="h-8 w-8 text-muted-foreground/50" />
-      <p className="text-2xs text-muted-foreground/70">
+      <Quotes weight="regular" className="h-8 w-8 text-muted-foreground" />
+      <p className="text-2xs text-muted-foreground">
         No references matching &quot;{query}&quot;
       </p>
     </div>
@@ -731,18 +742,35 @@ function LibraryOverview() {
 
               {/* ── Attention Banner ── */}
               {hasAttention && (
-                <div className="mb-6 flex items-start gap-4 rounded-lg border-2 border-amber-600/60 dark:border-amber-500/40 bg-amber-500/[0.05] p-4">
-                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-amber-500/15">
-                    <Warning className="text-amber-500" size={16} weight="bold" />
+                <div
+                  className="mb-6 flex items-start gap-4 rounded-lg bg-secondary/30 p-4"
+                  style={{
+                    borderWidth: "2px",
+                    borderStyle: "solid",
+                    borderColor: `${STATUS_COLORS.warning}80`,
+                  }}
+                >
+                  <div
+                    className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg"
+                    style={{ backgroundColor: `${STATUS_COLORS.warning}1a` }}
+                  >
+                    <Warning size={16} weight="bold" style={{ color: STATUS_COLORS.warning }} />
                   </div>
                   <div className="min-w-0 flex-1">
-                    <span className="text-2xs font-semibold uppercase tracking-wider text-amber-600 dark:text-amber-400">Needs Attention</span>
+                    <span
+                      className="text-2xs font-semibold uppercase tracking-wider"
+                      style={{ color: STATUS_COLORS.warning }}
+                    >Needs Attention</span>
                     <div className="mt-1 space-y-0.5">
                       {unlinkedRefCount > 0 && (
-                        <p className="text-note font-medium text-amber-600 dark:text-amber-400">{unlinkedRefCount} unlinked reference{unlinkedRefCount !== 1 ? "s" : ""}</p>
+                        <p className="text-note font-medium" style={{ color: STATUS_COLORS.warning }}>
+                          {unlinkedRefCount} unlinked reference{unlinkedRefCount !== 1 ? "s" : ""}
+                        </p>
                       )}
                       {unusedTagCount > 0 && (
-                        <p className="text-note font-medium text-amber-600 dark:text-amber-400">{unusedTagCount} unused tag{unusedTagCount !== 1 ? "s" : ""}</p>
+                        <p className="text-note font-medium" style={{ color: STATUS_COLORS.warning }}>
+                          {unusedTagCount} unused tag{unusedTagCount !== 1 ? "s" : ""}
+                        </p>
                       )}
                     </div>
                   </div>
@@ -809,12 +837,19 @@ function LibraryOverview() {
 
 /* ── Tags View: imported from tags-view.tsx ──────── */
 
-/* ── Files View ──────────────────────────────────── */
+/* ── Files View — All Notes-level table design ────── */
+
+type FilesSortField = "name" | "size" | "type" | "createdAt"
 
 function FilesView() {
   const attachments = usePlotStore((s) => s.attachments)
   const addAttachment = usePlotStore((s) => s.addAttachment)
+  const removeAttachment = usePlotStore((s) => s.removeAttachment)
   const [filter, setFilter] = useState<"all" | "image" | "document">("all")
+  const [sortField, setSortField] = useState<FilesSortField>("createdAt")
+  const [sortDir, setSortDir] = useState<SortDir>("desc")
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
+  const lastClickedRef = useRef<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const activeAttachments = useMemo(() => attachments.filter((a) => !a.trashed), [attachments])
@@ -840,18 +875,93 @@ function FilesView() {
   }
 
   const filtered = useMemo(() => {
-    if (filter === "all") return activeAttachments
-    if (filter === "image") return activeAttachments.filter((a) => a.type === "image")
-    return activeAttachments.filter((a) => a.type !== "image")
-  }, [activeAttachments, filter])
+    let arr = activeAttachments
+    if (filter === "image") arr = arr.filter((a) => a.type === "image")
+    else if (filter === "document") arr = arr.filter((a) => a.type !== "image")
+
+    const sorted = [...arr]
+    sorted.sort((a, b) => {
+      let cmp = 0
+      if (sortField === "name") cmp = (a.name || "").localeCompare(b.name || "")
+      else if (sortField === "size") cmp = (a.size || 0) - (b.size || 0)
+      else if (sortField === "type") cmp = (a.type || "").localeCompare(b.type || "")
+      else cmp = new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+      return sortDir === "asc" ? cmp : -cmp
+    })
+    return sorted
+  }, [activeAttachments, filter, sortField, sortDir])
+
+  const toggleSort = useCallback((field: FilesSortField) => {
+    setSortField((prev) => {
+      if (prev === field) {
+        setSortDir((d) => (d === "asc" ? "desc" : "asc"))
+      } else {
+        setSortDir(field === "name" || field === "type" ? "asc" : "desc")
+      }
+      return field
+    })
+  }, [])
 
   const imageCount = useMemo(() => activeAttachments.filter((a) => a.type === "image").length, [activeAttachments])
   const docCount = useMemo(() => activeAttachments.filter((a) => a.type !== "image").length, [activeAttachments])
 
+  /* ── Selection ── */
+  const toggleSelect = useCallback((id: string, e?: React.MouseEvent) => {
+    if (e?.shiftKey && lastClickedRef.current) {
+      const lastIdx = filtered.findIndex((a) => a.id === lastClickedRef.current)
+      const curIdx = filtered.findIndex((a) => a.id === id)
+      if (lastIdx !== -1 && curIdx !== -1) {
+        const start = Math.min(lastIdx, curIdx)
+        const end = Math.max(lastIdx, curIdx)
+        const next = new Set(selectedIds)
+        for (let i = start; i <= end; i++) next.add(filtered[i].id)
+        setSelectedIds(next)
+        return
+      }
+    }
+    setSelectedIds((prev) => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+    lastClickedRef.current = id
+  }, [filtered, selectedIds])
+
+  const toggleSelectAll = useCallback(() => {
+    if (selectedIds.size === filtered.length && filtered.length > 0) {
+      setSelectedIds(new Set())
+    } else {
+      setSelectedIds(new Set(filtered.map((a) => a.id)))
+    }
+  }, [selectedIds.size, filtered])
+
+  const handleBulkDelete = useCallback(() => {
+    selectedIds.forEach((id) => removeAttachment(id))
+    const count = selectedIds.size
+    setSelectedIds(new Set())
+    toast.success(`Moved ${count} file${count > 1 ? "s" : ""} to trash`)
+  }, [selectedIds, removeAttachment])
+
+  // Escape clears selection
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && selectedIds.size > 0) setSelectedIds(new Set())
+    }
+    window.addEventListener("keydown", handler)
+    return () => window.removeEventListener("keydown", handler)
+  }, [selectedIds.size])
+
+  const isAllSelected = filtered.length > 0 && selectedIds.size === filtered.length
+  const isPartiallySelected = selectedIds.size > 0 && selectedIds.size < filtered.length
+
+  // Grid template: checkbox 32px + Name minmax(160px, 1fr) + Size 80px + Type 100px + Created 100px
+  const gridTemplate = "32px minmax(160px, 1fr) 80px 100px 100px"
+
   return (
     <div className="flex-1 flex flex-col overflow-hidden">
       <ViewHeader
-        icon={<Folder weight="duotone" className="h-4 w-4" />}
+        icon={<Folder weight="regular" className="h-4 w-4" />}
         title="Files"
         count={activeAttachments.length}
         onCreateNew={() => fileInputRef.current?.click()}
@@ -863,9 +973,10 @@ function FilesView() {
         className="hidden"
         onChange={handleUpload}
       />
-      <div className="flex-1 overflow-y-auto">
-        {/* Filter bar */}
-        <div className="px-4 py-2 flex items-center gap-1 border-b border-border-subtle">
+
+      {/* Filter bar */}
+      {activeAttachments.length > 0 && (
+        <div className="flex items-center gap-1.5 px-5 py-1.5 border-b border-border-subtle">
           {(["all", "image", "document"] as const).map((f) => (
             <QuickFilterButton
               key={f}
@@ -876,40 +987,211 @@ function FilesView() {
             />
           ))}
         </div>
+      )}
 
+      <div className="flex-1 overflow-y-auto">
         {filtered.length === 0 ? (
-          <div className="flex h-full flex-col items-center justify-center gap-3 text-muted-foreground/70">
-            <Folder weight="duotone" className="h-10 w-10" />
-            <span className="text-note font-medium">No files yet</span>
-            <span className="text-2xs">
-              {activeAttachments.length === 0
-                ? "Click + to upload files, or add attachments to notes"
-                : "No files match this filter"}
-            </span>
+          <div className="flex h-full flex-col items-center justify-center gap-3 px-6 text-center">
+            <Folder weight="regular" className="h-12 w-12 text-muted-foreground" />
+            <div>
+              <p className="text-note font-medium text-foreground">
+                {activeAttachments.length === 0 ? "No files yet" : "No files match this filter"}
+              </p>
+              <p className="mt-1 text-2xs text-muted-foreground max-w-[280px]">
+                {activeAttachments.length === 0
+                  ? "Upload files or add attachments to your notes."
+                  : "Try a different filter or upload new files."}
+              </p>
+            </div>
+            {activeAttachments.length === 0 && (
+              <button
+                onClick={() => fileInputRef.current?.click()}
+                className="mt-2 flex items-center gap-1.5 rounded-lg bg-accent/10 px-3 py-1.5 text-2xs font-medium text-accent hover:bg-accent/20 transition-colors"
+              >
+                <UploadSimple weight="bold" className="h-3 w-3" />
+                Upload files
+              </button>
+            )}
           </div>
         ) : (
-          <div className="p-4 space-y-0.5">
-            {filtered.map((att) => (
-              <div
-                key={att.id}
-                className="flex items-center gap-3 rounded-lg px-3 py-2.5 transition-colors hover:bg-hover-bg"
-              >
-                <FileText
-                  size={16}
+          <div>
+            {/* Header row — Notes-aligned */}
+            <div
+              data-header-row
+              style={{ display: "grid", gridTemplateColumns: gridTemplate }}
+              className="sticky top-0 z-10 items-center border-b border-border-subtle bg-background px-5 py-2.5 text-2xs font-medium text-muted-foreground"
+            >
+              <div className="flex items-center justify-center">
+                <div
+                  data-checkbox
+                  onClick={toggleSelectAll}
                   className={cn(
-                    "shrink-0",
-                    att.type === "image" ? "text-accent/60" : "text-muted-foreground/70"
+                    "h-4 w-4 rounded-[4px] border flex items-center justify-center cursor-pointer transition-colors shadow-sm",
+                    isAllSelected
+                      ? "bg-accent border-accent"
+                      : isPartiallySelected
+                        ? "bg-accent/50 border-accent"
+                        : "bg-card border-zinc-400 dark:border-zinc-600 hover:border-zinc-500 dark:hover:border-zinc-500"
                   )}
-                />
-                <span className="flex-1 truncate text-note text-foreground">
-                  {att.name || "Untitled file"}
-                </span>
-                <span className="text-2xs text-muted-foreground/70 shrink-0">{att.type}</span>
+                >
+                  {isAllSelected && <Check size={10} weight="bold" className="text-accent-foreground" />}
+                  {isPartiallySelected && <Minus size={10} weight="regular" className="text-accent-foreground" />}
+                </div>
               </div>
-            ))}
+              <button
+                onClick={() => toggleSort("name")}
+                className="flex items-center gap-0.5 hover:text-foreground transition-colors text-left"
+              >
+                Name
+                {sortField === "name" && (
+                  sortDir === "asc"
+                    ? <CaretUp size={10} weight="bold" className="text-accent" />
+                    : <CaretDown size={10} weight="bold" className="text-accent" />
+                )}
+              </button>
+              <button
+                onClick={() => toggleSort("size")}
+                className="flex items-center justify-end gap-0.5 hover:text-foreground transition-colors"
+              >
+                Size
+                {sortField === "size" && (
+                  sortDir === "asc"
+                    ? <CaretUp size={10} weight="bold" className="text-accent" />
+                    : <CaretDown size={10} weight="bold" className="text-accent" />
+                )}
+              </button>
+              <button
+                onClick={() => toggleSort("type")}
+                className="flex items-center justify-end gap-0.5 hover:text-foreground transition-colors"
+              >
+                Type
+                {sortField === "type" && (
+                  sortDir === "asc"
+                    ? <CaretUp size={10} weight="bold" className="text-accent" />
+                    : <CaretDown size={10} weight="bold" className="text-accent" />
+                )}
+              </button>
+              <button
+                onClick={() => toggleSort("createdAt")}
+                className="flex items-center justify-end gap-0.5 hover:text-foreground transition-colors"
+              >
+                Created
+                {sortField === "createdAt" && (
+                  sortDir === "asc"
+                    ? <CaretUp size={10} weight="bold" className="text-accent" />
+                    : <CaretDown size={10} weight="bold" className="text-accent" />
+                )}
+              </button>
+            </div>
+
+            {/* Rows */}
+            {filtered.map((att) => {
+              const isSelected = selectedIds.has(att.id)
+              const isImage = att.type === "image"
+              const timeAgo = att.createdAt
+                ? formatDistanceToNow(new Date(att.createdAt), { addSuffix: false })
+                : ""
+              return (
+                <ContextMenu key={att.id}>
+                  <ContextMenuTrigger asChild>
+                    <div
+                      style={{ display: "grid", gridTemplateColumns: gridTemplate }}
+                      className={cn(
+                        "group items-center border-b border-border/50 px-5 py-2.5 transition-colors duration-100",
+                        isSelected ? "bg-accent/8" : "hover:bg-hover-bg"
+                      )}
+                      onClick={(e) => {
+                        if ((e.target as HTMLElement).closest("[data-checkbox]")) return
+                        toggleSelect(att.id, e)
+                      }}
+                    >
+                      <div className="flex items-center justify-center">
+                        <div
+                          data-checkbox
+                          onClick={(e) => { e.stopPropagation(); toggleSelect(att.id, e) }}
+                          className={cn(
+                            "h-4 w-4 rounded-[4px] border flex items-center justify-center cursor-pointer transition-colors shadow-sm",
+                            isSelected
+                              ? "bg-accent border-accent"
+                              : "bg-card border-zinc-400 dark:border-zinc-600 hover:border-zinc-500 dark:hover:border-zinc-500",
+                            !isSelected && selectedIds.size === 0 && "invisible group-hover:visible"
+                          )}
+                        >
+                          {isSelected && <Check size={10} weight="bold" className="text-accent-foreground" />}
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        {isImage ? (
+                          <PhImage weight="duotone" className="h-4 w-4 shrink-0 text-accent" />
+                        ) : (
+                          <FileText weight="duotone" className="h-4 w-4 shrink-0 text-muted-foreground" />
+                        )}
+                        <span className="truncate text-note text-foreground" title={att.name}>
+                          {att.name || "Untitled file"}
+                        </span>
+                      </div>
+                      <span className="text-2xs text-muted-foreground tabular-nums text-right">
+                        {formatFileSize(att.size || 0)}
+                      </span>
+                      <span className="text-2xs text-muted-foreground capitalize text-right">
+                        {att.type === "image" ? "Image" : att.mimeType?.split("/")[1] || "File"}
+                      </span>
+                      <span className="text-2xs text-muted-foreground tabular-nums text-right">
+                        {timeAgo}
+                      </span>
+                    </div>
+                  </ContextMenuTrigger>
+                  <ContextMenuContent className="w-48">
+                    <ContextMenuItem
+                      onClick={() => {
+                        navigator.clipboard.writeText(att.name || "")
+                        toast.success("Copied filename")
+                      }}
+                    >
+                      <Copy weight="bold" className="mr-2 h-3.5 w-3.5" />
+                      Copy filename
+                    </ContextMenuItem>
+                    <ContextMenuSeparator />
+                    <ContextMenuItem
+                      onClick={() => {
+                        removeAttachment(att.id)
+                        toast.success("Moved to trash")
+                      }}
+                      className="text-destructive focus:text-destructive"
+                    >
+                      <Trash weight="bold" className="mr-2 h-3.5 w-3.5" />
+                      Delete
+                    </ContextMenuItem>
+                  </ContextMenuContent>
+                </ContextMenu>
+              )
+            })}
           </div>
         )}
       </div>
+
+      {/* Floating action bar — unified style */}
+      {selectedIds.size > 0 && (
+        <div className="fixed bottom-6 left-1/2 z-50 -translate-x-1/2 animate-in slide-in-from-bottom-4 fade-in duration-200">
+          <div className="flex items-center gap-1 rounded-xl border border-border bg-surface-overlay px-4 py-2.5 shadow-[0_8px_32px_rgba(0,0,0,0.4)]">
+            <button
+              onClick={() => setSelectedIds(new Set())}
+              className="mr-1 flex items-center gap-1.5 rounded-md px-2 py-1.5 text-2xs font-medium text-muted-foreground hover:bg-active-bg transition-colors"
+            >
+              <Lightning size={14} weight="fill" className="text-accent" />
+              {selectedIds.size} selected
+              <PhX size={12} weight="regular" className="ml-0.5 text-muted-foreground/70" />
+            </button>
+            <Divider />
+            <button
+              onClick={handleBulkDelete}
+              className="inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-2xs font-medium text-destructive hover:bg-destructive/10 transition-colors"
+            >
+              <Trash size={16} weight="regular" /> Delete
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
@@ -1165,7 +1447,7 @@ function ReferencesView() {
         hasActiveFilters={hasActiveFilters}
         filterContent={
           <div className="p-3 w-[260px]">
-            <div className="text-2xs font-medium text-muted-foreground/60 mb-2">
+            <div className="text-2xs font-medium text-muted-foreground mb-2">
               Status
             </div>
             <div className="flex flex-wrap gap-1 mb-3">
@@ -1177,7 +1459,7 @@ function ReferencesView() {
                     "px-2.5 py-1 rounded-md text-2xs font-medium transition-colors capitalize",
                     quickFilter === f
                       ? "bg-accent/10 text-accent"
-                      : "text-muted-foreground/60 hover:bg-hover-bg hover:text-foreground"
+                      : "text-muted-foreground hover:bg-hover-bg hover:text-foreground"
                   )}
                 >
                   {f}
@@ -1186,7 +1468,7 @@ function ReferencesView() {
             </div>
             {fieldKeys.length > 0 && (
               <>
-                <div className="text-2xs font-medium text-muted-foreground/60 mb-2">
+                <div className="text-2xs font-medium text-muted-foreground mb-2">
                   Field Keys
                 </div>
                 <div className="flex flex-wrap gap-1">
@@ -1198,7 +1480,7 @@ function ReferencesView() {
                         "px-2.5 py-1 rounded-md text-2xs font-medium transition-colors",
                         activeFieldKeys.has(key)
                           ? "bg-accent/10 text-accent"
-                          : "text-muted-foreground/60 hover:bg-hover-bg hover:text-foreground"
+                          : "text-muted-foreground hover:bg-hover-bg hover:text-foreground"
                       )}
                     >
                       {key}
@@ -1213,7 +1495,7 @@ function ReferencesView() {
                   setQuickFilter("all")
                   setActiveFieldKeys(new Set())
                 }}
-                className="mt-3 w-full text-2xs text-muted-foreground/70 hover:text-foreground transition-colors"
+                className="mt-3 w-full text-2xs text-muted-foreground hover:text-foreground transition-colors"
               >
                 Clear all filters
               </button>
@@ -1224,7 +1506,7 @@ function ReferencesView() {
         displayContent={
           <div className="p-3 w-[240px]">
             {/* Sort */}
-            <div className="text-2xs font-medium text-muted-foreground/60 mb-2">Sort by</div>
+            <div className="text-2xs font-medium text-muted-foreground mb-2">Sort by</div>
             <div className="flex flex-wrap gap-1 mb-3">
               {([
                 { field: "updatedAt" as SortField, label: "Updated" },
@@ -1238,7 +1520,7 @@ function ReferencesView() {
                     "flex items-center gap-1 px-2.5 py-1 rounded-md text-2xs font-medium transition-colors",
                     sortBy === field
                       ? "bg-accent/10 text-accent"
-                      : "text-muted-foreground/60 hover:bg-hover-bg hover:text-foreground"
+                      : "text-muted-foreground hover:bg-hover-bg hover:text-foreground"
                   )}
                 >
                   {label}
@@ -1250,7 +1532,7 @@ function ReferencesView() {
             </div>
 
             {/* Group by */}
-            <div className="text-2xs font-medium text-muted-foreground/60 mb-2">Group by</div>
+            <div className="text-2xs font-medium text-muted-foreground mb-2">Group by</div>
             <div className="flex flex-wrap gap-1">
               {([
                 { value: "none" as const, label: "None" },
@@ -1264,7 +1546,7 @@ function ReferencesView() {
                     "px-2.5 py-1 rounded-md text-2xs font-medium transition-colors",
                     groupBy === value
                       ? "bg-accent/10 text-accent"
-                      : "text-muted-foreground/60 hover:bg-hover-bg hover:text-foreground"
+                      : "text-muted-foreground hover:bg-hover-bg hover:text-foreground"
                   )}
                 >
                   {label}
@@ -1283,7 +1565,7 @@ function ReferencesView() {
                       "px-2 py-0.5 rounded text-2xs transition-colors",
                       groupFieldKey === key
                         ? "bg-accent/10 text-accent"
-                        : "text-muted-foreground/70 hover:bg-hover-bg hover:text-foreground"
+                        : "text-muted-foreground hover:bg-hover-bg hover:text-foreground"
                     )}
                   >
                     {key}
@@ -1320,21 +1602,29 @@ function ReferencesView() {
           )
         ) : (
           <>
-            {/* Select All Header Row */}
-            <div className="flex items-center gap-2.5 px-5 py-2 border-b border-border/50 text-2xs text-muted-foreground/60">
-              <button
+            {/* Select All Header Row (PR #230 pattern, Notes-aligned) */}
+            <div
+              data-header-row
+              className="sticky top-0 z-10 flex items-center gap-2.5 px-5 py-2.5 border-b border-border-subtle bg-background text-2xs font-medium text-muted-foreground"
+            >
+              <div
+                data-checkbox
                 onClick={handleSelectAll}
-                className="w-4 h-4 rounded border border-border flex items-center justify-center shrink-0 hover:border-foreground/30 transition-colors"
+                className={cn(
+                  "h-4 w-4 rounded-[4px] border flex items-center justify-center cursor-pointer transition-colors shadow-sm shrink-0",
+                  isAllSelected
+                    ? "bg-accent border-accent"
+                    : isPartiallySelected
+                      ? "bg-accent/50 border-accent"
+                      : "bg-card border-zinc-400 dark:border-zinc-600 hover:border-zinc-500 dark:hover:border-zinc-500"
+                )}
               >
-                {isAllSelected ? (
-                  <Check size={12} className="text-accent" />
-                ) : isPartiallySelected ? (
-                  <Minus size={12} className="text-muted-foreground" />
-                ) : null}
-              </button>
+                {isAllSelected && <Check size={10} weight="bold" className="text-accent-foreground" />}
+                {isPartiallySelected && <Minus size={10} weight="regular" className="text-accent-foreground" />}
+              </div>
               <button
                 onClick={() => toggleSort("title")}
-                className="flex-1 flex items-center gap-0.5 font-medium hover:text-foreground transition-colors text-left"
+                className="flex-1 flex items-center gap-0.5 hover:text-foreground transition-colors text-left"
               >
                 Name
                 {sortBy === "title" && (
@@ -1346,7 +1636,7 @@ function ReferencesView() {
               <span className="w-16 text-right">Fields</span>
               <button
                 onClick={() => toggleSort("updatedAt")}
-                className="w-20 flex items-center justify-end gap-0.5 font-medium hover:text-foreground transition-colors"
+                className="w-20 flex items-center justify-end gap-0.5 hover:text-foreground transition-colors"
               >
                 Updated
                 {sortBy === "updatedAt" && (
@@ -1359,9 +1649,9 @@ function ReferencesView() {
             {groupedReferences ? (
               groupedReferences.map((group) => (
                 <div key={group.label}>
-                  <div className="sticky top-0 z-10 flex items-center gap-2 border-b border-border/30 bg-background/95 backdrop-blur-sm px-5 py-1.5">
-                    <span className="text-2xs font-medium uppercase tracking-wide text-muted-foreground/70">{group.label}</span>
-                    <span className="text-2xs text-muted-foreground/60">{group.items.length}</span>
+                  <div className="sticky top-0 z-10 flex items-center gap-2 border-b border-border-subtle bg-background/95 backdrop-blur-sm px-5 py-1.5">
+                    <span className="text-2xs font-medium uppercase tracking-wide text-muted-foreground">{group.label}</span>
+                    <span className="text-2xs text-muted-foreground tabular-nums">{group.items.length}</span>
                   </div>
                   {group.items.map((ref) => (
                     <ReferenceRow

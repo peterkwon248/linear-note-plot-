@@ -896,6 +896,11 @@ export function NotesBoard({
           onRemoveFilter={(idx) => updateViewState({ filters: viewState.filters.filter((_, i) => i !== idx) })}
           onClearAll={() => updateViewState({ filters: [] })}
           onSetFilters={(filters) => updateViewState({ filters })}
+          onUpdateFilter={(idx, rule) => {
+            const next = [...(viewState.filters ?? [])]
+            next[idx] = rule
+            updateViewState({ filters: next })
+          }}
         />
       </ViewHeader>
 

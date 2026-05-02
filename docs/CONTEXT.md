@@ -3,6 +3,95 @@
 > This file is synced via git so all machines share the same context.
 > before-work reads this file. Update it whenever major decisions change.
 
+## 🚀 2026-05-01 ~ 2026-05-02 — Light Mode + Ontology Graph 재설계 + Group by Hull + Sticker entity + Dashboard 3분할 (단일 PR)
+
+**12개 큰 작업을 한 PR에 누적:**
+
+1. **라벨 편집 UX 재설계 (Option A)**: name click=rename, color popover always-on, FAB rename/recolor, 우클릭 메뉴, hover pencil 제거
+2. **한글 → 영어 전환 + v97/v98 마이그레이션**: 인포박스 프리셋/필드명, navbox 버튼, wikiArticles dedup
+3. **글로벌 컬러 시스템**: SPACE_COLORS + ENTITY_COLORS + STATUS_COLORS 단일 진입점, 라이트 모드 가시성 헬퍼
+4. **폰트 스케일 시스템**: 위키 article 6 그룹 (title/heading/body/infobox/meta/misc) per-group 배율. Reader Settings popover (S/M/L/XL + Refine ± + Layout + Reset)
+5. **Ontology Graph Redesign Phase 1~4**: `lib/graph/ontology-graph-config.ts` 신규 — 50+ 매직넘버 단일 진입점. Force tier, sqrt(linkCount) 사이징, smooth LOD fade, 부채 정리
+6. **Phase 7 — Ontology UX 통일**: Display popover에 View Mode (Graph/Insights) + 노드 타입 토글 통합. 사이드바 Node Types 제거, OntologyTabBar 제거. Notes/Wiki와 동일 멘탈 모델
+7. **🆕 Phase 7 버그 fix**: `showViewMode` prop 누락 → ontology-view에서 Graph/Insights 토글 안 보이는 문제 해결
+8. **🆕 Group by Hull 시스템 (PRD: REDESIGN_GRAPH_GROUPING.md)**: Ontology hull = 사용자 group by 결과. 라벨/태그/카테고리/폴더/스티커/상태 어느 거든 부여 = 그래프 hull 멤버십. Hull light/dark 분기로 라이트모드 가시성 ~3× 개선
+9. **🆕 Sticker entity 신규**: 라벨(노트만)/카테고리(위키만)/태그(맥락) 외에 **임의 묶음** 슬롯. 노트+위키 모두 다중 멤버십. 사용자 멘탈모델: "라벨/카테고리/태그 의미 따질 필요 없이 그냥 한 묶음으로 표시하고 싶어"
+10. **🆕 우클릭 메뉴 + 인라인 스티커 생성**: 그래프 노드/hull 우클릭 → Add sticker… → 인라인 검색 + "+ New" → 즉시 모든 선택 노드에 부여 + Group by 자동 전환. Linear quick-add 패턴
+11. **🆕 Hull 인터랙티브**: hull = 블록. 클릭(그룹 선택) / 드래그(그룹 이동) / 우클릭(메뉴) 모두 지원. 안의 모든 노드 함께 이동 (group-drag 로직 재활용)
+12. **🆕 3분할 Dashboard 진입**: Ontology = Graph (시각화) + Insights (행동 유발) + Dashboard (raw stats, "사브메트릭스"). 사이드바 More에 Dashboard 진입점. Stats 재설계 (Health → Stats, Density 삭제, Top hub → 노트 제목)
+13. **🆕 Hull/스티커 색 사용자 변경 UI**: 우클릭 메뉴의 스티커 서브메뉴에 두 곳 색 picker — (1) 새 스티커 생성 시 입력창 옆 dot → PRESET_COLORS swatch grid, (2) 기존 스티커 row의 dot 클릭 → 인라인 picker. **Hull 색 = entity 색**이라 스티커 색만 바꾸면 hull도 즉시 동기화
+14. **🆕 Hull 드래그 부드럽게**: Hull = 블록 드래그 시 path data 매 tick 재계산하면 "꿈틀거림" 발생 → drag 중에는 path 모양 freeze + SVG `transform=translate(dx, dy)`로 통째 이동. 노드들은 group-drag 로직으로 동일 delta 적용. drag 끝나면 transform 해제 + 새 위치 기반 hull 자연스럽게 그대로 그려짐 (점프 없음)
+15. **🆕 다중 선택 강화**: Ctrl/Cmd+click(toggle) + **Shift+click(add)** + Shift+drag(marquee) 모두 지원 (Mac Finder/Linear 패턴). 좌상단 hint 재설계: 선택 0개일 때 단축키 안내 (Kbd badge), 선택 시 카운트 + 해제 버튼
+16. **🆕 범례 라이트모드 가시성 통일**: 텍스트 색을 통일된 slate-800로 (이전 status별 색상은 흐림), color는 swatch에만 — Linear 패턴. 배경 `0.92 → 0.98` 거의 불투명, 노드 fill alpha `0x55 → 0x88`
+17. **🆕 Stats 재구조 + 호버 tooltip**: Notes/Wiki **큰 숫자 카드** (grid-2col) + 각 행에 `cursor-help` + 풍부한 tooltip (status breakdown, 노트 제목 미리보기 8개), 푸터에 `N edges → Dashboard` 포인터
+18. **🆕 사이드바 Ontology 진입점 재설계**: Wiki/Library 패턴 따라 **Graph / Insights / Dashboard 모두 상단 navigation으로** (More 섹션에서 끌어올림). 각 클릭 시 `plot:set-ontology-tab` 이벤트 → 같은 /ontology 페이지에서 viewMode 전환 (그래프 layout/positions 보존)
+19. **🆕 연결 끊기 (시각만, 데이터 보존)**: ViewState에 `hiddenEdgeIds` / `hiddenEdgeKinds` / `isolatedNodeIds` 추가 → visibleEdges 필터링. 우클릭 메뉴에 **Hide connections** (선택 노드의 모든 엣지 숨김) + **Isolate** (선택만 보이게, 나머지 dim) + **Show all** (복원). 좌상단에 amber 인디케이터 ("N hidden · M isolated · Show all"). 엣지 직접 우클릭은 path hit-area 코드 비용 커서 다음 PR로 위임
+20a. **🆕 다크모드 엣지 색 강화 + Dashboard 아이콘 분리**:
+- EDGE_STYLE.alphaRelation/Wikilink/Tag의 dark 값이 light보다 *낮게* 설정돼 다크에서 거의 안 보였던 버그 수정 (relation: 0.12→0.38, wikilink 0.08→0.30, tag 0.06→0.22). 다크 모드에서도 엣지 잘 보임
+- 사이드바 Insights/Dashboard 동일 아이콘 → Dashboard만 `ChartBar`로 변경
+
+20c. **🆕 Filter chip 인라인 편집 (Step A)**: connectedTo chip의 direction 부분을 클릭하면 Popover로 Both/In/Out 즉시 토글. 매번 우클릭 → submenu 갈 필요 없음. FilterChipBar에 `onUpdateFilter` prop 추가, notes-table·notes-board에서 wire. 다른 chip(Status/Folder/Label 등)의 인라인 편집은 Step B로 다음 PR
+
+20d. **🆕 폴더 인라인 생성 (Move to folder 안에서)**: 노트 우클릭 → Move to folder → "+ New folder…" 선택 시 prompt로 이름 입력 → 즉시 생성 + 자동 부여. 위키 row 메뉴, multi-select 플로팅바에도 동일 패턴. createFolder가 생성된 ID 반환하도록 변경 (이전 void)
+
+20b. **🆕 Connection 필터 (in-place backlink/links 필터)**: 노트/위키 뷰 안에서 "이 노트와 연결된 entity만 보기". Ontology 가지 않고 현장에서 즉시 적용.
+- 새 FilterField `connectedTo` (value: `<id>:<direction>`, direction ∈ both/in/out)
+- Notes pipeline (filter.ts): linksOut + backlinksMap 기반 양방향 처리
+- Wiki pipeline (wiki-list-pipeline.ts): linksOut(titles) + alias 기반 매칭, allArticles 추가 extras
+- 우클릭 → "Show connected" 서브메뉴 (Both / Backlinks only / Links out only)
+- 노트와 위키 양쪽 동일 패턴, FolderPickerSubmenu와 같은 인라인 expand-to-list UI
+- Filter chip 자동 표시 ("Connected · [노트 제목] (↔ both)")
+- 세 방향 토글로 분리되어 backlinks/links out 별도 필터 가능
+
+21. **🆕 폴더 = 글로벌 컨테이너 (노트+위키 공유)**: v99에서 데이터 모델은 이미 통합됐으나 UI가 노트만 다뤘던 것을 정리.
+    - 노트 row 우클릭 메뉴 → **Move to folder** 서브메뉴 (폴더 목록 + No folder + 색 dot)
+    - 노트 multi-select 플로팅바 → **Folder** popover 버튼 (bulk 적용 + 토스트)
+    - 위키 row 메뉴 → **Move to folder** 인라인 expand-to-list submenu (FolderPickerSubmenu 컴포넌트)
+    - 폴더 detail 페이지 (`/folder/[id]`) 완전 재구성 — 기존 `/notes` redirect 폐기. 두 섹션 (Wiki / Notes) + "+ Add" 드롭다운 (New note / New wiki article). 빈 섹션엔 "Create one" 액션. "Open in Notes view" 링크로 풀 기능 노트 뷰 진입 가능
+    - 사이드바 폴더 카운트 = 노트 + 위키 합산 (이전엔 노트만)
+    - layout.tsx 라우팅 수정 — pathname이 동적 라우트(`/folder/`, `/label/`, `/tag/`)면 isFallback 강제 → children(폴더 페이지)이 NotesTableView 위에 정확히 표시
+    - createWikiArticle에 `folderId?` partial 필드 추가 (폴더 페이지에서 새 위키 생성 시 자동 멤버십)
+    - **이름 결정**: "Folder" 그대로 유지 (Notion에는 폴더 없음 / Apple Notes·Obsidian·Logseq·Evernote 모두 폴더 메타포로 검증됨 / 친숙도 ★★★★★ + Plot의 노트+위키 컨테이너 의미 정확)
+    - 위키 detail panel folder 셀렉터는 다음 PR (UI 영역 큼)
+
+**데이터 모델 변경 (v98 → v100)**:
+- WikiCategory에 `color: string` 추가 (graph hull 색)
+- WikiArticle에 `folderId?: string | null` 추가 (노트+위키 통합 폴더 멤버십)
+- **Sticker interface 신규** + Note/WikiArticle.stickerIds (multi)
+- 신규 slice: `lib/store/slices/stickers.ts` (CRUD + bulkAddSticker)
+- v99 마이그레이션: 기존 카테고리에 자동 색 할당, 위키 folderId default null
+- v100 마이그레이션: stickers: [] 보장
+
+**Group by 옵션 (Display popover)**:
+- None / **Sticker** (default 추천, 노트+위키 통합) / Tag / Label / Wiki Category / Folder / Status / Connections (legacy BFS)
+
+**Marquee 단축키**: Shift+drag = 영역 선택 / Ctrl+click = 노드 toggle. 그래프 좌상단에 hint 표시 (선택 후 사라짐)
+
+**위키 노드 가시성**: hex `#8b5cf6` → `#7c3aed` (더 진한 violet) + light fillOpacity 0.33 → 0.55, strokeWidth 2.0 → 2.4
+
+**Store**: v96 → v97 → v98 → v99 → **v100** (sticker entity)
+
+**Out of scope (다음 PR)**:
+- **사이드바 Stickers 섹션 + /stickers 페이지** (라벨처럼 관리, 우클릭 메뉴)
+- **카테고리 사이드바 색 dot + Change color UI**
+- **위키 폴더 입력 UI** (folderId 데이터는 있음)
+- **위키 detail panel folder 셀렉터** (G20d deferred)
+- **Dashboard 추가 섹션**: time series, connectivity distribution, cluster analysis, wiki article stats
+- **모바일 인터랙션**: long press → selection mode + 하단 액션바
+- **Phase 8** — 계층 시각화 (parent/child/root/orphan 차별화)
+- **Phase 5** — Layout Switcher (Force/Hierarchical/Radial)
+- **Filter chip 인라인 편집 Step B/C** — value 전체 + Field swap (Step A 완료)
+- **Side Panel Connections 탭 강화** (sortable + clickable + filter chip 통합)
+- **엣지 직접 우클릭** (path hit-area overlay)
+- **Display popover edge type 세분화** (wikilink/relation/tag 토글 분리)
+- **Insights Hub 본격 구축** (Wiki candidates / Stale notes / Broken wikilinks)
+- **🆕 Saved Views 완성** — 데이터 슬라이스 + 사이드바 UI는 4 space (Notes/Wiki/Ontology/Calendar) 모두 구현됨. **하지만 viewState 복원은 Notes만 동작** (notes-table-view에서 activeViewId 감시). **Wiki/Ontology/Calendar는 dead end** (사이드바에 view 표시되고 클릭 라우팅도 되지만 viewState 적용 X). 다음 PR로 3개 view에 동일 패턴 적용 (notes-table-view의 useEffect 패턴 복제). 비용 ~3h
+- **🆕 NoteStatus 리네이밍 (`inbox/capture/permanent` → `stone/brick/keystone`) + Inbox 알림함 시스템 도입** — 큰 작업, 사용자 직접 작성 PRD `docs/REDESIGN_NOTE_STATUS_INBOX.md`. **Phase 1 NoteStatus 전면 리네이밍 + IDB v101 마이그레이션**, **Phase 2 Home Inbox 의미 재정의 (placeholder + InboxSignal stub)**. 작업 시작 전 사전 조사 + 사용자 합의 절차 강제
+
+자세한 PRD: [`docs/REDESIGN_ONTOLOGY_GRAPH.md`](./REDESIGN_ONTOLOGY_GRAPH.md), [`docs/REDESIGN_GRAPH_GROUPING.md`](./REDESIGN_GRAPH_GROUPING.md), [`docs/REDESIGN_NOTE_STATUS_INBOX.md`](./REDESIGN_NOTE_STATUS_INBOX.md)
+
+---
+
 ## 🚀 2026-04-30 오후 — Sprint 1.4 완료 (4 PR 통합 단일 commit). 다음은 Sprint 1.5 + Wiki Hierarchy filter fix
 
 **Sprint 1.4 완료 (단일 commit, ~40 파일)**:

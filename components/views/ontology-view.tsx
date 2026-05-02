@@ -5,8 +5,9 @@ import { usePlotStore } from "@/lib/store"
 import { buildOntologyGraphData, type OntologyGraph, type OntologyNode } from "@/lib/graph"
 import { OntologyGraphCanvas } from "@/components/ontology/ontology-graph-canvas"
 import { OntologyDetailPanel } from "@/components/ontology/ontology-detail-panel"
-import { OntologyTabBar, type OntologyTabKey } from "@/components/ontology/ontology-tab-bar"
+// OntologyTabBar removed in Phase 7 — view mode lives in Display popover
 import { OntologyInsightsPanel } from "@/components/ontology/ontology-insights-panel"
+import { OntologyDashboardPanel } from "@/components/ontology/ontology-dashboard-panel"
 import { ontologyLayoutClient } from "@/lib/graph/ontology-layout-client"
 import type { Note } from "@/lib/types"
 import { ViewHeader } from "@/components/view-header"
@@ -35,20 +36,6 @@ export function OntologyView() {
   const [graph, setGraph] = useState<OntologyGraph | null>(null)
   const [searchQuery, setSearchQuery] = useState("")
   const [graphFilters, setGraphFilters] = useState<FilterRule[]>([])
-  const [tab, setTab] = useState<OntologyTabKey>("graph")
-
-  // External tab control: Home's "Improve your knowledge graph" link fires
-  // a `plot:set-ontology-tab` CustomEvent so we land directly on Insights.
-  useEffect(() => {
-    function handler(e: Event) {
-      const detail = (e as CustomEvent<{ tab?: OntologyTabKey }>).detail
-      if (detail?.tab === "graph" || detail?.tab === "insights") {
-        setTab(detail.tab)
-      }
-    }
-    window.addEventListener("plot:set-ontology-tab", handler)
-    return () => window.removeEventListener("plot:set-ontology-tab", handler)
-  }, [])
 
   // Graph display state from store (unified via viewStateByContext)
   const graphViewState = usePlotStore((s) => s.viewStateByContext["graph"]) ?? buildViewStateForContext("graph")
@@ -57,7 +44,27 @@ export function OntologyView() {
     (patch: Partial<ViewState>) => setViewState("graph" as ViewContextKey, patch),
     [setViewState]
   )
-  const graphToggles = graphViewState?.toggles ?? { showWikilinks: true, showTagNodes: false }
+
+  // View mode: "graph" or "insights" (lives in graphViewState.viewMode).
+  // External event compatibility: legacy listeners that fire `plot:set-ontology-tab`
+  // (e.g. Home's "Improve your knowledge graph" link) are still honored.
+  // 3-way tab: graph (default), insights (action prompts), dashboard (raw stats).
+  const tab = (
+    graphViewState.viewMode === "insights" ? "insights" :
+    graphViewState.viewMode === "dashboard" ? "dashboard" :
+    "graph"
+  ) as "graph" | "insights" | "dashboard"
+  useEffect(() => {
+    function handler(e: Event) {
+      const detail = (e as CustomEvent<{ tab?: "graph" | "insights" | "dashboard" }>).detail
+      if (detail?.tab === "graph" || detail?.tab === "insights" || detail?.tab === "dashboard") {
+        updateGraphViewState({ viewMode: detail.tab })
+      }
+    }
+    window.addEventListener("plot:set-ontology-tab", handler)
+    return () => window.removeEventListener("plot:set-ontology-tab", handler)
+  }, [updateGraphViewState])
+  const graphToggles = graphViewState?.toggles ?? { showWikilinks: true, showTagNodes: false, showNotes: true, showWiki: true }
 
   const handleGraphFilterToggle = (rule: FilterRule) => {
     setGraphFilters(prev => {
@@ -71,6 +78,9 @@ export function OntologyView() {
   const tags = usePlotStore((s) => s.tags)
   const labels = usePlotStore((s) => s.labels)
   const wikiArticles = usePlotStore((s) => s.wikiArticles)
+  const wikiCategories = usePlotStore((s) => s.wikiCategories)
+  const folders = usePlotStore((s) => s.folders)
+  const stickers = usePlotStore((s) => s.stickers)
   const openNote = usePlotStore((s) => s.openNote)
   const ontologyPositions = usePlotStore((s) => s.ontologyPositions)
   const updateOntologyPositions = usePlotStore((s) => s.updateOntologyPositions)
@@ -84,6 +94,8 @@ export function OntologyView() {
       ...base,
       showWikilinks: graphToggles.showWikilinks ?? true,
       showTagNodes: graphToggles.showTagNodes ?? false,
+      showNotes: graphToggles.showNotes ?? true,
+      showWiki: graphToggles.showWiki ?? true,
     }
   }, [graphFilters, graphToggles])
 
@@ -147,6 +159,12 @@ export function OntologyView() {
       parentArticleId: a.parentArticleId,
       // Extract noteIds from note-ref blocks so graph can link wiki nodes to referenced notes
       noteIds: a.blocks.filter((b) => b.type === "note-ref" && b.noteId).map((b) => b.noteId as string),
+      // Group-by source fields — let buildOntologyGraphData populate
+      // OntologyNode.tags/categoryIds/folderId/stickerIds for hull computation.
+      tags: a.tags,
+      categoryIds: a.categoryIds,
+      folderId: a.folderId ?? null,
+      stickerIds: a.stickerIds,
     })),
     [wikiArticles],
   )
@@ -258,6 +276,10 @@ export function OntologyView() {
             config={GRAPH_VIEW_CONFIG.displayConfig}
             viewState={graphViewState}
             onViewStateChange={updateGraphViewState}
+            // View Mode (Graph / Insights / Dashboard) lives in the sidebar's
+            // More section instead — keeps Display popover focused on the
+            // current view's options (group by, ordering, toggles, etc.)
+            // and avoids duplicating mode entry points.
             toggleStates={graphToggles}
             onToggleChange={(key, value) =>
               updateGraphViewState({ toggles: { ...graphToggles, [key]: value } })
@@ -278,7 +300,8 @@ export function OntologyView() {
           }
         }}
       />
-      <OntologyTabBar tab={tab} onChange={setTab} />
+      {/* View mode (Graph/Insights) is controlled via Display popover.
+          Legacy tab bar removed in favor of unified Display button (Phase 7). */}
 
       {/* Graph: always mounted (hidden when Insights is active) so the worker
           layout never re-runs on tab switch. */}
@@ -294,6 +317,44 @@ export function OntologyView() {
             graph={graph}
             filters={ontologyFilters}
             labels={labels}
+            wikiCategories={wikiCategories}
+            folders={folders}
+            stickers={stickers}
+            groupBy={graphViewState.groupBy}
+            onRequestGroupBy={(g) => updateGraphViewState({ groupBy: g })}
+            // Visual filters (declutter the canvas, no data mutation)
+            hiddenEdgeIds={graphViewState.hiddenEdgeIds}
+            hiddenEdgeKinds={graphViewState.hiddenEdgeKinds}
+            isolatedNodeIds={graphViewState.isolatedNodeIds}
+            onHideEdge={(id) =>
+              updateGraphViewState({
+                hiddenEdgeIds: [...(graphViewState.hiddenEdgeIds ?? []), id],
+              })
+            }
+            onHideEdgeKind={(kind) =>
+              updateGraphViewState({
+                hiddenEdgeKinds: [...(graphViewState.hiddenEdgeKinds ?? []), kind],
+              })
+            }
+            onHideNodeConnections={(nodeId) => {
+              // Add every visible edge touching this node to hiddenEdgeIds.
+              if (!graph) return
+              const idsToHide = graph.edges
+                .filter((e) => e.source === nodeId || e.target === nodeId)
+                .map((e) => `${e.source}→${e.target}:${e.kind}`)
+              const merged = Array.from(new Set([...(graphViewState.hiddenEdgeIds ?? []), ...idsToHide]))
+              updateGraphViewState({ hiddenEdgeIds: merged })
+            }}
+            onIsolateNodes={(ids) =>
+              updateGraphViewState({ isolatedNodeIds: ids })
+            }
+            onShowAll={() =>
+              updateGraphViewState({
+                hiddenEdgeIds: [],
+                hiddenEdgeKinds: [],
+                isolatedNodeIds: [],
+              })
+            }
             notes={filteredNotes.map((n) => ({ id: n.id, title: n.title, preview: n.preview, status: n.status, tags: n.tags }))}
             tags={tags.map((t) => ({ id: t.id, name: t.name, color: t.color }))}
             searchMatchIds={searchMatchIds}
@@ -324,6 +385,15 @@ export function OntologyView() {
       {tab === "insights" && (
         <div className="flex-1 min-h-0 overflow-y-auto">
           <OntologyInsightsPanel />
+        </div>
+      )}
+
+      {/* Dashboard: pure stats, "sabermetrics for your knowledge base".
+          Distinct from Insights (which prompts actions) and from Home
+          (daily entry). Mounted on demand. */}
+      {tab === "dashboard" && (
+        <div className="flex-1 min-h-0 overflow-y-auto">
+          <OntologyDashboardPanel />
         </div>
       )}
     </main>

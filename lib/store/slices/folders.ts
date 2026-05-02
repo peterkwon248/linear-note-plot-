@@ -7,9 +7,12 @@ export function createFoldersSlice(set: Set) {
   return {
     createFolder: (name: string, color: string, opts?: Partial<Folder>) => {
       const now = new Date().toISOString()
+      // Generate id outside the set callback so we can return it for
+      // immediate use (e.g. inline "+ New folder" → apply to selected note).
+      const id = genId()
       set((state: any) => ({
         folders: [...state.folders, {
-          id: genId(),
+          id,
           name,
           color,
           parentId: null,
@@ -20,6 +23,7 @@ export function createFoldersSlice(set: Set) {
           ...opts,
         }],
       }))
+      return id
     },
 
     updateFolder: (id: string, updates: Partial<Folder>) => {

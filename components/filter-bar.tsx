@@ -11,6 +11,7 @@ import {
   DropdownMenuSubTrigger,
   DropdownMenuSubContent,
 } from "@/components/ui/dropdown-menu"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { FunnelSimple } from "@phosphor-icons/react/dist/ssr/FunnelSimple"
 import { Plus as PhPlus } from "@phosphor-icons/react/dist/ssr/Plus"
 import { X as PhX } from "@phosphor-icons/react/dist/ssr/X"
@@ -134,6 +135,7 @@ const FIELD_INFO: Record<string, { label: string; icon: React.ReactNode }> = {
   wordCount:      { label: "Words",     icon: <TextAa size={11} weight="regular" /> },
   category:       { label: "Category",  icon: <PhTag size={11} weight="regular" /> },
   wikiTier:       { label: "Hierarchy", icon: <PhLink size={11} weight="regular" /> },
+  connectedTo:    { label: "Connected", icon: <PhLink size={11} weight="regular" /> },
 }
 
 export function formatFilterChip(
@@ -191,6 +193,29 @@ export function formatFilterChip(
     }
     if (rule.field === "wikiRegistered") {
       return rule.value === "true" ? "In wiki" : rule.value === "false" ? "Not in wiki" : rule.value
+    }
+    if (rule.field === "connectedTo") {
+      // value format "<noteId>:<direction>". Show note title + direction badge.
+      const [targetId, dirRaw] = rule.value.split(":")
+      const dir = dirRaw === "in" ? "← in" : dirRaw === "out" ? "out →" : "↔ both"
+      // Hop into the store synchronously (cheap for a single id lookup).
+      // Falls back to id-substring if the note has been deleted/renamed.
+      let title: string = targetId
+      try {
+        const state = (typeof window !== "undefined" && (window as any).__plotStore)
+          ? (window as any).__plotStore.getState()
+          : null
+        if (state) {
+          const n = state.notes?.find((x: { id: string; title?: string }) => x.id === targetId)
+          if (n?.title) title = n.title
+          else {
+            const w = state.wikiArticles?.find((x: { id: string; title?: string }) => x.id === targetId)
+            if (w?.title) title = w.title
+          }
+        }
+      } catch {}
+      const short = title.length > 18 ? title.slice(0, 17) + "…" : title
+      return `${short} (${dir})`
     }
     if (rule.field === "content") {
       const map: Record<string, string> = { empty: "Empty", hasImage: "Has images", hasCode: "Has code", hasTable: "Has tables" }
@@ -766,6 +791,10 @@ const FIELD_TO_GROUP: Record<FilterField, FilterGroupKey> = {
   wikiTier: "content",
   // Knowledge-graph filter fields
   wikiRegistered: "links",
+  // Connection filter (in-place backlinks/linksOut filter without
+  // jumping to the Ontology view). Grouped under "links" since it's
+  // semantically a link/reference relationship.
+  connectedTo: "links",
 }
 
 export function getFilterGroupKey(field: FilterField): FilterGroupKey {
@@ -1098,6 +1127,10 @@ export function FilterButton({ hideLabel, ...props }: FilterButtonProps) {
 interface FilterChipBarProps extends FilterMenuProps {
   onRemoveFilter: (idx: number) => void
   onClearAll: () => void
+  /** Update a single rule in place. Used by chips that support inline
+   *  editing (e.g. connectedTo direction toggle). Optional so legacy
+   *  callers without inline-edit support still compile. */
+  onUpdateFilter?: (idx: number, rule: FilterRule) => void
 }
 
 export function FilterChipBar({
@@ -1107,6 +1140,7 @@ export function FilterChipBar({
   labels = [],
   onRemoveFilter,
   onClearAll,
+  onUpdateFilter,
   ...menuProps
 }: FilterChipBarProps) {
   if (filters.length === 0) return null
@@ -1116,6 +1150,10 @@ export function FilterChipBar({
       {/* Active filter chips — Linear-style 4-part: [icon] field | op | value | × */}
       {filters.map((f, i) => {
         const parts = formatFilterChip(f, folders, tags, labels)
+        // Inline-editable: connectedTo direction (Both / In / Out).
+        // Step A of the broader chip-editing roadmap — same pattern can
+        // extend to status/folder/label values in a follow-up.
+        const isConnectedTo = f.field === "connectedTo" && !!onUpdateFilter
         return (
           <div
             key={i}
@@ -1130,8 +1168,40 @@ export function FilterChipBar({
             {/* operator */}
             <span className="inline-flex items-center px-1.5 py-0.5 text-accent/60">{parts.operatorLabel}</span>
             <span className="w-px self-stretch bg-accent/25" aria-hidden />
-            {/* value */}
-            <span className="inline-flex items-center px-2 py-0.5 text-accent">{parts.valueLabel}</span>
+            {/* value (inline-editable for connectedTo) */}
+            {isConnectedTo ? (
+              <Popover>
+                <PopoverTrigger asChild>
+                  <button
+                    type="button"
+                    className="inline-flex items-center px-2 py-0.5 text-accent hover:bg-accent/15 transition-colors cursor-pointer"
+                    title="Click to change direction"
+                  >
+                    {parts.valueLabel}
+                  </button>
+                </PopoverTrigger>
+                <PopoverContent align="start" className="w-44 p-1">
+                  {(["both", "in", "out"] as const).map((dir) => {
+                    const [targetId, currentDir] = f.value.split(":")
+                    const isCurrent = (currentDir || "both") === dir
+                    const labels = { both: "↔ Both directions", in: "← Backlinks only", out: "→ Links out only" }
+                    return (
+                      <button
+                        key={dir}
+                        type="button"
+                        onClick={() => onUpdateFilter?.(i, { ...f, value: `${targetId}:${dir}` })}
+                        className={`flex w-full items-center gap-2 px-2.5 py-1.5 text-note text-left rounded hover:bg-accent ${isCurrent ? "font-medium text-foreground" : "text-foreground/80"}`}
+                      >
+                        {labels[dir]}
+                        {isCurrent && <PhCheck className="ml-auto text-accent" size={12} weight="bold" />}
+                      </button>
+                    )
+                  })}
+                </PopoverContent>
+              </Popover>
+            ) : (
+              <span className="inline-flex items-center px-2 py-0.5 text-accent">{parts.valueLabel}</span>
+            )}
             <span className="w-px self-stretch bg-accent/25" aria-hidden />
             {/* remove */}
             <button

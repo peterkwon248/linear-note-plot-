@@ -4,6 +4,7 @@ import { useState, useMemo, useRef, useCallback, useEffect } from "react"
 import { cn } from "@/lib/utils"
 import { usePlotStore } from "@/lib/store"
 import type { WikiBlock } from "@/lib/types"
+import { emScale } from "@/lib/wiki-font-scales"
 import { useAttachmentUrl } from "@/lib/use-attachment-url"
 import { persistAttachmentBlob } from "@/lib/store/helpers"
 import { useWikiBlockContent, useWikiBlockContentJson } from "@/hooks/use-wiki-block-content"
@@ -180,47 +181,45 @@ function SectionBlock({ block, editable, sectionNumber, onUpdate, onDelete, drag
           }
         </button>
 
-        {sectionNumber && (
-          <span
-            className={cn(
-              "shrink-0 font-semibold text-accent/80 tabular-nums",
-              level === 2 && "text-[1.5em]",
-              level === 3 && "text-[1.25em]",
-              level >= 4 && "text-[1.125em]",
-            )}
-          >
-            {sectionNumber}.
-          </span>
-        )}
+        {(() => {
+          const baseEm = level === 2 ? 1.5 : level === 3 ? 1.25 : 1.125
+          const headingFs = emScale(baseEm, "heading")
+          return (
+            <>
+              {sectionNumber && (
+                <span
+                  className="shrink-0 font-semibold text-accent/80 tabular-nums"
+                  style={{ fontSize: headingFs }}
+                >
+                  {sectionNumber}.
+                </span>
+              )}
 
-        {editing ? (
-          <input
-            ref={inputRef}
-            value={editTitle}
-            onChange={(e) => setEditTitle(e.target.value)}
-            onBlur={handleFinishEdit}
-            onKeyDown={(e) => { if (e.key === "Enter") handleFinishEdit(); if (e.key === "Escape") { setEditing(false) } }}
-            className={cn(
-              "flex-1 min-w-[120px] bg-transparent outline-none border-b border-accent/40 font-semibold text-foreground",
-              level === 2 && "text-[1.5em]",
-              level === 3 && "text-[1.25em]",
-              level >= 4 && "text-[1.125em]",
-            )}
-          />
-        ) : (
-          <div
-            onClick={handleStartEdit}
-            className={cn(
-              "font-semibold text-foreground",
-              level === 2 && "text-[1.5em]",
-              level === 3 && "text-[1.25em]",
-              level >= 4 && "text-[1.125em]",
-              editable && "cursor-text hover:text-accent/80 transition-colors duration-100",
-            )}
-          >
-            {block.title || "Untitled Section"}
-          </div>
-        )}
+              {editing ? (
+                <input
+                  ref={inputRef}
+                  value={editTitle}
+                  onChange={(e) => setEditTitle(e.target.value)}
+                  onBlur={handleFinishEdit}
+                  onKeyDown={(e) => { if (e.key === "Enter") handleFinishEdit(); if (e.key === "Escape") { setEditing(false) } }}
+                  className="flex-1 min-w-[120px] bg-transparent outline-none border-b border-accent/40 font-semibold text-foreground"
+                  style={{ fontSize: headingFs }}
+                />
+              ) : (
+                <div
+                  onClick={handleStartEdit}
+                  className={cn(
+                    "font-semibold text-foreground",
+                    editable && "cursor-text hover:text-accent/80 transition-colors duration-100",
+                  )}
+                  style={{ fontSize: headingFs }}
+                >
+                  {block.title || "Untitled Section"}
+                </div>
+              )}
+            </>
+          )
+        })()}
 
         {/* Unmerge button — shown on merge divider blocks */}
         {block.mergedFrom && articleId && (
@@ -593,7 +592,10 @@ function TextBlock({ block, editable, onUpdate, onDelete, dragHandleProps, artic
           {hasRichContent ? (
             <ReadOnlyBlock content={initialContent} footnoteStartOffset={footnoteStartOffset} articleId={articleId} />
           ) : (
-            <div className="prose dark:prose-invert max-w-none text-base leading-relaxed text-foreground/85 whitespace-pre-wrap">
+            <div
+              className="prose dark:prose-invert max-w-none leading-relaxed text-foreground/85 whitespace-pre-wrap"
+              style={{ fontSize: emScale(1, "body") }}
+            >
               {content || <span className="text-muted-foreground/60 italic">Write something...</span>}
             </div>
           )}
@@ -640,7 +642,8 @@ function ReadOnlyBlock({
   return (
     <EditorContent
       editor={editor}
-      className="w-full prose dark:prose-invert max-w-none focus:outline-none text-base leading-relaxed text-foreground/85 [&_.ProseMirror]:p-0"
+      className="w-full prose dark:prose-invert max-w-none focus:outline-none leading-relaxed text-foreground/85 [&_.ProseMirror]:p-0"
+      style={{ fontSize: emScale(1, "body") }}
     />
   )
 }
@@ -725,7 +728,8 @@ function WikiTextEditor({
         <BlockDragOverlay editor={editor}>
           <EditorContent
             editor={editor}
-            className="w-full prose dark:prose-invert max-w-none focus:outline-none text-base leading-relaxed text-foreground/85 min-h-[100px]"
+            className="w-full prose dark:prose-invert max-w-none focus:outline-none leading-relaxed text-foreground/85 min-h-[100px]"
+            style={{ fontSize: emScale(1, "body") }}
           />
         </BlockDragOverlay>
       </div>
@@ -965,7 +969,7 @@ function NoteRefBlock({ block, editable, onUpdate, onDelete, dragHandleProps, ar
         <span className="text-2xs font-medium uppercase tracking-wide text-accent/80">From Note</span>
         <span className="text-note font-medium text-foreground/80 flex-1 truncate">{note.title || "Untitled"}</span>
       </div>
-      <div className="px-4 py-3 text-base leading-relaxed text-foreground/75">
+      <div className="px-4 py-3 leading-relaxed text-foreground/75" style={{ fontSize: emScale(1, "body") }}>
         {noteBodyJson && Object.keys(noteBodyJson).length > 0 ? (
           <div
             className="prose dark:prose-invert max-w-none"
