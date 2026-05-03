@@ -18,6 +18,7 @@ import { CircleDashed } from "@phosphor-icons/react/dist/ssr/CircleDashed"
 import { CircleHalf } from "@phosphor-icons/react/dist/ssr/CircleHalf"
 import { CheckCircle } from "@phosphor-icons/react/dist/ssr/CheckCircle"
 import { IconWiki } from "@/components/plot-icons"
+import { NOTE_STATUS_HEX, WIKI_STATUS_HEX } from "@/lib/colors"
 import { usePlotStore } from "@/lib/store"
 import { isWikiStub } from "@/lib/wiki-utils"
 import { getBody } from "@/lib/note-body-store"
@@ -292,13 +293,13 @@ const WikilinkList = forwardRef<WikilinkListRef, WikilinkListProps>(
                       ) : (
                         <>
                           {item.isWiki ? (
-                            <IconWiki size={14} className="shrink-0" style={{ color: item.isStub ? "#f59e0b" : "#8b5cf6" }} />
+                            <IconWiki size={14} className="shrink-0" style={{ color: item.isStub ? WIKI_STATUS_HEX.stub : WIKI_STATUS_HEX.article }} />
                           ) : item.status === "inbox" ? (
-                            <CircleDashed className="shrink-0" size={14} style={{ color: "#22d3ee" }} />
+                            <CircleDashed className="shrink-0" size={14} style={{ color: NOTE_STATUS_HEX.inbox }} />
                           ) : item.status === "capture" ? (
-                            <CircleHalf className="shrink-0" size={14} style={{ color: "#f97316" }} />
+                            <CircleHalf className="shrink-0" size={14} style={{ color: NOTE_STATUS_HEX.capture }} />
                           ) : item.status === "permanent" ? (
-                            <CheckCircle className="shrink-0" size={14} style={{ color: "#22c55e" }} />
+                            <CheckCircle className="shrink-0" size={14} style={{ color: NOTE_STATUS_HEX.permanent }} />
                           ) : (
                             <FileText className="shrink-0 text-muted-foreground" size={14} />
                           )}

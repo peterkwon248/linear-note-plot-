@@ -49,7 +49,7 @@ import { usePaneActiveRoute } from "@/components/workspace/pane-context"
 import { pickColor } from "@/components/note-fields"
 import { persistAttachmentBlob } from "@/lib/store/helpers"
 import type { Reference, Attachment } from "@/lib/types"
-import { STATUS_COLORS } from "@/lib/colors"
+import { STATUS_COLORS, KNOWLEDGE_INDEX_COLORS } from "@/lib/colors"
 
 /* ── File size formatter ─────────────────────────── */
 function formatFileSize(bytes: number): string {
@@ -723,12 +723,17 @@ function LibraryOverview() {
                   orange-400) to break the visual collision with Tags amber.
                   Stickers added per Phase 2 — Library now hosts the only
                   Stickers entry point (33 design decisions §8). */}
+              {/* All four cards consume KNOWLEDGE_INDEX_COLORS — same source
+                  as Home StatsRow. The pre-PR collision (Tags amber-vs-green,
+                  References accent-vs-amber, Files teal-vs-rose) lived in this
+                  exact mismatch: Home used 600/400 dark-aware classes while
+                  Library used 500-tier single-class. Now identical. */}
               <div className="mb-6 grid grid-cols-2 gap-3 min-[800px]:grid-cols-4">
                 <LibMiniStat
                   label="References"
                   value={refTotal}
                   sub={`${linkedRefCount} linked`}
-                  color="text-accent"
+                  color={KNOWLEDGE_INDEX_COLORS.references.text}
                   icon={<Quotes size={24} weight="regular" />}
                   onClick={() => setActiveRoute("/library/references")}
                 />
@@ -736,7 +741,7 @@ function LibraryOverview() {
                   label="Tags"
                   value={tagTotal}
                   sub={`used across ${tagUsedCount} tags`}
-                  color="text-amber-500"
+                  color={KNOWLEDGE_INDEX_COLORS.tags.text}
                   icon={<Tag size={24} weight="regular" />}
                   onClick={() => setActiveRoute("/library/tags")}
                 />
@@ -744,7 +749,7 @@ function LibraryOverview() {
                   label="Files"
                   value={fileTotal}
                   sub={`${imageCount} image${imageCount !== 1 ? "s" : ""}, ${docCount} doc${docCount !== 1 ? "s" : ""}`}
-                  color="text-teal-500"
+                  color={KNOWLEDGE_INDEX_COLORS.files.text}
                   icon={<Paperclip size={24} weight="regular" />}
                   onClick={() => setActiveRoute("/library/files")}
                 />
@@ -752,7 +757,7 @@ function LibraryOverview() {
                   label="Stickers"
                   value={stickerTotal}
                   sub={`${stickerUsedCount} in use`}
-                  color="text-fuchsia-500"
+                  color={KNOWLEDGE_INDEX_COLORS.stickers.text}
                   icon={<StickerIcon size={24} weight="regular" />}
                   onClick={() => setActiveRoute("/stickers")}
                 />

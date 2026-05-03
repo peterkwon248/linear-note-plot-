@@ -29,7 +29,13 @@
   --chart-3: #c2410c;
   --chart-4: #dc2626;
   --chart-5: #15803d;
-  --wiki-complete: #7c3aed;
+  /* Wiki "complete" / article state — emerald, mirrors WIKI_STATUS_HEX.article
+     in lib/colors.ts. Was #7c3aed violet, but that collided with the wiki
+     **entity** color (SPACE_COLORS.wiki = #8b5cf6) so the article state vs
+     entity were indistinguishable. Now article = "complete" = emerald, mirroring
+     Notes-permanent green semantic. Sole consumer today: FixedToolbar peek-mode
+     bg (`bg-wiki-complete/[0.06]`) — emerald tint reads as "viewing wiki article". */
+  --wiki-complete: #10b981;
   --priority-medium: #d97706;
   --radius: 0.5rem;
   --sidebar-bg: #fafafa;
@@ -118,7 +124,9 @@
   --chart-3: #fb923c;
   --chart-4: #f87171;
   --chart-5: #4ade80;
-  --wiki-complete: #a78bfa;
+  /* Wiki "complete" / article state — emerald-400 for dark mode. See light
+     theme above for full rationale. */
+  --wiki-complete: #34d399;
   --priority-medium: #fbbf24;
   /* Sidebar: subtle layering */
   --sidebar-bg: #141416;

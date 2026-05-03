@@ -7,6 +7,7 @@ import { shortRelative } from "@/lib/format-utils"
 import { setWikiViewMode } from "@/lib/wiki-view-mode"
 import { isWikiStub } from "@/lib/wiki-utils"
 import { usePlotStore } from "@/lib/store"
+import { WIKI_STATUS_HEX } from "@/lib/colors"
 import type { WikiArticle, WikiCategory } from "@/lib/types"
 import type { GroupBy } from "@/lib/view-engine/types"
 import type { WikiGroup } from "@/lib/view-engine/wiki-list-pipeline"
@@ -375,13 +376,25 @@ function ArticleTableRow({
       </button>
       {isVisible("status") && (
         <div className="w-[72px] shrink-0 flex items-center px-2">
+          {/* Status badges use WIKI_STATUS_HEX (single source of truth).
+              Stub = orange (in-progress), Article = emerald (complete) —
+              mirrors Notes capture/permanent semantic. The wiki entity
+              violet stays reserved for entity-level surfaces (sidebar,
+              activity-bar). Icons (FileDashed/BookOpen) will be replaced
+              in the icon-PR with Article + FileDashed pair. */}
           {isWikiStub(note) ? (
-            <span className="inline-flex items-center gap-1 rounded-md bg-zinc-400/15 px-1.5 py-0.5 text-2xs font-medium text-zinc-500 dark:text-zinc-400">
+            <span
+              className="inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-2xs font-medium"
+              style={{ color: WIKI_STATUS_HEX.stub, backgroundColor: `${WIKI_STATUS_HEX.stub}26` }}
+            >
               <FileDashed size={11} weight="regular" />
               Stub
             </span>
           ) : (
-            <span className="inline-flex items-center gap-1 rounded-md bg-accent/15 px-1.5 py-0.5 text-2xs font-medium text-accent">
+            <span
+              className="inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-2xs font-medium"
+              style={{ color: WIKI_STATUS_HEX.article, backgroundColor: `${WIKI_STATUS_HEX.article}26` }}
+            >
               <BookOpen size={11} weight="regular" />
               Article
             </span>

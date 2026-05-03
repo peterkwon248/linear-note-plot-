@@ -314,8 +314,11 @@ function getNodeBaseColor(node: OntologyNode, labels: Label[]): string {
     const label = labels.find((l) => l.id === node.labelId)
     if (label?.color) return label.color
   }
-  // Wiki nodes use violet color
-  if (node.isWiki || node.nodeType === "wiki") return WIKI_STATUS_HEX.article    // #8b5cf6 violet
+  // Wiki nodes use the wiki entity color (violet) — NOT WIKI_STATUS_HEX.article
+  // (which is article-state emerald). The graph node represents the wiki entity
+  // regardless of stub/article state, so it inherits the entity color used by
+  // the sidebar/activity-bar/Home StatsRow.
+  if (node.isWiki || node.nodeType === "wiki") return GRAPH_NODE_HEX.wiki    // violet (#8b5cf6)
   return STATUS_COLORS[node.status] ?? DEFAULT_NODE_COLOR
 }
 
@@ -2457,7 +2460,8 @@ function LegendOverlay({ svgRef, legendRelationTypes, hasWikilinkEdges, isDarkMo
       <g transform={`translate(10, ${10 + 3 * rowHeight})`}>
         {(() => {
           const pts = hexagonPoints(6, 6, 4)
-          return <polygon points={pts.map(p => `${p[0]},${p[1]}`).join(" ")} fill={WIKI_STATUS_HEX.article + nodeFillAlpha} stroke={WIKI_STATUS_HEX.article} strokeWidth={isDarkMode ? 1.5 : 2.0} strokeLinejoin="round" />
+          // Legend swatch — match the actual graph wiki node fill (entity violet).
+          return <polygon points={pts.map(p => `${p[0]},${p[1]}`).join(" ")} fill={GRAPH_NODE_HEX.wiki + nodeFillAlpha} stroke={GRAPH_NODE_HEX.wiki} strokeWidth={isDarkMode ? 1.5 : 2.0} strokeLinejoin="round" />
         })()}
         <text x={26} y={10} fill={labelFill} fontSize={10} fontWeight={isDarkMode ? 500 : 600} fontFamily="-apple-system, system-ui, sans-serif">Wiki</text>
       </g>
