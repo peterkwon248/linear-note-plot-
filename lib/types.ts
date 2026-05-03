@@ -536,8 +536,9 @@ export interface NoteTemplate {
   id: string
   name: string
   description: string
-  icon: string           // emoji or lucide icon name
-  color: string          // hex color
+  // Note: `icon` (emoji) and `color` (hex) fields were removed in v102.
+  // Templates take their visual cues from the linked `labelId` like notes
+  // do — single source of truth. Migration v102 strips the legacy fields.
   // Pre-filled fields
   title: string          // template for title (can contain {date}, {time} placeholders)
   content: string        // markdown body template

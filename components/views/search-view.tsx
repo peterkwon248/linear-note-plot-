@@ -141,7 +141,9 @@ export function SearchView() {
   const matchedTemplates = useMemo(() => {
     if (!hasFuzzyQuery) return []
     const q = query.toLowerCase().trim()
-    return (templates as { id: string; name: string; description: string; icon: string }[])
+    // Templates dropped per-template `icon` in v102 — search row now
+    // shows the generic Layout icon (see below).
+    return (templates as { id: string; name: string; description: string }[])
       .filter(
         (t) =>
           t.name.toLowerCase().includes(q) ||
@@ -546,11 +548,8 @@ export function SearchView() {
                           onClick={handleTemplateSelect}
                           className="flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-left transition-colors hover:bg-hover-bg"
                         >
-                          {tmpl.icon ? (
-                            <span className="shrink-0 text-note leading-none">{tmpl.icon}</span>
-                          ) : (
-                            <Layout className="shrink-0 text-muted-foreground" size={16} weight="regular" />
-                          )}
+                          {/* Generic Layout icon — templates no longer carry per-template emoji (v102). */}
+                          <Layout className="shrink-0 text-muted-foreground" size={16} weight="regular" />
                           <div className="min-w-0 flex-1">
                             <div className="truncate text-foreground">
                               {highlightQuery(tmpl.name, query)}

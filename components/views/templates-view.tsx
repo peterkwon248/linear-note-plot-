@@ -35,11 +35,11 @@ import { TipTapEditor } from "@/components/editor/TipTapEditor"
 import { FixedToolbar } from "@/components/editor/FixedToolbar"
 import type { Editor } from "@tiptap/react"
 import { ViewHeader } from "@/components/view-header"
-import { PRESET_COLORS } from "@/lib/colors"
+// PRESET_COLORS no longer needed — templates dropped per-template color in v102.
 
 /* ── Constants ─────────────────────────────────────────── */
 
-const ICON_OPTIONS = ["📄", "📋", "📝", "💡", "📊", "🎯", "🔬", "📌", "✏️", "📎", "🗂️", "📁"]
+// ICON_OPTIONS removed in v102 — templates use a generic Layout icon now.
 
 const PLACEHOLDER_VARS = [
   { key: "{date}",     label: "Date",     desc: "YYYY-MM-DD" },
@@ -61,8 +61,6 @@ const VIEW_MODES: { mode: TemplateViewMode; label: string; icon: typeof ArrowsOu
 interface TemplateFormData {
   name: string
   description: string
-  icon: string
-  color: string
   title: string
   content: string
   status: NoteStatus
@@ -73,8 +71,6 @@ interface TemplateFormData {
 const DEFAULT_FORM: TemplateFormData = {
   name: "",
   description: "",
-  icon: "📄",
-  color: PRESET_COLORS[5],
   title: "",
   content: "",
   status: "inbox",
@@ -199,42 +195,8 @@ function TemplateFormDialog({
             />
           </div>
 
-          {/* Icon + Color row */}
-          <div className="flex gap-4">
-            <div className="flex-1">
-              <label className="block text-note font-medium text-muted-foreground mb-1.5">Icon</label>
-              <div className="flex flex-wrap gap-1.5">
-                {ICON_OPTIONS.map((emoji) => (
-                  <button
-                    key={emoji}
-                    onClick={() => setForm((f) => ({ ...f, icon: emoji }))}
-                    className={`flex h-8 w-8 items-center justify-center rounded-md text-ui transition-colors ${
-                      form.icon === emoji
-                        ? "bg-accent/20 ring-1 ring-accent"
-                        : "hover:bg-hover-bg"
-                    }`}
-                  >
-                    {emoji}
-                  </button>
-                ))}
-              </div>
-            </div>
-            <div>
-              <label className="block text-note font-medium text-muted-foreground mb-1.5">Color</label>
-              <div className="flex flex-wrap gap-1.5">
-                {PRESET_COLORS.map((c) => (
-                  <button
-                    key={c}
-                    onClick={() => setForm((f) => ({ ...f, color: c }))}
-                    className={`h-6 w-6 rounded-full transition-all ${
-                      form.color === c ? "ring-2 ring-accent ring-offset-2 ring-offset-card" : ""
-                    }`}
-                    style={{ backgroundColor: c }}
-                  />
-                ))}
-              </div>
-            </div>
-          </div>
+          {/* Icon + Color removed in v102 — templates inherit visual cues
+              from labelId (single source of truth, mirrors notes). */}
 
           {/* Status + Priority row */}
           <div className="flex gap-4">
@@ -304,8 +266,6 @@ function TemplateEditor({
   // Local state mirrors the template for controlled inputs
   const [name, setName] = useState(template.name)
   const [description, setDescription] = useState(template.description)
-  const [icon, setIcon] = useState(template.icon)
-  const [color, setColor] = useState(template.color)
   const [title, setTitle] = useState(template.title)
   const [contentJson, setContentJson] = useState<Record<string, unknown> | null>(template.contentJson)
   const [status, setStatus] = useState<NoteStatus>(template.status)
@@ -316,8 +276,6 @@ function TemplateEditor({
   useEffect(() => {
     setName(template.name)
     setDescription(template.description)
-    setIcon(template.icon)
-    setColor(template.color)
     setTitle(template.title)
     setContentJson(template.contentJson)
     setStatus(template.status)
@@ -341,8 +299,6 @@ function TemplateEditor({
 
   const handleName = (v: string) => { setName(v); scheduleSave({ name: v }) }
   const handleDescription = (v: string) => { setDescription(v); scheduleSave({ description: v }) }
-  const handleIcon = (v: string) => { setIcon(v); scheduleSave({ icon: v }) }
-  const handleColor = (v: string) => { setColor(v); scheduleSave({ color: v }) }
   const handleTitle = (v: string) => { setTitle(v); scheduleSave({ title: v }) }
   const handleStatus = (v: NoteStatus) => { setStatus(v); scheduleSave({ status: v }) }
   const handlePriority = (v: NotePriority) => { setPriority(v); scheduleSave({ priority: v }) }
@@ -353,11 +309,10 @@ function TemplateEditor({
       <div className="flex items-center justify-between border-b border-border px-6 py-3 shrink-0">
         <div className="flex items-center gap-2">
           {topBarSlot}
-          <span
-            className="flex h-7 w-7 items-center justify-center rounded-md text-ui"
-            style={{ backgroundColor: `${color}20` }}
-          >
-            {icon}
+          {/* Generic Layout icon — templates no longer carry per-template
+              emoji/color (v102). Visual cues come from the linked label. */}
+          <span className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground bg-secondary/40">
+            <Layout size={14} weight="regular" />
           </span>
           <span className="text-note font-medium text-muted-foreground">Editing template</span>
         </div>
@@ -390,40 +345,8 @@ function TemplateEditor({
           className="w-full bg-transparent text-note text-muted-foreground placeholder:text-muted-foreground/70 focus:outline-none border-b border-transparent focus:border-border pb-1 transition-colors"
         />
 
-        {/* Icon + Color picker row */}
-        <div className="flex gap-6 items-start">
-          <div>
-            <label className="block text-2xs font-medium text-muted-foreground mb-2 uppercase tracking-wide">Icon</label>
-            <div className="flex flex-wrap gap-1.5">
-              {ICON_OPTIONS.map((emoji) => (
-                <button
-                  key={emoji}
-                  onClick={() => handleIcon(emoji)}
-                  className={`flex h-8 w-8 items-center justify-center rounded-md text-ui transition-colors ${
-                    icon === emoji ? "bg-accent/20 ring-1 ring-accent" : "hover:bg-hover-bg"
-                  }`}
-                >
-                  {emoji}
-                </button>
-              ))}
-            </div>
-          </div>
-          <div>
-            <label className="block text-2xs font-medium text-muted-foreground mb-2 uppercase tracking-wide">Color</label>
-            <div className="flex flex-wrap gap-1.5">
-              {PRESET_COLORS.map((c) => (
-                <button
-                  key={c}
-                  onClick={() => handleColor(c)}
-                  className={`h-6 w-6 rounded-full transition-all ${
-                    color === c ? "ring-2 ring-accent ring-offset-2 ring-offset-background" : ""
-                  }`}
-                  style={{ backgroundColor: c }}
-                />
-              ))}
-            </div>
-          </div>
-        </div>
+        {/* Icon + Color picker removed in v102 — templates inherit visual
+            cues from labelId (single source of truth, mirrors notes). */}
 
         {/* Title template + Status + Priority row */}
         <div className="flex gap-4 items-end">
@@ -557,17 +480,14 @@ function TemplateCard({
           onClick={() => onSelect(tmpl.id)}
           className="group relative flex flex-col rounded-lg border border-border bg-card hover:bg-hover-bg transition-colors cursor-pointer overflow-hidden"
         >
-          {/* Card top accent */}
-          <div className="h-1 w-full shrink-0" style={{ backgroundColor: tmpl.color }} />
+          {/* Card top accent removed in v102 — templates no longer carry
+              per-template color. Visual hierarchy comes from name + label. */}
 
           <div className="flex flex-col gap-2 p-4">
-            {/* Icon + name row */}
+            {/* Generic Layout icon — was per-template emoji until v102. */}
             <div className="flex items-start gap-2.5">
-              <span
-                className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-lg"
-                style={{ backgroundColor: `${tmpl.color}20` }}
-              >
-                {tmpl.icon}
+              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-secondary/40 text-muted-foreground">
+                <Layout size={16} weight="regular" />
               </span>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-1.5">
@@ -774,8 +694,6 @@ export function TemplatesView() {
     const newId = createTemplate({
       name: data.name,
       description: data.description,
-      icon: data.icon,
-      color: data.color,
       title: data.title,
       content: data.content,
       contentJson: null,
@@ -984,12 +902,9 @@ export function TemplatesView() {
                         : "border-l-2 border-transparent hover:bg-hover-bg"
                     }`}
                   >
-                    {/* Icon */}
-                    <span
-                      className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-note"
-                      style={{ backgroundColor: `${tmpl.color}20` }}
-                    >
-                      {tmpl.icon}
+                    {/* Generic Layout icon — was per-template emoji until v102. */}
+                    <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-secondary/40 text-muted-foreground">
+                      <Layout size={14} weight="regular" />
                     </span>
 
                     {/* Name + description */}
