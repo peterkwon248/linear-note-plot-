@@ -4,6 +4,7 @@ import { extractPreview, extractLinksOut } from "../body-helpers"
 import { buildDefaultViewStates, normalizeViewStatesMap, buildViewStateForContext } from "../view-engine/defaults"
 import type { WorkspaceTab } from "../workspace/types"
 import type { PlotState } from "./types"
+import { SEED_TEMPLATES } from "./seeds"
 
 export function migrate(persistedState: unknown): PlotState {
   const state = persistedState as Record<string, unknown>
@@ -1475,6 +1476,22 @@ export function migrate(persistedState: unknown): PlotState {
         const hasMeaningful = withoutDesc.some((c) => !["updatedAt", "createdAt"].includes(c))
         tmplVs.visibleColumns = hasMeaningful ? withoutDesc : ["title", "updatedAt", "createdAt"]
       }
+    }
+  }
+
+  // v106: Inject new seed templates added in PR d (4 → 13).
+  // Existing users (pre-PR d) only have the original 4 seeds (tmpl-meeting,
+  // tmpl-daily, tmpl-idea, tmpl-research). This block adds the 9 new seeds
+  // idempotently — if a template with the same id already exists, skip.
+  // New users get all 13 from SEED_TEMPLATES at store creation, so this is
+  // a no-op for them.
+  if (!Array.isArray(state.templates)) {
+    state.templates = []
+  }
+  const existingTemplateIds = new Set((state.templates as Array<{ id: string }>).map((t) => t.id))
+  for (const seed of SEED_TEMPLATES) {
+    if (!existingTemplateIds.has(seed.id)) {
+      (state.templates as Array<unknown>).push(seed)
     }
   }
 
