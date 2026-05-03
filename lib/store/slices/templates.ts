@@ -5,16 +5,47 @@ import { extractPreview, extractLinksOut } from "../../body-helpers"
 type Set = (fn: ((state: any) => any) | any) => void
 type Get = () => any
 
-/** Expand placeholders in template strings */
+/**
+ * Expand placeholders in template strings (33-decisions §15 v1, opt A).
+ *
+ * Two pattern families are supported simultaneously (additive — both
+ * work, no conflict because `{` and `{{` are distinct prefixes):
+ *
+ *   - **Plot legacy** (single brace, lowercase, semantic name):
+ *     `{date}` `{time}` `{datetime}` `{year}` `{month}` `{day}`
+ *   - **UpNote-compatible** (double brace, mixed case, format token):
+ *     `{{YYYY}}` `{{MM}}` `{{DD}}` `{{HH}}` `{{mm}}` `{{date}}` `{{time}}`
+ *
+ * Substitutions run in this order: UpNote double-brace first, Plot
+ * single-brace second. Order matters because UpNote tokens like
+ * `{{date}}` would otherwise get consumed by the single-brace `{date}`
+ * pass mid-replacement.
+ */
 export function expandPlaceholders(template: string): string {
   const d = new Date()
+  const yyyy = String(d.getFullYear())
+  const mm = String(d.getMonth() + 1).padStart(2, "0")
+  const dd = String(d.getDate()).padStart(2, "0")
+  const hh = String(d.getHours()).padStart(2, "0")
+  const min = String(d.getMinutes()).padStart(2, "0")
+  const isoDate = d.toISOString().split("T")[0]
+  const isoTime = d.toTimeString().split(" ")[0].slice(0, 5)
   return template
-    .replace(/\{date\}/g, d.toISOString().split("T")[0])
-    .replace(/\{time\}/g, d.toTimeString().split(" ")[0].slice(0, 5))
-    .replace(/\{datetime\}/g, `${d.toISOString().split("T")[0]} ${d.toTimeString().split(" ")[0].slice(0, 5)}`)
-    .replace(/\{year\}/g, String(d.getFullYear()))
-    .replace(/\{month\}/g, String(d.getMonth() + 1).padStart(2, "0"))
-    .replace(/\{day\}/g, String(d.getDate()).padStart(2, "0"))
+    // UpNote double-brace tokens (must run first)
+    .replace(/\{\{YYYY\}\}/g, yyyy)
+    .replace(/\{\{MM\}\}/g, mm)
+    .replace(/\{\{DD\}\}/g, dd)
+    .replace(/\{\{HH\}\}/g, hh)
+    .replace(/\{\{mm\}\}/g, min)
+    .replace(/\{\{date\}\}/g, isoDate)
+    .replace(/\{\{time\}\}/g, isoTime)
+    // Plot legacy single-brace tokens
+    .replace(/\{date\}/g, isoDate)
+    .replace(/\{time\}/g, isoTime)
+    .replace(/\{datetime\}/g, `${isoDate} ${isoTime}`)
+    .replace(/\{year\}/g, yyyy)
+    .replace(/\{month\}/g, mm)
+    .replace(/\{day\}/g, dd)
 }
 
 export function createTemplatesSlice(set: Set, get: Get, appendEvent: AppendEventFn) {

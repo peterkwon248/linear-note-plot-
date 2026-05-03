@@ -1,6 +1,6 @@
 "use client"
 
-import { useRef, Fragment } from "react"
+import { useRef, useState, Fragment } from "react"
 import { Editor } from "@tiptap/react"
 import {
   DropdownMenu,
@@ -14,12 +14,14 @@ import {
   Paperclip,
   Plus as PhPlus,
 } from "@/lib/editor/editor-icons"
+import { Layout as PhLayout } from "@phosphor-icons/react/dist/ssr/Layout"
 import { usePlotStore } from "@/lib/store"
 import { persistAttachmentBlob } from "@/lib/store/helpers"
 import {
   BLOCK_REGISTRY,
   type BlockGroup,
 } from "@/components/editor/block-registry"
+import { SelectFromTemplatesModal } from "@/components/editor/SelectFromTemplatesModal"
 
 interface InsertMenuProps {
   editor: Editor
@@ -51,6 +53,8 @@ export function InsertMenu({ editor, noteId }: InsertMenuProps) {
   const imageInputRef = useRef<HTMLInputElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const addAttachment = usePlotStore((s) => s.addAttachment)
+  // Templates entry — UpNote-pattern modal trigger (33-decisions §15).
+  const [templatesOpen, setTemplatesOpen] = useState(false)
 
   // ── Attachments (kept local — need file-input refs and noteId) ────────
   const handleImage = () => imageInputRef.current?.click()
@@ -164,6 +168,22 @@ export function InsertMenu({ editor, noteId }: InsertMenuProps) {
             <span className="flex-1">File</span>
           </DropdownMenuItem>
 
+          {/* Templates — opens the UpNote-pattern picker modal. Hardcoded
+              entry (not registry-driven) because it needs local React state
+              to drive the modal's open/close. */}
+          <DropdownMenuSeparator className="my-1" />
+          <DropdownMenuItem
+            onSelect={(e) => {
+              // Prevent the dropdown from stealing focus before modal mounts.
+              e.preventDefault()
+              setTemplatesOpen(true)
+            }}
+            className={ITEM_CLASS}
+          >
+            <PhLayout size={14} />
+            <span className="flex-1">Templates…</span>
+          </DropdownMenuItem>
+
           {/* Registry-driven sections, grouped with separators between groups. */}
           {groupSections.map((section) => (
             <Fragment key={section[0]!.group}>
@@ -185,6 +205,15 @@ export function InsertMenu({ editor, noteId }: InsertMenuProps) {
           ))}
         </DropdownMenuContent>
       </DropdownMenu>
+
+      {/* Modal lives outside DropdownMenu so it survives the dropdown
+          unmounting on close. Same editor instance — selecting a template
+          inserts at the current cursor. */}
+      <SelectFromTemplatesModal
+        open={templatesOpen}
+        onOpenChange={setTemplatesOpen}
+        editor={editor}
+      />
     </>
   )
 }
