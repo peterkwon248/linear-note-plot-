@@ -20,12 +20,16 @@ import { Check as PhCheck } from "@phosphor-icons/react/dist/ssr/Check"
 import { Minus } from "@phosphor-icons/react/dist/ssr/Minus"
 import { EyeSlash } from "@phosphor-icons/react/dist/ssr/EyeSlash"
 import { Sticker as StickerIcon } from "@phosphor-icons/react/dist/ssr/Sticker"
+import { BookOpen } from "@phosphor-icons/react/dist/ssr/BookOpen"
+import { Note as PhNote } from "@phosphor-icons/react/dist/ssr/Note"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { cn } from "@/lib/utils"
 import { ColorPickerGrid } from "@/components/color-picker-grid"
 import { PRESET_COLORS } from "@/lib/colors"
 import type { Sticker } from "@/lib/types"
 import { ViewHeader } from "@/components/view-header"
+import { navigateToWikiArticle } from "@/lib/wiki-article-nav"
+import { setActiveRoute } from "@/lib/table-route"
 
 const DRAG_THRESHOLD = 5
 const ROW_HEIGHT = 40
@@ -118,6 +122,22 @@ export function StickersView() {
     )
     return activeNotes.filter((n) => noteIdSet.has(n.id))
   }, [selectedStickerId, stickers, activeNotes])
+
+  // Wiki articles attached to the currently selected sticker.
+  // Phase 2: visual verification that the cross-everything model (옵션 D2)
+  // surfaces both entity kinds. Phase 3 (Universal Picker) extends this
+  // to tag/label/category/file/reference.
+  const selectedStickerWikis = useMemo(() => {
+    if (!selectedStickerId) return []
+    const sticker = stickers.find((s) => s.id === selectedStickerId)
+    if (!sticker) return []
+    const wikiIdSet = new Set(
+      (sticker.members ?? [])
+        .filter((m) => m.kind === "wiki")
+        .map((m) => m.id),
+    )
+    return activeWiki.filter((w) => wikiIdSet.has(w.id))
+  }, [selectedStickerId, stickers, activeWiki])
 
   const selectedStickerCount = useMemo(() => {
     if (!selectedStickerId) return 0
@@ -428,31 +448,79 @@ export function StickersView() {
           </button>
         </div>
 
-        {/* Notes list */}
+        {/* Members list — grouped by entity kind. Phase 2 surfaces
+            notes + wikis (the two kinds with actual data today). Phase 3
+            (Universal Picker) extends to tag/label/category/file/reference. */}
         <div className="flex-1 overflow-y-auto">
-          {selectedStickerNotes.length === 0 ? (
+          {selectedStickerNotes.length === 0 && selectedStickerWikis.length === 0 ? (
             <div className="flex items-center justify-center h-32 text-note text-muted-foreground">
-              No notes with this sticker
+              No items with this sticker
             </div>
           ) : (
             <div>
-              {selectedStickerNotes.map((note) => (
-                <button
-                  key={note.id}
-                  onClick={() => openNote(note.id)}
-                  className="flex w-full items-center gap-4 px-6 py-3 text-left hover:bg-hover-bg transition-colors"
-                >
-                  <span className="flex-1 truncate text-ui text-foreground">
-                    {note.title || "Untitled"}
-                  </span>
-                  <span className="text-note text-muted-foreground capitalize">
-                    {note.status}
-                  </span>
-                  <span className="text-note text-muted-foreground tabular-nums">
-                    {formatRelativeTime(note.updatedAt)}
-                  </span>
-                </button>
-              ))}
+              {/* Notes section */}
+              {selectedStickerNotes.length > 0 && (
+                <div>
+                  <div className="sticky top-0 z-10 flex items-center gap-2 border-b border-border-subtle bg-background px-6 py-2">
+                    <PhNote size={14} weight="regular" className="text-muted-foreground" />
+                    <span className="text-note font-medium text-muted-foreground">Notes</span>
+                    <span className="text-note text-muted-foreground tabular-nums">
+                      {selectedStickerNotes.length}
+                    </span>
+                  </div>
+                  {selectedStickerNotes.map((note) => (
+                    <button
+                      key={note.id}
+                      onClick={() => openNote(note.id)}
+                      className="flex w-full items-center gap-4 px-6 py-3 text-left hover:bg-hover-bg transition-colors"
+                    >
+                      <span className="flex-1 truncate text-ui text-foreground">
+                        {note.title || "Untitled"}
+                      </span>
+                      <span className="text-note text-muted-foreground capitalize">
+                        {note.status}
+                      </span>
+                      <span className="text-note text-muted-foreground tabular-nums">
+                        {formatRelativeTime(note.updatedAt)}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              )}
+
+              {/* Wiki articles section */}
+              {selectedStickerWikis.length > 0 && (
+                <div>
+                  <div className="sticky top-0 z-10 flex items-center gap-2 border-b border-border-subtle bg-background px-6 py-2">
+                    <BookOpen size={14} weight="regular" className="text-muted-foreground" />
+                    <span className="text-note font-medium text-muted-foreground">Wiki articles</span>
+                    <span className="text-note text-muted-foreground tabular-nums">
+                      {selectedStickerWikis.length}
+                    </span>
+                  </div>
+                  {selectedStickerWikis.map((wiki) => (
+                    <button
+                      key={wiki.id}
+                      onClick={() => {
+                        // Switch to wiki space first — navigateToWikiArticle
+                        // alone only sets the pending ID for WikiView, which
+                        // isn't mounted while we're at /stickers. Same pattern
+                        // as reference-detail-panel.tsx.
+                        setActiveRoute("/wiki")
+                        navigateToWikiArticle(wiki.id)
+                      }}
+                      className="flex w-full items-center gap-4 px-6 py-3 text-left hover:bg-hover-bg transition-colors"
+                    >
+                      <span className="flex-1 truncate text-ui text-foreground">
+                        {wiki.title || "Untitled"}
+                      </span>
+                      <span className="text-note text-muted-foreground tabular-nums">
+                        {formatRelativeTime(wiki.updatedAt)}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
           )}
         </div>

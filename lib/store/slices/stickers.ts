@@ -115,10 +115,10 @@ export function createStickersSlice(set: Set, get: Get) {
      *   - bare ID            = note
      *   - `"wiki:{id}"`      = wiki article (graph canvas, today)
      *   - `"tag:{id}"`       = tag node (graph canvas tag-node right-click, today)
-     *   - `"label:{id}"`     = reserved for the Phase 2 Universal Picker
-     *   - `"category:{id}"`  = reserved for the Phase 2 Universal Picker
-     *   - `"file:{id}"`      = reserved for the Phase 2 Universal Picker
-     *   - `"reference:{id}"` = reserved for the Phase 2 Universal Picker
+     *   - `"label:{id}"`     = reserved for the Phase 3 Universal Picker
+     *   - `"category:{id}"`  = reserved for the Phase 3 Universal Picker
+     *   - `"file:{id}"`      = reserved for the Phase 3 Universal Picker
+     *   - `"reference:{id}"` = reserved for the Phase 3 Universal Picker
      */
     bulkAddSticker: (entityIds: string[], stickerId: string) => {
       const newRefs: EntityRef[] = []

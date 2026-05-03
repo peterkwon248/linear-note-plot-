@@ -151,6 +151,14 @@ export function createWikiArticlesSlice(set: Set, get: Get) {
       removeArticleBlocks(articleId)
       set((state: any) => ({
         wikiArticles: state.wikiArticles.filter((a: WikiArticle) => a.id !== articleId),
+        // Sticker membership cascade — drop {kind:"wiki", id} refs from
+        // every Sticker.members[] (옵션 D2 — single forward reference).
+        stickers: (state.stickers ?? []).map((s: any) => {
+          const members = s.members ?? []
+          const next = members.filter((m: any) => !(m.kind === "wiki" && m.id === articleId))
+          if (next.length === members.length) return s
+          return { ...s, members: next }
+        }),
       }))
     },
 
