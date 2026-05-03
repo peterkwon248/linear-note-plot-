@@ -5,6 +5,7 @@ import { useSidePanelEntity } from "./use-side-panel-entity"
 import { SidePanelContext } from "./side-panel-context"
 import { WikiArticleDetailPanel } from "./wiki-article-detail-panel"
 import { ReferenceDetailPanel } from "./reference-detail-panel"
+import { TemplateDetailPanel } from "./template-detail-panel"
 
 /**
  * Entity-aware detail panel that renders appropriate detail content
@@ -26,6 +27,10 @@ export function SidePanelDetail() {
 
   if (entity.type === "reference" && entity.referenceId) {
     return <ReferenceDetailPanel referenceId={entity.referenceId} />
+  }
+
+  if (entity.type === "template" && entity.template) {
+    return <TemplateDetailPanel template={entity.template} />
   }
 
   // type === "note" or null — pass resolved noteId for pane-aware rendering
