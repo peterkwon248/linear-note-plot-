@@ -1,88 +1,96 @@
 ---
-session_date: "2026-05-03 16:10"
+session_date: "2026-05-03 22:30"
 project: "Plot"
-working_directory: "C:/Users/user/Desktop/linear-note-plot-/.claude/worktrees/zen-tesla-36e76e"
-duration_estimate: "~6 hours, 11 PRs merged"
+working_directory: "C:/Users/user/Desktop/linear-note-plot-/.claude/worktrees/fervent-nash-44e7da"
+duration_estimate: "~5 시간, 5 PRs squash-merged"
 ---
 
 ## Completed Work
 
-11 PRs squash-merged to main, in order:
+5 PRs squash-merged to main:
 
-- **PR #237** 옵션 B: 11 commits 묶음 (33 design decisions + Hull 버그 fix + Sticker 사이드바)
-- **PR #238** Sticker v2 Phase 1 — `Sticker.members[]` 옵션 D2 cross-everything (v100→v101)
-- **PR #239** Sticker v2 Phase 2 — Library 진입점 + cross-everything detail + cascade cleanup
-- **PR #240** docs — 6 design decisions (Folder type-strict re-confirm + Smart Book + Template policy)
-- **PR #241** notes 인덱스 fix — virtualItems가 groupBy="none"에서 showAlphaIndex 무시 (`notes-table.tsx:789`)
-- **PR #242** 노트 템플릿 UpNote Phase 1/3 — `{{YYYY}}` 변수 호환 + SelectFromTemplatesModal + Insert 진입점
-- **PR #243** Group A 색상 통일 — `KNOWLEDGE_INDEX_COLORS` const + wiki status emerald + graph wiki violet 보존
-- **PR #244** Group A 아이콘 통일 — IconWiki→BookOpen alias (13 사이트 자동) + IconWikiStub/Article 활성화
-- **PR #245** Group C PR-A — wiki board 도달 (showViewMode prop) + notes board visibleColumns + boardDefaultGroupBy
-- **PR #246** Template PR a — 메타 슬림화 (icon/color 폐기, v101→v102)
-- **PR #247** Template PR b — 편집 UI 통합 (NoteEditor 재사용 + TemplateDetailPanel 사이드 패널, +615/-317)
+- **PR #249** Template PR c — view-engine 통합 (list/grid + multi-select + alpha index + chip 일관성). 마이그레이션 v102→v105.
+- **PR #250** Template PR d — seed templates 4→13. 신규 사용자 only.
+- **PR #251** PR e — Linear-style properties-aware cards. 12개 도메인 chip + visibleColumns wiring + overflow.
+- **PR #252** PR f — v106 migration: 기존 사용자에게 9개 신규 시드 idempotent 주입.
+- **PR #253** PR (folder-a) — Folder type-strict + N:M 데이터 모델 + 마이그레이션 v107. 45 files +1540/-164 LOC.
 
 ## In Progress
-
 - 없음 (모든 PR 머지 완료)
 
 ## Remaining Tasks (다음 세션 — 우선순위 순)
 
-### 🟢 작은 폴리시 (1-3시간)
-- [ ] **Template PR c** — template-only views (filter/display + view-engine 통합)
-- [ ] **Template PR d** — 시드 템플릿 10-20개 clean slate (회의록/일기/투두/Daily/PARA/소설/리서치 등)
+### 🔴 즉시 (사용자 워크플로우 차단)
+- [ ] **BUG**: 시드 템플릿 더블클릭 시 에러. 시드 13개는 정상 보이지만 더블클릭 편집 안 됨. 정확한 콘솔 메시지 미수집. PR c~e 변경 중 어딘가 원인. `template-edit-page.tsx` + `templates-table.tsx`의 row 클릭 → setSelectedTemplateId 시점부터 디버깅.
 
-### 🟡 중간 (3-5시간)
-- [ ] **Wiki template 3-layer** (Layout Preset + Content Template + Typed Infobox) — 위키 데이터 모델 위에 별도 설계 필요
-- [ ] **Template seed audit** — `PlotTemplate<T>` 추상화 검토 (인포박스/배너/카테고리/시드 통합 가능성). explore-high agent 위임
+### 🟡 PR (folder-b/c) — folder N:M 후속
+- [ ] **PR (folder-b)** UI 분리: 사이드바 Notes/Wiki 분리, `/folder/[id]` kind 분기, FolderPicker 컴포넌트 (4곳 dedup), DnD cross-kind drop 거부.
+- [ ] **PR (folder-c)** Multi-folder UX: Detail panel 다중 폴더 chips + add/remove, multi-folder picker, DnD add vs move, group-by-folder N번 등장 시각 마커.
 
-### 🔴 큰 작업 (수일)
-- [ ] **Group C PR-D** — Tags/Labels/Stickers/References/Files view-engine 통합 (5-8 PRs). 현재 ad-hoc local state라 일관성 0
-- [ ] **§2 Folder type-strict + N:M 마이그레이션** — `Folder.kind: "note"|"wiki"` + `folderIds[]` 배열. PR #236 임시 cross-everything 폐기
-- [ ] **Smart Book v2** — AutoSource[] 5종 (folder/category/tag/label/sticker) + Hybrid manual/auto + Universal Picker
+### 🔵 worklog 큰 작업
+- [ ] **Wiki template 3-layer** (Layout Preset + Content Template + Typed Infobox)
+- [ ] **Group C PR-D** — Tags/Labels/Stickers/References/Files view-engine 통합 (5-8 PRs, planner 권장)
+- [ ] **Smart Book v2** — AutoSource[5] (folder/category/tag/label/sticker)
+- [ ] **Template seed audit** — `PlotTemplate<T>` 추상화
 
 ### 🟣 마지막 (출시 폴리시)
-- [ ] **Note UI toolbar** (UpNote-style) — Phase 1: Pin/Focus/Version 5-6 핵심 버튼만, configurable, "Organize..." multi-action (Folder/Tag/Label/Sticker)
+- [ ] **Note UI toolbar** (UpNote-style) — Pin/Focus/Version 5-6 핵심 버튼
+
+### 🟤 마지막에 논의 (보류)
+- [ ] **House (계보 시각화)** — Claude 의견: 별도 entity 불필요, Graph view에 lineage mode + sidebar 단축 링크로 대체 가능. 다음 토론 시 결정.
 
 ## Key Decisions
-
-- **Plot 정체성 영구**: "Gentle by default, powerful when needed"
-- **작업 원칙 영구**: "정확도 + 버그 위험 최소화" (10 rules)
-- **Folder type-strict + N:M** 재확정 (33 §2)
-- **Smart Book = AutoSource[]** 5종 — 엑셀 함수 패턴
-- **Note template = UpNote opt A only** (메타 슬림 + 사이드 패널, Smart Template v2 보류)
-- **Wiki status 색 분리**: stub=orange, article=emerald, entity=violet
-- **Sticker = Library only 진입점** (33 §8)
+- **Templates 본질**: 선택 도구 (vs 노트=탐색 대상). list+grid만, board 미지원.
+- **Templates 디스플레이 properties 단순화**: status/priority/label/folder/tags/description 폐기 → Index/Updated/Created 3개만.
+- **NoteTemplate.status/priority/description**: "default 값"이지 카드 정체성 X. 카드 표시 폐기. 타입 필드 제거는 별도 PR.
+- **Linear-style chips**: 도메인별 chip + 하드 캡 3개 + "+N more". pinned는 always-on.
+- **Folder type-strict + N:M**: 노트 폴더=노트만, 위키 폴더=위키만. 한 노트가 여러 폴더 가능. 4사분면 모델 (Folder=type-strict / Sticker=type-free) 명확화.
+- **혼합 폴더 자동 분리**: 데이터 손실 0. `{name}` (note) + `{name} (Wiki)` 두 폴더로.
+- **Templates folderId**: single 유지 (개수 적어 N:M 가치 낮음).
+- **시드 마이그레이션 정책**: 신규 사용자 default + 기존 사용자 별도 idempotent (id 충돌 시 skip).
 
 ## Technical Learnings
-
-- **Icon alias trick**: `export { BookOpen as IconWiki }` 한 줄 = 13 site 자동 적용
-- **Thin fork over genericize**: TemplateEditorAdapter (140 LOC) vs NoteEditorAdapter (460 LOC) — Y.Doc/IDB body/hashtag-sync 생략으로 충분
-- **v102 마이그레이션**: `delete t.icon; delete t.color` (idempotent, additive vs subtractive 패턴)
-- **`KNOWLEDGE_INDEX_COLORS` 패턴**: text + bg + hex 3종 한곳, 라이트/다크 모두
-- **architect Opus stall (17분)**: 큰 PR 검증 시 시간 weight, medium 옵션 검토 또는 self-review
-- **planner agent 활용**: 복잡 작업 전 plan 도출 → 사용자 합의 → 즉시 구현
+- **Linear chip 패턴 wiring 발견**: 노트/위키 board는 이미 visibleColumns + isVisible(key) 가드 있었음. 진짜 문제는 ad-hoc inline span 시각.
+- **wordCount derived from preview** (`note.preview.split(/\s+/).filter(Boolean).length`) — notes-table 기존 패턴.
+- **memo comparator 업데이트 의무**: 새 prop 추가 시 비교에도 추가 안 하면 update 안 됨.
+- **Migration v107 혼합 폴더 알고리즘**: 데이터 기반 자동 추론 + 혼합 시 클론 분리 (id `{origId}-wiki`).
+- **N:M view-engine 영향**: group-by-folder는 다중 폴더 시 N번 등장. count는 unique 처리 별도 필요 (PR c에서).
+- **Templates view-engine**: useNotesView는 Note[] 전용. Templates는 thin fork (useTemplatesView)가 정합.
+- **TemplateGroupSection sticky 함정**: virtualized 아닌 list에 sticky 쓰면 row 겹침. notes-table은 absolute transform.
+- **DisplayConfig 중복 정의**: PR e에서 view-configs.tsx single source로 통합.
+- **Templates grid의 "본문 미리보기" 가치**: 짧은 템플릿엔 결정적, 긴 템플릿엔 약함. List default + Grid 옵션 유지.
 
 ## Blockers / Issues
-
-- 없음
+- **시드 템플릿 더블클릭 에러** (사용자 워크플로우 차단): PR e 머지 후 발견. 정확한 콘솔 메시지 미수집. 다음 세션 즉시 fix 필요.
+- **Templates grid chip 시스템 미통일** (PR e deviation): footer는 inline span 유지. 별도 작은 PR 후보.
 
 ## Environment & Config
-
-- **Worktree**: `C:/Users/user/Desktop/linear-note-plot-/.claude/worktrees/zen-tesla-36e76e`
-- **Main HEAD**: PR #247 직후
-- **Store version**: v102 (Sticker.members v101 + Template icon/color drop v102)
-- **Build**: tsc clean, npm run build clean
+- **Worktree**: `C:/Users/user/Desktop/linear-note-plot-/.claude/worktrees/fervent-nash-44e7da`
+- **Main HEAD**: PR #253 머지 직후
+- **Store version**: v107 (Folder kind + N:M)
+- **Build**: tsc clean, npm run build clean (33 routes), npm run test 167/167 pass
+- **Local main checkout 실패** (gh pr merge --delete-branch 시): main worktree가 다른 곳에 있어서. 서버 머지는 정상.
 
 ## Notes for Next Session
+- **새 worktree 시작 권장** — fervent-nash-44e7da 일단락.
+- **다음 작업 우선순위**: 1순위 = 더블클릭 BUG fix, 2순위 = PR (folder-b) UI 분리
+- **Plan 문서 참고**: `.omc/plans/folder-nm-migration.md` (PR b/c 명세)
+- **Group C PR-D 시작 전 planner 활용 권장** (5-8 PRs 분할)
 
-- **새 worktree 시작 권장** — 이번 worktree (zen-tesla-36e76e)는 일단락
-- **Plan 문서 보존**: `.omc/plans/template-b-edit-ui-unification.md` (다음 PR 참고)
-- **DisplayConfig interface 중복** — display-panel.tsx + view-configs.tsx 두 곳, 향후 통합 필요
-- **다음 작업**: Template PR c부터 시작 (작고 즉시 가치)
-- **Group C PR-D는 큰 작업** — 시작 전 planner agent 활용 권장 (5-8 PRs 분할)
+## Files Modified (이번 세션 전체)
 
-## Files Modified
+### PR #249 (templates view-engine, 11 files +1351/-458)
+- 신규: `templates-floating-action-bar.tsx`, `templates-table.tsx`, `use-templates-view.ts`
 
-- 마지막 PR (#247) 이후: 빌드 artifacts만 (commit 안 함)
-- 신규 untracked: `.omc/plans/template-b-edit-ui-unification.md` (보존)
-- docs/MEMORY.md, .omc/notepad.md, .omc/notepads/general/{learnings,decisions}.md (이번 after-work에서 업데이트)
+### PR #250 (seed templates, 1 file +156/-7)
+- `lib/store/seeds.ts` 9개 신규 시드 추가
+
+### PR #251 (Linear cards, 5 files +732/-82)
+- 신규: `components/property-chips.tsx`
+
+### PR #252 (v106 migration, 2 files +18/-1)
+- `lib/store/migrate.ts` v106 + version bump
+
+### PR #253 (folder N:M PR-a, 44 files +1540/-164)
+- 신규: `lib/store/__tests__/migrate-v107.test.ts`, `.omc/plans/folder-nm-migration.md`
+- Major: `lib/types.ts`, `lib/store/{migrate, slices/folders, slices/notes, slices/wiki-articles, slices/templates}.ts`, `lib/view-engine/*`, 30+ read-sites
