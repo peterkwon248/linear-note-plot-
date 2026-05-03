@@ -786,12 +786,19 @@ export function NotesTable({
   const isCompact = containerWidth < 480
 
   const virtualItems = useMemo((): VirtualItem[] => {
-    if (viewState.groupBy === "none") {
+    // Bypass the "none" fast path when alphabetical index is on — the
+    // `groups` memo above has already rebuilt the list as initial-keyed
+    // groups, so we want the regular header+notes rendering path.
+    if (viewState.groupBy === "none" && !showAlphaIndex) {
       return flatNotes.map((note) => ({ type: "note" as const, note }))
     }
     const items: VirtualItem[] = []
     for (const group of groups) {
       if (group.notes.length === 0 && !viewState.showEmptyGroups) continue
+      // groupBy stays "none" for downstream consumers; the alphabetical
+      // index supplies its own label/key on the group itself, so header
+      // chrome (icon, label) gracefully falls through to those fields
+      // without needing a new GroupBy enum member.
       items.push({ type: "header", label: group.label, count: group.notes.length, groupKey: group.key, groupBy: viewState.groupBy })
       if (!collapsedGroups.has(group.key)) {
         if (group.subGroups && group.subGroups.length > 0) {
@@ -815,7 +822,7 @@ export function NotesTable({
       }
     }
     return items
-  }, [flatNotes, groups, viewState.groupBy, viewState.subGroupBy, viewState.showEmptyGroups, collapsedGroups])
+  }, [flatNotes, groups, viewState.groupBy, viewState.subGroupBy, viewState.showEmptyGroups, collapsedGroups, showAlphaIndex])
 
   const scrollContainerRef = useRef<HTMLDivElement>(null)
 
@@ -1188,12 +1195,7 @@ export function NotesTable({
                             onClick={(e) => {
                               e.stopPropagation()
                               e.preventDefault()
-                              const next = !showAlphaIndex
-                              // eslint-disable-next-line no-console
-                              console.log("[plot:index-toggle]", { effectiveTab, before: showAlphaIndex, next, viewStateToggles: viewState.toggles })
-                              setShowAlphaIndex(next)
-                              // eslint-disable-next-line no-console
-                              setTimeout(() => console.log("[plot:index-toggle:after]", { storedToggles: usePlotStore.getState().viewStateByContext[effectiveTab as any]?.toggles }), 50)
+                              setShowAlphaIndex((prev) => !prev)
                             }}
                             className={`flex h-6 items-center gap-1 rounded-md px-1.5 text-note font-medium transition-all duration-100 ${
                               showAlphaIndex
