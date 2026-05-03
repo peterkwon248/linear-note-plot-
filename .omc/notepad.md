@@ -29,6 +29,9 @@
 ### 🟣 마지막 (출시 폴리시)
 - [ ] **Note UI toolbar** (UpNote-style) — Phase 1: Pin/Focus/Version 5-6 핵심 버튼만, configurable, "Organize..." multi-action (Folder/Tag/Label/Sticker)
 
+### 🟤 마지막에 논의 (결정 보류)
+- [ ] **House (계보 시각화)** — 노트 root/parent/children 전체 조망. 사용자 의견: "House" 명칭, 사이드바 More 진입, 노트+위키 둘 다. Claude 냉정 의견: 별도 entity 불필요, Graph view에 lineage mode + hierarchical layout + 사이드바 단축 링크로 대체 가능 (House 90% 커버). 다음 토론 시 결정.
+
 ## Polished Decisions (이번 세션)
 - **Folder type-strict + N:M** 재확정 (33 §2)
 - **Smart Book = AutoSource[]** 5종 (folder/category/tag/label/sticker)

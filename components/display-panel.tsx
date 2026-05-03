@@ -5,6 +5,7 @@ import { MAX_SORT_RULES } from "@/lib/view-engine/types"
 import type { ReactNode } from "react"
 import { List } from "@phosphor-icons/react/dist/ssr/List"
 import { Kanban } from "@phosphor-icons/react/dist/ssr/Kanban"
+import { GridFour } from "@phosphor-icons/react/dist/ssr/GridFour"
 import { Graph } from "@phosphor-icons/react/dist/ssr/Graph"
 import { ChartLine } from "@phosphor-icons/react/dist/ssr/ChartLine"
 import { SortAscending } from "@phosphor-icons/react/dist/ssr/SortAscending"
@@ -13,31 +14,10 @@ import { Plus as PhPlus } from "@phosphor-icons/react/dist/ssr/Plus"
 import { X as PhX } from "@phosphor-icons/react/dist/ssr/X"
 import { ToggleSwitch } from "@/components/ui/toggle-switch"
 import { ChipDropdown } from "@/components/ui/chip-dropdown"
-
-export interface DisplayConfig {
-  orderingOptions: { value: SortField; label: string }[]
-  groupingOptions: { value: GroupBy; label: string }[]
-  toggles: DisplayToggle[]
-  properties: DisplayProperty[]
-  supportedModes?: ViewMode[]
-  /** Default groupBy when switching to board mode from groupBy="none".
-   *  Notes default to "status" (canonical board axis); Wiki has no status,
-   *  so it sets "label" (Category). DisplayPanel reads this on the
-   *  list→board mode switch. */
-  boardDefaultGroupBy?: GroupBy
-}
-
-export interface DisplayToggle {
-  key: string
-  label: string
-  icon?: ReactNode
-}
-
-export interface DisplayProperty {
-  key: string
-  label: string
-  icon?: ReactNode
-}
+// Single source of truth — declared in the view-engine layer, re-exported here
+// for back-compat with any consumer that imports DisplayConfig from this module.
+import type { DisplayConfig, DisplayToggle, DisplayProperty } from "@/lib/view-engine/view-configs"
+export type { DisplayConfig, DisplayToggle, DisplayProperty }
 
 interface DisplayPanelProps {
   config: DisplayConfig
@@ -80,6 +60,7 @@ export const SortIcon = () => (
 const MODE_DEFS: { mode: ViewMode; icon: ReactNode; label: string }[] = [
   { mode: "list",     icon: <List size={14} weight="regular" />,     label: "List" },
   { mode: "board",    icon: <Kanban size={14} weight="regular" />,   label: "Board" },
+  { mode: "grid",     icon: <GridFour size={14} weight="regular" />, label: "Grid" },
   { mode: "graph",    icon: <Graph size={14} weight="regular" />,    label: "Graph" },
   { mode: "insights", icon: <ChartLine size={14} weight="regular" />, label: "Insights" },
 ]

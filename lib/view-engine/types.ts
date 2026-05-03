@@ -19,11 +19,12 @@ export type ViewContextKey =
   | "wiki-category"  // /wiki/categories — category management
   | "graph"          // /ontology — graph view
   | "calendar"       // /calendar — calendar view
+  | "templates"      // /templates — note template list (PR template-c)
   | `query-${string}` // inline query blocks in editor
 
 /* ── View State ────────────────────────────────────────── */
 
-export type ViewMode = "list" | "board" | "insights" | "calendar" | "graph" | "dashboard"
+export type ViewMode = "list" | "board" | "grid" | "insights" | "calendar" | "graph" | "dashboard"
 
 export type SortField =
   | "updatedAt"
@@ -181,6 +182,8 @@ export const VALID_VIEW_CONTEXT_KEYS: ViewContextKey[] = [
   "all", "pinned", "inbox", "capture", "permanent",
   "unlinked", "review", "folder", "tag", "label", "trash",
   "savedView", "wiki", "wiki-category", "graph", "calendar",
+  // PR template-c: templates list now uses the unified view-engine pipeline.
+  "templates",
 ]
 
 export const VALID_SORT_FIELDS: SortField[] = [
@@ -198,7 +201,7 @@ export const VALID_GROUP_BY: GroupBy[] = [
   "role",
 ]
 
-export const VALID_VIEW_MODES: ViewMode[] = ["list", "board", "insights", "calendar", "graph"]
+export const VALID_VIEW_MODES: ViewMode[] = ["list", "board", "grid", "insights", "calendar", "graph"]
 
 export const VALID_GROUP_SORT_BY: GroupSortBy[] = ["default", "manual", "name", "count"]
 
