@@ -91,6 +91,12 @@ export function SidePanelContext({ noteId: propNoteId }: { noteId?: string | nul
   const moveBackToInbox = usePlotStore((s) => s.moveBackToInbox)
   const setMergePickerOpen = usePlotStore((s) => s.setMergePickerOpen)
   const setLinkPickerOpen = usePlotStore((s) => s.setLinkPickerOpen)
+  // PR (c) — N:M membership actions for the multi-folder chip strip.
+  // removeNoteFromFolder is the per-chip "x" handler; setNoteFolders is
+  // the multi-picker Apply handler (full set replacement, kind-validated
+  // at the action layer).
+  const removeNoteFromFolder = usePlotStore((s) => s.removeNoteFromFolder)
+  const setNoteFolders = usePlotStore((s) => s.setNoteFolders)
 
   const backlinks = useBacklinksIndex()
 
@@ -154,9 +160,11 @@ export function SidePanelContext({ noteId: propNoteId }: { noteId?: string | nul
   const staleSuggest = isStaleSuggest(note)
   const linkCount = backlinks.get(note.id) ?? 0
 
-  // v107 N:M: side panel currently shows the primary folder; PR (c)
-  // upgrades this to a multi-folder chip strip with add/remove.
-  const currentFolder = folders.find((f) => f.id === note.folderIds[0])
+  // PR (c): N:M chip strip — every folder this note belongs to renders as
+  // a removable chip. `+ Add to folders…` opens the multi-select picker.
+  const noteFolders = folders.filter(
+    (f) => f.kind === "note" && note.folderIds.includes(f.id),
+  )
   const noteTags = tags.filter((t) => note.tags.includes(t.id) && !t.trashed)
   const availableTags = tags.filter((t) => !note.tags.includes(t.id) && !t.trashed)
 
@@ -331,39 +339,59 @@ export function SidePanelContext({ noteId: propNoteId }: { noteId?: string | nul
 
       <div className="mx-4 border-b border-border" />
 
-      {/* Folder */}
-      <InspectorSection title="Folder" icon={<FolderOpen size={16} weight="regular" />}>
-        <Popover open={folderOpen} onOpenChange={setFolderOpen}>
-          <PopoverTrigger asChild>
-            <button className="flex w-full items-center justify-between rounded-md border border-border bg-secondary/30 px-2.5 py-1.5 text-note text-foreground transition-colors hover:bg-hover-bg">
-              <span className="flex items-center gap-2">
-                {currentFolder && (
-                  <span
-                    className="h-2 w-2 rounded-full"
-                    style={{ backgroundColor: currentFolder.color }}
-                  />
-                )}
-                {currentFolder?.name ?? "No folder"}
-              </span>
-              <CaretDown className="text-muted-foreground" size={14} weight="regular" />
-            </button>
-          </PopoverTrigger>
-          <PopoverContent align="start" className="w-52 p-1">
-            {/* PR (b): unified FolderPicker — notes side panel always
-                operates on a Note → kind="note" enforced. PR (c) flips this
-                to multi-select once detail-panel chip strip lands. */}
-            <FolderPicker
-              kind="note"
-              currentFolderIds={note.folderIds}
-              onSelect={(folderId) => {
-                updateNote(note.id, {
-                  folderIds: folderId ? [folderId] : [],
-                })
-                setFolderOpen(false)
+      {/* Folders — PR (c) N:M chip strip
+          Each folder this note belongs to renders as a removable chip.
+          The "+ Add to folders…" button opens a multi-select picker that
+          commits the entire new set on Apply. Single-folder UX is gone —
+          this is the surface that exposes the N:M model to users.
+          Section title is plural to reinforce the cardinality change. */}
+      <InspectorSection title="Folders" icon={<FolderOpen size={16} weight="regular" />}>
+        <div className="flex flex-wrap items-center gap-1.5">
+          {noteFolders.map((f) => (
+            <span
+              key={f.id}
+              className="group/chip flex items-center gap-1 rounded-md px-2 py-0.5 text-2xs font-medium"
+              style={{
+                backgroundColor: `${f.color}1a`,
+                color: f.color,
               }}
-            />
-          </PopoverContent>
-        </Popover>
+              title={f.name}
+            >
+              <FolderOpen size={10} weight="regular" />
+              <span className="truncate max-w-[120px]">{f.name}</span>
+              <button
+                type="button"
+                onClick={() => removeNoteFromFolder(note.id, f.id)}
+                className="rounded-sm p-0.5 transition-colors hover:bg-hover-bg/40"
+                title={`Remove from ${f.name}`}
+              >
+                <PhX size={10} weight="bold" />
+              </button>
+            </span>
+          ))}
+          <Popover open={folderOpen} onOpenChange={setFolderOpen}>
+            <PopoverTrigger asChild>
+              <button className="flex items-center gap-1 rounded-md border border-dashed border-border px-2 py-0.5 text-2xs text-muted-foreground transition-colors hover:border-muted-foreground hover:text-foreground">
+                <PhPlus size={10} weight="regular" />
+                {noteFolders.length === 0 ? "Add to folders" : "Add"}
+              </button>
+            </PopoverTrigger>
+            <PopoverContent align="start" className="w-56 p-1">
+              {/* PR (c): multi-select. Apply commits the new set wholesale
+                  through setNoteFolders; the action layer kind-filters
+                  defensively (we already pass kind="note"). */}
+              <FolderPicker
+                kind="note"
+                currentFolderIds={note.folderIds}
+                selectMode="multi"
+                onApply={(ids) => {
+                  setNoteFolders(note.id, ids)
+                  setFolderOpen(false)
+                }}
+              />
+            </PopoverContent>
+          </Popover>
+        </div>
       </InspectorSection>
 
       <div className="mx-4 border-b border-border" />

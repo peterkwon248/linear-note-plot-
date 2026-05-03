@@ -1,6 +1,6 @@
 "use client"
 
-import { useMemo } from "react"
+import { useMemo, useState } from "react"
 import { usePlotStore } from "@/lib/store"
 import { format, formatDistanceToNow } from "date-fns"
 import { CalendarBlank } from "@phosphor-icons/react/dist/ssr/CalendarBlank"
@@ -12,6 +12,11 @@ import { Layout } from "@phosphor-icons/react/dist/ssr/Layout"
 import { Trash } from "@phosphor-icons/react/dist/ssr/Trash"
 import { Image as PhImage } from "@phosphor-icons/react/dist/ssr/Image"
 import { PushPin } from "@phosphor-icons/react/dist/ssr/PushPin"
+import { FolderOpen } from "@phosphor-icons/react/dist/ssr/FolderOpen"
+import { X as PhX } from "@phosphor-icons/react/dist/ssr/X"
+import { Plus as PhPlus } from "@phosphor-icons/react/dist/ssr/Plus"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { FolderPicker } from "@/components/folder-picker"
 import { IconWiki } from "@/components/plot-icons"
 import { setActiveRoute } from "@/lib/table-route"
 import type { WikiArticle } from "@/lib/types"
@@ -44,6 +49,20 @@ export function WikiArticleDetailPanel({ article }: { article: WikiArticle | nul
   const tags = usePlotStore((s) => s.tags)
   const notes = usePlotStore((s) => s.notes)
   const attachments = usePlotStore((s) => s.attachments)
+  const folders = usePlotStore((s) => s.folders)
+  // PR (c): N:M membership actions for the wiki Folders chip strip.
+  // Mirrors the note side panel — chips with X to remove, "+ Add" to open
+  // the multi-select picker.
+  const removeWikiFromFolder = usePlotStore((s) => s.removeWikiFromFolder)
+  const setWikiFolders = usePlotStore((s) => s.setWikiFolders)
+  const [folderOpen, setFolderOpen] = useState(false)
+
+  const articleFolders = useMemo(() => {
+    if (!article?.folderIds?.length) return []
+    return folders.filter(
+      (f) => f.kind === "wiki" && article.folderIds.includes(f.id),
+    )
+  }, [article?.folderIds, folders])
 
   const articleCategories = useMemo(() => {
     if (!article?.categoryIds?.length) return []
@@ -175,6 +194,58 @@ export function WikiArticleDetailPanel({ article }: { article: WikiArticle | nul
           <div className="mx-4 border-b border-border" />
         </>
       )}
+
+      {/* Folders — PR (c) N:M chip strip
+          Mirrors the note side panel. Always rendered (even empty) since
+          folder management is the primary surface for the N:M model in
+          the wiki context too. Click "+ Add" to open the multi-select
+          picker; click chip X to remove from that folder. */}
+      <InspectorSection title="Folders" icon={<FolderOpen size={16} weight="regular" />}>
+        <div className="flex flex-wrap items-center gap-1.5">
+          {articleFolders.map((f) => (
+            <span
+              key={f.id}
+              className="flex items-center gap-1 rounded-md px-2 py-0.5 text-2xs font-medium"
+              style={{
+                backgroundColor: `${f.color}1a`,
+                color: f.color,
+              }}
+              title={f.name}
+            >
+              <FolderOpen size={10} weight="regular" />
+              <span className="truncate max-w-[120px]">{f.name}</span>
+              <button
+                type="button"
+                onClick={() => removeWikiFromFolder(article.id, f.id)}
+                className="rounded-sm p-0.5 transition-colors hover:bg-hover-bg/40"
+                title={`Remove from ${f.name}`}
+              >
+                <PhX size={10} weight="bold" />
+              </button>
+            </span>
+          ))}
+          <Popover open={folderOpen} onOpenChange={setFolderOpen}>
+            <PopoverTrigger asChild>
+              <button className="flex items-center gap-1 rounded-md border border-dashed border-border px-2 py-0.5 text-2xs text-muted-foreground transition-colors hover:border-muted-foreground hover:text-foreground">
+                <PhPlus size={10} weight="regular" />
+                {articleFolders.length === 0 ? "Add to folders" : "Add"}
+              </button>
+            </PopoverTrigger>
+            <PopoverContent align="start" className="w-56 p-1">
+              <FolderPicker
+                kind="wiki"
+                currentFolderIds={article.folderIds}
+                selectMode="multi"
+                onApply={(ids) => {
+                  setWikiFolders(article.id, ids)
+                  setFolderOpen(false)
+                }}
+              />
+            </PopoverContent>
+          </Popover>
+        </div>
+      </InspectorSection>
+      <div className="mx-4 border-b border-border" />
 
       {/* Tags */}
       {articleTags.length > 0 && (
