@@ -16,7 +16,6 @@ import { ArrowsDownUp } from "@phosphor-icons/react/dist/ssr/ArrowsDownUp"
 import { ArrowUp } from "@phosphor-icons/react/dist/ssr/ArrowUp"
 import { ArrowDown } from "@phosphor-icons/react/dist/ssr/ArrowDown"
 import { FileText } from "@phosphor-icons/react/dist/ssr/FileText"
-import { Link as PhLink } from "@phosphor-icons/react/dist/ssr/Link"
 import { CaretDown } from "@phosphor-icons/react/dist/ssr/CaretDown"
 import { CaretRight } from "@phosphor-icons/react/dist/ssr/CaretRight"
 import { X as PhX } from "@phosphor-icons/react/dist/ssr/X"
@@ -48,9 +47,24 @@ import { toast } from "sonner"
 import { getSnoozeTime, type SnoozePreset } from "@/lib/queries/notes"
 import { useNotesView } from "@/lib/view-engine/use-notes-view"
 import type { ViewContextKey, SortField, GroupBy, NoteGroup, FilterRule } from "@/lib/view-engine/types"
-import { StatusBadge, PriorityBadge, STATUS_CONFIG, PRIORITY_CONFIG } from "@/components/note-fields"
+import { STATUS_CONFIG, PRIORITY_CONFIG } from "@/components/note-fields"
+import {
+  StatusChip,
+  PriorityChip,
+  FolderChip,
+  LabelChip,
+  TagChip,
+  LinksChip,
+  WordsChip,
+  UpdatedChip,
+  CreatedChip,
+  ParentChip,
+  ChildrenChip,
+  PinnedChip,
+  PropertyChipRow,
+} from "@/components/property-chips"
 import { BoardWorkbench } from "@/components/board-workbench"
-import type { Note, NoteStatus, NotePriority, TriageStatus, Folder } from "@/lib/types"
+import type { Note, NoteStatus, NotePriority, TriageStatus, Folder, Tag, Label } from "@/lib/types"
 import { FilterChipBar } from "@/components/filter-bar"
 import { ViewHeader } from "@/components/view-header"
 import { useSaveViewProps } from "@/lib/view-engine/use-save-view-props"
@@ -265,6 +279,15 @@ interface BoardCardProps {
   note: Note
   links: number
   folders: Folder[]
+  /** All labels — used to resolve note.labelId to a Label entity. */
+  labels: Label[]
+  /** All tags — used to resolve note.tags[] to Tag entities. */
+  tags: Tag[]
+  /** Parent note title (resolved by parent from notesById map). Empty when
+   *  the note has no parent or the parent isn't in the visible set. */
+  parentTitle?: string
+  /** Number of direct children (computed by parent from childrenByParent map). */
+  childrenCount?: number
   isActive?: boolean
   isSelected?: boolean
   isDragOverlay?: boolean
@@ -292,6 +315,10 @@ function BoardCardInner({
   note,
   links,
   folders,
+  labels,
+  tags,
+  parentTitle,
+  childrenCount,
   isActive,
   isSelected,
   isDragOverlay,
@@ -322,7 +349,84 @@ function BoardCardInner({
     ? { transform: CSS.Transform.toString(transform), opacity: isDragging ? 0.5 : 1, touchAction: "none" as const }
     : { touchAction: "none" as const }
 
+  // ── Resolve referenced entities for chip rendering ──
   const folder = note.folderId ? folders.find((f) => f.id === note.folderId) : null
+  const label = note.labelId ? labels.find((l) => l.id === note.labelId) : null
+  // Tag resolution — only the actual tag objects (drop unknown IDs).
+  const noteTagObjs = useMemo(() => {
+    if (!note.tags || note.tags.length === 0) return []
+    return note.tags
+      .map((id) => tags.find((t) => t.id === id))
+      .filter((t): t is Tag => !!t)
+  }, [note.tags, tags])
+
+  // wordCount derivation matches notes-table.tsx (split note.preview by
+  // whitespace). Preview is precomputed (~120 chars) so this is bounded.
+  const wordCount = useMemo(() => {
+    if (!note.preview) return 0
+    return note.preview.split(/\s+/).filter(Boolean).length
+  }, [note.preview])
+
+  // ── Build the property chip row ──
+  // Order matters: most identity-defining first (folder, label) then
+  // semantic (tags) then numeric (links/words/children) then time. The
+  // PropertyChipRow caps at 3 visible + "+N" overflow regardless.
+  const propertyChips = useMemo(() => {
+    const out: React.ReactNode[] = []
+    // Priority is not redundant when groupBy="priority" — column header
+    // already shows the level — so suppress in that case (matches old
+    // behaviour). Same for status (handled in title row).
+    if (
+      isVisible("priority") &&
+      groupBy !== "priority" &&
+      note.priority !== "none"
+    ) {
+      out.push(<PriorityChip key="priority" priority={note.priority} />)
+    }
+    if (folder && isVisible("folder")) {
+      out.push(<FolderChip key="folder" folder={folder} />)
+    }
+    if (label && isVisible("label")) {
+      out.push(<LabelChip key="label" label={label} />)
+    }
+    if (isVisible("tags") && noteTagObjs.length > 0) {
+      // Each tag becomes its own chip — overflow ("+N") is handled by
+      // PropertyChipRow at the row level, not per-tag-group.
+      for (const t of noteTagObjs) {
+        out.push(<TagChip key={`tag-${t.id}`} tag={t} />)
+      }
+    }
+    if (
+      parentTitle &&
+      isVisible("parent") &&
+      groupBy !== "parent"
+    ) {
+      out.push(<ParentChip key="parent" title={parentTitle} />)
+    }
+    if (
+      isVisible("children") &&
+      (childrenCount ?? 0) > 0
+    ) {
+      out.push(<ChildrenChip key="children" count={childrenCount!} />)
+    }
+    if (links > 0 && isVisible("links")) {
+      out.push(<LinksChip key="links" count={links} />)
+    }
+    if (wordCount > 0 && isVisible("wordCount")) {
+      out.push(<WordsChip key="words" count={wordCount} />)
+    }
+    if (isVisible("updatedAt")) {
+      out.push(<UpdatedChip key="updated" iso={note.updatedAt} />)
+    }
+    if (isVisible("createdAt")) {
+      out.push(<CreatedChip key="created" iso={note.createdAt} />)
+    }
+    return out
+  }, [
+    note.priority, note.updatedAt, note.createdAt,
+    folder, label, noteTagObjs, parentTitle, childrenCount,
+    links, wordCount, groupBy, visibleColumns,
+  ]) // eslint-disable-line react-hooks/exhaustive-deps
 
   /* Visual card — no drag refs, just presentation + click */
   const cardVisual = (
@@ -349,7 +453,9 @@ function BoardCardInner({
         : "border-border"
       } ${isDragOverlay ? "shadow-lg rotate-[2deg]" : ""} ${isDragging ? "opacity-50" : ""}`}
     >
-      {/* Selection checkbox — hover or selected */}
+      {/* Selection checkbox — hover or selected.
+          Note: we move the checkbox inside the title row spacer when pinned
+          to avoid overlapping with the pin icon. */}
       <div
         className={`absolute top-1.5 right-1.5 flex h-4 w-4 items-center justify-center rounded border transition-all cursor-pointer ${
           isSelected
@@ -365,14 +471,18 @@ function BoardCardInner({
       </div>
 
       {/* Title row — Status hides when groupBy="status" (redundant) AND
-          when the user has unchecked Status in Display Properties. */}
-      <div className="flex items-start gap-2">
+          when the user has unchecked Status in Display Properties.
+          Pinned is rendered as identity (always-on, Linear pattern). The
+          right-side reserved space (pr-5) keeps the pin from colliding
+          with the hover-selection checkbox. */}
+      <div className="flex items-start gap-2 pr-5">
         {groupBy !== "status" && isVisible("status") && (
-          <StatusBadge status={note.status} />
+          <StatusChip status={note.status} />
         )}
         <span className="flex-1 truncate text-ui font-medium text-foreground leading-snug">
           {note.title || "Untitled"}
         </span>
+        {note.pinned && <PinnedChip />}
       </div>
 
       {/* Preview text */}
@@ -382,26 +492,13 @@ function BoardCardInner({
         </p>
       )}
 
-      {/* Bottom row: priority + project + links — folder/links honor
-          Display Properties; priority isn't in the displayConfig.properties
-          list yet (intentionally board-only for now), so it stays gated
-          by groupBy + non-none-priority only. */}
-      <div className="mt-2 flex items-center gap-2">
-        {groupBy !== "priority" && note.priority !== "none" && (
-          <PriorityBadge priority={note.priority} />
-        )}
-        {folder && isVisible("folder") && (
-          <span className="truncate rounded-sm bg-secondary px-1.5 py-0.5 text-2xs font-medium text-muted-foreground">
-            {folder.name}
-          </span>
-        )}
-        {links > 0 && isVisible("links") && (
-          <span className="flex items-center gap-0.5 text-2xs text-muted-foreground">
-            <PhLink size={10} weight="regular" />
-            {links}
-          </span>
-        )}
-      </div>
+      {/* Property chip row — single line, max 3 chips + "+N" overflow.
+          Empty rows render nothing (no extra spacing). */}
+      {propertyChips.length > 0 && (
+        <div className="mt-2">
+          <PropertyChipRow chips={propertyChips} maxVisible={3} />
+        </div>
+      )}
     </div>
   )
 
@@ -503,12 +600,25 @@ function BoardCardInner({
 const BoardCard = memo(BoardCardInner, (prev, next) =>
   prev.note.id === next.note.id &&
   prev.note.updatedAt === next.note.updatedAt &&
+  prev.note.createdAt === next.note.createdAt &&
   prev.note.status === next.note.status &&
   prev.note.priority === next.note.priority &&
   prev.note.folderId === next.note.folderId &&
+  // PR e: new chip dimensions — must trigger re-render when any change.
+  prev.note.labelId === next.note.labelId &&
+  prev.note.tags === next.note.tags &&
+  prev.note.pinned === next.note.pinned &&
+  prev.note.parentNoteId === next.note.parentNoteId &&
   prev.note.title === next.note.title &&
   prev.note.preview === next.note.preview &&
   prev.links === next.links &&
+  // Reference equality on the lookup arrays — parent ensures stable refs
+  // (zustand selectors return the same array unless data changed).
+  prev.folders === next.folders &&
+  prev.labels === next.labels &&
+  prev.tags === next.tags &&
+  prev.parentTitle === next.parentTitle &&
+  prev.childrenCount === next.childrenCount &&
   prev.showCardPreview === next.showCardPreview &&
   prev.isActive === next.isActive &&
   prev.isSelected === next.isSelected &&
@@ -677,6 +787,31 @@ export function NotesBoard({
       return folder ? { ...g, label: folder.name } : g
     })
   }, [groups, viewState.groupBy, folders])
+
+  // ── Parent / Children lookups for chip rendering (PR e) ──
+  // Mirrors the notes-table pattern: build once at the parent level,
+  // pass scalar lookups to each card via props. Computed only when the
+  // user has the relevant chip enabled in Display Properties.
+  const showParentChip = !viewState.visibleColumns || viewState.visibleColumns.includes("parent")
+  const showChildrenChip = !viewState.visibleColumns || viewState.visibleColumns.includes("children")
+
+  const notesByIdForParent = useMemo(() => {
+    if (!showParentChip) return null
+    const m = new Map<string, Note>()
+    for (const n of notes) m.set(n.id, n)
+    return m
+  }, [notes, showParentChip])
+
+  const childrenCountByParent = useMemo(() => {
+    if (!showChildrenChip) return null
+    const m = new Map<string, number>()
+    for (const n of notes) {
+      if (n.parentNoteId && !n.trashed) {
+        m.set(n.parentNoteId, (m.get(n.parentNoteId) ?? 0) + 1)
+      }
+    }
+    return m
+  }, [notes, showChildrenChip])
 
   const handleDragStart = useCallback((event: DragStartEvent) => {
     const dragId = event.active.id as string
@@ -986,6 +1121,14 @@ export function NotesBoard({
                     note={note}
                     links={backlinksMap.get(note.id) ?? 0}
                     folders={folders}
+                    labels={labels}
+                    tags={tags}
+                    parentTitle={
+                      note.parentNoteId
+                        ? notesByIdForParent?.get(note.parentNoteId)?.title
+                        : undefined
+                    }
+                    childrenCount={childrenCountByParent?.get(note.id) ?? 0}
                     isActive={activePreviewId === note.id}
                     isSelected={selectedIds.has(note.id)}
                     showCardPreview={false}
@@ -1118,6 +1261,14 @@ export function NotesBoard({
                     note={activeDragNote}
                     links={backlinksMap.get(activeDragNote.id) ?? 0}
                     folders={folders}
+                    labels={labels}
+                    tags={tags}
+                    parentTitle={
+                      activeDragNote.parentNoteId
+                        ? notesByIdForParent?.get(activeDragNote.parentNoteId)?.title
+                        : undefined
+                    }
+                    childrenCount={childrenCountByParent?.get(activeDragNote.id) ?? 0}
                     isDragOverlay
                     groupBy={viewState.groupBy}
                     visibleColumns={viewState.visibleColumns}

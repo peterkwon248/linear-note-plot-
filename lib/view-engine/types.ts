@@ -211,4 +211,8 @@ export const VALID_COLUMNS: string[] = [
   "tags", "aliases",
   // Wiki-category-specific columns
   "parent", "tier", "sub",
+  // PR e: notes board now exposes priority/label/tags as toggleable chip
+  // columns so the Display popover affects the board surface too. children
+  // was already rendered by notes-table; whitelist it for visibleColumns.
+  "priority", "label", "children",
 ]

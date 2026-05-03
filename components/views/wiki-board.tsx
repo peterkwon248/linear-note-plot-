@@ -14,15 +14,24 @@ import {
 import type { DragEndEvent, DragStartEvent } from "@dnd-kit/core"
 import { SortableContext, horizontalListSortingStrategy, arrayMove, useSortable } from "@dnd-kit/sortable"
 import { CSS } from "@dnd-kit/utilities"
-import { Link as PhLink } from "@phosphor-icons/react/dist/ssr/Link"
-import { Eye } from "@phosphor-icons/react/dist/ssr/Eye"
 import { FileText } from "@phosphor-icons/react/dist/ssr/FileText"
 import { cn } from "@/lib/utils"
-import { shortRelative } from "@/lib/format-utils"
 import { isWikiStub } from "@/lib/wiki-utils"
 import { usePlotStore } from "@/lib/store"
 import { WIKI_STATUS_HEX } from "@/lib/colors"
 import { IconWikiStub, IconWikiArticle } from "@/components/plot-icons"
+import {
+  LinksChip,
+  ReadsChip,
+  CategoryChip,
+  UpdatedChip,
+  CreatedChip,
+  ParentChip,
+  ChildrenChip,
+  AliasesChip,
+  PinnedChip,
+  PropertyChipRow,
+} from "@/components/property-chips"
 import type { WikiArticle, WikiCategory } from "@/lib/types"
 import type { GroupBy, ViewState } from "@/lib/view-engine/types"
 import type { WikiGroup } from "@/lib/view-engine/wiki-list-pipeline"
@@ -140,6 +149,10 @@ interface CardProps {
   visibleColumns?: string[]
   wikiCategories: WikiCategory[]
   groupBy: GroupBy
+  /** Resolved parent article title (lookup done once at the parent). */
+  parentTitle?: string
+  /** Direct child article count (memoized lookup at the parent). */
+  childrenCount?: number
   onClick: () => void
   onSelect?: (id: string, e: React.MouseEvent) => void
 }
@@ -156,6 +169,8 @@ function CardInner({
   visibleColumns,
   wikiCategories,
   groupBy,
+  parentTitle,
+  childrenCount,
   onClick,
   onSelect,
 }: CardProps) {
@@ -168,22 +183,67 @@ function CardInner({
     ? { transform: CSS.Transform.toString(transform), opacity: isDragging ? 0.5 : 1, touchAction: "none" as const }
     : { touchAction: "none" as const }
 
-  const showStatus = !visibleColumns || visibleColumns.includes("status")
-  const showLinks = !visibleColumns || visibleColumns.includes("links")
-  const showReads = !visibleColumns || visibleColumns.includes("reads")
-  const showUpdated = !visibleColumns || visibleColumns.includes("updatedAt")
-  const showCategories = (!visibleColumns || visibleColumns.includes("tags")) && groupBy !== "label"
+  // Display Property gates — undefined visibleColumns = show all (back-compat)
+  const isVisible = (key: string) => !visibleColumns || visibleColumns.includes(key)
+  const showStatus = isVisible("status")
 
-  const categoryNames = useMemo(() => {
-    if (!showCategories) return []
+  // Resolve every category to {name, color} so CategoryChip can colour them.
+  // PropertyChipRow caps the visible count, so we don't pre-slice here.
+  const categoryEntries = useMemo(() => {
     const ids = article.categoryIds ?? []
+    if (ids.length === 0) return []
     return ids
-      .map((id) => wikiCategories.find((c) => c.id === id)?.name)
-      .filter((n): n is string => !!n)
-      .slice(0, 2)
-  }, [article.categoryIds, wikiCategories, showCategories])
+      .map((id) => {
+        const c = wikiCategories.find((wc) => wc.id === id)
+        return c ? { id, name: c.name, color: c.color } : null
+      })
+      .filter((c): c is { id: string; name: string; color: string } => !!c)
+  }, [article.categoryIds, wikiCategories])
 
   const reads = article.reads ?? 0
+  const aliases = article.aliases ?? []
+
+  // Build the property chip row. Order: identity (categories) →
+  // hierarchy (parent/children) → numeric (links/reads) → meta (aliases) →
+  // time. Status chip stays in the title row (visual anchor).
+  const propertyChips = useMemo(() => {
+    const out: React.ReactNode[] = []
+    // Categories — only when we're not already grouped by category (label).
+    if (isVisible("tags") && groupBy !== "label" && categoryEntries.length > 0) {
+      for (const c of categoryEntries) {
+        out.push(<CategoryChip key={`cat-${c.id}`} name={c.name} color={c.color} />)
+      }
+    }
+    if (
+      parentTitle &&
+      isVisible("parent") &&
+      groupBy !== "parent"
+    ) {
+      out.push(<ParentChip key="parent" title={parentTitle} />)
+    }
+    if (isVisible("children") && (childrenCount ?? 0) > 0) {
+      out.push(<ChildrenChip key="children" count={childrenCount!} />)
+    }
+    if (isVisible("links") && backlinks > 0) {
+      out.push(<LinksChip key="links" count={backlinks} />)
+    }
+    if (isVisible("reads") && reads > 0) {
+      out.push(<ReadsChip key="reads" count={reads} />)
+    }
+    if (isVisible("aliases") && aliases.length > 0) {
+      out.push(<AliasesChip key="aliases" count={aliases.length} />)
+    }
+    if (isVisible("updatedAt")) {
+      out.push(<UpdatedChip key="updated" iso={article.updatedAt} />)
+    }
+    if (isVisible("createdAt")) {
+      out.push(<CreatedChip key="created" iso={article.createdAt} />)
+    }
+    return out
+  }, [
+    visibleColumns, groupBy, categoryEntries, parentTitle, childrenCount,
+    backlinks, reads, aliases.length, article.updatedAt, article.createdAt,
+  ]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const visual = (
     <div
@@ -210,10 +270,9 @@ function CardInner({
       )}
     >
       {/* Title row — uses IconWikiStub / IconWikiArticle (status-specific
-          icons defined in components/plot-icons.tsx). The wiki entity icon
-          (BookOpen, used in activity bar / sidebar) is reserved for entity-
-          level surfaces; here we want stub-vs-article differentiation, so
-          the dedicated status icons are correct. Color from WIKI_STATUS_HEX. */}
+          icons defined in components/plot-icons.tsx). Pinned shows on the
+          right (Linear identity pattern). The status chip lives below in
+          the property row so the title gets full width. */}
       <div className="flex items-start gap-2">
         {showStatus && (
           isStub ? (
@@ -225,44 +284,29 @@ function CardInner({
         <span className="flex-1 truncate text-ui font-medium text-foreground leading-snug">
           {article.title || "Untitled"}
         </span>
+        {article.pinned && <PinnedChip />}
       </div>
 
-      {/* Bottom meta row */}
-      <div className="mt-2 flex flex-wrap items-center gap-2">
-        {showStatus && (
-          <span
-            className="rounded-sm px-1.5 py-0.5 text-2xs font-medium"
-            style={{
-              color: isStub ? WIKI_STATUS_HEX.stub : WIKI_STATUS_HEX.article,
-              backgroundColor: `${isStub ? WIKI_STATUS_HEX.stub : WIKI_STATUS_HEX.article}1a`,
-            }}
-          >
-            {isStub ? "Stub" : "Article"}
-          </span>
-        )}
-        {showLinks && backlinks > 0 && (
-          <span className="flex items-center gap-0.5 text-2xs text-muted-foreground">
-            <PhLink size={10} weight="regular" />
-            {backlinks}
-          </span>
-        )}
-        {showReads && reads > 0 && (
-          <span className="flex items-center gap-0.5 text-2xs text-muted-foreground">
-            <Eye size={10} weight="regular" />
-            {reads}
-          </span>
-        )}
-        {showCategories && categoryNames.length > 0 && (
-          <span className="truncate rounded-sm bg-secondary px-1.5 py-0.5 text-2xs font-medium text-muted-foreground">
-            {categoryNames.join(", ")}
-          </span>
-        )}
-        {showUpdated && (
-          <span className="ml-auto text-2xs text-muted-foreground/70">
-            {shortRelative(article.updatedAt)}
-          </span>
-        )}
-      </div>
+      {/* Status chip + property row. Status keeps its own slot so it stays
+          anchored to the left even when other chips overflow. */}
+      {(showStatus || propertyChips.length > 0) && (
+        <div className="mt-2 flex items-center gap-1 min-w-0">
+          {showStatus && (
+            <span
+              className="inline-flex items-center h-5 rounded-sm px-1.5 text-2xs font-medium leading-none whitespace-nowrap shrink-0"
+              style={{
+                color: isStub ? WIKI_STATUS_HEX.stub : WIKI_STATUS_HEX.article,
+                backgroundColor: `${isStub ? WIKI_STATUS_HEX.stub : WIKI_STATUS_HEX.article}1a`,
+              }}
+            >
+              {isStub ? "Stub" : "Article"}
+            </span>
+          )}
+          {propertyChips.length > 0 && (
+            <PropertyChipRow chips={propertyChips} maxVisible={3} />
+          )}
+        </div>
+      )}
     </div>
   )
 
@@ -278,15 +322,25 @@ function CardInner({
 const Card = memo(CardInner, (prev, next) =>
   prev.article.id === next.article.id &&
   prev.article.updatedAt === next.article.updatedAt &&
+  prev.article.createdAt === next.article.createdAt &&
   prev.article.title === next.article.title &&
   prev.article.reads === next.article.reads &&
+  // PR e: new chip dimensions
+  prev.article.aliases === next.article.aliases &&
+  prev.article.categoryIds === next.article.categoryIds &&
+  prev.article.parentArticleId === next.article.parentArticleId &&
+  prev.article.pinned === next.article.pinned &&
   prev.cardKey === next.cardKey &&
   prev.backlinks === next.backlinks &&
   prev.isStub === next.isStub &&
   prev.isActive === next.isActive &&
   prev.isSelected === next.isSelected &&
   prev.groupBy === next.groupBy &&
-  prev.isDragDisabled === next.isDragDisabled,
+  prev.isDragDisabled === next.isDragDisabled &&
+  prev.visibleColumns === next.visibleColumns &&
+  prev.wikiCategories === next.wikiCategories &&
+  prev.parentTitle === next.parentTitle &&
+  prev.childrenCount === next.childrenCount,
 )
 
 /* ── Drag rules ──────────────────────────────────────── */
@@ -315,6 +369,34 @@ export function WikiBoard({
 }: WikiBoardProps) {
   const updateWikiArticle = usePlotStore((s) => s.updateWikiArticle)
   const setWikiArticleParent = usePlotStore((s) => s.setWikiArticleParent)
+  // PR e: subscribe to wiki articles only when we need parent/children
+  // resolution for chips. Reading from `groups` would miss articles outside
+  // the current view.
+  const wikiArticles = usePlotStore((s) => s.wikiArticles) as WikiArticle[]
+
+  // ── Parent / Children lookups for chip rendering ──
+  // Computed once per render; pass scalar primitives to each Card so memo
+  // comparators can short-circuit.
+  const showParentChip = !visibleColumns || visibleColumns.includes("parent")
+  const showChildrenChip = !visibleColumns || visibleColumns.includes("children")
+
+  const articlesByIdForParent = useMemo(() => {
+    if (!showParentChip) return null
+    const m = new Map<string, WikiArticle>()
+    for (const a of wikiArticles) m.set(a.id, a)
+    return m
+  }, [wikiArticles, showParentChip])
+
+  const childrenCountByParent = useMemo(() => {
+    if (!showChildrenChip) return null
+    const m = new Map<string, number>()
+    for (const a of wikiArticles) {
+      if (a.parentArticleId) {
+        m.set(a.parentArticleId, (m.get(a.parentArticleId) ?? 0) + 1)
+      }
+    }
+    return m
+  }, [wikiArticles, showChildrenChip])
 
   const [activeDragId, setActiveDragId] = useState<string | null>(null)
   const isColumnDrag = activeDragId?.startsWith("col-") ?? false
@@ -485,6 +567,12 @@ export function WikiBoard({
                         visibleColumns={visibleColumns}
                         wikiCategories={wikiCategories}
                         groupBy={groupBy}
+                        parentTitle={
+                          article.parentArticleId
+                            ? articlesByIdForParent?.get(article.parentArticleId)?.title
+                            : undefined
+                        }
+                        childrenCount={childrenCountByParent?.get(article.id) ?? 0}
                         onClick={() => onOpenArticle(article.id)}
                         onSelect={(id, e) => onSelect?.(id, { multi: e.metaKey || e.ctrlKey, shift: e.shiftKey })}
                       />
@@ -514,6 +602,12 @@ export function WikiBoard({
                 visibleColumns={visibleColumns}
                 wikiCategories={wikiCategories}
                 groupBy={groupBy}
+                parentTitle={
+                  activeArticleFromDrag.parentArticleId
+                    ? articlesByIdForParent?.get(activeArticleFromDrag.parentArticleId)?.title
+                    : undefined
+                }
+                childrenCount={childrenCountByParent?.get(activeArticleFromDrag.id) ?? 0}
                 onClick={() => {}}
               />
             )}

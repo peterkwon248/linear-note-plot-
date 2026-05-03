@@ -43,6 +43,7 @@ import { DisplayPanel } from "@/components/display-panel"
 import { TEMPLATES_VIEW_CONFIG } from "@/lib/view-engine/view-configs"
 import { useTemplatesView } from "@/lib/view-engine/use-templates-view"
 import { groupByInitial } from "@/lib/korean-utils"
+import { shortRelative } from "@/lib/format-utils"
 import { TemplatesTable } from "@/components/views/templates-table"
 import { TemplateEditPage } from "@/components/views/template-edit-page"
 import { TemplatesFloatingActionBar } from "@/components/templates-floating-action-bar"
@@ -151,6 +152,7 @@ function TemplateFormDialog({
 
 function TemplateCard({
   tmpl,
+  visibleColumns,
   onSelect,
   onUse,
   onEdit,
@@ -158,12 +160,28 @@ function TemplateCard({
   onDelete,
 }: {
   tmpl: NoteTemplate
+  /** Display Properties — which meta chips to surface on the grid card.
+   *  Mirrors the table view's column visibility. Undefined = show all
+   *  (back-compat). PR e wiring: templates grid honors the same Display
+   *  popover as the table. */
+  visibleColumns?: string[]
   onSelect: (id: string) => void
   onUse: (id: string) => void
   onEdit: (id: string) => void
   onPin: (id: string) => void
   onDelete: (id: string) => void
 }) {
+  const isVisible = (key: string) => !visibleColumns || visibleColumns.includes(key)
+
+  // Templates grid stays preview-focused (the body excerpt is the identity).
+  // We add ONLY updatedAt / createdAt chips at the bottom — heavier meta
+  // (folder, label, tags) would compete with the body preview that gives
+  // the card its purpose. If the user wants those, the list view shows
+  // them in proper columns.
+  const showUpdated = isVisible("updatedAt")
+  const showCreated = isVisible("createdAt")
+  const hasFooterChips = showUpdated || showCreated
+
   return (
     <ContextMenu>
       <ContextMenuTrigger asChild>
@@ -206,6 +224,29 @@ function TemplateCard({
                 <p className="text-2xs text-muted-foreground/70 italic">Empty template</p>
               )}
             </div>
+
+            {/* Meta chip footer — Linear pattern. Date chips only, kept
+                minimal to preserve the body-preview as the card identity. */}
+            {hasFooterChips && (
+              <div className="flex items-center gap-2 pt-0.5">
+                {showUpdated && (
+                  <span
+                    title={`Updated ${new Date(tmpl.updatedAt).toLocaleString()}`}
+                    className="text-2xs text-muted-foreground/70"
+                  >
+                    {shortRelative(tmpl.updatedAt)}
+                  </span>
+                )}
+                {showCreated && (
+                  <span
+                    title={`Created ${new Date(tmpl.createdAt).toLocaleString()}`}
+                    className="text-2xs text-muted-foreground/60"
+                  >
+                    +{shortRelative(tmpl.createdAt)}
+                  </span>
+                )}
+              </div>
+            )}
 
           </div>
 
@@ -565,6 +606,7 @@ export function TemplatesView() {
               <TemplateCard
                 key={tmpl.id}
                 tmpl={tmpl}
+                visibleColumns={viewState.visibleColumns}
                 onSelect={(id) => setSelectedTemplateId(id)}
                 onUse={handleUseTemplate}
                 onEdit={(id) => setSelectedTemplateId(id)}
