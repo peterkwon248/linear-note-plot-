@@ -16,7 +16,6 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Check as PhCheck } from "@phosphor-icons/react/dist/ssr/Check"
 import { Minus } from "@phosphor-icons/react/dist/ssr/Minus"
 import { ArrowLeft } from "@phosphor-icons/react/dist/ssr/ArrowLeft"
-import { Warning } from "@phosphor-icons/react/dist/ssr/Warning"
 import { BookOpen } from "@phosphor-icons/react/dist/ssr/BookOpen"
 import { ListBullets } from "@phosphor-icons/react/dist/ssr/ListBullets"
 import { GitMerge } from "@phosphor-icons/react/dist/ssr/GitMerge"
