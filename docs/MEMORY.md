@@ -28,6 +28,63 @@
 
 ---
 
+## 🚀 2026-05-04 — Folder N:M 시리즈 완성 (PR b/c)
+
+**범위**: PR (folder-b) UI 분리 + PR (folder-c) Multi-folder UX. Folder type-strict + N:M 시리즈 3-PR 완성.
+
+### 머지된 PRs (이번 세션)
+- **#255** PR (folder-b) — UI type-strict 시각화. 신규 `folder-picker.tsx` (kind-aware, 3가지 export로 4곳 dedup) + 사이드바 Notes/Wiki Folders 분리 (kind="note" / kind="wiki") + `/folder/[id]` kind 분기 + DnD wrong-kind drop 거부 + notes board/table 다중 폴더 FolderChip ("+N more"). 8 files +744/-397 LOC, 5 commits.
+- **#256** PR (folder-c) — Multi-folder UX. FolderPicker `selectMode="multi"` 활성화 (체크박스 + Apply) + Detail panel 다중 폴더 chip strip (note + wiki) + 우클릭 메뉴 / floating-action-bar "Add to folders…" + group-by-folder MultiFolderMarker (다른 폴더 카운트) + DnD Shift modifier (no shift = Add, Shift = Move). 10 files +931/-124 LOC, 5 commits, 18 신규 N:M action 테스트.
+
+### Folder N:M 시리즈 총합 (PR a/b/c)
+- **3 PRs**, 17 commits, 65+ files, **+3215 / -685 LOC**
+- 데이터 N:M (PR a) → UI type-strict (PR b) → multi-folder UX (PR c)
+- Test coverage: 167 → 185 (18 신규 N:M action 테스트)
+
+### 이번 세션 핵심 결정사항
+- **FolderPicker는 단일 컴포넌트 + 3가지 export** (Popover / inline-submenu / 훅) — 4곳의 chrome 차이 흡수
+- **DnD modifier 시맨틱**: 일반 drop = Add (N:M 자연), Shift+drop = Move (single 시맨틱 보존). 첫 drop 시 toast로 안내.
+- **MultiFolderMarker**: group-by-folder에서 다중 폴더 노트는 현재 컬럼 외 다른 폴더 수만 chip으로 표시 (전체 chip 아님 — 카드 과밀 방지)
+- **Wiki bulk action**: 별도 floating bar 없음. wiki-list 우클릭 메뉴만. 향후 wiki bulk bar 만들 때 같은 패턴 transplant.
+- **FolderPicker 검색 필터**: 미구현 (50+ 폴더 시점에 도입 검토)
+
+### 이번 세션 기술 학습
+- **FolderPicker 추상화 패턴**: 다양한 chrome (Popover/Submenu/inline-expand) 흡수하는 design = 단일 컴포넌트 + 다중 export. 호출 사이트가 자기 chrome 결정.
+- **DnD shiftKey 감지**: dnd-kit에서 `shiftPressedRef` (global keydown/keyup listener) 패턴으로 re-render 없이 modifier 추적.
+- **vitest + jsdom 미설정**: 프로젝트는 .ts 만 테스트 (component .tsx 테스트 X). 슬라이스 액션 단위 테스트로 대체.
+- **multi-mode picker 디자인**: local pending Set + Apply 버튼이 single-toggle보다 명확. count summary 노출.
+
+### 다음 세션 우선순위 (재정렬)
+
+#### 🔴 즉시 (사용자 워크플로우 차단)
+1. **BUG fix** — 시드 템플릿 더블클릭 에러. 콘솔 메시지 미수집. `template-edit-page.tsx` + `templates-table.tsx` 디버깅 필요.
+
+#### 🟡 큰 작업 후보
+2. **Group C PR-D** — Tags/Labels/Stickers/References/Files view-engine 통합 (5-8 PRs). Templates/Folder가 본보기. **planner 권장**.
+3. **Wiki template 3-layer** (Layout Preset + Content Template + Typed Infobox)
+4. **Smart Book v2** — AutoSource[5] (folder/category/tag/label/sticker)
+5. **Template seed audit** — `PlotTemplate<T>` 추상화 검토
+
+#### 🟣 마지막
+6. **Note UI toolbar** (UpNote-style)
+7. **House (계보 시각화)** — 토론 후 결정
+
+#### 🟢 작은 후속 정리
+- Templates grid chip 시스템 완전 통일 (PR e deviation)
+- NoteTemplate 타입에서 description/status/priority 필드 제거
+- 키보드 shortcut (D/T/P 등) — 노트 + templates 통합
+- Wiki bulk action bar (필요해지면)
+- FolderPicker 검색 필터 (50+ 폴더 시점)
+
+### Plan 문서 보존
+- `.omc/plans/folder-nm-migration.md` (PR a/b/c 모두 완료)
+- `.omc/plans/template-b-edit-ui-unification.md` (이전)
+
+### Store version (현재 v107)
+v100 → v107 (Sticker.members → Template icon/color drop → templates context → visibleColumns 단순화 → description 제거 → seed 9개 주입 → Folder kind+N:M)
+
+---
+
 ## 🚀 2026-05-03 (저녁) — Templates 시리즈 종결 + Folder N:M 시작
 
 **범위**: Templates 시리즈 4개 PR + Folder type-strict N:M 데이터 모델 PR (a) 1개. 총 5개 PR squash-merge.
@@ -38,6 +95,7 @@
 - **#251** PR e — Linear-style properties-aware cards. 12개 도메인 chip (`property-chips.tsx`) + notes/wiki board + templates grid `visibleColumns` wiring + `+N more` overflow. ViewMode union에 "grid" 추가.
 - **#252** PR f — v106 migration: 기존 사용자에게 9개 신규 시드 idempotent 주입.
 - **#253** PR (folder-a) — Folder type-strict + N:M 데이터 모델 + 마이그레이션 v107. Folder.kind: "note"|"wiki", Note.folderIds[], WikiArticle.folderIds[]. 혼합 폴더 자동 분리 (`{name} (Wiki)` 클론). 45 files +634/-169 LOC.
+- **#254** docs: after-work session wrap-up — notepad + worklog 동기화.
 
 ### 핵심 결정사항
 - **Templates 디스플레이 properties 단순화**: status/priority/label/folder/tags/description 폐기 → Index/Updated/Created 3개만
