@@ -43,7 +43,10 @@ import { BookOpen } from "@phosphor-icons/react/dist/ssr/BookOpen"
 import { Quotes } from "@phosphor-icons/react/dist/ssr/Quotes"
 import { Tag as PhTag } from "@phosphor-icons/react/dist/ssr/Tag"
 import { Paperclip } from "@phosphor-icons/react/dist/ssr/Paperclip"
+import { Sticker as StickerPhosphor } from "@phosphor-icons/react/dist/ssr/Sticker"
 import { setWikiCategoryFilter } from "@/lib/wiki-category-filter"
+import { getCurrentViewContextKey, getSavedViewSpaceForActivity } from "@/lib/view-engine/saved-view-context"
+import type { ViewContextKey } from "@/lib/view-engine/types"
 import { ALL_SIDEBAR_ROUTES, setActiveRoute, getActiveRoute, setActiveFolderId, setActiveTagId, setActiveLabelId, useActiveRoute, useActiveFolderId, useActiveTagId, useActiveLabelId, useActiveSpace, setActiveViewId, useActiveViewId, routeGoBack, routeGoForward } from "@/lib/table-route"
 import type { Note, NoteStatus, ActivitySpace } from "@/lib/types"
 import { cn } from "@/lib/utils"
@@ -276,6 +279,7 @@ export function LinearSidebar() {
 
   const tags = usePlotStore((s) => s.tags)
   const labels = usePlotStore((s) => s.labels)
+  const stickers = usePlotStore((s) => s.stickers)
   const templates = usePlotStore((s) => s.templates)
 
   const wikiCategories = usePlotStore((s) => s.wikiCategories)
@@ -532,7 +536,17 @@ export function LinearSidebar() {
   const handleNewViewSubmit = () => {
     const name = newViewName.trim()
     if (name) {
-      createSavedView(name, undefined, activeSpace as any)
+      // Capture current viewState (snapshot UX) instead of creating an empty
+      // default view. Resolves to the active context key by space + route, so
+      // /inbox saves "inbox" filters, /wiki saves "wiki" state, etc.
+      const contextKey = getCurrentViewContextKey(activeSpace, activeRoute)
+      const currentViewState = usePlotStore.getState().viewStateByContext[contextKey]
+      const savedSpace = getSavedViewSpaceForActivity(activeSpace)
+      createSavedView(
+        name,
+        currentViewState as any, // ViewState shape is wider than SavedView.viewState; the slice merges defaults
+        savedSpace
+      )
     }
     setNewViewName("")
     setNewViewOpen(false)
@@ -553,6 +567,26 @@ export function LinearSidebar() {
       setActiveRoute("/notes")
       router.push("/notes")
     }
+  }
+
+  // Saved Views snapshot UX:
+  //  - Update: overwrite saved viewState with the current (dirty) state
+  //  - Reset: discard current edits and re-apply the saved viewState
+  const handleUpdateView = (viewId: string) => {
+    const view = savedViews.find((v) => v.id === viewId)
+    if (!view) return
+    const contextKey = getCurrentViewContextKey(activeSpace, activeRoute)
+    const currentViewState = usePlotStore.getState().viewStateByContext[contextKey]
+    if (!currentViewState) return
+    updateSavedView(viewId, { viewState: currentViewState as any })
+  }
+
+  const handleResetView = (viewId: string) => {
+    const view = savedViews.find((v) => v.id === viewId)
+    if (!view) return
+    const contextKey = getCurrentViewContextKey(activeSpace, activeRoute)
+    const setViewState = usePlotStore.getState().setViewState
+    setViewState(contextKey as ViewContextKey, view.viewState as any)
   }
 
   const renderViewsSection = (spaceFilter: string, routeOnClick: string) => {
@@ -626,6 +660,13 @@ export function LinearSidebar() {
                 </button>
               </ContextMenuTrigger>
               <ContextMenuContent className="w-48">
+                <ContextMenuItem onClick={() => handleUpdateView(view.id)}>
+                  Update view
+                </ContextMenuItem>
+                <ContextMenuItem onClick={() => handleResetView(view.id)}>
+                  Reset to saved
+                </ContextMenuItem>
+                <ContextMenuSeparator />
                 <ContextMenuItem onClick={() => {
                   setRenamingItem({ id: view.id })
                   setRenameValue(view.name)
@@ -908,6 +949,14 @@ export function LinearSidebar() {
                 dragContent={{ type: "labels" }}
               />
               <NavLink
+                href="/stickers"
+                icon={<StickerPhosphor size={20} />}
+                label="Stickers"
+                count={stickers.filter((s) => !s.trashed).length}
+                active={isActive("/stickers")}
+                dragContent={{ type: "stickers" }}
+              />
+              <NavLink
                 href="/templates"
                 icon={<IconTemplate size={20} />}
                 label="Templates"
@@ -1031,6 +1080,17 @@ export function LinearSidebar() {
                 </span>
                 <span className="truncate text-left flex-1">Categories</span>
               </button>
+              {/* Stickers — cross-entity bundling marker. Sticker entries
+                  reference both notes and wiki articles, so the entry point
+                  belongs in every space, not just Notes. */}
+              <NavLink
+                href="/stickers"
+                icon={<StickerPhosphor size={20} />}
+                label="Stickers"
+                count={stickers.filter((s) => !s.trashed).length}
+                active={isActive("/stickers")}
+                dragContent={{ type: "stickers" }}
+              />
             </div>
 
             {/* Wiki Views */}
@@ -1228,6 +1288,17 @@ export function LinearSidebar() {
                   </>
                 )
               })()}
+              {/* Stickers — Group by Sticker is already the default ontology
+                  grouping option, so a direct entry point here keeps the
+                  mental model consistent. */}
+              <NavLink
+                href="/stickers"
+                icon={<StickerPhosphor size={20} />}
+                label="Stickers"
+                count={stickers.filter((s) => !s.trashed).length}
+                active={isActive("/stickers")}
+                dragContent={{ type: "stickers" }}
+              />
             </div>
 
             {/* Node Types removed in Phase 7 — moved into Display popover */}
@@ -1388,11 +1459,21 @@ export function LinearSidebar() {
                 count={attachments.length > 0 ? attachments.length : undefined}
                 active={isActive("/library/files")}
               />
+              {/* Stickers — cross-entity bundling marker, alongside other
+                  cross-cutting library indices (References / Tags / Files). */}
+              <NavLink
+                href="/stickers"
+                icon={<StickerPhosphor size={20} />}
+                label="Stickers"
+                count={stickers.filter((s) => !s.trashed).length}
+                active={isActive("/stickers")}
+                dragContent={{ type: "stickers" }}
+              />
             </div>
           </>
         )}
 
-        {/* ── Home: minimal sidebar — only Inbox.
+        {/* ── Home: minimal sidebar — Inbox + cross-entity entry points.
             Heavy insights moved to Ontology > Insights (PR 6).
             Home view itself surfaces workflow + nudges. */}
         {activeSpace === "home" && (
@@ -1403,6 +1484,16 @@ export function LinearSidebar() {
               label="Inbox"
               count={inboxCount > 0 ? inboxCount : undefined}
               active={isActive("/inbox")}
+            />
+            {/* Stickers — cross-entity grouping is global by definition,
+                so it earns a top-level Home entry point. */}
+            <NavLink
+              href="/stickers"
+              icon={<StickerPhosphor size={20} />}
+              label="Stickers"
+              count={stickers.filter((s) => !s.trashed).length}
+              active={isActive("/stickers")}
+              dragContent={{ type: "stickers" }}
             />
           </div>
         )}

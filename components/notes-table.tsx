@@ -66,6 +66,7 @@ import { toast } from "sonner"
 import { FloatingActionBar } from "@/components/floating-action-bar"
 import { FilterChipBar } from "@/components/filter-bar"
 import { ViewHeader } from "@/components/view-header"
+import { useSaveViewProps } from "@/lib/view-engine/use-save-view-props"
 import { FilterPanel } from "@/components/filter-panel"
 import { DisplayPanel } from "@/components/display-panel"
 import { NOTES_VIEW_CONFIG } from "@/lib/view-engine/view-configs"
@@ -113,11 +114,14 @@ const SORT_FIELD_LABELS: Record<SortField, string> = {
 
 const COLUMN_DEFS: { id: string; label: string; width: string; align?: string; sortField?: SortField; minWidth?: number }[] = [
   { id: "title", label: "Name", width: "flex-1 min-w-0", sortField: "title" },
-  { id: "status", label: "Status", width: "w-[120px] shrink-0", align: "text-right", sortField: "status", minWidth: 400 },
+  // status: header is left-aligned so the "Status" label sits directly above
+  // the status badge in each row (Wiki list pattern). Previously text-right
+  // caused header/data misalignment.
+  { id: "status", label: "Status", width: "w-[120px] shrink-0", sortField: "status", minWidth: 400 },
   { id: "folder", label: "Folder", width: "w-[80px] shrink-0", align: "text-center", sortField: "folder", minWidth: 560 },
   { id: "parent", label: "Parent", width: "w-[100px] shrink-0", align: "text-center", minWidth: 700 },
   { id: "children", label: "Children", width: "w-[72px] shrink-0", align: "text-center", minWidth: 700 },
-  { id: "links", label: "Links", width: "w-[72px] shrink-0", align: "text-center", sortField: "links", minWidth: 600 },
+  { id: "links", label: "Backlinks", width: "w-[72px] shrink-0", align: "text-center", sortField: "links", minWidth: 600 },
   { id: "reads", label: "Reads", width: "w-[72px] shrink-0", align: "text-center", sortField: "reads", minWidth: 720 },
   { id: "wordCount", label: "Words", width: "w-[72px] shrink-0", align: "text-right", sortField: "reads", minWidth: 760 },
   { id: "updatedAt", label: "Updated", width: "w-[80px] shrink-0", align: "text-right", sortField: "updatedAt", minWidth: 280 },
@@ -150,7 +154,7 @@ function TH({
 }) {
   if (!col) {
     return (
-      <span className={`inline-flex items-center text-note font-medium text-muted-foreground ${className}`}>
+      <span className={`inline-flex items-center text-note font-medium text-foreground/80 ${className}`}>
         {label}
       </span>
     )
@@ -158,7 +162,7 @@ function TH({
   const active = sortCol === col
   return (
     <button
-      className={`group/th inline-flex items-center gap-1 text-note font-medium text-muted-foreground transition-colors hover:text-foreground ${className}`}
+      className={`group/th inline-flex items-center gap-1 text-note font-medium text-foreground/80 transition-colors hover:text-foreground ${className}`}
       onClick={() => onSort(col)}
     >
       {label}
@@ -323,6 +327,11 @@ export function NotesTable({
   const effectiveTab = context ?? "all"
   const isTrashView = effectiveTab === "trash"
 
+  // Save view button (snapshot UX): captures or updates the current viewState
+  // for the active context. "all" → notes space; "trash" / "savedView" inherit
+  // the table's effective context so dirty detection works per-page.
+  const { saveViewMode, onSaveView } = useSaveViewProps(effectiveTab as any, "notes")
+
   const backlinksMap = useBacklinksIndex()
 
   const folders = usePlotStore((s) => s.folders)
@@ -378,8 +387,17 @@ export function NotesTable({
     [rawFlatNotes, trashFilterFn]
   )
 
-  // Alphabetical Index toggle (Wiki-pattern parity)
-  const [showAlphaIndex, setShowAlphaIndex] = useState(false)
+  // Alphabetical Index toggle (Wiki-pattern parity).
+  // Stored in viewState.toggles so it persists across saved views — sidebar +
+  // button captures it, ViewHeader Save button restores it.
+  const showAlphaIndex = viewState.toggles?.showAlphaIndex ?? false
+  const setShowAlphaIndex = useCallback(
+    (value: boolean | ((prev: boolean) => boolean)) => {
+      const next = typeof value === "function" ? value(showAlphaIndex) : value
+      updateViewState({ toggles: { ...(viewState.toggles ?? {}), showAlphaIndex: next } })
+    },
+    [showAlphaIndex, viewState.toggles, updateViewState],
+  )
 
   const groups = useMemo<NoteGroup[]>(() => {
     const baseGroups = isTrashView && trashFilter !== "all"
@@ -912,21 +930,13 @@ export function NotesTable({
         icon={<FileText size={20} weight="regular" />}
         title={title ?? "Notes"}
         count={flatNotes.length}
+        saveViewMode={saveViewMode}
+        onSaveView={onSaveView}
         extraToolbarButtons={
           <>
-            {/* Index toggle — Wiki-pattern parity (alphabetical group view) */}
-            <button
-              onClick={() => setShowAlphaIndex((v) => !v)}
-              className={`flex h-7 items-center gap-1.5 rounded-md px-2 text-2xs font-medium transition-all duration-100 ${
-                showAlphaIndex
-                  ? "bg-foreground/10 text-foreground"
-                  : "text-muted-foreground hover:bg-hover-bg hover:text-foreground"
-              }`}
-              title={showAlphaIndex ? "Exit Index" : "Show alphabetical Index"}
-            >
-              <ListBullets size={13} weight="bold" />
-              Index
-            </button>
+            {/* Index toggle moved into the column header row (next to Name) so
+                it sits with the data it acts on, freeing this toolbar for
+                global view-level actions (Filter / Display / Save view). */}
             {viewState.groupBy !== "none" && groups.length > 0 && !showAlphaIndex && (
               <button
                 onClick={() => {
@@ -1162,14 +1172,50 @@ export function NotesTable({
                   </div>
                   {COLUMN_DEFS.filter((col) => col.id === "title" || effectiveVisibleCols.includes(col.id)).map((col) => (
                     <div key={col.id} className={col.align ?? ""}>
-                      <TH
-                        label={col.label}
-                        col={col.sortField}
-                        sortCol={viewState.sortField}
-                        sortDir={viewState.sortDirection}
-                        onSort={handleSort}
-                        className={`${col.align === "text-right" ? "justify-end" : col.align === "text-center" ? "justify-center" : ""}`}
-                      />
+                      {col.id === "title" ? (
+                        <div className="flex items-center justify-between gap-1 pr-0">
+                          <TH
+                            label={col.label}
+                            col={col.sortField}
+                            sortCol={viewState.sortField}
+                            sortDir={viewState.sortDirection}
+                            onSort={handleSort}
+                            className=""
+                          />
+                          {/* Alphabetical Index toggle — sits with the data it groups.
+                              Tight `mr-0` keeps it close to the next (Status) column. */}
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              e.preventDefault()
+                              const next = !showAlphaIndex
+                              // eslint-disable-next-line no-console
+                              console.log("[plot:index-toggle]", { effectiveTab, before: showAlphaIndex, next, viewStateToggles: viewState.toggles })
+                              setShowAlphaIndex(next)
+                              // eslint-disable-next-line no-console
+                              setTimeout(() => console.log("[plot:index-toggle:after]", { storedToggles: usePlotStore.getState().viewStateByContext[effectiveTab as any]?.toggles }), 50)
+                            }}
+                            className={`flex h-6 items-center gap-1 rounded-md px-1.5 text-note font-medium transition-all duration-100 ${
+                              showAlphaIndex
+                                ? "bg-foreground/10 text-foreground"
+                                : "text-foreground/70 hover:bg-hover-bg hover:text-foreground"
+                            }`}
+                            title={showAlphaIndex ? "Exit alphabetical index" : "Show alphabetical index"}
+                          >
+                            <ListBullets size={12} weight="bold" />
+                            <span>Index</span>
+                          </button>
+                        </div>
+                      ) : (
+                        <TH
+                          label={col.label}
+                          col={col.sortField}
+                          sortCol={viewState.sortField}
+                          sortDir={viewState.sortDirection}
+                          onSort={handleSort}
+                          className={`${col.align === "text-right" ? "justify-end" : col.align === "text-center" ? "justify-center" : ""}`}
+                        />
+                      )}
                     </div>
                   ))}
                 </div>
@@ -1620,9 +1666,9 @@ function NoteRowInner({
         )}
       </div>
 
-      {/* Status */}
+      {/* Status — left-aligned to match the column header (Wiki list parity) */}
       {visibleCols.includes("status") && (
-        <div className="flex items-center justify-end">
+        <div className="flex items-center justify-start">
           <StatusBadge status={note.status} />
         </div>
       )}

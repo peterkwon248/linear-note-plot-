@@ -347,7 +347,12 @@ export function OntologyGraphCanvas({
   onPositionsUpdate,
 }: OntologyGraphCanvasProps) {
   const svgRef = useRef<SVGSVGElement>(null)
-  const [, forceRender] = useReducer((c: number) => c + 1, 0)
+  // renderTick must be exposed (not destructured to `_`) because some memos
+  // depend on it to invalidate when forceRender is called — most notably the
+  // hull path computation, which reads node positions from a ref (positionsRef)
+  // that React can't track. Without renderTick in deps, hulls would stay frozen
+  // at their drag-start positions while nodes move to new locations.
+  const [renderTick, forceRender] = useReducer((c: number) => c + 1, 0)
   const { resolvedTheme } = useTheme()
   const isDarkMode = resolvedTheme !== "light"
 
@@ -377,10 +382,13 @@ export function OntologyGraphCanvas({
   /* ── Context menu state (right-click on node or hull) ── */
   // Targets are entity ids ready for store actions (notes are bare ids,
   // wikis are "wiki:<id>"). Aligns with bulkAddSticker's expected format.
+  // hullSticker: when right-clicking a sticker hull, expose the sticker's
+  // identity so the menu can show Rename / Change color / Delete actions.
   const [contextMenu, setContextMenu] = useState<{
     x: number
     y: number
     targets: string[]
+    hullSticker?: { id: string; name: string; color: string }
   } | null>(null)
 
   /* ── Hull drag state ── *
@@ -876,11 +884,14 @@ export function OntologyGraphCanvas({
       idx++
     }
     return hulls
-    // PRD Q3 (a): re-compute every render. n=200 hull build < 5ms so cheap.
+    // n=200 hull build < 5ms so re-computing every render is cheap.
     // positionsRef.current is a ref — React doesn't track ref mutations as
-    // deps, so we use the per-render `transform` (changes on every sim tick
-    // via forceRender) to invalidate the memo when needed.
-  }, [groupBy, visibleEdges, graph.nodes, labels, tags, wikiCategories, folders, stickers, nodeMap, transform])
+    // deps. We rely on `renderTick` (incremented by forceRender on every
+    // sim tick + during drag) to invalidate this memo so hulls follow node
+    // positions. Earlier versions used `transform` here, but that only
+    // changes during panning — node drags never invalidated the memo, so
+    // hulls stayed frozen at the drag-start positions while nodes moved.
+  }, [groupBy, visibleEdges, graph.nodes, labels, tags, wikiCategories, folders, stickers, nodeMap, renderTick])
 
   /* ── Node adjacency for hover highlight ────────────── */
   const connectedToHovered = useCallback(
@@ -1441,17 +1452,28 @@ export function OntologyGraphCanvas({
               const dragTransform = isDragging
                 ? `translate(${hullDragDelta.dx}, ${hullDragDelta.dy})`
                 : undefined
+              // Hull is "selected" when every member node is in multi-select.
+              // Stronger visuals so the user gets clear feedback that the
+              // group click registered (otherwise low default fillOpacity
+              // makes it feel unresponsive).
+              const isSelected =
+                hull.nodeIds.length > 0 &&
+                hull.nodeIds.every((id) => multiSelectedIds.has(id))
               return (
                 <path
                   key={hull.id}
                   d={hull.path}
                   fill={hull.color}
-                  fillOpacity={hullProps.fillOpacity}
+                  fillOpacity={isSelected ? hullProps.fillOpacity * 2.5 : hullProps.fillOpacity}
                   stroke={hull.color}
-                  strokeOpacity={hullProps.strokeOpacity}
-                  strokeWidth={hullProps.strokeWidth}
+                  strokeOpacity={isSelected ? Math.min(1, hullProps.strokeOpacity * 1.6) : hullProps.strokeOpacity}
+                  strokeWidth={isSelected ? hullProps.strokeWidth * 1.8 : hullProps.strokeWidth}
                   transform={dragTransform}
-                  style={{ cursor: isDragging ? "grabbing" : "grab" }}
+                  // pointer-events: "all" — default "visiblePainted" treats very
+                  // low fillOpacity (0.04~0.10) as not-painted in some browsers,
+                  // so clicks pass through. Force hit-testing across the whole
+                  // path regardless of paint visibility.
+                  style={{ cursor: isDragging ? "grabbing" : "grab", pointerEvents: "all" }}
                   onMouseDown={(e) => {
                     // Left-button only — right-click handled by onContextMenu.
                     if (e.button !== 0) return
@@ -1480,7 +1502,19 @@ export function OntologyGraphCanvas({
                     e.preventDefault()
                     e.stopPropagation()
                     setMultiSelectedIds(new Set(hull.nodeIds))
-                    setContextMenu({ x: e.clientX, y: e.clientY, targets: hull.nodeIds })
+                    // If grouped by sticker, attach the sticker identity so
+                    // the context menu can offer rename / recolor / delete.
+                    // Hull id format: `cluster-${groupBy}-${key}` — extract key.
+                    let hullSticker: { id: string; name: string; color: string } | undefined
+                    if (groupBy === "sticker" && stickers) {
+                      const prefix = "cluster-sticker-"
+                      if (hull.id.startsWith(prefix)) {
+                        const stickerId = hull.id.slice(prefix.length)
+                        const s = stickers.find((s) => s.id === stickerId)
+                        if (s) hullSticker = { id: s.id, name: s.name, color: s.color }
+                      }
+                    }
+                    setContextMenu({ x: e.clientX, y: e.clientY, targets: hull.nodeIds, hullSticker })
                   }}
                 />
               )
@@ -1965,6 +1999,7 @@ export function OntologyGraphCanvas({
             }
             hasHidden={hasAnyHidden}
             onShowAll={onShowAll}
+            editingSticker={contextMenu.hullSticker}
           />
         )
       })()}

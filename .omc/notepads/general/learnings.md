@@ -1,5 +1,43 @@
 # Technical Learnings
 
+## 2026-05-03
+
+### SVG pointer-events 함정
+- Default `pointer-events="visiblePainted"`는 fillOpacity가 매우 낮으면 (≤ 0.10) "not painted"로 판단 → 클릭 통과
+- Hull (HULL.fillOpacity = { dark: 0.04, light: 0.10 })가 정확히 이 case
+- 해결: `style.pointerEvents = "all"` 명시 → fillOpacity 무관 항상 hit-test
+- 위치: components/ontology/ontology-graph-canvas.tsx hull `<path>`
+
+### React useMemo + ref 추적 함정
+- ref 값 변경은 React가 추적 X → useMemo deps에 ref 직접 못 씀
+- `forceRender()` 호출만으론 useMemo 재계산 X (deps 불변이면)
+- 해결: `useReducer((c) => c+1, 0)`의 카운터를 deps에 추가 → forceRender 호출마다 카운터 증가 → memo invalidate
+- 패턴: `const [renderTick, forceRender] = useReducer(...)` (이전엔 `const [, forceRender]`로 카운터 버림)
+- 위치: components/ontology/ontology-graph-canvas.tsx clusterHulls useMemo
+
+### 자료구조 본질 차이로 entity 정당화
+- Set vs Sequence는 다른 자료구조 → 다른 entity로 분리 정당
+- Sticker = set (collection, 무순서)
+- Book = sequence (ordered list)
+- 단순 "Sticker의 ordered version"이 아니라 본질 차원 다름
+
+### 사용자 통찰 = 디자인 시그널
+- "Sticker = 글로벌 폴더 같은 것" → 의미 분리 약하다는 신호 (Folder 폐기 후 Sticker 단일화 검토 계기)
+- "Detail 패널 = 본문 변화 추적/반영" → 본문 source of truth 원칙
+- 사용자 직관 무시하지 말 것
+
+### 종이책 메타포 함정
+- "한 책 = 한 종류 콘텐츠" 종이책 패턴에 갇히면 안 됨
+- 디지털 책 = cross-type 자유 (Notion 페이지가 다양한 블록 mix 패턴)
+- Plot의 Sticker도 cross-everything → Book도 같은 패턴 정합
+
+### 대규모 데이터 모델 변경 시 사이드 패널 영향
+- 사이드 패널 = entity 단위 메타 dashboard
+- 모든 큰 PR이 사이드 패널 자기 부분 변경 collateral
+- 별도 "사이드 패널 PR" 없음 — 각 큰 PR에 분배
+
+---
+
 ## 2026-04-30 (Sprint 1.3)
 
 - **replace_all은 들여쓰기까지 매칭** — 동일 코드라도 들여쓰기 다르면 누락. 한 곳씩 수동 변경 필요할 수 있음. (예: wiki-view.tsx line 944 `<IconWiki size={20} />` 8 spaces, 나머지 두 곳은 10 spaces — replace_all에서 944만 누락)

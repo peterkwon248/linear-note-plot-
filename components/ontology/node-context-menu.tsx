@@ -30,6 +30,9 @@ import { Sticker as StickerIcon } from "@phosphor-icons/react/dist/ssr/Sticker"
 import { ArrowsOutCardinal } from "@phosphor-icons/react/dist/ssr/ArrowsOutCardinal"
 import { ArrowsInCardinal } from "@phosphor-icons/react/dist/ssr/ArrowsInCardinal"
 import { CaretRight } from "@phosphor-icons/react/dist/ssr/CaretRight"
+import { PencilSimple } from "@phosphor-icons/react/dist/ssr/PencilSimple"
+import { Palette } from "@phosphor-icons/react/dist/ssr/Palette"
+import { Trash } from "@phosphor-icons/react/dist/ssr/Trash"
 
 /** Default color shown in the new-sticker picker. Matches the first palette
  *  entry the slice would auto-assign so "auto" and "explicit pick" are
@@ -56,6 +59,13 @@ interface NodeContextMenuProps {
   /** Whether any visual filter (hidden/isolate) is active — if so, show "Show all". */
   hasHidden?: boolean
   onShowAll?: () => void
+  /**
+   * When the right-clicked target is a sticker hull, expose the sticker's
+   * identity so the menu can offer Rename / Change color / Delete sticker
+   * actions. The menu uses the store directly (updateSticker / deleteSticker)
+   * — caller just needs to pass the sticker info from the hull.
+   */
+  editingSticker?: { id: string; name: string; color: string }
 }
 
 export function NodeContextMenu({
@@ -70,18 +80,25 @@ export function NodeContextMenu({
   onIsolate,
   hasHidden,
   onShowAll,
+  editingSticker,
 }: NodeContextMenuProps) {
   const stickers = usePlotStore((s) => s.stickers)
   const createSticker = usePlotStore((s) => s.createSticker)
   const bulkAddSticker = usePlotStore((s) => s.bulkAddSticker)
   const updateSticker = usePlotStore((s) => s.updateSticker)
+  const deleteSticker = usePlotStore((s) => s.deleteSticker)
 
   const [view, setView] = useState<"main" | "sticker">("main")
   const [stickerQuery, setStickerQuery] = useState("")
   const [newColor, setNewColor] = useState(DEFAULT_NEW_COLOR)
   /** When set, the per-row color popover is open for this sticker id. */
   const [colorEditingId, setColorEditingId] = useState<string | null>(null)
+  /** Inline rename / color picker state for the editingSticker (hull) header. */
+  const [hullStickerRenaming, setHullStickerRenaming] = useState(false)
+  const [hullStickerRenameValue, setHullStickerRenameValue] = useState("")
+  const [hullStickerColorOpen, setHullStickerColorOpen] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
+  const renameInputRef = useRef<HTMLInputElement>(null)
   const menuRef = useRef<HTMLDivElement>(null)
 
   // Auto-focus input when sticker submenu opens.
@@ -166,6 +183,103 @@ export function NodeContextMenu({
           <div className="px-3 py-1.5 text-2xs text-muted-foreground border-b border-border-subtle">
             {selectedIds.length} {selectedIds.length === 1 ? "node" : "nodes"} selected
           </div>
+
+          {/* ── Sticker meta actions (only when right-clicking a sticker hull) ── */}
+          {editingSticker && (
+            <>
+              <div className="px-3 py-1.5 border-b border-border-subtle bg-muted/30">
+                <div className="text-2xs text-muted-foreground mb-1">Sticker</div>
+                {hullStickerRenaming ? (
+                  <input
+                    ref={renameInputRef}
+                    autoFocus
+                    type="text"
+                    value={hullStickerRenameValue}
+                    onChange={(e) => setHullStickerRenameValue(e.target.value)}
+                    onBlur={() => {
+                      const trimmed = hullStickerRenameValue.trim()
+                      if (trimmed && trimmed !== editingSticker.name) {
+                        updateSticker(editingSticker.id, { name: trimmed })
+                      }
+                      setHullStickerRenaming(false)
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        const trimmed = hullStickerRenameValue.trim()
+                        if (trimmed && trimmed !== editingSticker.name) {
+                          updateSticker(editingSticker.id, { name: trimmed })
+                        }
+                        setHullStickerRenaming(false)
+                        onClose()
+                      }
+                      if (e.key === "Escape") {
+                        setHullStickerRenaming(false)
+                      }
+                    }}
+                    className="w-full bg-background border border-border rounded px-2 py-1 text-note outline-none focus:ring-1 focus:ring-accent"
+                  />
+                ) : (
+                  <div className="flex items-center gap-2">
+                    <span
+                      className="h-2.5 w-2.5 rounded-full shrink-0"
+                      style={{ backgroundColor: editingSticker.color }}
+                    />
+                    <span className="text-note font-medium truncate">{editingSticker.name}</span>
+                  </div>
+                )}
+              </div>
+
+              {!hullStickerRenaming && (
+                <>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setHullStickerRenameValue(editingSticker.name)
+                      setHullStickerRenaming(true)
+                    }}
+                    className="flex items-center gap-2 px-3 py-1.5 text-left hover:bg-accent"
+                  >
+                    <PencilSimple size={14} weight="regular" />
+                    Rename
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setHullStickerColorOpen((v) => !v)}
+                    className="flex items-center gap-2 px-3 py-1.5 text-left hover:bg-accent"
+                  >
+                    <Palette size={14} weight="regular" />
+                    Change color
+                  </button>
+                  {hullStickerColorOpen && (
+                    <div className="px-3 py-2 border-y border-border-subtle bg-muted/30">
+                      <ColorPickerGrid
+                        value={editingSticker.color}
+                        onChange={(c) => {
+                          updateSticker(editingSticker.id, { color: c })
+                          setHullStickerColorOpen(false)
+                        }}
+                        showCustom={false}
+                        size="sm"
+                      />
+                    </div>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      deleteSticker(editingSticker.id)
+                      onClose()
+                    }}
+                    className="flex items-center gap-2 px-3 py-1.5 text-left hover:bg-accent text-destructive"
+                  >
+                    <Trash size={14} weight="regular" />
+                    Delete sticker
+                  </button>
+                </>
+              )}
+
+              <div className="my-1 border-t border-border-subtle" />
+            </>
+          )}
 
           <button
             type="button"

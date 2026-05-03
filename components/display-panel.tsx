@@ -379,6 +379,27 @@ export function DisplayPanel({
             </p>
             <div className="flex flex-wrap gap-1.5">
               {config.properties.map((prop) => {
+                // Special: showAlphaIndex is a display-mode flag stored in
+                // viewState.toggles, not a column in visibleColumns. Route the
+                // chip click through the same toggle channel as LIST OPTIONS.
+                if (prop.key === "showAlphaIndex") {
+                  const active = !!toggleStates["showAlphaIndex"]
+                  return (
+                    <button
+                      key={prop.key}
+                      onClick={() => onToggleChange?.("showAlphaIndex", !active)}
+                      className={[
+                        "inline-flex items-center gap-1 px-2.5 py-1 rounded-md border text-2xs font-medium transition-colors",
+                        active
+                          ? "border-accent/30 bg-accent/[0.14] text-accent/90"
+                          : "border-border-subtle bg-transparent text-muted-foreground",
+                      ].join(" ")}
+                    >
+                      {prop.icon && <span className="shrink-0">{prop.icon}</span>}
+                      {prop.label}
+                    </button>
+                  )
+                }
                 const active = viewState.visibleColumns.includes(prop.key)
                 return (
                   <button

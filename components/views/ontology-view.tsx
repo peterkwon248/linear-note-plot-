@@ -20,6 +20,8 @@ import { buildViewStateForContext } from "@/lib/view-engine/defaults"
 import { rulesToOntologyFilters } from "@/lib/view-engine/graph-filter-adapter"
 import type { OntologyFilters } from "@/components/ontology/ontology-graph-canvas"
 import { Graph } from "@phosphor-icons/react/dist/ssr/Graph"
+import { useActiveViewId } from "@/lib/table-route"
+import { useSaveViewProps } from "@/lib/view-engine/use-save-view-props"
 
 function applyFilters(notes: Note[], filters: OntologyFilters): Note[] {
   return notes.filter((n) => {
@@ -44,6 +46,21 @@ export function OntologyView() {
     (patch: Partial<ViewState>) => setViewState("graph" as ViewContextKey, patch),
     [setViewState]
   )
+
+  // Saved view restoration — when an ontology-scoped saved view becomes active,
+  // hydrate its viewState into viewStateByContext["graph"]
+  const activeViewId = useActiveViewId()
+  const savedViews = usePlotStore((s) => s.savedViews)
+  useEffect(() => {
+    if (!activeViewId) return
+    const view = savedViews.find((v) => v.id === activeViewId)
+    if (view && view.space === "ontology") {
+      setViewState("graph" as ViewContextKey, view.viewState as Parameters<typeof setViewState>[1])
+    }
+  }, [activeViewId]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Save view button (snapshot UX) for Ontology
+  const { saveViewMode: graphSaveViewMode, onSaveView: onSaveGraphView } = useSaveViewProps("graph", "ontology")
 
   // View mode: "graph" or "insights" (lives in graphViewState.viewMode).
   // External event compatibility: legacy listeners that fire `plot:set-ontology-tab`
@@ -261,6 +278,8 @@ export function OntologyView() {
         searchValue={searchQuery}
         onSearchChange={setSearchQuery}
         count={searchMatchIds ? searchMatchIds.size : undefined}
+        saveViewMode={graphSaveViewMode}
+        onSaveView={onSaveGraphView}
         showFilter
         hasActiveFilters={graphFilters.length > 0}
         filterContent={

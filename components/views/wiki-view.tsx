@@ -41,7 +41,7 @@ import {
 } from "@/components/ui/dialog"
 import { cn } from "@/lib/utils"
 import { usePlotStore } from "@/lib/store"
-import { setActiveRoute, getSecondarySpace, setSecondarySpace, getActiveSpace } from "@/lib/table-route"
+import { setActiveRoute, getSecondarySpace, setSecondarySpace, getActiveSpace, useActiveViewId } from "@/lib/table-route"
 import { usePane } from "@/components/workspace/pane-context"
 import { useWikiViewMode, setWikiViewMode, setPendingMergeIds, useActiveCategoryId, setActiveCategoryView } from "@/lib/wiki-view-mode"
 import { ViewHeader } from "@/components/view-header"
@@ -61,6 +61,7 @@ import { WikiMergePage } from "./wiki-merge-page"
 import { WikiSplitPage } from "./wiki-split-page"
 import { WikiCategoryPage } from "./wiki-category-page"
 import { isWikiStub } from "@/lib/wiki-utils"
+import { useSaveViewProps } from "@/lib/view-engine/use-save-view-props"
 
 export function WikiView() {
   const notes = usePlotStore((s) => s.notes)
@@ -125,9 +126,6 @@ export function WikiView() {
   // Category filter from sidebar click
   const categoryFilterTagId = useWikiCategoryFilter()
 
-  // All Articles view state
-  const [showAllArticles, setShowAllArticles] = useState(false)
-
   // Wiki article selection state (for floating action bar)
   const [selectedArticleIds, setSelectedArticleIds] = useState<Set<string>>(new Set())
   const lastClickedIndexRef = useRef<number>(-1)
@@ -144,6 +142,32 @@ export function WikiView() {
     (patch: Partial<ViewState>) => setViewState("wiki" as ViewContextKey, patch),
     [setViewState]
   )
+
+  // All Articles view state — alphabetical index. Lives in viewState.toggles
+  // (showAlphaIndex) so saved views preserve the index-on/off setting.
+  // Must be declared after wikiViewState/updateWikiViewState.
+  const showAllArticles = wikiViewState.toggles?.showAlphaIndex ?? false
+  const setShowAllArticles = useCallback(
+    (show: boolean) => {
+      updateWikiViewState({ toggles: { ...(wikiViewState.toggles ?? {}), showAlphaIndex: show } })
+    },
+    [wikiViewState.toggles, updateWikiViewState],
+  )
+
+  // Saved view restoration — when a wiki-scoped saved view becomes active,
+  // hydrate its viewState into viewStateByContext["wiki"]
+  const activeViewId = useActiveViewId()
+  const savedViews = usePlotStore((s) => s.savedViews)
+  useEffect(() => {
+    if (!activeViewId) return
+    const view = savedViews.find((v) => v.id === activeViewId)
+    if (view && view.space === "wiki") {
+      setViewState("wiki" as ViewContextKey, view.viewState as Parameters<typeof setViewState>[1])
+    }
+  }, [activeViewId]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Save view button (snapshot UX) for Wiki list mode
+  const { saveViewMode: wikiSaveViewMode, onSaveView: onSaveWikiView } = useSaveViewProps("wiki", "wiki")
   const wikiFilters = wikiViewState.filters
   const handleWikiFilterToggle = useCallback((rule: FilterRule) => {
     const exists = wikiFilters.some(
@@ -962,6 +986,8 @@ export function WikiView() {
         icon={<BookOpen size={20} weight="regular" />}
         title="Wiki"
         count={stats.total}
+        saveViewMode={wikiViewMode === "dashboard" ? "hidden" : wikiSaveViewMode}
+        onSaveView={onSaveWikiView}
         showFilter={wikiViewMode !== "dashboard"}
         hasActiveFilters={wikiViewMode === "category" ? categoryFilters.length > 0 : wikiFilters.length > 0}
         filterContent={

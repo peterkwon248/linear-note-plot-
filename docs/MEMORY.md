@@ -1,5 +1,263 @@
 # Plot Project Memory
 
+## ⭐ Plot 정체성 (영구 디자인 원칙, 2026-05-03 확정)
+
+> **"Gentle by default, powerful when needed."**
+> 기본만으로 충분, 원할 때 강력. 소란스럽지 않게.
+> 모든 디자인 결정의 척도.
+
+## ⭐ 작업 원칙 (영구, 모든 PR/작업에 적용)
+
+> **"정확도 + 버그 위험 최소화"**
+
+### 핵심 규칙
+1. 변경 전 코드/패턴 정확히 이해 (추측 X)
+2. 최소 diff (executor scope 초과 X)
+3. 빌드/타입 검증 의무 (`npm run build` + `tsc --noEmit`)
+4. 사용자 reproduce 정보 우선 (추측 fix X)
+5. 마이그레이션 신중 (백업/롤백 가능)
+6. UI + 데이터 모델 분리 PR
+7. Edge case 점검 (빈/거대/hydration/SSR)
+8. 사용자 직관 = 디자인 시그널 (무시 X)
+9. docs는 진실 source (검증된 사실만)
+10. 커밋 메시지 명시 (무엇/왜/검증)
+
+### 재발 방지 사례
+- Executor scope 초과 → 명시적 prompt + 결과 검증
+- 추측 fix → reproduce + 원인 분석 후 fix
+
+---
+
+## 🚀 2026-05-03 세션 — 대규모 디자인 토론 + Hull 버그 fix
+
+**범위**: 코드 변경 (Hull 버그 fix 3개) + 33개 디자인 결정 (앞으로 작업 방향)
+
+### 코드 변경 (PR #237에 누적, 9 → 11 커밋)
+- 90e18f1: Hull 클릭 안 되는 버그 (pointerEvents)
+- 9cec76a: Hull stuck 버그 (renderTick deps)
+- b65caa3: Hull 우클릭 sticker 메타 액션 (Rename / Change color / Delete)
+
+### 핵심 디자인 결정 (33개 → 큰 그림)
+
+#### A. 4사분면 모델 정립
+```
+                Unordered (collection)    Ordered (sequence)
+Type-strict     Folder                    (의미 약함)
+Type-free       Sticker                   Book ⭐ (신규)
+```
+
+#### B. Folder 변경 (큰 PR)
+- type-strict (Note 폴더 = 노트만, Wiki 폴더 = 위키만)
+- N:M 멤버십 (한 노트 → 여러 폴더)
+
+#### C. Sticker v2 (큰 PR, cross-everything)
+- 모든 entity 수용 (Note + Wiki + Tag + Label + Category + File + Reference)
+- 정참조 모델 (`Sticker.members[]`)
+- Universal Entity Picker UI
+
+#### D. Book entity 신규 (v3급 PR)
+- Activity Bar 7번째 (7개 OK)
+- cross-entity (Note + Wiki 포괄, 단일 Book entity)
+- ordered sequence (chapter 순서가 본질)
+- Manual drag-drop default + Auto-sort 액션
+- 시각화: Hull + Sequence edge + 별도 Reading view
+- Wikilink: `[[Book]]` / `[[Book#Chapter]]`
+
+#### E. Page entity = 폐기 (확정)
+- 제텔카스텐 atomic 위배
+- Book entity로 needs 충족 (atomic 보존 + sequence)
+
+#### F. Sandbox + Save view 통합 (옵션 B)
+- Save view = 보기 + 데이터 staging 함께 영구
+- Sandbox = 그래프만 (노트/위키 즉시 영구)
+- Wikilink = 본문에서만, Relation = 그래프에서
+
+#### G. Relation 저장 = 본문 embed 자동 추가
+- 본문 contentJson에 직접 embed (footer 추가 X)
+- 사용자 첫 번째만 prompt + "기억" 옵션
+- 위키: 자동 "See also" 섹션 + entity-ref WikiBlock 일반화
+
+#### H. Sticker 진입점 = Library만 (정정)
+- 이전 4 space에서 추가 → Library만으로 변경
+- 다른 4 space에서 NavLink 제거 작업 필요
+
+#### I. 사이드 패널 변경
+- Detail/Connections/Activity 모두 영향
+- 각 큰 PR이 자기 부분 처리 (별도 사이드 패널 PR 없음)
+
+#### J. Linear-style entity navigation (의미 A)
+- view 안 노트 간 ↑/↓ 키, 1/N 표시
+- 작은 PR로 즉시 가능
+
+#### K. 마크다운 단축키 (Obsidian 90% 수준)
+- Phase 1: `---` Enter 패턴 + Highlight + Image embed
+- Phase 2: Math + Heading anchor
+- Phase 3: Block reference + Definition list (큰 작업)
+
+### 다음 작업 큐 (재정렬, 우선순위 순)
+
+**🟢 작은 polish PR (즉시)**
+1. `---` Enter 패턴 + Highlight + Image embed (마크다운 Phase 1)
+2. Linear-style entity navigation (↑/↓ 키)
+3. Wiki "Blocks" Display Property
+4. Stickers Library만 진입점 (4 space에서 NavLink revert)
+5. Notes 사이드바 위계 (Notes ▼ Status 그룹)
+
+**🟡 중간 PR**
+6. NoteStatus 리네이밍 (PRD 사전 조사 완료)
+7. 마크다운 Phase 2 (Math + Heading anchor)
+8. Filter chip 3-part 드롭다운
+9. Linear 검색창 패턴
+
+**🔴 큰 데이터 모델 PR (의존성 큼)**
+10. Folder type-strict + N:M
+11. Sticker v2 (cross-everything)
+12. Sandbox + Save view 통합
+13. Entity-ref WikiBlock 일반화
+14. 온톨로지 그래프 노드 확장 (모든 entity)
+
+**🟣 v3급 PR (가장 마지막)**
+15. Book entity (cross-entity, ordered sequence)
+16. Activity Bar 7개 확장
+
+**🎨 디자인 polish (별도)**
+- 컬럼 헤더 아이콘 통일
+- Status 아이콘 시리즈 (Linear 빈/반/꽉)
+- Updated/Created 아이콘 분기
+
+### Technical Learnings (이번 세션)
+
+#### 1. Hull 클릭 안 됨 — `pointer-events: visiblePainted` 함정
+- SVG default `pointer-events="visiblePainted"`는 fillOpacity 0.04~0.10을 "not painted"로 판단
+- 클릭 이벤트가 통과해 SVG background로 빠짐
+- 해결: `style.pointerEvents = "all"` 명시
+
+#### 2. Hull stuck 버그 — useMemo deps 누락
+- `clusterHulls` useMemo deps에 viewport `transform`만 있어서 노드 드래그 시 재계산 안 됨
+- `positionsRef`는 ref라 React 추적 X
+- 해결: `forceRender`의 카운터 (renderTick) 노출 + deps에 추가
+
+#### 3. 자료구조 본질 — Set vs Sequence
+- Sticker = collection (set, 무순서)
+- Book = sequence (list, 순서 있음)
+- 다른 자료구조 → 다른 entity 정당화
+
+#### 4. 종이책 메타포 함정
+- "한 책 = 한 종류 콘텐츠" 종이책 메타포에 갇히면 안 됨
+- 디지털 책은 cross-type 자유 (Notion 페이지 패턴)
+- Plot의 Sticker도 cross-everything → Book도 같은 패턴
+
+#### 5. 사용자 통찰 = 디자인 시그널
+- 사용자가 "Sticker = 글로벌 폴더 같은 것" 통찰 = 의미 분리 약하다는 신호
+- 사용자가 "Detail 패널 = 본문 변화 추적/반영" 통찰 = 본문 source of truth 원칙
+- 사용자 직관을 무시하지 말 것
+
+#### 6. Page vs Book — 같은 needs, 다른 정체성 정합
+- Page = sub-entity (atomic 위배)
+- Book = entity 묶음 (atomic 보존)
+- 같은 사용자 needs (소설 회차)지만 정체성 측면에서 Book이 정합
+
+---
+
+## 🚀 2026-05-02 (늦은 밤) 세션 — Index 버튼 위치 통일 + viewState.toggles 보존 (옵션 B)
+
+**범위**: Notes/Wiki list view의 Index 토글 위치 통일. Display 패널 토글 + viewState.toggles 보존으로 saved view에 같이 저장.
+
+### 핵심 결정사항
+- **Index 위치 = Title 컬럼 헤더 옆 inline (통일)**: 데이터 영역에 인접 → "이 컬럼들을 알파벳 그룹화" 의미 명확. 위키도 동일 위치로 마이그레이션
+- **viewState.toggles.showAlphaIndex**: 로컬 useState 폐기, viewState에 보존 → saved view 스냅샷에 자동 포함
+- **컬럼 헤더 inline + Display 패널 두 진입점**: 같은 state (synced), Linear 패턴 모방
+- **viewStateEquals에 toggles 비교 추가**: dirty 검증 범위 확장. Index 토글 변경 시 ViewHeader Save 버튼 자동 등장 (보존 일관성)
+- **ViewHeader extraToolbarButtons는 글로벌 액션만**: Filter/Display/Save view만 — 데이터 액션(Index)은 컬럼으로 강등
+
+### 코드 변경 요약
+- `components/notes-table.tsx` — useState → useCallback 래퍼 (viewState.toggles 패치). ViewHeader에서 Index 버튼 제거. COLUMN_DEFS map의 title 컬럼에 `<button>Index</button>` inline. Collapse-all 버튼 등 다른 extraToolbar 항목은 유지
+- `components/views/wiki-list.tsx` — `ColumnHeaders` props에 `showAlphaIndex` + `onToggleAlphaIndex` 추가. 별도 toolbar의 Index 버튼 + divider 제거. 두 위치(alphabetical view + 일반 view)의 ColumnHeaders 호출처에 props 전달
+- `components/views/wiki-view.tsx` — `showAllArticles` useState 제거 → `wikiViewState.toggles?.showAlphaIndex ?? false`. setShowAllArticles 콜백이 `updateWikiViewState({ toggles: { ..., showAlphaIndex } })` 호출
+- `lib/view-engine/saved-view-context.ts` — `viewStateEquals`에 `toggles` map 비교 추가 (Object.keys 비교 + 각 키 값 비교)
+- `lib/view-engine/view-configs.tsx` — `NOTES_VIEW_CONFIG.displayConfig.toggles`와 `WIKI_VIEW_CONFIG.displayConfig.toggles`에 `{ key: "showAlphaIndex", label: "Alphabetical index" }` 추가
+
+### Technical Learnings
+- **변수 선언 순서 함정**: `wikiViewState`를 사용하는 hook을 그것 정의 위에 놓으면 TS error TS2448 ("used before declaration"). 의존성 그래프 따라 선언 순서 신경 써야
+- **toggles 비교 = saved view 보존의 단서**: 기존 viewStateEquals에서 toggles 비교 빠뜨려서 graph 관련 toggles(showWikilinks 등)도 dirty 감지 안 됐음. 통일된 비교로 모든 toggles가 saved view에 의미 있게 보존됨
+- **컬럼 헤더 inline 토글 = 데이터 액션 / ViewHeader = 글로벌 액션**: Linear 멘탈모델. Filter는 모든 데이터에 적용 → 글로벌. Index는 그룹화 모드 → 데이터 직접 액션 → 컬럼 인접
+
+---
+
+## 🚀 2026-05-02 (밤) 세션 — Saved Views 스냅샷 UX (Linear 패턴, 옵션 C)
+
+**범위**: PR #237 직후 같은 워크트리에서 진행. 사용자 합의된 옵션 C 구현.
+
+### 핵심 결정사항
+- **빈 뷰 생성 → 현재 viewState 캡처로 의미 변경**: 사이드바 + 버튼이 더 이상 빈 default state를 만들지 않음. `createSavedView(name, currentViewState, space)` — 이름 받자마자 현재 활성 context의 viewState 그대로 저장
+- **ViewHeader Save 버튼 신규** (Linear 패턴): 변경 감지 시 강조 색상으로 "Save" 등장. 활성 view 없을 땐 "Save view" popover로 이름 입력
+- **사이드바 우클릭 메뉴 확장**: Update view (덮어쓰기) / Reset to saved (되돌리기) 2개 추가. 기존 Rename / Delete 유지
+- **Dirty 검증 범위**: viewMode/sortField/sortDirection/groupBy/showEmptyGroups + filters[] + visibleColumns[]. toggles는 의도적 제외 (per-context 플래그라 SavedView 모델에 없음)
+- **활성 view 자동 활성화**: save-as 모드에서 새 뷰 생성 시 setActiveViewId 호출 → 이후 편집은 dirty 추적
+- **5 view 모두 적용**: notes-table, notes-board, wiki-view (list mode), ontology-view, calendar-view. wiki dashboard 모드는 의도적 hidden
+
+### 코드 변경 요약
+- **신규 helper**: `lib/view-engine/saved-view-context.ts` — `getCurrentViewContextKey(space, route)`, `getSavedViewSpaceForActivity(space)`, `viewStateEquals(a, b)`
+- **신규 hook**: `lib/view-engine/use-save-view-props.ts` — `useSaveViewProps(contextKey, space)` 자동 계산
+- **사이드바**: `components/linear-sidebar.tsx` — `handleNewViewSubmit` viewState 캡처로 변경, `handleUpdateView` / `handleResetView` 신규, ContextMenu 항목 4개로 확장
+- **ViewHeader**: `components/view-header.tsx` — `saveViewMode` (hidden/save-as/update/clean) + `onSaveView` props 추가, FloppyDisk 아이콘 + Save 버튼 (popover/직접 호출 분기)
+- **5 view 호출처**: notes-table, notes-board, wiki-view, ontology-view, calendar-view에 `useSaveViewProps` 호출 + ViewHeader prop 전달
+
+### 다음 작업 후보 (큐)
+- **NoteStatus 리네이밍 Phase 1** — `inbox/capture/permanent` → `stone/brick/keystone` + IDB v101 마이그레이션. PRD 사전 조사 완료
+- **Filter chip 3-part 드롭다운 Step B** — Field/Operator/Value 모두 popover, Linear 한 술 더 뜸
+- **linear-sidebar wiki space 카테고리 트리 표시** — 현재 wiki-category-page에서만 색 dot 보임
+- **dead code 정리** — `components/views/wiki-sidebar.tsx`
+
+### Technical Learnings
+- **shallow viewState 비교**: filters/visibleColumns는 deep 비교 안 해도 ordering이 stable해서 index-based 비교로 충분 (filter 추가 시 항상 끝에 push)
+- **save-as 자동 activate**: createSavedView 후 setActiveViewId — 사용자가 입력 후 즉시 dirty 추적 시작
+- **dynamic context (notes)**: notes context는 route에 따라 inbox/capture/permanent/folder/tag/label 변동. helper가 route 분기로 처리
+- **ViewHeader save 버튼 클로저 함정**: hydrated 가드 안 두면 Popover 마운트 시점이 server vs client 다름. 기존 Filter/Display 패턴 그대로 따름
+
+---
+
+## 🚀 2026-05-02 (오후) 세션 — docs 정리 + Saved Views 완성 + 카테고리 색 UI + Sticker 사이드바 (사이드바 polish + Sticker 1급 UI 통합 PR)
+
+**범위**: 5개 작업 묶음 PR. PR #236 직후 fresh worktree에서 시작.
+
+### 핵심 결정사항
+- **stale docs 5개 archive로 분리**: TODO.md/NEXT-ACTION.md/SESSION-LOG.md (CONTEXT.md/MEMORY.md/worklog와 정보 중복, 매번 갱신 누락 패턴), PHASE-PLAN-wiki-enrichment.md (v75→v83 가정 깨짐), plot-discussion/ 11개 (historical, 일부 결정 뒤집힘). **single source 원칙**: 이제 CONTEXT.md + MEMORY.md만 갱신
+- **PHASE-PLAN-wiki-enrichment 분할 재작성 방침**: 한 큰 PRD 대신 필요할 때 작은 단위로 (REDESIGN_INFOBOX_TIER1, REDESIGN_BANNER_NAVBOX, REDESIGN_MACROS)
+- **Sticker 1급 UI 완성**: 그래프 우클릭 메뉴에서만 가능했던 sticker 생성/관리를 라벨처럼 사이드바 진입점 + /stickers 페이지로. LabelsView 패턴 1:1 복제 (754줄)
+- **Saved Views Wiki/Ontology/Calendar 완성**: 기존 Notes 패턴 복제 — Notes의 viewState 복원 useEffect를 3개 view로 확장, SavedView.space 가드 추가
+- **SavedView.viewMode 타입에 graph/dashboard 추가**: ontology saved view viewMode 보존 가능 (잠재 버그 사전 차단)
+- **Saved Views 스냅샷 UX 결함 식별**: 현재 사이드바 + 버튼은 빈 default state 뷰만 생성. ViewHeader Save 버튼 부재 → 사용자가 현재 viewState를 스냅샷으로 저장 불가. 다음 PR로 분리 (옵션 C: ViewHeader Save + 사이드바 + 버튼 의미 변경)
+
+### 코드 변경 요약
+- **이동**: `docs/TODO.md` → `docs/.archive/`, NEXT-ACTION/SESSION-LOG/PHASE-PLAN-wiki-enrichment 동일, `docs/plot-discussion/` → `docs/.archive/plot-discussion/`
+- **신규 docs**: `docs/.archive/README.md` (보관 이유 가이드)
+- **타입**: `lib/types.ts:314` SavedView.viewMode union에 `"graph" | "dashboard"` 추가
+- **3개 view (saved view 복원)**: `components/views/wiki-view.tsx`, `ontology-view.tsx`, `components/calendar-view.tsx`에 `useActiveViewId` import + savedView 복원 useEffect (~10줄 × 3)
+- **카테고리 UI**: `components/views/wiki-category-page.tsx` 121줄 추가 — ContextMenu/ColorPickerGrid/Popover imports, CategoryFullListView에 색 dot + ContextMenu(Rename/Change color/Delete + undo), CategoryEditor에 Color Popover. `lib/store/types.ts` updateWikiCategory color 파라미터 추가
+- **Sticker UI (신규)**:
+  - `components/views/stickers-view.tsx` 신규 (754줄, LabelsView 복제)
+  - `app/(app)/stickers/page.tsx` 신규 shell
+  - `app/(app)/layout.tsx` StickersView always-mounted 등록
+  - `components/linear-sidebar.tsx` More 섹션에 Stickers NavLink (Sticker Phosphor 아이콘 + count + dragContent)
+  - `lib/table-route.ts` VIEW_ROUTES에 `/stickers` 추가
+
+### 다음 작업 후보 (큐)
+- **Saved Views 스냅샷 UX 개선 (옵션 C)** — ViewHeader Save 버튼 + 사이드바 + 버튼 의미 변경 (현재 viewState 캡처). 사용자 합의됨, 별도 PR
+- **NoteStatus 리네이밍 Phase 1** — `inbox/capture/permanent` → `stone/brick/keystone` + IDB v101 마이그레이션. PRD 사전 조사 완료 (영향 범위 65 파일/353회). NoteTemplate.status, settings-store startView, graph-filter-adapter 인라인 리터럴, 테스트 4개, AGENTS.md까지 포함
+- **Filter chip 3-part 드롭다운 Step B** — Field/Operator/Value 모두 popover, Linear 한 술 더 뜸. 사용자 명시 요청
+- **카테고리 사이드바 트리** — linear-sidebar의 wiki space에 카테고리 트리 + 색 dot. 이번 PR scope 초과로 deferred
+- **dead code 정리** — `components/views/wiki-sidebar.tsx` 어디서도 import 안 됨, 삭제 후보
+
+### Technical Learnings
+- **dead code 발견**: `components/views/wiki-sidebar.tsx`는 자기 자신만 정의, 어디서도 import 안 됨. 다음 정리 PR에서 삭제 후보
+- **Saved View 적용 범위**: 사이드바 라우팅은 모든 space에서 동작했으나 viewState 복원은 Notes만 동작이었음. useEffect 패턴 복제만으로 해결 (~10줄/view)
+- **Saved View 스냅샷 UX 결함**: + 버튼이 `createSavedView(name, undefined, space)` 호출 → 빈 default state 뷰 생성. 사용자가 "내 현재 상태를 저장" 의도로 + 누르면 빈 뷰만 생기는 문제. Linear 패턴 (ViewHeader Save 버튼)이 정답
+- **single source docs 원칙**: 정보 중복 = 갱신 누락의 주범. CONTEXT.md/MEMORY.md/worklog가 같은 정보를 다른 형식으로 보존 → 별도 TODO/NEXT-ACTION/SESSION-LOG는 stale의 불가피한 운명
+- **LabelsView 1:1 복제 패턴**: Sticker UI 만들 때 LabelsView 구조 그대로 복제 → 일관된 UX 자동 보장. drag-to-select, ColorPickerGrid, ContextMenu, ViewHeader 등 동일
+
+---
+
 ## 🚀 2026-05-01 ~ 2026-05-02 세션 — Light Mode + Ontology 대규모 재설계 + Group by Hull + Sticker entity + Dashboard 3분할 (단일 PR 누적)
 
 **범위**: 12개 큰 작업이 한 PR에 누적.

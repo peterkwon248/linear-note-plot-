@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useMemo, useCallback } from "react"
+import { useState, useMemo, useCallback, useEffect } from "react"
 import {
   startOfMonth,
   endOfMonth,
@@ -30,6 +30,8 @@ import type { NoteStatus } from "@/lib/types"
 import { usePlotStore } from "@/lib/store"
 import { useNotesView } from "@/lib/view-engine/use-notes-view"
 import { useBacklinksIndex } from "@/lib/search/use-backlinks-index"
+import { useActiveViewId } from "@/lib/table-route"
+import { useSaveViewProps } from "@/lib/view-engine/use-save-view-props"
 import { ViewHeader } from "@/components/view-header"
 import { FilterPanel } from "@/components/filter-panel"
 import { DisplayPanel } from "@/components/display-panel"
@@ -669,6 +671,21 @@ export function CalendarView({
     [setViewState]
   )
 
+  // Saved view restoration — when a calendar-scoped saved view becomes active,
+  // hydrate its viewState into viewStateByContext["calendar"]
+  const activeViewId = useActiveViewId()
+  const savedViews = usePlotStore((s) => s.savedViews)
+  useEffect(() => {
+    if (!activeViewId) return
+    const view = savedViews.find((v) => v.id === activeViewId)
+    if (view && view.space === "calendar") {
+      setViewState("calendar" as ViewContextKey, view.viewState as Parameters<typeof setViewState>[1])
+    }
+  }, [activeViewId]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Save view button (snapshot UX) for Calendar
+  const { saveViewMode: calSaveViewMode, onSaveView: onSaveCalView } = useSaveViewProps("calendar", "calendar")
+
   // dateSource derived from sortField
   const dateSource: DateSource = calViewState.sortField === "updatedAt" ? "updatedAt" : "createdAt"
   // layers derived from toggles
@@ -855,6 +872,8 @@ export function CalendarView({
         icon={<CalendarDots size={20} weight="regular" />}
         title={headerTitle}
         count={currentMonthCount}
+        saveViewMode={calSaveViewMode}
+        onSaveView={onSaveCalView}
         showFilter
         hasActiveFilters={calendarFilters.length > 0}
         filterContent={

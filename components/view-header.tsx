@@ -21,6 +21,7 @@ import { setSecondarySpace, getSecondarySpace } from "@/lib/table-route"
 import { useActiveSpace } from "@/lib/table-route"
 import { usePane } from "@/components/workspace/pane-context"
 import { usePlotStore } from "@/lib/store"
+import { FloppyDisk } from "@phosphor-icons/react/dist/ssr/FloppyDisk"
 
 /* ── Header Icon Button ── */
 
@@ -90,6 +91,19 @@ interface ViewHeaderProps {
   onCreateNew?: () => void
   /** Custom create menu content — renders + as a popover trigger with this content */
   createMenuContent?: ReactNode
+
+  /* ── Saved View Snapshot UX ── */
+
+  /**
+   * Save view button mode.
+   *  - "hidden": no button (default)
+   *  - "save-as": no active view → opens name-input popover, captures current state
+   *  - "update": active view, dirty → "Save changes" overwrites saved viewState
+   *  - "clean": active view, no changes → button hidden (or rendered greyed out)
+   */
+  saveViewMode?: "hidden" | "save-as" | "update" | "clean"
+  /** Called when user clicks Save (update mode) or submits the name (save-as mode) */
+  onSaveView?: (name?: string) => void
 }
 
 export function ViewHeader({
@@ -112,6 +126,8 @@ export function ViewHeader({
   extraToolbarButtons,
   onCreateNew,
   createMenuContent,
+  saveViewMode = "hidden",
+  onSaveView,
 }: ViewHeaderProps) {
   const pane = usePane()
   // Internal search state if not controlled
@@ -143,7 +159,19 @@ export function ViewHeader({
     if (displayOpen) setFilterOpen(false)
   }, [displayOpen])
 
-  const hasToolbar = showFilter || showDisplay || showDetailPanel || onCreateNew
+  const showSaveButton = saveViewMode === "save-as" || saveViewMode === "update"
+  const hasToolbar = showFilter || showDisplay || showDetailPanel || onCreateNew || showSaveButton
+
+  // Save-as popover state (collect view name)
+  const [saveAsOpen, setSaveAsOpen] = useState(false)
+  const [saveAsName, setSaveAsName] = useState("")
+
+  const handleSaveAsSubmit = () => {
+    const name = saveAsName.trim()
+    if (name && onSaveView) onSaveView(name)
+    setSaveAsName("")
+    setSaveAsOpen(false)
+  }
 
   return (
     <>
@@ -196,6 +224,60 @@ export function ViewHeader({
         {hasToolbar && (
           <div className="flex items-center gap-0.5">
             {extraToolbarButtons}
+
+            {/* Save view button — Linear pattern. Update mode shows when dirty,
+                save-as mode shows when no active view exists. Either reveals
+                an explicit signal so the user knows there are unsaved changes. */}
+            {showSaveButton && (
+              saveViewMode === "update" ? (
+                <button
+                  onClick={() => onSaveView?.()}
+                  className="flex h-7 items-center gap-1 rounded-md border-none bg-accent/10 px-2 text-2xs font-medium text-accent transition-colors hover:bg-accent/15"
+                  title="Save changes to this view"
+                >
+                  <FloppyDisk size={12} weight="regular" />
+                  <span>Save</span>
+                </button>
+              ) : (
+                hydrated ? (
+                  <Popover open={saveAsOpen} onOpenChange={(o) => { setSaveAsOpen(o); if (!o) setSaveAsName("") }}>
+                    <PopoverTrigger asChild>
+                      <button
+                        className="flex h-7 items-center gap-1 rounded-md border-none bg-secondary/60 px-2 text-2xs font-medium text-foreground/80 transition-colors hover:bg-hover-bg hover:text-foreground"
+                        title="Save current filters/sort/grouping as a view"
+                      >
+                        <FloppyDisk size={12} weight="regular" />
+                        <span>Save view</span>
+                      </button>
+                    </PopoverTrigger>
+                    <PopoverContent
+                      align="end"
+                      sideOffset={5}
+                      className="w-[240px] rounded-lg border border-border-subtle bg-surface-overlay p-2 shadow-lg"
+                    >
+                      <input
+                        autoFocus
+                        type="text"
+                        value={saveAsName}
+                        onChange={(e) => setSaveAsName(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") handleSaveAsSubmit()
+                          if (e.key === "Escape") { setSaveAsName(""); setSaveAsOpen(false) }
+                        }}
+                        placeholder="View name"
+                        className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-note text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-accent"
+                      />
+                    </PopoverContent>
+                  </Popover>
+                ) : (
+                  <button className="flex h-7 items-center gap-1 rounded-md border-none bg-secondary/60 px-2 text-2xs font-medium text-foreground/80">
+                    <FloppyDisk size={12} weight="regular" />
+                    <span>Save view</span>
+                  </button>
+                )
+              )
+            )}
+
             {showFilter && (
               hydrated ? (
                 <Popover open={filterOpen} onOpenChange={setFilterOpen}>

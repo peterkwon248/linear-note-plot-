@@ -30,6 +30,22 @@ import { cn } from "@/lib/utils"
 import { toast } from "sonner"
 import { pushUndo, popUndo } from "@/lib/undo-manager"
 import { setActiveCategoryView } from "@/lib/wiki-view-mode"
+import {
+  ContextMenu,
+  ContextMenuContent,
+  ContextMenuItem,
+  ContextMenuSub,
+  ContextMenuSubTrigger,
+  ContextMenuSubContent,
+  ContextMenuSeparator,
+  ContextMenuTrigger,
+} from "@/components/ui/context-menu"
+import { ColorPickerGrid } from "@/components/color-picker-grid"
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover"
 
 /* ── Props ── */
 
@@ -538,6 +554,8 @@ function CategoryFullListView({
   onDoubleClick?: (id: string) => void
 }) {
   const showCol = (key: string) => !displayProps || displayProps.includes(key)
+  const updateWikiCategory = usePlotStore((s) => s.updateWikiCategory)
+  const deleteWikiCategory = usePlotStore((s) => s.deleteWikiCategory)
   const catMap = useMemo(() => new Map(categories.map((c) => [c.id, c])), [categories])
 
   const getDepthLocal = useCallback(
@@ -683,6 +701,53 @@ function CategoryFullListView({
     if (selectedId === null) setExpandedCatId(null)
   }, [selectedId])
 
+  const handleDeleteCat = useCallback((catId: string) => {
+    const cat = categories.find((c) => c.id === catId)
+    if (!cat) return
+    const snapshot: WikiCategory = { ...cat }
+    const orphanedParentRefs: { catId: string; parentId: string }[] = []
+    for (const c of categories) {
+      for (const pid of c.parentIds) {
+        if (pid === catId) orphanedParentRefs.push({ catId: c.id, parentId: pid })
+      }
+    }
+    const articleCatRefs: { articleId: string; categoryId: string }[] = []
+    for (const a of articles) {
+      for (const cid of a.categoryIds ?? []) {
+        if (cid === catId) articleCatRefs.push({ articleId: a.id, categoryId: cid })
+      }
+    }
+    deleteWikiCategory(catId)
+    pushUndo(
+      `Delete category "${snapshot.name}"`,
+      () => {
+        const { wikiCategories: currentCats } = usePlotStore.getState()
+        usePlotStore.setState({ wikiCategories: [...currentCats, snapshot] })
+        if (orphanedParentRefs.length > 0) {
+          const updated = usePlotStore.getState().wikiCategories.map((c) => {
+            const refs = orphanedParentRefs.filter((r) => r.catId === c.id)
+            if (refs.length === 0) return c
+            return { ...c, parentIds: [...new Set([...c.parentIds, ...refs.map((r) => r.parentId)])] }
+          })
+          usePlotStore.setState({ wikiCategories: updated })
+        }
+        if (articleCatRefs.length > 0) {
+          const updatedArts = usePlotStore.getState().wikiArticles.map((a) => {
+            const refs = articleCatRefs.filter((r) => r.articleId === a.id)
+            if (refs.length === 0) return a
+            return { ...a, categoryIds: [...new Set([...(a.categoryIds ?? []), ...refs.map((r) => r.categoryId)])] }
+          })
+          usePlotStore.setState({ wikiArticles: updatedArts })
+        }
+        toast.success(`Restored "${snapshot.name}"`)
+      },
+      () => { usePlotStore.getState().deleteWikiCategory(snapshot.id) }
+    )
+    toast.success(`Deleted "${snapshot.name}"`, {
+      action: { label: "Undo", onClick: () => popUndo() },
+    })
+  }, [categories, articles, deleteWikiCategory])
+
   const tierLabel = (depth: number) => {
     if (depth === 0) return "1st"
     if (depth === 1) return "2nd"
@@ -798,6 +863,8 @@ function CategoryFullListView({
               const familyDepth = (group as any).depthMap?.[cat.id] ?? 0
               return (
               <div key={cat.id} style={grouping === "family" ? { paddingLeft: `${familyDepth * 24}px` } : undefined}>
+                <ContextMenu>
+                  <ContextMenuTrigger asChild>
                 <button
                   onClick={(e) => {
                     e.stopPropagation()
@@ -812,6 +879,10 @@ function CategoryFullListView({
                   }`}
                 >
                   <div className="flex flex-1 items-center gap-2.5 min-w-0">
+                    <span
+                      className="h-2 w-2 shrink-0 rounded-full"
+                      style={{ backgroundColor: cat.color ?? "#6b7280" }}
+                    />
                     <FolderSimple
                       size={16}
                       weight="duotone"
@@ -860,6 +931,32 @@ function CategoryFullListView({
                     </span>
                   )}
                 </button>
+                  </ContextMenuTrigger>
+                  <ContextMenuContent className="w-48">
+                    <ContextMenuItem
+                      onClick={() => onDoubleClick?.(cat.id)}
+                      className="text-note"
+                    >
+                      Rename
+                    </ContextMenuItem>
+                    <ContextMenuSub>
+                      <ContextMenuSubTrigger className="text-note">Change color</ContextMenuSubTrigger>
+                      <ContextMenuSubContent className="p-2">
+                        <ColorPickerGrid
+                          value={cat.color ?? "#6b7280"}
+                          onChange={(color) => updateWikiCategory(cat.id, { color })}
+                        />
+                      </ContextMenuSubContent>
+                    </ContextMenuSub>
+                    <ContextMenuSeparator />
+                    <ContextMenuItem
+                      onClick={() => handleDeleteCat(cat.id)}
+                      className="text-note text-destructive focus:text-destructive"
+                    >
+                      Delete
+                    </ContextMenuItem>
+                  </ContextMenuContent>
+                </ContextMenu>
 
                 {/* Expanded: show articles in this category */}
                 {expandedCatId === cat.id && catArticles.length > 0 && (
@@ -1086,6 +1183,30 @@ function CategoryEditor({
           className="w-full bg-transparent text-xl font-semibold text-foreground placeholder:text-muted-foreground/60 border-none outline-none rounded-md px-1 -ml-1 hover:bg-hover-bg focus:bg-secondary/30 focus:ring-1 focus:ring-accent/30 transition-colors"
           placeholder="Category name"
         />
+      </div>
+
+      {/* Color */}
+      <div className="px-6 pb-1">
+        <Popover>
+          <PopoverTrigger asChild>
+            <button
+              className="flex items-center gap-1.5 rounded-md px-2 py-1 text-2xs text-muted-foreground hover:bg-hover-bg transition-colors"
+              title="Change color"
+            >
+              <span
+                className="h-3 w-3 rounded-full border border-border-subtle shrink-0"
+                style={{ backgroundColor: category.color ?? "#6b7280" }}
+              />
+              <span>Color</span>
+            </button>
+          </PopoverTrigger>
+          <PopoverContent className="w-auto p-2">
+            <ColorPickerGrid
+              value={category.color ?? "#6b7280"}
+              onChange={(color) => updateWikiCategory(categoryId, { color })}
+            />
+          </PopoverContent>
+        </Popover>
       </div>
 
       {/* Description */}
