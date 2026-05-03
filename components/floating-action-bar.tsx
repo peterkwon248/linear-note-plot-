@@ -69,6 +69,10 @@ export function FloatingActionBar({
   // Folders are global containers (notes + wikis). Listed here for the
   // bulk "Move to folder" picker popover.
   const folders = usePlotStore((s) => s.folders)
+  // PR (c) — N:M bulk add. Used by the "Add to folders…" multi-picker
+  // to layer membership on top of existing memberships (set union per
+  // note), as opposed to the legacy Move-to-folder which wipes + sets.
+  const addNoteToFolder = usePlotStore((s) => s.addNoteToFolder)
 
   /* ── GitMerge ── */
   const [mergeOpen, setMergeOpen] = useState(false)
@@ -438,16 +442,18 @@ export function FloatingActionBar({
               <PhLink size={16} weight="regular" /> Link
             </button>
 
-            {/* Move to folder — bulk apply to all selected notes. Folders are
-                global containers shared with wiki articles, so the picker
-                shows every available folder + a "No folder" reset option. */}
+            {/* Move to folder — bulk single-folder replace. Each selected
+                note's folderIds is overwritten with [chosen] (or [] for
+                No folder). Use this when you want exclusive membership.
+                The N:M-aware "Add to folders…" button below preserves
+                existing memberships and just layers on more. */}
             <Popover>
               <PopoverTrigger asChild>
                 <button
                   className="inline-flex items-center gap-1 rounded-md bg-secondary/60 px-3 py-2 text-ui font-medium text-muted-foreground hover:bg-hover-bg hover:text-foreground transition-colors"
-                  title="Move selected notes to a folder"
+                  title="Move selected notes to a folder (replaces existing memberships)"
                 >
-                  <FolderOpen size={16} weight="regular" /> Folder
+                  <FolderOpen size={16} weight="regular" /> Move
                 </button>
               </PopoverTrigger>
               <PopoverContent align="center" className="w-56 p-1">
@@ -465,6 +471,46 @@ export function FloatingActionBar({
                       batchUpdateNotes(ids, { folderIds: [folderId] })
                       toast(`${count} note${count !== 1 ? "s" : ""} moved to ${target?.name ?? "folder"}`)
                     }
+                  }}
+                />
+              </PopoverContent>
+            </Popover>
+
+            {/* Add to folders… — bulk N:M add. Multi-select picker; on
+                Apply, every selected folder is union-added to every
+                selected note (idempotent — addNoteToFolder no-ops on
+                duplicates). currentFolderIds is intentionally [] in the
+                picker since we're adding across many notes with possibly
+                divergent memberships — showing one note's set would lie
+                about the others. */}
+            <Popover>
+              <PopoverTrigger asChild>
+                <button
+                  className="inline-flex items-center gap-1 rounded-md bg-secondary/60 px-3 py-2 text-ui font-medium text-muted-foreground hover:bg-hover-bg hover:text-foreground transition-colors"
+                  title="Add selected notes to one or more folders (preserves existing memberships)"
+                >
+                  <FolderOpen size={16} weight="regular" /> Add to
+                </button>
+              </PopoverTrigger>
+              <PopoverContent align="center" className="w-56 p-1">
+                <FolderPicker
+                  kind="note"
+                  currentFolderIds={[]}
+                  selectMode="multi"
+                  onApply={(folderIds) => {
+                    if (folderIds.length === 0) return
+                    for (const noteId of ids) {
+                      for (const folderId of folderIds) {
+                        addNoteToFolder(noteId, folderId)
+                      }
+                    }
+                    const folderNames = folderIds
+                      .map((fid) => folders.find((f) => f.id === fid)?.name)
+                      .filter(Boolean)
+                      .join(", ")
+                    toast(
+                      `Added ${count} note${count !== 1 ? "s" : ""} to ${folderNames}`,
+                    )
                   }}
                 />
               </PopoverContent>

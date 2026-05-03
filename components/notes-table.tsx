@@ -73,7 +73,7 @@ import { NOTES_VIEW_CONFIG } from "@/lib/view-engine/view-configs"
 import { setActiveFolderId, usePendingFilters, clearPendingFilters } from "@/lib/table-route"
 import { setNoteDragData } from "@/lib/drag-helpers"
 import { pushUndo } from "@/lib/undo-manager"
-import { useFolderPickerData } from "@/components/folder-picker"
+import { useFolderPickerData, FolderPicker } from "@/components/folder-picker"
 
 /* ── Helpers ───────────────────────────────────────────── */
 
@@ -1343,6 +1343,11 @@ export function NotesTable({
                               onStatus={(s) => updateNote(item.note.id, { status: s })}
                               onSetFolder={(folderId) => updateNote(item.note.id, { folderIds: folderId ? [folderId] : [] })}
                               onRemoveFolder={() => updateNote(item.note.id, { folderIds: [] })}
+                              // PR (c): N:M multi-folder commit. Caller wires
+                              // setNoteFolders directly so we don't go through
+                              // updateNote (which would bypass the kind filter
+                              // safety net in the action layer).
+                              onSetFolders={(folderIds) => usePlotStore.getState().setNoteFolders(item.note.id, folderIds)}
                               onKeep={() => { triageKeep(item.note.id); pushUndo("Triage to Capture", () => moveBackToInbox(item.note.id), () => triageKeep(item.note.id)) }}
                               onSnooze={(opt) => triageSnooze(item.note.id, getSnoozeTime(opt))}
                               onTrash={() => { triageTrash(item.note.id); pushUndo("Trash note", () => toggleTrash(item.note.id), () => triageTrash(item.note.id)) }}
@@ -1480,6 +1485,8 @@ interface NoteRowProps {
   onStatus: (s: NoteStatus) => void
   onSetFolder: (folderId: string) => void
   onRemoveFolder: () => void
+  /** PR (c) — Multi-folder Apply (replaces entire set). */
+  onSetFolders: (folderIds: string[]) => void
   onKeep: () => void
   onSnooze: (opt: SnoozePreset) => void
   onTrash: () => void
@@ -1570,6 +1577,7 @@ function NoteRowInner({
   onStatus,
   onSetFolder,
   onRemoveFolder,
+  onSetFolders,
   onKeep,
   onSnooze,
   onTrash,
@@ -1970,10 +1978,11 @@ function NoteRowInner({
           </ContextMenuSubContent>
         </ContextMenuSub>
 
-        {/* ── Move to folder ── *
-         * Folders in Plot are global containers — they hold both notes and
-         * wiki articles. Submenu lists all folders + a "No folder" option to
-         * unset, mirroring the sidebar's folder-picker UX. */}
+        {/* ── Move to folder (single-replace) ── *
+         * Single-folder semantic: replaces the entire folderIds set with
+         * the chosen folder. PR (c) keeps this for users who want
+         * exclusive membership; the new "Add to folders…" submenu below
+         * exposes the N:M multi-toggle path. */}
         <ContextMenuSub>
           <ContextMenuSubTrigger className="text-note">
             <FolderOpen className="mr-2 text-muted-foreground" size={16} weight="regular" />
@@ -2013,6 +2022,29 @@ function NoteRowInner({
               <PhPlus className="mr-2" size={14} weight="bold" />
               New folder…
             </ContextMenuItem>
+          </ContextMenuSubContent>
+        </ContextMenuSub>
+
+        {/* ── Add to folders… (multi-toggle, PR c) ── *
+         * The N:M surface in the right-click menu. Embeds the shared
+         * FolderPicker in selectMode="multi" inside a ContextMenuSubContent
+         * — Apply commits the entire new set via setNoteFolders. Loses
+         * native ContextMenu keyboard nav inside the picker (Radix doesn't
+         * propagate arrow keys into nested non-MenuItem children) but
+         * gains the discoverable checkbox UX that single-toggle
+         * MenuItems can't produce in a single click. */}
+        <ContextMenuSub>
+          <ContextMenuSubTrigger className="text-note">
+            <FolderOpen className="mr-2 text-muted-foreground" size={16} weight="regular" />
+            Add to folders…
+          </ContextMenuSubTrigger>
+          <ContextMenuSubContent className="w-56 p-1">
+            <FolderPicker
+              kind="note"
+              currentFolderIds={note.folderIds}
+              selectMode="multi"
+              onApply={(ids) => onSetFolders(ids)}
+            />
           </ContextMenuSubContent>
         </ContextMenuSub>
 

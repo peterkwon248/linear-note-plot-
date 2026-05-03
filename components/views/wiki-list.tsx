@@ -450,8 +450,9 @@ function ArticleTableRow({
               )}
 
               {/* Move to folder — PR (b): kind-aware shared picker. Wiki rows
-                  always operate on a wiki article → kind="wiki". PR (c) adds
-                  multi-folder semantics for the same picker. */}
+                  always operate on a wiki article → kind="wiki". Single
+                  semantic preserved for users who want exclusive membership;
+                  the "Add to folders…" entry below is the N:M surface. */}
               {onShowConnected && <div className="my-1 h-px bg-border/40" />}
               <FolderPickerInlineSubmenu
                 kind="wiki"
@@ -463,6 +464,21 @@ function ArticleTableRow({
                   usePlotStore.getState().updateWikiArticle(note.id, {
                     folderIds: folderId ? [folderId] : [],
                   })
+                }}
+              />
+              {/* Add to folders… (PR c) — multi-toggle picker. Apply
+                  commits the entire new set via setWikiFolders, layered
+                  on the same inline-submenu chrome to avoid Popover-in-
+                  Popover portal collisions. */}
+              <FolderPickerInlineSubmenu
+                kind="wiki"
+                currentFolderIds={note.folderIds}
+                selectMode="multi"
+                triggerLabel="Add to folders…"
+                triggerIcon={<FolderOpen size={14} weight="regular" />}
+                onApply={(folderIds) => {
+                  setMenuOpen(false)
+                  usePlotStore.getState().setWikiFolders(note.id, folderIds)
                 }}
               />
               {(onMerge || onSplit) && onDelete && (
