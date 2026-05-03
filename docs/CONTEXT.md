@@ -57,10 +57,18 @@ Type-free       Sticker                   Book ⭐ (신규 결정)
 - **Book** = 수동 멤버십, cross-entity, **ordered sequence**
 - **Search** = 일회성 도구 (컨테이너 X, Linear 탭형 검색창 패턴)
 
-### 2. Folder 변경 결정 (큰 PR 예정)
+### 2. Folder 변경 결정 (큰 PR 예정) — **재확정 2026-05-03**
 - **type-strict** (노트 폴더는 노트만, 위키 폴더는 위키만)
 - **N:M 멤버십** (한 노트 → 여러 폴더)
 - 메타포: "텍스트 파일만 수용하는 폴더"
+- **재확정 근거 (2026-05-03)**: 사용자 재논의 — cross-everything의 단기 자유도보다
+  사이드바 일관성 + 4사분면 모델 + Sticker entity 가치가 더 중요. cross-entity 통합은
+  Sticker가 담당, Folder는 한 영역 1차 정리 도구로 분리.
+- **현재 코드 상태**: PR #236에서 `WikiArticle.folderId?` 임시 추가 (cross-everything).
+  §2 큰 PR로 마이그레이션 시 type-strict + N:M 적용 예정. 임시 cross-everything UX
+  (예: `/folder/[id]`의 노트+위키 동시 표시)는 큰 PR에서 롤백.
+- **데이터 모델 (예정)**: `Folder.kind: "note" | "wiki"` 필드 추가 + `Note.folderIds[]`
+  / `WikiArticle.folderIds[]` (단일 → 배열 마이그레이션)
 
 ### 3. Sticker v2 결정 (큰 PR 예정)
 - **cross-everything** (Note + Wiki + Tag + Label + Category + File + Reference 모두 수용)
@@ -69,7 +77,7 @@ Type-free       Sticker                   Book ⭐ (신규 결정)
 - 데이터 모델 옵션 D2 (정참조 단일) 추천: `Sticker.members[]`
 - Universal Entity Picker UI 신규 필요
 
-### 4. Book entity 신규 결정 (v3급 PR 예정)
+### 4. Book entity 신규 결정 (v3급 PR 예정) — **확장 2026-05-03 (Smart Book)**
 - **신규 1급 entity** (Activity Bar 7번째 space — 7개 OK)
 - **cross-entity** (Note + Wiki 포괄, 단일 Book entity)
 - **ordered sequence** (chapter 순서 = 본질, slideshow 비유 정확)
@@ -77,6 +85,50 @@ Type-free       Sticker                   Book ⭐ (신규 결정)
 - chapter 정렬: **Manual drag-drop default + Auto-sort 액션**
 - 시각화: **Hull + Sequence edge** (그래프) + **별도 Reading view** (Book detail)
 - Wikilink 통합: `[[Book]]` / `[[Book#Chapter]]`
+
+#### Smart Book — `AutoSource[]` 배열 (2026-05-03 확정)
+
+엑셀 함수 패턴: 여러 source를 조합해 chapters[] 자동 생성.
+
+```ts
+interface Book {
+  id, name, color, ...
+  chapters: BookChapter[]      // 표시되는 chapter 목록 (수동 + 자동 합)
+  autoSources?: AutoSource[]   // 비어있지 않으면 Smart Book
+  excludeIds?: string[]        // 자동 chapter 중 사용자가 제외한 것
+}
+
+interface BookChapter {
+  kind: "note" | "wiki"
+  id: string
+  order: number
+  addedBy: "manual" | "auto"
+  sourceId?: string            // 자동인 경우 어느 AutoSource에서 왔는지
+}
+
+interface AutoSource {
+  id: string
+  type: "folder" | "category" | "tag" | "label" | "sticker"  // 5종
+  targetKind: "note" | "wiki" | "both"                       // sticker는 무시
+  targetId: string
+}
+```
+
+**Sticker source의 특별함**: Sticker 자체가 cross-everything이라 가장 강력한 source.
+"이 sticker 묶음을 책으로" 워크플로우 직관적.
+
+**UI 패턴**: Book detail에 "+ Add source" 버튼 (스프레드시트 함수 추가 UX).
+각 source는 chip + 카운트 + 제거 버튼.
+
+**Hybrid (수동 + 자동) 권장**: 일부 chapter는 manual (대표 노트), 일부는 auto
+(folder/sticker 매칭). `excludeIds[]`로 자동 chapter 제외 가능.
+
+#### Book template 시스템 X (Smart Book이 대체)
+
+별도 "Book template" 도입 X. 이유:
+- Book = 컨테이너 (자체 콘텐츠 없음)
+- 진짜 가치는 chapter 콘텐츠 = 노트/위키 자체 → 노트/위키 템플릿이 처리
+- 동적 자동화는 Smart Book의 `autoSources[]`가 대체
 
 ### 5. Page entity 도입 폐기 (확정)
 **이유**:
@@ -143,6 +195,59 @@ Type-free       Sticker                   Book ⭐ (신규 결정)
 - **Hull stuck 버그**: `clusterHulls` useMemo deps에 `transform`만 있어서 노드 드래그 시 재계산 안 됨 → `forceRender`의 카운터 (renderTick) 노출해서 deps에 추가
 - **위키-노트 cross-entity가 디지털에선 자연**: 종이책 메타포에 갇히지 말 것 (Notion 페이지가 다양한 블록 mix하듯)
 - **자료구조 본질 차이**: Sticker = collection (set, 무순서) / Book = sequence (list, 순서 있음). 다른 entity 정당화
+
+### 15. 노트 템플릿 = UpNote식 옵션 A only (v1) — 2026-05-03 확정
+
+**정체성**: "준비된 빈 노트" — 단순 복사 + 변수 치환. powerful 동적 조합은 Smart Book이 담당.
+
+**v1 scope (옵션 A — 변수 시스템 강화)**:
+- 기존 변수 (`{date}`, `{year}`, `{month}`, `{day}`, `{time}`, `{datetime}`)는 그대로 유지
+- UpNote 형식 추가: `{{YYYY}}`, `{{MM}}`, `{{DD}}`, `{{date}}`, `{{time}}`
+- `expandPlaceholders` 양쪽 패턴 모두 지원 (additive, regex 충돌 X)
+- 4 진입점 ("건물 하나, 출입구 여러 개" 원칙):
+  - ① 슬래시 명령어 `/` (이미 있음)
+  - ② 우클릭 메뉴 → "Insert from template..."
+  - ③ 하단 플로팅바 Insert 메뉴 → "Templates"
+  - ④ 빈 노트 placeholder 클릭 (모달 트리거)
+  - (⑤ 단축키 옵션)
+- 빈 노트 placeholder: "Press / for menu, or start with a template"
+  (UpNote와 어순 다름, 저작권 안전)
+- 시드 템플릿 10~20개 (회의록/일기/투두/Daily/PARA 등) — Sprint 2 출시 폴리시
+
+**폐기 (v1 scope 밖)**:
+- 옵션 B (템플릿 조합) — TipTap JSON merge 어려움, 가치 모호
+- 옵션 D (Partial / include) — 가치 낮음
+
+### 16. Smart Template (옵션 C) → v2 재검토 — 보류
+
+동적 콘텐츠 가진 템플릿 (예: "주간 리뷰" → 자동으로 이번 주 노트 리스트 삽입).
+
+**v1 보류 이유**:
+- Smart Book과 멘탈모델 겹침 ("Smart Book이랑 뭐가 달라?")
+- 템플릿 정체성 ("준비된 빈 노트") 흐림
+- 디버깅 어려움 (동적 콘텐츠 → 예측 어려움)
+
+**v2 재검토 조건**: 옵션 A (UpNote식) 안착 후 사용자 피드백 받고 진짜 필요한지 판단.
+필요하면 Smart Book과 명확히 차이 정의 후 도입.
+
+### 17. Template 시드 + entity별 audit (큰 작업) — 별도 PR
+
+**현재 상태**:
+- 노트 템플릿: NoteTemplate slice 있음, 시드 0개
+- 인포박스 프리셋: `lib/wiki-infobox-presets.ts` 237줄 (Person/Place/Concept 시드 있음)
+- 위키 템플릿: 결정만, 구현 0
+- 배너 블록: 33-decisions에 있음, 미구현
+- 카테고리 트리, 사이드바 layout 등: 시드 X
+
+**사용자 요청 (2026-05-03)**: "인포박스/배너 외에도 템플릿 만들 수 있을 법한 entity는 다 가능하게. 코드 깊이 분석 필요."
+
+**audit 범위 (별도 PR)**:
+1. Plot 코드베이스 전체 grep: "preset", "template", "default", "seed" 패턴
+2. Entity별 시드 유무 점수표
+3. 통합 추상화 가능성 (`PlotTemplate<T>` 단일 추상화 vs entity별 따로)
+4. 변수 시스템 적용 가능 entity 목록
+
+**Book 템플릿은 X**: §4 Smart Book이 대체 (autoSources로 동적 chapter).
 
 ---
 
