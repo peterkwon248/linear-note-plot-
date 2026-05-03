@@ -179,11 +179,31 @@ export interface PlotState {
   createNoteFromTemplate: (templateId: string) => string
 
   // ── Folders ──
-  createFolder: (name: string, color: string, opts?: Partial<Folder>) => string
+  /**
+   * v107: `kind` is required. Folders are type-strict — they accept either
+   * notes (`kind="note"`) or wiki articles (`kind="wiki"`), never both.
+   * Caller decides based on the active context (sidebar section, picker
+   * source). Kind is immutable after creation.
+   */
+  createFolder: (name: string, kind: "note" | "wiki", color: string, opts?: Partial<Folder>) => string
+  /** Cosmetic edits only — `kind` is silently dropped from `updates`. */
   updateFolder: (id: string, updates: Partial<Folder>) => void
   deleteFolder: (id: string) => void
   accessFolder: (id: string) => void
   toggleFolderPin: (id: string) => void
+  // ── Folder N:M Membership (v107) ──
+  /** Add a note to a folder (kind-validated, idempotent). Wrong kind = no-op. */
+  addNoteToFolder: (noteId: string, folderId: string) => void
+  /** Remove a note from a folder (idempotent — no-op if not a member). */
+  removeNoteFromFolder: (noteId: string, folderId: string) => void
+  /** Replace a note's folder set wholesale (auto-filters wrong-kind ids). */
+  setNoteFolders: (noteId: string, folderIds: string[]) => void
+  /** Add a wiki article to a folder (kind-validated, idempotent). */
+  addWikiToFolder: (articleId: string, folderId: string) => void
+  /** Remove a wiki article from a folder. */
+  removeWikiFromFolder: (articleId: string, folderId: string) => void
+  /** Replace a wiki article's folder set wholesale (auto-filters wrong-kind ids). */
+  setWikiFolders: (articleId: string, folderIds: string[]) => void
 
   // ── Tags ──
   createTag: (name: string, color: string) => void
@@ -285,7 +305,7 @@ export interface PlotState {
   setArticleCategories: (articleId: string, categoryIds: string[]) => void
 
   // ── Wiki Articles (Assembly Model) ──
-  createWikiArticle: (partial: { title: string; aliases?: string[]; tags?: string[]; blocks?: WikiBlock[]; folderId?: string | null }) => string
+  createWikiArticle: (partial: { title: string; aliases?: string[]; tags?: string[]; blocks?: WikiBlock[]; folderIds?: string[] }) => string
   updateWikiArticle: (articleId: string, patch: Partial<Omit<WikiArticle, "id" | "createdAt">>) => void
   addArticleReference: (articleId: string, referenceId: string) => void
   removeArticleReference: (articleId: string, referenceId: string) => void

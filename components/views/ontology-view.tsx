@@ -177,11 +177,12 @@ export function OntologyView() {
       // Extract noteIds from note-ref blocks so graph can link wiki nodes to referenced notes
       noteIds: a.blocks.filter((b) => b.type === "note-ref" && b.noteId).map((b) => b.noteId as string),
       // Group-by source fields — let buildOntologyGraphData populate
-      // OntologyNode.tags/categoryIds/folderId for hull computation. Sticker
-      // membership is derived from the `stickers` slice (옵션 D2).
+      // OntologyNode.tags/categoryIds/folderIds for hull computation. Sticker
+      // membership is derived from the `stickers` slice (옵션 D2). v107 N:M:
+      // wiki articles can belong to multiple folders simultaneously.
       tags: a.tags,
       categoryIds: a.categoryIds,
-      folderId: a.folderId ?? null,
+      folderIds: a.folderIds ?? [],
     })),
     [wikiArticles],
   )

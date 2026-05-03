@@ -187,15 +187,20 @@ function groupByFolder(notes: Note[], folderNames?: Map<string, string>): NoteGr
   const map = new Map<string, Note[]>()
   const noFolder: Note[] = []
 
+  // v107 N:M: a note can belong to multiple folders. Decision (per plan
+  // §"Group by folder 다중 표시"): the note appears in EACH of its folder
+  // buckets. Visual marker for cross-folder notes lands in PR (b/c).
   for (const note of notes) {
-    const folderId = note.folderId
-    if (!folderId) {
+    const ids = note.folderIds ?? []
+    if (ids.length === 0) {
       noFolder.push(note)
       continue
     }
-    const bucket = map.get(folderId)
-    if (bucket) bucket.push(note)
-    else map.set(folderId, [note])
+    for (const folderId of ids) {
+      const bucket = map.get(folderId)
+      if (bucket) bucket.push(note)
+      else map.set(folderId, [note])
+    }
   }
 
   const groups: NoteGroup[] = []

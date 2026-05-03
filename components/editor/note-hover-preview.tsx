@@ -201,9 +201,12 @@ function PreviewCard({ noteId, noteType, x, y }: PreviewState) {
 
   // ── Derived metadata ──
   const folderName = useMemo(() => {
-    if (!note?.folderId) return null
-    return folders.find((f) => f.id === note.folderId)?.name || null
-  }, [note?.folderId, folders])
+    // v107 N:M: hover preview shows the primary folder (folderIds[0]). PR (b)
+    // can extend to a multi-folder badge if the design demands it.
+    const fid = note?.folderIds?.[0]
+    if (!fid) return null
+    return folders.find((f) => f.id === fid)?.name || null
+  }, [note?.folderIds, folders])
 
   const backlinks = useMemo(() => {
     if (!title) return []

@@ -26,11 +26,11 @@ export interface OntologyNode {
   // Group-by membership fields. Used to compute graph hulls based on
   // user-defined groupings (Display popover → Group by).
   // - tags: noteId or wikiId tags (for "Group by Tag" — unified)
-  // - folderId: noteId or wikiId folder (for "Group by Folder" — unified)
+  // - folderIds: noteId or wikiId folder ids (for "Group by Folder" — unified, v107 N:M)
   // - categoryIds: wiki article categoryIds (for "Group by Category" — wiki only)
   // - stickerIds: cross-entity sticker membership (for "Group by Sticker" — unified)
   tags?: string[]
-  folderId?: string | null
+  folderIds?: string[]
   categoryIds?: string[]
   stickerIds?: string[]
 }
@@ -105,7 +105,7 @@ export function buildOntologyGraphData(
     // derived from `stickers` (옵션 D2 reverse lookup), not passed here.
     tags?: string[]
     categoryIds?: string[]
-    folderId?: string | null
+    folderIds?: string[]
   }>,
   stickers?: Sticker[],
 ): OntologyGraphData {
@@ -192,7 +192,7 @@ export function buildOntologyGraphData(
       isWiki,
       nodeType,
       tags: n.tags,
-      folderId: n.folderId,
+      folderIds: n.folderIds,
       stickerIds: getStickerIdsFor(stickerIndex, "note", n.id),
     }
   })
@@ -255,7 +255,7 @@ export function buildOntologyGraphData(
         isWiki: true,
         nodeType: "wiki",
         tags: wa.tags,
-        folderId: wa.folderId ?? null,
+        folderIds: wa.folderIds ?? [],
         categoryIds: wa.categoryIds,
         stickerIds: getStickerIdsFor(stickerIndex, "wiki", wa.id),
       })

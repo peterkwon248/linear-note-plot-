@@ -659,7 +659,7 @@ function NoteConnections() {
           title: n.title,
           tags: n.tags,
           linksOut: n.linksOut,
-          folderId: n.folderId,
+          folderIds: n.folderIds,
           isWiki: n.noteType === "wiki" || wikiArticleIds.has(n.id),
           preview: n.preview,
           // Surface mentionTargets to Discover only for notes that mention
@@ -699,7 +699,7 @@ function NoteConnections() {
       noteBody: note.preview ?? "",
       noteTags: note.tags,
       noteLinksOut: note.linksOut,
-      noteFolderId: note.folderId,
+      noteFolderIds: note.folderIds,
       allNotes: allNotesInput,
       backlinksMap,
       allTags: tags.map((t) => ({ id: t.id, name: t.name })),

@@ -21,7 +21,7 @@ export function getOrphanActions(
     title: n.title,
     tags: n.tags,
     linksOut: n.linksOut,
-    folderId: n.folderId,
+    folderIds: n.folderIds,
     preview: n.content?.slice(0, 200),
   }))
 
@@ -31,7 +31,7 @@ export function getOrphanActions(
     noteBody: note.content ?? "",
     noteTags: note.tags,
     noteLinksOut: note.linksOut,
-    noteFolderId: note.folderId,
+    noteFolderIds: note.folderIds,
     allNotes: inputs,
     backlinksMap,
     allTags: allTags.filter((t) => !t.trashed).map((t) => ({ id: t.id, name: t.name })),
@@ -55,13 +55,20 @@ export function getOrphanActions(
     }
   }
 
-  // Move suggestion
-  if (!note.folderId && folders.length > 0) {
+  // Move suggestion (only when the note is unfoldered and we have at least
+  // one Note folder to suggest). v107 N:M: only `kind="note"` folders are
+  // valid targets for notes — wrong-kind folders are skipped.
+  const noteKindFolders = folders.filter((f) => f.kind === "note")
+  if (note.folderIds.length === 0 && noteKindFolders.length > 0) {
     const folderCounts: Record<string, number> = {}
     for (const n of allNotes) {
-      if (n.folderId) folderCounts[n.folderId] = (folderCounts[n.folderId] ?? 0) + 1
+      for (const fid of n.folderIds ?? []) {
+        folderCounts[fid] = (folderCounts[fid] ?? 0) + 1
+      }
     }
-    const topFolderId = Object.entries(folderCounts).sort((a, b) => b[1] - a[1])[0]?.[0]
+    const topFolderId = Object.entries(folderCounts)
+      .sort((a, b) => b[1] - a[1])
+      .find(([fid]) => noteKindFolders.some((f) => f.id === fid))?.[0]
     const topFolder = topFolderId ? folders.find((f) => f.id === topFolderId) : null
     if (topFolder) {
       actions.push({

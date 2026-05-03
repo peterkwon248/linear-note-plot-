@@ -57,13 +57,15 @@ export default function FolderPage({ params }: { params: Promise<{ id: string }>
 
   const folder = folders.find((f) => f.id === id)
   const folderNotes = useMemo(
-    () => notes.filter((n) => !n.trashed && n.folderId === id),
+    // v107 N:M: a note is in this folder iff its folderIds includes `id`.
+    () => notes.filter((n) => !n.trashed && n.folderIds.includes(id)),
     [notes, id],
   )
   const folderWikis = useMemo(
     // WikiArticle has no `trashed` boolean (deleted articles are removed
     // entirely or moved to a separate trash list). Filter purely by folder.
-    () => wikiArticles.filter((w) => w.folderId === id),
+    // v107 N:M: any folder match in folderIds.
+    () => wikiArticles.filter((w) => w.folderIds.includes(id)),
     [wikiArticles, id],
   )
 
@@ -110,7 +112,9 @@ export default function FolderPage({ params }: { params: Promise<{ id: string }>
               <button
                 type="button"
                 onClick={() => {
-                  const noteId = createNote({ folderId: id })
+                  // v107 N:M: createNote takes folderIds[]. The current
+                  // folder context becomes a single-element seed.
+                  const noteId = createNote({ folderIds: [id] })
                   openNote(noteId)
                 }}
                 className="flex w-full items-center gap-2 rounded-md px-2.5 py-1.5 text-note text-left hover:bg-accent"
@@ -120,7 +124,8 @@ export default function FolderPage({ params }: { params: Promise<{ id: string }>
               <button
                 type="button"
                 onClick={() => {
-                  const wikiId = createWikiArticle({ title: "Untitled", folderId: id })
+                  // v107 N:M: createWikiArticle takes folderIds[].
+                  const wikiId = createWikiArticle({ title: "Untitled", folderIds: [id] })
                   if (wikiId) router.push(`/wiki/${wikiId}`)
                 }}
                 className="flex w-full items-center gap-2 rounded-md px-2.5 py-1.5 text-note text-left hover:bg-accent"
@@ -164,7 +169,8 @@ export default function FolderPage({ params }: { params: Promise<{ id: string }>
                 label="No wiki articles in this folder yet."
                 actionLabel="Create one"
                 onAction={() => {
-                  const wikiId = createWikiArticle({ title: "Untitled", folderId: id })
+                  // v107 N:M: createWikiArticle takes folderIds[].
+                  const wikiId = createWikiArticle({ title: "Untitled", folderIds: [id] })
                   if (wikiId) router.push(`/wiki/${wikiId}`)
                 }}
               />
@@ -204,7 +210,9 @@ export default function FolderPage({ params }: { params: Promise<{ id: string }>
                 label="No notes in this folder yet."
                 actionLabel="Create one"
                 onAction={() => {
-                  const noteId = createNote({ folderId: id })
+                  // v107 N:M: createNote takes folderIds[]. The current
+                  // folder context becomes a single-element seed.
+                  const noteId = createNote({ folderIds: [id] })
                   openNote(noteId)
                 }}
               />

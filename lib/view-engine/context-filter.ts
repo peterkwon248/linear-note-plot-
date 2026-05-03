@@ -49,8 +49,16 @@ export function applyContext(
       return notes.filter((n) => showTrashed || !n.trashed)
 
     case "folder":
+      // v107 N:M: a note belongs to a folder when its folderIds contains
+      // the URL-context folder id. URL context itself remains single
+      // (`extras.folderId`) because routes still resolve one folder at a
+      // time; only entity membership is array-typed.
       return notes.filter(
-        (n) => (showTrashed || !n.trashed) && n.folderId === extras?.folderId
+        (n) =>
+          (showTrashed || !n.trashed) &&
+          (extras?.folderId !== undefined
+            ? (n.folderIds ?? []).includes(extras.folderId)
+            : (n.folderIds ?? []).length === 0)
       )
 
     case "tag":

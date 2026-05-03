@@ -720,7 +720,9 @@ export function CalendarView({
     // Apply user filters
     for (const rule of calendarFilters) {
       if (rule.field === "status") result = result.filter((n) => n.status === rule.value)
-      if (rule.field === "folder") result = result.filter((n) => n.folderId === rule.value)
+      // v107 N:M: filter "in folder" matches when the note's folderIds
+      // contains the rule value.
+      if (rule.field === "folder") result = result.filter((n) => n.folderIds.includes(rule.value))
       if (rule.field === "label") result = result.filter((n) => n.labelId === rule.value)
       if (rule.field === "tags") result = result.filter((n) => n.tags.includes(rule.value))
     }

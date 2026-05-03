@@ -80,7 +80,9 @@ export function MixedQuicklinks({ limit = 8 }: { limit?: number }) {
     /* ── Folders ── */
     for (const f of folders as Folder[]) {
       if (!f.pinned) continue
-      const noteCount = notes.filter((n: Note) => !n.trashed && n.folderId === f.id).length
+      // v107 N:M: a note belongs to a folder iff its folderIds includes
+      // that folder. PR (b) refines counting to per-kind (notes vs wikis).
+      const noteCount = notes.filter((n: Note) => !n.trashed && n.folderIds.includes(f.id)).length
       result.push({
         key: `folder:${f.id}`,
         kind: "folder",

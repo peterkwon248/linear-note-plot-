@@ -29,7 +29,8 @@ function getFieldValue(ctx: AutopilotContext, field: string): string | number | 
     case "has_label":
       return note.labelId !== null
     case "has_folder":
-      return note.folderId !== null
+      // v107 N:M: a note "has folder" iff its folderIds is non-empty.
+      return note.folderIds.length > 0
     case "link_count":
       return note.linksOut.length + ctx.backlinksCount
     case "tag_count":

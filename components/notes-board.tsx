@@ -350,7 +350,10 @@ function BoardCardInner({
     : { touchAction: "none" as const }
 
   // ── Resolve referenced entities for chip rendering ──
-  const folder = note.folderId ? folders.find((f) => f.id === note.folderId) : null
+  // v107 N:M: a note can be in multiple folders. PR (a) shows the primary
+  // (first) folder as the chip. PR (b) renders all folders with overflow.
+  const primaryFolderId = note.folderIds[0] ?? null
+  const folder = primaryFolderId ? folders.find((f) => f.id === primaryFolderId) : null
   const label = note.labelId ? labels.find((l) => l.id === note.labelId) : null
   // Tag resolution — only the actual tag objects (drop unknown IDs).
   const noteTagObjs = useMemo(() => {
@@ -603,7 +606,9 @@ const BoardCard = memo(BoardCardInner, (prev, next) =>
   prev.note.createdAt === next.note.createdAt &&
   prev.note.status === next.note.status &&
   prev.note.priority === next.note.priority &&
-  prev.note.folderId === next.note.folderId &&
+  // v107 N:M: equality is reference-based on the array. A new array
+  // (mutated membership) → re-render. Same identity skips re-render.
+  prev.note.folderIds === next.note.folderIds &&
   // PR e: new chip dimensions — must trigger re-render when any change.
   prev.note.labelId === next.note.labelId &&
   prev.note.tags === next.note.tags &&
@@ -634,7 +639,10 @@ function getFieldUpdate(groupBy: GroupBy, targetKey: string): Partial<Note> | nu
     case "status": return { status: targetKey as NoteStatus }
     case "priority": return { priority: targetKey as NotePriority }
     case "triage": return { triageStatus: targetKey as TriageStatus }
-    case "folder": return { folderId: targetKey === "_no_folder" ? null : targetKey }
+    // v107 N:M: dropping a note onto a folder column overwrites the entire
+    // folderIds set with [target]. PR (c) introduces add-vs-move modifier
+    // to preserve other memberships.
+    case "folder": return { folderIds: targetKey === "_no_folder" ? [] : [targetKey] }
     default: return null
   }
 }
@@ -694,7 +702,8 @@ export function NotesBoard({
   const notesFilterCategories = useMemo(() => {
     return NOTES_VIEW_CONFIG.filterCategories.map(cat => {
       if (cat.key === "folder") {
-        return { ...cat, values: folders.map(f => ({ key: f.id, label: f.name, count: notes.filter(n => !n.trashed && n.folderId === f.id).length })) }
+        // v107 N:M: count notes that include this folder in their folderIds.
+        return { ...cat, values: folders.map(f => ({ key: f.id, label: f.name, count: notes.filter(n => !n.trashed && n.folderIds.includes(f.id)).length })) }
       }
       if (cat.key === "label") {
         return { ...cat, values: labels.filter(l => !l.trashed).map(l => ({ key: l.id, label: l.name, color: l.color, count: notes.filter(n => !n.trashed && n.labelId === l.id).length })) }

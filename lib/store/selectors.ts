@@ -19,7 +19,7 @@ export function getFilteredNotes(state: PlotState): Note[] {
       break
     case "folder":
       filtered = filtered.filter(
-        (n) => n.folderId === activeView.folderId && isActive(n)
+        (n) => n.folderIds.includes(activeView.folderId) && isActive(n)
       )
       break
     case "pinned":
@@ -67,7 +67,7 @@ export function filterNotesByRoute(notes: Note[], filter: NoteFilter, searchQuer
       filtered = filtered.filter((n) => n.pinned && isActive(n))
       break
     case "folder":
-      filtered = filtered.filter((n) => n.folderId === filter.folderId && isActive(n))
+      filtered = filtered.filter((n) => n.folderIds.includes(filter.folderId) && isActive(n))
       break
     case "tag":
       filtered = filtered.filter((n) => n.tags.includes(filter.tagId) && isActive(n))

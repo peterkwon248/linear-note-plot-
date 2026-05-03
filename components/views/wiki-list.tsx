@@ -132,7 +132,9 @@ function FolderPickerSubmenu({
               if (!name) return
               const palette = ["#f97316", "#3b82f6", "#22c55e", "#a855f7", "#ec4899", "#14b8a6", "#eab308"]
               const color = palette[folders.length % palette.length]
-              const newId = usePlotStore.getState().createFolder(name, color)
+              // v107: wiki-list's folder picker is wiki-context →
+              // newly-created folder is `kind="wiki"`.
+              const newId = usePlotStore.getState().createFolder(name, "wiki", color)
               onSelect(newId)
             }}
             className="flex w-full items-center gap-2 rounded-md px-2.5 py-1.5 text-2xs text-muted-foreground hover:text-foreground hover:bg-active-bg transition-colors"
@@ -521,14 +523,17 @@ function ArticleTableRow({
                 />
               )}
 
-              {/* Move to folder — wiki articles share the same global folder
-                  containers as notes. Submenu of folders + "No folder" reset. */}
+              {/* Move to folder — v107 N:M: PR (a) keeps the single-folder
+                  picker (overwrites the entire folderIds set); PR (c) adds a
+                  multi-folder picker. PR (b) makes the picker kind-aware. */}
               {onShowConnected && <div className="my-1 h-px bg-border/40" />}
               <FolderPickerSubmenu
-                currentFolderId={note.folderId ?? null}
+                currentFolderId={note.folderIds[0] ?? null}
                 onSelect={(folderId) => {
                   setMenuOpen(false)
-                  usePlotStore.getState().updateWikiArticle(note.id, { folderId })
+                  usePlotStore.getState().updateWikiArticle(note.id, {
+                    folderIds: folderId ? [folderId] : [],
+                  })
                 }}
               />
               {(onMerge || onSplit) && onDelete && (
