@@ -52,6 +52,7 @@ import {
   StatusChip,
   PriorityChip,
   FolderChip,
+  MultiFolderMarker,
   LabelChip,
   TagChip,
   LinksChip,
@@ -293,6 +294,11 @@ interface BoardCardProps {
   isDragOverlay?: boolean
   showCardPreview?: boolean
   groupBy: GroupBy
+  /** PR (c) — current group key (folder id when groupBy="folder"). Drives
+   *  the multi-folder marker and the suppression of the redundant chip
+   *  for the folder this card is currently rendered under. Optional —
+   *  callers in non-grouped contexts can omit. */
+  groupKey?: string
   /** Display Properties — which meta chips to surface on the card.
    *  Mirrors the list view's column visibility so the toggle in the
    *  Display popover affects both surfaces. Undefined = show all. */
@@ -324,6 +330,7 @@ function BoardCardInner({
   isDragOverlay,
   showCardPreview,
   groupBy,
+  groupKey,
   visibleColumns,
   onClick,
   onDoubleClick,
@@ -396,8 +403,28 @@ function BoardCardInner({
       // PR (b): multi-folder render — one chip per membership. Overflow
       // ("+N") is collapsed at the row level by PropertyChipRow's
       // maxVisible cap, so a note in 5 folders doesn't blow up the card.
-      for (const f of noteFolderObjs) {
-        out.push(<FolderChip key={`folder-${f.id}`} folder={f} />)
+      // PR (c): when groupBy="folder" inside a folder column, we already
+      // have the column header announcing the folder identity. Showing
+      // the same folder again as a chip is noise. Instead we collapse
+      // the OTHER memberships into a single MultiFolderMarker — the
+      // marker's tooltip reveals the names. This makes the legitimate
+      // "same card in N columns" effect of N:M legible at a glance
+      // without clutter.
+      if (groupBy === "folder" && groupKey && groupKey !== "_no_folder") {
+        const others = noteFolderObjs.filter((f) => f.id !== groupKey)
+        if (others.length > 0) {
+          out.push(
+            <MultiFolderMarker
+              key="multi-folder-marker"
+              count={others.length}
+              otherFolderNames={others.map((f) => f.name)}
+            />
+          )
+        }
+      } else {
+        for (const f of noteFolderObjs) {
+          out.push(<FolderChip key={`folder-${f.id}`} folder={f} />)
+        }
       }
     }
     if (label && isVisible("label")) {
@@ -439,7 +466,7 @@ function BoardCardInner({
   }, [
     note.priority, note.updatedAt, note.createdAt,
     noteFolderObjs, label, noteTagObjs, parentTitle, childrenCount,
-    links, wordCount, groupBy, visibleColumns,
+    links, wordCount, groupBy, groupKey, visibleColumns,
   ]) // eslint-disable-line react-hooks/exhaustive-deps
 
   /* Visual card — no drag refs, just presentation + click */
@@ -639,6 +666,7 @@ const BoardCard = memo(BoardCardInner, (prev, next) =>
   prev.isActive === next.isActive &&
   prev.isSelected === next.isSelected &&
   prev.groupBy === next.groupBy &&
+  prev.groupKey === next.groupKey &&
   prev.visibleColumns === next.visibleColumns &&
   prev.onDoubleClick === next.onDoubleClick
 )
@@ -1169,6 +1197,7 @@ export function NotesBoard({
                     isSelected={selectedIds.has(note.id)}
                     showCardPreview={false}
                     groupBy={viewState.groupBy}
+                    groupKey={group.key}
                     visibleColumns={viewState.visibleColumns}
                     onClick={() => {
                       setSelectedIds(new Set())

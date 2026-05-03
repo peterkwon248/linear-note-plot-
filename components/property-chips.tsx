@@ -100,6 +100,36 @@ export function FolderChip({ folder }: { folder: { name: string; color: string }
   )
 }
 
+/* ── Multi-folder marker (PR c) ───────────────────────── */
+
+/**
+ * Visual marker for "this note is also in N other folders". Used on
+ * board / grid cards when groupBy="folder" so a note that appears in
+ * multiple folder columns surfaces its multi-membership at a glance —
+ * otherwise the user sees the same card in two columns and might think
+ * it's a bug. Tooltip lists the other folder names.
+ *
+ * Style: muted (no folder color tint) since it's a meta-indicator, not
+ * an entity chip. Icon = small folders-plural mark drawn inline.
+ */
+export function MultiFolderMarker({
+  count,
+  otherFolderNames,
+}: {
+  count: number
+  otherFolderNames: string[]
+}) {
+  return (
+    <span
+      title={`Also in: ${otherFolderNames.join(", ")}`}
+      className="inline-flex items-center gap-0.5 h-5 px-1.5 rounded-sm text-2xs font-medium leading-none whitespace-nowrap shrink-0 bg-secondary/60 text-muted-foreground"
+    >
+      <PhFolder size={10} weight="regular" />
+      +{count}
+    </span>
+  )
+}
+
 /* ── Label chip ───────────────────────────────────────── */
 
 /**

@@ -134,7 +134,11 @@ const COLUMN_DEFS: { id: string; label: string; width: string; align?: string; s
 type VirtualItem =
   | { type: "header"; label: string; count: number; groupKey: string; groupBy: GroupBy }
   | { type: "subheader"; label: string; count: number; groupKey: string; parentKey: string; groupBy: GroupBy }
-  | { type: "note"; note: Note; depth?: number }
+  // PR (c): note items track their enclosing group's key so the row
+  // can render a multi-folder marker when groupBy="folder" — telling
+  // the user that a note appearing under multiple folder groups is
+  // the natural N:M effect, not a duplicated row bug.
+  | { type: "note"; note: Note; depth?: number; parentGroupKey?: string }
 
 /* ── Header cell ───────────────────────────────────────── */
 
@@ -811,14 +815,17 @@ export function NotesTable({
             items.push({ type: "subheader", label: sub.label, count: sub.notes.length, groupKey: subKey, parentKey: group.key, groupBy: viewState.subGroupBy })
             if (!collapsedGroups.has(subKey)) {
               for (const note of sub.notes) {
-                items.push({ type: "note", note })
+                // parentGroupKey carries the OUTER group key (the folder
+                // when groupBy="folder"). Sub-groups don't change the
+                // semantic — outer is what the user sees as "the column".
+                items.push({ type: "note", note, parentGroupKey: group.key })
               }
             }
           }
         } else {
           for (const note of group.notes) {
             const depth = group.depthMap?.[note.id]
-            items.push({ type: "note", note, depth })
+            items.push({ type: "note", note, depth, parentGroupKey: group.key })
           }
         }
       }
@@ -1379,6 +1386,7 @@ export function NotesTable({
                               }}
                               showCardPreview={false}
                               groupBy={viewState.groupBy}
+                              groupKey={item.parentGroupKey}
                               parentTitle={item.note.parentNoteId ? notesById?.get(item.note.parentNoteId)?.title : undefined}
                               childTitles={childrenByParent?.get(item.note.id)}
                             />
@@ -1502,6 +1510,11 @@ interface NoteRowProps {
   onLinkWith: () => void
   showCardPreview?: boolean
   groupBy?: string
+  /** PR (c) — when groupBy="folder", the folder id this row is rendered
+   *  under. Drives the "+N other folders" marker in the folder column
+   *  so the user understands the same note appearing in multiple folder
+   *  groups is intentional N:M behaviour, not a bug. */
+  groupKey?: string
   parentTitle?: string
   childTitles?: string[]
 }
@@ -1590,6 +1603,7 @@ function NoteRowInner({
   onLinkWith,
   showCardPreview,
   groupBy,
+  groupKey,
   parentTitle,
   childTitles,
 }: NoteRowProps) {
@@ -1693,8 +1707,12 @@ function NoteRowInner({
 
       {/* Folder — PR (b): N:M render. Each folder this note belongs to
           gets a colored dot + name; >2 collapses to "first, second +N".
-          Stays single-line so the table doesn't grow tall when a note
-          has many memberships. */}
+          PR (c): when grouped by folder, the column already announces
+          this row's primary folder via the group header — so we collapse
+          OTHER memberships into a "+N" marker that the user can hover
+          to see which other folders the note lives in. This keeps the
+          duplicate-row appearance across folder groups intentional and
+          the column compact. */}
       {visibleCols.includes("folder") && (
         <div className="flex items-center justify-center gap-1.5 px-2 overflow-hidden">
           {note.folderIds.length === 0 ? (
@@ -1705,6 +1723,22 @@ function NoteRowInner({
               .filter((f): f is Folder => !!f)
             if (memberships.length === 0) {
               return <span className="text-note text-muted-foreground">—</span>
+            }
+            // PR (c) — folder-group context: suppress the current group's
+            // folder, surface a single marker for the rest.
+            if (groupBy === "folder" && groupKey && groupKey !== "_no_folder") {
+              const others = memberships.filter((f) => f.id !== groupKey)
+              if (others.length === 0) {
+                return <span className="text-note text-muted-foreground">—</span>
+              }
+              return (
+                <span
+                  className="inline-flex items-center gap-0.5 px-1.5 rounded-sm text-2xs font-medium bg-secondary/60 text-muted-foreground tabular-nums shrink-0"
+                  title={`Also in: ${others.map((f) => f.name).join(", ")}`}
+                >
+                  +{others.length}
+                </span>
+              )
             }
             const visible = memberships.slice(0, 2)
             const overflow = memberships.length - visible.length
@@ -2078,5 +2112,6 @@ const NoteRow = memo(NoteRowInner, (prev, next) =>
   prev.visibleColumns === next.visibleColumns &&
   prev.gridTemplate === next.gridTemplate &&
   prev.showCardPreview === next.showCardPreview &&
-  prev.groupBy === next.groupBy
+  prev.groupBy === next.groupBy &&
+  prev.groupKey === next.groupKey
 )
