@@ -73,7 +73,7 @@ import { NOTES_VIEW_CONFIG } from "@/lib/view-engine/view-configs"
 import { setActiveFolderId, usePendingFilters, clearPendingFilters } from "@/lib/table-route"
 import { setNoteDragData } from "@/lib/drag-helpers"
 import { pushUndo } from "@/lib/undo-manager"
-import { useFolderPickerData } from "@/components/folder-picker"
+import { useFolderPickerData, FolderPicker } from "@/components/folder-picker"
 
 /* ── Helpers ───────────────────────────────────────────── */
 
@@ -134,7 +134,11 @@ const COLUMN_DEFS: { id: string; label: string; width: string; align?: string; s
 type VirtualItem =
   | { type: "header"; label: string; count: number; groupKey: string; groupBy: GroupBy }
   | { type: "subheader"; label: string; count: number; groupKey: string; parentKey: string; groupBy: GroupBy }
-  | { type: "note"; note: Note; depth?: number }
+  // PR (c): note items track their enclosing group's key so the row
+  // can render a multi-folder marker when groupBy="folder" — telling
+  // the user that a note appearing under multiple folder groups is
+  // the natural N:M effect, not a duplicated row bug.
+  | { type: "note"; note: Note; depth?: number; parentGroupKey?: string }
 
 /* ── Header cell ───────────────────────────────────────── */
 
@@ -811,14 +815,17 @@ export function NotesTable({
             items.push({ type: "subheader", label: sub.label, count: sub.notes.length, groupKey: subKey, parentKey: group.key, groupBy: viewState.subGroupBy })
             if (!collapsedGroups.has(subKey)) {
               for (const note of sub.notes) {
-                items.push({ type: "note", note })
+                // parentGroupKey carries the OUTER group key (the folder
+                // when groupBy="folder"). Sub-groups don't change the
+                // semantic — outer is what the user sees as "the column".
+                items.push({ type: "note", note, parentGroupKey: group.key })
               }
             }
           }
         } else {
           for (const note of group.notes) {
             const depth = group.depthMap?.[note.id]
-            items.push({ type: "note", note, depth })
+            items.push({ type: "note", note, depth, parentGroupKey: group.key })
           }
         }
       }
@@ -1343,6 +1350,11 @@ export function NotesTable({
                               onStatus={(s) => updateNote(item.note.id, { status: s })}
                               onSetFolder={(folderId) => updateNote(item.note.id, { folderIds: folderId ? [folderId] : [] })}
                               onRemoveFolder={() => updateNote(item.note.id, { folderIds: [] })}
+                              // PR (c): N:M multi-folder commit. Caller wires
+                              // setNoteFolders directly so we don't go through
+                              // updateNote (which would bypass the kind filter
+                              // safety net in the action layer).
+                              onSetFolders={(folderIds) => usePlotStore.getState().setNoteFolders(item.note.id, folderIds)}
                               onKeep={() => { triageKeep(item.note.id); pushUndo("Triage to Capture", () => moveBackToInbox(item.note.id), () => triageKeep(item.note.id)) }}
                               onSnooze={(opt) => triageSnooze(item.note.id, getSnoozeTime(opt))}
                               onTrash={() => { triageTrash(item.note.id); pushUndo("Trash note", () => toggleTrash(item.note.id), () => triageTrash(item.note.id)) }}
@@ -1374,6 +1386,7 @@ export function NotesTable({
                               }}
                               showCardPreview={false}
                               groupBy={viewState.groupBy}
+                              groupKey={item.parentGroupKey}
                               parentTitle={item.note.parentNoteId ? notesById?.get(item.note.parentNoteId)?.title : undefined}
                               childTitles={childrenByParent?.get(item.note.id)}
                             />
@@ -1480,6 +1493,8 @@ interface NoteRowProps {
   onStatus: (s: NoteStatus) => void
   onSetFolder: (folderId: string) => void
   onRemoveFolder: () => void
+  /** PR (c) — Multi-folder Apply (replaces entire set). */
+  onSetFolders: (folderIds: string[]) => void
   onKeep: () => void
   onSnooze: (opt: SnoozePreset) => void
   onTrash: () => void
@@ -1495,6 +1510,11 @@ interface NoteRowProps {
   onLinkWith: () => void
   showCardPreview?: boolean
   groupBy?: string
+  /** PR (c) — when groupBy="folder", the folder id this row is rendered
+   *  under. Drives the "+N other folders" marker in the folder column
+   *  so the user understands the same note appearing in multiple folder
+   *  groups is intentional N:M behaviour, not a bug. */
+  groupKey?: string
   parentTitle?: string
   childTitles?: string[]
 }
@@ -1570,6 +1590,7 @@ function NoteRowInner({
   onStatus,
   onSetFolder,
   onRemoveFolder,
+  onSetFolders,
   onKeep,
   onSnooze,
   onTrash,
@@ -1582,6 +1603,7 @@ function NoteRowInner({
   onLinkWith,
   showCardPreview,
   groupBy,
+  groupKey,
   parentTitle,
   childTitles,
 }: NoteRowProps) {
@@ -1685,8 +1707,12 @@ function NoteRowInner({
 
       {/* Folder — PR (b): N:M render. Each folder this note belongs to
           gets a colored dot + name; >2 collapses to "first, second +N".
-          Stays single-line so the table doesn't grow tall when a note
-          has many memberships. */}
+          PR (c): when grouped by folder, the column already announces
+          this row's primary folder via the group header — so we collapse
+          OTHER memberships into a "+N" marker that the user can hover
+          to see which other folders the note lives in. This keeps the
+          duplicate-row appearance across folder groups intentional and
+          the column compact. */}
       {visibleCols.includes("folder") && (
         <div className="flex items-center justify-center gap-1.5 px-2 overflow-hidden">
           {note.folderIds.length === 0 ? (
@@ -1697,6 +1723,22 @@ function NoteRowInner({
               .filter((f): f is Folder => !!f)
             if (memberships.length === 0) {
               return <span className="text-note text-muted-foreground">—</span>
+            }
+            // PR (c) — folder-group context: suppress the current group's
+            // folder, surface a single marker for the rest.
+            if (groupBy === "folder" && groupKey && groupKey !== "_no_folder") {
+              const others = memberships.filter((f) => f.id !== groupKey)
+              if (others.length === 0) {
+                return <span className="text-note text-muted-foreground">—</span>
+              }
+              return (
+                <span
+                  className="inline-flex items-center gap-0.5 px-1.5 rounded-sm text-2xs font-medium bg-secondary/60 text-muted-foreground tabular-nums shrink-0"
+                  title={`Also in: ${others.map((f) => f.name).join(", ")}`}
+                >
+                  +{others.length}
+                </span>
+              )
             }
             const visible = memberships.slice(0, 2)
             const overflow = memberships.length - visible.length
@@ -1970,10 +2012,11 @@ function NoteRowInner({
           </ContextMenuSubContent>
         </ContextMenuSub>
 
-        {/* ── Move to folder ── *
-         * Folders in Plot are global containers — they hold both notes and
-         * wiki articles. Submenu lists all folders + a "No folder" option to
-         * unset, mirroring the sidebar's folder-picker UX. */}
+        {/* ── Move to folder (single-replace) ── *
+         * Single-folder semantic: replaces the entire folderIds set with
+         * the chosen folder. PR (c) keeps this for users who want
+         * exclusive membership; the new "Add to folders…" submenu below
+         * exposes the N:M multi-toggle path. */}
         <ContextMenuSub>
           <ContextMenuSubTrigger className="text-note">
             <FolderOpen className="mr-2 text-muted-foreground" size={16} weight="regular" />
@@ -2016,6 +2059,29 @@ function NoteRowInner({
           </ContextMenuSubContent>
         </ContextMenuSub>
 
+        {/* ── Add to folders… (multi-toggle, PR c) ── *
+         * The N:M surface in the right-click menu. Embeds the shared
+         * FolderPicker in selectMode="multi" inside a ContextMenuSubContent
+         * — Apply commits the entire new set via setNoteFolders. Loses
+         * native ContextMenu keyboard nav inside the picker (Radix doesn't
+         * propagate arrow keys into nested non-MenuItem children) but
+         * gains the discoverable checkbox UX that single-toggle
+         * MenuItems can't produce in a single click. */}
+        <ContextMenuSub>
+          <ContextMenuSubTrigger className="text-note">
+            <FolderOpen className="mr-2 text-muted-foreground" size={16} weight="regular" />
+            Add to folders…
+          </ContextMenuSubTrigger>
+          <ContextMenuSubContent className="w-56 p-1">
+            <FolderPicker
+              kind="note"
+              currentFolderIds={note.folderIds}
+              selectMode="multi"
+              onApply={(ids) => onSetFolders(ids)}
+            />
+          </ContextMenuSubContent>
+        </ContextMenuSub>
+
         <ContextMenuSeparator />
         <ContextMenuItem onClick={() => usePlotStore.getState().openInSecondary(note.id)} className="text-note">
           <SplitHorizontal className="mr-2 text-muted-foreground" size={16} weight="regular" />
@@ -2046,5 +2112,6 @@ const NoteRow = memo(NoteRowInner, (prev, next) =>
   prev.visibleColumns === next.visibleColumns &&
   prev.gridTemplate === next.gridTemplate &&
   prev.showCardPreview === next.showCardPreview &&
-  prev.groupBy === next.groupBy
+  prev.groupBy === next.groupBy &&
+  prev.groupKey === next.groupKey
 )

@@ -161,9 +161,14 @@ export function NoteDetailPanel({
 
   const note = notes.find((n) => n.id === noteId)
 
-  // v107 N:M: detail panel currently shows the primary folder (folderIds[0]).
-  // Multi-folder chip rendering lands in PR (c).
-  const noteFolder = note ? folders.find((f) => f.id === note.folderIds[0]) : null
+  // PR (c): N:M chip render. This panel is currently dead code (not imported
+  // — the live note inspector is `side-panel-context.tsx`) but we keep its
+  // markup in sync so reviving it doesn't reintroduce single-folder UX.
+  const noteFolderObjs = note
+    ? folders.filter(
+        (f) => f.kind === "note" && note.folderIds.includes(f.id),
+      )
+    : []
   const noteLabel = note ? labels.find((l) => l.id === note.labelId) : null
   const noteTags = note ? tags.filter((t) => note.tags.includes(t.id)) : []
 
@@ -459,11 +464,18 @@ export function NoteDetailPanel({
             <MetaRow label="Status" icon={<CircleDashed size={14} weight="regular" />}>
               <StatusBadge status={note.status} />
             </MetaRow>
-            {noteFolder && (
-              <MetaRow label="FolderSimple" icon={<FolderSimple size={14} weight="regular" />}>
-                <span className="flex items-center gap-1.5">
-                  <span className="h-2 w-2 rounded-full" style={{ backgroundColor: noteFolder.color }} />
-                  <span className="text-note">{noteFolder.name}</span>
+            {noteFolderObjs.length > 0 && (
+              <MetaRow
+                label={noteFolderObjs.length === 1 ? "Folder" : "Folders"}
+                icon={<FolderSimple size={14} weight="regular" />}
+              >
+                <span className="flex flex-wrap items-center gap-1.5 justify-end">
+                  {noteFolderObjs.map((f) => (
+                    <span key={f.id} className="flex items-center gap-1" title={f.name}>
+                      <span className="h-2 w-2 rounded-full shrink-0" style={{ backgroundColor: f.color }} />
+                      <span className="text-note truncate max-w-[120px]">{f.name}</span>
+                    </span>
+                  ))}
                 </span>
               </MetaRow>
             )}
