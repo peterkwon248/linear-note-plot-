@@ -1,6 +1,23 @@
 "use client"
 
-import { useState, useMemo, useRef, useEffect } from "react"
+/**
+ * TemplatesView — list / grid for note templates (PR template-c).
+ *
+ * Plot Template PR c (2026-05-03): the legacy `list-editor` (left list +
+ * right inline editor) is gone. Selecting a template now hands off to
+ * <TemplateEditPage> (full primary panel) and the Properties live in the
+ * side panel via TemplateDetailPanel. Sort / filter / display all flow
+ * through the shared view-engine pipeline (`useTemplatesView`) so saved
+ * views, filter chips, and ViewHeader work the same as Notes / Wiki.
+ *
+ * Modes (from displayConfig.viewMode):
+ *   - "list": <TemplatesTable> renders virtualization-free rows
+ *   - "grid": legacy <TemplateCard> grid (preserved)
+ *   Board mode is intentionally NOT supported — templates are blueprints,
+ *   not workflow items, so a kanban view has no semantic meaning.
+ */
+
+import { useState, useMemo, useRef, useEffect, useCallback } from "react"
 import { usePlotStore } from "@/lib/store"
 import {
   ContextMenu,
@@ -15,49 +32,22 @@ import { PushPin } from "@phosphor-icons/react/dist/ssr/PushPin"
 import { PushPinSlash } from "@phosphor-icons/react/dist/ssr/PushPinSlash"
 import { Layout } from "@phosphor-icons/react/dist/ssr/Layout"
 import { X as PhX } from "@phosphor-icons/react/dist/ssr/X"
-import { Columns } from "@phosphor-icons/react/dist/ssr/Columns"
-import { GridFour } from "@phosphor-icons/react/dist/ssr/GridFour"
-import { ArrowsDownUp } from "@phosphor-icons/react/dist/ssr/ArrowsDownUp"
-import { Check as PhCheck } from "@phosphor-icons/react/dist/ssr/Check"
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { ArrowLeft } from "@phosphor-icons/react/dist/ssr/ArrowLeft"
 import { cn } from "@/lib/utils"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
 import { FileText } from "@phosphor-icons/react/dist/ssr/FileText"
-import type { NoteTemplate, NoteStatus, NotePriority } from "@/lib/types"
+import type { NoteTemplate } from "@/lib/types"
+import type { FilterRule } from "@/lib/view-engine/types"
 import { ViewHeader } from "@/components/view-header"
+import { FilterPanel } from "@/components/filter-panel"
+import { DisplayPanel } from "@/components/display-panel"
+import { TEMPLATES_VIEW_CONFIG } from "@/lib/view-engine/view-configs"
+import { useTemplatesView } from "@/lib/view-engine/use-templates-view"
+import { groupByInitial } from "@/lib/korean-utils"
+import { TemplatesTable } from "@/components/views/templates-table"
 import { TemplateEditPage } from "@/components/views/template-edit-page"
-// PR template-b: TemplateEditor (right-panel form), TipTapEditor, FixedToolbar,
-// ArrowLeft, ArrowsOut, Editor, useCallback imports were removed — the
-// editing surface lives in TemplateEditPage now. NoteStatus + NotePriority
-// + FileText are still consumed by TemplateCard (grid view).
-// PRESET_COLORS / per-template icon+color dropped in v102 (PR template-a).
+import { TemplatesFloatingActionBar } from "@/components/templates-floating-action-bar"
 
 /* ── Constants ─────────────────────────────────────────── */
-
-// ICON_OPTIONS removed in v102 — templates use a generic Layout icon now.
-
-const PLACEHOLDER_VARS = [
-  { key: "{date}",     label: "Date",     desc: "YYYY-MM-DD" },
-  { key: "{time}",     label: "Time",     desc: "HH:MM" },
-  { key: "{datetime}", label: "DateTime", desc: "YYYY-MM-DD HH:MM" },
-  { key: "{year}",     label: "Year",     desc: "YYYY" },
-  { key: "{month}",    label: "Month",    desc: "MM" },
-  { key: "{day}",      label: "Day",      desc: "DD" },
-] as const
-
-/* "focus" mode dropped in PR template-b — list-editor with the side panel
-   IS the focus experience now (NoteEditor reuse + properties side panel). */
-type TemplateViewMode = "list-editor" | "grid"
-
-const VIEW_MODES: { mode: TemplateViewMode; label: string; icon: typeof Columns }[] = [
-  { mode: "list-editor", label: "List + Editor", icon: Columns },
-  { mode: "grid",        label: "Grid",          icon: GridFour },
-]
 
 // PR template-b: dialog now collects only the two fields the user must
 // pick at create time. Everything else (title pattern, status, priority,
@@ -71,56 +61,6 @@ interface TemplateFormData {
 const DEFAULT_FORM: TemplateFormData = {
   name: "",
   description: "",
-}
-
-/* ── View Mode Switcher ────────────────────────────────── */
-
-function TemplateViewSwitcher({
-  viewMode,
-  onChangeMode,
-}: {
-  viewMode: TemplateViewMode
-  onChangeMode: (mode: TemplateViewMode) => void
-}) {
-  const [open, setOpen] = useState(false)
-  const CurrentIcon = VIEW_MODES.find((m) => m.mode === viewMode)?.icon ?? GridFour
-
-  return (
-    <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger asChild>
-        <button
-          className={cn(
-            "inline-flex items-center justify-center rounded-md p-1.5",
-            "text-muted-foreground hover:text-foreground hover:bg-hover-bg",
-            "transition-colors"
-          )}
-          title="View mode"
-        >
-          <CurrentIcon className="h-4 w-4" />
-        </button>
-      </PopoverTrigger>
-      <PopoverContent align="end" className="w-56 p-1.5" sideOffset={8}>
-        {VIEW_MODES.map(({ mode, label, icon: Icon }) => (
-          <button
-            key={mode}
-            onClick={() => {
-              onChangeMode(mode)
-              setOpen(false)
-            }}
-            className={cn(
-              "flex w-full items-center gap-3 rounded-md px-3 py-2 text-left transition-colors",
-              viewMode === mode
-                ? "bg-secondary/80 text-foreground"
-                : "text-muted-foreground hover:bg-hover-bg hover:text-foreground"
-            )}
-          >
-            <Icon className="h-4 w-4 shrink-0" />
-            <span className="flex-1 text-note font-medium">{label}</span>
-          </button>
-        ))}
-      </PopoverContent>
-    </Popover>
-  )
 }
 
 /* ── Create Dialog ─────────────────────────────────────── */
@@ -151,7 +91,6 @@ function TemplateFormDialog({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 animate-in fade-in duration-150">
       <div className="w-full max-w-lg rounded-lg border border-border bg-card shadow-xl animate-in zoom-in-95 duration-150">
-        {/* Header */}
         <div className="flex items-center justify-between border-b border-border px-6 py-4">
           <h2 className="text-ui font-semibold text-foreground">{dialogTitle}</h2>
           <button
@@ -162,9 +101,7 @@ function TemplateFormDialog({
           </button>
         </div>
 
-        {/* Body */}
         <div className="space-y-4 px-6 py-5">
-          {/* Name */}
           <div>
             <label className="block text-note font-medium text-muted-foreground mb-1.5">Name</label>
             <input
@@ -178,7 +115,6 @@ function TemplateFormDialog({
             />
           </div>
 
-          {/* Description */}
           <div>
             <label className="block text-note font-medium text-muted-foreground mb-1.5">Description</label>
             <input
@@ -189,14 +125,8 @@ function TemplateFormDialog({
               className="h-9 w-full rounded-md border border-border bg-background px-3 text-note text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-accent"
             />
           </div>
-
-          {/* Status / Priority / Title-pattern fields moved to the side
-              panel (TemplateDetailPanel) in PR template-b. The create
-              dialog now only collects name + description; everything else
-              defaults and is editable post-create from the side panel. */}
         </div>
 
-        {/* Footer */}
         <div className="flex items-center justify-end gap-2 border-t border-border px-6 py-4">
           <button
             onClick={onCancel}
@@ -217,10 +147,6 @@ function TemplateFormDialog({
   )
 }
 
-/* TemplateEditor (right-panel form) was deleted in PR template-b — its
-   editing surface is now `<TemplateEditPage>` (NoteEditor reuse) and its
-   metadata fields live in the side panel via `TemplateDetailPanel`. */
-
 /* ── Template Card (Grid view) ─────────────────────────── */
 
 function TemplateCard({
@@ -238,28 +164,6 @@ function TemplateCard({
   onPin: (id: string) => void
   onDelete: (id: string) => void
 }) {
-  const STATUS_LABELS: Record<NoteStatus, string> = {
-    inbox: "Inbox",
-    capture: "Capture",
-    permanent: "Permanent",
-  }
-
-  const PRIORITY_LABELS: Record<NotePriority, string> = {
-    none: "",
-    low: "Low",
-    medium: "Medium",
-    high: "High",
-    urgent: "Urgent",
-  }
-
-  const PRIORITY_COLORS: Record<NotePriority, string> = {
-    none: "",
-    low: "text-blue-400 bg-blue-400/10",
-    medium: "text-yellow-400 bg-yellow-400/10",
-    high: "text-orange-400 bg-orange-400/10",
-    urgent: "text-red-400 bg-red-400/10",
-  }
-
   return (
     <ContextMenu>
       <ContextMenuTrigger asChild>
@@ -267,11 +171,7 @@ function TemplateCard({
           onClick={() => onSelect(tmpl.id)}
           className="group relative flex flex-col rounded-lg border border-border bg-card hover:bg-hover-bg transition-colors cursor-pointer overflow-hidden"
         >
-          {/* Card top accent removed in v102 — templates no longer carry
-              per-template color. Visual hierarchy comes from name + label. */}
-
           <div className="flex flex-col gap-2 p-4">
-            {/* Generic Layout icon — was per-template emoji until v102. */}
             <div className="flex items-start gap-2.5">
               <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-secondary/40 text-muted-foreground">
                 <Layout size={16} weight="regular" />
@@ -281,13 +181,9 @@ function TemplateCard({
                   <span className="text-note font-semibold text-foreground truncate">{tmpl.name}</span>
                   {tmpl.pinned && <PushPin className="text-accent shrink-0" size={12} weight="regular" />}
                 </div>
-                {tmpl.description && (
-                  <p className="text-2xs text-muted-foreground truncate mt-0.5">{tmpl.description}</p>
-                )}
               </div>
             </div>
 
-            {/* Title + Content preview */}
             <div className="bg-secondary/40 rounded-md px-2.5 py-2 space-y-1">
               {tmpl.title && (
                 <p className="text-2xs font-semibold text-foreground/70 truncate">
@@ -311,23 +207,8 @@ function TemplateCard({
               )}
             </div>
 
-            {/* Badges */}
-            <div className="flex items-center gap-1.5 flex-wrap">
-              <span className="inline-flex items-center rounded-md px-1.5 py-0.5 text-2xs font-medium bg-secondary text-muted-foreground">
-                {STATUS_LABELS[tmpl.status]}
-              </span>
-              {tmpl.priority !== "none" && (
-                <span className={cn(
-                  "inline-flex items-center rounded-md px-1.5 py-0.5 text-2xs font-medium",
-                  PRIORITY_COLORS[tmpl.priority]
-                )}>
-                  {PRIORITY_LABELS[tmpl.priority]}
-                </span>
-              )}
-            </div>
           </div>
 
-          {/* Hover action buttons */}
           <div className="absolute top-3 right-3 hidden group-hover:flex items-center gap-1">
             <button
               onClick={(e) => { e.stopPropagation(); onEdit(tmpl.id) }}
@@ -347,15 +228,15 @@ function TemplateCard({
         </div>
       </ContextMenuTrigger>
       <ContextMenuContent className="w-48">
-        <ContextMenuItem onClick={() => onUse(tmpl.id)}>
-          <FileText className="mr-2 text-muted-foreground" size={16} weight="regular" />
+        <ContextMenuItem className="text-note" onClick={() => onUse(tmpl.id)}>
+          <FileText className="mr-2 text-accent" size={16} weight="regular" />
           Use template
         </ContextMenuItem>
-        <ContextMenuItem onClick={() => onEdit(tmpl.id)}>
+        <ContextMenuItem className="text-note" onClick={() => onEdit(tmpl.id)}>
           <Layout className="mr-2 text-muted-foreground" size={16} weight="regular" />
           Edit
         </ContextMenuItem>
-        <ContextMenuItem onClick={() => onPin(tmpl.id)}>
+        <ContextMenuItem className="text-note" onClick={() => onPin(tmpl.id)}>
           {tmpl.pinned ? (
             <>
               <PushPinSlash className="mr-2 text-muted-foreground" size={16} weight="regular" />
@@ -363,8 +244,8 @@ function TemplateCard({
             </>
           ) : (
             <>
-              <PushPin className="mr-2 text-muted-foreground" size={16} weight="regular" />
-              PushPin
+              <PushPin className="mr-2 text-accent" size={16} weight="regular" />
+              Pin
             </>
           )}
         </ContextMenuItem>
@@ -381,93 +262,145 @@ function TemplateCard({
   )
 }
 
-/* ── Template Sort Dropdown ────────────────────────────── */
-
-const TEMPLATE_SORT_OPTIONS = [
-  { value: "name-asc" as const, label: "Name A-Z" },
-  { value: "name-desc" as const, label: "Name Z-A" },
-  { value: "updated-desc" as const, label: "Updated (newest)" },
-  { value: "updated-asc" as const, label: "Updated (oldest)" },
-  { value: "created-desc" as const, label: "Created (newest)" },
-]
-
-function TemplateSortDropdown({
-  value,
-  onChange,
-}: {
-  value: string
-  onChange: (v: "name-asc" | "name-desc" | "updated-desc" | "updated-asc" | "created-desc") => void
-}) {
-  return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <button className="flex items-center gap-1.5 rounded-md px-2 py-1 text-note text-muted-foreground transition-colors hover:bg-hover-bg hover:text-foreground">
-          <ArrowsDownUp size={14} weight="regular" />
-          {TEMPLATE_SORT_OPTIONS.find((o) => o.value === value)?.label ?? "Sort"}
-        </button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="start">
-        {TEMPLATE_SORT_OPTIONS.map(({ value: v, label }) => (
-          <DropdownMenuItem key={v} onClick={() => onChange(v)}>
-            <PhCheck className={cn(" mr-2 shrink-0", value === v ? "opacity-100" : "opacity-0")} size={14} weight="bold" />
-            {label}
-          </DropdownMenuItem>
-        ))}
-      </DropdownMenuContent>
-    </DropdownMenu>
-  )
-}
-
 /* ── Templates View ───────────────────────────────────── */
 
 export function TemplatesView() {
-  const templates = usePlotStore((s) => s.templates) as NoteTemplate[]
+  const allTemplates = usePlotStore((s) => s.templates) as NoteTemplate[]
+  const labels = usePlotStore((s) => s.labels)
+  const folders = usePlotStore((s) => s.folders)
+  const tags = usePlotStore((s) => s.tags)
   const createTemplate = usePlotStore((s) => s.createTemplate) as (t: Omit<NoteTemplate, "id" | "createdAt" | "updatedAt">) => string
-  const updateTemplate = usePlotStore((s) => s.updateTemplate) as (id: string, updates: Partial<NoteTemplate>) => void
   const deleteTemplate = usePlotStore((s) => s.deleteTemplate) as (id: string) => void
   const toggleTemplatePin = usePlotStore((s) => s.toggleTemplatePin) as (id: string) => void
   const createNoteFromTemplate = usePlotStore((s) => s.createNoteFromTemplate) as (id: string) => string
   const openNote = usePlotStore((s) => s.openNote)
+  const sidePanelOpen = usePlotStore((s) => s.sidePanelOpen)
 
+  // Active template = which template is being edited inside this view.
+  // null → list/grid is shown; non-null → <TemplateEditPage> takes over the
+  // primary panel (Back button returns).
   const [selectedTemplateId, setSelectedTemplateId] = useState<string | null>(null)
   const [showCreateDialog, setShowCreateDialog] = useState(false)
-  const [viewMode, setViewMode] = useState<TemplateViewMode>("grid")
-  const [templateSortBy, setTemplateSortBy] = useState<"name-asc" | "name-desc" | "updated-desc" | "updated-asc" | "created-desc">("updated-desc")
+  // Local search (templates context doesn't pollute the global store query).
   const [search, setSearch] = useState("")
+  // Multi-select — lifted up from TemplatesTable so FAB can be rendered here.
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
 
-  // Sorted: pinned first, then by selected sort, then filtered by search (excluding trashed)
-  const sortedTemplates = useMemo(() => {
+  // Pipeline — produces filtered/sorted/grouped templates per viewState.
+  // Note: useTemplatesView reads from the global searchQuery store; we
+  // bypass that here and provide a local search box, mirroring the legacy
+  // templates-view UX. To keep the pipeline working with our local search,
+  // we override the store search by writing it back as a noop and instead
+  // filter manually below. Simpler: just compose locally on flatTemplates.
+  const { groups, flatTemplates, totalCount, viewState, updateViewState } = useTemplatesView("templates")
+
+  const selectedTemplate = useMemo(
+    () => (selectedTemplateId ? allTemplates.find((t) => t.id === selectedTemplateId) ?? null : null),
+    [selectedTemplateId, allTemplates],
+  )
+
+  // Local search overlay — hide rows that don't match the search box. Kept
+  // independent from the pipeline's searchQuery so typing in the templates
+  // search doesn't bleed into Notes / Wiki search state.
+  const searchedFlat = useMemo(() => {
     const q = search.trim().toLowerCase()
-    const activeTemplates = templates.filter((t) => !t.trashed)
-    const filtered = q ? activeTemplates.filter((t) => t.name.toLowerCase().includes(q)) : activeTemplates
-    const pinned = filtered.filter((t) => t.pinned)
-    const unpinned = filtered.filter((t) => !t.pinned)
-    const sortFn = (a: NoteTemplate, b: NoteTemplate) => {
-      switch (templateSortBy) {
-        case "name-asc": return a.name.localeCompare(b.name)
-        case "name-desc": return b.name.localeCompare(a.name)
-        case "updated-desc": return b.updatedAt.localeCompare(a.updatedAt)
-        case "updated-asc": return a.updatedAt.localeCompare(b.updatedAt)
-        case "created-desc": return b.createdAt.localeCompare(a.createdAt)
-        default: return 0
+    if (!q) return flatTemplates
+    return flatTemplates.filter((t) =>
+      t.name.toLowerCase().includes(q) ||
+      (t.description ?? "").toLowerCase().includes(q),
+    )
+  }, [flatTemplates, search])
+
+  // Re-apply search to grouped output too (drop empty groups when grouping).
+  const searchedGroups = useMemo(() => {
+    if (!search.trim()) return groups
+    const allowed = new Set(searchedFlat.map((t) => t.id))
+    return groups
+      .map((g) => ({ ...g, templates: g.templates.filter((t) => allowed.has(t.id)) }))
+      .filter((g) => g.templates.length > 0)
+  }, [groups, searchedFlat, search])
+
+  // Alphabetical Index toggle — same pattern as notes-table.tsx.
+  // When enabled, overrides groupBy and re-groups the flat list by first letter.
+  const showAlphaIndex = viewState.toggles?.showAlphaIndex ?? false
+  const onToggleAlphaIndex = useCallback(() => {
+    const next = !showAlphaIndex
+    updateViewState({ toggles: { ...(viewState.toggles ?? {}), showAlphaIndex: next } })
+  }, [showAlphaIndex, viewState.toggles, updateViewState])
+
+  const displayGroups = useMemo(() => {
+    if (!showAlphaIndex) return searchedGroups
+    const allFlat = searchedFlat
+    const map = groupByInitial(allFlat, (t) => t.name || "Untitled")
+    return Array.from(map.entries()).map(([key, templates]) => ({ key, label: key, templates }))
+  }, [showAlphaIndex, searchedGroups, searchedFlat])
+
+  // Hydrate runtime filter values (label / folder / tags) — TEMPLATES_VIEW_CONFIG
+  // declares empty `values: []` for these and we fill them from the store.
+  const filterCategories = useMemo(() => {
+    return TEMPLATES_VIEW_CONFIG.filterCategories.map((cat) => {
+      if (cat.key === "label") {
+        return {
+          ...cat,
+          values: labels
+            .filter((l) => !l.trashed)
+            .map((l) => ({
+              key: l.id,
+              label: l.name,
+              color: l.color,
+              count: allTemplates.filter((t) => !t.trashed && t.labelId === l.id).length,
+            })),
+        }
       }
-    }
-    return [...pinned.sort(sortFn), ...unpinned.sort(sortFn)]
-  }, [templates, templateSortBy, search])
+      if (cat.key === "folder") {
+        return {
+          ...cat,
+          values: folders.map((f) => ({
+            key: f.id,
+            label: f.name,
+            color: f.color,
+            count: allTemplates.filter((t) => !t.trashed && t.folderId === f.id).length,
+          })),
+        }
+      }
+      if (cat.key === "tags") {
+        return {
+          ...cat,
+          values: tags
+            .filter((t) => !t.trashed)
+            .map((tag) => ({
+              key: tag.id,
+              label: tag.name,
+              color: tag.color,
+              count: allTemplates.filter((t) => !t.trashed && t.tags.includes(tag.id)).length,
+            })),
+        }
+      }
+      return cat
+    })
+  }, [labels, folders, tags, allTemplates])
 
-  const selectedTemplate = selectedTemplateId ? templates.find((t) => t.id === selectedTemplateId) ?? null : null
+  // FilterPanel handlers
+  const handleFilterToggle = useCallback((rule: FilterRule) => {
+    const exists = viewState.filters.some(
+      (f) => f.field === rule.field && f.value === rule.value,
+    )
+    const next = exists
+      ? viewState.filters.filter((f) => !(f.field === rule.field && f.value === rule.value))
+      : [...viewState.filters, rule]
+    updateViewState({ filters: next })
+  }, [viewState.filters, updateViewState])
 
-  // If selected template gets deleted, clear selection
+  // If selected template gets deleted, clear selection so we don't render
+  // a ghost <TemplateEditPage>.
   useEffect(() => {
-    if (selectedTemplateId && !templates.find((t) => t.id === selectedTemplateId)) {
+    if (selectedTemplateId && !allTemplates.find((t) => t.id === selectedTemplateId)) {
       setSelectedTemplateId(null)
     }
-  }, [templates, selectedTemplateId])
+  }, [allTemplates, selectedTemplateId])
 
-  // Q3 default: auto-open the side panel the first time the user picks a
-  // template this session, then respect any subsequent toggles. Tracked
-  // via a session-scoped ref so re-selecting the same template does not
-  // re-open the panel after the user has explicitly closed it.
+  // Sync side panel context when the active template changes — same pattern
+  // as the b1 wiring; opens the panel automatically the first time per session.
   const sidePanelAutoOpenedRef = useRef(false)
   useEffect(() => {
     if (!selectedTemplateId) return
@@ -479,13 +412,9 @@ export function TemplatesView() {
     }
   }, [selectedTemplateId])
 
-  // Direct mode switch — no auto-selection guards now that "focus" is gone.
-  const handleSetViewMode = (mode: TemplateViewMode) => setViewMode(mode)
+  /* ── Handlers ──────────────────────────────────────── */
 
   const handleCreateSubmit = (data: TemplateFormData) => {
-    // Q1 default: drop straight into list-editor with the new template
-    // selected. Defaults for the rest of the metadata mirror what the
-    // simplified dialog hides — user edits them in the side panel.
     const newId = createTemplate({
       name: data.name,
       description: data.description,
@@ -501,7 +430,6 @@ export function TemplatesView() {
     })
     setShowCreateDialog(false)
     setSelectedTemplateId(newId)
-    setViewMode("list-editor")
   }
 
   const handleUseTemplate = (templateId: string) => {
@@ -511,229 +439,157 @@ export function TemplatesView() {
 
   const handleDelete = (id: string) => {
     deleteTemplate(id)
+    if (selectedTemplateId === id) {
+      setSelectedTemplateId(null)
+    }
+    setSelectedIds((prev) => {
+      const next = new Set(prev)
+      next.delete(id)
+      return next
+    })
   }
 
-  // Card grid: clicking selects and switches to list-editor
-  const handleCardSelect = (id: string) => {
-    setSelectedTemplateId(id)
-    setViewMode("list-editor")
-  }
+  /* ── Edit page mode ─────────────────────────────────── */
 
-  // Card edit button: switch to list-editor with that template
-  const handleCardEdit = (id: string) => {
-    setSelectedTemplateId(id)
-    setViewMode("list-editor")
-  }
-
-  /* ── Grid Mode ─────────────────────────────────────── */
-  if (viewMode === "grid") {
+  if (selectedTemplate) {
     return (
       <div className="flex flex-1 flex-col overflow-hidden">
-        <ViewHeader
-          icon={<Layout size={20} weight="regular" />}
-          title="Templates"
-          count={templates.length}
-          searchPlaceholder="Search templates..."
-          searchValue={search}
-          onSearchChange={setSearch}
-          actions={
-            <>
-              <TemplateSortDropdown value={templateSortBy} onChange={setTemplateSortBy} />
-              <TemplateViewSwitcher viewMode={viewMode} onChangeMode={handleSetViewMode} />
-              <button
-                onClick={() => setShowCreateDialog(true)}
-                className="flex items-center gap-1.5 rounded-md bg-accent px-2.5 py-1 text-note font-medium text-accent-foreground hover:bg-accent/90"
-              >
-                <PhPlus size={14} weight="regular" />
-                New
-              </button>
-            </>
-          }
-        />
-
-        {/* Grid */}
-        <div className="flex-1 overflow-y-auto">
-          {templates.length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-48 gap-2 px-4">
-              <Layout className="text-muted-foreground/60" size={32} weight="regular" />
-              <span className="text-2xs text-muted-foreground text-center">No templates yet</span>
-              <button
-                onClick={() => setShowCreateDialog(true)}
-                className="mt-1 flex items-center gap-1 px-2.5 py-1.5 rounded-md text-2xs bg-accent text-accent-foreground hover:bg-accent/90 transition-colors"
-              >
-                <PhPlus size={12} weight="regular" />
-                New template
-              </button>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 p-6">
-              {sortedTemplates.map((tmpl) => (
-                <TemplateCard
-                  key={tmpl.id}
-                  tmpl={tmpl}
-                  onSelect={handleCardSelect}
-                  onUse={handleUseTemplate}
-                  onEdit={handleCardEdit}
-                  onPin={toggleTemplatePin}
-                  onDelete={handleDelete}
-                />
-              ))}
-            </div>
-          )}
+        {/* Compact back-bar — keeps the user oriented + provides a one-click
+            return to the list/grid. */}
+        <div className="flex items-center gap-2 border-b border-border bg-background px-4 py-2 shrink-0">
+          <button
+            onClick={() => setSelectedTemplateId(null)}
+            className="flex items-center gap-1 rounded-md px-2 py-1 text-2xs text-muted-foreground hover:bg-hover-bg hover:text-foreground transition-colors"
+          >
+            <ArrowLeft size={12} weight="regular" />
+            Templates
+          </button>
+          <span className="text-2xs text-muted-foreground/60">/</span>
+          <span className="text-2xs font-medium text-foreground truncate">
+            {selectedTemplate.name || "Untitled template"}
+          </span>
         </div>
-
-        {showCreateDialog && (
-          <TemplateFormDialog
-            initial={DEFAULT_FORM}
-            onSubmit={handleCreateSubmit}
-            onCancel={() => setShowCreateDialog(false)}
-            title="New Template"
-          />
-        )}
+        <TemplateEditPage key={selectedTemplate.id} template={selectedTemplate} />
       </div>
     )
   }
 
-  /* "Focus Mode" branch removed in PR template-b. List+Editor with the
-     side panel (TemplateDetailPanel) covers the same focused experience
-     and matches the NoteEditor surface. */
+  /* ── List / Grid mode ───────────────────────────────── */
 
-  /* ── List + Editor Mode (default) ──────────────────── */
   return (
-    <div className="flex flex-1 flex-row overflow-hidden">
-      {/* ── Left Panel: Template List ──────────────────── */}
-      <div className="flex flex-col w-[280px] min-w-[280px] border-r border-border overflow-hidden">
-        <ViewHeader
-          icon={<Layout size={20} weight="regular" />}
-          title="Templates"
-          count={templates.length}
-          searchPlaceholder="Search templates..."
-          searchValue={search}
-          onSearchChange={setSearch}
-          actions={
-            <>
-              <TemplateSortDropdown value={templateSortBy} onChange={setTemplateSortBy} />
-              <TemplateViewSwitcher viewMode={viewMode} onChangeMode={handleSetViewMode} />
-              <button
-                onClick={() => setShowCreateDialog(true)}
-                className="flex items-center gap-1.5 rounded-md bg-accent px-2.5 py-1 text-note font-medium text-accent-foreground hover:bg-accent/90"
-              >
-                <PhPlus size={14} weight="regular" />
-                New
-              </button>
-            </>
+    <div className="flex flex-1 flex-col overflow-hidden">
+      <ViewHeader
+        icon={<Layout size={20} weight="regular" />}
+        title="Templates"
+        count={totalCount}
+        searchPlaceholder="Search templates..."
+        searchValue={search}
+        onSearchChange={setSearch}
+        showFilter={TEMPLATES_VIEW_CONFIG.showFilter}
+        hasActiveFilters={viewState.filters.length > 0}
+        filterContent={
+          <FilterPanel
+            categories={filterCategories}
+            activeFilters={viewState.filters}
+            onToggle={handleFilterToggle}
+            quickFilters={TEMPLATES_VIEW_CONFIG.quickFilters as any}
+            onQuickFilter={(rules) => updateViewState({ filters: rules })}
+          />
+        }
+        showDisplay={TEMPLATES_VIEW_CONFIG.showDisplay}
+        displayContent={
+          <DisplayPanel
+            config={TEMPLATES_VIEW_CONFIG.displayConfig}
+            viewState={viewState}
+            onViewStateChange={updateViewState}
+            toggleStates={viewState.toggles ?? {}}
+            onToggleChange={(key, value) =>
+              updateViewState({ toggles: { ...(viewState.toggles ?? {}), [key]: value } })
+            }
+            showViewMode={true}
+          />
+        }
+        showDetailPanel={TEMPLATES_VIEW_CONFIG.showDetailPanel}
+        detailPanelOpen={sidePanelOpen}
+        onDetailPanelToggle={() => {
+          const store = usePlotStore.getState()
+          if (!store.sidePanelOpen) {
+            store.setSidePanelOpen(true)
+            usePlotStore.setState({ sidePanelMode: 'detail' })
+          } else if (store.sidePanelMode === 'detail') {
+            store.setSidePanelOpen(false)
+          } else {
+            usePlotStore.setState({ sidePanelMode: 'detail' })
           }
-        />
+        }}
+        onCreateNew={() => setShowCreateDialog(true)}
+      />
 
-        {/* List */}
-        <div className="flex-1 overflow-y-auto py-1">
-          {templates.length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-48 gap-2 px-4">
-              <Layout className="text-muted-foreground/60" size={32} weight="regular" />
-              <span className="text-2xs text-muted-foreground text-center">No templates yet</span>
-              <button
-                onClick={() => setShowCreateDialog(true)}
-                className="mt-1 flex items-center gap-1 px-2.5 py-1.5 rounded-md text-2xs bg-accent text-accent-foreground hover:bg-accent/90 transition-colors"
-              >
-                <PhPlus size={12} weight="regular" />
-                New template
-              </button>
-            </div>
-          ) : (
-            sortedTemplates.map((tmpl) => (
-              <ContextMenu key={tmpl.id}>
-                <ContextMenuTrigger asChild>
-                  <button
-                    onClick={() => setSelectedTemplateId(tmpl.id)}
-                    className={`group w-full flex items-center gap-2.5 px-3 py-2 text-left transition-colors ${
-                      selectedTemplateId === tmpl.id
-                        ? "bg-accent/10 border-l-2 border-accent"
-                        : "border-l-2 border-transparent hover:bg-hover-bg"
-                    }`}
-                  >
-                    {/* Generic Layout icon — was per-template emoji until v102. */}
-                    <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-secondary/40 text-muted-foreground">
-                      <Layout size={14} weight="regular" />
-                    </span>
-
-                    {/* Name + description */}
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-1.5">
-                        <span className="text-note font-medium text-foreground truncate">{tmpl.name}</span>
-                        {tmpl.pinned && <PushPin className="text-accent shrink-0" size={12} weight="regular" />}
-                      </div>
-                      {tmpl.description && (
-                        <div className="text-2xs text-muted-foreground truncate">{tmpl.description}</div>
-                      )}
-                    </div>
-                  </button>
-                </ContextMenuTrigger>
-                <ContextMenuContent className="w-48">
-                  <ContextMenuItem onClick={() => handleUseTemplate(tmpl.id)}>
-                    <FileText className="mr-2 text-muted-foreground" size={16} weight="regular" />
-                    Use template
-                  </ContextMenuItem>
-                  <ContextMenuItem onClick={() => setSelectedTemplateId(tmpl.id)}>
-                    <Layout className="mr-2 text-muted-foreground" size={16} weight="regular" />
-                    Edit
-                  </ContextMenuItem>
-                  <ContextMenuItem onClick={() => toggleTemplatePin(tmpl.id)}>
-                    {tmpl.pinned ? (
-                      <>
-                        <PushPinSlash className="mr-2 text-muted-foreground" size={16} weight="regular" />
-                        Unpin
-                      </>
-                    ) : (
-                      <>
-                        <PushPin className="mr-2 text-muted-foreground" size={16} weight="regular" />
-                        PushPin
-                      </>
-                    )}
-                  </ContextMenuItem>
-                  <ContextMenuSeparator />
-                  <ContextMenuItem
-                    onClick={() => handleDelete(tmpl.id)}
-                    className="text-red-400 focus:text-red-400"
-                  >
-                    <Trash className="mr-2" size={16} weight="regular" />
-                    Delete
-                  </ContextMenuItem>
-                </ContextMenuContent>
-              </ContextMenu>
-            ))
-          )}
+      {/* Body — list (table) or grid (cards). When list-mode is selected
+          AND no templates exist at all (not just the filtered slice), show
+          the "no templates yet" hero. Otherwise the table/grid handle the
+          empty-filtered case themselves. */}
+      {allTemplates.filter((t) => !t.trashed).length === 0 ? (
+        <div className="flex flex-1 flex-col items-center justify-center h-48 gap-2 px-4">
+          <Layout className="text-muted-foreground/60" size={32} weight="regular" />
+          <span className="text-2xs text-muted-foreground text-center">No templates yet</span>
+          <button
+            onClick={() => setShowCreateDialog(true)}
+            className="mt-1 flex items-center gap-1 px-2.5 py-1.5 rounded-md text-2xs bg-accent text-accent-foreground hover:bg-accent/90 transition-colors"
+          >
+            <PhPlus size={12} weight="regular" />
+            New template
+          </button>
         </div>
-      </div>
-
-      {/* ── Right Panel: Template Editor ──────────────── */}
-      <div className="flex flex-1 flex-col overflow-hidden">
-        {selectedTemplate ? (
-          <TemplateEditPage key={selectedTemplate.id} template={selectedTemplate} />
-        ) : (
-          <div className="flex flex-1 flex-col items-center justify-center gap-3 text-center px-8">
-            <Layout className="text-muted-foreground/60" size={48} weight="regular" />
-            <p className="text-note font-medium text-muted-foreground">Select a template to edit</p>
-            <p className="text-2xs text-muted-foreground/60 max-w-xs">
-              Choose a template from the list on the left, or create a new one to get started.
-            </p>
-            <button
-              onClick={() => setShowCreateDialog(true)}
-              className="mt-2 flex items-center gap-1.5 px-3 py-1.5 rounded-md text-note bg-accent text-accent-foreground hover:bg-accent/90 transition-colors"
-            >
-              <PhPlus size={14} weight="regular" />
-              New template
-            </button>
+      ) : viewState.viewMode !== "grid" ? (
+        <TemplatesTable
+          groups={displayGroups}
+          flatTemplates={searchedFlat}
+          groupBy={showAlphaIndex ? "none" : viewState.groupBy}
+          visibleColumns={viewState.visibleColumns}
+          selectedTemplateId={selectedTemplateId}
+          onSelect={(id) => setSelectedTemplateId(id)}
+          onUseTemplate={handleUseTemplate}
+          onDelete={handleDelete}
+          onTogglePin={toggleTemplatePin}
+          onCreateNew={() => setShowCreateDialog(true)}
+          showAlphaIndex={showAlphaIndex}
+          onToggleAlphaIndex={onToggleAlphaIndex}
+          selectedIds={selectedIds}
+          onSelectionChange={setSelectedIds}
+        />
+      ) : (
+        <div className="flex-1 overflow-y-auto">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 p-6">
+            {searchedFlat.map((tmpl) => (
+              <TemplateCard
+                key={tmpl.id}
+                tmpl={tmpl}
+                onSelect={(id) => setSelectedTemplateId(id)}
+                onUse={handleUseTemplate}
+                onEdit={(id) => setSelectedTemplateId(id)}
+                onPin={toggleTemplatePin}
+                onDelete={handleDelete}
+              />
+            ))}
           </div>
-        )}
-      </div>
+        </div>
+      )}
 
-      {/* Create dialog */}
       {showCreateDialog && (
         <TemplateFormDialog
           initial={DEFAULT_FORM}
           onSubmit={handleCreateSubmit}
           onCancel={() => setShowCreateDialog(false)}
           title="New Template"
+        />
+      )}
+
+      {selectedIds.size > 0 && (
+        <TemplatesFloatingActionBar
+          selectedIds={selectedIds}
+          templates={allTemplates}
+          onClearSelection={() => setSelectedIds(new Set())}
         />
       )}
     </div>

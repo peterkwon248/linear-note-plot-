@@ -40,6 +40,11 @@ const CONTEXT_DEFAULTS: Partial<Record<ViewContextKey, Partial<ViewState>>> = {
   "wiki-category": { viewMode: "list", ...ctx("title", "asc"), groupBy: "none", visibleColumns: ["parent", "tier", "articles", "stubs", "sub", "updatedAt"] },
   graph:          { viewMode: "graph", ...ctx("updatedAt"), groupBy: "none", toggles: { showWikilinks: true, showTagNodes: false, showLabels: false, showNotes: true, showWiki: true } },
   calendar:       { viewMode: "calendar", ...ctx("createdAt"), groupBy: "none", toggles: { showNotes: true, showWiki: true } },
+  // PR template-c: templates list adopts list/grid via the unified pipeline.
+  // visibleColumns: name (title slot) only — updatedAt/createdAt tail is
+  // appended automatically by ensureRequiredColumns.
+  // description removed (PR template-c fix batch v105).
+  templates:      { viewMode: "list", ...ctx("updatedAt"), groupBy: "none", visibleColumns: ["title"] },
 }
 
 /** Build a ViewState for a specific context, merging defaults */

@@ -23,11 +23,30 @@ export interface QuickFilter {
   rules: Array<{ field: string; operator: string; value: string }>
 }
 
+/** A toggle entry rendered in DisplayPanel's "List/Board options" section. */
+export interface DisplayToggle {
+  key: string
+  label: string
+  icon?: ReactNode
+}
+
+/** A toggleable property chip rendered in DisplayPanel's "Display properties" section.
+ *  Property keys map to viewState.visibleColumns (or a special toggle channel
+ *  for showAlphaIndex). */
+export interface DisplayProperty {
+  key: string
+  label: string
+  icon?: ReactNode
+}
+
+/** Single source of truth for display-panel configuration shape.
+ *  Consumed by both view-configs.tsx (declares per-context configs) and
+ *  components/display-panel.tsx (renders the popover). */
 export interface DisplayConfig {
   orderingOptions: Array<{ value: SortField; label: string }>
   groupingOptions: Array<{ value: GroupBy; label: string }>
-  toggles: Array<{ key: string; label: string; icon?: ReactNode }>
-  properties: Array<{ key: string; label: string; icon?: ReactNode }>
+  toggles: DisplayToggle[]
+  properties: DisplayProperty[]
   supportedModes?: ViewMode[]
   /** Default groupBy when switching to board mode from groupBy="none".
    *  Notes use "status" (the canonical board axis); Wiki has no status,
@@ -455,6 +474,63 @@ export const CALENDAR_VIEW_CONFIG: ViewConfig = {
   },
 }
 
+// Templates-specific filter/display options (PR template-c).
+// Templates entity is intentionally board-mode-free — templates are pre-set
+// blueprints, not workflow items. Only list + grid modes make sense.
+// `grid` is added to ViewMode in DisplayPanel via `supportedModes` filter.
+export const TEMPLATES_VIEW_CONFIG: ViewConfig = {
+  showFilter: true,
+  showDisplay: true,
+  showDetailPanel: true,
+  filterCategories: [
+    { key: "status", label: "Status", icon: StatusIcon, values: [
+      { key: "inbox", label: "Inbox", color: "rgba(255,255,255,0.32)", icon: <CircleDashed size={14} weight="bold" style={{ color: "var(--chart-2)" }} /> },
+      { key: "capture", label: "Capture", color: "#f5a623", icon: <CircleHalf size={14} weight="fill" style={{ color: "var(--chart-3)" }} /> },
+      { key: "permanent", label: "Permanent", color: "#45d483", icon: <CheckCircle size={14} weight="fill" style={{ color: "var(--chart-5)" }} /> },
+    ]},
+    { key: "priority", label: "Priority", icon: PriorityIcon, values: [
+      { key: "urgent", label: "Urgent" },
+      { key: "high", label: "High" },
+      { key: "medium", label: "Medium" },
+      { key: "low", label: "Low" },
+      { key: "none", label: "No priority" },
+    ]},
+    { key: "label", label: "Label", icon: LabelIcon, values: [] },  // hydrated at runtime
+    { key: "folder", label: "Folder", icon: FolderIcon, values: [] },  // hydrated at runtime
+    { key: "tags", label: "Tags", icon: TagIcon, values: [] },  // hydrated at runtime
+    { key: "pinned", label: "Pinned", icon: PinIcon, values: [
+      { key: "true", label: "Pinned" },
+      { key: "false", label: "Not pinned" },
+    ]},
+  ],
+  quickFilters: [
+    { label: "Pinned only", desc: "show pinned templates", rules: [
+      { field: "pinned", operator: "eq", value: "true" },
+    ]},
+  ],
+  displayConfig: {
+    supportedModes: ["list", "grid"],
+    orderingOptions: [
+      { value: "updatedAt", label: "Updated" },
+      { value: "createdAt", label: "Created" },
+      { value: "title", label: "Name" },
+    ],
+    groupingOptions: [
+      { value: "none", label: "No grouping" },
+      { value: "status", label: "Status" },
+      { value: "priority", label: "Priority" },
+      { value: "label", label: "Label" },
+      { value: "folder", label: "Folder" },
+    ],
+    toggles: [],
+    properties: [
+      { key: "showAlphaIndex", label: "Index", icon: IndexIcon },
+      { key: "updatedAt", label: "Updated", icon: CalendarIcon },
+      { key: "createdAt", label: "Created", icon: CalendarIcon },
+    ],
+  },
+}
+
 export const VIEW_CONFIGS: Record<string, ViewConfig> = {
   notes: NOTES_VIEW_CONFIG,
   wiki: WIKI_VIEW_CONFIG,
@@ -463,4 +539,5 @@ export const VIEW_CONFIGS: Record<string, ViewConfig> = {
   inbox: INBOX_VIEW_CONFIG,
   insights: INSIGHTS_VIEW_CONFIG,
   calendar: CALENDAR_VIEW_CONFIG,
+  templates: TEMPLATES_VIEW_CONFIG,
 }

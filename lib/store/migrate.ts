@@ -1,7 +1,7 @@
 import type { NoteBody } from "../types"
 import { nanoid } from "nanoid"
 import { extractPreview, extractLinksOut } from "../body-helpers"
-import { buildDefaultViewStates, normalizeViewStatesMap } from "../view-engine/defaults"
+import { buildDefaultViewStates, normalizeViewStatesMap, buildViewStateForContext } from "../view-engine/defaults"
 import type { WorkspaceTab } from "../workspace/types"
 import type { PlotState } from "./types"
 
@@ -1423,6 +1423,58 @@ export function migrate(persistedState: unknown): PlotState {
       if (!t) continue
       delete t.icon
       delete t.color
+    }
+  }
+
+  // v103: Templates view-engine adoption (PR template-c).
+  // Ensure viewStateByContext has an entry for the new "templates" context.
+  // Purely additive: leaves existing keys untouched, only injects when missing.
+  // Idempotent: subsequent runs find the key already populated and no-op.
+  if (state.viewStateByContext && typeof state.viewStateByContext === "object") {
+    const vsMap = state.viewStateByContext as Record<string, unknown>
+    if (!vsMap.templates) {
+      vsMap.templates = buildViewStateForContext("templates")
+    }
+  }
+
+  // v104: Templates display property simplification (PR template-c fix batch).
+  // Remove status/priority/label/folder/tags from templates visibleColumns —
+  // these properties are not meaningful for blueprint items.
+  // New default: ["title", "description", "updatedAt", "createdAt"].
+  // Idempotent: columns not present are silently skipped; if the result is
+  // empty (only removed cols existed), reset to the new default set.
+  const REMOVED_TEMPLATE_COLUMNS = ["status", "priority", "label", "folder", "tags"]
+  const NEW_TEMPLATE_DEFAULT_COLUMNS = ["title", "description", "updatedAt", "createdAt"]
+  if (state.viewStateByContext && typeof state.viewStateByContext === "object") {
+    const vsMap = state.viewStateByContext as Record<string, unknown>
+    if (vsMap.templates && typeof vsMap.templates === "object") {
+      const tmplVs = vsMap.templates as Record<string, unknown>
+      if (Array.isArray(tmplVs.visibleColumns)) {
+        const filtered = (tmplVs.visibleColumns as string[]).filter(
+          (c) => !REMOVED_TEMPLATE_COLUMNS.includes(c),
+        )
+        // If stripping leaves nothing meaningful (or only the always-present "title"),
+        // reset to the full new default.
+        tmplVs.visibleColumns = filtered.length > 1 ? filtered : NEW_TEMPLATE_DEFAULT_COLUMNS
+      }
+    }
+  }
+
+  // v105: Remove "description" from templates visibleColumns — the description
+  // column is retired from the list view and grid card (PR template-c fix batch).
+  // New default after removal: ["title", "updatedAt", "createdAt"].
+  // Idempotent: if "description" is already absent, the filter is a no-op.
+  if (state.viewStateByContext && typeof state.viewStateByContext === "object") {
+    const vsMap = state.viewStateByContext as Record<string, unknown>
+    if (vsMap.templates && typeof vsMap.templates === "object") {
+      const tmplVs = vsMap.templates as Record<string, unknown>
+      if (Array.isArray(tmplVs.visibleColumns)) {
+        const withoutDesc = (tmplVs.visibleColumns as string[]).filter((c) => c !== "description")
+        // If nothing meaningful remains (empty or only updatedAt/createdAt tail),
+        // reset to the new default ["title", "updatedAt", "createdAt"].
+        const hasMeaningful = withoutDesc.some((c) => !["updatedAt", "createdAt"].includes(c))
+        tmplVs.visibleColumns = hasMeaningful ? withoutDesc : ["title", "updatedAt", "createdAt"]
+      }
     }
   }
 
