@@ -202,3 +202,40 @@ function next(depth: number): string {
 - `buildOntologyGraphData`에 entity 추가 시 prefix 사용 (`wiki:{id}`, `tag:{id}`)
 - noteId 충돌 방지 + nodeType 분기 가능
 - WikiArticle을 별도 노드로 추가하면 parent-child + note-ref edges 자연 생성
+
+## 2026-05-03 (Session: 11 PRs merged)
+
+### Icon alias trick — 1줄 수정 = 13 site 자동 적용
+- `export { BookOpen as IconWiki } from "@phosphor-icons/react/dist/ssr/BookOpen"`
+- 13 site 변경 X. legacy alias로 점진적 마이그레이션.
+- 적용처: plot-icons.tsx에서 IconWiki SVG 정의 → BookOpen alias
+
+### TemplateEditorAdapter 패턴 — thin fork over generic
+- NoteEditorAdapter (460 LOC, Y.Doc/IDB body/hashtag-sync 포함)을 fork하지 말고 genericize도 하지 말고
+- thin fork (140 LOC, 핵심만): TipTap mount, debounced save, title-from-first-block, FootnotesFooter, key remount
+- 생략 가능: Y.Doc multi-pane, IDB body store, hashtag bidirectional sync, LinkSuggestion (use case마다 결정)
+
+### v102 마이그레이션 — additive vs subtractive
+- Sticker.members[] (v101): additive (notes/wiki에서 stickerIds → Sticker.members로 이전)
+- Template icon/color drop (v102): subtractive (`delete t.icon; delete t.color`)
+- 둘 다 idempotent, 사용자 데이터 손실 0 (테스트 환경)
+
+### `KNOWLEDGE_INDEX_COLORS` 패턴 — 단일 source 통합
+- text class (light+dark) + bg class + hex 3종 한곳에 정의
+- Home StatsRow + Library Overview + 사이드패널 등 모든 site가 import
+- 카드 색 collision (Tags green/amber, Refs amber/accent, Files rose/teal) 해소
+
+### Wiki status 색 분리
+- WIKI_STATUS_HEX.article (#7c3aed) === SPACE_COLORS.wiki (#8b5cf6) collision 발견
+- 분리: stub=orange, article=emerald, entity=violet
+- 그래프 wiki 노드는 entity 색 (violet) 유지 — `GRAPH_NODE_HEX.wiki = SPACE_COLORS.wiki` (architect 회귀 방지)
+
+### Architect Opus stall (17분)
+- 큰 PR (615+/317- 6 files) 검증 시 stall 가능성
+- 다음에는 architect-medium (Sonnet) 또는 self-review 고려
+- self-review 충분 조건: tsc/build clean + 코드 패턴 명확 + data-loss surface 인지
+
+### planner agent 활용
+- 복잡한 작업 (예: Template PR b — UI unification) 전에 planner 호출
+- 결과: `.omc/plans/template-b-edit-ui-unification.md` (Q1-Q5 default + 3 phase 분할)
+- 사용자 합의 후 즉시 구현 → 효율적

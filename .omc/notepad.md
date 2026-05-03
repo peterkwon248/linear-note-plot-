@@ -1,88 +1,57 @@
-# Session Notepad (Updated: 2026-05-03 01:30)
+# Session Notepad (Updated: 2026-05-03 16:10)
 
 ## Critical Context
 
 ### 영구 원칙 (모든 작업에 적용)
 - **디자인 원칙**: "Gentle by default, powerful when needed"
-- **작업 원칙**: "정확도 + 버그 위험 최소화"
-  1. 추측 X, 코드/패턴 정확 이해 후 변경
-  2. 최소 diff (scope 초과 X)
-  3. 빌드/타입 검증 의무
-  4. 사용자 reproduce 정보 우선
-  5. UI + 데이터 모델 분리 PR
-  6. 사용자 직관 = 디자인 시그널 (무시 X)
+- **작업 원칙**: "정확도 + 버그 위험 최소화" (10가지 규칙 — docs/MEMORY.md 참조)
 
-### 현재 상태
-- **PR #237**: 12 커밋, main 머지 대기 (open). 다음 세션은 fresh worktree 권장
-- **이번 세션 = 코드 9 커밋 + 33 디자인 결정** (앞으로 작업 방향 정리)
+### 오늘 (2026-05-03) 11 PRs 머지
+- 디자인 결정 → 즉시 구현. main에 #237 ~ #247 squash-merged.
+- **현재 main HEAD**: #247 (Template PR b — edit UI unification) 머지 직후
+- **다음 worktree**: 새로 시작 권장 (이번 worktree는 일단락)
 
 ## Active Tasks (다음 세션 — 우선순위 순)
 
-### 🟢 작은 polish PR (즉시 시작)
-- [ ] 마크다운 Phase 1: `---` Enter 패턴 + Highlight + Image embed
-- [ ] Linear-style entity navigation (↑/↓ 키)
-- [ ] Wiki "Blocks" Display Property
-- [ ] Stickers Library만 진입점 (4 space NavLink revert)
-- [ ] Notes 사이드바 위계 (Notes ▼ Status 그룹)
+### 🟢 작은 폴리시 (1-3시간)
+- [ ] **Template PR c** — template-only views (filter/display + view-engine)
+- [ ] **Template PR d** — 시드 템플릿 10-20개 (clean slate, 회의록/일기/투두/Daily/PARA/소설/리서치 등)
 
-### 🟡 중간 PR
-- [ ] NoteStatus 리네이밍 Phase 1 (PRD 사전 조사 완료)
-- [ ] 마크다운 Phase 2 (Math + Heading anchor)
-- [ ] Filter chip 3-part 드롭다운
-- [ ] Linear 검색창 패턴
+### 🟡 중간 (3-5시간)
+- [ ] **Wiki template 3-layer** (Layout Preset + Content Template + Typed Infobox) — 위키 데이터 모델 위에 별도 설계
+- [ ] **Template seed audit** — `PlotTemplate<T>` 추상화 검토 (인포박스/배너/카테고리/시드 통합 가능성)
 
-### 🔴 큰 데이터 모델 PR
-- [ ] Folder type-strict + N:M
-- [ ] Sticker v2 cross-everything
-- [ ] Sandbox + Save view 통합
-- [ ] Entity-ref WikiBlock 일반화
-- [ ] 온톨로지 그래프 노드 확장
+### 🔴 큰 작업 (수일)
+- [ ] **Group C PR-D** — Tags/Labels/Stickers/Refs/Files view-engine 통합 (5-8 PRs)
+- [ ] **§2 Folder type-strict + N:M 마이그레이션** — 큰 PR (cross-everything 임시 폐기)
+- [ ] **Smart Book v2** — AutoSource[5] + Sticker source + Hybrid manual/auto + Universal Picker
 
-### 🟣 v3급 PR (가장 마지막)
-- [ ] Book entity (cross-entity, ordered sequence, Activity Bar 7번째)
+### 🟣 마지막 (출시 폴리시)
+- [ ] **Note UI toolbar** (UpNote-style) — Phase 1: Pin/Focus/Version 5-6 핵심 버튼만, configurable, "Organize..." multi-action (Folder/Tag/Label/Sticker)
 
-## 핵심 결정사항 (영구)
-
-### 4사분면 컨테이너 모델
-```
-                Unordered (collection)    Ordered (sequence)
-Type-strict     Folder                    -
-Type-free       Sticker                   Book
-```
-
-### Page entity 폐기 (atomic 위배), Book entity 채택 (atomic 보존 + sequence)
-
-### Sandbox = 그래프만 / 노트/위키 = 즉시 영구
-- Wikilink = 본문에서만, Relation = 그래프에서
-- Save view = 보기 + 데이터 staging 함께 영구 (옵션 B 통합)
-
-### Relation 저장 = 본문 contentJson에 직접 embed
-- 사용자 첫 번째만 prompt + "기억" 옵션
-- 위키: 자동 "See also" 섹션 + entity-ref WikiBlock 일반화
-
-## Technical Learnings (이번 세션)
-
-- **SVG pointer-events 함정**: fillOpacity 낮으면 클릭 통과. `pointerEvents: "all"` 명시 필요
-- **useMemo + ref**: `forceRender` 카운터 노출 + deps 추가 (renderTick 패턴)
-- **자료구조 = entity 정당화**: Sticker (set) vs Book (sequence)
-- **종이책 메타포 함정 회피**: 디지털은 cross-type 자유
-
-## Resume Commands
-
-```bash
-# 다음 세션 시작 시
-cd C:/Users/user/Desktop/linear-note-plot-
-git pull origin main
-# 새 worktree 만들기 (claude code 자동)
-npm install  # 새 worktree에서
-
-# /before-work 실행
-```
+## Polished Decisions (이번 세션)
+- **Folder type-strict + N:M** 재확정 (33 §2)
+- **Smart Book = AutoSource[]** 5종 (folder/category/tag/label/sticker)
+- **Note template = UpNote opt A** (메타 슬림 + 사이드 패널, Smart Template v2 보류)
+- **Wiki status 색**: stub=orange, article=emerald, entity=violet
+- **Sticker Library only 진입점**
 
 ## Blockers
 - 없음
 
-## 다음 세션 진입 전 점검
-1. PR #237 머지 상태 확인
-2. main 동기화 (git pull origin main)
-3. 새 worktree에서 작은 polish PR 시작 추천
+## Known Gotchas (다음 세션 주의)
+- **Tailwind v4 `border-[1.5px]`** 미적용 → `style={{ borderWidth: "1.5px" }}` 직접
+- **라이트모드 alpha** `/30~50` 흰 배경에서 거의 안 보임 → `/60+` 또는 `var(--muted-foreground)` 직접
+- **DisplayConfig interface 중복** — display-panel.tsx + view-configs.tsx 두 곳에 정의됨 (향후 통합)
+- **architect Opus agent**가 큰 PR (600+ LOC) 검증 시 stall 가능성 — medium 옵션 검토
+- **Store version 102** — Sticker.members[] (v101), Template icon/color drop (v102)
+- **Plan 문서**: `.omc/plans/template-b-edit-ui-unification.md` 보존 (다음 PR 참고)
+
+## Resume Commands
+```bash
+# 새 worktree에서 시작 (권장)
+cd C:/Users/user/Desktop/linear-note-plot-
+git pull origin main
+# 새 worktree 만들기 (claude code가 자동)
+npm install  # in new worktree
+```
