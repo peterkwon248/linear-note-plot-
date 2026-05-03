@@ -73,6 +73,7 @@ import { NOTES_VIEW_CONFIG } from "@/lib/view-engine/view-configs"
 import { setActiveFolderId, usePendingFilters, clearPendingFilters } from "@/lib/table-route"
 import { setNoteDragData } from "@/lib/drag-helpers"
 import { pushUndo } from "@/lib/undo-manager"
+import { useFolderPickerData } from "@/components/folder-picker"
 
 /* ── Helpers ───────────────────────────────────────────── */
 
@@ -1549,6 +1550,9 @@ function GroupHeaderIcon({ groupBy, groupKey, label, folders, labels }: {
   }
 }
 
+// PR (b): notes-table rows always operate on a Note → kind="note" picker.
+// Hook lives at module level (not inside ContextMenu, which only renders on
+// open) so the kind filter is reactive to folder additions.
 function NoteRowInner({
   note,
   folders,
@@ -1583,6 +1587,9 @@ function NoteRowInner({
 }: NoteRowProps) {
   const visibleCols = visibleColumns
   const labels = usePlotStore((s) => s.labels)
+  // PR (b): kind-aware folder picker data (notes context). Replaces the
+  // ad-hoc `folders.filter(f => f.kind === "note")` previously inlined here.
+  const { folders: noteFolders, createFolderInline } = useFolderPickerData("note")
 
   /* ── Table mode rendering (CSS Grid) ── */
 
@@ -1950,10 +1957,11 @@ function NoteRowInner({
               <span className="text-muted-foreground">No folder</span>
               {note.folderIds.length === 0 && <PhCheck className="ml-auto text-accent" size={14} weight="bold" />}
             </ContextMenuItem>
-            {/* PR (a): list only `kind="note"` folders. PR (b) replaces this
-                with the kind-aware FolderPicker component. */}
-            {folders.filter((f) => f.kind === "note").length > 0 && <ContextMenuSeparator />}
-            {folders.filter((f) => f.kind === "note").map((f) => (
+            {/* PR (b): kind-aware via useFolderPickerData hook — only
+                `kind="note"` folders appear, sourced through the shared
+                folder-picker module so wiki folders can never leak in. */}
+            {noteFolders.length > 0 && <ContextMenuSeparator />}
+            {noteFolders.map((f) => (
               <ContextMenuItem
                 key={f.id}
                 onClick={() => onSetFolder(f.id)}
@@ -1965,21 +1973,11 @@ function NoteRowInner({
               </ContextMenuItem>
             ))}
             <ContextMenuSeparator />
-            {/* Inline folder creation — saves a trip to the sidebar.
-                Uses a native prompt for now (kept dependency-free). The
-                FolderPicker dialog is on the roadmap for a richer flow. */}
+            {/* Inline folder creation — delegates to shared
+                `createFolderInline` which uses PRESET_COLORS and creates
+                with the correct kind ("note" here). */}
             <ContextMenuItem
-              onClick={() => {
-                const name = window.prompt("New folder name:")?.trim()
-                if (!name) return
-                // Cycle through a small palette so a brand-new folder
-                // gets a distinguishable color from existing ones.
-                const palette = ["#f97316", "#3b82f6", "#22c55e", "#a855f7", "#ec4899", "#14b8a6", "#eab308"]
-                const color = palette[folders.length % palette.length]
-                // v107: notes-table operates on notes → kind="note" folder.
-                const newId = usePlotStore.getState().createFolder(name, "note", color)
-                onSetFolder(newId)
-              }}
+              onClick={() => createFolderInline((newId) => onSetFolder(newId))}
               className="text-note text-muted-foreground hover:text-foreground"
             >
               <PhPlus className="mr-2" size={14} weight="bold" />

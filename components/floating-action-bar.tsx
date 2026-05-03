@@ -26,6 +26,7 @@ import { setSplitTargetNoteId } from "@/lib/note-split-mode"
 import { ArrowCounterClockwise } from "@phosphor-icons/react/dist/ssr/ArrowCounterClockwise"
 import { BookOpen } from "@phosphor-icons/react/dist/ssr/BookOpen"
 import { FolderOpen } from "@phosphor-icons/react/dist/ssr/FolderOpen"
+import { FolderPicker } from "@/components/folder-picker"
 
 /* ── Props ────────────────────────────────────────────── */
 
@@ -450,58 +451,22 @@ export function FloatingActionBar({
                 </button>
               </PopoverTrigger>
               <PopoverContent align="center" className="w-56 p-1">
-                <button
-                  type="button"
-                  onClick={() => {
-                    // v107 N:M: "No folder" = empty folderIds (single-folder
-                    // semantics from PR (a) — picker overwrites entire set).
-                    // PR (c) introduces add-vs-move so we'd preserve OTHER
-                    // folders here; for now we keep the simpler replace-all.
-                    batchUpdateNotes(ids, { folderIds: [] })
-                    toast(`${count} note${count !== 1 ? "s" : ""} moved out of folder`)
+                {/* PR (b): unified FolderPicker — kind-aware (notes only here),
+                    inline creation, single-folder replace semantics intact. */}
+                <FolderPicker
+                  kind="note"
+                  currentFolderIds={[]}
+                  onSelect={(folderId) => {
+                    if (folderId === null) {
+                      batchUpdateNotes(ids, { folderIds: [] })
+                      toast(`${count} note${count !== 1 ? "s" : ""} moved out of folder`)
+                    } else {
+                      const target = folders.find((f) => f.id === folderId)
+                      batchUpdateNotes(ids, { folderIds: [folderId] })
+                      toast(`${count} note${count !== 1 ? "s" : ""} moved to ${target?.name ?? "folder"}`)
+                    }
                   }}
-                  className="flex w-full items-center gap-2 px-2.5 py-1.5 text-note text-left rounded hover:bg-accent text-muted-foreground"
-                >
-                  No folder
-                </button>
-                {folders.length > 0 && <div className="my-1 border-t border-border-subtle" />}
-                {/* PR (a): show only `kind="note"` folders. PR (b) makes the
-                    filter prop-driven (notes vs wikis). */}
-                {folders.filter((f) => f.kind === "note").map((f) => (
-                  <button
-                    key={f.id}
-                    type="button"
-                    onClick={() => {
-                      batchUpdateNotes(ids, { folderIds: [f.id] })
-                      toast(`${count} note${count !== 1 ? "s" : ""} moved to ${f.name}`)
-                    }}
-                    className="flex w-full items-center gap-2 px-2.5 py-1.5 text-note text-left rounded hover:bg-accent"
-                  >
-                    <span className="h-2 w-2 rounded-full shrink-0" style={{ backgroundColor: f.color }} />
-                    <span className="truncate">{f.name}</span>
-                  </button>
-                ))}
-                {/* Inline folder creation — bulk apply to selected notes
-                    after creation. Saves a trip to the sidebar. */}
-                <div className="my-1 border-t border-border-subtle" />
-                <button
-                  type="button"
-                  onClick={() => {
-                    const name = window.prompt("New folder name:")?.trim()
-                    if (!name) return
-                    const palette = ["#f97316", "#3b82f6", "#22c55e", "#a855f7", "#ec4899", "#14b8a6", "#eab308"]
-                    const color = palette[folders.length % palette.length]
-                    // v107: floating action bar always operates on notes →
-                    // newly-created folder is `kind="note"`.
-                    const newId = usePlotStore.getState().createFolder(name, "note", color)
-                    batchUpdateNotes(ids, { folderIds: [newId] })
-                    toast(`${count} note${count !== 1 ? "s" : ""} moved to ${name}`)
-                  }}
-                  className="flex w-full items-center gap-2 px-2.5 py-1.5 text-note text-left rounded text-muted-foreground hover:text-foreground hover:bg-accent"
-                >
-                  <span className="text-base leading-none">+</span>
-                  <span>New folder…</span>
-                </button>
+                />
               </PopoverContent>
             </Popover>
 

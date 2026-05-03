@@ -26,6 +26,7 @@ import { X as PhX } from "@phosphor-icons/react/dist/ssr/X"
 import { FolderOpen } from "@phosphor-icons/react/dist/ssr/FolderOpen"
 import { CaretRight } from "@phosphor-icons/react/dist/ssr/CaretRight"
 import { Link as PhLink } from "@phosphor-icons/react/dist/ssr/Link"
+import { FolderPickerInlineSubmenu } from "@/components/folder-picker"
 
 /* ── ShowConnectedSubmenu ──────────────────────────────────
  * Inline expand-to-list pattern (matching FolderPickerSubmenu).
@@ -65,87 +66,12 @@ function ShowConnectedSubmenu({
   )
 }
 
-/* ── FolderPickerSubmenu ─────────────────────────────────────
- * Inline expand-to-list pattern (rather than nested Popover) — keeps
- * the action stay open while the user picks. Used by both wiki list
- * row menu and the global folder selector elsewhere. */
-function FolderPickerSubmenu({
-  currentFolderId,
-  onSelect,
-}: {
-  currentFolderId: string | null
-  onSelect: (folderId: string | null) => void
-}) {
-  const folders = usePlotStore((s) => s.folders)
-  const [open, setOpen] = useState(false)
-  const currentName = currentFolderId
-    ? folders.find((f) => f.id === currentFolderId)?.name ?? "Unknown"
-    : null
-  return (
-    <div className="flex flex-col">
-      <button
-        type="button"
-        onClick={() => setOpen((v) => !v)}
-        className="flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-2xs text-foreground/80 hover:bg-active-bg transition-colors"
-      >
-        <FolderOpen size={14} weight="regular" />
-        <span className="flex-1 text-left">Move to folder</span>
-        <span className="text-2xs text-muted-foreground truncate max-w-[80px]">
-          {currentName ?? "—"}
-        </span>
-        <CaretRight size={10} weight="bold" className={cn("transition-transform", open && "rotate-90")} />
-      </button>
-      {open && (
-        <div className="ml-4 mt-0.5 mb-1 flex flex-col gap-px max-h-[200px] overflow-y-auto">
-          <button
-            type="button"
-            onClick={() => onSelect(null)}
-            className={cn(
-              "flex w-full items-center gap-2 rounded-md px-2.5 py-1.5 text-2xs hover:bg-active-bg transition-colors",
-              !currentFolderId ? "text-foreground font-medium" : "text-muted-foreground"
-            )}
-          >
-            No folder
-            {!currentFolderId && <PhCheck className="ml-auto text-accent" size={12} weight="bold" />}
-          </button>
-          {folders.map((f) => (
-            <button
-              key={f.id}
-              type="button"
-              onClick={() => onSelect(f.id)}
-              className={cn(
-                "flex w-full items-center gap-2 rounded-md px-2.5 py-1.5 text-2xs hover:bg-active-bg transition-colors",
-                currentFolderId === f.id ? "text-foreground font-medium" : "text-foreground/80"
-              )}
-            >
-              <span className="h-2 w-2 rounded-full shrink-0" style={{ backgroundColor: f.color }} />
-              <span className="truncate">{f.name}</span>
-              {currentFolderId === f.id && <PhCheck className="ml-auto text-accent shrink-0" size={12} weight="bold" />}
-            </button>
-          ))}
-          {/* Inline folder creation — same flow as the notes context menu. */}
-          <div className="my-1 h-px bg-border/40" />
-          <button
-            type="button"
-            onClick={() => {
-              const name = window.prompt("New folder name:")?.trim()
-              if (!name) return
-              const palette = ["#f97316", "#3b82f6", "#22c55e", "#a855f7", "#ec4899", "#14b8a6", "#eab308"]
-              const color = palette[folders.length % palette.length]
-              // v107: wiki-list's folder picker is wiki-context →
-              // newly-created folder is `kind="wiki"`.
-              const newId = usePlotStore.getState().createFolder(name, "wiki", color)
-              onSelect(newId)
-            }}
-            className="flex w-full items-center gap-2 rounded-md px-2.5 py-1.5 text-2xs text-muted-foreground hover:text-foreground hover:bg-active-bg transition-colors"
-          >
-            <span className="text-base leading-none">+</span> New folder…
-          </button>
-        </div>
-      )}
-    </div>
-  )
-}
+/* ── FolderPickerSubmenu (PR b) ───────────────────────────────
+ * Replaced by the shared `FolderPickerInlineSubmenu` from
+ * `components/folder-picker.tsx`. Kept this banner so a future grep for
+ * "FolderPickerSubmenu" in this file lands on the explanation rather
+ * than nothing. The shared component is kind-aware — wiki-list passes
+ * `kind="wiki"` so the picker only shows / creates wiki-kind folders. */
 
 /* ── Types ── */
 
@@ -523,12 +449,15 @@ function ArticleTableRow({
                 />
               )}
 
-              {/* Move to folder — v107 N:M: PR (a) keeps the single-folder
-                  picker (overwrites the entire folderIds set); PR (c) adds a
-                  multi-folder picker. PR (b) makes the picker kind-aware. */}
+              {/* Move to folder — PR (b): kind-aware shared picker. Wiki rows
+                  always operate on a wiki article → kind="wiki". PR (c) adds
+                  multi-folder semantics for the same picker. */}
               {onShowConnected && <div className="my-1 h-px bg-border/40" />}
-              <FolderPickerSubmenu
-                currentFolderId={note.folderIds[0] ?? null}
+              <FolderPickerInlineSubmenu
+                kind="wiki"
+                currentFolderIds={note.folderIds}
+                triggerLabel="Move to folder"
+                triggerIcon={<FolderOpen size={14} weight="regular" />}
                 onSelect={(folderId) => {
                   setMenuOpen(false)
                   usePlotStore.getState().updateWikiArticle(note.id, {
