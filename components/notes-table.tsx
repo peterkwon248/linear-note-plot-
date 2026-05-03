@@ -1683,19 +1683,49 @@ function NoteRowInner({
         </div>
       )}
 
-      {/* Folder — v107 N:M: shows primary folder (folderIds[0]); PR (b)
-          will render multi-folder chips with overflow. */}
+      {/* Folder — PR (b): N:M render. Each folder this note belongs to
+          gets a colored dot + name; >2 collapses to "first, second +N".
+          Stays single-line so the table doesn't grow tall when a note
+          has many memberships. */}
       {visibleCols.includes("folder") && (
-        <div className="flex items-center justify-center px-2">
-          {note.folderIds[0] ? (() => {
-            const folder = folders.find((f: Folder) => f.id === note.folderIds[0])
-            if (!folder) return <span className="text-note text-muted-foreground">—</span>
-            return (
-              <span className="text-note text-foreground truncate">{folder.name}</span>
-            )
-          })() : (
+        <div className="flex items-center justify-center gap-1.5 px-2 overflow-hidden">
+          {note.folderIds.length === 0 ? (
             <span className="text-note text-muted-foreground">—</span>
-          )}
+          ) : (() => {
+            const memberships = note.folderIds
+              .map((fid) => folders.find((f: Folder) => f.id === fid))
+              .filter((f): f is Folder => !!f)
+            if (memberships.length === 0) {
+              return <span className="text-note text-muted-foreground">—</span>
+            }
+            const visible = memberships.slice(0, 2)
+            const overflow = memberships.length - visible.length
+            return (
+              <>
+                {visible.map((f) => (
+                  <span
+                    key={f.id}
+                    className="inline-flex items-center gap-1 min-w-0 max-w-[120px]"
+                    title={f.name}
+                  >
+                    <span
+                      className="h-2 w-2 rounded-full shrink-0"
+                      style={{ backgroundColor: f.color }}
+                    />
+                    <span className="text-note text-foreground truncate">{f.name}</span>
+                  </span>
+                ))}
+                {overflow > 0 && (
+                  <span
+                    className="text-2xs text-muted-foreground tabular-nums shrink-0"
+                    title={memberships.slice(2).map((f) => f.name).join(", ")}
+                  >
+                    +{overflow}
+                  </span>
+                )}
+              </>
+            )
+          })()}
         </div>
       )}
 

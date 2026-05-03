@@ -350,10 +350,16 @@ function BoardCardInner({
     : { touchAction: "none" as const }
 
   // ── Resolve referenced entities for chip rendering ──
-  // v107 N:M: a note can be in multiple folders. PR (a) shows the primary
-  // (first) folder as the chip. PR (b) renders all folders with overflow.
-  const primaryFolderId = note.folderIds[0] ?? null
-  const folder = primaryFolderId ? folders.find((f) => f.id === primaryFolderId) : null
+  // PR (b): N:M render — every folder this note belongs to becomes its
+  // own chip. Resolution preserves the order from `note.folderIds` (the
+  // order the user added them). Unknown IDs are dropped so a stale
+  // membership doesn't render an empty chip.
+  const noteFolderObjs = useMemo(() => {
+    if (note.folderIds.length === 0) return []
+    return note.folderIds
+      .map((fid) => folders.find((f) => f.id === fid))
+      .filter((f): f is Folder => !!f)
+  }, [note.folderIds, folders])
   const label = note.labelId ? labels.find((l) => l.id === note.labelId) : null
   // Tag resolution — only the actual tag objects (drop unknown IDs).
   const noteTagObjs = useMemo(() => {
@@ -386,8 +392,13 @@ function BoardCardInner({
     ) {
       out.push(<PriorityChip key="priority" priority={note.priority} />)
     }
-    if (folder && isVisible("folder")) {
-      out.push(<FolderChip key="folder" folder={folder} />)
+    if (isVisible("folder") && noteFolderObjs.length > 0) {
+      // PR (b): multi-folder render — one chip per membership. Overflow
+      // ("+N") is collapsed at the row level by PropertyChipRow's
+      // maxVisible cap, so a note in 5 folders doesn't blow up the card.
+      for (const f of noteFolderObjs) {
+        out.push(<FolderChip key={`folder-${f.id}`} folder={f} />)
+      }
     }
     if (label && isVisible("label")) {
       out.push(<LabelChip key="label" label={label} />)
@@ -427,7 +438,7 @@ function BoardCardInner({
     return out
   }, [
     note.priority, note.updatedAt, note.createdAt,
-    folder, label, noteTagObjs, parentTitle, childrenCount,
+    noteFolderObjs, label, noteTagObjs, parentTitle, childrenCount,
     links, wordCount, groupBy, visibleColumns,
   ]) // eslint-disable-line react-hooks/exhaustive-deps
 
