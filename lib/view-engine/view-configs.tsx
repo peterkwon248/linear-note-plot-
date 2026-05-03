@@ -186,6 +186,14 @@ export const NOTES_VIEW_CONFIG: ViewConfig = {
       // display-mode flag, not a column.
       { key: "showAlphaIndex", label: "Index", icon: IndexIcon },
       { key: "status", label: "Status", icon: StatusIcon },
+      // PR e: priority/label/tags now toggleable on the board card. They
+      // were always-rendered before — moving them under Display Properties
+      // gives users the same visibility control as the list view.
+      // pinned is intentionally NOT here: pinned notes always show the pin
+      // icon (Linear pattern — pinned-state is identity, not a meta toggle).
+      { key: "priority", label: "Priority", icon: PriorityIcon },
+      { key: "label", label: "Label", icon: LabelIcon },
+      { key: "tags", label: "Tags", icon: TagIcon },
       { key: "folder", label: "Folder", icon: FolderIcon },
       { key: "parent", label: "Parent", icon: ParentIcon },
       { key: "children", label: "Children", icon: ChildrenIcon },
