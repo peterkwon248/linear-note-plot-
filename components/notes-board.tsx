@@ -873,6 +873,22 @@ export function NotesBoard({
     const fieldUpdate = getFieldUpdate(viewState.groupBy, targetKey)
     if (!fieldUpdate) { setActiveDragId(null); return }
 
+    // PR (b): kind validation for folder drops. The Notes Board only ever
+    // contains notes (this is the notes-board), so the only legal folder
+    // drop targets are `kind="note"` folders. The `_no_folder` sentinel is
+    // always allowed (it clears membership). A `kind="wiki"` column shouldn't
+    // even appear here — group-by-folder iterates over folders the notes
+    // actually belong to, and PR (a) prevents notes from being in wiki
+    // folders — but we guard anyway in case of stale group state.
+    if (viewState.groupBy === "folder" && targetKey !== "_no_folder") {
+      const targetFolder = folders.find((f) => f.id === targetKey)
+      if (targetFolder && targetFolder.kind !== "note") {
+        toast.error(`Can't move notes into "${targetFolder.name}" — it's a wiki folder`)
+        setActiveDragId(null)
+        return
+      }
+    }
+
     const targetGroup = groups.find(g => g.key === targetKey)
 
     // Multi-card or single-card update
@@ -891,7 +907,7 @@ export function NotesBoard({
 
     setSelectedIds(new Set())
     setActiveDragId(null)
-  }, [groups, resolvedGroups, viewState, updateViewState, updateNote, batchUpdateNotes, selectedIds, notes])
+  }, [groups, resolvedGroups, viewState, updateViewState, updateNote, batchUpdateNotes, selectedIds, notes, folders])
 
   // Drag-select mouse handlers
   const handleBoardMouseDown = useCallback((e: React.MouseEvent) => {
