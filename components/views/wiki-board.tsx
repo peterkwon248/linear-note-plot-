@@ -15,8 +15,6 @@ import type { DragEndEvent, DragStartEvent } from "@dnd-kit/core"
 import { SortableContext, horizontalListSortingStrategy, arrayMove, useSortable } from "@dnd-kit/sortable"
 import { CSS } from "@dnd-kit/utilities"
 import { Link as PhLink } from "@phosphor-icons/react/dist/ssr/Link"
-import { BookOpen } from "@phosphor-icons/react/dist/ssr/BookOpen"
-import { Warning } from "@phosphor-icons/react/dist/ssr/Warning"
 import { Eye } from "@phosphor-icons/react/dist/ssr/Eye"
 import { FileText } from "@phosphor-icons/react/dist/ssr/FileText"
 import { cn } from "@/lib/utils"
@@ -24,6 +22,7 @@ import { shortRelative } from "@/lib/format-utils"
 import { isWikiStub } from "@/lib/wiki-utils"
 import { usePlotStore } from "@/lib/store"
 import { WIKI_STATUS_HEX } from "@/lib/colors"
+import { IconWikiStub, IconWikiArticle } from "@/components/plot-icons"
 import type { WikiArticle, WikiCategory } from "@/lib/types"
 import type { GroupBy, ViewState } from "@/lib/view-engine/types"
 import type { WikiGroup } from "@/lib/view-engine/wiki-list-pipeline"
@@ -210,16 +209,17 @@ function CardInner({
         isDragging && "opacity-50",
       )}
     >
-      {/* Title row */}
-      {/* Status icons: Warning(stub) → FileDashed and BookOpen → Article
-          will be swapped in the next icon-PR. Color uses WIKI_STATUS_HEX
-          (single source of truth) — stub orange, article emerald. */}
+      {/* Title row — uses IconWikiStub / IconWikiArticle (status-specific
+          icons defined in components/plot-icons.tsx). The wiki entity icon
+          (BookOpen, used in activity bar / sidebar) is reserved for entity-
+          level surfaces; here we want stub-vs-article differentiation, so
+          the dedicated status icons are correct. Color from WIKI_STATUS_HEX. */}
       <div className="flex items-start gap-2">
         {showStatus && (
           isStub ? (
-            <Warning className="shrink-0 mt-0.5" size={12} weight="regular" style={{ color: WIKI_STATUS_HEX.stub }} />
+            <IconWikiStub className="shrink-0 mt-0.5" size={12} style={{ color: WIKI_STATUS_HEX.stub }} />
           ) : (
-            <BookOpen className="shrink-0 mt-0.5" size={12} weight="regular" style={{ color: WIKI_STATUS_HEX.article }} />
+            <IconWikiArticle className="shrink-0 mt-0.5" size={12} style={{ color: WIKI_STATUS_HEX.article }} />
           )
         )}
         <span className="flex-1 truncate text-ui font-medium text-foreground leading-snug">

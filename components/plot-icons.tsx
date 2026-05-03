@@ -53,15 +53,22 @@ export function IconNotes({ size = 20, ...props }: IconProps) {
   )
 }
 
-export function IconWiki({ size = 20, ...props }: IconProps) {
-  return (
-    <svg width={size} height={size} {...defaults} {...props}>
-      <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20" />
-      <line x1="8" y1="7" x2="16" y2="7" />
-      <line x1="8" y1="11" x2="13" y2="11" />
-    </svg>
-  )
-}
+/**
+ * Wiki ENTITY icon — alias for Phosphor `BookOpen`.
+ *
+ * Single source of truth: the wiki entity icon is `BookOpen` across the
+ * entire app (activity bar, sidebar Overview, ViewHeader, sidepanel
+ * connections, mention/wikilink picker "create wiki" rows, etc.). This
+ * legacy alias keeps existing call sites compiling without per-file edits;
+ * new code should import `BookOpen` directly from @phosphor-icons/react.
+ *
+ * For wiki STATUS icons (stub vs article), use `IconWikiStub` /
+ * `IconWikiArticle` below — those are dedicated, visually distinct
+ * silhouettes that mark publication state, not entity identity.
+ *
+ * @deprecated Use Phosphor `BookOpen` directly. See audit 2026-05-03.
+ */
+export { BookOpen as IconWiki } from "@phosphor-icons/react/dist/ssr/BookOpen"
 
 export function IconOntology({ size = 20, ...props }: IconProps) {
   return (

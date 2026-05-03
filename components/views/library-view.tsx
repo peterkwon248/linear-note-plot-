@@ -817,7 +817,8 @@ function LibraryOverview() {
                           className="flex w-full items-center gap-2.5 rounded-md px-2.5 py-2 text-left transition-colors duration-100 hover:bg-hover-bg"
                         >
                           <span className="shrink-0 text-muted-foreground">
-                            {item.type === "reference" && <BookOpenText size={14} weight="bold" />}
+                            {/* Reference icon = Quotes (canonical Refs entity icon, matches sidebar + library overview card). Was BookOpenText — outlier. */}
+                            {item.type === "reference" && <Quotes size={14} weight="bold" />}
                             {item.type === "tag" && <Tag size={14} weight="bold" />}
                             {item.type === "file" && <Paperclip size={14} weight="bold" />}
                           </span>

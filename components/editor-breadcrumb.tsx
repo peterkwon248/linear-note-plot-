@@ -15,7 +15,10 @@ import {
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { House } from "@phosphor-icons/react/dist/ssr/House"
 import { NotePencil } from "@phosphor-icons/react/dist/ssr/NotePencil"
-import { BookOpenText } from "@phosphor-icons/react/dist/ssr/BookOpenText"
+// Wiki space icon = Phosphor `BookOpen` (matches activity bar / sidebar /
+// sidepanel — single source of truth). Aliased as `BookOpenText` to keep
+// the local lookup map below readable; the import name no longer matters.
+import { BookOpen as BookOpenText } from "@phosphor-icons/react/dist/ssr/BookOpen"
 import { CalendarBlank } from "@phosphor-icons/react/dist/ssr/CalendarBlank"
 import { Graph } from "@phosphor-icons/react/dist/ssr/Graph"
 import { Books } from "@phosphor-icons/react/dist/ssr/Books"

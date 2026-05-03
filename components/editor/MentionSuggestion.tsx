@@ -14,7 +14,7 @@ import { Tag, CalendarBlank, Asterisk } from "@/lib/editor/editor-icons"
 import { CircleDashed } from "@phosphor-icons/react/dist/ssr/CircleDashed"
 import { CircleHalf } from "@phosphor-icons/react/dist/ssr/CircleHalf"
 import { CheckCircle } from "@phosphor-icons/react/dist/ssr/CheckCircle"
-import { IconWiki } from "@/components/plot-icons"
+import { IconWikiStub, IconWikiArticle } from "@/components/plot-icons"
 import { usePlotStore } from "@/lib/store"
 import { parseMentionDate } from "@/lib/mention-date-parser"
 import { NOTE_STATUS_HEX, SPACE_COLORS, ENTITY_COLORS, WIKI_STATUS_HEX } from "@/lib/colors"
@@ -191,12 +191,12 @@ function ItemIcon({ item }: { item: MentionItem }) {
         />
       )
     case "wiki":
-      return (
-        <IconWiki
-          size={14}
-          className="shrink-0"
-          style={{ color: item.isStub ? WIKI_STATUS_HEX.stub : WIKI_STATUS_HEX.article }}
-        />
+      // Status-specific icons (stub vs article) — distinct from the BookOpen
+      // used for the wiki entity in the activity bar / sidebar.
+      return item.isStub ? (
+        <IconWikiStub size={14} className="shrink-0" style={{ color: WIKI_STATUS_HEX.stub }} />
+      ) : (
+        <IconWikiArticle size={14} className="shrink-0" style={{ color: WIKI_STATUS_HEX.article }} />
       )
     case "note": {
       const status = item.noteStatus ?? "capture"
