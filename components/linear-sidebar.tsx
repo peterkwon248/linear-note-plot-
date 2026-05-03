@@ -330,10 +330,13 @@ export function LinearSidebar() {
     routes.forEach((r) => router.prefetch(r))
   }, [router])
 
-  // Folder creation state
-  const [newFolderOpen, setNewFolderOpen] = useState(false)
+  // Folder creation state. PR (b): captures the kind so submit creates with
+  // the right discriminator. `null` = closed, otherwise the section that
+  // opened the input ("note" / "wiki").
+  const [newFolderKind, setNewFolderKind] = useState<"note" | "wiki" | null>(null)
   const [newFolderName, setNewFolderName] = useState("")
   const newFolderInputRef = useRef<HTMLInputElement>(null)
+  const newFolderOpen = newFolderKind !== null
 
   // Folder collapse state
   const [showAllFolders, setShowAllFolders] = useState(false)
@@ -357,10 +360,12 @@ export function LinearSidebar() {
   const categoryMenuRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    if (newFolderOpen) {
+    // Focus the input each time a section's "+" toggles it on. Tracks
+    // newFolderKind directly (boolean derivation triggers identically).
+    if (newFolderKind !== null) {
       setTimeout(() => newFolderInputRef.current?.focus(), 0)
     }
-  }, [newFolderOpen])
+  }, [newFolderKind])
 
   useEffect(() => {
     if (newViewOpen) {
@@ -393,12 +398,14 @@ export function LinearSidebar() {
   const references = usePlotStore((s) => s.references)
   const attachments = usePlotStore((s) => s.attachments)
 
-  // Sorted folders: pinned first (by pinnedOrder), then unpinned by lastAccessedAt desc (null last)
-  const sortedFolders = useMemo(() => {
-    const pinned = folders
+  // PR (b): kind-strict per-context folder lists. Notes context shows
+  // `kind="note"` folders only; Wiki context shows `kind="wiki"` only.
+  // Sorting + auto-collapse rules unchanged — applied per-kind.
+  const sortFolders = (list: typeof folders) => {
+    const pinned = list
       .filter((f) => f.pinned)
       .sort((a, b) => a.pinnedOrder - b.pinnedOrder)
-    const unpinned = folders
+    const unpinned = list
       .filter((f) => !f.pinned)
       .sort((a, b) => {
         if (a.lastAccessedAt === null && b.lastAccessedAt === null) return 0
@@ -407,40 +414,48 @@ export function LinearSidebar() {
         return b.lastAccessedAt.localeCompare(a.lastAccessedAt)
       })
     return [...pinned, ...unpinned]
-  }, [folders])
+  }
 
-  // Auto-collapse: visible = pinned OR accessed within 30 days OR (never accessed AND created within 30 days)
-  const { visibleFolders, hiddenFolders } = useMemo(() => {
+  const noteFoldersSorted = useMemo(
+    () => sortFolders(folders.filter((f) => f.kind === "note")),
+    [folders],
+  )
+  const wikiFoldersSorted = useMemo(
+    () => sortFolders(folders.filter((f) => f.kind === "wiki")),
+    [folders],
+  )
+
+  // Auto-collapse: visible = pinned OR accessed within 30 days OR (never
+  // accessed AND created within 30 days). Same predicate as before, now
+  // computed per-kind so each section's "+N more" reflects its own pool.
+  const collapseSplit = (sorted: typeof folders) => {
     const now = Date.now()
     const thirtyDays = 30 * 24 * 60 * 60 * 1000
     const visible: typeof folders = []
     const hidden: typeof folders = []
-    for (const f of sortedFolders) {
+    for (const f of sorted) {
       if (f.pinned) {
         visible.push(f)
       } else if (f.lastAccessedAt !== null) {
         const age = now - new Date(f.lastAccessedAt).getTime()
-        if (age <= thirtyDays) {
-          visible.push(f)
-        } else {
-          hidden.push(f)
-        }
+        if (age <= thirtyDays) visible.push(f)
+        else hidden.push(f)
       } else {
-        // never accessed — check createdAt
         const age = now - new Date(f.createdAt).getTime()
-        if (age <= thirtyDays) {
-          visible.push(f)
-        } else {
-          hidden.push(f)
-        }
+        if (age <= thirtyDays) visible.push(f)
+        else hidden.push(f)
       }
     }
-    return { visibleFolders: visible, hiddenFolders: hidden }
-  }, [sortedFolders])
+    return { visible, hidden }
+  }
 
-  const displayedFolders = showAllFolders
-    ? sortedFolders
-    : visibleFolders
+  const noteFolderSplit = useMemo(() => collapseSplit(noteFoldersSorted), [noteFoldersSorted])
+  const wikiFolderSplit = useMemo(() => collapseSplit(wikiFoldersSorted), [wikiFoldersSorted])
+
+  const displayedNoteFolders = showAllFolders ? noteFoldersSorted : noteFolderSplit.visible
+  const displayedWikiFolders = showAllFolders ? wikiFoldersSorted : wikiFolderSplit.visible
+  const hiddenNoteFolders = noteFolderSplit.hidden
+  const hiddenWikiFolders = wikiFolderSplit.hidden
 
   // Pinned notes for sidebar shortcut section
   const pinnedNotes = useMemo(() =>
@@ -489,13 +504,11 @@ export function LinearSidebar() {
 
   const handleNewFolderSubmit = () => {
     const name = newFolderName.trim()
-    if (name) {
-      // v107 PR (a): sidebar's "+ New folder" lives in the Notes context →
-      // creates a `kind="note"` folder. PR (b) adds an analogous Wiki
-      // section that creates `kind="wiki"`.
-      createFolder(name, "note", PRESET_COLORS[5])
+    if (name && newFolderKind) {
+      // PR (b): kind is captured at "+" click time per section.
+      createFolder(name, newFolderKind, PRESET_COLORS[5])
     }
-    setNewFolderOpen(false)
+    setNewFolderKind(null)
     setNewFolderName("")
   }
 
@@ -503,7 +516,7 @@ export function LinearSidebar() {
     if (e.key === "Enter") {
       handleNewFolderSubmit()
     } else if (e.key === "Escape") {
-      setNewFolderOpen(false)
+      setNewFolderKind(null)
       setNewFolderName("")
     }
   }
@@ -691,15 +704,13 @@ export function LinearSidebar() {
     )
   }
 
-  // v107 N:M: a folder's count = members across both kinds. PR (b) splits
-  // this into two contexts (Notes Folders count = notes only; Wiki Folders
-  // count = wikis only) once the sidebar has separate sections per kind.
-  // Until then we keep the unified sum so existing UI doesn't regress.
-  const notesInFolder = (folderId: string) => {
-    const noteCount = notes.filter((n) => n.folderIds.includes(folderId) && !n.trashed).length
-    const wikiCount = wikiArticles.filter((w) => w.folderIds.includes(folderId)).length
-    return noteCount + wikiCount
-  }
+  // PR (b): per-kind counts. Folders are now type-strict so a `kind="note"`
+  // folder can never contain wiki articles, and vice versa. Each context's
+  // count is therefore the only one that matters for the section it lives in.
+  const notesInNoteFolder = (folderId: string) =>
+    notes.filter((n) => n.folderIds.includes(folderId) && !n.trashed).length
+  const wikisInWikiFolder = (folderId: string) =>
+    wikiArticles.filter((w) => w.folderIds.includes(folderId)).length
 
   return (
     <aside className="flex h-full w-full shrink-0 flex-col bg-sidebar-bg border-r border-sidebar-border select-none overflow-hidden">
@@ -825,20 +836,23 @@ export function LinearSidebar() {
               />
             </div>
 
-            {/* Folders section */}
+            {/* Folders section — Notes context (kind="note" only).
+                PR (b): per-kind isolation. The Wiki context renders an
+                analogous section below; the two no longer share a folder
+                pool. */}
             <Section
               title="Folders"
               trailing={
                 <button
-                  onClick={() => setNewFolderOpen(true)}
+                  onClick={() => setNewFolderKind("note")}
                   className="flex items-center justify-center h-5 w-5 rounded hover:bg-sidebar-hover text-sidebar-muted hover:text-sidebar-foreground transition-colors"
-                  aria-label="New folder"
+                  aria-label="New note folder"
                 >
                   <IconPlus size={14} />
                 </button>
               }
             >
-              {newFolderOpen && (
+              {newFolderKind === "note" && (
                 <div className="px-2 py-1">
                   <input
                     ref={newFolderInputRef}
@@ -852,8 +866,8 @@ export function LinearSidebar() {
                   />
                 </div>
               )}
-              {displayedFolders.map((folder) => {
-                const count = notesInFolder(folder.id)
+              {displayedNoteFolders.map((folder) => {
+                const count = notesInNoteFolder(folder.id)
                 const active = isFolderActive(folder.id)
                 const isRenaming = renamingItem?.id === folder.id
                 return (
@@ -922,15 +936,15 @@ export function LinearSidebar() {
                   </ContextMenu>
                 )
               })}
-              {hiddenFolders.length > 0 && !showAllFolders && (
+              {hiddenNoteFolders.length > 0 && !showAllFolders && (
                 <button
                   onClick={() => setShowAllFolders(true)}
                   className="flex w-full items-center gap-2.5 rounded-md px-2.5 py-1.5 text-note text-sidebar-muted hover:text-sidebar-foreground transition-colors"
                 >
-                  {hiddenFolders.length} more
+                  {hiddenNoteFolders.length} more
                 </button>
               )}
-              {showAllFolders && hiddenFolders.length > 0 && (
+              {showAllFolders && hiddenNoteFolders.length > 0 && (
                 <button
                   onClick={() => setShowAllFolders(false)}
                   className="flex w-full items-center gap-2.5 rounded-md px-2.5 py-1.5 text-note text-sidebar-muted hover:text-sidebar-foreground transition-colors"
@@ -1086,6 +1100,126 @@ export function LinearSidebar() {
 
             {/* Wiki Views */}
             {renderViewsSection("wiki", "/wiki")}
+
+            {/* Folders section — Wiki context (kind="wiki" only). PR (b)
+                introduces this analog of the Notes Folders section so wiki
+                articles get their own first-class folder organisation, fully
+                isolated from note folders by Folder.kind. */}
+            <Section
+              title="Folders"
+              trailing={
+                <button
+                  onClick={() => setNewFolderKind("wiki")}
+                  className="flex items-center justify-center h-5 w-5 rounded hover:bg-sidebar-hover text-sidebar-muted hover:text-sidebar-foreground transition-colors"
+                  aria-label="New wiki folder"
+                >
+                  <IconPlus size={14} />
+                </button>
+              }
+            >
+              {newFolderKind === "wiki" && (
+                <div className="px-2 py-1">
+                  <input
+                    ref={newFolderInputRef}
+                    type="text"
+                    value={newFolderName}
+                    onChange={(e) => setNewFolderName(e.target.value)}
+                    onKeyDown={handleNewFolderKeyDown}
+                    onBlur={handleNewFolderSubmit}
+                    placeholder="Folder name"
+                    className="w-full rounded-md border border-sidebar-border bg-sidebar-bg px-2.5 py-1 text-note text-sidebar-foreground placeholder:text-sidebar-muted focus:outline-none focus:ring-1 focus:ring-accent"
+                  />
+                </div>
+              )}
+              {displayedWikiFolders.map((folder) => {
+                const count = wikisInWikiFolder(folder.id)
+                const active = isFolderActive(folder.id)
+                const isRenaming = renamingItem?.id === folder.id
+                return (
+                  <ContextMenu key={folder.id}>
+                    <ContextMenuTrigger asChild>
+                      <button
+                        onClick={() => {
+                          accessFolder(folder.id)
+                          setActiveFolderId(folder.id)
+                          // Wiki folder click routes to /folder/[id] which
+                          // (Commit C) renders the wiki-only folder page.
+                          setActiveRoute(`/folder/${folder.id}`)
+                          setSelectedNoteId(null)
+                          router.push(`/folder/${folder.id}`)
+                        }}
+                        className={`nav-item group flex w-full items-center gap-2.5 rounded-md px-2.5 py-1.5 text-ui transition-colors ${
+                          active
+                            ? "bg-sidebar-active text-sidebar-active-text"
+                            : "text-sidebar-foreground hover:bg-sidebar-hover hover:text-sidebar-hover-text"
+                        }`}
+                      >
+                        <span className={`flex shrink-0 items-center justify-center w-5 h-5 ${active ? "text-sidebar-active-text" : "text-sidebar-muted group-hover:text-sidebar-foreground"}`}>
+                          <IconFolder size={20} />
+                        </span>
+                        {isRenaming ? (
+                          <input
+                            ref={renameInputRef}
+                            type="text"
+                            value={renameValue}
+                            onChange={(e) => setRenameValue(e.target.value)}
+                            onKeyDown={handleRenameKeyDown}
+                            onBlur={handleRenameSubmit}
+                            className="flex-1 rounded border border-sidebar-border bg-sidebar-bg px-1.5 py-0.5 text-note text-sidebar-foreground focus:outline-none focus:ring-1 focus:ring-accent"
+                            onClick={(e) => e.stopPropagation()}
+                          />
+                        ) : (
+                          <span className="truncate text-left flex-1">{folder.name}</span>
+                        )}
+                        {!isRenaming && count > 0 && (
+                          <span className="text-2xs text-sidebar-count tabular-nums">{count}</span>
+                        )}
+                      </button>
+                    </ContextMenuTrigger>
+                    <ContextMenuContent className="w-48">
+                      <ContextMenuItem onClick={() => {
+                        setRenamingItem({ id: folder.id })
+                        setRenameValue(folder.name)
+                      }}>
+                        Rename
+                      </ContextMenuItem>
+                      <ContextMenuSub>
+                        <ContextMenuSubTrigger>Change color</ContextMenuSubTrigger>
+                        <ContextMenuSubContent className="p-2">
+                          <ColorPickerGrid
+                            value={folder.color}
+                            onChange={(color) => updateFolder(folder.id, { color })}
+                          />
+                        </ContextMenuSubContent>
+                      </ContextMenuSub>
+                      <ContextMenuSeparator />
+                      <ContextMenuItem
+                        onClick={() => handleDeleteFolder(folder.id)}
+                        className="text-destructive focus:text-destructive"
+                      >
+                        Delete
+                      </ContextMenuItem>
+                    </ContextMenuContent>
+                  </ContextMenu>
+                )
+              })}
+              {hiddenWikiFolders.length > 0 && !showAllFolders && (
+                <button
+                  onClick={() => setShowAllFolders(true)}
+                  className="flex w-full items-center gap-2.5 rounded-md px-2.5 py-1.5 text-note text-sidebar-muted hover:text-sidebar-foreground transition-colors"
+                >
+                  {hiddenWikiFolders.length} more
+                </button>
+              )}
+              {showAllFolders && hiddenWikiFolders.length > 0 && (
+                <button
+                  onClick={() => setShowAllFolders(false)}
+                  className="flex w-full items-center gap-2.5 rounded-md px-2.5 py-1.5 text-note text-sidebar-muted hover:text-sidebar-foreground transition-colors"
+                >
+                  Show less
+                </button>
+              )}
+            </Section>
 
             {/* Pinned wiki articles */}
             {(() => {
