@@ -137,26 +137,30 @@ export function WikiDashboard({
         </div>
 
         {/* ── Top Stats Row ── */}
+        {/* Tailwind colors mirror lib/colors.ts WIKI_STATUS_HEX semantic:
+            article = emerald (complete), stub = orange (in-progress).
+            Uncategorized uses amber as a neutral "needs attention" hue
+            distinct from the orange already taken by stub. */}
         <div className="mb-6 grid grid-cols-2 gap-3 min-[800px]:grid-cols-3">
           <MiniStat
             label="Wiki Articles"
             value={articleCount}
             sub={`${stats.total} total`}
-            color="text-accent"
+            color="text-emerald-600 dark:text-emerald-400"
             onClick={onViewAll}
           />
           <MiniStat
             label="Stubs"
             value={stubCount}
             sub="need content"
-            color="text-amber-500"
+            color="text-orange-600 dark:text-orange-400"
             onClick={onViewStubs}
           />
           <MiniStat
             label="Uncategorized"
             value={wikiArticles.filter(a => !a.categoryIds || a.categoryIds.length === 0).length}
             sub="need categories"
-            color="text-orange-400"
+            color="text-amber-600 dark:text-amber-400"
           />
         </div>
 

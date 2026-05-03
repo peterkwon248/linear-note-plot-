@@ -8,6 +8,7 @@ import type { WikiGroup } from "@/lib/view-engine/wiki-list-pipeline"
 import { FilterPanel } from "@/components/filter-panel"
 import { DisplayPanel } from "@/components/display-panel"
 import { WIKI_VIEW_CONFIG, WIKI_CATEGORY_VIEW_CONFIG } from "@/lib/view-engine/view-configs"
+import { WIKI_STATUS_HEX } from "@/lib/colors"
 import { useRouter } from "next/navigation"
 import {
   Popover,
@@ -1405,7 +1406,13 @@ function WikiPickerChevron({ currentArticleId, onSelect }: { currentArticleId: s
               >
                 <IconWiki size={16} className="shrink-0 text-muted-foreground" />
                 <span className="truncate text-note font-medium flex-1">{a.title || "Untitled"}</span>
-                <span className={`shrink-0 rounded px-1.5 py-0.5 text-[10px] font-medium ${stub ? 'bg-amber-500/20 text-amber-400' : 'bg-emerald-500/20 text-emerald-400'}`}>
+                <span
+                  className="shrink-0 rounded px-1.5 py-0.5 text-[10px] font-medium"
+                  style={{
+                    color: stub ? WIKI_STATUS_HEX.stub : WIKI_STATUS_HEX.article,
+                    backgroundColor: `${stub ? WIKI_STATUS_HEX.stub : WIKI_STATUS_HEX.article}33`,
+                  }}
+                >
                   {stub ? 'stub' : 'article'}
                 </span>
               </button>

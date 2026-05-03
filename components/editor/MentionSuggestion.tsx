@@ -17,7 +17,7 @@ import { CheckCircle } from "@phosphor-icons/react/dist/ssr/CheckCircle"
 import { IconWiki } from "@/components/plot-icons"
 import { usePlotStore } from "@/lib/store"
 import { parseMentionDate } from "@/lib/mention-date-parser"
-import { NOTE_STATUS_HEX } from "@/lib/colors"
+import { NOTE_STATUS_HEX, SPACE_COLORS, ENTITY_COLORS, WIKI_STATUS_HEX } from "@/lib/colors"
 import { isWikiStub } from "@/lib/wiki-utils"
 import type { SuggestionOptions, SuggestionProps, SuggestionKeyDownProps } from "@tiptap/suggestion"
 import type { MentionNodeAttrs } from "@tiptap/extension-mention"
@@ -55,13 +55,14 @@ const categoryLabels: Record<MentionItem["mentionType"], string> = {
   reference: "References",
 }
 
-// Symbolic color per category — matches global SPACE_COLORS / ENTITY_COLORS.
+// Symbolic color per category — sourced from lib/colors.ts (single source
+// of truth). Was previously inline duplicates of SPACE_COLORS/ENTITY_COLORS.
 const categoryColors: Record<MentionItem["mentionType"], string | undefined> = {
   date:      undefined,            // neutral
-  note:      "#06b6d4",            // SPACE_COLORS.notes
-  wiki:      "#8b5cf6",            // SPACE_COLORS.wiki
-  tag:       "#6b7280",            // ENTITY_COLORS.tag
-  reference: "#3b82f6",            // ENTITY_COLORS.reference
+  note:      SPACE_COLORS.notes,
+  wiki:      SPACE_COLORS.wiki,
+  tag:       ENTITY_COLORS.tag,
+  reference: ENTITY_COLORS.reference,
 }
 
 const categoryOrder: MentionItem["mentionType"][] = ["date", "note", "wiki", "tag", "reference"]
@@ -194,7 +195,7 @@ function ItemIcon({ item }: { item: MentionItem }) {
         <IconWiki
           size={14}
           className="shrink-0"
-          style={{ color: item.isStub ? "#f59e0b" : "#8b5cf6" }}
+          style={{ color: item.isStub ? WIKI_STATUS_HEX.stub : WIKI_STATUS_HEX.article }}
         />
       )
     case "note": {

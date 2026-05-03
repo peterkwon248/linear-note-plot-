@@ -23,6 +23,7 @@ import { cn } from "@/lib/utils"
 import { shortRelative } from "@/lib/format-utils"
 import { isWikiStub } from "@/lib/wiki-utils"
 import { usePlotStore } from "@/lib/store"
+import { WIKI_STATUS_HEX } from "@/lib/colors"
 import type { WikiArticle, WikiCategory } from "@/lib/types"
 import type { GroupBy, ViewState } from "@/lib/view-engine/types"
 import type { WikiGroup } from "@/lib/view-engine/wiki-list-pipeline"
@@ -210,12 +211,15 @@ function CardInner({
       )}
     >
       {/* Title row */}
+      {/* Status icons: Warning(stub) → FileDashed and BookOpen → Article
+          will be swapped in the next icon-PR. Color uses WIKI_STATUS_HEX
+          (single source of truth) — stub orange, article emerald. */}
       <div className="flex items-start gap-2">
         {showStatus && (
           isStub ? (
-            <Warning className="shrink-0 text-amber-500/80 mt-0.5" size={12} weight="regular" />
+            <Warning className="shrink-0 mt-0.5" size={12} weight="regular" style={{ color: WIKI_STATUS_HEX.stub }} />
           ) : (
-            <BookOpen className="shrink-0 text-accent/70 mt-0.5" size={12} weight="regular" />
+            <BookOpen className="shrink-0 mt-0.5" size={12} weight="regular" style={{ color: WIKI_STATUS_HEX.article }} />
           )
         )}
         <span className="flex-1 truncate text-ui font-medium text-foreground leading-snug">
@@ -227,12 +231,11 @@ function CardInner({
       <div className="mt-2 flex flex-wrap items-center gap-2">
         {showStatus && (
           <span
-            className={cn(
-              "rounded-sm px-1.5 py-0.5 text-2xs font-medium",
-              isStub
-                ? "bg-amber-500/10 text-amber-500/90"
-                : "bg-accent/10 text-accent/90",
-            )}
+            className="rounded-sm px-1.5 py-0.5 text-2xs font-medium"
+            style={{
+              color: isStub ? WIKI_STATUS_HEX.stub : WIKI_STATUS_HEX.article,
+              backgroundColor: `${isStub ? WIKI_STATUS_HEX.stub : WIKI_STATUS_HEX.article}1a`,
+            }}
           >
             {isStub ? "Stub" : "Article"}
           </span>

@@ -62,6 +62,57 @@ export const ENTITY_COLORS = {
   wiki:      SPACE_COLORS.wiki,
 } as const
 
+/* ── Knowledge Index Entity Colors ───────────────
+ * SINGLE SOURCE OF TRUTH for the 6 cross-cutting entities that
+ * appear in Home StatsRow, Library Overview, sidebar nav, mention
+ * pickers, and search results. Every entity has ONE canonical:
+ *   - text class (Tailwind, theme-aware light/dark)
+ *   - bg class (for icon chips / badges)
+ *   - hex (for canvas / SVG / inline style color={...})
+ *
+ * NEVER hardcode entity colors inline. NEVER define a parallel
+ * map in a feature module. Import from here.
+ *
+ * Cross-references:
+ *   - notes  ↔ SPACE_COLORS.notes  (cyan, same hex / lighter Tailwind tier)
+ *   - wiki   ↔ SPACE_COLORS.wiki   (violet, same hex / lighter Tailwind tier)
+ *   - tags / refs / files / stickers — knowledge-index only
+ */
+export const KNOWLEDGE_INDEX_COLORS = {
+  notes: {
+    text: "text-cyan-600 dark:text-cyan-400",
+    bg:   "bg-cyan-500/10",
+    hex:  "#06b6d4",            // matches SPACE_COLORS.notes
+  },
+  wiki: {
+    text: "text-violet-600 dark:text-violet-400",
+    bg:   "bg-violet-500/10",
+    hex:  "#8b5cf6",            // matches SPACE_COLORS.wiki
+  },
+  tags: {
+    text: "text-amber-600 dark:text-amber-400",
+    bg:   "bg-amber-500/10",
+    hex:  "#f59e0b",
+  },
+  references: {
+    text: "text-accent",
+    bg:   "bg-accent/10",
+    hex:  "#4f46e5",            // mirrors --accent (light)
+  },
+  files: {
+    text: "text-teal-600 dark:text-teal-400",
+    bg:   "bg-teal-500/10",
+    hex:  "#14b8a6",
+  },
+  stickers: {
+    text: "text-fuchsia-600 dark:text-fuchsia-400",
+    bg:   "bg-fuchsia-500/10",
+    hex:  "#d946ef",
+  },
+} as const
+
+export type KnowledgeIndexEntity = keyof typeof KNOWLEDGE_INDEX_COLORS
+
 /* ── Note Status ─────────────────────────────── */
 
 /** CSS-var references (for Tailwind / inline style with var()) */
@@ -85,12 +136,14 @@ export const WIKI_STATUS_COLORS = {
   article: { css: "var(--wiki-complete)", tw: "wiki-complete" },
 } as const
 
-/** Wiki hex — article uses violet to distinguish from permanent green.
- *  Bumped 8b5cf6 → 7c3aed (deeper violet) for better light-mode contrast
- *  on graph hexagon nodes. */
+/** Wiki status hex — article (= "complete") uses emerald to distinguish
+ *  from the wiki **entity** color (violet, `SPACE_COLORS.wiki`). Earlier
+ *  the article hex was `#7c3aed` violet and indistinguishable from the
+ *  entity color. Mirrors the Notes-permanent green semantic: stub=in-
+ *  progress (orange), article=complete (emerald), wiki entity=violet. */
 export const WIKI_STATUS_HEX = {
-  stub:    "#f97316",   // orange
-  article: "#7c3aed",   // violet  ← NOT green (darker than #8b5cf6)
+  stub:    "#f97316",   // orange — in-progress (same hue as Notes capture)
+  article: "#10b981",   // emerald — complete (same hue as Notes permanent)
 } as const
 
 /* ── Priority ────────────────────────────────── */
@@ -136,7 +189,11 @@ export const GRAPH_NODE_HEX = {
   inbox:     NOTE_STATUS_HEX.inbox,
   capture:   NOTE_STATUS_HEX.capture,
   permanent: NOTE_STATUS_HEX.permanent,
-  wiki:      WIKI_STATUS_HEX.article,   // violet for wiki nodes
+  // Wiki **entity** color (violet) — NOT WIKI_STATUS_HEX.article (emerald,
+  // which is a publication-state color). Graph nodes represent the wiki
+  // entity itself regardless of stub/article state, so they inherit the
+  // entity color used by the sidebar/activity-bar/Home StatsRow.
+  wiki:      SPACE_COLORS.wiki,
   tag:       "#6b7280",
   default:   "#6b7280",
 } as const
