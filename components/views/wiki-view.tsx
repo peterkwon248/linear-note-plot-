@@ -1031,6 +1031,7 @@ export function WikiView() {
               config={WIKI_VIEW_CONFIG.displayConfig}
               viewState={wikiViewState}
               onViewStateChange={updateWikiViewState}
+              showViewMode
               toggleStates={wikiViewState.toggles ?? {}}
               onToggleChange={(key, value) =>
                 updateWikiViewState({ toggles: { ...(wikiViewState.toggles ?? {}), [key]: value } })

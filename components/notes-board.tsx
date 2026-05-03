@@ -270,6 +270,10 @@ interface BoardCardProps {
   isDragOverlay?: boolean
   showCardPreview?: boolean
   groupBy: GroupBy
+  /** Display Properties — which meta chips to surface on the card.
+   *  Mirrors the list view's column visibility so the toggle in the
+   *  Display popover affects both surfaces. Undefined = show all. */
+  visibleColumns?: string[]
   onClick: () => void
   onDoubleClick?: () => void
   onSelect?: (noteId: string, e: React.MouseEvent) => void
@@ -293,6 +297,7 @@ function BoardCardInner({
   isDragOverlay,
   showCardPreview,
   groupBy,
+  visibleColumns,
   onClick,
   onDoubleClick,
   onSelect,
@@ -305,6 +310,9 @@ function BoardCardInner({
   onRemind,
 }: BoardCardProps) {
   const isDragDisabled = groupBy === "date" || groupBy === "linkCount"
+  // Honor Display Properties on the board card. Undefined = show all
+  // (back-compat for any caller that doesn't pass the prop yet).
+  const isVisible = (key: string) => !visibleColumns || visibleColumns.includes(key)
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
     id: note.id,
     disabled: isDragDisabled,
@@ -356,9 +364,10 @@ function BoardCardInner({
         {isSelected && <PhCheck className="text-accent-foreground" size={10} weight="bold" />}
       </div>
 
-      {/* Title row */}
+      {/* Title row — Status hides when groupBy="status" (redundant) AND
+          when the user has unchecked Status in Display Properties. */}
       <div className="flex items-start gap-2">
-        {groupBy !== "status" && (
+        {groupBy !== "status" && isVisible("status") && (
           <StatusBadge status={note.status} />
         )}
         <span className="flex-1 truncate text-ui font-medium text-foreground leading-snug">
@@ -373,17 +382,20 @@ function BoardCardInner({
         </p>
       )}
 
-      {/* Bottom row: priority + project + links */}
+      {/* Bottom row: priority + project + links — folder/links honor
+          Display Properties; priority isn't in the displayConfig.properties
+          list yet (intentionally board-only for now), so it stays gated
+          by groupBy + non-none-priority only. */}
       <div className="mt-2 flex items-center gap-2">
         {groupBy !== "priority" && note.priority !== "none" && (
           <PriorityBadge priority={note.priority} />
         )}
-        {folder && (
+        {folder && isVisible("folder") && (
           <span className="truncate rounded-sm bg-secondary px-1.5 py-0.5 text-2xs font-medium text-muted-foreground">
             {folder.name}
           </span>
         )}
-        {links > 0 && (
+        {links > 0 && isVisible("links") && (
           <span className="flex items-center gap-0.5 text-2xs text-muted-foreground">
             <PhLink size={10} weight="regular" />
             {links}
@@ -501,6 +513,7 @@ const BoardCard = memo(BoardCardInner, (prev, next) =>
   prev.isActive === next.isActive &&
   prev.isSelected === next.isSelected &&
   prev.groupBy === next.groupBy &&
+  prev.visibleColumns === next.visibleColumns &&
   prev.onDoubleClick === next.onDoubleClick
 )
 
@@ -977,6 +990,7 @@ export function NotesBoard({
                     isSelected={selectedIds.has(note.id)}
                     showCardPreview={false}
                     groupBy={viewState.groupBy}
+                    visibleColumns={viewState.visibleColumns}
                     onClick={() => {
                       setSelectedIds(new Set())
                       onRowClick?.(note.id)
@@ -1106,6 +1120,7 @@ export function NotesBoard({
                     folders={folders}
                     isDragOverlay
                     groupBy={viewState.groupBy}
+                    visibleColumns={viewState.visibleColumns}
                     onClick={() => {}}
                     onStatus={() => {}}
                     onPriority={() => {}}
