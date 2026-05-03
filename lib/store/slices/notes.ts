@@ -155,6 +155,16 @@ export function createNotesSlice(set: Set, get: Get, appendEvent: AppendEventFn)
           relationSuggestions: state.relationSuggestions.filter(
             (s: any) => s.sourceNoteId !== id && s.targetNoteId !== id
           ),
+          // Sticker membership cascade — drop {kind:"note", id} refs from
+          // every Sticker.members[] (옵션 D2 — single forward reference).
+          // Read-time filters in stickers-view already mask stale notes,
+          // but cleaning at delete time keeps the persisted state lean.
+          stickers: (state.stickers ?? []).map((s: any) => {
+            const members = s.members ?? []
+            const next = members.filter((m: any) => !(m.kind === "note" && m.id === id))
+            if (next.length === members.length) return s
+            return { ...s, members: next }
+          }),
           navigationHistory,
           navigationIndex,
         }

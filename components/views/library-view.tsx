@@ -40,6 +40,7 @@ import { Warning } from "@phosphor-icons/react/dist/ssr/Warning"
 import { Paperclip } from "@phosphor-icons/react/dist/ssr/Paperclip"
 import { BookOpenText } from "@phosphor-icons/react/dist/ssr/BookOpenText"
 import { Quotes } from "@phosphor-icons/react/dist/ssr/Quotes"
+import { Sticker as StickerIcon } from "@phosphor-icons/react/dist/ssr/Sticker"
 import { UploadSimple } from "@phosphor-icons/react/dist/ssr/UploadSimple"
 import { Image as PhImage } from "@phosphor-icons/react/dist/ssr/Image"
 import { cn } from "@/lib/utils"
@@ -553,22 +554,27 @@ function LibraryOverview() {
   const tags = usePlotStore((s) => s.tags)
   const attachments = usePlotStore((s) => s.attachments)
   const notes = usePlotStore((s) => s.notes)
+  const stickers = usePlotStore((s) => s.stickers ?? [])
 
   // Stats
   const refList = useMemo(() => Object.values(references).filter((r) => !r.trashed), [references])
   const activeTags = useMemo(() => tags.filter((t) => !t.trashed), [tags])
   const activeAttachments = useMemo(() => attachments.filter((a) => !a.trashed), [attachments])
   const activeNotes = useMemo(() => notes.filter((n) => !n.trashed), [notes])
+  const activeStickers = useMemo(() => stickers.filter((s) => !s.trashed), [stickers])
 
   const refTotal = refList.length
   const tagTotal = activeTags.length
   const fileTotal = activeAttachments.length
+  const stickerTotal = activeStickers.length
 
   // Sub-stats
   const linkedRefCount = refList.filter((r) => r.content.trim()).length
   const imageCount = activeAttachments.filter((a) => a.type === "image").length
   const docCount = fileTotal - imageCount
   const tagUsedCount = activeTags.filter((t) => activeNotes.some((n) => n.tags?.includes(t.id))).length
+  // Stickers with at least one member — surfaces "set up but never used" cases.
+  const stickerUsedCount = activeStickers.filter((s) => (s.members ?? []).length > 0).length
 
   // Unified recent feed — merge all types, sort by time
   const recentFeed = useMemo(() => {
@@ -625,7 +631,7 @@ function LibraryOverview() {
   const unusedTagCount = activeTags.filter((t) => !activeNotes.some((n) => n.tags?.includes(t.id))).length
   const hasAttention = unlinkedRefCount > 0 || unusedTagCount > 0
 
-  const isEmpty = refTotal === 0 && tagTotal === 0 && fileTotal === 0
+  const isEmpty = refTotal === 0 && tagTotal === 0 && fileTotal === 0 && stickerTotal === 0
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   return (
@@ -713,7 +719,11 @@ function LibraryOverview() {
           ) : (
             <>
               {/* ── Stat Cards ── */}
-              <div className="mb-6 grid grid-cols-2 gap-3 min-[800px]:grid-cols-3">
+              {/* 4 cross-cutting library indices. Files uses teal (was
+                  orange-400) to break the visual collision with Tags amber.
+                  Stickers added per Phase 2 — Library now hosts the only
+                  Stickers entry point (33 design decisions §8). */}
+              <div className="mb-6 grid grid-cols-2 gap-3 min-[800px]:grid-cols-4">
                 <LibMiniStat
                   label="References"
                   value={refTotal}
@@ -734,9 +744,17 @@ function LibraryOverview() {
                   label="Files"
                   value={fileTotal}
                   sub={`${imageCount} image${imageCount !== 1 ? "s" : ""}, ${docCount} doc${docCount !== 1 ? "s" : ""}`}
-                  color="text-orange-400"
+                  color="text-teal-500"
                   icon={<Paperclip size={24} weight="regular" />}
                   onClick={() => setActiveRoute("/library/files")}
+                />
+                <LibMiniStat
+                  label="Stickers"
+                  value={stickerTotal}
+                  sub={`${stickerUsedCount} in use`}
+                  color="text-fuchsia-500"
+                  icon={<StickerIcon size={24} weight="regular" />}
+                  onClick={() => setActiveRoute("/stickers")}
                 />
               </div>
 
