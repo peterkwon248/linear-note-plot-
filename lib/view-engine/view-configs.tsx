@@ -29,6 +29,11 @@ export interface DisplayConfig {
   toggles: Array<{ key: string; label: string; icon?: ReactNode }>
   properties: Array<{ key: string; label: string; icon?: ReactNode }>
   supportedModes?: ViewMode[]
+  /** Default groupBy when switching to board mode from groupBy="none".
+   *  Notes use "status" (the canonical board axis); Wiki has no status,
+   *  so defaults to "label" (Category). DisplayPanel reads this on the
+   *  list→board mode switch. */
+  boardDefaultGroupBy?: GroupBy
 }
 
 export interface ViewConfig {
@@ -232,6 +237,10 @@ export const WIKI_VIEW_CONFIG: ViewConfig = {
   ],
   displayConfig: {
     supportedModes: ["list", "board"],
+    // Wiki has no `status` field (article/stub is heuristic, not enum), so
+    // when switching to board mode from groupBy="none" fall back to
+    // "label" (Category) — the canonical Wiki grouping axis.
+    boardDefaultGroupBy: "label",
     // priority 제외 (wiki에 의미 없음)
     orderingOptions: [
       { value: "updatedAt", label: "Updated" },

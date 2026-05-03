@@ -20,6 +20,11 @@ export interface DisplayConfig {
   toggles: DisplayToggle[]
   properties: DisplayProperty[]
   supportedModes?: ViewMode[]
+  /** Default groupBy when switching to board mode from groupBy="none".
+   *  Notes default to "status" (canonical board axis); Wiki has no status,
+   *  so it sets "label" (Category). DisplayPanel reads this on the
+   *  list→board mode switch. */
+  boardDefaultGroupBy?: GroupBy
 }
 
 export interface DisplayToggle {
@@ -145,9 +150,13 @@ export function DisplayPanel({
                   key={def.mode}
                   onClick={() => {
                     const patch: Partial<ViewState> = { viewMode: def.mode as ViewMode }
-                    // Board needs groupBy — fallback to status if none
+                    // Board needs a non-"none" groupBy — fall back to the
+                    // config's preferred axis. Notes default to "status",
+                    // Wiki to "label" (Category). Per-config so Wiki users
+                    // don't end up with an empty status-grouped board (Wiki
+                    // has no status field).
                     if (def.mode === "board" && viewState.groupBy === "none") {
-                      patch.groupBy = "status"
+                      patch.groupBy = config.boardDefaultGroupBy ?? "status"
                     }
                     onViewStateChange(patch)
                   }}
