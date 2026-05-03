@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useMemo, useRef, useEffect, useCallback } from "react"
+import { useState, useMemo, useRef, useEffect } from "react"
 import { usePlotStore } from "@/lib/store"
 import {
   ContextMenu,
@@ -15,11 +15,8 @@ import { PushPin } from "@phosphor-icons/react/dist/ssr/PushPin"
 import { PushPinSlash } from "@phosphor-icons/react/dist/ssr/PushPinSlash"
 import { Layout } from "@phosphor-icons/react/dist/ssr/Layout"
 import { X as PhX } from "@phosphor-icons/react/dist/ssr/X"
-import { FileText } from "@phosphor-icons/react/dist/ssr/FileText"
-import { ArrowsOut } from "@phosphor-icons/react/dist/ssr/ArrowsOut"
 import { Columns } from "@phosphor-icons/react/dist/ssr/Columns"
 import { GridFour } from "@phosphor-icons/react/dist/ssr/GridFour"
-import { ArrowLeft } from "@phosphor-icons/react/dist/ssr/ArrowLeft"
 import { ArrowsDownUp } from "@phosphor-icons/react/dist/ssr/ArrowsDownUp"
 import { Check as PhCheck } from "@phosphor-icons/react/dist/ssr/Check"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
@@ -30,12 +27,15 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { FileText } from "@phosphor-icons/react/dist/ssr/FileText"
 import type { NoteTemplate, NoteStatus, NotePriority } from "@/lib/types"
-import { TipTapEditor } from "@/components/editor/TipTapEditor"
-import { FixedToolbar } from "@/components/editor/FixedToolbar"
-import type { Editor } from "@tiptap/react"
 import { ViewHeader } from "@/components/view-header"
-// PRESET_COLORS no longer needed — templates dropped per-template color in v102.
+import { TemplateEditPage } from "@/components/views/template-edit-page"
+// PR template-b: TemplateEditor (right-panel form), TipTapEditor, FixedToolbar,
+// ArrowLeft, ArrowsOut, Editor, useCallback imports were removed — the
+// editing surface lives in TemplateEditPage now. NoteStatus + NotePriority
+// + FileText are still consumed by TemplateCard (grid view).
+// PRESET_COLORS / per-template icon+color dropped in v102 (PR template-a).
 
 /* ── Constants ─────────────────────────────────────────── */
 
@@ -50,32 +50,27 @@ const PLACEHOLDER_VARS = [
   { key: "{day}",      label: "Day",      desc: "DD" },
 ] as const
 
-type TemplateViewMode = "focus" | "list-editor" | "grid"
+/* "focus" mode dropped in PR template-b — list-editor with the side panel
+   IS the focus experience now (NoteEditor reuse + properties side panel). */
+type TemplateViewMode = "list-editor" | "grid"
 
-const VIEW_MODES: { mode: TemplateViewMode; label: string; icon: typeof ArrowsOut }[] = [
-  { mode: "focus",       label: "Focus",        icon: ArrowsOut },
+const VIEW_MODES: { mode: TemplateViewMode; label: string; icon: typeof Columns }[] = [
   { mode: "list-editor", label: "List + Editor", icon: Columns },
   { mode: "grid",        label: "Grid",          icon: GridFour },
 ]
 
+// PR template-b: dialog now collects only the two fields the user must
+// pick at create time. Everything else (title pattern, status, priority,
+// label, folder, tags, pinned, content) defaults and becomes editable
+// in the side panel + main editor right after the template is created.
 interface TemplateFormData {
   name: string
   description: string
-  title: string
-  content: string
-  status: NoteStatus
-  priority: NotePriority
-  pinned: boolean
 }
 
 const DEFAULT_FORM: TemplateFormData = {
   name: "",
   description: "",
-  title: "",
-  content: "",
-  status: "inbox",
-  priority: "none",
-  pinned: false,
 }
 
 /* ── View Mode Switcher ────────────────────────────────── */
@@ -195,38 +190,10 @@ function TemplateFormDialog({
             />
           </div>
 
-          {/* Icon + Color removed in v102 — templates inherit visual cues
-              from labelId (single source of truth, mirrors notes). */}
-
-          {/* Status + Priority row */}
-          <div className="flex gap-4">
-            <div className="flex-1">
-              <label className="block text-note font-medium text-muted-foreground mb-1.5">Status</label>
-              <select
-                value={form.status}
-                onChange={(e) => setForm((f) => ({ ...f, status: e.target.value as NoteStatus }))}
-                className="h-9 w-full rounded-md border border-border bg-background px-2 text-note text-foreground focus:outline-none focus:ring-1 focus:ring-accent"
-              >
-                <option value="inbox">Inbox</option>
-                <option value="capture">Capture</option>
-                <option value="permanent">Permanent</option>
-              </select>
-            </div>
-            <div className="flex-1">
-              <label className="block text-note font-medium text-muted-foreground mb-1.5">Priority</label>
-              <select
-                value={form.priority}
-                onChange={(e) => setForm((f) => ({ ...f, priority: e.target.value as NotePriority }))}
-                className="h-9 w-full rounded-md border border-border bg-background px-2 text-note text-foreground focus:outline-none focus:ring-1 focus:ring-accent"
-              >
-                <option value="none">None</option>
-                <option value="low">Low</option>
-                <option value="medium">Medium</option>
-                <option value="high">High</option>
-                <option value="urgent">Urgent</option>
-              </select>
-            </div>
-          </div>
+          {/* Status / Priority / Title-pattern fields moved to the side
+              panel (TemplateDetailPanel) in PR template-b. The create
+              dialog now only collects name + description; everything else
+              defaults and is editable post-create from the side panel. */}
         </div>
 
         {/* Footer */}
@@ -250,189 +217,9 @@ function TemplateFormDialog({
   )
 }
 
-/* ── Template Editor (Right Panel) ────────────────────── */
-
-function TemplateEditor({
-  template,
-  onUpdate,
-  onUse,
-  topBarSlot,
-}: {
-  template: NoteTemplate
-  onUpdate: (id: string, updates: Partial<NoteTemplate>) => void
-  onUse: (id: string) => void
-  topBarSlot?: React.ReactNode
-}) {
-  // Local state mirrors the template for controlled inputs
-  const [name, setName] = useState(template.name)
-  const [description, setDescription] = useState(template.description)
-  const [title, setTitle] = useState(template.title)
-  const [contentJson, setContentJson] = useState<Record<string, unknown> | null>(template.contentJson)
-  const [status, setStatus] = useState<NoteStatus>(template.status)
-  const [priority, setPriority] = useState<NotePriority>(template.priority)
-  const [editorInstance, setEditorInstance] = useState<Editor | null>(null)
-
-  // Sync when template selection changes
-  useEffect(() => {
-    setName(template.name)
-    setDescription(template.description)
-    setTitle(template.title)
-    setContentJson(template.contentJson)
-    setStatus(template.status)
-    setPriority(template.priority)
-  }, [template.id]) // eslint-disable-line react-hooks/exhaustive-deps
-
-  // Debounced save
-  const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-
-  const scheduleSave = useCallback(
-    (updates: Partial<NoteTemplate>) => {
-      if (saveTimerRef.current) clearTimeout(saveTimerRef.current)
-      saveTimerRef.current = setTimeout(() => {
-        onUpdate(template.id, updates)
-      }, 500)
-    },
-    [template.id, onUpdate]
-  )
-
-  useEffect(() => () => { if (saveTimerRef.current) clearTimeout(saveTimerRef.current) }, [])
-
-  const handleName = (v: string) => { setName(v); scheduleSave({ name: v }) }
-  const handleDescription = (v: string) => { setDescription(v); scheduleSave({ description: v }) }
-  const handleTitle = (v: string) => { setTitle(v); scheduleSave({ title: v }) }
-  const handleStatus = (v: NoteStatus) => { setStatus(v); scheduleSave({ status: v }) }
-  const handlePriority = (v: NotePriority) => { setPriority(v); scheduleSave({ priority: v }) }
-
-  return (
-    <div className="flex flex-col h-full overflow-hidden">
-      {/* Top bar */}
-      <div className="flex items-center justify-between border-b border-border px-6 py-3 shrink-0">
-        <div className="flex items-center gap-2">
-          {topBarSlot}
-          {/* Generic Layout icon — templates no longer carry per-template
-              emoji/color (v102). Visual cues come from the linked label. */}
-          <span className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground bg-secondary/40">
-            <Layout size={14} weight="regular" />
-          </span>
-          <span className="text-note font-medium text-muted-foreground">Editing template</span>
-        </div>
-        <button
-          onClick={() => onUse(template.id)}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-note bg-accent text-accent-foreground hover:bg-accent/90 transition-colors"
-        >
-          <FileText size={14} weight="regular" />
-          Use Template
-        </button>
-      </div>
-
-      {/* Form body — flex column to let content textarea fill remaining space */}
-      <div className="flex-1 min-h-0 overflow-y-auto px-6 py-5 flex flex-col gap-5">
-        {/* Name */}
-        <input
-          type="text"
-          value={name}
-          onChange={(e) => handleName(e.target.value)}
-          placeholder="Template name"
-          className="w-full bg-transparent text-xl font-semibold text-foreground placeholder:text-muted-foreground/70 focus:outline-none border-b border-transparent focus:border-border pb-1 transition-colors"
-        />
-
-        {/* Description */}
-        <input
-          type="text"
-          value={description}
-          onChange={(e) => handleDescription(e.target.value)}
-          placeholder="Brief description"
-          className="w-full bg-transparent text-note text-muted-foreground placeholder:text-muted-foreground/70 focus:outline-none border-b border-transparent focus:border-border pb-1 transition-colors"
-        />
-
-        {/* Icon + Color picker removed in v102 — templates inherit visual
-            cues from labelId (single source of truth, mirrors notes). */}
-
-        {/* Title template + Status + Priority row */}
-        <div className="flex gap-4 items-end">
-          <div className="flex-[2]">
-            <label className="block text-2xs font-medium text-muted-foreground mb-2 uppercase tracking-wide">
-              Title Template
-              <span className="ml-2 text-muted-foreground/60 normal-case tracking-normal font-normal">
-                {"{date}"} {"{time}"} {"{year}"}
-              </span>
-            </label>
-            <input
-              type="text"
-              value={title}
-              onChange={(e) => handleTitle(e.target.value)}
-              placeholder="e.g. Meeting - {date}"
-              className="h-9 w-full rounded-md border border-border bg-background px-3 text-note text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-accent"
-            />
-          </div>
-          <div className="flex-1">
-            <label className="block text-2xs font-medium text-muted-foreground mb-2 uppercase tracking-wide">Status</label>
-            <select
-              value={status}
-              onChange={(e) => handleStatus(e.target.value as NoteStatus)}
-              className="h-9 w-full rounded-md border border-border bg-background px-2 text-note text-foreground focus:outline-none focus:ring-1 focus:ring-accent"
-            >
-              <option value="inbox">Inbox</option>
-              <option value="capture">Capture</option>
-              <option value="permanent">Permanent</option>
-            </select>
-          </div>
-          <div className="flex-1">
-            <label className="block text-2xs font-medium text-muted-foreground mb-2 uppercase tracking-wide">Priority</label>
-            <select
-              value={priority}
-              onChange={(e) => handlePriority(e.target.value as NotePriority)}
-              className="h-9 w-full rounded-md border border-border bg-background px-2 text-note text-foreground focus:outline-none focus:ring-1 focus:ring-accent"
-            >
-              <option value="none">None</option>
-              <option value="low">Low</option>
-              <option value="medium">Medium</option>
-              <option value="high">High</option>
-              <option value="urgent">Urgent</option>
-            </select>
-          </div>
-        </div>
-
-        {/* Content template — fills remaining space */}
-        <div className="flex flex-col flex-1 min-h-0">
-          <div className="flex items-center gap-2 mb-2 flex-wrap">
-            <label className="text-2xs font-medium text-muted-foreground uppercase tracking-wide">Content</label>
-            <div className="h-3 w-px bg-border mx-0.5" />
-            <span className="text-2xs text-muted-foreground/60">Insert variable:</span>
-            {PLACEHOLDER_VARS.map(({ key, label, desc }) => (
-              <button
-                key={key}
-                title={`Insert ${key} → expands to ${desc}`}
-                onClick={() => {
-                  if (editorInstance) {
-                    editorInstance.chain().focus().insertContent(key).run()
-                  }
-                }}
-                className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-2xs font-mono bg-secondary/60 text-muted-foreground hover:bg-accent/20 hover:text-accent transition-colors border border-transparent hover:border-accent/30"
-              >
-                {label}
-              </button>
-            ))}
-          </div>
-          <div className="flex-1 min-h-[200px] rounded-md border border-border bg-background overflow-y-auto">
-            <TipTapEditor
-              content={contentJson ?? {}}
-              onChange={(json, plainText) => {
-                setContentJson(json)
-                scheduleSave({ contentJson: json, content: plainText })
-              }}
-              placeholder="Start writing your template content..."
-              onEditorReady={(e) => setEditorInstance(e)}
-            />
-          </div>
-        </div>
-      </div>
-
-      {/* Fixed toolbar at bottom */}
-      <FixedToolbar editor={editorInstance} />
-    </div>
-  )
-}
+/* TemplateEditor (right-panel form) was deleted in PR template-b — its
+   editing surface is now `<TemplateEditPage>` (NoteEditor reuse) and its
+   metadata fields live in the side panel via `TemplateDetailPanel`. */
 
 /* ── Template Card (Grid view) ─────────────────────────── */
 
@@ -677,36 +464,44 @@ export function TemplatesView() {
     }
   }, [templates, selectedTemplateId])
 
-  // If entering focus mode without a selected template, auto-select first one
-  const handleSetViewMode = (mode: TemplateViewMode) => {
-    if (mode === "focus" && !selectedTemplate) {
-      if (sortedTemplates.length > 0) {
-        setSelectedTemplateId(sortedTemplates[0].id)
-      } else {
-        // No templates at all, stay in current mode
-        return
-      }
+  // Q3 default: auto-open the side panel the first time the user picks a
+  // template this session, then respect any subsequent toggles. Tracked
+  // via a session-scoped ref so re-selecting the same template does not
+  // re-open the panel after the user has explicitly closed it.
+  const sidePanelAutoOpenedRef = useRef(false)
+  useEffect(() => {
+    if (!selectedTemplateId) return
+    const store = usePlotStore.getState()
+    store.setSidePanelContext({ type: "template", id: selectedTemplateId })
+    if (!sidePanelAutoOpenedRef.current && !store.sidePanelOpen) {
+      store.setSidePanelOpen(true)
+      sidePanelAutoOpenedRef.current = true
     }
-    setViewMode(mode)
-  }
+  }, [selectedTemplateId])
+
+  // Direct mode switch — no auto-selection guards now that "focus" is gone.
+  const handleSetViewMode = (mode: TemplateViewMode) => setViewMode(mode)
 
   const handleCreateSubmit = (data: TemplateFormData) => {
+    // Q1 default: drop straight into list-editor with the new template
+    // selected. Defaults for the rest of the metadata mirror what the
+    // simplified dialog hides — user edits them in the side panel.
     const newId = createTemplate({
       name: data.name,
       description: data.description,
-      title: data.title,
-      content: data.content,
+      title: "",
+      content: "",
       contentJson: null,
-      status: data.status,
-      priority: data.priority,
-      pinned: data.pinned,
+      status: "inbox",
+      priority: "none",
+      pinned: false,
       labelId: null,
       tags: [],
       folderId: null,
     })
     setShowCreateDialog(false)
     setSelectedTemplateId(newId)
-    setViewMode("focus")
+    setViewMode("list-editor")
   }
 
   const handleUseTemplate = (templateId: string) => {
@@ -799,55 +594,9 @@ export function TemplatesView() {
     )
   }
 
-  /* ── Focus Mode ────────────────────────────────────── */
-  if (viewMode === "focus") {
-    return (
-      <div className="flex flex-1 flex-col overflow-hidden">
-        {selectedTemplate ? (
-          <TemplateEditor
-            key={selectedTemplate.id}
-            template={selectedTemplate}
-            onUpdate={updateTemplate}
-            onUse={handleUseTemplate}
-            topBarSlot={
-              <div className="flex items-center gap-1 mr-1">
-                <button
-                  onClick={() => setViewMode("list-editor")}
-                  className="flex items-center justify-center h-7 w-7 rounded-md text-muted-foreground hover:text-foreground hover:bg-hover-bg transition-colors"
-                  title="Back to list"
-                >
-                  <ArrowLeft size={16} weight="regular" />
-                </button>
-                <TemplateViewSwitcher viewMode={viewMode} onChangeMode={handleSetViewMode} />
-              </div>
-            }
-          />
-        ) : (
-          // Fallback: no template selected in focus mode
-          <div className="flex flex-1 flex-col items-center justify-center gap-3 text-center px-8">
-            <Layout className="text-muted-foreground/60" size={48} weight="regular" />
-            <p className="text-note font-medium text-muted-foreground">No template selected</p>
-            <button
-              onClick={() => setViewMode("list-editor")}
-              className="mt-2 flex items-center gap-1.5 px-3 py-1.5 rounded-md text-note bg-secondary text-foreground hover:bg-hover-bg transition-colors"
-            >
-              <ArrowLeft size={14} weight="regular" />
-              Back to list
-            </button>
-          </div>
-        )}
-
-        {showCreateDialog && (
-          <TemplateFormDialog
-            initial={DEFAULT_FORM}
-            onSubmit={handleCreateSubmit}
-            onCancel={() => setShowCreateDialog(false)}
-            title="New Template"
-          />
-        )}
-      </div>
-    )
-  }
+  /* "Focus Mode" branch removed in PR template-b. List+Editor with the
+     side panel (TemplateDetailPanel) covers the same focused experience
+     and matches the NoteEditor surface. */
 
   /* ── List + Editor Mode (default) ──────────────────── */
   return (
@@ -959,12 +708,7 @@ export function TemplatesView() {
       {/* ── Right Panel: Template Editor ──────────────── */}
       <div className="flex flex-1 flex-col overflow-hidden">
         {selectedTemplate ? (
-          <TemplateEditor
-            key={selectedTemplate.id}
-            template={selectedTemplate}
-            onUpdate={updateTemplate}
-            onUse={handleUseTemplate}
-          />
+          <TemplateEditPage key={selectedTemplate.id} template={selectedTemplate} />
         ) : (
           <div className="flex flex-1 flex-col items-center justify-center gap-3 text-center px-8">
             <Layout className="text-muted-foreground/60" size={48} weight="regular" />

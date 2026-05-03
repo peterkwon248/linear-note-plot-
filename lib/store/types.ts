@@ -30,6 +30,7 @@ export type SidePanelContext =
   | { type: "note"; id: string }
   | { type: "wiki"; id: string }
   | { type: "reference"; id: string }
+  | { type: "template"; id: string }
   | null
 
 export interface PlotState {
