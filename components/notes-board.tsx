@@ -724,6 +724,11 @@ export function NotesBoard({
   const folders = usePlotStore((s) => s.folders)
   const tags = usePlotStore((s) => s.tags)
   const labels = usePlotStore((s) => s.labels)
+  // PR (c) — DnD modifier: default drop = "Add to" (preserve existing
+  // memberships via addNoteToFolder), Shift-drop = legacy "Move to"
+  // (replace via the existing fieldUpdate path). Idempotent at the
+  // action layer so repeated drops on the same folder are no-ops.
+  const addNoteToFolder = usePlotStore((s) => s.addNoteToFolder)
 
   const searchQuery = usePlotStore((s) => s.searchQuery)
   const setSearchQuery = usePlotStore((s) => s.setSearchQuery)
@@ -861,6 +866,28 @@ export function NotesBoard({
     return m
   }, [notes, showChildrenChip])
 
+  // ── DnD modifier tracking (PR c) ─────────────────────
+  // We can't read the modifier state directly from dnd-kit's DragEndEvent
+  // (its `activatorEvent` is the drag-START event, which captures shift
+  // at press time, not at drop time). For "press shift before drop"
+  // ergonomics — matching how Finder / Linear handle modified drops —
+  // we keep a live ref toggled by global keydown/keyup. handleDragEnd
+  // reads this ref to decide between addNoteToFolder (default) and
+  // setNoteFolders (Shift). Ref over state to avoid re-rendering the
+  // whole board on every shift toggle.
+  const shiftPressedRef = useRef(false)
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      shiftPressedRef.current = e.shiftKey
+    }
+    window.addEventListener("keydown", onKey)
+    window.addEventListener("keyup", onKey)
+    return () => {
+      window.removeEventListener("keydown", onKey)
+      window.removeEventListener("keyup", onKey)
+    }
+  }, [])
+
   const handleDragStart = useCallback((event: DragStartEvent) => {
     const dragId = event.active.id as string
     setActiveDragId(dragId)
@@ -935,18 +962,45 @@ export function NotesBoard({
       ? Array.from(selectedIds)
       : [noteId]
 
-    if (idsToUpdate.length > 1) {
-      batchUpdateNotes(idsToUpdate, fieldUpdate)
-      toast.success(`Moved ${idsToUpdate.length} notes to ${targetGroup?.label ?? targetKey}`)
+    // PR (c) — DnD modifier branch for folder drops:
+    //   * Default (no modifier): "Add to folder" — preserve existing
+    //     memberships, just add this folder. Matches N:M semantics.
+    //   * Shift+drop: "Move to folder" — replace entire folderIds set
+    //     with [target]. Legacy single-folder semantic preserved for
+    //     users who want exclusive membership.
+    //   * `_no_folder` column: shift modifier ignored (no semantic for
+    //     "add to no folder" — clearing is always exclusive).
+    // Other groupBy modes (status / priority / triage) are inherently
+    // single-valued, so the modifier doesn't apply; the existing
+    // fieldUpdate path always runs.
+    const isFolderTarget =
+      viewState.groupBy === "folder" && targetKey !== "_no_folder"
+    const useAddSemantic = isFolderTarget && !shiftPressedRef.current
+
+    if (useAddSemantic) {
+      for (const id of idsToUpdate) {
+        addNoteToFolder(id, targetKey)
+      }
+      const verb = idsToUpdate.length > 1
+        ? `Added ${idsToUpdate.length} notes`
+        : `Added "${notes.find(n => n.id === idsToUpdate[0])?.title ?? "Note"}"`
+      toast.success(`${verb} to ${targetGroup?.label ?? targetKey}`, {
+        description: "Hold Shift while dragging to move instead of add",
+      })
     } else {
-      updateNote(idsToUpdate[0], fieldUpdate)
-      const draggedNote = notes.find(n => n.id === idsToUpdate[0])
-      toast.success(`Moved "${draggedNote?.title ?? "Note"}" to ${targetGroup?.label ?? targetKey}`)
+      if (idsToUpdate.length > 1) {
+        batchUpdateNotes(idsToUpdate, fieldUpdate)
+        toast.success(`Moved ${idsToUpdate.length} notes to ${targetGroup?.label ?? targetKey}`)
+      } else {
+        updateNote(idsToUpdate[0], fieldUpdate)
+        const draggedNote = notes.find(n => n.id === idsToUpdate[0])
+        toast.success(`Moved "${draggedNote?.title ?? "Note"}" to ${targetGroup?.label ?? targetKey}`)
+      }
     }
 
     setSelectedIds(new Set())
     setActiveDragId(null)
-  }, [groups, resolvedGroups, viewState, updateViewState, updateNote, batchUpdateNotes, selectedIds, notes, folders])
+  }, [groups, resolvedGroups, viewState, updateViewState, updateNote, batchUpdateNotes, selectedIds, notes, folders, addNoteToFolder])
 
   // Drag-select mouse handlers
   const handleBoardMouseDown = useCallback((e: React.MouseEvent) => {
