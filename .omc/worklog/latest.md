@@ -1,96 +1,82 @@
 ---
-session_date: "2026-05-03 22:30"
+session_date: "2026-05-04"
 project: "Plot"
 working_directory: "C:/Users/user/Desktop/linear-note-plot-/.claude/worktrees/fervent-nash-44e7da"
-duration_estimate: "~5 시간, 5 PRs squash-merged"
+duration_estimate: "~3 시간, 2 PRs squash-merged (folder N:M 시리즈 완성)"
 ---
 
 ## Completed Work
 
-5 PRs squash-merged to main:
+2 PRs squash-merged to main (Folder N:M 시리즈 PR b/c 완성):
 
-- **PR #249** Template PR c — view-engine 통합 (list/grid + multi-select + alpha index + chip 일관성). 마이그레이션 v102→v105.
-- **PR #250** Template PR d — seed templates 4→13. 신규 사용자 only.
-- **PR #251** PR e — Linear-style properties-aware cards. 12개 도메인 chip + visibleColumns wiring + overflow.
-- **PR #252** PR f — v106 migration: 기존 사용자에게 9개 신규 시드 idempotent 주입.
-- **PR #253** PR (folder-a) — Folder type-strict + N:M 데이터 모델 + 마이그레이션 v107. 45 files +1540/-164 LOC.
+- **PR #255** PR (folder-b) — UI type-strict 시각화. 신규 `folder-picker.tsx` (kind-aware, 3가지 export로 4곳 dedup) + 사이드바 Notes/Wiki Folders 분리 + `/folder/[id]` kind 분기 + DnD wrong-kind drop 거부 + notes board/table 다중 폴더 FolderChip. 8 files +744/-397 LOC.
+- **PR #256** PR (folder-c) — Multi-folder UX. FolderPicker `selectMode="multi"` (체크박스 + Apply) + Detail panel 다중 폴더 chip strip + "Add to folders…" 우클릭 메뉴 + group-by-folder MultiFolderMarker + DnD Shift modifier (Add vs Move). 10 files +931/-124 LOC, 18 신규 N:M 액션 테스트.
+
+**Folder N:M 시리즈 총합 (PR a/b/c #253/#255/#256)**: 17 commits, 65+ files, +3215/-685 LOC, 18 신규 테스트.
 
 ## In Progress
-- 없음 (모든 PR 머지 완료)
+- 없음 (모든 작업 머지 완료)
 
 ## Remaining Tasks (다음 세션 — 우선순위 순)
 
 ### 🔴 즉시 (사용자 워크플로우 차단)
-- [ ] **BUG**: 시드 템플릿 더블클릭 시 에러. 시드 13개는 정상 보이지만 더블클릭 편집 안 됨. 정확한 콘솔 메시지 미수집. PR c~e 변경 중 어딘가 원인. `template-edit-page.tsx` + `templates-table.tsx`의 row 클릭 → setSelectedTemplateId 시점부터 디버깅.
+- [ ] **BUG**: 시드 템플릿 더블클릭 시 에러. 시드 13개는 정상 보이지만 더블클릭 편집 안 됨. 정확한 콘솔 메시지 미수집. PR c~e 변경 중 어딘가 원인. `template-edit-page.tsx` + `templates-table.tsx` row click 시점부터 디버깅. **사용자에게 콘솔 메시지 요청 필요.**
 
-### 🟡 PR (folder-b/c) — folder N:M 후속
-- [ ] **PR (folder-b)** UI 분리: 사이드바 Notes/Wiki 분리, `/folder/[id]` kind 분기, FolderPicker 컴포넌트 (4곳 dedup), DnD cross-kind drop 거부.
-- [ ] **PR (folder-c)** Multi-folder UX: Detail panel 다중 폴더 chips + add/remove, multi-folder picker, DnD add vs move, group-by-folder N번 등장 시각 마커.
-
-### 🔵 worklog 큰 작업
-- [ ] **Wiki template 3-layer** (Layout Preset + Content Template + Typed Infobox)
-- [ ] **Group C PR-D** — Tags/Labels/Stickers/References/Files view-engine 통합 (5-8 PRs, planner 권장)
+### 🟡 큰 작업 후보
+- [ ] **Group C PR-D** — Tags/Labels/Stickers/References/Files view-engine 통합 (5-8 PRs, planner 권장). Templates/Folder가 본보기. 가장 자연스러운 다음 큰 작업.
+- [ ] **Wiki template 3-layer** (Layout Preset + Content Template + Typed Infobox) — 위키 데이터 모델 위 별도 설계 필요
 - [ ] **Smart Book v2** — AutoSource[5] (folder/category/tag/label/sticker)
-- [ ] **Template seed audit** — `PlotTemplate<T>` 추상화
+- [ ] **Template seed audit** — `PlotTemplate<T>` 추상화 검토
 
 ### 🟣 마지막 (출시 폴리시)
 - [ ] **Note UI toolbar** (UpNote-style) — Pin/Focus/Version 5-6 핵심 버튼
 
 ### 🟤 마지막에 논의 (보류)
-- [ ] **House (계보 시각화)** — Claude 의견: 별도 entity 불필요, Graph view에 lineage mode + sidebar 단축 링크로 대체 가능. 다음 토론 시 결정.
+- [ ] **House (계보 시각화)** — Claude 의견: 별도 entity 불필요, Graph view에 lineage mode + sidebar 단축 링크로 대체. 다음 토론 시 결정.
 
-## Key Decisions
-- **Templates 본질**: 선택 도구 (vs 노트=탐색 대상). list+grid만, board 미지원.
-- **Templates 디스플레이 properties 단순화**: status/priority/label/folder/tags/description 폐기 → Index/Updated/Created 3개만.
-- **NoteTemplate.status/priority/description**: "default 값"이지 카드 정체성 X. 카드 표시 폐기. 타입 필드 제거는 별도 PR.
-- **Linear-style chips**: 도메인별 chip + 하드 캡 3개 + "+N more". pinned는 always-on.
-- **Folder type-strict + N:M**: 노트 폴더=노트만, 위키 폴더=위키만. 한 노트가 여러 폴더 가능. 4사분면 모델 (Folder=type-strict / Sticker=type-free) 명확화.
-- **혼합 폴더 자동 분리**: 데이터 손실 0. `{name}` (note) + `{name} (Wiki)` 두 폴더로.
-- **Templates folderId**: single 유지 (개수 적어 N:M 가치 낮음).
-- **시드 마이그레이션 정책**: 신규 사용자 default + 기존 사용자 별도 idempotent (id 충돌 시 skip).
+### 🟢 작은 후속 정리
+- [ ] Templates grid chip 시스템 완전 통일 (PR e deviation 정리)
+- [ ] NoteTemplate 타입에서 description/status/priority 필드 제거 + 마이그레이션
+- [ ] 키보드 shortcut (D/T/P) — 노트 + templates 통합
+- [ ] Wiki bulk action bar (필요해지면)
+- [ ] FolderPicker 검색 필터 (50+ 폴더 시점)
+
+## Key Decisions (이번 세션)
+- **FolderPicker 추상화 패턴**: 단일 컴포넌트 + 3가지 export (Popover content / inline-submenu / 훅) — 호출 사이트가 자기 chrome 결정. 4곳 dedup.
+- **DnD modifier 시맨틱**: 일반 drop = Add (N:M 자연), Shift+drop = Move (이전 single 시맨틱 보존). 첫 drop 시 toast 안내.
+- **MultiFolderMarker**: group-by-folder에서 다중 폴더 노트의 다른 폴더 카운트만 chip으로 (전체 chip은 카드 과밀, "+N" 패턴).
+- **multi-mode picker UI**: local pending Set + Apply 버튼 (count summary). single-toggle보다 명확.
+- **Wiki bulk action**: 별도 bar 없음 결정. wiki-list 우클릭 메뉴만. 향후 만들 때 같은 패턴.
 
 ## Technical Learnings
-- **Linear chip 패턴 wiring 발견**: 노트/위키 board는 이미 visibleColumns + isVisible(key) 가드 있었음. 진짜 문제는 ad-hoc inline span 시각.
-- **wordCount derived from preview** (`note.preview.split(/\s+/).filter(Boolean).length`) — notes-table 기존 패턴.
-- **memo comparator 업데이트 의무**: 새 prop 추가 시 비교에도 추가 안 하면 update 안 됨.
-- **Migration v107 혼합 폴더 알고리즘**: 데이터 기반 자동 추론 + 혼합 시 클론 분리 (id `{origId}-wiki`).
-- **N:M view-engine 영향**: group-by-folder는 다중 폴더 시 N번 등장. count는 unique 처리 별도 필요 (PR c에서).
-- **Templates view-engine**: useNotesView는 Note[] 전용. Templates는 thin fork (useTemplatesView)가 정합.
-- **TemplateGroupSection sticky 함정**: virtualized 아닌 list에 sticky 쓰면 row 겹침. notes-table은 absolute transform.
-- **DisplayConfig 중복 정의**: PR e에서 view-configs.tsx single source로 통합.
-- **Templates grid의 "본문 미리보기" 가치**: 짧은 템플릿엔 결정적, 긴 템플릿엔 약함. List default + Grid 옵션 유지.
+- **DnD shiftKey 감지**: `shiftPressedRef` (global keydown/keyup listener) 패턴으로 re-render 없이 modifier 추적. 카드 update 영향 X.
+- **vitest jsdom 미설정**: 프로젝트는 .ts 만 (component .tsx 테스트 X). 슬라이스 액션 단위 테스트로 대체.
+- **Linear 패턴 cross-cutting 적용**: PR e의 chip overflow ("+N") 패턴이 PR (folder-b) 다중 FolderChip + PR (folder-c) MultiFolderMarker에 자연 transplant.
+- **Memo equality 업데이트 의무 재확인**: BoardCard / NoteRow의 새 prop (groupKey 등) 추가 시 memo 비교에도 추가 안 하면 update 안 됨.
+- **Inline create + auto-check**: FolderPicker multi 모드에서 "+ New folder" 클릭 시 자동 pre-check → create-then-apply 한 번에.
 
 ## Blockers / Issues
-- **시드 템플릿 더블클릭 에러** (사용자 워크플로우 차단): PR e 머지 후 발견. 정확한 콘솔 메시지 미수집. 다음 세션 즉시 fix 필요.
-- **Templates grid chip 시스템 미통일** (PR e deviation): footer는 inline span 유지. 별도 작은 PR 후보.
+- **시드 템플릿 더블클릭 에러** (사용자 워크플로우 차단): 이전 세션부터 미해결. 정확한 콘솔 메시지 미수집. 다음 세션 즉시 fix 필요.
 
 ## Environment & Config
 - **Worktree**: `C:/Users/user/Desktop/linear-note-plot-/.claude/worktrees/fervent-nash-44e7da`
-- **Main HEAD**: PR #253 머지 직후
-- **Store version**: v107 (Folder kind + N:M)
-- **Build**: tsc clean, npm run build clean (33 routes), npm run test 167/167 pass
-- **Local main checkout 실패** (gh pr merge --delete-branch 시): main worktree가 다른 곳에 있어서. 서버 머지는 정상.
+- **Main HEAD**: PR #256 머지 직후
+- **Store version**: v107 (변경 없음, 이번 세션은 UI만)
+- **Build**: tsc clean, npm run build clean (33 routes), npm run test 185/185 pass
+- **Local main checkout 실패** (gh pr merge --delete-branch 시): 이전과 동일. 서버 머지 정상.
 
 ## Notes for Next Session
-- **새 worktree 시작 권장** — fervent-nash-44e7da 일단락.
-- **다음 작업 우선순위**: 1순위 = 더블클릭 BUG fix, 2순위 = PR (folder-b) UI 분리
-- **Plan 문서 참고**: `.omc/plans/folder-nm-migration.md` (PR b/c 명세)
-- **Group C PR-D 시작 전 planner 활용 권장** (5-8 PRs 분할)
+- **새 worktree 시작 권장** — fervent-nash-44e7da는 일단락. 다음은 클린 worktree.
+- **다음 작업 우선순위**: 1순위 = 더블클릭 BUG fix (사용자에게 콘솔 메시지 요청), 2순위 = Group C PR-D (planner 위임)
+- **Plan 문서 참고**: `.omc/plans/folder-nm-migration.md` (PR a/b/c 완료된 참고용)
+- **Group C PR-D는 큰 작업**: 5-8 PRs로 분할. planner 활용 필수. Templates/Folder 시리즈가 본보기.
 
 ## Files Modified (이번 세션 전체)
 
-### PR #249 (templates view-engine, 11 files +1351/-458)
-- 신규: `templates-floating-action-bar.tsx`, `templates-table.tsx`, `use-templates-view.ts`
+### PR #255 (folder-b UI 분리, 8 files +744/-397)
+- 신규: `components/folder-picker.tsx`
+- 변경: linear-sidebar, app/(app)/folder/[id]/page.tsx, notes-board, notes-table, floating-action-bar, side-panel-context, views/wiki-list
 
-### PR #250 (seed templates, 1 file +156/-7)
-- `lib/store/seeds.ts` 9개 신규 시드 추가
-
-### PR #251 (Linear cards, 5 files +732/-82)
-- 신규: `components/property-chips.tsx`
-
-### PR #252 (v106 migration, 2 files +18/-1)
-- `lib/store/migrate.ts` v106 + version bump
-
-### PR #253 (folder N:M PR-a, 44 files +1540/-164)
-- 신규: `lib/store/__tests__/migrate-v107.test.ts`, `.omc/plans/folder-nm-migration.md`
-- Major: `lib/types.ts`, `lib/store/{migrate, slices/folders, slices/notes, slices/wiki-articles, slices/templates}.ts`, `lib/view-engine/*`, 30+ read-sites
+### PR #256 (folder-c Multi-folder UX, 10 files +931/-124)
+- 신규: `lib/store/__tests__/folders-nm-actions.test.ts` (18 테스트)
+- 변경: folder-picker (multi 모드), side-panel-context, wiki-article-detail-panel, note-detail-panel, notes-table, floating-action-bar, views/wiki-list, notes-board, property-chips
