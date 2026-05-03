@@ -97,6 +97,9 @@ export function inferSpace(route: string): ActivitySpace {
   if (route.startsWith("/calendar") || route === "/todos") return "calendar"
   if (route === "/ontology" || route === "/graph-insights") return "ontology"
   if (route.startsWith("/library")) return "library"
+  // Stickers — cross-everything index, lives in Library per 33-design-decisions §8.
+  // Routed at /stickers (not /library/stickers) for URL brevity.
+  if (route === "/stickers") return "library"
   // /notes, /inbox, /tags, /labels, /templates, /insights, /capture, /permanent, /trash, /pinned, /search
   return "notes"
 }
