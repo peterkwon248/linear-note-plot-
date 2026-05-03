@@ -78,22 +78,46 @@ export function StickersView() {
     [wikiArticles]
   )
 
-  // Sticker counts (notes + wiki combined)
+  // Lookup maps for active-entity check during count.
+  // Sticker.members may still reference trashed notes (we don't auto-cleanup),
+  // so filter them out at read time to match the prior behavior.
+  const activeNoteIds = useMemo(() => new Set(activeNotes.map((n) => n.id)), [activeNotes])
+  const activeWikiIds = useMemo(() => new Set(activeWiki.map((w) => w.id)), [activeWiki])
+
+  // Sticker counts (notes + wikis combined; future kinds will fall through).
+  // Reads from Sticker.members[] (옵션 D2). Each ref kind decides its own
+  // active-entity test; unknown kinds count as-is for forward compatibility.
   const stickerCounts = useMemo(() => {
     const counts: Record<string, number> = {}
     for (const sticker of stickers) {
-      const noteCount = activeNotes.filter((n) => n.stickerIds?.includes(sticker.id)).length
-      const wikiCount = activeWiki.filter((w) => w.stickerIds?.includes(sticker.id)).length
-      counts[sticker.id] = noteCount + wikiCount
+      let count = 0
+      for (const ref of sticker.members ?? []) {
+        if (ref.kind === "note") {
+          if (activeNoteIds.has(ref.id)) count++
+        } else if (ref.kind === "wiki") {
+          if (activeWikiIds.has(ref.id)) count++
+        } else {
+          // tag / label / category / file / reference — no active check yet
+          count++
+        }
+      }
+      counts[sticker.id] = count
     }
     return counts
-  }, [stickers, activeNotes, activeWiki])
+  }, [stickers, activeNoteIds, activeWikiIds])
 
-  // Sticker note counts for detail view
+  // Notes attached to the currently selected sticker (active only).
   const selectedStickerNotes = useMemo(() => {
     if (!selectedStickerId) return []
-    return activeNotes.filter((n) => n.stickerIds?.includes(selectedStickerId))
-  }, [selectedStickerId, activeNotes])
+    const sticker = stickers.find((s) => s.id === selectedStickerId)
+    if (!sticker) return []
+    const noteIdSet = new Set(
+      (sticker.members ?? [])
+        .filter((m) => m.kind === "note")
+        .map((m) => m.id),
+    )
+    return activeNotes.filter((n) => noteIdSet.has(n.id))
+  }, [selectedStickerId, stickers, activeNotes])
 
   const selectedStickerCount = useMemo(() => {
     if (!selectedStickerId) return 0

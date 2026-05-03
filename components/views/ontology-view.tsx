@@ -177,17 +177,17 @@ export function OntologyView() {
       // Extract noteIds from note-ref blocks so graph can link wiki nodes to referenced notes
       noteIds: a.blocks.filter((b) => b.type === "note-ref" && b.noteId).map((b) => b.noteId as string),
       // Group-by source fields — let buildOntologyGraphData populate
-      // OntologyNode.tags/categoryIds/folderId/stickerIds for hull computation.
+      // OntologyNode.tags/categoryIds/folderId for hull computation. Sticker
+      // membership is derived from the `stickers` slice (옵션 D2).
       tags: a.tags,
       categoryIds: a.categoryIds,
       folderId: a.folderId ?? null,
-      stickerIds: a.stickerIds,
     })),
     [wikiArticles],
   )
   const graphData = useMemo(
-    () => buildOntologyGraphData(filteredNotes, relations, tagsMapped, wikiArticlesMapped),
-    [filteredNotes, relations, tagsMapped, wikiArticlesMapped],
+    () => buildOntologyGraphData(filteredNotes, relations, tagsMapped, wikiArticlesMapped, stickers),
+    [filteredNotes, relations, tagsMapped, wikiArticlesMapped, stickers],
   )
 
   // Previous positions for warm-start (initialized from persisted store)

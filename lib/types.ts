@@ -283,8 +283,8 @@ export interface WikiArticle {
   categoryIds?: string[]           // references to WikiCategory.id (DAG)
   /** Folder membership (mirrors Note.folderId). Enables unified note+wiki grouping by folder. */
   folderId?: string | null
-  /** Sticker membership (multi). Cross-entity grouping marker — see Sticker. */
-  stickerIds?: string[]
+  // Sticker membership lives on Sticker.members[] (옵션 D2). Reverse
+  // lookup via `useStickerMembers({ kind: "wiki", id })` hook.
   layout?: WikiLayout              // article layout mode (default: "default")
   fontSize?: number                // global font size multiplier (0.85=S, 1=M default, 1.15=L, 1.3=XL)
   fontScales?: WikiFontScales      // per-group fine-tune multipliers (relative to global). undefined = 1×
@@ -332,8 +332,8 @@ export interface Note {
   contentJson: Record<string, unknown> | null
   folderId: string | null
   tags: string[]
-  /** Sticker membership (multi). Cross-entity grouping marker — see Sticker. */
-  stickerIds?: string[]
+  // Sticker membership lives on Sticker.members[] (옵션 D2). Reverse
+  // lookup via `useStickerMembers({ kind: "note", id })` hook.
   labelId: string | null
   status: NoteStatus
   priority: NotePriority
@@ -424,20 +424,56 @@ export interface Label {
 }
 
 /**
+ * EntityKind — discriminator for cross-entity references.
+ *
+ * Plot's "cross-everything" containers (Sticker v2, future Book) need to
+ * point at heterogeneous entity types. EntityRef uses this kind tag to
+ * disambiguate IDs that may collide across slices.
+ */
+export type EntityKind =
+  | "note"
+  | "wiki"
+  | "tag"
+  | "label"
+  | "category"
+  | "file"
+  | "reference"
+
+/**
+ * EntityRef — typed pointer to any first-class entity in the store.
+ *
+ * Used by cross-entity containers (Sticker.members[]) instead of bare ID
+ * strings. The `kind` discriminator removes ambiguity when the same ID
+ * could exist in multiple slices.
+ */
+export interface EntityRef {
+  kind: EntityKind
+  id: string
+}
+
+/**
  * Sticker — a free-form, cross-entity grouping marker.
  *
  * Unlike Label (note-only color category) or WikiCategory (wiki-only DAG),
- * a Sticker can be attached to BOTH notes and wiki articles. It exists for
- * the user intent: "I just want to bundle these together — not necessarily
- * by topic, label, or category."
+ * a Sticker can be attached to ANY entity: notes, wikis, tags, labels,
+ * categories, files, references. It exists for the user intent:
+ * "I just want to bundle these together — not necessarily by topic,
+ * label, or category."
  *
- * Multi-membership: a single note/wiki can carry multiple stickers.
- * Color drives the graph hull when grouping by sticker.
+ * Data model: **single forward reference** (옵션 D2). Membership lives
+ * on the Sticker (`members[]`), not on each entity. Reverse lookup is
+ * provided by the `useStickerMembers` hook (memoized index).
+ *
+ * Multi-membership: a single entity can carry multiple stickers (hulls
+ * may overlap in the graph). Color drives the graph hull when grouping
+ * by sticker.
  */
 export interface Sticker {
   id: string
   name: string
   color: string
+  /** Cross-entity membership (옵션 D2 — single forward reference). */
+  members: EntityRef[]
   trashed?: boolean
   trashedAt?: string | null
   createdAt: string

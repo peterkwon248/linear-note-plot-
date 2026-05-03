@@ -1355,5 +1355,59 @@ export function migrate(persistedState: unknown): PlotState {
     (state as any).stickers = []
   }
 
+  // v101: Sticker v2 — cross-everything membership model (옵션 D2).
+  // Move `stickerIds[]` from each Note/WikiArticle onto the matching
+  // Sticker as `members: EntityRef[]`. Single forward reference so future
+  // entity types (Tag/Label/Category/File/Reference, Book) can join
+  // without touching note/wiki schemas again.
+  //
+  // Backward fallback: if a stickerId on a note/wiki points at a sticker
+  // that no longer exists, the reference is silently dropped. The reverse
+  // direction (sticker membership pointing at a note that doesn't exist)
+  // is handled at read time by the useStickerMembers hook.
+  if (Array.isArray((state as any).stickers)) {
+    const stickersArr = (state as any).stickers as Array<{ id: string; members?: any }>
+    // Index stickers by id for O(1) lookup during the cascade.
+    const stickerById = new Map<string, { id: string; members: any[] }>()
+    for (const s of stickersArr) {
+      const initial = Array.isArray(s.members) ? s.members : []
+      stickerById.set(s.id, { ...s, members: initial } as any)
+    }
+
+    const ensureRef = (sticker: { members: any[] }, kind: string, id: string) => {
+      // Dedup: skip if (kind, id) already present.
+      for (const m of sticker.members) {
+        if (m && m.kind === kind && m.id === id) return
+      }
+      sticker.members.push({ kind, id })
+    }
+
+    if (Array.isArray(state.notes)) {
+      for (const n of state.notes as any[]) {
+        if (!n || !Array.isArray(n.stickerIds)) continue
+        for (const sid of n.stickerIds) {
+          const sticker = stickerById.get(sid)
+          if (sticker) ensureRef(sticker, "note", n.id)
+        }
+        // Strip the legacy field after migration.
+        delete n.stickerIds
+      }
+    }
+
+    if (Array.isArray(state.wikiArticles)) {
+      for (const w of state.wikiArticles as any[]) {
+        if (!w || !Array.isArray(w.stickerIds)) continue
+        for (const sid of w.stickerIds) {
+          const sticker = stickerById.get(sid)
+          if (sticker) ensureRef(sticker, "wiki", w.id)
+        }
+        delete w.stickerIds
+      }
+    }
+
+    // Write the rebuilt sticker array back (preserves order).
+    ;(state as any).stickers = stickersArr.map((s) => stickerById.get(s.id) ?? { ...s, members: [] })
+  }
+
   return state as unknown as PlotState
 }

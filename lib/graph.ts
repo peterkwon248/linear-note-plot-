@@ -1,4 +1,5 @@
-import type { Note, NoteStatus, Relation, RelationType } from "./types"
+import type { Note, NoteStatus, Relation, RelationType, Sticker } from "./types"
+import { buildStickerMemberIndex, getStickerIdsFor } from "./stickers"
 import { FORCE_CONFIG, SIM_CONFIG, classifyTier, TAG_NODE_MIN_USAGE } from "./graph/ontology-graph-config"
 
 /* ── Ontology graph ──────────────────────────────── */
@@ -100,13 +101,19 @@ export function buildOntologyGraphData(
     parentArticleId?: string | null
     noteIds?: string[]
     // Group-by source fields (mirror WikiArticle). Optional so existing
-    // call sites that pass minimal data still compile.
+    // call sites that pass minimal data still compile. `stickerIds` is
+    // derived from `stickers` (옵션 D2 reverse lookup), not passed here.
     tags?: string[]
     categoryIds?: string[]
     folderId?: string | null
-    stickerIds?: string[]
   }>,
+  stickers?: Sticker[],
 ): OntologyGraphData {
+  // Reverse-lookup index for sticker membership (옵션 D2). Built once
+  // here and queried per-node below. Empty when `stickers` is omitted.
+  const stickerIndex = stickers && stickers.length > 0
+    ? buildStickerMemberIndex(stickers)
+    : new Map<string, Sticker[]>()
   if (notes.length === 0) return { nodeData: [], edges: [], forceConfig: computeForceConfig(0) }
 
   // Build wiki title lookup from WikiArticle Assembly Model
@@ -186,7 +193,7 @@ export function buildOntologyGraphData(
       nodeType,
       tags: n.tags,
       folderId: n.folderId,
-      stickerIds: n.stickerIds,
+      stickerIds: getStickerIdsFor(stickerIndex, "note", n.id),
     }
   })
 
@@ -250,7 +257,7 @@ export function buildOntologyGraphData(
         tags: wa.tags,
         folderId: wa.folderId ?? null,
         categoryIds: wa.categoryIds,
-        stickerIds: wa.stickerIds,
+        stickerIds: getStickerIdsFor(stickerIndex, "wiki", wa.id),
       })
     }
 
