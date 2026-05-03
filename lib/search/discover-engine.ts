@@ -47,7 +47,8 @@ export interface DiscoverNoteInput {
   title: string
   tags: string[]
   linksOut: string[]
-  folderId?: string | null
+  /** v107 N:M: a note can belong to multiple folders. */
+  folderIds?: string[]
   isWiki?: boolean
   preview?: string
   /**
@@ -64,7 +65,8 @@ export interface DiscoverParams {
   noteBody: string
   noteTags: string[]
   noteLinksOut: string[]
-  noteFolderId: string | null
+  /** v107 N:M: source note's folder memberships. Empty = unfoldered. */
+  noteFolderIds: string[]
   allNotes: DiscoverNoteInput[]
   backlinksMap: Record<string, string[]>
   allTags: Array<{ id: string; name: string }>
@@ -91,7 +93,7 @@ export function discoverRelated(params: DiscoverParams): DiscoverResult {
     noteBody,
     noteTags,
     noteLinksOut,
-    noteFolderId,
+    noteFolderIds,
     allNotes,
     backlinksMap,
     allTags,
@@ -227,8 +229,11 @@ export function discoverRelated(params: DiscoverParams): DiscoverResult {
 
     score += backlinkScore
 
-    // 4. Folder proximity (weight: W_FOLDER)
-    if (noteFolderId && other.folderId === noteFolderId) {
+    // 4. Folder proximity (weight: W_FOLDER) — v107 N:M: any folder
+    //    overlap counts.
+    const otherFolderIds = other.folderIds ?? []
+    const sharedFolders = noteFolderIds.filter((fid) => otherFolderIds.includes(fid))
+    if (sharedFolders.length > 0) {
       score += W_FOLDER
       reasons.push("same folder")
     }

@@ -28,8 +28,11 @@ function inferRelationType(
     return { type: "depends-on", reason: "B references A", sourceId: noteB.id, targetId: noteA.id }
   }
 
-  // Same folder → related-to (default but with better reason)
-  if (noteA.folderId && noteA.folderId === noteB.folderId) {
+  // Same folder → related-to (default but with better reason).
+  // v107 N:M: any folder overlap counts.
+  const aFolders = noteA.folderIds ?? []
+  const bFolders = noteB.folderIds ?? []
+  if (aFolders.some((fid) => bFolders.includes(fid))) {
     return { type: "related-to", reason: "Same folder" }
   }
 

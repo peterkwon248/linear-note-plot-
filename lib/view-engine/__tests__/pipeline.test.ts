@@ -14,7 +14,7 @@ function makeNote(overrides: Partial<Note> = {}): Note {
     title: 'Test Note',
     content: 'Test content',
     contentJson: null,
-    folderId: null,
+    folderIds: [],
     tags: [],
     status: 'inbox' as NoteStatus,
     priority: 'none' as NotePriority,
@@ -273,25 +273,25 @@ describe('applySort', () => {
   })
 
   describe('sort by folder', () => {
-    it('should sort by folder id ascending, null values first', () => {
+    it('should sort by folder id ascending, empty values first', () => {
       const notes = [
-        makeNote({ id: '1', folderId: 'folder-zebra' }),
-        makeNote({ id: '2', folderId: null }),
-        makeNote({ id: '3', folderId: 'folder-alpha' }),
+        makeNote({ id: '1', folderIds: ['folder-zebra'] }),
+        makeNote({ id: '2', folderIds: [] }),
+        makeNote({ id: '3', folderIds: ['folder-alpha'] }),
       ]
       const sorted = applySort(notes, 'folder', 'asc')
-      // null becomes empty string, sorts first
+      // empty folderIds becomes empty string, sorts first
       expect(sorted.map(n => n.id)).toEqual(['2', '3', '1'])
     })
 
-    it('should sort by folder id descending', () => {
+    it('should sort by folder id descending (uses folderIds[0])', () => {
       const notes = [
-        makeNote({ id: '1', folderId: 'folder-zebra' }),
-        makeNote({ id: '2', folderId: 'folder-alpha' }),
-        makeNote({ id: '3', folderId: 'folder-beta' }),
+        makeNote({ id: '1', folderIds: ['folder-zebra'] }),
+        makeNote({ id: '2', folderIds: ['folder-alpha'] }),
+        makeNote({ id: '3', folderIds: ['folder-beta'] }),
       ]
       const sorted = applySort(notes, 'folder', 'desc')
-      expect(sorted.map(n => n.folderId)).toEqual([
+      expect(sorted.map(n => n.folderIds[0])).toEqual([
         'folder-zebra',
         'folder-beta',
         'folder-alpha',
@@ -735,9 +735,9 @@ describe('applyGrouping', () => {
   describe('groupBy "folder"', () => {
     it('should group by folder id', () => {
       const notes = [
-        makeNote({ id: '1', folderId: 'folder-a' }),
-        makeNote({ id: '2', folderId: 'folder-a' }),
-        makeNote({ id: '3', folderId: 'folder-b' }),
+        makeNote({ id: '1', folderIds: ['folder-a'] }),
+        makeNote({ id: '2', folderIds: ['folder-a'] }),
+        makeNote({ id: '3', folderIds: ['folder-b'] }),
       ]
       const groups = applyGrouping(notes, 'folder')
       expect(groups).toHaveLength(2)
@@ -746,19 +746,19 @@ describe('applyGrouping', () => {
 
     it('should sort folder ids alphabetically', () => {
       const notes = [
-        makeNote({ id: '1', folderId: 'folder-zebra' }),
-        makeNote({ id: '2', folderId: 'folder-apple' }),
-        makeNote({ id: '3', folderId: 'folder-banana' }),
+        makeNote({ id: '1', folderIds: ['folder-zebra'] }),
+        makeNote({ id: '2', folderIds: ['folder-apple'] }),
+        makeNote({ id: '3', folderIds: ['folder-banana'] }),
       ]
       const groups = applyGrouping(notes, 'folder')
       expect(groups.map(g => g.key)).toEqual(['folder-apple', 'folder-banana', 'folder-zebra'])
     })
 
-    it('should create "No Folder" group for null folders', () => {
+    it('should create "No Folder" group for empty folderIds', () => {
       const notes = [
-        makeNote({ id: '1', folderId: 'folder-a' }),
-        makeNote({ id: '2', folderId: null }),
-        makeNote({ id: '3', folderId: null }),
+        makeNote({ id: '1', folderIds: ['folder-a'] }),
+        makeNote({ id: '2', folderIds: [] }),
+        makeNote({ id: '3', folderIds: [] }),
       ]
       const groups = applyGrouping(notes, 'folder')
       expect(groups).toHaveLength(2)
@@ -767,25 +767,40 @@ describe('applyGrouping', () => {
       expect(noFolderGroup.notes.map(n => n.id)).toEqual(['2', '3'])
     })
 
-    it('should only include "No Folder" group if there are null folders', () => {
+    it('should only include "No Folder" group if there are empty folderIds', () => {
       const notes = [
-        makeNote({ id: '1', folderId: 'folder-a' }),
-        makeNote({ id: '2', folderId: 'folder-b' }),
+        makeNote({ id: '1', folderIds: ['folder-a'] }),
+        makeNote({ id: '2', folderIds: ['folder-b'] }),
       ]
       const groups = applyGrouping(notes, 'folder')
       expect(groups).toHaveLength(2)
       expect(groups.every(g => g.key !== '_no_folder')).toBe(true)
     })
 
-    it('should handle notes with all folders as null', () => {
+    it('should handle notes with all folderIds empty', () => {
       const notes = [
-        makeNote({ id: '1', folderId: null }),
-        makeNote({ id: '2', folderId: null }),
+        makeNote({ id: '1', folderIds: [] }),
+        makeNote({ id: '2', folderIds: [] }),
       ]
       const groups = applyGrouping(notes, 'folder')
       expect(groups).toHaveLength(1)
       expect(groups[0].key).toBe('_no_folder')
       expect(groups[0].notes.map(n => n.id)).toEqual(['1', '2'])
+    })
+
+    // v107 N:M: a note with multiple folderIds appears in EACH folder bucket.
+    it('should duplicate a note into every folder it belongs to (N:M)', () => {
+      const notes = [
+        makeNote({ id: 'multi', folderIds: ['folder-a', 'folder-b'] }),
+        makeNote({ id: 'solo-a', folderIds: ['folder-a'] }),
+        makeNote({ id: 'solo-b', folderIds: ['folder-b'] }),
+      ]
+      const groups = applyGrouping(notes, 'folder')
+      expect(groups).toHaveLength(2)
+      const a = groups.find(g => g.key === 'folder-a')!
+      const b = groups.find(g => g.key === 'folder-b')!
+      expect(a.notes.map(n => n.id).sort()).toEqual(['multi', 'solo-a'])
+      expect(b.notes.map(n => n.id).sort()).toEqual(['multi', 'solo-b'])
     })
   })
 

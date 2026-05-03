@@ -1495,5 +1495,133 @@ export function migrate(persistedState: unknown): PlotState {
     }
   }
 
+  // v107: Folder type-strict + N:M membership migration.
+  //
+  // Three structural changes — all idempotent (re-running is a no-op):
+  //   1. `Folder.kind: "note" | "wiki"` introduced (data-driven inference)
+  //   2. `Note.folderId` (single) → `Note.folderIds[]` (array)
+  //   3. `WikiArticle.folderId` (PR #236, single) → `WikiArticle.folderIds[]`
+  //   4. Mixed folders (PR #236 cross-everything era — note+wiki together)
+  //      auto-split: original folder keeps notes as `kind="note"`, a clone
+  //      `{name} (Wiki)` with id `{id}-wiki` collects the wikis as
+  //      `kind="wiki"`. Wiki memberships are rewritten to the clone.
+  //
+  // `kind` inference per folder:
+  //   - W (wiki count) === 0 → kind = "note"  (covers pure-note + empty)
+  //   - N (note count) === 0 → kind = "wiki"  (pure-wiki, including PR #236)
+  //   - both N>0 and W>0     → kind = "note" + clone for wikis (split)
+  //
+  // Idempotent guards:
+  //   - Folder already has `kind` → skip
+  //   - Note already has `folderIds[]` array → skip
+  //   - WikiArticle already has `folderIds[]` array → skip
+  //
+  // Templates (NoteTemplate.folderId) intentionally untouched — see
+  // `.omc/plans/folder-nm-migration.md` §"Templates 변경 X". Their folder
+  // means "default folder for new notes from this template" (single-target
+  // semantics).
+  if (Array.isArray(state.folders)) {
+    const folders = state.folders as any[]
+    const notes = (state.notes ?? []) as any[]
+    const wikis = (state.wikiArticles ?? []) as any[]
+
+    // 1. Note.folderId → folderIds (idempotent)
+    for (const n of notes) {
+      if (Array.isArray(n.folderIds)) continue  // already migrated
+      const legacy = n.folderId
+      n.folderIds = (typeof legacy === "string" && legacy.length > 0) ? [legacy] : []
+      delete n.folderId
+    }
+
+    // 2. WikiArticle.folderId → folderIds (idempotent)
+    for (const w of wikis) {
+      if (Array.isArray(w.folderIds)) continue
+      const legacy = w.folderId
+      w.folderIds = (typeof legacy === "string" && legacy.length > 0) ? [legacy] : []
+      delete w.folderId
+    }
+
+    // 3. Folder.kind inference + mixed-folder split.
+    //    Index counts the live (non-trashed) members per folder id.
+    const noteFoldersIndex = new Map<string, number>()
+    const wikiFoldersIndex = new Map<string, number>()
+    for (const n of notes) {
+      if (n.trashed) continue
+      for (const fid of (n.folderIds ?? [])) {
+        noteFoldersIndex.set(fid, (noteFoldersIndex.get(fid) ?? 0) + 1)
+      }
+    }
+    for (const w of wikis) {
+      // WikiArticle has no `trashed` boolean (deleted articles are removed
+      // from the array). Count all members.
+      for (const fid of (w.folderIds ?? [])) {
+        wikiFoldersIndex.set(fid, (wikiFoldersIndex.get(fid) ?? 0) + 1)
+      }
+    }
+
+    const newFolders: any[] = []
+    const wikiFolderClones = new Map<string, string>()  // original id → cloned wiki id
+    let kindInferredCount = 0
+    let mixedSplitCount = 0
+
+    for (const f of folders) {
+      if (typeof f.kind === "string") {
+        // Already migrated — preserve as-is.
+        newFolders.push(f)
+        continue
+      }
+      const N = noteFoldersIndex.get(f.id) ?? 0
+      const W = wikiFoldersIndex.get(f.id) ?? 0
+
+      if (W === 0) {
+        // Pure note folder, or empty (default to note).
+        newFolders.push({ ...f, kind: "note" as const })
+        kindInferredCount++
+      } else if (N === 0) {
+        // Pure wiki folder (e.g. PR #236 user who only added wikis).
+        newFolders.push({ ...f, kind: "wiki" as const })
+        kindInferredCount++
+      } else {
+        // Mixed: keep the original as a "note" folder, clone for wikis.
+        // Clone id = `{id}-wiki` (deterministic, idempotent across runs in
+        // the unlikely event the user already had such a collision — guarded
+        // by the `Array.isArray` checks above + folder already-has-kind).
+        const cloneId = `${f.id}-wiki`
+        newFolders.push({ ...f, kind: "note" as const })
+        newFolders.push({
+          ...f,
+          id: cloneId,
+          name: `${f.name} (Wiki)`,
+          kind: "wiki" as const,
+          createdAt: typeof f.createdAt === "string" ? f.createdAt : new Date().toISOString(),
+        })
+        wikiFolderClones.set(f.id, cloneId)
+        mixedSplitCount++
+      }
+    }
+    state.folders = newFolders
+
+    // 4. Rewrite wiki memberships from any mixed-original to its clone.
+    if (wikiFolderClones.size > 0) {
+      for (const w of wikis) {
+        const ids = w.folderIds as string[]
+        if (!Array.isArray(ids) || ids.length === 0) continue
+        let mutated = false
+        const next = ids.map((fid) => {
+          const cloneId = wikiFolderClones.get(fid)
+          if (cloneId !== undefined) { mutated = true; return cloneId }
+          return fid
+        })
+        if (mutated) w.folderIds = next
+      }
+    }
+
+    if (kindInferredCount > 0 || mixedSplitCount > 0) {
+      console.log(
+        `[migrate] v106→v107: folder kind inferred for ${kindInferredCount} folders, ${mixedSplitCount} mixed folders auto-split`,
+      )
+    }
+  }
+
   return state as unknown as PlotState
 }

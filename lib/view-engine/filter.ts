@@ -144,12 +144,16 @@ function matchesRule(note: Note, rule: FilterRule, extras?: Pick<PipelineExtras,
       return compareNumber(note.reads ?? 0, operator, value)
 
     case "folder": {
-      const fid = note.folderId ?? ""
+      // v107 N:M: a note can be in multiple folders. Filter semantics:
+      // "in folder X" means "X is one of the note's folders".
+      const ids = note.folderIds ?? []
       // Special value "_none" means "no folder assigned"
       if (value === "_none") {
-        return operator === "eq" ? fid === "" : fid !== ""
+        const empty = ids.length === 0
+        return operator === "eq" ? empty : !empty
       }
-      return compareString(fid, operator, value)
+      const has = ids.includes(value)
+      return operator === "eq" ? has : !has
     }
 
     case "label": {

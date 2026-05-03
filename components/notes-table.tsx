@@ -670,7 +670,8 @@ export function NotesTable({
   const notesFilterCategories = useMemo(() => {
     return NOTES_VIEW_CONFIG.filterCategories.map(cat => {
       if (cat.key === "folder") {
-        return { ...cat, values: folders.map(f => ({ key: f.id, label: f.name, count: notes.filter(n => !n.trashed && n.folderId === f.id).length })) }
+        // v107 N:M: count notes that include this folder in their folderIds.
+        return { ...cat, values: folders.map(f => ({ key: f.id, label: f.name, count: notes.filter(n => !n.trashed && n.folderIds.includes(f.id)).length })) }
       }
       if (cat.key === "label") {
         return { ...cat, values: labels.filter(l => !l.trashed).map(l => ({ key: l.id, label: l.name, color: l.color, count: notes.filter(n => !n.trashed && n.labelId === l.id).length })) }
@@ -1339,8 +1340,8 @@ export function NotesTable({
                               }}
                               onDoubleClick={() => openNote(item.note.id)}
                               onStatus={(s) => updateNote(item.note.id, { status: s })}
-                              onSetFolder={(folderId) => updateNote(item.note.id, { folderId })}
-                              onRemoveFolder={() => updateNote(item.note.id, { folderId: null })}
+                              onSetFolder={(folderId) => updateNote(item.note.id, { folderIds: folderId ? [folderId] : [] })}
+                              onRemoveFolder={() => updateNote(item.note.id, { folderIds: [] })}
                               onKeep={() => { triageKeep(item.note.id); pushUndo("Triage to Capture", () => moveBackToInbox(item.note.id), () => triageKeep(item.note.id)) }}
                               onSnooze={(opt) => triageSnooze(item.note.id, getSnoozeTime(opt))}
                               onTrash={() => { triageTrash(item.note.id); pushUndo("Trash note", () => toggleTrash(item.note.id), () => triageTrash(item.note.id)) }}
@@ -1675,11 +1676,12 @@ function NoteRowInner({
         </div>
       )}
 
-      {/* Folder */}
+      {/* Folder — v107 N:M: shows primary folder (folderIds[0]); PR (b)
+          will render multi-folder chips with overflow. */}
       {visibleCols.includes("folder") && (
         <div className="flex items-center justify-center px-2">
-          {note.folderId ? (() => {
-            const folder = folders.find((f: Folder) => f.id === note.folderId)
+          {note.folderIds[0] ? (() => {
+            const folder = folders.find((f: Folder) => f.id === note.folderIds[0])
             if (!folder) return <span className="text-note text-muted-foreground">—</span>
             return (
               <span className="text-note text-foreground truncate">{folder.name}</span>
@@ -1943,21 +1945,23 @@ function NoteRowInner({
           <ContextMenuSubContent className="w-48">
             <ContextMenuItem
               onClick={() => onSetFolder("")}
-              className={`text-note ${!note.folderId ? "font-medium" : ""}`}
+              className={`text-note ${note.folderIds.length === 0 ? "font-medium" : ""}`}
             >
               <span className="text-muted-foreground">No folder</span>
-              {!note.folderId && <PhCheck className="ml-auto text-accent" size={14} weight="bold" />}
+              {note.folderIds.length === 0 && <PhCheck className="ml-auto text-accent" size={14} weight="bold" />}
             </ContextMenuItem>
-            {folders.length > 0 && <ContextMenuSeparator />}
-            {folders.map((f) => (
+            {/* PR (a): list only `kind="note"` folders. PR (b) replaces this
+                with the kind-aware FolderPicker component. */}
+            {folders.filter((f) => f.kind === "note").length > 0 && <ContextMenuSeparator />}
+            {folders.filter((f) => f.kind === "note").map((f) => (
               <ContextMenuItem
                 key={f.id}
                 onClick={() => onSetFolder(f.id)}
-                className={`text-note ${note.folderId === f.id ? "font-medium" : ""}`}
+                className={`text-note ${note.folderIds.includes(f.id) ? "font-medium" : ""}`}
               >
                 <span className="h-2 w-2 rounded-full mr-2 shrink-0" style={{ backgroundColor: f.color }} />
                 <span className="truncate">{f.name}</span>
-                {note.folderId === f.id && <PhCheck className="ml-auto text-accent shrink-0" size={14} weight="bold" />}
+                {note.folderIds.includes(f.id) && <PhCheck className="ml-auto text-accent shrink-0" size={14} weight="bold" />}
               </ContextMenuItem>
             ))}
             <ContextMenuSeparator />
@@ -1972,7 +1976,8 @@ function NoteRowInner({
                 // gets a distinguishable color from existing ones.
                 const palette = ["#f97316", "#3b82f6", "#22c55e", "#a855f7", "#ec4899", "#14b8a6", "#eab308"]
                 const color = palette[folders.length % palette.length]
-                const newId = usePlotStore.getState().createFolder(name, color)
+                // v107: notes-table operates on notes → kind="note" folder.
+                const newId = usePlotStore.getState().createFolder(name, "note", color)
                 onSetFolder(newId)
               }}
               className="text-note text-muted-foreground hover:text-foreground"
@@ -1998,7 +2003,9 @@ const NoteRow = memo(NoteRowInner, (prev, next) =>
   prev.note.id === next.note.id &&
   prev.note.updatedAt === next.note.updatedAt &&
   prev.note.status === next.note.status &&
-  prev.note.folderId === next.note.folderId &&
+  // v107 N:M: array reference equality — mutations create new arrays so
+  // memoization invalidates correctly when membership changes.
+  prev.note.folderIds === next.note.folderIds &&
   prev.note.reads === next.note.reads &&
   prev.note.title === next.note.title &&
   prev.note.preview === next.note.preview &&

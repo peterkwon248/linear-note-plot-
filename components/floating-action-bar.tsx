@@ -453,7 +453,11 @@ export function FloatingActionBar({
                 <button
                   type="button"
                   onClick={() => {
-                    batchUpdateNotes(ids, { folderId: null })
+                    // v107 N:M: "No folder" = empty folderIds (single-folder
+                    // semantics from PR (a) — picker overwrites entire set).
+                    // PR (c) introduces add-vs-move so we'd preserve OTHER
+                    // folders here; for now we keep the simpler replace-all.
+                    batchUpdateNotes(ids, { folderIds: [] })
                     toast(`${count} note${count !== 1 ? "s" : ""} moved out of folder`)
                   }}
                   className="flex w-full items-center gap-2 px-2.5 py-1.5 text-note text-left rounded hover:bg-accent text-muted-foreground"
@@ -461,12 +465,14 @@ export function FloatingActionBar({
                   No folder
                 </button>
                 {folders.length > 0 && <div className="my-1 border-t border-border-subtle" />}
-                {folders.map((f) => (
+                {/* PR (a): show only `kind="note"` folders. PR (b) makes the
+                    filter prop-driven (notes vs wikis). */}
+                {folders.filter((f) => f.kind === "note").map((f) => (
                   <button
                     key={f.id}
                     type="button"
                     onClick={() => {
-                      batchUpdateNotes(ids, { folderId: f.id })
+                      batchUpdateNotes(ids, { folderIds: [f.id] })
                       toast(`${count} note${count !== 1 ? "s" : ""} moved to ${f.name}`)
                     }}
                     className="flex w-full items-center gap-2 px-2.5 py-1.5 text-note text-left rounded hover:bg-accent"
@@ -485,8 +491,10 @@ export function FloatingActionBar({
                     if (!name) return
                     const palette = ["#f97316", "#3b82f6", "#22c55e", "#a855f7", "#ec4899", "#14b8a6", "#eab308"]
                     const color = palette[folders.length % palette.length]
-                    const newId = usePlotStore.getState().createFolder(name, color)
-                    batchUpdateNotes(ids, { folderId: newId })
+                    // v107: floating action bar always operates on notes →
+                    // newly-created folder is `kind="note"`.
+                    const newId = usePlotStore.getState().createFolder(name, "note", color)
+                    batchUpdateNotes(ids, { folderIds: [newId] })
                     toast(`${count} note${count !== 1 ? "s" : ""} moved to ${name}`)
                   }}
                   className="flex w-full items-center gap-2 px-2.5 py-1.5 text-note text-left rounded text-muted-foreground hover:text-foreground hover:bg-accent"

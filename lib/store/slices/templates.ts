@@ -111,12 +111,21 @@ export function createTemplatesSlice(set: Set, get: Get, appendEvent: AppendEven
       const content = expandPlaceholders(template.content)
       const activeView = state.activeView
 
+      // Templates still use single `folderId` semantics (default folder for
+      // newly created notes). v107: convert to N:M `folderIds[]` at the
+      // creation boundary. Active-view folder wins when the template has
+      // none, matching createNote's auto-classify behavior.
+      const folderFromTemplate = template.folderId
+      const folderFromView = activeView.type === "folder" ? activeView.folderId : null
+      const seedFolder = folderFromTemplate ?? folderFromView
+      const folderIds = seedFolder ? [seedFolder] : []
+
       const newNote: Note = {
         id,
         title,
         content,
         contentJson: template.contentJson ?? null,
-        folderId: template.folderId ?? (activeView.type === "folder" ? activeView.folderId : null),
+        folderIds,
         tags: [...template.tags],
         labelId: template.labelId,
         status: template.status,

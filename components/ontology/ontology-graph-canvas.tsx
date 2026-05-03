@@ -842,7 +842,10 @@ export function OntologyGraphCanvas({
           keys = tagsFor(node)
           break
         case "folder":
-          if (node.folderId) keys = [node.folderId]
+          // v107 N:M: a node can belong to multiple folders → contributes
+          // to a hull for each one. Same semantics as group-by-folder in
+          // the list/board views (note duplicated across buckets).
+          if (node.folderIds && node.folderIds.length > 0) keys = node.folderIds
           break
         case "category":
           // Wiki-only field; notes won't have categoryIds → won't be grouped

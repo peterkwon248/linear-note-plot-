@@ -153,7 +153,9 @@ export function SidePanelContext({ noteId: propNoteId }: { noteId?: string | nul
   const staleSuggest = isStaleSuggest(note)
   const linkCount = backlinks.get(note.id) ?? 0
 
-  const currentFolder = folders.find((f) => f.id === note.folderId)
+  // v107 N:M: side panel currently shows the primary folder; PR (c)
+  // upgrades this to a multi-folder chip strip with add/remove.
+  const currentFolder = folders.find((f) => f.id === note.folderIds[0])
   const noteTags = tags.filter((t) => note.tags.includes(t.id) && !t.trashed)
   const availableTags = tags.filter((t) => !note.tags.includes(t.id) && !t.trashed)
 
@@ -348,26 +350,31 @@ export function SidePanelContext({ noteId: propNoteId }: { noteId?: string | nul
           <PopoverContent align="start" className="w-52 p-1">
             <button
               onClick={() => {
-                updateNote(note.id, { folderId: null })
+                // v107 N:M (PR a): single-folder picker still overwrites the
+                // entire set with [] / [folder.id]. PR (c) introduces a
+                // multi-folder picker with add/remove semantics.
+                updateNote(note.id, { folderIds: [] })
                 setFolderOpen(false)
               }}
               className={cn(
                 "flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-note transition-colors hover:bg-hover-bg",
-                !note.folderId ? "text-foreground" : "text-muted-foreground"
+                note.folderIds.length === 0 ? "text-foreground" : "text-muted-foreground"
               )}
             >
               No folder
             </button>
-            {folders.map((folder) => (
+            {/* PR (a): list only `kind="note"` folders. PR (b) makes the
+                folder picker fully kind-aware via a shared component. */}
+            {folders.filter((f) => f.kind === "note").map((folder) => (
               <button
                 key={folder.id}
                 onClick={() => {
-                  updateNote(note.id, { folderId: folder.id })
+                  updateNote(note.id, { folderIds: [folder.id] })
                   setFolderOpen(false)
                 }}
                 className={cn(
                   "flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-note transition-colors hover:bg-hover-bg",
-                  note.folderId === folder.id ? "text-foreground" : "text-muted-foreground"
+                  note.folderIds.includes(folder.id) ? "text-foreground" : "text-muted-foreground"
                 )}
               >
                 <span

@@ -28,6 +28,55 @@
 
 ---
 
+## 🚀 2026-05-03 (저녁) — Templates 시리즈 종결 + Folder N:M 시작
+
+**범위**: Templates 시리즈 4개 PR + Folder type-strict N:M 데이터 모델 PR (a) 1개. 총 5개 PR squash-merge.
+
+### 머지된 PRs
+- **#249** Template PR c — view-engine 통합 (list/grid + multi-select + alpha index + chip 일관성). 마이그레이션 v102→v105 (templates context 등록 + visibleColumns 단순화)
+- **#250** Template PR d — seed templates 4→13 (Weekly Review/Monthly Reflection/1:1 Meeting/Standup/Reading Notes/Diary/Goal Setting/Decision Log/Project Kickoff). 신규 사용자 only.
+- **#251** PR e — Linear-style properties-aware cards. 12개 도메인 chip (`property-chips.tsx`) + notes/wiki board + templates grid `visibleColumns` wiring + `+N more` overflow. ViewMode union에 "grid" 추가.
+- **#252** PR f — v106 migration: 기존 사용자에게 9개 신규 시드 idempotent 주입.
+- **#253** PR (folder-a) — Folder type-strict + N:M 데이터 모델 + 마이그레이션 v107. Folder.kind: "note"|"wiki", Note.folderIds[], WikiArticle.folderIds[]. 혼합 폴더 자동 분리 (`{name} (Wiki)` 클론). 45 files +634/-169 LOC.
+
+### 핵심 결정사항
+- **Templates 디스플레이 properties 단순화**: status/priority/label/folder/tags/description 폐기 → Index/Updated/Created 3개만
+- **Templates 본질**: 선택 도구 (vs 노트=탐색 대상). Board 모드 미지원, list+grid만.
+- **NoteTemplate.status/priority/description** = "default 값"이지 카드 정체성 X. 카드 표시 폐기. 타입 필드 제거는 별도 PR.
+- **Linear-style chips**: 도메인별 chip (B 옵션) + 하드 캡 3개 (A density). pinned는 always-on (toggle 없음).
+- **Folder type-strict**: 노트 폴더 = 노트만 / 위키 폴더 = 위키만. 4사분면 모델 (Folder=type-strict / Sticker=type-free) 명확화.
+- **혼합 폴더 자동 분리** (마이그레이션 정책): 데이터 손실 0. `{name}` (note) + `{name} (Wiki)` (wiki) 두 폴더로.
+- **Templates folderId**: single 유지 (개수 적어 N:M 가치 낮음, YAGNI).
+
+### 다음 세션 우선순위 (순서)
+1. **BUG fix**: 템플릿 더블클릭 시 에러 (시드는 보이나 편집 안 됨) — 사용자 워크플로우 차단 중
+2. **PR (folder-b)** — UI 분리 type-strict 시각화: 사이드바 Notes/Wiki 분리, /folder/[id] kind 분기, Folder picker kind 검증, DnD kind 검증
+3. **PR (folder-c)** — Multi-folder UX: detail panel 다중 폴더 chips, multi-folder picker, DnD add vs move, group-by-folder 다중 마커
+4. **Wiki template 3-layer** (Layout Preset + Content Template + Typed Infobox)
+5. **Group C PR-D** — Tags/Labels/Stickers/References/Files view-engine 통합 (5-8 PRs, planner 권장)
+6. **Smart Book v2** (AutoSource[5] + Sticker source + Hybrid manual/auto)
+7. **Template seed audit** (`PlotTemplate<T>` 추상화)
+8. **(마지막) Note UI toolbar** (UpNote-style)
+9. **(논의)** House (계보 시각화) — Claude 의견: 별도 entity 불필요, Graph view에 lineage mode + sidebar 단축 링크로 대체. 마지막에 토론.
+
+### 기술 학습
+- **시드 템플릿 마이그레이션 정책** (PR d/f): 신규 사용자 only가 안전한 default. 기존 사용자는 별도 idempotent 마이그레이션 (id 충돌 시 skip).
+- **Linear chip 패턴 wiring 발견**: 노트/위키 board는 이미 `visibleColumns + isVisible(key)` 가드 있었음. 진짜 문제는 ad-hoc inline span 시각. 디자인 + 누락 properties 추가가 본질.
+- **wordCount derived from preview** (`note.preview.split(/\s+/).filter(Boolean).length`) — `notes-table`의 기존 패턴. 별도 store 필드 추가 X.
+- **memo comparator 업데이트 의무**: BoardCard 새 prop 추가 시 (note.labelId, note.tags, note.pinned 등) memo 비교에도 추가 안 하면 update 안 됨.
+- **Migration v107 혼합 폴더 알고리즘**: 데이터 기반 자동 추론 + 혼합 시 클론 분리 (id `{origId}-wiki`). 7 test cases (5 plan-required + 2 edge) all PASS.
+- **N:M view-engine 영향**: `group-by-folder`는 한 노트가 여러 폴더에 속하면 N번 등장. count는 unique 처리 별도 필요 (PR c에서).
+- **Templates view-engine 발견**: `useNotesView`는 `Note[]` 전용. Templates는 thin fork (`useTemplatesView`)가 정합. Generic 화는 scope 폭발.
+
+### Plan 문서 보존
+- `.omc/plans/template-b-edit-ui-unification.md` (이전 세션)
+- `.omc/plans/folder-nm-migration.md` (이번 세션, PR (folder-b/c) 참고)
+
+### Store version 진화 (이번 세션)
+v102 → v103 (templates context) → v104 (visibleColumns 단순화) → v105 (description 제거) → v106 (시드 9개 주입) → v107 (Folder kind + N:M)
+
+---
+
 ## 🚀 2026-05-03 (오후 후반) — 11 PRs 머지 거대 세션
 
 **범위**: 디자인 결정 → 즉시 구현. 6시간 동안 11 PRs squash-merge to main.

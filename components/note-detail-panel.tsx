@@ -161,7 +161,9 @@ export function NoteDetailPanel({
 
   const note = notes.find((n) => n.id === noteId)
 
-  const noteFolder = note ? folders.find((f) => f.id === note.folderId) : null
+  // v107 N:M: detail panel currently shows the primary folder (folderIds[0]).
+  // Multi-folder chip rendering lands in PR (c).
+  const noteFolder = note ? folders.find((f) => f.id === note.folderIds[0]) : null
   const noteLabel = note ? labels.find((l) => l.id === note.labelId) : null
   const noteTags = note ? tags.filter((t) => note.tags.includes(t.id)) : []
 

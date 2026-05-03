@@ -62,7 +62,11 @@ export function EditorBreadcrumb({ note, onClose, pane = 'primary' }: EditorBrea
   const notes = usePlotStore((s) => s.notes)
   const openNote = usePlotStore((s) => s.openNote)
 
-  const folder = note.folderId ? folders.find((f) => f.id === note.folderId) : null
+  // v107 N:M: a note can belong to multiple folders. Breadcrumb shows
+  // the first folder as the canonical location (PR (b) will iterate over
+  // multi-folder visualization). `folderIds[0]` is stable per render.
+  const primaryFolderId = note.folderIds[0] ?? null
+  const folder = primaryFolderId ? folders.find((f) => f.id === primaryFolderId) : null
   // Notes always show "Notes" in breadcrumb regardless of which space opened the split
   const currentSpace = pane === 'secondary' ? 'notes' as ActivitySpace : activeSpace
 
@@ -81,7 +85,7 @@ export function EditorBreadcrumb({ note, onClose, pane = 'primary' }: EditorBrea
     usePlotStore.getState().setSelectedNoteId(null)
     const currentRoute = getActiveRoute()
     setActiveRoute("/notes")
-    setActiveFolderId(note.folderId)
+    setActiveFolderId(primaryFolderId)
     if (currentRoute !== "/notes") router.push("/notes")
   }
 

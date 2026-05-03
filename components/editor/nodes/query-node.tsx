@@ -132,7 +132,12 @@ function NoteRow({
             {col === "status" && <StatusBadge status={note.status} />}
             {col === "folder" && (
               <span className="text-2xs text-muted-foreground truncate block">
-                {note.folderId ? (folderNames.get(note.folderId) ?? "—") : "—"}
+                {/* v107 N:M: query-node row shows primary folder (folderIds[0]).
+                    PR (b) introduces multi-folder rendering across views. */}
+                {(() => {
+                  const fid = note.folderIds[0]
+                  return fid ? (folderNames.get(fid) ?? "—") : "—"
+                })()}
               </span>
             )}
             {col === "label" && (

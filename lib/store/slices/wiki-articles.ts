@@ -16,9 +16,13 @@ export function createWikiArticlesSlice(set: Set, get: Get) {
       aliases?: string[]
       tags?: string[]
       blocks?: WikiBlock[]
-      /** Optional folder containment — set when created from inside a
-       *  folder page so the new article is automatically a member. */
-      folderId?: string | null
+      /**
+       * Optional folder containment (v107 N:M). Set when created from inside
+       * a folder page so the new article is automatically a member of that
+       * folder. Caller is responsible for passing only `kind="wiki"` folder
+       * ids — kind validation lives in PR (b) UI layer.
+       */
+      folderIds?: string[]
     }) => {
       const id = genId()
       const blocks = partial.blocks ?? [
@@ -36,7 +40,7 @@ export function createWikiArticlesSlice(set: Set, get: Get) {
         blocks,
         sectionIndex: buildSectionIndex(blocks),
         tags: partial.tags ?? [],
-        folderId: partial.folderId ?? null,
+        folderIds: partial.folderIds ?? [],
         linksOut: extractLinksFromWikiBlocks(blocks),
         reads: 0,
         createdAt: now(),
@@ -345,7 +349,8 @@ export function createWikiArticlesSlice(set: Set, get: Get) {
 
       if (extractedBlocks.length === 0 || remainingBlocks.length === 0) return null
 
-      // Create new article with extracted blocks
+      // Create new article with extracted blocks. Folder membership inherits
+      // from the source so the split-off article stays grouped with siblings.
       const newId = genId()
       const newArticle: WikiArticle = {
         id: newId,
@@ -355,6 +360,7 @@ export function createWikiArticlesSlice(set: Set, get: Get) {
         blocks: extractedBlocks,
         sectionIndex: buildSectionIndex(extractedBlocks),
         tags: [...source.tags],
+        folderIds: [...(source.folderIds ?? [])],
         linksOut: extractLinksFromWikiBlocks(extractedBlocks),
         createdAt: now(),
         updatedAt: now(),
@@ -414,6 +420,7 @@ export function createWikiArticlesSlice(set: Set, get: Get) {
         blocks: clonedBlocks,
         sectionIndex: buildSectionIndex(clonedBlocks),
         tags: [...source.tags],
+        folderIds: [...(source.folderIds ?? [])],
         linksOut: extractLinksFromWikiBlocks(clonedBlocks),
         createdAt: now(),
         updatedAt: now(),
@@ -452,7 +459,9 @@ export function createWikiArticlesSlice(set: Set, get: Get) {
 
       if (extractedBlocks.length === 0) return null
 
-      // Recreate the original article from snapshot
+      // Recreate the original article from snapshot. Folder membership
+      // is not part of the merge snapshot (legacy field) — restored articles
+      // start unfoldered; user can re-file them.
       const restoredId = genId()
       const restoredArticle: WikiArticle = {
         id: restoredId,
@@ -462,6 +471,7 @@ export function createWikiArticlesSlice(set: Set, get: Get) {
         blocks: extractedBlocks,
         sectionIndex: buildSectionIndex(extractedBlocks),
         tags: snapshot.tags,
+        folderIds: [],
         createdAt: snapshot.mergedAt,
         updatedAt: now(),
       }
@@ -603,7 +613,12 @@ export function createWikiArticlesSlice(set: Set, get: Get) {
 
         return targetId
       } else {
-        // Mode: create new article
+        // Mode: create new article. Union of folder memberships across
+        // sources — keeps the merged article reachable from every folder
+        // that previously contained any constituent.
+        const folderIdsUnion = Array.from(
+          new Set(sources.flatMap((s) => s.folderIds ?? [])),
+        )
         const newId = genId()
         const newArticle: WikiArticle = {
           id: newId,
@@ -614,6 +629,7 @@ export function createWikiArticlesSlice(set: Set, get: Get) {
           sectionIndex,
           tags: Array.from(allTags),
           categoryIds: options.categoryIds,
+          folderIds: folderIdsUnion,
           linksOut,
           mergeHistory,
           createdAt: now(),
@@ -664,7 +680,9 @@ export function createWikiArticlesSlice(set: Set, get: Get) {
         ? extractedBlocks
         : JSON.parse(JSON.stringify(snapshot.blocks)) as WikiBlock[]
 
-      // Create restored article from snapshot
+      // Create restored article from snapshot. Folder membership is not
+      // captured in the snapshot (legacy field) — restored article starts
+      // unfoldered for the user to re-file.
       const restoredId = genId()
       const restoredArticle: WikiArticle = {
         id: restoredId,
@@ -674,6 +692,7 @@ export function createWikiArticlesSlice(set: Set, get: Get) {
         blocks: restorationBlocks,
         sectionIndex: buildSectionIndex(restorationBlocks),
         tags: [...snapshot.tags],
+        folderIds: [],
         linksOut: extractLinksFromWikiBlocks(restorationBlocks),
         createdAt: snapshot.mergedAt,
         updatedAt: now(),

@@ -238,7 +238,9 @@ export function NoteList({ filter }: { filter: NoteFilter }) {
             className="flex items-center gap-1 rounded-md bg-accent px-2 py-1 text-note font-medium text-accent-foreground transition-colors hover:bg-accent/80"
             onClick={() => createNote({
               status: filter.type === "inbox" ? "inbox" as const : undefined,
-              folderId: filter.type === "folder" ? filter.folderId : undefined,
+              // v107 N:M: createNote takes folderIds[]; route folder context
+              // becomes a single-element array.
+              folderIds: filter.type === "folder" ? [filter.folderId] : undefined,
               pinned: filter.type === "pinned" ? true : undefined,
             })}
           >

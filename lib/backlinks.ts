@@ -102,8 +102,11 @@ export function suggestBacklinks(
       reasons.push(`${sharedTags.length} shared tag(s)`)
     }
 
-    // (C) Same folder
-    if (target.folderId && other.folderId === target.folderId) {
+    // (C) Same folder — v107 N:M: any overlap counts as "same folder"
+    const sharedFolders = (target.folderIds ?? []).filter((fid) =>
+      (other.folderIds ?? []).includes(fid),
+    )
+    if (sharedFolders.length > 0) {
       score += 2
       reasons.push("same folder")
     }

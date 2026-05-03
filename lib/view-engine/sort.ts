@@ -25,8 +25,12 @@ function compareSingle(
       return dir * (PRIORITY_ORDER[a.priority] - PRIORITY_ORDER[b.priority])
 
     case "folder": {
-      const aFolder = a.folderId ?? ""
-      const bFolder = b.folderId ?? ""
+      // v107 N:M: a note can belong to multiple folders. Use the first
+      // folder id as the stable sort key — alphabetical by id achieves
+      // the same grouping behaviour as before. UI may display only
+      // `folderIds[0]` until PR (b) introduces multi-chip rendering.
+      const aFolder = a.folderIds[0] ?? ""
+      const bFolder = b.folderIds[0] ?? ""
       return dir * aFolder.localeCompare(bFolder)
     }
 

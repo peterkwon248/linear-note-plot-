@@ -281,8 +281,12 @@ export interface WikiArticle {
   sectionIndex: WikiSectionIndex[]
   tags: string[]
   categoryIds?: string[]           // references to WikiCategory.id (DAG)
-  /** Folder membership (mirrors Note.folderId). Enables unified note+wiki grouping by folder. */
-  folderId?: string | null
+  /**
+   * Folder membership — N:M (a wiki article can live in any number of
+   * `kind="wiki"` folders). v107 migration converts the legacy single
+   * `folderId` (PR #236) into this array. Empty = no folders.
+   */
+  folderIds: string[]
   // Sticker membership lives on Sticker.members[] (옵션 D2). Reverse
   // lookup via `useStickerMembers({ kind: "wiki", id })` hook.
   layout?: WikiLayout              // article layout mode (default: "default")
@@ -330,7 +334,12 @@ export interface Note {
   title: string
   content: string
   contentJson: Record<string, unknown> | null
-  folderId: string | null
+  /**
+   * Folder membership — N:M (a note can live in any number of `kind="note"`
+   * folders simultaneously). v107 migration converts the legacy single
+   * `folderId` into this array. Empty = no folders.
+   */
+  folderIds: string[]
   tags: string[]
   // Sticker membership lives on Sticker.members[] (옵션 D2). Reverse
   // lookup via `useStickerMembers({ kind: "note", id })` hook.
@@ -386,6 +395,14 @@ export interface Folder {
   pinned: boolean
   pinnedOrder: number
   createdAt: string
+  /**
+   * Folder type discriminator (v107). A folder accepts either notes
+   * (`kind="note"`) or wiki articles (`kind="wiki"`), never both. The
+   * v107 migration infers this from existing membership; new folders
+   * must specify `kind` at creation. Immutable after creation — see
+   * `.omc/plans/folder-nm-migration.md` §"Must NOT Have".
+   */
+  kind: "note" | "wiki"
 }
 
 export interface Tag {

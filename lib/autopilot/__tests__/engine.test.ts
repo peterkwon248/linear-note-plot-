@@ -12,7 +12,7 @@ function makeNote(overrides: Partial<Note> = {}): Note {
     title: "Test Note",
     content: "",
     contentJson: null,
-    folderId: null,
+    folderIds: [],
     tags: [],
     labelId: null,
     status: "inbox",

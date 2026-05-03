@@ -490,7 +490,10 @@ export function LinearSidebar() {
   const handleNewFolderSubmit = () => {
     const name = newFolderName.trim()
     if (name) {
-      createFolder(name, PRESET_COLORS[5])
+      // v107 PR (a): sidebar's "+ New folder" lives in the Notes context →
+      // creates a `kind="note"` folder. PR (b) adds an analogous Wiki
+      // section that creates `kind="wiki"`.
+      createFolder(name, "note", PRESET_COLORS[5])
     }
     setNewFolderOpen(false)
     setNewFolderName("")
@@ -688,11 +691,13 @@ export function LinearSidebar() {
     )
   }
 
-  // Folder = global container (notes + wiki articles). Sidebar count
-  // sums both so the user sees the true content of each folder at a glance.
+  // v107 N:M: a folder's count = members across both kinds. PR (b) splits
+  // this into two contexts (Notes Folders count = notes only; Wiki Folders
+  // count = wikis only) once the sidebar has separate sections per kind.
+  // Until then we keep the unified sum so existing UI doesn't regress.
   const notesInFolder = (folderId: string) => {
-    const noteCount = notes.filter((n) => n.folderId === folderId && !n.trashed).length
-    const wikiCount = wikiArticles.filter((w) => w.folderId === folderId).length
+    const noteCount = notes.filter((n) => n.folderIds.includes(folderId) && !n.trashed).length
+    const wikiCount = wikiArticles.filter((w) => w.folderIds.includes(folderId)).length
     return noteCount + wikiCount
   }
 

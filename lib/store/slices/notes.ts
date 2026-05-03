@@ -27,14 +27,20 @@ export function createNotesSlice(set: Set, get: Get, appendEvent: AppendEventFn)
         labelId = memoLabel.id
       }
 
+      // Folder membership (v107 N:M). Priority order:
+      //   1. Explicit `partial.folderIds` from caller (any source)
+      //   2. Active view if user is inside a folder route (auto-classify
+      //      newly created notes into the visible folder)
+      //   3. Empty (no folder)
+      const folderIds = partial?.folderIds ??
+        (activeView.type === "folder" ? [activeView.folderId] : [])
+
       const newNote: Note = {
         id,
         title: partial?.title ?? "",
         content,
         contentJson: partial?.contentJson ?? null,
-        folderId:
-          partial?.folderId ??
-          (activeView.type === "folder" ? activeView.folderId : null),
+        folderIds,
         tags: partial?.tags ?? [],
         status: partial?.status ?? "inbox",
         priority: partial?.priority ?? "none",
@@ -318,7 +324,7 @@ export function createNotesSlice(set: Set, get: Get, appendEvent: AppendEventFn)
         title: titleForNew,
         content: "",
         contentJson: extractedJson,
-        folderId: source.folderId,
+        folderIds: [...source.folderIds],
         tags: [...source.tags],
         status: "inbox",
         priority: "none",
@@ -407,7 +413,7 @@ export function createNotesSlice(set: Set, get: Get, appendEvent: AppendEventFn)
         title: "",
         content: "",
         contentJson: null,
-        folderId: parent.folderId,
+        folderIds: [...parent.folderIds],
         tags: [...parent.tags],
         status: parent.status,
         priority: "none",
@@ -499,7 +505,7 @@ export function createNotesSlice(set: Set, get: Get, appendEvent: AppendEventFn)
         title,
         content: templateContent,
         contentJson: null,
-        folderId: null,
+        folderIds: [],
         tags: [],
         status: "inbox",
         priority: "none",
