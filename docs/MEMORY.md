@@ -28,7 +28,55 @@
 
 ---
 
-## 🚀 2026-05-03 세션 — 대규모 디자인 토론 + Hull 버그 fix
+## 🚀 2026-05-03 (오후 후반) — 11 PRs 머지 거대 세션
+
+**범위**: 디자인 결정 → 즉시 구현. 6시간 동안 11 PRs squash-merge to main.
+
+### 머지된 PRs (순서)
+- **#237** 옵션 B: 11 commits 묶음 (33 design decisions + Hull 버그 fix + Sticker 사이드바)
+- **#238** Sticker v2 Phase 1 — 데이터 모델 (옵션 D2, `Sticker.members[]` cross-everything, v100→v101)
+- **#239** Sticker v2 Phase 2 — Library 진입점 + cross-everything detail + cascade cleanup
+- **#240** docs — 6 design decisions (Folder type-strict re-confirm + Smart Book + Template policy)
+- **#241** notes 인덱스 버그 — virtualItems가 groupBy="none"에서 showAlphaIndex 무시 (1줄 fix)
+- **#242** 노트 템플릿 UpNote Phase 1/3 — `{{YYYY}}` 변수 호환 + SelectFromTemplatesModal + Insert 메뉴
+- **#243** Group A 색상 통일 — `KNOWLEDGE_INDEX_COLORS` const + wiki status emerald + graph wiki violet 보존
+- **#244** Group A 아이콘 통일 — IconWiki→BookOpen alias (13 사이트 자동) + IconWikiStub/Article 활성화
+- **#245** Group C PR-A — wiki board 도달 (showViewMode prop) + notes board visibleColumns + boardDefaultGroupBy
+- **#246** Template PR a — 메타 슬림화 (icon/color 폐기, v101→v102)
+- **#247** Template PR b — 편집 UI 통합 (NoteEditor 재사용 + TemplateDetailPanel 사이드 패널)
+
+### 핵심 결정사항 (재확정 / 신규)
+- **Folder type-strict + N:M** (33 §2 재확정, 마이그레이션 미구현 → 큰 PR 예정)
+- **Smart Book = AutoSource[]** 5종 (folder/category/tag/label/sticker) — 엑셀 함수 패턴
+- **Note template = UpNote opt A only** (메타 슬림 + 사이드 패널, Smart Template = v2 보류)
+- **Wiki status 색 분리**: stub=orange, article=emerald, entity=violet (wiki entity ≠ article state)
+- **Sticker = cross-everything Library only** 진입점 (33 §8 정정)
+- **Plot 정체성 영구 정의**: "Gentle by default, powerful when needed"
+- **작업 원칙 영구 정의**: "정확도 + 버그 위험 최소화" (10가지 규칙)
+
+### 다음 세션 우선순위 (순서)
+1. **Template PR c** — template-only views (filter/display + view-engine)
+2. **Template PR d** — 시드 10-20개 clean slate
+3. **Group C PR-D** — Tags/Labels/Stickers/Refs/Files view-engine 통합 (5-8 PRs, 큰 작업)
+4. **Wiki template 3-layer** (Layout Preset + Content Template + Typed Infobox)
+5. **§2 Folder type-strict + N:M 마이그레이션** (큰 PR)
+6. **Smart Book v2** (AutoSource + Sticker source + Hybrid manual/auto)
+7. **Template seed audit** (`PlotTemplate<T>` 추상화 — 인포박스/배너/카테고리 등 통합)
+8. **(마지막) Note UI toolbar** (UpNote-style, minimalist 5-6 buttons, configurable, "Organize..." multi-action)
+
+### 기술 학습
+- **IconWiki → BookOpen alias 1줄 수정 = 13 site 자동 적용** (`export { BookOpen as IconWiki }`)
+- **DisplayConfig interface 두 곳 중복 정의** (display-panel.tsx + view-configs.tsx) — 향후 통합 검토
+- **TemplateEditorAdapter thin fork (140 LOC) vs NoteEditorAdapter (460 LOC)** — Y.Doc/IDB body/hashtag-sync 생략으로 충분
+- **architect Opus agent stalled 17분 사례** — 큰 PR (615+/317- 6 files) 검증 시 시간 weight 고려, medium 옵션 검토
+- **Store: v100 → v101 (Sticker.members) → v102 (Template icon/color drop)**
+
+### Plan 문서 보존
+`.omc/plans/template-b-edit-ui-unification.md` — Template PR b planner 결과물 (다음 PR 참고)
+
+---
+
+## 🚀 2026-05-03 (오전) — 대규모 디자인 토론 + Hull 버그 fix
 
 **범위**: 코드 변경 (Hull 버그 fix 3개) + 33개 디자인 결정 (앞으로 작업 방향)
 

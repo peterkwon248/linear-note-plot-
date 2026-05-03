@@ -208,3 +208,67 @@
 - legacy `isWiki` 모델 (Note에 wiki 분류) deprecated
 - `buildOntologyGraphData`에 WikiArticle 별도 노드 (`wiki:{id}` prefix)
 - parent-child hierarchy + note-ref edges
+
+## 2026-05-03 (Session: 11 PRs merged)
+
+### Plot 정체성 영구 정의
+- "Gentle by default, powerful when needed."
+
+### 작업 원칙 영구 정의 (10 rules)
+1. 변경 전 점검 (추측 X)
+2. 최소 diff (executor scope 초과 X)
+3. 빌드/타입 검증 의무
+4. 사용자 reproduce 정보 우선
+5. 마이그레이션 신중
+6. UI + 데이터 모델 분리 PR
+7. Edge case 점검
+8. 사용자 직관 = 디자인 시그널
+9. docs는 진실 source
+10. 커밋 메시지 명시 (무엇/왜/검증)
+
+### 4사분면 컨테이너 모델 (33 design decisions §1)
+```
+                Unordered (collection)    Ordered (sequence)
+Type-strict     Folder                    (의미 약함)
+Type-free       Sticker                   Book
+```
+
+### Folder type-strict + N:M (33 §2 재확정)
+- 노트 폴더 = 노트만, 위키 폴더 = 위키만
+- N:M 멤버십 (한 노트 → 여러 폴더)
+- 현재 코드는 cross-everything (PR #236, 임시), 큰 PR로 마이그레이션 예정
+- 통합은 Sticker가 담당 (33 §1 4사분면 정합)
+
+### Sticker v2 = cross-everything (33 §3)
+- 옵션 D2 (정참조 단일): `Sticker.members: EntityRef[]`
+- 7 EntityKind: note/wiki/tag/label/category/file/reference
+- 진입점 = Library only (33 §8)
+
+### Smart Book = AutoSource[] (33 §4 확장 2026-05-03)
+- 엑셀 함수 패턴: 여러 source 조합 → chapters 자동 생성
+- 5 source types: folder/category/tag/label/sticker
+- Sticker source가 가장 강력 (이미 cross-everything)
+- Hybrid: 일부 manual + 일부 auto + excludeIds[]
+- Book template 시스템 X (Smart Book이 대체)
+
+### Note template = UpNote opt A only (33 §15)
+- "준비된 빈 노트" — 단순 복사 + 변수 치환
+- 변수: 양쪽 패턴 (`{date}` + `{{YYYY}}`) additive
+- 4 진입점 ("건물 하나, 출입구 여러 개"): slash / 우클릭 / Insert / placeholder
+- icon/color 폐기 (v102) — labelId가 single source
+- Smart Template (옵션 C) → v2 재검토 (Smart Book과 멘탈모델 겹침)
+
+### 위키 status 색 분리 (PR #243)
+- stub=orange (in-progress, Notes capture 미러)
+- article=emerald (complete, Notes permanent 미러)
+- wiki entity=violet (`SPACE_COLORS.wiki`, 그래프 노드 + 사이드바)
+
+### KNOWLEDGE_INDEX_COLORS 단일 source (PR #243)
+- 6 cross-cutting entities: notes/wiki/tags/references/files/stickers
+- text + bg + hex 3종, light+dark Tailwind
+- Home + Library + 사이드패널 모두 import
+
+### IconWiki = BookOpen alias (PR #244)
+- legacy alias로 13 site 자동 마이그레이션
+- 새 코드는 BookOpen 직접 import 권장 (deprecated 마킹)
+- IconWikiArticle / IconWikiStub은 status icon으로 활성화 (이전 dead code)

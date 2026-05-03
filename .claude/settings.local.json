@@ -165,7 +165,14 @@
       "Bash(grep -rn \">in<\\\\|{\\\\\"in\\\\\"}\\\\|\\\\\\\\bin\\\\\\\\b.*linksOut\" components/ --include=\"*.tsx\")",
       "Bash(grep -v \"//\")",
       "WebFetch(domain:www.palantir.com)",
-      "WebFetch(domain:graphaware.com)"
+      "WebFetch(domain:graphaware.com)",
+      "Bash(:)",
+      "Read(//c/Users/user/AppData/Local/Temp/claude/C--Users-user-Desktop-linear-note-plot---claude-worktrees-zen-tesla-36e76e/bf24726c-503b-4dfa-9132-66367bd17e33/tasks/**)",
+      "Bash(kill %1)",
+      "Bash(awk '{print $5, $6, $7, $8}')",
+      "Bash(awk '{print \"size:\", $5, \"mtime:\", $6, $7, $8}')",
+      "Read(//c/Users/user/.claude/.omc-worklog/**)",
+      "Bash(cp ~/.claude/.omc-worklog/latest.md ~/.claude/.omc-worklog/2026-05-03_1610.md)"
     ]
   }
 }
