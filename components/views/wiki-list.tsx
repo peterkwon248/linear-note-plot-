@@ -8,6 +8,7 @@ import { setWikiViewMode } from "@/lib/wiki-view-mode"
 import { isWikiStub } from "@/lib/wiki-utils"
 import { usePlotStore } from "@/lib/store"
 import { WIKI_STATUS_HEX } from "@/lib/colors"
+import { IconWikiStub, IconWikiArticle } from "@/components/plot-icons"
 import type { WikiArticle, WikiCategory } from "@/lib/types"
 import type { GroupBy } from "@/lib/view-engine/types"
 import type { WikiGroup } from "@/lib/view-engine/wiki-list-pipeline"
@@ -15,9 +16,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Check as PhCheck } from "@phosphor-icons/react/dist/ssr/Check"
 import { Minus } from "@phosphor-icons/react/dist/ssr/Minus"
 import { ArrowLeft } from "@phosphor-icons/react/dist/ssr/ArrowLeft"
-import { Warning } from "@phosphor-icons/react/dist/ssr/Warning"
 import { BookOpen } from "@phosphor-icons/react/dist/ssr/BookOpen"
-import { FileDashed } from "@phosphor-icons/react/dist/ssr/FileDashed"
 import { ListBullets } from "@phosphor-icons/react/dist/ssr/ListBullets"
 import { GitMerge } from "@phosphor-icons/react/dist/ssr/GitMerge"
 import { DotsThree } from "@phosphor-icons/react/dist/ssr/DotsThree"
@@ -368,26 +367,33 @@ function ArticleTableRow({
             onClick()
           }
         }}
-        className="flex flex-1 items-center text-left min-w-0"
+        className="flex flex-1 items-center gap-2 text-left min-w-0"
       >
+        {/* Always-on leading status icon — gives a stub/article hint at the
+            title row even when the optional Status column is hidden. Color
+            is muted-foreground to avoid competing with the title; the rich
+            color appears only in the Status column badge. */}
+        {isWikiStub(note) ? (
+          <IconWikiStub size={14} className="shrink-0 text-muted-foreground" />
+        ) : (
+          <IconWikiArticle size={14} className="shrink-0 text-muted-foreground" />
+        )}
         <span className="min-w-0 flex-1 truncate text-note font-medium text-foreground/90">
           {note.title || "Untitled"}
         </span>
       </button>
       {isVisible("status") && (
         <div className="w-[72px] shrink-0 flex items-center px-2">
-          {/* Status badges use WIKI_STATUS_HEX (single source of truth).
-              Stub = orange (in-progress), Article = emerald (complete) —
-              mirrors Notes capture/permanent semantic. The wiki entity
-              violet stays reserved for entity-level surfaces (sidebar,
-              activity-bar). Icons (FileDashed/BookOpen) will be replaced
-              in the icon-PR with Article + FileDashed pair. */}
+          {/* Status badges use the dedicated IconWikiStub / IconWikiArticle
+              icons (defined in components/plot-icons.tsx) — distinct from
+              the BookOpen used for the wiki ENTITY in the activity bar /
+              sidebar. Color from WIKI_STATUS_HEX (orange/emerald). */}
           {isWikiStub(note) ? (
             <span
               className="inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-2xs font-medium"
               style={{ color: WIKI_STATUS_HEX.stub, backgroundColor: `${WIKI_STATUS_HEX.stub}26` }}
             >
-              <FileDashed size={11} weight="regular" />
+              <IconWikiStub size={11} />
               Stub
             </span>
           ) : (
@@ -395,7 +401,7 @@ function ArticleTableRow({
               className="inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-2xs font-medium"
               style={{ color: WIKI_STATUS_HEX.article, backgroundColor: `${WIKI_STATUS_HEX.article}26` }}
             >
-              <BookOpen size={11} weight="regular" />
+              <IconWikiArticle size={11} />
               Article
             </span>
           )}

@@ -17,7 +17,8 @@ import { FileText, Asterisk, Link as LinkIcon, Hash } from "@/lib/editor/editor-
 import { CircleDashed } from "@phosphor-icons/react/dist/ssr/CircleDashed"
 import { CircleHalf } from "@phosphor-icons/react/dist/ssr/CircleHalf"
 import { CheckCircle } from "@phosphor-icons/react/dist/ssr/CheckCircle"
-import { IconWiki } from "@/components/plot-icons"
+import { BookOpen } from "@phosphor-icons/react/dist/ssr/BookOpen"
+import { IconWikiStub, IconWikiArticle } from "@/components/plot-icons"
 import { NOTE_STATUS_HEX, WIKI_STATUS_HEX } from "@/lib/colors"
 import { usePlotStore } from "@/lib/store"
 import { isWikiStub } from "@/lib/wiki-utils"
@@ -286,14 +287,20 @@ const WikilinkList = forwardRef<WikilinkListRef, WikilinkListProps>(
                       ) : item.isNewWiki ? (
                         <>
                           <span className="text-accent text-2xs">+</span>
-                          <IconWiki size={14} className="shrink-0 text-accent" />
+                          {/* Create-Wiki uses BookOpen (entity icon, matches activity bar). */}
+                          <BookOpen size={14} weight="regular" className="shrink-0 text-accent" />
                           <span className="truncate font-medium text-foreground">{item.title}</span>
                           <span className="ml-auto shrink-0 text-2xs text-accent">+ Create Wiki</span>
                         </>
                       ) : (
                         <>
                           {item.isWiki ? (
-                            <IconWiki size={14} className="shrink-0" style={{ color: item.isStub ? WIKI_STATUS_HEX.stub : WIKI_STATUS_HEX.article }} />
+                            // Existing wiki — split by status: stub vs article icon.
+                            item.isStub ? (
+                              <IconWikiStub size={14} className="shrink-0" style={{ color: WIKI_STATUS_HEX.stub }} />
+                            ) : (
+                              <IconWikiArticle size={14} className="shrink-0" style={{ color: WIKI_STATUS_HEX.article }} />
+                            )
                           ) : item.status === "inbox" ? (
                             <CircleDashed className="shrink-0" size={14} style={{ color: NOTE_STATUS_HEX.inbox }} />
                           ) : item.status === "capture" ? (
