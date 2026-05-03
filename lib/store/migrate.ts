@@ -1409,5 +1409,22 @@ export function migrate(persistedState: unknown): PlotState {
     ;(state as any).stickers = stickersArr.map((s) => stickerById.get(s.id) ?? { ...s, members: [] })
   }
 
+  // v102: Template meta slimming — strip legacy `icon` (emoji) and
+  // `color` (hex) fields from NoteTemplate. Templates now derive their
+  // visual cues from the linked `labelId` (single source of truth,
+  // matching how notes themselves work). UI cleanup:
+  // - Templates list/grid no longer renders the per-template icon/color
+  // - TemplateFormDialog no longer prompts for icon/color
+  // - createNoteFromTemplate no longer copies these fields onto the new note
+  //
+  // Idempotent: subsequent runs find no `icon`/`color` keys and no-op.
+  if (Array.isArray((state as any).templates)) {
+    for (const t of (state as any).templates as any[]) {
+      if (!t) continue
+      delete t.icon
+      delete t.color
+    }
+  }
+
   return state as unknown as PlotState
 }
