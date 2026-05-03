@@ -1,4 +1,4 @@
-import type { Note, WikiArticle, Sticker } from "../../types"
+import type { EntityRef, Sticker } from "../../types"
 import { genId, now } from "../helpers"
 
 type Set = (fn: ((state: any) => any) | any) => void
@@ -12,6 +12,19 @@ const STICKER_DEFAULT_PALETTE = [
   "#ec4899", "#f43f5e",
 ]
 
+/** True when two refs point at the same entity. */
+function refEquals(a: EntityRef, b: EntityRef): boolean {
+  return a.kind === b.kind && a.id === b.id
+}
+
+/**
+ * Sticker slice — cross-everything membership (옵션 D2).
+ *
+ * Membership lives on `Sticker.members: EntityRef[]` (single forward
+ * reference). Reverse lookup ("which stickers does this entity belong
+ * to?") is provided by the `useStickerMembers` hook in
+ * `lib/hooks/use-sticker-members.ts`.
+ */
 export function createStickersSlice(set: Set, get: Get) {
   return {
     /** Create a new sticker. Color cycles through the palette if omitted. */
@@ -24,6 +37,7 @@ export function createStickersSlice(set: Set, get: Get) {
         id,
         name,
         color: finalColor,
+        members: [],
         createdAt: now(),
       }
       set((state: any) => ({
@@ -40,7 +54,7 @@ export function createStickersSlice(set: Set, get: Get) {
       }))
     },
 
-    /** Soft delete — keeps the sticker in store with trashed flag. */
+    /** Soft delete — keeps the sticker (and its members) with trashed flag. */
     deleteSticker: (id: string) => {
       set((state: any) => ({
         stickers: (state.stickers ?? []).map((s: Sticker) =>
@@ -57,93 +71,74 @@ export function createStickersSlice(set: Set, get: Get) {
       }))
     },
 
-    /** Hard delete + cascade removal from all notes/wiki stickerIds. */
+    /**
+     * Hard delete — drops the sticker entirely. Membership rows live on
+     * the sticker itself (옵션 D2), so removing it implicitly drops every
+     * reverse pointer. No cascade across notes/wikis required.
+     */
     permanentlyDeleteSticker: (id: string) => {
       set((state: any) => ({
         stickers: (state.stickers ?? []).filter((s: Sticker) => s.id !== id),
-        notes: state.notes.map((n: Note) =>
-          n.stickerIds?.includes(id)
-            ? { ...n, stickerIds: n.stickerIds.filter((sid: string) => sid !== id) }
-            : n
-        ),
-        wikiArticles: state.wikiArticles.map((w: WikiArticle) =>
-          w.stickerIds?.includes(id)
-            ? { ...w, stickerIds: w.stickerIds.filter((sid: string) => sid !== id) }
-            : w
-        ),
       }))
     },
 
-    /** Add a sticker to a single note. */
-    addNoteSticker: (noteId: string, stickerId: string) => {
+    /** Attach a single entity to a sticker (idempotent). */
+    addStickerMember: (stickerId: string, ref: EntityRef) => {
       set((state: any) => ({
-        notes: state.notes.map((n: Note) => {
-          if (n.id !== noteId) return n
-          const current = n.stickerIds ?? []
-          if (current.includes(stickerId)) return n
-          return { ...n, stickerIds: [...current, stickerId] }
+        stickers: (state.stickers ?? []).map((s: Sticker) => {
+          if (s.id !== stickerId) return s
+          const members = s.members ?? []
+          if (members.some((m) => refEquals(m, ref))) return s
+          return { ...s, members: [...members, ref] }
         }),
       }))
     },
 
-    /** Remove a sticker from a single note. */
-    removeNoteSticker: (noteId: string, stickerId: string) => {
+    /** Detach a single entity from a sticker. No-op if not a member. */
+    removeStickerMember: (stickerId: string, ref: EntityRef) => {
       set((state: any) => ({
-        notes: state.notes.map((n: Note) =>
-          n.id === noteId && n.stickerIds
-            ? { ...n, stickerIds: n.stickerIds.filter((sid: string) => sid !== stickerId) }
-            : n
-        ),
-      }))
-    },
-
-    /** Add a sticker to a single wiki article. */
-    addWikiSticker: (wikiId: string, stickerId: string) => {
-      set((state: any) => ({
-        wikiArticles: state.wikiArticles.map((w: WikiArticle) => {
-          if (w.id !== wikiId) return w
-          const current = w.stickerIds ?? []
-          if (current.includes(stickerId)) return w
-          return { ...w, stickerIds: [...current, stickerId] }
+        stickers: (state.stickers ?? []).map((s: Sticker) => {
+          if (s.id !== stickerId) return s
+          const members = s.members ?? []
+          const next = members.filter((m) => !refEquals(m, ref))
+          if (next.length === members.length) return s
+          return { ...s, members: next }
         }),
-      }))
-    },
-
-    /** Remove a sticker from a single wiki article. */
-    removeWikiSticker: (wikiId: string, stickerId: string) => {
-      set((state: any) => ({
-        wikiArticles: state.wikiArticles.map((w: WikiArticle) =>
-          w.id === wikiId && w.stickerIds
-            ? { ...w, stickerIds: w.stickerIds.filter((sid: string) => sid !== stickerId) }
-            : w
-        ),
       }))
     },
 
     /**
-     * Bulk add sticker to a mixed entity selection (notes + wikis).
+     * Bulk add sticker to a mixed entity selection.
      * Used by the graph's marquee selection → "Add sticker..." flow.
-     * Entity ids are namespaced: bare id = note, "wiki:{id}" = wiki article.
+     *
+     * Entity IDs follow the graph-canvas namespacing:
+     *   - bare ID            = note
+     *   - `"wiki:{id}"`      = wiki article (graph canvas, today)
+     *   - `"tag:{id}"`       = tag node (graph canvas tag-node right-click, today)
+     *   - `"label:{id}"`     = reserved for the Phase 2 Universal Picker
+     *   - `"category:{id}"`  = reserved for the Phase 2 Universal Picker
+     *   - `"file:{id}"`      = reserved for the Phase 2 Universal Picker
+     *   - `"reference:{id}"` = reserved for the Phase 2 Universal Picker
      */
     bulkAddSticker: (entityIds: string[], stickerId: string) => {
-      const noteIds = new Set<string>()
-      const wikiIds = new Set<string>()
+      const newRefs: EntityRef[] = []
       for (const eid of entityIds) {
-        if (eid.startsWith("wiki:")) wikiIds.add(eid.slice(5))
-        else noteIds.add(eid)
+        if (eid.startsWith("wiki:")) newRefs.push({ kind: "wiki", id: eid.slice(5) })
+        else if (eid.startsWith("tag:")) newRefs.push({ kind: "tag", id: eid.slice(4) })
+        else if (eid.startsWith("label:")) newRefs.push({ kind: "label", id: eid.slice(6) })
+        else if (eid.startsWith("category:")) newRefs.push({ kind: "category", id: eid.slice(9) })
+        else if (eid.startsWith("file:")) newRefs.push({ kind: "file", id: eid.slice(5) })
+        else if (eid.startsWith("reference:")) newRefs.push({ kind: "reference", id: eid.slice(10) })
+        else newRefs.push({ kind: "note", id: eid })
       }
+      if (newRefs.length === 0) return
       set((state: any) => ({
-        notes: state.notes.map((n: Note) => {
-          if (!noteIds.has(n.id)) return n
-          const current = n.stickerIds ?? []
-          if (current.includes(stickerId)) return n
-          return { ...n, stickerIds: [...current, stickerId] }
-        }),
-        wikiArticles: state.wikiArticles.map((w: WikiArticle) => {
-          if (!wikiIds.has(w.id)) return w
-          const current = w.stickerIds ?? []
-          if (current.includes(stickerId)) return w
-          return { ...w, stickerIds: [...current, stickerId] }
+        stickers: (state.stickers ?? []).map((s: Sticker) => {
+          if (s.id !== stickerId) return s
+          const members = s.members ?? []
+          const additions = newRefs.filter((r) => !members.some((m) => refEquals(m, r)))
+          if (additions.length === 0) return s
+          return { ...s, members: [...members, ...additions] }
         }),
       }))
     },

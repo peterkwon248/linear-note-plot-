@@ -1,4 +1,4 @@
-import type { Note, NoteBody, Folder, Tag, Label, Sticker, NoteTemplate, ActiveView, NoteEvent, Thread, AutopilotRule, AutopilotLogEntry, Relation, RelationType, Attachment, CoOccurrence, RelationSuggestion, WikiClusterSuggestion, WikiInfoboxEntry, WikiCollectionItem, SavedView, WikiArticle, WikiBlock, WikiCategory, Reference, GlobalBookmark, Comment, CommentAnchor } from "../types"
+import type { Note, NoteBody, Folder, Tag, Label, Sticker, EntityRef, NoteTemplate, ActiveView, NoteEvent, Thread, AutopilotRule, AutopilotLogEntry, Relation, RelationType, Attachment, CoOccurrence, RelationSuggestion, WikiClusterSuggestion, WikiInfoboxEntry, WikiCollectionItem, SavedView, WikiArticle, WikiBlock, WikiCategory, Reference, GlobalBookmark, Comment, CommentAnchor } from "../types"
 import type { SRSState, SRSRating } from "@/lib/srs"
 import type { ViewState, ViewContextKey } from "../view-engine/types"
 import type { WorkspaceTab } from "../workspace/types"
@@ -201,17 +201,17 @@ export interface PlotState {
   permanentlyDeleteLabel: (id: string) => void
   setNoteLabel: (noteId: string, labelId: string | null) => void
 
-  // ── Stickers (cross-entity grouping marker) ──
+  // ── Stickers (cross-everything grouping marker, 옵션 D2) ──
   createSticker: (name: string, color?: string) => string
   updateSticker: (id: string, updates: Partial<Pick<Sticker, "name" | "color">>) => void
   deleteSticker: (id: string) => void
   restoreSticker: (id: string) => void
   permanentlyDeleteSticker: (id: string) => void
-  addNoteSticker: (noteId: string, stickerId: string) => void
-  removeNoteSticker: (noteId: string, stickerId: string) => void
-  addWikiSticker: (wikiId: string, stickerId: string) => void
-  removeWikiSticker: (wikiId: string, stickerId: string) => void
-  /** Bulk apply: entityIds use "wiki:<id>" prefix for wikis, bare for notes. */
+  /** Attach a single entity to a sticker (idempotent). */
+  addStickerMember: (stickerId: string, ref: EntityRef) => void
+  /** Detach a single entity from a sticker. */
+  removeStickerMember: (stickerId: string, ref: EntityRef) => void
+  /** Bulk apply: entityIds use "wiki:<id>"/"tag:<id>"/etc. prefix; bare = note. */
   bulkAddSticker: (entityIds: string[], stickerId: string) => void
 
   // ── UI Actions ──
