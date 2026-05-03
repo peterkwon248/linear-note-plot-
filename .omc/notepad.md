@@ -1,60 +1,51 @@
-# Session Notepad (Updated: 2026-05-03 16:10)
+# Session Notepad (Updated: 2026-05-03 22:30)
 
 ## Critical Context
 
-### 영구 원칙 (모든 작업에 적용)
-- **디자인 원칙**: "Gentle by default, powerful when needed"
-- **작업 원칙**: "정확도 + 버그 위험 최소화" (10가지 규칙 — docs/MEMORY.md 참조)
+### 영구 원칙
+- **디자인**: "Gentle by default, powerful when needed"
+- **작업**: "정확도 + 버그 위험 최소화" (10가지 — docs/MEMORY.md)
 
-### 오늘 (2026-05-03) 11 PRs 머지
-- 디자인 결정 → 즉시 구현. main에 #237 ~ #247 squash-merged.
-- **현재 main HEAD**: #247 (Template PR b — edit UI unification) 머지 직후
-- **다음 worktree**: 새로 시작 권장 (이번 worktree는 일단락)
+### 오늘 (2026-05-03) 16 PRs 머지 (오전+오후+저녁)
+- 오전+오후: #237~#247 (Sticker v2, Group A/C, Template a/b, 33 design decisions)
+- 저녁: #249~#253 (Templates 시리즈 c/d/e + v106 migration + Folder N:M PR-a)
 
-## Active Tasks (다음 세션 — 우선순위 순)
+### Store Version 진화
+v100 → v107 (Sticker.members → Template icon/color drop → templates context → visibleColumns 단순화 → description 제거 → seed 9개 주입 → Folder kind+N:M)
 
-### 🟢 작은 폴리시 (1-3시간)
-- [ ] **Template PR c** — template-only views (filter/display + view-engine)
-- [ ] **Template PR d** — 시드 템플릿 10-20개 (clean slate, 회의록/일기/투두/Daily/PARA/소설/리서치 등)
+## Active Tasks (다음 세션 우선순위)
 
-### 🟡 중간 (3-5시간)
-- [ ] **Wiki template 3-layer** (Layout Preset + Content Template + Typed Infobox) — 위키 데이터 모델 위에 별도 설계
-- [ ] **Template seed audit** — `PlotTemplate<T>` 추상화 검토 (인포박스/배너/카테고리/시드 통합 가능성)
+### 🔴 즉시
+- [ ] **BUG**: 시드 템플릿 더블클릭 시 에러. 시드는 보이나 편집 안 됨. 콘솔 메시지 미수집. PR c~e 변경 추정. `template-edit-page.tsx` + `templates-table.tsx` row click 시점 디버깅.
 
-### 🔴 큰 작업 (수일)
-- [ ] **Group C PR-D** — Tags/Labels/Stickers/Refs/Files view-engine 통합 (5-8 PRs)
-- [ ] **§2 Folder type-strict + N:M 마이그레이션** — 큰 PR (cross-everything 임시 폐기)
-- [ ] **Smart Book v2** — AutoSource[5] + Sticker source + Hybrid manual/auto + Universal Picker
+### 🟡 PR (folder-b/c) — folder N:M 후속
+- [ ] **PR (folder-b)** UI 분리: 사이드바 Notes/Wiki 분리, /folder/[id] kind 분기, FolderPicker (4곳 dedup), DnD kind 검증
+- [ ] **PR (folder-c)** Multi-folder UX: chips, picker, DnD add vs move, group-by-folder N번 마커
 
-### 🟣 마지막 (출시 폴리시)
-- [ ] **Note UI toolbar** (UpNote-style) — Phase 1: Pin/Focus/Version 5-6 핵심 버튼만, configurable, "Organize..." multi-action (Folder/Tag/Label/Sticker)
+### 🔵 worklog 큰 작업
+- [ ] Wiki template 3-layer
+- [ ] Group C PR-D (5-8 PRs, planner 권장)
+- [ ] Smart Book v2
+- [ ] Template seed audit (`PlotTemplate<T>` 추상화)
 
-### 🟤 마지막에 논의 (결정 보류)
-- [ ] **House (계보 시각화)** — 노트 root/parent/children 전체 조망. 사용자 의견: "House" 명칭, 사이드바 More 진입, 노트+위키 둘 다. Claude 냉정 의견: 별도 entity 불필요, Graph view에 lineage mode + hierarchical layout + 사이드바 단축 링크로 대체 가능 (House 90% 커버). 다음 토론 시 결정.
+### 🟣 마지막
+- [ ] Note UI toolbar (UpNote-style)
+
+### 🟤 마지막에 논의 (보류)
+- [ ] **House (계보 시각화)** — Claude 의견: 별도 entity 불필요, Graph view에 lineage mode + sidebar 단축 링크로 대체 가능 (House 90% 커버). 다음 토론 시 결정.
 
 ## Polished Decisions (이번 세션)
-- **Folder type-strict + N:M** 재확정 (33 §2)
-- **Smart Book = AutoSource[]** 5종 (folder/category/tag/label/sticker)
-- **Note template = UpNote opt A** (메타 슬림 + 사이드 패널, Smart Template v2 보류)
-- **Wiki status 색**: stub=orange, article=emerald, entity=violet
-- **Sticker Library only 진입점**
+- **Templates 본질**: 선택 도구 → list+grid만, board 미지원
+- **Templates 디스플레이 properties**: Index/Updated/Created 3개만 (status/priority/label/folder/tags/description 폐기)
+- **NoteTemplate.status/priority/description**: default 값일 뿐. 카드 표시 폐기. 타입 필드 제거는 별도 PR.
+- **Linear chip system**: 도메인별 chip + 하드 캡 3개 + "+N more". pinned는 always-on.
+- **Folder type-strict + N:M**: 노트 폴더=노트만, 위키 폴더=위키만. 한 노트가 여러 폴더 가능.
+- **혼합 폴더 자동 분리** (마이그레이션): `{name}` (note) + `{name} (Wiki)` 두 폴더로
+- **Templates folderId**: single 유지 (YAGNI)
 
 ## Blockers
-- 없음
+- 시드 템플릿 더블클릭 에러 (사용자 워크플로우 차단) — 다음 세션 즉시 fix
 
-## Known Gotchas (다음 세션 주의)
-- **Tailwind v4 `border-[1.5px]`** 미적용 → `style={{ borderWidth: "1.5px" }}` 직접
-- **라이트모드 alpha** `/30~50` 흰 배경에서 거의 안 보임 → `/60+` 또는 `var(--muted-foreground)` 직접
-- **DisplayConfig interface 중복** — display-panel.tsx + view-configs.tsx 두 곳에 정의됨 (향후 통합)
-- **architect Opus agent**가 큰 PR (600+ LOC) 검증 시 stall 가능성 — medium 옵션 검토
-- **Store version 102** — Sticker.members[] (v101), Template icon/color drop (v102)
-- **Plan 문서**: `.omc/plans/template-b-edit-ui-unification.md` 보존 (다음 PR 참고)
-
-## Resume Commands
-```bash
-# 새 worktree에서 시작 (권장)
-cd C:/Users/user/Desktop/linear-note-plot-
-git pull origin main
-# 새 worktree 만들기 (claude code가 자동)
-npm install  # in new worktree
-```
+## Plans 보존
+- `.omc/plans/folder-nm-migration.md` — PR (folder-b/c) 명세
+- `.omc/plans/template-b-edit-ui-unification.md` — 이전 PR b
