@@ -1,27 +1,37 @@
 "use client"
 
 /**
- * Folder detail page — global container view.
+ * Folder detail page — type-strict container view (v107 / PR folder-b).
  *
- * Folders in Plot hold BOTH notes and wiki articles (v99). This page
- * surfaces them together so the user sees the full content of their
- * "place" (Workspace/Place naming TBD — keeping "Folder" for familiarity).
+ * Folders are now type-strict (PR folder-a): a folder accepts notes XOR
+ * wiki articles, never both. The PR #236 unified-folder model is
+ * permanently retired — see `.omc/plans/folder-nm-migration.md`.
  *
- * Layout:
+ * This page branches on `folder.kind`:
+ *   - `kind === "note"` → only the Notes section renders (+ "New note"
+ *     in the Add popover; "Open in Notes view" link).
+ *   - `kind === "wiki"` → only the Wiki section renders (+ "New wiki
+ *     article" in the Add popover; no Notes view link).
+ *
+ * Header subtitle is a single metric matching the kind ("3 notes" or
+ * "5 wikis"). The PR #236 dual subtitle ("3 notes · 5 wikis") would now
+ * always show one half as zero, which would just be visual noise.
+ *
+ * Layout (note kind):
  *   ┌────────────────────────────────────────┐
- *   │ ● [Folder name]      [+ Add ▾] [Open in Notes view] │
+ *   │ ● [Folder name]   3 notes   [+ Add] [Open in Notes view] │
  *   ├────────────────────────────────────────┤
- *   │ Wiki articles (N)                      │
- *   │   ⬡ Article 1                          │
- *   │   ⬡ Article 2                          │
- *   ├────────────────────────────────────────┤
- *   │ Notes (M)                              │
+ *   │ Notes (3)                              │
  *   │   ◯ Note 1                             │
- *   │   ◯ Note 2                             │
  *   └────────────────────────────────────────┘
  *
- * For full filter/sort/group-by note management, the "Open in Notes view"
- * link routes to the legacy /notes page with the folder filter applied.
+ * Layout (wiki kind):
+ *   ┌────────────────────────────────────────┐
+ *   │ ● [Folder name]   5 wikis     [+ Add]  │
+ *   ├────────────────────────────────────────┤
+ *   │ Wiki Articles (5)                      │
+ *   │   ⬡ Article 1                          │
+ *   └────────────────────────────────────────┘
  */
 
 import { use, useState, useMemo, useEffect } from "react"
@@ -56,15 +66,17 @@ export default function FolderPage({ params }: { params: Promise<{ id: string }>
   const openNote = usePlotStore((s) => s.openNote)
 
   const folder = folders.find((f) => f.id === id)
+  // PR (b): kind-strict folders. Only one of these arrays is meaningful per
+  // page — the other is empty by construction (a `kind="note"` folder
+  // cannot hold wiki articles, and vice versa). We compute both anyway so
+  // the loading-then-resolve flow is referential-equality stable.
   const folderNotes = useMemo(
-    // v107 N:M: a note is in this folder iff its folderIds includes `id`.
     () => notes.filter((n) => !n.trashed && n.folderIds.includes(id)),
     [notes, id],
   )
   const folderWikis = useMemo(
     // WikiArticle has no `trashed` boolean (deleted articles are removed
     // entirely or moved to a separate trash list). Filter purely by folder.
-    // v107 N:M: any folder match in folderIds.
     () => wikiArticles.filter((w) => w.folderIds.includes(id)),
     [wikiArticles, id],
   )
@@ -76,6 +88,12 @@ export default function FolderPage({ params }: { params: Promise<{ id: string }>
       </main>
     )
   }
+
+  const isNoteFolder = folder.kind === "note"
+  const subtitleCount = isNoteFolder ? folderNotes.length : folderWikis.length
+  const subtitleLabel = isNoteFolder
+    ? subtitleCount === 1 ? "note" : "notes"
+    : subtitleCount === 1 ? "wiki" : "wikis"
 
   return (
     <main className="flex h-full flex-col overflow-hidden bg-background">
@@ -91,10 +109,7 @@ export default function FolderPage({ params }: { params: Promise<{ id: string }>
           <div className="min-w-0">
             <h1 className="text-lg font-semibold truncate">{folder.name}</h1>
             <p className="text-2xs text-muted-foreground tabular-nums">
-              {folderNotes.length} {folderNotes.length === 1 ? "note" : "notes"}
-              {" · "}
-              {folderWikis.length} wiki
-              {folderWikis.length !== 1 && "s"}
+              {subtitleCount} {subtitleLabel}
             </p>
           </div>
         </div>
@@ -109,133 +124,143 @@ export default function FolderPage({ params }: { params: Promise<{ id: string }>
               </button>
             </PopoverTrigger>
             <PopoverContent align="end" className="w-44 p-1">
-              <button
-                type="button"
-                onClick={() => {
-                  // v107 N:M: createNote takes folderIds[]. The current
-                  // folder context becomes a single-element seed.
-                  const noteId = createNote({ folderIds: [id] })
-                  openNote(noteId)
-                }}
-                className="flex w-full items-center gap-2 rounded-md px-2.5 py-1.5 text-note text-left hover:bg-accent"
-              >
-                <span className="h-2 w-2 rounded-full bg-chart-2" /> New note
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  // v107 N:M: createWikiArticle takes folderIds[].
-                  const wikiId = createWikiArticle({ title: "Untitled", folderIds: [id] })
-                  if (wikiId) router.push(`/wiki/${wikiId}`)
-                }}
-                className="flex w-full items-center gap-2 rounded-md px-2.5 py-1.5 text-note text-left hover:bg-accent"
-              >
-                <span className="h-2 w-2 rounded-full bg-violet-500" /> New wiki article
-              </button>
+              {/* PR (b): kind-aware Add popover. Only the option matching
+                  this folder's kind is offered — adding a wiki to a note
+                  folder (or vice versa) would violate the type-strict
+                  invariant that PR (a) put in place. */}
+              {isNoteFolder ? (
+                <button
+                  type="button"
+                  onClick={() => {
+                    const noteId = createNote({ folderIds: [id] })
+                    openNote(noteId)
+                  }}
+                  className="flex w-full items-center gap-2 rounded-md px-2.5 py-1.5 text-note text-left hover:bg-accent"
+                >
+                  <span className="h-2 w-2 rounded-full bg-chart-2" /> New note
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => {
+                    const wikiId = createWikiArticle({ title: "Untitled", folderIds: [id] })
+                    if (wikiId) router.push(`/wiki/${wikiId}`)
+                  }}
+                  className="flex w-full items-center gap-2 rounded-md px-2.5 py-1.5 text-note text-left hover:bg-accent"
+                >
+                  <span className="h-2 w-2 rounded-full bg-violet-500" /> New wiki article
+                </button>
+              )}
             </PopoverContent>
           </Popover>
 
-          <button
-            type="button"
-            onClick={() => {
-              setActiveFolderId(id)
-              setActiveRoute("/notes")
-              router.push("/notes")
-            }}
-            className="inline-flex items-center gap-1.5 rounded-md border border-border-subtle px-3 py-1.5 text-note text-muted-foreground hover:bg-hover-bg hover:text-foreground"
-            title="Open in full Notes view (with sort, filter, group by)"
-          >
-            <ArrowSquareOut size={14} weight="regular" />
-            Open in Notes view
-          </button>
+          {/* "Open in Notes view" only meaningful for note folders — the
+              /notes table has no equivalent for wiki articles (wiki has
+              its own list view at /wiki). */}
+          {isNoteFolder && (
+            <button
+              type="button"
+              onClick={() => {
+                setActiveFolderId(id)
+                setActiveRoute("/notes")
+                router.push("/notes")
+              }}
+              className="inline-flex items-center gap-1.5 rounded-md border border-border-subtle px-3 py-1.5 text-note text-muted-foreground hover:bg-hover-bg hover:text-foreground"
+              title="Open in full Notes view (with sort, filter, group by)"
+            >
+              <ArrowSquareOut size={14} weight="regular" />
+              Open in Notes view
+            </button>
+          )}
         </div>
       </header>
 
       {/* ── Content ── */}
       <div className="flex-1 overflow-y-auto">
         <div className="max-w-3xl mx-auto px-6 py-6 flex flex-col gap-8">
-          {/* Wiki section */}
-          <section>
-            <div className="flex items-center justify-between mb-3">
-              <h2 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                Wiki Articles
-              </h2>
-              <span className="text-2xs text-muted-foreground tabular-nums">
-                {folderWikis.length}
-              </span>
-            </div>
-            {folderWikis.length === 0 ? (
-              <EmptyHint
-                label="No wiki articles in this folder yet."
-                actionLabel="Create one"
-                onAction={() => {
-                  // v107 N:M: createWikiArticle takes folderIds[].
-                  const wikiId = createWikiArticle({ title: "Untitled", folderIds: [id] })
-                  if (wikiId) router.push(`/wiki/${wikiId}`)
-                }}
-              />
-            ) : (
-              <ul className="flex flex-col gap-px rounded-md border border-border-subtle overflow-hidden">
-                {folderWikis.map((w) => (
-                  <li key={w.id}>
-                    <button
-                      type="button"
-                      onClick={() => router.push(`/wiki/${w.id}`)}
-                      className="flex w-full items-center gap-3 px-3 py-2 text-left bg-card hover:bg-hover-bg"
-                    >
-                      <span className="h-2 w-2 rounded-full bg-violet-500 shrink-0" />
-                      <span className="text-note truncate flex-1">{w.title || "Untitled"}</span>
-                      <span className="text-2xs text-muted-foreground tabular-nums shrink-0">
-                        {(w.blocks?.length ?? 0)} blocks
-                      </span>
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </section>
+          {!isNoteFolder && (
+            /* Wiki folder — show only wiki articles. */
+            <section>
+              <div className="flex items-center justify-between mb-3">
+                <h2 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                  Wiki Articles
+                </h2>
+                <span className="text-2xs text-muted-foreground tabular-nums">
+                  {folderWikis.length}
+                </span>
+              </div>
+              {folderWikis.length === 0 ? (
+                <EmptyHint
+                  label="No wiki articles in this folder yet."
+                  actionLabel="Create one"
+                  onAction={() => {
+                    const wikiId = createWikiArticle({ title: "Untitled", folderIds: [id] })
+                    if (wikiId) router.push(`/wiki/${wikiId}`)
+                  }}
+                />
+              ) : (
+                <ul className="flex flex-col gap-px rounded-md border border-border-subtle overflow-hidden">
+                  {folderWikis.map((w) => (
+                    <li key={w.id}>
+                      <button
+                        type="button"
+                        onClick={() => router.push(`/wiki/${w.id}`)}
+                        className="flex w-full items-center gap-3 px-3 py-2 text-left bg-card hover:bg-hover-bg"
+                      >
+                        <span className="h-2 w-2 rounded-full bg-violet-500 shrink-0" />
+                        <span className="text-note truncate flex-1">{w.title || "Untitled"}</span>
+                        <span className="text-2xs text-muted-foreground tabular-nums shrink-0">
+                          {(w.blocks?.length ?? 0)} blocks
+                        </span>
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </section>
+          )}
 
-          {/* Notes section */}
-          <section>
-            <div className="flex items-center justify-between mb-3">
-              <h2 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                Notes
-              </h2>
-              <span className="text-2xs text-muted-foreground tabular-nums">
-                {folderNotes.length}
-              </span>
-            </div>
-            {folderNotes.length === 0 ? (
-              <EmptyHint
-                label="No notes in this folder yet."
-                actionLabel="Create one"
-                onAction={() => {
-                  // v107 N:M: createNote takes folderIds[]. The current
-                  // folder context becomes a single-element seed.
-                  const noteId = createNote({ folderIds: [id] })
-                  openNote(noteId)
-                }}
-              />
-            ) : (
-              <ul className="flex flex-col gap-px rounded-md border border-border-subtle overflow-hidden">
-                {folderNotes.map((n) => (
-                  <li key={n.id}>
-                    <button
-                      type="button"
-                      onClick={() => openNote(n.id)}
-                      className="flex w-full items-center gap-3 px-3 py-2 text-left bg-card hover:bg-hover-bg"
-                    >
-                      <span className="h-2 w-2 rounded-full bg-chart-2 shrink-0" />
-                      <span className="text-note truncate flex-1">{n.title || "Untitled"}</span>
-                      <span className="text-2xs text-muted-foreground shrink-0 capitalize">
-                        {n.status}
-                      </span>
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </section>
+          {isNoteFolder && (
+            /* Note folder — show only notes. */
+            <section>
+              <div className="flex items-center justify-between mb-3">
+                <h2 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                  Notes
+                </h2>
+                <span className="text-2xs text-muted-foreground tabular-nums">
+                  {folderNotes.length}
+                </span>
+              </div>
+              {folderNotes.length === 0 ? (
+                <EmptyHint
+                  label="No notes in this folder yet."
+                  actionLabel="Create one"
+                  onAction={() => {
+                    const noteId = createNote({ folderIds: [id] })
+                    openNote(noteId)
+                  }}
+                />
+              ) : (
+                <ul className="flex flex-col gap-px rounded-md border border-border-subtle overflow-hidden">
+                  {folderNotes.map((n) => (
+                    <li key={n.id}>
+                      <button
+                        type="button"
+                        onClick={() => openNote(n.id)}
+                        className="flex w-full items-center gap-3 px-3 py-2 text-left bg-card hover:bg-hover-bg"
+                      >
+                        <span className="h-2 w-2 rounded-full bg-chart-2 shrink-0" />
+                        <span className="text-note truncate flex-1">{n.title || "Untitled"}</span>
+                        <span className="text-2xs text-muted-foreground shrink-0 capitalize">
+                          {n.status}
+                        </span>
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </section>
+          )}
         </div>
       </div>
     </main>

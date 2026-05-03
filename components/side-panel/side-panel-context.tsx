@@ -42,6 +42,7 @@ import { toast } from "sonner"
 import { useActiveRoute } from "@/lib/table-route"
 import { useWikiViewMode, useActiveCategoryId, setActiveCategoryView } from "@/lib/wiki-view-mode"
 import { CategorySidePanel } from "@/components/views/wiki-category-page"
+import { FolderPicker } from "@/components/folder-picker"
 
 function InspectorSection({
   title,
@@ -348,42 +349,19 @@ export function SidePanelContext({ noteId: propNoteId }: { noteId?: string | nul
             </button>
           </PopoverTrigger>
           <PopoverContent align="start" className="w-52 p-1">
-            <button
-              onClick={() => {
-                // v107 N:M (PR a): single-folder picker still overwrites the
-                // entire set with [] / [folder.id]. PR (c) introduces a
-                // multi-folder picker with add/remove semantics.
-                updateNote(note.id, { folderIds: [] })
+            {/* PR (b): unified FolderPicker — notes side panel always
+                operates on a Note → kind="note" enforced. PR (c) flips this
+                to multi-select once detail-panel chip strip lands. */}
+            <FolderPicker
+              kind="note"
+              currentFolderIds={note.folderIds}
+              onSelect={(folderId) => {
+                updateNote(note.id, {
+                  folderIds: folderId ? [folderId] : [],
+                })
                 setFolderOpen(false)
               }}
-              className={cn(
-                "flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-note transition-colors hover:bg-hover-bg",
-                note.folderIds.length === 0 ? "text-foreground" : "text-muted-foreground"
-              )}
-            >
-              No folder
-            </button>
-            {/* PR (a): list only `kind="note"` folders. PR (b) makes the
-                folder picker fully kind-aware via a shared component. */}
-            {folders.filter((f) => f.kind === "note").map((folder) => (
-              <button
-                key={folder.id}
-                onClick={() => {
-                  updateNote(note.id, { folderIds: [folder.id] })
-                  setFolderOpen(false)
-                }}
-                className={cn(
-                  "flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-note transition-colors hover:bg-hover-bg",
-                  note.folderIds.includes(folder.id) ? "text-foreground" : "text-muted-foreground"
-                )}
-              >
-                <span
-                  className="h-2 w-2 rounded-full"
-                  style={{ backgroundColor: folder.color }}
-                />
-                {folder.name}
-              </button>
-            ))}
+            />
           </PopoverContent>
         </Popover>
       </InspectorSection>
