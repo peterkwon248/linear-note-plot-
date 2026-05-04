@@ -120,6 +120,9 @@ export function createTemplatesSlice(set: Set, get: Get, appendEvent: AppendEven
       const seedFolder = folderFromTemplate ?? folderFromView
       const folderIds = seedFolder ? [seedFolder] : []
 
+      // v108: NoteTemplate dropped `status` / `priority` fields — new notes
+      // start at sensible defaults ("inbox" / "none"), matching createNote's
+      // baseline. Users override on first edit if needed.
       const newNote: Note = {
         id,
         title,
@@ -128,8 +131,8 @@ export function createTemplatesSlice(set: Set, get: Get, appendEvent: AppendEven
         folderIds,
         tags: [...template.tags],
         labelId: template.labelId,
-        status: template.status,
-        priority: template.priority,
+        status: "inbox",
+        priority: "none",
         reads: 0,
         pinned: false,
         trashed: false,
@@ -137,7 +140,7 @@ export function createTemplatesSlice(set: Set, get: Get, appendEvent: AppendEven
         updatedAt: now(),
         preview: extractPreview(content),
         linksOut: extractLinksOut(content),
-        ...workflowDefaults(template.status),
+        ...workflowDefaults("inbox"),
         noteType: "note" as const,
         source: "manual",
         aliases: [],

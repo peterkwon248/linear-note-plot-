@@ -3,7 +3,6 @@
 import { useMemo, useCallback } from "react"
 import { usePlotStore } from "../store"
 import type { ViewState, ViewContextKey, FilterRule, SortRule, GroupBy } from "./types"
-import { STATUS_ORDER, PRIORITY_ORDER } from "./types"
 import { buildViewStateForContext } from "./defaults"
 import type { NoteTemplate } from "../types"
 
@@ -38,9 +37,10 @@ function templateMatchesRule(t: NoteTemplate, rule: FilterRule): boolean {
   const { field, operator, value } = rule
   const eq = (a: unknown, b: unknown) => operator === "eq" ? a === b : a !== b
 
+  // v108: status / priority filter cases retired alongside the field removal.
+  // Stale rules referencing those fields fall through to `default: true` and
+  // are no-ops until the user clears them via the filter UI.
   switch (field) {
-    case "status":   return eq(t.status, value)
-    case "priority": return eq(t.priority, value)
     case "label": {
       const lid = t.labelId ?? ""
       if (value === "_none") return operator === "eq" ? lid === "" : lid !== ""
@@ -84,21 +84,18 @@ function applyTemplateFilters(templates: NoteTemplate[], filters: FilterRule[]):
 function applyTemplateSearch(templates: NoteTemplate[], query: string): NoteTemplate[] {
   const q = query.trim().toLowerCase()
   if (!q) return templates
-  return templates.filter((t) => {
-    if (t.name.toLowerCase().includes(q)) return true
-    if (t.description?.toLowerCase().includes(q)) return true
-    return false
-  })
+  // v108: `description` field retired — name is the only searchable text.
+  return templates.filter((t) => t.name.toLowerCase().includes(q))
 }
 
 /* ── Stage 3: Sort ────────────────────────────────────── */
 
 function compareTemplate(a: NoteTemplate, b: NoteTemplate, rule: SortRule): number {
   const dir = rule.direction === "asc" ? 1 : -1
+  // v108: status / priority sort cases retired with the field removal. Stale
+  // saved sort rules referencing them fall through to `default: 0` (stable).
   switch (rule.field) {
     case "title":     return dir * a.name.localeCompare(b.name)
-    case "status":    return dir * (STATUS_ORDER[a.status] - STATUS_ORDER[b.status])
-    case "priority":  return dir * (PRIORITY_ORDER[a.priority] - PRIORITY_ORDER[b.priority])
     case "createdAt": return dir * (a.createdAt < b.createdAt ? -1 : a.createdAt > b.createdAt ? 1 : 0)
     case "updatedAt": return dir * (a.updatedAt < b.updatedAt ? -1 : a.updatedAt > b.updatedAt ? 1 : 0)
     default:          return 0
@@ -133,23 +130,8 @@ function applyTemplateGrouping(
     return [{ key: "_all", label: "", templates }]
   }
 
-  if (groupBy === "status") {
-    const buckets = new Map<string, NoteTemplate[]>()
-    const labels: Record<string, string> = { inbox: "Inbox", capture: "Capture", permanent: "Permanent" }
-    const order = ["inbox", "capture", "permanent"]
-    for (const k of order) buckets.set(k, [])
-    for (const t of templates) buckets.get(t.status)?.push(t)
-    return order.map((k) => ({ key: k, label: labels[k], templates: buckets.get(k) ?? [] }))
-  }
-
-  if (groupBy === "priority") {
-    const buckets = new Map<string, NoteTemplate[]>()
-    const labels: Record<string, string> = { urgent: "Urgent", high: "High", medium: "Medium", low: "Low", none: "No Priority" }
-    const order = ["urgent", "high", "medium", "low", "none"]
-    for (const k of order) buckets.set(k, [])
-    for (const t of templates) buckets.get(t.priority)?.push(t)
-    return order.map((k) => ({ key: k, label: labels[k], templates: buckets.get(k) ?? [] }))
-  }
+  // v108: status / priority groupBy retired. Stale saved groupBy values fall
+  // through to the unknown-grouping fallback below (single bucket).
 
   if (groupBy === "label") {
     const map = new Map<string, NoteTemplate[]>()

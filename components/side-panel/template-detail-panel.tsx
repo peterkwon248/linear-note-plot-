@@ -22,13 +22,12 @@ import { Layout } from "@phosphor-icons/react/dist/ssr/Layout"
 import { TextAlignLeft } from "@phosphor-icons/react/dist/ssr/TextAlignLeft"
 import { Tag as PhTag } from "@phosphor-icons/react/dist/ssr/Tag"
 import { Folder as PhFolder } from "@phosphor-icons/react/dist/ssr/Folder"
-import { CircleHalf } from "@phosphor-icons/react/dist/ssr/CircleHalf"
 import { Lightning } from "@phosphor-icons/react/dist/ssr/Lightning"
 import { PushPin } from "@phosphor-icons/react/dist/ssr/PushPin"
 import { Trash } from "@phosphor-icons/react/dist/ssr/Trash"
 import { FileText } from "@phosphor-icons/react/dist/ssr/FileText"
 import { Bookmark } from "@phosphor-icons/react/dist/ssr/Bookmark"
-import type { NoteTemplate, NoteStatus, NotePriority } from "@/lib/types"
+import type { NoteTemplate } from "@/lib/types"
 
 function InspectorSection({
   title,
@@ -141,31 +140,10 @@ export function TemplateDetailPanel({ template }: { template: NoteTemplate }) {
       </div>
 
       {/* ── Properties ────────────────────────────────────── */}
+      {/* v108: Status / Priority rows retired — those fields no longer exist
+          on NoteTemplate. New notes default to "inbox" / "none" and the user
+          adjusts on first edit. Label / Folder remain as meaningful defaults. */}
       <InspectorSection title="Properties" icon={<Layout size={11} weight="regular" />}>
-        <PropertyRow label="Status">
-          <select
-            value={template.status}
-            onChange={(e) => updateTemplate(template.id, { status: e.target.value as NoteStatus })}
-            className="h-7 w-full rounded-md border border-border bg-background px-2 text-note text-foreground focus:outline-none focus:ring-1 focus:ring-accent"
-          >
-            <option value="inbox">Inbox</option>
-            <option value="capture">Capture</option>
-            <option value="permanent">Permanent</option>
-          </select>
-        </PropertyRow>
-        <PropertyRow label="Priority">
-          <select
-            value={template.priority}
-            onChange={(e) => updateTemplate(template.id, { priority: e.target.value as NotePriority })}
-            className="h-7 w-full rounded-md border border-border bg-background px-2 text-note text-foreground focus:outline-none focus:ring-1 focus:ring-accent"
-          >
-            <option value="none">None</option>
-            <option value="low">Low</option>
-            <option value="medium">Medium</option>
-            <option value="high">High</option>
-            <option value="urgent">Urgent</option>
-          </select>
-        </PropertyRow>
         <PropertyRow label="Label">
           <select
             value={template.labelId ?? ""}

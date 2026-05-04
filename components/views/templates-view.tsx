@@ -346,10 +346,8 @@ export function TemplatesView() {
   const searchedFlat = useMemo(() => {
     const q = search.trim().toLowerCase()
     if (!q) return flatTemplates
-    return flatTemplates.filter((t) =>
-      t.name.toLowerCase().includes(q) ||
-      (t.description ?? "").toLowerCase().includes(q),
-    )
+    // v108: `description` field retired — name is the only searchable text.
+    return flatTemplates.filter((t) => t.name.toLowerCase().includes(q))
   }, [flatTemplates, search])
 
   // Re-apply search to grouped output too (drop empty groups when grouping).
@@ -456,14 +454,14 @@ export function TemplatesView() {
   /* ── Handlers ──────────────────────────────────────── */
 
   const handleCreateSubmit = (data: TemplateFormData) => {
+    // v108: `description`, `status`, `priority` fields retired from NoteTemplate.
+    // The legacy create dialog still collects `data.description` for now —
+    // ignored here. Dialog cleanup tracked separately.
     const newId = createTemplate({
       name: data.name,
-      description: data.description,
       title: "",
       content: "",
       contentJson: null,
-      status: "inbox",
-      priority: "none",
       pinned: false,
       labelId: null,
       tags: [],

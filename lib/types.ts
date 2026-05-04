@@ -552,16 +552,20 @@ export interface AutopilotLogEntry {
 export interface NoteTemplate {
   id: string
   name: string
-  description: string
   // Note: `icon` (emoji) and `color` (hex) fields were removed in v102.
   // Templates take their visual cues from the linked `labelId` like notes
   // do — single source of truth. Migration v102 strips the legacy fields.
+  //
+  // Note: `description`, `status`, `priority` fields were removed in v108.
+  // The card-display retirement (PR template-c, e) made these fields invisible
+  // surfaces; v108 follows up by deleting them from the data model itself.
+  // - description: name carries enough; UpNote-style picker no longer shows it
+  // - status / priority: too weak as defaults — users override on first edit;
+  //   new notes from a template now start at "inbox" / "none" sensibly.
   // Pre-filled fields
   title: string          // template for title (can contain {date}, {time} placeholders)
   content: string        // markdown body template
   contentJson: Record<string, unknown> | null  // TipTap JSON content
-  status: NoteStatus
-  priority: NotePriority
   labelId: string | null
   tags: string[]         // tag IDs
   folderId: string | null

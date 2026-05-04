@@ -362,19 +362,18 @@ function TemplateRow({
   const renderCell = (col: ColumnDef): ReactNode => {
     switch (col.id) {
       case "title":
+        // No leading entity icon — every template renders the same icon, so it
+        // is visual noise without information (notes/wiki use status icons
+        // because those values vary). Pin remains because it's the one signal
+        // that *does* differ row-to-row.
         return (
-          <div className={cn("flex items-center gap-2 min-w-0", col.width)}>
-            <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-secondary/40 text-muted-foreground">
-              <Layout size={12} weight="regular" />
+          <div className={cn("flex items-center gap-1.5 min-w-0", col.width)}>
+            <span className="truncate text-ui text-foreground">
+              {tmpl.name || "Untitled template"}
             </span>
-            <div className="flex-1 min-w-0 flex items-center gap-1.5">
-              <span className="text-note font-medium text-foreground truncate">
-                {tmpl.name || "Untitled template"}
-              </span>
-              {tmpl.pinned && (
-                <PushPin className="text-accent shrink-0" size={11} weight="regular" />
-              )}
-            </div>
+            {tmpl.pinned && (
+              <PushPin className="text-accent shrink-0" size={12} weight="regular" />
+            )}
           </div>
         )
 
