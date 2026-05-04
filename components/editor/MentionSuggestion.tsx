@@ -297,7 +297,7 @@ export const mentionSuggestionConfig: Omit<SuggestionOptions<MentionItem, Mentio
         id: t.id,
         label: t.name,
         mentionType: "tag",
-        color: t.color,
+        color: t.color ?? undefined, // v109: opt-in color fallback
       })
     }
 

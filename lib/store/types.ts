@@ -185,7 +185,8 @@ export interface PlotState {
    * Caller decides based on the active context (sidebar section, picker
    * source). Kind is immutable after creation.
    */
-  createFolder: (name: string, kind: "note" | "wiki", color: string, opts?: Partial<Folder>) => string
+  // v109: `color` is optional (opt-in). Slice defaults to null when omitted.
+  createFolder: (name: string, kind: "note" | "wiki", color?: string | null, opts?: Partial<Folder>) => string
   /** Cosmetic edits only — `kind` is silently dropped from `updates`. */
   updateFolder: (id: string, updates: Partial<Folder>) => void
   deleteFolder: (id: string) => void
@@ -206,7 +207,8 @@ export interface PlotState {
   setWikiFolders: (articleId: string, folderIds: string[]) => void
 
   // ── Tags ──
-  createTag: (name: string, color: string) => void
+  // v109: `color` is optional (opt-in). Slice defaults to null when omitted.
+  createTag: (name: string, color?: string | null) => void
   updateTag: (id: string, updates: Partial<Tag>) => void
   deleteTag: (id: string) => void
   restoreTag: (id: string) => void

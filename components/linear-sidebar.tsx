@@ -27,7 +27,7 @@ import { CaretRight } from "@phosphor-icons/react/dist/ssr/CaretRight"
 import { CaretLeft } from "@phosphor-icons/react/dist/ssr/CaretLeft"
 import { MagnifyingGlass } from "@phosphor-icons/react/dist/ssr/MagnifyingGlass"
 import { usePlotStore } from "@/lib/store"
-import { PRESET_COLORS } from "@/lib/colors"
+import { PRESET_COLORS, getEntityColor } from "@/lib/colors" // v109: opt-in color fallback
 import { setWikiViewMode, useWikiViewMode, setCategoryOverview } from "@/lib/wiki-view-mode"
 import { GitMerge } from "@phosphor-icons/react/dist/ssr/GitMerge"
 import { Scissors } from "@phosphor-icons/react/dist/ssr/Scissors"
@@ -506,7 +506,8 @@ export function LinearSidebar() {
     const name = newFolderName.trim()
     if (name && newFolderKind) {
       // PR (b): kind is captured at "+" click time per section.
-      createFolder(name, newFolderKind, PRESET_COLORS[5])
+      // v109: opt-in color — new folders start uncolored.
+      createFolder(name, newFolderKind)
     }
     setNewFolderKind(null)
     setNewFolderName("")
@@ -920,11 +921,15 @@ export function LinearSidebar() {
                         <ContextMenuSubTrigger>Change color</ContextMenuSubTrigger>
                         <ContextMenuSubContent className="p-2">
                           <ColorPickerGrid
-                            value={folder.color}
+                            value={getEntityColor(folder.color)}
                             onChange={(color) => updateFolder(folder.id, { color })}
                           />
                         </ContextMenuSubContent>
                       </ContextMenuSub>
+                      {/* v109: opt-in color — Reset returns the folder to neutral gray. */}
+                      <ContextMenuItem onClick={() => updateFolder(folder.id, { color: null })}>
+                        Reset color
+                      </ContextMenuItem>
                       <ContextMenuSeparator />
                       <ContextMenuItem
                         onClick={() => handleDeleteFolder(folder.id)}
@@ -1187,11 +1192,15 @@ export function LinearSidebar() {
                         <ContextMenuSubTrigger>Change color</ContextMenuSubTrigger>
                         <ContextMenuSubContent className="p-2">
                           <ColorPickerGrid
-                            value={folder.color}
+                            value={getEntityColor(folder.color)}
                             onChange={(color) => updateFolder(folder.id, { color })}
                           />
                         </ContextMenuSubContent>
                       </ContextMenuSub>
+                      {/* v109: opt-in color — Reset returns the folder to neutral gray. */}
+                      <ContextMenuItem onClick={() => updateFolder(folder.id, { color: null })}>
+                        Reset color
+                      </ContextMenuItem>
                       <ContextMenuSeparator />
                       <ContextMenuItem
                         onClick={() => handleDeleteFolder(folder.id)}

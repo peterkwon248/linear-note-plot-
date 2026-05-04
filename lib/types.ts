@@ -389,7 +389,13 @@ export interface NoteBody {
 export interface Folder {
   id: string
   name: string
-  color: string
+  /**
+   * Folder color. v109: opt-in policy — `null` means "no color yet"
+   * (display sites resolve via `getEntityColor()` to a neutral gray).
+   * Auto-assignment (palette cycle in folder-picker) was removed; the user
+   * sets a color explicitly via the sidebar context menu when desired.
+   */
+  color: string | null
   parentId: string | null
   lastAccessedAt: string | null
   pinned: boolean
@@ -408,7 +414,12 @@ export interface Folder {
 export interface Tag {
   id: string
   name: string
-  color: string
+  /**
+   * Tag color. v109: opt-in policy — `null` means "no color yet". Hash-based
+   * auto-coloring (pickColor) was removed; tags created from hashtags or the
+   * picker start uncolored. Display sites resolve via `getEntityColor()`.
+   */
+  color: string | null
   trashed?: boolean
   trashedAt?: string | null
 }

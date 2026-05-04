@@ -203,7 +203,8 @@ export function NoteEditorAdapter({ note, onEditorReady, editable = true }: Note
             for (const name of hashtagNames) {
               let tag = store.tags.find((t) => t.name.toLowerCase() === name.toLowerCase())
               if (!tag) {
-                store.createTag(name, pickColor(name))
+                // v109: opt-in color — hashtag-created tags start uncolored.
+                store.createTag(name)
                 tag = usePlotStore.getState().tags.find((t) => t.name.toLowerCase() === name.toLowerCase())
               }
               if (tag && !currentNote.tags.includes(tag.id)) {
@@ -230,7 +231,8 @@ export function NoteEditorAdapter({ note, onEditorReady, editable = true }: Note
     for (const name of hashtagNames) {
       let tag = store.tags.find((t) => t.name.toLowerCase() === name.toLowerCase())
       if (!tag) {
-        store.createTag(name, pickColor(name))
+        // v109: opt-in color — hashtag-created tags start uncolored.
+        store.createTag(name)
         tag = usePlotStore.getState().tags.find((t) => t.name.toLowerCase() === name.toLowerCase())
       }
       if (tag && !currentNote.tags.includes(tag.id)) {

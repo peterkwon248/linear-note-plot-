@@ -665,7 +665,8 @@ function LibraryOverview() {
                     const name = (e.target as HTMLInputElement).value.trim()
                     const store = usePlotStore.getState()
                     if (!store.tags.some((t) => t.name.toLowerCase() === name.toLowerCase())) {
-                      store.createTag(name, pickColor(name))
+                      // v109: opt-in color — tag starts uncolored.
+                      store.createTag(name)
                       toast.success(`Tag "${name}" created`)
                     } else {
                       toast.error(`Tag "${name}" already exists`)

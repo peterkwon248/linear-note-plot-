@@ -15,10 +15,12 @@ export function createFoldersSlice(set: Set) {
      * for cosmetic edits (name/color/parentId/pin); attempting to change
      * `kind` is silently ignored at the action layer (UI should disable it).
      */
-    createFolder: (name: string, kind: "note" | "wiki", color: string, opts?: Partial<Folder>) => {
+    createFolder: (name: string, kind: "note" | "wiki", color: string | null = null, opts?: Partial<Folder>) => {
       const now = new Date().toISOString()
       // Generate id outside the set callback so we can return it for
       // immediate use (e.g. inline "+ New folder" → apply to selected note).
+      // v109: `color` defaults to null (opt-in). Callers no longer cycle a
+      // palette — users set a color explicitly via "Set color..." when desired.
       const id = genId()
       set((state: any) => ({
         folders: [...state.folders, {

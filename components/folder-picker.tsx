@@ -46,7 +46,7 @@ import { Check as PhCheck } from "@phosphor-icons/react/dist/ssr/Check"
 import { Plus as PhPlus } from "@phosphor-icons/react/dist/ssr/Plus"
 import { cn } from "@/lib/utils"
 import { usePlotStore } from "@/lib/store"
-import { PRESET_COLORS } from "@/lib/colors"
+import { PRESET_COLORS, getEntityColor } from "@/lib/colors" // v109: opt-in color fallback
 
 export type FolderPickerKind = "note" | "wiki"
 export type FolderPickerSelectMode = "single" | "multi"
@@ -121,11 +121,9 @@ export function FolderPicker({
     const handleCreateSingle = () => {
       const name = window.prompt("New folder name:")?.trim()
       if (!name) return
-      // Distinguishable color across the existing folder set. PRESET_COLORS
-      // (16-color palette in lib/colors.ts) is the canonical app palette;
-      // local cycling palettes were the pre-PR (b) ad-hoc per call site.
-      const color = PRESET_COLORS[matching.length % PRESET_COLORS.length]
-      const newId = createFolder(name, kind, color)
+      // v109: opt-in color — new folders start uncolored (neutral gray).
+      // Users assign a color via "Set color..." in the sidebar context menu.
+      const newId = createFolder(name, kind)
       onSelect?.(newId)
     }
 
@@ -172,7 +170,7 @@ export function FolderPicker({
             >
               <span
                 className="h-2 w-2 rounded-full shrink-0"
-                style={{ backgroundColor: f.color }}
+                style={{ backgroundColor: getEntityColor(f.color) }}
               />
               <span className="flex-1 text-left truncate">{f.name}</span>
               {selected && <PhCheck size={12} weight="bold" className="text-accent shrink-0" />}
@@ -271,8 +269,8 @@ function FolderPickerMulti({
   const handleCreateMulti = () => {
     const name = window.prompt("New folder name:")?.trim()
     if (!name) return
-    const color = PRESET_COLORS[matching.length % PRESET_COLORS.length]
-    const newId = createFolder(name, kind, color)
+    // v109: opt-in color (see handleCreateSingle).
+    const newId = createFolder(name, kind)
     // Newly created folder is pre-checked — most users create-then-apply.
     setPending((prev) => {
       const next = new Set(prev)
@@ -336,7 +334,7 @@ function FolderPickerMulti({
             </span>
             <span
               className="h-2 w-2 rounded-full shrink-0"
-              style={{ backgroundColor: f.color }}
+              style={{ backgroundColor: getEntityColor(f.color) }}
             />
             <span className="flex-1 text-left truncate">{f.name}</span>
           </button>
@@ -400,8 +398,8 @@ export function useFolderPickerData(kind: FolderPickerKind) {
   const createFolderInline = (afterCreate: (newId: string) => void) => {
     const name = window.prompt("New folder name:")?.trim()
     if (!name) return
-    const color = PRESET_COLORS[matching.length % PRESET_COLORS.length]
-    const newId = createFolder(name, kind, color)
+    // v109: opt-in color (see handleCreateSingle).
+    const newId = createFolder(name, kind)
     afterCreate(newId)
   }
 

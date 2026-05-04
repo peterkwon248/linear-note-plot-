@@ -31,6 +31,7 @@ import { StatusBadge, PriorityBadge } from "@/components/note-fields"
 import { applyFilters } from "@/lib/view-engine/filter"
 import type { FilterRule, FilterField } from "@/lib/view-engine/types"
 import type { NoteStatus, NotePriority } from "@/lib/types"
+import { getEntityColor } from "@/lib/colors" // v109: opt-in color fallback
 /* ── Picker Filter Types ──────────────────────────────── */
 
 interface PickerFilterValue {
@@ -328,7 +329,7 @@ export function NotePickerDialog({
                         {(() => {
                           const tag = tags.find((t) => t.id === value)
                           return tag ? (
-                            <span className="h-2.5 w-2.5 rounded-full shrink-0" style={{ backgroundColor: tag.color }} />
+                            <span className="h-2.5 w-2.5 rounded-full shrink-0" style={{ backgroundColor: getEntityColor(tag.color) }} />
                           ) : null
                         })()}
                         <span className="text-note">{label}</span>

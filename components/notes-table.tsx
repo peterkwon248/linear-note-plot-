@@ -74,6 +74,7 @@ import { setActiveFolderId, usePendingFilters, clearPendingFilters } from "@/lib
 import { setNoteDragData } from "@/lib/drag-helpers"
 import { pushUndo } from "@/lib/undo-manager"
 import { useFolderPickerData, FolderPicker } from "@/components/folder-picker"
+import { getEntityColor } from "@/lib/colors" // v109: opt-in color fallback
 
 /* ── Helpers ───────────────────────────────────────────── */
 
@@ -1752,7 +1753,7 @@ function NoteRowInner({
                   >
                     <span
                       className="h-2 w-2 rounded-full shrink-0"
-                      style={{ backgroundColor: f.color }}
+                      style={{ backgroundColor: getEntityColor(f.color) }}
                     />
                     <span className="text-note text-foreground truncate">{f.name}</span>
                   </span>
@@ -2040,7 +2041,7 @@ function NoteRowInner({
                 onClick={() => onSetFolder(f.id)}
                 className={`text-note ${note.folderIds.includes(f.id) ? "font-medium" : ""}`}
               >
-                <span className="h-2 w-2 rounded-full mr-2 shrink-0" style={{ backgroundColor: f.color }} />
+                <span className="h-2 w-2 rounded-full mr-2 shrink-0" style={{ backgroundColor: getEntityColor(f.color) }} />
                 <span className="truncate">{f.name}</span>
                 {note.folderIds.includes(f.id) && <PhCheck className="ml-auto text-accent shrink-0" size={14} weight="bold" />}
               </ContextMenuItem>

@@ -32,6 +32,7 @@ import { PushPin as PhPushPin } from "@phosphor-icons/react/dist/ssr/PushPin"
 import { StatusBadge, PriorityBadge } from "@/components/note-fields"
 import { shortRelative } from "@/lib/format-utils"
 import type { NoteStatus, NotePriority } from "@/lib/types"
+import { getEntityColor } from "@/lib/colors" // v109: opt-in color fallback
 
 /* ── Common chip skeleton ─────────────────────────────── */
 
@@ -84,14 +85,15 @@ export function PriorityChip({ priority }: { priority: NotePriority }) {
 
 /* ── Folder chip ──────────────────────────────────────── */
 
-export function FolderChip({ folder }: { folder: { name: string; color: string } }) {
-  // Folder color tints both icon and text. bg uses the same color at 1a (~10%).
+export function FolderChip({ folder }: { folder: { name: string; color: string | null } }) {
+  // Folder color tints both icon and text. bg uses the same color at 1a (~10%). v109: opt-in color fallback
+  const resolvedColor = getEntityColor(folder.color)
   return (
     <ChipShell
       title={folder.name}
       style={{
-        backgroundColor: `${folder.color}1a`,
-        color: folder.color,
+        backgroundColor: `${resolvedColor}1a`,
+        color: resolvedColor,
       }}
     >
       <PhFolder size={10} weight="regular" />
@@ -161,13 +163,15 @@ export function LabelChip({ label }: { label: { name: string; color: string } })
  * icon (the # is the icon). Shorter max-width than label since tags often
  * come in groups.
  */
-export function TagChip({ tag }: { tag: { name: string; color: string } }) {
+export function TagChip({ tag }: { tag: { name: string; color: string | null } }) {
+  // v109: opt-in color fallback
+  const resolvedColor = getEntityColor(tag.color)
   return (
     <ChipShell
       title={`#${tag.name}`}
       style={{
-        backgroundColor: `${tag.color}1a`,
-        color: tag.color,
+        backgroundColor: `${resolvedColor}1a`,
+        color: resolvedColor,
       }}
     >
       <PhHash size={10} weight="bold" className="-mr-0.5" />

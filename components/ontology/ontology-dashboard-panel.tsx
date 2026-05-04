@@ -26,6 +26,7 @@
 import { useMemo } from "react"
 import { usePlotStore } from "@/lib/store"
 import { useKnowledgeMetrics } from "@/hooks/use-knowledge-metrics"
+import { getEntityColor } from "@/lib/colors" // v109: opt-in color fallback
 
 export function OntologyDashboardPanel() {
   const m = useKnowledgeMetrics()
@@ -166,7 +167,7 @@ export function OntologyDashboardPanel() {
                   </span>
                   <span
                     className="h-2.5 w-2.5 rounded-full shrink-0"
-                    style={{ backgroundColor: row.tag!.color }}
+                    style={{ backgroundColor: getEntityColor(row.tag!.color) }}
                   />
                   <span className="text-note truncate">{row.tag!.name}</span>
                 </div>

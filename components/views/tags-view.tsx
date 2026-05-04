@@ -7,8 +7,14 @@ import {
   ContextMenu,
   ContextMenuContent,
   ContextMenuItem,
+  ContextMenuSeparator,
+  ContextMenuSub,
+  ContextMenuSubContent,
+  ContextMenuSubTrigger,
   ContextMenuTrigger,
 } from "@/components/ui/context-menu"
+import { ColorPickerGrid } from "@/components/color-picker-grid"
+import { getEntityColor } from "@/lib/colors"
 import { ArrowLeft } from "@phosphor-icons/react/dist/ssr/ArrowLeft"
 import { ArrowUp } from "@phosphor-icons/react/dist/ssr/ArrowUp"
 import { ArrowDown } from "@phosphor-icons/react/dist/ssr/ArrowDown"
@@ -128,6 +134,7 @@ export function TagsView() {
   const folders = usePlotStore((s) => s.folders)
   const createTag = usePlotStore((s) => s.createTag)
   const deleteTag = usePlotStore((s) => s.deleteTag)
+  const updateTag = usePlotStore((s) => s.updateTag)
   const openNote = usePlotStore((s) => s.openNote)
 
   // View state
@@ -225,7 +232,8 @@ export function TagsView() {
           (t) => t.name.toLowerCase() === name.toLowerCase(),
         )
         if (!exists) {
-          createTag(name, pickColor(name))
+          // v109: opt-in color — tag starts uncolored.
+          createTag(name)
         }
       }
       setTagInput("")
@@ -651,43 +659,76 @@ export function TagsView() {
                   </button>
                 </div>
                 {sortedTags.map((tag, index) => (
-                  <div
-                    key={tag.id}
-                    data-tag-index={index}
-                    className={`group flex items-center gap-3 px-6 py-2.5 border-b border-border/50 transition-colors ${
-                      checkedTags.has(tag.id) ? "bg-accent/8" : "hover:bg-hover-bg"
-                    }`}
-                    onClick={(e) => {
-                      // Only handle if click is on the row background (not buttons)
-                      if ((e.target as HTMLElement).closest("button")) return
-                      handleRowClick(tag.id, index, e)
-                    }}
-                  >
-                    <div
-                      data-checkbox
-                      onClick={(e) => { e.stopPropagation(); toggleCheck(tag.id) }}
-                      className={cn(
-                        "h-4 w-4 shrink-0 rounded-[4px] border flex items-center justify-center cursor-pointer transition-colors shadow-sm",
-                        checkedTags.has(tag.id)
-                          ? "bg-accent border-accent"
-                          : "bg-card border-zinc-400 dark:border-zinc-600 hover:border-zinc-500 dark:hover:border-zinc-500"
-                      )}
-                    >
-                      {checkedTags.has(tag.id) && (
-                        <PhCheck size={10} weight="bold" className="text-accent-foreground" />
-                      )}
-                    </div>
-                    <button
-                      onClick={() => setSelectedTagId(tag.id)}
-                      className="flex-1 text-left text-ui text-foreground transition-colors hover:text-accent"
-                    >
-                      <span className="text-muted-foreground">#</span>
-                      {tag.name}
-                    </button>
-                    <span className="w-16 text-right text-note tabular-nums text-muted-foreground">
-                      {tagCounts[tag.id] || 0}
-                    </span>
-                  </div>
+                  // v109: row-level ContextMenu — Set color picker entry point.
+                  // Per opt-in policy, tags start uncolored; this menu lets the
+                  // user assign a color when they want to highlight one. Reset
+                  // (no color) sends color back to null = neutral gray dot.
+                  <ContextMenu key={tag.id}>
+                    <ContextMenuTrigger asChild>
+                      <div
+                        data-tag-index={index}
+                        className={`group flex items-center gap-3 px-6 py-2.5 border-b border-border/50 transition-colors ${
+                          checkedTags.has(tag.id) ? "bg-accent/8" : "hover:bg-hover-bg"
+                        }`}
+                        onClick={(e) => {
+                          // Only handle if click is on the row background (not buttons)
+                          if ((e.target as HTMLElement).closest("button")) return
+                          handleRowClick(tag.id, index, e)
+                        }}
+                      >
+                        <div
+                          data-checkbox
+                          onClick={(e) => { e.stopPropagation(); toggleCheck(tag.id) }}
+                          className={cn(
+                            "h-4 w-4 shrink-0 rounded-[4px] border flex items-center justify-center cursor-pointer transition-colors shadow-sm",
+                            checkedTags.has(tag.id)
+                              ? "bg-accent border-accent"
+                              : "bg-card border-zinc-400 dark:border-zinc-600 hover:border-zinc-500 dark:hover:border-zinc-500"
+                          )}
+                        >
+                          {checkedTags.has(tag.id) && (
+                            <PhCheck size={10} weight="bold" className="text-accent-foreground" />
+                          )}
+                        </div>
+                        {/* v109: leading dot — gray when no color set, hex otherwise. */}
+                        <span
+                          className="h-2 w-2 shrink-0 rounded-full"
+                          style={{ backgroundColor: getEntityColor(tag.color) }}
+                        />
+                        <button
+                          onClick={() => setSelectedTagId(tag.id)}
+                          className="flex-1 text-left text-ui text-foreground transition-colors hover:text-accent"
+                        >
+                          <span className="text-muted-foreground">#</span>
+                          {tag.name}
+                        </button>
+                        <span className="w-16 text-right text-note tabular-nums text-muted-foreground">
+                          {tagCounts[tag.id] || 0}
+                        </span>
+                      </div>
+                    </ContextMenuTrigger>
+                    <ContextMenuContent className="w-48">
+                      <ContextMenuSub>
+                        <ContextMenuSubTrigger>Change color</ContextMenuSubTrigger>
+                        <ContextMenuSubContent className="p-2">
+                          <ColorPickerGrid
+                            value={getEntityColor(tag.color)}
+                            onChange={(color) => updateTag(tag.id, { color })}
+                          />
+                        </ContextMenuSubContent>
+                      </ContextMenuSub>
+                      <ContextMenuItem onClick={() => updateTag(tag.id, { color: null })}>
+                        Reset color
+                      </ContextMenuItem>
+                      <ContextMenuSeparator />
+                      <ContextMenuItem
+                        onClick={() => deleteTag(tag.id)}
+                        className="text-destructive focus:text-destructive"
+                      >
+                        Delete
+                      </ContextMenuItem>
+                    </ContextMenuContent>
+                  </ContextMenu>
                 ))}
               </div>
             )}

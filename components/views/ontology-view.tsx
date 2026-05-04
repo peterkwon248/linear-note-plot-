@@ -22,6 +22,7 @@ import type { OntologyFilters } from "@/components/ontology/ontology-graph-canva
 import { Graph } from "@phosphor-icons/react/dist/ssr/Graph"
 import { useActiveViewId } from "@/lib/table-route"
 import { useSaveViewProps } from "@/lib/view-engine/use-save-view-props"
+import { getEntityColor } from "@/lib/colors" // v109: opt-in color fallback
 
 function applyFilters(notes: Note[], filters: OntologyFilters): Note[] {
   return notes.filter((n) => {
@@ -129,7 +130,7 @@ export function OntologyView() {
           values: tags.map((t) => ({
             key: t.id,
             label: t.name,
-            color: t.color,
+            color: t.color ?? undefined, // v109: null → undefined for FilterValue
           })),
         }
       }
@@ -165,7 +166,7 @@ export function OntologyView() {
 
   // Build graph data (no positions — fast, synchronous)
   const tagsMapped = useMemo(
-    () => tags.map((t) => ({ id: t.id, name: t.name, color: t.color })),
+    () => tags.map((t) => ({ id: t.id, name: t.name, color: getEntityColor(t.color) })),
     [tags],
   )
   const wikiArticlesMapped = useMemo(
@@ -376,7 +377,7 @@ export function OntologyView() {
               })
             }
             notes={filteredNotes.map((n) => ({ id: n.id, title: n.title, preview: n.preview, status: n.status, tags: n.tags }))}
-            tags={tags.map((t) => ({ id: t.id, name: t.name, color: t.color }))}
+            tags={tags.map((t) => ({ id: t.id, name: t.name, color: getEntityColor(t.color) }))}
             searchMatchIds={searchMatchIds}
             selectedNodeId={selectedNodeId}
             onSelectNode={setSelectedNodeId}
