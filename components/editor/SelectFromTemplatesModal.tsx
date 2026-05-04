@@ -84,7 +84,7 @@ export function SelectFromTemplatesModal({ open, onOpenChange, editor }: Props) 
             {sortedTemplates.map((template) => (
               <CommandItem
                 key={template.id}
-                value={`${template.name} ${template.description ?? ""}`}
+                value={template.name}
                 onSelect={() => handleSelect(template)}
                 className="flex items-center gap-3"
               >
@@ -93,16 +93,9 @@ export function SelectFromTemplatesModal({ open, onOpenChange, editor }: Props) 
                   weight="regular"
                   className="shrink-0 text-muted-foreground"
                 />
-                <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-                  <span className="truncate text-note text-foreground">
-                    {template.name}
-                  </span>
-                  {template.description && (
-                    <span className="truncate text-2xs text-muted-foreground">
-                      {template.description}
-                    </span>
-                  )}
-                </div>
+                <span className="truncate flex-1 text-note text-foreground">
+                  {template.name}
+                </span>
                 {template.pinned && (
                   <PushPin
                     size={12}

@@ -155,7 +155,8 @@ export const SlashCommandExtension = Extension.create({
             .map<SlashItem>((t) => ({
               id: `template-${t.id}`,
               label: `Template: ${t.name}`,
-              description: t.description || "Insert template content",
+              // v108: NoteTemplate.description retired — generic hint instead.
+              description: "Insert template content",
               icon: Layout,
               surfaces: ["slash"],
               group: "structure",

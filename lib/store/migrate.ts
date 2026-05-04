@@ -1623,5 +1623,23 @@ export function migrate(persistedState: unknown): PlotState {
     }
   }
 
+  // v108: Strip retired NoteTemplate fields (`description`, `status`, `priority`).
+  // Card display already retired in PR template-c/e — v108 follows up by deleting
+  // them from persisted templates so the data model matches the type.
+  // Idempotent: `delete` on missing keys is a no-op.
+  if (Array.isArray(state.templates)) {
+    let strippedCount = 0
+    for (const t of state.templates as Record<string, unknown>[]) {
+      let mutated = false
+      if ("description" in t) { delete t.description; mutated = true }
+      if ("status" in t) { delete t.status; mutated = true }
+      if ("priority" in t) { delete t.priority; mutated = true }
+      if (mutated) strippedCount++
+    }
+    if (strippedCount > 0) {
+      console.log(`[migrate] v107→v108: stripped retired fields from ${strippedCount} templates`)
+    }
+  }
+
   return state as unknown as PlotState
 }

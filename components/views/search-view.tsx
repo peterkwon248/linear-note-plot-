@@ -141,15 +141,9 @@ export function SearchView() {
   const matchedTemplates = useMemo(() => {
     if (!hasFuzzyQuery) return []
     const q = query.toLowerCase().trim()
-    // Templates dropped per-template `icon` in v102 — search row now
-    // shows the generic Layout icon (see below).
-    return (templates as { id: string; name: string; description: string }[])
-      .filter(
-        (t) =>
-          t.name.toLowerCase().includes(q) ||
-          t.description.toLowerCase().includes(q),
-      )
-      .slice(0, 10)
+    // v102: per-template `icon` retired (generic Layout below).
+    // v108: `description` retired — name is the only searchable text.
+    return templates.filter((t) => t.name.toLowerCase().includes(q)).slice(0, 10)
   }, [templates, query, hasFuzzyQuery])
 
   const matchedFolders = useMemo(() => {
@@ -554,11 +548,7 @@ export function SearchView() {
                             <div className="truncate text-foreground">
                               {highlightQuery(tmpl.name, query)}
                             </div>
-                            {tmpl.description && (
-                              <div className="truncate text-note text-muted-foreground">
-                                {tmpl.description}
-                              </div>
-                            )}
+                            {/* v108: NoteTemplate.description retired — name carries the row alone. */}
                           </div>
                         </button>
                       ))}

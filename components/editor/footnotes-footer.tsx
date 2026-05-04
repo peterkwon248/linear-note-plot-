@@ -283,6 +283,8 @@ export function FootnotesFooter({ editor, noteId, editable = true }: FootnotesFo
 
 /* ── Note References Footer (standalone document-level references with modal) ── */
 
+const EMPTY_REF_IDS: string[] = []
+
 interface NoteReferencesFooterProps {
   footnoteRefIds: string[]
   noteId?: string
@@ -296,9 +298,9 @@ function NoteReferencesFooter({ footnoteRefIds, noteId, editable = true }: NoteR
   const createReference = usePlotStore((s) => s.createReference)
   const updateReference = usePlotStore((s) => s.updateReference)
   const noteReferenceIds = usePlotStore((s) => {
-    if (!noteId) return [] as string[]
+    if (!noteId) return EMPTY_REF_IDS
     const note = s.notes.find((n: any) => n.id === noteId)
-    return (note?.referenceIds ?? []) as string[]
+    return (note?.referenceIds ?? EMPTY_REF_IDS) as string[]
   })
 
   const [collapsed, setCollapsed] = useState(true)
