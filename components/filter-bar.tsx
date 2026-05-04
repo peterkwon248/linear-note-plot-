@@ -34,6 +34,7 @@ import { Hash as PhHash } from "@phosphor-icons/react/dist/ssr/Hash"
 import { StatusBadge } from "@/components/note-fields"
 import type { FilterRule, FilterField, GroupBy } from "@/lib/view-engine/types"
 import type { NoteStatus, NoteSource, Folder, Tag as TagType, Label } from "@/lib/types"
+import { getEntityColor } from "@/lib/colors" // v109: opt-in color fallback
 
 /* ── Helpers ──────────────────────────────────────────── */
 
@@ -497,7 +498,7 @@ export function FilterMenuItems({
                 <CheckMark active={hasFilter(filters, "tags", tag.id)} />
                 <span
                   className="h-2.5 w-2.5 rounded-full shrink-0"
-                  style={{ backgroundColor: tag.color }}
+                  style={{ backgroundColor: getEntityColor(tag.color) }}
                 />
                 <span className="text-note">{tag.name}</span>
               </DropdownMenuItem>
@@ -943,7 +944,7 @@ export function FilterFieldContent({ groupKey, filters, folders, tags, labels = 
             .map((tag) => (
               <DropdownMenuItem key={tag.id} onSelect={(e) => { e.preventDefault(); onToggleFilter("tags", tag.id) }}>
                 <CheckMark active={hasFilter(filters, "tags", tag.id)} />
-                <span className="h-2.5 w-2.5 rounded-full shrink-0" style={{ backgroundColor: tag.color }} />
+                <span className="h-2.5 w-2.5 rounded-full shrink-0" style={{ backgroundColor: getEntityColor(tag.color) }} />
                 <span className="text-note">{tag.name}</span>
               </DropdownMenuItem>
             ))}

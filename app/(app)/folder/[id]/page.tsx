@@ -44,6 +44,7 @@ import { Plus } from "@phosphor-icons/react/dist/ssr/Plus"
 import { CaretDown } from "@phosphor-icons/react/dist/ssr/CaretDown"
 import { ArrowSquareOut } from "@phosphor-icons/react/dist/ssr/ArrowSquareOut"
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover"
+import { getEntityColor } from "@/lib/colors" // v109: opt-in color fallback
 
 export default function FolderPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params)
@@ -102,9 +103,9 @@ export default function FolderPage({ params }: { params: Promise<{ id: string }>
         <div className="flex items-center gap-3 min-w-0">
           <span
             className="h-7 w-7 rounded-md flex items-center justify-center shrink-0"
-            style={{ backgroundColor: `${folder.color}20` }}
+            style={{ backgroundColor: `${getEntityColor(folder.color)}20` }}
           >
-            <FolderOpen size={18} weight="regular" style={{ color: folder.color }} />
+            <FolderOpen size={18} weight="regular" style={{ color: getEntityColor(folder.color) }} />
           </span>
           <div className="min-w-0">
             <h1 className="text-lg font-semibold truncate">{folder.name}</h1>

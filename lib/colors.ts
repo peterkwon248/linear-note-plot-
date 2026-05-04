@@ -263,6 +263,23 @@ export const LINK_DENSITY_HEX = {
 
 export const STATUS_DOT_FALLBACK = "#6b7280"
 
+/* ── Entity color (v109 opt-in policy) ───────────────
+ * Folder / Tag colors are opt-in as of v109. Auto-assignment
+ * (palette cycle, hash-based pickColor) was removed — new
+ * folders / tags start with `color: null` and only carry a
+ * value when the user explicitly sets one via "Set color..."
+ * (sidebar context menu). Display sites should resolve via
+ * `getEntityColor(...)` so a missing color falls back to the
+ * neutral gray dot rather than rendering as transparent.
+ *
+ * Note: Label / Sticker colors are NOT opt-in — they remain
+ * required because their visual identity (chip, hull) depends
+ * on color presence.
+ */
+export function getEntityColor(color: string | null | undefined): string {
+  return color || STATUS_DOT_FALLBACK
+}
+
 /* ── Event Log ───────────────────────────────── */
 
 export const EVENT_HEX = {

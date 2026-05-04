@@ -5,7 +5,10 @@ type Set = (fn: ((state: any) => any) | any) => void
 
 export function createTagsSlice(set: Set) {
   return {
-    createTag: (name: string, color: string) => {
+    // v109: `color` defaults to null (opt-in). Tags created from hashtags or
+    // the picker start uncolored; users set a color explicitly via context
+    // menu when desired.
+    createTag: (name: string, color: string | null = null) => {
       set((state: any) => ({
         tags: [...state.tags, { id: genId(), name, color }],
       }))

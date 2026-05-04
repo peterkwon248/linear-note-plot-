@@ -25,7 +25,7 @@ import { Plus as PhPlus } from "@phosphor-icons/react/dist/ssr/Plus"
 import { X as PhX } from "@phosphor-icons/react/dist/ssr/X"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { cn } from "@/lib/utils"
-import { PRESET_COLORS } from "@/lib/colors"
+import { PRESET_COLORS, getEntityColor } from "@/lib/colors" // v109: opt-in color fallback
 import type { NoteStatus, NotePriority } from "@/lib/types"
 
 export function pickColor(name: string): string {
@@ -362,10 +362,11 @@ export function TagPicker({
 }: {
   noteId: string
   selectedTagIds: string[]
-  allTags: { id: string; name: string; color: string }[]
+  allTags: { id: string; name: string; color: string | null }[] // v109: opt-in color fallback
   onAddTag: (noteId: string, tagId: string) => void
   onRemoveTag: (noteId: string, tagId: string) => void
-  onCreateTag: (name: string, color: string) => void
+  // v109: opt-in color — `color` arg dropped at call sites; store applies null default.
+  onCreateTag: (name: string, color?: string | null) => void
 }) {
   const [open, setOpen] = useState(false)
   const [search, setSearch] = useState("")
@@ -395,7 +396,7 @@ export function TagPicker({
           <span
             key={t.id}
             className="group/tag inline-flex items-center gap-0.5 rounded-full px-2 py-0.5 text-2xs font-medium"
-            style={{ backgroundColor: `${t.color}18`, color: t.color }}
+            style={{ backgroundColor: `${getEntityColor(t.color)}18`, color: getEntityColor(t.color) }}
           >
             {t.name}
             <button
@@ -427,7 +428,7 @@ export function TagPicker({
               onKeyDown={(e) => {
                 if (e.key === "Enter" && showCreate) {
                   e.preventDefault()
-                  onCreateTag(search.trim(), pickColor(search.trim()))
+                  onCreateTag(search.trim())
                   setSearch("")
                 }
               }}
@@ -447,7 +448,7 @@ export function TagPicker({
                   }}
                 >
                   <span className="flex items-center gap-2">
-                    <span className="h-2 w-2 rounded-full" style={{ backgroundColor: t.color }} />
+                    <span className="h-2 w-2 rounded-full" style={{ backgroundColor: getEntityColor(t.color) }} />
                     <span className="text-foreground">{t.name}</span>
                   </span>
                   {isSelected && <PhCheck className="text-muted-foreground" size={12} weight="bold" />}
@@ -459,7 +460,7 @@ export function TagPicker({
                 className="flex w-full items-center gap-2 px-3 py-1.5 text-note text-accent transition-colors hover:bg-hover-bg"
                 onClick={(e) => {
                   e.stopPropagation()
-                  onCreateTag(search.trim(), pickColor(search.trim()))
+                  onCreateTag(search.trim())
                   setSearch("")
                 }}
               >

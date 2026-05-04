@@ -24,6 +24,7 @@ import { useSettingsStore } from "@/lib/settings-store"
 import type { Note, NoteFilter } from "@/lib/types"
 import { StatusDropdown, PriorityDropdown } from "@/components/note-fields"
 import { setNoteDragData } from "@/lib/drag-helpers"
+import { getEntityColor } from "@/lib/colors" // v109: opt-in color fallback
 
 /* -- helpers -------------------------------------------------- */
 
@@ -117,8 +118,8 @@ const NoteRow = memo(function NoteRow({ note }: { note: Note }) {
               key={tag.id}
               className="shrink-0 rounded-full px-2 py-0.5 text-2xs font-medium"
               style={{
-                backgroundColor: `${tag.color}18`,
-                color: tag.color,
+                backgroundColor: `${getEntityColor(tag.color)}18`,
+                color: getEntityColor(tag.color),
               }}
             >
               {tag.name}

@@ -397,7 +397,7 @@ export function TemplatesView() {
           values: folders.map((f) => ({
             key: f.id,
             label: f.name,
-            color: f.color,
+            color: f.color ?? undefined, // v109: null → undefined for FilterValue
             count: allTemplates.filter((t) => !t.trashed && t.folderId === f.id).length,
           })),
         }
@@ -410,7 +410,7 @@ export function TemplatesView() {
             .map((tag) => ({
               key: tag.id,
               label: tag.name,
-              color: tag.color,
+              color: tag.color ?? undefined, // v109: null → undefined for FilterValue
               count: allTemplates.filter((t) => !t.trashed && t.tags.includes(tag.id)).length,
             })),
         }

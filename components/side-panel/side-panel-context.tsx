@@ -43,6 +43,7 @@ import { useActiveRoute } from "@/lib/table-route"
 import { useWikiViewMode, useActiveCategoryId, setActiveCategoryView } from "@/lib/wiki-view-mode"
 import { CategorySidePanel } from "@/components/views/wiki-category-page"
 import { FolderPicker } from "@/components/folder-picker"
+import { getEntityColor } from "@/lib/colors" // v109: opt-in color fallback
 
 function InspectorSection({
   title,
@@ -352,8 +353,8 @@ export function SidePanelContext({ noteId: propNoteId }: { noteId?: string | nul
               key={f.id}
               className="group/chip flex items-center gap-1 rounded-md px-2 py-0.5 text-2xs font-medium"
               style={{
-                backgroundColor: `${f.color}1a`,
-                color: f.color,
+                backgroundColor: `${getEntityColor(f.color)}1a`,
+                color: getEntityColor(f.color),
               }}
               title={f.name}
             >
@@ -416,8 +417,8 @@ export function SidePanelContext({ noteId: propNoteId }: { noteId?: string | nul
               key={tag.id}
               className="flex items-center gap-1 rounded-full px-2 py-0.5 text-2xs font-medium"
               style={{
-                backgroundColor: `${tag.color}18`,
-                color: tag.color,
+                backgroundColor: `${getEntityColor(tag.color)}18`,
+                color: getEntityColor(tag.color),
               }}
             >
               {tag.name}
@@ -449,7 +450,7 @@ export function SidePanelContext({ noteId: propNoteId }: { noteId?: string | nul
                   >
                     <span
                       className="h-2 w-2 rounded-full"
-                      style={{ backgroundColor: tag.color }}
+                      style={{ backgroundColor: getEntityColor(tag.color) }}
                     />
                     {tag.name}
                   </button>

@@ -37,6 +37,7 @@ import { GitMerge } from "@phosphor-icons/react/dist/ssr/GitMerge"
 import { FolderSimple } from "@phosphor-icons/react/dist/ssr/FolderSimple"
 import { Tag as PhTag } from "@phosphor-icons/react/dist/ssr/Tag"
 import { TextT } from "@phosphor-icons/react/dist/ssr/TextT"
+import { getEntityColor } from "@/lib/colors" // v109: opt-in color fallback
 
 /* ── Section ───────────────────────────────────────────── */
 
@@ -472,7 +473,7 @@ export function NoteDetailPanel({
                 <span className="flex flex-wrap items-center gap-1.5 justify-end">
                   {noteFolderObjs.map((f) => (
                     <span key={f.id} className="flex items-center gap-1" title={f.name}>
-                      <span className="h-2 w-2 rounded-full shrink-0" style={{ backgroundColor: f.color }} />
+                      <span className="h-2 w-2 rounded-full shrink-0" style={{ backgroundColor: getEntityColor(f.color) }} />
                       <span className="text-note truncate max-w-[120px]">{f.name}</span>
                     </span>
                   ))}

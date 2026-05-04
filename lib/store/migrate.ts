@@ -1641,5 +1641,17 @@ export function migrate(persistedState: unknown): PlotState {
     }
   }
 
+  // v109: Folder/Tag color opt-in policy.
+  //
+  // No data transformation needed — existing folders and tags keep whatever
+  // colors they already have (auto-assigned by palette cycle / pickColor in
+  // earlier versions). The schema simply widens to `string | null` so new
+  // folders/tags can start uncolored. The version bump is for forward-compat
+  // bookkeeping; this block is intentionally a no-op.
+  //
+  // Rationale: stripping existing colors would be invasive and surprise users
+  // who already organized their workspace by color. Opt-in applies to *new*
+  // entities; existing data keeps its expression.
+
   return state as unknown as PlotState
 }

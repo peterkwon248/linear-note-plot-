@@ -8,6 +8,7 @@ import { detectUnlinkedMentions } from "@/lib/unlinked-mentions"
 import type { Relation, RelationType } from "@/lib/types"
 import { X as PhX } from "@phosphor-icons/react/dist/ssr/X"
 import { ArrowSquareOut } from "@phosphor-icons/react/dist/ssr/ArrowSquareOut"
+import { getEntityColor } from "@/lib/colors" // v109: opt-in color fallback
 interface OntologyDetailPanelProps {
   noteId: string
   onClose: () => void
@@ -192,7 +193,7 @@ export function OntologyDetailPanel({
               >
                 <div
                   className="w-1.5 h-1.5 rounded-full flex-shrink-0"
-                  style={{ backgroundColor: tag!.color }}
+                  style={{ backgroundColor: getEntityColor(tag!.color) }}
                 />
                 <span className="text-muted-foreground">{tag!.name}</span>
               </div>

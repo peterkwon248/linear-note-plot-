@@ -20,6 +20,7 @@ import { FolderPicker } from "@/components/folder-picker"
 import { IconWiki } from "@/components/plot-icons"
 import { setActiveRoute } from "@/lib/table-route"
 import type { WikiArticle } from "@/lib/types"
+import { getEntityColor } from "@/lib/colors" // v109: opt-in color fallback
 
 function InspectorSection({
   title,
@@ -207,8 +208,8 @@ export function WikiArticleDetailPanel({ article }: { article: WikiArticle | nul
               key={f.id}
               className="flex items-center gap-1 rounded-md px-2 py-0.5 text-2xs font-medium"
               style={{
-                backgroundColor: `${f.color}1a`,
-                color: f.color,
+                backgroundColor: `${getEntityColor(f.color)}1a`,
+                color: getEntityColor(f.color),
               }}
               title={f.name}
             >
@@ -257,8 +258,8 @@ export function WikiArticleDetailPanel({ article }: { article: WikiArticle | nul
                   key={tag.id}
                   className="flex items-center gap-1 rounded-full px-2 py-0.5 text-2xs font-medium"
                   style={{
-                    backgroundColor: `${tag.color}18`,
-                    color: tag.color,
+                    backgroundColor: `${getEntityColor(tag.color)}18`,
+                    color: getEntityColor(tag.color),
                   }}
                 >
                   {tag.name}
