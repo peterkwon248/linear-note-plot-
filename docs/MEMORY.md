@@ -28,6 +28,67 @@
 
 ---
 
+## 🚀 2026-05-04 (오후) — Templates 데이터 모델 정리 + 색 opt-in 정책 (v108/v109)
+
+**범위**: Templates 시리즈 마무리 + Folder/Tag 색 정책 큰 결정. 2-PR 분리 머지.
+
+### 머지된 PRs (이번 세션)
+- **#258** v108 — NoteTemplate slim. `description` / `status` / `priority` 3 필드 데이터 모델에서 제거 (이전 카드 표시 폐기 → 데이터 모델 정리 follow-up). 사이드 패널 Status/Priority row 제거, Label/Folder만 유지. `createNoteFromTemplate` default `"inbox"` / `"none"` 하드코딩. 시드 13개에서 3 필드 strip. v108 마이그레이션: 기존 templates 3 필드 idempotent strip. 부수: footnotes-footer Zustand selector 무한 루프 BUG fix (`EMPTY_REF_IDS` stable ref). templates-table row 시각 baseline notes-table와 일치 (Layout 아이콘 제거, pin만 유지). 13 files +74/-145 LOC.
+- **#259** v109 — Folder/Tag 색 opt-in 정책. 자동 부여(palette cycle / pickColor 해시) 폐지 → 신규 폴더/태그는 `color: null`로 시작. 사용자가 우클릭 "Change color..."로 명시적 부여. `Folder.color` / `Tag.color` → `string | null`. helper `getEntityColor(c)` 추가 (null → STATUS_DOT_FALLBACK 회색). 30+ 표시 사용처에 fallback 일괄 적용. 사이드바 폴더 우클릭 + Tags-view row 우클릭에 Reset color 옵션. v109 마이그레이션: no-op (옵션 A — 기존 사용자 색 그대로 유지). 27 files +219/-105 LOC.
+
+### 큰 결정 (영구, 이번 세션)
+- **Templates는 카드 + 데이터 모델 모두 정리**: status/priority/description은 default 값으로서도 가치 약 (사용자가 어차피 변경) → 완전 제거. 새 노트는 inbox/none으로 시작.
+- **Templates row 시각 = Notes row baseline**: 같은 list라 같은 시각. Layout entity 아이콘 = 차별화 0 → 시각 노이즈로 제거. 핀만 inline 유지 (정보 차이 있는 곳).
+- **색 정책 4사분면 (LOCKED)**:
+  - Label / Sticker = 색 필수 유지 (chip / hull 시각 도구)
+  - Folder / Tag = **opt-in** (이름·계층이 정체성, 색은 강조 옵션)
+- **Tag 본질 재정의**: 본문 hashtag로 자동 생성되는 가벼운 마커. 색 의도 0이라 자동 부여(pickColor)는 노이즈.
+- **마이그레이션 옵션 A 채택**: 기존 사용자 색 그대로 유지 (의식적 reset 가능). 데이터 손실 0.
+- **PR 분리 원칙 준수**: v108(Templates) → squash merge → v109(색) 별도 작업. UI + 데이터 모델 둘 다 변경하더라도 의미 단위로 묶음.
+
+### 이번 세션 핵심 결정사항
+- **footnotes-footer BUG**: zustand selector에서 매번 새 빈 array `[]` 반환 → React 19 useSyncExternalStore "infinite loop" 감지. `EMPTY_REF_IDS` stable ref 패턴으로 해결 (lib/stickers.ts `EMPTY_STICKER_ARRAY` 컨벤션 따름).
+- **Templates 사이드 패널 default 의미**: 사용자가 헷갈렸음 ("이 properties 의미?") → status/priority가 default 값이라는 게 직관적이지 않음 = 제거 신호.
+- **시각 매칭 검증 = DOM measure**: 같은 14px 이라도 outline vs filled, 무채색 vs status컬러 차이로 시각 무게 다름. 사용자 직관 = 디자인 시그널.
+- **Tag opt-in 시각화 = leading dot**: tags-view row에 색 dot 추가하면서 우클릭 picker 진입점 마련. 색 변경 즉시 시각 피드백.
+- **Folder vs Tag entity 구별**: Folder는 사용자가 의식적으로 만듬. Tag는 hashtag로 우연 생성 가능. opt-in 정책에 차이 없지만 UX 진입점은 다름 (Folder = 사이드바 우클릭, Tag = tags-view row 우클릭).
+
+### 이번 세션 기술 학습
+- **Zustand selector + React 19**: 매번 새 array/object 반환하면 useSyncExternalStore 안티패턴. 모듈 레벨 stable empty constant 패턴 정합 (이미 lib/stickers.ts:47에 있던 컨벤션).
+- **executor agent 위임 효과**: v109 type error 30+ 사이트 일괄 fix를 executor에 위임 → 자동으로 helper 호출 + import 정리 + tsc 0 errors까지. multi-file 변경에 강력.
+- **Worktree branch 관리**: v108 squash-merge 후 origin/branch는 squash 전 원본 commit. force push 회피하려면 새 branch checkout (Plot 워크플로우: branch per PR).
+- **`gh pr merge` worktree 충돌**: `--delete-branch` 옵션이 local checkout 시도 → main worktree 점유로 실패. `--squash`만 사용하면 remote merge OK. local cleanup은 별도.
+- **Color picker UI 재사용**: 이미 ColorPickerGrid 컴포넌트 + 사이드바 Folder 우클릭에 wired. v109 작업이 인프라 추가가 아니라 *기존 인프라의 default 정책 변경* + Tag entry point 추가로 minimal.
+
+### 다음 세션 우선순위 (재정렬)
+
+#### 🟡 큰 작업 후보 (시드 템플릿 BUG는 v108에서 해결됨)
+1. **Group C PR-D** — Tags/Labels/Stickers/References/Files view-engine 통합 (5-8 PRs). Templates/Folder가 본보기. **planner 권장**.
+2. **Wiki template 3-layer** (Layout Preset + Content Template + Typed Infobox)
+3. **Smart Book v2** — AutoSource[5] (folder/category/tag/label/sticker)
+4. **Template seed audit** — `PlotTemplate<T>` 추상화 검토
+
+#### 🟣 마지막
+5. **Note UI toolbar** (UpNote-style)
+6. **House (계보 시각화)** — 토론 후 결정
+
+#### 🟢 작은 후속 정리
+- Templates grid chip 시스템 완전 통일 (PR e deviation)
+- 키보드 shortcut (D/T/P 등) — 노트 + templates 통합
+- Wiki bulk action bar (필요해지면)
+- FolderPicker 검색 필터 (50+ 폴더 시점)
+- Tag 우클릭 메뉴 Rename 옵션 추가 (v109에서 Change color/Reset/Delete만 추가됨)
+- Label 색 정책 재검토 — 현재 필수지만 Tag와 같은 opt-in 가능성 토론 필요
+
+### Plan 문서 보존 / 신규
+- `.omc/plans/folder-nm-migration.md` (이전, PR a/b/c 완료)
+- `.omc/plans/template-b-edit-ui-unification.md` (이전, v108 정리 토대)
+
+### Store version 진화 (이번 세션)
+v107 → v108 (NoteTemplate description/status/priority strip) → v109 (Folder/Tag color nullable, no-op migration)
+
+---
+
 ## 🚀 2026-05-04 — Folder N:M 시리즈 완성 (PR b/c)
 
 **범위**: PR (folder-b) UI 분리 + PR (folder-c) Multi-folder UX. Folder type-strict + N:M 시리즈 3-PR 완성.
