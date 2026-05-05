@@ -20,6 +20,8 @@ export type ViewContextKey =
   | "graph"          // /ontology — graph view
   | "calendar"       // /calendar — calendar view
   | "templates"      // /templates — note template list (PR template-c)
+  // Group C PR-D: entity index views (tag entity list, not tag-filtered notes)
+  | "tags-list"      // /library/tags — Tag entity index (PR group-c-d-1)
   | `query-${string}` // inline query blocks in editor
 
 /* ── View State ────────────────────────────────────────── */
@@ -40,6 +42,9 @@ export type SortField =
   | "sub"
   | "tier"
   | "parent"
+  // Group C PR-D: entity-specific sort fields
+  | "name"       // tags-list / labels-list: alphabetical name sort
+  | "noteCount"  // tags-list / labels-list: attached note count
 
 export type SortDirection = "asc" | "desc"
 
@@ -184,11 +189,15 @@ export const VALID_VIEW_CONTEXT_KEYS: ViewContextKey[] = [
   "savedView", "wiki", "wiki-category", "graph", "calendar",
   // PR template-c: templates list now uses the unified view-engine pipeline.
   "templates",
+  // Group C PR-D: entity index views
+  "tags-list",
 ]
 
 export const VALID_SORT_FIELDS: SortField[] = [
   "updatedAt", "createdAt", "priority", "title", "status", "links", "reads", "folder", "label",
   "sub", "tier", "parent",
+  // Group C PR-D entity-specific
+  "name", "noteCount",
 ]
 
 export const VALID_GROUP_BY: GroupBy[] = [
@@ -215,4 +224,7 @@ export const VALID_COLUMNS: string[] = [
   // columns so the Display popover affects the board surface too. children
   // was already rendered by notes-table; whitelist it for visibleColumns.
   "priority", "label", "children",
+  // PR group-c-d-1 (Tags): Tag entity index display properties.
+  // noteCount = TagNoteCountChip toggle, color = leading color dot toggle.
+  "noteCount", "color",
 ]

@@ -29,6 +29,7 @@ import { Eye as PhEye } from "@phosphor-icons/react/dist/ssr/Eye"
 import { Tree as PhTree } from "@phosphor-icons/react/dist/ssr/Tree"
 import { ArrowBendUpLeft as PhParent } from "@phosphor-icons/react/dist/ssr/ArrowBendUpLeft"
 import { PushPin as PhPushPin } from "@phosphor-icons/react/dist/ssr/PushPin"
+import { NoteBlank as PhNoteBlank } from "@phosphor-icons/react/dist/ssr/NoteBlank"
 import { StatusBadge, PriorityBadge } from "@/components/note-fields"
 import { shortRelative } from "@/lib/format-utils"
 import type { NoteStatus, NotePriority } from "@/lib/types"
@@ -326,6 +327,30 @@ export function PinnedChip() {
   return (
     <span title="Pinned" className="inline-flex items-center shrink-0">
       <PhPushPin className="text-accent" size={12} weight="regular" />
+    </span>
+  )
+}
+
+/* ── TagNoteCountChip (Group C PR-D) ─────────────────── */
+
+/**
+ * Displays the number of notes attached to a tag.
+ * Rendered on tag entity cards (tags-list view). Hidden when count === 0
+ * to keep empty-tag rows visually clean.
+ *
+ * Icon: NoteBlank — consistent with other note-count indicators across
+ * the app. Neutral muted style (no color tint) — count is metadata,
+ * not identity.
+ */
+export function TagNoteCountChip({ count }: { count: number }) {
+  if (count === 0) return null
+  return (
+    <span
+      title={`${count} ${count === 1 ? "note" : "notes"}`}
+      className="inline-flex items-center gap-0.5 h-5 text-2xs text-muted-foreground leading-none whitespace-nowrap shrink-0"
+    >
+      <PhNoteBlank size={10} weight="regular" />
+      {count}
     </span>
   )
 }

@@ -112,6 +112,9 @@ const SORT_FIELD_LABELS: Record<SortField, string> = {
   sub: "Sub",
   tier: "Tier",
   parent: "Parent",
+  // Group C PR-D: entity-specific sort fields
+  name: "Name",
+  noteCount: "Note count",
 }
 
 const COLUMN_DEFS: { id: string; label: string; width: string; align?: string; sortField?: SortField; minWidth?: number }[] = [

@@ -1653,5 +1653,20 @@ export function migrate(persistedState: unknown): PlotState {
   // who already organized their workspace by color. Opt-in applies to *new*
   // entities; existing data keeps its expression.
 
+  // v110: Tags entity index view-engine integration (PR group-c-d-1).
+  //
+  // Inject viewStateByContext["tags-list"] default if not already present.
+  // Idempotent (option A) — existing users who already have the key keep
+  // their persisted viewState. New key only injected for users upgrading
+  // from v109 who don't have the key yet.
+  {
+    const vsc = state.viewStateByContext as Record<string, unknown> | undefined
+    if (vsc && !("tags-list" in vsc)) {
+      const defaultState = buildViewStateForContext("tags-list")
+      vsc["tags-list"] = defaultState
+      console.log("[migrate] v109→v110: injected tags-list viewState default")
+    }
+  }
+
   return state as unknown as PlotState
 }
