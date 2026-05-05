@@ -78,6 +78,8 @@ const PinIcon = <svg width={14} height={14} viewBox="0 0 16 16" fill="none" stro
 const ArchiveIcon = <svg width={14} height={14} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"><rect x="1.5" y="2" width="13" height="3" rx="1"/><path d="M2.5 5v8a1.3 1.3 0 001.3 1.3h8.4A1.3 1.3 0 0013.5 13V5"/><line x1="6" y1="8.5" x2="10" y2="8.5"/></svg>
 const TrashIcon = <svg width={14} height={14} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"><polyline points="2 4 3.3 4 14 4"/><path d="M12.7 4v9a1.3 1.3 0 01-1.4 1.3H4.7A1.3 1.3 0 013.3 13V4m2 0V2.7a1.3 1.3 0 011.4-1.4h2.6a1.3 1.3 0 011.4 1.4V4"/></svg>
 const SortIcon = <svg width={14} height={14} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"><line x1="2.5" y1="4" x2="10" y2="4"/><line x1="2.5" y1="8" x2="7.5" y2="8"/><line x1="2.5" y1="12" x2="5" y2="12"/></svg>
+// Color dot: filled circle suggesting "color swatch"
+const ColorDotIcon = <svg width={14} height={14} viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="4.5" fill="currentColor"/></svg>
 // Index (alphabetical group): 4 horizontal bars with leading dot bullets — "list with markers"
 const IndexIcon = <svg width={14} height={14} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"><circle cx="3" cy="3.5" r="0.8" fill="currentColor" stroke="none"/><circle cx="3" cy="8" r="0.8" fill="currentColor" stroke="none"/><circle cx="3" cy="12.5" r="0.8" fill="currentColor" stroke="none"/><line x1="6" y1="3.5" x2="13.5" y2="3.5"/><line x1="6" y1="8" x2="13.5" y2="8"/><line x1="6" y1="12.5" x2="13.5" y2="12.5"/></svg>
 const GraphIcon = <svg width={14} height={14} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"><circle cx="8" cy="3.3" r="1.7"/><circle cx="3.3" cy="12.7" r="1.7"/><circle cx="12.7" cy="12.7" r="1.7"/><line x1="8" y1="5" x2="3.3" y2="11"/><line x1="8" y1="5" x2="12.7" y2="11"/><line x1="5" y1="12.7" x2="11" y2="12.7"/></svg>
@@ -539,6 +541,33 @@ export const TEMPLATES_VIEW_CONFIG: ViewConfig = {
   },
 }
 
+// Tags entity index view config (PR group-c-d-1).
+// Tags are hashtag markers — no status/priority/board axis. list+grid only.
+// Sort by name (alpha) or noteCount. No filter categories (tags don't have
+// folder/label membership). Search is handled globally via searchQuery.
+export const TAGS_LIST_VIEW_CONFIG: ViewConfig = {
+  showFilter: false,
+  showDisplay: true,
+  showDetailPanel: false,
+  filterCategories: [],
+  quickFilters: [],
+  displayConfig: {
+    supportedModes: ["list", "grid"],
+    orderingOptions: [
+      { value: "name", label: "Name" },
+      { value: "noteCount", label: "Note count" },
+    ],
+    groupingOptions: [
+      { value: "none", label: "No grouping" },
+    ],
+    toggles: [],
+    properties: [
+      { key: "noteCount", label: "Note count", icon: SortIcon },
+      { key: "color", label: "Color", icon: ColorDotIcon },
+    ],
+  },
+}
+
 export const VIEW_CONFIGS: Record<string, ViewConfig> = {
   notes: NOTES_VIEW_CONFIG,
   wiki: WIKI_VIEW_CONFIG,
@@ -548,4 +577,5 @@ export const VIEW_CONFIGS: Record<string, ViewConfig> = {
   insights: INSIGHTS_VIEW_CONFIG,
   calendar: CALENDAR_VIEW_CONFIG,
   templates: TEMPLATES_VIEW_CONFIG,
+  "tags-list": TAGS_LIST_VIEW_CONFIG,
 }

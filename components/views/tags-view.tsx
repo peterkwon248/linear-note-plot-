@@ -42,7 +42,11 @@ import { cn } from "@/lib/utils"
 import { IconTag } from "@/components/plot-icons"
 import { ViewHeader } from "@/components/view-header"
 import { useNotesView } from "@/lib/view-engine/use-notes-view"
+import { useTagsView } from "@/lib/view-engine/use-tags-view"
 import { FilterButton, FilterChipBar } from "@/components/filter-bar"
+import { DisplayPanel } from "@/components/display-panel"
+import { TAGS_LIST_VIEW_CONFIG } from "@/lib/view-engine/view-configs"
+import { TagNoteCountChip } from "@/components/property-chips"
 import type { SortField, FilterRule, GroupBy } from "@/lib/view-engine/types"
 
 /* ── Sort/Group options for detail view ─────────────────── */
@@ -130,7 +134,6 @@ const DRAG_THRESHOLD = 5
 export function TagsView() {
   const tags = usePlotStore((s) => s.tags)
   const labels = usePlotStore((s) => s.labels)
-  const notes = usePlotStore((s) => s.notes)
   const folders = usePlotStore((s) => s.folders)
   const createTag = usePlotStore((s) => s.createTag)
   const deleteTag = usePlotStore((s) => s.deleteTag)
@@ -139,14 +142,29 @@ export function TagsView() {
 
   // View state
   const [selectedTagId, setSelectedTagId] = useState<string | null>(null)
-  const [searchQuery, setSearchQuery] = useState("")
   const [tagInput, setTagInput] = useState("")
   const [creatingTag, setCreatingTag] = useState(false)
   const [checkedTags, setCheckedTags] = useState<Set<string>>(new Set())
   const tagInputRef = useRef<HTMLInputElement>(null)
-  const [displayPopoverOpen, setDisplayPopoverOpen] = useState(false)
-  const [tagSortBy, setTagSortBy] = useState<"name-asc" | "name-desc" | "count-desc" | "count-asc">("name-asc")
-  const [hideEmptyTags, setHideEmptyTags] = useState(false)
+
+  // ── Tags-list view engine (entity index) ─────────────
+  // useTagsView manages: search (via global searchQuery), sort, group.
+  const {
+    flatTags: sortedTags,
+    flatCount,
+    totalCount,
+    viewState: tagsListViewState,
+    updateViewState: updateTagsListView,
+  } = useTagsView()
+
+  // hideEmpty toggle — stored in viewState.toggles
+  const hideEmpty = tagsListViewState.toggles?.hideEmpty ?? false
+
+  // Apply hideEmpty filter on top of the view-engine result
+  const visibleTags = useMemo(
+    () => hideEmpty ? sortedTags.filter((t) => t.noteCount > 0) : sortedTags,
+    [sortedTags, hideEmpty],
+  )
 
   // View engine for tag detail mode (must be called unconditionally)
   const tagExtras = useMemo(() => ({ tagId: selectedTagId ?? undefined }), [selectedTagId])
@@ -174,46 +192,6 @@ export function TagsView() {
   const isDraggingRef = useRef(false)
   const scrollContainerRef = useRef<HTMLDivElement>(null)
 
-  // Active (non-trashed, non-archived) notes only
-  const activeNotes = useMemo(
-    () => notes.filter((n) => !n.trashed),
-    [notes],
-  )
-
-  // PhTag note counts
-  const tagCounts = useMemo(() => {
-    const counts: Record<string, number> = {}
-    for (const tag of tags) {
-      counts[tag.id] = activeNotes.filter((n) =>
-        n.tags.includes(tag.id),
-      ).length
-    }
-    return counts
-  }, [tags, activeNotes])
-
-  // Filtered tags (by search, excluding trashed)
-  const filteredTags = useMemo(() => {
-    const activeTags = tags.filter((t) => !t.trashed)
-    if (!searchQuery.trim()) return activeTags
-    const q = searchQuery.toLowerCase()
-    return activeTags.filter((t) => t.name.toLowerCase().includes(q))
-  }, [tags, searchQuery])
-
-  // Sort and filter tags
-  const sortedTags = useMemo(() => {
-    let result = [...filteredTags]
-    if (hideEmptyTags) {
-      result = result.filter(t => (tagCounts[t.id] || 0) > 0)
-    }
-    switch (tagSortBy) {
-      case "name-asc": return result.sort((a, b) => a.name.localeCompare(b.name))
-      case "name-desc": return result.sort((a, b) => b.name.localeCompare(a.name))
-      case "count-desc": return result.sort((a, b) => (tagCounts[b.id] || 0) - (tagCounts[a.id] || 0))
-      case "count-asc": return result.sort((a, b) => (tagCounts[a.id] || 0) - (tagCounts[b.id] || 0))
-      default: return result
-    }
-  }, [filteredTags, tagSortBy, hideEmptyTags, tagCounts])
-
   const selectedTag = tags.find((t) => t.id === selectedTagId)
 
   // Handle tag input: parse #tag1 #tag2 format
@@ -227,7 +205,7 @@ export function TagsView() {
         .filter((s) => s.length > 0)
 
       for (const name of names) {
-        // PhCheck if tag already exists (case-insensitive)
+        // Check if tag already exists (case-insensitive)
         const exists = tags.some(
           (t) => t.name.toLowerCase() === name.toLowerCase(),
         )
@@ -265,10 +243,10 @@ export function TagsView() {
 
   // Toggle all
   const toggleAll = () => {
-    if (checkedTags.size === sortedTags.length) {
+    if (checkedTags.size === visibleTags.length) {
       setCheckedTags(new Set())
     } else {
-      setCheckedTags(new Set(sortedTags.map((t) => t.id)))
+      setCheckedTags(new Set(visibleTags.map((t) => t.id)))
     }
   }
 
@@ -277,7 +255,7 @@ export function TagsView() {
     if (e.shiftKey && lastClickedRef.current !== null) {
       const start = Math.min(lastClickedRef.current, rowIndex)
       const end = Math.max(lastClickedRef.current, rowIndex)
-      const rangeIds = sortedTags.slice(start, end + 1).map((t) => t.id)
+      const rangeIds = visibleTags.slice(start, end + 1).map((t) => t.id)
       setCheckedTags(new Set(rangeIds))
       e.preventDefault()
       return
@@ -296,7 +274,7 @@ export function TagsView() {
     // Normal click on row background — toggle check
     toggleCheck(tagId)
     lastClickedRef.current = rowIndex
-  }, [sortedTags, toggleCheck])
+  }, [visibleTags, toggleCheck])
 
   // Drag-to-select: mousedown on scroll container
   const handleDragMouseDown = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
@@ -355,11 +333,11 @@ export function TagsView() {
       const adjustedBottom = rectBottom - HEADER_HEIGHT
 
       const matchedIds = new Set<string>()
-      for (let i = 0; i < sortedTags.length; i++) {
+      for (let i = 0; i < visibleTags.length; i++) {
         const rowTop = i * ROW_HEIGHT
         const rowBottom = rowTop + ROW_HEIGHT
         if (rowBottom > adjustedTop && rowTop < adjustedBottom) {
-          matchedIds.add(sortedTags[i].id)
+          matchedIds.add(visibleTags[i].id)
         }
       }
       setCheckedTags(matchedIds)
@@ -379,7 +357,7 @@ export function TagsView() {
       document.removeEventListener("mousemove", handleMouseMove)
       document.removeEventListener("mouseup", handleMouseUp)
     }
-  }, [sortedTags])
+  }, [visibleTags])
 
   // Keyboard handlers: ESC to clear, Ctrl+A to select all
   useEffect(() => {
@@ -389,16 +367,16 @@ export function TagsView() {
         e.preventDefault()
         return
       }
-      if ((e.metaKey || e.ctrlKey) && e.key === "a" && sortedTags.length > 0) {
+      if ((e.metaKey || e.ctrlKey) && e.key === "a" && visibleTags.length > 0) {
         const tag = (e.target as HTMLElement)?.tagName?.toLowerCase()
         if (tag === "input" || tag === "textarea") return
-        setCheckedTags(new Set(sortedTags.map((t) => t.id)))
+        setCheckedTags(new Set(visibleTags.map((t) => t.id)))
         e.preventDefault()
       }
     }
     window.addEventListener("keydown", handler)
     return () => window.removeEventListener("keydown", handler)
-  }, [checkedTags.size, sortedTags])
+  }, [checkedTags.size, visibleTags])
 
   // Format relative time
   const formatRelativeTime = (dateStr: string) => {
@@ -415,7 +393,25 @@ export function TagsView() {
     })
   }
 
-  // ── PhTag Detail Mode ──
+  const isGridMode = tagsListViewState.viewMode === "grid"
+
+  // Current sort indicator helpers (for list header columns)
+  const currentSortField = tagsListViewState.sortFields[0]?.field ?? "name"
+  const currentSortDir = tagsListViewState.sortFields[0]?.direction ?? "asc"
+
+  const handleSortToggle = (field: "name" | "noteCount") => {
+    const isCurrent = currentSortField === field || (field === "name" && currentSortField === "title")
+    if (isCurrent) {
+      // Toggle direction
+      updateTagsListView({ sortFields: [{ field, direction: currentSortDir === "asc" ? "desc" : "asc" }] })
+    } else {
+      // Default direction per field
+      const dir = field === "noteCount" ? "desc" : "asc"
+      updateTagsListView({ sortFields: [{ field, direction: dir }] })
+    }
+  }
+
+  // ── Tag Detail Mode ──
   if (selectedTagId && selectedTag) {
     return (
       <div className="flex flex-1 flex-col overflow-hidden">
@@ -459,7 +455,7 @@ export function TagsView() {
             onSetFilters={(f) => updateTagView({ filters: f })}
           />
           <div className="flex-1" />
-          <Popover open={displayPopoverOpen} onOpenChange={setDisplayPopoverOpen}>
+          <Popover>
             <PopoverTrigger asChild>
               <button className="flex items-center gap-1.5 rounded-md px-2 py-1 text-note text-muted-foreground transition-colors hover:bg-hover-bg hover:text-foreground">
                 <SlidersHorizontal size={16} weight="regular" />
@@ -552,21 +548,33 @@ export function TagsView() {
     )
   }
 
-  // ── PhTag List Mode ──
+  // ── Tag List Mode ──
   return (
     <div className="flex flex-1 flex-col overflow-hidden">
       <ViewHeader
         icon={<IconTag size={20} />}
         title="Tags"
-        count={filteredTags.length}
+        count={flatCount}
         onCreateNew={() => {
           setCreatingTag(true)
           setTimeout(() => tagInputRef.current?.focus(), 100)
         }}
+        showDisplay={TAGS_LIST_VIEW_CONFIG.showDisplay}
+        displayContent={
+          <DisplayPanel
+            config={TAGS_LIST_VIEW_CONFIG.displayConfig}
+            viewState={tagsListViewState}
+            onViewStateChange={updateTagsListView}
+            showViewMode={true}
+            toggleStates={tagsListViewState.toggles}
+            onToggleChange={(key, val) =>
+              updateTagsListView({ toggles: { ...tagsListViewState.toggles, [key]: val } })
+            }
+          />
+        }
       />
 
-
-      {/* PhTag list */}
+      {/* Tag list / grid */}
       <ContextMenu>
         <ContextMenuTrigger asChild>
           <div
@@ -594,15 +602,97 @@ export function TagsView() {
               </div>
             )}
 
-            {sortedTags.length === 0 && !creatingTag && (
+            {visibleTags.length === 0 && !creatingTag && (
               <div className="flex h-32 flex-col items-center justify-center gap-2">
                 <span className="text-note text-muted-foreground">No tags yet</span>
                 <span className="text-2xs text-muted-foreground">Click + to create a tag</span>
               </div>
             )}
-            {sortedTags.length > 0 && (
+
+            {/* ── Grid Mode ── */}
+            {isGridMode && visibleTags.length > 0 && (
+              <div className="grid grid-cols-[repeat(auto-fill,minmax(160px,1fr))] gap-2 p-4">
+                {visibleTags.map((tag) => (
+                  <ContextMenu key={tag.id}>
+                    <ContextMenuTrigger asChild>
+                      <div
+                        className={cn(
+                          "group relative flex flex-col gap-2 rounded-lg border border-border/60 p-3 transition-all cursor-pointer",
+                          checkedTags.has(tag.id)
+                            ? "bg-accent/8 border-accent/40"
+                            : "bg-card hover:bg-hover-bg hover:border-border",
+                        )}
+                        onClick={(e) => {
+                          if ((e.target as HTMLElement).closest("button")) return
+                          toggleCheck(tag.id)
+                        }}
+                      >
+                        {/* Checkbox (top-right) */}
+                        <div
+                          onClick={(e) => { e.stopPropagation(); toggleCheck(tag.id) }}
+                          className={cn(
+                            "absolute right-2 top-2 h-4 w-4 shrink-0 rounded-[4px] border flex items-center justify-center cursor-pointer transition-all shadow-sm",
+                            checkedTags.has(tag.id)
+                              ? "bg-accent border-accent opacity-100"
+                              : "opacity-0 group-hover:opacity-100 bg-card border-zinc-400 dark:border-zinc-600",
+                          )}
+                        >
+                          {checkedTags.has(tag.id) && (
+                            <PhCheck size={10} weight="bold" className="text-accent-foreground" />
+                          )}
+                        </div>
+
+                        {/* Color dot */}
+                        <span
+                          className="h-2.5 w-2.5 shrink-0 rounded-full"
+                          style={{ backgroundColor: getEntityColor(tag.color) }}
+                        />
+
+                        {/* Tag name */}
+                        <button
+                          onClick={() => setSelectedTagId(tag.id)}
+                          className="text-left text-ui text-foreground transition-colors hover:text-accent leading-tight"
+                        >
+                          <span className="text-muted-foreground text-note">#</span>
+                          {tag.name}
+                        </button>
+
+                        {/* PropertyChip row */}
+                        <div className="flex items-center gap-1 min-w-0">
+                          <TagNoteCountChip count={tag.noteCount} />
+                        </div>
+                      </div>
+                    </ContextMenuTrigger>
+                    <ContextMenuContent className="w-48">
+                      <ContextMenuSub>
+                        <ContextMenuSubTrigger>Change color</ContextMenuSubTrigger>
+                        <ContextMenuSubContent className="p-2">
+                          <ColorPickerGrid
+                            value={getEntityColor(tag.color)}
+                            onChange={(color) => updateTag(tag.id, { color })}
+                          />
+                        </ContextMenuSubContent>
+                      </ContextMenuSub>
+                      <ContextMenuItem onClick={() => updateTag(tag.id, { color: null })}>
+                        Reset color
+                      </ContextMenuItem>
+                      <ContextMenuSeparator />
+                      <ContextMenuItem
+                        onClick={() => deleteTag(tag.id)}
+                        className="text-destructive focus:text-destructive"
+                      >
+                        Delete
+                      </ContextMenuItem>
+                    </ContextMenuContent>
+                  </ContextMenu>
+                ))}
+              </div>
+            )}
+
+            {/* ── List Mode ── */}
+            {!isGridMode && visibleTags.length > 0 && (
               <div>
-                {/* Header row with select-all checkbox (PR #230 pattern, Notes-aligned) */}
+                {/* Header row with select-all checkbox */}
                 <div
                   data-header-row
                   className="sticky top-0 z-10 flex items-center gap-3 border-b border-border-subtle bg-background px-6 py-2.5"
@@ -611,58 +701,57 @@ export function TagsView() {
                     onClick={toggleAll}
                     className={cn(
                       "h-4 w-4 rounded-[4px] border flex items-center justify-center cursor-pointer transition-colors shadow-sm",
-                      checkedTags.size === sortedTags.length && sortedTags.length > 0
+                      checkedTags.size === visibleTags.length && visibleTags.length > 0
                         ? "bg-accent border-accent"
                         : checkedTags.size > 0
                           ? "bg-accent/50 border-accent"
                           : "bg-card border-zinc-400 dark:border-zinc-600 hover:border-zinc-500 dark:hover:border-zinc-500"
                     )}
                   >
-                    {checkedTags.size === sortedTags.length && sortedTags.length > 0 && (
+                    {checkedTags.size === visibleTags.length && visibleTags.length > 0 && (
                       <PhCheck size={10} weight="bold" className="text-accent-foreground" />
                     )}
-                    {checkedTags.size > 0 && checkedTags.size < sortedTags.length && (
+                    {checkedTags.size > 0 && checkedTags.size < visibleTags.length && (
                       <Minus size={10} weight="regular" className="text-accent-foreground" />
                     )}
                   </div>
                   <button
                     className="flex flex-1 items-center gap-1 text-left text-2xs font-medium text-muted-foreground transition-colors hover:text-foreground"
-                    onClick={() => setTagSortBy(tagSortBy === "name-asc" ? "name-desc" : "name-asc")}
+                    onClick={() => handleSortToggle("name")}
                   >
                     Name
-                    {(tagSortBy === "name-asc" || tagSortBy === "name-desc") && (
-                      tagSortBy === "name-asc"
+                    {(currentSortField === "name" || currentSortField === "title") && (
+                      currentSortDir === "asc"
                         ? <ArrowUp size={12} weight="regular" className="text-accent" />
                         : <ArrowDown size={12} weight="regular" className="text-accent" />
                     )}
                   </button>
                   <button
                     className="flex w-16 items-center justify-end gap-1 text-2xs font-medium text-muted-foreground transition-colors hover:text-foreground"
-                    onClick={() => setTagSortBy(tagSortBy === "count-desc" ? "count-asc" : "count-desc")}
+                    onClick={() => handleSortToggle("noteCount")}
                   >
                     Notes
-                    {(tagSortBy === "count-desc" || tagSortBy === "count-asc") && (
-                      tagSortBy === "count-desc"
+                    {currentSortField === "noteCount" && (
+                      currentSortDir === "desc"
                         ? <ArrowDown size={12} weight="regular" className="text-accent" />
                         : <ArrowUp size={12} weight="regular" className="text-accent" />
                     )}
                   </button>
                   <button
-                    onClick={() => setHideEmptyTags(!hideEmptyTags)}
+                    onClick={() =>
+                      updateTagsListView({ toggles: { ...tagsListViewState.toggles, hideEmpty: !hideEmpty } })
+                    }
                     className={cn(
                       "ml-2 rounded p-1 transition-colors",
-                      hideEmptyTags ? "text-accent" : "text-muted-foreground hover:text-foreground"
+                      hideEmpty ? "text-accent" : "text-muted-foreground hover:text-foreground"
                     )}
-                    title={hideEmptyTags ? "Show all" : "Hide empty"}
+                    title={hideEmpty ? "Show all" : "Hide empty"}
                   >
                     <EyeSlash size={14} weight="regular" />
                   </button>
                 </div>
-                {sortedTags.map((tag, index) => (
+                {visibleTags.map((tag, index) => (
                   // v109: row-level ContextMenu — Set color picker entry point.
-                  // Per opt-in policy, tags start uncolored; this menu lets the
-                  // user assign a color when they want to highlight one. Reset
-                  // (no color) sends color back to null = neutral gray dot.
                   <ContextMenu key={tag.id}>
                     <ContextMenuTrigger asChild>
                       <div
@@ -703,7 +792,7 @@ export function TagsView() {
                           {tag.name}
                         </button>
                         <span className="w-16 text-right text-note tabular-nums text-muted-foreground">
-                          {tagCounts[tag.id] || 0}
+                          {tag.noteCount}
                         </span>
                       </div>
                     </ContextMenuTrigger>

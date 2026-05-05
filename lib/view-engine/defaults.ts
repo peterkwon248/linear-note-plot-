@@ -45,6 +45,11 @@ const CONTEXT_DEFAULTS: Partial<Record<ViewContextKey, Partial<ViewState>>> = {
   // appended automatically by ensureRequiredColumns.
   // description removed (PR template-c fix batch v105).
   templates:      { viewMode: "list", ...ctx("updatedAt"), groupBy: "none", visibleColumns: ["title"] },
+
+  // Group C PR-D: entity index views.
+  // Note: Tag has no updatedAt/createdAt — ensureRequiredColumns appends them
+  // as strings but the sort/timestamp logic in useTagsView guards against it.
+  "tags-list":    { viewMode: "list", ...ctx("name", "asc"), groupBy: "none", visibleColumns: ["title", "noteCount", "color"] },
 }
 
 /** Build a ViewState for a specific context, merging defaults */
