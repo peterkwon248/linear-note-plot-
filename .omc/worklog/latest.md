@@ -1,82 +1,152 @@
 ---
-session_date: "2026-05-04"
+session_date: "2026-05-05 ~ 2026-05-06"
 project: "Plot"
-working_directory: "C:/Users/user/Desktop/linear-note-plot-/.claude/worktrees/fervent-nash-44e7da"
-duration_estimate: "~3 시간, 2 PRs squash-merged (folder N:M 시리즈 완성)"
+working_directory: "C:\\Users\\user\\Desktop\\linear-note-plot-\\.claude\\worktrees\\trusting-kirch-4eb5f8"
+duration_estimate: "~6 hours"
+branch: "claude/group-c-d-2-labels"
 ---
 
-## Completed Work
+# 다음 세션 (다른 컴퓨터 OK) — Plot 2.0 PRD 진행 중
 
-2 PRs squash-merged to main (Folder N:M 시리즈 PR b/c 완성):
+## 한 줄 요약
+**Plot 2.0 진화 PRD 시작. Phase A (코드 정독 + 진화 진단) 완료. 11가지 핵심 결정 확정. Phase B (designer-high에게 완벽한 목업 위임) 직전에 멈춤.**
 
-- **PR #255** PR (folder-b) — UI type-strict 시각화. 신규 `folder-picker.tsx` (kind-aware, 3가지 export로 4곳 dedup) + 사이드바 Notes/Wiki Folders 분리 + `/folder/[id]` kind 분기 + DnD wrong-kind drop 거부 + notes board/table 다중 폴더 FolderChip. 8 files +744/-397 LOC.
-- **PR #256** PR (folder-c) — Multi-folder UX. FolderPicker `selectMode="multi"` (체크박스 + Apply) + Detail panel 다중 폴더 chip strip + "Add to folders…" 우클릭 메뉴 + group-by-folder MultiFolderMarker + DnD Shift modifier (Add vs Move). 10 files +931/-124 LOC, 18 신규 N:M 액션 테스트.
+---
 
-**Folder N:M 시리즈 총합 (PR a/b/c #253/#255/#256)**: 17 commits, 65+ files, +3215/-685 LOC, 18 신규 테스트.
+## Completed Work (이번 세션)
 
-## In Progress
-- 없음 (모든 작업 머지 완료)
+### Group C PR-D 시리즈
+- **PR #261** v110 — Tags view-engine 통합 (merged)
+- **PR #262** v111 — Labels view-engine 통합 (created, after-work에서 머지)
 
-## Remaining Tasks (다음 세션 — 우선순위 순)
+### Hotfix 8개 (PR #262와 함께)
+1. `status-icon.tsx` defensive guard — `NOTE_STATUS_COLORS[status]?.css ?? "currentColor"` (crash fix)
+2. `notes-table.tsx` — Index 헤더 gap-2 + TH `hideInactiveHint` prop
+3. `wiki-list.tsx` — Index gap-2, checkbox w-8, **article icon status color 적용**
+4. `templates-table.tsx` — Index gap-2, row gap-2/py-2.5, title gap-2
+5. `labels-view.tsx` — row 체크박스 hover-only
+6. `tags-view.tsx` — list mode 체크박스 hover-only
+7. `stickers-view.tsx` — row 체크박스 hover-only
+8. `linear-sidebar.tsx` — Notes context **Folders ↔ Views 순서 변경** (Views 위)
 
-### 🔴 즉시 (사용자 워크플로우 차단)
-- [ ] **BUG**: 시드 템플릿 더블클릭 시 에러. 시드 13개는 정상 보이지만 더블클릭 편집 안 됨. 정확한 콘솔 메시지 미수집. PR c~e 변경 중 어딘가 원인. `template-edit-page.tsx` + `templates-table.tsx` row click 시점부터 디버깅. **사용자에게 콘솔 메시지 요청 필요.**
+### 🆕 Plot 2.0 진화 PRD — Phase A 완료
 
-### 🟡 큰 작업 후보
-- [ ] **Group C PR-D** — Tags/Labels/Stickers/References/Files view-engine 통합 (5-8 PRs, planner 권장). Templates/Folder가 본보기. 가장 자연스러운 다음 큰 작업.
-- [ ] **Wiki template 3-layer** (Layout Preset + Content Template + Typed Infobox) — 위키 데이터 모델 위 별도 설계 필요
-- [ ] **Smart Book v2** — AutoSource[5] (folder/category/tag/label/sticker)
-- [ ] **Template seed audit** — `PlotTemplate<T>` 추상화 검토
+**자료 위치**: `C:\Users\user\Desktop\플롯 UI 진화 가이드자료\KakaoTalk_*.png` (20장, 사용자 ChatGPT 목업 영감)
 
-### 🟣 마지막 (출시 폴리시)
-- [ ] **Note UI toolbar** (UpNote-style) — Pin/Focus/Version 5-6 핵심 버튼
+**산출물**:
+- `docs/PLOT-CURRENT-STATE-FOR-2.0.md` — 코드베이스 완전 매핑 + 진화 매트릭스 (designer-high 입력용)
+- `docs/PLOT-2.0-MOCKUP.html` — 1차 5-화면 prototype (Notes/Wiki/Home/Library/Focus)
+- `docs/PLOT-2.0-NOTES.html` — designer-high 1차 정밀화 (Notes 시그니처, 90점)
+- `docs/PLOT-2.0-NOTES-FINAL.html` — 정밀화 진행 중 산출물 (참고)
 
-### 🟤 마지막에 논의 (보류)
-- [ ] **House (계보 시각화)** — Claude 의견: 별도 entity 불필요, Graph view에 lineage mode + sidebar 단축 링크로 대체. 다음 토론 시 결정.
+---
 
-### 🟢 작은 후속 정리
-- [ ] Templates grid chip 시스템 완전 통일 (PR e deviation 정리)
-- [ ] NoteTemplate 타입에서 description/status/priority 필드 제거 + 마이그레이션
-- [ ] 키보드 shortcut (D/T/P) — 노트 + templates 통합
-- [ ] Wiki bulk action bar (필요해지면)
-- [ ] FolderPicker 검색 필터 (50+ 폴더 시점)
+## 🔴 다음 세션 (Plot 2.0 Phase B) — 즉시 진행
 
-## Key Decisions (이번 세션)
-- **FolderPicker 추상화 패턴**: 단일 컴포넌트 + 3가지 export (Popover content / inline-submenu / 훅) — 호출 사이트가 자기 chrome 결정. 4곳 dedup.
-- **DnD modifier 시맨틱**: 일반 drop = Add (N:M 자연), Shift+drop = Move (이전 single 시맨틱 보존). 첫 drop 시 toast 안내.
-- **MultiFolderMarker**: group-by-folder에서 다중 폴더 노트의 다른 폴더 카운트만 chip으로 (전체 chip은 카드 과밀, "+N" 패턴).
-- **multi-mode picker UI**: local pending Set + Apply 버튼 (count summary). single-toggle보다 명확.
-- **Wiki bulk action**: 별도 bar 없음 결정. wiki-list 우클릭 메뉴만. 향후 만들 때 같은 패턴.
+**designer-high agent에게 위임할 brief 핵심**:
+- 입력: `docs/PLOT-CURRENT-STATE-FOR-2.0.md` + 영감 PNG 20장
+- 출력: `docs/PLOT-2.0-NOTES-FINAL.html` (또는 새 이름)
+- 11가지 결정 모두 반영
+- 반응형 + 토글 + ChatGPT 이미지 수준 디자인
+
+**진행 옵션**:
+- A) Notes 시그니처 1.5h → 검토 → 나머지 4 화면 (Wiki/Home/Library+Books/Focus) (각 30-40분)
+- B) 5 화면 한 번에 4-6h
+- C) 메인 agent (나)가 직접 단계적 30분/화면
+
+**제 추천: A**
+
+---
+
+## 11가지 확정 결정 (영구)
+
+| # | 결정 |
+|---|---|
+| 1 | Activity Bar 7-space (home/notes/wiki/calendar/ontology/library/**books NEW**) |
+| 2 | 7-space 새 팔레트 (Books = Rose #fb7185 dark / #e11d48 light) |
+| 3 | 분류 4-system → 3-system: Label→**Type**, Category→**Type**(wiki pool), Tag그대로, **Sticker→Pack** |
+| 4 | Type rename = UI 레이블만 (코드는 Label 그대로), 별도 PR로 코드 rename |
+| 5 | Type 컬럼 Display picker: Hidden / **Icon only (default)** / Text only / Icon+Text |
+| 6 | Icon = emoji 먼저 prep, `icon: { type: "emoji"\|"custom", value }` 이중 구조 |
+| 7 | Tags 사이드바 **인라인 색 dot** (큰 변화) |
+| 8 | Templates 사이드바 승격 ([Note] [Wiki disabled] 탭) |
+| 9 | Timeline = ViewMode (별도 ContextKey X) |
+| 10 | Detail Panel 5-tab: Detail/Connections/Activity/Bookmarks/**Stats** ("Insights" 아님) |
+| 11 | Focus Mode 4-mode + 3-진입점 (단축키 + 버튼 + Settings) |
+
+---
+
+## 보존 영구 결정 (변경 X)
+
+- "Gentle by default, powerful when needed"
+- Note/Wiki 2-entity 영구 분리
+- 색 정책 4사분면 (Label/Sticker→Pack 필수, Folder/Tag opt-in)
+- LLM/API 미사용 (규칙 + 통계 + 그래프)
+- Note split = UniqueID 활용
+- 사용자 직접 디자인 진행 중 (아이콘/뱃지/로고)
+
+---
+
+## Key Decisions
+
+- **Plot 2.0 = 95% 적용 가능** (기능 손실 0, 80% 표면 + 20% 새 layer)
+- **Sticker → Pack** (Bundle 비추, Box는 Inbox/Infobox와 헷갈림, Album 이미지 인상)
+- **"Insights" vs "Stats" 분리** — Plot 전체 = Insights, 단일 노트 = Stats
+- **반응형 + 패널 토글 필수** (1차 목업에서 빠진 핵심)
+- **사용자 자유 권한**: "기존 코드 100% 보존 X, 진화 시 코드 변경 OK" (단 데이터 0 손실 + Note/Wiki 분리는 영구)
+
+---
 
 ## Technical Learnings
-- **DnD shiftKey 감지**: `shiftPressedRef` (global keydown/keyup listener) 패턴으로 re-render 없이 modifier 추적. 카드 update 영향 X.
-- **vitest jsdom 미설정**: 프로젝트는 .ts 만 (component .tsx 테스트 X). 슬라이스 액션 단위 테스트로 대체.
-- **Linear 패턴 cross-cutting 적용**: PR e의 chip overflow ("+N") 패턴이 PR (folder-b) 다중 FolderChip + PR (folder-c) MultiFolderMarker에 자연 transplant.
-- **Memo equality 업데이트 의무 재확인**: BoardCard / NoteRow의 새 prop (groupKey 등) 추가 시 memo 비교에도 추가 안 하면 update 안 됨.
-- **Inline create + auto-check**: FolderPicker multi 모드에서 "+ New folder" 클릭 시 자동 pre-check → create-then-apply 한 번에.
+
+- **TH 컴포넌트 hideInactiveHint prop**: Title cell의 invisible sort arrow 12px width가 wiki/templates와 다른 간격 유발 → prop으로 Title만 hide
+- **체크박스 hover-only 통합 패턴**: `selectionActive || isChecked ? "visible" : "invisible group-hover:visible"` (Templates 패턴)
+- **Wiki article icon color** 사용자 직관 = 노트 status icon처럼 색 직접 적용 (회색 placeholder 대체)
+- **explore-high agent** = Phase A 적합 (코드 정독 + 미래 진단 동시)
+- **designer-high (Opus)** = 1.5-2h 한 화면 정밀화. 5 화면 한 번에 4-6h
+- **Plot accent = Indigo (#4f46e5/#818cf8)** — 목업 보라/파랑 색감과 자연 일치
+
+---
 
 ## Blockers / Issues
-- **시드 템플릿 더블클릭 에러** (사용자 워크플로우 차단): 이전 세션부터 미해결. 정확한 콘솔 메시지 미수집. 다음 세션 즉시 fix 필요.
+- 없음. Phase B 진행 준비 완료.
+
+---
 
 ## Environment & Config
-- **Worktree**: `C:/Users/user/Desktop/linear-note-plot-/.claude/worktrees/fervent-nash-44e7da`
-- **Main HEAD**: PR #256 머지 직후
-- **Store version**: v107 (변경 없음, 이번 세션은 UI만)
-- **Build**: tsc clean, npm run build clean (33 routes), npm run test 185/185 pass
-- **Local main checkout 실패** (gh pr merge --delete-branch 시): 이전과 동일. 서버 머지 정상.
+
+- **OS**: Windows 11
+- **Branch**: `claude/group-c-d-2-labels` (PR #262 머지 후 새 브랜치 권장)
+- **Store version**: v111
+- **Stack**: Next.js 16, React 19, Zustand 5, Tailwind v4, TipTap 3
+- **Build**: ✅ tsc clean, ✅ npm run build success
+
+---
 
 ## Notes for Next Session
-- **새 worktree 시작 권장** — fervent-nash-44e7da는 일단락. 다음은 클린 worktree.
-- **다음 작업 우선순위**: 1순위 = 더블클릭 BUG fix (사용자에게 콘솔 메시지 요청), 2순위 = Group C PR-D (planner 위임)
-- **Plan 문서 참고**: `.omc/plans/folder-nm-migration.md` (PR a/b/c 완료된 참고용)
-- **Group C PR-D는 큰 작업**: 5-8 PRs로 분할. planner 활용 필수. Templates/Folder 시리즈가 본보기.
 
-## Files Modified (이번 세션 전체)
+### 다른 컴퓨터에서 시작 시
+```bash
+git pull origin main
+/before-work
+```
 
-### PR #255 (folder-b UI 분리, 8 files +744/-397)
-- 신규: `components/folder-picker.tsx`
-- 변경: linear-sidebar, app/(app)/folder/[id]/page.tsx, notes-board, notes-table, floating-action-bar, side-panel-context, views/wiki-list
+before-work이 자동으로 읽음:
+- `.omc/worklog/latest.md` (이 파일)
+- `docs/MEMORY.md` (영구 결정 + PR history)
+- `.omc/notepad.md` (Plot 2.0 분석 + 11 결정)
+- `docs/PLOT-CURRENT-STATE-FOR-2.0.md` (Phase A 보고서)
+- `docs/PLOT-2.0-MOCKUP.html` + `PLOT-2.0-NOTES.html` (1차 시도)
 
-### PR #256 (folder-c Multi-folder UX, 10 files +931/-124)
-- 신규: `lib/store/__tests__/folders-nm-actions.test.ts` (18 테스트)
-- 변경: folder-picker (multi 모드), side-panel-context, wiki-article-detail-panel, note-detail-panel, notes-table, floating-action-bar, views/wiki-list, notes-board, property-chips
+### 첫 행동 (다음 세션)
+1. before-work 끝나면 "Plot 2.0 Phase B로 진행할까요?"
+2. designer-high에게 Notes 시그니처 위임 (brief는 .omc/notepad.md에 다 있음)
+3. 결과 검토 → 나머지 4 화면
+
+### 개인 목업 영감 (참고)
+- `C:\Users\user\Desktop\플롯 UI 진화 가이드자료\` (PNG 20장) — 다른 컴퓨터에선 이 경로가 다를 수 있음
+
+### 알아둘 것
+- 사용자가 직접 아이콘/뱃지/로고 디자인 진행 중 — 완성되면 Plot에 import 예정
+- Pack rename은 v112 마이그레이션 + UI 레이블만 변경 (데이터 그대로)
+- 모든 미커밋 변경은 PR #262에 squash merge 묶음 (worktree에서 진행한 진화 작업 전체)

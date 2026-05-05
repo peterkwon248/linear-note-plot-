@@ -28,6 +28,90 @@
 
 ---
 
+## 🚀 2026-05-05 — Group C PR-D 시리즈 진행 + UI hotfix + Plot 2.0 PRD 시작
+
+**범위**: PR #261 (Tags) merged, PR #262 (Labels) created. UI hotfix 8개. **Plot 2.0 진화 PRD Phase A 완료 + 핵심 결정 11가지 확정**.
+
+### 머지된 PRs (이번 세션)
+- **#261** v110 — Group C PR-D PR 1 (Tags). `tags-list` ViewContextKey + CONTEXT_DEFAULTS, useTagsView thin fork (~165 LOC), TAGS_LIST_VIEW_CONFIG, TagNoteCountChip, ViewMode list+grid, v110 idempotent migration. 9 files +954/-83 LOC. Architect APPROVED 3 NITs (모두 fix). Preview 검증 완료 (Display popover, Grid mode, viewState persist).
+- **#262** v111 — Group C PR-D PR 2 (Labels). #261 패턴 그대로 + Label 특성 (color non-nullable, 1:1 labelId, /labels 라우트 유지). useLabelsView thin fork (~155 LOC), LABELS_LIST_VIEW_CONFIG, LabelNoteCountChip. Architect APPROVED 0 NITs. Preview 검증 (Memo label 3 노트 정확). 8 files +577/-239 LOC.
+
+### Hotfix 8개 (PR #262와 함께 묶음)
+1. `status-icon.tsx` defensive guard — `NOTE_STATUS_COLORS[status]?.css ?? "currentColor"` (groupBy="status" + invalid label crash 방지, pre-existing 버그 fix)
+2. `notes-table.tsx` — Index 헤더 위치 (justify-between → gap-2, Title 옆), TH `hideInactiveHint` prop (Title 컬럼만 invisible sort arrow 숨김 → wiki/templates 간격 통일)
+3. `wiki-list.tsx` — Index 헤더 gap-2, checkbox `w-7 → w-8`, **wiki article icon status color** (stub=orange, article=emerald)
+4. `templates-table.tsx` — Index gap-2, row `gap-3 py-2 → gap-2 py-2.5`, title cell wrapper `gap-1.5 → gap-2`
+5. `labels-view.tsx` — row 체크박스 hover-only (Templates 패턴)
+6. `tags-view.tsx` — list mode 체크박스 hover-only
+7. `stickers-view.tsx` — row 체크박스 hover-only
+8. `linear-sidebar.tsx` — **Notes 사이드바 Folders ↔ Views 순서 변경** (Views 위, Folders 아래)
+
+### 🆕 Plot 2.0 PRD 시작 (큰 결정)
+
+**자료**: 사용자가 ChatGPT 목업 20장 (`C:\Users\user\Desktop\플롯 UI 진화 가이드자료\`) 첨부 → Plot 진화 vision 영감
+
+**Phase A 완료** — 코드베이스 깊이 정독 + 진화 진단:
+- `docs/PLOT-CURRENT-STATE-FOR-2.0.md` 신규 — 22 slice / 8 entity / 17 ViewContextKey / 7 ViewMode 완전 매핑 + 진화 매트릭스 + Open Questions 10개
+- 1차 목업: `docs/PLOT-2.0-MOCKUP.html` (5 화면 1차 prototype)
+- 1차 정밀화: `docs/PLOT-2.0-NOTES.html` (designer-high 정밀화, 90점)
+
+**확정된 11가지 결정** (영구):
+1. **Activity Bar 7-space** (home/notes/wiki/calendar/ontology/library/**books NEW**)
+2. **7-space 새 팔레트**: home indigo, notes cyan, wiki violet, calendar pink, ontology emerald, library amber, **books rose** (#fb7185 dark / #e11d48 light)
+3. **분류 체계 4-system → 3-system**: Label → **Type** (note pool, 단일), Category → **Type** (wiki pool, DAG 다중), Tag (그대로), **Sticker → Pack** (rename + 새 시각 정체성)
+4. **Type rename 방식**: UI 레이블만 변경 (코드 그대로), 나중에 별도 PR로 코드 rename
+5. **Type 컬럼 Display picker**: Hidden / Icon only (default) / Text only / Icon + Text
+6. **이모지 vs Custom Icon**: emoji 단일 필드 먼저 prep, `Label.icon: { type: "emoji" | "custom"; value: string }` 이중 구조로 swap 가능 (사용자 직접 디자인 진행 중)
+7. **Tags 사이드바 인라인 색 dot** (큰 변화)
+8. **Templates 사이드바 승격** (More section → 별도 섹션, [Note] [Wiki disabled] 탭)
+9. **Timeline = ViewMode** (별도 ContextKey X), `VALID_VIEW_MODES`에 `timeline` 추가
+10. **Detail Panel 5-tab**: Detail / Connections / Activity / Bookmarks / **Stats** (NEW). "Insights" 단어는 Plot 전체 분석에 보존, **Stats**는 단일 노트
+11. **Focus Mode**: Default / Focus / Zen / Compact. 3-진입점 (단축키 ⌘. + 우상단 버튼 + Settings)
+
+**Plot 2.0 핵심 영구 결정 보존**:
+- "Gentle by default, powerful when needed"
+- Note/Wiki 2-entity 영구 분리
+- 색 정책 4사분면 (Label/Sticker→Pack 필수, Folder/Tag opt-in)
+- LLM/API 미사용
+- Note split = UniqueID 활용
+
+**Phase B-D 남음**:
+- Phase B: 완벽한 목업 제작 (반응형 + 토글 + 데이터 정확도) — 5-7 화면
+- Phase C: 사용자 검토 + 수정
+- Phase D: PRD 작성 + 작업 단위 분해 (2-4개월 구현 로드맵)
+
+### 큰 결정 (영구, 이번 세션)
+- **Plot 2.0 진화 = 95% 적용 가능** — 기능 손실 0, 80% 표면 강화 + 20% 새 layer
+- **Label/Category/Sticker → Type/Pack rename** (UI 단어 변경, 데이터 모델 그대로)
+- **사용자 직접 아이콘 디자인 진행 중** — 완성 시 custom icon registry로 swap (이중 구조)
+- **새 7-space 팔레트** — 기존 SPACE_COLORS 재디자인 (새 술 새 부대)
+- **Sticker → Pack** (Bundle 비추, Box는 Inbox/Infobox와 헷갈림, Album은 이미지 인상 강함)
+- **"Insights" vs "Stats" 분리** — Plot 전체 분석=Insights, 단일 노트=Stats
+
+### 이번 세션 기술 학습
+- **TH 컴포넌트 hideInactiveHint prop** — Title cell의 invisible sort arrow가 12px width 차지 → notes Title이 wiki/templates와 다른 간격. prop 추가로 Title만 hide (다른 컬럼 hover hint 보존).
+- **체크박스 hover-only 패턴**: `selectionActive || isChecked ? "visible" : "invisible group-hover:visible"` (Templates 패턴, 모든 entity에 일괄 적용).
+- **사이드바 섹션 순서**: Views → Folders가 Notes에서 더 자연 (사용자 직관, 2026-05-05 결정).
+- **Wiki article icon color**: 회색 + Status 컬럼 badge 분리 의도였지만 사용자가 "노트처럼 색 직접" 원함 → leading icon에도 status color 적용. WIKI_STATUS_HEX inline.
+- **explore-high agent 활용 = Phase A 적합** — 22 slice + 8 entity + 디자인 토큰 + 진화 진단까지 한 번에 (코드 정독 + 미래 진단).
+- **designer-high agent (Opus)** = 1.5-2시간 정밀화 (한 화면). 5 화면 다 한 번에 4-6시간.
+
+### 다음 세션 우선순위
+1. **🔴 Plot 2.0 Phase B 진행** — designer-high에게 Notes 시그니처 위임 (반응형 + 토글 + 모든 결정 반영)
+2. Phase B 만족 → 같은 디자인 언어로 나머지 4 화면 (Wiki / Home / Library + Books / Focus)
+3. Phase C: 검토 후 Phase D PRD 작성 + Phase 1 구현 시작 (2-3주)
+4. Group C PR-D PR 3-5 (Stickers→Pack / References / Files) — Phase 1 진행 중에 동시 가능
+
+### Plan 문서 보존
+- `.omc/plans/group-c-prd-view-engine-integration.md` (PR 1, 2 완료, 3-5 남음)
+- `docs/PLOT-CURRENT-STATE-FOR-2.0.md` (Plot 2.0 Phase A 보고서)
+- `.omc/notepad.md` (Plot 2.0 PRD 진행 + 11가지 결정 + 다음 세션 컨텍스트)
+
+### Store version 진화 (이번 세션)
+v109 → v110 (tags-list viewState) → v111 (labels-list viewState)
+
+---
+
 ## 🚀 2026-05-04 (오후) — Templates 데이터 모델 정리 + 색 opt-in 정책 (v108/v109)
 
 **범위**: Templates 시리즈 마무리 + Folder/Tag 색 정책 큰 결정. 2-PR 분리 머지.

@@ -153,6 +153,7 @@ function TH({
   sortDir,
   onSort,
   className = "",
+  hideInactiveHint = false,
 }: {
   label: string
   col?: SortField
@@ -160,6 +161,10 @@ function TH({
   sortDir: SortDirection
   onSort: (c: SortField) => void
   className?: string
+  /** Hide the inactive sort hint icon to keep header tight against adjacent
+   *  controls (e.g. the Index toggle next to Title). The active sort arrow
+   *  is still shown when this column is the active sort. */
+  hideInactiveHint?: boolean
 }) {
   if (!col) {
     return (
@@ -177,7 +182,7 @@ function TH({
       {label}
       {active ? (
         sortDir === "asc" ? <ArrowUp className="text-muted-foreground" size={12} weight="regular" /> : <ArrowDown className="text-muted-foreground" size={12} weight="regular" />
-      ) : (
+      ) : hideInactiveHint ? null : (
         <ArrowsDownUp className="opacity-0 group-hover/th:opacity-60" size={12} weight="regular" />
       )}
     </button>
@@ -1193,7 +1198,7 @@ export function NotesTable({
                   {COLUMN_DEFS.filter((col) => col.id === "title" || effectiveVisibleCols.includes(col.id)).map((col) => (
                     <div key={col.id} className={col.align ?? ""}>
                       {col.id === "title" ? (
-                        <div className="flex items-center justify-between gap-1 pr-0">
+                        <div className="flex items-center gap-2 pr-0">
                           <TH
                             label={col.label}
                             col={col.sortField}
@@ -1201,9 +1206,10 @@ export function NotesTable({
                             sortDir={viewState.sortDirection}
                             onSort={handleSort}
                             className=""
+                            hideInactiveHint
                           />
-                          {/* Alphabetical Index toggle — sits with the data it groups.
-                              Tight `mr-0` keeps it close to the next (Status) column. */}
+                          {/* Alphabetical Index toggle — sits right next to Name
+                              (the column it groups by initial letter). */}
                           <button
                             onClick={(e) => {
                               e.stopPropagation()

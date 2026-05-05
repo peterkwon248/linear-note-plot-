@@ -184,7 +184,7 @@ export function TemplatesTable({
   return (
     <div className={cn("flex flex-1 flex-col overflow-hidden", selectedIds.size > 0 && "pb-20")}>
       {/* Header row */}
-      <div className="sticky top-0 z-10 flex items-center gap-3 border-b border-border bg-background px-5 py-2">
+      <div className="sticky top-0 z-10 flex items-center gap-2 border-b border-border bg-background px-5 py-2.5">
         {/* Checkbox column header — 32px */}
         <div className="w-8 shrink-0 flex items-center justify-center">
           <div
@@ -215,7 +215,7 @@ export function TemplatesTable({
               "text-note font-medium text-foreground/80",
               c.width,
               c.align,
-              c.id === "title" && "flex items-center justify-between",
+              c.id === "title" && "flex items-center gap-2",
             )}
           >
             {c.id === "title" ? (
@@ -367,7 +367,7 @@ function TemplateRow({
         // because those values vary). Pin remains because it's the one signal
         // that *does* differ row-to-row.
         return (
-          <div className={cn("flex items-center gap-1.5 min-w-0", col.width)}>
+          <div className={cn("flex items-center gap-2 min-w-0", col.width)}>
             <span className="truncate text-ui text-foreground">
               {tmpl.name || "Untitled template"}
             </span>
@@ -408,7 +408,7 @@ function TemplateRow({
         <button
           onClick={(e) => onRowClick(tmpl.id, rowIndex, e)}
           className={cn(
-            "group w-full flex items-center gap-3 px-5 py-2 text-left transition-colors",
+            "group w-full flex items-center gap-2 px-5 py-2.5 text-left transition-colors",
             isChecked
               ? "bg-accent/5"
               : isSelected

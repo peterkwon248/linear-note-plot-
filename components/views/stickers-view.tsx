@@ -669,7 +669,8 @@ export function StickersView() {
                               "flex h-4 w-4 shrink-0 items-center justify-center rounded-[4px] border transition-colors mt-0.5 shadow-sm",
                               checkedStickers.has(sticker.id)
                                 ? "bg-accent border-accent text-accent-foreground"
-                                : "bg-card border-zinc-400 dark:border-zinc-600 hover:border-zinc-500"
+                                : "bg-card border-zinc-400 dark:border-zinc-600 hover:border-zinc-500",
+                              checkedStickers.size > 0 || checkedStickers.has(sticker.id) ? "visible" : "invisible group-hover:visible"
                             )}
                           >
                             {checkedStickers.has(sticker.id) && (

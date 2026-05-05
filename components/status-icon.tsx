@@ -42,7 +42,7 @@ export function StatusShapeIcon({
   size?: number
   className?: string
 }) {
-  const color = NOTE_STATUS_COLORS[status].css
+  const color = NOTE_STATUS_COLORS[status]?.css ?? "currentColor"
   const shared = cn("shrink-0", className)
   if (status === "inbox") {
     return <CircleDashed size={size} weight="regular" style={{ color }} className={shared} />

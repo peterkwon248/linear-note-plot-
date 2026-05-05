@@ -852,7 +852,8 @@ export function LabelsView() {
                                   "flex h-4 w-4 shrink-0 items-center justify-center rounded-[4px] border transition-colors mt-0.5 shadow-sm",
                                   checkedLabels.has(label.id)
                                     ? "bg-accent border-accent text-accent-foreground"
-                                    : "bg-card border-zinc-400 dark:border-zinc-600 hover:border-zinc-500"
+                                    : "bg-card border-zinc-400 dark:border-zinc-600 hover:border-zinc-500",
+                                  checkedLabels.size > 0 || checkedLabels.has(label.id) ? "visible" : "invisible group-hover:visible"
                                 )}
                               >
                                 {checkedLabels.has(label.id) && (

@@ -149,7 +149,7 @@ function ColumnHeaders({
   return (
     <div className="flex items-center px-5 py-2 text-note font-medium text-foreground/80 border-b border-border bg-secondary/30">
       {hasSelection && (
-        <div className="w-7 shrink-0 flex items-center justify-center">
+        <div className="w-8 shrink-0 flex items-center justify-center">
           {onSelectAll ? (
             <div
               data-checkbox
@@ -171,12 +171,10 @@ function ColumnHeaders({
           )}
         </div>
       )}
-      <span className="min-w-0 flex-1 flex items-center justify-between gap-1 pr-0">
+      <span className="min-w-0 flex-1 flex items-center gap-2 pr-0">
         <span>Title</span>
-        {/* Alphabetical Index toggle — Notes-style placement: Title left,
-            Index pinned to the cell's right edge (= immediately before
-            the next column's header). Sits with the data, not in the
-            global toolbar. */}
+        {/* Alphabetical Index toggle — sits right next to Title
+            (the column it groups by initial letter). */}
         {onToggleAlphaIndex && (
           <button
             onClick={(e) => { e.stopPropagation(); onToggleAlphaIndex() }}
@@ -269,7 +267,7 @@ function ArticleTableRow({
       {onSelect && (
         <div
           className={cn(
-            "w-7 shrink-0 flex items-center justify-center cursor-pointer",
+            "w-8 shrink-0 flex items-center justify-center cursor-pointer",
             selectionActive || isSelected ? "visible" : "invisible group-hover:visible"
           )}
           onClick={(e) => {
@@ -298,13 +296,13 @@ function ArticleTableRow({
         className="flex flex-1 items-center gap-2 text-left min-w-0"
       >
         {/* Always-on leading status icon — gives a stub/article hint at the
-            title row even when the optional Status column is hidden. Color
-            is muted-foreground to avoid competing with the title; the rich
-            color appears only in the Status column badge. */}
+            title row even when the optional Status column is hidden. Mirrors
+            Notes' StatusShapeIcon pattern (inline color from WIKI_STATUS_HEX
+            — stub=orange, article=emerald). */}
         {isWikiStub(note) ? (
-          <IconWikiStub size={14} className="shrink-0 text-muted-foreground" />
+          <IconWikiStub size={14} className="shrink-0" style={{ color: WIKI_STATUS_HEX.stub }} />
         ) : (
-          <IconWikiArticle size={14} className="shrink-0 text-muted-foreground" />
+          <IconWikiArticle size={14} className="shrink-0" style={{ color: WIKI_STATUS_HEX.article }} />
         )}
         <span className="min-w-0 flex-1 truncate text-note font-medium text-foreground/90">
           {note.title || "Untitled"}

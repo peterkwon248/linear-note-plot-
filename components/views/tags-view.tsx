@@ -772,7 +772,8 @@ export function TagsView() {
                             "h-4 w-4 shrink-0 rounded-[4px] border flex items-center justify-center cursor-pointer transition-colors shadow-sm",
                             checkedTags.has(tag.id)
                               ? "bg-accent border-accent"
-                              : "bg-card border-zinc-400 dark:border-zinc-600 hover:border-zinc-500 dark:hover:border-zinc-500"
+                              : "bg-card border-zinc-400 dark:border-zinc-600 hover:border-zinc-500 dark:hover:border-zinc-500",
+                            checkedTags.size > 0 || checkedTags.has(tag.id) ? "visible" : "invisible group-hover:visible"
                           )}
                         >
                           {checkedTags.has(tag.id) && (
