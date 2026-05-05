@@ -47,9 +47,11 @@ const CONTEXT_DEFAULTS: Partial<Record<ViewContextKey, Partial<ViewState>>> = {
   templates:      { viewMode: "list", ...ctx("updatedAt"), groupBy: "none", visibleColumns: ["title"] },
 
   // Group C PR-D: entity index views.
-  // Note: Tag has no updatedAt/createdAt — ensureRequiredColumns appends them
-  // as strings but the sort/timestamp logic in useTagsView guards against it.
+  // Note: Tag/Label have no updatedAt/createdAt — ensureRequiredColumns appends them
+  // as strings but the sort/timestamp logic in useTagsView/useLabelsView guards against it.
   "tags-list":    { viewMode: "list", ...ctx("name", "asc"), groupBy: "none", visibleColumns: ["title", "noteCount", "color"] },
+  // Label.color is non-nullable (always present) — color column is always meaningful.
+  "labels-list":  { viewMode: "list", ...ctx("name", "asc"), groupBy: "none", visibleColumns: ["title", "noteCount", "color"] },
 }
 
 /** Build a ViewState for a specific context, merging defaults */

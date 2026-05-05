@@ -355,6 +355,30 @@ export function TagNoteCountChip({ count }: { count: number }) {
   )
 }
 
+/* ── LabelNoteCountChip (Group C PR-D-2) ─────────────── */
+
+/**
+ * Displays the number of notes attached to a label.
+ * Rendered on label entity cards (labels-list view). Hidden when count === 0
+ * to keep empty-label rows visually clean.
+ *
+ * Visually identical to TagNoteCountChip — same NoteBlank icon, same neutral
+ * muted style. Data source differs: Label uses Note.labelId (1:1 single-label)
+ * vs. Tag's Note.tags[] (N:M array).
+ */
+export function LabelNoteCountChip({ count }: { count: number }) {
+  if (count === 0) return null
+  return (
+    <span
+      title={`${count} ${count === 1 ? "note" : "notes"}`}
+      className="inline-flex items-center gap-0.5 h-5 text-2xs text-muted-foreground leading-none whitespace-nowrap shrink-0"
+    >
+      <PhNoteBlank size={10} weight="regular" />
+      {count}
+    </span>
+  )
+}
+
 /* ── More chip (overflow) ─────────────────────────────── */
 
 export function MoreChip({ count }: { count: number }) {

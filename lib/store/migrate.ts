@@ -1668,5 +1668,19 @@ export function migrate(persistedState: unknown): PlotState {
     }
   }
 
+  // v111: Labels entity index view-engine integration (PR group-c-d-2).
+  //
+  // Inject viewStateByContext["labels-list"] default if not already present.
+  // Idempotent — existing users who already have the key keep their persisted
+  // viewState. New key only injected for users upgrading from v110.
+  {
+    const vsc = state.viewStateByContext as Record<string, unknown> | undefined
+    if (vsc && !("labels-list" in vsc)) {
+      const defaultState = buildViewStateForContext("labels-list")
+      vsc["labels-list"] = defaultState
+      console.log("[migrate] v110→v111: injected labels-list viewState default")
+    }
+  }
+
   return state as unknown as PlotState
 }

@@ -541,6 +541,34 @@ export const TEMPLATES_VIEW_CONFIG: ViewConfig = {
   },
 }
 
+// Labels entity index view config (PR group-c-d-2).
+// Labels are categorical markers with a required color — no status/priority/board axis.
+// list+grid only. Sort by name (alpha) or noteCount. No filter categories (labels don't
+// have folder membership). Search is handled globally via searchQuery.
+// Key difference from Tags: Label.color is non-nullable — color column is always meaningful.
+export const LABELS_LIST_VIEW_CONFIG: ViewConfig = {
+  showFilter: false,
+  showDisplay: true,
+  showDetailPanel: false,
+  filterCategories: [],
+  quickFilters: [],
+  displayConfig: {
+    supportedModes: ["list", "grid"],
+    orderingOptions: [
+      { value: "name", label: "Name" },
+      { value: "noteCount", label: "Note count" },
+    ],
+    groupingOptions: [
+      { value: "none", label: "No grouping" },
+    ],
+    toggles: [],
+    properties: [
+      { key: "noteCount", label: "Note count", icon: SortIcon },
+      { key: "color", label: "Color", icon: ColorDotIcon },
+    ],
+  },
+}
+
 // Tags entity index view config (PR group-c-d-1).
 // Tags are hashtag markers — no status/priority/board axis. list+grid only.
 // Sort by name (alpha) or noteCount. No filter categories (tags don't have
@@ -578,4 +606,5 @@ export const VIEW_CONFIGS: Record<string, ViewConfig> = {
   calendar: CALENDAR_VIEW_CONFIG,
   templates: TEMPLATES_VIEW_CONFIG,
   "tags-list": TAGS_LIST_VIEW_CONFIG,
+  "labels-list": LABELS_LIST_VIEW_CONFIG,
 }
