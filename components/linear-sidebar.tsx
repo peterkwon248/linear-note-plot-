@@ -837,6 +837,9 @@ export function LinearSidebar() {
               />
             </div>
 
+            {/* Views section — placed above Folders per user preference (2026-05-05). */}
+            {renderViewsSection("notes", "/notes")}
+
             {/* Folders section — Notes context (kind="note" only).
                 PR (b): per-kind isolation. The Wiki context renders an
                 analogous section below; the two no longer share a folder
@@ -958,9 +961,6 @@ export function LinearSidebar() {
                 </button>
               )}
             </Section>
-
-            {/* Views section */}
-            {renderViewsSection("notes", "/notes")}
 
             {/* More section: Labels, Templates, Insights */}
             <Section title="More">

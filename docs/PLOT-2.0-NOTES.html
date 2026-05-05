@@ -1,0 +1,2233 @@
+<!DOCTYPE html>
+<html lang="ko" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=1440, initial-scale=1.0">
+  <title>Plot 2.0 — Notes (Refined)</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=Geist+Mono:wght@400;500&family=Newsreader:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
+  <style>
+    /* ==========================================================
+       Plot 2.0 — Notes screen (refined)
+       Aesthetic direction: "Quiet luxury" — Linear's density
+       meets Mercury's color layering, on a Vercel-Geist canvas.
+       ========================================================== */
+
+    :root {
+      /* Spectral neutrals (cooler than zinc) */
+      --bg:           #0b0b0e;
+      --bg-elev:      #111116;
+      --bg-elev-2:    #16161d;
+      --bg-elev-3:    #1c1c25;
+      --bg-row-sel:   #1a1a25;
+      --fg:           #f5f5f8;
+      --fg-strong:    #ffffff;
+      --fg-muted:     #a4a4af;
+      --fg-subtle:    #6e6e7a;
+      --fg-faint:     #4a4a55;
+      --border:       #23232c;
+      --border-strong:#2e2e3a;
+      --border-faint: #1d1d24;
+
+      /* Plot indigo — refined to feel "considered" */
+      --accent:        #818cf8;
+      --accent-2:      #a5b4fc;
+      --accent-deep:   #4f46e5;
+      --accent-glow:   rgba(129, 140, 248, 0.18);
+      --accent-soft:   rgba(129, 140, 248, 0.10);
+      --accent-faint:  rgba(129, 140, 248, 0.05);
+
+      --status-inbox:    #60a5fa;
+      --status-capture:  #fb923c;
+      --status-permanent:#34d399;
+
+      /* Tag colors — desaturated, considered */
+      --tag-blue:    #7dd3fc;
+      --tag-green:   #6ee7b7;
+      --tag-pink:    #f9a8d4;
+      --tag-purple:  #c4b5fd;
+      --tag-amber:   #fcd34d;
+      --tag-rose:    #fda4af;
+
+      /* Shadow stack */
+      --shadow-sm: 0 1px 2px rgba(0,0,0,0.20), 0 0 0 1px rgba(255,255,255,0.02);
+      --shadow-md: 0 2px 8px rgba(0,0,0,0.32), 0 1px 2px rgba(0,0,0,0.20), inset 0 0 0 1px rgba(255,255,255,0.03);
+      --shadow-lg: 0 12px 32px rgba(0,0,0,0.42), 0 4px 12px rgba(0,0,0,0.28), inset 0 0 0 1px rgba(255,255,255,0.04);
+      --shadow-glow: 0 0 24px var(--accent-glow), 0 0 0 1px rgba(129,140,248,0.20);
+      --shadow-row-hover: inset 2px 0 0 0 var(--accent), 0 0 24px -8px var(--accent-glow);
+
+      /* Easings */
+      --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+      --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    [data-theme="light"] {
+      --bg:           #fbfbfa;
+      --bg-elev:      #ffffff;
+      --bg-elev-2:    #f6f6f4;
+      --bg-elev-3:    #efeeec;
+      --bg-row-sel:   #eef0fc;
+      --fg:           #14141a;
+      --fg-strong:    #000000;
+      --fg-muted:     #4f4f5c;
+      --fg-subtle:    #8b8b96;
+      --fg-faint:     #b8b8c2;
+      --border:       #e8e7e3;
+      --border-strong:#d8d6d2;
+      --border-faint: #f0eeea;
+
+      --accent:        #4f46e5;
+      --accent-2:      #6366f1;
+      --accent-deep:   #4338ca;
+      --accent-glow:   rgba(79, 70, 229, 0.14);
+      --accent-soft:   rgba(79, 70, 229, 0.08);
+      --accent-faint:  rgba(79, 70, 229, 0.04);
+
+      --status-inbox:    #2563eb;
+      --status-capture:  #ea580c;
+      --status-permanent:#059669;
+
+      --tag-blue:    #0284c7;
+      --tag-green:   #059669;
+      --tag-pink:    #db2777;
+      --tag-purple:  #7c3aed;
+      --tag-amber:   #ca8a04;
+      --tag-rose:    #e11d48;
+
+      --shadow-sm: 0 1px 2px rgba(20,20,30,0.04), 0 0 0 1px rgba(20,20,30,0.04);
+      --shadow-md: 0 2px 8px rgba(20,20,30,0.06), 0 1px 2px rgba(20,20,30,0.04), inset 0 0 0 1px rgba(255,255,255,0.6);
+      --shadow-lg: 0 16px 40px rgba(20,20,30,0.10), 0 4px 12px rgba(20,20,30,0.04), inset 0 0 0 1px rgba(255,255,255,0.6);
+      --shadow-glow: 0 0 0 1px rgba(79,70,229,0.30), 0 6px 24px rgba(79,70,229,0.18);
+      --shadow-row-hover: inset 2px 0 0 0 var(--accent), 0 0 16px -8px var(--accent-glow);
+    }
+
+    /* ===================== Base ===================== */
+    * { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+    html, body { height: 100%; }
+    body {
+      font-family: 'Geist', -apple-system, BlinkMacSystemFont, sans-serif;
+      font-feature-settings: "ss01", "cv11", "cv05";
+      background: var(--bg);
+      color: var(--fg);
+      letter-spacing: -0.011em;
+      overflow: hidden;
+    }
+    .mono { font-family: 'Geist Mono', ui-monospace, monospace; font-feature-settings: "zero", "ss01"; }
+    .serif { font-family: 'Newsreader', Georgia, serif; }
+
+    /* ===================== Atmospheric layer ===================== */
+    /* Subtle mesh gradient on body — barely visible but adds depth */
+    body::before {
+      content: "";
+      position: fixed; inset: 0;
+      pointer-events: none;
+      z-index: 0;
+      background:
+        radial-gradient(ellipse 1200px 800px at 12% -10%, rgba(129,140,248,0.06), transparent 55%),
+        radial-gradient(ellipse 900px 600px at 100% 110%, rgba(99,102,241,0.05), transparent 60%),
+        radial-gradient(ellipse 700px 500px at 50% 50%, rgba(255,255,255,0.012), transparent 70%);
+    }
+    [data-theme="light"] body::before {
+      background:
+        radial-gradient(ellipse 1200px 800px at 12% -10%, rgba(99,102,241,0.07), transparent 55%),
+        radial-gradient(ellipse 900px 600px at 100% 110%, rgba(168,85,247,0.05), transparent 60%);
+    }
+
+    /* Grain texture overlay */
+    body::after {
+      content: "";
+      position: fixed; inset: 0;
+      pointer-events: none;
+      z-index: 0;
+      opacity: 0.025;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence baseFrequency='0.9' numOctaves='3' /%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' /%3E%3C/svg%3E");
+    }
+    [data-theme="light"] body::after { opacity: 0.04; }
+
+    .app-shell { position: relative; z-index: 1; }
+
+    /* ===================== Color utilities ===================== */
+    .text-fg        { color: var(--fg); }
+    .text-strong    { color: var(--fg-strong); }
+    .text-muted     { color: var(--fg-muted); }
+    .text-subtle    { color: var(--fg-subtle); }
+    .text-faint     { color: var(--fg-faint); }
+    .bg-bg          { background: var(--bg); }
+    .bg-elev        { background: var(--bg-elev); }
+    .bg-elev-2      { background: var(--bg-elev-2); }
+    .bg-elev-3      { background: var(--bg-elev-3); }
+    .border-base    { border-color: var(--border); }
+    .border-strong  { border-color: var(--border-strong); }
+    .border-faint   { border-color: var(--border-faint); }
+    .accent         { color: var(--accent); }
+    .bg-accent      { background: var(--accent); }
+    .text-2xs       { font-size: 10.5px; line-height: 14px; }
+
+    /* ===================== Scrollbars ===================== */
+    ::-webkit-scrollbar { width: 8px; height: 8px; }
+    ::-webkit-scrollbar-thumb {
+      background: transparent;
+      border-radius: 8px;
+      border: 2px solid transparent;
+      background-clip: padding-box;
+    }
+    *:hover::-webkit-scrollbar-thumb { background: var(--border-strong); background-clip: padding-box; border: 2px solid transparent; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--fg-subtle); background-clip: padding-box; border: 2px solid transparent; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-corner { background: transparent; }
+
+    /* ===================== ActivityBar ===================== */
+    .activity-bar {
+      width: 56px;
+      background: var(--bg-elev);
+      border-right: 1px solid var(--border-faint);
+      box-shadow: 1px 0 0 0 rgba(255,255,255,0.01);
+      position: relative;
+    }
+    .activity-bar::after {
+      content: "";
+      position: absolute; right: 0; top: 0; bottom: 0; width: 1px;
+      background: linear-gradient(180deg, transparent 0%, var(--border) 20%, var(--border) 80%, transparent 100%);
+    }
+
+    .ab-btn {
+      width: 36px; height: 36px;
+      display: flex; align-items: center; justify-content: center;
+      border-radius: 9px;
+      color: var(--fg-subtle);
+      position: relative;
+      transition: all 200ms var(--ease-out);
+      cursor: pointer;
+    }
+    .ab-btn:hover { color: var(--fg); background: var(--bg-elev-2); }
+    .ab-btn.active {
+      color: var(--fg-strong);
+      background: var(--bg-elev-2);
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,0.04);
+    }
+    .ab-btn.active::before {
+      content: "";
+      position: absolute; left: -10px; top: 50%; transform: translateY(-50%);
+      width: 3px; height: 18px;
+      background: linear-gradient(180deg, var(--accent), var(--accent-deep));
+      border-radius: 0 3px 3px 0;
+      box-shadow: 0 0 12px var(--accent-glow);
+    }
+    .ab-btn .ab-icon { width: 18px; height: 18px; stroke-width: 1.6; }
+    .ab-btn .ab-tooltip {
+      position: absolute; left: calc(100% + 14px); top: 50%; transform: translateY(-50%);
+      background: var(--bg-elev-3);
+      border: 1px solid var(--border);
+      color: var(--fg);
+      font-size: 12px;
+      padding: 6px 10px;
+      border-radius: 6px;
+      white-space: nowrap;
+      opacity: 0;
+      pointer-events: none;
+      transform: translateY(-50%) translateX(-4px);
+      transition: all 180ms var(--ease-out);
+      z-index: 100;
+      box-shadow: var(--shadow-md);
+      letter-spacing: -0.005em;
+    }
+    .ab-btn .ab-tooltip kbd {
+      display: inline-block;
+      margin-left: 8px;
+      padding: 1px 5px;
+      font-family: 'Geist Mono', monospace;
+      font-size: 10px;
+      background: var(--bg-elev-2);
+      color: var(--fg-subtle);
+      border: 1px solid var(--border);
+      border-radius: 3px;
+    }
+    .ab-btn:hover .ab-tooltip { opacity: 1; transform: translateY(-50%) translateX(0); }
+
+    .ab-logo {
+      width: 36px; height: 36px;
+      display: flex; align-items: center; justify-content: center;
+      border-radius: 9px;
+      background:
+        linear-gradient(135deg, var(--accent) 0%, var(--accent-deep) 100%);
+      color: white;
+      font-weight: 700;
+      font-size: 16px;
+      letter-spacing: -0.04em;
+      position: relative;
+      box-shadow:
+        0 4px 12px var(--accent-glow),
+        inset 0 1px 0 rgba(255,255,255,0.18),
+        inset 0 -1px 0 rgba(0,0,0,0.18);
+    }
+    .ab-logo::after {
+      content: "";
+      position: absolute; inset: 0;
+      border-radius: 9px;
+      background: radial-gradient(ellipse at 30% 20%, rgba(255,255,255,0.25), transparent 60%);
+      pointer-events: none;
+    }
+
+    .ab-avatar {
+      width: 32px; height: 32px;
+      border-radius: 50%;
+      background:
+        radial-gradient(circle at 30% 25%, #f0abfc, #c084fc 40%, #6d28d9);
+      color: white;
+      font-size: 12px;
+      font-weight: 600;
+      display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 2px 6px rgba(124,58,237,0.36), inset 0 1px 0 rgba(255,255,255,0.22);
+      letter-spacing: -0.02em;
+      position: relative;
+    }
+    .ab-avatar::after {
+      content: "";
+      position: absolute; bottom: -1px; right: -1px;
+      width: 10px; height: 10px;
+      border-radius: 50%;
+      background: var(--status-permanent);
+      border: 2px solid var(--bg-elev);
+    }
+
+    /* ===================== Sidebar ===================== */
+    .sidebar {
+      width: 248px;
+      background: var(--bg-elev);
+      border-right: 1px solid var(--border-faint);
+      position: relative;
+    }
+    .sidebar::after {
+      content: "";
+      position: absolute; right: 0; top: 0; bottom: 0; width: 1px;
+      background: linear-gradient(180deg, transparent, var(--border) 8%, var(--border) 92%, transparent);
+    }
+    .sidebar-fade-bottom {
+      position: absolute; bottom: 56px; left: 0; right: 0; height: 32px;
+      background: linear-gradient(180deg, transparent, var(--bg-elev));
+      pointer-events: none; z-index: 1;
+    }
+
+    .nav-item {
+      display: flex; align-items: center; gap: 9px;
+      padding: 5px 8px 5px 9px;
+      border-radius: 6px;
+      font-size: 13px;
+      color: var(--fg-muted);
+      letter-spacing: -0.005em;
+      cursor: pointer;
+      transition: all 140ms var(--ease-out);
+      position: relative;
+    }
+    .nav-item:hover {
+      background: var(--bg-elev-2);
+      color: var(--fg);
+    }
+    .nav-item.active {
+      background: linear-gradient(90deg, var(--accent-soft), transparent 60%);
+      color: var(--fg-strong);
+      box-shadow: inset 2px 0 0 var(--accent);
+    }
+    .nav-item.active .nav-count { color: var(--accent); }
+    .nav-icon { width: 14px; height: 14px; flex-shrink: 0; opacity: 0.78; }
+    .nav-item:hover .nav-icon { opacity: 1; }
+    .nav-count {
+      margin-left: auto;
+      font-size: 11px;
+      color: var(--fg-faint);
+      font-variant-numeric: tabular-nums;
+      font-family: 'Geist Mono', monospace;
+      letter-spacing: -0.02em;
+    }
+    .nav-dot {
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      flex-shrink: 0;
+      box-shadow: 0 0 0 1px rgba(0,0,0,0.10), inset 0 1px 0 rgba(255,255,255,0.18);
+    }
+
+    .section-label {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 10px;
+      margin-bottom: 4px;
+      font-size: 10.5px;
+      font-weight: 500;
+      color: var(--fg-faint);
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+    .section-label .add-btn {
+      width: 16px; height: 16px;
+      display: flex; align-items: center; justify-content: center;
+      border-radius: 4px;
+      color: var(--fg-faint);
+      cursor: pointer;
+      opacity: 0;
+      transition: all 140ms var(--ease-out);
+    }
+    .sidebar-section:hover .add-btn { opacity: 1; }
+    .add-btn:hover { background: var(--bg-elev-2); color: var(--fg); }
+
+    /* ===================== Topbar ===================== */
+    .topbar {
+      height: 50px;
+      background: var(--bg-elev);
+      border-bottom: 1px solid var(--border-faint);
+      position: relative;
+      z-index: 5;
+    }
+    .topbar::after {
+      content: "";
+      position: absolute; left: 0; right: 0; bottom: 0; height: 1px;
+      background: linear-gradient(90deg, transparent, var(--border) 10%, var(--border) 90%, transparent);
+    }
+
+    .breadcrumb-sep { color: var(--fg-faint); margin: 0 6px; font-weight: 300; }
+
+    .search-shell {
+      flex: 1;
+      max-width: 460px;
+      margin: 0 auto;
+      position: relative;
+    }
+    .search-input {
+      width: 100%;
+      height: 30px;
+      padding: 0 80px 0 30px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 7px;
+      font-size: 12.5px;
+      color: var(--fg);
+      letter-spacing: -0.005em;
+      transition: all 180ms var(--ease-out);
+    }
+    .search-input::placeholder { color: var(--fg-faint); }
+    .search-input:focus {
+      outline: none;
+      border-color: var(--accent);
+      background: var(--bg-elev-2);
+      box-shadow: 0 0 0 3px var(--accent-soft);
+    }
+    .search-icon {
+      position: absolute; left: 9px; top: 50%; transform: translateY(-50%);
+      width: 14px; height: 14px;
+      color: var(--fg-subtle);
+      pointer-events: none;
+    }
+    .search-kbd {
+      position: absolute; right: 8px; top: 50%; transform: translateY(-50%);
+      display: flex; gap: 2px;
+    }
+    .search-kbd kbd {
+      padding: 1px 5px;
+      font-family: 'Geist Mono', monospace;
+      font-size: 10px;
+      background: var(--bg-elev-2);
+      color: var(--fg-subtle);
+      border: 1px solid var(--border);
+      border-radius: 3px;
+      letter-spacing: 0;
+    }
+
+    .btn-ghost {
+      display: flex; align-items: center; gap: 5px;
+      height: 28px;
+      padding: 0 9px;
+      border-radius: 6px;
+      font-size: 12.5px;
+      color: var(--fg-muted);
+      background: transparent;
+      border: 1px solid transparent;
+      cursor: pointer;
+      transition: all 140ms var(--ease-out);
+      letter-spacing: -0.005em;
+    }
+    .btn-ghost:hover { background: var(--bg-elev-2); color: var(--fg); border-color: var(--border-faint); }
+    .btn-ghost svg { width: 13px; height: 13px; opacity: 0.78; }
+
+    .btn-primary {
+      display: flex; align-items: center; gap: 6px;
+      height: 28px;
+      padding: 0 11px 0 9px;
+      border-radius: 6px;
+      font-size: 12.5px;
+      font-weight: 500;
+      color: white;
+      background: linear-gradient(180deg, var(--accent), var(--accent-deep));
+      border: 1px solid var(--accent-deep);
+      cursor: pointer;
+      transition: all 140ms var(--ease-out);
+      box-shadow:
+        0 1px 0 rgba(255,255,255,0.16) inset,
+        0 -1px 0 rgba(0,0,0,0.18) inset,
+        0 1px 2px rgba(79,70,229,0.32),
+        0 4px 12px rgba(79,70,229,0.18);
+      letter-spacing: -0.005em;
+    }
+    .btn-primary:hover {
+      transform: translateY(-0.5px);
+      box-shadow:
+        0 1px 0 rgba(255,255,255,0.18) inset,
+        0 -1px 0 rgba(0,0,0,0.18) inset,
+        0 2px 4px rgba(79,70,229,0.36),
+        0 8px 18px rgba(79,70,229,0.26);
+    }
+    .btn-primary svg { width: 12px; height: 12px; }
+
+    /* ===================== View tabs ===================== */
+    .view-tabs {
+      height: 38px;
+      padding: 0 16px;
+      border-bottom: 1px solid var(--border-faint);
+      display: flex; align-items: center; gap: 1px;
+      background: var(--bg);
+      position: relative;
+    }
+    .view-tab {
+      display: flex; align-items: center; gap: 5px;
+      padding: 5px 9px;
+      border-radius: 5px;
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--fg-subtle);
+      cursor: pointer;
+      transition: all 140ms var(--ease-out);
+      letter-spacing: -0.003em;
+    }
+    .view-tab svg { width: 12px; height: 12px; opacity: 0.85; }
+    .view-tab:hover { color: var(--fg); background: var(--bg-elev-2); }
+    .view-tab.active {
+      color: var(--fg-strong);
+      background: var(--bg-elev-2);
+      box-shadow:
+        inset 0 0 0 1px var(--border),
+        0 1px 2px rgba(0,0,0,0.08);
+    }
+    .view-tab .new-badge {
+      margin-left: 2px;
+      font-family: 'Geist Mono', monospace;
+      font-size: 9px;
+      color: var(--accent);
+      background: var(--accent-soft);
+      padding: 1px 4px;
+      border-radius: 3px;
+      letter-spacing: 0.04em;
+      font-weight: 500;
+    }
+
+    .density-toggle {
+      display: flex;
+      background: var(--bg-elev);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 1px;
+    }
+    .density-opt {
+      padding: 3px 8px;
+      font-size: 11px;
+      color: var(--fg-subtle);
+      cursor: pointer;
+      border-radius: 4px;
+      letter-spacing: -0.003em;
+      transition: all 140ms var(--ease-out);
+    }
+    .density-opt.active {
+      background: var(--bg-elev-3);
+      color: var(--fg);
+      box-shadow: 0 1px 2px rgba(0,0,0,0.12);
+    }
+
+    .sort-pill {
+      display: flex; align-items: center; gap: 4px;
+      padding: 3px 8px;
+      font-size: 11px;
+      color: var(--fg-muted);
+      background: var(--bg-elev);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      letter-spacing: -0.003em;
+    }
+    .sort-pill svg { width: 10px; height: 10px; }
+
+    /* ===================== Group rows ===================== */
+    .group-row {
+      display: flex; align-items: center; gap: 8px;
+      padding: 11px 16px 7px;
+      background:
+        linear-gradient(180deg, var(--bg) 0%, var(--bg) 80%, transparent);
+      border-bottom: 1px solid var(--border-faint);
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--fg-subtle);
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      position: sticky;
+      top: 36px;
+      z-index: 2;
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+    }
+    .group-row:not(:first-child) { margin-top: 4px; }
+    .group-row::before {
+      content: "";
+      width: 8px; height: 8px;
+      border-radius: 2px;
+      background: linear-gradient(135deg, var(--accent), var(--accent-deep));
+      opacity: 0.5;
+    }
+    .group-count {
+      font-family: 'Geist Mono', monospace;
+      font-size: 10px;
+      color: var(--fg-faint);
+      letter-spacing: -0.02em;
+      text-transform: none;
+    }
+
+    /* ===================== Table ===================== */
+    .table-header {
+      position: sticky; top: 0; z-index: 3;
+      display: grid;
+      grid-template-columns: 28px 36px 1fr 116px 124px 184px 76px 76px 28px;
+      align-items: center;
+      padding: 0 16px;
+      height: 36px;
+      background: var(--bg);
+      border-bottom: 1px solid var(--border);
+      font-size: 10.5px;
+      font-weight: 500;
+      color: var(--fg-faint);
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      backdrop-filter: blur(12px);
+    }
+    .table-header > div { padding: 0 4px; }
+
+    .table-row {
+      display: grid;
+      grid-template-columns: 28px 36px 1fr 116px 124px 184px 76px 76px 28px;
+      align-items: center;
+      padding: 0 16px;
+      height: 42px;
+      border-bottom: 1px solid var(--border-faint);
+      font-size: 13px;
+      cursor: pointer;
+      transition: all 160ms var(--ease-out);
+      position: relative;
+    }
+    .table-row > div { padding: 0 4px; min-width: 0; }
+    .table-row::before {
+      content: "";
+      position: absolute; left: 0; top: 0; bottom: 0;
+      width: 2px;
+      background: var(--accent);
+      transform: scaleY(0);
+      transition: transform 160ms var(--ease-out);
+    }
+    .table-row:hover {
+      background: var(--bg-elev);
+    }
+    .table-row:hover::before { transform: scaleY(0.6); }
+
+    .table-row.selected {
+      background:
+        linear-gradient(90deg, var(--accent-soft), transparent 70%),
+        var(--bg-row-sel);
+    }
+    .table-row.selected::before { transform: scaleY(1); width: 2.5px; box-shadow: 0 0 12px var(--accent-glow); }
+    .table-row.selected .row-title { color: var(--fg-strong); font-weight: 600; }
+    [data-theme="light"] .table-row.selected { box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 14%, transparent); }
+
+    .table-row.faded { opacity: 0.62; }
+    .table-row.faded:hover { opacity: 1; }
+
+    .row-checkbox {
+      width: 14px; height: 14px;
+      border: 1px solid var(--border-strong);
+      border-radius: 3.5px;
+      background: var(--bg-elev);
+      cursor: pointer;
+      transition: all 140ms var(--ease-out);
+      opacity: 0;
+      display: grid; place-items: center;
+      flex-shrink: 0;
+    }
+    .table-row:hover .row-checkbox { opacity: 1; }
+    .row-checkbox.checked,
+    .table-row.selected .row-checkbox {
+      opacity: 1;
+      background: var(--accent);
+      border-color: var(--accent);
+      box-shadow: 0 1px 3px var(--accent-glow);
+    }
+    .row-checkbox.checked::after {
+      content: "";
+      width: 7px; height: 4px;
+      border: 1.6px solid white;
+      border-top: 0; border-right: 0;
+      transform: rotate(-45deg) translate(0px, -1px);
+    }
+
+    .grip-handle {
+      width: 14px; height: 14px;
+      display: grid; place-items: center;
+      color: var(--fg-faint);
+      opacity: 0;
+      transition: opacity 140ms var(--ease-out);
+      cursor: grab;
+    }
+    .table-row:hover .grip-handle { opacity: 1; }
+
+    /* Type icon — soft circular tint */
+    .type-icon {
+      width: 26px; height: 26px;
+      display: grid; place-items: center;
+      border-radius: 7px;
+      font-size: 14px;
+      transition: transform 200ms var(--ease-spring);
+      position: relative;
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,0.04);
+    }
+    .table-row:hover .type-icon { transform: scale(1.08); }
+    .type-icon.t-memo    { background: color-mix(in srgb, #94a3b8 14%, transparent); }
+    .type-icon.t-project { background: color-mix(in srgb, #fbbf24 18%, transparent); }
+    .type-icon.t-research{ background: color-mix(in srgb, #38bdf8 16%, transparent); }
+    .type-icon.t-idea    { background: color-mix(in srgb, #c084fc 18%, transparent); }
+    .type-icon.t-goal    { background: color-mix(in srgb, #f87171 16%, transparent); }
+    .type-icon.t-reading { background: color-mix(in srgb, #34d399 16%, transparent); }
+
+    .row-title {
+      font-weight: 500;
+      color: var(--fg);
+      letter-spacing: -0.012em;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      font-size: 13.5px;
+    }
+    .row-meta-pin {
+      display: inline-flex; align-items: center;
+      gap: 2px;
+      padding: 1.5px 5px;
+      margin-left: 6px;
+      background: var(--accent-soft);
+      color: var(--accent);
+      font-size: 9.5px;
+      font-weight: 500;
+      letter-spacing: 0.03em;
+      border-radius: 3px;
+      border: 1px solid var(--accent-faint);
+    }
+    .row-meta-snippet {
+      color: var(--fg-faint);
+      font-size: 11px;
+      letter-spacing: -0.005em;
+      white-space: nowrap;
+    }
+
+    /* Status badges — micro, refined */
+    .status-badge {
+      display: inline-flex; align-items: center;
+      gap: 5px;
+      padding: 2px 7px 2px 6px;
+      font-size: 11px;
+      font-weight: 500;
+      border-radius: 4px;
+      letter-spacing: -0.003em;
+      position: relative;
+    }
+    .status-badge::before {
+      content: "";
+      width: 5px; height: 5px;
+      border-radius: 50%;
+      background: currentColor;
+      box-shadow: 0 0 6px currentColor, inset 0 0 0 1px rgba(255,255,255,0.18);
+    }
+    .status-inbox {
+      background: color-mix(in srgb, var(--status-inbox) 10%, transparent);
+      color: var(--status-inbox);
+      box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--status-inbox) 22%, transparent);
+    }
+    .status-capture {
+      background: color-mix(in srgb, var(--status-capture) 10%, transparent);
+      color: var(--status-capture);
+      box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--status-capture) 22%, transparent);
+    }
+    .status-permanent {
+      background: color-mix(in srgb, var(--status-permanent) 10%, transparent);
+      color: var(--status-permanent);
+      box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--status-permanent) 22%, transparent);
+    }
+
+    .folder-cell {
+      display: flex; align-items: center; gap: 5px;
+      font-size: 12px;
+      color: var(--fg-muted);
+      letter-spacing: -0.005em;
+      white-space: nowrap;
+      overflow: hidden;
+    }
+    .folder-cell svg { width: 12px; height: 12px; opacity: 0.8; flex-shrink: 0; }
+
+    /* Tag chips — distilled */
+    .tag-chip {
+      display: inline-flex; align-items: center;
+      gap: 4px;
+      padding: 1.5px 6px 1.5px 5px;
+      font-size: 11px;
+      font-weight: 500;
+      border-radius: 3.5px;
+      letter-spacing: -0.005em;
+      max-width: 100%;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .tag-chip::before {
+      content: "";
+      width: 4px; height: 4px;
+      border-radius: 1px;
+      background: currentColor;
+      flex-shrink: 0;
+      transform: rotate(45deg);
+    }
+    .tag-blue   { background: color-mix(in srgb, var(--tag-blue)   12%, transparent); color: var(--tag-blue); }
+    .tag-green  { background: color-mix(in srgb, var(--tag-green)  12%, transparent); color: var(--tag-green); }
+    .tag-pink   { background: color-mix(in srgb, var(--tag-pink)   13%, transparent); color: var(--tag-pink); }
+    .tag-purple { background: color-mix(in srgb, var(--tag-purple) 14%, transparent); color: var(--tag-purple); }
+
+    .tag-more {
+      font-size: 10.5px;
+      color: var(--fg-faint);
+      font-family: 'Geist Mono', monospace;
+      letter-spacing: -0.02em;
+    }
+
+    .words-cell {
+      text-align: right;
+      font-family: 'Geist Mono', monospace;
+      font-size: 11.5px;
+      color: var(--fg-muted);
+      font-feature-settings: "tnum";
+      letter-spacing: -0.02em;
+    }
+    .updated-cell {
+      text-align: right;
+      font-size: 11.5px;
+      color: var(--fg-subtle);
+      font-variant-numeric: tabular-nums;
+      letter-spacing: -0.005em;
+    }
+    .updated-cell.fresh { color: var(--accent); }
+
+    .row-actions {
+      display: flex; justify-content: flex-end;
+      opacity: 0;
+      transition: opacity 140ms var(--ease-out);
+    }
+    .table-row:hover .row-actions { opacity: 1; }
+    .row-action-btn {
+      width: 22px; height: 22px;
+      display: grid; place-items: center;
+      border-radius: 4px;
+      color: var(--fg-subtle);
+      cursor: pointer;
+    }
+    .row-action-btn:hover { background: var(--bg-elev-2); color: var(--fg); }
+    .row-action-btn svg { width: 13px; height: 13px; }
+
+    /* ===================== Detail panel ===================== */
+    .detail-panel {
+      width: 340px;
+      background: var(--bg-elev);
+      border-left: 1px solid var(--border-faint);
+      position: relative;
+      overflow-y: auto;
+    }
+    .detail-panel::after {
+      content: "";
+      position: absolute; left: 0; top: 0; bottom: 0; width: 1px;
+      background: linear-gradient(180deg, transparent, var(--border) 8%, var(--border) 92%, transparent);
+    }
+
+    .panel-section {
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--border-faint);
+    }
+    .panel-section + .panel-section { padding-top: 16px; }
+
+    .panel-title {
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--fg-strong);
+      letter-spacing: -0.024em;
+      line-height: 1.28;
+      display: flex; align-items: flex-start; gap: 10px;
+    }
+    .panel-title-emoji {
+      display: grid; place-items: center;
+      width: 32px; height: 32px;
+      border-radius: 8px;
+      background:
+        radial-gradient(circle at 30% 25%, rgba(255,255,255,0.06), transparent 65%),
+        color-mix(in srgb, #fbbf24 18%, transparent);
+      font-size: 17px;
+      box-shadow:
+        inset 0 0 0 1px rgba(255,255,255,0.04),
+        0 1px 2px rgba(0,0,0,0.16);
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+
+    .panel-tabs {
+      display: flex; align-items: center;
+      gap: 1px;
+      padding: 0 14px;
+      border-bottom: 1px solid var(--border-faint);
+      background: var(--bg-elev);
+      position: sticky; top: 0; z-index: 2;
+    }
+    .panel-tab {
+      padding: 8px 10px;
+      font-size: 11.5px;
+      font-weight: 500;
+      color: var(--fg-subtle);
+      cursor: pointer;
+      letter-spacing: -0.003em;
+      border-bottom: 1.5px solid transparent;
+      transition: all 140ms var(--ease-out);
+      margin-bottom: -1px;
+    }
+    .panel-tab:hover { color: var(--fg); }
+    .panel-tab.active {
+      color: var(--fg-strong);
+      border-bottom-color: var(--accent);
+    }
+
+    .section-heading {
+      font-size: 10.5px;
+      font-weight: 500;
+      color: var(--fg-faint);
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .section-heading-rule {
+      flex: 1; height: 1px;
+      background: linear-gradient(90deg, var(--border-faint), transparent);
+    }
+
+    .prop-row {
+      display: grid;
+      grid-template-columns: 92px 1fr;
+      align-items: center;
+      gap: 12px;
+      padding: 4px 0;
+      font-size: 12px;
+      letter-spacing: -0.005em;
+    }
+    .prop-key {
+      color: var(--fg-faint);
+      font-size: 11px;
+      letter-spacing: -0.003em;
+    }
+    .prop-val {
+      color: var(--fg);
+      display: flex; align-items: center; gap: 6px;
+      font-size: 12px;
+    }
+
+    /* Activity stat cards */
+    .stat-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 6px;
+    }
+    .stat-card {
+      background: var(--bg);
+      border: 1px solid var(--border-faint);
+      border-radius: 8px;
+      padding: 10px 11px;
+      position: relative;
+      overflow: hidden;
+      transition: all 200ms var(--ease-out);
+    }
+    .stat-card::before {
+      content: "";
+      position: absolute; inset: 0;
+      background: linear-gradient(135deg, transparent, var(--accent-faint));
+      opacity: 0;
+      transition: opacity 200ms var(--ease-out);
+    }
+    .stat-card:hover { border-color: var(--border); transform: translateY(-1px); }
+    .stat-card:hover::before { opacity: 1; }
+    .stat-label {
+      font-size: 10px;
+      font-weight: 500;
+      color: var(--fg-faint);
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      margin-bottom: 4px;
+    }
+    .stat-value {
+      font-family: 'Geist Mono', monospace;
+      font-size: 18px;
+      font-weight: 500;
+      color: var(--fg-strong);
+      letter-spacing: -0.03em;
+      font-feature-settings: "tnum";
+      line-height: 1;
+    }
+    .stat-delta {
+      font-size: 10px;
+      color: var(--status-permanent);
+      margin-top: 4px;
+      letter-spacing: -0.005em;
+      display: flex; align-items: center; gap: 2px;
+    }
+    .stat-delta svg { width: 8px; height: 8px; }
+
+    /* Sparkline */
+    .sparkline {
+      width: 100%;
+      height: 44px;
+      margin-top: 8px;
+    }
+
+    /* Mini graph */
+    .mini-graph {
+      width: 100%;
+      height: 168px;
+      background:
+        radial-gradient(ellipse at 50% 50%, var(--accent-faint), transparent 60%),
+        var(--bg);
+      border: 1px solid var(--border-faint);
+      border-radius: 10px;
+      position: relative;
+      overflow: hidden;
+    }
+    .mini-graph::before {
+      content: "";
+      position: absolute; inset: 0;
+      background-image:
+        radial-gradient(circle at 1px 1px, var(--border-strong) 1px, transparent 0);
+      background-size: 14px 14px;
+      opacity: 0.36;
+    }
+    [data-theme="light"] .mini-graph::before { opacity: 0.6; }
+
+    .timeline-item {
+      display: grid;
+      grid-template-columns: 36px 12px 1fr;
+      gap: 0;
+      padding: 6px 0;
+      font-size: 12px;
+      letter-spacing: -0.005em;
+      position: relative;
+      align-items: start;
+    }
+    .timeline-time {
+      color: var(--fg-faint);
+      font-family: 'Geist Mono', monospace;
+      font-size: 11px;
+      font-feature-settings: "tnum";
+      letter-spacing: -0.02em;
+      padding-top: 1px;
+      text-align: right;
+      padding-right: 8px;
+    }
+    .timeline-rail {
+      position: relative;
+      height: 100%;
+      display: flex; justify-content: center;
+    }
+    .timeline-rail::before {
+      content: "";
+      position: absolute; top: 0; bottom: -12px; left: 50%; width: 1px;
+      background: var(--border);
+      transform: translateX(-0.5px);
+    }
+    .timeline-item:last-child .timeline-rail::before { background: linear-gradient(180deg, var(--border), transparent); }
+    .timeline-rail::after {
+      content: "";
+      position: absolute; top: 6px; left: 50%; transform: translateX(-50%);
+      width: 5px; height: 5px;
+      border-radius: 50%;
+      background: var(--bg-elev);
+      box-shadow: 0 0 0 1.5px var(--border-strong);
+      z-index: 1;
+    }
+    .timeline-item.fresh .timeline-rail::after {
+      background: var(--accent);
+      box-shadow: 0 0 0 1.5px var(--accent), 0 0 10px var(--accent-glow);
+    }
+    .timeline-content {
+      color: var(--fg-muted);
+      line-height: 1.5;
+      padding-left: 10px;
+    }
+    .timeline-content .ev { color: var(--fg); font-weight: 500; }
+    .timeline-content .ev-link { color: var(--accent); }
+
+    .timeline-list { position: relative; }
+
+    .backlink-row {
+      display: flex; align-items: center;
+      gap: 8px;
+      padding: 6px 7px;
+      border-radius: 6px;
+      font-size: 12px;
+      color: var(--fg-muted);
+      cursor: pointer;
+      transition: all 140ms var(--ease-out);
+      margin: 0 -7px;
+      letter-spacing: -0.005em;
+    }
+    .backlink-row:hover { background: var(--bg-elev-2); color: var(--fg); }
+    .backlink-icon {
+      width: 22px; height: 22px;
+      display: grid; place-items: center;
+      font-size: 12px;
+      border-radius: 5px;
+      flex-shrink: 0;
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,0.04);
+    }
+    .backlink-row .arrow { margin-left: auto; opacity: 0; transition: opacity 140ms; color: var(--fg-faint); }
+    .backlink-row:hover .arrow { opacity: 1; }
+
+    /* Theme toggle */
+    .theme-toggle {
+      position: fixed;
+      top: 12px; right: 16px;
+      z-index: 50;
+      display: flex; align-items: center;
+      gap: 1px;
+      padding: 2px;
+      background: var(--bg-elev);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      box-shadow: var(--shadow-md);
+    }
+    .theme-toggle button {
+      width: 28px; height: 24px;
+      display: grid; place-items: center;
+      color: var(--fg-subtle);
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 140ms var(--ease-out);
+    }
+    .theme-toggle button.active {
+      background: var(--bg-elev-2);
+      color: var(--fg);
+      box-shadow: 0 1px 2px rgba(0,0,0,0.12);
+    }
+    .theme-toggle svg { width: 13px; height: 13px; }
+
+    /* Footer */
+    .footbar {
+      height: 28px;
+      background: var(--bg-elev);
+      border-top: 1px solid var(--border-faint);
+      display: flex; align-items: center;
+      padding: 0 14px;
+      font-size: 11px;
+      color: var(--fg-faint);
+      letter-spacing: -0.003em;
+    }
+    .foot-pill {
+      display: flex; align-items: center; gap: 5px;
+      padding: 2px 8px;
+      background: var(--bg-elev-2);
+      border: 1px solid var(--border-faint);
+      border-radius: 4px;
+      color: var(--fg-subtle);
+    }
+    .foot-pill kbd {
+      font-family: 'Geist Mono', monospace;
+      font-size: 9.5px;
+      color: var(--fg-faint);
+    }
+
+    /* Animation: fade in on load */
+    @keyframes fade-up {
+      from { opacity: 0; transform: translateY(4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .table-row { animation: fade-up 320ms var(--ease-out) backwards; }
+    .table-row:nth-child(1) { animation-delay: 30ms; }
+    .table-row:nth-child(2) { animation-delay: 60ms; }
+    .table-row:nth-child(3) { animation-delay: 90ms; }
+    .table-row:nth-child(4) { animation-delay: 120ms; }
+    .table-row:nth-child(5) { animation-delay: 150ms; }
+    .table-row:nth-child(6) { animation-delay: 180ms; }
+    .table-row:nth-child(7) { animation-delay: 210ms; }
+    .table-row:nth-child(8) { animation-delay: 240ms; }
+
+    .panel-section { animation: fade-up 360ms var(--ease-out) backwards; animation-delay: 200ms; }
+    .panel-section:nth-of-type(2) { animation-delay: 260ms; }
+    .panel-section:nth-of-type(3) { animation-delay: 320ms; }
+    .panel-section:nth-of-type(4) { animation-delay: 380ms; }
+    .panel-section:nth-of-type(5) { animation-delay: 440ms; }
+
+    /* Subtle pulse on live element */
+    @keyframes pulse-glow {
+      0%, 100% { box-shadow: 0 0 0 0 var(--accent-glow); }
+      50% { box-shadow: 0 0 0 4px transparent; }
+    }
+    .live-dot {
+      width: 6px; height: 6px;
+      background: var(--status-permanent);
+      border-radius: 50%;
+      animation: pulse-glow 2.4s var(--ease-out) infinite;
+      box-shadow: 0 0 8px var(--status-permanent);
+    }
+
+    /* Soft divider for sidebar sections */
+    .sidebar-divider {
+      height: 1px;
+      margin: 8px 12px;
+      background: linear-gradient(90deg, transparent, var(--border-faint) 20%, var(--border-faint) 80%, transparent);
+    }
+
+    /* Bundle pill (orbital) */
+    .bundle-pill {
+      display: inline-flex; align-items: center; gap: 5px;
+      padding: 2px 8px 2px 5px;
+      background: linear-gradient(135deg, var(--accent-soft), transparent);
+      border: 1px solid color-mix(in srgb, var(--accent) 18%, transparent);
+      border-radius: 999px;
+      color: var(--accent-2);
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: -0.005em;
+    }
+    .bundle-pill::before {
+      content: "";
+      width: 5px; height: 5px;
+      border-radius: 50%;
+      background: var(--accent);
+      box-shadow: 0 0 6px var(--accent);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Theme toggle -->
+  <div class="theme-toggle">
+    <button id="theme-light" title="Light mode" aria-label="Light mode">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8"><circle cx="12" cy="12" r="4"/><path stroke-linecap="round" d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
+    </button>
+    <button id="theme-dark" class="active" title="Dark mode" aria-label="Dark mode">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+    </button>
+  </div>
+
+  <div class="app-shell flex h-screen w-screen overflow-hidden">
+
+    <!-- ============ ACTIVITY BAR ============ -->
+    <aside class="activity-bar flex flex-col items-center py-3 gap-1 shrink-0">
+      <div class="ab-logo mb-2">P</div>
+
+      <button class="ab-btn" title="Home">
+        <svg class="ab-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 12l9-9 9 9M5 10v10a1 1 0 0 0 1 1h3v-7h6v7h3a1 1 0 0 0 1-1V10"/></svg>
+        <span class="ab-tooltip">Home <kbd>G H</kbd></span>
+      </button>
+
+      <button class="ab-btn active" title="Notes">
+        <svg class="ab-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 4h7l4 4v11a1 1 0 0 1-1 1H9a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1zM5 8v12a1 1 0 0 0 1 1h9"/></svg>
+        <span class="ab-tooltip">Notes <kbd>G N</kbd></span>
+      </button>
+
+      <button class="ab-btn" title="Wiki">
+        <svg class="ab-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 5a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V5zM8 7h8M8 11h8M8 15h5"/></svg>
+        <span class="ab-tooltip">Wiki <kbd>G W</kbd></span>
+      </button>
+
+      <button class="ab-btn" title="Library">
+        <svg class="ab-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 8L12 3 3 8m18 0l-9 5m9-5v8l-9 5m0-8L3 8m9 5v8M3 8v8l9 5"/></svg>
+        <span class="ab-tooltip">Library <kbd>G L</kbd></span>
+      </button>
+
+      <button class="ab-btn" title="Calendar">
+        <svg class="ab-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 4H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2zM3 10h18M8 2v4M16 2v4"/></svg>
+        <span class="ab-tooltip">Calendar <kbd>G C</kbd></span>
+      </button>
+
+      <button class="ab-btn" title="Timeline">
+        <svg class="ab-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 6h18M3 12h18M3 18h18M7 6v12M14 6v12"/></svg>
+        <span class="ab-tooltip">Timeline <kbd>G T</kbd></span>
+      </button>
+
+      <button class="ab-btn" title="Graph">
+        <svg class="ab-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="6" cy="6" r="2.5"/><circle cx="18" cy="6" r="2.5"/><circle cx="12" cy="18" r="2.5"/><path stroke-linecap="round" d="M8 7l8 0M7 8l5 8M17 8l-5 8"/></svg>
+        <span class="ab-tooltip">Graph <kbd>G G</kbd></span>
+      </button>
+
+      <div class="flex-1"></div>
+
+      <button class="ab-btn" title="Settings">
+        <svg class="ab-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path stroke-linecap="round" stroke-linejoin="round" d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        <span class="ab-tooltip">Settings <kbd>⌘ ,</kbd></span>
+      </button>
+
+      <div class="ab-avatar mt-1">PK</div>
+    </aside>
+
+
+    <!-- ============ SIDEBAR ============ -->
+    <aside class="sidebar flex flex-col shrink-0 overflow-hidden">
+
+      <!-- Workspace switcher -->
+      <div class="px-3 py-2.5 border-b border-faint flex items-center gap-2">
+        <div class="w-6 h-6 rounded-md grid place-items-center text-[10px] font-semibold"
+             style="background: linear-gradient(135deg, #818cf8, #4f46e5); color: white; box-shadow: inset 0 1px 0 rgba(255,255,255,0.18);">P</div>
+        <div class="flex-1 min-w-0">
+          <div class="text-[12.5px] font-semibold text-fg leading-tight tracking-tight">Personal</div>
+          <div class="text-[10px] text-subtle leading-tight tracking-wide">Pro · 3 devices</div>
+        </div>
+        <button class="text-faint hover:text-fg transition-colors">
+          <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7l4-4 4 4M16 17l-4 4-4-4"/></svg>
+        </button>
+      </div>
+
+      <!-- Header -->
+      <div class="px-3 pt-3 pb-2">
+        <div class="flex items-baseline justify-between">
+          <h2 class="text-[15px] font-semibold text-strong tracking-tight" style="letter-spacing:-0.018em">Notes</h2>
+          <span class="mono text-[10.5px] text-subtle tracking-tighter">42</span>
+        </div>
+        <div class="text-[10.5px] text-faint mt-0.5 tracking-wide flex items-center gap-1.5">
+          <span class="live-dot"></span>
+          <span>3 syncing · 8 unread</span>
+        </div>
+      </div>
+
+      <div class="flex-1 overflow-y-auto px-2 pb-2">
+
+        <!-- Status section -->
+        <section class="sidebar-section py-2">
+          <div class="section-label">
+            <span>Status</span>
+          </div>
+          <div class="space-y-px">
+            <a class="nav-item active">
+              <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M22 12h-6l-2 3h-4l-2-3H2"/><path stroke-linecap="round" stroke-linejoin="round" d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></svg>
+              <span>All Notes</span>
+              <span class="nav-count">42</span>
+            </a>
+            <a class="nav-item">
+              <span class="nav-dot" style="background: var(--status-inbox)"></span>
+              <span>Inbox</span>
+              <span class="nav-count">12</span>
+            </a>
+            <a class="nav-item">
+              <span class="nav-dot" style="background: var(--status-capture)"></span>
+              <span>Capture</span>
+              <span class="nav-count">8</span>
+            </a>
+            <a class="nav-item">
+              <span class="nav-dot" style="background: var(--status-permanent)"></span>
+              <span>Permanent</span>
+              <span class="nav-count">22</span>
+            </a>
+            <a class="nav-item">
+              <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M12 17v5M9 7L4 12l5 5M15 7l5 5-5 5M12 2v5"/></svg>
+              <span>Pinned</span>
+              <span class="nav-count">3</span>
+            </a>
+          </div>
+        </section>
+
+        <div class="sidebar-divider"></div>
+
+        <!-- Views section -->
+        <section class="sidebar-section py-2">
+          <div class="section-label">
+            <span>Views</span>
+            <button class="add-btn">
+              <svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" d="M12 5v14M5 12h14"/></svg>
+            </button>
+          </div>
+          <div class="space-y-px">
+            <a class="nav-item">
+              <svg class="nav-icon" fill="none" stroke="#fbbf24" viewBox="0 0 24 24" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M12 2l2.39 7.36H22l-6.18 4.5L18.18 22 12 17.27 5.82 22l2.36-8.14L2 9.36h7.61z"/></svg>
+              <span>Today's Focus</span>
+              <span class="nav-count">5</span>
+            </a>
+            <a class="nav-item">
+              <svg class="nav-icon" fill="none" stroke="#fb923c" viewBox="0 0 24 24" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M12 2c2 4 6 6 6 11a6 6 0 1 1-12 0c0-3 2-5 3-7 1 2 2 3 3 1z"/></svg>
+              <span>This Week</span>
+              <span class="nav-count">17</span>
+            </a>
+            <a class="nav-item">
+              <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M3 3v18h18M7 14l4-4 4 4 5-5"/></svg>
+              <span>Review Queue</span>
+              <span class="nav-count">8</span>
+            </a>
+          </div>
+        </section>
+
+        <div class="sidebar-divider"></div>
+
+        <!-- Folders section -->
+        <section class="sidebar-section py-2">
+          <div class="section-label">
+            <span>Folders</span>
+            <button class="add-btn">
+              <svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" d="M12 5v14M5 12h14"/></svg>
+            </button>
+          </div>
+          <div class="space-y-px">
+            <a class="nav-item">
+              <svg class="nav-icon" fill="none" stroke="#94a3b8" viewBox="0 0 24 24" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+              <span>Daily Log</span>
+              <span class="nav-count">14</span>
+            </a>
+            <a class="nav-item">
+              <svg class="nav-icon" fill="none" stroke="#fbbf24" viewBox="0 0 24 24" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+              <span>Projects</span>
+              <span class="nav-count">9</span>
+            </a>
+            <a class="nav-item">
+              <svg class="nav-icon" fill="none" stroke="#38bdf8" viewBox="0 0 24 24" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+              <span>Research</span>
+              <span class="nav-count">6</span>
+            </a>
+            <a class="nav-item">
+              <svg class="nav-icon" fill="none" stroke="#34d399" viewBox="0 0 24 24" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+              <span>Reading</span>
+              <span class="nav-count">5</span>
+            </a>
+          </div>
+        </section>
+
+        <div class="sidebar-divider"></div>
+
+        <!-- Tags section -->
+        <section class="sidebar-section py-2">
+          <div class="section-label">
+            <span>Tags</span>
+            <button class="add-btn">
+              <svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" d="M12 5v14M5 12h14"/></svg>
+            </button>
+          </div>
+          <div class="space-y-px">
+            <a class="nav-item">
+              <span class="nav-dot" style="background: var(--tag-blue)"></span>
+              <span>frontend</span>
+              <span class="nav-count">8</span>
+            </a>
+            <a class="nav-item">
+              <span class="nav-dot" style="background: var(--tag-green)"></span>
+              <span>zettelkasten</span>
+              <span class="nav-count">12</span>
+            </a>
+            <a class="nav-item">
+              <span class="nav-dot" style="background: var(--tag-pink)"></span>
+              <span>design</span>
+              <span class="nav-count">6</span>
+            </a>
+            <a class="nav-item">
+              <span class="nav-dot" style="background: var(--tag-purple)"></span>
+              <span>idea</span>
+              <span class="nav-count">5</span>
+            </a>
+          </div>
+        </section>
+
+        <div class="sidebar-divider"></div>
+
+        <!-- Bundles -->
+        <section class="sidebar-section py-2">
+          <div class="section-label">
+            <span>Bundles</span>
+          </div>
+          <div class="space-y-px">
+            <a class="nav-item">
+              <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><circle cx="12" cy="12" r="9" opacity="0.5"/></svg>
+              <span>Q4 Projects</span>
+              <span class="nav-count">7</span>
+            </a>
+            <a class="nav-item">
+              <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><circle cx="12" cy="12" r="9" opacity="0.5"/></svg>
+              <span>Plot 2.0 Launch</span>
+              <span class="nav-count">11</span>
+            </a>
+          </div>
+        </section>
+
+      </div>
+
+      <!-- Footer -->
+      <div class="border-t border-faint px-2 py-1.5 mt-auto bg-elev relative">
+        <div class="space-y-px">
+          <a class="nav-item">
+            <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M14 2v6h6M5 4v16a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8l-6-6H7a2 2 0 0 0-2 2z"/></svg>
+            <span>Templates</span>
+            <span class="nav-count">13</span>
+          </a>
+          <a class="nav-item">
+            <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M3 6h18M19 6l-1.4 14a2 2 0 0 1-2 1.7H8.4a2 2 0 0 1-2-1.7L5 6M10 11v6M14 11v6M9 6V4a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2"/></svg>
+            <span>Trash</span>
+            <span class="nav-count">2</span>
+          </a>
+        </div>
+      </div>
+
+    </aside>
+
+
+    <!-- ============ MAIN ============ -->
+    <main class="flex-1 flex flex-col min-w-0">
+
+      <!-- Topbar -->
+      <header class="topbar flex items-center px-4 gap-3 shrink-0">
+        <div class="flex items-center text-[12.5px] tracking-tight">
+          <span class="text-faint">Notes</span>
+          <span class="breadcrumb-sep">/</span>
+          <span class="text-fg font-medium">All Notes</span>
+          <span class="ml-2 mono text-[10.5px] text-faint tracking-tighter">42</span>
+        </div>
+
+        <div class="search-shell">
+          <svg class="search-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8"><circle cx="11" cy="11" r="7"/><path stroke-linecap="round" d="M21 21l-4.5-4.5"/></svg>
+          <input type="text" class="search-input" placeholder="Search notes, tags, content...">
+          <span class="search-kbd"><kbd>⌘</kbd><kbd>K</kbd></span>
+        </div>
+
+        <button class="btn-ghost">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M3 6h18M6 12h12M9 18h6"/></svg>
+          Filter
+          <span class="ml-1 text-[10px] text-accent font-medium mono" style="background: var(--accent-soft); padding: 1px 4px; border-radius: 3px;">2</span>
+        </button>
+
+        <button class="btn-ghost">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M3 6h18M3 12h18M3 18h18"/></svg>
+          Display
+        </button>
+
+        <button class="btn-primary">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.4"><path stroke-linecap="round" d="M12 5v14M5 12h14"/></svg>
+          New Note
+          <span class="ml-1 text-[10px] opacity-70 mono" style="padding: 1px 3px; border-radius: 3px; background: rgba(255,255,255,0.18);">N</span>
+        </button>
+      </header>
+
+      <!-- View tabs -->
+      <div class="view-tabs">
+        <button class="view-tab active">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M3 6h18M3 12h18M3 18h18"/></svg>
+          Table
+        </button>
+        <button class="view-tab">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4h6v16H4zM14 4h6v10h-6z"/></svg>
+          Board
+        </button>
+        <button class="view-tab">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M19 4H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2zM3 10h18M8 2v4M16 2v4"/></svg>
+          Calendar
+        </button>
+        <button class="view-tab">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8"><circle cx="12" cy="12" r="10"/><path stroke-linecap="round" d="M12 6v6l4 2"/></svg>
+          Timeline
+          <span class="new-badge">NEW</span>
+        </button>
+        <button class="view-tab">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8"><circle cx="6" cy="6" r="2"/><circle cx="18" cy="6" r="2"/><circle cx="12" cy="18" r="2"/><path stroke-linecap="round" d="M8 7l8 0M7 8l5 8M17 8l-5 8"/></svg>
+          Graph
+        </button>
+
+        <div class="ml-auto flex items-center gap-2">
+          <span class="text-[11px] text-faint tracking-tight">Density</span>
+          <div class="density-toggle">
+            <div class="density-opt">Cozy</div>
+            <div class="density-opt active">Compact</div>
+          </div>
+          <div class="sort-pill">
+            <svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" d="M3 6h13M3 12h9M3 18h5M17 8v12m0 0l-3-3m3 3l3-3"/></svg>
+            <span>Updated</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Table -->
+      <div class="flex-1 overflow-y-auto bg-bg">
+        <!-- Header -->
+        <div class="table-header">
+          <div></div>
+          <div>Type</div>
+          <div>Title</div>
+          <div>Status</div>
+          <div>Folder</div>
+          <div>Tags</div>
+          <div class="text-right">Words</div>
+          <div class="text-right">Updated</div>
+          <div></div>
+        </div>
+
+        <!-- Group: Today -->
+        <div class="group-row">
+          <span>Today</span>
+          <span class="group-count">2</span>
+        </div>
+
+        <!-- ROW 1 -->
+        <div class="table-row">
+          <div><span class="row-checkbox"></span></div>
+          <div><div class="type-icon t-memo">📝</div></div>
+          <div>
+            <div class="flex items-center min-w-0">
+              <span class="row-title">노트앱의 본질에 대한 생각</span>
+              <span class="row-meta-snippet ml-2">· 3 backlinks · &ldquo;정보 자체보다 정보의 흐름이...&rdquo;</span>
+            </div>
+          </div>
+          <div><span class="status-badge status-inbox">Inbox</span></div>
+          <div><div class="folder-cell">
+            <svg fill="none" stroke="#94a3b8" viewBox="0 0 24 24" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+            <span>Daily Log</span>
+          </div></div>
+          <div class="flex items-center gap-1 min-w-0">
+            <span class="tag-chip tag-green">zettelkasten</span>
+            <span class="tag-chip tag-purple">idea</span>
+          </div>
+          <div class="words-cell">847</div>
+          <div class="updated-cell">2h</div>
+          <div class="row-actions">
+            <button class="row-action-btn"><svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/></svg></button>
+          </div>
+        </div>
+
+        <!-- ROW 2: SELECTED -->
+        <div class="table-row selected">
+          <div><span class="row-checkbox checked"></span></div>
+          <div><div class="type-icon t-project">⭐</div></div>
+          <div>
+            <div class="flex items-center min-w-0">
+              <span class="row-title">Plot 2.0 리디자인 전략</span>
+              <span class="row-meta-pin">
+                <svg width="9" height="9" fill="currentColor" viewBox="0 0 24 24"><path d="M16 12V4h1V2H7v2h1v8l-2 2v2h5.2v6h1.6v-6H18v-2l-2-2z"/></svg>
+                PIN
+              </span>
+            </div>
+          </div>
+          <div><span class="status-badge status-permanent">Permanent</span></div>
+          <div><div class="folder-cell">
+            <svg fill="none" stroke="#fbbf24" viewBox="0 0 24 24" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+            <span>Projects</span>
+          </div></div>
+          <div class="flex items-center gap-1 min-w-0">
+            <span class="tag-chip tag-pink">design</span>
+            <span class="tag-chip tag-blue">frontend</span>
+          </div>
+          <div class="words-cell">2,341</div>
+          <div class="updated-cell fresh">14m</div>
+          <div class="row-actions">
+            <button class="row-action-btn"><svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/></svg></button>
+          </div>
+        </div>
+
+        <!-- ROW 3 -->
+        <div class="table-row">
+          <div><span class="row-checkbox"></span></div>
+          <div><div class="type-icon t-research">🔬</div></div>
+          <div>
+            <div class="flex items-center min-w-0">
+              <span class="row-title">React Server Components 분석</span>
+            </div>
+          </div>
+          <div><span class="status-badge status-capture">Capture</span></div>
+          <div><div class="folder-cell">
+            <svg fill="none" stroke="#38bdf8" viewBox="0 0 24 24" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+            <span>Research</span>
+          </div></div>
+          <div class="flex items-center gap-1 min-w-0">
+            <span class="tag-chip tag-blue">frontend</span>
+            <span class="tag-more">+2</span>
+          </div>
+          <div class="words-cell">1,256</div>
+          <div class="updated-cell">3h</div>
+          <div class="row-actions">
+            <button class="row-action-btn"><svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/></svg></button>
+          </div>
+        </div>
+
+        <!-- Group: Yesterday -->
+        <div class="group-row">
+          <span>Yesterday</span>
+          <span class="group-count">1</span>
+        </div>
+
+        <!-- ROW 4 -->
+        <div class="table-row">
+          <div><span class="row-checkbox"></span></div>
+          <div><div class="type-icon t-idea">💡</div></div>
+          <div>
+            <div class="flex items-center min-w-0">
+              <span class="row-title">새 캡처 인터페이스 아이디어</span>
+            </div>
+          </div>
+          <div><span class="status-badge status-inbox">Inbox</span></div>
+          <div><div class="folder-cell text-faint"><span>—</span></div></div>
+          <div class="flex items-center gap-1 min-w-0">
+            <span class="tag-chip tag-purple">idea</span>
+          </div>
+          <div class="words-cell">312</div>
+          <div class="updated-cell">1d</div>
+          <div class="row-actions">
+            <button class="row-action-btn"><svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/></svg></button>
+          </div>
+        </div>
+
+        <!-- Group: Earlier this week -->
+        <div class="group-row">
+          <span>Earlier this week</span>
+          <span class="group-count">3</span>
+        </div>
+
+        <!-- ROW 5 -->
+        <div class="table-row">
+          <div><span class="row-checkbox"></span></div>
+          <div><div class="type-icon t-goal">🎯</div></div>
+          <div>
+            <div class="flex items-center min-w-0">
+              <span class="row-title">Q4 2026 목표 설정</span>
+              <span class="row-meta-snippet ml-2">· 12 milestones</span>
+            </div>
+          </div>
+          <div><span class="status-badge status-permanent">Permanent</span></div>
+          <div><div class="folder-cell">
+            <svg fill="none" stroke="#fbbf24" viewBox="0 0 24 24" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+            <span>Projects</span>
+          </div></div>
+          <div class="flex items-center gap-1 min-w-0">
+            <span class="text-faint text-[11px]">—</span>
+          </div>
+          <div class="words-cell">1,089</div>
+          <div class="updated-cell">2d</div>
+          <div class="row-actions">
+            <button class="row-action-btn"><svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/></svg></button>
+          </div>
+        </div>
+
+        <!-- ROW 6 -->
+        <div class="table-row">
+          <div><span class="row-checkbox"></span></div>
+          <div><div class="type-icon t-reading">📚</div></div>
+          <div>
+            <div class="flex items-center min-w-0">
+              <span class="row-title">Atomic Habits — 핵심 정리</span>
+              <span class="row-meta-snippet ml-2">· 12 highlights · 4 footnotes</span>
+            </div>
+          </div>
+          <div><span class="status-badge status-permanent">Permanent</span></div>
+          <div><div class="folder-cell">
+            <svg fill="none" stroke="#34d399" viewBox="0 0 24 24" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+            <span>Reading</span>
+          </div></div>
+          <div class="flex items-center gap-1 min-w-0">
+            <span class="tag-chip tag-green">zettelkasten</span>
+          </div>
+          <div class="words-cell">3,421</div>
+          <div class="updated-cell">5d</div>
+          <div class="row-actions">
+            <button class="row-action-btn"><svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/></svg></button>
+          </div>
+        </div>
+
+        <!-- ROW 7 -->
+        <div class="table-row faded">
+          <div><span class="row-checkbox"></span></div>
+          <div><div class="type-icon t-memo">📝</div></div>
+          <div>
+            <div class="flex items-center min-w-0">
+              <span class="row-title">노트 분류 체계 정리</span>
+            </div>
+          </div>
+          <div><span class="status-badge status-inbox">Inbox</span></div>
+          <div><div class="folder-cell">
+            <svg fill="none" stroke="#94a3b8" viewBox="0 0 24 24" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+            <span>Daily Log</span>
+          </div></div>
+          <div class="flex items-center gap-1 min-w-0">
+            <span class="text-faint text-[11px]">—</span>
+          </div>
+          <div class="words-cell">654</div>
+          <div class="updated-cell">5d</div>
+          <div class="row-actions">
+            <button class="row-action-btn"><svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/></svg></button>
+          </div>
+        </div>
+
+        <!-- Group: Last week -->
+        <div class="group-row">
+          <span>Last week</span>
+          <span class="group-count">1</span>
+        </div>
+
+        <!-- ROW 8 -->
+        <div class="table-row faded">
+          <div><span class="row-checkbox"></span></div>
+          <div><div class="type-icon t-project">⭐</div></div>
+          <div>
+            <div class="flex items-center min-w-0">
+              <span class="row-title">View Engine 통합 PRD</span>
+              <span class="row-meta-snippet ml-2">· 7 sections</span>
+            </div>
+          </div>
+          <div><span class="status-badge status-permanent">Permanent</span></div>
+          <div><div class="folder-cell">
+            <svg fill="none" stroke="#fbbf24" viewBox="0 0 24 24" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+            <span>Projects</span>
+          </div></div>
+          <div class="flex items-center gap-1 min-w-0">
+            <span class="text-faint text-[11px]">—</span>
+          </div>
+          <div class="words-cell">1,872</div>
+          <div class="updated-cell">1w</div>
+          <div class="row-actions">
+            <button class="row-action-btn"><svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/></svg></button>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Footer -->
+      <div class="footbar shrink-0 justify-between">
+        <div class="flex items-center gap-3">
+          <span>1 selected</span>
+          <span class="text-faint">·</span>
+          <span>8 of 42</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <span class="foot-pill"><kbd>↑↓</kbd> Navigate</span>
+          <span class="foot-pill"><kbd>↵</kbd> Open</span>
+          <span class="foot-pill"><kbd>⌘K</kbd> Quick action</span>
+        </div>
+      </div>
+
+    </main>
+
+
+    <!-- ============ DETAIL PANEL ============ -->
+    <aside class="detail-panel shrink-0">
+
+      <!-- Tabs -->
+      <div class="panel-tabs">
+        <div class="panel-tab active">Detail</div>
+        <div class="panel-tab">Connections <span class="ml-1 mono text-[9.5px] text-faint">5</span></div>
+        <div class="panel-tab">Activity <span class="ml-1 mono text-[9.5px] text-faint">23</span></div>
+        <div class="panel-tab ml-auto" style="padding-right: 0;">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/></svg>
+        </div>
+      </div>
+
+      <!-- Title section -->
+      <div class="panel-section">
+        <div class="text-[10px] text-faint mb-2 tracking-widest font-medium flex items-center gap-1.5">
+          <span style="width: 14px; height: 1px; background: var(--accent); opacity: 0.6;"></span>
+          PROJECT NOTE
+        </div>
+        <h1 class="panel-title">
+          <span class="panel-title-emoji">⭐</span>
+          <span>Plot 2.0 리디자인 전략</span>
+        </h1>
+        <div class="flex items-center gap-2 mt-3 flex-wrap">
+          <span class="status-badge status-permanent">Permanent</span>
+          <span class="bundle-pill">Q4 Projects</span>
+          <span class="ml-auto text-[10px] text-faint mono tracking-tighter">PLT-014</span>
+        </div>
+      </div>
+
+      <!-- Properties -->
+      <div class="panel-section">
+        <div class="section-heading">
+          <span>Properties</span>
+          <span class="section-heading-rule"></span>
+        </div>
+        <div class="space-y-0.5">
+          <div class="prop-row">
+            <span class="prop-key">Type</span>
+            <span class="prop-val">
+              <span class="type-icon t-project" style="width: 18px; height: 18px; font-size: 11px; border-radius: 5px;">⭐</span>
+              Project
+            </span>
+          </div>
+          <div class="prop-row">
+            <span class="prop-key">Status</span>
+            <span class="prop-val"><span class="status-badge status-permanent">Permanent</span></span>
+          </div>
+          <div class="prop-row">
+            <span class="prop-key">Folder</span>
+            <span class="prop-val">
+              <svg class="w-3 h-3" fill="none" stroke="#fbbf24" viewBox="0 0 24 24" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+              Projects
+            </span>
+          </div>
+          <div class="prop-row">
+            <span class="prop-key">Tags</span>
+            <span class="prop-val flex-wrap">
+              <span class="tag-chip tag-pink">design</span>
+              <span class="tag-chip tag-blue">frontend</span>
+            </span>
+          </div>
+          <div class="prop-row">
+            <span class="prop-key">Bundle</span>
+            <span class="prop-val"><span class="bundle-pill">Q4 Projects</span></span>
+          </div>
+          <div class="prop-row">
+            <span class="prop-key">Created</span>
+            <span class="prop-val text-muted">Apr 28, 2026</span>
+          </div>
+          <div class="prop-row">
+            <span class="prop-key">Updated</span>
+            <span class="prop-val">
+              <span class="live-dot"></span>
+              <span class="text-fg">14m ago</span>
+              <span class="text-faint text-[10px] ml-1">· just now</span>
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 7-day Activity -->
+      <div class="panel-section">
+        <div class="section-heading">
+          <span>7-Day Activity</span>
+          <span class="section-heading-rule"></span>
+        </div>
+        <div class="stat-grid">
+          <div class="stat-card">
+            <div class="stat-label">Words</div>
+            <div class="stat-value">2,341</div>
+            <div class="stat-delta">
+              <svg fill="none" stroke="currentColor" stroke-width="2.4" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M7 17l5-5 4 4 5-7"/></svg>
+              +312
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Reads</div>
+            <div class="stat-value">23</div>
+            <div class="stat-delta">
+              <svg fill="none" stroke="currentColor" stroke-width="2.4" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M7 17l5-5 4 4 5-7"/></svg>
+              +6
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Edits</div>
+            <div class="stat-value">8</div>
+            <div class="stat-delta">
+              <svg fill="none" stroke="currentColor" stroke-width="2.4" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M7 17l5-5 4 4 5-7"/></svg>
+              +2
+            </div>
+          </div>
+        </div>
+
+        <!-- Sparkline -->
+        <svg class="sparkline" viewBox="0 0 280 44" preserveAspectRatio="none">
+          <defs>
+            <linearGradient id="spark-fill" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="var(--accent)" stop-opacity="0.25"/>
+              <stop offset="100%" stop-color="var(--accent)" stop-opacity="0"/>
+            </linearGradient>
+            <linearGradient id="spark-stroke" x1="0" y1="0" x2="1" y2="0">
+              <stop offset="0%" stop-color="var(--accent)" stop-opacity="0.5"/>
+              <stop offset="100%" stop-color="var(--accent)" stop-opacity="1"/>
+            </linearGradient>
+          </defs>
+          <!-- area fill -->
+          <path d="M0,34 L40,30 L80,32 L120,22 L160,24 L200,14 L240,12 L280,4 L280,44 L0,44 Z"
+                fill="url(#spark-fill)"/>
+          <!-- line -->
+          <path d="M0,34 L40,30 L80,32 L120,22 L160,24 L200,14 L240,12 L280,4"
+                fill="none" stroke="url(#spark-stroke)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+          <!-- points -->
+          <circle cx="0" cy="34" r="1.8" fill="var(--accent)" opacity="0.4"/>
+          <circle cx="40" cy="30" r="1.8" fill="var(--accent)" opacity="0.5"/>
+          <circle cx="80" cy="32" r="1.8" fill="var(--accent)" opacity="0.5"/>
+          <circle cx="120" cy="22" r="1.8" fill="var(--accent)" opacity="0.6"/>
+          <circle cx="160" cy="24" r="1.8" fill="var(--accent)" opacity="0.7"/>
+          <circle cx="200" cy="14" r="1.8" fill="var(--accent)" opacity="0.8"/>
+          <circle cx="240" cy="12" r="1.8" fill="var(--accent)" opacity="0.9"/>
+          <!-- last point highlighted -->
+          <circle cx="280" cy="4" r="3" fill="var(--accent)"/>
+          <circle cx="280" cy="4" r="6" fill="var(--accent)" opacity="0.18"/>
+        </svg>
+        <div class="flex justify-between mt-1.5 text-[9.5px] text-faint mono tracking-tight">
+          <span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span><span>Sun</span><span>Today</span>
+        </div>
+      </div>
+
+      <!-- Connected Notes -->
+      <div class="panel-section">
+        <div class="section-heading">
+          <span>Connected Notes</span>
+          <span class="section-heading-rule"></span>
+          <span class="mono text-[10px] text-faint">5</span>
+        </div>
+        <div class="mini-graph">
+          <svg class="absolute inset-0 w-full h-full" viewBox="0 0 308 168" preserveAspectRatio="xMidYMid meet">
+            <defs>
+              <radialGradient id="node-grad" cx="50%" cy="35%">
+                <stop offset="0%" stop-color="var(--accent-2)"/>
+                <stop offset="100%" stop-color="var(--accent-deep)"/>
+              </radialGradient>
+              <radialGradient id="node-grad-c" cx="50%" cy="35%">
+                <stop offset="0%" stop-color="#fbbf24"/>
+                <stop offset="100%" stop-color="#d97706"/>
+              </radialGradient>
+              <filter id="node-glow">
+                <feGaussianBlur stdDeviation="3"/>
+              </filter>
+            </defs>
+
+            <!-- Edges -->
+            <g stroke="var(--border-strong)" stroke-width="1" fill="none" opacity="0.7">
+              <path d="M154 84 Q 100 50 60 38" stroke-dasharray="0"/>
+              <path d="M154 84 Q 220 50 252 36"/>
+              <path d="M154 84 Q 92 100 50 130"/>
+              <path d="M154 84 Q 222 110 256 132"/>
+              <path d="M154 84 Q 154 130 154 142" stroke="var(--accent)" stroke-width="1.4" opacity="0.8"/>
+            </g>
+            <g stroke="var(--accent)" stroke-width="1.2" fill="none" opacity="0.36">
+              <path d="M154 84 Q 100 50 60 38"/>
+              <path d="M154 84 Q 222 110 256 132"/>
+            </g>
+
+            <!-- Outer nodes -->
+            <g>
+              <!-- View Engine PRD -->
+              <circle cx="60" cy="38" r="14" fill="url(#node-grad)" opacity="0.20" filter="url(#node-glow)"/>
+              <circle cx="60" cy="38" r="9" fill="url(#node-grad)" stroke="var(--bg)" stroke-width="2"/>
+              <text x="60" y="42" text-anchor="middle" font-size="9" font-weight="600" fill="white">⭐</text>
+
+              <!-- Folder N:M -->
+              <circle cx="252" cy="36" r="11" fill="url(#node-grad)" opacity="0.18" filter="url(#node-glow)"/>
+              <circle cx="252" cy="36" r="7" fill="var(--bg-elev-3)" stroke="var(--accent)" stroke-width="1.5"/>
+              <text x="252" y="40" text-anchor="middle" font-size="7" fill="var(--fg)">📝</text>
+
+              <!-- Linear UI -->
+              <circle cx="50" cy="130" r="11" fill="url(#node-grad)" opacity="0.16" filter="url(#node-glow)"/>
+              <circle cx="50" cy="130" r="7" fill="var(--bg-elev-3)" stroke="var(--accent)" stroke-width="1.5"/>
+              <text x="50" y="134" text-anchor="middle" font-size="7" fill="var(--fg)">💡</text>
+
+              <!-- Tags Architecture -->
+              <circle cx="256" cy="132" r="13" fill="url(#node-grad-c)" opacity="0.18" filter="url(#node-glow)"/>
+              <circle cx="256" cy="132" r="8" fill="url(#node-grad-c)" stroke="var(--bg)" stroke-width="2"/>
+              <text x="256" y="136" text-anchor="middle" font-size="8" fill="white">🔬</text>
+
+              <!-- Wiki TOC -->
+              <circle cx="154" cy="142" r="10" fill="var(--bg-elev-3)" stroke="var(--border-strong)" stroke-width="1.5"/>
+              <text x="154" y="146" text-anchor="middle" font-size="8" fill="var(--fg)">📚</text>
+
+              <!-- Center node (current) -->
+              <circle cx="154" cy="84" r="20" fill="var(--accent)" opacity="0.16" filter="url(#node-glow)"/>
+              <circle cx="154" cy="84" r="14" fill="url(#node-grad)" stroke="var(--bg-elev)" stroke-width="2.5"/>
+              <text x="154" y="89" text-anchor="middle" font-size="11" font-weight="700" fill="white">⭐</text>
+
+              <!-- Pulse ring -->
+              <circle cx="154" cy="84" r="22" fill="none" stroke="var(--accent)" stroke-width="1" opacity="0.6">
+                <animate attributeName="r" from="14" to="30" dur="2.4s" repeatCount="indefinite"/>
+                <animate attributeName="opacity" from="0.6" to="0" dur="2.4s" repeatCount="indefinite"/>
+              </circle>
+            </g>
+          </svg>
+
+          <!-- Legend overlay -->
+          <div class="absolute top-2 right-2 flex items-center gap-1.5 text-[9px] text-faint mono tracking-tight bg-elev-3 px-1.5 py-0.5 rounded border border-faint">
+            <span class="w-1.5 h-1.5 rounded-full" style="background: var(--accent)"></span>
+            <span>Linked</span>
+          </div>
+        </div>
+
+        <!-- Connected list -->
+        <div class="mt-2.5 space-y-px">
+          <a class="backlink-row">
+            <span class="backlink-icon" style="background: color-mix(in srgb, #fbbf24 16%, transparent)">⭐</span>
+            <span class="flex-1 truncate">View Engine 통합 PRD</span>
+            <span class="text-[10px] text-faint mono tracking-tighter">strong</span>
+            <svg class="arrow w-3 h-3" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" d="M9 6l6 6-6 6"/></svg>
+          </a>
+          <a class="backlink-row">
+            <span class="backlink-icon" style="background: color-mix(in srgb, #94a3b8 14%, transparent)">📝</span>
+            <span class="flex-1 truncate">Folder N:M 정책 결정</span>
+            <span class="text-[10px] text-faint mono tracking-tighter">refs</span>
+            <svg class="arrow w-3 h-3" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" d="M9 6l6 6-6 6"/></svg>
+          </a>
+          <a class="backlink-row">
+            <span class="backlink-icon" style="background: color-mix(in srgb, #c084fc 16%, transparent)">💡</span>
+            <span class="flex-1 truncate">Linear UI 패턴 학습</span>
+            <span class="text-[10px] text-faint mono tracking-tighter">refs</span>
+            <svg class="arrow w-3 h-3" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" d="M9 6l6 6-6 6"/></svg>
+          </a>
+          <a class="backlink-row">
+            <span class="backlink-icon" style="background: color-mix(in srgb, #38bdf8 16%, transparent)">🔬</span>
+            <span class="flex-1 truncate">Tags Architecture 분석</span>
+            <span class="text-[10px] text-faint mono tracking-tighter">weak</span>
+            <svg class="arrow w-3 h-3" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" d="M9 6l6 6-6 6"/></svg>
+          </a>
+          <a class="backlink-row">
+            <span class="backlink-icon" style="background: color-mix(in srgb, #34d399 16%, transparent)">📚</span>
+            <span class="flex-1 truncate">Wiki TOC 시스템</span>
+            <span class="text-[10px] text-faint mono tracking-tighter">weak</span>
+            <svg class="arrow w-3 h-3" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" d="M9 6l6 6-6 6"/></svg>
+          </a>
+        </div>
+      </div>
+
+      <!-- Recent Activity -->
+      <div class="panel-section">
+        <div class="section-heading">
+          <span>Recent Activity</span>
+          <span class="section-heading-rule"></span>
+        </div>
+        <div class="timeline-list">
+          <div class="timeline-item fresh">
+            <span class="timeline-time">14m</span>
+            <div class="timeline-rail"></div>
+            <div class="timeline-content">
+              <span class="ev">Edited content</span>
+              <span class="text-faint">·</span>
+              <span style="color: var(--status-permanent); font-weight: 500;">+312 words</span>
+            </div>
+          </div>
+          <div class="timeline-item">
+            <span class="timeline-time">2h</span>
+            <div class="timeline-rail"></div>
+            <div class="timeline-content">
+              Linked to <span class="ev-link">"View Engine PRD"</span>
+            </div>
+          </div>
+          <div class="timeline-item">
+            <span class="timeline-time">1d</span>
+            <div class="timeline-rail"></div>
+            <div class="timeline-content">
+              Added to bundle <span class="ev">Q4 Projects</span>
+            </div>
+          </div>
+          <div class="timeline-item">
+            <span class="timeline-time">3d</span>
+            <div class="timeline-rail"></div>
+            <div class="timeline-content">
+              Status:
+              <span class="status-badge status-capture" style="font-size: 10px; padding: 1px 5px; vertical-align: 1px;">Capture</span>
+              <svg class="inline w-2.5 h-2.5 mx-0.5" fill="none" stroke="var(--fg-faint)" stroke-width="1.8" viewBox="0 0 24 24" style="vertical-align: middle;"><path stroke-linecap="round" d="M5 12h14M13 6l6 6-6 6"/></svg>
+              <span class="status-badge status-permanent" style="font-size: 10px; padding: 1px 5px; vertical-align: 1px;">Permanent</span>
+            </div>
+          </div>
+          <div class="timeline-item">
+            <span class="timeline-time">8d</span>
+            <div class="timeline-rail"></div>
+            <div class="timeline-content">
+              <span class="ev">Created</span>
+              <span class="text-faint">from template Project Note</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Backlinks -->
+      <div class="panel-section">
+        <div class="section-heading">
+          <span>Backlinks</span>
+          <span class="section-heading-rule"></span>
+          <span class="mono text-[10px] text-faint">3</span>
+        </div>
+        <div class="space-y-px -mx-1">
+          <a class="backlink-row">
+            <span class="backlink-icon" style="background: color-mix(in srgb, #94a3b8 14%, transparent)">📝</span>
+            <div class="flex-1 min-w-0">
+              <div class="truncate text-fg text-[12px] font-medium tracking-tight">노트앱의 본질에 대한 생각</div>
+              <div class="text-[10px] text-faint truncate">&ldquo;...리디자인 전략에서 정리한 4-layer...&rdquo;</div>
+            </div>
+            <svg class="arrow w-3 h-3" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" d="M9 6l6 6-6 6"/></svg>
+          </a>
+          <a class="backlink-row">
+            <span class="backlink-icon" style="background: color-mix(in srgb, #fbbf24 16%, transparent)">⭐</span>
+            <div class="flex-1 min-w-0">
+              <div class="truncate text-fg text-[12px] font-medium tracking-tight">View Engine 통합 PRD</div>
+              <div class="text-[10px] text-faint truncate">&ldquo;...리디자인 전략 문서의 Phase 3...&rdquo;</div>
+            </div>
+            <svg class="arrow w-3 h-3" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" d="M9 6l6 6-6 6"/></svg>
+          </a>
+          <a class="backlink-row">
+            <span class="backlink-icon" style="background: color-mix(in srgb, #38bdf8 16%, transparent)">🔬</span>
+            <div class="flex-1 min-w-0">
+              <div class="truncate text-fg text-[12px] font-medium tracking-tight">React Server Components 분석</div>
+              <div class="text-[10px] text-faint truncate">&ldquo;...리디자인 전략 §7에서 RSC 활용...&rdquo;</div>
+            </div>
+            <svg class="arrow w-3 h-3" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" d="M9 6l6 6-6 6"/></svg>
+          </a>
+        </div>
+      </div>
+
+      <!-- Bottom action -->
+      <div class="panel-section" style="border-bottom: 0; padding-bottom: 24px;">
+        <button class="w-full flex items-center justify-center gap-2 h-9 rounded-lg text-[12.5px] font-medium tracking-tight transition-all hover:translate-y-[-0.5px]"
+                style="background: var(--bg-elev-2); border: 1px solid var(--border); color: var(--fg-muted); box-shadow: 0 1px 2px rgba(0,0,0,0.08);">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 0 0-2 2v11a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2v-5M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+          Open in editor
+          <span class="text-[10px] text-faint mono ml-1">⌘ ↵</span>
+        </button>
+      </div>
+
+    </aside>
+
+  </div>
+
+  <script>
+    // Theme toggle
+    const themeLight = document.getElementById('theme-light');
+    const themeDark = document.getElementById('theme-dark');
+    const html = document.documentElement;
+
+    function setTheme(t) {
+      html.setAttribute('data-theme', t);
+      themeLight.classList.toggle('active', t === 'light');
+      themeDark.classList.toggle('active', t === 'dark');
+    }
+
+    themeLight.addEventListener('click', () => setTheme('light'));
+    themeDark.addEventListener('click', () => setTheme('dark'));
+
+    // Row click selection (visual only)
+    document.querySelectorAll('.table-row').forEach(row => {
+      row.addEventListener('click', (e) => {
+        if (e.target.closest('.row-checkbox') || e.target.closest('.row-action-btn')) return;
+        document.querySelectorAll('.table-row').forEach(r => r.classList.remove('selected'));
+        document.querySelectorAll('.row-checkbox').forEach(c => c.classList.remove('checked'));
+        row.classList.add('selected');
+        const cb = row.querySelector('.row-checkbox');
+        if (cb) cb.classList.add('checked');
+      });
+    });
+
+    // Density toggle (visual only)
+    document.querySelectorAll('.density-opt').forEach(opt => {
+      opt.addEventListener('click', () => {
+        document.querySelectorAll('.density-opt').forEach(o => o.classList.remove('active'));
+        opt.classList.add('active');
+      });
+    });
+
+    // View tabs
+    document.querySelectorAll('.view-tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        document.querySelectorAll('.view-tab').forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+      });
+    });
+
+    // Panel tabs
+    document.querySelectorAll('.panel-tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        document.querySelectorAll('.panel-tab').forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+      });
+    });
+  </script>
+
+</body>
+</html>

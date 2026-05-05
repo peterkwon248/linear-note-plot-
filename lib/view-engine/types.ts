@@ -22,6 +22,7 @@ export type ViewContextKey =
   | "templates"      // /templates — note template list (PR template-c)
   // Group C PR-D: entity index views (tag entity list, not tag-filtered notes)
   | "tags-list"      // /library/tags — Tag entity index (PR group-c-d-1)
+  | "labels-list"    // /labels — Label entity index (PR group-c-d-2)
   | `query-${string}` // inline query blocks in editor
 
 /* ── View State ────────────────────────────────────────── */
@@ -191,6 +192,7 @@ export const VALID_VIEW_CONTEXT_KEYS: ViewContextKey[] = [
   "templates",
   // Group C PR-D: entity index views
   "tags-list",
+  "labels-list",
 ]
 
 export const VALID_SORT_FIELDS: SortField[] = [

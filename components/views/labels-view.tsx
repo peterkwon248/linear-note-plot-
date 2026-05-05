@@ -25,17 +25,15 @@ import { Minus } from "@phosphor-icons/react/dist/ssr/Minus"
 import { EyeSlash } from "@phosphor-icons/react/dist/ssr/EyeSlash"
 import { BookmarkSimple } from "@phosphor-icons/react/dist/ssr/BookmarkSimple"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
 import { cn } from "@/lib/utils"
 import { ColorPickerGrid } from "@/components/color-picker-grid"
 import { PRESET_COLORS } from "@/lib/colors"
 import { useNotesView } from "@/lib/view-engine/use-notes-view"
+import { useLabelsView } from "@/lib/view-engine/use-labels-view"
 import { FilterButton, FilterChipBar } from "@/components/filter-bar"
+import { DisplayPanel } from "@/components/display-panel"
+import { LABELS_LIST_VIEW_CONFIG } from "@/lib/view-engine/view-configs"
+import { LabelNoteCountChip } from "@/components/property-chips"
 import type { SortField, FilterRule, GroupBy } from "@/lib/view-engine/types"
 import type { Label } from "@/lib/types"
 import { ViewHeader } from "@/components/view-header"
@@ -123,16 +121,12 @@ const HEADER_HEIGHT = 37
 
 export function LabelsView() {
   const labels = usePlotStore((s) => s.labels)
-  const notes = usePlotStore((s) => s.notes)
   const folders = usePlotStore((s) => s.folders)
   const tags = usePlotStore((s) => s.tags)
   const createLabel = usePlotStore((s) => s.createLabel)
   const deleteLabel = usePlotStore((s) => s.deleteLabel)
   const updateLabel = usePlotStore((s) => s.updateLabel)
   const openNote = usePlotStore((s) => s.openNote)
-
-  // Search state
-  const [search, setSearch] = useState("")
 
   // View state
   const [selectedLabelId, setSelectedLabelId] = useState<string | null>(null)
@@ -145,11 +139,28 @@ export function LabelsView() {
   const nameInputRef = useRef<HTMLInputElement>(null)
   const editInputRef = useRef<HTMLInputElement>(null)
   const [displayPopoverOpen, setDisplayPopoverOpen] = useState(false)
-  const [labelSortBy, setLabelSortBy] = useState<"name-asc" | "name-desc" | "count-desc" | "count-asc">("name-asc")
-  const [hideEmptyLabels, setHideEmptyLabels] = useState(false)
   const [colorPickerOpenId, setColorPickerOpenId] = useState<string | null>(null)
   const [contextMenuLabelId, setContextMenuLabelId] = useState<string | null>(null)
   const clickTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  // ── Labels-list view engine (entity index) ─────────────
+  // useLabelsView manages: search (via global searchQuery), sort, group.
+  const {
+    flatLabels: sortedLabels,
+    flatCount,
+    totalCount,
+    viewState: labelsListViewState,
+    updateViewState: updateLabelsListView,
+  } = useLabelsView()
+
+  // hideEmpty toggle — stored in viewState.toggles
+  const hideEmptyLabels = labelsListViewState.toggles?.hideEmpty ?? false
+
+  // Apply hideEmpty filter on top of the view-engine result
+  const visibleLabels = useMemo(
+    () => hideEmptyLabels ? sortedLabels.filter((l) => l.noteCount > 0) : sortedLabels,
+    [sortedLabels, hideEmptyLabels],
+  )
 
   // View engine for label detail mode (must be called unconditionally)
   const labelExtras = useMemo(() => ({ labelId: selectedLabelId ?? undefined }), [selectedLabelId])
@@ -177,42 +188,10 @@ export function LabelsView() {
   const dragStartRef = useRef<{ x: number; y: number; scrollTop: number } | null>(null)
   const isDraggingRef = useRef(false)
   const scrollContainerRef = useRef<HTMLDivElement>(null)
-  const labelsRef = useRef<typeof labels>(labels)
+  // labelsRef tracks the currently-rendered list for drag-to-select row math
+  const labelsRef = useRef<typeof visibleLabels>(visibleLabels)
 
-  // Active notes
-  const activeNotes = useMemo(() =>
-    notes.filter((n) => !n.trashed),
-    [notes]
-  )
-
-  // Label note counts
-  const labelCounts = useMemo(() => {
-    const counts: Record<string, number> = {}
-    for (const label of labels) {
-      counts[label.id] = activeNotes.filter((n) => n.labelId === label.id).length
-    }
-    return counts
-  }, [labels, activeNotes])
-
-  // Sort and filter labels for list mode (excluding trashed)
-  const sortedLabels = useMemo(() => {
-    let result = labels.filter((l) => !l.trashed)
-    if (hideEmptyLabels) {
-      result = result.filter(l => (labelCounts[l.id] || 0) > 0)
-    }
-    if (search) {
-      result = result.filter(l => l.name.toLowerCase().includes(search.toLowerCase()))
-    }
-    switch (labelSortBy) {
-      case "name-asc": return result.sort((a, b) => a.name.localeCompare(b.name))
-      case "name-desc": return result.sort((a, b) => b.name.localeCompare(a.name))
-      case "count-desc": return result.sort((a, b) => (labelCounts[b.id] || 0) - (labelCounts[a.id] || 0))
-      case "count-asc": return result.sort((a, b) => (labelCounts[a.id] || 0) - (labelCounts[b.id] || 0))
-      default: return result
-    }
-  }, [labels, labelSortBy, hideEmptyLabels, labelCounts, search])
-
-  labelsRef.current = sortedLabels
+  labelsRef.current = visibleLabels
 
   const selectedLabel = labels.find((l) => l.id === selectedLabelId)
 
@@ -349,10 +328,10 @@ export function LabelsView() {
   }
 
   const toggleAll = () => {
-    if (checkedLabels.size === sortedLabels.length) {
+    if (checkedLabels.size === visibleLabels.length) {
       setCheckedLabels(new Set())
     } else {
-      setCheckedLabels(new Set(sortedLabels.map(l => l.id)))
+      setCheckedLabels(new Set(visibleLabels.map(l => l.id)))
     }
   }
 
@@ -394,16 +373,16 @@ export function LabelsView() {
         setCheckedLabels(new Set())
         e.preventDefault()
       }
-      if ((e.metaKey || e.ctrlKey) && e.key === "a" && sortedLabels.length > 0) {
+      if ((e.metaKey || e.ctrlKey) && e.key === "a" && visibleLabels.length > 0) {
         const tag = (e.target as HTMLElement)?.tagName?.toLowerCase()
         if (tag === "input" || tag === "textarea") return
-        setCheckedLabels(new Set(sortedLabels.map(l => l.id)))
+        setCheckedLabels(new Set(visibleLabels.map(l => l.id)))
         e.preventDefault()
       }
     }
     window.addEventListener("keydown", handler)
     return () => window.removeEventListener("keydown", handler)
-  }, [checkedLabels.size, sortedLabels])
+  }, [checkedLabels.size, visibleLabels])
 
   // Drag-to-select mousedown handler
   const handleDragMouseDown = useCallback((e: React.MouseEvent) => {
@@ -612,17 +591,45 @@ export function LabelsView() {
   }
 
   // ── Label List Mode ──
+  const isGridMode = labelsListViewState.viewMode === "grid"
+
+  // Current sort indicator helpers (for list header columns)
+  const currentSortField = labelsListViewState.sortFields[0]?.field ?? "name"
+  const currentSortDir = labelsListViewState.sortFields[0]?.direction ?? "asc"
+
+  const handleSortToggle = (field: "name" | "noteCount") => {
+    const isCurrent = currentSortField === field || (field === "name" && currentSortField === "title")
+    if (isCurrent) {
+      updateLabelsListView({ sortFields: [{ field, direction: currentSortDir === "asc" ? "desc" : "asc" }] })
+    } else {
+      const dir = field === "noteCount" ? "desc" : "asc"
+      updateLabelsListView({ sortFields: [{ field, direction: dir }] })
+    }
+  }
+
   return (
     <div className="flex flex-1 flex-col overflow-hidden">
       <ViewHeader
         icon={<BookmarkSimple size={20} weight="regular" />}
         title="Labels"
-        count={labels.filter((l) => !l.trashed).length}
+        count={flatCount}
         onCreateNew={() => setCreating(true)}
+        showDisplay={LABELS_LIST_VIEW_CONFIG.showDisplay}
+        displayContent={
+          <DisplayPanel
+            config={LABELS_LIST_VIEW_CONFIG.displayConfig}
+            viewState={labelsListViewState}
+            onViewStateChange={updateLabelsListView}
+            showViewMode={true}
+            toggleStates={labelsListViewState.toggles}
+            onToggleChange={(key, val) =>
+              updateLabelsListView({ toggles: { ...labelsListViewState.toggles, [key]: val } })
+            }
+          />
+        }
       />
 
-
-      {/* Label list */}
+      {/* Label list / grid */}
       <ContextMenu>
         <ContextMenuTrigger asChild>
           <div
@@ -668,198 +675,293 @@ export function LabelsView() {
                 </span>
               </div>
             ) : (
-              <div>
-                {/* Header row (PR #230 pattern, Notes-aligned) */}
-                <div
-                  data-header-row
-                  className="sticky top-0 z-10 flex items-center gap-3 border-b border-border-subtle bg-background px-6 py-2.5"
-                >
-                  <div
-                    onClick={toggleAll}
-                    className={cn(
-                      "h-4 w-4 shrink-0 rounded-[4px] border flex items-center justify-center cursor-pointer transition-colors shadow-sm",
-                      checkedLabels.size === sortedLabels.length && sortedLabels.length > 0
-                        ? "bg-accent border-accent"
-                        : checkedLabels.size > 0
-                          ? "bg-accent/50 border-accent"
-                          : "bg-card border-zinc-400 dark:border-zinc-600 hover:border-zinc-500 dark:hover:border-zinc-500"
-                    )}
-                  >
-                    {checkedLabels.size === sortedLabels.length && sortedLabels.length > 0 && (
-                      <PhCheck size={10} weight="bold" className="text-accent-foreground" />
-                    )}
-                    {checkedLabels.size > 0 && checkedLabels.size < sortedLabels.length && (
-                      <Minus size={10} weight="regular" className="text-accent-foreground" />
-                    )}
-                  </div>
-                  <button
-                    className="flex flex-1 items-center gap-1 text-left text-note font-medium text-muted-foreground transition-colors hover:text-foreground"
-                    onClick={() => setLabelSortBy(labelSortBy === "name-asc" ? "name-desc" : "name-asc")}
-                  >
-                    Name
-                    {(labelSortBy === "name-asc" || labelSortBy === "name-desc") && (
-                      labelSortBy === "name-asc"
-                        ? <ArrowUp size={12} weight="bold" className="text-muted-foreground" />
-                        : <ArrowDown size={12} weight="bold" className="text-muted-foreground" />
-                    )}
-                  </button>
-                  <button
-                    className="flex w-16 items-center justify-end gap-1 text-note font-medium text-muted-foreground transition-colors hover:text-foreground"
-                    onClick={() => setLabelSortBy(labelSortBy === "count-desc" ? "count-asc" : "count-desc")}
-                  >
-                    Notes
-                    {(labelSortBy === "count-desc" || labelSortBy === "count-asc") && (
-                      labelSortBy === "count-desc"
-                        ? <ArrowDown size={12} weight="bold" className="text-muted-foreground" />
-                        : <ArrowUp size={12} weight="bold" className="text-muted-foreground" />
-                    )}
-                  </button>
-                  <button
-                    onClick={() => setHideEmptyLabels(!hideEmptyLabels)}
-                    className={cn(
-                      "ml-2 rounded p-1 transition-colors",
-                      hideEmptyLabels ? "text-accent" : "text-muted-foreground hover:text-foreground"
-                    )}
-                    title={hideEmptyLabels ? "Show all" : "Hide empty"}
-                  >
-                    <EyeSlash size={14} weight="bold" />
-                  </button>
-                  <span className="w-16" />
-                </div>
-
-                {sortedLabels.map((label, index) => {
-                  const isEditing = editingId === label.id
-                  const dotColor = isEditing ? editColor : label.color
-                  return (
-                    <ContextMenu key={label.id} onOpenChange={(open) => {
-                      if (open) setContextMenuLabelId(label.id)
-                      else setContextMenuLabelId(null)
-                    }}>
-                      <ContextMenuTrigger asChild>
-                        <div
-                          data-label-index={index}
-                          className={`flex items-start gap-3 px-6 py-2.5 transition-colors group cursor-default${
-                            checkedLabels.has(label.id) ? " bg-accent/10" : " hover:bg-hover-bg"
-                          }`}
-                          onClick={(e) => {
-                            if ((e.target as HTMLElement).closest('button, input, [data-no-drag]')) return
-                            if (isEditing) return
-                            handleRowClick(label.id, index, e)
-                          }}
-                        >
-                          <button
-                            onClick={(e) => { e.stopPropagation(); toggleCheck(label.id) }}
+              <>
+                {/* ── Grid Mode ── */}
+                {isGridMode && visibleLabels.length > 0 && (
+                  <div className="grid grid-cols-[repeat(auto-fill,minmax(160px,1fr))] gap-2 p-4">
+                    {visibleLabels.map((label) => (
+                      <ContextMenu key={label.id}>
+                        <ContextMenuTrigger asChild>
+                          <div
                             className={cn(
-                              "flex h-4 w-4 shrink-0 items-center justify-center rounded-[4px] border transition-colors mt-0.5 shadow-sm",
+                              "group relative flex flex-col gap-2 rounded-lg border border-border/60 p-3 transition-all cursor-pointer",
                               checkedLabels.has(label.id)
-                                ? "bg-accent border-accent text-accent-foreground"
-                                : "bg-card border-zinc-400 dark:border-zinc-600 hover:border-zinc-500"
+                                ? "bg-accent/8 border-accent/40"
+                                : "bg-card hover:bg-hover-bg hover:border-border",
                             )}
-                          >
-                            {checkedLabels.has(label.id) && (
-                              <PhCheck size={10} weight="bold" />
-                            )}
-                          </button>
-
-                          {/* Color dot — always a popover trigger */}
-                          <Popover
-                            open={colorPickerOpenId === label.id}
-                            onOpenChange={(open) => {
-                              if (!open) setColorPickerOpenId(null)
+                            onClick={(e) => {
+                              if ((e.target as HTMLElement).closest("button")) return
+                              toggleCheck(label.id)
                             }}
                           >
-                            <PopoverTrigger asChild>
-                              <button
-                                onClick={(e) => handleColorDotClick(label, e)}
-                                className="h-3 w-3 rounded-full shrink-0 mt-0.5 ring-1 ring-black/5 dark:ring-white/10 hover:ring-2 hover:ring-foreground/20 transition-all cursor-pointer"
-                                style={{ backgroundColor: dotColor }}
-                                title="Change color"
-                                type="button"
-                              />
-                            </PopoverTrigger>
-                            <PopoverContent
-                              className="w-[280px] p-3"
-                              align="start"
-                              sideOffset={6}
-                              onClick={(e) => e.stopPropagation()}
-                              onOpenAutoFocus={(e) => e.preventDefault()}
+                            {/* Checkbox (top-right) */}
+                            <div
+                              onClick={(e) => { e.stopPropagation(); toggleCheck(label.id) }}
+                              className={cn(
+                                "absolute right-2 top-2 h-4 w-4 shrink-0 rounded-[4px] border flex items-center justify-center cursor-pointer transition-all shadow-sm",
+                                checkedLabels.has(label.id)
+                                  ? "bg-accent border-accent opacity-100"
+                                  : "opacity-0 group-hover:opacity-100 bg-card border-zinc-400 dark:border-zinc-600",
+                              )}
                             >
-                              <ColorPickerGrid
-                                value={dotColor}
-                                onChange={(color) => {
-                                  if (isEditing) handleEditColorChange(color)
-                                  else handleQuickColorChange(label.id, color)
-                                }}
-                              />
-                            </PopoverContent>
-                          </Popover>
-
-                          {/* Name — click to rename, double-click to navigate */}
-                          {isEditing ? (
-                            <div className="flex-1 flex items-center gap-2">
-                              <input
-                                ref={editInputRef}
-                                type="text"
-                                value={editName}
-                                onChange={(e) => setEditName(e.target.value)}
-                                onKeyDown={handleEditKeyDown}
-                                onBlur={handleEditBlur}
-                                onClick={(e) => e.stopPropagation()}
-                                className="flex-1 h-7 max-w-md rounded-md border border-border bg-card px-2.5 text-note text-foreground focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-colors"
-                                placeholder="Label name"
-                              />
+                              {checkedLabels.has(label.id) && (
+                                <PhCheck size={10} weight="bold" className="text-accent-foreground" />
+                              )}
                             </div>
-                          ) : (
+
+                            {/* Color dot — Label.color is non-nullable, use directly */}
+                            <span
+                              className="h-2.5 w-2.5 shrink-0 rounded-full"
+                              style={{ backgroundColor: label.color }}
+                            />
+
+                            {/* Label name */}
                             <button
-                              onClick={(e) => handleNameClick(label, e)}
-                              className="flex-1 text-left text-ui text-foreground hover:text-accent transition-colors"
-                              title="Click to rename · Double-click to view notes"
+                              onClick={() => setSelectedLabelId(label.id)}
+                              className="text-left text-ui text-foreground transition-colors hover:text-accent leading-tight"
                             >
                               {label.name}
                             </button>
-                          )}
 
-                          {!isEditing && (
-                            <span className="w-16 text-right text-note text-muted-foreground tabular-nums self-center">
-                              {labelCounts[label.id] || 0}
-                            </span>
-                          )}
-                        </div>
-                      </ContextMenuTrigger>
-                      <ContextMenuContent className="w-48">
-                        <ContextMenuItem
-                          onClick={() => startEdit(label)}
-                          className="text-note"
-                        >
-                          <PencilSimple className="mr-2 text-muted-foreground" size={14} weight="regular" />
-                          Rename
-                        </ContextMenuItem>
-                        <ContextMenuItem
-                          onClick={() => setColorPickerOpenId(label.id)}
-                          className="text-note"
-                        >
-                          <span className="mr-2 h-3 w-3 shrink-0 rounded-full inline-block" style={{ backgroundColor: label.color }} />
-                          Change color
-                        </ContextMenuItem>
-                        <ContextMenuItem
-                          onClick={() => setSelectedLabelId(label.id)}
-                          className="text-note"
-                        >
-                          <Stack className="mr-2 text-muted-foreground" size={14} weight="regular" />
-                          View notes
-                        </ContextMenuItem>
-                        <ContextMenuItem
-                          onClick={() => deleteLabel(label.id)}
-                          className="text-note text-destructive focus:text-destructive"
-                        >
-                          <Trash className="mr-2" size={14} weight="regular" />
-                          Delete
-                        </ContextMenuItem>
-                      </ContextMenuContent>
-                    </ContextMenu>
-                  )
-                })}
-              </div>
+                            {/* PropertyChip row */}
+                            <div className="flex items-center gap-1 min-w-0">
+                              <LabelNoteCountChip count={label.noteCount} />
+                            </div>
+                          </div>
+                        </ContextMenuTrigger>
+                        <ContextMenuContent className="w-48">
+                          <ContextMenuItem
+                            onClick={() => startEdit(label)}
+                            className="text-note"
+                          >
+                            <PencilSimple className="mr-2 text-muted-foreground" size={14} weight="regular" />
+                            Rename
+                          </ContextMenuItem>
+                          <ContextMenuItem
+                            onClick={() => setColorPickerOpenId(label.id)}
+                            className="text-note"
+                          >
+                            <span className="mr-2 h-3 w-3 shrink-0 rounded-full inline-block" style={{ backgroundColor: label.color }} />
+                            Change color
+                          </ContextMenuItem>
+                          <ContextMenuItem
+                            onClick={() => setSelectedLabelId(label.id)}
+                            className="text-note"
+                          >
+                            <Stack className="mr-2 text-muted-foreground" size={14} weight="regular" />
+                            View notes
+                          </ContextMenuItem>
+                          <ContextMenuItem
+                            onClick={() => deleteLabel(label.id)}
+                            className="text-note text-destructive focus:text-destructive"
+                          >
+                            <Trash className="mr-2" size={14} weight="regular" />
+                            Delete
+                          </ContextMenuItem>
+                        </ContextMenuContent>
+                      </ContextMenu>
+                    ))}
+                  </div>
+                )}
+
+                {/* ── List Mode ── */}
+                {!isGridMode && (
+                  <div>
+                    {/* Header row */}
+                    <div
+                      data-header-row
+                      className="sticky top-0 z-10 flex items-center gap-3 border-b border-border-subtle bg-background px-6 py-2.5"
+                    >
+                      <div
+                        onClick={toggleAll}
+                        className={cn(
+                          "h-4 w-4 shrink-0 rounded-[4px] border flex items-center justify-center cursor-pointer transition-colors shadow-sm",
+                          checkedLabels.size === visibleLabels.length && visibleLabels.length > 0
+                            ? "bg-accent border-accent"
+                            : checkedLabels.size > 0
+                              ? "bg-accent/50 border-accent"
+                              : "bg-card border-zinc-400 dark:border-zinc-600 hover:border-zinc-500 dark:hover:border-zinc-500"
+                        )}
+                      >
+                        {checkedLabels.size === visibleLabels.length && visibleLabels.length > 0 && (
+                          <PhCheck size={10} weight="bold" className="text-accent-foreground" />
+                        )}
+                        {checkedLabels.size > 0 && checkedLabels.size < visibleLabels.length && (
+                          <Minus size={10} weight="regular" className="text-accent-foreground" />
+                        )}
+                      </div>
+                      <button
+                        className="flex flex-1 items-center gap-1 text-left text-2xs font-medium text-muted-foreground transition-colors hover:text-foreground"
+                        onClick={() => handleSortToggle("name")}
+                      >
+                        Name
+                        {(currentSortField === "name" || currentSortField === "title") && (
+                          currentSortDir === "asc"
+                            ? <ArrowUp size={12} weight="regular" className="text-accent" />
+                            : <ArrowDown size={12} weight="regular" className="text-accent" />
+                        )}
+                      </button>
+                      <button
+                        className="flex w-16 items-center justify-end gap-1 text-2xs font-medium text-muted-foreground transition-colors hover:text-foreground"
+                        onClick={() => handleSortToggle("noteCount")}
+                      >
+                        Notes
+                        {currentSortField === "noteCount" && (
+                          currentSortDir === "desc"
+                            ? <ArrowDown size={12} weight="regular" className="text-accent" />
+                            : <ArrowUp size={12} weight="regular" className="text-accent" />
+                        )}
+                      </button>
+                      <button
+                        onClick={() =>
+                          updateLabelsListView({ toggles: { ...labelsListViewState.toggles, hideEmpty: !hideEmptyLabels } })
+                        }
+                        className={cn(
+                          "ml-2 rounded p-1 transition-colors",
+                          hideEmptyLabels ? "text-accent" : "text-muted-foreground hover:text-foreground"
+                        )}
+                        title={hideEmptyLabels ? "Show all" : "Hide empty"}
+                      >
+                        <EyeSlash size={14} weight="regular" />
+                      </button>
+                    </div>
+
+                    {visibleLabels.map((label, index) => {
+                      const isEditing = editingId === label.id
+                      const dotColor = isEditing ? editColor : label.color
+                      return (
+                        <ContextMenu key={label.id} onOpenChange={(open) => {
+                          if (open) setContextMenuLabelId(label.id)
+                          else setContextMenuLabelId(null)
+                        }}>
+                          <ContextMenuTrigger asChild>
+                            <div
+                              data-label-index={index}
+                              className={`flex items-start gap-3 px-6 py-2.5 transition-colors group cursor-default${
+                                checkedLabels.has(label.id) ? " bg-accent/10" : " hover:bg-hover-bg"
+                              }`}
+                              onClick={(e) => {
+                                if ((e.target as HTMLElement).closest('button, input, [data-no-drag]')) return
+                                if (isEditing) return
+                                handleRowClick(label.id, index, e)
+                              }}
+                            >
+                              <button
+                                onClick={(e) => { e.stopPropagation(); toggleCheck(label.id) }}
+                                className={cn(
+                                  "flex h-4 w-4 shrink-0 items-center justify-center rounded-[4px] border transition-colors mt-0.5 shadow-sm",
+                                  checkedLabels.has(label.id)
+                                    ? "bg-accent border-accent text-accent-foreground"
+                                    : "bg-card border-zinc-400 dark:border-zinc-600 hover:border-zinc-500",
+                                  checkedLabels.size > 0 || checkedLabels.has(label.id) ? "visible" : "invisible group-hover:visible"
+                                )}
+                              >
+                                {checkedLabels.has(label.id) && (
+                                  <PhCheck size={10} weight="bold" />
+                                )}
+                              </button>
+
+                              {/* Color dot — always a popover trigger */}
+                              <Popover
+                                open={colorPickerOpenId === label.id}
+                                onOpenChange={(open) => {
+                                  if (!open) setColorPickerOpenId(null)
+                                }}
+                              >
+                                <PopoverTrigger asChild>
+                                  <button
+                                    onClick={(e) => handleColorDotClick(label, e)}
+                                    className="h-3 w-3 rounded-full shrink-0 mt-0.5 ring-1 ring-black/5 dark:ring-white/10 hover:ring-2 hover:ring-foreground/20 transition-all cursor-pointer"
+                                    style={{ backgroundColor: dotColor }}
+                                    title="Change color"
+                                    type="button"
+                                  />
+                                </PopoverTrigger>
+                                <PopoverContent
+                                  className="w-[280px] p-3"
+                                  align="start"
+                                  sideOffset={6}
+                                  onClick={(e) => e.stopPropagation()}
+                                  onOpenAutoFocus={(e) => e.preventDefault()}
+                                >
+                                  <ColorPickerGrid
+                                    value={dotColor}
+                                    onChange={(color) => {
+                                      if (isEditing) handleEditColorChange(color)
+                                      else handleQuickColorChange(label.id, color)
+                                    }}
+                                  />
+                                </PopoverContent>
+                              </Popover>
+
+                              {/* Name — click to rename, double-click to navigate */}
+                              {isEditing ? (
+                                <div className="flex-1 flex items-center gap-2">
+                                  <input
+                                    ref={editInputRef}
+                                    type="text"
+                                    value={editName}
+                                    onChange={(e) => setEditName(e.target.value)}
+                                    onKeyDown={handleEditKeyDown}
+                                    onBlur={handleEditBlur}
+                                    onClick={(e) => e.stopPropagation()}
+                                    className="flex-1 h-7 max-w-md rounded-md border border-border bg-card px-2.5 text-note text-foreground focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-colors"
+                                    placeholder="Label name"
+                                  />
+                                </div>
+                              ) : (
+                                <button
+                                  onClick={(e) => handleNameClick(label, e)}
+                                  className="flex-1 text-left text-ui text-foreground hover:text-accent transition-colors"
+                                  title="Click to rename · Double-click to view notes"
+                                >
+                                  {label.name}
+                                </button>
+                              )}
+
+                              {!isEditing && (
+                                <span className="w-16 text-right text-note text-muted-foreground tabular-nums self-center">
+                                  {label.noteCount}
+                                </span>
+                              )}
+                            </div>
+                          </ContextMenuTrigger>
+                          <ContextMenuContent className="w-48">
+                            <ContextMenuItem
+                              onClick={() => startEdit(label)}
+                              className="text-note"
+                            >
+                              <PencilSimple className="mr-2 text-muted-foreground" size={14} weight="regular" />
+                              Rename
+                            </ContextMenuItem>
+                            <ContextMenuItem
+                              onClick={() => setColorPickerOpenId(label.id)}
+                              className="text-note"
+                            >
+                              <span className="mr-2 h-3 w-3 shrink-0 rounded-full inline-block" style={{ backgroundColor: label.color }} />
+                              Change color
+                            </ContextMenuItem>
+                            <ContextMenuItem
+                              onClick={() => setSelectedLabelId(label.id)}
+                              className="text-note"
+                            >
+                              <Stack className="mr-2 text-muted-foreground" size={14} weight="regular" />
+                              View notes
+                            </ContextMenuItem>
+                            <ContextMenuItem
+                              onClick={() => deleteLabel(label.id)}
+                              className="text-note text-destructive focus:text-destructive"
+                            >
+                              <Trash className="mr-2" size={14} weight="regular" />
+                              Delete
+                            </ContextMenuItem>
+                          </ContextMenuContent>
+                        </ContextMenu>
+                      )
+                    })}
+                  </div>
+                )}
+              </>
             )}
 
             {/* Drag selection rectangle */}

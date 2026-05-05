@@ -38,6 +38,67 @@
 
 ---
 
+## 🚀 2026-05-05 — Group C PR-D 진행 + Plot 2.0 PRD 시작
+
+**범위**: PR #261 (Tags v110) merged. PR #262 (Labels v111) created. Hotfix 8개. **Plot 2.0 진화 PRD Phase A 완료 + 11가지 결정 확정**.
+
+### 🆕 Plot 2.0 진화 (큰 결정, 영구)
+
+**자료**: 사용자 ChatGPT 목업 20장 (`C:\Users\user\Desktop\플롯 UI 진화 가이드자료\`) 영감
+
+**확정된 11가지 결정**:
+1. **Activity Bar 7-space**: home/notes/wiki/calendar/ontology/library/**books NEW**
+2. **7-space 새 팔레트** (기존 SPACE_COLORS 재디자인): home indigo, notes cyan, wiki violet, calendar pink, ontology emerald, library amber, **books rose** (#fb7185 dark / #e11d48 light)
+3. **분류 체계 4-system → 3-system**:
+   - Label → **Type** (note pool, 단일)
+   - Category → **Type** (wiki pool, DAG 다중)
+   - Tag (그대로, 사이드바 인라인 색 dot 추가)
+   - **Sticker → Pack** (rename + 새 시각 정체성)
+4. **Type rename 방식**: UI 레이블만 변경 (코드 그대로), 나중에 별도 PR로 코드 rename
+5. **Type 컬럼 Display picker**: Hidden / Icon only (default) / Text only / Icon + Text
+6. **이모지 vs Custom Icon**: emoji 단일 필드 먼저 prep, 이중 구조로 swap 가능 (사용자 직접 디자인 진행 중)
+7. **Tags 사이드바 인라인 색 dot** (큰 변화)
+8. **Templates 사이드바 승격**: More section → 별도 섹션, [Note] [Wiki disabled] 탭
+9. **Timeline = ViewMode** (별도 ContextKey X), `VALID_VIEW_MODES`에 `timeline` 추가
+10. **Detail Panel 5-tab**: Detail / Connections / Activity / Bookmarks / **Stats** (NEW). "Insights" 단어는 Plot 전체 분석에 보존, **Stats**는 단일 노트
+11. **Focus Mode** 4-mode (Default/Focus/Zen/Compact). 3-진입점 (단축키 ⌘. + 우상단 버튼 + Settings)
+
+**진행 단계**:
+- ✅ Phase A: 코드베이스 정독 (`docs/PLOT-CURRENT-STATE-FOR-2.0.md`)
+- ⏳ Phase B: 완벽한 목업 (반응형 + 토글 + 데이터 정확) — designer-high 위임 대기
+- ⏳ Phase C: 사용자 검토
+- ⏳ Phase D: PRD 작성 + 작업 단위 분해 (2-4개월 구현)
+
+**보존 영구 결정**:
+- Note/Wiki 2-entity 분리
+- 색 정책 4사분면 (Label/Sticker→Pack 필수, Folder/Tag opt-in)
+- LLM/API 미사용
+- Note split = UniqueID
+
+### 머지된 PRs (이번 세션)
+- **#261** v110 — Group C PR-D PR 1 (Tags). useTagsView thin fork, ViewMode list+grid, TagNoteCountChip
+- **#262** v111 — Group C PR-D PR 2 (Labels). useLabelsView thin fork, list+grid, LabelNoteCountChip + 8 hotfix 함께
+
+### Hotfix 8개
+1. status-icon defensive guard (crash fix)
+2. notes-table Index gap-2 + TH hideInactiveHint
+3. wiki-list Index gap-2 + checkbox w-8 + article icon status color
+4. templates-table row align (gap-2/py-2.5)
+5. labels-view 체크박스 hover-only
+6. tags-view list mode 체크박스 hover-only
+7. stickers-view 체크박스 hover-only
+8. linear-sidebar Folders ↔ Views 순서 변경
+
+### 다음 세션 우선순위
+1. **🔴 Plot 2.0 Phase B** (designer-high 위임, Notes 시그니처부터)
+2. Phase C+D
+3. Group C PR-D 나머지 (Stickers→Pack / References / Files)
+
+### Store Version 진화
+v109 → v110 (tags-list) → v111 (labels-list)
+
+---
+
 ## 🚀 2026-05-03 — 대규모 디자인 토론 (코드 변경 X, 결정사항만)
 
 이 세션은 코드 변경보다 **앞으로 작업 방향 결정**이 핵심이었음. 33개 디자인 결정 정리.
