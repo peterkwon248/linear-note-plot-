@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Imperial UI — single-file bundle</title>
+<link rel="stylesheet" href="colors_and_type.css" />
+<link rel="stylesheet" href="imperial-ui.css" />
+<style>
+  body { margin: 0; background: var(--background); color: var(--foreground); font-family: var(--font-sans); }
+  body.dark { color-scheme: dark; }
+
+  .iub-page { max-width: 1100px; margin: 0 auto; padding: 56px 32px 96px; }
+  .iub-hero { display: flex; flex-direction: column; gap: 14px; padding: 24px 0 48px; border-bottom: 1px solid var(--border-subtle); }
+  .iub-eyebrow { font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted-foreground); font-weight: 600; }
+  .iub-hero h1 { font-family: var(--font-display); font-size: 64px; line-height: 1.02; letter-spacing: -0.02em; margin: 0; font-weight: 600; }
+  .iub-hero p { font-size: 17px; line-height: 1.6; color: var(--muted-foreground); margin: 0; max-width: 680px; }
+
+  .iub-bullets { display: flex; gap: 32px; padding-top: 12px; flex-wrap: wrap; }
+  .iub-bullet { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--foreground); }
+  .iub-bullet svg { color: var(--muted-foreground); }
+
+  .iub-section { padding: 56px 0; border-bottom: 1px solid var(--border-subtle); }
+  .iub-section:last-child { border-bottom: none; }
+  .iub-h2 { font-family: var(--font-display); font-size: 32px; letter-spacing: -0.01em; margin: 0 0 8px; font-weight: 600; }
+  .iub-section > p { color: var(--muted-foreground); margin: 0 0 28px; max-width: 640px; line-height: 1.6; font-size: 15px; }
+
+  .iub-code {
+    background: var(--popover); border: 1px solid var(--border-subtle); border-radius: 12px;
+    overflow: hidden; font-family: var(--font-mono); font-size: 13px; line-height: 1.7;
+  }
+  .iub-code-head {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 10px 16px; background: rgba(0,0,0,.02);
+    border-bottom: 1px solid var(--border-subtle);
+    font-size: 11px; color: var(--muted-foreground);
+    letter-spacing: .06em; text-transform: uppercase; font-family: var(--font-sans);
+  }
+  body.dark .iub-code-head { background: rgba(255,255,255,.02); }
+  .iub-code pre { margin: 0; padding: 18px; white-space: pre; overflow-x: auto; color: var(--foreground); }
+  .tk-key { color: #c084fc; } .tk-str { color: #86efac; } .tk-com { color: var(--muted-foreground); }
+  .tk-num { color: #fbbf24; } .tk-tag { color: #60a5fa; } .tk-fn { color: #f9a8d4; }
+
+  .iub-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+  @media (max-width: 800px) { .iub-grid-2 { grid-template-columns: 1fr; } }
+
+  .iub-demo {
+    background: var(--card); border: 1px solid var(--border-subtle); border-radius: 14px;
+    padding: 28px; display: flex; flex-direction: column; gap: 16px; min-height: 320px;
+  }
+  .iub-demo-label { font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted-foreground); font-weight: 600; }
+
+  .iub-icon-row { display: flex; gap: 16px; flex-wrap: wrap; align-items: center; }
+  .iub-icon-cell {
+    width: 56px; height: 56px; border: 1px solid var(--border-subtle); border-radius: 10px;
+    display: flex; align-items: center; justify-content: center; color: var(--foreground);
+    background: var(--background);
+  }
+
+  .iub-tag {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 4px 10px; border-radius: 14px; font-size: 13px; font-weight: 500;
+  }
+  .iub-tag-dot { width: 8px; height: 8px; border-radius: 50%; }
+
+  .iub-button {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 10px 16px; border-radius: 8px; font-size: 13px; font-weight: 500;
+    border: none; cursor: pointer; transition: opacity .15s;
+  }
+  .iub-button:hover { opacity: .9; }
+
+  .iub-stat { display: flex; gap: 24px; padding: 16px 0; border-top: 1px dashed var(--border-subtle); flex-wrap: wrap; }
+  .iub-stat > div { display: flex; flex-direction: column; gap: 2px; }
+  .iub-stat b { font-family: var(--font-display); font-size: 24px; font-weight: 600; }
+  .iub-stat span { font-size: 11px; color: var(--muted-foreground); text-transform: uppercase; letter-spacing: .06em; }
+
+  .iub-files {
+    display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px;
+  }
+  .iub-file {
+    background: var(--card); border: 1px solid var(--border-subtle); border-radius: 10px;
+    padding: 16px; display: flex; align-items: center; gap: 14px; text-decoration: none;
+    color: var(--foreground); transition: transform .1s, border-color .15s;
+  }
+  .iub-file:hover { border-color: var(--foreground); transform: translateY(-1px); }
+  .iub-file-icon { width: 40px; height: 40px; flex-shrink: 0; border-radius: 8px;
+    background: var(--popover); display: flex; align-items: center; justify-content: center; }
+  .iub-file-meta { flex: 1; display: flex; flex-direction: column; gap: 2px; }
+  .iub-file-name { font-family: var(--font-mono); font-size: 13px; font-weight: 600; }
+  .iub-file-desc { font-size: 11px; color: var(--muted-foreground); }
+  .iub-file-size { font-size: 11px; font-family: var(--font-mono); color: var(--muted-foreground); }
+
+  .iub-theme {
+    position: fixed; top: 16px; right: 16px;
+    width: 36px; height: 36px;
+    background: var(--card); border: 1px solid var(--border-subtle);
+    border-radius: 8px; cursor: pointer;
+    display: inline-flex; align-items: center; justify-content: center;
+    color: var(--foreground);
+  }
+
+  .iub-search {
+    width: 100%; padding: 12px 14px; border: 1px solid var(--border); border-radius: 8px;
+    background: var(--background); color: var(--foreground);
+    font-size: 14px; font-family: inherit; outline: none;
+  }
+  .iub-search:focus { border-color: var(--foreground); }
+
+  .iub-icon-grid {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
+    gap: 8px; margin-top: 16px;
+  }
+  .iub-icon-card {
+    border: 1px solid var(--border-subtle); border-radius: 8px;
+    padding: 16px 8px; display: flex; flex-direction: column; align-items: center;
+    gap: 8px; cursor: pointer; transition: border-color .15s, background .15s;
+    background: var(--card);
+  }
+  .iub-icon-card:hover { border-color: var(--foreground); background: var(--popover); }
+  .iub-icon-card .iub-icon-name { font-size: 10px; color: var(--muted-foreground); font-family: var(--font-mono); }
+</style>
+</head>
+<body class="dark">
+
+<button class="iub-theme" id="iubTheme" title="Toggle theme">
+  <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4 12H2M22 12h-2M5 5l1.5 1.5M17.5 17.5 19 19M5 19l1.5-1.5M17.5 6.5 19 5"/></svg>
+</button>
+
+<div class="iub-page">
+
+  <header class="iub-hero">
+    <div class="iub-eyebrow">Imperial UI · single-file bundle</div>
+    <h1>Two files.<br/>One import.</h1>
+    <p>80+ Linear-grade icons and a full HSV color picker shipped as a single drop-in pair: <code style="font-family: var(--font-mono); background: var(--popover); padding: 2px 6px; border-radius: 4px">imperial-ui.jsx</code> + <code style="font-family: var(--font-mono); background: var(--popover); padding: 2px 6px; border-radius: 4px">imperial-ui.css</code>. No build step. No npm. Works wherever React runs.</p>
+    <div class="iub-bullets">
+      <div class="iub-bullet">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="m4 12 5 5L20 6"/></svg>
+        <span>80+ icons</span>
+      </div>
+      <div class="iub-bullet">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="m4 12 5 5L20 6"/></svg>
+        <span>Full HSV picker</span>
+      </div>
+      <div class="iub-bullet">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="m4 12 5 5L20 6"/></svg>
+        <span>0 dependencies (just React)</span>
+      </div>
+      <div class="iub-bullet">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="m4 12 5 5L20 6"/></svg>
+        <span>~50kb total</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Get the files -->
+  <section class="iub-section">
+    <h2 class="iub-h2">Get the files</h2>
+    <p>Right-click → Save As, or drag to your project. That's it.</p>
+    <div class="iub-files">
+      <a href="imperial-ui.jsx" download class="iub-file">
+        <div class="iub-file-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3v4a1 1 0 0 0 1 1h4M17 21H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7l5 5v11a2 2 0 0 1-2 2z"/></svg>
+        </div>
+        <div class="iub-file-meta">
+          <div class="iub-file-name">imperial-ui.jsx</div>
+          <div class="iub-file-desc">All icons + ColorPicker + utilities</div>
+        </div>
+        <div class="iub-file-size">~50kb</div>
+      </a>
+      <a href="imperial-ui.css" download class="iub-file">
+        <div class="iub-file-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3v4a1 1 0 0 0 1 1h4M17 21H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7l5 5v11a2 2 0 0 1-2 2z"/></svg>
+        </div>
+        <div class="iub-file-meta">
+          <div class="iub-file-name">imperial-ui.css</div>
+          <div class="iub-file-desc">Color picker styles, themable</div>
+        </div>
+        <div class="iub-file-size">~6kb</div>
+      </a>
+    </div>
+  </section>
+
+  <!-- Setup -->
+  <section class="iub-section">
+    <h2 class="iub-h2">1. Drop into your HTML</h2>
+    <p>Add these tags. The bundle exposes everything via the <code style="font-family: var(--font-mono); background: var(--popover); padding: 2px 6px; border-radius: 4px">Imperial</code> global.</p>
+    <div class="iub-code">
+      <div class="iub-code-head"><span>index.html</span></div>
+      <pre><span class="tk-tag">&lt;link</span> <span class="tk-key">rel</span>=<span class="tk-str">"stylesheet"</span> <span class="tk-key">href</span>=<span class="tk-str">"imperial-ui.css"</span><span class="tk-tag">&gt;</span>
+
+<span class="tk-tag">&lt;script</span> <span class="tk-key">src</span>=<span class="tk-str">"https://unpkg.com/react@18.3.1/umd/react.development.js"</span><span class="tk-tag">&gt;&lt;/script&gt;</span>
+<span class="tk-tag">&lt;script</span> <span class="tk-key">src</span>=<span class="tk-str">"https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js"</span><span class="tk-tag">&gt;&lt;/script&gt;</span>
+<span class="tk-tag">&lt;script</span> <span class="tk-key">src</span>=<span class="tk-str">"https://unpkg.com/@babel/standalone/babel.min.js"</span><span class="tk-tag">&gt;&lt;/script&gt;</span>
+
+<span class="tk-tag">&lt;script</span> <span class="tk-key">type</span>=<span class="tk-str">"text/babel"</span> <span class="tk-key">src</span>=<span class="tk-str">"imperial-ui.jsx"</span><span class="tk-tag">&gt;&lt;/script&gt;</span>
+<span class="tk-tag">&lt;script</span> <span class="tk-key">type</span>=<span class="tk-str">"text/babel"</span> <span class="tk-key">src</span>=<span class="tk-str">"app.jsx"</span><span class="tk-tag">&gt;&lt;/script&gt;</span></pre>
+    </div>
+  </section>
+
+  <!-- Usage -->
+  <section class="iub-section">
+    <h2 class="iub-h2">2. Use it</h2>
+    <p>Three ways to call icons. Pick whichever fits your app.</p>
+
+    <div class="iub-grid-2">
+      <div>
+        <div class="iub-code">
+          <div class="iub-code-head"><span>Direct component (auto-globalized)</span></div>
+          <pre><span class="tk-tag">&lt;Search</span> <span class="tk-key">size</span>=<span class="tk-str">{20}</span><span class="tk-tag"> /&gt;</span>
+<span class="tk-tag">&lt;Plus</span> <span class="tk-key">size</span>=<span class="tk-str">{18}</span> <span class="tk-key">strokeWidth</span>=<span class="tk-str">{1.25}</span><span class="tk-tag"> /&gt;</span>
+<span class="tk-tag">&lt;Heart</span> <span class="tk-key">style</span>=<span class="tk-str">{{ color: <span class="tk-str">'#ec4899'</span> }}</span><span class="tk-tag"> /&gt;</span></pre>
+        </div>
+      </div>
+      <div>
+        <div class="iub-code">
+          <div class="iub-code-head"><span>By name (string lookup)</span></div>
+          <pre><span class="tk-tag">&lt;Imperial.Icon</span>
+  <span class="tk-key">name</span>=<span class="tk-str">"search"</span>
+  <span class="tk-key">size</span>=<span class="tk-str">{20}</span>
+<span class="tk-tag">/&gt;</span></pre>
+        </div>
+      </div>
+    </div>
+
+    <div style="height: 16px"></div>
+    <div class="iub-code">
+      <div class="iub-code-head"><span>Color picker</span></div>
+      <pre><span class="tk-key">function</span> <span class="tk-fn">App</span>() {
+  <span class="tk-key">const</span> [color, setColor] = React.<span class="tk-fn">useState</span>(<span class="tk-str">"#3b82f6"</span>);
+  <span class="tk-key">return</span> (
+    <span class="tk-tag">&lt;Imperial.ColorPicker</span>
+      <span class="tk-key">value</span>=<span class="tk-str">{color}</span>
+      <span class="tk-key">onChange</span>=<span class="tk-str">{(hex, alpha, [r,g,b]) =&gt; setColor(hex)}</span>
+    <span class="tk-tag">/&gt;</span>
+  );
+}</pre>
+    </div>
+  </section>
+
+  <!-- Live demos -->
+  <section class="iub-section">
+    <h2 class="iub-h2">Live demos</h2>
+    <p>Both demos are running off the bundle you'll download. Inspect the page — there are zero other dependencies.</p>
+
+    <div class="iub-grid-2">
+      <div class="iub-demo">
+        <div class="iub-demo-label">Icons in context</div>
+        <div id="iconsDemo"></div>
+      </div>
+      <div class="iub-demo" style="align-items: flex-start">
+        <div class="iub-demo-label">Color picker</div>
+        <div id="pickerDemo"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Browse all icons -->
+  <section class="iub-section">
+    <h2 class="iub-h2">Every icon, searchable</h2>
+    <p>Click any to copy the JSX snippet. Same names you'd write in your own app.</p>
+    <input id="iconSearch" class="iub-search" placeholder="Search icons by name…" />
+    <div id="iconBrowser" class="iub-icon-grid"></div>
+  </section>
+
+  <!-- API summary -->
+  <section class="iub-section">
+    <h2 class="iub-h2">What's in the namespace</h2>
+    <div class="iub-code">
+      <div class="iub-code-head"><span>window.Imperial</span></div>
+      <pre><span class="tk-com">// Components</span>
+Imperial.<span class="tk-fn">Icon</span>          <span class="tk-com">// &lt;Imperial.Icon name="search" /&gt;</span>
+Imperial.<span class="tk-fn">ColorPicker</span>   <span class="tk-com">// &lt;Imperial.ColorPicker value onChange /&gt;</span>
+
+<span class="tk-com">// Icon registry — all 80+ as named exports</span>
+Imperial.icons        <span class="tk-com">// { Search, Plus, Heart, ChevronDown, ... }</span>
+
+<span class="tk-com">// Color utilities</span>
+Imperial.<span class="tk-fn">hexToRgb</span>(<span class="tk-str">"#3b82f6"</span>)   <span class="tk-com">// → [59, 130, 246]</span>
+Imperial.<span class="tk-fn">rgbToHex</span>(<span class="tk-num">59</span>, <span class="tk-num">130</span>, <span class="tk-num">246</span>) <span class="tk-com">// → "#3b82f6"</span>
+Imperial.<span class="tk-fn">hsvToRgb</span>(h, s, v)
+Imperial.<span class="tk-fn">rgbToHsv</span>(r, g, b)</pre>
+    </div>
+  </section>
+
+</div>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+<!-- The bundle itself -->
+<script type="text/babel" src="imperial-ui.jsx"></script>
+
+<script type="text/babel">
+  document.getElementById('iubTheme').addEventListener('click', function() {
+    document.body.classList.toggle('dark');
+  });
+
+  // Demo 1 — icons in context
+  function IconsDemo() {
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+        <div className="iub-icon-row">
+          <div className="iub-icon-cell"><Imperial.Icon name="search" size={22} /></div>
+          <div className="iub-icon-cell"><Imperial.Icon name="plus" size={22} /></div>
+          <div className="iub-icon-cell"><Imperial.Icon name="heart" size={22} /></div>
+          <div className="iub-icon-cell" style={{ color: '#3b82f6' }}><Imperial.Icon name="check" size={22} /></div>
+          <div className="iub-icon-cell" style={{ color: '#ec4899' }}><Imperial.Icon name="bell" size={22} /></div>
+          <div className="iub-icon-cell" style={{ color: '#16a34a' }}><Imperial.Icon name="zap" size={22} /></div>
+        </div>
+        <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+          <span className="iub-tag" style={{ background: 'rgba(124,58,237,.15)', color: '#a78bfa' }}>
+            <span className="iub-tag-dot" style={{ background: '#7c3aed' }}></span>
+            <Imperial.Icon name="bookmark" size={12} />
+            Saved
+          </span>
+          <span className="iub-tag" style={{ background: 'rgba(245,158,11,.15)', color: '#fbbf24' }}>
+            <Imperial.Icon name="zap" size={12} />
+            Urgent
+          </span>
+          <span className="iub-tag" style={{ background: 'rgba(22,163,74,.15)', color: '#4ade80' }}>
+            <Imperial.Icon name="check" size={12} />
+            Done
+          </span>
+        </div>
+        <div style={{ display: 'flex', gap: 8 }}>
+          <button className="iub-button" style={{ background: 'var(--foreground)', color: 'var(--background)' }}>
+            <Imperial.Icon name="plus" size={14} />
+            New issue
+          </button>
+          <button className="iub-button" style={{ background: 'var(--popover)', color: 'var(--foreground)', border: '1px solid var(--border)' }}>
+            <Imperial.Icon name="filter" size={14} />
+            Filter
+          </button>
+        </div>
+        <div className="iub-stat">
+          <div><b>83</b><span>Icons</span></div>
+          <div><b>1</b><span>Component</span></div>
+          <div><b>4</b><span>Utilities</span></div>
+        </div>
+      </div>
+    );
+  }
+  ReactDOM.createRoot(document.getElementById('iconsDemo')).render(<IconsDemo />);
+
+  // Demo 2 — color picker
+  function PickerDemo() {
+    const [color, setColor] = React.useState('#7c3aed');
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 14, alignItems: 'flex-start' }}>
+        <Imperial.ColorPicker value={color} onChange={(hex) => setColor(hex)} />
+        <div style={{ fontFamily: 'var(--font-mono)', fontSize: 12, color: 'var(--muted-foreground)' }}>
+          Selected: <span style={{ color: 'var(--foreground)' }}>{color.toUpperCase()}</span>
+        </div>
+      </div>
+    );
+  }
+  ReactDOM.createRoot(document.getElementById('pickerDemo')).render(<PickerDemo />);
+
+  // Icon browser
+  function IconBrowser() {
+    const [query, setQuery] = React.useState('');
+    const allNames = Object.keys(Imperial.icons);
+    const filtered = query
+      ? allNames.filter(n => n.toLowerCase().includes(query.toLowerCase()))
+      : allNames;
+
+    React.useEffect(() => {
+      const input = document.getElementById('iconSearch');
+      const handler = (e) => setQuery(e.target.value);
+      input.addEventListener('input', handler);
+      return () => input.removeEventListener('input', handler);
+    }, []);
+
+    function copySnippet(name) {
+      const snippet = `<${name} size={20} />`;
+      navigator.clipboard?.writeText(snippet);
+    }
+
+    return (
+      <>
+        {filtered.map(name => {
+          const Comp = Imperial.icons[name];
+          return (
+            <button key={name} className="iub-icon-card" onClick={() => copySnippet(name)} title={`Click to copy <${name} size={20} />`}>
+              <Comp size={22} />
+              <span className="iub-icon-name">{name}</span>
+            </button>
+          );
+        })}
+        {filtered.length === 0 ? <div style={{ padding: 24, color: 'var(--muted-foreground)', fontSize: 13 }}>No icons match "{query}"</div> : null}
+      </>
+    );
+  }
+  ReactDOM.createRoot(document.getElementById('iconBrowser')).render(<IconBrowser />);
+</script>
+
+</body>
+</html>

@@ -1,0 +1,117 @@
+/* ════════════════════════════════════════════════════════════
+   PLOT v3 — Linear-style filter menu (Plot-flavored)
+   Two-column popover: filter types on left, options on right
+   ════════════════════════════════════════════════════════════ */
+
+.pf-popover {
+  position: absolute;
+  z-index: 80;
+  display: flex;
+  gap: 0;
+  background: var(--surface, #fff);
+  border: 1px solid var(--sidebar-border);
+  border-radius: 10px;
+  box-shadow:
+    0 1px 2px rgba(0,0,0,0.04),
+    0 18px 48px -12px rgba(20,20,40,0.18);
+  font-family: 'Geist', system-ui, sans-serif;
+  overflow: hidden;
+}
+.dark .pf-popover { background: #1a1a1d; box-shadow: 0 18px 48px -12px rgba(0,0,0,0.6); }
+
+.pf-col {
+  display: flex; flex-direction: column;
+  width: 220px;
+  padding: 4px 0;
+}
+.pf-col + .pf-col {
+  border-left: 1px solid var(--sidebar-border);
+  width: 220px;
+}
+
+.pf-section {
+  display: flex; flex-direction: column;
+  padding: 4px 0;
+}
+.pf-section + .pf-section {
+  border-top: 1px solid var(--sidebar-border);
+  margin-top: 2px;
+  padding-top: 4px;
+}
+
+.pf-row {
+  display: flex; align-items: center; gap: 9px;
+  padding: 5px 10px;
+  font-size: 12.5px;
+  color: var(--fg);
+  border-radius: 4px;
+  margin: 0 4px;
+  cursor: pointer;
+  user-select: none;
+}
+.pf-row:hover { background: var(--sidebar-hover); }
+.pf-row[data-active="true"] {
+  background: color-mix(in srgb, var(--plot-accent, #5e6ad2) 14%, transparent);
+  color: var(--fg);
+}
+
+.pf-row__icon {
+  width: 16px; height: 16px;
+  display: inline-flex; align-items: center; justify-content: center;
+  color: var(--sidebar-icon);
+  flex-shrink: 0;
+}
+.pf-row[data-active="true"] .pf-row__icon { color: var(--plot-accent, #5e6ad2); }
+.pf-row__label { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pf-row__count {
+  font-size: 11px;
+  color: var(--sidebar-muted);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.02em;
+}
+.pf-row__arrow { color: var(--sidebar-muted); font-size: 14px; line-height: 1; }
+.pf-row__check {
+  width: 14px; height: 14px;
+  border: 1.5px solid var(--sidebar-border);
+  border-radius: 3px;
+  flex-shrink: 0;
+  position: relative;
+}
+.pf-row[data-checked="true"] .pf-row__check {
+  background: var(--plot-accent, #5e6ad2);
+  border-color: var(--plot-accent, #5e6ad2);
+}
+.pf-row[data-checked="true"] .pf-row__check::after {
+  content: '';
+  position: absolute;
+  left: 4px; top: 1px;
+  width: 4px; height: 8px;
+  border-right: 1.5px solid #fff;
+  border-bottom: 1.5px solid #fff;
+  transform: rotate(45deg);
+}
+
+.pf-search {
+  padding: 8px 12px 6px;
+  border-bottom: 1px solid var(--sidebar-border);
+  font-size: 11.5px;
+  color: var(--sidebar-muted);
+  letter-spacing: 0.02em;
+  margin-bottom: 4px;
+}
+
+.pf-empty {
+  width: 220px;
+  display: grid; place-items: center;
+  font-size: 11.5px;
+  color: var(--sidebar-muted);
+  padding: 28px 16px;
+  text-align: center;
+  line-height: 1.5;
+}
+
+.pf-tone-dot {
+  width: 9px; height: 9px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}

@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Imperial Icons — 나만의 아이콘 키트</title>
+<link rel="stylesheet" href="colors_and_type.css" />
+<link rel="stylesheet" href="styles.css" />
+</head>
+<body class="dark">
+<div id="root"></div>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+<script>
+// Transform all first, then inject in order
+(async function() {
+  const files = ['icons.jsx', 'linear-icons.jsx', 'plot-icons.jsx', 'keystone-icons.jsx', 'flowbase-icons.jsx', 'color-picker.jsx', 'app.jsx'];
+  const sources = await Promise.all(files.map(f => fetch(f).then(r => r.text())));
+  const transformed = [];
+  for (let i = 0; i < files.length; i++) {
+    try {
+      transformed.push(Babel.transform(sources[i], { presets: ['react'] }).code);
+    } catch (e) {
+      console.error('TRANSFORM FAILED at ' + files[i] + ':', e.message);
+      return;
+    }
+  }
+  const inject = (code) => {
+    const s = document.createElement('script');
+    s.textContent = code;
+    document.body.appendChild(s);
+  };
+  for (let i = 0; i < files.length; i++) {
+    inject(transformed[i]);
+    const f = files[i];
+    if (f === 'linear-icons.jsx') inject('Array.prototype.push.apply(ICONS, LINEAR_ICONS);');
+    if (f === 'plot-icons.jsx') inject('Array.prototype.push.apply(ICONS, PLOT_ICONS);');
+    if (f === 'keystone-icons.jsx') inject('Array.prototype.push.apply(ICONS, KEYSTONE_ICONS);');
+    if (f === 'flowbase-icons.jsx') inject('Array.prototype.push.apply(ICONS, FLOWBASE_ICONS);');
+  }
+})();
+</script>
+</body>
+</html>

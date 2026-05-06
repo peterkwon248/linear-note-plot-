@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html><body>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js"></script>
+<script>
+(async () => {
+  try {
+    const src = await fetch('linear-icons.jsx').then(r => r.text());
+    console.log('source length:', src.length);
+    const out = Babel.transform(src, { presets: ['react'] }).code;
+    console.log('OK, output length:', out.length);
+  } catch (e) {
+    console.error('FAIL:', e.message);
+    // try to bisect — split source in halves and try each
+    const src = await fetch('linear-icons.jsx').then(r => r.text());
+    const lines = src.split('\n');
+    const mid = Math.floor(lines.length / 2);
+    try {
+      Babel.transform(lines.slice(0, mid).join('\n'), { presets: ['react'] });
+      console.log('first half OK');
+    } catch (e1) { console.error('first half FAIL:', e1.message); }
+    try {
+      Babel.transform(lines.slice(mid).join('\n'), { presets: ['react'] });
+      console.log('second half OK');
+    } catch (e2) { console.error('second half FAIL:', e2.message); }
+  }
+})();
+</script>
+</body></html>

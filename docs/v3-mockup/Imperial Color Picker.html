@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Imperial Color Picker — drop-in component</title>
+<link rel="stylesheet" href="colors_and_type.css" />
+<link rel="stylesheet" href="imperial-color-picker.css" />
+<style>
+  body { margin: 0; background: var(--background); color: var(--foreground); font-family: var(--font-sans); }
+  body.dark { color-scheme: dark; }
+
+  .icp-page { max-width: 1200px; margin: 0 auto; padding: 48px 32px 96px; }
+  .icp-hero { display: flex; flex-direction: column; gap: 16px; padding: 24px 0 40px; border-bottom: 1px solid var(--border-subtle); }
+  .icp-eyebrow { font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted-foreground); font-weight: 600; }
+  .icp-hero h1 { font-family: var(--font-display); font-size: 56px; line-height: 1.05; letter-spacing: -0.02em; margin: 0; font-weight: 600; }
+  .icp-hero p { font-size: 16px; line-height: 1.6; color: var(--muted-foreground); margin: 0; max-width: 640px; }
+  .icp-meta { display: flex; gap: 24px; font-size: 12px; color: var(--muted-foreground); padding-top: 8px; }
+  .icp-meta b { color: var(--foreground); font-weight: 500; }
+
+  /* Section heads */
+  .icp-section { padding: 48px 0; border-bottom: 1px solid var(--border-subtle); }
+  .icp-section:last-child { border-bottom: none; }
+  .icp-h2 { font-family: var(--font-display); font-size: 28px; letter-spacing: -0.01em; margin: 0 0 8px; font-weight: 600; }
+  .icp-section > p { color: var(--muted-foreground); margin: 0 0 28px; max-width: 640px; line-height: 1.6; }
+
+  /* Live demo grid */
+  .icp-demo-grid {
+    display: grid;
+    grid-template-columns: 280px 1fr;
+    gap: 32px;
+    align-items: start;
+    background: var(--card);
+    border: 1px solid var(--border-subtle);
+    border-radius: 16px;
+    padding: 32px;
+  }
+  .icp-demo-out {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    min-height: 460px;
+  }
+  .icp-demo-target {
+    background: var(--background);
+    border: 1px solid var(--border-subtle);
+    border-radius: 12px;
+    padding: 32px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  .icp-demo-target-label { font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted-foreground); font-weight: 600; }
+  .icp-target-block {
+    height: 96px;
+    border-radius: 10px;
+    transition: background .15s;
+    border: 1px solid rgba(0,0,0,.06);
+  }
+  .icp-target-text {
+    font-family: var(--font-display);
+    font-size: 40px;
+    font-weight: 600;
+    line-height: 1.1;
+    transition: color .15s;
+  }
+  .icp-target-icon-row { display: flex; gap: 12px; align-items: center; }
+  .icp-target-icon-row svg { transition: stroke .15s, fill .15s; }
+  .icp-target-output {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--muted-foreground);
+    background: var(--popover);
+    padding: 10px 12px;
+    border-radius: 6px;
+    border: 1px solid var(--border-subtle);
+  }
+
+  /* Code blocks */
+  .icp-code {
+    background: var(--popover);
+    border: 1px solid var(--border-subtle);
+    border-radius: 10px;
+    overflow: hidden;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    line-height: 1.7;
+  }
+  .icp-code-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 14px;
+    background: rgba(0,0,0,.02);
+    border-bottom: 1px solid var(--border-subtle);
+    font-size: 11px;
+    color: var(--muted-foreground);
+    letter-spacing: .05em;
+    text-transform: uppercase;
+  }
+  body.dark .icp-code-head { background: rgba(255,255,255,.02); }
+  .icp-code pre { margin: 0; padding: 14px; white-space: pre-wrap; word-break: break-all; color: var(--foreground); }
+  .icp-code .tk-key { color: #c084fc; }
+  .icp-code .tk-str { color: #86efac; }
+  .icp-code .tk-com { color: var(--muted-foreground); }
+  .icp-code .tk-num { color: #fbbf24; }
+  .icp-code .tk-tag { color: #60a5fa; }
+
+  /* Variants section */
+  .icp-variants {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 24px;
+  }
+  .icp-variant-card {
+    background: var(--card);
+    border: 1px solid var(--border-subtle);
+    border-radius: 14px;
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+  .icp-variant-head { display: flex; flex-direction: column; gap: 4px; }
+  .icp-variant-title { font-family: var(--font-display); font-size: 16px; font-weight: 600; }
+  .icp-variant-desc { font-size: 12px; color: var(--muted-foreground); line-height: 1.5; }
+
+  /* Plot mockup */
+  .icp-plot-wrap { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; align-items: start; }
+  .icp-plot-mock {
+    background: #fafaf9;
+    border: 1px solid #e7e5e4;
+    border-radius: 12px;
+    padding: 24px;
+    color: #1c1917;
+    font-family: var(--font-sans);
+    position: relative;
+    min-height: 480px;
+  }
+  body.dark .icp-plot-mock { background: #1c1917; border-color: #292524; color: #fafaf9; }
+  .icp-plot-head { font-family: var(--font-display); font-weight: 600; font-size: 22px; margin-bottom: 16px; }
+  .icp-plot-property-row {
+    display: grid;
+    grid-template-columns: 120px 1fr;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px solid rgba(0,0,0,.06);
+    font-size: 13px;
+  }
+  body.dark .icp-plot-property-row { border-bottom-color: rgba(255,255,255,.06); }
+  .icp-plot-property-key { color: #78716c; font-size: 11px; letter-spacing: .04em; text-transform: uppercase; }
+  body.dark .icp-plot-property-key { color: #a8a29e; }
+  .icp-plot-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 2px 10px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: transform .1s;
+  }
+  .icp-plot-tag:hover { transform: scale(1.04); }
+  .icp-plot-tag-dot { width: 8px; height: 8px; border-radius: 50%; }
+
+  .icp-plot-popover {
+    background: var(--popover);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    box-shadow: 0 16px 48px rgba(0,0,0,.18), 0 0 0 1px rgba(0,0,0,.04);
+    padding: 16px;
+    width: max-content;
+  }
+  body.dark .icp-plot-popover { box-shadow: 0 16px 48px rgba(0,0,0,.5), 0 0 0 1px rgba(255,255,255,.06); }
+
+  .icp-side-by-side {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+  .icp-old-picker {
+    background: var(--popover);
+    border: 1px solid var(--border-subtle);
+    border-radius: 12px;
+    padding: 14px;
+  }
+  .icp-old-picker-label { font-size: 10px; text-transform: uppercase; color: var(--muted-foreground); letter-spacing: .08em; margin-bottom: 10px; font-weight: 600; }
+  .icp-old-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 6px;
+    margin-bottom: 10px;
+  }
+  .icp-old-chip {
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    border: 1px solid rgba(0,0,0,.06);
+    cursor: pointer;
+  }
+  .icp-old-custom {
+    display: flex; align-items: center; gap: 6px;
+    font-size: 11px; color: var(--muted-foreground); padding: 6px 4px; cursor: pointer;
+  }
+
+  /* Theme toggle */
+  .icp-theme {
+    position: fixed; top: 16px; right: 16px;
+    width: 36px; height: 36px;
+    background: var(--card); border: 1px solid var(--border-subtle);
+    border-radius: 8px; cursor: pointer;
+    display: inline-flex; align-items: center; justify-content: center;
+    color: var(--foreground);
+  }
+
+  /* Properties table */
+  .icp-props {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+  .icp-props th, .icp-props td {
+    text-align: left; padding: 10px 14px; border-bottom: 1px solid var(--border-subtle);
+  }
+  .icp-props th { font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted-foreground); background: rgba(0,0,0,.02); }
+  body.dark .icp-props th { background: rgba(255,255,255,.02); }
+  .icp-props code { font-family: var(--font-mono); font-size: 12px; background: var(--popover); padding: 2px 6px; border-radius: 4px; color: var(--foreground); }
+
+  /* Token customization showcase */
+  .icp-token-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+  }
+  .icp-token-card {
+    background: var(--card);
+    border: 1px solid var(--border-subtle);
+    border-radius: 12px;
+    padding: 20px;
+    display: flex; flex-direction: column; gap: 12px;
+  }
+  .icp-token-card-head { display: flex; flex-direction: column; gap: 2px; }
+  .icp-token-title { font-family: var(--font-display); font-weight: 600; font-size: 14px; }
+  .icp-token-sub { font-size: 11px; color: var(--muted-foreground); }
+  .icp-mini-picker { display: flex; flex-direction: column; gap: 8px; }
+  .icp-mini-canvas {
+    height: 100px;
+    border-radius: 6px;
+    background: linear-gradient(to right, #fff, transparent), linear-gradient(to top, #000, transparent), var(--accent, #3b82f6);
+    background-blend-mode: normal, normal, normal;
+    position: relative;
+    border: 1px solid;
+  }
+  .icp-mini-hue {
+    height: 8px;
+    border-radius: 4px;
+    background: linear-gradient(to right, #ff0000 0%, #ffff00 16.7%, #00ff00 33.3%, #00ffff 50%, #0000ff 66.7%, #ff00ff 83.3%, #ff0000 100%);
+  }
+  .icp-mini-row { display: flex; gap: 6px; }
+  .icp-mini-swatch { width: 22px; height: 22px; border-radius: 4px; border: 1px solid; flex-shrink: 0; }
+  .icp-mini-input { flex: 1; height: 22px; border-radius: 4px; border: 1px solid; font-family: var(--font-mono); font-size: 10px; padding: 0 6px; display: flex; align-items: center; }
+</style>
+</head>
+<body class="dark">
+
+<button class="icp-theme" id="icpTheme" title="Toggle theme">
+  <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4 12H2M22 12h-2M5 5l1.5 1.5M17.5 17.5 19 19M5 19l1.5-1.5M17.5 6.5 19 5"/></svg>
+</button>
+
+<div class="icp-page">
+
+  <header class="icp-hero">
+    <div class="icp-eyebrow">Imperial Components</div>
+    <h1>Color Picker</h1>
+    <p>A drop-in HSV color picker — saturation/value canvas, hue + alpha sliders, eyedropper, hex/RGB inputs, recent + 90 Tailwind-style preset swatches. Self-contained styling that themes through CSS variables.</p>
+    <div class="icp-meta">
+      <div><b>240px</b> wide · drop in any container</div>
+      <div><b>~10kb</b> JSX + CSS</div>
+      <div><b>0</b> dependencies (just React)</div>
+    </div>
+  </header>
+
+  <!-- Live demo -->
+  <section class="icp-section">
+    <h2 class="icp-h2">Live demo</h2>
+    <p>Pick any color — watch the swatch, headline color, and icon stroke update in real time. The hex code is what your app receives via <code>onChange</code>.</p>
+    <div class="icp-demo-grid">
+      <div id="liveDemo"></div>
+      <div class="icp-demo-out">
+        <div class="icp-demo-target">
+          <span class="icp-demo-target-label">Background</span>
+          <div class="icp-target-block" id="targetBlock"></div>
+          <span class="icp-demo-target-label" style="margin-top: 8px">Headline</span>
+          <div class="icp-target-text" id="targetText">Made by Imperial.</div>
+          <span class="icp-demo-target-label" style="margin-top: 8px">Icons</span>
+          <div class="icp-target-icon-row" id="targetIcons">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="m12 2 3 7h7l-5.5 4.5L18 21l-6-4-6 4 1.5-7.5L2 9h7z"/></svg>
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>
+          </div>
+        </div>
+        <div class="icp-target-output" id="targetOutput">onChange("#3B82F6", 1, [59, 130, 246])</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Drop-in usage -->
+  <section class="icp-section">
+    <h2 class="icp-h2">Drop it into your app</h2>
+    <p>Three files. No build step. Works wherever React + JSX run.</p>
+
+    <div class="icp-code">
+      <div class="icp-code-head"><span>1. Files to copy</span></div>
+      <pre>your-app/
+├── color-picker.jsx        <span class="tk-com">// component (~330 lines, no deps)</span>
+└── imperial-color-picker.css <span class="tk-com">// styles (themable via CSS vars)</span></pre>
+    </div>
+
+    <div style="height: 16px"></div>
+
+    <div class="icp-code">
+      <div class="icp-code-head"><span>2. HTML — load it</span></div>
+      <pre><span class="tk-tag">&lt;link</span> <span class="tk-key">rel</span>=<span class="tk-str">"stylesheet"</span> <span class="tk-key">href</span>=<span class="tk-str">"imperial-color-picker.css"</span><span class="tk-tag">&gt;</span>
+<span class="tk-tag">&lt;script</span> <span class="tk-key">src</span>=<span class="tk-str">"https://unpkg.com/react@18.3.1/umd/react.development.js"</span><span class="tk-tag">&gt;&lt;/script&gt;</span>
+<span class="tk-tag">&lt;script</span> <span class="tk-key">src</span>=<span class="tk-str">"https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js"</span><span class="tk-tag">&gt;&lt;/script&gt;</span>
+<span class="tk-tag">&lt;script</span> <span class="tk-key">src</span>=<span class="tk-str">"https://unpkg.com/@babel/standalone/babel.min.js"</span><span class="tk-tag">&gt;&lt;/script&gt;</span>
+<span class="tk-tag">&lt;script</span> <span class="tk-key">type</span>=<span class="tk-str">"text/babel"</span> <span class="tk-key">src</span>=<span class="tk-str">"color-picker.jsx"</span><span class="tk-tag">&gt;&lt;/script&gt;</span></pre>
+    </div>
+
+    <div style="height: 16px"></div>
+
+    <div class="icp-code">
+      <div class="icp-code-head"><span>3. JSX — use it</span></div>
+      <pre><span class="tk-key">function</span> <span class="tk-tag">PaintButton</span>() {
+  <span class="tk-key">const</span> [color, setColor] = React.useState(<span class="tk-str">"#3b82f6"</span>);
+  <span class="tk-key">return</span> (
+    <span class="tk-tag">&lt;ColorPicker</span>
+      <span class="tk-key">value</span>={color}
+      <span class="tk-key">onChange</span>={(hex, alpha, [r, g, b]) =&gt; setColor(hex)}
+    <span class="tk-tag">/&gt;</span>
+  );
+}</pre>
+    </div>
+  </section>
+
+  <!-- API table -->
+  <section class="icp-section">
+    <h2 class="icp-h2">API</h2>
+    <p>Two props in. Three values out per change.</p>
+    <table class="icp-props">
+      <thead>
+        <tr><th>Prop</th><th>Type</th><th>Description</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><code>value</code></td><td><code>string</code></td><td>Initial color as 6-digit hex (default <code>#3b82f6</code>)</td></tr>
+        <tr><td><code>onChange</code></td><td><code>(hex, alpha, rgb) =&gt; void</code></td><td>Fires on every drag/edit. <code>hex</code> is uppercase 6-digit. <code>alpha</code> is 0–1. <code>rgb</code> is <code>[r, g, b]</code> 0–255.</td></tr>
+      </tbody>
+    </table>
+
+    <div style="height: 28px"></div>
+    <h3 style="font-family: var(--font-display); font-weight: 600; margin: 0 0 8px">Theming</h3>
+    <p>Override these CSS variables on <code>.cp-root</code> or any ancestor. Defaults follow <code>prefers-color-scheme</code>.</p>
+    <table class="icp-props">
+      <tbody>
+        <tr><td><code>--cp-bg-host</code></td><td>Input background</td></tr>
+        <tr><td><code>--cp-fg-host</code></td><td>Text color</td></tr>
+        <tr><td><code>--cp-border-host</code></td><td>Input borders</td></tr>
+        <tr><td><code>--cp-border-subtle-host</code></td><td>Sliders & swatches</td></tr>
+        <tr><td><code>--cp-accent-host</code></td><td>Focus ring color</td></tr>
+        <tr><td><code>--cp-radius-host</code></td><td>Canvas corner radius</td></tr>
+        <tr><td><code>--cp-mono-host</code></td><td>Monospace font for inputs</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- Plot upgrade demo -->
+  <section class="icp-section">
+    <h2 class="icp-h2">Plot upgrade — before / after</h2>
+    <p>Plot's current category-color picker is 8 swatches + a "Custom color" link. Drop Imperial Color Picker in and Plot users get a full HSV/eyedropper/hex/RGBA picker — without leaving the page.</p>
+
+    <div class="icp-plot-wrap">
+      <!-- Before -->
+      <div class="icp-plot-mock">
+        <div class="icp-plot-head">Plot · Wiki property</div>
+        <div class="icp-plot-property-row">
+          <div class="icp-plot-property-key">Affiliation</div>
+          <div><span class="icp-plot-tag" style="background: #ddd6fe; color: #5b21b6"><span class="icp-plot-tag-dot" style="background: #7c3aed"></span>Plot App</span></div>
+        </div>
+        <div class="icp-plot-property-row">
+          <div class="icp-plot-property-key">Category</div>
+          <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap">
+            <span class="icp-plot-tag" style="background: #fef3c7; color: #92400e"><span class="icp-plot-tag-dot" style="background: #f59e0b"></span>Knowledge</span>
+            <span class="icp-plot-tag" style="background: #dbeafe; color: #1e40af"><span class="icp-plot-tag-dot" style="background: #3b82f6"></span>Reference</span>
+          </div>
+        </div>
+        <div style="margin-top: 24px">
+          <div class="icp-old-picker">
+            <div class="icp-old-picker-label">Pick a color</div>
+            <div class="icp-old-grid">
+              <button class="icp-old-chip" style="background: #f5f5f5"></button>
+              <button class="icp-old-chip" style="background: #fde68a"></button>
+              <button class="icp-old-chip" style="background: #fca5a5"></button>
+              <button class="icp-old-chip" style="background: #86efac"></button>
+              <button class="icp-old-chip" style="background: #93c5fd"></button>
+              <button class="icp-old-chip" style="background: #c4b5fd"></button>
+              <button class="icp-old-chip" style="background: #f9a8d4"></button>
+              <button class="icp-old-chip" style="background: #6ee7b7"></button>
+            </div>
+            <div class="icp-old-custom">
+              <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M9 12h6M12 9v6"/></svg>
+              Custom color
+            </div>
+          </div>
+          <div style="margin-top: 12px; font-size: 11px; color: #a8a29e; font-style: italic">Before — 8 fixed swatches, "Custom" hides behind a click.</div>
+        </div>
+      </div>
+
+      <!-- After -->
+      <div class="icp-plot-mock">
+        <div class="icp-plot-head">Plot · Wiki property</div>
+        <div class="icp-plot-property-row">
+          <div class="icp-plot-property-key">Affiliation</div>
+          <div><span class="icp-plot-tag" id="plotTag1"></span></div>
+        </div>
+        <div class="icp-plot-property-row">
+          <div class="icp-plot-property-key">Category</div>
+          <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap">
+            <span class="icp-plot-tag" id="plotTag2"></span>
+            <span class="icp-plot-tag" id="plotTag3"></span>
+          </div>
+        </div>
+        <div style="margin-top: 16px">
+          <div class="icp-plot-popover">
+            <div id="plotPicker"></div>
+          </div>
+          <div style="margin-top: 12px; font-size: 11px; color: #a8a29e; font-style: italic">After — full picker inline. Eyedrop a color from anywhere on screen.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Token theming showcase -->
+  <section class="icp-section">
+    <h2 class="icp-h2">Themable</h2>
+    <p>Same component, three host design systems. The picker borrows the host's borders, fonts, and accent — no rebuild needed.</p>
+
+    <div class="icp-token-grid">
+      <div class="icp-token-card" style="--accent: #ec4899">
+        <div class="icp-token-card-head">
+          <div class="icp-token-title">Default · system fonts</div>
+          <div class="icp-token-sub">No tokens overridden — auto light/dark.</div>
+        </div>
+        <div class="icp-mini-picker">
+          <div class="icp-mini-canvas" style="--accent: #ec4899; border-color: rgba(0,0,0,.06)"></div>
+          <div class="icp-mini-hue"></div>
+          <div class="icp-mini-row">
+            <div class="icp-mini-swatch" style="background: #ec4899; border-color: rgba(0,0,0,.06)"></div>
+            <div class="icp-mini-input" style="border-color: rgba(0,0,0,.12); color: var(--foreground)">#EC4899</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="icp-token-card" style="--accent: #16a34a; border-radius: 4px">
+        <div class="icp-token-card-head">
+          <div class="icp-token-title">Sharp · brutalist</div>
+          <div class="icp-token-sub">2px borders, 0px radius, mono everywhere.</div>
+        </div>
+        <div class="icp-mini-picker" style="font-family: var(--font-mono)">
+          <div class="icp-mini-canvas" style="--accent: #16a34a; border-radius: 0; border: 2px solid var(--foreground)"></div>
+          <div class="icp-mini-hue" style="border-radius: 0; height: 10px"></div>
+          <div class="icp-mini-row">
+            <div class="icp-mini-swatch" style="background: #16a34a; border-radius: 0; border: 2px solid var(--foreground)"></div>
+            <div class="icp-mini-input" style="border-radius: 0; border: 2px solid var(--foreground); color: var(--foreground); font-family: inherit">#16A34A</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="icp-token-card" style="background: linear-gradient(135deg, rgba(99,102,241,.08), rgba(236,72,153,.08))">
+        <div class="icp-token-card-head">
+          <div class="icp-token-title">Soft · rounded</div>
+          <div class="icp-token-sub">14px radius, no borders, indigo accent.</div>
+        </div>
+        <div class="icp-mini-picker">
+          <div class="icp-mini-canvas" style="--accent: #6366f1; border-radius: 14px; border: none"></div>
+          <div class="icp-mini-hue" style="border-radius: 999px"></div>
+          <div class="icp-mini-row">
+            <div class="icp-mini-swatch" style="background: #6366f1; border-radius: 999px; border: none; box-shadow: 0 0 0 2px rgba(99,102,241,.2)"></div>
+            <div class="icp-mini-input" style="border-radius: 999px; border: none; background: rgba(99,102,241,.1); color: var(--foreground)">#6366F1</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="icp-section">
+    <h2 class="icp-h2">Get the files</h2>
+    <p>Two files. Copy them into your project and you're done.</p>
+    <div style="display: flex; gap: 12px; flex-wrap: wrap">
+      <a href="color-picker.jsx" download style="padding: 10px 16px; background: var(--foreground); color: var(--background); border-radius: 8px; font-size: 13px; font-weight: 500; text-decoration: none; display: inline-flex; align-items: center; gap: 8px;">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v14M5 12l7 7 7-7M3 21h18"/></svg>
+        color-picker.jsx
+      </a>
+      <a href="imperial-color-picker.css" download style="padding: 10px 16px; background: var(--card); color: var(--foreground); border: 1px solid var(--border); border-radius: 8px; font-size: 13px; font-weight: 500; text-decoration: none; display: inline-flex; align-items: center; gap: 8px;">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v14M5 12l7 7 7-7M3 21h18"/></svg>
+        imperial-color-picker.css
+      </a>
+    </div>
+  </section>
+
+</div>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+<script type="text/babel" src="color-picker.jsx"></script>
+
+<script type="text/babel">
+  // Theme toggle
+  document.getElementById('icpTheme').addEventListener('click', function() {
+    document.body.classList.toggle('dark');
+  });
+
+  function LiveDemo() {
+    const [color, setColor] = React.useState('#3b82f6');
+    const [alpha, setAlpha] = React.useState(1);
+    const [rgb, setRgb] = React.useState([59, 130, 246]);
+
+    React.useEffect(function() {
+      const rgba = 'rgba(' + rgb[0] + ',' + rgb[1] + ',' + rgb[2] + ',' + alpha + ')';
+      const block = document.getElementById('targetBlock');
+      const text = document.getElementById('targetText');
+      const icons = document.getElementById('targetIcons');
+      const out = document.getElementById('targetOutput');
+      if (block) block.style.background = rgba;
+      if (text) text.style.color = color;
+      if (icons) icons.querySelectorAll('svg').forEach(function(s){ s.style.stroke = color; });
+      if (out) out.textContent = 'onChange("' + color.toUpperCase() + '", ' + alpha.toFixed(2) + ', [' + rgb.join(', ') + '])';
+    }, [color, alpha, rgb]);
+
+    return <ColorPicker value={color} onChange={function(hex, a, r) { setColor(hex); setAlpha(a); setRgb(r); }} />;
+  }
+
+  ReactDOM.createRoot(document.getElementById('liveDemo')).render(<LiveDemo />);
+
+  // Plot demo
+  function PlotDemo() {
+    const [tagColor, setTagColor] = React.useState('#7c3aed');
+    const tags = [
+      { ref: 'plotTag1', label: 'Plot App' },
+      { ref: 'plotTag2', label: 'Knowledge' },
+      { ref: 'plotTag3', label: 'Reference' },
+    ];
+
+    React.useEffect(function() {
+      // colorize tag1 with picked color
+      const t1 = document.getElementById('plotTag1');
+      if (t1) {
+        const rgb = hexToRgb(tagColor);
+        const bg = 'rgba(' + rgb.join(',') + ',.18)';
+        t1.style.background = bg;
+        t1.style.color = tagColor;
+        t1.innerHTML = '<span class="icp-plot-tag-dot" style="background: ' + tagColor + '"></span>Plot App';
+      }
+      // others stay
+      const t2 = document.getElementById('plotTag2');
+      if (t2) t2.innerHTML = '<span class="icp-plot-tag-dot" style="background: #f59e0b"></span>Knowledge';
+      t2 && (t2.style.background = '#fef3c7') && (t2.style.color = '#92400e');
+      const t3 = document.getElementById('plotTag3');
+      if (t3) t3.innerHTML = '<span class="icp-plot-tag-dot" style="background: #3b82f6"></span>Reference';
+      t3 && (t3.style.background = '#dbeafe') && (t3.style.color = '#1e40af');
+    }, [tagColor]);
+
+    return <ColorPicker value={tagColor} onChange={function(hex){ setTagColor(hex); }} />;
+  }
+
+  ReactDOM.createRoot(document.getElementById('plotPicker')).render(<PlotDemo />);
+</script>
+
+</body>
+</html>

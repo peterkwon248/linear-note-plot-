@@ -105,7 +105,7 @@ import { SidebarSimple } from "@phosphor-icons/react/dist/ssr/SidebarSimple"
 ## Imperial Icon Kit 매핑
 
 ### Imperial에서 export하는 아이콘 (확인)
-`C:\Users\user\AppData\Local\Temp\plot-v3-mockup\imperial-ui.jsx`는 현재 접근 불가.
+`docs/v3-mockup/imperial-ui.jsx` 참조 (repo에 commit됨, 다른 컴퓨터 호환).
 
 하지만 **Phosphor v2.1.10 표준 아이콘 4개 모두**는 Imperial의 일반 icon set에 포함된 것으로 알려짐:
 - ✅ BookOpen — 매우 기본 (책/문서)
