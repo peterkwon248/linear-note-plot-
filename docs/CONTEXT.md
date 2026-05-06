@@ -38,6 +38,37 @@
 
 ---
 
+## 🚀 2026-05-07 — Plot v3 PRD 작성 + Phase 0 cleanup 완료
+
+**범위**: Plot 2.0 → v3 리브랜드 + Phase 0 사전 정리 (C1 priority namespace / C2 ViewMode mismatch).
+
+### 결정사항 (영구)
+
+- **Plot 2.0 폐기**: 앞 세션의 11가지 결정(7-space, Type rename 등)은 유지하되, "2.0" 브랜딩 버리고 **v3 visual refresh** PR 시리즈로 진행
+- **v3 mockup 채택**: `docs/PLOT-V3-VISUAL-REFRESH-PRD.md` 기준 — Notion/Linear 하이브리드 에디터, 토큰 시스템 전면 교체
+
+### Phase 0 결과 (store v112, 완료)
+
+| 항목 | 내용 |
+|------|------|
+| ViewMode 통합 | `SavedView.viewState.viewMode`에서 legacy `"table"` 제거, `"grid"` 추가 — view-engine `ViewMode`와 exact match |
+| normalizeViewState | pre-v112 `"table"` → `"list"` rawViewMode 매핑 helper 추가 (fallback 보장) |
+| Store v112 | savedViews.viewState.viewMode `"table"` → `"list"` idempotent 마이그레이션 |
+| `--v3-priority-*` namespace | `:root` + `.dark`에 `--v3-priority-{high,medium,low}: unset` 선언 자리 마련 (Phase 1에서 값 채움) |
+| 기존 보존 | `--priority-{medium,high,low,urgent,none}` Plot 5-tier 100% 보존 |
+
+### 검증 결과
+
+- `tsc --noEmit`: 0 errors
+- `npm run test`: 185 tests passed (0 regression)
+- `npm run build`: clean
+
+### 다음: Phase 1 (token swap)
+
+`--v3-priority-*` 값 채우기 + 전체 토큰 시스템 교체. `.omc/plans/v3-phase-1-tokens-typography.md` 참조.
+
+---
+
 ## 🚀 2026-05-05 — Group C PR-D 진행 + Plot 2.0 PRD 시작
 
 **범위**: PR #261 (Tags v110) merged. PR #262 (Labels v111) created. Hotfix 8개. **Plot 2.0 진화 PRD Phase A 완료 + 11가지 결정 확정**.
