@@ -122,11 +122,19 @@ export const NOTE_STATUS_COLORS = {
   permanent: { css: "var(--chart-5)", tw: "chart-5" },
 } as const
 
-/** Resolved hex values for canvas / SVG (dark theme canonical) */
+/** Resolved hex values for canvas / SVG (dark theme canonical).
+ *
+ * v3 desaturated palette (Q3 LOCKED) — phase 1 refresh:
+ * - Previously saturated cyan/orange/green were visually loud and competed
+ *   with workspace colors. v3 mockup tones them down: neutral gray for
+ *   inbox (= "needs triage"), warm brown-orange for capture (= "in
+ *   progress"), teal-green for permanent (= "settled / verified").
+ * - Mirrors --status-{inbox,capture,permanent} CSS vars in app/globals.css.
+ */
 export const NOTE_STATUS_HEX = {
-  inbox:     "#22d3ee",   // cyan
-  capture:   "#f97316",   // orange
-  permanent: "#22c55e",   // green
+  inbox:     "#6B7280",   // neutral gray   — needs triage
+  capture:   "#D97706",   // brown-orange   — in progress
+  permanent: "#0E9384",   // teal-green     — settled / verified
 } as const
 
 /* ── Wiki Status ─────────────────────────────── */
@@ -310,4 +318,40 @@ export const EVENT_HEX = {
   attachment_removed:  "#ef4444",
   reflection_added:    "#f59e0b",
   split:               "#a855f7",
+} as const
+
+/* ── v3 Token Aliases (Phase 1) ──────────────────
+ * Convenience CSS-var alias maps for v3 design tokens. Use these when
+ * authoring components against v3 names without hardcoding `var(--*)`
+ * strings. The underlying values resolve via app/globals.css.
+ *
+ * - TEXT_HIERARCHY: 3-tier text hierarchy (soft / muted / whisper)
+ * - MOTION: motion durations (fast / mid / slow)
+ * - RADIUS: 8 radius scale (r2..r12)
+ *
+ * Plot existing tokens (PRIORITY_HEX 5-tier, SPACE_COLORS, PRESET_COLORS)
+ * are PRESERVED — these aliases are additive only.
+ */
+
+export const TEXT_HIERARCHY = {
+  soft:    "var(--soft-fg)",
+  muted:   "var(--muted-fg)",
+  whisper: "var(--whisper-fg)",
+} as const
+
+export const MOTION = {
+  fast: "var(--t-fast)",
+  mid:  "var(--t-mid)",
+  slow: "var(--t-slow)",
+} as const
+
+export const RADIUS = {
+  r2:  "var(--r-2)",
+  r3:  "var(--r-3)",
+  r4:  "var(--r-4)",
+  r5:  "var(--r-5)",
+  r6:  "var(--r-6)",
+  r8:  "var(--r-8)",
+  r10: "var(--r-10)",
+  r12: "var(--r-12)",
 } as const
