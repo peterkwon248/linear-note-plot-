@@ -283,7 +283,9 @@
 @theme inline {
   --font-sans: 'Geist', 'Geist Fallback';
   --font-mono: 'Geist Mono', 'Geist Mono Fallback';
-  --font-serif: 'Source Serif 4', 'Iowan Old Style', 'Charter', Georgia, serif;
+  /* Source Serif 4 loaded via next/font (app/layout.tsx) as --font-source-serif.
+     Tailwind exposes it as font-serif with system serif fallback chain. */
+  --font-serif: var(--font-source-serif), 'Iowan Old Style', 'Charter', Georgia, serif;
 
   /* Typography scale — exact pixel values preserved */
   --font-size-2xs: 0.6875rem;  /* 11px — tiny labels, editor menus */
