@@ -28,6 +28,47 @@
 
 ---
 
+## 🚀 2026-05-07 — Plot v3 Phase 1 (token foundation) 완료
+
+**범위**: v3 design tokens 통합 + Q1-Q3, Q8 LOCKED 결정 적용 + Source Serif 4
+font + `_legacy/` 폴더 마련. Phase 0 위에서 진행.
+
+### 주요 결정 (LOCKED 적용)
+- **Q1 SPACE_COLORS = B**: Plot 유지 (notes=cyan, wiki=violet, calendar=pink 등). v3 mockup 값 적용 안 함.
+- **Q2 --accent = A (v3)**: light `#5E6AD2`, dark `#7C8AE7`. cascading 토큰 (`--ring`, `--sidebar-primary`, `--toolbar-active` 등) 모두 따라 변경.
+- **Q3 NOTE_STATUS_HEX = A (v3 desaturated)**: inbox `#6B7280`, capture `#D97706`, permanent `#0E9384`.
+- **Q8 Priority namespace = A**: `--v3-priority-{high,medium,low}` v3 mockup 값 채움 (`#DC6803`, `#5E6AD2`, `#98A2B3`). Plot `--priority-*` 5-tier 100% 보존.
+
+### 머지 예정 PRs (Phase 1)
+- **PR #NEW** Plot v3 Phase 1 — 6 commits:
+  - `chore(tokens): Token Cascade Map analysis (Phase 1.1)` — `.omc/plans/v3-phase-1-cascade-map.md`. v3 신규 토큰 grep 0 hits + Plot 기존 토큰 shadcn 의존 매핑.
+  - `feat(tokens): integrate v3 design tokens with alias policy (Phase 1.2)` — `app/globals.css` 3-Layer alias 정책 적용. v3 surface (`--bg`, `--fg`, `--soft-fg` 등) + space (Q1) + status (Q3) + priority (Q8) + typography + radii + motion + shadow. Plot 기존 토큰 100% 보존. `@theme inline`에 v3 토큰 노출.
+  - `feat(colors): add v3 color aliases, apply Q3 desaturated status (Phase 1.3)` — `lib/colors.ts` NOTE_STATUS_HEX 변경 + 신규 export `TEXT_HIERARCHY`/`MOTION`/`RADIUS`.
+  - `feat(fonts): add Source Serif 4, verify Geist (Phase 1.4)` — next/font 추가. self-reference 회피 위해 `--font-source-serif` → `@theme inline`에서 `--font-serif`로 alias.
+  - `chore(_legacy): scaffold _legacy folder + import policy (Phase 1.7)` — `components/_legacy/` + README.md 4 정책.
+  - `docs(plot-v3): Phase 1 token migration complete` — CONTEXT/MEMORY 업데이트.
+
+### Token alias 정책 (3-Layer)
+```
+Layer 1: v3 names    (--bg, --fg, --soft-fg, --bg-elev, --space-*, --v3-priority-*)
+                     ↓ same hex
+Layer 2: Plot names  (--background, --foreground, --muted-foreground, --card, --priority-*)
+                     ↓ expose
+Layer 3: Tailwind    (@theme inline → --color-background, --color-fg-soft, etc.)
+```
+
+### 검증 결과
+- `tsc --noEmit`: 0 errors
+- `npm run build`: clean (33 routes prerendered)
+- `npm run test`: 185 tests passed (0 regression)
+- shadcn/ui Tailwind cascade: 정상 (40+ ui/* 컴포넌트 의존하는 Plot 기존 토큰 모두 보존)
+
+### 다음
+Phase 2 (Imperial icons codemod, ~0.5일 예상) — 121 phosphor import 사이트
+변환. `_legacy/` 폴더 본격 사용 시작점.
+
+---
+
 ## 🚀 2026-05-07 — Plot v3 PRD 작성 + Phase 0 cleanup
 
 **범위**: Plot 2.0 → v3 visual refresh 리브랜드. Critic 발견 2가지 사전 정리 (C1 priority namespace / C2 ViewMode mismatch). Store v112.

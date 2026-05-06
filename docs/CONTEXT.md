@@ -38,6 +38,39 @@
 
 ---
 
+## 🚀 2026-05-07 — Plot v3 Phase 1 (token foundation) 완료
+
+**범위**: v3 design tokens 통합 + Q1-Q3, Q8 LOCKED 결정 적용 + Source Serif 4
+font 추가 + `_legacy/` 폴더 마련.
+
+### Phase 1 결과 (완료)
+
+| Task | 내용 |
+|------|------|
+| 1.1 Token Cascade Map | `app/globals.css` 토큰 → 사용처 분석. v3 신규 토큰 모두 grep 0 hits (충돌 없음). Plot 기존 토큰은 shadcn/ui 40+ 컴포넌트 의존 — 100% 보존 정책 확정. `.omc/plans/v3-phase-1-cascade-map.md` 산출. |
+| 1.2 globals.css 통합 | v3 신규 토큰 추가 (`--bg`, `--fg`, `--soft-fg`, `--bg-elev`, `--space-*`, `--status-*`, `--shadow-*`, `--font-2xs..3xl`, `--r-2..12`, `--t-fast/mid/slow`, `--accent-soft`). Plot 기존 토큰은 그대로 (shadcn cascade 보존). `@theme inline`에 v3 토큰 노출. |
+| Q1 SPACE_COLORS | Plot 유지 (notes=cyan, wiki=violet, calendar=pink 등). v3 mockup 값 적용 안 함. |
+| Q2 --accent | light `#4f46e5 → #5E6AD2`, dark `#818cf8 → #7C8AE7`. cascading: `--ring`, `--sidebar-primary`, `--sidebar-ring`, `--toolbar-active` 따라 변경. (의도된 시각 변화) |
+| Q3 NOTE_STATUS_HEX | inbox `#22d3ee → #6B7280`, capture `#f97316 → #D97706`, permanent `#22c55e → #0E9384`. desaturated 톤. |
+| Q8 --v3-priority-* | Phase 0의 unset 자리에 v3 mockup 값 채움: high `#DC6803`, medium `#5E6AD2`, low `#98A2B3`. Plot `--priority-*` 5-tier 100% 보존. |
+| 1.3 lib/colors.ts | NOTE_STATUS_HEX 변경 + 신규 export: `TEXT_HIERARCHY`, `MOTION`, `RADIUS` (CSS var alias maps). Plot 기존 export 보존. |
+| 1.4 Source Serif 4 | next/font (`Source_Serif_4`) 추가. `--font-source-serif` → `@theme inline { --font-serif: var(--font-source-serif), ... }` alias로 자기 참조 회피. Geist + Geist Mono 그대로. |
+| 1.7 _legacy/ scaffold | `components/_legacy/` + README.md 정책 문서 (4 정책: codemod 제외, 새 작업 import 금지, deprecation 주석, 삭제 정책). Phase 2부터 사용. |
+
+### 검증 결과 (Phase 1 acceptance 통과)
+
+- `tsc --noEmit`: 0 errors
+- `npm run build`: clean (33 routes prerendered)
+- `npm run test`: 185 tests passed (0 regression)
+- shadcn/ui Tailwind cascade: 정상 (Plot 기존 토큰 모두 보존)
+
+### 다음: Phase 2 (Imperial icons codemod)
+
+121 phosphor import 사이트의 Imperial icon kit 변환. `_legacy/` 폴더 본격 사용
+시작점. `.omc/plans/v3-phase-2-imperial-icons.md`(작성 예정) 참조.
+
+---
+
 ## 🚀 2026-05-07 — Plot v3 PRD 작성 + Phase 0 cleanup 완료
 
 **범위**: Plot 2.0 → v3 리브랜드 + Phase 0 사전 정리 (C1 priority namespace / C2 ViewMode mismatch).
@@ -62,10 +95,6 @@
 - `tsc --noEmit`: 0 errors
 - `npm run test`: 185 tests passed (0 regression)
 - `npm run build`: clean
-
-### 다음: Phase 1 (token swap)
-
-`--v3-priority-*` 값 채우기 + 전체 토큰 시스템 교체. `.omc/plans/v3-phase-1-tokens-typography.md` 참조.
 
 ---
 
