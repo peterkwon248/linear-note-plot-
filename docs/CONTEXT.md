@@ -38,6 +38,30 @@
 
 ---
 
+## 🚀 2026-05-07 (저녁) — Phase 2 부분 진행 (Imperial icon kit)
+
+**범위**: Imperial icon kit 모듈 작성 + 일부 파일 migration. 사용자가 위임 거절 시점에 부분 완료 상태.
+
+### 완료
+- `components/icons/imperial.tsx` 신규 (Imperial 80+ icons, 1.5px stroke, currentColor, `weight: never` 의도적 typing)
+- `components/icons/imperial-extras.tsx` 신규 (Plot 도메인: WikiBook, OntologyWide, Bookshelf 등)
+- `components/activity-bar.tsx` — phosphor SSR (Graph/Books/BookOpen/SidebarSimple) → Imperial 교체
+- `components/plot-icons.tsx` — `IconWiki = BookOpen` (phosphor) → `WikiBook` (Imperial)
+- `components/views/{note-split,wiki-merge,wiki-split}-page.tsx` — lucide → Imperial 일부
+- `components/side-panel/backlink-card.tsx` — `weight="regular"` 제거 (Imperial weight: never 충돌 fix)
+
+### 잔여 (다음 세션 0.5일)
+- 5+ files / 85+ occurrences `weight=` 잔존 (calendar-view.tsx, display-panel.tsx, filter-bar.tsx, board-workbench.tsx, color-picker-grid.tsx 외)
+- lucide / iconoir / tabler / remixicon 잔존 사용처
+- imperial-extras.tsx의 Plot 도메인 icon SVG 정확성 검증
+
+### 검증
+- `tsc --noEmit`: 0 errors (backlink-card fix 후)
+- `npm run build`: clean
+- `npm run test`: 185 pass (0 regression)
+
+---
+
 ## 🚀 2026-05-07 — Plot v3 Phase 1 (token foundation) 완료
 
 **범위**: v3 design tokens 통합 + Q1-Q3, Q8 LOCKED 결정 적용 + Source Serif 4
