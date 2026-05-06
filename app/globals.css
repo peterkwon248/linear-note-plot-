@@ -37,6 +37,10 @@
      bg (`bg-wiki-complete/[0.06]`) — emerald tint reads as "viewing wiki article". */
   --wiki-complete: #10b981;
   --priority-medium: #d97706;
+  /* v3 priority tokens — values to be filled in Phase 1 (separate from Plot --priority-* 5-tier) */
+  --v3-priority-high: unset;
+  --v3-priority-medium: unset;
+  --v3-priority-low: unset;
   --radius: 0.5rem;
   --sidebar-bg: #fafafa;
   --sidebar-foreground: #18181b;
@@ -128,6 +132,10 @@
      theme above for full rationale. */
   --wiki-complete: #34d399;
   --priority-medium: #fbbf24;
+  /* v3 priority tokens — values to be filled in Phase 1 (separate from Plot --priority-* 5-tier) */
+  --v3-priority-high: unset;
+  --v3-priority-medium: unset;
+  --v3-priority-low: unset;
   /* Sidebar: subtle layering */
   --sidebar-bg: #141416;
   --sidebar-foreground: #d4d4d8;
