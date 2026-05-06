@@ -4,6 +4,81 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
+  /* ──────────────────────────────────────────────────────────
+     v3 Token Layer (Phase 1) — see .omc/plans/v3-phase-1-cascade-map.md
+     Plot existing tokens are PRESERVED below for shadcn/ui cascade.
+     v3 names alias to Plot names with same hex (Q1-Q3, Q8 LOCKED).
+     ────────────────────────────────────────────────────────── */
+
+  /* v3 Surface */
+  --bg: #fafafa;
+  --bg-elev: #ffffff;
+  --fg: #18181b;
+  --soft-fg: #52525b;
+  --muted-fg: #71717a;
+  --whisper-fg: #a1a1aa;
+  --accent-soft: #EEF0FB;
+
+  /* v3 Space colors (Q1 = Plot 유지) */
+  --space-home:     #5e6ad2;
+  --space-notes:    #06b6d4;
+  --space-wiki:     #8b5cf6;
+  --space-ontology: #0f766e;
+  --space-calendar: #ec4899;
+  --space-library:  #b45309;
+  --space-books:    #6366f1;
+
+  /* v3 Note status (Q3 = v3 desaturated) */
+  --status-inbox:     #6B7280;
+  --status-capture:   #D97706;
+  --status-permanent: #0E9384;
+
+  /* v3 Wiki status — mirrors WIKI_STATUS_HEX in lib/colors.ts */
+  --wiki-stub:    #f97316;
+  --wiki-article: #10b981;
+
+  /* v3 Typography scale */
+  --font-2xs: 11px;
+  --font-xs:  12px;
+  --font-sm:  13px;
+  --font-base:14px;
+  --font-md:  15px;
+  --font-lg:  17px;
+  --font-xl:  20px;
+  --font-2xl: 24px;
+  --font-3xl: 32px;
+
+  /* v3 Radii */
+  --r-2:  2px;
+  --r-3:  3px;
+  --r-4:  4px;
+  --r-5:  5px;
+  --r-6:  6px;
+  --r-8:  8px;
+  --r-10: 10px;
+  --r-12: 12px;
+
+  /* v3 Motion */
+  --t-fast: 120ms cubic-bezier(0.2, 0, 0.2, 1);
+  --t-mid:  200ms cubic-bezier(0.2, 0, 0.2, 1);
+  --t-slow: 320ms cubic-bezier(0.2, 0, 0.2, 1);
+
+  /* v3 Shadow */
+  --shadow-sm: 0 1px 2px rgba(0,0,0,0.04);
+  --shadow-md: 0 4px 12px rgba(0,0,0,0.06), 0 1px 3px rgba(0,0,0,0.04);
+  --shadow-lg: 0 12px 32px rgba(0,0,0,0.10), 0 4px 12px rgba(0,0,0,0.06);
+
+  /* v3 Layout spine (alias to Plot) */
+  --activity-bar-w: 44px;
+  --sidebar-w:      220px;
+  --header-h:       52px;
+  --workspace-header-h: 44px;
+
+  /* ──────────────────────────────────────────────────────────
+     Plot Token Layer — preserved for shadcn/ui Tailwind cascade
+     (40+ ui/* components depend on these via @theme inline)
+     ────────────────────────────────────────────────────────── */
+
   /* Light theme — improved contrast and clarity */
   --background: #fafafa;
   --foreground: #18181b;
@@ -17,13 +92,14 @@
   --secondary-foreground: #18181b;
   --muted: #f4f4f5;
   --muted-foreground: #52525b;
-  --accent: #4f46e5;
+  /* Q2 LOCKED: --accent v3 #5E6AD2 (was #4f46e5 Plot indigo) */
+  --accent: #5E6AD2;
   --accent-foreground: #ffffff;
   --destructive: #dc2626;
   --destructive-foreground: #ffffff;
   --border: #a8a8ad;
   --input: #a8a8ad;
-  --ring: #4f46e5;
+  --ring: #5E6AD2;
   --chart-1: #4f46e5;
   --chart-2: #0e7490;
   --chart-3: #c2410c;
@@ -36,16 +112,22 @@
      Notes-permanent green semantic. Sole consumer today: FixedToolbar peek-mode
      bg (`bg-wiki-complete/[0.06]`) — emerald tint reads as "viewing wiki article". */
   --wiki-complete: #10b981;
+  /* Plot --priority-* 5-tier (preserved 100% — see lib/colors.ts PRIORITY_HEX) */
   --priority-medium: #d97706;
+  /* Q8 LOCKED: v3 priority tokens — namespace-isolated from Plot 5-tier above.
+     Values from plot-v3-tokens.css. */
+  --v3-priority-high:   #DC6803;
+  --v3-priority-medium: #5E6AD2;
+  --v3-priority-low:    #98A2B3;
   --radius: 0.5rem;
   --sidebar-bg: #fafafa;
   --sidebar-foreground: #18181b;
-  --sidebar-primary: #4f46e5;
+  --sidebar-primary: #5E6AD2;
   --sidebar-primary-foreground: #ffffff;
   --sidebar-accent: #f4f4f5;
   --sidebar-accent-foreground: #18181b;
   --sidebar-border: #a8a8ad;
-  --sidebar-ring: #4f46e5;
+  --sidebar-ring: #5E6AD2;
   --sidebar-muted: #3f3f46;
   --sidebar-hover: #f4f4f5;
 
@@ -60,7 +142,7 @@
   --hover-bg: rgba(0,0,0, 0.04);
   --active-bg: rgba(0,0,0, 0.06);
   --active-bg-strong: rgba(0,0,0, 0.08);
-  --toolbar-active: rgba(79,70,229, 0.12);
+  --toolbar-active: rgba(94,106,210, 0.12);
 
   /* Editor Spine */
   --editor-font-size: 15px;
@@ -99,6 +181,32 @@
 }
 
 .dark {
+  /* ──────────────────────────────────────────────────────────
+     v3 Token Layer (Phase 1) — dark variants.
+     ────────────────────────────────────────────────────────── */
+
+  /* v3 Surface (dark) */
+  --bg: #0f0f11;
+  --bg-elev: #1c1c1f;
+  --fg: #f4f4f5;
+  --soft-fg: #d4d4d8;
+  --muted-fg: #a1a1aa;
+  --whisper-fg: #71717a;
+  --accent-soft: rgba(94,106,210,0.16);
+
+  /* v3 Wiki status (dark) — mirrors lib/colors.ts WIKI_STATUS_HEX dark variant */
+  --wiki-stub:    #fb923c;
+  --wiki-article: #34d399;
+
+  /* v3 Shadow (dark) */
+  --shadow-sm: 0 1px 2px rgba(0,0,0,0.30);
+  --shadow-md: 0 4px 16px rgba(0,0,0,0.40), 0 1px 3px rgba(0,0,0,0.30);
+  --shadow-lg: 0 16px 40px rgba(0,0,0,0.55), 0 4px 12px rgba(0,0,0,0.40);
+
+  /* ──────────────────────────────────────────────────────────
+     Plot Token Layer (dark) — preserved for shadcn/ui cascade.
+     ────────────────────────────────────────────────────────── */
+
   /* App background: refined charcoal with better depth */
   --background: #0f0f11;
   --foreground: #f4f4f5;
@@ -112,13 +220,14 @@
   --secondary-foreground: #f4f4f5;
   --muted: #27272a;
   --muted-foreground: #a1a1aa;
-  --accent: #818cf8;
+  /* Q2 LOCKED: --accent v3 dark #7C8AE7 (was #818cf8 Plot indigo-soft) */
+  --accent: #7C8AE7;
   --accent-foreground: #0f0f11;
   --destructive: #f87171;
   --destructive-foreground: #0f0f11;
   --border: #3f3f46;
   --input: #3f3f46;
-  --ring: #818cf8;
+  --ring: #7C8AE7;
   --chart-1: #818cf8;
   --chart-2: #22d3ee;
   --chart-3: #fb923c;
@@ -128,17 +237,23 @@
      theme above for full rationale. */
   --wiki-complete: #34d399;
   --priority-medium: #fbbf24;
+  /* Q8 LOCKED: v3 priority tokens (dark) — same values as light per
+     plot-v3-tokens.css (mockup uses shared priority tokens for both modes).
+     Plot --priority-* 5-tier remains untouched. */
+  --v3-priority-high:   #DC6803;
+  --v3-priority-medium: #5E6AD2;
+  --v3-priority-low:    #98A2B3;
   /* Sidebar: subtle layering */
   --sidebar-bg: #141416;
   --sidebar-foreground: #d4d4d8;
   --sidebar-muted: #c4c4cb;
   --sidebar-hover: rgba(255,255,255, 0.04);
   --sidebar-border: #3f3f46;
-  --sidebar-primary: #818cf8;
+  --sidebar-primary: #7C8AE7;
   --sidebar-primary-foreground: #0f0f11;
   --sidebar-accent: #27272a;
   --sidebar-accent-foreground: #f4f4f5;
-  --sidebar-ring: #818cf8;
+  --sidebar-ring: #7C8AE7;
 
   /* === Linear Polish: 시맨틱 토큰 === */
   /* 사이드바 상태 */
@@ -158,7 +273,7 @@
   --active-bg-strong: rgba(255,255,255, 0.10);
 
   /* 에디터 툴바 */
-  --toolbar-active: rgba(129,140,248, 0.2);
+  --toolbar-active: rgba(124,138,231, 0.2);
 
   /* Editor Spine (dark) */
   --editor-code-bg: rgba(255,255,255,0.08);
@@ -168,6 +283,9 @@
 @theme inline {
   --font-sans: 'Geist', 'Geist Fallback';
   --font-mono: 'Geist Mono', 'Geist Mono Fallback';
+  /* Source Serif 4 loaded via next/font (app/layout.tsx) as --font-source-serif.
+     Tailwind exposes it as font-serif with system serif fallback chain. */
+  --font-serif: var(--font-source-serif), 'Iowan Old Style', 'Charter', Georgia, serif;
 
   /* Typography scale — exact pixel values preserved */
   --font-size-2xs: 0.6875rem;  /* 11px — tiny labels, editor menus */
@@ -227,6 +345,34 @@
   --color-active-bg: var(--active-bg);
   --color-active-bg-strong: var(--active-bg-strong);
   --color-toolbar-active: var(--toolbar-active);
+
+  /* === v3 Token Tailwind exposure (Phase 1) === */
+  /* Surface */
+  --color-bg: var(--bg);
+  --color-bg-elev: var(--bg-elev);
+  --color-fg: var(--fg);
+  --color-fg-soft: var(--soft-fg);
+  --color-fg-muted: var(--muted-fg);
+  --color-fg-whisper: var(--whisper-fg);
+  --color-accent-soft: var(--accent-soft);
+  /* Space */
+  --color-space-home:     var(--space-home);
+  --color-space-notes:    var(--space-notes);
+  --color-space-wiki:     var(--space-wiki);
+  --color-space-ontology: var(--space-ontology);
+  --color-space-calendar: var(--space-calendar);
+  --color-space-library:  var(--space-library);
+  --color-space-books:    var(--space-books);
+  /* Status */
+  --color-status-inbox:     var(--status-inbox);
+  --color-status-capture:   var(--status-capture);
+  --color-status-permanent: var(--status-permanent);
+  --color-wiki-stub:        var(--wiki-stub);
+  --color-wiki-article:     var(--wiki-article);
+  /* v3 Priority (namespace-isolated from Plot 5-tier) */
+  --color-v3-priority-high:   var(--v3-priority-high);
+  --color-v3-priority-medium: var(--v3-priority-medium);
+  --color-v3-priority-low:    var(--v3-priority-low);
 
   /* 에디터 제목 사이즈 토큰 */
   --font-size-title: 1.75rem;

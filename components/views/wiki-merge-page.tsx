@@ -8,7 +8,7 @@ import { toast } from "sonner"
 import {
   Search,
   GitMerge,
-  X,
+  Close as X,
   GripVertical,
   ChevronDown,
   ChevronRight,
@@ -17,7 +17,7 @@ import {
   Check,
   FileText,
   Layers,
-} from "lucide-react"
+} from "@/components/icons/imperial"
 import { navigateToWikiArticle } from "@/lib/wiki-article-nav"
 import { setWikiViewMode } from "@/lib/wiki-view-mode"
 

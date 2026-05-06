@@ -1,5 +1,68 @@
 # Architectural Decisions
 
+## 2026-05-07 — Plot 2.0 PRD 폐기 + v3 mockup 채택 (영구 결정)
+
+### 핵심
+사용자가 Claude 디자인과 작업한 v3 mockup이 Plot의 새 단일 비전. Plot 2.0 PRD (Phase A 완료, 11가지 결정 LOCKED) 폐기.
+
+### v3 mockup
+- 위치: `C:\Users\user\AppData\Local\Temp\plot-v3-mockup\`
+- Imperial icon kit (1.5px stroke, 24 viewBox, currentColor)
+- 5 view modes: Table / Gallery / Studio / Editorial / Graph
+- 7-space (home/notes/wiki/calendar/ontology/library/books)
+- Linear-style filter popover
+
+### Q1-Q14 LOCKED
+- Q1: SPACE_COLORS = Plot 현재 유지 (notes=cyan, calendar=pink — 정체성)
+- Q2: --accent = v3 #5E6AD2
+- Q3: NOTE_STATUS = v3 desaturated (gray/brown/teal)
+- Q4: Studio dark forced
+- Q5: Editorial body = TipTap helper
+- Q6: Feature flag 미사용
+- Q7: Phase 1 → 2 순차
+- Q8: Priority namespace 격리 (`--v3-priority-*`)
+- Q9: Gallery hue = noteId hash
+- Q10: Editorial subtitle = Plot `summary` field
+- Q11: v3 modes = Notes list만
+- Q12: Studio segments = SRS 진행도
+- Q13: view-switcher = workspace header
+- Q14: 키보드 검증 = qa-tester 수동
+
+### 영구 보존 (v3와 무관)
+- "Gentle by default, powerful when needed"
+- Note/Wiki 2-entity 영구 분리
+- LLM/API 미사용
+- Note split = UniqueID
+
+### Phase 분해 (8 phase, 7-12주 + 1일)
+- Phase 0 cleanup (DONE): ViewMode 통합 + store v112 + --v3-priority-* namespace
+- Phase 1 tokens (DONE): v3 token + alias + Source Serif 4 + _legacy/ scaffold
+- Phase 2 Imperial icons (PARTIAL): 모듈 작성 + activity-bar/plot-icons/split-pages migration. 잔존 phosphor `weight=` 5 files / 85+ occurrences.
+- Phase 3 Activity Bar / Sidebar reskin
+- Phase 4 Table mode reskin
+- Phase 5 4 view modes 신규 (Gallery/Studio/Editorial/Graph)
+- Phase 6 Filter popover + workspace chrome
+- Phase 7 QA + polish + cleanup (Plot 2.0 docs archive)
+
+### 보존 정책 (사용자 합의)
+- 22-slice store / hooks / TipTap extensions / routing 그대로
+- UI 컴포넌트는 `_legacy/` 폴더 통한 점진 교체 (한 번에 다 삭제 X)
+- CSS는 git history에 보존, alias 정책으로 backward compat
+
+### 핵심 문서
+- PRD: `docs/PLOT-V3-VISUAL-REFRESH-PRD.md` (v1.1 critic 검토 반영)
+- Phase plans: `.omc/plans/v3-phase-{0,1}-*.md`
+- Inventory: `.omc/plans/v3-phosphor-inventory.md`, `v3-tsc-errors-classified.md`, `v3-phase-1-cascade-map.md`
+
+### Critic 검토 결과 (NEEDS REVISION → revision 완료)
+- C1 priority namespace (해결: --v3-priority-*)
+- C2 ViewMode mismatch (해결: store v112)
+- C3 file count (해결: 인벤토리 실측 = 2 files)
+- C4-C5 NoteContent helper spec (해결: Phase 5 helper 4종)
+- C6 token alias 검증 (해결: cascade map)
+
+---
+
 ## 2026-05-03 — 대규모 디자인 토론 (Plot v3 방향)
 
 ### Plot 정체성 영구 정의

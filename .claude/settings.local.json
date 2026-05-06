@@ -172,7 +172,12 @@
       "Bash(awk '{print $5, $6, $7, $8}')",
       "Bash(awk '{print \"size:\", $5, \"mtime:\", $6, $7, $8}')",
       "Read(//c/Users/user/.claude/.omc-worklog/**)",
-      "Bash(cp ~/.claude/.omc-worklog/latest.md ~/.claude/.omc-worklog/2026-05-03_1610.md)"
+      "Bash(cp ~/.claude/.omc-worklog/latest.md ~/.claude/.omc-worklog/2026-05-03_1610.md)",
+      "Bash(mkdir -p \"/tmp/plot-v3-mockup\")",
+      "Bash(unzip -o \"C:/Users/user/Downloads/아이콘 키트.zip\" -d \"/tmp/plot-v3-mockup\")",
+      "Bash(cygpath -w /tmp/plot-v3-mockup)",
+      "Bash(echo \"TSC EXIT: $?\")",
+      "Bash(echo \"TSC: $?\")"
     ]
   }
 }

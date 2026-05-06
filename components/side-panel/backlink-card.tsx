@@ -61,10 +61,12 @@ export function BacklinkCard({
     >
       {/* Title row */}
       <div className="flex items-center gap-1.5">
+        {/* Icon may be Imperial (no weight prop) or Phosphor (weight prop).
+            We pass weight only when supported via spread to avoid TS narrowing
+            that conflicts with Imperial's `weight?: never` typing. */}
         <Icon
           className="shrink-0 text-muted-foreground/60"
           size={13}
-          weight="regular"
         />
         <span className="truncate text-note text-muted-foreground group-hover:text-foreground transition-colors">
           {source.sourceTitle || "Untitled"}

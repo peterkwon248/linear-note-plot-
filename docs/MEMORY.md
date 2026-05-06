@@ -28,6 +28,92 @@
 
 ---
 
+## 🚀 2026-05-07 (저녁) — Plot v3 Phase 2 부분 진행
+
+**범위**: Imperial icon kit 모듈 작성 + 일부 migration. 사용자 위임 거절로 부분 완료 상태에서 commit.
+
+### 완료
+- `components/icons/imperial.tsx` 신규 (Imperial 80+ icons, 1.5px stroke, currentColor, `weight: never` 의도적 typing — phosphor 잔존을 컴파일 에러로 surface)
+- `components/icons/imperial-extras.tsx` 신규 (Plot 도메인: WikiBook, OntologyWide, Bookshelf 등)
+- `components/activity-bar.tsx` — phosphor SSR (Graph/Books/BookOpen/SidebarSimple) → Imperial
+- `components/plot-icons.tsx` — `IconWiki = BookOpen` (phosphor) → `IconWiki = WikiBook` (Imperial)
+- `components/views/{note-split,wiki-merge,wiki-split}-page.tsx` — lucide → Imperial 일부
+- `components/side-panel/backlink-card.tsx` — `weight="regular"` 제거 (Imperial weight: never 충돌 fix)
+
+### 잔여 (다음 세션 0.5일)
+- 5+ files / 85+ occurrences `weight=` props 잔존 (calendar-view.tsx, display-panel.tsx, filter-bar.tsx, board-workbench.tsx, color-picker-grid.tsx 외)
+- lucide / iconoir / tabler / remixicon 잔존 사용처
+- imperial-extras.tsx의 Plot 도메인 icon SVG 정확성 검증
+
+### 검증
+- `tsc --noEmit`: 0 errors
+- `npm run build`: clean
+- `npm run test`: 185 pass (0 regression)
+
+---
+
+## 🚀 2026-05-07 — Plot v3 Phase 1 (token foundation) 완료
+
+**범위**: v3 design tokens 통합 + Q1-Q3, Q8 LOCKED 결정 적용 + Source Serif 4
+font + `_legacy/` 폴더 마련. Phase 0 위에서 진행.
+
+### 주요 결정 (LOCKED 적용)
+- **Q1 SPACE_COLORS = B**: Plot 유지 (notes=cyan, wiki=violet, calendar=pink 등). v3 mockup 값 적용 안 함.
+- **Q2 --accent = A (v3)**: light `#5E6AD2`, dark `#7C8AE7`. cascading 토큰 (`--ring`, `--sidebar-primary`, `--toolbar-active` 등) 모두 따라 변경.
+- **Q3 NOTE_STATUS_HEX = A (v3 desaturated)**: inbox `#6B7280`, capture `#D97706`, permanent `#0E9384`.
+- **Q8 Priority namespace = A**: `--v3-priority-{high,medium,low}` v3 mockup 값 채움 (`#DC6803`, `#5E6AD2`, `#98A2B3`). Plot `--priority-*` 5-tier 100% 보존.
+
+### 머지 예정 PRs (Phase 1)
+- **PR #NEW** Plot v3 Phase 1 — 6 commits:
+  - `chore(tokens): Token Cascade Map analysis (Phase 1.1)` — `.omc/plans/v3-phase-1-cascade-map.md`. v3 신규 토큰 grep 0 hits + Plot 기존 토큰 shadcn 의존 매핑.
+  - `feat(tokens): integrate v3 design tokens with alias policy (Phase 1.2)` — `app/globals.css` 3-Layer alias 정책 적용. v3 surface (`--bg`, `--fg`, `--soft-fg` 등) + space (Q1) + status (Q3) + priority (Q8) + typography + radii + motion + shadow. Plot 기존 토큰 100% 보존. `@theme inline`에 v3 토큰 노출.
+  - `feat(colors): add v3 color aliases, apply Q3 desaturated status (Phase 1.3)` — `lib/colors.ts` NOTE_STATUS_HEX 변경 + 신규 export `TEXT_HIERARCHY`/`MOTION`/`RADIUS`.
+  - `feat(fonts): add Source Serif 4, verify Geist (Phase 1.4)` — next/font 추가. self-reference 회피 위해 `--font-source-serif` → `@theme inline`에서 `--font-serif`로 alias.
+  - `chore(_legacy): scaffold _legacy folder + import policy (Phase 1.7)` — `components/_legacy/` + README.md 4 정책.
+  - `docs(plot-v3): Phase 1 token migration complete` — CONTEXT/MEMORY 업데이트.
+
+### Token alias 정책 (3-Layer)
+```
+Layer 1: v3 names    (--bg, --fg, --soft-fg, --bg-elev, --space-*, --v3-priority-*)
+                     ↓ same hex
+Layer 2: Plot names  (--background, --foreground, --muted-foreground, --card, --priority-*)
+                     ↓ expose
+Layer 3: Tailwind    (@theme inline → --color-background, --color-fg-soft, etc.)
+```
+
+### 검증 결과
+- `tsc --noEmit`: 0 errors
+- `npm run build`: clean (33 routes prerendered)
+- `npm run test`: 185 tests passed (0 regression)
+- shadcn/ui Tailwind cascade: 정상 (40+ ui/* 컴포넌트 의존하는 Plot 기존 토큰 모두 보존)
+
+### 다음
+Phase 2 (Imperial icons codemod, ~0.5일 예상) — 121 phosphor import 사이트
+변환. `_legacy/` 폴더 본격 사용 시작점.
+
+---
+
+## 🚀 2026-05-07 — Plot v3 PRD 작성 + Phase 0 cleanup
+
+**범위**: Plot 2.0 → v3 visual refresh 리브랜드. Critic 발견 2가지 사전 정리 (C1 priority namespace / C2 ViewMode mismatch). Store v112.
+
+### 주요 결정 (영구)
+- **Plot 2.0 폐기, v3 visual refresh 채택**: `docs/PLOT-V3-VISUAL-REFRESH-PRD.md` — Notion/Linear 하이브리드 에디터 방향 + 토큰 시스템 전면 교체
+- 앞 세션 11가지 결정 (7-space, Type rename 등)은 v3 PRD에 통합
+
+### 머지 예정 PRs (#NEW — Phase 0 cleanup)
+- **PR #NEW** v112 — Plot v3 Phase 0 cleanup.
+  - `lib/types.ts`: SavedView.viewState.viewMode `"table"` 제거 + `"grid"` 추가 (view-engine ViewMode exact match, @migrated v112 JSDoc)
+  - `lib/view-engine/defaults.ts`: normalizeViewState에 legacy `"table"` → `"list"` rawViewMode 매핑 helper
+  - `lib/store/migrate.ts` + `lib/store/index.ts`: v112 마이그레이션 (savedViews viewMode `"table"` → `"list"`, idempotent)
+  - `app/globals.css`: `--v3-priority-{high,medium,low}: unset` 선언 자리 마련 (`:root` + `.dark`, 값은 Phase 1)
+  - tsc 0 errors / 185 tests pass / build clean
+
+### Store version 진화 (이번 세션)
+v111 (labels-list) → **v112** (SavedView viewMode "table"→"list" + --v3-priority-* namespace)
+
+---
+
 ## 🚀 2026-05-05 — Group C PR-D 시리즈 진행 + UI hotfix + Plot 2.0 PRD 시작
 
 **범위**: PR #261 (Tags) merged, PR #262 (Labels) created. UI hotfix 8개. **Plot 2.0 진화 PRD Phase A 완료 + 핵심 결정 11가지 확정**.
@@ -1626,6 +1712,12 @@ notes, workflow, folders, tags, labels, thread, maps, relations, ui, autopilot, 
 - **표류 종결** — 2026-03-30 PIVOT #1 (IKEA 전략) → 2026-04-01 ROLLBACK #2 (노션식 폐기) → 2026-04-14 FINAL (분리 유지 + 위키 디자인 강화). 향후 엔티티 통합 제안 금지.
 
 ## Completed PRs (recent)
+- **PR #NEW (2026-05-07)**: Plot v3 Phase 0 cleanup (store v112)
+  - `lib/types.ts`: SavedView.viewState.viewMode `"table"` → `"grid"` 교체 (view-engine ViewMode exact match)
+  - `lib/view-engine/defaults.ts`: normalizeViewState legacy `"table"` → `"list"` rawViewMode helper
+  - `lib/store/migrate.ts` / `lib/store/index.ts`: v112 idempotent migration
+  - `app/globals.css`: `--v3-priority-{high,medium,low}: unset` `:root` + `.dark` 선언
+
 - **PR #215 (2026-04-23)**: Wiki visual polish + Ontology rename + IDB fix
   - Graph → Ontology rename (editor-breadcrumb, linear-sidebar, view-header, secondary-panel-content, ontology-view)
   - Encyclopedia TOC: dark-only `white/XX` → design tokens (border-border-subtle / bg-secondary/20 / text-foreground/80)

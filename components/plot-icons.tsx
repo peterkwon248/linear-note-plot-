@@ -54,21 +54,19 @@ export function IconNotes({ size = 20, ...props }: IconProps) {
 }
 
 /**
- * Wiki ENTITY icon — alias for Phosphor `BookOpen`.
+ * Wiki ENTITY icon — Imperial `WikiBook`.
  *
- * Single source of truth: the wiki entity icon is `BookOpen` across the
- * entire app (activity bar, sidebar Overview, ViewHeader, sidepanel
- * connections, mention/wikilink picker "create wiki" rows, etc.). This
- * legacy alias keeps existing call sites compiling without per-file edits;
- * new code should import `BookOpen` directly from @phosphor-icons/react.
+ * Single source of truth: the wiki entity icon used across the entire app
+ * (activity bar, sidebar Overview, ViewHeader, sidepanel connections,
+ * mention/wikilink picker "create wiki" rows, etc.).
  *
  * For wiki STATUS icons (stub vs article), use `IconWikiStub` /
  * `IconWikiArticle` below — those are dedicated, visually distinct
  * silhouettes that mark publication state, not entity identity.
  *
- * @deprecated Use Phosphor `BookOpen` directly. See audit 2026-05-03.
+ * Migrated from Phosphor `BookOpen` to Imperial `WikiBook` (Phase 2.2).
  */
-export { BookOpen as IconWiki } from "@phosphor-icons/react/dist/ssr/BookOpen"
+export { WikiBook as IconWiki } from "@/components/icons/imperial-extras"
 
 export function IconOntology({ size = 20, ...props }: IconProps) {
   return (

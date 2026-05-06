@@ -1,5 +1,50 @@
 # Technical Learnings
 
+## 2026-05-07 — Plot v3 visual refresh (Phase 0+1)
+
+### Inventory vs critic estimate 16배 차이
+- Critic이 PRD에서 phosphor 사용 121-128 files 추정. 실제 인벤토리 = **2 files / 4 icons**.
+- estimate 신뢰성보다 실측 우선. PRD scope 정정 (Phase 2 1-2주 → 0.5일).
+
+### Imperial `weight: never` 패턴
+- `interface IconProps { weight?: never; ... }` — phosphor 잔존을 컴파일 타임에 surface시키는 의도적 typing.
+- backlink-card.tsx의 `weight="regular"`가 즉시 TS error로 발견됨.
+- 이행 작업의 자동 감지 메커니즘 (회귀 방지).
+
+### Source Serif 4 self-reference 회피
+- `next/font` 변수명이 `--font-serif`이면 `@theme inline { --font-serif: var(--font-serif), ... }` 무한 루프.
+- 해결: next/font 변수명을 `--font-source-serif`로 분리 → `@theme inline`에서 `--font-serif`로 alias.
+
+### Token alias 3-Layer
+- Layer 1: v3 names (`--bg`, `--fg`, `--soft-fg`)
+- Layer 2: Plot names (`--background`, `--foreground`, `--muted-foreground`)
+- Layer 3: Tailwind (`@theme inline { --color-* }`)
+- 각 layer 동일 hex. shadcn/ui cascade 보존.
+
+### --accent cascading
+- `--accent` 변경 시 자동 cascade: `--ring`, `--sidebar-primary`, `--sidebar-ring`, `--toolbar-active` (alpha rgba).
+- shadcn cascade 영향 0 (Plot 기존 토큰 보존).
+
+### Store v112 idempotent migration
+- `viewMode === "table"` → `"list"` 변환. `Array.isArray(state.savedViews)` 가드 + 두 번 실행해도 안전.
+- ViewMode union의 single source of truth = view-engine `ViewMode` (`SavedView`는 alias).
+
+### Next.js 16 vs strict tsc 차이
+- `npm run build` exit 0이라도 `tsc --noEmit` 1 error 가능.
+- Next.js prerender는 type 에러 일부 lenient. 둘 다 검증 필수.
+
+### `_legacy/` 4 정책 (점진 교체)
+1. Codemod 변환 대상 제외 (glob: `!components/_legacy/**`)
+2. 새 작업 시 `_legacy/` 파일 import 금지
+3. Deprecation 주석 의무 (`// @deprecated — moved to _legacy on YYYY-MM-DD`)
+4. 사용처 0 확인 후 다음 quarter 시작 시 archive/삭제
+
+### Sub-agent 위임 거절 후 disk 상태
+- 사용자가 위임 거절해도 sub-agent가 이미 시작한 작업은 disk에 남음.
+- after-work에서 명확히 보고 + 사용자 결정 받기 권장 (revert vs commit vs partial).
+
+---
+
 ## 2026-05-03
 
 ### SVG pointer-events 함정

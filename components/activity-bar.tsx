@@ -21,10 +21,8 @@ import {
   IconSun,
   IconMoon,
 } from "@/components/plot-icons"
-import { Graph } from "@phosphor-icons/react/dist/ssr/Graph"
-import { Books } from "@phosphor-icons/react/dist/ssr/Books"
-import { BookOpen } from "@phosphor-icons/react/dist/ssr/BookOpen"
-import { SidebarSimple } from "@phosphor-icons/react/dist/ssr/SidebarSimple"
+import { Sidebar } from "@/components/icons/imperial"
+import { WikiBook, OntologyWide, Bookshelf } from "@/components/icons/imperial-extras"
 import { useSettingsStore } from "@/lib/settings-store"
 import { SPACE_COLORS } from "@/lib/colors"
 
@@ -38,10 +36,10 @@ const SPACES: {
 }[] = [
   { id: "home",     label: "Home",     icon: IconHome,     shortcut: "G then H" },
   { id: "notes",    label: "Notes",    icon: IconNotes,    shortcut: "G then N" },
-  { id: "wiki",     label: "Wiki",     icon: (props) => <BookOpen {...props} weight="regular" />, shortcut: "" },
-  { id: "calendar", label: "Calendar", icon: IconCalendar, shortcut: "" },
-  { id: "ontology", label: "Ontology",  icon: Graph,        shortcut: "" },
-  { id: "library",  label: "Library",  icon: (props) => <Books {...props} weight="regular" />, shortcut: "" },
+  { id: "wiki",     label: "Wiki",     icon: WikiBook,       shortcut: "" },
+  { id: "calendar", label: "Calendar", icon: IconCalendar,  shortcut: "" },
+  { id: "ontology", label: "Ontology", icon: OntologyWide,  shortcut: "" },
+  { id: "library",  label: "Library",  icon: Bookshelf,     shortcut: "" },
 ]
 
 /* ── Component ──────────────────────────────────────── */
@@ -92,7 +90,7 @@ export function ActivityBar() {
                 className="flex h-9 w-9 items-center justify-center rounded-lg text-foreground/85 dark:text-foreground/70 transition-colors hover:bg-hover-bg hover:text-foreground"
                 aria-label="Open sidebar"
               >
-                <SidebarSimple size={20} />
+                <Sidebar size={20} />
               </button>
             </TooltipTrigger>
             <TooltipContent side="right" className="text-2xs">Open sidebar</TooltipContent>

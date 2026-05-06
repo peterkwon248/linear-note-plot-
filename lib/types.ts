@@ -315,7 +315,8 @@ export interface SavedView {
   color: string
   space: "inbox" | "notes" | "wiki" | "calendar" | "ontology" | "all"
   viewState: {
-    viewMode: "list" | "table" | "board" | "insights" | "calendar" | "graph" | "dashboard"
+    /** @migrated v112 — legacy "table" mapped to "list" */
+    viewMode: "list" | "board" | "grid" | "insights" | "calendar" | "graph" | "dashboard"
     sortField: string
     sortDirection: "asc" | "desc"
     groupBy: string

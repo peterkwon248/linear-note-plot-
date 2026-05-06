@@ -8,14 +8,14 @@ import { cn } from "@/lib/utils"
 import { toast } from "sonner"
 import {
   Scissors,
-  X,
+  Close as X,
   GripVertical,
   ChevronRight,
   ArrowRight,
   ArrowLeft,
   Check,
   Layers,
-} from "lucide-react"
+} from "@/components/icons/imperial"
 
 /* ──────────────────────────────────────────────────────────
  * Types — top-level TipTap node we handle.

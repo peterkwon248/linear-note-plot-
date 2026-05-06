@@ -1682,5 +1682,21 @@ export function migrate(persistedState: unknown): PlotState {
     }
   }
 
+  // v112: SavedView.viewMode legacy "table" → "list"
+  // Critic finding C2: align SavedView with view-engine ViewMode
+  if (state.savedViews && Array.isArray(state.savedViews)) {
+    state.savedViews = (state.savedViews as Record<string, unknown>[]).map((v) => {
+      const viewState = v.viewState as Record<string, unknown> | undefined
+      if (viewState && (viewState.viewMode as string) === "table") {
+        return {
+          ...v,
+          viewState: { ...viewState, viewMode: "list" },
+          updatedAt: v.updatedAt ?? new Date().toISOString(),
+        }
+      }
+      return v
+    })
+  }
+
   return state as unknown as PlotState
 }
