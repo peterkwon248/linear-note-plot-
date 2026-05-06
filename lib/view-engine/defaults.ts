@@ -133,8 +133,12 @@ export function normalizeViewState(raw: Partial<ViewState>, ctx: ViewContextKey)
     sortFields = [{ field, direction }]
   }
 
+  // Legacy mapping: pre-v112 saved views may have viewMode === "table"
+  // (was a synonym for "list"). Normalize before VALID_VIEW_MODES check.
+  const rawViewMode = (merged.viewMode as string) === "table" ? "list" : merged.viewMode
+
   return {
-    viewMode: VALID_VIEW_MODES.includes(merged.viewMode) ? merged.viewMode : base.viewMode,
+    viewMode: VALID_VIEW_MODES.includes(rawViewMode) ? rawViewMode : base.viewMode,
     sortFields,
     sortField: sortFields[0].field,
     sortDirection: sortFields[0].direction,
