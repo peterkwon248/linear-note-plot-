@@ -6,7 +6,7 @@
 사용자가 Claude 디자인과 작업한 v3 mockup이 Plot의 새 단일 비전. Plot 2.0 PRD (Phase A 완료, 11가지 결정 LOCKED) 폐기.
 
 ### v3 mockup
-- 위치: `C:\Users\user\AppData\Local\Temp\plot-v3-mockup\`
+- 위치: `docs/v3-mockup/`
 - Imperial icon kit (1.5px stroke, 24 viewBox, currentColor)
 - 5 view modes: Table / Gallery / Studio / Editorial / Graph
 - 7-space (home/notes/wiki/calendar/ontology/library/books)

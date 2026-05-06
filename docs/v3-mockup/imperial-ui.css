@@ -1,0 +1,203 @@
+/* =============================================================================
+   Imperial UI — single-file CSS bundle
+   Color picker styles. Icons are pure SVG with currentColor — no CSS needed.
+   ============================================================================= */
+
+/* ============================================================
+   Imperial Color Picker — standalone CSS
+   Works in any host app. Override the --cp-* tokens to theme it.
+   ============================================================ */
+
+.cp-root {
+  /* Self-contained tokens — host app can override any of these */
+  --cp-bg: var(--cp-bg-host, #fff);
+  --cp-fg: var(--cp-fg-host, #1a1a1a);
+  --cp-muted: var(--cp-muted-host, #6b7280);
+  --cp-border: var(--cp-border-host, rgba(0,0,0,.12));
+  --cp-border-subtle: var(--cp-border-subtle-host, rgba(0,0,0,.06));
+  --cp-hover: var(--cp-hover-host, rgba(0,0,0,.04));
+  --cp-accent: var(--cp-accent-host, #3b82f6);
+  --cp-mono: var(--cp-mono-host, ui-monospace, "SF Mono", Menlo, monospace);
+  --cp-radius: var(--cp-radius-host, 8px);
+
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 240px;
+  color: var(--cp-fg);
+  font-family: var(--cp-font-host, system-ui, -apple-system, sans-serif);
+}
+
+/* Dark mode auto-detection */
+@media (prefers-color-scheme: dark) {
+  .cp-root:not([data-cp-theme]) {
+    --cp-bg: var(--cp-bg-host, #1a1a1a);
+    --cp-fg: var(--cp-fg-host, #f5f5f5);
+    --cp-muted: var(--cp-muted-host, #9ca3af);
+    --cp-border: var(--cp-border-host, rgba(255,255,255,.14));
+    --cp-border-subtle: var(--cp-border-subtle-host, rgba(255,255,255,.08));
+    --cp-hover: var(--cp-hover-host, rgba(255,255,255,.06));
+  }
+}
+.cp-root[data-cp-theme="dark"] {
+  --cp-bg: var(--cp-bg-host, #1a1a1a);
+  --cp-fg: var(--cp-fg-host, #f5f5f5);
+  --cp-muted: var(--cp-muted-host, #9ca3af);
+  --cp-border: var(--cp-border-host, rgba(255,255,255,.14));
+  --cp-border-subtle: var(--cp-border-subtle-host, rgba(255,255,255,.08));
+  --cp-hover: var(--cp-hover-host, rgba(255,255,255,.06));
+}
+
+.cp-sv {
+  position: relative;
+  width: 240px;
+  height: 160px;
+  border-radius: var(--cp-radius);
+  overflow: hidden;
+  cursor: crosshair;
+  border: 1px solid var(--cp-border-subtle);
+}
+.cp-sv canvas { display: block; width: 240px; height: 160px; }
+.cp-sv-dot {
+  position: absolute;
+  width: 12px; height: 12px;
+  border: 2px solid #fff;
+  border-radius: 50%;
+  transform: translate(-6px, -6px);
+  box-shadow: 0 0 0 1px rgba(0,0,0,.5), inset 0 0 0 1px rgba(0,0,0,.3);
+  pointer-events: none;
+}
+.cp-hue, .cp-alpha {
+  position: relative;
+  width: 240px;
+  height: 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  border: 1px solid var(--cp-border-subtle);
+}
+.cp-hue {
+  background: linear-gradient(to right, #ff0000 0%, #ffff00 16.7%, #00ff00 33.3%, #00ffff 50%, #0000ff 66.7%, #ff00ff 83.3%, #ff0000 100%);
+}
+.cp-alpha-checker, .cp-swatch-checker {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background-image:
+    linear-gradient(45deg, #888 25%, transparent 25%),
+    linear-gradient(-45deg, #888 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, #888 75%),
+    linear-gradient(-45deg, transparent 75%, #888 75%);
+  background-size: 8px 8px;
+  background-position: 0 0, 0 4px, 4px -4px, -4px 0;
+  opacity: .35;
+}
+.cp-alpha-grad { position: absolute; inset: 0; border-radius: inherit; }
+.cp-hue-thumb, .cp-alpha-thumb {
+  position: absolute;
+  top: 50%;
+  width: 12px; height: 16px;
+  background: #fff;
+  border-radius: 3px;
+  transform: translate(-6px, -50%);
+  box-shadow: 0 0 0 1px rgba(0,0,0,.5);
+  pointer-events: none;
+}
+.cp-row { display: flex; align-items: center; gap: 6px; }
+.cp-swatch-wrap {
+  position: relative;
+  width: 32px; height: 32px;
+  border-radius: 6px;
+  overflow: hidden;
+  border: 1px solid var(--cp-border-subtle);
+  flex-shrink: 0;
+}
+.cp-swatch { position: absolute; inset: 0; }
+.cp-eyedrop {
+  width: 28px; height: 28px;
+  border: 1px solid var(--cp-border);
+  background: var(--cp-bg);
+  color: var(--cp-fg);
+  border-radius: 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+.cp-eyedrop:hover { background: var(--cp-hover); }
+.cp-hex {
+  flex: 1;
+  background: var(--cp-bg);
+  border: 1px solid var(--cp-border);
+  color: var(--cp-fg);
+  font-family: var(--cp-mono);
+  font-size: 12px;
+  padding: 6px 8px;
+  border-radius: 6px;
+  text-transform: uppercase;
+  outline: none;
+}
+.cp-hex:focus { border-color: var(--cp-accent); }
+.cp-row-rgb {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+}
+.cp-row-rgb label {
+  display: flex;
+  flex-direction: column;
+  font-size: 10px;
+  color: var(--cp-muted);
+  text-transform: uppercase;
+  gap: 2px;
+}
+.cp-row-rgb input {
+  background: var(--cp-bg);
+  border: 1px solid var(--cp-border);
+  color: var(--cp-fg);
+  font-family: var(--cp-mono);
+  font-size: 11px;
+  padding: 4px 6px;
+  border-radius: 4px;
+  outline: none;
+  width: 100%;
+}
+.cp-row-rgb input:focus { border-color: var(--cp-accent); }
+.cp-section { display: flex; flex-direction: column; gap: 6px; }
+.cp-section-label {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  color: var(--cp-muted);
+  font-weight: 600;
+}
+.cp-recent {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  gap: 4px;
+}
+.cp-recent-chip {
+  width: 100%;
+  aspect-ratio: 1;
+  border: 1px solid var(--cp-border-subtle);
+  border-radius: 3px;
+  cursor: pointer;
+  padding: 0;
+  transition: transform .1s;
+}
+.cp-recent-chip:hover { transform: scale(1.15); border-color: var(--cp-fg); }
+.cp-presets { display: flex; flex-direction: column; gap: 2px; }
+.cp-preset-row {
+  display: grid;
+  grid-template-columns: repeat(9, 1fr);
+  gap: 2px;
+}
+.cp-preset-chip {
+  width: 100%;
+  aspect-ratio: 1;
+  border: none;
+  border-radius: 2px;
+  cursor: pointer;
+  padding: 0;
+  transition: transform .1s;
+}
+.cp-preset-chip:hover { transform: scale(1.2); z-index: 1; position: relative; box-shadow: 0 0 0 1px var(--cp-fg); }

@@ -4,7 +4,7 @@
 
 ### 영구 결정 (2026-05-07)
 - **Plot 2.0 PRD 폐기 → v3 mockup 채택**: 사용자가 Claude 디자인과 작업한 v3 mockup이 새 단일 비전.
-- mockup 위치: `C:\Users\user\AppData\Local\Temp\plot-v3-mockup\`
+- mockup 위치: `docs/v3-mockup/`
 - PRD: `docs/PLOT-V3-VISUAL-REFRESH-PRD.md` (v1.1, critic 검토 반영)
 - 8 phase 분해 (Phase 0 cleanup + 1-7 main), 7-12주 + 1일
 
@@ -57,7 +57,7 @@
 
 ## Quick References
 
-- v3 mockup: `C:\Users\user\AppData\Local\Temp\plot-v3-mockup\`
+- v3 mockup: `docs/v3-mockup/`
 - PRD: `docs/PLOT-V3-VISUAL-REFRESH-PRD.md`
 - Plans: `.omc/plans/v3-phase-{0,1}-*.md`, `v3-phosphor-inventory.md`, `v3-tsc-errors-classified.md`
 - Imperial 모듈: `components/icons/imperial.tsx`, `imperial-extras.tsx`

@@ -177,7 +177,10 @@
       "Bash(unzip -o \"C:/Users/user/Downloads/아이콘 키트.zip\" -d \"/tmp/plot-v3-mockup\")",
       "Bash(cygpath -w /tmp/plot-v3-mockup)",
       "Bash(echo \"TSC EXIT: $?\")",
-      "Bash(echo \"TSC: $?\")"
+      "Bash(echo \"TSC: $?\")",
+      "Bash(grep -l \"C:.\\\\\\\\\\\\\\\\Users.\\\\\\\\\\\\\\\\user.\\\\\\\\\\\\\\\\AppData.\\\\\\\\\\\\\\\\Local.\\\\\\\\\\\\\\\\Temp\" docs/PLOT-V3-VISUAL-REFRESH-PRD.md .omc/plans/v3-*.md)",
+      "Bash(cp .omc/worklog/latest.md \"C:\\\\Users\\\\user\\\\.claude\\\\.omc-worklog\\\\latest.md\")",
+      "Bash(cp .omc/worklog/latest.md \"C:\\\\Users\\\\user\\\\.claude\\\\.omc-worklog\\\\2026-05-07_0757.md\")"
     ]
   }
 }

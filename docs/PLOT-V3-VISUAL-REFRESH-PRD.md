@@ -3,7 +3,7 @@
 > **Status**: Draft v1.1 (2026-05-07, critic-revised)
 > **Author**: Prometheus (planner) + 사용자
 > **Replaces**: Plot 2.0 PRD (Phase A — 11가지 결정 LOCKED) → 폐기. v3 mockup이 새 단일 비전.
-> **Mockup source**: `C:\Users\user\AppData\Local\Temp\plot-v3-mockup\` (Claude 디자인과 공동 작업)
+> **Mockup source**: `docs/v3-mockup/` (Claude 디자인과 공동 작업)
 
 ---
 
