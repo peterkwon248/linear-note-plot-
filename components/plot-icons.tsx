@@ -12,7 +12,7 @@
 import { type SVGProps } from "react"
 import { Hexagon } from "@phosphor-icons/react/dist/ssr/Hexagon"
 import { Cube } from "@phosphor-icons/react/dist/ssr/Cube"
-import { SquaresFour } from "@phosphor-icons/react/dist/ssr/SquaresFour"
+import { CubeFocus } from "@phosphor-icons/react/dist/ssr/CubeFocus"
 
 type IconProps = SVGProps<SVGSVGElement> & { size?: number }
 
@@ -190,15 +190,17 @@ export function IconBrick({ size = 20, ...rest }: IconProps) {
 }
 
 /**
- * Keystone — phosphor `SquaresFour` (regular weight).
+ * Keystone — phosphor `CubeFocus` (regular weight).
  *
- * Phosphor doesn't ship a `CubesFour` (which is what fit the metaphor
- * cleanest — 4 isometric cubes); `SquaresFour` is the closest 2×2
- * arrangement available. Reads as "many units assembled" even if it's
- * flat 2D rather than 3D like Cube.
+ * Same isometric Cube as Brick but with corner focus brackets — reads
+ * as "the Cube, specialized/anchored." Direct sequential evolution from
+ * Brick rather than a different category.
+ *
+ * Hexagon (raw 2D crystal) → Cube (single 3D unit) → CubeFocus
+ * (specialized/anchored Cube — the keystone).
  */
 export function IconKeystone({ size = 20, ...rest }: IconProps) {
-  return <SquaresFour size={size} weight="regular" {...rest} />
+  return <CubeFocus size={size} weight="regular" {...rest} />
 }
 
 export function IconPin({ size = 14, ...props }: IconProps) {
