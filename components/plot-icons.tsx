@@ -189,14 +189,15 @@ export function IconBrick({ size = 20, ...rest }: IconProps) {
 }
 
 /**
- * Keystone — 3-cube pyramid (1 top + 2 bottom).
+ * Keystone — 2 isometric cubes stacked vertically.
  *
- * Hexagon (raw mineral) → Cube (single processed unit) → 3 cubes assembled
- * into a small structure with the top cube occupying the keystone position.
- * Reads as "brick has evolved into a built structure."
+ * Hexagon (raw 2D crystal) → Cube (single 3D unit) → 2 stacked Cubes
+ * (3D structure built from units). Each cube uses the same hex-silhouette
+ * + Y-internal-edges isometric language as phosphor Cube, so the keystone
+ * preserves the 3D depth feel its neighbor has at 20px instead of falling
+ * back to a flat 2D shape.
  *
- * Stroke ratio matches phosphor regular (1.5/24 = 6.25%) so it sits
- * visually coherent next to Hexagon and Cube at 20px.
+ * Stroke ratio (1.5/24 = 6.25%) matches phosphor regular.
  */
 export function IconKeystone({ size = 20, ...rest }: IconProps) {
   return (
@@ -211,12 +212,12 @@ export function IconKeystone({ size = 20, ...rest }: IconProps) {
       strokeLinejoin="round"
       {...rest}
     >
-      {/* Top cube — keystone position */}
-      <rect x="7.5" y="3" width="9" height="9" />
-      {/* Bottom-left supporting cube */}
-      <rect x="3" y="14" width="9" height="9" />
-      {/* Bottom-right supporting cube */}
-      <rect x="12" y="14" width="9" height="9" />
+      {/* Top cube — hex silhouette + 3-edge Y for the front-corner */}
+      <path d="M 12 1 L 17 3 L 17 9 L 12 11 L 7 9 L 7 3 Z" />
+      <path d="M 12 6 L 12 1 M 12 6 L 17 9 M 12 6 L 7 9" />
+      {/* Bottom cube — same shape, stacked under with a small gap */}
+      <path d="M 12 13 L 17 15 L 17 21 L 12 23 L 7 21 L 7 15 Z" />
+      <path d="M 12 18 L 12 13 M 12 18 L 17 21 M 12 18 L 7 21" />
     </svg>
   )
 }
