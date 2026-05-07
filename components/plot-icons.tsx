@@ -12,7 +12,6 @@
 import { type SVGProps } from "react"
 import { Hexagon } from "@phosphor-icons/react/dist/ssr/Hexagon"
 import { Cube } from "@phosphor-icons/react/dist/ssr/Cube"
-import { Diamond } from "@phosphor-icons/react/dist/ssr/Diamond"
 
 type IconProps = SVGProps<SVGSVGElement> & { size?: number }
 
@@ -190,11 +189,28 @@ export function IconBrick({ size = 20, ...rest }: IconProps) {
 }
 
 /**
- * Keystone — phosphor `Diamond` (regular weight). Faceted gem with a top
- * apex evokes the architectural keystone (anchor at the top of an arch).
+ * Keystone — custom architectural keystone wedge (trapezoid wider at top).
+ *
+ * Hexagon (raw mineral) → Cube (processed unit) → Keystone (specialized
+ * brick at the apex of an arch). Stroke ratio matches phosphor regular
+ * (1.5/24 = 6.25%) so it sits cleanly next to Hexagon and Cube at 20px.
  */
 export function IconKeystone({ size = 20, ...rest }: IconProps) {
-  return <Diamond size={size} weight="regular" {...rest} />
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={1.5}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      {...rest}
+    >
+      <path d="M 4 4 L 20 4 L 17 20 L 7 20 Z" />
+    </svg>
+  )
 }
 
 export function IconPin({ size = 14, ...props }: IconProps) {
