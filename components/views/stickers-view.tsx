@@ -7,6 +7,10 @@ import {
   ContextMenuContent,
   ContextMenuItem,
   ContextMenuTrigger,
+  ContextMenuSub,
+  ContextMenuSubTrigger,
+  ContextMenuSubContent,
+  ContextMenuSeparator,
 } from "@/components/ui/context-menu"
 import { ArrowLeft } from "@phosphor-icons/react/dist/ssr/ArrowLeft"
 import { ArrowUp } from "@phosphor-icons/react/dist/ssr/ArrowUp"
@@ -18,7 +22,6 @@ import { X as PhX } from "@phosphor-icons/react/dist/ssr/X"
 import { Lightning } from "@phosphor-icons/react/dist/ssr/Lightning"
 import { Check as PhCheck } from "@phosphor-icons/react/dist/ssr/Check"
 import { Minus } from "@phosphor-icons/react/dist/ssr/Minus"
-import { EyeSlash } from "@phosphor-icons/react/dist/ssr/EyeSlash"
 import { Sticker as StickerIcon } from "@phosphor-icons/react/dist/ssr/Sticker"
 import { BookOpen } from "@phosphor-icons/react/dist/ssr/BookOpen"
 import { Note as PhNote } from "@phosphor-icons/react/dist/ssr/Note"
@@ -28,6 +31,10 @@ import { ColorPickerGrid } from "@/components/color-picker-grid"
 import { PRESET_COLORS } from "@/lib/colors"
 import type { Sticker } from "@/lib/types"
 import { ViewHeader } from "@/components/view-header"
+import { DisplayPanel } from "@/components/display-panel"
+import { useStickersView } from "@/lib/view-engine/use-stickers-view"
+import { STICKERS_LIST_VIEW_CONFIG } from "@/lib/view-engine/view-configs"
+import { StickerMemberCountChip } from "@/components/property-chips"
 import { navigateToWikiArticle } from "@/lib/wiki-article-nav"
 import { setActiveRoute } from "@/lib/table-route"
 
@@ -44,10 +51,21 @@ export function StickersView() {
   const updateSticker = usePlotStore((s) => s.updateSticker)
   const openNote = usePlotStore((s) => s.openNote)
 
-  // Search state
-  const [search, setSearch] = useState("")
+  // View-engine integration (PR group-c-d-3): viewState (sort, viewMode,
+  // visibleColumns) is persisted via the unified pipeline. Search uses
+  // the global `searchQuery` slice. Local sortBy/hideEmpty state was removed.
+  const {
+    flatStickers,
+    flatCount,
+    totalCount,
+    viewState,
+    updateViewState,
+  } = useStickersView()
+  const isGridMode = viewState.viewMode === "grid"
+  const sortField = viewState.sortFields[0]?.field ?? "name"
+  const sortDirection = viewState.sortFields[0]?.direction ?? "asc"
 
-  // View state
+  // UI-only local state (not in viewState)
   const [selectedStickerId, setSelectedStickerId] = useState<string | null>(null)
   const [creating, setCreating] = useState(false)
   const [newName, setNewName] = useState("")
@@ -57,8 +75,6 @@ export function StickersView() {
   const [editColor, setEditColor] = useState("")
   const nameInputRef = useRef<HTMLInputElement>(null)
   const editInputRef = useRef<HTMLInputElement>(null)
-  const [stickerSortBy, setStickerSortBy] = useState<"name-asc" | "name-desc" | "count-desc" | "count-asc">("name-asc")
-  const [hideEmptyStickers, setHideEmptyStickers] = useState(false)
   const [colorPickerOpenId, setColorPickerOpenId] = useState<string | null>(null)
   const [contextMenuStickerId, setContextMenuStickerId] = useState<string | null>(null)
   const clickTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -70,45 +86,29 @@ export function StickersView() {
   const dragStartRef = useRef<{ x: number; y: number; scrollTop: number } | null>(null)
   const isDraggingRef = useRef(false)
   const scrollContainerRef = useRef<HTMLDivElement>(null)
-  const stickersRef = useRef<typeof stickers>(stickers)
+  const stickersRef = useRef<typeof flatStickers>(flatStickers)
 
-  // Active notes and wiki articles
+  // Notes/wiki active sets — used by detail mode for membership filtering
+  // (the hook handles the count derivation in flatStickers.memberCount).
   const activeNotes = useMemo(() =>
     notes.filter((n) => !n.trashed),
     [notes]
   )
-  const activeWiki = useMemo(() =>
-    wikiArticles,
-    [wikiArticles]
-  )
+  const activeWiki = wikiArticles
 
-  // Lookup maps for active-entity check during count.
-  // Sticker.members may still reference trashed notes (we don't auto-cleanup),
-  // so filter them out at read time to match the prior behavior.
-  const activeNoteIds = useMemo(() => new Set(activeNotes.map((n) => n.id)), [activeNotes])
-  const activeWikiIds = useMemo(() => new Set(activeWiki.map((w) => w.id)), [activeWiki])
-
-  // Sticker counts (notes + wikis combined; future kinds will fall through).
-  // Reads from Sticker.members[] (옵션 D2). Each ref kind decides its own
-  // active-entity test; unknown kinds count as-is for forward compatibility.
-  const stickerCounts = useMemo(() => {
-    const counts: Record<string, number> = {}
-    for (const sticker of stickers) {
-      let count = 0
-      for (const ref of sticker.members ?? []) {
-        if (ref.kind === "note") {
-          if (activeNoteIds.has(ref.id)) count++
-        } else if (ref.kind === "wiki") {
-          if (activeWikiIds.has(ref.id)) count++
-        } else {
-          // tag / label / category / file / reference — no active check yet
-          count++
-        }
-      }
-      counts[sticker.id] = count
+  // Sort handler — toggles direction when same field, otherwise switches field.
+  const handleSortToggle = useCallback((field: "name" | "memberCount") => {
+    const currentField = viewState.sortFields[0]?.field
+    const currentDir = viewState.sortFields[0]?.direction
+    let nextDir: "asc" | "desc"
+    if (currentField === field) {
+      nextDir = currentDir === "asc" ? "desc" : "asc"
+    } else {
+      // Different field: name → asc default, memberCount → desc default.
+      nextDir = field === "name" ? "asc" : "desc"
     }
-    return counts
-  }, [stickers, activeNoteIds, activeWikiIds])
+    updateViewState({ sortFields: [{ field, direction: nextDir }] })
+  }, [viewState.sortFields, updateViewState])
 
   // Notes attached to the currently selected sticker (active only).
   const selectedStickerNotes = useMemo(() => {
@@ -141,28 +141,11 @@ export function StickersView() {
 
   const selectedStickerCount = useMemo(() => {
     if (!selectedStickerId) return 0
-    return stickerCounts[selectedStickerId] ?? 0
-  }, [selectedStickerId, stickerCounts])
+    const enriched = flatStickers.find((s) => s.id === selectedStickerId)
+    return enriched?.memberCount ?? 0
+  }, [selectedStickerId, flatStickers])
 
-  // Sort and filter stickers for list mode (excluding trashed)
-  const sortedStickers = useMemo(() => {
-    let result = stickers.filter((s) => !s.trashed)
-    if (hideEmptyStickers) {
-      result = result.filter((s) => (stickerCounts[s.id] || 0) > 0)
-    }
-    if (search) {
-      result = result.filter((s) => s.name.toLowerCase().includes(search.toLowerCase()))
-    }
-    switch (stickerSortBy) {
-      case "name-asc": return result.sort((a, b) => a.name.localeCompare(b.name))
-      case "name-desc": return result.sort((a, b) => b.name.localeCompare(a.name))
-      case "count-desc": return result.sort((a, b) => (stickerCounts[b.id] || 0) - (stickerCounts[a.id] || 0))
-      case "count-asc": return result.sort((a, b) => (stickerCounts[a.id] || 0) - (stickerCounts[b.id] || 0))
-      default: return result
-    }
-  }, [stickers, stickerSortBy, hideEmptyStickers, stickerCounts, search])
-
-  stickersRef.current = sortedStickers
+  stickersRef.current = flatStickers
 
   const selectedSticker = stickers.find((s) => s.id === selectedStickerId)
 
@@ -296,10 +279,10 @@ export function StickersView() {
   }
 
   const toggleAll = () => {
-    if (checkedStickers.size === sortedStickers.length) {
+    if (checkedStickers.size === flatStickers.length) {
       setCheckedStickers(new Set())
     } else {
-      setCheckedStickers(new Set(sortedStickers.map((s) => s.id)))
+      setCheckedStickers(new Set(flatStickers.map((s) => s.id)))
     }
   }
 
@@ -341,16 +324,16 @@ export function StickersView() {
         setCheckedStickers(new Set())
         e.preventDefault()
       }
-      if ((e.metaKey || e.ctrlKey) && e.key === "a" && sortedStickers.length > 0) {
+      if ((e.metaKey || e.ctrlKey) && e.key === "a" && flatStickers.length > 0) {
         const tag = (e.target as HTMLElement)?.tagName?.toLowerCase()
         if (tag === "input" || tag === "textarea") return
-        setCheckedStickers(new Set(sortedStickers.map((s) => s.id)))
+        setCheckedStickers(new Set(flatStickers.map((s) => s.id)))
         e.preventDefault()
       }
     }
     window.addEventListener("keydown", handler)
     return () => window.removeEventListener("keydown", handler)
-  }, [checkedStickers.size, sortedStickers])
+  }, [checkedStickers.size, flatStickers])
 
   // Drag-to-select
   const handleDragMouseDown = useCallback((e: React.MouseEvent) => {
@@ -534,8 +517,21 @@ export function StickersView() {
       <ViewHeader
         icon={<StickerIcon size={20} weight="regular" />}
         title="Stickers"
-        count={stickers.filter((s) => !s.trashed).length}
+        count={flatCount}
         onCreateNew={() => setCreating(true)}
+        showDisplay={STICKERS_LIST_VIEW_CONFIG.showDisplay}
+        displayContent={
+          <DisplayPanel
+            config={STICKERS_LIST_VIEW_CONFIG.displayConfig}
+            viewState={viewState}
+            onViewStateChange={updateViewState}
+            showViewMode={true}
+            toggleStates={viewState.toggles}
+            onToggleChange={(key, val) =>
+              updateViewState({ toggles: { ...viewState.toggles, [key]: val } })
+            }
+          />
+        }
       />
 
       {/* Sticker list */}
@@ -583,6 +579,88 @@ export function StickersView() {
                   Click &quot;New sticker&quot; to create one
                 </span>
               </div>
+            ) : isGridMode && flatStickers.length > 0 ? (
+              /* ── Grid Mode ── */
+              <div className="grid grid-cols-[repeat(auto-fill,minmax(160px,1fr))] gap-2 p-4">
+                {flatStickers.map((sticker) => (
+                  <ContextMenu key={sticker.id}>
+                    <ContextMenuTrigger asChild>
+                      <div
+                        className={cn(
+                          "group relative flex flex-col gap-2 rounded-lg border border-border/60 p-3 transition-all cursor-pointer",
+                          checkedStickers.has(sticker.id)
+                            ? "bg-accent/8 border-accent/40"
+                            : "bg-card hover:bg-hover-bg hover:border-border",
+                        )}
+                        onClick={(e) => {
+                          if ((e.target as HTMLElement).closest("button")) return
+                          toggleCheck(sticker.id)
+                        }}
+                      >
+                        {/* Checkbox (top-right) */}
+                        <button
+                          onClick={(e) => { e.stopPropagation(); toggleCheck(sticker.id) }}
+                          className={cn(
+                            "absolute right-2 top-2 h-4 w-4 shrink-0 rounded-[4px] border flex items-center justify-center cursor-pointer transition-all shadow-sm",
+                            checkedStickers.has(sticker.id)
+                              ? "bg-accent border-accent opacity-100"
+                              : "opacity-0 group-hover:opacity-100 bg-card border-zinc-400 dark:border-zinc-600",
+                          )}
+                        >
+                          {checkedStickers.has(sticker.id) && (
+                            <PhCheck size={10} weight="bold" className="text-accent-foreground" />
+                          )}
+                        </button>
+
+                        {/* Color dot — required color (drives graph hull) */}
+                        <span
+                          className="h-2.5 w-2.5 shrink-0 rounded-full ring-1 ring-black/5 dark:ring-white/10"
+                          style={{ backgroundColor: sticker.color }}
+                        />
+
+                        {/* Sticker name — click to view items */}
+                        <button
+                          onClick={() => setSelectedStickerId(sticker.id)}
+                          className="text-left text-ui text-foreground transition-colors hover:text-accent leading-tight"
+                          title="Click to view items"
+                        >
+                          {sticker.name}
+                        </button>
+
+                        {/* PropertyChip row */}
+                        <div className="flex items-center gap-1 min-w-0">
+                          <StickerMemberCountChip count={sticker.memberCount} />
+                        </div>
+                      </div>
+                    </ContextMenuTrigger>
+                    <ContextMenuContent className="w-48">
+                      <ContextMenuSub>
+                        <ContextMenuSubTrigger>Change color</ContextMenuSubTrigger>
+                        <ContextMenuSubContent className="p-2">
+                          <ColorPickerGrid
+                            value={sticker.color}
+                            onChange={(color) => updateSticker(sticker.id, { color })}
+                          />
+                        </ContextMenuSubContent>
+                      </ContextMenuSub>
+                      <ContextMenuItem
+                        onClick={() => setSelectedStickerId(sticker.id)}
+                        className="text-note"
+                      >
+                        View items
+                      </ContextMenuItem>
+                      <ContextMenuSeparator />
+                      <ContextMenuItem
+                        onClick={() => deleteSticker(sticker.id)}
+                        className="text-note text-destructive focus:text-destructive"
+                      >
+                        <Trash className="mr-2" size={14} weight="regular" />
+                        Delete
+                      </ContextMenuItem>
+                    </ContextMenuContent>
+                  </ContextMenu>
+                ))}
+              </div>
             ) : (
               <div>
                 {/* Header row */}
@@ -594,56 +672,46 @@ export function StickersView() {
                     onClick={toggleAll}
                     className={cn(
                       "h-4 w-4 shrink-0 rounded-[4px] border flex items-center justify-center cursor-pointer transition-colors shadow-sm",
-                      checkedStickers.size === sortedStickers.length && sortedStickers.length > 0
+                      checkedStickers.size === flatStickers.length && flatStickers.length > 0
                         ? "bg-accent border-accent"
                         : checkedStickers.size > 0
                           ? "bg-accent/50 border-accent"
                           : "bg-card border-zinc-400 dark:border-zinc-600 hover:border-zinc-500 dark:hover:border-zinc-500"
                     )}
                   >
-                    {checkedStickers.size === sortedStickers.length && sortedStickers.length > 0 && (
+                    {checkedStickers.size === flatStickers.length && flatStickers.length > 0 && (
                       <PhCheck size={10} weight="bold" className="text-accent-foreground" />
                     )}
-                    {checkedStickers.size > 0 && checkedStickers.size < sortedStickers.length && (
+                    {checkedStickers.size > 0 && checkedStickers.size < flatStickers.length && (
                       <Minus size={10} weight="regular" className="text-accent-foreground" />
                     )}
                   </div>
                   <button
                     className="flex flex-1 items-center gap-1 text-left text-note font-medium text-muted-foreground transition-colors hover:text-foreground"
-                    onClick={() => setStickerSortBy(stickerSortBy === "name-asc" ? "name-desc" : "name-asc")}
+                    onClick={() => handleSortToggle("name")}
                   >
                     Name
-                    {(stickerSortBy === "name-asc" || stickerSortBy === "name-desc") && (
-                      stickerSortBy === "name-asc"
+                    {sortField === "name" && (
+                      sortDirection === "asc"
                         ? <ArrowUp size={12} weight="bold" className="text-muted-foreground" />
                         : <ArrowDown size={12} weight="bold" className="text-muted-foreground" />
                     )}
                   </button>
                   <button
                     className="flex w-16 items-center justify-end gap-1 text-note font-medium text-muted-foreground transition-colors hover:text-foreground"
-                    onClick={() => setStickerSortBy(stickerSortBy === "count-desc" ? "count-asc" : "count-desc")}
+                    onClick={() => handleSortToggle("memberCount")}
                   >
                     Items
-                    {(stickerSortBy === "count-desc" || stickerSortBy === "count-asc") && (
-                      stickerSortBy === "count-desc"
+                    {sortField === "memberCount" && (
+                      sortDirection === "desc"
                         ? <ArrowDown size={12} weight="bold" className="text-muted-foreground" />
                         : <ArrowUp size={12} weight="bold" className="text-muted-foreground" />
                     )}
                   </button>
-                  <button
-                    onClick={() => setHideEmptyStickers(!hideEmptyStickers)}
-                    className={cn(
-                      "ml-2 rounded p-1 transition-colors",
-                      hideEmptyStickers ? "text-accent" : "text-muted-foreground hover:text-foreground"
-                    )}
-                    title={hideEmptyStickers ? "Show all" : "Hide empty"}
-                  >
-                    <EyeSlash size={14} weight="bold" />
-                  </button>
                   <span className="w-16" />
                 </div>
 
-                {sortedStickers.map((sticker, index) => {
+                {flatStickers.map((sticker, index) => {
                   const isEditing = editingId === sticker.id
                   const dotColor = isEditing ? editColor : sticker.color
                   return (
@@ -738,7 +806,7 @@ export function StickersView() {
 
                           {!isEditing && (
                             <span className="w-16 text-right text-note text-muted-foreground tabular-nums self-center">
-                              {stickerCounts[sticker.id] || 0}
+                              {sticker.memberCount}
                             </span>
                           )}
                         </div>

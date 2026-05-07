@@ -1698,5 +1698,19 @@ export function migrate(persistedState: unknown): PlotState {
     })
   }
 
+  // v113: Stickers entity index view-engine integration (PR group-c-d-3).
+  //
+  // Inject viewStateByContext["stickers"] default if not already present.
+  // Idempotent — existing users who already have the key keep their persisted
+  // viewState. New key only injected for users upgrading from v112.
+  {
+    const vsc = state.viewStateByContext as Record<string, unknown> | undefined
+    if (vsc && !("stickers" in vsc)) {
+      const defaultState = buildViewStateForContext("stickers")
+      vsc["stickers"] = defaultState
+      console.log("[migrate] v112→v113: injected stickers viewState default")
+    }
+  }
+
   return state as unknown as PlotState
 }

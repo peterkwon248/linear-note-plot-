@@ -23,6 +23,7 @@ export type ViewContextKey =
   // Group C PR-D: entity index views (tag entity list, not tag-filtered notes)
   | "tags-list"      // /library/tags — Tag entity index (PR group-c-d-1)
   | "labels-list"    // /labels — Label entity index (PR group-c-d-2)
+  | "stickers"       // /stickers — Sticker entity index (PR group-c-d-3)
   | `query-${string}` // inline query blocks in editor
 
 /* ── View State ────────────────────────────────────────── */
@@ -44,8 +45,9 @@ export type SortField =
   | "tier"
   | "parent"
   // Group C PR-D: entity-specific sort fields
-  | "name"       // tags-list / labels-list: alphabetical name sort
-  | "noteCount"  // tags-list / labels-list: attached note count
+  | "name"        // tags-list / labels-list: alphabetical name sort
+  | "noteCount"   // tags-list / labels-list: attached note count
+  | "memberCount" // stickers: cross-entity members count (PR group-c-d-3)
 
 export type SortDirection = "asc" | "desc"
 
@@ -193,13 +195,14 @@ export const VALID_VIEW_CONTEXT_KEYS: ViewContextKey[] = [
   // Group C PR-D: entity index views
   "tags-list",
   "labels-list",
+  "stickers",
 ]
 
 export const VALID_SORT_FIELDS: SortField[] = [
   "updatedAt", "createdAt", "priority", "title", "status", "links", "reads", "folder", "label",
   "sub", "tier", "parent",
   // Group C PR-D entity-specific
-  "name", "noteCount",
+  "name", "noteCount", "memberCount",
 ]
 
 export const VALID_GROUP_BY: GroupBy[] = [
@@ -229,4 +232,6 @@ export const VALID_COLUMNS: string[] = [
   // PR group-c-d-1 (Tags): Tag entity index display properties.
   // noteCount = TagNoteCountChip toggle, color = leading color dot toggle.
   "noteCount", "color",
+  // PR group-c-d-3 (Stickers): cross-entity member count display property.
+  "memberCount",
 ]

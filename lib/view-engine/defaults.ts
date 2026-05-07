@@ -52,6 +52,10 @@ const CONTEXT_DEFAULTS: Partial<Record<ViewContextKey, Partial<ViewState>>> = {
   "tags-list":    { viewMode: "list", ...ctx("name", "asc"), groupBy: "none", visibleColumns: ["title", "noteCount", "color"] },
   // Label.color is non-nullable (always present) — color column is always meaningful.
   "labels-list":  { viewMode: "list", ...ctx("name", "asc"), groupBy: "none", visibleColumns: ["title", "noteCount", "color"] },
+
+  // PR group-c-d-3 (Stickers): cross-entity index. Sticker.color is required
+  // (drives graph hull). memberCount is cross-entity (notes + wikis + tag/label/category/file/reference).
+  "stickers":     { viewMode: "list", ...ctx("name", "asc"), groupBy: "none", visibleColumns: ["title", "memberCount", "color"] },
 }
 
 /** Build a ViewState for a specific context, merging defaults */

@@ -115,6 +115,7 @@ const SORT_FIELD_LABELS: Record<SortField, string> = {
   // Group C PR-D: entity-specific sort fields
   name: "Name",
   noteCount: "Note count",
+  memberCount: "Member count",
 }
 
 const COLUMN_DEFS: { id: string; label: string; width: string; align?: string; sortField?: SortField; minWidth?: number }[] = [

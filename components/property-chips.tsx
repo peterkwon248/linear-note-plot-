@@ -30,6 +30,7 @@ import { Tree as PhTree } from "@phosphor-icons/react/dist/ssr/Tree"
 import { ArrowBendUpLeft as PhParent } from "@phosphor-icons/react/dist/ssr/ArrowBendUpLeft"
 import { PushPin as PhPushPin } from "@phosphor-icons/react/dist/ssr/PushPin"
 import { NoteBlank as PhNoteBlank } from "@phosphor-icons/react/dist/ssr/NoteBlank"
+import { Stack as PhStack } from "@phosphor-icons/react/dist/ssr/Stack"
 import { StatusBadge, PriorityBadge } from "@/components/note-fields"
 import { shortRelative } from "@/lib/format-utils"
 import type { NoteStatus, NotePriority } from "@/lib/types"
@@ -374,6 +375,32 @@ export function LabelNoteCountChip({ count }: { count: number }) {
       className="inline-flex items-center gap-0.5 h-5 text-2xs text-muted-foreground leading-none whitespace-nowrap shrink-0"
     >
       <PhNoteBlank size={10} weight="regular" />
+      {count}
+    </span>
+  )
+}
+
+/* ── StickerMemberCountChip (Group C PR-D-3) ─────────────── */
+
+/**
+ * Displays the number of cross-entity members attached to a sticker.
+ * Rendered on sticker entity cards (stickers list view). Hidden when
+ * count === 0 to keep empty-sticker rows visually clean.
+ *
+ * Visual style mirrors TagNoteCountChip / LabelNoteCountChip — same h-5 /
+ * text-2xs / muted-foreground. Different icon (Stack) to signal
+ * cross-entity bundling: stickers can group note + wiki + tag/label/...
+ * Data source: Sticker.members[].length with active-entity filtering for
+ * note/wiki kinds (matches useStickersView countMap).
+ */
+export function StickerMemberCountChip({ count }: { count: number }) {
+  if (count === 0) return null
+  return (
+    <span
+      title={`${count} ${count === 1 ? "item" : "items"}`}
+      className="inline-flex items-center gap-0.5 h-5 text-2xs text-muted-foreground leading-none whitespace-nowrap shrink-0"
+    >
+      <PhStack size={10} weight="regular" />
       {count}
     </span>
   )

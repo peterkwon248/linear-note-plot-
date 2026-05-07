@@ -596,6 +596,36 @@ export const TAGS_LIST_VIEW_CONFIG: ViewConfig = {
   },
 }
 
+// Stickers entity index view config (PR group-c-d-3).
+// Stickers are cross-everything bundling markers with required color (drives
+// graph hull). list+grid only. Sort by name (alpha) or memberCount (cross-
+// entity). No filter categories (stickers cross all entity kinds).
+// Search is handled globally via searchQuery.
+// Key difference from Tags/Labels: members are cross-entity (note + wiki +
+// tag/label/category/file/reference) — count semantics differ accordingly.
+export const STICKERS_LIST_VIEW_CONFIG: ViewConfig = {
+  showFilter: false,
+  showDisplay: true,
+  showDetailPanel: false,
+  filterCategories: [],
+  quickFilters: [],
+  displayConfig: {
+    supportedModes: ["list", "grid"],
+    orderingOptions: [
+      { value: "name", label: "Name" },
+      { value: "memberCount", label: "Member count" },
+    ],
+    groupingOptions: [
+      { value: "none", label: "No grouping" },
+    ],
+    toggles: [],
+    properties: [
+      { key: "memberCount", label: "Member count", icon: SortIcon },
+      { key: "color", label: "Color", icon: ColorDotIcon },
+    ],
+  },
+}
+
 export const VIEW_CONFIGS: Record<string, ViewConfig> = {
   notes: NOTES_VIEW_CONFIG,
   wiki: WIKI_VIEW_CONFIG,
@@ -607,4 +637,5 @@ export const VIEW_CONFIGS: Record<string, ViewConfig> = {
   templates: TEMPLATES_VIEW_CONFIG,
   "tags-list": TAGS_LIST_VIEW_CONFIG,
   "labels-list": LABELS_LIST_VIEW_CONFIG,
+  stickers: STICKERS_LIST_VIEW_CONFIG,
 }
