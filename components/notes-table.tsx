@@ -29,6 +29,7 @@ import { ArrowUpRight } from "@phosphor-icons/react/dist/ssr/ArrowUpRight"
 import { ArrowDownLeft } from "@phosphor-icons/react/dist/ssr/ArrowDownLeft"
 import { Tray } from "@phosphor-icons/react/dist/ssr/Tray"
 import { StatusShapeIcon } from "@/components/status-icon"
+import { StatusBadge } from "@/components/note-fields"
 import { DotsThree } from "@phosphor-icons/react/dist/ssr/DotsThree"
 import { Bell } from "@phosphor-icons/react/dist/ssr/Bell"
 import { Clock as PhClock } from "@phosphor-icons/react/dist/ssr/Clock"
@@ -171,7 +172,7 @@ function TH({
 }) {
   if (!col) {
     return (
-      <span className={`a-th__cell inline-flex items-center ${className}`}>
+      <span className={`inline-flex items-center text-note font-medium text-foreground/80 ${className}`}>
         {label}
       </span>
     )
@@ -179,7 +180,7 @@ function TH({
   const active = sortCol === col
   return (
     <button
-      className={`a-th__cell group/th inline-flex items-center gap-1 transition-colors hover:text-foreground ${className}`}
+      className={`group/th inline-flex items-center gap-1 text-note font-medium text-foreground/80 transition-colors hover:text-foreground ${className}`}
       onClick={() => onSort(col)}
     >
       {label}
@@ -1204,7 +1205,11 @@ export function NotesTable({
                     </div>
                   </div>
                   {COLUMN_DEFS.filter((col) => col.id === "title" || effectiveVisibleCols.includes(col.id)).map((col) => (
-                    <div key={col.id} className={col.align ?? ""}>
+                    <div
+                      key={col.id}
+                      className={col.align ?? ""}
+                      style={col.id === "title" ? { marginLeft: -8 } : undefined}
+                    >
                       {col.id === "title" ? (
                         <div className="flex items-center gap-2 pr-0">
                           <TH
@@ -1681,8 +1686,9 @@ function NoteRowInner({
         </div>
       </div>
 
-      {/* Name — v3: .a-row__lead (icon + title) */}
-      <div className="flex flex-col min-w-0">
+      {/* Name — v3: .a-row__lead (icon + title)
+          marginLeft -8: grid gap 상쇄해 체크박스에 가깝게 (위키 wiki-list 정합) */}
+      <div className="flex flex-col min-w-0" style={{ marginLeft: -8 }}>
         <div className="a-row__lead">
           {groupBy !== "status" && (
             <span className="a-row__icon" data-tone={note.status}>
@@ -1718,13 +1724,10 @@ function NoteRowInner({
         )}
       </div>
 
-      {/* Status — v3 .a-stchip with data-st attribute */}
+      {/* Status — Plot StatusBadge (icon + label, Plot 정체성 보존) */}
       {visibleCols.includes("status") && (
         <div className="flex items-center justify-start">
-          <span className="a-stchip" data-st={note.status}>
-            <span className="a-stchip__dot" />
-            {note.status === "stone" ? "Stone" : note.status === "brick" ? "Brick" : "Keystone"}
-          </span>
+          <StatusBadge status={note.status} />
         </div>
       )}
 

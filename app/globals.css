@@ -1025,9 +1025,13 @@
 .a-th, .a-row {
   display: grid;
   grid-template-columns: minmax(0, 2.4fr) minmax(0, 1.3fr) 110px 90px 70px 80px;
-  gap: 16px;
+  /* Plot: 8px gap (위키 wiki-list.tsx:150 gap-2 정합) — 체크박스 옆에 Title 가깝게.
+     mockup default 16px는 Title cell이 너무 멀어 보임. */
+  gap: 8px;
   align-items: center;
-  padding: 0 16px;
+  /* Plot: padding 20px (위키 px-5 정합) — 헤더와 row 체크박스 위치 정확히 정합.
+     mockup default 16px는 row inline paddingLeft 20px와 4px 어긋남. */
+  padding: 0 20px;
 }
 .a-th {
   height: 30px;
@@ -1290,6 +1294,8 @@
 /* Per-mode body backgrounds (so each mode keeps its identity) */
 .u-mode[data-mode="gallery"] { background: var(--gallery-bg, #f3eee2); }
 .dark .u-mode[data-mode="gallery"] { background: #1a1814; }
+/* Studio is dark-forced (Q4 LOCKED) — independent of light/dark theme. */
+.u-mode[data-mode="studio"] { background: #0d0e10; }
 
 /* ─── GALLERY MODE — Atelier cards on warm canvas ────────────── */
 .u-gallery {
@@ -1481,4 +1487,272 @@
   gap: 8px;
   align-items: center;
   font-variant-numeric: tabular-nums;
+}
+
+/* ─── STUDIO MODE — Pro media tool (dark-forced, Q4 LOCKED) ─────
+ * Mockup ref: `docs/v3-mockup/plot-v3-unified.css:448-709` — values copied
+ * verbatim. Studio ignores the light/dark theme switch by design (it is
+ * itself a "dark studio" surface), so there are no `.dark` overrides.
+ * ----------------------------------------------------------------- */
+.u-studio {
+  position: absolute; inset: 0;
+  background: #0d0e10;
+  color: #d6d8dc;
+  display: grid;
+  grid-template-rows: 44px 1fr 168px;
+  grid-template-columns: 1fr 280px;
+  font-family: 'Geist', system-ui, sans-serif;
+}
+
+/* Transport bar */
+.u-studio__transport {
+  grid-column: 1 / 3;
+  display: flex; align-items: center;
+  gap: 12px;
+  padding: 0 14px;
+  border-bottom: 1px solid #2a2c30;
+  background: linear-gradient(180deg, #16181c 0%, #0f1114 100%);
+}
+.u-studio__transport-btn {
+  width: 28px; height: 28px;
+  border-radius: 5px;
+  display: grid; place-items: center;
+  background: #1f2226;
+  color: #c8cad0;
+  border: 1px solid #2a2c30;
+  cursor: pointer;
+  transition: background 0.12s, color 0.12s;
+}
+.u-studio__transport-btn:hover { background: #25282d; color: #fff; }
+.u-studio__transport-btn[data-primary="true"] {
+  background: linear-gradient(180deg, #2dd4bf 0%, #0d9488 100%);
+  border-color: #14b8a6;
+  color: #042027;
+  box-shadow: 0 0 12px rgba(45,212,191,0.35);
+}
+
+.u-studio__readout {
+  font-family: 'Geist Mono', ui-monospace, monospace;
+  font-size: 11.5px;
+  letter-spacing: 0.04em;
+  color: #6cdfd0;
+  padding: 4px 10px;
+  border-radius: 4px;
+  background: #0a1614;
+  border: 1px solid #14463e;
+  font-variant-numeric: tabular-nums;
+}
+
+.u-studio__transport-meta {
+  margin-left: auto;
+  display: flex; gap: 18px;
+  font-size: 10.5px;
+  color: #9aa0a8;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  font-variant-numeric: tabular-nums;
+}
+.u-studio__transport-meta b { color: #d6d8dc; font-weight: 500; }
+
+/* Main canvas — track list */
+.u-studio__canvas {
+  position: relative;
+  overflow: auto;
+  background: #0d0e10;
+  background-image:
+    linear-gradient(90deg, transparent calc(100% - 1px), rgba(255,255,255,0.03) calc(100% - 1px)),
+    linear-gradient(90deg, transparent calc(25% - 0.5px), rgba(108,223,208,0.08) calc(25% - 0.5px), rgba(108,223,208,0.08) calc(25% + 0.5px), transparent calc(25% + 0.5px)),
+    linear-gradient(90deg, transparent calc(50% - 0.5px), rgba(108,223,208,0.08) calc(50% - 0.5px), rgba(108,223,208,0.08) calc(50% + 0.5px), transparent calc(50% + 0.5px)),
+    linear-gradient(90deg, transparent calc(75% - 0.5px), rgba(108,223,208,0.08) calc(75% - 0.5px), rgba(108,223,208,0.08) calc(75% + 0.5px), transparent calc(75% + 0.5px));
+}
+
+.u-studio__rail {
+  display: grid;
+  grid-template-columns: 220px 1fr;
+  height: 56px;
+  border-bottom: 1px solid #1c1e22;
+  align-items: center;
+  cursor: pointer;
+  transition: background 0.12s;
+}
+.u-studio__rail:hover { background: #131518; }
+.u-studio__rail[data-active="true"] {
+  background: linear-gradient(90deg, #0f1f1c 0%, transparent 60%);
+  box-shadow: inset 2px 0 0 #2dd4bf;
+}
+
+.u-studio__rail-head {
+  display: flex; align-items: center; gap: 10px;
+  padding: 0 12px;
+  border-right: 1px solid #1c1e22;
+  height: 100%;
+  background: #0f1114;
+}
+.u-studio__rail-icon {
+  width: 32px; height: 32px;
+  border-radius: 5px;
+  display: grid; place-items: center;
+  flex-shrink: 0;
+}
+.u-studio__rail-info { min-width: 0; flex: 1; }
+.u-studio__rail-title {
+  font-size: 12.5px;
+  font-weight: 500;
+  color: #e6e8ec;
+  letter-spacing: -0.005em;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.u-studio__rail-meta {
+  font-size: 10px;
+  color: #6e7480;
+  font-family: 'Geist Mono', monospace;
+  letter-spacing: 0.04em;
+  margin-top: 1px;
+  font-variant-numeric: tabular-nums;
+}
+
+.u-studio__rail-track {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 3px;
+  padding: 0 14px;
+  height: 100%;
+  align-items: center;
+}
+.u-studio__seg {
+  height: 32px;
+  border-radius: 3px;
+  background: linear-gradient(180deg, rgba(108,223,208,0.45) 0%, rgba(108,223,208,0.15) 100%);
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgba(108,223,208,0.25);
+}
+.u-studio__seg::after {
+  content: '';
+  position: absolute; inset: 0;
+  background-image:
+    linear-gradient(90deg, transparent 50%, rgba(255,255,255,0.04) 50%);
+  background-size: 6px 100%;
+}
+.u-studio__seg[data-fill="0"]   { opacity: 0.10; background: rgba(255,255,255,0.04); border-color: rgba(255,255,255,0.04); }
+.u-studio__seg[data-fill="0.3"] { opacity: 0.45; }
+.u-studio__seg[data-fill="0.4"] { opacity: 0.50; }
+.u-studio__seg[data-fill="0.5"] { opacity: 0.6;  }
+.u-studio__seg[data-fill="0.6"] { opacity: 0.7;  }
+.u-studio__seg[data-fill="0.7"] { opacity: 0.8;  }
+.u-studio__seg[data-fill="0.8"] { opacity: 0.9;  }
+.u-studio__seg[data-fill="0.9"] { opacity: 0.95; }
+.u-studio__seg[data-fill="1"]   { opacity: 1;    }
+
+/* Inspector */
+.u-studio__inspector {
+  border-left: 1px solid #2a2c30;
+  background: #131518;
+  display: flex; flex-direction: column;
+  overflow: auto;
+}
+.u-studio__inspector-head {
+  padding: 12px 14px 10px;
+  border-bottom: 1px solid #1c1e22;
+  display: flex; align-items: center; gap: 10px;
+}
+.u-studio__inspector-icon {
+  width: 36px; height: 36px;
+  border-radius: 6px;
+  display: grid; place-items: center;
+}
+.u-studio__inspector-title {
+  font-size: 13px;
+  font-weight: 500;
+  color: #e6e8ec;
+  letter-spacing: -0.01em;
+  line-height: 1.25;
+}
+.u-studio__inspector-sub {
+  font-size: 10.5px;
+  color: #6e7480;
+  margin-top: 1px;
+  font-family: 'Geist Mono', monospace;
+  letter-spacing: 0.04em;
+}
+
+.u-studio__inspector-section {
+  padding: 12px 14px;
+  border-bottom: 1px solid #1c1e22;
+  display: flex; flex-direction: column; gap: 8px;
+}
+.u-studio__inspector-label {
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: #6e7480;
+  font-weight: 600;
+}
+.u-studio__pair {
+  display: flex; justify-content: space-between;
+  font-size: 11.5px;
+  color: #c8cad0;
+  font-family: 'Geist Mono', monospace;
+  font-variant-numeric: tabular-nums;
+}
+.u-studio__pair span:first-child { color: #8a909c; }
+.u-studio__chip-row { display: flex; gap: 4px; flex-wrap: wrap; }
+.u-studio__chip {
+  font-size: 10.5px;
+  padding: 2px 6px;
+  border-radius: 3px;
+  background: #1f2226;
+  color: #9aa0a8;
+  border: 1px solid #2a2c30;
+}
+
+/* Timeline (bottom) */
+.u-studio__timeline {
+  grid-column: 1 / 3;
+  border-top: 1px solid #2a2c30;
+  background: #0a0b0d;
+  padding: 12px 16px;
+  display: flex; flex-direction: column; gap: 8px;
+}
+.u-studio__timeline-head {
+  display: flex; justify-content: space-between;
+  font-size: 10.5px;
+  color: #6e7480;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+.u-studio__timeline-track {
+  position: relative;
+  height: 90px;
+  background: linear-gradient(180deg, #0d0e10, #131518);
+  border: 1px solid #1c1e22;
+  border-radius: 4px;
+  overflow: hidden;
+}
+.u-studio__playhead {
+  position: absolute; top: 0; bottom: 0;
+  width: 1px;
+  background: #2dd4bf;
+  box-shadow: 0 0 8px rgba(45,212,191,0.7);
+  z-index: 2;
+}
+.u-studio__playhead::before {
+  content: '';
+  position: absolute; top: -1px; left: -4px;
+  width: 9px; height: 9px;
+  background: #2dd4bf;
+  clip-path: polygon(0 0, 100% 0, 50% 100%);
+}
+.u-studio__waveform {
+  position: absolute; inset: 0;
+  display: grid;
+  grid-template-columns: repeat(120, 1fr);
+  gap: 1px;
+  align-items: center;
+  padding: 8px;
+}
+.u-studio__bar {
+  background: linear-gradient(180deg, #2dd4bf, #0d9488);
+  border-radius: 1px;
+  opacity: 0.6;
 }
