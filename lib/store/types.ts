@@ -1,5 +1,5 @@
-import type { Note, NoteBody, Folder, Tag, Label, Sticker, EntityRef, EntityKind, NoteTemplate, ActiveView, NoteEvent, Thread, AutopilotRule, AutopilotLogEntry, Relation, RelationType, Attachment, CoOccurrence, RelationSuggestion, WikiClusterSuggestion, WikiInfoboxEntry, WikiCollectionItem, SavedView, WikiArticle, WikiBlock, WikiCategory, Reference, GlobalBookmark, Comment, CommentAnchor } from "../types"
-import type { InboxDismissed, InboxSnoozed } from "./slices/inbox"
+import type { Note, NoteBody, Folder, Tag, Label, Sticker, EntityRef, NoteTemplate, ActiveView, NoteEvent, Thread, AutopilotRule, AutopilotLogEntry, Relation, RelationType, Attachment, CoOccurrence, RelationSuggestion, WikiClusterSuggestion, WikiInfoboxEntry, WikiCollectionItem, SavedView, WikiArticle, WikiBlock, WikiCategory, Reference, GlobalBookmark, Comment, CommentAnchor } from "../types"
+import type { InboxDismissed, InboxSnoozed, InboxItemKind } from "./slices/inbox"
 import type { SRSState, SRSRating } from "@/lib/srs"
 import type { ViewState, ViewContextKey } from "../view-engine/types"
 import type { WorkspaceTab } from "../workspace/types"
@@ -415,10 +415,10 @@ export interface PlotState {
   snoozedInboxItems: InboxSnoozed[]
 
   // ── Inbox Actions ──
-  dismissInbox: (kind: EntityKind, id: string) => void
-  undoDismissInbox: (kind: EntityKind, id: string) => void
-  snoozeInbox: (kind: EntityKind, id: string, until: Date) => void
-  unsnoozeInbox: (kind: EntityKind, id: string) => void
+  dismissInbox: (kind: InboxItemKind, sourceId: string) => void
+  undoDismissInbox: (kind: InboxItemKind, sourceId: string) => void
+  snoozeInbox: (kind: InboxItemKind, sourceId: string, until: Date) => void
+  unsnoozeInbox: (kind: InboxItemKind, sourceId: string) => void
   clearExpiredSnoozed: () => void
 
   // ── Internal ──
