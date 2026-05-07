@@ -16,7 +16,10 @@ import { IconInbox } from "@/components/plot-icons"
 import { useBacklinksIndex } from "@/lib/search/use-backlinks-index"
 import { useInbox, type InboxItem } from "@/lib/hooks/use-inbox"
 import { Bell } from "@phosphor-icons/react/dist/ssr/Bell"
+import { Brain } from "@phosphor-icons/react/dist/ssr/Brain"
+import { MoonStars } from "@phosphor-icons/react/dist/ssr/MoonStars"
 import type { Note } from "@/lib/types"
+import type { InboxItemKind } from "@/lib/store/slices/inbox"
 
 /**
  * Home view — clean data dashboard (Wiki Dashboard style).
@@ -263,17 +266,26 @@ function NoteItem({
   )
 }
 
+function InboxSourceIcon({ kind, className }: { kind: InboxItemKind; className?: string }) {
+  const iconProps = { size: 14, weight: "regular" as const, className }
+  switch (kind) {
+    case "srs":           return <Brain {...iconProps} />
+    case "snooze-expired": return <MoonStars {...iconProps} />
+    case "reminder":
+    default:              return <Bell {...iconProps} />
+  }
+}
+
 function InboxRow({ item, onClick }: { item: InboxItem; onClick: () => void }) {
-  const isOverdue = item.action?.startsWith("Overdue")
+  const isOverdue = item.action?.toLowerCase().includes("overdue") ?? false
   return (
     <button
       onClick={onClick}
       className="group flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-left transition-colors duration-100 hover:bg-hover-bg"
     >
-      <Bell
+      <InboxSourceIcon
+        kind={item.kind}
         className="shrink-0 text-muted-foreground/50 transition-colors group-hover:text-muted-foreground/70"
-        size={14}
-        weight="regular"
       />
       <span className="min-w-0 flex-1 truncate text-note text-foreground">
         {item.title}
