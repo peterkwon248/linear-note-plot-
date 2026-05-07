@@ -1029,7 +1029,9 @@
      mockup default 16px는 Title cell이 너무 멀어 보임. */
   gap: 8px;
   align-items: center;
-  padding: 0 16px;
+  /* Plot: padding 20px (위키 px-5 정합) — 헤더와 row 체크박스 위치 정확히 정합.
+     mockup default 16px는 row inline paddingLeft 20px와 4px 어긋남. */
+  padding: 0 20px;
 }
 .a-th {
   height: 30px;
