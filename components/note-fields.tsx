@@ -103,7 +103,7 @@ const PRIORITY_OPTIONS: NotePriority[] = ["none", "urgent", "high", "medium", "l
 /* ── StatusBadge ──────────────────────────────────────── */
 
 export function StatusBadge({ status }: { status: NoteStatus }) {
-  const cfg = STATUS_CONFIG[status] ?? STATUS_CONFIG.capture
+  const cfg = STATUS_CONFIG[status] ?? STATUS_CONFIG.brick
   return (
     <span
       className="inline-flex items-center gap-1 rounded-md border px-1.5 py-0.5 text-2xs font-medium leading-none"
@@ -140,7 +140,7 @@ export function StatusDropdown({
   onChange: (status: NoteStatus) => void
   variant?: "button" | "inline"
 }) {
-  const current = STATUS_CONFIG[value] ?? STATUS_CONFIG.capture
+  const current = STATUS_CONFIG[value] ?? STATUS_CONFIG.brick
 
   return (
     <DropdownMenu>

@@ -29,9 +29,9 @@
   --space-books:    #6366f1;
 
   /* v3 Note status (Q3 = v3 desaturated) */
-  --status-inbox:     #6B7280;
-  --status-capture:   #D97706;
-  --status-permanent: #0E9384;
+  --status-stone:    #6B7280;
+  --status-brick:    #D97706;
+  --status-keystone: #0E9384;
 
   /* v3 Wiki status — mirrors WIKI_STATUS_HEX in lib/colors.ts */
   --wiki-stub:    #f97316;
@@ -374,9 +374,9 @@
   --color-space-library:  var(--space-library);
   --color-space-books:    var(--space-books);
   /* Status */
-  --color-status-inbox:     var(--status-inbox);
-  --color-status-capture:   var(--status-capture);
-  --color-status-permanent: var(--status-permanent);
+  --color-status-stone:    var(--status-stone);
+  --color-status-brick:    var(--status-brick);
+  --color-status-keystone: var(--status-keystone);
   --color-wiki-stub:        var(--wiki-stub);
   --color-wiki-article:     var(--wiki-article);
   /* v3 Priority (namespace-isolated from Plot 5-tier) */
@@ -1131,17 +1131,17 @@
   background: var(--muted);
   color: var(--muted-fg);
 }
-.a-row__icon[data-tone="inbox"] {
-  color: var(--status-inbox);
-  background: color-mix(in srgb, var(--status-inbox) 12%, transparent);
+.a-row__icon[data-tone="stone"] {
+  color: var(--status-stone);
+  background: color-mix(in srgb, var(--status-stone) 12%, transparent);
 }
-.a-row__icon[data-tone="capture"] {
-  color: var(--status-capture);
-  background: color-mix(in srgb, var(--status-capture) 12%, transparent);
+.a-row__icon[data-tone="brick"] {
+  color: var(--status-brick);
+  background: color-mix(in srgb, var(--status-brick) 12%, transparent);
 }
-.a-row__icon[data-tone="permanent"] {
-  color: var(--status-permanent);
-  background: color-mix(in srgb, var(--status-permanent) 12%, transparent);
+.a-row__icon[data-tone="keystone"] {
+  color: var(--status-keystone);
+  background: color-mix(in srgb, var(--status-keystone) 12%, transparent);
 }
 .a-row__icon[data-tone="wiki"] {
   color: var(--space-wiki);
@@ -1209,17 +1209,17 @@
   border-radius: 50%;
   background: currentColor;
 }
-.a-stchip[data-st="inbox"] {
-  color: var(--status-inbox);
-  background: color-mix(in srgb, var(--status-inbox) 12%, transparent);
+.a-stchip[data-st="stone"] {
+  color: var(--status-stone);
+  background: color-mix(in srgb, var(--status-stone) 12%, transparent);
 }
-.a-stchip[data-st="capture"] {
-  color: var(--status-capture);
-  background: color-mix(in srgb, var(--status-capture) 12%, transparent);
+.a-stchip[data-st="brick"] {
+  color: var(--status-brick);
+  background: color-mix(in srgb, var(--status-brick) 12%, transparent);
 }
-.a-stchip[data-st="permanent"] {
-  color: var(--status-permanent);
-  background: color-mix(in srgb, var(--status-permanent) 12%, transparent);
+.a-stchip[data-st="keystone"] {
+  color: var(--status-keystone);
+  background: color-mix(in srgb, var(--status-keystone) 12%, transparent);
 }
 
 /* Numeric cells (links / words / updated) */
