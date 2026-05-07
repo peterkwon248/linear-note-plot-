@@ -12,7 +12,7 @@
 import { type SVGProps } from "react"
 import { Hexagon } from "@phosphor-icons/react/dist/ssr/Hexagon"
 import { Cube } from "@phosphor-icons/react/dist/ssr/Cube"
-import { Buildings } from "@phosphor-icons/react/dist/ssr/Buildings"
+import { SquaresFour } from "@phosphor-icons/react/dist/ssr/SquaresFour"
 
 type IconProps = SVGProps<SVGSVGElement> & { size?: number }
 
@@ -190,13 +190,15 @@ export function IconBrick({ size = 20, ...rest }: IconProps) {
 }
 
 /**
- * Keystone — phosphor `Buildings` (regular weight). Buildings made of
- * bricks read as the mature endpoint of the architectural progression:
- * Hexagon (raw mineral) → Cube (single unit) → Buildings (completed
- * structures from many units).
+ * Keystone — phosphor `SquaresFour` (regular weight).
+ *
+ * Phosphor doesn't ship a `CubesFour` (which is what fit the metaphor
+ * cleanest — 4 isometric cubes); `SquaresFour` is the closest 2×2
+ * arrangement available. Reads as "many units assembled" even if it's
+ * flat 2D rather than 3D like Cube.
  */
 export function IconKeystone({ size = 20, ...rest }: IconProps) {
-  return <Buildings size={size} weight="regular" {...rest} />
+  return <SquaresFour size={size} weight="regular" {...rest} />
 }
 
 export function IconPin({ size = 14, ...props }: IconProps) {
