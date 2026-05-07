@@ -1,8 +1,13 @@
 # Inbox Layer — 단일 통합 알림함
 
+> ⚠️ **DRAFT — 미확정 (2026-05-07)**: 이 plan의 도입 여부 자체가 사용자 결정 미완료 상태.
+> "Inbox 단어를 알림함 의미로 부여 + 기능 구현"은 직전 세션 새벽에 *합의 안 됨*.
+> Phase A (rename)만 우선 진행하고, Phase B는 사용자 추가 결정 후 진행할 것.
+> 새 세션이 자동으로 진행하지 말 것.
+>
 > **Phase B of 2** (Phase A = NoteStatus rename, 별도 plan). 새 layer 신규 디자인 + 구현.
 > Linear / Things3 패턴 정합. Plot "Gentle by default, powerful when needed" + IKEA 전략 정합.
-> **선행 조건**: Phase A (NoteStatus rename) 완료 — stone/brick/keystone 3-status 확정 후.
+> **선행 조건**: Phase A (NoteStatus rename) 완료 + **사용자가 알림함 도입을 명시적으로 결정**한 후.
 
 ---
 
