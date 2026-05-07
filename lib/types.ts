@@ -1,6 +1,6 @@
-export type NoteStatus = "inbox" | "capture" | "permanent"
+export type NoteStatus = "stone" | "brick" | "keystone"
 export type NotePriority = "none" | "urgent" | "high" | "medium" | "low"
-/** Triage status for inbox notes */
+/** Triage status for stone notes */
 export type TriageStatus = "untriaged" | "kept" | "snoozed" | "trashed"
 
 /** Source of note creation */
