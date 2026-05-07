@@ -140,9 +140,10 @@ export function NotesTableView() {
 
   // Table / Board view + optional detail panel
   const ViewComponent = viewMode === "board" ? NotesBoard : NotesTable
+  const modeAttr = viewMode === "board" ? "board" : "table"
 
   return (
-    <div className="flex flex-1 overflow-hidden">
+    <div className="u-mode flex flex-1 overflow-hidden" data-mode={modeAttr}>
       <ViewComponent
         context={config.context}
         title={config.title}
