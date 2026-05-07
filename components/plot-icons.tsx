@@ -36,12 +36,25 @@ export function IconHome({ size = 20, ...props }: IconProps) {
 /**
  * Stone status icon — irregular polygon (raw, ungroomed pebble).
  * Architecture metaphor: raw stone, the unworked input material.
- * Replaces former `IconInbox` (mailbox shape, didn't match stone semantics).
+ *
+ * Uses viewBox 0 0 14 14 (same as StatusShapeIcon) so the stroke-to-icon
+ * ratio matches the smaller status icon — keeps the iconic, weighted look
+ * at 20px instead of the airier rendering a wider viewBox produces.
  */
 export function IconStone({ size = 20, ...props }: IconProps) {
   return (
-    <svg width={size} height={size} {...defaults} {...props}>
-      <path d="M 7.5 3.2 L 15.5 3.5 L 20.5 7.5 L 19.5 15.5 L 14 20.5 L 6 19 L 3 13 L 4.5 6 Z" />
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 14 14"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={1.5}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      {...props}
+    >
+      <path d="M 4.5 1.6 L 9.6 2.2 L 12.4 5.2 L 11.6 9.6 L 8.2 12.4 L 3.4 11.6 L 1.6 7.4 L 2.6 3.4 Z" />
     </svg>
   )
 }
@@ -185,13 +198,24 @@ export function IconInsight({ size = 16, ...props }: IconProps) {
 /**
  * Brick status icon — rounded rectangle with horizontal mortar seam.
  * Architecture metaphor: regular processed unit, ready to lay.
- * Replaces former `IconCapture` (pencil shape).
+ *
+ * viewBox 0 0 14 14 to match StatusShapeIcon stroke ratio (see IconStone).
  */
 export function IconBrick({ size = 20, ...props }: IconProps) {
   return (
-    <svg width={size} height={size} {...defaults} {...props}>
-      <rect x="3" y="6" width="18" height="12" rx="1.5" />
-      <path d="M 3 12 L 21 12" />
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 14 14"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={1.5}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      {...props}
+    >
+      <rect x="1.6" y="3.4" width="10.8" height="7.2" rx="1" />
+      <path d="M 1.6 7 L 12.4 7" />
     </svg>
   )
 }
@@ -199,12 +223,23 @@ export function IconBrick({ size = 20, ...props }: IconProps) {
 /**
  * Keystone status icon — trapezoid wider at top (architectural keystone).
  * Architecture metaphor: anchor stone at the apex of an arch.
- * Replaces former `IconPermanent` (gem/diamond shape).
+ *
+ * viewBox 0 0 14 14 to match StatusShapeIcon stroke ratio (see IconStone).
  */
 export function IconKeystone({ size = 20, ...props }: IconProps) {
   return (
-    <svg width={size} height={size} {...defaults} {...props}>
-      <path d="M 3 5 L 21 5 L 16.5 19 L 7.5 19 Z" />
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 14 14"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={1.5}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      {...props}
+    >
+      <path d="M 1.6 3 L 12.4 3 L 9.6 11 L 4.4 11 Z" />
     </svg>
   )
 }
