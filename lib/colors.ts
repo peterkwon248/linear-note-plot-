@@ -117,9 +117,9 @@ export type KnowledgeIndexEntity = keyof typeof KNOWLEDGE_INDEX_COLORS
 
 /** CSS-var references (for Tailwind / inline style with var()) */
 export const NOTE_STATUS_COLORS = {
-  inbox:     { css: "var(--chart-2)", tw: "chart-2" },
-  capture:   { css: "var(--chart-3)", tw: "chart-3" },
-  permanent: { css: "var(--chart-5)", tw: "chart-5" },
+  stone:    { css: "var(--chart-2)", tw: "chart-2" },
+  brick:    { css: "var(--chart-3)", tw: "chart-3" },
+  keystone: { css: "var(--chart-5)", tw: "chart-5" },
 } as const
 
 /** Resolved hex values for canvas / SVG (dark theme canonical).
@@ -127,14 +127,14 @@ export const NOTE_STATUS_COLORS = {
  * v3 desaturated palette (Q3 LOCKED) — phase 1 refresh:
  * - Previously saturated cyan/orange/green were visually loud and competed
  *   with workspace colors. v3 mockup tones them down: neutral gray for
- *   inbox (= "needs triage"), warm brown-orange for capture (= "in
- *   progress"), teal-green for permanent (= "settled / verified").
- * - Mirrors --status-{inbox,capture,permanent} CSS vars in app/globals.css.
+ *   stone (= "needs triage"), warm brown-orange for brick (= "in
+ *   progress"), teal-green for keystone (= "settled / verified").
+ * - Mirrors --status-{stone,brick,keystone} CSS vars in app/globals.css.
  */
 export const NOTE_STATUS_HEX = {
-  inbox:     "#6B7280",   // neutral gray   — needs triage
-  capture:   "#D97706",   // brown-orange   — in progress
-  permanent: "#0E9384",   // teal-green     — settled / verified
+  stone:    "#6B7280",   // neutral gray   — needs triage
+  brick:    "#D97706",   // brown-orange   — in progress
+  keystone: "#0E9384",   // teal-green     — settled / verified
 } as const
 
 /* ── Wiki Status ─────────────────────────────── */
@@ -194,9 +194,9 @@ export const RELATION_HEX = {
 /* ── Graph (ontology) ────────────────────────── */
 
 export const GRAPH_NODE_HEX = {
-  inbox:     NOTE_STATUS_HEX.inbox,
-  capture:   NOTE_STATUS_HEX.capture,
-  permanent: NOTE_STATUS_HEX.permanent,
+  stone:     NOTE_STATUS_HEX.stone,
+  brick:     NOTE_STATUS_HEX.brick,
+  keystone:  NOTE_STATUS_HEX.keystone,
   // Wiki **entity** color (violet) — NOT WIKI_STATUS_HEX.article (emerald,
   // which is a publication-state color). Graph nodes represent the wiki
   // entity itself regardless of stub/article state, so they inherit the

@@ -8,10 +8,10 @@ import { usePlotStore } from "@/lib/store"
  * Quick Capture — top-of-Home single-line input.
  *
  * Behavior contract (PR 7 spec):
- *   - Enter -> createNote({title, status: "inbox"}); stay on Home (selectedNoteId restored to null)
+ *   - Enter -> createNote({title, status: "stone"}); stay on Home (selectedNoteId restored to null)
  *   - Escape -> blur + clear
  *   - Empty Enter -> ignored (no toast)
- *   - Toast: "Added to Inbox" 1.5s
+ *   - Toast: "Added to Stone" 1.5s
  *
  * Visual discipline:
  *   - Border-bottom only (no top/sides) — feels like the page's first line, not a card
@@ -54,7 +54,7 @@ export function QuickCapture() {
     // createNote sets selectedNoteId = id internally; restore to null so we stay on Home.
     store.createNote({
       title: trimmed,
-      status: "inbox",
+      status: "stone",
       source: "manual",
     })
     store.setSelectedNoteId(null)
@@ -64,7 +64,7 @@ export function QuickCapture() {
     setFlashing(true)
     window.setTimeout(() => setFlashing(false), 220)
 
-    toast.success("Added to Inbox", {
+    toast.success("Added to Stone", {
       duration: 1500,
       position: "bottom-right",
     })

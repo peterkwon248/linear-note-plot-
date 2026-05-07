@@ -227,7 +227,7 @@ export function BoardWorkbench({
               <div className="flex items-center gap-2 pt-1">
                 <span className="text-2xs text-muted-foreground/60">Change all →</span>
                 <StatusDropdown
-                  value={commonStatus ?? "inbox"}
+                  value={commonStatus ?? "stone"}
                   onChange={(s) => batchUpdateNotes(Array.from(selectedIds), { status: s })}
                   variant="inline"
                 />
@@ -248,10 +248,10 @@ export function BoardWorkbench({
         />
 
         {/* Mixed-status workflow for All/Unlinked tabs */}
-        {effectiveTab !== "inbox" && effectiveTab !== "capture" && effectiveTab !== "permanent" && effectiveTab !== "trash" && (() => {
-          const inboxNotes = selectedNotes.filter(n => n.status === 'inbox')
-          const captureNotes = selectedNotes.filter(n => n.status === 'capture')
-          const permanentNotes = selectedNotes.filter(n => n.status === 'permanent')
+        {effectiveTab !== "stone" && effectiveTab !== "brick" && effectiveTab !== "keystone" && effectiveTab !== "trash" && (() => {
+          const inboxNotes = selectedNotes.filter(n => n.status === 'stone')
+          const captureNotes = selectedNotes.filter(n => n.status === 'brick')
+          const permanentNotes = selectedNotes.filter(n => n.status === 'keystone')
           if (inboxNotes.length === 0 && captureNotes.length === 0 && permanentNotes.length === 0) return null
           return (
             <div className="mt-4 space-y-3">
@@ -262,7 +262,7 @@ export function BoardWorkbench({
                     onClick={() => {
                       inboxNotes.forEach(n => triageKeep(n.id))
                       onClearSelection()
-                      toast(`Moved ${inboxNotes.length} note${inboxNotes.length > 1 ? "s" : ""} to Capture`)
+                      toast(`Moved ${inboxNotes.length} note${inboxNotes.length > 1 ? "s" : ""} to Brick`)
                     }}
                     className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-note font-medium text-foreground transition-colors hover:bg-hover-bg"
                   >
@@ -274,7 +274,7 @@ export function BoardWorkbench({
                     onClick={() => {
                       captureNotes.forEach(n => promoteToPermanent(n.id))
                       onClearSelection()
-                      toast(`Promoted ${captureNotes.length} note${captureNotes.length > 1 ? "s" : ""} to Permanent`)
+                      toast(`Promoted ${captureNotes.length} note${captureNotes.length > 1 ? "s" : ""} to Keystone`)
                     }}
                     className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-note font-medium text-foreground transition-colors hover:bg-hover-bg"
                   >
@@ -286,7 +286,7 @@ export function BoardWorkbench({
                     onClick={() => {
                       permanentNotes.forEach(n => undoPromote(n.id))
                       onClearSelection()
-                      toast(`Demoted ${permanentNotes.length} note${permanentNotes.length > 1 ? "s" : ""} to Capture`)
+                      toast(`Demoted ${permanentNotes.length} note${permanentNotes.length > 1 ? "s" : ""} to Brick`)
                     }}
                     className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-note font-medium text-foreground transition-colors hover:bg-hover-bg"
                   >
@@ -450,20 +450,20 @@ function WorkflowActions({
 }) {
   const actions: { icon: React.ReactNode; label: string; onClick: () => void }[] = []
 
-  if (effectiveTab === "inbox") {
+  if (effectiveTab === "stone") {
     actions.push(
       { icon: <PhCheck className="text-accent" size={16} weight="bold" />, label: "Done All", onClick: onKeepAll },
     )
   }
 
-  if (effectiveTab === "capture") {
+  if (effectiveTab === "brick") {
     actions.push(
       { icon: <ArrowUpRight className="text-accent" size={16} weight="regular" />, label: "Promote All", onClick: onPromoteAll },
-      { icon: <ArrowDownLeft className="text-accent" size={16} weight="regular" />, label: "Back to Inbox", onClick: onMoveBackAll },
+      { icon: <ArrowDownLeft className="text-accent" size={16} weight="regular" />, label: "Back to Stone", onClick: onMoveBackAll },
     )
   }
 
-  if (effectiveTab === "permanent") {
+  if (effectiveTab === "keystone") {
     actions.push(
       { icon: <ArrowDownLeft className="text-accent" size={16} weight="regular" />, label: "Demote All", onClick: onDemoteAll },
     )
@@ -512,7 +512,7 @@ function OverviewContent({
   onCardClick?: (noteId: string) => void
 }) {
   switch (effectiveTab) {
-    case "inbox":
+    case "stone":
       return (
         <InboxOverview
           notes={notes}
@@ -520,7 +520,7 @@ function OverviewContent({
           onSelectMany={onSelectMany}
         />
       )
-    case "capture":
+    case "brick":
       return (
         <CaptureOverview
           notes={notes}
@@ -529,7 +529,7 @@ function OverviewContent({
           onCardClick={onCardClick}
         />
       )
-    case "permanent":
+    case "keystone":
       return (
         <KnowledgeOverview
           effectiveTab={effectiveTab}
@@ -716,7 +716,7 @@ function KnowledgeOverview({
   onSelectAll,
   onCardClick,
 }: {
-  effectiveTab: "permanent"
+  effectiveTab: "keystone"
   notes: Note[]
   backlinksMap: Map<string, number>
   onSelectAll: () => void

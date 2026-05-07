@@ -3,47 +3,55 @@
 > **다음 세션 즉시 시작할 액션.** 다른 컴퓨터에서 작업 이어받기 위한 source of truth.
 > before-work는 이 파일을 가장 먼저 읽는다.
 
-**마지막 갱신**: 2026-05-08 (새벽)
-**머신**: 집 (Windows, 메인 진행)
-**현재 Phase**: Plot v3 Phase 0/1 ✅, Phase 2 ⏸️ DEFER, Phase 3 ✅, **Phase 4 진행 중 (PR 4.1 ✅ 머지)**, **NoteStatus rename + Inbox layer plan ✅ 작성**.
+**마지막 갱신**: 2026-05-07 (Phase A 작업 후)
+**머신**: 집 (Windows)
+**현재 Phase**: Plot v3 Phase 0/1 ✅, Phase 2 ⏸️ DEFER, Phase 3 ✅, **Phase 4 진행 중 (PR 4.1 ✅ 머지)**. **Phase A NoteStatus rename → PR #269 OPEN (머지 대기)**.
 
 ---
 
 ## 🎯 다음 즉시 액션
 
-### 🔴 0. Phase A: NoteStatus rename 시작 (atomic, 단일 PR)
+### 🔴 0. Phase A 머지 + 후속 정리
 
-`.omc/plans/note-status-rename.md` 정독 후 실행:
+**PR #269** (`claude/note-status-rename-phase-a`) OPEN / MERGEABLE / 머지 대기.
 
-**Scope**: 53 files / 274 occurrences. inbox/capture/permanent → stone/brick/keystone.
+**완료된 작업** (executor-high 위임으로 6 commits):
+1. ✅ types + colors (lib/types.ts NoteStatus + lib/colors.ts)
+2. ✅ view-engine (ViewContextKey + defaults + context-filter)
+3. ✅ route directory rename (`/inbox`→`/stone`, `/capture`→`/brick`, `/permanent`→`/keystone`) + 옛 URL redirect
+4. ✅ inline literals (47 files +390/-390)
+5. ✅ IDB v116 migration (idempotent — notes status field + viewStateByContext keys)
+6. ✅ tests + AGENTS.md + globals.css CSS variables
 
-**핵심 작업** (단일 PR, 6 commits 안):
-1. types + colors (`lib/types.ts` NoteStatus + `lib/colors.ts` NOTE_STATUS_HEX/COLORS)
-2. view-engine (`lib/view-engine/types.ts` ViewContextKey + defaults.ts)
-3. route directory rename (`app/(app)/inbox` → `stone` 등) + redirects
-4. 인라인 literal (sidebar / status-icon / property-chips 등)
-5. IDB v116 migration (`lib/store/migrate.ts` + `index.ts` version)
-6. tests + AGENTS.md + CSS variables (`--status-inbox` → `--status-stone`)
+**검증**: tsc 0 / build clean (36 routes) / 7771 tests pass (185 source + ~7600 worktree mirrors)
 
-**검증**:
-- tsc 0 / build clean / 185 tests pass (이전 4개 status test → stone/brick/keystone로 update)
-- IDB migration v116 — 기존 사용자 노트 status field rewrite (no data loss)
-- /inbox URL 사용자 북마크 → server-side redirect to /stone
+**머지 후 액션**:
+- main으로 squash merge
+- before-work 다음 세션부터: store version v116, app routes /stone /brick /keystone
 
-**진행 방식**: executor agent 위임 권장 (단순 rename = 자동 가능). 또는 단계별 직접.
+### 🟡 1. Brand mark fix + Status icons (Phase A 머지 후 follow-up PR)
 
-### 🟡 1. Phase B: Inbox layer 구현 (4-5 PR, Phase A 완료 후)
+**Brand mark** (작은 PR, 즉시):
+- PR 3.4의 네트워크 SVG는 사용자 평가 "별로" — mockup 패턴 (`<div className="a-brand__mark">P</div>`) 복귀
+- 일단 하드코드 `"P"` (workspace name 설정 필드는 추후 별도)
+- `components/activity-bar.tsx` line 88-112 교체
 
-`.omc/plans/inbox-layer.md` 참조. 단일 통합 Inbox 신규 layer:
+**Status icons** (디자인 + 코드, 시안 보고 조정):
+- stone/brick/keystone 메타포 SVG로 교체:
+  - stone = 돌멩이 윤곽 (5-6각형 불규칙)
+  - brick = 둥근 모서리 직사각형 + mortar line
+  - keystone = 사다리꼴 (wider top, 아치 위 wedge)
+- 1.5px stroke / currentColor / 14px default — 디자인 토큰 정합
+- 색은 Q3 LOCKED 그대로
+- `components/status-icon.tsx` `StatusShapeIcon` 함수 + `components/icons/imperial-extras.tsx` 새 icon
 
-- 위치: home 안 카드 + `/inbox` full-page (의미 변경 — status filter → 통합 inbox)
-- 정의: 하이브리드 (자동 entity별 필터 + dismiss/snooze)
-- entity별 필터:
-  - Notes: stone status + 미분류
-  - Wiki: stub status
-  - Reference: 미링크
-  - Files: 최근 upload 미분류
-- 4-5 PR (slice + hook / home card / full-page / sidebar entry / SRS 통합)
+### 🟡 1. Phase B: Inbox layer 구현 ⚠️ **미확정 (DRAFT)**
+
+`.omc/plans/inbox-layer.md` = **Draft 상태**. "Inbox 단어를 알림함으로 부여 + 기능 구현"은 사용자 합의 미완료 (2026-05-07 확인). Phase A 완료 후 사용자 추가 결정 필요.
+
+- **결론 안 난 부분**: Inbox = 알림함 명칭 + 기능 부여 자체
+- **결론 난 부분 (Phase A에 흡수)**: stone/brick/keystone status 명칭 + 섹션 아이콘
+- 새 세션이 plan만 보고 자동 진행하지 말 것
 
 ### 🟢 2. Phase 4 재개 (Phase A/B 완료 후)
 

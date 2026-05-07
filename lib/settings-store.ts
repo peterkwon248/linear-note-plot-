@@ -30,7 +30,7 @@ export interface SettingsState {
 
   // Preferences
   language: string
-  startView: "home" | "all" | "inbox" | "pinned"
+  startView: "home" | "all" | "stone" | "pinned"
   confirmDelete: boolean
   viewMode: "list" | "board"
 
@@ -52,7 +52,7 @@ export interface SettingsState {
   setFontSize: (v: string) => void
   setDensity: (v: "compact" | "default" | "comfortable") => void
   setLanguage: (v: string) => void
-  setStartView: (v: "all" | "inbox" | "pinned") => void
+  setStartView: (v: "all" | "stone" | "pinned") => void
   setConfirmDelete: (v: boolean) => void
   setViewMode: (v: "list" | "board") => void
 }

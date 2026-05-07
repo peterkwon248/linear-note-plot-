@@ -139,7 +139,7 @@ function NavLink({
             return
           }
           setNoteId(null)
-          if (href === "/notes" || href === "/inbox") {
+          if (href === "/notes" || href === "/stone") {
             setActiveFolderId(null)
             setActiveTagId(null)
             setActiveLabelId(null)
@@ -326,7 +326,7 @@ export function LinearSidebar() {
 
   // Prefetch routes on mount
   useEffect(() => {
-    const routes = ["/inbox", "/notes", "/pinned", "/trash", "/settings"]
+    const routes = ["/stone", "/notes", "/pinned", "/trash", "/settings"]
     routes.forEach((r) => router.prefetch(r))
   }, [router])
 
@@ -388,10 +388,10 @@ export function LinearSidebar() {
     return () => document.removeEventListener("mousedown", handler)
   }, [categoryMenuId])
 
-  const inboxCount = useMemo(() => notes.filter((n) => n.status === "inbox" && !n.trashed && n.triageStatus !== "trashed").length, [notes])
+  const inboxCount = useMemo(() => notes.filter((n) => n.status === "stone" && !n.trashed && n.triageStatus !== "trashed").length, [notes])
   const allNotesCount = useMemo(() => notes.filter((n) => !n.trashed).length, [notes])
-  const captureCount = useMemo(() => notes.filter((n) => n.status === "capture" && !n.trashed).length, [notes])
-  const permanentCount = useMemo(() => notes.filter((n) => n.status === "permanent" && !n.trashed).length, [notes])
+  const captureCount = useMemo(() => notes.filter((n) => n.status === "brick" && !n.trashed).length, [notes])
+  const permanentCount = useMemo(() => notes.filter((n) => n.status === "keystone" && !n.trashed).length, [notes])
   const trashCount = useMemo(() => notes.filter((n) => n.trashed).length, [notes])
   const wikiCount = useMemo(() => notes.filter((n) => n.noteType === "wiki" && !n.trashed).length, [notes])
   const todoTaskCount = usePlotStore((s) => s.todoTasks.filter((t) => !t.checked).length)
@@ -555,7 +555,7 @@ export function LinearSidebar() {
     if (name) {
       // Capture current viewState (snapshot UX) instead of creating an empty
       // default view. Resolves to the active context key by space + route, so
-      // /inbox saves "inbox" filters, /wiki saves "wiki" state, etc.
+      // /stone saves "stone" filters, /wiki saves "wiki" state, etc.
       const contextKey = getCurrentViewContextKey(activeSpace, activeRoute)
       const currentViewState = usePlotStore.getState().viewStateByContext[contextKey]
       const savedSpace = getSavedViewSpaceForActivity(activeSpace)
@@ -805,25 +805,25 @@ export function LinearSidebar() {
                 active={isActive("/notes")}
               />
               <NavLink
-                href="/inbox"
+                href="/stone"
                 icon={<IconInbox size={20} />}
-                label="Inbox"
+                label="Stone"
                 count={inboxCount > 0 ? inboxCount : undefined}
-                active={isActive("/inbox")}
+                active={isActive("/stone")}
               />
               <NavLink
-                href="/capture"
+                href="/brick"
                 icon={<IconCapture size={20} />}
-                label="Capture"
+                label="Brick"
                 count={captureCount > 0 ? captureCount : undefined}
-                active={isActive("/capture")}
+                active={isActive("/brick")}
               />
               <NavLink
-                href="/permanent"
+                href="/keystone"
                 icon={<IconPermanent size={20} />}
-                label="Permanent"
+                label="Keystone"
                 count={permanentCount > 0 ? permanentCount : undefined}
-                active={isActive("/permanent")}
+                active={isActive("/keystone")}
               />
               <NavLink
                 href="/pinned"
@@ -1436,9 +1436,9 @@ export function LinearSidebar() {
 
                 // Status breakdown for tooltips (preview note titles)
                 const liveNotes = notes.filter((n: any) => !n.trashed)
-                const inboxNotes = liveNotes.filter((n: any) => n.status === "inbox")
-                const captureNotes = liveNotes.filter((n: any) => n.status === "capture")
-                const permanentNotes = liveNotes.filter((n: any) => n.status === "permanent")
+                const inboxNotes = liveNotes.filter((n: any) => n.status === "stone")
+                const captureNotes = liveNotes.filter((n: any) => n.status === "brick")
+                const permanentNotes = liveNotes.filter((n: any) => n.status === "keystone")
                 const orphanNotes = liveNotes.filter((n: any) =>
                   !(n.linksOut?.length || 0) && !((n as any).backlinks?.length || 0)
                 )
@@ -1586,11 +1586,11 @@ export function LinearSidebar() {
         {activeSpace === "home" && (
           <div className="space-y-px">
             <NavLink
-              href="/inbox"
+              href="/stone"
               icon={<IconInbox size={20} />}
-              label="Inbox"
+              label="Stone"
               count={inboxCount > 0 ? inboxCount : undefined}
-              active={isActive("/inbox")}
+              active={isActive("/stone")}
             />
             {/* Stickers entry lives only in Library (33 design
                 decisions #8 — cross-cutting index). */}

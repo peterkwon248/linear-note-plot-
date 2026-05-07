@@ -41,7 +41,7 @@ import { LOD, VIEWPORT, NODE_THEME, FIT_CONFIG, MAX_VISIBLE_NODES, FORCE_CONFIG,
 export interface OntologyFilters {
   tagIds: string[]
   labelId: string | null
-  status: "inbox" | "capture" | "permanent" | "all"
+  status: "stone" | "brick" | "keystone" | "all"
   relationTypes: RelationType[] | "all"
   showWikilinks: boolean
   showTagNodes: boolean
@@ -303,9 +303,9 @@ function computeEdgePath(
 /* ── Node base color (for gradient palette) ──────────── */
 
 const STATUS_COLORS: Record<string, string> = {
-  inbox:     GRAPH_NODE_HEX.inbox,
-  capture:   GRAPH_NODE_HEX.capture,
-  permanent: GRAPH_NODE_HEX.permanent,
+  stone:    GRAPH_NODE_HEX.stone,
+  brick:    GRAPH_NODE_HEX.brick,
+  keystone: GRAPH_NODE_HEX.keystone,
 }
 const DEFAULT_NODE_COLOR = "hsl(var(--muted-foreground))"
 
@@ -2447,16 +2447,16 @@ function LegendOverlay({ svgRef, legendRelationTypes, hasWikilinkEdges, isDarkMo
            Light-mode swatches use a thicker stroke + denser fill so the
            tiny 8px shapes still read against a white card background. ── */}
       <g transform={`translate(10, ${10 + 0 * rowHeight})`}>
-        <circle cx={6} cy={6} r={4} fill={GRAPH_NODE_HEX.inbox + nodeFillAlpha} stroke={GRAPH_NODE_HEX.inbox} strokeWidth={isDarkMode ? 1.3 : 1.8} />
-        <text x={26} y={10} fill={labelFill} fontSize={10} fontWeight={isDarkMode ? 500 : 600} fontFamily="-apple-system, system-ui, sans-serif">Inbox</text>
+        <circle cx={6} cy={6} r={4} fill={GRAPH_NODE_HEX.stone + nodeFillAlpha} stroke={GRAPH_NODE_HEX.stone} strokeWidth={isDarkMode ? 1.3 : 1.8} />
+        <text x={26} y={10} fill={labelFill} fontSize={10} fontWeight={isDarkMode ? 500 : 600} fontFamily="-apple-system, system-ui, sans-serif">Stone</text>
       </g>
       <g transform={`translate(10, ${10 + 1 * rowHeight})`}>
-        <circle cx={6} cy={6} r={4} fill={GRAPH_NODE_HEX.capture + nodeFillAlpha} stroke={GRAPH_NODE_HEX.capture} strokeWidth={isDarkMode ? 1.3 : 1.8} />
-        <text x={26} y={10} fill={labelFill} fontSize={10} fontWeight={isDarkMode ? 500 : 600} fontFamily="-apple-system, system-ui, sans-serif">Capture</text>
+        <circle cx={6} cy={6} r={4} fill={GRAPH_NODE_HEX.brick + nodeFillAlpha} stroke={GRAPH_NODE_HEX.brick} strokeWidth={isDarkMode ? 1.3 : 1.8} />
+        <text x={26} y={10} fill={labelFill} fontSize={10} fontWeight={isDarkMode ? 500 : 600} fontFamily="-apple-system, system-ui, sans-serif">Brick</text>
       </g>
       <g transform={`translate(10, ${10 + 2 * rowHeight})`}>
-        <circle cx={6} cy={6} r={4} fill={GRAPH_NODE_HEX.permanent + nodeFillAlpha} stroke={GRAPH_NODE_HEX.permanent} strokeWidth={isDarkMode ? 1.3 : 1.8} />
-        <text x={26} y={10} fill={labelFill} fontSize={10} fontWeight={isDarkMode ? 500 : 600} fontFamily="-apple-system, system-ui, sans-serif">Permanent</text>
+        <circle cx={6} cy={6} r={4} fill={GRAPH_NODE_HEX.keystone + nodeFillAlpha} stroke={GRAPH_NODE_HEX.keystone} strokeWidth={isDarkMode ? 1.3 : 1.8} />
+        <text x={26} y={10} fill={labelFill} fontSize={10} fontWeight={isDarkMode ? 500 : 600} fontFamily="-apple-system, system-ui, sans-serif">Keystone</text>
       </g>
 
       {/* ── Wiki (hexagon — matches actual graph shape) ── */}

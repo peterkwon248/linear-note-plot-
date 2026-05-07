@@ -10,10 +10,10 @@ import type { ActivitySpace } from "./types"
 /* ── Route constants ─────────────────────────────────── */
 
 /** Routes handled by NotesTableView (always-mounted table component) */
-export const TABLE_VIEW_ROUTES = ["/notes", "/inbox", "/capture", "/permanent", "/pinned", "/trash"]
+export const TABLE_VIEW_ROUTES = ["/notes", "/stone", "/brick", "/keystone", "/pinned", "/trash"]
 
 /** Workflow routes — for future Phase 4 sidebar refactor */
-export const WORKFLOW_ROUTES = ["/inbox", "/capture", "/permanent"]
+export const WORKFLOW_ROUTES = ["/stone", "/brick", "/keystone"]
 
 /** Routes handled by individual always-mounted view components */
 export const VIEW_ROUTES = ["/home", "/labels", "/stickers", "/templates", "/ontology", "/insights", "/wiki", "/search", "/calendar", "/graph-insights", "/todos", "/library", "/library/references", "/library/tags", "/library/files"]
@@ -100,7 +100,7 @@ export function inferSpace(route: string): ActivitySpace {
   // Stickers — cross-everything index, lives in Library per 33-design-decisions §8.
   // Routed at /stickers (not /library/stickers) for URL brevity.
   if (route === "/stickers") return "library"
-  // /notes, /inbox, /tags, /labels, /templates, /insights, /capture, /permanent, /trash, /pinned, /search
+  // /notes, /stone, /tags, /labels, /templates, /insights, /brick, /keystone, /trash, /pinned, /search
   return "notes"
 }
 

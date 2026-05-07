@@ -310,27 +310,27 @@ export function SearchDialog() {
               {/* Navigation */}
               <CommandGroup heading="Navigation">
                 <CommandItem
-                  value="go-to-inbox"
-                  onSelect={() => { router.push("/inbox"); closePalette() }}
+                  value="go-to-stone"
+                  onSelect={() => { router.push("/stone"); closePalette() }}
                 >
                   <Tray size={16} weight="regular" />
-                  <span>Go to Inbox</span>
+                  <span>Go to Stone</span>
                   <CommandShortcut>G I</CommandShortcut>
                 </CommandItem>
                 <CommandItem
-                  value="go-to-capture"
-                  onSelect={() => { router.push("/capture"); closePalette() }}
+                  value="go-to-brick"
+                  onSelect={() => { router.push("/brick"); closePalette() }}
                 >
                   <Stack size={16} weight="regular" />
-                  <span>Go to Capture</span>
+                  <span>Go to Brick</span>
                   <CommandShortcut>G C</CommandShortcut>
                 </CommandItem>
                 <CommandItem
-                  value="go-to-permanent"
-                  onSelect={() => { router.push("/permanent"); closePalette() }}
+                  value="go-to-keystone"
+                  onSelect={() => { router.push("/keystone"); closePalette() }}
                 >
                   <PhShield size={16} weight="regular" />
-                  <span>Go to Permanent</span>
+                  <span>Go to Keystone</span>
                   <CommandShortcut>G M</CommandShortcut>
                 </CommandItem>
                 <CommandItem
@@ -515,14 +515,14 @@ export function SearchDialog() {
                   </CommandGroup>
 
                   {/* Stage-Specific Commands */}
-                  {selectedNote.status === "inbox" && (
+                  {selectedNote.status === "stone" && (
                     <>
                       <CommandSeparator />
-                      <CommandGroup heading="Inbox Actions">
+                      <CommandGroup heading="Stone Actions">
                         <CommandItem
                           value="triage-keep"
                           onSelect={() =>
-                            execCommand(() => triageKeep(selectedNote.id), "Kept - moved to Capture")
+                            execCommand(() => triageKeep(selectedNote.id), "Kept - moved to Brick")
                           }
                         >
                           <CheckCircle size={16} weight="regular" />
@@ -556,55 +556,55 @@ export function SearchDialog() {
                     </>
                   )}
 
-                  {selectedNote.status === "capture" && (
+                  {selectedNote.status === "brick" && (
                     <>
                       <CommandSeparator />
-                      <CommandGroup heading="Capture Actions">
+                      <CommandGroup heading="Brick Actions">
                         <CommandItem
-                          value="promote-to-permanent"
+                          value="promote-to-keystone"
                           onSelect={() =>
                             execCommand(
                               () => promoteToPermanent(selectedNote.id),
-                              "Promoted to Permanent"
+                              "Promoted to Keystone"
                             )
                           }
                         >
                           <ArrowCircleUp size={16} weight="regular" />
-                          <span>Promote to Permanent</span>
+                          <span>Promote to Keystone</span>
                           <CommandShortcut>P</CommandShortcut>
                         </CommandItem>
                         <CommandItem
-                          value="move-back-to-inbox"
+                          value="move-back-to-stone"
                           onSelect={() =>
                             execCommand(
                               () => moveBackToInbox(selectedNote.id),
-                              "Moved back to Inbox"
+                              "Moved back to Stone"
                             )
                           }
                         >
                           <Tray size={16} weight="regular" />
-                          <span>Back to Inbox</span>
+                          <span>Back to Stone</span>
                           <CommandShortcut>B</CommandShortcut>
                         </CommandItem>
                       </CommandGroup>
                     </>
                   )}
 
-                  {selectedNote.status === "permanent" && (
+                  {selectedNote.status === "keystone" && (
                     <>
                       <CommandSeparator />
-                      <CommandGroup heading="Permanent Actions">
+                      <CommandGroup heading="Keystone Actions">
                         <CommandItem
-                          value="demote-to-capture"
+                          value="demote-to-brick"
                           onSelect={() =>
                             execCommand(
                               () => undoPromote(selectedNote.id),
-                              "Demoted to Capture"
+                              "Demoted to Brick"
                             )
                           }
                         >
                           <ArrowCircleDown size={16} weight="regular" />
-                          <span>Demote to Capture</span>
+                          <span>Demote to Brick</span>
                           <CommandShortcut>D</CommandShortcut>
                         </CommandItem>
                       </CommandGroup>

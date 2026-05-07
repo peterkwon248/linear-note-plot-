@@ -55,7 +55,7 @@ export function ontologyFiltersToRules(filters: OntologyFilters): FilterRule[] {
 export function rulesToOntologyFilters(rules: FilterRule[]): OntologyFilters {
   const tagIds: string[] = []
   let labelId: string | null = null
-  let status: "inbox" | "capture" | "permanent" | "all" = "all"
+  let status: "stone" | "brick" | "keystone" | "all" = "all"
   const relationTypes: RelationType[] = []
   let showWikilinks = true
   let showTagNodes = false
@@ -69,7 +69,7 @@ export function rulesToOntologyFilters(rules: FilterRule[]): OntologyFilters {
         labelId = rule.value
         break
       case "status":
-        status = rule.value as "inbox" | "capture" | "permanent"
+        status = rule.value as "stone" | "brick" | "keystone"
         break
       case "relationType":
         relationTypes.push(rule.value as RelationType)

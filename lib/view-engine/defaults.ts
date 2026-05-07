@@ -28,9 +28,9 @@ const ctx = (field: SortField, direction: SortDirection = "desc"): Partial<ViewS
 })
 
 const CONTEXT_DEFAULTS: Partial<Record<ViewContextKey, Partial<ViewState>>> = {
-  inbox:     { viewMode: "list", ...ctx("updatedAt"), groupBy: "none" },
-  capture:   { viewMode: "list", ...ctx("updatedAt"), groupBy: "none" },
-  permanent: { viewMode: "list", ...ctx("updatedAt"), groupBy: "none" },
+  stone:    { viewMode: "list", ...ctx("updatedAt"), groupBy: "none" },
+  brick:    { viewMode: "list", ...ctx("updatedAt"), groupBy: "none" },
+  keystone: { viewMode: "list", ...ctx("updatedAt"), groupBy: "none" },
   review:    { viewMode: "list", ...ctx("updatedAt"), groupBy: "status" },
   folder:    { viewMode: "list", ...ctx("updatedAt") },
   tag:       { viewMode: "list", ...ctx("updatedAt") },

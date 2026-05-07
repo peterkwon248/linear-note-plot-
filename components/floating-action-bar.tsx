@@ -96,16 +96,16 @@ export function FloatingActionBar({
     return map
   }, [selectedNotes])
 
-  const inboxCount = useMemo(() => selectedNotes.filter(n => n.status === 'inbox').length, [selectedNotes])
-  const captureCount = useMemo(() => selectedNotes.filter(n => n.status === 'capture').length, [selectedNotes])
-  const permanentCount = useMemo(() => selectedNotes.filter(n => n.status === 'permanent').length, [selectedNotes])
+  const inboxCount = useMemo(() => selectedNotes.filter(n => n.status === 'stone').length, [selectedNotes])
+  const captureCount = useMemo(() => selectedNotes.filter(n => n.status === 'brick').length, [selectedNotes])
+  const permanentCount = useMemo(() => selectedNotes.filter(n => n.status === 'keystone').length, [selectedNotes])
 
   /* ── Batch handlers ──────────────────────────────────── */
 
   const handleStatusChange = (status: NoteStatus) => {
     const prevStatuses = ids.map((id) => {
       const n = notes.find((n) => n.id === id)
-      return { id, status: n?.status ?? "inbox" as NoteStatus }
+      return { id, status: n?.status ?? "stone" as NoteStatus }
     })
     batchUpdateNotes(ids, { status })
     pushUndo(`Status → ${status}`, () => {
@@ -117,8 +117,8 @@ export function FloatingActionBar({
   const handleKeepAll = () => {
     ids.forEach((id) => triageKeep(id))
     onClearSelection()
-    pushUndo(`Triage ${count} to Capture`, () => ids.forEach((id) => moveBackToInbox(id)), () => ids.forEach((id) => triageKeep(id)))
-    toast(`Moved ${count} note${count > 1 ? "s" : ""} to Capture`, {
+    pushUndo(`Triage ${count} to Brick`, () => ids.forEach((id) => moveBackToInbox(id)), () => ids.forEach((id) => triageKeep(id)))
+    toast(`Moved ${count} note${count > 1 ? "s" : ""} to Brick`, {
       action: { label: "Undo", onClick: () => ids.forEach((id) => moveBackToInbox(id)) },
       duration: 5000,
     })
@@ -136,8 +136,8 @@ export function FloatingActionBar({
   const handlePromoteAll = () => {
     ids.forEach((id) => promoteToPermanent(id))
     onClearSelection()
-    pushUndo(`Promote ${count} to Permanent`, () => ids.forEach((id) => undoPromote(id)), () => ids.forEach((id) => promoteToPermanent(id)))
-    toast(`Promoted ${count} note${count > 1 ? "s" : ""} to Permanent`, {
+    pushUndo(`Promote ${count} to Keystone`, () => ids.forEach((id) => undoPromote(id)), () => ids.forEach((id) => promoteToPermanent(id)))
+    toast(`Promoted ${count} note${count > 1 ? "s" : ""} to Keystone`, {
       action: { label: "Undo", onClick: () => ids.forEach((id) => undoPromote(id)) },
       duration: 5000,
     })
@@ -146,8 +146,8 @@ export function FloatingActionBar({
   const handleDemoteAll = () => {
     ids.forEach((id) => undoPromote(id))
     onClearSelection()
-    pushUndo(`Demote ${count} to Capture`, () => ids.forEach((id) => promoteToPermanent(id)), () => ids.forEach((id) => undoPromote(id)))
-    toast(`Demoted ${count} note${count > 1 ? "s" : ""} to Capture`, {
+    pushUndo(`Demote ${count} to Brick`, () => ids.forEach((id) => promoteToPermanent(id)), () => ids.forEach((id) => undoPromote(id)))
+    toast(`Demoted ${count} note${count > 1 ? "s" : ""} to Brick`, {
       duration: 5000,
     })
   }
@@ -155,8 +155,8 @@ export function FloatingActionBar({
   const handleMoveBackAll = () => {
     ids.forEach((id) => moveBackToInbox(id))
     onClearSelection()
-    pushUndo(`Move ${count} back to Inbox`, () => ids.forEach((id) => triageKeep(id)), () => ids.forEach((id) => moveBackToInbox(id)))
-    toast(`Moved ${count} note${count > 1 ? "s" : ""} back to Inbox`, {
+    pushUndo(`Move ${count} back to Stone`, () => ids.forEach((id) => triageKeep(id)), () => ids.forEach((id) => moveBackToInbox(id)))
+    toast(`Moved ${count} note${count > 1 ? "s" : ""} back to Stone`, {
       duration: 5000,
     })
   }
@@ -181,30 +181,30 @@ export function FloatingActionBar({
   }
 
   const handleKeepInboxOnly = () => {
-    const inboxIds = selectedNotes.filter(n => n.status === 'inbox').map(n => n.id)
+    const inboxIds = selectedNotes.filter(n => n.status === 'stone').map(n => n.id)
     if (inboxIds.length === 0) return
     inboxIds.forEach((id) => triageKeep(id))
     onClearSelection()
-    pushUndo(`Triage ${inboxIds.length} to Capture`, () => inboxIds.forEach((id) => moveBackToInbox(id)), () => inboxIds.forEach((id) => triageKeep(id)))
-    toast(`Moved ${inboxIds.length} note${inboxIds.length > 1 ? "s" : ""} to Capture`)
+    pushUndo(`Triage ${inboxIds.length} to Brick`, () => inboxIds.forEach((id) => moveBackToInbox(id)), () => inboxIds.forEach((id) => triageKeep(id)))
+    toast(`Moved ${inboxIds.length} note${inboxIds.length > 1 ? "s" : ""} to Brick`)
   }
 
   const handlePromoteCaptureOnly = () => {
-    const captureIds = selectedNotes.filter(n => n.status === 'capture').map(n => n.id)
+    const captureIds = selectedNotes.filter(n => n.status === 'brick').map(n => n.id)
     if (captureIds.length === 0) return
     captureIds.forEach((id) => promoteToPermanent(id))
     onClearSelection()
-    pushUndo(`Promote ${captureIds.length} to Permanent`, () => captureIds.forEach((id) => undoPromote(id)), () => captureIds.forEach((id) => promoteToPermanent(id)))
-    toast(`Promoted ${captureIds.length} note${captureIds.length > 1 ? "s" : ""} to Permanent`)
+    pushUndo(`Promote ${captureIds.length} to Keystone`, () => captureIds.forEach((id) => undoPromote(id)), () => captureIds.forEach((id) => promoteToPermanent(id)))
+    toast(`Promoted ${captureIds.length} note${captureIds.length > 1 ? "s" : ""} to Keystone`)
   }
 
   const handleDemotePermanentOnly = () => {
-    const permIds = selectedNotes.filter(n => n.status === 'permanent').map(n => n.id)
+    const permIds = selectedNotes.filter(n => n.status === 'keystone').map(n => n.id)
     if (permIds.length === 0) return
     permIds.forEach((id) => undoPromote(id))
     onClearSelection()
-    pushUndo(`Demote ${permIds.length} to Capture`, () => permIds.forEach((id) => promoteToPermanent(id)), () => permIds.forEach((id) => undoPromote(id)))
-    toast(`Demoted ${permIds.length} note${permIds.length > 1 ? "s" : ""} to Capture`)
+    pushUndo(`Demote ${permIds.length} to Brick`, () => permIds.forEach((id) => promoteToPermanent(id)), () => permIds.forEach((id) => undoPromote(id)))
+    toast(`Demoted ${permIds.length} note${permIds.length > 1 ? "s" : ""} to Brick`)
   }
 
   /* ── Workflow buttons (conditional on tab) ───────────── */
@@ -229,7 +229,7 @@ export function FloatingActionBar({
           </>
         )
 
-      case "inbox":
+      case "stone":
         return (
           <button
             onClick={handleKeepAll}
@@ -239,7 +239,7 @@ export function FloatingActionBar({
           </button>
         )
 
-      case "capture":
+      case "brick":
         return (
           <>
             <button
@@ -252,12 +252,12 @@ export function FloatingActionBar({
               onClick={handleMoveBackAll}
               className="inline-flex items-center gap-1 rounded-md bg-secondary/60 px-3 py-2 text-ui font-medium text-muted-foreground hover:bg-hover-bg transition-colors"
             >
-              <Tray size={16} weight="regular" /> Back to Inbox
+              <Tray size={16} weight="regular" /> Back to Stone
             </button>
           </>
         )
 
-      case "permanent":
+      case "keystone":
         return (
           <button
             onClick={handleDemoteAll}

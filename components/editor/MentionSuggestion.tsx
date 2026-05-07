@@ -199,12 +199,12 @@ function ItemIcon({ item }: { item: MentionItem }) {
         <IconWikiArticle size={14} className="shrink-0" style={{ color: WIKI_STATUS_HEX.article }} />
       )
     case "note": {
-      const status = item.noteStatus ?? "capture"
+      const status = item.noteStatus ?? "brick"
       const color = NOTE_STATUS_HEX[status]
-      if (status === "inbox") {
+      if (status === "stone") {
         return <CircleDashed className="shrink-0" size={14} style={{ color }} />
       }
-      if (status === "capture") {
+      if (status === "brick") {
         return <CircleHalf className="shrink-0" size={14} style={{ color }} />
       }
       return <CheckCircle className="shrink-0" size={14} style={{ color }} />

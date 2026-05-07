@@ -5,9 +5,9 @@ import type { Note, NoteStatus, NotePriority } from "../types"
 export type ViewContextKey =
   | "all"            // /notes
   | "pinned"         // /pinned
-  | "inbox"          // /inbox
-  | "capture"        // /capture
-  | "permanent"      // /permanent
+  | "stone"          // /stone
+  | "brick"          // /brick
+  | "keystone"       // /keystone
   | "unlinked"       // tab filter within /notes
   | "review"         // /review
   | "folder"         // /folder/[id]
@@ -176,9 +176,9 @@ export interface PipelineExtras {
 /* ── Sort Order Constants ──────────────────────────────── */
 
 export const STATUS_ORDER: Record<NoteStatus, number> = {
-  inbox: 0,
-  capture: 1,
-  permanent: 2,
+  stone: 0,
+  brick: 1,
+  keystone: 2,
 }
 
 export const PRIORITY_ORDER: Record<NotePriority, number> = {
@@ -192,7 +192,7 @@ export const PRIORITY_ORDER: Record<NotePriority, number> = {
 /* ── Valid Keys (for migration normalization) ──────────── */
 
 export const VALID_VIEW_CONTEXT_KEYS: ViewContextKey[] = [
-  "all", "pinned", "inbox", "capture", "permanent",
+  "all", "pinned", "stone", "brick", "keystone",
   "unlinked", "review", "folder", "tag", "label", "trash",
   "savedView", "wiki", "wiki-category", "graph", "calendar",
   // PR template-c: templates list now uses the unified view-engine pipeline.

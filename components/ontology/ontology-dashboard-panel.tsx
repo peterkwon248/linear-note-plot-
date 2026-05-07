@@ -40,11 +40,11 @@ export function OntologyDashboardPanel() {
 
   // Note status distribution
   const statusCounts = useMemo(() => {
-    const c = { inbox: 0, capture: 0, permanent: 0 }
+    const c = { stone: 0, brick: 0, keystone: 0 }
     for (const n of notes) {
-      if (n.status === "inbox") c.inbox++
-      else if (n.status === "capture") c.capture++
-      else if (n.status === "permanent") c.permanent++
+      if (n.status === "stone") c.stone++
+      else if (n.status === "brick") c.brick++
+      else if (n.status === "keystone") c.keystone++
     }
     return c
   }, [notes])
@@ -88,7 +88,7 @@ export function OntologyDashboardPanel() {
       <Section title="Volume">
         <Grid>
           <Stat label="Notes" value={m.totalNotes}
-            sub={`${statusCounts.inbox} inbox · ${statusCounts.capture} capture · ${statusCounts.permanent} permanent`} />
+            sub={`${statusCounts.stone} stone · ${statusCounts.brick} brick · ${statusCounts.keystone} keystone`} />
           <Stat label="Wiki articles" value={m.totalWiki ?? wikiArticles.length} />
           <Stat label="Tags" value={tags.length} />
           <Stat label="Labels" value={labels.length} />

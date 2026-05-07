@@ -93,6 +93,24 @@ export function migrate(persistedState: unknown): PlotState {
   if (state.sidebarLastWidth === undefined) state.sidebarLastWidth = 220
   if (state.sidebarCollapsed === undefined) state.sidebarCollapsed = false
   delete state.sidebarPeek // removed in Split-First migration
+  // v116 (early-bird): rename viewStateByContext keys BEFORE normalizeViewStatesMap.
+  // normalizeViewStatesMap iterates only VALID_VIEW_CONTEXT_KEYS (now stone/brick/keystone),
+  // so without this early rename a v115 user's persisted inbox/capture/permanent customization
+  // would be silently discarded. Idempotent (only renames when target is undefined).
+  if (state.viewStateByContext) {
+    const vsc = state.viewStateByContext as Record<string, unknown>
+    const earlyStatusRenames: Record<string, string> = {
+      inbox: "stone",
+      capture: "brick",
+      permanent: "keystone",
+    }
+    for (const [oldKey, newKey] of Object.entries(earlyStatusRenames)) {
+      if (vsc[oldKey] !== undefined && vsc[newKey] === undefined) {
+        vsc[newKey] = vsc[oldKey]
+        delete vsc[oldKey]
+      }
+    }
+  }
   // v16: ViewState per context
   if (state.viewStateByContext) {
     state.viewStateByContext = normalizeViewStatesMap(
@@ -1739,6 +1757,32 @@ export function migrate(persistedState: unknown): PlotState {
       console.log("[migrate] v114→v115: injected files viewState default")
     }
   }
+
+  // v116: NoteStatus rename — inbox→stone, capture→brick, permanent→keystone.
+  //
+  // Phase A atomic rename. Renames the persisted `status` field on every
+  // note plus the keys in `viewStateByContext` so existing users keep
+  // their per-route view configuration after upgrading. Idempotent —
+  // notes that already carry the new values pass through untouched, and
+  // viewStateByContext entries are only renamed when the new key does
+  // not already exist (avoids clobbering a user-edited target slot).
+  if (state.notes && Array.isArray(state.notes)) {
+    let renamedCount = 0
+    state.notes = (state.notes as Record<string, unknown>[]).map((n) => {
+      const oldStatus = n.status as string
+      let newStatus = oldStatus
+      if (oldStatus === "inbox") newStatus = "stone"
+      else if (oldStatus === "capture") newStatus = "brick"
+      else if (oldStatus === "permanent") newStatus = "keystone"
+      if (newStatus !== oldStatus) renamedCount++
+      return { ...n, status: newStatus }
+    })
+    if (renamedCount > 0) {
+      console.log(`[migrate] v115→v116: renamed NoteStatus on ${renamedCount} notes`)
+    }
+  }
+  // (viewStateByContext key rename happens early — see "v116 (early-bird)" block above —
+  // because normalizeViewStatesMap iterates only VALID_VIEW_CONTEXT_KEYS.)
 
   return state as unknown as PlotState
 }

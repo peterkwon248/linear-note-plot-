@@ -112,7 +112,7 @@ export function SidePanelContext({ noteId: propNoteId }: { noteId?: string | nul
   )
 
   const advanceToNextInbox = useCallback(() => {
-    if (!note || note.status !== "inbox") return
+    if (!note || note.status !== "stone") return
     const inbox = getInboxNotes(notes, backlinks)
     const next = inbox.find((n) => n.id !== note.id)
     setSelectedNoteId(next?.id ?? null)
@@ -187,18 +187,18 @@ export function SidePanelContext({ noteId: propNoteId }: { noteId?: string | nul
         )}
         {/* Stage badge */}
         <span className={`flex items-center gap-1 rounded-md px-2 py-0.5 text-2xs font-medium ${
-          note.status === "inbox"
+          note.status === "stone"
             ? "bg-accent/10 text-accent"
-            : note.status === "capture"
+            : note.status === "brick"
             ? "bg-chart-2/10 text-chart-2"
-            : note.status === "permanent"
+            : note.status === "keystone"
             ? "bg-chart-5/10 text-chart-5"
             : "bg-accent/10 text-accent"
         }`}>
-          {note.status === "permanent" && <PhShield size={14} weight="regular" />}
-          {note.status ? note.status.charAt(0).toUpperCase() + note.status.slice(1) : "Inbox"}
+          {note.status === "keystone" && <PhShield size={14} weight="regular" />}
+          {note.status ? note.status.charAt(0).toUpperCase() + note.status.slice(1) : "Stone"}
         </span>
-        {note.status === "capture" && isReadyToPromote(note, backlinks) && (
+        {note.status === "brick" && isReadyToPromote(note, backlinks) && (
           <span className="flex items-center gap-1 rounded-md bg-chart-5/10 px-2 py-0.5 text-2xs font-medium text-chart-5">
             <Sparkle size={14} weight="regular" />
             Ready to promote
@@ -207,10 +207,10 @@ export function SidePanelContext({ noteId: propNoteId }: { noteId?: string | nul
       </div>
 
       {/* Workflow Actions */}
-      {note.status === "inbox" && note.triageStatus !== "trashed" && (
+      {note.status === "stone" && note.triageStatus !== "trashed" && (
         <div className="flex items-center gap-1.5 px-4 py-2.5 border-b border-border bg-secondary/10">
           <button
-            onClick={() => { triageKeep(note.id); toast("Done — moved to Capture"); advanceToNextInbox() }}
+            onClick={() => { triageKeep(note.id); toast("Done — moved to Brick"); advanceToNextInbox() }}
             className="inline-flex items-center gap-1 rounded-md bg-accent px-2 py-1 text-2xs font-medium text-accent-foreground transition-colors hover:bg-accent/80"
           >
             <PhCheck size={14} weight="bold" />
@@ -246,11 +246,11 @@ export function SidePanelContext({ noteId: propNoteId }: { noteId?: string | nul
         </div>
       )}
 
-      {note.status === "capture" && (
+      {note.status === "brick" && (
         <div className="border-b border-border">
           <div className="flex items-center gap-1.5 px-4 py-2.5 bg-secondary/10">
             <button
-              onClick={() => { promoteToPermanent(note.id); toast("Promoted to Permanent") }}
+              onClick={() => { promoteToPermanent(note.id); toast("Promoted to Keystone") }}
               className={`inline-flex items-center gap-1 rounded-md px-2 py-1 text-2xs font-medium transition-colors ${
                 isReadyToPromote(note, backlinks)
                   ? "bg-chart-5 text-primary-foreground hover:bg-chart-5/80"
@@ -261,11 +261,11 @@ export function SidePanelContext({ noteId: propNoteId }: { noteId?: string | nul
               Promote
             </button>
             <button
-              onClick={() => { moveBackToInbox(note.id); toast("Moved back to Inbox") }}
+              onClick={() => { moveBackToInbox(note.id); toast("Moved back to Stone") }}
               className="inline-flex items-center gap-1 rounded-md border border-border bg-card px-2 py-1 text-2xs font-medium text-muted-foreground transition-colors hover:bg-hover-bg hover:text-foreground"
             >
               <Tray size={14} weight="regular" />
-              Back to Inbox
+              Back to Stone
             </button>
           </div>
           {staleSuggest && (
@@ -273,10 +273,10 @@ export function SidePanelContext({ noteId: propNoteId }: { noteId?: string | nul
               <Warning className="shrink-0 text-destructive" size={14} weight="regular" />
               <span className="text-2xs text-destructive">14+ days untouched.</span>
               <button
-                onClick={() => { moveBackToInbox(note.id); toast("Moved back to Inbox") }}
+                onClick={() => { moveBackToInbox(note.id); toast("Moved back to Stone") }}
                 className="ml-auto text-2xs font-medium text-destructive underline underline-offset-2 hover:no-underline"
               >
-                Move to Inbox?
+                Move to Stone?
               </button>
             </div>
           )}
@@ -289,15 +289,15 @@ export function SidePanelContext({ noteId: propNoteId }: { noteId?: string | nul
         </div>
       )}
 
-      {note.status === "permanent" && (
+      {note.status === "keystone" && (
         <div className="border-b border-border">
           <div className="flex items-center gap-1.5 px-4 py-2.5 bg-secondary/10">
             <button
-              onClick={() => { undoPromote(note.id); toast("Demoted to Capture") }}
+              onClick={() => { undoPromote(note.id); toast("Demoted to Brick") }}
               className="inline-flex items-center gap-1 rounded-md border border-border bg-card px-2 py-1 text-2xs font-medium text-muted-foreground transition-colors hover:bg-hover-bg hover:text-foreground"
             >
               <ArrowDownLeft size={14} weight="regular" />
-              Demote to Capture
+              Demote to Brick
             </button>
           </div>
           {linkCount === 0 && (

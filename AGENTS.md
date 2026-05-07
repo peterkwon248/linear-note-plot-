@@ -24,8 +24,8 @@ Before making changes, read these in order:
 
 1. `lib/types.ts` — All core types: `Note`, `Folder`, `Tag`, `Label`, `NoteTemplate`, `AutopilotRule`, `NoteEvent`, etc.
 2. `lib/store/types.ts` — `PlotState` interface: every state field and every action, plus `EditorTab`, `EditorPanel`, `EditorState`
-3. `lib/store/index.ts` — Store composition, persist config, `partialize`, current version (`version: 30`)
-4. `lib/store/migrate.ts` — All migration logic (v6→v30); read before touching store shape
+3. `lib/store/index.ts` — Store composition, persist config, `partialize`, current version (`version: 116`)
+4. `lib/store/migrate.ts` — All migration logic (v6→v116); read before touching store shape
 5. `lib/view-engine/types.ts` — `ViewState`, `ViewContextKey`, `ViewMode`, `PipelineResult`, sort/group/filter enums
 
 ---
@@ -62,7 +62,7 @@ Bodies are loaded async at startup by `components/providers/body-provider.tsx` w
 
 ### 4. Every New Store Field Needs Migration
 
-The store version is `30` (in `lib/store/index.ts`). When you add a field to `PlotState`:
+The store version is `116` (in `lib/store/index.ts`). When you add a field to `PlotState`:
 
 1. Add the field to `lib/store/types.ts`
 2. Implement the slice logic in `lib/store/slices/{name}.ts`
@@ -196,7 +196,7 @@ In React components, use `useNotesView(contextKey, extras?)` from `lib/view-engi
 Each route has its own `ViewState` stored under `viewStateByContext[contextKey]`. Valid context keys:
 
 ```
-"all" | "pinned" | "inbox" | "capture" | "permanent" | "unlinked" | "review" | "archive" | "folder" | "tag" | "label" | "trash" | "savedView"
+"all" | "pinned" | "stone" | "brick" | "keystone" | "unlinked" | "review" | "archive" | "folder" | "tag" | "label" | "trash" | "savedView"
 ```
 
 ### View Modes
@@ -219,9 +219,9 @@ VALID_COLUMNS: ["title", "status", "folder", "links", "reads", "priority", "crea
 
 | Route | Context key | Status filter | Key actions |
 |---|---|---|---|
-| `/inbox` | `"inbox"` | `status === "inbox"`, untriaged or snoozed-due | triageKeep, triageSnooze, triageTrash |
-| `/capture` | `"capture"` | `status === "capture"` | promoteToPermanent, readyScore |
-| `/permanent` | `"permanent"` | `status === "permanent"` | enrollSRS, reviewSRS, unenrollSRS |
+| `/stone` | `"stone"` | `status === "stone"`, untriaged or snoozed-due | triageKeep, triageSnooze, triageTrash |
+| `/brick` | `"brick"` | `status === "brick"` | promoteToPermanent, readyScore |
+| `/keystone` | `"keystone"` | `status === "keystone"` | enrollSRS, reviewSRS, unenrollSRS |
 | `/notes` | `"all"` | all non-trashed notes | full view engine |
 | `/review` | `"review"` | aggregated queue | `getReviewQueue()` from `lib/queries/notes.ts` |
 | `/activity` | n/a | n/a | Datalog activity feed/stats/timeline |
@@ -232,11 +232,11 @@ VALID_COLUMNS: ["title", "status", "folder", "links", "reads", "priority", "crea
 ### Note Status Lifecycle
 
 ```
-inbox → (triageKeep) → capture → (promoteToPermanent) → permanent
-inbox → (triageSnooze) → inbox (snoozed)
-inbox → (triageTrash) → inbox (trashed, hidden)
-permanent → (undoPromote) → capture
-capture/permanent → (moveBackToInbox) → inbox
+stone → (triageKeep) → brick → (promoteToPermanent) → keystone
+stone → (triageSnooze) → stone (snoozed)
+stone → (triageTrash) → stone (trashed, hidden)
+keystone → (undoPromote) → brick
+brick/keystone → (moveBackToInbox) → stone
 ```
 
 `promoteToPermanent` automatically calls `enrollSRS`.
@@ -277,7 +277,7 @@ Read-only analysis engine producing insights about notes.
 - Fixed intervals: `[1, 3, 7, 14, 30, 60, 120]` days (index = step)
 - `SRSRating`: `0=Again` (reset to step 0), `1=Hard` (hold/step back), `2=Good` (+1 step), `3=Easy` (+2 steps)
 - State stored as `srsStateByNoteId: Record<string, SRSState>` in the main store
-- Only `status === "permanent"` notes can be enrolled
+- Only `status === "keystone"` notes can be enrolled
 - `SRSState` fields: `step`, `dueAt` (ISO), `lastReviewedAt`, `introducedAt`, `lapses`
 
 ---
@@ -304,7 +304,7 @@ Activity event logging and analytics.
 | `lib/idb-storage.ts` | Zustand persist storage backed by IDB (debounced 500ms writes) |
 | `lib/note-body-store.ts` | CRUD for note bodies in `plot-note-bodies` IDB |
 | `lib/settings-store.ts` | Separate Zustand store for app settings |
-| `lib/table-route.ts` | Route store: `TABLE_VIEW_ROUTES` (/notes, /pinned, /trash), `VIEW_ROUTES` (/inbox, /activity, /tags, /labels), active folder/tag/label IDs with mutual exclusion |
+| `lib/table-route.ts` | Route store: `TABLE_VIEW_ROUTES` (/notes, /stone, /brick, /keystone, /pinned, /trash), `VIEW_ROUTES` (/activity, /tags, /labels), active folder/tag/label IDs with mutual exclusion |
 | `components/color-picker-grid.tsx` | 10-color preset grid for label color selection |
 | `lib/graph.ts` | Graph data structures for connections visualization |
 | `lib/backlinks.ts` | Backlink computation utilities |

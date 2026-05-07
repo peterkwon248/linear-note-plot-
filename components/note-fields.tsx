@@ -40,22 +40,22 @@ export const STATUS_CONFIG: Record<
   NoteStatus,
   { label: string; color: string; bg: string; border: string; icon: React.ReactNode }
 > = {
-  inbox: {
-    label: "Inbox",
+  stone: {
+    label: "Stone",
     color: "var(--chart-2)",
     bg: "color-mix(in srgb, var(--chart-2) 18%, transparent)",
     border: "color-mix(in srgb, var(--chart-2) 35%, transparent)",
     icon: <CircleDashed size={14} weight="bold" />,
   },
-  capture: {
-    label: "Capture",
+  brick: {
+    label: "Brick",
     color: "var(--chart-3)",
     bg: "color-mix(in srgb, var(--chart-3) 18%, transparent)",
     border: "color-mix(in srgb, var(--chart-3) 35%, transparent)",
     icon: <CircleHalf size={14} weight="fill" />,
   },
-  permanent: {
-    label: "Permanent",
+  keystone: {
+    label: "Keystone",
     color: "var(--chart-5)",
     bg: "color-mix(in srgb, var(--chart-5) 18%, transparent)",
     border: "color-mix(in srgb, var(--chart-5) 35%, transparent)",
@@ -63,7 +63,7 @@ export const STATUS_CONFIG: Record<
   },
 }
 
-const STATUS_OPTIONS: NoteStatus[] = ["inbox", "capture", "permanent"]
+const STATUS_OPTIONS: NoteStatus[] = ["stone", "brick", "keystone"]
 
 /* ── Priority config ──────────────────────────────────── */
 
@@ -103,7 +103,7 @@ const PRIORITY_OPTIONS: NotePriority[] = ["none", "urgent", "high", "medium", "l
 /* ── StatusBadge ──────────────────────────────────────── */
 
 export function StatusBadge({ status }: { status: NoteStatus }) {
-  const cfg = STATUS_CONFIG[status] ?? STATUS_CONFIG.capture
+  const cfg = STATUS_CONFIG[status] ?? STATUS_CONFIG.brick
   return (
     <span
       className="inline-flex items-center gap-1 rounded-md border px-1.5 py-0.5 text-2xs font-medium leading-none"
@@ -140,7 +140,7 @@ export function StatusDropdown({
   onChange: (status: NoteStatus) => void
   variant?: "button" | "inline"
 }) {
-  const current = STATUS_CONFIG[value] ?? STATUS_CONFIG.capture
+  const current = STATUS_CONFIG[value] ?? STATUS_CONFIG.brick
 
   return (
     <DropdownMenu>

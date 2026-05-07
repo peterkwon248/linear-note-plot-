@@ -16,7 +16,7 @@ function makeNote(overrides: Partial<Note> = {}): Note {
     contentJson: null,
     folderIds: [],
     tags: [],
-    status: 'inbox' as NoteStatus,
+    status: 'stone' as NoteStatus,
     priority: 'none' as NotePriority,
     reads: 0,
     pinned: false,
@@ -84,31 +84,31 @@ describe('applySort', () => {
   })
 
   describe('sort by status', () => {
-    it('should sort by status order: inbox < capture < permanent', () => {
+    it('should sort by status order: stone < brick < keystone', () => {
       const notes = [
-        makeNote({ id: '1', status: 'permanent' }),
-        makeNote({ id: '2', status: 'inbox' }),
-        makeNote({ id: '3', status: 'capture' }),
+        makeNote({ id: '1', status: 'keystone' }),
+        makeNote({ id: '2', status: 'stone' }),
+        makeNote({ id: '3', status: 'brick' }),
       ]
       const sorted = applySort(notes, 'status', 'asc')
       expect(sorted.map(n => n.status)).toEqual([
-        'inbox',
-        'capture',
-        'permanent',
+        'stone',
+        'brick',
+        'keystone',
       ])
     })
 
     it('should reverse status order when descending', () => {
       const notes = [
-        makeNote({ id: '1', status: 'inbox' }),
-        makeNote({ id: '2', status: 'capture' }),
-        makeNote({ id: '3', status: 'permanent' }),
+        makeNote({ id: '1', status: 'stone' }),
+        makeNote({ id: '2', status: 'brick' }),
+        makeNote({ id: '3', status: 'keystone' }),
       ]
       const sorted = applySort(notes, 'status', 'desc')
       expect(sorted.map(n => n.status)).toEqual([
-        'permanent',
-        'capture',
-        'inbox',
+        'keystone',
+        'brick',
+        'stone',
       ])
     })
   })
@@ -352,27 +352,27 @@ describe('applyFilters', () => {
   })
 
   describe('filter by status', () => {
-    it('should filter by status eq "capture"', () => {
+    it('should filter by status eq "brick"', () => {
       const notes = [
-        makeNote({ id: '1', status: 'inbox' }),
-        makeNote({ id: '2', status: 'capture' }),
-        makeNote({ id: '3', status: 'capture' }),
-        makeNote({ id: '4', status: 'permanent' }),
+        makeNote({ id: '1', status: 'stone' }),
+        makeNote({ id: '2', status: 'brick' }),
+        makeNote({ id: '3', status: 'brick' }),
+        makeNote({ id: '4', status: 'keystone' }),
       ]
       const filtered = applyFilters(notes, [
-        { field: 'status', operator: 'eq', value: 'capture' },
+        { field: 'status', operator: 'eq', value: 'brick' },
       ])
       expect(filtered.map(n => n.id)).toEqual(['2', '3'])
     })
 
-    it('should filter by status neq "inbox"', () => {
+    it('should filter by status neq "stone"', () => {
       const notes = [
-        makeNote({ id: '1', status: 'inbox' }),
-        makeNote({ id: '2', status: 'capture' }),
-        makeNote({ id: '3', status: 'permanent' }),
+        makeNote({ id: '1', status: 'stone' }),
+        makeNote({ id: '2', status: 'brick' }),
+        makeNote({ id: '3', status: 'keystone' }),
       ]
       const filtered = applyFilters(notes, [
-        { field: 'status', operator: 'neq', value: 'inbox' },
+        { field: 'status', operator: 'neq', value: 'stone' },
       ])
       expect(filtered.map(n => n.id)).toEqual(['2', '3'])
     })
@@ -513,13 +513,13 @@ describe('applyFilters', () => {
   describe('multiple filters (AND logic)', () => {
     it('should apply multiple filters with AND logic', () => {
       const notes = [
-        makeNote({ id: '1', status: 'inbox', priority: 'high' }),
-        makeNote({ id: '2', status: 'capture', priority: 'high' }),
-        makeNote({ id: '3', status: 'inbox', priority: 'low' }),
-        makeNote({ id: '4', status: 'capture', priority: 'low' }),
+        makeNote({ id: '1', status: 'stone', priority: 'high' }),
+        makeNote({ id: '2', status: 'brick', priority: 'high' }),
+        makeNote({ id: '3', status: 'stone', priority: 'low' }),
+        makeNote({ id: '4', status: 'brick', priority: 'low' }),
       ]
       const filtered = applyFilters(notes, [
-        { field: 'status', operator: 'eq', value: 'inbox' },
+        { field: 'status', operator: 'eq', value: 'stone' },
         { field: 'priority', operator: 'eq', value: 'high' },
       ])
       expect(filtered.map(n => n.id)).toEqual(['1'])
@@ -541,12 +541,12 @@ describe('applyFilters', () => {
 
     it('should return empty when no notes match all filters', () => {
       const notes = [
-        makeNote({ id: '1', status: 'inbox', priority: 'high' }),
-        makeNote({ id: '2', status: 'capture', priority: 'high' }),
-        makeNote({ id: '3', status: 'inbox', priority: 'low' }),
+        makeNote({ id: '1', status: 'stone', priority: 'high' }),
+        makeNote({ id: '2', status: 'brick', priority: 'high' }),
+        makeNote({ id: '3', status: 'stone', priority: 'low' }),
       ]
       const filtered = applyFilters(notes, [
-        { field: 'status', operator: 'eq', value: 'permanent' },
+        { field: 'status', operator: 'eq', value: 'keystone' },
         { field: 'priority', operator: 'eq', value: 'urgent' },
       ])
       expect(filtered).toEqual([])
@@ -618,30 +618,30 @@ describe('applyGrouping', () => {
   describe('groupBy "status"', () => {
     it('should return 3 groups in status order: inbox, capture, permanent', () => {
       const notes = [
-        makeNote({ id: '1', status: 'permanent', title: 'P1' }),
-        makeNote({ id: '2', status: 'inbox', title: 'I1' }),
-        makeNote({ id: '3', status: 'capture', title: 'C1' }),
+        makeNote({ id: '1', status: 'keystone', title: 'P1' }),
+        makeNote({ id: '2', status: 'stone', title: 'I1' }),
+        makeNote({ id: '3', status: 'brick', title: 'C1' }),
       ]
       const groups = applyGrouping(notes, 'status')
       expect(groups).toHaveLength(3)
       expect(groups.map(g => g.key)).toEqual([
-        'inbox',
-        'capture',
-        'permanent',
+        'stone',
+        'brick',
+        'keystone',
       ])
     })
 
     it('should populate correct notes in each status group', () => {
       const notes = [
-        makeNote({ id: '1', status: 'inbox' }),
-        makeNote({ id: '2', status: 'inbox' }),
-        makeNote({ id: '3', status: 'capture' }),
-        makeNote({ id: '4', status: 'permanent' }),
+        makeNote({ id: '1', status: 'stone' }),
+        makeNote({ id: '2', status: 'stone' }),
+        makeNote({ id: '3', status: 'brick' }),
+        makeNote({ id: '4', status: 'keystone' }),
       ]
       const groups = applyGrouping(notes, 'status')
-      const inboxGroup = groups.find(g => g.key === 'inbox')!
-      const captureGroup = groups.find(g => g.key === 'capture')!
-      const permanentGroup = groups.find(g => g.key === 'permanent')!
+      const inboxGroup = groups.find(g => g.key === 'stone')!
+      const captureGroup = groups.find(g => g.key === 'brick')!
+      const permanentGroup = groups.find(g => g.key === 'keystone')!
 
       expect(inboxGroup.notes.map(n => n.id)).toEqual(['1', '2'])
       expect(captureGroup.notes.map(n => n.id)).toEqual(['3'])
@@ -650,8 +650,8 @@ describe('applyGrouping', () => {
 
     it('should return all 3 status groups even if some are empty', () => {
       const notes = [
-        makeNote({ id: '1', status: 'inbox' }),
-        makeNote({ id: '2', status: 'inbox' }),
+        makeNote({ id: '1', status: 'stone' }),
+        makeNote({ id: '2', status: 'stone' }),
       ]
       const groups = applyGrouping(notes, 'status')
       expect(groups).toHaveLength(3)
@@ -663,9 +663,9 @@ describe('applyGrouping', () => {
     it('should have correct labels for status groups', () => {
       const groups = applyGrouping([], 'status')
       expect(groups.map(g => g.label)).toEqual([
-        'Inbox',
-        'Capture',
-        'Permanent',
+        'Stone',
+        'Brick',
+        'Keystone',
       ])
     })
   })

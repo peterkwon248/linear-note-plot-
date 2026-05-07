@@ -141,7 +141,7 @@ export function TemplateDetailPanel({ template }: { template: NoteTemplate }) {
 
       {/* ── Properties ────────────────────────────────────── */}
       {/* v108: Status / Priority rows retired — those fields no longer exist
-          on NoteTemplate. New notes default to "inbox" / "none" and the user
+          on NoteTemplate. New notes default to "stone" / "none" and the user
           adjusts on first edit. Label / Folder remain as meaningful defaults. */}
       <InspectorSection title="Properties" icon={<Layout size={11} weight="regular" />}>
         <PropertyRow label="Label">

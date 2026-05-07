@@ -28,14 +28,14 @@ export function HomeView() {
   // Compute insights
   const insights = useMemo(() => {
     const liveNotes = notes.filter((n: Note) => !n.trashed)
-    const inboxNotes = liveNotes.filter((n: Note) => n.status === "inbox")
+    const inboxNotes = liveNotes.filter((n: Note) => n.status === "stone")
     const recentlyEdited = [...liveNotes]
       .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
       .slice(0, 5)
-    
-    // Featured note: most recently edited non-inbox note
+
+    // Featured note: most recently edited non-stone note
     const featured = liveNotes
-      .filter((n: Note) => n.status !== "inbox")
+      .filter((n: Note) => n.status !== "stone")
       .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())[0]
 
     // Most connected notes — out-degree (linksOut) + in-degree (backlinks via index)
@@ -116,7 +116,7 @@ export function HomeView() {
               iconColor="text-amber-500 dark:text-amber-400"
               trailing={
                 <button
-                  onClick={() => setActiveRoute("/inbox")}
+                  onClick={() => setActiveRoute("/stone")}
                   className="text-2xs text-muted-foreground hover:text-foreground transition-colors"
                 >
                   View all <span aria-hidden>→</span>

@@ -55,9 +55,9 @@ const STATUS_GROUP: PickerFilterGroup = {
   icon: CircleDashed,
   field: "status" as FilterField,
   values: [
-    { value: "inbox", label: "Inbox" },
-    { value: "capture", label: "Capture" },
-    { value: "permanent", label: "Permanent" },
+    { value: "stone", label: "Stone" },
+    { value: "brick", label: "Brick" },
+    { value: "keystone", label: "Keystone" },
   ],
 }
 

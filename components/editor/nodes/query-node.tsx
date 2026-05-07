@@ -73,22 +73,22 @@ const FILTER_OPERATOR_OPTIONS: { value: FilterOperator; label: string }[] = [
 
 function StatusBadge({ status }: { status: string }) {
   switch (status) {
-    case "inbox":
+    case "stone":
       return (
         <span className="inline-flex items-center gap-1 text-2xs text-muted-foreground">
-          <CircleDashed size={12} /> Inbox
+          <CircleDashed size={12} /> Stone
         </span>
       )
-    case "capture":
+    case "brick":
       return (
         <span className="inline-flex items-center gap-1 text-2xs text-[var(--accent)]">
-          <CircleHalf size={12} /> Capture
+          <CircleHalf size={12} /> Brick
         </span>
       )
-    case "permanent":
+    case "keystone":
       return (
         <span className="inline-flex items-center gap-1 text-2xs text-[var(--accent)]">
-          <CheckCircle size={12} /> Permanent
+          <CheckCircle size={12} /> Keystone
         </span>
       )
     default:
@@ -397,18 +397,18 @@ function QueryPresetPicker({
   const presets: { icon: React.ReactNode; label: string; filters: FilterRule[] }[] = [
     {
       icon: <Tray size={16} className="text-muted-foreground" />,
-      label: "Inbox notes",
-      filters: [{ field: "status" as FilterField, operator: "eq" as FilterOperator, value: "inbox" }],
+      label: "Stone notes",
+      filters: [{ field: "status" as FilterField, operator: "eq" as FilterOperator, value: "stone" }],
     },
     {
       icon: <CheckCircle size={16} className="text-muted-foreground" />,
-      label: "Permanent notes",
-      filters: [{ field: "status" as FilterField, operator: "eq" as FilterOperator, value: "permanent" }],
+      label: "Keystone notes",
+      filters: [{ field: "status" as FilterField, operator: "eq" as FilterOperator, value: "keystone" }],
     },
     {
       icon: <CircleHalf size={16} className="text-muted-foreground" />,
-      label: "Capture notes",
-      filters: [{ field: "status" as FilterField, operator: "eq" as FilterOperator, value: "capture" }],
+      label: "Brick notes",
+      filters: [{ field: "status" as FilterField, operator: "eq" as FilterOperator, value: "brick" }],
     },
     {
       icon: <PushPin size={16} className="text-muted-foreground" />,

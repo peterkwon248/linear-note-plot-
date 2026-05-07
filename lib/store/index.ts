@@ -176,7 +176,7 @@ export const usePlotStore = create<PlotState>()(
 
           if (!quickNote) {
             // Create new Quick Tasks note
-            noteId = state.createNote({ title: "Quick Tasks", status: "inbox" as const })
+            noteId = state.createNote({ title: "Quick Tasks", status: "stone" as const })
             // Build initial contentJson with the task
             const contentJson = {
               type: "doc",
@@ -242,7 +242,7 @@ export const usePlotStore = create<PlotState>()(
     },
     {
       name: "plot-store",
-      version: 115,
+      version: 116,
       storage: createIDBStorage<PlotState>(),
       partialize: (state) => {
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
