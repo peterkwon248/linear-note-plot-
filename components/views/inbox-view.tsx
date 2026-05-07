@@ -9,9 +9,7 @@ import { ViewHeader } from "@/components/view-header"
 import { IconInbox } from "@/components/plot-icons"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { toast } from "sonner"
-import { Bell } from "@phosphor-icons/react/dist/ssr/Bell"
-import { Brain } from "@phosphor-icons/react/dist/ssr/Brain"
-import { MoonStars } from "@phosphor-icons/react/dist/ssr/MoonStars"
+import { InboxSourceIcon } from "@/components/inbox/inbox-source-icon"
 import { X as PhX } from "@phosphor-icons/react/dist/ssr/X"
 import { Clock } from "@phosphor-icons/react/dist/ssr/Clock"
 
@@ -25,18 +23,6 @@ const TABS: { id: FilterTab; label: string }[] = [
   { id: "srs", label: "SRS" },
   { id: "snoozed", label: "Snoozed" },
 ]
-
-/* ── InboxSourceIcon (shared with home-view pattern) ─── */
-
-function InboxSourceIcon({ kind, className }: { kind: InboxItemKind; className?: string }) {
-  const iconProps = { size: 14, weight: "regular" as const, className }
-  switch (kind) {
-    case "srs":            return <Brain {...iconProps} />
-    case "snooze-expired": return <MoonStars {...iconProps} />
-    case "reminder":
-    default:               return <Bell {...iconProps} />
-  }
-}
 
 /* ── Snooze option helpers ────────────────────────────── */
 
@@ -81,7 +67,11 @@ function InboxRowFull({
     // Don't open note when clicking action buttons
     const target = e.target as HTMLElement
     if (target.closest("[data-inbox-action]")) return
-    onOpenNote(item.sourceId)
+    if (item.kind === "wiki-redlink" || item.kind === "auto-enroll") {
+      setActiveRoute("/wiki")
+    } else {
+      onOpenNote(item.sourceId)
+    }
   }
 
   function handleDismiss(e: React.MouseEvent) {
@@ -110,7 +100,13 @@ function InboxRowFull({
       tabIndex={0}
       onClick={handleRowClick}
       onKeyDown={(e) => {
-        if (e.key === "Enter" || e.key === " ") onOpenNote(item.sourceId)
+        if (e.key === "Enter" || e.key === " ") {
+          if (item.kind === "wiki-redlink" || item.kind === "auto-enroll") {
+            setActiveRoute("/wiki")
+          } else {
+            onOpenNote(item.sourceId)
+          }
+        }
       }}
       className="group flex w-full cursor-pointer items-center gap-2.5 rounded-md px-3 py-2 text-left transition-colors duration-100 hover:bg-hover-bg focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
     >
