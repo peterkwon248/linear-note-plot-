@@ -83,9 +83,33 @@ export function ActivityBar() {
       className="a-actbar h-full shrink-0"
       style={{ width: "var(--a-actbar-w, 72px)" }}
     >
-      {/* Brand mark — gradient "P" logo */}
+      {/* Brand mark — Plot logo (knowledge network graph on gradient) */}
       <div className="a-actbar__head">
-        <div className="a-brand__mark">P</div>
+        <div className="a-brand__mark">
+          <svg
+            width={20}
+            height={20}
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth={1.3}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            aria-hidden="true"
+          >
+            {/* Outer ring (subtle, 1px stroke) */}
+            <circle cx="12" cy="12" r="9.5" strokeWidth={1.1} />
+            {/* Edges — knowledge graph triangulation (zettelkasten / palantir) */}
+            <path d="M5 8 L12 5 M12 5 L19 8 M5 8 L12 12 M19 8 L12 12 M12 5 L12 12 M5 8 L9 17 M19 8 L15 17 M9 17 L12 12 M15 17 L12 12 M9 17 L15 17" />
+            {/* Nodes (filled circles, prominent center) */}
+            <circle cx="12" cy="5" r="1.3" fill="currentColor" stroke="none" />
+            <circle cx="5" cy="8" r="1.3" fill="currentColor" stroke="none" />
+            <circle cx="19" cy="8" r="1.3" fill="currentColor" stroke="none" />
+            <circle cx="9" cy="17" r="1.3" fill="currentColor" stroke="none" />
+            <circle cx="15" cy="17" r="1.3" fill="currentColor" stroke="none" />
+            <circle cx="12" cy="12" r="1.7" fill="currentColor" stroke="none" />
+          </svg>
+        </div>
       </div>
 
       {/* Sidebar open button — only when collapsed (Plot 패턴 보존) */}
