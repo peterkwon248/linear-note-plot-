@@ -189,11 +189,14 @@ export function IconBrick({ size = 20, ...rest }: IconProps) {
 }
 
 /**
- * Keystone — custom architectural keystone wedge (trapezoid wider at top).
+ * Keystone — 3-cube pyramid (1 top + 2 bottom).
  *
- * Hexagon (raw mineral) → Cube (processed unit) → Keystone (specialized
- * brick at the apex of an arch). Stroke ratio matches phosphor regular
- * (1.5/24 = 6.25%) so it sits cleanly next to Hexagon and Cube at 20px.
+ * Hexagon (raw mineral) → Cube (single processed unit) → 3 cubes assembled
+ * into a small structure with the top cube occupying the keystone position.
+ * Reads as "brick has evolved into a built structure."
+ *
+ * Stroke ratio matches phosphor regular (1.5/24 = 6.25%) so it sits
+ * visually coherent next to Hexagon and Cube at 20px.
  */
 export function IconKeystone({ size = 20, ...rest }: IconProps) {
   return (
@@ -208,7 +211,12 @@ export function IconKeystone({ size = 20, ...rest }: IconProps) {
       strokeLinejoin="round"
       {...rest}
     >
-      <path d="M 4 4 L 20 4 L 17 20 L 7 20 Z" />
+      {/* Top cube — keystone position */}
+      <rect x="7.5" y="3" width="9" height="9" />
+      {/* Bottom-left supporting cube */}
+      <rect x="3" y="14" width="9" height="9" />
+      {/* Bottom-right supporting cube */}
+      <rect x="12" y="14" width="9" height="9" />
     </svg>
   )
 }
