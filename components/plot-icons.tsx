@@ -12,6 +12,7 @@
 import { type SVGProps } from "react"
 import { Hexagon } from "@phosphor-icons/react/dist/ssr/Hexagon"
 import { Cube } from "@phosphor-icons/react/dist/ssr/Cube"
+import { Buildings } from "@phosphor-icons/react/dist/ssr/Buildings"
 
 type IconProps = SVGProps<SVGSVGElement> & { size?: number }
 
@@ -189,37 +190,13 @@ export function IconBrick({ size = 20, ...rest }: IconProps) {
 }
 
 /**
- * Keystone — 2 isometric cubes stacked vertically.
- *
- * Hexagon (raw 2D crystal) → Cube (single 3D unit) → 2 stacked Cubes
- * (3D structure built from units). Each cube uses the same hex-silhouette
- * + Y-internal-edges isometric language as phosphor Cube, so the keystone
- * preserves the 3D depth feel its neighbor has at 20px instead of falling
- * back to a flat 2D shape.
- *
- * Stroke ratio (1.5/24 = 6.25%) matches phosphor regular.
+ * Keystone — phosphor `Buildings` (regular weight). Buildings made of
+ * bricks read as the mature endpoint of the architectural progression:
+ * Hexagon (raw mineral) → Cube (single unit) → Buildings (completed
+ * structures from many units).
  */
 export function IconKeystone({ size = 20, ...rest }: IconProps) {
-  return (
-    <svg
-      width={size}
-      height={size}
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth={1.5}
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      {...rest}
-    >
-      {/* Top cube — hex silhouette + 3-edge Y for the front-corner */}
-      <path d="M 12 1 L 17 3 L 17 9 L 12 11 L 7 9 L 7 3 Z" />
-      <path d="M 12 6 L 12 1 M 12 6 L 17 9 M 12 6 L 7 9" />
-      {/* Bottom cube — same shape, stacked under with a small gap */}
-      <path d="M 12 13 L 17 15 L 17 21 L 12 23 L 7 21 L 7 15 Z" />
-      <path d="M 12 18 L 12 13 M 12 18 L 17 21 M 12 18 L 7 21" />
-    </svg>
-  )
+  return <Buildings size={size} weight="regular" {...rest} />
 }
 
 export function IconPin({ size = 14, ...props }: IconProps) {
