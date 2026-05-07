@@ -1,8 +1,23 @@
 # Phosphor Icon Inventory (v3 codemod 입력)
 
-**Generated**: 2026-05-07  
-**Scope**: Phase 2 codemod 준비 데이터  
-**Current Status**: 프로젝트는 phosphor-icons를 **매우 제한적** 사용  
+> ## 🔴 ARCHIVED (2026-05-07) — 데이터 부정확
+>
+> 이 문서는 **stale + 부정확**합니다. 사용 금지. 의사결정 입력으로 쓰지 마세요.
+>
+> **부정확한 사실**:
+> - "2 files / 4 icons / weight 2곳" 주장 → **실측 119 files / 60+ icons / 87 files weight 사용**
+> - 누락 grep: `from "@phosphor-icons/react/dist/ssr/<X>"` 패턴 미반영
+> - "Phase 2 codemod = trivial 0.5일" 주장 → **실제 single-PR로 안전하지 않음**
+>
+> **결정**: Plot v3 Phase 2 (Imperial icon kit replace) **보류** (`docs/PLOT-V3-VISUAL-REFRESH-PRD.md` 상단 DECISION 섹션 참조).
+>
+> **재개 조건**: 정확한 인벤토리 재작성 후. 본 문서는 **historical reference**로 남김 (삭제 X).
+
+---
+
+**Generated**: 2026-05-07
+**Scope**: Phase 2 codemod 준비 데이터
+**Current Status**: ⚠️ ARCHIVED — 부정확 (위 banner 참조)
 
 ---
 

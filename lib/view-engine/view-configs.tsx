@@ -596,6 +596,101 @@ export const TAGS_LIST_VIEW_CONFIG: ViewConfig = {
   },
 }
 
+// Files entity index view config (PR group-c-d-5).
+// Files are media entities (Attachment — type "image" | "url" | "file").
+// list+grid both supported — image previews drive grid value. Sort by name /
+// createdAt / size / fileType. groupBy "none" 1차 (filter by type kept local
+// — multi-state UI doesn't fit viewState.groupBy union). Search not exposed
+// (no global SearchHandled at view-engine level for this entity).
+export const FILES_VIEW_CONFIG: ViewConfig = {
+  showFilter: false,
+  showDisplay: true,
+  showDetailPanel: false,
+  filterCategories: [],
+  quickFilters: [],
+  displayConfig: {
+    supportedModes: ["list", "grid"],
+    orderingOptions: [
+      { value: "createdAt", label: "Created" },
+      { value: "name", label: "Name" },
+      { value: "size", label: "Size" },
+      { value: "fileType", label: "Type" },
+    ],
+    groupingOptions: [
+      { value: "none", label: "No grouping" },
+    ],
+    toggles: [],
+    properties: [
+      { key: "fileType", label: "Type", icon: SortIcon },
+      { key: "size", label: "Size", icon: SortIcon },
+    ],
+  },
+}
+
+// References entity index view config (PR group-c-d-4).
+// References are rich entities (title + content + infobox fields + tags + image)
+// — first non-Note entity in this series. list+grid both supported.
+// Sort by updatedAt / createdAt / title / fieldCount. groupBy "type" (link vs
+// citation, derived from url field) is supported via the hook's classifier.
+// Note: quickFilter (all/linked/unlinked/links) and field-key filter are kept
+// LOCAL to ReferencesView for now — multi-state UI doesn't fit toggles
+// (boolean record). Future PR can lift them into viewState.filters.
+// Search is local (ViewHeader searchValue/onSearchChange) for the same reason.
+export const REFERENCES_VIEW_CONFIG: ViewConfig = {
+  showFilter: false,
+  showDisplay: true,
+  showDetailPanel: false,
+  filterCategories: [],
+  quickFilters: [],
+  displayConfig: {
+    supportedModes: ["list", "grid"],
+    orderingOptions: [
+      { value: "updatedAt", label: "Updated" },
+      { value: "createdAt", label: "Created" },
+      { value: "title", label: "Name" },
+      { value: "fieldCount", label: "Field count" },
+    ],
+    groupingOptions: [
+      { value: "none", label: "No grouping" },
+    ],
+    toggles: [],
+    properties: [
+      { key: "fieldCount", label: "Field count", icon: SortIcon },
+      { key: "image", label: "Image", icon: ContentIcon },
+    ],
+  },
+}
+
+// Stickers entity index view config (PR group-c-d-3).
+// Stickers are cross-everything bundling markers with required color (drives
+// graph hull). list+grid only. Sort by name (alpha) or memberCount (cross-
+// entity). No filter categories (stickers cross all entity kinds).
+// Search is handled globally via searchQuery.
+// Key difference from Tags/Labels: members are cross-entity (note + wiki +
+// tag/label/category/file/reference) — count semantics differ accordingly.
+export const STICKERS_LIST_VIEW_CONFIG: ViewConfig = {
+  showFilter: false,
+  showDisplay: true,
+  showDetailPanel: false,
+  filterCategories: [],
+  quickFilters: [],
+  displayConfig: {
+    supportedModes: ["list", "grid"],
+    orderingOptions: [
+      { value: "name", label: "Name" },
+      { value: "memberCount", label: "Member count" },
+    ],
+    groupingOptions: [
+      { value: "none", label: "No grouping" },
+    ],
+    toggles: [],
+    properties: [
+      { key: "memberCount", label: "Member count", icon: SortIcon },
+      { key: "color", label: "Color", icon: ColorDotIcon },
+    ],
+  },
+}
+
 export const VIEW_CONFIGS: Record<string, ViewConfig> = {
   notes: NOTES_VIEW_CONFIG,
   wiki: WIKI_VIEW_CONFIG,
@@ -607,4 +702,7 @@ export const VIEW_CONFIGS: Record<string, ViewConfig> = {
   templates: TEMPLATES_VIEW_CONFIG,
   "tags-list": TAGS_LIST_VIEW_CONFIG,
   "labels-list": LABELS_LIST_VIEW_CONFIG,
+  stickers: STICKERS_LIST_VIEW_CONFIG,
+  references: REFERENCES_VIEW_CONFIG,
+  files: FILES_VIEW_CONFIG,
 }

@@ -1698,5 +1698,47 @@ export function migrate(persistedState: unknown): PlotState {
     })
   }
 
+  // v113: Stickers entity index view-engine integration (PR group-c-d-3).
+  //
+  // Inject viewStateByContext["stickers"] default if not already present.
+  // Idempotent — existing users who already have the key keep their persisted
+  // viewState. New key only injected for users upgrading from v112.
+  {
+    const vsc = state.viewStateByContext as Record<string, unknown> | undefined
+    if (vsc && !("stickers" in vsc)) {
+      const defaultState = buildViewStateForContext("stickers")
+      vsc["stickers"] = defaultState
+      console.log("[migrate] v112→v113: injected stickers viewState default")
+    }
+  }
+
+  // v114: References entity index view-engine integration (PR group-c-d-4).
+  //
+  // Inject viewStateByContext["references"] default if not already present.
+  // Idempotent — existing users who already have the key keep their persisted
+  // viewState. New key only injected for users upgrading from v113.
+  {
+    const vsc = state.viewStateByContext as Record<string, unknown> | undefined
+    if (vsc && !("references" in vsc)) {
+      const defaultState = buildViewStateForContext("references")
+      vsc["references"] = defaultState
+      console.log("[migrate] v113→v114: injected references viewState default")
+    }
+  }
+
+  // v115: Files entity index view-engine integration (PR group-c-d-5).
+  //
+  // Inject viewStateByContext["files"] default if not already present.
+  // Idempotent — existing users who already have the key keep their persisted
+  // viewState. New key only injected for users upgrading from v114.
+  {
+    const vsc = state.viewStateByContext as Record<string, unknown> | undefined
+    if (vsc && !("files" in vsc)) {
+      const defaultState = buildViewStateForContext("files")
+      vsc["files"] = defaultState
+      console.log("[migrate] v114→v115: injected files viewState default")
+    }
+  }
+
   return state as unknown as PlotState
 }

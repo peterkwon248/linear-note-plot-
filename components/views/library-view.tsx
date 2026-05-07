@@ -15,6 +15,10 @@ import {
   ContextMenuSeparator,
 } from "@/components/ui/context-menu"
 import { ViewHeader } from "@/components/view-header"
+import { useReferencesView } from "@/lib/view-engine/use-references-view"
+import { useFilesView } from "@/lib/view-engine/use-files-view"
+import { REFERENCES_VIEW_CONFIG, FILES_VIEW_CONFIG } from "@/lib/view-engine/view-configs"
+import { RefTypeChip, RefFieldCountChip, RefImageChip, FileTypeChip, FileSizeChip } from "@/components/property-chips"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -64,7 +68,6 @@ function formatFileSize(bytes: number): string {
 
 type QuickFilterType = "all" | "linked" | "unlinked" | "links"
 type SortField = "updatedAt" | "title" | "createdAt"
-type SortDir = "asc" | "desc"
 
 /* ── Quick Filter Button ─────────────────────────── */
 
@@ -864,15 +867,17 @@ function LibraryOverview() {
 
 /* ── Files View — All Notes-level table design ────── */
 
-type FilesSortField = "name" | "size" | "type" | "createdAt"
+/** View-engine SortField subset used in FilesView column headers. */
+type FilesSortField = "name" | "size" | "fileType" | "createdAt"
 
 function FilesView() {
   const attachments = usePlotStore((s) => s.attachments)
   const addAttachment = usePlotStore((s) => s.addAttachment)
   const removeAttachment = usePlotStore((s) => s.removeAttachment)
+  // PR group-c-d-5: sort moved into viewState (persisted via view-engine).
+  // type filter (all/image/document) kept local — multi-state radio doesn't
+  // fit viewState.toggles boolean record (future PR can lift).
   const [filter, setFilter] = useState<"all" | "image" | "document">("all")
-  const [sortField, setSortField] = useState<FilesSortField>("createdAt")
-  const [sortDir, setSortDir] = useState<SortDir>("desc")
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
   const lastClickedRef = useRef<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -899,33 +904,37 @@ function FilesView() {
     e.target.value = ""
   }
 
-  const filtered = useMemo(() => {
+  // Stage 1: filter only (no sort) — sort handled by useFilesView (viewState).
+  const filteredAttachments = useMemo(() => {
     let arr = activeAttachments
     if (filter === "image") arr = arr.filter((a) => a.type === "image")
     else if (filter === "document") arr = arr.filter((a) => a.type !== "image")
+    return arr
+  }, [activeAttachments, filter])
 
-    const sorted = [...arr]
-    sorted.sort((a, b) => {
-      let cmp = 0
-      if (sortField === "name") cmp = (a.name || "").localeCompare(b.name || "")
-      else if (sortField === "size") cmp = (a.size || 0) - (b.size || 0)
-      else if (sortField === "type") cmp = (a.type || "").localeCompare(b.type || "")
-      else cmp = new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
-      return sortDir === "asc" ? cmp : -cmp
-    })
-    return sorted
-  }, [activeAttachments, filter, sortField, sortDir])
+  // Stage 2: sort via view-engine (sort persisted in viewState).
+  const {
+    flatAttachments: filtered,
+    viewState,
+    updateViewState,
+  } = useFilesView(filteredAttachments)
+  const isGridMode = viewState.viewMode === "grid"
+  const sortField = viewState.sortFields[0]?.field ?? "createdAt"
+  const sortDirection = viewState.sortFields[0]?.direction ?? "desc"
 
-  const toggleSort = useCallback((field: FilesSortField) => {
-    setSortField((prev) => {
-      if (prev === field) {
-        setSortDir((d) => (d === "asc" ? "desc" : "asc"))
-      } else {
-        setSortDir(field === "name" || field === "type" ? "asc" : "desc")
-      }
-      return field
-    })
-  }, [])
+  // Sort toggle helper — used by display popover and column headers.
+  // field: "name" | "size" | "fileType" | "createdAt" (view-engine SortField subset).
+  const handleSortToggle = useCallback((field: FilesSortField) => {
+    const currentField = viewState.sortFields[0]?.field
+    const currentDir = viewState.sortFields[0]?.direction
+    let nextDir: "asc" | "desc"
+    if (currentField === field) {
+      nextDir = currentDir === "asc" ? "desc" : "asc"
+    } else {
+      nextDir = field === "name" || field === "fileType" ? "asc" : "desc"
+    }
+    updateViewState({ sortFields: [{ field, direction: nextDir }] })
+  }, [viewState.sortFields, updateViewState])
 
   const imageCount = useMemo(() => activeAttachments.filter((a) => a.type === "image").length, [activeAttachments])
   const docCount = useMemo(() => activeAttachments.filter((a) => a.type !== "image").length, [activeAttachments])
@@ -990,6 +999,59 @@ function FilesView() {
         title="Files"
         count={activeAttachments.length}
         onCreateNew={() => fileInputRef.current?.click()}
+        showDisplay={FILES_VIEW_CONFIG.showDisplay}
+        displayContent={
+          <div className="p-3 w-[240px]">
+            {/* View Mode (PR group-c-d-5) */}
+            <div className="text-2xs font-medium text-muted-foreground mb-2">View as</div>
+            <div className="flex gap-1 mb-3">
+              {([
+                { mode: "list" as const, label: "List" },
+                { mode: "grid" as const, label: "Grid" },
+              ]).map(({ mode, label }) => (
+                <button
+                  key={mode}
+                  onClick={() => updateViewState({ viewMode: mode })}
+                  className={cn(
+                    "px-2.5 py-1 rounded-md text-2xs font-medium transition-colors capitalize",
+                    viewState.viewMode === mode
+                      ? "bg-accent/10 text-accent"
+                      : "text-muted-foreground hover:bg-hover-bg hover:text-foreground"
+                  )}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+
+            {/* Sort */}
+            <div className="text-2xs font-medium text-muted-foreground mb-2">Sort by</div>
+            <div className="flex flex-wrap gap-1">
+              {([
+                { field: "createdAt" as const, label: "Created" },
+                { field: "name" as const, label: "Name" },
+                { field: "size" as const, label: "Size" },
+                { field: "fileType" as const, label: "Type" },
+              ]).map(({ field, label }) => (
+                <button
+                  key={field}
+                  onClick={() => handleSortToggle(field)}
+                  className={cn(
+                    "flex items-center gap-1 px-2.5 py-1 rounded-md text-2xs font-medium transition-colors",
+                    sortField === field
+                      ? "bg-accent/10 text-accent"
+                      : "text-muted-foreground hover:bg-hover-bg hover:text-foreground"
+                  )}
+                >
+                  {label}
+                  {sortField === field && (
+                    sortDirection === "asc" ? <CaretUp size={10} /> : <CaretDown size={10} />
+                  )}
+                </button>
+              ))}
+            </div>
+          </div>
+        }
       />
       <input
         ref={fileInputRef}
@@ -1038,6 +1100,90 @@ function FilesView() {
               </button>
             )}
           </div>
+        ) : isGridMode ? (
+          /* ── Grid Mode (PR group-c-d-5) ── */
+          <div className="grid grid-cols-[repeat(auto-fill,minmax(180px,1fr))] gap-3 p-4">
+            {filtered.map((att) => {
+              const isSelected = selectedIds.has(att.id)
+              const isImage = att.type === "image"
+              return (
+                <ContextMenu key={att.id}>
+                  <ContextMenuTrigger asChild>
+                    <div
+                      className={cn(
+                        "group relative flex flex-col gap-2 rounded-lg border border-border/60 p-3 transition-all cursor-pointer",
+                        isSelected
+                          ? "bg-accent/8 border-accent/40"
+                          : "bg-card hover:bg-hover-bg hover:border-border",
+                      )}
+                      onClick={(e) => {
+                        if ((e.target as HTMLElement).closest("button")) return
+                        toggleSelect(att.id, e)
+                      }}
+                    >
+                      {/* Checkbox (top-right) */}
+                      <button
+                        onClick={(e) => { e.stopPropagation(); toggleSelect(att.id, e) }}
+                        className={cn(
+                          "absolute right-2 top-2 h-4 w-4 shrink-0 rounded-[4px] border flex items-center justify-center cursor-pointer transition-all shadow-sm z-10",
+                          isSelected
+                            ? "bg-accent border-accent opacity-100"
+                            : "opacity-0 group-hover:opacity-100 bg-card border-zinc-400 dark:border-zinc-600",
+                        )}
+                      >
+                        {isSelected && <Check size={10} weight="bold" className="text-accent-foreground" />}
+                      </button>
+
+                      {/* Thumbnail / Icon block (4:3 aspect) */}
+                      <div className="aspect-[4/3] w-full overflow-hidden rounded bg-muted/40 flex items-center justify-center">
+                        {isImage ? (
+                          <PhImage weight="duotone" className="h-10 w-10 text-accent" />
+                        ) : (
+                          <FileText weight="duotone" className="h-10 w-10 text-muted-foreground" />
+                        )}
+                      </div>
+
+                      {/* Name */}
+                      <span
+                        className="truncate text-note text-foreground leading-tight"
+                        title={att.name}
+                      >
+                        {att.name || "Untitled file"}
+                      </span>
+
+                      {/* PropertyChip row */}
+                      <div className="flex items-center gap-1 mt-auto flex-wrap">
+                        <FileTypeChip type={att.type} />
+                        <FileSizeChip size={att.size || 0} />
+                      </div>
+                    </div>
+                  </ContextMenuTrigger>
+                  <ContextMenuContent className="w-48">
+                    <ContextMenuItem
+                      onClick={() => {
+                        navigator.clipboard.writeText(att.name || "")
+                        toast.success("Copied filename")
+                      }}
+                    >
+                      <Copy weight="bold" className="mr-2 h-3.5 w-3.5" />
+                      Copy filename
+                    </ContextMenuItem>
+                    <ContextMenuSeparator />
+                    <ContextMenuItem
+                      onClick={() => {
+                        removeAttachment(att.id)
+                        toast.success("Moved to trash")
+                      }}
+                      className="text-destructive focus:text-destructive"
+                    >
+                      <Trash weight="bold" className="mr-2 h-3.5 w-3.5" />
+                      Delete
+                    </ContextMenuItem>
+                  </ContextMenuContent>
+                </ContextMenu>
+              )
+            })}
+          </div>
         ) : (
           <div>
             {/* Header row — Notes-aligned */}
@@ -1064,45 +1210,45 @@ function FilesView() {
                 </div>
               </div>
               <button
-                onClick={() => toggleSort("name")}
+                onClick={() => handleSortToggle("name")}
                 className="flex items-center gap-0.5 hover:text-foreground transition-colors text-left"
               >
                 Name
                 {sortField === "name" && (
-                  sortDir === "asc"
+                  sortDirection === "asc"
                     ? <CaretUp size={10} weight="bold" className="text-accent" />
                     : <CaretDown size={10} weight="bold" className="text-accent" />
                 )}
               </button>
               <button
-                onClick={() => toggleSort("size")}
+                onClick={() => handleSortToggle("size")}
                 className="flex items-center justify-end gap-0.5 hover:text-foreground transition-colors"
               >
                 Size
                 {sortField === "size" && (
-                  sortDir === "asc"
+                  sortDirection === "asc"
                     ? <CaretUp size={10} weight="bold" className="text-accent" />
                     : <CaretDown size={10} weight="bold" className="text-accent" />
                 )}
               </button>
               <button
-                onClick={() => toggleSort("type")}
+                onClick={() => handleSortToggle("fileType")}
                 className="flex items-center justify-end gap-0.5 hover:text-foreground transition-colors"
               >
                 Type
-                {sortField === "type" && (
-                  sortDir === "asc"
+                {sortField === "fileType" && (
+                  sortDirection === "asc"
                     ? <CaretUp size={10} weight="bold" className="text-accent" />
                     : <CaretDown size={10} weight="bold" className="text-accent" />
                 )}
               </button>
               <button
-                onClick={() => toggleSort("createdAt")}
+                onClick={() => handleSortToggle("createdAt")}
                 className="flex items-center justify-end gap-0.5 hover:text-foreground transition-colors"
               >
                 Created
                 {sortField === "createdAt" && (
-                  sortDir === "asc"
+                  sortDirection === "asc"
                     ? <CaretUp size={10} weight="bold" className="text-accent" />
                     : <CaretDown size={10} weight="bold" className="text-accent" />
                 )}
@@ -1234,15 +1380,16 @@ function ReferencesView() {
   const [search, setSearch] = useState("")
   const [quickFilter, setQuickFilter] = useState<QuickFilterType>("all")
   const [activeFieldKeys, setActiveFieldKeys] = useState<Set<string>>(new Set())
-  const [sortBy, setSortBy] = useState<SortField>("updatedAt")
-  const [sortDir, setSortDir] = useState<SortDir>("desc")
+  // PR group-c-d-4: sort moved into viewState (persisted via view-engine).
+  // groupBy / groupFieldKey kept local — multi-state with dynamic field key
+  // selector doesn't fit viewState.groupBy union (future PR can lift).
   const [groupBy, setGroupBy] = useState<"none" | "type" | "fieldKey">("none")
   const [groupFieldKey, setGroupFieldKey] = useState<string | null>(null)
   const lastClickedIdRef = useRef<string | null>(null)
 
   const isMultiMode = selectedIds.size > 0
 
-  /* ── Filter/Sort helpers ── */
+  /* ── Filter helpers ── */
 
   const toggleFieldKey = useCallback((key: string) => {
     setActiveFieldKeys((prev) => {
@@ -1250,17 +1397,6 @@ function ReferencesView() {
       if (next.has(key)) next.delete(key)
       else next.add(key)
       return next
-    })
-  }, [])
-
-  const toggleSort = useCallback((field: SortField) => {
-    setSortBy((prev) => {
-      if (prev === field) {
-        setSortDir((d) => (d === "asc" ? "desc" : "asc"))
-      } else {
-        setSortDir(field === "title" ? "asc" : "desc")
-      }
-      return field
     })
   }, [])
 
@@ -1295,7 +1431,8 @@ function ReferencesView() {
     return [...keys].sort()
   }, [activeRefs])
 
-  const referenceList = useMemo(() => {
+  // Stage 1: filter only (no sort) — sort handled by useReferencesView (viewState).
+  const filteredRefs = useMemo(() => {
     let arr = activeRefs
 
     // Quick filter
@@ -1311,7 +1448,7 @@ function ReferencesView() {
       })
     }
 
-    // Search
+    // Search (local — ViewHeader searchValue/onSearchChange).
     if (search.trim()) {
       const q = search.toLowerCase()
       arr = arr.filter(
@@ -1321,21 +1458,31 @@ function ReferencesView() {
       )
     }
 
-    // Sort
-    arr.sort((a, b) => {
-      let cmp = 0
-      if (sortBy === "title") {
-        cmp = (a.title || "").localeCompare(b.title || "")
-      } else if (sortBy === "createdAt") {
-        cmp = new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
-      } else {
-        cmp = new Date(a.updatedAt).getTime() - new Date(b.updatedAt).getTime()
-      }
-      return sortDir === "asc" ? cmp : -cmp
-    })
-
     return arr
-  }, [activeRefs, quickFilter, activeFieldKeys, search, sortBy, sortDir])
+  }, [activeRefs, quickFilter, activeFieldKeys, search])
+
+  // Stage 2: enrich + sort via view-engine (sort persisted in viewState).
+  const {
+    flatRefs: referenceList,
+    viewState,
+    updateViewState,
+  } = useReferencesView(filteredRefs)
+  const isGridMode = viewState.viewMode === "grid"
+  const sortField = viewState.sortFields[0]?.field ?? "updatedAt"
+  const sortDirection = viewState.sortFields[0]?.direction ?? "desc"
+
+  // Sort toggle helper — used by display popover and list-mode column header.
+  const handleSortToggle = useCallback((field: SortField) => {
+    const currentField = viewState.sortFields[0]?.field
+    const currentDir = viewState.sortFields[0]?.direction
+    let nextDir: "asc" | "desc"
+    if (currentField === field) {
+      nextDir = currentDir === "asc" ? "desc" : "asc"
+    } else {
+      nextDir = field === "title" ? "asc" : "desc"
+    }
+    updateViewState({ sortFields: [{ field, direction: nextDir }] })
+  }, [viewState.sortFields, updateViewState])
 
   const groupedReferences = useMemo(() => {
     if (groupBy === "none") return null
@@ -1527,9 +1674,31 @@ function ReferencesView() {
             )}
           </div>
         }
-        showDisplay
+        showDisplay={REFERENCES_VIEW_CONFIG.showDisplay}
         displayContent={
           <div className="p-3 w-[240px]">
+            {/* View Mode (PR group-c-d-4) */}
+            <div className="text-2xs font-medium text-muted-foreground mb-2">View as</div>
+            <div className="flex gap-1 mb-3">
+              {([
+                { mode: "list" as const, label: "List" },
+                { mode: "grid" as const, label: "Grid" },
+              ]).map(({ mode, label }) => (
+                <button
+                  key={mode}
+                  onClick={() => updateViewState({ viewMode: mode })}
+                  className={cn(
+                    "px-2.5 py-1 rounded-md text-2xs font-medium transition-colors capitalize",
+                    viewState.viewMode === mode
+                      ? "bg-accent/10 text-accent"
+                      : "text-muted-foreground hover:bg-hover-bg hover:text-foreground"
+                  )}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+
             {/* Sort */}
             <div className="text-2xs font-medium text-muted-foreground mb-2">Sort by</div>
             <div className="flex flex-wrap gap-1 mb-3">
@@ -1540,17 +1709,17 @@ function ReferencesView() {
               ]).map(({ field, label }) => (
                 <button
                   key={field}
-                  onClick={() => toggleSort(field)}
+                  onClick={() => handleSortToggle(field)}
                   className={cn(
                     "flex items-center gap-1 px-2.5 py-1 rounded-md text-2xs font-medium transition-colors",
-                    sortBy === field
+                    sortField === field
                       ? "bg-accent/10 text-accent"
                       : "text-muted-foreground hover:bg-hover-bg hover:text-foreground"
                   )}
                 >
                   {label}
-                  {sortBy === field && (
-                    sortDir === "asc" ? <CaretUp size={10} /> : <CaretDown size={10} />
+                  {sortField === field && (
+                    sortDirection === "asc" ? <CaretUp size={10} /> : <CaretDown size={10} />
                   )}
                 </button>
               ))}
@@ -1625,6 +1794,52 @@ function ReferencesView() {
           ) : (
             <EmptyReferences onCreate={handleCreate} />
           )
+        ) : isGridMode ? (
+          /* ── Grid Mode (PR group-c-d-4) ── */
+          <div className="grid grid-cols-[repeat(auto-fill,minmax(220px,1fr))] gap-3 p-4">
+            {referenceList.map((ref) => (
+              <div
+                key={ref.id}
+                onClick={() => handleRowClick(ref.id)}
+                className={cn(
+                  "group relative flex flex-col gap-2 rounded-lg border border-border/60 p-3 transition-all cursor-pointer",
+                  selectedIds.has(ref.id)
+                    ? "bg-accent/8 border-accent/40"
+                    : selectedId === ref.id
+                      ? "bg-accent/5 border-accent/30"
+                      : "bg-card hover:bg-hover-bg hover:border-border",
+                )}
+              >
+                {/* Image preview (if any) */}
+                {ref.hasImage && ref.imageUrl && (
+                  <img
+                    src={ref.imageUrl}
+                    alt=""
+                    className="w-full h-24 object-cover rounded shrink-0"
+                  />
+                )}
+
+                {/* Title */}
+                <h3 className="text-ui font-medium text-foreground line-clamp-2 leading-tight">
+                  {ref.title || "Untitled Reference"}
+                </h3>
+
+                {/* Content preview */}
+                {ref.content.trim() && (
+                  <p className="text-2xs text-muted-foreground line-clamp-3">
+                    {ref.content}
+                  </p>
+                )}
+
+                {/* PropertyChip row */}
+                <div className="flex items-center gap-1 mt-auto flex-wrap">
+                  <RefTypeChip type={ref.refType} />
+                  <RefFieldCountChip count={ref.fieldCount} />
+                  {ref.hasImage && <RefImageChip />}
+                </div>
+              </div>
+            ))}
+          </div>
         ) : (
           <>
             {/* Select All Header Row (PR #230 pattern, Notes-aligned) */}
@@ -1648,24 +1863,24 @@ function ReferencesView() {
                 {isPartiallySelected && <Minus size={10} weight="regular" className="text-accent-foreground" />}
               </div>
               <button
-                onClick={() => toggleSort("title")}
+                onClick={() => handleSortToggle("title")}
                 className="flex-1 flex items-center gap-0.5 hover:text-foreground transition-colors text-left"
               >
                 Name
-                {sortBy === "title" && (
-                  sortDir === "asc"
+                {sortField === "title" && (
+                  sortDirection === "asc"
                     ? <CaretUp size={10} weight="bold" className="text-accent" />
                     : <CaretDown size={10} weight="bold" className="text-accent" />
                 )}
               </button>
               <span className="w-16 text-right">Fields</span>
               <button
-                onClick={() => toggleSort("updatedAt")}
+                onClick={() => handleSortToggle("updatedAt")}
                 className="w-20 flex items-center justify-end gap-0.5 hover:text-foreground transition-colors"
               >
                 Updated
-                {sortBy === "updatedAt" && (
-                  sortDir === "asc"
+                {sortField === "updatedAt" && (
+                  sortDirection === "asc"
                     ? <CaretUp size={10} weight="bold" className="text-accent" />
                     : <CaretDown size={10} weight="bold" className="text-accent" />
                 )}

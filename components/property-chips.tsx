@@ -30,6 +30,9 @@ import { Tree as PhTree } from "@phosphor-icons/react/dist/ssr/Tree"
 import { ArrowBendUpLeft as PhParent } from "@phosphor-icons/react/dist/ssr/ArrowBendUpLeft"
 import { PushPin as PhPushPin } from "@phosphor-icons/react/dist/ssr/PushPin"
 import { NoteBlank as PhNoteBlank } from "@phosphor-icons/react/dist/ssr/NoteBlank"
+import { Stack as PhStack } from "@phosphor-icons/react/dist/ssr/Stack"
+import { Image as PhImage } from "@phosphor-icons/react/dist/ssr/Image"
+import { Quotes as PhQuotes } from "@phosphor-icons/react/dist/ssr/Quotes"
 import { StatusBadge, PriorityBadge } from "@/components/note-fields"
 import { shortRelative } from "@/lib/format-utils"
 import type { NoteStatus, NotePriority } from "@/lib/types"
@@ -375,6 +378,138 @@ export function LabelNoteCountChip({ count }: { count: number }) {
     >
       <PhNoteBlank size={10} weight="regular" />
       {count}
+    </span>
+  )
+}
+
+/* ── StickerMemberCountChip (Group C PR-D-3) ─────────────── */
+
+/**
+ * Displays the number of cross-entity members attached to a sticker.
+ * Rendered on sticker entity cards (stickers list view). Hidden when
+ * count === 0 to keep empty-sticker rows visually clean.
+ *
+ * Visual style mirrors TagNoteCountChip / LabelNoteCountChip — same h-5 /
+ * text-2xs / muted-foreground. Different icon (Stack) to signal
+ * cross-entity bundling: stickers can group note + wiki + tag/label/...
+ * Data source: Sticker.members[].length with active-entity filtering for
+ * note/wiki kinds (matches useStickersView countMap).
+ */
+export function StickerMemberCountChip({ count }: { count: number }) {
+  if (count === 0) return null
+  return (
+    <span
+      title={`${count} ${count === 1 ? "item" : "items"}`}
+      className="inline-flex items-center gap-0.5 h-5 text-2xs text-muted-foreground leading-none whitespace-nowrap shrink-0"
+    >
+      <PhStack size={10} weight="regular" />
+      {count}
+    </span>
+  )
+}
+
+/* ── RefTypeChip (Group C PR-D-4) ─────────────────────── */
+
+/**
+ * Reference type indicator: "link" (has a url field) or "citation" (no url).
+ * Domain-specific to References (rich entity with infobox fields).
+ *
+ * Visual: muted pill with lead icon — Link icon for url-typed refs, Quotes
+ * icon for citations. Distinct from TagChip/LabelChip (no entity color tint)
+ * since type is metadata, not identity.
+ */
+export function RefTypeChip({ type }: { type: "link" | "citation" }) {
+  const Icon = type === "link" ? PhLink : PhQuotes
+  return (
+    <ChipShell
+      title={type === "link" ? "Link reference" : "Citation"}
+      className="bg-secondary/60 text-muted-foreground"
+    >
+      <Icon size={10} weight="regular" />
+      <span className="capitalize">{type}</span>
+    </ChipShell>
+  )
+}
+
+/* ── RefFieldCountChip ─────────────────────────────────── */
+
+/**
+ * Field count indicator for Reference cards (infobox metadata count).
+ * Hidden when count === 0 — empty-fields refs are visually clean.
+ */
+export function RefFieldCountChip({ count }: { count: number }) {
+  if (count === 0) return null
+  return (
+    <span
+      title={`${count} ${count === 1 ? "field" : "fields"}`}
+      className="inline-flex items-center gap-0.5 h-5 text-2xs text-muted-foreground leading-none whitespace-nowrap shrink-0"
+    >
+      <PhFileText size={10} weight="regular" />
+      {count}
+    </span>
+  )
+}
+
+/* ── RefImageChip ──────────────────────────────────────── */
+
+/**
+ * Image presence indicator for Reference cards. Icon-only (boolean signal).
+ * Used when a reference carries an `imageUrl`.
+ */
+export function RefImageChip() {
+  return (
+    <span
+      title="Has image"
+      className="inline-flex items-center h-5 text-2xs text-muted-foreground leading-none whitespace-nowrap shrink-0"
+    >
+      <PhImage size={10} weight="regular" />
+    </span>
+  )
+}
+
+/* ── FileTypeChip (Group C PR-D-5) ─────────────────────── */
+
+/**
+ * Attachment type indicator for File entity cards: image / url / file.
+ * Domain-specific to Files (Library /library/files).
+ *
+ * Visual: muted pill with lead icon — Image icon for image attachments,
+ * Link icon for url-typed, FileText for generic files. Distinct from
+ * RefTypeChip (icon-text rather than text-only) to differentiate
+ * Reference vs File at a glance in shared rows.
+ */
+export function FileTypeChip({ type }: { type: "image" | "url" | "file" }) {
+  const label = type === "image" ? "Image" : type === "url" ? "Link" : "File"
+  const Icon = type === "image" ? PhImage : type === "url" ? PhLink : PhFileText
+  return (
+    <ChipShell title={label} className="bg-secondary/60 text-muted-foreground">
+      <Icon size={10} weight="regular" />
+      {label}
+    </ChipShell>
+  )
+}
+
+/* ── FileSizeChip ──────────────────────────────────────── */
+
+function formatBytesShort(bytes: number): string {
+  if (!bytes || bytes < 0) return "—"
+  if (bytes < 1024) return `${bytes} B`
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
+  if (bytes < 1024 * 1024 * 1024) return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
+  return `${(bytes / (1024 * 1024 * 1024)).toFixed(1)} GB`
+}
+
+/**
+ * File size indicator. Tabular-numeric for column alignment in lists. Uses
+ * the same B/KB/MB/GB formatter as FilesView's existing column.
+ */
+export function FileSizeChip({ size }: { size: number }) {
+  return (
+    <span
+      title={`${size} bytes`}
+      className="inline-flex items-center h-5 text-2xs text-muted-foreground tabular-nums leading-none whitespace-nowrap shrink-0"
+    >
+      {formatBytesShort(size)}
     </span>
   )
 }

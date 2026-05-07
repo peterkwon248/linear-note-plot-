@@ -38,6 +38,74 @@
 
 ---
 
+## 🚀 2026-05-07 (밤) — Group C PR-D 5/5 완성 + 4 design skills install
+
+**범위**: PR 3 Stickers + PR 4 References + PR 5 Files + skills install. Group C PR-D 시리즈 종료. Store v112 → v115.
+
+### 머지된 PRs (이번 세션)
+- **a055581 v113** — Stickers view-engine 통합
+- **c3700ad v114** — References view-engine 통합 (첫 non-Note entity)
+- **f210fcf v115** — Files view-engine 통합 (시리즈 완성)
+
+### 디자인 인프라 보강
+- **0f7e2ec** — taste-skill 4개 install (project-level): design-taste-frontend / high-end-visual-design / redesign-existing-projects / minimalist-ui
+- universal symlink (12 agents 호환). cross-machine sync는 `npx skills experimental_install`
+
+### Group C PR-D 시리즈 완성 🎉
+5 entity (Tags / Labels / Stickers / References / Files) 모두 view-engine + ViewHeader + viewState persist + list/grid mode 통합. thin fork 패턴 정합. Saved View 자동 지원.
+
+### 외부 도구 평가 (적용 X 결정)
+- **onlook** (visual code editor): production app 자동 코드 변경 회귀 위험
+- **Front-End-Design-Checklist**: design-quality-gate / 4 design skills과 중복
+
+### shadcn-ui 확인
+✅ 이미 적용 (components.json + components/ui/* 30+ + @radix-ui 28개)
+
+### Store version
+v112 → v113 (Stickers) → v114 (References) → v115 (Files)
+
+### 다음 우선순위 (NEXT-ACTION.md 참조)
+- 🔴 Plot v3 Phase 3+ 분해 plan
+- 🟡 Wiki template 3-layer
+- 🟡 Smart Book v2
+
+---
+
+## 🚀 2026-05-07 (밤) — Plot v3 Phase 2 DEFERRED (큰 방향 결정)
+
+**범위**: Phase 2 (Imperial icon kit) 도입 **보류** 결정. PRD 상단 DECISION banner + plan 문서 ARCHIVED.
+
+### 결정 (영구)
+- **Imperial icon kit 전면 도입 보류**: phosphor-icons 그대로 유지
+- 직전 plan 문서 (`.omc/plans/v3-phosphor-inventory.md`) **부정확** ("2 files / 4 icons" → 실측 **119 files / 60+ icons / 87 files weight 사용**, `from "@phosphor-icons/react/dist/ssr/<X>"` 패턴 미반영)
+- 119 files = 단일 PR로 안전하지 않음 (작업 원칙 #2 "최소 diff" 위배)
+- phosphor `weight="regular"` (1.5–1.7px stroke) ↔ Imperial (1.5px stroke) 시각 위화감 미미 → Imperial 도입의 시각 가치 약함
+- 빌드 정상 (`tsc --noEmit` 0 errors / `npm run build` clean / 185 tests pass)
+- lucide / 다른 외부 라이브러리 도입은 의미 없음 (이미 phosphor 광범위)
+
+### 처리한 작업
+- `docs/PLOT-V3-VISUAL-REFRESH-PRD.md` 상단 **DECISION banner 추가**, §0 TL;DR Imperial 항목 strike-through + DEFERRED 표시. Status v1.1 → v1.2 (Phase 2 deferred)
+- `.omc/plans/v3-phosphor-inventory.md` **ARCHIVED banner 추가**, historical reference로 보존 (삭제 X)
+- `docs/CONTEXT.md` / `docs/MEMORY.md` 결정 기록
+
+### 보존된 partial work (revert 안 함)
+- `components/icons/imperial.tsx` + `imperial-extras.tsx` 모듈 보존 (활동바 등 일부 사용 중)
+- `components/activity-bar.tsx` Imperial migration
+- `components/plot-icons.tsx` `IconWiki = WikiBook` (Imperial extras)
+- `components/views/{note-split,wiki-merge,wiki-split}-page.tsx` 일부
+- `components/side-panel/backlink-card.tsx` weight 제거
+
+### 재개 조건 (future Phase)
+- 정확한 phosphor 인벤토리 재작성
+- imperial-extras shim의 phosphor 매핑 coverage 검증 (60+ icons 중 매핑 가능 비율)
+- 단일 책임 PR 단위 분할 (페이지 그룹별 5–10 PR 시리즈)
+
+### 다음 P0 (Phase 2 종료, 다음 우선순위 이동)
+- **Group C PR-D PR 3-5**: Stickers→Pack / References / Files view-engine 통합
+- 또는 **Plot v3 Phase 3+**: PRD 후속 phases (Notion/Linear 하이브리드 에디터, Type rename PR 등)
+
+---
+
 ## 🚀 2026-05-07 (저녁) — Phase 2 부분 진행 (Imperial icon kit)
 
 **범위**: Imperial icon kit 모듈 작성 + 일부 파일 migration. 사용자가 위임 거절 시점에 부분 완료 상태.

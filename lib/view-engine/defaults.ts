@@ -52,6 +52,20 @@ const CONTEXT_DEFAULTS: Partial<Record<ViewContextKey, Partial<ViewState>>> = {
   "tags-list":    { viewMode: "list", ...ctx("name", "asc"), groupBy: "none", visibleColumns: ["title", "noteCount", "color"] },
   // Label.color is non-nullable (always present) — color column is always meaningful.
   "labels-list":  { viewMode: "list", ...ctx("name", "asc"), groupBy: "none", visibleColumns: ["title", "noteCount", "color"] },
+
+  // PR group-c-d-3 (Stickers): cross-entity index. Sticker.color is required
+  // (drives graph hull). memberCount is cross-entity (notes + wikis + tag/label/category/file/reference).
+  "stickers":     { viewMode: "list", ...ctx("name", "asc"), groupBy: "none", visibleColumns: ["title", "memberCount", "color"] },
+
+  // PR group-c-d-4 (References): rich entity (title + content + fields + tags + image).
+  // fieldCount + image presence are domain-specific display properties.
+  // sort default: updatedAt desc (matches existing ReferencesView behavior).
+  "references":   { viewMode: "list", ...ctx("updatedAt"), groupBy: "none", visibleColumns: ["title", "fieldCount", "image"] },
+
+  // PR group-c-d-5 (Files): media entity (Attachment — image/url/file).
+  // size + fileType are domain-specific. sort default: createdAt desc
+  // (matches existing FilesView behavior). Image previews drive grid mode value.
+  "files":        { viewMode: "list", ...ctx("createdAt"), groupBy: "none", visibleColumns: ["title", "fileType", "size"] },
 }
 
 /** Build a ViewState for a specific context, merging defaults */
