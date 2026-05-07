@@ -93,6 +93,24 @@ export function migrate(persistedState: unknown): PlotState {
   if (state.sidebarLastWidth === undefined) state.sidebarLastWidth = 220
   if (state.sidebarCollapsed === undefined) state.sidebarCollapsed = false
   delete state.sidebarPeek // removed in Split-First migration
+  // v116 (early-bird): rename viewStateByContext keys BEFORE normalizeViewStatesMap.
+  // normalizeViewStatesMap iterates only VALID_VIEW_CONTEXT_KEYS (now stone/brick/keystone),
+  // so without this early rename a v115 user's persisted inbox/capture/permanent customization
+  // would be silently discarded. Idempotent (only renames when target is undefined).
+  if (state.viewStateByContext) {
+    const vsc = state.viewStateByContext as Record<string, unknown>
+    const earlyStatusRenames: Record<string, string> = {
+      inbox: "stone",
+      capture: "brick",
+      permanent: "keystone",
+    }
+    for (const [oldKey, newKey] of Object.entries(earlyStatusRenames)) {
+      if (vsc[oldKey] !== undefined && vsc[newKey] === undefined) {
+        vsc[newKey] = vsc[oldKey]
+        delete vsc[oldKey]
+      }
+    }
+  }
   // v16: ViewState per context
   if (state.viewStateByContext) {
     state.viewStateByContext = normalizeViewStatesMap(
@@ -1763,22 +1781,8 @@ export function migrate(persistedState: unknown): PlotState {
       console.log(`[migrate] v115→v116: renamed NoteStatus on ${renamedCount} notes`)
     }
   }
-  // viewStateByContext keys also rename so the user's saved view config
-  // (sort/filter/columns) follows the route rename.
-  if (state.viewStateByContext) {
-    const vsc = state.viewStateByContext as Record<string, unknown>
-    const renames: Record<string, string> = {
-      inbox: "stone",
-      capture: "brick",
-      permanent: "keystone",
-    }
-    for (const [oldKey, newKey] of Object.entries(renames)) {
-      if (vsc[oldKey] !== undefined && vsc[newKey] === undefined) {
-        vsc[newKey] = vsc[oldKey]
-        delete vsc[oldKey]
-      }
-    }
-  }
+  // (viewStateByContext key rename happens early — see "v116 (early-bird)" block above —
+  // because normalizeViewStatesMap iterates only VALID_VIEW_CONTEXT_KEYS.)
 
   return state as unknown as PlotState
 }
