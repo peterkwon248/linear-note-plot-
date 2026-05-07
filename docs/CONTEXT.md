@@ -38,6 +38,32 @@
 
 ---
 
+## 🚀 2026-05-07 (밤 늦게) — Plot v3 Phase 3 완료 (4 PR)
+
+**범위**: Activity Bar / Sidebar Chrome v3 mockup reskin. 4 PR 누적.
+
+### Phase 3 4 PR
+- **98f9277** PR 3.1: CSS 통합 (시각 변경 0, +729 LOC)
+- **5ac22ef** PR 3.2: activity-bar.tsx reskin (width 72px / label / brand / per-space 색)
+- **8155530** PR 3.3: linear-sidebar.tsx reskin (+43/-61, NavLink + Section + 11 inline 일괄)
+- **3761e42** PR 3.4: brand mark = Plot 로고 SVG (네트워크 그래프)
+
+### PR 3.4 scope 변경 (영구)
+- shell grid 보류 → Phase 6 통합 (ResizablePanel 충돌)
+- brand mark SVG 교체로 전환
+
+### 다음
+- 🔴 Visual confirm (사용자 manual)
+- 🟡 Phase 4 / 5 / 6 결정
+
+### Phase 진행 상황
+- ✅ Phase 0/1: cleanup + token foundation
+- ⏸️ Phase 2: Imperial icon kit DEFER
+- ✅ **Phase 3: Activity Bar / Sidebar Chrome** (이번)
+- ⏳ Phase 4-7
+
+---
+
 ## 🚀 2026-05-07 (밤) — Group C PR-D 5/5 완성 + 4 design skills install
 
 **범위**: PR 3 Stickers + PR 4 References + PR 5 Files + skills install. Group C PR-D 시리즈 종료. Store v112 → v115.

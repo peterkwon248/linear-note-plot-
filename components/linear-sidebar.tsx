@@ -94,20 +94,20 @@ function NavLink({
   const setNoteId = usePlotStore((s) => s.setSelectedNoteId)
   const isSidebarRoute = ALL_SIDEBAR_ROUTES.includes(href)
 
-  const className = `nav-item group flex w-full items-center gap-2.5 rounded-md px-2.5 py-1.5 text-ui transition-colors ${
-    active
-      ? "bg-sidebar-active text-sidebar-active-text"
-      : "text-sidebar-foreground hover:bg-sidebar-hover hover:text-sidebar-hover-text"
-  }`
+  // v3 Phase 3.3: `.a-sb-link` (data-active driven). Plot wrapper span 보존
+  // (icon size + alignment 안정) — v3 css `.a-sb-link svg`가 descendant
+  // selector라 wrapper 안에서도 작동.
+  const className = "a-sb-link"
+  const dataActive = active ? "true" : undefined
 
   const content = (
     <>
-      <span className={`flex shrink-0 items-center justify-center w-5 h-5 ${active ? "text-sidebar-active-text" : "text-sidebar-muted group-hover:text-sidebar-foreground"}`}>
+      <span className="flex shrink-0 items-center justify-center w-5 h-5">
         {icon}
       </span>
       <span className="truncate text-left flex-1">{label}</span>
       {count !== undefined && (
-        <span className="text-2xs text-sidebar-count tabular-nums">
+        <span className="a-sb-link__count tabular-nums">
           {count}
         </span>
       )}
@@ -152,6 +152,7 @@ function NavLink({
           if (currentRoute !== href) router.push(href)
         }}
         className={className}
+        data-active={dataActive}
         {...dragProps}
       >
         {content}
@@ -164,6 +165,7 @@ function NavLink({
       href={href}
       onClick={() => setActiveRoute(null)}
       className={className}
+      data-active={dataActive}
       {...dragProps}
     >
       {content}
@@ -194,19 +196,17 @@ function Section({
   const [open, setOpen] = useState(defaultOpen)
 
   return (
-    <div className="mt-8">
-      <div className="group flex w-full items-center gap-1.5 px-2.5 py-1">
+    <div className="a-sb-section">
+      <div className="a-sb-section__head group">
         <button
           onClick={() => setOpen(!open)}
-          className={`flex flex-1 items-center gap-1.5 text-2xs font-medium transition-colors ${
-            active
-              ? "text-sidebar-active-text"
-              : "text-sidebar-muted hover:text-sidebar-foreground"
+          className={`flex flex-1 items-center gap-1.5 transition-colors ${
+            active ? "text-sidebar-active-text" : "hover:text-sidebar-foreground"
           }`}
         >
           <span>{title}</span>
           {count !== undefined && (
-            <span className="text-2xs text-sidebar-count tabular-nums">{count}</span>
+            <span className="a-sb-section__hint">{count}</span>
           )}
           {open ? (
             <CaretDown size={14} weight="regular" />
@@ -648,13 +648,10 @@ export function LinearSidebar() {
                     setSelectedNoteId(null)
                     router.push(routeOnClick)
                   }}
-                  className={`nav-item group flex w-full items-center gap-2.5 rounded-md px-2.5 py-1.5 text-ui transition-colors ${
-                    isViewActive
-                      ? "bg-sidebar-active text-sidebar-active-text"
-                      : "text-sidebar-foreground hover:bg-sidebar-hover hover:text-sidebar-hover-text"
-                  }`}
+                  className="a-sb-link"
+                  data-active={isViewActive ? "true" : undefined}
                 >
-                  <span className={`flex shrink-0 items-center justify-center w-5 h-5 ${isViewActive ? "text-sidebar-active-text" : "text-sidebar-muted group-hover:text-sidebar-foreground"}`}>
+                  <span className="flex shrink-0 items-center justify-center w-5 h-5">
                     <svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
                       <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7z" />
                       <circle cx="12" cy="12" r="3" />
@@ -714,7 +711,7 @@ export function LinearSidebar() {
     wikiArticles.filter((w) => w.folderIds.includes(folderId)).length
 
   return (
-    <aside className="flex h-full w-full shrink-0 flex-col bg-sidebar-bg border-r border-sidebar-border select-none overflow-hidden">
+    <aside className="a-sidebar h-full w-full shrink-0 select-none">
       {/* Header: RecentlyViewed + Back/Forward + spacer + Search + Close */}
       <div className="flex items-center gap-0.5 px-2.5 pt-2.5 pb-1.5">
         {/* Recently Viewed */}
@@ -885,13 +882,10 @@ export function LinearSidebar() {
                           setSelectedNoteId(null)
                           router.push("/notes")
                         }}
-                        className={`nav-item group flex w-full items-center gap-2.5 rounded-md px-2.5 py-1.5 text-ui transition-colors ${
-                          active
-                            ? "bg-sidebar-active text-sidebar-active-text"
-                            : "text-sidebar-foreground hover:bg-sidebar-hover hover:text-sidebar-hover-text"
-                        }`}
+                        className="a-sb-link"
+                        data-active={active ? "true" : undefined}
                       >
-                        <span className={`flex shrink-0 items-center justify-center w-5 h-5 ${active ? "text-sidebar-active-text" : "text-sidebar-muted group-hover:text-sidebar-foreground"}`}>
+                        <span className="flex shrink-0 items-center justify-center w-5 h-5">
                           <IconFolder size={20} />
                         </span>
                         {isRenaming ? (
@@ -909,7 +903,7 @@ export function LinearSidebar() {
                           <span className="truncate text-left flex-1">{folder.name}</span>
                         )}
                         {!isRenaming && count > 0 && (
-                          <span className="text-2xs text-sidebar-count tabular-nums">{count}</span>
+                          <span className="a-sb-link__count tabular-nums">{count}</span>
                         )}
                       </button>
                     </ContextMenuTrigger>
@@ -1001,7 +995,7 @@ export function LinearSidebar() {
                     draggable
                     onDragStart={(e) => setNoteDragData(e, item.id)}
                     onClick={(e) => openNote(item.id, { forceNewTab: e.ctrlKey || e.metaKey })}
-                    className="nav-item group flex w-full items-center gap-2.5 rounded-md px-2.5 py-1.5 text-ui transition-colors text-sidebar-foreground hover:bg-sidebar-hover hover:text-sidebar-hover-text"
+                    className="a-sb-link"
                   >
                     <span className="flex shrink-0 items-center justify-center w-5 h-5">
                       <StatusShapeIcon status={item.status} size={14} />
@@ -1021,7 +1015,7 @@ export function LinearSidebar() {
                     draggable
                     onDragStart={(e) => setNoteDragData(e, item.id)}
                     onClick={(e) => openNote(item.id, { forceNewTab: e.ctrlKey || e.metaKey })}
-                    className="nav-item group flex w-full items-center gap-2.5 rounded-md px-2.5 py-1.5 text-ui transition-colors text-sidebar-foreground hover:bg-sidebar-hover hover:text-sidebar-hover-text"
+                    className="a-sb-link"
                   >
                     <span className="flex shrink-0 items-center justify-center w-5 h-5">
                       <StatusShapeIcon status={item.status} size={14} />
@@ -1052,13 +1046,10 @@ export function LinearSidebar() {
                   setWikiViewMode("merge")
                   router.push("/wiki")
                 }}
-                className={`nav-item group flex w-full items-center gap-2.5 rounded-md px-2.5 py-1.5 text-ui transition-colors ${
-                  wikiViewMode === "merge"
-                    ? "bg-sidebar-active text-sidebar-active-text"
-                    : "text-sidebar-foreground hover:bg-sidebar-hover hover:text-sidebar-hover-text"
-                }`}
+                className="a-sb-link"
+                data-active={wikiViewMode === "merge" ? "true" : undefined}
               >
-                <span className={`flex shrink-0 items-center justify-center w-5 h-5 ${wikiViewMode === "merge" ? "text-sidebar-active-text" : "text-sidebar-muted group-hover:text-sidebar-foreground"}`}>
+                <span className="flex shrink-0 items-center justify-center w-5 h-5">
                   <GitMerge size={16} weight="regular" />
                 </span>
                 <span className="truncate text-left flex-1">Merge</span>
@@ -1070,13 +1061,10 @@ export function LinearSidebar() {
                   setWikiViewMode("split")
                   router.push("/wiki")
                 }}
-                className={`nav-item group flex w-full items-center gap-2.5 rounded-md px-2.5 py-1.5 text-ui transition-colors ${
-                  wikiViewMode === "split"
-                    ? "bg-sidebar-active text-sidebar-active-text"
-                    : "text-sidebar-foreground hover:bg-sidebar-hover hover:text-sidebar-hover-text"
-                }`}
+                className="a-sb-link"
+                data-active={wikiViewMode === "split" ? "true" : undefined}
               >
-                <span className={`flex shrink-0 items-center justify-center w-5 h-5 ${wikiViewMode === "split" ? "text-sidebar-active-text" : "text-sidebar-muted group-hover:text-sidebar-foreground"}`}>
+                <span className="flex shrink-0 items-center justify-center w-5 h-5">
                   <Scissors size={16} weight="regular" />
                 </span>
                 <span className="truncate text-left flex-1">Split</span>
@@ -1088,13 +1076,10 @@ export function LinearSidebar() {
                   setCategoryOverview()
                   router.push("/wiki")
                 }}
-                className={`nav-item group flex w-full items-center gap-2.5 rounded-md px-2.5 py-1.5 text-ui transition-colors ${
-                  wikiViewMode === "category"
-                    ? "bg-sidebar-active text-sidebar-active-text"
-                    : "text-sidebar-foreground hover:bg-sidebar-hover hover:text-sidebar-hover-text"
-                }`}
+                className="a-sb-link"
+                data-active={wikiViewMode === "category" ? "true" : undefined}
               >
-                <span className={`flex shrink-0 items-center justify-center w-5 h-5 ${wikiViewMode === "category" ? "text-sidebar-active-text" : "text-sidebar-muted group-hover:text-sidebar-foreground"}`}>
+                <span className="flex shrink-0 items-center justify-center w-5 h-5">
                   <Folders size={16} weight="regular" />
                 </span>
                 <span className="truncate text-left flex-1">Categories</span>
@@ -1153,13 +1138,10 @@ export function LinearSidebar() {
                           setSelectedNoteId(null)
                           router.push(`/folder/${folder.id}`)
                         }}
-                        className={`nav-item group flex w-full items-center gap-2.5 rounded-md px-2.5 py-1.5 text-ui transition-colors ${
-                          active
-                            ? "bg-sidebar-active text-sidebar-active-text"
-                            : "text-sidebar-foreground hover:bg-sidebar-hover hover:text-sidebar-hover-text"
-                        }`}
+                        className="a-sb-link"
+                        data-active={active ? "true" : undefined}
                       >
-                        <span className={`flex shrink-0 items-center justify-center w-5 h-5 ${active ? "text-sidebar-active-text" : "text-sidebar-muted group-hover:text-sidebar-foreground"}`}>
+                        <span className="flex shrink-0 items-center justify-center w-5 h-5">
                           <IconFolder size={20} />
                         </span>
                         {isRenaming ? (
@@ -1177,7 +1159,7 @@ export function LinearSidebar() {
                           <span className="truncate text-left flex-1">{folder.name}</span>
                         )}
                         {!isRenaming && count > 0 && (
-                          <span className="text-2xs text-sidebar-count tabular-nums">{count}</span>
+                          <span className="a-sb-link__count tabular-nums">{count}</span>
                         )}
                       </button>
                     </ContextMenuTrigger>
@@ -1239,9 +1221,9 @@ export function LinearSidebar() {
                     <button
                       key={note.id}
                       onClick={(e) => openNote(note.id, { forceNewTab: e.ctrlKey || e.metaKey })}
-                      className="nav-item group flex w-full items-center gap-2.5 rounded-md px-2.5 py-1.5 text-ui transition-colors text-sidebar-foreground hover:bg-sidebar-hover hover:text-sidebar-hover-text"
+                      className="a-sb-link"
                     >
-                      <span className="flex shrink-0 items-center justify-center w-5 h-5 text-sidebar-muted">
+                      <span className="flex shrink-0 items-center justify-center w-5 h-5">
                         <IconDoc size={14} />
                       </span>
                       <span className="truncate text-left flex-1">{note.title || "Untitled"}</span>
@@ -1263,9 +1245,9 @@ export function LinearSidebar() {
                     <button
                       key={item.id}
                       onClick={(e) => openNote(item.id, { forceNewTab: e.ctrlKey || e.metaKey })}
-                      className="nav-item group flex w-full items-center gap-2.5 rounded-md px-2.5 py-1.5 text-ui transition-colors text-sidebar-foreground hover:bg-sidebar-hover hover:text-sidebar-hover-text"
+                      className="a-sb-link"
                     >
-                      <span className="flex shrink-0 items-center justify-center w-5 h-5 text-sidebar-muted">
+                      <span className="flex shrink-0 items-center justify-center w-5 h-5">
                         <IconDoc size={14} />
                       </span>
                       <span className="truncate text-left flex-1">{item.title}</span>
@@ -1339,9 +1321,9 @@ export function LinearSidebar() {
                       <button
                         key={note.id}
                         onClick={(e) => openNote(note.id, { forceNewTab: e.ctrlKey || e.metaKey })}
-                        className="nav-item group flex w-full items-center gap-2.5 rounded-md px-2.5 py-1.5 text-ui transition-colors text-sidebar-foreground hover:bg-sidebar-hover hover:text-sidebar-hover-text"
+                        className="a-sb-link"
                       >
-                        <span className="flex shrink-0 items-center justify-center w-5 h-5 text-sidebar-muted">
+                        <span className="flex shrink-0 items-center justify-center w-5 h-5">
                           <IconDoc size={14} />
                         </span>
                         <span className="truncate text-left flex-1">{note.title || "Untitled"}</span>

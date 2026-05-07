@@ -79,83 +79,118 @@ export function ActivityBar() {
   }
 
   return (
-    <div className="flex h-full w-11 shrink-0 flex-col items-center border-r border-border bg-sidebar-bg pt-2">
-      {/* Sidebar open button — only when collapsed */}
-      {sidebarCollapsed && (
-        <div className="flex flex-col items-center mb-1">
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <button
-                onClick={() => setSidebarCollapsed(false)}
-                className="flex h-9 w-9 items-center justify-center rounded-lg text-foreground/85 dark:text-foreground/70 transition-colors hover:bg-hover-bg hover:text-foreground"
-                aria-label="Open sidebar"
-              >
-                <Sidebar size={20} />
-              </button>
-            </TooltipTrigger>
-            <TooltipContent side="right" className="text-2xs">Open sidebar</TooltipContent>
-          </Tooltip>
+    <aside
+      className="a-actbar h-full shrink-0"
+      style={{ width: "var(--a-actbar-w, 72px)" }}
+    >
+      {/* Brand mark — Plot logo (knowledge network graph on gradient) */}
+      <div className="a-actbar__head">
+        <div className="a-brand__mark">
+          <svg
+            width={20}
+            height={20}
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth={1.3}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            aria-hidden="true"
+          >
+            {/* Outer ring (subtle, 1px stroke) */}
+            <circle cx="12" cy="12" r="9.5" strokeWidth={1.1} />
+            {/* Edges — knowledge graph triangulation (zettelkasten / palantir) */}
+            <path d="M5 8 L12 5 M12 5 L19 8 M5 8 L12 12 M19 8 L12 12 M12 5 L12 12 M5 8 L9 17 M19 8 L15 17 M9 17 L12 12 M15 17 L12 12 M9 17 L15 17" />
+            {/* Nodes (filled circles, prominent center) */}
+            <circle cx="12" cy="5" r="1.3" fill="currentColor" stroke="none" />
+            <circle cx="5" cy="8" r="1.3" fill="currentColor" stroke="none" />
+            <circle cx="19" cy="8" r="1.3" fill="currentColor" stroke="none" />
+            <circle cx="9" cy="17" r="1.3" fill="currentColor" stroke="none" />
+            <circle cx="15" cy="17" r="1.3" fill="currentColor" stroke="none" />
+            <circle cx="12" cy="12" r="1.7" fill="currentColor" stroke="none" />
+          </svg>
         </div>
-      )}
-
-      {/* Tier 1 — primary spaces */}
-      <div className="flex flex-col items-center gap-0.5">
-        {SPACES.map(({ id, label, icon: Icon, shortcut }) => {
-          const isActive = activeSpace === id
-          return (
-            <Tooltip key={id}>
-              <TooltipTrigger asChild>
-                <button
-                  onClick={() => handleSpaceClick(id)}
-                  className={cn(
-                    "relative flex h-9 w-9 items-center justify-center rounded-lg transition-all duration-150",
-                    isActive
-                      ? "bg-active-bg-strong"
-                      : "text-foreground/80 dark:text-foreground/60 hover:bg-hover-bg hover:text-foreground"
-                  )}
-                  style={isActive && id in SPACE_COLORS ? { color: SPACE_COLORS[id as keyof typeof SPACE_COLORS] } : undefined}
-                  aria-label={label}
-                >
-                  <Icon size={20} />
-                  {isActive && (
-                    <div
-                      className="absolute left-0 top-1/2 h-4 w-0.5 -translate-y-1/2 rounded-full"
-                      style={{ backgroundColor: id in SPACE_COLORS ? SPACE_COLORS[id as keyof typeof SPACE_COLORS] : "currentColor" }}
-                    />
-                  )}
-                </button>
-              </TooltipTrigger>
-              <TooltipContent side="right" className="text-2xs">
-                {label}
-                {shortcut && (
-                  <span className="ml-2 text-muted-foreground">{shortcut}</span>
-                )}
-              </TooltipContent>
-            </Tooltip>
-          )
-        })}
       </div>
 
-      {/* Spacer — pushes settings to bottom */}
-      <div className="flex-1" />
-
-      {/* Tier 2 — theme toggle */}
-      <div className="pb-2">
+      {/* Sidebar open button — only when collapsed (Plot 패턴 보존) */}
+      {sidebarCollapsed && (
         <Tooltip>
           <TooltipTrigger asChild>
             <button
-              onClick={toggleTheme}
-              className="flex h-9 w-9 items-center justify-center rounded-lg text-foreground/80 dark:text-foreground/60 transition-colors hover:bg-hover-bg hover:text-foreground"
-              aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+              onClick={() => setSidebarCollapsed(false)}
+              className="a-ab"
+              aria-label="Open sidebar"
             >
-              {theme === "dark" ? <IconSun size={20} /> : <IconMoon size={20} />}
+              <Sidebar size={20} />
+              <span className="a-ab__label">Sidebar</span>
             </button>
           </TooltipTrigger>
-          <TooltipContent side="right" className="text-2xs">
-            {theme === "dark" ? "Light mode" : "Dark mode"}
-          </TooltipContent>
+          <TooltipContent side="right" className="text-2xs">Open sidebar</TooltipContent>
         </Tooltip>
-      </div>
-    </div>
+      )}
+
+      {/* Tier 1 — primary spaces */}
+      {SPACES.map(({ id, label, icon: Icon, shortcut }) => {
+        const isActive = activeSpace === id
+        const spaceColor = id in SPACE_COLORS ? SPACE_COLORS[id as keyof typeof SPACE_COLORS] : null
+        // Plot preserves per-space colors (SPACE_COLORS lib/colors.ts) — v3
+        // mockup uses single --space-notes for all active states; we override
+        // via inline style to keep 6 distinct space colors.
+        const activeStyle = isActive && spaceColor
+          ? {
+              background: `color-mix(in srgb, ${spaceColor} 16%, transparent)`,
+              color: spaceColor,
+              boxShadow: `inset 0 0 0 1px color-mix(in srgb, ${spaceColor} 24%, transparent)`,
+            }
+          : undefined
+        return (
+          <Tooltip key={id}>
+            <TooltipTrigger asChild>
+              <button
+                onClick={() => handleSpaceClick(id)}
+                className="a-ab a-ab--space"
+                data-active={isActive}
+                style={activeStyle}
+                aria-label={label}
+              >
+                <Icon size={20} />
+                <span
+                  className="a-ab__label"
+                  style={isActive && spaceColor ? { color: spaceColor } : undefined}
+                >
+                  {label}
+                </span>
+              </button>
+            </TooltipTrigger>
+            <TooltipContent side="right" className="text-2xs">
+              {label}
+              {shortcut && (
+                <span className="ml-2 text-muted-foreground">{shortcut}</span>
+              )}
+            </TooltipContent>
+          </Tooltip>
+        )
+      })}
+
+      {/* Spacer — pushes theme toggle to bottom */}
+      <div className="flex-1" />
+
+      {/* Tier 2 — theme toggle */}
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <button
+            onClick={toggleTheme}
+            className="a-ab"
+            aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+          >
+            {theme === "dark" ? <IconSun size={20} /> : <IconMoon size={20} />}
+            <span className="a-ab__label">{theme === "dark" ? "Light" : "Dark"}</span>
+          </button>
+        </TooltipTrigger>
+        <TooltipContent side="right" className="text-2xs">
+          {theme === "dark" ? "Light mode" : "Dark mode"}
+        </TooltipContent>
+      </Tooltip>
+    </aside>
   )
 }
