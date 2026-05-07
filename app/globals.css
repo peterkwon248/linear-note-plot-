@@ -1025,7 +1025,9 @@
 .a-th, .a-row {
   display: grid;
   grid-template-columns: minmax(0, 2.4fr) minmax(0, 1.3fr) 110px 90px 70px 80px;
-  gap: 16px;
+  /* Plot: 8px gap (위키 wiki-list.tsx:150 gap-2 정합) — 체크박스 옆에 Title 가깝게.
+     mockup default 16px는 Title cell이 너무 멀어 보임. */
+  gap: 8px;
   align-items: center;
   padding: 0 16px;
 }
