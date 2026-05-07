@@ -22,6 +22,8 @@ import {
   IconMoon,
 } from "@/components/plot-icons"
 import { Sidebar } from "@/components/icons/imperial"
+import { CaretRight } from "@phosphor-icons/react/dist/ssr/CaretRight"
+import { X as PhX } from "@phosphor-icons/react/dist/ssr/X"
 import { WikiBook, OntologyWide, Bookshelf } from "@/components/icons/imperial-extras"
 import { useSettingsStore } from "@/lib/settings-store"
 import { SPACE_COLORS } from "@/lib/colors"
@@ -50,6 +52,8 @@ export function ActivityBar() {
 
   const sidebarCollapsed = usePlotStore((s) => s.sidebarCollapsed)
   const setSidebarCollapsed = usePlotStore((s) => s.setSidebarCollapsed)
+  const activitybarCollapsed = usePlotStore((s) => s.activitybarCollapsed)
+  const setActivitybarCollapsed = usePlotStore((s) => s.setActivitybarCollapsed)
 
   const setSelectedNoteId = usePlotStore((s) => s.setSelectedNoteId)
 
@@ -78,11 +82,44 @@ export function ActivityBar() {
     setTheme(theme === "dark" ? "light" : "dark")
   }
 
+  // Collapsed state: render only thin edge button to re-open (mockup .a-edge pattern)
+  if (activitybarCollapsed) {
+    return (
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <button
+            onClick={() => setActivitybarCollapsed(false)}
+            className="h-full w-4 shrink-0 flex items-center justify-center text-muted-foreground/50 hover:text-foreground hover:bg-hover-bg transition-colors border-r border-border"
+            aria-label="Open activity bar"
+          >
+            <CaretRight size={11} weight="bold" />
+          </button>
+        </TooltipTrigger>
+        <TooltipContent side="right" className="text-2xs">Open activity bar</TooltipContent>
+      </Tooltip>
+    )
+  }
+
   return (
     <aside
-      className="a-actbar h-full shrink-0"
+      className="a-actbar h-full shrink-0 relative"
       style={{ width: "var(--a-actbar-w, 72px)" }}
+      data-actbar="open"
     >
+      {/* Close button — mockup .a-actbar__close spec */}
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <button
+            className="a-actbar__close absolute top-2 right-1 opacity-0 hover:opacity-100 group-hover/actbar:opacity-100 transition-opacity"
+            onClick={() => setActivitybarCollapsed(true)}
+            aria-label="Close activity bar"
+          >
+            <PhX size={11} weight="bold" />
+          </button>
+        </TooltipTrigger>
+        <TooltipContent side="right" className="text-2xs">Close activity bar</TooltipContent>
+      </Tooltip>
+
       {/* Brand mark — gradient badge with workspace initial (mockup pattern, plot-v3-a-*.jsx) */}
       <div className="a-actbar__head">
         <div className="a-brand__mark">P</div>

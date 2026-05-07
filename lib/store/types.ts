@@ -77,6 +77,8 @@ export interface PlotState {
   sidebarWidth: number
   sidebarLastWidth: number
   sidebarCollapsed: boolean
+  /** v3 mockup spec: actbar collapse (data-actbar="open|collapsed"). 단축키 ⌘⇧A. */
+  activitybarCollapsed: boolean
   // View Engine
   viewStateByContext: Record<ViewContextKey, ViewState>
   _viewStateHydrated: boolean
@@ -249,6 +251,7 @@ export interface PlotState {
   toggleSidePanel: () => void
   setSidebarWidth: (width: number) => void
   setSidebarCollapsed: (collapsed: boolean) => void
+  setActivitybarCollapsed: (collapsed: boolean) => void
   restoreSidebar: () => void
   goBack: () => boolean
   goForward: () => boolean
