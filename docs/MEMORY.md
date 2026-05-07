@@ -28,6 +28,36 @@
 
 ---
 
+## 🚀 2026-05-07 (밤) — Plot v3 Phase 2 DEFERRED (큰 방향 결정)
+
+**범위**: Phase 2 (Imperial icon kit) 도입 **보류** 결정. PRD 상단 DECISION banner + plan 문서 ARCHIVED. partial work 그대로 유지.
+
+### 결정 (영구)
+- **Imperial 전면 도입 보류**: phosphor-icons 그대로 유지
+- 직전 plan (`.omc/plans/v3-phosphor-inventory.md`) **부정확** ("2 files / 4 icons" → 실측 **119 files / 60+ icons / 87 files weight 사용**)
+- 119 files = 단일 PR 안전성 위배 (작업 원칙 #2 최소 diff)
+- phosphor regular ↔ Imperial 시각 위화감 미미 (둘 다 1.5px stroke Linear-style) → Imperial 도입의 시각 가치 약함
+- 빌드 정상 (tsc 0 / build clean / 185 tests pass)
+- lucide / 외부 라이브러리 추가 도입은 의미 없음 (phosphor 광범위)
+
+### 처리한 작업
+- `docs/PLOT-V3-VISUAL-REFRESH-PRD.md` 상단 DECISION banner 추가. Status v1.1 → v1.2. §0 TL;DR Imperial 항목 strike-through
+- `.omc/plans/v3-phosphor-inventory.md` ARCHIVED banner. historical reference로 보존
+- CONTEXT/MEMORY 결정 기록
+
+### 보존된 partial work (revert 안 함)
+- `components/icons/imperial.tsx` + `imperial-extras.tsx` 모듈 보존
+- `components/activity-bar.tsx` Imperial 마이그레이션
+- `components/plot-icons.tsx` `IconWiki = WikiBook`
+- `components/views/{note-split,wiki-merge,wiki-split}-page.tsx` 일부
+- `components/side-panel/backlink-card.tsx` weight 제거
+
+### 다음 P0
+- **Group C PR-D PR 3-5** (Stickers→Pack / References / Files view-engine 통합) 또는
+- **Plot v3 Phase 3+** (PRD 후속 phases — Notion/Linear 하이브리드 에디터, Type rename 등)
+
+---
+
 ## 🚀 2026-05-07 (저녁) — Plot v3 Phase 2 부분 진행
 
 **범위**: Imperial icon kit 모듈 작성 + 일부 migration. 사용자 위임 거절로 부분 완료 상태에서 commit.
