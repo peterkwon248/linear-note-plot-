@@ -117,6 +117,8 @@ const SORT_FIELD_LABELS: Record<SortField, string> = {
   noteCount: "Note count",
   memberCount: "Member count",
   fieldCount: "Field count",
+  size: "Size",
+  fileType: "Type",
 }
 
 const COLUMN_DEFS: { id: string; label: string; width: string; align?: string; sortField?: SortField; minWidth?: number }[] = [

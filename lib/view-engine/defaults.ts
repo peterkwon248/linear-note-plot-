@@ -61,6 +61,11 @@ const CONTEXT_DEFAULTS: Partial<Record<ViewContextKey, Partial<ViewState>>> = {
   // fieldCount + image presence are domain-specific display properties.
   // sort default: updatedAt desc (matches existing ReferencesView behavior).
   "references":   { viewMode: "list", ...ctx("updatedAt"), groupBy: "none", visibleColumns: ["title", "fieldCount", "image"] },
+
+  // PR group-c-d-5 (Files): media entity (Attachment — image/url/file).
+  // size + fileType are domain-specific. sort default: createdAt desc
+  // (matches existing FilesView behavior). Image previews drive grid mode value.
+  "files":        { viewMode: "list", ...ctx("createdAt"), groupBy: "none", visibleColumns: ["title", "fileType", "size"] },
 }
 
 /** Build a ViewState for a specific context, merging defaults */

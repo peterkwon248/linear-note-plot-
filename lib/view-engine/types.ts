@@ -25,6 +25,7 @@ export type ViewContextKey =
   | "labels-list"    // /labels — Label entity index (PR group-c-d-2)
   | "stickers"       // /stickers — Sticker entity index (PR group-c-d-3)
   | "references"     // /library/references — Reference entity index (PR group-c-d-4)
+  | "files"          // /library/files — Attachment entity index (PR group-c-d-5)
   | `query-${string}` // inline query blocks in editor
 
 /* ── View State ────────────────────────────────────────── */
@@ -50,6 +51,8 @@ export type SortField =
   | "noteCount"   // tags-list / labels-list: attached note count
   | "memberCount" // stickers: cross-entity members count (PR group-c-d-3)
   | "fieldCount"  // references: infobox field count (PR group-c-d-4)
+  | "size"        // files: attachment size in bytes (PR group-c-d-5)
+  | "fileType"    // files: attachment type (image/url/file) (PR group-c-d-5)
 
 export type SortDirection = "asc" | "desc"
 
@@ -199,13 +202,14 @@ export const VALID_VIEW_CONTEXT_KEYS: ViewContextKey[] = [
   "labels-list",
   "stickers",
   "references",
+  "files",
 ]
 
 export const VALID_SORT_FIELDS: SortField[] = [
   "updatedAt", "createdAt", "priority", "title", "status", "links", "reads", "folder", "label",
   "sub", "tier", "parent",
   // Group C PR-D entity-specific
-  "name", "noteCount", "memberCount", "fieldCount",
+  "name", "noteCount", "memberCount", "fieldCount", "size", "fileType",
 ]
 
 export const VALID_GROUP_BY: GroupBy[] = [
@@ -239,4 +243,6 @@ export const VALID_COLUMNS: string[] = [
   "memberCount",
   // PR group-c-d-4 (References): field count + image presence display properties.
   "fieldCount", "image",
+  // PR group-c-d-5 (Files): file size + file type display properties.
+  "size", "fileType",
 ]

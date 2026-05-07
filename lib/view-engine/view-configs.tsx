@@ -596,6 +596,37 @@ export const TAGS_LIST_VIEW_CONFIG: ViewConfig = {
   },
 }
 
+// Files entity index view config (PR group-c-d-5).
+// Files are media entities (Attachment — type "image" | "url" | "file").
+// list+grid both supported — image previews drive grid value. Sort by name /
+// createdAt / size / fileType. groupBy "none" 1차 (filter by type kept local
+// — multi-state UI doesn't fit viewState.groupBy union). Search not exposed
+// (no global SearchHandled at view-engine level for this entity).
+export const FILES_VIEW_CONFIG: ViewConfig = {
+  showFilter: false,
+  showDisplay: true,
+  showDetailPanel: false,
+  filterCategories: [],
+  quickFilters: [],
+  displayConfig: {
+    supportedModes: ["list", "grid"],
+    orderingOptions: [
+      { value: "createdAt", label: "Created" },
+      { value: "name", label: "Name" },
+      { value: "size", label: "Size" },
+      { value: "fileType", label: "Type" },
+    ],
+    groupingOptions: [
+      { value: "none", label: "No grouping" },
+    ],
+    toggles: [],
+    properties: [
+      { key: "fileType", label: "Type", icon: SortIcon },
+      { key: "size", label: "Size", icon: SortIcon },
+    ],
+  },
+}
+
 // References entity index view config (PR group-c-d-4).
 // References are rich entities (title + content + infobox fields + tags + image)
 // — first non-Note entity in this series. list+grid both supported.
@@ -673,4 +704,5 @@ export const VIEW_CONFIGS: Record<string, ViewConfig> = {
   "labels-list": LABELS_LIST_VIEW_CONFIG,
   stickers: STICKERS_LIST_VIEW_CONFIG,
   references: REFERENCES_VIEW_CONFIG,
+  files: FILES_VIEW_CONFIG,
 }

@@ -1726,5 +1726,19 @@ export function migrate(persistedState: unknown): PlotState {
     }
   }
 
+  // v115: Files entity index view-engine integration (PR group-c-d-5).
+  //
+  // Inject viewStateByContext["files"] default if not already present.
+  // Idempotent — existing users who already have the key keep their persisted
+  // viewState. New key only injected for users upgrading from v114.
+  {
+    const vsc = state.viewStateByContext as Record<string, unknown> | undefined
+    if (vsc && !("files" in vsc)) {
+      const defaultState = buildViewStateForContext("files")
+      vsc["files"] = defaultState
+      console.log("[migrate] v114→v115: injected files viewState default")
+    }
+  }
+
   return state as unknown as PlotState
 }

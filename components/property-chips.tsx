@@ -467,6 +467,53 @@ export function RefImageChip() {
   )
 }
 
+/* ── FileTypeChip (Group C PR-D-5) ─────────────────────── */
+
+/**
+ * Attachment type indicator for File entity cards: image / url / file.
+ * Domain-specific to Files (Library /library/files).
+ *
+ * Visual: muted pill with lead icon — Image icon for image attachments,
+ * Link icon for url-typed, FileText for generic files. Distinct from
+ * RefTypeChip (icon-text rather than text-only) to differentiate
+ * Reference vs File at a glance in shared rows.
+ */
+export function FileTypeChip({ type }: { type: "image" | "url" | "file" }) {
+  const label = type === "image" ? "Image" : type === "url" ? "Link" : "File"
+  const Icon = type === "image" ? PhImage : type === "url" ? PhLink : PhFileText
+  return (
+    <ChipShell title={label} className="bg-secondary/60 text-muted-foreground">
+      <Icon size={10} weight="regular" />
+      {label}
+    </ChipShell>
+  )
+}
+
+/* ── FileSizeChip ──────────────────────────────────────── */
+
+function formatBytesShort(bytes: number): string {
+  if (!bytes || bytes < 0) return "—"
+  if (bytes < 1024) return `${bytes} B`
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
+  if (bytes < 1024 * 1024 * 1024) return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
+  return `${(bytes / (1024 * 1024 * 1024)).toFixed(1)} GB`
+}
+
+/**
+ * File size indicator. Tabular-numeric for column alignment in lists. Uses
+ * the same B/KB/MB/GB formatter as FilesView's existing column.
+ */
+export function FileSizeChip({ size }: { size: number }) {
+  return (
+    <span
+      title={`${size} bytes`}
+      className="inline-flex items-center h-5 text-2xs text-muted-foreground tabular-nums leading-none whitespace-nowrap shrink-0"
+    >
+      {formatBytesShort(size)}
+    </span>
+  )
+}
+
 /* ── More chip (overflow) ─────────────────────────────── */
 
 export function MoreChip({ count }: { count: number }) {
