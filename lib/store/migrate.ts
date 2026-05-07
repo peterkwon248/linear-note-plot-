@@ -1740,5 +1740,45 @@ export function migrate(persistedState: unknown): PlotState {
     }
   }
 
+  // v116: NoteStatus rename — inbox→stone, capture→brick, permanent→keystone.
+  //
+  // Phase A atomic rename. Renames the persisted `status` field on every
+  // note plus the keys in `viewStateByContext` so existing users keep
+  // their per-route view configuration after upgrading. Idempotent —
+  // notes that already carry the new values pass through untouched, and
+  // viewStateByContext entries are only renamed when the new key does
+  // not already exist (avoids clobbering a user-edited target slot).
+  if (state.notes && Array.isArray(state.notes)) {
+    let renamedCount = 0
+    state.notes = (state.notes as Record<string, unknown>[]).map((n) => {
+      const oldStatus = n.status as string
+      let newStatus = oldStatus
+      if (oldStatus === "inbox") newStatus = "stone"
+      else if (oldStatus === "capture") newStatus = "brick"
+      else if (oldStatus === "permanent") newStatus = "keystone"
+      if (newStatus !== oldStatus) renamedCount++
+      return { ...n, status: newStatus }
+    })
+    if (renamedCount > 0) {
+      console.log(`[migrate] v115→v116: renamed NoteStatus on ${renamedCount} notes`)
+    }
+  }
+  // viewStateByContext keys also rename so the user's saved view config
+  // (sort/filter/columns) follows the route rename.
+  if (state.viewStateByContext) {
+    const vsc = state.viewStateByContext as Record<string, unknown>
+    const renames: Record<string, string> = {
+      inbox: "stone",
+      capture: "brick",
+      permanent: "keystone",
+    }
+    for (const [oldKey, newKey] of Object.entries(renames)) {
+      if (vsc[oldKey] !== undefined && vsc[newKey] === undefined) {
+        vsc[newKey] = vsc[oldKey]
+        delete vsc[oldKey]
+      }
+    }
+  }
+
   return state as unknown as PlotState
 }
