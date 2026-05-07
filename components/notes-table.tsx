@@ -1205,7 +1205,11 @@ export function NotesTable({
                     </div>
                   </div>
                   {COLUMN_DEFS.filter((col) => col.id === "title" || effectiveVisibleCols.includes(col.id)).map((col) => (
-                    <div key={col.id} className={col.align ?? ""}>
+                    <div
+                      key={col.id}
+                      className={col.align ?? ""}
+                      style={col.id === "title" ? { marginLeft: -8 } : undefined}
+                    >
                       {col.id === "title" ? (
                         <div className="flex items-center gap-2 pr-0">
                           <TH
@@ -1682,8 +1686,9 @@ function NoteRowInner({
         </div>
       </div>
 
-      {/* Name — v3: .a-row__lead (icon + title) */}
-      <div className="flex flex-col min-w-0">
+      {/* Name — v3: .a-row__lead (icon + title)
+          marginLeft -8: grid gap 상쇄해 체크박스에 가깝게 (위키 wiki-list 정합) */}
+      <div className="flex flex-col min-w-0" style={{ marginLeft: -8 }}>
         <div className="a-row__lead">
           {groupBy !== "status" && (
             <span className="a-row__icon" data-tone={note.status}>
