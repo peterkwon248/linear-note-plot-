@@ -38,6 +38,39 @@
 
 ---
 
+## 🚀 2026-05-07 (밤) — Group C PR-D 5/5 완성 + 4 design skills install
+
+**범위**: PR 3 Stickers + PR 4 References + PR 5 Files + skills install. Group C PR-D 시리즈 종료. Store v112 → v115.
+
+### 머지된 PRs (이번 세션)
+- **a055581 v113** — Stickers view-engine 통합
+- **c3700ad v114** — References view-engine 통합 (첫 non-Note entity)
+- **f210fcf v115** — Files view-engine 통합 (시리즈 완성)
+
+### 디자인 인프라 보강
+- **0f7e2ec** — taste-skill 4개 install (project-level): design-taste-frontend / high-end-visual-design / redesign-existing-projects / minimalist-ui
+- universal symlink (12 agents 호환). cross-machine sync는 `npx skills experimental_install`
+
+### Group C PR-D 시리즈 완성 🎉
+5 entity (Tags / Labels / Stickers / References / Files) 모두 view-engine + ViewHeader + viewState persist + list/grid mode 통합. thin fork 패턴 정합. Saved View 자동 지원.
+
+### 외부 도구 평가 (적용 X 결정)
+- **onlook** (visual code editor): production app 자동 코드 변경 회귀 위험
+- **Front-End-Design-Checklist**: design-quality-gate / 4 design skills과 중복
+
+### shadcn-ui 확인
+✅ 이미 적용 (components.json + components/ui/* 30+ + @radix-ui 28개)
+
+### Store version
+v112 → v113 (Stickers) → v114 (References) → v115 (Files)
+
+### 다음 우선순위 (NEXT-ACTION.md 참조)
+- 🔴 Plot v3 Phase 3+ 분해 plan
+- 🟡 Wiki template 3-layer
+- 🟡 Smart Book v2
+
+---
+
 ## 🚀 2026-05-07 (밤) — Plot v3 Phase 2 DEFERRED (큰 방향 결정)
 
 **범위**: Phase 2 (Imperial icon kit) 도입 **보류** 결정. PRD 상단 DECISION banner + plan 문서 ARCHIVED.

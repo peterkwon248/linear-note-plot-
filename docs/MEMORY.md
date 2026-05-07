@@ -28,6 +28,53 @@
 
 ---
 
+## 🚀 2026-05-07 (밤) — Group C PR-D 5/5 완성 + 4 design skills install
+
+**범위**: PR 3 Stickers (v113) + PR 4 References (v114) + PR 5 Files (v115) + skills install. Group C PR-D 시리즈 종료.
+
+### 머지된 PRs (이번 세션, 모두 같은 worktree)
+- **a055581 v113** — PR group-c-d-3 Stickers view-engine 통합. `stickers` ViewContextKey + useStickersView thin fork (~180 LOC, cross-entity members count) + StickerMemberCountChip (Stack icon) + STICKERS_LIST_VIEW_CONFIG + ViewMode list+grid + idempotent v113 migration. 9 files +427/-92.
+- **c3700ad v114** — PR group-c-d-4 References view-engine 통합. 첫 non-Note entity. `references` ViewContextKey + useReferencesView thin fork (~155 LOC, caller가 pre-filtered Reference[] 전달, enrich + sort + group) + 3 신규 chips (RefTypeChip / RefFieldCountChip / RefImageChip) + REFERENCES_VIEW_CONFIG + Grid mode (image preview + title + content excerpt + chips). sort + viewMode → viewState. quickFilter / fieldKey filter / search 로컬 유지 (multi-state UI가 viewState.toggles boolean record에 안 맞음). 9 files +408/-43.
+- **f210fcf v115** — PR group-c-d-5 Files view-engine 통합. media entity (Attachment image/url/file). `files` ViewContextKey + useFilesView thin fork (~135 LOC) + 2 신규 chips (FileTypeChip / FileSizeChip) + FILES_VIEW_CONFIG + Grid mode (4:3 thumbnail block + chip row) + column header sort "type" → "fileType" 명시 변환. 신규 SortField: size + fileType. 9 files +423/-39.
+
+### 부수 fix (반복)
+- `notes-table.tsx` SORT_FIELD_LABELS Record<SortField, string> exhaustive 매번 update — memberCount, fieldCount, size, fileType 추가 (PR 3/4/5). next build type error 방지.
+- 로컬 type alias `SortDir` 제거 (사용처 0)
+
+### 디자인 인프라 보강 (이번 세션)
+- **0f7e2ec** — taste-skill 4개 install (project-level, `.agents/skills/`)
+  - design-taste-frontend (Senior UI/UX, metric-based)
+  - high-end-visual-design (agency-grade fonts/spacing/shadows)
+  - redesign-existing-projects (v3 visual refresh와 정합)
+  - minimalist-ui ("Gentle by default" 정합)
+- universal symlink (Codex/Cursor/Copilot 등 12 agents 호환). Claude Code 자동 활성
+- skills-lock.json (cross-machine sync). 새 머신: `npx skills experimental_install`로 symlink 재생성
+
+### 외부 도구 평가 (영구 결정)
+- **shadcn-ui**: ✅ 이미 적용 (components.json + 30+ 컴포넌트 + @radix-ui 28개). v3 PRD "shadcn cascade 보존" 명시
+- **onlook** (visual code editor, 25.7k stars): ❌ Plot 부적합. production app 자동 코드 변경 회귀 위험. greenfield/marketing에 적합
+- **Front-End-Design-Checklist** (passive 40+ items, 5.2k stars): ❌ design-quality-gate / linear-design-mirror / 4 design skills과 중복. handoff 가이드라 1인 dev에 audience 불일치
+- **huashu-design** (mockup/prototype 도구): △ Plot production code에는 적용 X. v3 mockup 단계에서만 유용
+
+### Group C PR-D 시리즈 완성 🎉
+- ✅ PR 1: Tags v110 (#261)
+- ✅ PR 2: Labels v111 (#262)
+- ✅ PR 3: Stickers v113 (a055581)
+- ✅ PR 4: References v114 (c3700ad)
+- ✅ PR 5: Files v115 (f210fcf)
+
+5 entity 모두 view-engine pipeline + ViewHeader + viewState persist + list/grid mode 통합. thin fork 패턴 정합 (Generic 화 X 영구). Saved View가 5 entity context 자동 적용.
+
+### 다음 우선순위 (NEXT-ACTION.md 참조)
+- 🔴 **Plot v3 Phase 3+** 분해 plan (Notion/Linear 하이브리드 에디터 / Type rename / 5 view modes / activity-bar reskin / Linear-style filter popover)
+- 🟡 Wiki template 3-layer (Layout Preset + Content Template + Typed Infobox)
+- 🟡 Smart Book v2 — AutoSource[5] (folder/category/tag/label/sticker)
+
+### Store Version 진화 (이번 세션)
+v112 → v113 (Stickers) → v114 (References) → v115 (Files)
+
+---
+
 ## 🚀 2026-05-07 (밤) — Plot v3 Phase 2 DEFERRED (큰 방향 결정)
 
 **범위**: Phase 2 (Imperial icon kit) 도입 **보류** 결정. PRD 상단 DECISION banner + plan 문서 ARCHIVED. partial work 그대로 유지.
