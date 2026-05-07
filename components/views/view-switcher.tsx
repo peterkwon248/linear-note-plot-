@@ -5,19 +5,24 @@
  *
  * Mockup ref: `docs/v3-mockup/plot-v3-unified.css:7-37` (`.u-vs`).
  *
- * Phase 5.1 added Gallery; Phase 5.2 adds Studio (pro media tool surface,
- * dark-forced — see `components/views/studio-view.tsx`). Editorial / Graph
- * land in subsequent PRs and will plug into the same union type without
- * touching this component's shape.
+ * Phase 5.1 added Gallery; Phase 5.2 added Studio (pro media tool surface,
+ * dark-forced — see `components/views/studio-view.tsx`); Phase 5.3 adds
+ * Editorial (newsroom spread on warm canvas — see
+ * `components/views/editorial-view.tsx`). Graph lands in 5.4 and plugs into
+ * the same union type without touching this component's shape.
  */
 
 import { Table } from "@phosphor-icons/react/dist/ssr/Table"
 import { GridFour } from "@phosphor-icons/react/dist/ssr/GridFour"
 import { Waveform } from "@phosphor-icons/react/dist/ssr/Waveform"
+import { Newspaper } from "@phosphor-icons/react/dist/ssr/Newspaper"
 import type { ViewMode } from "@/lib/view-engine/types"
 
 /** Subset of ViewMode that this PR's switcher exposes. */
-export type ViewSwitcherMode = Extract<ViewMode, "list" | "gallery" | "studio">
+export type ViewSwitcherMode = Extract<
+  ViewMode,
+  "list" | "gallery" | "studio" | "editorial"
+>
 
 interface ViewSwitcherProps {
   value: ViewSwitcherMode
@@ -25,9 +30,10 @@ interface ViewSwitcherProps {
 }
 
 const MODES: { id: ViewSwitcherMode; label: string; Icon: typeof Table }[] = [
-  { id: "list",    label: "Table",   Icon: Table     },
-  { id: "gallery", label: "Gallery", Icon: GridFour  },
-  { id: "studio",  label: "Studio",  Icon: Waveform  },
+  { id: "list",      label: "Table",     Icon: Table     },
+  { id: "gallery",   label: "Gallery",   Icon: GridFour  },
+  { id: "studio",    label: "Studio",    Icon: Waveform  },
+  { id: "editorial", label: "Editorial", Icon: Newspaper },
 ]
 
 export function ViewSwitcher({ value, onChange }: ViewSwitcherProps) {
