@@ -171,7 +171,7 @@ function TH({
 }) {
   if (!col) {
     return (
-      <span className={`a-th__cell inline-flex items-center ${className}`}>
+      <span className={`inline-flex items-center text-note font-medium text-foreground/80 ${className}`}>
         {label}
       </span>
     )
@@ -179,7 +179,7 @@ function TH({
   const active = sortCol === col
   return (
     <button
-      className={`a-th__cell group/th inline-flex items-center gap-1 transition-colors hover:text-foreground ${className}`}
+      className={`group/th inline-flex items-center gap-1 text-note font-medium text-foreground/80 transition-colors hover:text-foreground ${className}`}
       onClick={() => onSort(col)}
     >
       {label}
