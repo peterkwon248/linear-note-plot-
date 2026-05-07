@@ -308,6 +308,7 @@ export function NotesTable({
   folderId,
   tagId,
   labelId,
+  headerExtras,
 }: {
   onRowClick?: (noteId: string) => void
   activePreviewId?: string | null
@@ -318,6 +319,9 @@ export function NotesTable({
   folderId?: string
   tagId?: string
   labelId?: string
+  /** v3 Phase 5.1: extra toolbar nodes (e.g. ViewSwitcher) rendered before
+   *  the existing extras. Threaded through to ViewHeader.extraToolbarButtons. */
+  headerExtras?: React.ReactNode
 }) {
   const notes = usePlotStore((s) => s.notes)
   const updateNote = usePlotStore((s) => s.updateNote)
@@ -964,6 +968,7 @@ export function NotesTable({
         onSaveView={onSaveView}
         extraToolbarButtons={
           <>
+            {headerExtras}
             {/* Index toggle moved into the column header row (next to Name) so
                 it sits with the data it acts on, freeing this toolbar for
                 global view-level actions (Filter / Display / Save view). */}
