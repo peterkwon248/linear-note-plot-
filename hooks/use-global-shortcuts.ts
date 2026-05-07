@@ -230,9 +230,9 @@ export function useGlobalShortcuts() {
         pendingG.current = false
         if (gTimer.current) clearTimeout(gTimer.current)
         const k = e.key.toLowerCase()
-        if (k === "i") { e.preventDefault(); router.push("/inbox"); return }
-        if (k === "c") { e.preventDefault(); router.push("/capture"); return }
-        if (k === "m") { e.preventDefault(); router.push("/permanent"); return }
+        if (k === "i") { e.preventDefault(); router.push("/stone"); return }
+        if (k === "c") { e.preventDefault(); router.push("/brick"); return }
+        if (k === "m") { e.preventDefault(); router.push("/keystone"); return }
         if (k === "n") { e.preventDefault(); router.push("/notes"); return }
         return
       }

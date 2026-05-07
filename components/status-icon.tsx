@@ -8,11 +8,11 @@ import { NOTE_STATUS_COLORS } from "@/lib/colors"
 
 /**
  * Shared status icon component — colored dot per status.
- * inbox = cyan, capture = orange, permanent = green.
+ * stone = gray, brick = orange, keystone = teal.
  * Used across sidebar, editor backlinks footer, and notes table.
  */
 export function StatusIcon({ status, className }: { status: NoteStatus; className?: string }) {
-  const cfg = STATUS_CONFIG[status] ?? STATUS_CONFIG.capture
+  const cfg = STATUS_CONFIG[status] ?? STATUS_CONFIG.brick
 
   return (
     <span
@@ -26,9 +26,9 @@ export function StatusIcon({ status, className }: { status: NoteStatus; classNam
 /**
  * Shape-differentiated status icon (Linear-style): workflow stage expressed through
  * icon shape in addition to color.
- * - inbox     = dashed circle (cyan)
- * - capture   = half-filled circle (orange)
- * - permanent = check circle (green)
+ * - stone    = dashed circle (gray)
+ * - brick    = half-filled circle (orange)
+ * - keystone = check circle (teal)
  *
  * Used in notes-table, peek picker, and anywhere a richer affordance is wanted
  * over a plain colored dot.
@@ -44,10 +44,10 @@ export function StatusShapeIcon({
 }) {
   const color = NOTE_STATUS_COLORS[status]?.css ?? "currentColor"
   const shared = cn("shrink-0", className)
-  if (status === "inbox") {
+  if (status === "stone") {
     return <CircleDashed size={size} weight="regular" style={{ color }} className={shared} />
   }
-  if (status === "capture") {
+  if (status === "brick") {
     return <CircleHalf size={size} weight="fill" style={{ color }} className={shared} />
   }
   return <CheckCircle size={size} weight="fill" style={{ color }} className={shared} />

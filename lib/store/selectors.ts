@@ -11,8 +11,8 @@ export function getFilteredNotes(state: PlotState): Note[] {
   const isActive = (n: Note) => !n.trashed
 
   switch (activeView.type) {
-    case "inbox":
-      filtered = filtered.filter((n) => n.status === "inbox" && isActive(n))
+    case "stone":
+      filtered = filtered.filter((n) => n.status === "stone" && isActive(n))
       break
     case "all":
       filtered = filtered.filter(isActive)
@@ -54,8 +54,8 @@ export function filterNotesByRoute(notes: Note[], filter: NoteFilter, searchQuer
   const isActive = (n: Note) => !n.trashed
 
   switch (filter.type) {
-    case "inbox":
-      filtered = filtered.filter((n) => n.status === "inbox" && isActive(n))
+    case "stone":
+      filtered = filtered.filter((n) => n.status === "stone" && isActive(n))
       break
     case "all":
       filtered = filtered.filter(isActive)
@@ -72,19 +72,19 @@ export function filterNotesByRoute(notes: Note[], filter: NoteFilter, searchQuer
     case "tag":
       filtered = filtered.filter((n) => n.tags.includes(filter.tagId) && isActive(n))
       break
-    case "status-inbox":
+    case "status-stone":
       filtered = filtered.filter((n) =>
-        n.status === "inbox" &&
+        n.status === "stone" &&
         isActive(n) &&
         n.triageStatus !== "trashed" &&
         (n.triageStatus === "untriaged" || (n.triageStatus === "snoozed" && n.reviewAt && new Date(n.reviewAt) <= new Date()))
       )
       break
-    case "status-capture":
-      filtered = filtered.filter((n) => n.status === "capture" && isActive(n) && n.triageStatus !== "trashed")
+    case "status-brick":
+      filtered = filtered.filter((n) => n.status === "brick" && isActive(n) && n.triageStatus !== "trashed")
       break
-    case "status-permanent":
-      filtered = filtered.filter((n) => n.status === "permanent" && isActive(n) && n.triageStatus !== "trashed")
+    case "status-keystone":
+      filtered = filtered.filter((n) => n.status === "keystone" && isActive(n) && n.triageStatus !== "trashed")
       break
     default:
       filtered = filtered.filter(isActive)
@@ -106,20 +106,20 @@ export function filterNotesByRoute(notes: Note[], filter: NoteFilter, searchQuer
 
 export function getFilterTitle(filter: NoteFilter, state: Pick<PlotState, "folders" | "tags">): string {
   switch (filter.type) {
-    case "inbox":
-      return "Inbox"
+    case "stone":
+      return "Stone"
     case "all":
       return "All Notes"
     case "trash":
       return "Trash"
     case "pinned":
       return "Pinned"
-    case "status-inbox":
-      return "Inbox"
-    case "status-capture":
-      return "Capture"
-    case "status-permanent":
-      return "Permanent"
+    case "status-stone":
+      return "Stone"
+    case "status-brick":
+      return "Brick"
+    case "status-keystone":
+      return "Keystone"
     case "folder": {
       const folder = state.folders.find((f) => f.id === filter.folderId)
       return folder?.name ?? "Folder"
@@ -135,8 +135,8 @@ export function getFilterTitle(filter: NoteFilter, state: Pick<PlotState, "folde
 
 export function getViewTitle(view: ActiveView, state: PlotState): string {
   switch (view.type) {
-    case "inbox":
-      return "Inbox"
+    case "stone":
+      return "Stone"
     case "all":
       return "All Notes"
     case "folder": {

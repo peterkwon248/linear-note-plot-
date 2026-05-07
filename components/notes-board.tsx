@@ -139,13 +139,13 @@ const COLUMN_CARD_LIMIT = 10
 
 /** Default groupBy per context tab for board mode */
 const BOARD_DEFAULT_GROUP: Partial<Record<ViewContextKey, GroupBy>> = {
-  inbox: "triage",
-  capture: "linkCount",
-  permanent: "linkCount",
+  stone: "triage",
+  brick: "linkCount",
+  keystone: "linkCount",
 }
 
 /** Tabs that filter to a single status — status grouping produces only 1 column */
-const SINGLE_STATUS_TABS: ViewContextKey[] = ["inbox", "capture", "permanent"]
+const SINGLE_STATUS_TABS: ViewContextKey[] = ["stone", "brick", "keystone"]
 
 const GROUP_OPTIONS: { value: GroupBy; label: string }[] = [
   { value: "none", label: "No grouping" },
@@ -551,7 +551,7 @@ function BoardCardInner({
     <ContextMenu>
       <ContextMenuTrigger asChild>{cardVisual}</ContextMenuTrigger>
       <ContextMenuContent className="w-52">
-        {note.status === "inbox" && note.triageStatus !== "trashed" && (
+        {note.status === "stone" && note.triageStatus !== "trashed" && (
           <>
             <ContextMenuItem onClick={onKeep} className="text-note">
               <PhCheck className="mr-2 text-accent" size={16} weight="bold" /> Done
@@ -574,21 +574,21 @@ function BoardCardInner({
             <ContextMenuSeparator />
           </>
         )}
-        {note.status === "capture" && (
+        {note.status === "brick" && (
           <>
             <ContextMenuItem onClick={onPromote} className="text-note">
-              <ArrowUpRight className="mr-2 text-chart-5" size={16} weight="regular" /> Promote to Permanent
+              <ArrowUpRight className="mr-2 text-chart-5" size={16} weight="regular" /> Promote to Keystone
             </ContextMenuItem>
             <ContextMenuItem onClick={onMoveBack} className="text-note">
-              <InboxIcon className="mr-2 text-muted-foreground" size={16} weight="regular" /> Back to Inbox
+              <InboxIcon className="mr-2 text-muted-foreground" size={16} weight="regular" /> Back to Stone
             </ContextMenuItem>
             <ContextMenuSeparator />
           </>
         )}
-        {note.status === "permanent" && (
+        {note.status === "keystone" && (
           <>
             <ContextMenuItem onClick={onDemote} className="text-note">
-              <ArrowDownLeft className="mr-2 text-muted-foreground" size={16} weight="regular" /> Demote to Capture
+              <ArrowDownLeft className="mr-2 text-muted-foreground" size={16} weight="regular" /> Demote to Brick
             </ContextMenuItem>
             <ContextMenuSeparator />
           </>

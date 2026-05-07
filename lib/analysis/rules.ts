@@ -4,15 +4,15 @@ const DAY_MS = 24 * 60 * 60 * 1000
 
 export const PRESET_RULES: AnalysisRule[] = [
   {
-    id: "inbox-neglect",
-    label: "Inbox neglected 30+ days",
-    description: "Notes sitting in inbox for over 30 days",
+    id: "stone-neglect",
+    label: "Stone neglected 30+ days",
+    description: "Notes sitting in stone for over 30 days",
     severity: "critical",
     match: (ctx) =>
       ctx.notes
         .filter(
           (n) =>
-            n.status === "inbox" &&
+            n.status === "stone" &&
             ctx.now - new Date(n.createdAt).getTime() > 30 * DAY_MS,
         )
         .map((n) => n.id),
@@ -36,12 +36,12 @@ export const PRESET_RULES: AnalysisRule[] = [
   {
     id: "stale-notes",
     label: "Stale notes (7+ days)",
-    description: "Capture/permanent notes not touched in over 7 days",
+    description: "Brick/keystone notes not touched in over 7 days",
     severity: "warning",
     match: (ctx) =>
       ctx.notes
         .filter((n) => {
-          if (n.status !== "capture" && n.status !== "permanent") return false
+          if (n.status !== "brick" && n.status !== "keystone") return false
           const touched = new Date(
             n.lastTouchedAt ?? n.updatedAt,
           ).getTime()
@@ -53,13 +53,13 @@ export const PRESET_RULES: AnalysisRule[] = [
   {
     id: "orphan-notes",
     label: "Orphan notes",
-    description: "Permanent notes with no inbound or outbound links",
+    description: "Keystone notes with no inbound or outbound links",
     severity: "warning",
     match: (ctx) =>
       ctx.notes
         .filter(
           (n) =>
-            n.status === "permanent" &&
+            n.status === "keystone" &&
             (ctx.backlinks.get(n.id) ?? 0) === 0 &&
             n.linksOut.length === 0,
         )
@@ -81,15 +81,15 @@ export const PRESET_RULES: AnalysisRule[] = [
   },
 
   {
-    id: "stuck-capture",
-    label: "Stuck in capture",
-    description: "Notes in capture stage for over 14 days without promotion",
+    id: "stuck-brick",
+    label: "Stuck in brick",
+    description: "Notes in brick stage for over 14 days without promotion",
     severity: "info",
     match: (ctx) =>
       ctx.notes
         .filter(
           (n) =>
-            n.status === "capture" &&
+            n.status === "brick" &&
             n.promotedAt === null &&
             ctx.now - new Date(n.createdAt).getTime() > 14 * DAY_MS,
         )

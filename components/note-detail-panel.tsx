@@ -189,12 +189,12 @@ export function NoteDetailPanel({
   const staleSuggest = note ? isStaleSuggest(note) : false
   const linkCount = note ? (backlinksIndex.get(note.id) ?? 0) : 0
 
-  // Days since note was created (for capture age nudge)
-  const daysInCapture = note && note.status === "capture"
+  // Days since note was created (for brick age nudge)
+  const daysInCapture = note && note.status === "brick"
     ? Math.floor((Date.now() - new Date(note.createdAt).getTime()) / (24 * 60 * 60 * 1000))
     : 0
-  // Show capture age nudge only when not already covered by staleSuggest (14d lastTouched check)
-  const showCaptureAgeNudge = note?.status === "capture" && !staleSuggest && daysInCapture >= 14
+  // Show brick age nudge only when not already covered by staleSuggest (14d lastTouched check)
+  const showCaptureAgeNudge = note?.status === "brick" && !staleSuggest && daysInCapture >= 14
 
   // Advance to next inbox note after triage action
   const advanceToNext = useCallback(() => {
@@ -207,8 +207,8 @@ export function NoteDetailPanel({
 
   const handleDone = useCallback(() => {
     triageKeep(noteId)
-    pushUndo("Triage to Capture", () => moveBackToInbox(noteId), () => triageKeep(noteId))
-    toast("Done — moved to Capture")
+    pushUndo("Triage to Brick", () => moveBackToInbox(noteId), () => triageKeep(noteId))
+    toast("Done — moved to Brick")
     advanceToNext()
   }, [triageKeep, noteId, advanceToNext, moveBackToInbox])
 
@@ -230,20 +230,20 @@ export function NoteDetailPanel({
 
   const handlePromote = useCallback(() => {
     promoteToPermanent(noteId)
-    pushUndo("Promote to Permanent", () => undoPromote(noteId), () => promoteToPermanent(noteId))
-    toast("Promoted to Permanent")
+    pushUndo("Promote to Keystone", () => undoPromote(noteId), () => promoteToPermanent(noteId))
+    toast("Promoted to Keystone")
   }, [promoteToPermanent, noteId, undoPromote])
 
   const handleDemote = useCallback(() => {
     undoPromote(noteId)
-    pushUndo("Demote to Capture", () => promoteToPermanent(noteId), () => undoPromote(noteId))
-    toast("Demoted to Capture")
+    pushUndo("Demote to Brick", () => promoteToPermanent(noteId), () => undoPromote(noteId))
+    toast("Demoted to Brick")
   }, [undoPromote, noteId, promoteToPermanent])
 
   const handleMoveBack = useCallback(() => {
     moveBackToInbox(noteId)
-    pushUndo("Move back to Inbox", () => triageKeep(noteId), () => moveBackToInbox(noteId))
-    toast("Moved back to Inbox")
+    pushUndo("Move back to Stone", () => triageKeep(noteId), () => moveBackToInbox(noteId))
+    toast("Moved back to Stone")
   }, [moveBackToInbox, noteId, triageKeep])
 
   const handleLinkSuggestion = useCallback((targetTitle: string) => {
@@ -259,16 +259,16 @@ export function NoteDetailPanel({
       if (target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.isContentEditable) return
       if (target.closest("[role='dialog']") || target.closest("[data-radix-popper-content-wrapper]")) return
 
-      if (note.status === "inbox" && note.triageStatus !== "trashed") {
+      if (note.status === "stone" && note.triageStatus !== "trashed") {
         if (e.key === "d" || e.key === "D") { e.preventDefault(); handleDone() }
         if (e.key === "s" || e.key === "S") { e.preventDefault(); handleSnooze(getSnoozeTime("tomorrow")) }
         if (e.key === "t" || e.key === "T") { e.preventDefault(); handleTrash() }
       }
-      if (note.status === "capture") {
+      if (note.status === "brick") {
         if (e.key === "p" || e.key === "P") { e.preventDefault(); handlePromote() }
         if (e.key === "b" || e.key === "B") { e.preventDefault(); handleMoveBack() }
       }
-      if (note.status === "permanent") {
+      if (note.status === "keystone") {
         if (e.key === "d" || e.key === "D") { e.preventDefault(); handleDemote() }
       }
     }
@@ -314,7 +314,7 @@ export function NoteDetailPanel({
       </header>
 
       {/* Stage-aware workflow action bar — hidden when embedded (parent provides its own triage bar) */}
-      {!embedded && note.status === "inbox" && note.triageStatus !== "trashed" && (
+      {!embedded && note.status === "stone" && note.triageStatus !== "trashed" && (
         <div className="flex shrink-0 items-center gap-2 border-b border-border bg-secondary/20 px-4 py-2">
           <button
             onClick={handleDone}
@@ -346,7 +346,7 @@ export function NoteDetailPanel({
         </div>
       )}
 
-      {note.status === "capture" && (
+      {note.status === "brick" && (
         <div className="shrink-0 border-b border-border">
           <div className="flex items-center gap-2 px-4 py-2 bg-secondary/20">
             <button
@@ -366,7 +366,7 @@ export function NoteDetailPanel({
               className="inline-flex items-center gap-1.5 rounded-md border border-border bg-card px-2.5 py-1 text-note font-medium text-muted-foreground transition-colors hover:bg-hover-bg hover:text-foreground"
             >
               <Tray size={14} weight="regular" />
-              Back to Inbox
+              Back to Stone
               <kbd className="ml-1 rounded bg-muted px-1 py-0.5 text-2xs font-mono leading-none text-muted-foreground">B</kbd>
             </button>
             <RemindPicker
@@ -408,7 +408,7 @@ export function NoteDetailPanel({
         </div>
       )}
 
-      {note.status === "permanent" && (
+      {note.status === "keystone" && (
         <div className="shrink-0 border-b border-border">
           <div className="flex items-center gap-2 px-4 py-2 bg-secondary/20">
             <button
@@ -416,7 +416,7 @@ export function NoteDetailPanel({
               className="inline-flex items-center gap-1.5 rounded-md border border-border bg-card px-2.5 py-1 text-note font-medium text-muted-foreground transition-colors hover:bg-hover-bg hover:text-foreground"
             >
               <ArrowDownLeft size={14} weight="regular" />
-              Demote to Capture
+              Demote to Brick
               <kbd className="ml-1 rounded bg-muted px-1 py-0.5 text-2xs font-mono leading-none text-muted-foreground">D</kbd>
             </button>
             <RemindPicker
@@ -433,7 +433,7 @@ export function NoteDetailPanel({
             <div className="flex items-center gap-2 bg-chart-3/5 px-4 py-2">
               <PhLink className="text-chart-3" size={16} weight="regular" />
               <span className="text-note text-chart-3">
-                Unlinked permanent note — add connections to strengthen your knowledge graph.
+                Unlinked keystone note — add connections to strengthen your knowledge graph.
                 {suggestions.length > 0 && (
                   <span className="ml-1 text-chart-3/80">
                     {suggestions.length} suggested {suggestions.length === 1 ? "connection" : "connections"} below.
@@ -512,7 +512,7 @@ export function NoteDetailPanel({
                   : "0 words"}
               </span>
             </MetaRow>
-            {note.reviewAt && note.status !== "inbox" && (
+            {note.reviewAt && note.status !== "stone" && (
               <div className="flex items-center justify-between py-1.5">
                 <span className="flex items-center gap-2 text-note text-muted-foreground">
                   <Bell size={14} weight="regular" />

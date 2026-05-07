@@ -301,12 +301,12 @@ const WikilinkList = forwardRef<WikilinkListRef, WikilinkListProps>(
                             ) : (
                               <IconWikiArticle size={14} className="shrink-0" style={{ color: WIKI_STATUS_HEX.article }} />
                             )
-                          ) : item.status === "inbox" ? (
-                            <CircleDashed className="shrink-0" size={14} style={{ color: NOTE_STATUS_HEX.inbox }} />
-                          ) : item.status === "capture" ? (
-                            <CircleHalf className="shrink-0" size={14} style={{ color: NOTE_STATUS_HEX.capture }} />
-                          ) : item.status === "permanent" ? (
-                            <CheckCircle className="shrink-0" size={14} style={{ color: NOTE_STATUS_HEX.permanent }} />
+                          ) : item.status === "stone" ? (
+                            <CircleDashed className="shrink-0" size={14} style={{ color: NOTE_STATUS_HEX.stone }} />
+                          ) : item.status === "brick" ? (
+                            <CircleHalf className="shrink-0" size={14} style={{ color: NOTE_STATUS_HEX.brick }} />
+                          ) : item.status === "keystone" ? (
+                            <CheckCircle className="shrink-0" size={14} style={{ color: NOTE_STATUS_HEX.keystone }} />
                           ) : (
                             <FileText className="shrink-0 text-muted-foreground" size={14} />
                           )}
@@ -520,7 +520,7 @@ export const WikilinkSuggestion = Extension.create({
             finalResults.push({
               id: `__new_note__${q}`,
               title: q,
-              status: "inbox",
+              status: "stone",
               isNewNote: true,
               itemType: "note",
             })

@@ -104,8 +104,8 @@ export function createAutopilotSlice(set: Set, get: Get, appendEvent: AppendEven
         ),
       }))
 
-      // If promoted to permanent, enroll in SRS
-      if (updates.status === "permanent" && note.status !== "permanent") {
+      // If promoted to keystone, enroll in SRS
+      if (updates.status === "keystone" && note.status !== "keystone") {
         get().enrollSRS(noteId)
       }
 
@@ -151,9 +151,9 @@ export function createAutopilotSlice(set: Set, get: Get, appendEvent: AppendEven
         switch (action.type) {
           case "set_status":
             // We can't know the original status perfectly, but we can infer from the rule
-            // For Inbox→Capture, reverse to inbox. For Capture→Permanent, reverse to capture.
-            if (action.value === "capture") reverseUpdates.status = "inbox"
-            else if (action.value === "permanent") reverseUpdates.status = "capture"
+            // For Stone→Brick, reverse to stone. For Brick→Keystone, reverse to brick.
+            if (action.value === "brick") reverseUpdates.status = "stone"
+            else if (action.value === "keystone") reverseUpdates.status = "brick"
             break
           case "set_priority":
             reverseUpdates.priority = "none"
@@ -183,8 +183,8 @@ export function createAutopilotSlice(set: Set, get: Get, appendEvent: AppendEven
       reverseUpdates.updatedAt = now()
       reverseUpdates.lastTouchedAt = now()
 
-      // If reverting from permanent, unenroll SRS
-      if (reverseUpdates.status && reverseUpdates.status !== "permanent" && note.status === "permanent") {
+      // If reverting from keystone, unenroll SRS
+      if (reverseUpdates.status && reverseUpdates.status !== "keystone" && note.status === "keystone") {
         get().unenrollSRS(entry.noteId)
       }
 

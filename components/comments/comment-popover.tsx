@@ -405,12 +405,12 @@ function CommentItem({
       const id = createNote({
         title: comment.body.split("\n")[0].slice(0, 80) || "Comment",
         content: comment.body,
-        status: "inbox",
+        status: "stone",
       })
       // Resolve the comment to show it's been "moved on"
       setStatus(comment.id, "done")
       const openNote = (usePlotStore.getState() as any).openNote
-      toast.success("Comment moved to Inbox", {
+      toast.success("Comment moved to Stone", {
         action: openNote
           ? {
               label: "Open",

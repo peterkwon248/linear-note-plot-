@@ -40,22 +40,22 @@ export const STATUS_CONFIG: Record<
   NoteStatus,
   { label: string; color: string; bg: string; border: string; icon: React.ReactNode }
 > = {
-  inbox: {
-    label: "Inbox",
+  stone: {
+    label: "Stone",
     color: "var(--chart-2)",
     bg: "color-mix(in srgb, var(--chart-2) 18%, transparent)",
     border: "color-mix(in srgb, var(--chart-2) 35%, transparent)",
     icon: <CircleDashed size={14} weight="bold" />,
   },
-  capture: {
-    label: "Capture",
+  brick: {
+    label: "Brick",
     color: "var(--chart-3)",
     bg: "color-mix(in srgb, var(--chart-3) 18%, transparent)",
     border: "color-mix(in srgb, var(--chart-3) 35%, transparent)",
     icon: <CircleHalf size={14} weight="fill" />,
   },
-  permanent: {
-    label: "Permanent",
+  keystone: {
+    label: "Keystone",
     color: "var(--chart-5)",
     bg: "color-mix(in srgb, var(--chart-5) 18%, transparent)",
     border: "color-mix(in srgb, var(--chart-5) 35%, transparent)",
@@ -63,7 +63,7 @@ export const STATUS_CONFIG: Record<
   },
 }
 
-const STATUS_OPTIONS: NoteStatus[] = ["inbox", "capture", "permanent"]
+const STATUS_OPTIONS: NoteStatus[] = ["stone", "brick", "keystone"]
 
 /* ── Priority config ──────────────────────────────────── */
 

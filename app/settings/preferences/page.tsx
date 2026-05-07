@@ -26,7 +26,7 @@ export default function PreferencesPage() {
   const enrollAllPermanentSRS = usePlotStore((s) => s.enrollAllPermanentSRS)
 
   const unenrolledCount = useMemo(
-    () => notes.filter((n) => n.status === "permanent" && !n.trashed && !srsStateByNoteId[n.id]).length,
+    () => notes.filter((n) => n.status === "keystone" && !n.trashed && !srsStateByNoteId[n.id]).length,
     [notes, srsStateByNoteId]
   )
 
@@ -53,10 +53,10 @@ export default function PreferencesPage() {
         <SettingRow label="Start view" description="Default view when opening the app">
           <SelectControl
             value={startView}
-            onChange={(v) => setStartView(v as "all" | "inbox" | "pinned")}
+            onChange={(v) => setStartView(v as "all" | "stone" | "pinned")}
             options={[
               { label: "All Notes", value: "all" },
-              { label: "Inbox", value: "inbox" },
+              { label: "Stone", value: "stone" },
               { label: "Pinned", value: "pinned" },
             ]}
           />
@@ -72,8 +72,8 @@ export default function PreferencesPage() {
 
       <SettingsCard title="Spaced Repetition">
         <SettingRow
-          label="Bulk enroll permanent notes"
-          description={`${unenrolledCount} permanent note${unenrolledCount === 1 ? "" : "s"} not yet enrolled in SRS`}
+          label="Bulk enroll keystone notes"
+          description={`${unenrolledCount} keystone note${unenrolledCount === 1 ? "" : "s"} not yet enrolled in SRS`}
         >
           <button
             onClick={() => {
@@ -81,7 +81,7 @@ export default function PreferencesPage() {
               if (count > 0) {
                 toast(`Enrolled ${count} note${count === 1 ? "" : "s"} into SRS`)
               } else {
-                toast("All permanent notes are already enrolled")
+                toast("All keystone notes are already enrolled")
               }
             }}
             disabled={unenrolledCount === 0}

@@ -313,7 +313,7 @@ export interface SavedView {
   description?: string
   icon?: string
   color: string
-  space: "inbox" | "notes" | "wiki" | "calendar" | "ontology" | "all"
+  space: "stone" | "notes" | "wiki" | "calendar" | "ontology" | "all"
   viewState: {
     /** @migrated v112 — legacy "table" mapped to "list" */
     viewMode: "list" | "board" | "grid" | "insights" | "calendar" | "graph" | "dashboard"
@@ -573,7 +573,7 @@ export interface NoteTemplate {
   // surfaces; v108 follows up by deleting them from the data model itself.
   // - description: name carries enough; UpNote-style picker no longer shows it
   // - status / priority: too weak as defaults — users override on first edit;
-  //   new notes from a template now start at "inbox" / "none" sensibly.
+  //   new notes from a template now start at "stone" / "none" sensibly.
   // Pre-filled fields
   title: string          // template for title (can contain {date}, {time} placeholders)
   content: string        // markdown body template
@@ -590,7 +590,7 @@ export interface NoteTemplate {
 }
 
 export type ActiveView =
-  | { type: "inbox" }
+  | { type: "stone" }
   | { type: "all" }
   | { type: "folder"; folderId: string }
   | { type: "templates" }
@@ -601,15 +601,15 @@ export type ActiveView =
 
 /** Route-based note filter, used by each page route */
 export type NoteFilter =
-  | { type: "inbox" }
+  | { type: "stone" }
   | { type: "all" }
   | { type: "trash" }
   | { type: "pinned" }
   | { type: "folder"; folderId: string }
   | { type: "tag"; tagId: string }
-  | { type: "status-inbox" }
-  | { type: "status-capture" }
-  | { type: "status-permanent" }
+  | { type: "status-stone" }
+  | { type: "status-brick" }
+  | { type: "status-keystone" }
 
 /* ── Phase 2: Event Log / Timeline ──────────────────── */
 

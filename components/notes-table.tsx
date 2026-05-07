@@ -682,7 +682,7 @@ export function NotesTable({
     updateViewState({ filters: viewState.filters.filter((_, i) => i !== idx) })
   }
 
-  const isSingleStatusTab = ["inbox", "capture", "permanent"].includes(effectiveTab)
+  const isSingleStatusTab = ["stone", "brick", "keystone"].includes(effectiveTab)
 
   // ── Dynamic filter categories (merge static config with store data) ──
   const notesFilterCategories = useMemo(() => {
@@ -1882,8 +1882,8 @@ function NoteRowInner({
       </ContextMenuTrigger>
 
       <ContextMenuContent className="w-52">
-        {/* Inbox actions */}
-        {note.status === "inbox" && note.triageStatus !== "trashed" && (
+        {/* Stone actions */}
+        {note.status === "stone" && note.triageStatus !== "trashed" && (
           <>
             <ContextMenuItem onClick={onKeep} className="text-note">
               <PhCheck className="mr-2 text-accent" size={16} weight="bold" />
@@ -1923,29 +1923,29 @@ function NoteRowInner({
           </>
         )}
 
-        {/* Capture actions */}
-        {note.status === "capture" && (
+        {/* Brick actions */}
+        {note.status === "brick" && (
           <>
             <ContextMenuItem onClick={onPromote} className="text-note">
               <ArrowUpRight className="mr-2 text-chart-5" size={16} weight="regular" />
-              Promote to Permanent
+              Promote to Keystone
               <span className="ml-auto text-2xs text-muted-foreground">P</span>
             </ContextMenuItem>
             <ContextMenuItem onClick={onMoveBack} className="text-note">
               <Tray className="mr-2 text-muted-foreground" size={16} weight="regular" />
-              Back to Inbox
+              Back to Stone
               <span className="ml-auto text-2xs text-muted-foreground">B</span>
             </ContextMenuItem>
             <ContextMenuSeparator />
           </>
         )}
 
-        {/* Permanent actions */}
-        {note.status === "permanent" && (
+        {/* Keystone actions */}
+        {note.status === "keystone" && (
           <>
             <ContextMenuItem onClick={onDemote} className="text-note">
               <ArrowDownLeft className="mr-2 text-muted-foreground" size={16} weight="regular" />
-              Demote to Capture
+              Demote to Brick
               <span className="ml-auto text-2xs text-muted-foreground">D</span>
             </ContextMenuItem>
             <ContextMenuSeparator />

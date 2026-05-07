@@ -13,7 +13,7 @@ export function createWorkflowSlice(set: Set, get: Get, appendEvent: AppendEvent
       set((state: any) => ({
         notes: state.notes.map((n: Note) =>
           n.id === id
-            ? { ...n, status: "capture" as const, triageStatus: "kept" as const, reviewAt, lastTouchedAt: now(), updatedAt: now() }
+            ? { ...n, status: "brick" as const, triageStatus: "kept" as const, reviewAt, lastTouchedAt: now(), updatedAt: now() }
             : n
         ),
       }))
@@ -46,7 +46,7 @@ export function createWorkflowSlice(set: Set, get: Get, appendEvent: AppendEvent
       set((state: any) => ({
         notes: state.notes.map((n: Note) =>
           n.id === id
-            ? { ...n, status: "permanent" as const, promotedAt: now(), lastTouchedAt: now(), updatedAt: now() }
+            ? { ...n, status: "keystone" as const, promotedAt: now(), lastTouchedAt: now(), updatedAt: now() }
             : n
         ),
       }))
@@ -58,7 +58,7 @@ export function createWorkflowSlice(set: Set, get: Get, appendEvent: AppendEvent
       set((state: any) => ({
         notes: state.notes.map((n: Note) =>
           n.id === id
-            ? { ...n, status: "capture" as const, promotedAt: null, lastTouchedAt: now(), updatedAt: now() }
+            ? { ...n, status: "brick" as const, promotedAt: null, lastTouchedAt: now(), updatedAt: now() }
             : n
         ),
       }))
@@ -70,7 +70,7 @@ export function createWorkflowSlice(set: Set, get: Get, appendEvent: AppendEvent
       set((state: any) => ({
         notes: state.notes.map((n: Note) =>
           n.id === id
-            ? { ...n, status: "inbox" as const, triageStatus: "untriaged" as const, lastTouchedAt: now(), updatedAt: now() }
+            ? { ...n, status: "stone" as const, triageStatus: "untriaged" as const, lastTouchedAt: now(), updatedAt: now() }
             : n
         ),
       }))
@@ -151,7 +151,7 @@ export function createWorkflowSlice(set: Set, get: Get, appendEvent: AppendEvent
     enrollAllPermanentSRS: () => {
       const state = get()
       const toEnroll = state.notes.filter(
-        (n: Note) => n.status === "permanent" && !n.trashed && !state.srsStateByNoteId[n.id]
+        (n: Note) => n.status === "keystone" && !n.trashed && !state.srsStateByNoteId[n.id]
       )
       if (toEnroll.length === 0) return 0
       const timestamp = now()

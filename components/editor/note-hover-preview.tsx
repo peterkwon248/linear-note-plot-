@@ -703,7 +703,7 @@ function PreviewCard({ noteId, noteType, x, y }: PreviewState) {
                       title: `${article.title} (copy)`,
                       content,
                       contentJson: contentJson as unknown as Record<string, unknown>,
-                      status: "capture" as const,
+                      status: "brick" as const,
                     })
                     if (newNoteId) {
                       const { saveBody } = await import("@/lib/note-body-store")

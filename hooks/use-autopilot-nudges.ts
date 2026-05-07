@@ -48,20 +48,20 @@ export function useAutopilotNudges(): void {
     firedRef.current = true
 
     const timer = setTimeout(() => {
-      // Inbox nudge
+      // Stone nudge
       const inboxCount = notes.filter(
-        (n) => n.status === "inbox" && !n.trashed
+        (n) => n.status === "stone" && !n.trashed
       ).length
 
-      if (inboxCount > 0 && !isOnCooldown("inbox-waiting")) {
-        setCooldown("inbox-waiting")
-        toast("Inbox needs attention", {
+      if (inboxCount > 0 && !isOnCooldown("stone-waiting")) {
+        setCooldown("stone-waiting")
+        toast("Stone needs attention", {
           description: `${inboxCount} ${inboxCount === 1 ? "note" : "notes"} waiting for triage`,
           action: {
-            label: "Open Inbox",
+            label: "Open Stone",
             onClick: () => {
-              setActiveRoute("/inbox")
-              router.push("/inbox")
+              setActiveRoute("/stone")
+              router.push("/stone")
             },
           },
           duration: 8000,

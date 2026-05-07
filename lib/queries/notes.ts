@@ -57,9 +57,9 @@ export function computeReadyScore(note: Note, backlinks: Map<string, number>): n
   return score
 }
 
-/** Whether a capture note is ready for promotion */
+/** Whether a brick note is ready for promotion */
 export function isReadyToPromote(note: Note, backlinks: Map<string, number>): boolean {
-  if (note.status !== "capture") return false
+  if (note.status !== "brick") return false
   const score = computeReadyScore(note, backlinks)
   if (score >= 5) return true
   // Alternative: links >= 2 AND summary exists
@@ -67,35 +67,35 @@ export function isReadyToPromote(note: Note, backlinks: Map<string, number>): bo
   return links >= 2 && !!note.summary && note.summary.trim().length > 0
 }
 
-/* ── Stale Capture Detection ──────────────────────────── */
+/* ── Stale Brick Detection ──────────────────────────── */
 
 const DAY_MS = 24 * 60 * 60 * 1000
 
-/** Check if a capture note needs review (7+ days untouched) */
+/** Check if a brick note needs review (7+ days untouched) */
 export function needsReview(note: Note): boolean {
-  if (note.status !== "capture") return false
+  if (note.status !== "brick") return false
   const touched = new Date(note.lastTouchedAt ?? note.updatedAt).getTime()
   return Date.now() - touched > 7 * DAY_MS
 }
 
-/** Check if a capture note is stale enough to suggest moving back to inbox (14+ days) */
+/** Check if a brick note is stale enough to suggest moving back to stone (14+ days) */
 export function isStaleSuggest(note: Note): boolean {
-  if (note.status !== "capture") return false
+  if (note.status !== "brick") return false
   const touched = new Date(note.lastTouchedAt ?? note.updatedAt).getTime()
   return Date.now() - touched > 14 * DAY_MS
 }
 
-/* ── Inbox query ──────────────────────────────────────── */
+/* ── Stone query ──────────────────────────────────────── */
 
 /**
- * Get inbox notes sorted by inboxRank desc, then createdAt desc.
+ * Get stone notes sorted by inboxRank desc, then createdAt desc.
  * Only shows untriaged or snoozed-that-are-due.
  */
 export function getInboxNotes(allNotes: Note[], backlinks: Map<string, number>): Note[] {
   const nowMs = Date.now()
   return allNotes
     .filter((n) => {
-      if (n.status !== "inbox") return false
+      if (n.status !== "stone") return false
       if (n.triageStatus === "trashed") return false
       if (n.triageStatus === "untriaged") return true
       if (n.triageStatus === "snoozed" && n.reviewAt && new Date(n.reviewAt).getTime() <= nowMs) return true
@@ -108,19 +108,19 @@ export function getInboxNotes(allNotes: Note[], backlinks: Map<string, number>):
     })
 }
 
-/* ── Capture query ────────────────────────────────────── */
+/* ── Brick query ────────────────────────────────────── */
 
 export function getCaptureNotes(allNotes: Note[]): Note[] {
   return allNotes
-    .filter((n) => n.status === "capture" && n.triageStatus !== "trashed")
+    .filter((n) => n.status === "brick" && n.triageStatus !== "trashed")
     .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
 }
 
-/* ── Permanent query ──────────────────────────────────── */
+/* ── Keystone query ──────────────────────────────────── */
 
 export function getPermanentNotes(allNotes: Note[]): Note[] {
   return allNotes
-    .filter((n) => n.status === "permanent" && n.triageStatus !== "trashed")
+    .filter((n) => n.status === "keystone" && n.triageStatus !== "trashed")
     .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
 }
 
@@ -128,26 +128,26 @@ export function getPermanentNotes(allNotes: Note[]): Note[] {
 
 /**
  * Get unlinked notes for cleanup, with the specified priority order:
- * 1. status=permanent with links=0
- * 2. status=capture with links=0
- * 3. status=inbox untriaged
+ * 1. status=keystone with links=0
+ * 2. status=brick with links=0
+ * 3. status=stone untriaged
  */
 export function getUnlinkedNotes(allNotes: Note[], backlinks: Map<string, number>): Note[] {
   const permanentUnlinked = allNotes.filter(
-    (n) => n.status === "permanent" && (backlinks.get(n.id) ?? 0) === 0 && n.triageStatus !== "trashed"
+    (n) => n.status === "keystone" && (backlinks.get(n.id) ?? 0) === 0 && n.triageStatus !== "trashed"
   )
   const captureUnlinked = allNotes.filter(
-    (n) => n.status === "capture" && (backlinks.get(n.id) ?? 0) === 0 && n.triageStatus !== "trashed"
+    (n) => n.status === "brick" && (backlinks.get(n.id) ?? 0) === 0 && n.triageStatus !== "trashed"
   )
   const inboxUntriaged = allNotes.filter(
-    (n) => n.status === "inbox" && n.triageStatus === "untriaged"
+    (n) => n.status === "stone" && n.triageStatus === "untriaged"
   )
   return [...permanentUnlinked, ...captureUnlinked, ...inboxUntriaged]
 }
 
 /* ── Daily Review Queue ──────────────────────────────── */
 
-export type ReviewReason = "inbox-untriaged" | "snoozed-due" | "stale-capture" | "unlinked-permanent" | "srs-due" | "remind-due"
+export type ReviewReason = "stone-untriaged" | "snoozed-due" | "stale-brick" | "unlinked-keystone" | "srs-due" | "remind-due"
 
 export interface ReviewItem {
   note: Note
@@ -156,52 +156,52 @@ export interface ReviewItem {
 
 /**
  * Aggregates notes requiring attention, prioritized:
- * 1. Inbox untriaged
+ * 1. Stone untriaged
  * 2. Snoozed notes that are due
- * 3. Stale capture (7+ days untouched)
- * 4. Unlinked permanent notes
+ * 3. Stale brick (7+ days untouched)
+ * 4. Unlinked keystone notes
  */
 export function getReviewQueue(allNotes: Note[], backlinks: Map<string, number>, srsMap?: Record<string, SRSState>): ReviewItem[] {
   const nowMs = Date.now()
   const items: ReviewItem[] = []
 
-  // 1. Inbox untriaged
+  // 1. Stone untriaged
   allNotes
-    .filter((n) => n.status === "inbox" && n.triageStatus === "untriaged")
-    .forEach((note) => items.push({ note, reason: "inbox-untriaged" }))
+    .filter((n) => n.status === "stone" && n.triageStatus === "untriaged")
+    .forEach((note) => items.push({ note, reason: "stone-untriaged" }))
 
   // 2. Snoozed due
   allNotes
     .filter(
       (n) =>
-        n.status === "inbox" &&
+        n.status === "stone" &&
         n.triageStatus === "snoozed" &&
         n.reviewAt &&
         new Date(n.reviewAt).getTime() <= nowMs
     )
     .forEach((note) => items.push({ note, reason: "snoozed-due" }))
 
-  // 3. Stale capture (7+ days)
+  // 3. Stale brick (7+ days)
   allNotes
-    .filter((n) => n.status === "capture" && n.triageStatus !== "trashed" && needsReview(n))
-    .forEach((note) => items.push({ note, reason: "stale-capture" }))
+    .filter((n) => n.status === "brick" && n.triageStatus !== "trashed" && needsReview(n))
+    .forEach((note) => items.push({ note, reason: "stale-brick" }))
 
-  // 4. Unlinked permanent
+  // 4. Unlinked keystone
   allNotes
     .filter(
       (n) =>
-        n.status === "permanent" &&
+        n.status === "keystone" &&
         n.triageStatus !== "trashed" &&
         (backlinks.get(n.id) ?? 0) === 0
     )
-    .forEach((note) => items.push({ note, reason: "unlinked-permanent" }))
+    .forEach((note) => items.push({ note, reason: "unlinked-keystone" }))
 
   // 5. SRS due
   if (srsMap) {
     const nowISO = new Date().toISOString()
     const seen = new Set(items.map((i) => i.note.id))
     for (const note of allNotes) {
-      if (note.status !== "permanent") continue
+      if (note.status !== "keystone") continue
       if (note.triageStatus === "trashed") continue
       if (seen.has(note.id)) continue
       const srs = srsMap[note.id]
@@ -211,12 +211,12 @@ export function getReviewQueue(allNotes: Note[], backlinks: Map<string, number>,
     }
   }
 
-  // 6. Remind-due (non-inbox notes with reviewAt in the past)
+  // 6. Remind-due (non-stone notes with reviewAt in the past)
   {
     const seen = new Set(items.map((i) => i.note.id))
     allNotes
       .filter((n) => {
-        if (n.status === "inbox") return false
+        if (n.status === "stone") return false
         if (n.triageStatus === "trashed") return false
         if (!n.reviewAt) return false
         return new Date(n.reviewAt).getTime() <= nowMs

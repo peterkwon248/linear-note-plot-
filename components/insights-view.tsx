@@ -149,9 +149,9 @@ function MostOpenedList({ items }: { items: { noteId: string; title: string; cou
 
 function LifecycleStats({ notes }: { notes: any[] }) {
   const active = notes.filter((n) => !n.trashedAt)
-  const inbox = active.filter((n) => n.status === "inbox").length
-  const capture = active.filter((n) => n.status === "capture").length
-  const permanent = active.filter((n) => n.status === "permanent").length
+  const inbox = active.filter((n) => n.status === "stone").length
+  const capture = active.filter((n) => n.status === "brick").length
+  const permanent = active.filter((n) => n.status === "keystone").length
   const wiki = active.filter((n) => n.noteType === "wiki").length
 
   return (
@@ -162,9 +162,9 @@ function LifecycleStats({ notes }: { notes: any[] }) {
       </div>
       <div className="grid grid-cols-4 gap-2">
         {[
-          { label: "Inbox", value: inbox, color: "text-chart-3" },
-          { label: "Capture", value: capture, color: "text-chart-2" },
-          { label: "Permanent", value: permanent, color: "text-chart-5" },
+          { label: "Stone", value: inbox, color: "text-chart-3" },
+          { label: "Brick", value: capture, color: "text-chart-2" },
+          { label: "Keystone", value: permanent, color: "text-chart-5" },
           { label: "Wiki", value: wiki, color: "text-accent" },
         ].map((s) => (
           <div key={s.label} className="text-center">

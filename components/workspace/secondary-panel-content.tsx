@@ -38,7 +38,7 @@ const CalendarView = lazy(() => import("@/components/calendar-view").then(m => (
 const OntologyView = lazy(() => import("@/components/views/ontology-view").then(m => ({ default: m.OntologyView })))
 const LibraryView = lazy(() => import("@/components/views/library-view").then(m => ({ default: m.LibraryView })))
 
-const TABLE_VIEW_ROUTES = ["/notes", "/inbox", "/capture", "/permanent", "/pinned", "/trash"]
+const TABLE_VIEW_ROUTES = ["/notes", "/stone", "/brick", "/keystone", "/pinned", "/trash"]
 
 const SPACE_LABELS: Record<ActivitySpace, string> = {
   home: "Home",
