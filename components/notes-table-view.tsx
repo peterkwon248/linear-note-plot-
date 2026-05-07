@@ -6,6 +6,7 @@ import { useSettingsStore } from "@/lib/settings-store"
 import { NotesTable } from "@/components/notes-table"
 import { NotesBoard } from "@/components/notes-board"
 import { GalleryViewShell } from "@/components/views/gallery-view-shell"
+import { StudioViewShell } from "@/components/views/studio-view-shell"
 import { ViewSwitcher, type ViewSwitcherMode } from "@/components/views/view-switcher"
 import { WorkspaceEditorArea } from "@/components/workspace/workspace-editor-area"
 import { usePane } from "@/components/workspace/pane-context"
@@ -107,17 +108,39 @@ export function NotesTableView() {
     )
   }
 
-  // ── v3 Phase 5.1: Gallery mode toggle ──
-  // ViewSwitcher exposes Table (list) ↔ Gallery; Board lives behind the
-  // Display popover. Hidden on /trash where Gallery has no useful semantics.
+  // ── v3 Phase 5.1 / 5.2: Gallery + Studio mode toggle ──
+  // ViewSwitcher exposes Table (list) ↔ Gallery ↔ Studio; Board lives behind
+  // the Display popover. Hidden on /trash where neither has useful semantics.
   const isTrashView = tableRoute === "/trash"
-  const switcherValue: ViewSwitcherMode = viewMode === "gallery" ? "gallery" : "list"
+  const switcherValue: ViewSwitcherMode =
+    viewMode === "gallery" ? "gallery"
+    : viewMode === "studio"  ? "studio"
+    : "list"
   const handleSwitcherChange = (mode: ViewSwitcherMode) => {
     setViewState(contextKey, { viewMode: mode as ViewMode })
   }
   const headerExtras = !isTrashView ? (
     <ViewSwitcher value={switcherValue} onChange={handleSwitcherChange} />
   ) : undefined
+
+  // Studio shell (own ViewHeader chrome, dark-forced body)
+  if (viewMode === "studio" && !isTrashView) {
+    return (
+      <div className="flex flex-1 overflow-hidden">
+        <StudioViewShell
+          context={contextKey}
+          title={config.title}
+          hideCreateButton={config.hideCreateButton}
+          folderId={activeFolderId ?? undefined}
+          tagId={activeTagId ?? undefined}
+          labelId={activeLabelId ?? undefined}
+          headerExtras={headerExtras}
+          onNoteClick={(noteId) => setPreviewNoteId(noteId)}
+          activePreviewId={previewNoteId}
+        />
+      </div>
+    )
+  }
 
   // Gallery shell (own ViewHeader chrome, parallel to NotesTable/Board)
   if (viewMode === "gallery" && !isTrashView) {
