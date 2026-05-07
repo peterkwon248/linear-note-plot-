@@ -51,6 +51,7 @@ import { ALL_SIDEBAR_ROUTES, setActiveRoute, getActiveRoute, setActiveFolderId, 
 import type { Note, NoteStatus, ActivitySpace } from "@/lib/types"
 import { cn } from "@/lib/utils"
 import { useKnowledgeMetrics } from "@/hooks/use-knowledge-metrics"
+import { useInbox } from "@/lib/hooks/use-inbox"
 type PanelContent = Record<string, unknown>
 import { setViewDragData, setNoteDragData } from "@/lib/drag-helpers"
 import { StatusShapeIcon } from "@/components/status-icon"
@@ -389,6 +390,8 @@ export function LinearSidebar() {
   }, [categoryMenuId])
 
   const inboxCount = useMemo(() => notes.filter((n) => n.status === "stone" && !n.trashed && n.triageStatus !== "trashed").length, [notes])
+  const inboxItems = useInbox()
+  const inboxItemsCount = inboxItems.length
   const allNotesCount = useMemo(() => notes.filter((n) => !n.trashed).length, [notes])
   const captureCount = useMemo(() => notes.filter((n) => n.status === "brick" && !n.trashed).length, [notes])
   const permanentCount = useMemo(() => notes.filter((n) => n.status === "keystone" && !n.trashed).length, [notes])
@@ -1585,6 +1588,13 @@ export function LinearSidebar() {
             Home view itself surfaces workflow + nudges. */}
         {activeSpace === "home" && (
           <div className="space-y-px">
+            <NavLink
+              href="/inbox"
+              icon={<IconInbox size={20} />}
+              label="Inbox"
+              count={inboxItemsCount > 0 ? inboxItemsCount : undefined}
+              active={isActive("/inbox")}
+            />
             <NavLink
               href="/stone"
               icon={<IconInbox size={20} />}

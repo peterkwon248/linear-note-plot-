@@ -38,6 +38,57 @@
 
 ---
 
+## 🚀 2026-05-07 (오후) — Phase B Inbox Layer 시리즈 완성 (4 PR) ⭐
+
+**범위**: 새 worktree `magical-curie-ad6175`. Inbox layer 4 PR (3 머지 + 1 OPEN). entity-based → action-based 큰 방향 전환.
+
+### 큰 방향 전환 (영구) ⭐
+- **v1 plan 폐기 → v2 action-based 채택**
+- v1 entity-based "stone+미분류" 필터가 Memo backfill 정책으로 항상 0 항목 (실측)
+- 사용자 통찰: "스톤은 인박스가 아니야. 리니어의 인박스처럼."
+- v2: action notification queue — "내가 *반응*해야 할 일들"
+
+### 5 sources 완성
+1. **reminder** — Note.reviewAt 도래
+2. **srs** — srsStateByNoteId.dueAt 도래
+3. **snooze-expired** — snoozedInboxItems 만료 재노출
+4. **wiki-redlink** — unresolved [[wiki-link]] (refs >= 2)
+5. **auto-enroll** — clusterSuggestions (status === pending)
+
+### 머지/OPEN PRs
+- **#272** ✅ infra (action-based dismiss/snooze + reminder source) + IDB v117 + plan v2
+- **#273** ✅ home inbox card with reminder source
+- **#274** ✅ /inbox full-page + srs/snooze-expired sources + dismiss/snooze hover button
+- **#275** 🔵 OPEN — sidebar entry + wiki-redlink/auto-enroll + InboxSourceIcon dedup
+
+### 완성된 인프라
+- `lib/store/slices/inbox.ts` — InboxItemKind type + 5 actions
+- `lib/hooks/use-inbox.ts` — 5 sources unified, dedup/dismiss/snooze 필터
+- `components/inbox/inbox-source-icon.tsx` — 공용 kind→icon 매핑
+- `components/views/inbox-view.tsx` — full-page (filter tabs + popover snooze + toast undo)
+- `components/linear-sidebar.tsx` — Home space sidebar Inbox link
+- IDB v117 migration
+
+### 영구 결정 (이번 세션)
+1. **Inbox = action notification queue** — entity-based 폐기. Linear 정합.
+2. **dismiss/snooze identifier = (kind, sourceId)** — 5 source 호환
+3. **InboxItemKind ≠ EntityKind** — kind = "왜 inbox에 있는가" (action source)
+4. **wiki-redlink threshold = 2** — noise 방지
+5. **Sidebar Inbox link = Home space만**
+
+### 기술 학습
+- **Memo backfill 함정**: createNote가 항상 Memo 자동 부여 — entity-based "no label" 필터 무효화
+- **VIEW_ROUTES 등록 필수**: 새 always-mounted route는 `lib/table-route.ts`에 추가
+- **InboxItemKind 분리**: EntityKind와 명확 구분 — semantic 명확화
+
+### 다음 우선순위
+- 🟡 Phase 4 PR 4.2+ (notes-table.tsx reskin, stone/brick/keystone 명칭)
+- 🟡 Wiki template 3-layer
+- 🟡 Smart Book v2 (AutoSource[5])
+- 🟢 (옵션) Inbox-5: SRS review mode 진입, mobile, grouping by date
+
+---
+
 ## 🚀 2026-05-08 (새벽) — NoteStatus rename + Inbox layer 결정 (plan 작성)
 
 **범위**: PR 4.1 (Phase 4 CSS 통합) 머지 + 2 plan 작성 (Phase A rename + Phase B Inbox layer). 작업은 다음 세션.

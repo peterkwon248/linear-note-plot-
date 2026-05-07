@@ -10,8 +10,7 @@ import type { InboxItemKind } from "@/lib/store/slices/inbox"
  * (`kind`)와 그 원본 entity (`sourceId`)를 추적한다. Entity 분류가 아닌
  * action source 기준으로 묶인다 ("정리 안 된 dashboard"가 아님).
  *
- * Sources: reminder / srs / snooze-expired.
- * wiki-redlink / auto-enroll 은 후속 PR에서 추가.
+ * Sources: reminder / srs / snooze-expired / wiki-redlink / auto-enroll.
  */
 export interface InboxItem {
   /** Action source — *왜* 이게 inbox에 있는가 */
@@ -33,6 +32,8 @@ export function useInbox(): InboxItem[] {
   const dismissedInboxItems = usePlotStore((s) => s.dismissedInboxItems)
   const snoozedInboxItems = usePlotStore((s) => s.snoozedInboxItems)
   const srsStateByNoteId = usePlotStore((s) => s.srsStateByNoteId)
+  const wikiArticles = usePlotStore((s) => s.wikiArticles)
+  const clusterSuggestions = usePlotStore((s) => s.clusterSuggestions)
 
   return useMemo(() => {
     const now = Date.now()
@@ -123,9 +124,66 @@ export function useInbox(): InboxItem[] {
       })
     }
 
+    // Source: wiki-redlink — [[link]] 작성됐는데 wiki article 미생성 (refs >= 2)
+    const wikiTitleSet = new Set(wikiArticles.map((a: { title: string }) => a.title.toLowerCase()))
+    const redLinkRefs = new Map<string, Set<string>>()
+    // firstSeen: link text 원본 (대소문자 보존) — 최초 발견 기준
+    const redLinkOriginal = new Map<string, string>()
+    for (const note of notes) {
+      if (note.trashed) continue
+      for (const link of (note.linksOut ?? [])) {
+        const normalized = link.toLowerCase()
+        if (!wikiTitleSet.has(normalized)) {
+          if (!redLinkRefs.has(normalized)) {
+            redLinkRefs.set(normalized, new Set())
+            redLinkOriginal.set(normalized, link)
+          }
+          redLinkRefs.get(normalized)!.add(note.id)
+        }
+      }
+    }
+    for (const [normalized, refs] of redLinkRefs) {
+      if (refs.size < 2) continue
+      if (!isVisible("wiki-redlink", normalized)) continue
+
+      // ts = 해당 link 가진 노트들 중 max updatedAt
+      let maxTs = ""
+      for (const noteId of refs) {
+        const n = noteById.get(noteId)
+        if (n && n.updatedAt > maxTs) maxTs = n.updatedAt
+      }
+
+      items.push({
+        kind: "wiki-redlink",
+        sourceId: normalized,
+        title: redLinkOriginal.get(normalized) ?? normalized,
+        ts: maxTs || new Date().toISOString(),
+        action: "Create wiki?",
+        meta: `${refs.size} notes`,
+      })
+    }
+
+    // Source: auto-enroll — clusterSuggestions with status === "pending"
+    for (const suggestion of (clusterSuggestions ?? [])) {
+      if (suggestion.status !== "pending") continue
+      if (!isVisible("auto-enroll", suggestion.id)) continue
+
+      const firstTitle = suggestion.conceptTitles[0] ?? "Unnamed cluster"
+      const extraCount = suggestion.conceptTitles.length - 1
+
+      items.push({
+        kind: "auto-enroll",
+        sourceId: suggestion.id,
+        title: extraCount > 0 ? `${firstTitle} +${extraCount}` : firstTitle,
+        ts: suggestion.createdAt,
+        action: "Enroll wiki?",
+        meta: `${suggestion.noteIds.length} notes`,
+      })
+    }
+
     // 정렬: oldest ts first (overdue 먼저)
     items.sort((a, b) => (a.ts < b.ts ? -1 : a.ts > b.ts ? 1 : 0))
 
     return items
-  }, [notes, dismissedInboxItems, snoozedInboxItems, srsStateByNoteId])
+  }, [notes, dismissedInboxItems, snoozedInboxItems, srsStateByNoteId, wikiArticles, clusterSuggestions])
 }

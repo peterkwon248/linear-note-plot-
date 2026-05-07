@@ -15,9 +15,7 @@ import { FileText } from "@phosphor-icons/react/dist/ssr/FileText"
 import { IconInbox } from "@/components/plot-icons"
 import { useBacklinksIndex } from "@/lib/search/use-backlinks-index"
 import { useInbox, type InboxItem } from "@/lib/hooks/use-inbox"
-import { Bell } from "@phosphor-icons/react/dist/ssr/Bell"
-import { Brain } from "@phosphor-icons/react/dist/ssr/Brain"
-import { MoonStars } from "@phosphor-icons/react/dist/ssr/MoonStars"
+import { InboxSourceIcon } from "@/components/inbox/inbox-source-icon"
 import type { Note } from "@/lib/types"
 import type { InboxItemKind } from "@/lib/store/slices/inbox"
 
@@ -137,7 +135,13 @@ export function HomeView() {
                 <InboxRow
                   key={`${item.kind}:${item.sourceId}`}
                   item={item}
-                  onClick={() => handleOpenNote(item.sourceId)}
+                  onClick={() => {
+                    if (item.kind === "wiki-redlink" || item.kind === "auto-enroll") {
+                      setActiveRoute("/wiki")
+                    } else {
+                      handleOpenNote(item.sourceId)
+                    }
+                  }}
                 />
               ))}
               {inboxItems.length > 5 && (
@@ -264,16 +268,6 @@ function NoteItem({
       <span className="shrink-0 text-2xs tabular-nums text-muted-foreground">{meta}</span>
     </button>
   )
-}
-
-function InboxSourceIcon({ kind, className }: { kind: InboxItemKind; className?: string }) {
-  const iconProps = { size: 14, weight: "regular" as const, className }
-  switch (kind) {
-    case "srs":           return <Brain {...iconProps} />
-    case "snooze-expired": return <MoonStars {...iconProps} />
-    case "reminder":
-    default:              return <Bell {...iconProps} />
-  }
 }
 
 function InboxRow({ item, onClick }: { item: InboxItem; onClick: () => void }) {

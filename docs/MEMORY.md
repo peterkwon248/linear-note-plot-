@@ -28,6 +28,72 @@
 
 ---
 
+## 🚀 2026-05-07 (오후) — Phase B Inbox Layer 시리즈 완성 (4 PR) + 큰 방향 전환
+
+**범위**: 새 worktree `magical-curie-ad6175`. Inbox layer 4 PR (3 머지 + 1 OPEN). entity-based → action-based 큰 방향 전환.
+
+### 머지된 PRs
+- **#272** (3019b37) — inbox infra (action-based dismiss/snooze + reminder source) + IDB v117 + plan v2
+- **#273** (edd902b) — home inbox card with reminder source
+- **#274** (7169eaf) — /inbox full-page + srs/snooze-expired sources + dismiss/snooze hover button
+- **#275** (OPEN, 0043597) — sidebar entry + wiki-redlink/auto-enroll sources + InboxSourceIcon dedup
+
+### 큰 방향 전환 (영구)
+
+**v1 plan 폐기 → v2 action-based 채택**:
+- v1: entity-based "stone + 미분류" 필터 = "정리 안 된 dashboard"
+- 실측 발견: createNote가 항상 Memo label 자동 부여 + onRehydrate backfill → useInbox 항상 0 항목
+- 사용자 통찰: "스톤은 인박스가 아니야. 기존 인박스가 스톤으로 이름이 바뀐 건데. 아예 없던 인박스 개념을 새로 만들어내는 거야. 리니어의 인박스처럼."
+- v2: action notification queue (Linear 정합) — "내가 *반응*해야 할 일들"
+
+### 5 sources 완성 (action-based)
+
+| Source | 데이터 | 의미 |
+|--------|--------|------|
+| 🔔 reminder | Note.reviewAt | 사용자 명시 due 도래 (today + overdue) |
+| 🧠 srs | srsStateByNoteId.dueAt | SRS 리뷰 도래 |
+| ⏰ snooze-expired | snoozedInboxItems | 사용자 snooze 만료 항목 재노출 |
+| 🔗 wiki-redlink | linksOut + wikiArticles | unresolved [[wiki-link]] (refs >= 2) |
+| 💡 auto-enroll | clusterSuggestions | wiki 자동 등재 제안 (status === pending) |
+
+### 핵심 인프라
+- `lib/store/slices/inbox.ts` — `InboxItemKind` type + dismiss/snooze actions (5 actions)
+- `lib/hooks/use-inbox.ts` — useInbox() unified hook, 5 sources, dedup/snooze 필터
+- `components/inbox/inbox-source-icon.tsx` — kind→icon 공용 매핑 (Bell/Brain/MoonStars/LinkBreak/Sparkle)
+- `components/views/inbox-view.tsx` — full-page (filter tabs + hover dismiss/snooze + popover)
+- IDB v117 migration (idempotent — Array.isArray 가드)
+
+### 영구 결정
+1. **Inbox = action notification queue** — entity-based 폐기. Linear 정합.
+2. **dismiss/snooze identifier = (kind, sourceId)** — 안정적 키, 5 source 호환
+3. **InboxItemKind ≠ EntityKind** — kind는 "왜 inbox에 있는가" (action source), entity 분류 아님
+4. **wiki-redlink threshold = 2** — noise 방지
+5. **clusterSuggestions filter = "pending"만** — accepted/dismissed 제외
+6. **Sidebar Inbox link = Home space만** — 다른 space와 분리
+
+### 기술 학습
+- **Memo backfill 함정**: createNote가 항상 Memo 자동 부여 + onRehydrate backfill — entity-based "no label" 필터 무효화. 영구 정책으로 알려둘 것
+- **VIEW_ROUTES 등록 필수**: 새 always-mounted route는 `lib/table-route.ts`의 VIEW_ROUTES에 추가 필수 (designer 누락 사례)
+- **Fast Refresh hook 순서 변경**: hook 추가 시 full reload 발생 — 정상 (HMR 한계)
+- **InboxItemKind 분리**: EntityKind와 명확 구분 — semantic 명확화
+
+### Architect 검증 결과
+- PR #272: APPROVED (3 Low concerns, inbox-3에서 처리)
+- PR #273: APPROVED (3 Low concerns, inbox-4에서 처리)
+- PR #274: APPROVED (2 Low concerns, inbox-4에서 처리)
+- PR #275: APPROVED (concerns 없음)
+
+### Phase B 시리즈 완성 🎉
+Linear-style action queue 완성. dismiss/snooze/undo/popover 모두 작동. 5 sources 통합. Plot "Gentle by default" + Linear UX 패턴 정합.
+
+### 다음 우선순위
+- 🟡 Phase 4 PR 4.2+ (notes-table.tsx reskin, stone/brick/keystone 명칭)
+- 🟡 Wiki template 3-layer
+- 🟡 Smart Book v2 (AutoSource[5])
+- 🟢 (옵션) Inbox-5: SRS review mode 진입, mobile, grouping by date
+
+---
+
 ## 🚀 2026-05-08 (새벽) — NoteStatus rename + Inbox layer 큰 결정 (plan 작성)
 
 **범위**: 새 worktree `note-status-rename`. PR 4.1 (Phase 4 CSS 통합) 머지 + 2 plan 작성. 작업은 다음 세션.
