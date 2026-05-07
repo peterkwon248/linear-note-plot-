@@ -1,5 +1,43 @@
 # Architectural Decisions
 
+## 2026-05-07 (오후) — Inbox = action notification queue (영구 결정)
+
+### 핵심 (entity-based 폐기)
+사용자 통찰: "스톤은 인박스가 아니야. 리니어의 인박스처럼."
+- 기존 inbox = stone status filter (Phase A에서 rename됨)
+- **새 inbox = action notification queue** ("내가 *반응*해야 할 일들")
+- entity-based "정리 안 된 dashboard"는 Ontology / Library cleanup 영역
+
+### 5 Sources (action source)
+- reminder (Note.reviewAt 도래)
+- srs (srsStateByNoteId.dueAt 도래)
+- snooze-expired (snoozedInboxItems 만료 재노출)
+- wiki-redlink (unresolved [[wiki-link]], refs >= 2)
+- auto-enroll (clusterSuggestions, status === pending)
+
+### 영구 키 결정
+- **dismiss/snooze identifier = (kind, sourceId)** — 5 source 호환 안정 키
+- **InboxItemKind ≠ EntityKind** — kind = "왜 inbox에 있는가" (action source)
+- **wiki-redlink threshold = 2** (noise 방지)
+- **clusterSuggestions filter = "pending"만**
+- **Sidebar Inbox link = Home space만** (다른 space 분리)
+
+### Plot 정체성 정합
+- 0 항목 시 카드 숨김 ("Gentle by default")
+- hover dismiss/snooze (Linear 패턴)
+- top 5 + "+N more" (cap)
+
+### 완성 인프라
+- `lib/store/slices/inbox.ts` — InboxItemKind + dismiss/snooze actions
+- `lib/hooks/use-inbox.ts` — 5 sources unified hook
+- `components/inbox/inbox-source-icon.tsx` — kind→icon 공용 매핑
+- `components/views/inbox-view.tsx` — full-page (filter tabs + popover snooze + toast undo)
+- IDB v117 migration (idempotent)
+
+### PR 시리즈 #272 → #273 → #274 → #275
+
+---
+
 ## 2026-05-07 — Plot 2.0 PRD 폐기 + v3 mockup 채택 (영구 결정)
 
 ### 핵심
