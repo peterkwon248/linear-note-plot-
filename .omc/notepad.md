@@ -1,26 +1,30 @@
-# Session Notepad (Updated: 2026-05-07 11:34)
+# Session Notepad (Updated: 2026-05-07 14:30)
 
 ## Critical Context
 
-### Phase B Inbox Layer 시리즈 완성 🎉 (4 PR)
-- PR #272 / #273 / #274 ✅ 머지
-- PR #275 🔵 OPEN — 사용자 머지 대기
+### v3 Phase 5 거의 완성 🎉
+- ✅ 5.1 Gallery / 5.1b Table shell / 5.2 Studio / 5.3 Editorial (OPEN PR #280)
+- ⏳ 5.4 Graph (마지막 view mode)
+- ⏳ Phase 6 (Filter popover, Workspace Chrome)
 
-### 큰 방향 전환 (영구)
-- **Inbox = action notification queue** (Linear 정합)
-- entity-based 폐기 (Memo backfill 함정)
+### Mockup-first 한계 명확화 (영구 결정)
+- mockup의 layout / cell / shell은 가져옴
+- 이미 잘 잡힌 Plot 디자인 (typography / badges / spacing)은 Plot 우선
+
+### Inbox Layer 시리즈 완성 (오늘 오전)
 - 5 sources: reminder / srs / snooze-expired / wiki-redlink / auto-enroll
+- Linear 정합 action queue
 
 ### Plot 정체성 영구
 - "Gentle by default, powerful when needed."
-- Note/Wiki 2-entity 분리
-- LLM/API 미사용
-- 22-slice store / TipTap / routing 보존
+- Note/Wiki 2-entity 분리, LLM 미사용
+- 22-slice store, TipTap, routing 보존
 
 ## Active Tasks
 
-- [ ] PR #275 머지 (사용자 권한)
-- [ ] 다음 plan 결정 (Phase 4.2 / Wiki template / Smart Book v2 / Inbox-5)
+- [ ] PR #280 머지 (사용자 권한)
+- [ ] Phase 5.4 Graph
+- [ ] Phase 6 Filter Popover
 
 ## Blockers
 

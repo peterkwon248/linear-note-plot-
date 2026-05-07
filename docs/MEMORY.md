@@ -28,6 +28,77 @@
 
 ---
 
+## 🚀 2026-05-07 (저녁/밤) — v3 Phase 4.2 + Phase 5 4 PR + mockup-first 패턴 정착
+
+**범위**: Inbox Layer 머지 후 v3 visual refresh 대규모 진행. notes-table reskin + Gallery + Studio + Editorial. 사용자와 mockup-first 한계 토론, Plot 정체성 보존 패턴 정착.
+
+### 머지된 PRs
+- **#276** v3 Phase 4.2 — notes-table.tsx reskin (.a-* row chip patterns)
+- **#277** v3 Phase 5.1 — Gallery view (mockup wow factor #1, warm canvas + cards)
+- **#278** v3 Phase 5.1b — Table/Board .u-mode shell wrapper
+- **#279** v3 Phase 5.2 + 7 fixes — Studio (dark forced + SRS) + mockup-first 보정 패턴
+- **#280 OPEN** v3 Phase 5.3 — Editorial (Source Serif 4 magazine 룩)
+
+### 큰 사용자 통찰 (영구 결정)
+
+**1. mockup-first의 한계 명확화**:
+- 사용자: "디자인만 가져오고 싶다, 기능은 살려라"
+- mockup의 layout/structure/cell 패턴은 가져오되 **이미 잘 잡힌 Plot 디자인은 보존**
+- mockup이 Plot 정체성을 무단 교체하면 안 됨
+
+**2. mockup vs Plot 결정 매트릭스 (영구)**:
+| 영역 | 정책 |
+|------|------|
+| Layout / structure / cell / shell | mockup ✅ |
+| Card / chip 패턴 (.u-card, .a-row) | mockup ✅ |
+| 다크 Studio / Source Serif 4 | mockup ✅ |
+| Header typography | Plot 위키 정합 (mockup .a-th__cell 폐기) |
+| Status badge | Plot StatusBadge (mockup .a-stchip 폐기) |
+| Memo label | Plot 보존 (사용자 명시 "무조건") |
+| Default columns | mockup-friendly + Plot folder 보존 |
+| spacing (gap, padding) | Plot 정체성 우선 (위키 정합) |
+
+**3. PR #279 7 fixes (Studio 외)**:
+- Header `.a-th__cell` → 위키 typography (14px medium normal-case)
+- Status chip → StatusBadge rollback
+- Default visibleColumns → mockup 6 + Plot folder
+- gap 16→8 (위키 wiki-list.tsx gap-2 정합)
+- Title cell marginLeft -8 (gap 상쇄, 체크박스에 가깝게)
+- padding 16→20 (헤더+row 체크박스 정렬)
+
+### Phase 5 view modes (4 modes)
+
+| Mode | 핵심 |
+|------|------|
+| 5.1 Gallery | warm canvas + oklch hue cards + Source Serif title |
+| 5.2 Studio | dark forced + SRS segments + transport bar |
+| 5.3 Editorial | magazine spread + drop cap + 2-column |
+| 5.4 Graph (대기) | SVG deterministic positioning |
+
+### 인프라 완성
+- `lib/v3/note-helpers.ts` — getHueFromNoteId / getCoverGradient / getExcerpt / getSpread / getWordCount / getStudioSegments / roundFillTo01 / getSubtitle / extractParagraphs / getIssueNumber
+- `components/views/view-switcher.tsx` — Table/Gallery/Studio/Editorial 4 buttons
+- `components/views/{gallery,studio,editorial}-view.tsx` + `*-view-shell.tsx` (parallel pattern)
+- `lib/view-engine/types.ts` — ViewMode union 4 modes 확장
+- `app/globals.css` — `.u-vs / .u-mode / .u-gallery* / .u-card* / .u-studio* / .u-edit*` mockup CSS 그대로 이식
+
+### Plot Q-decisions 적용 검증
+- Q4 Studio dark forced ✅
+- Q5 Editorial body = extractParagraphs runtime ✅
+- Q9 Gallery hue = noteId hash ✅
+- Q10 Editorial subtitle = note.summary ✅
+- Q11 5-mode = Notes list만 ✅
+- Q12 Studio segments = SRS 진행도 ✅
+- Q13 ViewSwitcher = workspace header ✅
+
+### 다음 우선순위
+- 🔴 PR #280 머지 (사용자 승인)
+- 🟡 Phase 5.4 Graph (마지막 view mode)
+- 🟡 Phase 6 (Filter Popover + Workspace Chrome)
+- 🟡 Phase 7 (QA + cleanup)
+
+---
+
 ## 🚀 2026-05-07 (오후) — Phase B Inbox Layer 시리즈 완성 (4 PR) + 큰 방향 전환
 
 **범위**: 새 worktree `magical-curie-ad6175`. Inbox layer 4 PR (3 머지 + 1 OPEN). entity-based → action-based 큰 방향 전환.

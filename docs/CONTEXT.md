@@ -38,6 +38,46 @@
 
 ---
 
+## 🚀 2026-05-07 (저녁/밤) — v3 Phase 4.2 + Phase 5 4 PR + mockup-first 패턴 정착 ⭐⭐
+
+**범위**: v3 visual refresh 대규모. Inbox 시리즈 후 notes-table reskin + Gallery + Studio + Editorial. 사용자와 토론으로 mockup-first 한계 명확화.
+
+### 머지된/OPEN PRs
+- ✅ #276 Phase 4.2 — notes-table reskin (.a-* row chip)
+- ✅ #277 Phase 5.1 — Gallery (warm canvas + cards)
+- ✅ #278 Phase 5.1b — Table/Board .u-mode shell
+- ✅ #279 Phase 5.2 — Studio (dark + SRS) + 7 mockup-first fixes
+- 🔵 #280 OPEN Phase 5.3 — Editorial (magazine 룩)
+
+### 큰 영구 결정 ⭐⭐
+
+**Mockup-first 한계 명확화**:
+- 사용자 통찰: "디자인만 가져오기, 기능 살리기"
+- mockup의 layout/structure는 가져오되 이미 잘 잡힌 Plot 디자인은 보존
+- mockup vs Plot 결정 매트릭스 (영구):
+  - Layout / cell / shell / card / chip → mockup
+  - Header typography / Status badge / Memo label / spacing → Plot
+
+### 4 view modes 완성 (Phase 5)
+- Gallery: oklch hue cards
+- Studio: dark forced + SRS segments
+- Editorial: Source Serif 4 magazine spread
+- Graph: 대기 (PR 5.4)
+
+### Phase 진행
+- ✅ Phase 0/1/3/4.1/4.2 머지
+- ✅ Phase 5.1 / 5.1b / 5.2 머지, 5.3 OPEN
+- ⏳ 5.4 Graph
+- ⏳ Phase 6 (Filter Popover + Workspace Chrome)
+- ⏳ Phase 7 (QA + cleanup)
+
+### 다음 우선순위
+- 🔴 PR #280 머지
+- 🟡 Phase 5.4 Graph (마지막 view mode)
+- 🟡 Phase 6 / 7
+
+---
+
 ## 🚀 2026-05-07 (오후) — Phase B Inbox Layer 시리즈 완성 (4 PR) ⭐
 
 **범위**: 새 worktree `magical-curie-ad6175`. Inbox layer 4 PR (3 머지 + 1 OPEN). entity-based → action-based 큰 방향 전환.
