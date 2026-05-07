@@ -38,6 +38,37 @@
 
 ---
 
+## 🚀 2026-05-08 (새벽) — NoteStatus rename + Inbox layer 결정 (plan 작성)
+
+**범위**: PR 4.1 (Phase 4 CSS 통합) 머지 + 2 plan 작성 (Phase A rename + Phase B Inbox layer). 작업은 다음 세션.
+
+### 큰 결정 (영구)
+
+**1. NoteStatus 명칭 변경 (Phase A)**:
+- `inbox/capture/permanent` → **`stone/brick/keystone`** (건축 메타포)
+- atomic 단일 PR (53 files / 274 occ). IDB v116 migration.
+
+**2. Inbox 개념 분리 + 단일 통합 (Phase B)**:
+- inbox는 NoteStatus enum이 아니라 **별도 layer** (Linear / Things3 패턴)
+- **하나의 inbox** = 모든 entity 통합 (per-entity 분산 X)
+- 위치: home 안 카드 + `/inbox` full-page
+- 정의: 하이브리드 (자동 entity별 필터 + dismiss/snooze)
+
+### Phase 진행 상황
+- ✅ Phase 0/1: cleanup + token foundation
+- ⏸️ Phase 2: Imperial icon kit DEFER
+- ✅ Phase 3: Activity Bar / Sidebar Chrome
+- ⏳ Phase 4: Table Mode Reskin
+  - ✅ PR 4.1 (CSS 통합)
+  - ⏳ PR 4.2+ — NoteStatus rename 후
+- ⏳ Phase A (NoteStatus rename) — 다음 세션
+- ⏳ Phase B (Inbox layer) — Phase A 완료 후
+
+### 다음
+- 🔴 Phase A: NoteStatus rename (단일 atomic PR)
+
+---
+
 ## 🚀 2026-05-07 (밤 늦게) — Plot v3 Phase 3 완료 (4 PR)
 
 **범위**: Activity Bar / Sidebar Chrome v3 mockup reskin. 4 PR 누적.

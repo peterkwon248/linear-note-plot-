@@ -5,6 +5,74 @@
 
 ---
 
+## 2026-05-08 (새벽) — 집
+
+### 완료
+- **새 worktree** `note-status-rename` 생성 (origin/main 28b7474 기반, Phase 4.1 머지 후)
+- **PR 4.1 (Phase 4 CSS 통합) 머지** — `.a-table` / `.a-row` / `.a-th` / `.a-tg` / `.a-stchip` / `.a-tag` / `.a-tool` 등 v3 table chrome 클래스 globals.css 통합. 시각 변경 0. PR #267.
+- **2 plan 파일 작성** (작업은 다음 세션):
+  - `.omc/plans/note-status-rename.md` (Phase A — atomic rename, 53 files / 274 occ)
+  - `.omc/plans/inbox-layer.md` (Phase B — 단일 통합 Inbox layer)
+- **NoteStatus rename + Inbox layer 큰 방향 결정** (영구)
+
+### 브레인스토밍 & 큰 결정 (영구)
+
+#### 1. NoteStatus 명칭 변경 (Phase A, 별도 plan)
+- **결정**: inbox/capture/permanent → **stone/brick/keystone** (건축 메타포)
+- **근거**: Plot 정체성 (Zettelkasten × Palantir) 정합. raw stone → processed brick → keystone (anchor) progression. 일반적 (Notion/Obsidian inbox/capture/permanent)에서 차별화.
+- **scope**: 53 files / 274 occurrences + IDB v116 migration + route redirect
+- **PR 구조**: 단일 atomic PR (rename은 분리 시 컴파일 에러). 6 commits in 1 PR.
+
+#### 2. Inbox 개념 분리 (Phase B, 별도 plan)
+- **결정**: inbox는 NoteStatus enum이 아니라 **별도 layer** (Linear / Things3 패턴)
+- 새 의미: "처리 대기" 알림함 — 자동 필터 + 사용자 dismiss
+- 기존 status 3개 (stone/brick/keystone)는 workflow stage. inbox는 별개 layer.
+
+#### 3. 단일 통합 Inbox (per-entity 분산 X)
+- **결정**: 하나의 inbox = 모든 entity (Notes / Wiki / Book / Reference / Files) 통합
+- **근거**:
+  - Plot 정체성 ("Gentle by default") — 사용자 한 곳만 봄
+  - Linear / Things3 / Notion 패턴 정합
+  - IKEA 전략 (앱이 자동 분류) — 사용자 부담 ↓
+  - 확장성 — 새 entity 추가 시 자동 통합
+- per-entity inbox 분산 = 사용자가 6+ inbox 관리. 부담.
+
+#### 4. Inbox 위치: Home 안 카드 + `/inbox` full-page
+- **결정**: home 안 카드 (Quick Capture / Stats 옆) + `/inbox` 별도 full-page
+- **근거**: v3 11결정 #1 (7-space) 보존. Plot home dashboard 정체성 정합.
+- top-level (Activity Bar 8번째 space) X — 7-space 위배
+
+#### 5. Inbox 정의: 하이브리드 (자동 + dismiss)
+- **결정**: 자동 entity별 필터 default + 사용자 dismiss/snooze 가능
+- **자동 필터**:
+  - Notes: stone + 미분류
+  - Wiki: stub status
+  - Reference: 미링크
+  - Files: 미분류
+  - (옵션) SRS: scheduled review 도래
+- **사용자 dismiss** = Linear archive 패턴
+
+### 다음 (NEXT-ACTION.md 참조)
+- 🔴 Phase A: NoteStatus rename (atomic 단일 PR — executor agent 위임 권장)
+- 🟡 Phase B: Inbox layer (4-5 PR — Phase A 완료 후)
+- 🟢 Phase 4 재개: PR 4.2 notes-table.tsx reskin (새 명칭 사용)
+
+### Watch Out
+- **Atomic rename 위험**: 53 files / 274 occ를 분리 시 중간 PR 컴파일 에러. 단일 PR 유지 필수.
+- **IDB v116 migration**: 기존 사용자 노트 status field rewrite. idempotent 보장 + no data loss.
+- **Route redirect**: `/inbox` `/capture` `/permanent` 사용자 북마크. server-side redirect 필요.
+- **v3 PRD Phase 5 적용 범위 변경**: `/inbox` 제거 (별도 layer). PRD 명시 update 필요.
+- **inbox layer가 v3 mockup과 conceptual mismatch**: visual 호환은 되지만 의미 다름. mockup은 status, Plot inbox는 알림함.
+
+### 머신
+집 (Windows)
+
+### 누적 commits (이번 세션, 1 PR + plan)
+- ✅ **PR #267** 머지 (claude/v3-phase-4-plan): feat(v3-phase-4-1) table mode CSS 통합 (시각 변경 0). 1 commit (`19d2038`).
+- 📝 plan 2개 (commit 예정 in this after-work)
+
+---
+
 ## 2026-05-07 (밤 늦게) — 집
 
 ### 완료

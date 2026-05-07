@@ -28,6 +28,63 @@
 
 ---
 
+## 🚀 2026-05-08 (새벽) — NoteStatus rename + Inbox layer 큰 결정 (plan 작성)
+
+**범위**: 새 worktree `note-status-rename`. PR 4.1 (Phase 4 CSS 통합) 머지 + 2 plan 작성. 작업은 다음 세션.
+
+### 머지된 PRs
+- **#267** (PR 4.1 — claude/v3-phase-4-plan): feat(v3-phase-4-1) table mode CSS 통합 (`.a-table` / `.a-row` / `.a-th` / `.a-tg` / `.a-stchip` / `.a-tag` / `.a-tool`). 시각 변경 0. +487 LOC.
+
+### Plan 파일 작성 (작업은 다음 세션)
+- `.omc/plans/note-status-rename.md` — Phase A: NoteStatus 단순 atomic rename (53 files / 274 occ + IDB v116 migration)
+- `.omc/plans/inbox-layer.md` — Phase B: 단일 통합 Inbox layer (4-5 PR, 새 기능)
+
+### 큰 결정 (영구)
+
+**1. NoteStatus 명칭 변경 (Phase A)**:
+- `inbox/capture/permanent` → **`stone/brick/keystone`** (건축 메타포)
+- 의미 progression 유지 (raw → processed → keystone). 색 동일 (Q3 LOCKED).
+- 단일 atomic PR (분리 시 컴파일 에러). 6 commits in 1 PR.
+- IDB v116 migration. route redirect (`/inbox` → `/stone` 등)
+
+**2. Inbox 개념 분리 (Phase B)**:
+- inbox는 NoteStatus enum이 아니라 **별도 layer** (Linear / Things3 패턴)
+- 새 의미: "처리 대기" 알림함
+
+**3. 단일 통합 Inbox** (per-entity 분산 X):
+- 하나의 inbox = Notes/Wiki/Book/Reference/Files 모두 통합
+- Plot 정체성 ("Gentle by default") + IKEA 전략 + Linear/Things3 패턴 정합
+- per-entity 분산 = 사용자 부담 ↑
+
+**4. Inbox 위치**: Home 안 카드 + `/inbox` full-page
+- v3 11결정 #1 (7-space) 보존
+- top-level activity bar 8번째 X
+
+**5. Inbox 정의**: 하이브리드
+- 자동 entity별 필터 default + 사용자 dismiss/snooze
+- entity별 자동 필터:
+  - Notes: stone + 미분류
+  - Wiki: stub status
+  - Reference: 미링크
+  - Files: 미분류
+  - (옵션) SRS: scheduled review 도래
+
+### v3 PRD 영향
+- Phase 5 적용 범위 변경: `/notes, /inbox, /capture, /permanent, ...` → `/notes, /stone, /brick, /keystone, ...`. `/inbox` 제거 (별도 layer).
+- v3 mockup의 inbox/capture/permanent → stone/brick/keystone로 적용. inbox layer는 mockup 외 신규 디자인.
+
+### 다음 우선순위 (P0)
+1. **🔴 Phase A**: NoteStatus rename (atomic 단일 PR, executor agent 위임 권장)
+2. **🟡 Phase B**: Inbox layer (4-5 PR, Phase A 완료 후)
+3. **🟢 Phase 4 재개**: PR 4.2 notes-table.tsx reskin (새 명칭 사용)
+
+### 이번 세션 기술 학습
+- **plan-only 세션 패턴**: 큰 결정사항 명확히 docs에 박은 후 다음 세션에서 작업. 작업 원칙 #4 (사용자 reproduce 정보 우선) 정합.
+- **Atomic rename 원리**: 53 files / 274 occ는 분리 시 컴파일 에러. 단일 PR이 안전.
+- **Per-entity vs 통합 inbox**: 단일 통합이 Plot 정체성 + UX 인지 부하 최적.
+
+---
+
 ## 🚀 2026-05-07 (밤 늦게) — Plot v3 Phase 3 완료 (4 PR — Activity Bar / Sidebar Chrome reskin)
 
 **범위**: 새 worktree `v3-phase-3-plan` 생성 + Phase 3 분해 plan + 4 PR 완료. Activity Bar (72px) + Sidebar (`.a-sb-*` 패턴) + Brand mark (Plot 로고 SVG) v3 mockup 적용.
