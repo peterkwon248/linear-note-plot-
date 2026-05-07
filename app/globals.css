@@ -74,6 +74,11 @@
   --header-h:       52px;
   --workspace-header-h: 44px;
 
+  /* v3 Phase 3 shell layout vars — used by `.a-shell` grid (Phase 3.4) */
+  --a-actbar-w:  72px;
+  --a-sidebar-w: 240px;
+  --a-detail-w:  0px;
+
   /* ──────────────────────────────────────────────────────────
      Plot Token Layer — preserved for shadcn/ui Tailwind cascade
      (40+ ui/* components depend on these via @theme inline)
@@ -137,6 +142,9 @@
   --sidebar-hover-text: #18181b;
   --sidebar-icon: #52525b;
   --sidebar-count: #52525b;
+  /* v3 Phase 3 alias — `.a-sb-*` mockup 클래스가 `--sidebar-fg` 사용. Plot
+     기존 `--sidebar-foreground`로 매핑 (mockup 코드 보존, 단순 alias). */
+  --sidebar-fg: var(--sidebar-foreground);
   --surface-overlay: #ffffff;
   --border-subtle: #a1a1aa;
   --hover-bg: rgba(0,0,0, 0.04);
@@ -262,6 +270,8 @@
   --sidebar-hover-text: #e4e4e7;
   --sidebar-icon: #a1a1aa;
   --sidebar-count: #a1a1aa;
+  /* v3 Phase 3 alias — `--sidebar-fg` → Plot `--sidebar-foreground` (dark) */
+  --sidebar-fg: var(--sidebar-foreground);
 
   /* Surface 계층 */
   --surface-overlay: #1c1c1f;
@@ -465,4 +475,451 @@
 
 *::-webkit-scrollbar-corner {
   background: transparent;
+}
+
+/* ════════════════════════════════════════════════════════════
+   PLOT v3 Phase 3 — Activity Bar / Sidebar Chrome
+   PR 3.1: CSS 통합 (시각 변경 0 — 클래스 추가만, 컴포넌트는 PR 3.2-3.4)
+   Source: docs/v3-mockup/plot-v3-a.css line 1-329 + 692-705
+   ════════════════════════════════════════════════════════════ */
+
+/* ─── Shell Grid (Phase 3.4에서 적용) ─── */
+.a-shell {
+  display: grid;
+  grid-template-columns: var(--a-actbar-w, 72px) var(--a-sidebar-w, 240px) 1fr var(--a-detail-w, 0px);
+  grid-template-rows: 100%;
+  background: var(--bg);
+  color: var(--fg);
+  width: 100%;
+  height: 100%;
+  transition: grid-template-columns 0.18s ease;
+}
+.a-shell[data-actbar="collapsed"]  { --a-actbar-w: 0px; }
+.a-shell[data-sidebar="collapsed"] { --a-sidebar-w: 0px; }
+.a-shell[data-detail="open"]       { --a-detail-w: 320px; }
+
+/* ─── Activity Bar ─── */
+.a-actbar {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  padding: 8px 6px;
+  gap: 1px;
+  border-right: 1px solid var(--sidebar-border);
+  background: var(--sidebar-bg);
+  overflow: hidden;
+  min-width: 0;
+}
+.a-actbar__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 2px 4px 6px;
+}
+.a-actbar__toggle {
+  width: 22px;
+  height: 22px;
+  border-radius: 4px;
+  display: grid;
+  place-items: center;
+  color: var(--sidebar-icon);
+}
+.a-actbar__toggle:hover {
+  background: var(--sidebar-hover);
+  color: var(--sidebar-fg);
+}
+.a-actbar__close {
+  width: 22px;
+  height: 22px;
+  border-radius: 4px;
+  display: grid;
+  place-items: center;
+  color: var(--sidebar-icon);
+  opacity: 0.6;
+  transition: opacity var(--t-fast), background var(--t-fast);
+}
+.a-actbar__close:hover {
+  opacity: 1;
+  background: var(--sidebar-hover);
+}
+
+/* Brand mark (top-left "P" gradient logo) */
+.a-brand__mark {
+  width: 28px;
+  height: 28px;
+  border-radius: 7px;
+  display: grid;
+  place-items: center;
+  background: linear-gradient(135deg, var(--space-home) 0%, var(--space-wiki) 100%);
+  color: #fff;
+  font-weight: 700;
+  font-size: 13px;
+  letter-spacing: -0.02em;
+  box-shadow: 0 1px 3px rgba(94,106,210,0.30), inset 0 0 0 1px rgba(255,255,255,0.10);
+}
+
+/* Activity bar buttons — vertical icon + label */
+.a-ab {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 7px 4px 6px;
+  border-radius: 7px;
+  color: var(--sidebar-icon);
+  transition: background var(--t-fast), color var(--t-fast);
+  min-width: 0;
+}
+.a-ab__label {
+  font-size: 10.5px;
+  font-weight: 500;
+  letter-spacing: -0.005em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+  color: var(--sidebar-muted);
+}
+.a-ab:hover {
+  background: var(--sidebar-hover);
+  color: var(--sidebar-fg);
+}
+.a-ab:hover .a-ab__label {
+  color: var(--sidebar-fg);
+}
+.a-ab--space[data-active="true"] {
+  background: color-mix(in srgb, var(--space-notes) 16%, transparent);
+  color: var(--space-notes);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--space-notes) 24%, transparent);
+}
+.a-ab--space[data-active="true"] .a-ab__label {
+  color: var(--space-notes);
+}
+.dark .a-ab--space[data-active="true"] {
+  background: color-mix(in srgb, var(--space-notes) 22%, transparent);
+}
+
+/* ─── Sidebar Container ─── */
+.a-sidebar {
+  display: flex;
+  flex-direction: column;
+  background: var(--sidebar-bg);
+  border-right: 1px solid var(--sidebar-border);
+  min-width: 0;
+  overflow: hidden;
+}
+.a-shell[data-sidebar="collapsed"] .a-sidebar {
+  border-right: 0;
+}
+.a-sidebar--nav    { background: var(--sidebar-bg); }
+.a-sidebar--browse { background: var(--bg-elev); }
+.dark .a-sidebar--browse { background: var(--bg); }
+
+/* ─── Detail Panel (Phase 6에서 본격 사용) ─── */
+.a-detail {
+  display: flex;
+  flex-direction: column;
+  background: var(--sidebar-bg);
+  border-left: 1px solid var(--sidebar-border);
+  min-width: 0;
+  overflow: hidden;
+}
+.a-detail__head {
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 8px 0 14px;
+  border-bottom: 1px solid var(--sidebar-border);
+}
+.a-detail__title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--sidebar-fg);
+  letter-spacing: -0.01em;
+}
+.a-detail__body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.a-detail__group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.a-detail__label {
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--sidebar-muted);
+}
+.a-detail__value {
+  font-size: 13px;
+  color: var(--sidebar-fg);
+  line-height: 1.5;
+}
+.a-detail__row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12.5px;
+  color: var(--sidebar-fg);
+}
+.a-detail__row .a-tag {
+  background: var(--hover-bg);
+}
+.a-detail__stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+.a-detail__stat {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 8px 10px;
+  background: var(--hover-bg);
+  border-radius: 6px;
+}
+.a-detail__stat-num {
+  font-size: 17px;
+  font-weight: 600;
+  font-family: 'Geist Mono', monospace;
+  color: var(--fg);
+  letter-spacing: -0.01em;
+}
+.a-detail__stat-lbl {
+  font-size: 10px;
+  color: var(--sidebar-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-weight: 600;
+}
+.a-detail__excerpt {
+  font-family: 'Source Serif 4', serif;
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--soft-fg);
+  font-style: italic;
+}
+
+/* ─── Sidebar Header ─── */
+.a-sb-head {
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 8px 0 14px;
+  border-bottom: 1px solid var(--sidebar-border);
+}
+.a-sb-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--sidebar-fg);
+  letter-spacing: -0.01em;
+}
+.a-sb-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  box-shadow: 0 0 0 2px var(--sidebar-bg), 0 0 0 3px color-mix(in srgb, var(--space-notes) 30%, transparent);
+}
+.a-sb-actions {
+  display: flex;
+  gap: 1px;
+}
+
+/* Icon Button (compact) */
+.a-icb {
+  width: 24px;
+  height: 24px;
+  border-radius: 4px;
+  display: grid;
+  place-items: center;
+  color: var(--sidebar-icon);
+  transition: background var(--t-fast), color var(--t-fast);
+}
+.a-icb:hover {
+  background: var(--hover-bg);
+  color: var(--fg);
+}
+.a-icb[data-active="true"] {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+.a-icb--restore {
+  margin-right: 4px;
+  background: var(--muted);
+  color: var(--soft-fg);
+}
+.a-icb--restore:hover {
+  background: var(--hover-bg);
+  color: var(--fg);
+}
+
+/* ─── Sidebar Search (⌘K input) ─── */
+.a-sb-search {
+  margin: 8px 8px 4px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 28px;
+  padding: 0 8px 0 10px;
+  border-radius: 6px;
+  background: var(--sidebar-hover);
+  border: 1px solid transparent;
+  transition: border-color var(--t-fast), background var(--t-fast);
+}
+.a-sb-search:focus-within {
+  border-color: color-mix(in srgb, var(--space-notes) 50%, transparent);
+  background: var(--bg-elev);
+}
+.a-sb-search input {
+  flex: 1;
+  font-size: 13px;
+  color: var(--sidebar-fg);
+  min-width: 0;
+}
+.a-sb-search input::placeholder {
+  color: var(--sidebar-muted);
+  opacity: 0.7;
+}
+.a-sb-search svg {
+  color: var(--sidebar-icon);
+}
+
+/* Keyboard shortcut chip */
+.a-kbd {
+  font-family: 'Geist Mono', monospace;
+  font-size: 10px;
+  padding: 1px 5px;
+  border-radius: 3px;
+  background: var(--sidebar-bg);
+  border: 1px solid var(--sidebar-border);
+  color: var(--sidebar-count);
+  font-weight: 500;
+  letter-spacing: 0;
+}
+.a-kbd--inv {
+  background: rgba(255,255,255,0.18);
+  border-color: rgba(255,255,255,0.18);
+  color: rgba(255,255,255,0.92);
+}
+
+/* ─── Sidebar Sections ─── */
+.a-sb-scroll {
+  flex: 1;
+  overflow-y: auto;
+  padding: 4px 6px 8px;
+}
+.a-sb-section {
+  margin-top: 12px;
+}
+.a-sb-section__head {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px 4px 10px;
+  color: var(--sidebar-muted);
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.a-sb-section__hint {
+  margin-left: auto;
+  font-size: 10px;
+  color: var(--sidebar-count);
+  font-weight: 500;
+  letter-spacing: 0;
+  text-transform: none;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Sidebar links (folder/tag/label rows) */
+.a-sb-link {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 8px 0 10px;
+  height: 26px;
+  border-radius: 5px;
+  font-size: 13px;
+  color: var(--sidebar-fg);
+  font-weight: 450;
+  width: 100%;
+  text-align: left;
+  transition: background var(--t-fast);
+}
+.a-sb-link:hover {
+  background: var(--sidebar-hover);
+}
+.a-sb-link[data-active="true"] {
+  background: var(--sidebar-active);
+  color: var(--sidebar-active-text);
+  font-weight: 500;
+}
+.a-sb-link svg {
+  color: var(--sidebar-icon);
+  flex: none;
+}
+.a-sb-link[data-active="true"] svg {
+  color: var(--space-notes);
+}
+.a-sb-link > span:nth-child(2) {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.a-sb-link__count {
+  font-size: 11px;
+  color: var(--sidebar-count);
+  font-weight: 500;
+}
+.a-sb-link__dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex: none;
+  margin: 0 4px 0 1px;
+}
+
+/* Sidebar foot (primary action button) */
+.a-sb-foot {
+  padding: 8px;
+  border-top: 1px solid var(--sidebar-border);
+}
+.a-sb-foot__primary {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  height: 32px;
+  padding: 0 10px;
+  border-radius: 6px;
+  background: var(--space-notes);
+  color: white;
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: -0.005em;
+  transition: filter var(--t-fast);
+}
+.a-sb-foot__primary:hover {
+  filter: brightness(1.05);
+}
+.a-sb-foot__primary > span {
+  flex: 1;
+  text-align: left;
 }
