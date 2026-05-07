@@ -12,7 +12,7 @@ import { Sparkle } from "@phosphor-icons/react/dist/ssr/Sparkle"
 import { TrendUp } from "@phosphor-icons/react/dist/ssr/TrendUp"
 import { ArrowRight } from "@phosphor-icons/react/dist/ssr/ArrowRight"
 import { FileText } from "@phosphor-icons/react/dist/ssr/FileText"
-import { IconInbox } from "@/components/plot-icons"
+import { IconStone } from "@/components/plot-icons"
 import { useBacklinksIndex } from "@/lib/search/use-backlinks-index"
 import type { Note } from "@/lib/types"
 
@@ -112,7 +112,7 @@ export function HomeView() {
           <section className="mb-6">
             <ContentCard
               title="Inbox"
-              icon={IconInbox}
+              icon={IconStone}
               iconColor="text-amber-500 dark:text-amber-400"
               trailing={
                 <button

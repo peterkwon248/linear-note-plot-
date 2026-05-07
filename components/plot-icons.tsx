@@ -33,11 +33,15 @@ export function IconHome({ size = 20, ...props }: IconProps) {
   )
 }
 
-export function IconInbox({ size = 20, ...props }: IconProps) {
+/**
+ * Stone status icon — irregular polygon (raw, ungroomed pebble).
+ * Architecture metaphor: raw stone, the unworked input material.
+ * Replaces former `IconInbox` (mailbox shape, didn't match stone semantics).
+ */
+export function IconStone({ size = 20, ...props }: IconProps) {
   return (
     <svg width={size} height={size} {...defaults} {...props}>
-      <polyline points="22 12 16 12 14 15 10 15 8 12 2 12" />
-      <path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z" />
+      <path d="M 7.5 3.2 L 15.5 3.5 L 20.5 7.5 L 19.5 15.5 L 14 20.5 L 6 19 L 3 13 L 4.5 6 Z" />
     </svg>
   )
 }
@@ -178,19 +182,29 @@ export function IconInsight({ size = 16, ...props }: IconProps) {
   )
 }
 
-export function IconCapture({ size = 16, ...props }: IconProps) {
+/**
+ * Brick status icon — rounded rectangle with horizontal mortar seam.
+ * Architecture metaphor: regular processed unit, ready to lay.
+ * Replaces former `IconCapture` (pencil shape).
+ */
+export function IconBrick({ size = 20, ...props }: IconProps) {
   return (
     <svg width={size} height={size} {...defaults} {...props}>
-      <path d="M17 3a2.83 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" />
+      <rect x="3" y="6" width="18" height="12" rx="1.5" />
+      <path d="M 3 12 L 21 12" />
     </svg>
   )
 }
 
-export function IconPermanent({ size = 16, ...props }: IconProps) {
+/**
+ * Keystone status icon — trapezoid wider at top (architectural keystone).
+ * Architecture metaphor: anchor stone at the apex of an arch.
+ * Replaces former `IconPermanent` (gem/diamond shape).
+ */
+export function IconKeystone({ size = 20, ...props }: IconProps) {
   return (
     <svg width={size} height={size} {...defaults} {...props}>
-      <path d="M6 3h12l4 6-10 13L2 9Z" />
-      <path d="M2 9h20" />
+      <path d="M 3 5 L 21 5 L 16.5 19 L 7.5 19 Z" />
     </svg>
   )
 }
