@@ -90,12 +90,12 @@ export function ActivityBar() {
           <button
             onClick={() => setActivitybarCollapsed(false)}
             className="h-full w-4 shrink-0 flex items-center justify-center text-muted-foreground/50 hover:text-foreground hover:bg-hover-bg transition-colors border-r border-border"
-            aria-label="Open activity bar"
+            aria-label="Open activity bar (⌘⇧A)"
           >
             <CaretRight size={11} weight="bold" />
           </button>
         </TooltipTrigger>
-        <TooltipContent side="right" className="text-2xs">Open activity bar</TooltipContent>
+        <TooltipContent side="right" className="text-2xs">Open activity bar (⌘⇧A)</TooltipContent>
       </Tooltip>
     )
   }
@@ -112,12 +112,12 @@ export function ActivityBar() {
           <button
             className="a-actbar__close absolute top-2 right-1 opacity-0 hover:opacity-100 group-hover/actbar:opacity-100 transition-opacity"
             onClick={() => setActivitybarCollapsed(true)}
-            aria-label="Close activity bar"
+            aria-label="Close activity bar (⌘⇧A)"
           >
             <PhX size={11} weight="bold" />
           </button>
         </TooltipTrigger>
-        <TooltipContent side="right" className="text-2xs">Close activity bar</TooltipContent>
+        <TooltipContent side="right" className="text-2xs">Close activity bar (⌘⇧A)</TooltipContent>
       </Tooltip>
 
       {/* Brand mark — gradient badge with workspace initial (mockup pattern, plot-v3-a-*.jsx) */}

@@ -136,6 +136,25 @@ export function useGlobalShortcuts() {
         return
       }
 
+      // ── 2b-2. Ctrl/Cmd+Shift+A — toggle activity bar collapse (v3 mockup spec) ────
+      // mockup spec ⌘⇧\ but Plot ⌘\ = split view (충돌). ⌘⇧A 사용.
+      if (
+        (e.key === "a" || e.key === "A") &&
+        e.shiftKey &&
+        (e.metaKey || e.ctrlKey)
+      ) {
+        e.preventDefault()
+        if (
+          target.closest("[role='dialog']") ||
+          target.closest("[data-radix-popper-content-wrapper]")
+        ) {
+          return
+        }
+        const s = usePlotStore.getState()
+        s.setActivitybarCollapsed(!s.activitybarCollapsed)
+        return
+      }
+
       // ── 2c. Cmd+B — toggle side panel ─────────────────────────
       if (mod && e.key === 'b' && !e.shiftKey) {
         if (target.closest('[contenteditable]') || target.tagName === 'INPUT' || target.tagName === 'TEXTAREA') {
