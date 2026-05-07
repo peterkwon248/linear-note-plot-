@@ -1,5 +1,39 @@
 # Architectural Decisions
 
+## 2026-05-07 (저녁) — Mockup-first 한계 영구 정책
+
+### 사용자 통찰 (영구)
+"디자인만 가져오고 싶은데, 우리 코드/기능은 살리자"
+
+### Mockup vs Plot 결정 매트릭스
+| 영역 | 정책 |
+|------|------|
+| **Layout / structure / shell wrapper** | mockup ✅ |
+| **Cell / chip / card 패턴** (.u-card, .a-row, .a-stchip) | mockup ✅ |
+| **Dark Studio / Source Serif 4 magazine 룩** | mockup ✅ |
+| **Header typography** (column header) | Plot 위키 정합 (.a-th__cell 폐기) |
+| **Status badge / 컴포넌트** | Plot 정체성 (StatusBadge 보존) |
+| **Memo label** | Plot 보존 (사용자 명시 "무조건") |
+| **Default visibleColumns** | mockup-friendly + Plot 차별점 (folder) |
+| **Spacing** (gap, padding) | Plot 위키 정합 우선 |
+
+### PR #279에 누적된 7 fixes (이 패턴 정착)
+1. Header `.a-th__cell` 폐기 → 위키 typography (14px medium normal-case)
+2. Status chip `.a-stchip` 폐기 → Plot StatusBadge rollback
+3. Default visibleColumns mockup-friendly (title/tags/status/folder/links/words/updatedAt)
+4. `.a-th, .a-row gap` 16→8px (위키 wiki-list gap-2 정합)
+5. Title cell `marginLeft: -8` (grid gap 상쇄, 체크박스 가깝게)
+6. `.a-th, .a-row padding` 16→20px (헤더+row 체크박스 정렬, 위키 px-5 정합)
+7. (Phase 5.3 Editorial은 mockup 그대로 — magazine 룩이 Plot 정체성과 부합)
+
+### 향후 적용 원칙
+새 mockup 디자인 도입 시:
+1. Layout/cell/shell은 mockup CSS/JSX 그대로
+2. Typography/spacing/badges는 Plot 위키와 비교, 다르면 Plot 우선
+3. 사용자 정성껏 잡은 디자인은 무단 교체 X
+
+---
+
 ## 2026-05-07 (오후) — Inbox = action notification queue (영구 결정)
 
 ### 핵심 (entity-based 폐기)

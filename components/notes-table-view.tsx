@@ -7,6 +7,7 @@ import { NotesTable } from "@/components/notes-table"
 import { NotesBoard } from "@/components/notes-board"
 import { GalleryViewShell } from "@/components/views/gallery-view-shell"
 import { StudioViewShell } from "@/components/views/studio-view-shell"
+import { EditorialViewShell } from "@/components/views/editorial-view-shell"
 import { ViewSwitcher, type ViewSwitcherMode } from "@/components/views/view-switcher"
 import { WorkspaceEditorArea } from "@/components/workspace/workspace-editor-area"
 import { usePane } from "@/components/workspace/pane-context"
@@ -108,13 +109,15 @@ export function NotesTableView() {
     )
   }
 
-  // ── v3 Phase 5.1 / 5.2: Gallery + Studio mode toggle ──
-  // ViewSwitcher exposes Table (list) ↔ Gallery ↔ Studio; Board lives behind
-  // the Display popover. Hidden on /trash where neither has useful semantics.
+  // ── v3 Phase 5.1 / 5.2 / 5.3: Gallery + Studio + Editorial mode toggle ──
+  // ViewSwitcher exposes Table (list) ↔ Gallery ↔ Studio ↔ Editorial; Board
+  // lives behind the Display popover. Hidden on /trash where these have no
+  // useful semantics (a deleted-note "magazine" makes no sense).
   const isTrashView = tableRoute === "/trash"
   const switcherValue: ViewSwitcherMode =
-    viewMode === "gallery" ? "gallery"
-    : viewMode === "studio"  ? "studio"
+    viewMode === "gallery"   ? "gallery"
+    : viewMode === "studio"    ? "studio"
+    : viewMode === "editorial" ? "editorial"
     : "list"
   const handleSwitcherChange = (mode: ViewSwitcherMode) => {
     setViewState(contextKey, { viewMode: mode as ViewMode })
@@ -122,6 +125,25 @@ export function NotesTableView() {
   const headerExtras = !isTrashView ? (
     <ViewSwitcher value={switcherValue} onChange={handleSwitcherChange} />
   ) : undefined
+
+  // Editorial shell (own ViewHeader chrome, warm canvas body)
+  if (viewMode === "editorial" && !isTrashView) {
+    return (
+      <div className="flex flex-1 overflow-hidden">
+        <EditorialViewShell
+          context={contextKey}
+          title={config.title}
+          hideCreateButton={config.hideCreateButton}
+          folderId={activeFolderId ?? undefined}
+          tagId={activeTagId ?? undefined}
+          labelId={activeLabelId ?? undefined}
+          headerExtras={headerExtras}
+          onNoteClick={(noteId) => setPreviewNoteId(noteId)}
+          activePreviewId={previewNoteId}
+        />
+      </div>
+    )
+  }
 
   // Studio shell (own ViewHeader chrome, dark-forced body)
   if (viewMode === "studio" && !isTrashView) {

@@ -140,3 +140,97 @@ export function roundFillTo01(v: number): string {
   if (r < 0.3) return "0"
   return r.toFixed(1)
 }
+
+/**
+ * Editorial-mode subtitle (Q10 LOCKED).
+ *
+ * The mockup's editorial deck (`<p className="u-edit__deck">`) renders a
+ * curated subtitle. Plot maps that to `note.summary` first — a user-authored
+ * summary line — and falls back to the auto-generated `preview` when no
+ * summary exists. Empty string is intentional: the deck collapses to zero
+ * height rather than being rendered as a stub.
+ *
+ * `getExcerpt` already does the same fallback for gallery cards, but we keep
+ * `getSubtitle` as a separate name for editorial readability — the call site
+ * (deck vs card excerpt) carries different semantics even when the value
+ * matches today.
+ */
+export function getSubtitle(note: Note): string {
+  return note.summary ?? note.preview ?? ""
+}
+
+/**
+ * Editorial-mode body extraction (Q5 LOCKED).
+ *
+ * The mockup's `<div className="u-edit__body">` renders multiple paragraphs.
+ * Plot derives them at render-time from the TipTap doc JSON rather than
+ * persisting a denormalized "body" array on `Note`. Walking the doc tree:
+ *   1. Recurse into `content[]` arrays.
+ *   2. Stop at `paragraph` nodes — flatten their inline children into a
+ *      single string (text marks, hard breaks → space).
+ *   3. Skip empty paragraphs (whitespace-only); they exist as TipTap
+ *      structural padding and would create empty `<p/>` in the spread.
+ *
+ * Returns up to `maxCount` non-empty paragraphs. The default of 4 matches
+ * the mockup spread density — more than that and the two-column body starts
+ * to overflow on common viewports. Schema-free: passing `null` /
+ * `undefined` / non-doc objects returns `[]`.
+ */
+export function extractParagraphs(
+  contentJson: Record<string, unknown> | null | undefined,
+  maxCount = 4,
+): string[] {
+  if (!contentJson || typeof contentJson !== "object") return []
+  const paragraphs: string[] = []
+
+  function walk(node: unknown): void {
+    if (!node || typeof node !== "object") return
+    const n = node as { type?: string; content?: unknown[]; text?: string }
+
+    // Paragraph leaf — flatten inline children, then stop recursing.
+    if (n.type === "paragraph") {
+      if (Array.isArray(n.content)) {
+        const text = n.content
+          .map((c) => {
+            if (c && typeof c === "object" && "text" in c) {
+              return String((c as { text: unknown }).text ?? "")
+            }
+            return ""
+          })
+          .join("")
+          .trim()
+        if (text.length > 0) paragraphs.push(text)
+      }
+      return
+    }
+
+    // Container — recurse into children.
+    if (Array.isArray(n.content)) {
+      for (const child of n.content) {
+        if (paragraphs.length >= maxCount) return
+        walk(child)
+      }
+    }
+  }
+
+  walk(contentJson)
+  return paragraphs.slice(0, maxCount)
+}
+
+/**
+ * Editorial-mode issue number — decorative.
+ *
+ * The mockup hardcodes "No. 47" in the issue strip. Plot replaces it with a
+ * deterministic hash of the active noteId so each note feels like its own
+ * "issue" without the number drifting between renders. Range 1-99 keeps the
+ * label visually compact (two digits at most). Pure decoration — the value
+ * never affects sort, filter, or persistence.
+ */
+export function getIssueNumber(noteId: string): string {
+  let h = 0
+  for (let i = 0; i < noteId.length; i++) {
+    h = (h * 31 + noteId.charCodeAt(i)) | 0
+  }
+  const num = (Math.abs(h) % 99) + 1
+  return `No. ${num}`
+}
