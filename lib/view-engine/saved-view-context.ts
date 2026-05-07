@@ -23,9 +23,9 @@ import type { ViewContextKey } from "./types"
  *
  * Notes space routes:
  *   /notes              → "all"
- *   /inbox              → "inbox"
- *   /capture            → "capture"
- *   /permanent          → "permanent"
+ *   /stone              → "stone"
+ *   /brick              → "brick"
+ *   /keystone           → "keystone"
  *   /pinned             → "pinned"
  *   /trash              → "trash"
  *   /folder/[id]        → "folder"
@@ -47,9 +47,9 @@ export function getCurrentViewContextKey(
 
   // Notes space — route-based
   if (!route) return "all"
-  if (route === "/inbox") return "inbox"
-  if (route === "/capture") return "capture"
-  if (route === "/permanent") return "permanent"
+  if (route === "/stone") return "stone"
+  if (route === "/brick") return "brick"
+  if (route === "/keystone") return "keystone"
   if (route === "/pinned") return "pinned"
   if (route === "/trash") return "trash"
   if (route.startsWith("/folder/")) return "folder"
@@ -61,13 +61,13 @@ export function getCurrentViewContextKey(
 /**
  * Map ActivitySpace → SavedView["space"] for createSavedView calls.
  *
- * SavedView.space is a narrower type ("inbox" | "notes" | "wiki" | "calendar"
+ * SavedView.space is a narrower type ("stone" | "notes" | "wiki" | "calendar"
  * | "ontology" | "all"); ActivitySpace includes "home" and "library" which
  * don't have saved views. Defaults to "all" for unknown spaces.
  */
 export function getSavedViewSpaceForActivity(
   space: ActivitySpace | string,
-): "inbox" | "notes" | "wiki" | "calendar" | "ontology" | "all" {
+): "stone" | "notes" | "wiki" | "calendar" | "ontology" | "all" {
   if (space === "notes") return "notes"
   if (space === "wiki") return "wiki"
   if (space === "calendar") return "calendar"

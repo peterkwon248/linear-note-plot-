@@ -100,9 +100,9 @@ export const NOTES_VIEW_CONFIG: ViewConfig = {
   showDetailPanel: true,
   filterCategories: [
     { key: "status", label: "Status", icon: StatusIcon, values: [
-      { key: "inbox", label: "Inbox", color: "rgba(255,255,255,0.32)", icon: <CircleDashed size={14} weight="bold" style={{ color: "var(--chart-2)" }} /> },
-      { key: "capture", label: "Capture", color: "#f5a623", icon: <CircleHalf size={14} weight="fill" style={{ color: "var(--chart-3)" }} /> },
-      { key: "permanent", label: "Permanent", color: "#45d483", icon: <CheckCircle size={14} weight="fill" style={{ color: "var(--chart-5)" }} /> },
+      { key: "stone", label: "Stone", color: "rgba(255,255,255,0.32)", icon: <CircleDashed size={14} weight="bold" style={{ color: "var(--chart-2)" }} /> },
+      { key: "brick", label: "Brick", color: "#f5a623", icon: <CircleHalf size={14} weight="fill" style={{ color: "var(--chart-3)" }} /> },
+      { key: "keystone", label: "Keystone", color: "#45d483", icon: <CheckCircle size={14} weight="fill" style={{ color: "var(--chart-5)" }} /> },
     ]},
     { key: "folder", label: "Folder", icon: FolderIcon, values: [] },
     { key: "label", label: "Label", icon: LabelIcon, values: [] },
@@ -355,9 +355,9 @@ export const GRAPH_VIEW_CONFIG: ViewConfig = {
   showDetailPanel: true,
   filterCategories: [
     { key: "status", label: "Status", icon: StatusIcon, values: [
-      { key: "inbox", label: "Inbox", color: "rgba(255,255,255,0.32)", icon: <CircleDashed size={14} weight="bold" style={{ color: "var(--chart-2)" }} /> },
-      { key: "capture", label: "Capture", color: "#f5a623", icon: <CircleHalf size={14} weight="fill" style={{ color: "var(--chart-3)" }} /> },
-      { key: "permanent", label: "Permanent", color: "#45d483", icon: <CheckCircle size={14} weight="fill" style={{ color: "var(--chart-5)" }} /> },
+      { key: "stone", label: "Stone", color: "rgba(255,255,255,0.32)", icon: <CircleDashed size={14} weight="bold" style={{ color: "var(--chart-2)" }} /> },
+      { key: "brick", label: "Brick", color: "#f5a623", icon: <CircleHalf size={14} weight="fill" style={{ color: "var(--chart-3)" }} /> },
+      { key: "keystone", label: "Keystone", color: "#45d483", icon: <CheckCircle size={14} weight="fill" style={{ color: "var(--chart-5)" }} /> },
     ]},
     { key: "tags", label: "Tags", icon: TagIcon, values: [] },
     { key: "label", label: "Label", icon: LabelIcon, values: [] },
@@ -460,9 +460,9 @@ export const CALENDAR_VIEW_CONFIG: ViewConfig = {
   showDetailPanel: true,
   filterCategories: [
     { key: "status", label: "Status", icon: StatusIcon, values: [
-      { key: "inbox", label: "Inbox", color: "rgba(255,255,255,0.32)", icon: <CircleDashed size={14} weight="bold" style={{ color: "var(--chart-2)" }} /> },
-      { key: "capture", label: "Capture", color: "#f5a623", icon: <CircleHalf size={14} weight="fill" style={{ color: "var(--chart-3)" }} /> },
-      { key: "permanent", label: "Permanent", color: "#45d483", icon: <CheckCircle size={14} weight="fill" style={{ color: "var(--chart-5)" }} /> },
+      { key: "stone", label: "Stone", color: "rgba(255,255,255,0.32)", icon: <CircleDashed size={14} weight="bold" style={{ color: "var(--chart-2)" }} /> },
+      { key: "brick", label: "Brick", color: "#f5a623", icon: <CircleHalf size={14} weight="fill" style={{ color: "var(--chart-3)" }} /> },
+      { key: "keystone", label: "Keystone", color: "#45d483", icon: <CheckCircle size={14} weight="fill" style={{ color: "var(--chart-5)" }} /> },
     ]},
     { key: "folder", label: "Folder", icon: FolderIcon, values: [] },
     { key: "label", label: "Label", icon: LabelIcon, values: [] },
@@ -494,9 +494,9 @@ export const TEMPLATES_VIEW_CONFIG: ViewConfig = {
   showDetailPanel: true,
   filterCategories: [
     { key: "status", label: "Status", icon: StatusIcon, values: [
-      { key: "inbox", label: "Inbox", color: "rgba(255,255,255,0.32)", icon: <CircleDashed size={14} weight="bold" style={{ color: "var(--chart-2)" }} /> },
-      { key: "capture", label: "Capture", color: "#f5a623", icon: <CircleHalf size={14} weight="fill" style={{ color: "var(--chart-3)" }} /> },
-      { key: "permanent", label: "Permanent", color: "#45d483", icon: <CheckCircle size={14} weight="fill" style={{ color: "var(--chart-5)" }} /> },
+      { key: "stone", label: "Stone", color: "rgba(255,255,255,0.32)", icon: <CircleDashed size={14} weight="bold" style={{ color: "var(--chart-2)" }} /> },
+      { key: "brick", label: "Brick", color: "#f5a623", icon: <CircleHalf size={14} weight="fill" style={{ color: "var(--chart-3)" }} /> },
+      { key: "keystone", label: "Keystone", color: "#45d483", icon: <CheckCircle size={14} weight="fill" style={{ color: "var(--chart-5)" }} /> },
     ]},
     { key: "priority", label: "Priority", icon: PriorityIcon, values: [
       { key: "urgent", label: "Urgent" },
