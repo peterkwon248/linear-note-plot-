@@ -1784,5 +1784,15 @@ export function migrate(persistedState: unknown): PlotState {
   // (viewStateByContext key rename happens early — see "v116 (early-bird)" block above —
   // because normalizeViewStatesMap iterates only VALID_VIEW_CONTEXT_KEYS.)
 
+  // v117: Inbox layer slice (Phase B PR inbox-1).
+  // Initialize empty inbox tracking arrays for users upgrading from v116.
+  // Idempotent — existing arrays preserved.
+  if (!Array.isArray(state.dismissedInboxItems)) {
+    state.dismissedInboxItems = []
+  }
+  if (!Array.isArray(state.snoozedInboxItems)) {
+    state.snoozedInboxItems = []
+  }
+
   return state as unknown as PlotState
 }

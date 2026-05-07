@@ -31,6 +31,7 @@ import { createWikiCategoriesSlice } from "./slices/wiki-categories"
 import { createReferencesSlice } from "./slices/references"
 import { createGlobalBookmarksSlice } from "./slices/global-bookmarks"
 import { createCommentsSlice } from "./slices/comments"
+import { createInboxSlice } from "./slices/inbox"
 import { DEFAULT_AUTOPILOT_RULES } from "../autopilot/defaults"
 import { migrate } from "./migrate"
 import type { PlotState } from "./types"
@@ -99,6 +100,8 @@ export const usePlotStore = create<PlotState>()(
         navigationHistory: [] as string[],
         navigationIndex: -1,
         todoTasks: [],
+        dismissedInboxItems: [] as import("./slices/inbox").InboxDismissed[],
+        snoozedInboxItems: [] as import("./slices/inbox").InboxSnoozed[],
 
         // ── Slices ──
         ...createNotesSlice(set, get, appendEvent),
@@ -124,6 +127,7 @@ export const usePlotStore = create<PlotState>()(
         ...createReferencesSlice(set),
         ...createGlobalBookmarksSlice(set),
         ...createCommentsSlice(set),
+        ...createInboxSlice(set),
 
         // ── Todo Index ──
         rebuildTodoIndex: async () => {
@@ -242,7 +246,7 @@ export const usePlotStore = create<PlotState>()(
     },
     {
       name: "plot-store",
-      version: 116,
+      version: 117,
       storage: createIDBStorage<PlotState>(),
       partialize: (state) => {
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
