@@ -38,6 +38,41 @@
 
 ---
 
+## 🚀 2026-05-07 (밤) — Mockup 직접 서빙 + PanelsMenu 통합 (PR #281, 5 commits) ⭐⭐⭐
+
+**큰 발견**: Mockup HTML을 dev server로 직접 서빙해서 작동 분석 가능. 이전 코드만 읽기 vs 작동 보기 = 인터랙션 spec 추출 차이 큼.
+
+### Mockup 직접 서빙 setup
+- `.claude/launch.json` mockup config 추가 (port 3003, npx serve)
+- preview MCP로 Plot v3.html 작동 → 인터랙션 spec 추출
+
+### 추출된 spec
+- 4-panel toggle (actbar/sidebar/list/detail)
+- PanelsMenu 햄버거 patterns (Show all / Hide all preset)
+- Filter popover Linear 2-column
+- `.a-shell` grid CSS var driven
+- 단축키 ⌘⇧\ / ⌘\
+
+### PR #281 누적 (5 commits — actbar + UI cleanup)
+1. Activity bar collapse + edge re-open
+2. Save view 단어 제거 (모든 view)
+3. ⌘⇧A 단축키
+4. (이전 commit 포함)
+5. **PanelsMenu (햄버거) 통합** — 분산 close button 폐기
+
+### 영구 결정
+1. **Mockup-first 한계** (layout mockup, typography Plot)
+2. **Mockup 직접 서빙으로 인터랙션 분석** (다른 Claude 만들기 X)
+3. **PanelsMenu 통합 패턴** (분산 close button 폐기)
+4. **단축키 매핑**: ⌘⇧F sidebar / ⌘⇧A actbar / ⌘B side panel / ⌘\ split
+
+### 다음 우선순위
+- 🔴 PR #281 머지
+- 🟡 Phase 6 본 작업 (Filter popover + .a-shell grid)
+- 🟡 Phase 5.4 Graph
+
+---
+
 ## 🚀 2026-05-07 (저녁/밤) — v3 Phase 4.2 + Phase 5 4 PR + mockup-first 패턴 정착 ⭐⭐
 
 **범위**: v3 visual refresh 대규모. Inbox 시리즈 후 notes-table reskin + Gallery + Studio + Editorial. 사용자와 토론으로 mockup-first 한계 명확화.

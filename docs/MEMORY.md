@@ -28,6 +28,58 @@
 
 ---
 
+## 🚀 2026-05-07 (밤) — Mockup 직접 서빙 + PanelsMenu 통합 (PR #281)
+
+**범위**: 이전 after-work 후 사용자와 큰 토론. mockup HTML을 dev server에 직접 서빙해서 내가 직접 작동시켜 인터랙션 분석. 발견된 spec을 PR #281에 누적 5 commits로 적용.
+
+### 큰 발견 (영구 인사이트)
+
+**Mockup 직접 서빙 = 인터랙션 spec 추출 가능**:
+- 이전엔 mockup JSX/CSS 코드만 읽음 → 인터랙션 spec 누락
+- `npx serve docs/v3-mockup/ -l 3003` + preview MCP로 직접 작동 확인
+- 다른 Claude 인스턴스 만들기 ≠ 빠름 (같은 한계 + 시간 두 배)
+- **나에게 mockup 작동을 보여주는 것이 진짜 답**
+
+### 추출된 mockup 인터랙션 spec
+- **4-panel toggle 시스템**: actbar / sidebar / list / detail 각자 독립
+- **Edge re-open button**: collapsed 시 chevron right
+- **Popover preset**: "Show all" / "Hide all" 통합 menu
+- **단축키**: ⌘⇧\ (actbar) / ⌘\ (sidebar) — Plot ⌘\ 충돌
+- **`.a-shell` grid**: CSS var driven (`--a-actbar-w` 등) + 0.18s ease 트랜지션
+- **Filter popover**: Linear-style 2-column (왼: filter type, 오: checkbox)
+
+### PR #281 누적 (5 commits)
+1. `bb3f36c` Activity bar collapse + edge re-open (분산 패턴, 5에서 통합으로 교체)
+2. `a6e7a9e` Save view 단어 제거 (모든 view 플로피 icon만)
+3. `3224e9d` ⌘⇧A 단축키 (actbar collapse 토글)
+4. `c17c0aa` **PanelsMenu (햄버거) 신규** — mockup spec 정확 적용
+   - 분산 close button (actbar X / sidebar) → 통합 햄버거 menu
+   - Popover with Activity bar / Sidebar / Detail 체크박스 + Show all / Hide all preset
+
+### 영구 결정 (이번 세션)
+1. **Mockup-first 한계 패턴**: layout/cell mockup, typography/badges/spacing은 Plot 우선
+2. **Mockup 직접 서빙으로 인터랙션 분석** (별도 Claude 인스턴스 X)
+3. **PanelsMenu 통합** — 분산 close button 패턴 폐기, 통합 햄버거 menu
+4. **단축키 정합 (Plot ↔ mockup 충돌 시 Plot 키 신규)**:
+   - ⌘⇧F: sidebar (Plot 기존)
+   - ⌘⇧A: activity bar (mockup ⌘⇧\ 충돌 회피)
+   - ⌘B: side panel
+5. **View modes / Display panel 통합 토론 → 보류** (사용자 결정: 그대로 유지)
+
+### 사용자 통찰 (정리)
+- "디자인만 가져오기, 기능은 살리자"
+- "별도 Claude 만들기" 아이디어 → 한계 인정 → mockup 직접 서빙 채택
+- "Save view 단어 빼라" → 모든 view 플로피 icon만
+- "햄버거 menu 패턴 mockup처럼" → PanelsMenu 통합
+
+### 다음 우선순위
+- 🔴 PR #281 머지 (사용자 승인)
+- 🟡 Phase 6 본 작업: Filter popover (Linear 2-column) + .a-shell grid layout
+- 🟡 Phase 5.4 Graph (남은 view mode)
+- 🟡 List/Detail panel collapse (PanelsMenu에 이미 있음, 시각 layout만)
+
+---
+
 ## 🚀 2026-05-07 (저녁/밤) — v3 Phase 4.2 + Phase 5 4 PR + mockup-first 패턴 정착
 
 **범위**: Inbox Layer 머지 후 v3 visual refresh 대규모 진행. notes-table reskin + Gallery + Studio + Editorial. 사용자와 mockup-first 한계 토론, Plot 정체성 보존 패턴 정착.
