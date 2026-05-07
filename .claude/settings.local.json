@@ -180,7 +180,9 @@
       "Bash(echo \"TSC: $?\")",
       "Bash(grep -l \"C:.\\\\\\\\\\\\\\\\Users.\\\\\\\\\\\\\\\\user.\\\\\\\\\\\\\\\\AppData.\\\\\\\\\\\\\\\\Local.\\\\\\\\\\\\\\\\Temp\" docs/PLOT-V3-VISUAL-REFRESH-PRD.md .omc/plans/v3-*.md)",
       "Bash(cp .omc/worklog/latest.md \"C:\\\\Users\\\\user\\\\.claude\\\\.omc-worklog\\\\latest.md\")",
-      "Bash(cp .omc/worklog/latest.md \"C:\\\\Users\\\\user\\\\.claude\\\\.omc-worklog\\\\2026-05-07_0757.md\")"
+      "Bash(cp .omc/worklog/latest.md \"C:\\\\Users\\\\user\\\\.claude\\\\.omc-worklog\\\\2026-05-07_0757.md\")",
+      "Bash(tasklist)",
+      "Bash(rm .git/index.lock && echo \"Lock removed\" 2>&1)"
     ]
   }
 }
