@@ -12,7 +12,6 @@
 import { type SVGProps } from "react"
 import { Hexagon } from "@phosphor-icons/react/dist/ssr/Hexagon"
 import { Cube } from "@phosphor-icons/react/dist/ssr/Cube"
-import { CubeFocus } from "@phosphor-icons/react/dist/ssr/CubeFocus"
 
 type IconProps = SVGProps<SVGSVGElement> & { size?: number }
 
@@ -190,17 +189,40 @@ export function IconBrick({ size = 20, ...rest }: IconProps) {
 }
 
 /**
- * Keystone — phosphor `CubeFocus` (regular weight).
+ * Keystone — 3 isometric cubes arranged in a pyramid (1 top + 2 base).
  *
- * Same isometric Cube as Brick but with corner focus brackets — reads
- * as "the Cube, specialized/anchored." Direct sequential evolution from
- * Brick rather than a different category.
+ * Custom SVG drawn in the same hex-silhouette + Y-internal-edges
+ * isometric language as phosphor `Cube`, just multiplied. Reads as
+ * "Brick (single Cube) developed into a small assembled structure."
+ * Stroke ratio (1.5/24 = 6.25%) matches phosphor regular.
  *
- * Hexagon (raw 2D crystal) → Cube (single 3D unit) → CubeFocus
- * (specialized/anchored Cube — the keystone).
+ * Phosphor doesn't ship a multi-cube isometric icon, so this is bespoke
+ * to keep the depth language continuous with Hexagon → Cube → here.
  */
 export function IconKeystone({ size = 20, ...rest }: IconProps) {
-  return <CubeFocus size={size} weight="regular" {...rest} />
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={1.5}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      {...rest}
+    >
+      {/* Top cube */}
+      <path d="M 12 2 L 16 4.5 L 16 9.5 L 12 12 L 8 9.5 L 8 4.5 Z" />
+      <path d="M 12 7 L 12 2 M 12 7 L 8 9.5 M 12 7 L 16 9.5" />
+      {/* Base-left cube */}
+      <path d="M 7 11 L 11 13.5 L 11 18.5 L 7 21 L 3 18.5 L 3 13.5 Z" />
+      <path d="M 7 16 L 7 11 M 7 16 L 3 18.5 M 7 16 L 11 18.5" />
+      {/* Base-right cube */}
+      <path d="M 17 11 L 21 13.5 L 21 18.5 L 17 21 L 13 18.5 L 13 13.5 Z" />
+      <path d="M 17 16 L 17 11 M 17 16 L 13 18.5 M 17 16 L 21 18.5" />
+    </svg>
+  )
 }
 
 export function IconPin({ size = 14, ...props }: IconProps) {
