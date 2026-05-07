@@ -21,7 +21,7 @@ import {
   IconSun,
   IconMoon,
 } from "@/components/plot-icons"
-import { Sidebar } from "@/components/icons/imperial"
+// Sidebar / CaretRight / PhX removed — PanelsMenu replaces actbar's own panel controls
 import { WikiBook, OntologyWide, Bookshelf } from "@/components/icons/imperial-extras"
 import { useSettingsStore } from "@/lib/settings-store"
 import { SPACE_COLORS } from "@/lib/colors"
@@ -50,6 +50,8 @@ export function ActivityBar() {
 
   const sidebarCollapsed = usePlotStore((s) => s.sidebarCollapsed)
   const setSidebarCollapsed = usePlotStore((s) => s.setSidebarCollapsed)
+  const activitybarCollapsed = usePlotStore((s) => s.activitybarCollapsed)
+  const setActivitybarCollapsed = usePlotStore((s) => s.setActivitybarCollapsed)
 
   const setSelectedNoteId = usePlotStore((s) => s.setSelectedNoteId)
 
@@ -78,32 +80,23 @@ export function ActivityBar() {
     setTheme(theme === "dark" ? "light" : "dark")
   }
 
+  // Collapsed state: render nothing (PanelsMenu hamburger handles re-open)
+  if (activitybarCollapsed) {
+    return null
+  }
+
   return (
     <aside
       className="a-actbar h-full shrink-0"
       style={{ width: "var(--a-actbar-w, 72px)" }}
+      data-actbar="open"
     >
       {/* Brand mark — gradient badge with workspace initial (mockup pattern, plot-v3-a-*.jsx) */}
       <div className="a-actbar__head">
         <div className="a-brand__mark">P</div>
       </div>
 
-      {/* Sidebar open button — only when collapsed (Plot 패턴 보존) */}
-      {sidebarCollapsed && (
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <button
-              onClick={() => setSidebarCollapsed(false)}
-              className="a-ab"
-              aria-label="Open sidebar"
-            >
-              <Sidebar size={20} />
-              <span className="a-ab__label">Sidebar</span>
-            </button>
-          </TooltipTrigger>
-          <TooltipContent side="right" className="text-2xs">Open sidebar</TooltipContent>
-        </Tooltip>
-      )}
+      {/* Sidebar toggle removed — PanelsMenu (hamburger) handles all panel toggles. */}
 
       {/* Tier 1 — primary spaces */}
       {SPACES.map(({ id, label, icon: Icon, shortcut }) => {

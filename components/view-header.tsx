@@ -8,6 +8,7 @@ import { SlidersHorizontal } from "@phosphor-icons/react/dist/ssr/SlidersHorizon
 import { SidebarSimple } from "@phosphor-icons/react/dist/ssr/SidebarSimple"
 import { Plus } from "@phosphor-icons/react/dist/ssr/Plus"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { PanelsMenu } from "@/components/panels-menu"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -176,6 +177,9 @@ export function ViewHeader({
   return (
     <>
       <div className="flex h-(--header-height) shrink-0 items-center gap-2 border-b border-border px-4">
+        {/* Panels toggle menu (mockup spec: hamburger ≡ → Activity bar / Sidebar / Detail toggle popover) */}
+        {pane === 'primary' && <PanelsMenu />}
+
         {/* Title area — in secondary pane, show space dropdown instead */}
         {pane === 'secondary' ? (
           <SecondaryTitleDropdown currentTitle={title} icon={icon} count={count} />
@@ -232,22 +236,22 @@ export function ViewHeader({
               saveViewMode === "update" ? (
                 <button
                   onClick={() => onSaveView?.()}
-                  className="flex h-7 items-center gap-1 rounded-md border-none bg-accent/10 px-2 text-2xs font-medium text-accent transition-colors hover:bg-accent/15"
+                  className="flex h-7 w-7 items-center justify-center rounded-md border-none bg-accent/10 text-accent transition-colors hover:bg-accent/15"
                   title="Save changes to this view"
+                  aria-label="Save changes to this view"
                 >
-                  <FloppyDisk size={12} weight="regular" />
-                  <span>Save</span>
+                  <FloppyDisk size={13} weight="regular" />
                 </button>
               ) : (
                 hydrated ? (
                   <Popover open={saveAsOpen} onOpenChange={(o) => { setSaveAsOpen(o); if (!o) setSaveAsName("") }}>
                     <PopoverTrigger asChild>
                       <button
-                        className="flex h-7 items-center gap-1 rounded-md border-none bg-secondary/60 px-2 text-2xs font-medium text-foreground/80 transition-colors hover:bg-hover-bg hover:text-foreground"
+                        className="flex h-7 w-7 items-center justify-center rounded-md border-none bg-secondary/60 text-foreground/80 transition-colors hover:bg-hover-bg hover:text-foreground"
                         title="Save current filters/sort/grouping as a view"
+                        aria-label="Save view"
                       >
-                        <FloppyDisk size={12} weight="regular" />
-                        <span>Save view</span>
+                        <FloppyDisk size={13} weight="regular" />
                       </button>
                     </PopoverTrigger>
                     <PopoverContent
@@ -270,9 +274,12 @@ export function ViewHeader({
                     </PopoverContent>
                   </Popover>
                 ) : (
-                  <button className="flex h-7 items-center gap-1 rounded-md border-none bg-secondary/60 px-2 text-2xs font-medium text-foreground/80">
-                    <FloppyDisk size={12} weight="regular" />
-                    <span>Save view</span>
+                  <button
+                    className="flex h-7 w-7 items-center justify-center rounded-md border-none bg-secondary/60 text-foreground/80"
+                    title="Save view"
+                    aria-label="Save view"
+                  >
+                    <FloppyDisk size={13} weight="regular" />
                   </button>
                 )
               )

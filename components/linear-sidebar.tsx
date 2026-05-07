@@ -785,13 +785,7 @@ export function LinearSidebar() {
           <MagnifyingGlass size={14} weight="regular" />
         </button>
 
-        <button
-          onClick={() => setSidebarCollapsed(true)}
-          className="flex items-center justify-center h-7 w-7 rounded-md text-sidebar-muted hover:text-sidebar-foreground hover:bg-sidebar-hover transition-colors"
-          title="Close sidebar"
-        >
-          <SidebarSimple size={16} weight="regular" />
-        </button>
+        {/* Close sidebar button removed — PanelsMenu (workspace header hamburger) handles toggle */}
       </div>
 
       {/* Navigation */}

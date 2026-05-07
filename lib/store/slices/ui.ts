@@ -204,6 +204,7 @@ export function createUISlice(set: Set, get: Get, appendEvent: AppendEventFn) {
     // Sidebar
     setSidebarWidth: (width: number) => set({ sidebarWidth: width, sidebarLastWidth: width }),
     setSidebarCollapsed: (collapsed: boolean) => set({ sidebarCollapsed: collapsed }),
+    setActivitybarCollapsed: (collapsed: boolean) => set({ activitybarCollapsed: collapsed }),
     restoreSidebar: () => set((s: any) => ({ sidebarCollapsed: false, sidebarWidth: s.sidebarLastWidth })),
 
     // Merge

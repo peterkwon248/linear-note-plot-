@@ -1,5 +1,47 @@
 # Architectural Decisions
 
+## 2026-05-07 (밤) — Mockup 직접 서빙 + PanelsMenu 통합 (PR #281)
+
+### 핵심 인사이트 (영구)
+
+**Mockup 직접 서빙 = 진짜 인터랙션 분석 도구**:
+- `.claude/launch.json`에 mockup server (port 3003) 추가
+- `npx serve docs/v3-mockup -l 3003` + preview MCP로 직접 작동
+- 코드만 읽기 → 인터랙션 누락. 작동 보기 → spec 정확
+- **다른 Claude 인스턴스 만들기 ≠ 빠름** (같은 한계 + 시간 두 배)
+
+### PanelsMenu 통합 패턴 (영구 결정)
+
+**분산 close button 패턴 폐기**:
+- ActivityBar의 close X button → 제거
+- ActivityBar의 edge re-open chevron → 제거
+- ActivityBar의 "Sidebar" button (sidebar collapsed 시) → 제거
+- Sidebar 자체 close button → 제거
+
+**PanelsMenu (햄버거 ≡) 통합**:
+- Workspace top-left (ViewHeader 좌측)
+- Popover: Activity bar / Sidebar / Detail 체크박스
+- Show all / Hide all preset
+- 단축키 hint 표시 (⌘⇧A / ⌘⇧F / ⌘B)
+- 모든 view 자동 (ViewHeader single source)
+
+### 단축키 매핑 (영구)
+- **⌘⇧F**: sidebar collapse (Plot 기존)
+- **⌘⇧A**: activity bar collapse (mockup ⌘⇧\ 충돌 회피, 신규)
+- **⌘B**: side panel toggle
+- **⌘\**: split view toggle
+
+### Save view 단어 제거 (모든 view)
+- view-header.tsx 3 위치
+- 플로피 disk icon만 (square 7x7px)
+- title + aria-label로 hover hint
+
+### 이번 세션 토론 보류
+- View modes / Display panel 통합 (사용자: 현재 그대로)
+- Editorial → Magazine rename (사용자: 접음)
+
+---
+
 ## 2026-05-07 (저녁) — Mockup-first 한계 영구 정책
 
 ### 사용자 통찰 (영구)

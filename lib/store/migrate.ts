@@ -1794,5 +1794,11 @@ export function migrate(persistedState: unknown): PlotState {
     state.snoozedInboxItems = []
   }
 
+  // v118: Activity bar collapse (mockup spec — `data-actbar="open|collapsed"`).
+  // Initialize false (open) for users upgrading from v117. Idempotent.
+  if (typeof state.activitybarCollapsed !== "boolean") {
+    state.activitybarCollapsed = false
+  }
+
   return state as unknown as PlotState
 }

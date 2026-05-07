@@ -65,6 +65,7 @@ export const usePlotStore = create<PlotState>()(
         sidebarWidth: 220,
         sidebarLastWidth: 220,
         sidebarCollapsed: false,
+        activitybarCollapsed: false,
         mergePickerOpen: false,
         mergePickerSourceId: null,
         linkPickerOpen: false,
@@ -246,7 +247,7 @@ export const usePlotStore = create<PlotState>()(
     },
     {
       name: "plot-store",
-      version: 117,
+      version: 118,
       storage: createIDBStorage<PlotState>(),
       partialize: (state) => {
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
