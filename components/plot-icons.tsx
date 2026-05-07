@@ -190,14 +190,15 @@ export function IconBrick({ size = 20, ...rest }: IconProps) {
 
 /**
  * Block (currently exported as `IconKeystone` until the keystone→block
- * rename lands) — 2 isometric cubes side-by-side, each rendered as 3
- * filled face parallelograms with descending opacity for 3D shading.
+ * rename lands) — 2 isometric cubes side-by-side, drawn in the same
+ * outlined hex-silhouette + Y-internal-edges language as phosphor Cube.
  *
- * Top face: brightest (1.0), front face: 0.55, right face: 0.25 —
- * matches user reference image (filled cubes with face shading).
+ * Outline only (no fill, no face shading) — matches the existing Cube's
+ * drawing style. User wants visual coherence with Brick (Cube), not a
+ * full 3D rendering.
  *
  * Hexagon (raw 2D crystal) → Cube (single 3D unit) → 2 Cubes joined
- * (a Block).
+ * (a Block — paired processed units).
  */
 export function IconKeystone({ size = 20, ...rest }: IconProps) {
   return (
@@ -205,22 +206,19 @@ export function IconKeystone({ size = 20, ...rest }: IconProps) {
       width={size}
       height={size}
       viewBox="0 0 24 24"
-      fill="currentColor"
-      stroke="none"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={1.5}
+      strokeLinecap="round"
+      strokeLinejoin="round"
       {...rest}
     >
-      {/* Cube 1 (left) — top face */}
-      <path d="M 7 6 L 12 9 L 7 12 L 2 9 Z" fillOpacity={1} />
-      {/* Cube 1 — front face */}
-      <path d="M 2 9 L 7 12 L 7 18 L 2 15 Z" fillOpacity={0.55} />
-      {/* Cube 1 — right face */}
-      <path d="M 12 9 L 12 15 L 7 18 L 7 12 Z" fillOpacity={0.25} />
-      {/* Cube 2 (right) — top face */}
-      <path d="M 17 6 L 22 9 L 17 12 L 12 9 Z" fillOpacity={1} />
-      {/* Cube 2 — front face (shares left edge with Cube 1's right face) */}
-      <path d="M 12 9 L 17 12 L 17 18 L 12 15 Z" fillOpacity={0.55} />
-      {/* Cube 2 — right face */}
-      <path d="M 22 9 L 22 15 L 17 18 L 17 12 Z" fillOpacity={0.25} />
+      {/* Left cube — hex outline + Y internal */}
+      <path d="M 7 6 L 12 9 L 12 15 L 7 18 L 2 15 L 2 9 Z" />
+      <path d="M 7 12 L 7 6 M 7 12 L 2 15 M 7 12 L 12 15" />
+      {/* Right cube — shares the (12,9)→(12,15) edge with the left cube */}
+      <path d="M 17 6 L 22 9 L 22 15 L 17 18 L 12 15 L 12 9 Z" />
+      <path d="M 17 12 L 17 6 M 17 12 L 12 15 M 17 12 L 22 15" />
     </svg>
   )
 }
