@@ -5,10 +5,12 @@ import { usePlotStore } from "@/lib/store"
 import { useSettingsStore } from "@/lib/settings-store"
 import { NotesTable } from "@/components/notes-table"
 import { NotesBoard } from "@/components/notes-board"
+import { GalleryViewShell } from "@/components/views/gallery-view-shell"
+import { ViewSwitcher, type ViewSwitcherMode } from "@/components/views/view-switcher"
 import { WorkspaceEditorArea } from "@/components/workspace/workspace-editor-area"
 import { usePane } from "@/components/workspace/pane-context"
 import { useActiveRoute, useActiveFolderId, useActiveTagId, useActiveLabelId, useActiveViewId } from "@/lib/table-route"
-import type { ViewContextKey } from "@/lib/view-engine/types"
+import type { ViewContextKey, ViewMode } from "@/lib/view-engine/types"
 import type { Note } from "@/lib/types"
 
 /* ── Route → View Config map ─────────────────────────── */
@@ -105,6 +107,37 @@ export function NotesTableView() {
     )
   }
 
+  // ── v3 Phase 5.1: Gallery mode toggle ──
+  // ViewSwitcher exposes Table (list) ↔ Gallery; Board lives behind the
+  // Display popover. Hidden on /trash where Gallery has no useful semantics.
+  const isTrashView = tableRoute === "/trash"
+  const switcherValue: ViewSwitcherMode = viewMode === "gallery" ? "gallery" : "list"
+  const handleSwitcherChange = (mode: ViewSwitcherMode) => {
+    setViewState(contextKey, { viewMode: mode as ViewMode })
+  }
+  const headerExtras = !isTrashView ? (
+    <ViewSwitcher value={switcherValue} onChange={handleSwitcherChange} />
+  ) : undefined
+
+  // Gallery shell (own ViewHeader chrome, parallel to NotesTable/Board)
+  if (viewMode === "gallery" && !isTrashView) {
+    return (
+      <div className="flex flex-1 overflow-hidden">
+        <GalleryViewShell
+          context={contextKey}
+          title={config.title}
+          hideCreateButton={config.hideCreateButton}
+          folderId={activeFolderId ?? undefined}
+          tagId={activeTagId ?? undefined}
+          labelId={activeLabelId ?? undefined}
+          headerExtras={headerExtras}
+          onNoteClick={(noteId) => setPreviewNoteId(noteId)}
+          activePreviewId={previewNoteId}
+        />
+      </div>
+    )
+  }
+
   // Table / Board view + optional detail panel
   const ViewComponent = viewMode === "board" ? NotesBoard : NotesTable
 
@@ -120,6 +153,7 @@ export function NotesTableView() {
         labelId={activeLabelId ?? undefined}
         onRowClick={(noteId) => setPreviewNoteId(noteId)}
         activePreviewId={previewNoteId}
+        headerExtras={headerExtras}
       />
     </div>
   )
