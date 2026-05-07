@@ -29,6 +29,22 @@
 - main으로 squash merge
 - before-work 다음 세션부터: store version v116, app routes /stone /brick /keystone
 
+### 🟡 1. Brand mark fix + Status icons (Phase A 머지 후 follow-up PR)
+
+**Brand mark** (작은 PR, 즉시):
+- PR 3.4의 네트워크 SVG는 사용자 평가 "별로" — mockup 패턴 (`<div className="a-brand__mark">P</div>`) 복귀
+- 일단 하드코드 `"P"` (workspace name 설정 필드는 추후 별도)
+- `components/activity-bar.tsx` line 88-112 교체
+
+**Status icons** (디자인 + 코드, 시안 보고 조정):
+- stone/brick/keystone 메타포 SVG로 교체:
+  - stone = 돌멩이 윤곽 (5-6각형 불규칙)
+  - brick = 둥근 모서리 직사각형 + mortar line
+  - keystone = 사다리꼴 (wider top, 아치 위 wedge)
+- 1.5px stroke / currentColor / 14px default — 디자인 토큰 정합
+- 색은 Q3 LOCKED 그대로
+- `components/status-icon.tsx` `StatusShapeIcon` 함수 + `components/icons/imperial-extras.tsx` 새 icon
+
 ### 🟡 1. Phase B: Inbox layer 구현 ⚠️ **미확정 (DRAFT)**
 
 `.omc/plans/inbox-layer.md` = **Draft 상태**. "Inbox 단어를 알림함으로 부여 + 기능 구현"은 사용자 합의 미완료 (2026-05-07 확인). Phase A 완료 후 사용자 추가 결정 필요.

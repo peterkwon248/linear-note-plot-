@@ -3,25 +3,37 @@
 > 우선순위 기반 작업 목록. NEXT-ACTION.md는 즉시 액션, 이 파일은 전체 우선순위 큰그림.
 > 완료 항목은 즉시 삭제 또는 "완료" 섹션으로 이동.
 
-**마지막 갱신**: 2026-05-08 (새벽)
+**마지막 갱신**: 2026-05-07 (Phase A 작업 후)
 
 ---
 
 ## 🔴 P0 — 즉시 (다음 세션)
 
-### 0. Phase A: NoteStatus rename (atomic 단일 PR)
-- `.omc/plans/note-status-rename.md` 정독
-- inbox/capture/permanent → stone/brick/keystone (53 files / 274 occ)
-- IDB v116 migration + route redirect
-- executor agent 위임 권장 (단순 rename = 자동)
+### 0. PR #269 머지 (Phase A NoteStatus rename)
+- 사용자가 직접 squash merge — https://github.com/peterkwon248/linear-note-plot-/pull/269
+- 머지 후 IDB v115→v116 자동 migration (idempotent) — 첫 실행 시 1회
 
-### 1. Phase B: Inbox layer (4-5 PR, Phase A 완료 후)
-- `.omc/plans/inbox-layer.md` 정독
-- 단일 통합 Inbox = home 안 카드 + `/inbox` full-page
-- 자동 entity별 필터 + dismiss/snooze
+### 1. Brand mark fix (작은 follow-up PR)
+- PR 3.4의 네트워크 SVG → mockup 패턴 (`<div className="a-brand__mark">P</div>`) 복귀
+- 일단 하드코드 `"P"` (workspace name 설정 필드는 별도 작업)
+- `components/activity-bar.tsx` line 88-112 교체
+- ~3 files / 작은 diff
 
-### 2. Phase 4 재개 (Phase A/B 완료 후)
-- PR 4.2 notes-table.tsx reskin (새 명칭 사용)
+### 2. Status icons stone/brick/keystone metaphor 적용
+- 현재 `StatusShapeIcon` = 일반 phosphor (CircleDashed/CircleHalf/CheckCircle)
+- 새 컨셉: 돌멩이 윤곽 (불규칙 다각형) / 둥근 직사각형 + mortar line / 사다리꼴 (wider top, 키스톤)
+- 색은 그대로 (Q3 LOCKED — `--status-stone/brick/keystone`)
+- `components/status-icon.tsx` + `components/icons/imperial-extras.tsx`
+- 시안 보고 조정 — 작업 시 design mockup HTML 또는 Preview에서 확인
+
+### 3. Phase 4 재개
+- PR 4.2 notes-table.tsx reskin (stone/brick/keystone 새 명칭 사용)
+- PR 4.3 other list views
+
+### 4. Phase B (Inbox 알림함) — ⏸️ DRAFT 미확정
+- `.omc/plans/inbox-layer.md` = Draft. 사용자 결정 필요
+- "Inbox 단어를 알림함 의미로 부여 + 기능 구현" 미확정
+- 나중에 새 layer로 추가 가능 (Phase A에서 `/inbox` redirect 제거 후 신규 page 생성 필요)
 
 ---
 
