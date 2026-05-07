@@ -28,6 +28,56 @@
 
 ---
 
+## 🚀 2026-05-07 (밤 늦게) — Plot v3 Phase 3 완료 (4 PR — Activity Bar / Sidebar Chrome reskin)
+
+**범위**: 새 worktree `v3-phase-3-plan` 생성 + Phase 3 분해 plan + 4 PR 완료. Activity Bar (72px) + Sidebar (`.a-sb-*` 패턴) + Brand mark (Plot 로고 SVG) v3 mockup 적용.
+
+### 머지된 PRs
+- **98f9277** PR 3.1 — CSS 통합. `.a-actbar` / `.a-sidebar` / `.a-sb-*` (link / section / head / hint / search / scroll / foot / link__count / link__dot) / `.a-icb` / `.a-kbd` / `.a-detail` / `.a-shell` 통합. `--sidebar-fg` alias + shell vars 추가. **시각 변경 0**. +729 LOC.
+- **5ac22ef** PR 3.2 — activity-bar.tsx reskin. width 44→72px, label permanent, brand mark, active 표시 변경. **Plot 6-space 색 보존** (mockup 단일 cyan → SPACE_COLORS 6색 inline override).
+- **8155530** PR 3.3 — linear-sidebar.tsx reskin. NavLink + Section + 11 inline button 일괄 (`.a-sb-link[data-active]` + `.a-sb-section + head + hint`). +43/-61 (코드 18줄 감소!).
+- **3761e42** PR 3.4 — brand mark을 Plot 로고 SVG 교체 (네트워크 그래프 6 nodes + 10 edges + 강조 center node = "central knowledge node" 메타포 — Zettelkasten × Palantir).
+
+### 큰 결정 (영구)
+
+**PR 3.4 scope 변경**:
+- 원래 `.a-shell` shell layout grid → ResizablePanel + view-split + side panel과 충돌
+- **결정**: brand mark SVG 교체로 전환. Shell grid는 Phase 6 (filter popover + workspace chrome)에서.
+
+**Plot 6-space 색 보존 (activity bar)**:
+- v3 mockup 단일 cyan → SPACE_COLORS 6색 inline override (color-mix bg + color + boxShadow)
+
+**Sidebar 단일 cyan (visual confirm 후 결정)**:
+- v3 `.a-sb-link[data-active] svg { color: var(--space-notes); }` 단일 cyan
+- visual confirm 후 회귀로 판단되면 fix PR
+
+### 외부 도구 평가 (영구 결정)
+- **Front-End-Design-Checklist** (passive 5.2k): ❌ 적용 X. 4 design skills과 중복
+
+### 이번 세션 기술 학습
+- **새 worktree 생성**: `git worktree add ../<name> -b claude/<branch> origin/main` + EnterWorktree (path 인자)
+- **Preview tool cwd cache**: EnterWorktree 후 preview_start cwd가 이전 worktree로 cache. workaround 한계 → 사용자 manual 권장
+- **CSS 클래스 통합 패턴**: v3 mockup CSS를 globals.css 끝에 그대로 이식 + 부족 token alias만 추가. **시각 변경 0** PR로 다음 PR 안전성 확보
+- **className replace_all**: 동일 substring 일괄 변경. 11 inline button 중 5개 정적 즉시 처리
+- **Edit minimal diff 효과**: PR 3.3 +43/-61 (코드 18줄 감소). v3 패턴이 Tailwind utility 인라인보다 짧음
+
+### 다음 우선순위
+- 🔴 **Visual confirm** (사용자 manual `npm run dev`)
+- 🟡 OK면: Phase 4 (Table reskin) 또는 Phase 5 (View Switcher) / Phase 6 (Filter + Shell grid)
+- ⚠️ 회귀 시: fix PR (sidebar svg 색 6-space 별 등)
+
+### Plan 문서 보존
+- `.omc/plans/v3-phase-3-decompose.md` (이번 세션)
+
+### Phase 진행 상황
+- ✅ Phase 0: cleanup (v112)
+- ✅ Phase 1: token foundation
+- ⏸️ Phase 2: Imperial icon kit DEFER
+- ✅ **Phase 3: Activity Bar / Sidebar Chrome** (이번)
+- ⏳ Phase 4-7
+
+---
+
 ## 🚀 2026-05-07 (밤) — Group C PR-D 5/5 완성 + 4 design skills install
 
 **범위**: PR 3 Stickers (v113) + PR 4 References (v114) + PR 5 Files (v115) + skills install. Group C PR-D 시리즈 종료.

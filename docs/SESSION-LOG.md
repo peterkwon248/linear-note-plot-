@@ -5,6 +5,58 @@
 
 ---
 
+## 2026-05-07 (밤 늦게) — 집
+
+### 완료
+- **새 worktree** `v3-phase-3-plan` 생성 (origin/main 41aab17 기반)
+- **Plot v3 Phase 3 4 PR 모두 완료** (Activity Bar / Sidebar Chrome reskin)
+  - **98f9277** PR 3.1: CSS 통합 (`.a-actbar` / `.a-sidebar` / `.a-sb-*` / `.a-icb` / `.a-kbd` / `.a-detail` 모두 globals.css에 통합. 시각 변경 0). +729 LOC.
+  - **5ac22ef** PR 3.2: activity-bar.tsx reskin — width 44→72px / label permanent / brand mark / per-space color inline override (Plot 6색 보존)
+  - **8155530** PR 3.3: linear-sidebar.tsx reskin — NavLink + Section + 11 inline button 일괄 (`.a-sb-link[data-active]` + `.a-sb-section + head + hint`). +43/-61 (코드 18줄 감소!)
+  - **3761e42** PR 3.4: brand mark을 Plot 로고 SVG 교체 (네트워크 그래프 6 nodes + 10 edges + 강조 center node = "central knowledge node" 메타포)
+- **Phase 3 분해 plan** `.omc/plans/v3-phase-3-decompose.md` 작성
+- **외부 도구 평가** Front-End-Design-Checklist (적용 X — design-quality-gate / 4 design skills과 중복)
+
+### 브레인스토밍 & 큰 결정 (영구)
+
+#### PR 3.4 scope 변경 결정 (영구)
+- 원래 plan = `.a-shell` shell layout grid 적용
+- 그러나 ResizablePanel + custom resize drag + view-split + dynamic side panel과 충돌
+- 큰 마이그레이션 = 작업 원칙 #2 (최소 diff) 위배 + 회귀 위험 (split view 등)
+- **결정**: PR 3.4 = brand mark SVG 교체로 전환 (Phase 3 마무리 + 즉시 visual gain)
+- Shell grid는 **Phase 6**에서 filter popover + workspace chrome + detail panel과 함께 도입
+
+#### Plot 6-space 색 보존 (activity bar)
+- v3 mockup `.a-ab--space[data-active]`는 단일 `--space-notes` (cyan)
+- Plot SPACE_COLORS 6색 (home indigo / notes cyan / wiki violet / calendar pink / ontology emerald / library amber)
+- **결정**: activity-bar.tsx inline style로 6색 보존 (color-mix bg + color + boxShadow inset)
+
+#### Sidebar는 단일 cyan (활성 svg 색) 임시
+- v3 `.a-sb-link[data-active] svg { color: var(--space-notes); }` 단일 cyan
+- Plot 기존: `text-sidebar-active-text` (varied)
+- visual confirm 후 회귀로 판단되면 fix PR 작성 (사이드바 svg 색 6-space 별 inline override)
+
+### 다음 (NEXT-ACTION.md 참조)
+- 🔴 **Visual confirm** (사용자 manual `npm run dev`) — Phase 3 큰 시각 변화 검증
+- 🟡 OK면: **Phase 4** (Table Mode Reskin — Notes / Tags / Labels list) 또는 Phase 5 / Phase 6
+- ⚠️ 회귀 발견 시: fix PR (사이드바 svg 색 6-space 별 등)
+
+### Watch Out
+- **Preview tool cwd cache**: 새 worktree에서 EnterWorktree + preview_start 시 cwd가 이전 worktree로 cache. workaround: ExitWorktree(keep) → EnterWorktree → preview_start. 또는 manual.
+- **Sidebar svg 색**: v3 mockup CSS가 단일 cyan. Plot 기존 sidebar-active-text (varied)에서 cyan로 변경됨 — visual 회귀 가능
+- **Brand mark SVG**: 28x28 brand container 안에 20x20 SVG. 사용자 첨부 디자인을 단순화 (6 nodes / 10 edges). 디테일 부족하면 사용자 동의 후 수정
+
+### 머신
+집 (Windows)
+
+### 누적 commits (이번 세션, 4개 PR)
+1. `98f9277` — feat(v3-phase-3-1): activity bar / sidebar chrome CSS 통합 (시각 변경 0)
+2. `5ac22ef` — feat(v3-phase-3-2): activity-bar.tsx v3 mockup 패턴 적용
+3. `8155530` — feat(v3-phase-3-3): linear-sidebar.tsx v3 mockup 패턴 적용
+4. `3761e42` — feat(v3-phase-3-4): brand mark을 Plot 로고 SVG로 교체 (네트워크 그래프)
+
+---
+
 ## 2026-05-07 (밤) — 집
 
 ### 완료

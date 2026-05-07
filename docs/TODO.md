@@ -3,21 +3,20 @@
 > 우선순위 기반 작업 목록. NEXT-ACTION.md는 즉시 액션, 이 파일은 전체 우선순위 큰그림.
 > 완료 항목은 즉시 삭제 또는 "완료" 섹션으로 이동.
 
-**마지막 갱신**: 2026-05-07 (밤)
+**마지막 갱신**: 2026-05-07 (밤 늦게)
 
 ---
 
 ## 🔴 P0 — 즉시 (다음 세션)
 
-### Plot v3 Phase 3+ 분해 + 첫 PR
-- `docs/PLOT-V3-VISUAL-REFRESH-PRD.md` Phase 3+ 정독
-- 후보 phases 분해 plan (ralplan 또는 plan):
-  - Notion/Linear 하이브리드 에디터 (TipTap 위 새 UX layer)
-  - Type rename PR (Label/Category/Sticker → Type/Pack UI 레이블만)
-  - 5 view modes (Table/Gallery/Studio/Editorial/Graph segmented switcher)
-  - activity-bar reskin (a-actbar 패턴)
-  - Linear-style filter popover (2-column)
-- 첫 PR 작업 시작
+### 0. Visual confirm Phase 3 4 PR (사용자 manual)
+- `cd C:\Users\kwonkyunghun\Desktop\리니어 노트앱 && npm run dev`
+- ActivityBar (72px / brand SVG / 6 spaces label) + Sidebar (a-sb-link / 색 dot / count) 정상 확인
+- dark/light mode 양쪽
+
+### 1. Phase 4 또는 Phase 5 / 6 시작
+- 새 worktree (`git worktree add ../v3-phase-X-XXX -b claude/v3-phase-X-XXX origin/main`) + EnterWorktree
+- 추천 순서: **Phase 4 (Table reskin)** → Phase 5 (View Switcher) → Phase 6 (Filter + Shell grid)
 
 ---
 
@@ -80,9 +79,15 @@
 
 ---
 
-## ✅ 최근 완료 (this session, 2026-05-07 밤)
+## ✅ 최근 완료
 
-### Group C PR-D 시리즈 5/5 완성
+### 2026-05-07 (밤 늦게) — Plot v3 Phase 3 (4 PR)
+- ✅ PR 3.1 (98f9277): CSS 통합 — `.a-actbar` / `.a-sidebar` / `.a-sb-*` / `.a-icb` / `.a-kbd` / `.a-detail` / `.a-shell` (시각 변경 0)
+- ✅ PR 3.2 (5ac22ef): activity-bar.tsx reskin (width 72px / label / brand mark / per-space 6색 inline)
+- ✅ PR 3.3 (8155530): linear-sidebar.tsx reskin (NavLink + Section + 11 inline 일괄)
+- ✅ PR 3.4 (3761e42): brand mark = Plot 로고 SVG (네트워크 그래프 — Zettelkasten × Palantir 정체성 정합)
+
+### 2026-05-07 (밤) — Group C PR-D 시리즈 5/5 완성
 - ✅ PR 1: Tags v110 (#261)
 - ✅ PR 2: Labels v111 (#262)
 - ✅ PR 3: Stickers v113 (a055581)

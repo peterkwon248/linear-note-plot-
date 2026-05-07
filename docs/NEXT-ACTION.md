@@ -3,71 +3,87 @@
 > **다음 세션 즉시 시작할 액션.** 다른 컴퓨터에서 작업 이어받기 위한 source of truth.
 > before-work는 이 파일을 가장 먼저 읽는다.
 
-**마지막 갱신**: 2026-05-07 (밤)
+**마지막 갱신**: 2026-05-07 (밤 늦게)
 **머신**: 집 (Windows, 메인 진행)
-**현재 Phase**: Plot v3 Phase 0/1 ✅, Phase 2 ⏸️ deferred. Group C PR-D 5/5 ✅.
-**Store version**: v115
+**현재 Phase**: Plot v3 Phase 0/1 ✅, Phase 2 ⏸️ DEFER, **Phase 3 ✅ 완료** (4 PR), Phase 4+ ⏳
+**Store version**: v115 (Phase 3은 visual reskin only — store 변경 0)
 
 ---
 
-## 🎯 다음 즉시 액션 (우선순위 순)
+## 🎯 다음 즉시 액션
 
-### 🔴 Option A — Plot v3 Phase 3+ 시작 (추천)
+### 🔴 0. Visual Confirm 먼저 (Phase 3 큰 시각 변화)
 
-**왜**: v3 PRD 흐름 자연. Phase 0/1 완료 + Phase 2 deferred 후 Phase 3+가 다음.
+Phase 3 (4 PR 누적) commit 후 머지됨. **사용자가 직접 dev server 띄워서 visual 확인 필요**:
 
-**첫 스텝**:
-1. `docs/PLOT-V3-VISUAL-REFRESH-PRD.md` Phase 3+ 영역 정독
-2. 후보 phases 식별:
-   - **Notion/Linear 하이브리드 에디터** (TipTap 25+ ext 위에 새 UX layer)
-   - **Type rename PR** (Label/Category/Sticker → Type/Pack UI 레이블만 변경, 코드 그대로)
-   - **5 view modes 신규** (Table/Gallery/Studio/Editorial/Graph segmented switcher)
-   - **activity-bar reskin** (a-actbar 패턴)
-   - **Linear-style filter popover** (2-column popover)
-3. Phase 3는 큰 작업 → ralplan 또는 plan으로 분해 plan 작성 후 진행
-4. 분해 후 첫 PR 작업
+```bash
+cd C:\Users\kwonkyunghun\Desktop\리니어 노트앱
+npm install   # 새 머신이면
+npm run dev
+# → http://localhost:3002/notes
+```
 
-### 🟡 Option B — Wiki template 3-layer
-- Layout Preset + Content Template + Typed Infobox
-- Wiki domain 작업
-- v3 Phase 3+와 독립
+**확인 포인트**:
+1. **Activity Bar** (좌측, 72px): 네트워크 그래프 brand 로고 / 6 spaces label 표시 / per-space active 색 (cyan/violet 등)
+2. **Sidebar**: hover/active 룩 (`.a-sb-link[data-active]`), folder/tag/label 인라인 색 dot, count 정렬, section 헤더 (uppercase + 0.06em letter-spacing)
+3. **Sections**: Folders / Views / Tags / Labels / Stickers / Templates 정상
+4. **dark/light mode** 양쪽
+5. **Sidebar svg 색**: v3 mockup이 단일 cyan으로 통합 — 회귀로 보이면 fix PR 필요
 
-### 🟡 Option C — Smart Book v2
-- AutoSource[5] (folder/category/tag/label/sticker)
-- Book entity 신규 (Plot v3 7번째 space 예정 — rose 팔레트)
+**문제 발견 시**: 새 worktree 만들어 fix PR 작성. 또는 main에서 직접 fix.
+
+**OK면**: 다음 Phase 진행.
+
+### 🟡 1. Phase 4 또는 Phase 5 시작
+
+Visual confirm 후 다음 Phase 결정. PRD 후보:
+
+| Phase | 내용 | 시각 임팩트 | 예상 |
+|------|------|---------|------|
+| **Phase 4** | Table Mode Reskin (Notes / Tags / Labels list — `.a-table` / `.a-row` / `.a-th`) | 중 | 2주, 2-3 PR |
+| **Phase 5** | View Switcher + 4 Modes (Gallery/Studio/Editorial/Graph) | 큼 (가장 큰 변화) | 3-4주, 4-5 PR |
+| **Phase 6** | Filter Popover + Workspace Chrome (+ `.a-shell` grid 도입) | 중 | 1-2주, 2-3 PR |
+
+**Phase 순서 추천**: Phase 4 (자연 흐름) → Phase 5 → Phase 6
+
+**첫 스텝 (Phase 4 시작 시)**:
+1. 새 worktree (`git worktree add ../v3-phase-4-table -b claude/v3-phase-4-table origin/main`) + EnterWorktree
+2. `docs/PLOT-V3-VISUAL-REFRESH-PRD.md` Phase 4 section (line 433-470) 정독
+3. `docs/v3-mockup/plot-v3-a.css`의 `.a-tabs-row` / `.a-table` / `.a-row` / `.a-th` / `.a-tg` / `.a-tag` / `.a-stchip` / `.a-tool` 영역 정독
+4. Phase 4 분해 plan 작성 (`.omc/plans/v3-phase-4-decompose.md`)
+5. PR 4.1 (CSS 통합) 시작
 
 ---
 
 ## 🧠 잊지 말 것 (이번 세션 핵심 결정)
 
-### Plot v3 Phase 2 DEFERRED (영구 결정, 2026-05-07 밤)
-- Imperial icon kit 전면 도입 **보류**
-- phosphor-icons 그대로 유지
-- partial work (activity-bar Imperial / plot-icons IconWiki = WikiBook / view 일부) **revert 안 함, 보존**
-- 근거: 시각 위화감 미미 (둘 다 1.5px stroke Linear-style) + 119 files codemod = 단일 PR 안전성 위배 (작업 원칙 #2 최소 diff)
-- 재개 조건: 정확한 인벤토리 + imperial-extras shim 매핑 coverage 검증 + 단일 책임 PR 분할
-- 기록: `docs/PLOT-V3-VISUAL-REFRESH-PRD.md` 상단 DECISION banner + `.omc/plans/v3-phosphor-inventory.md` ARCHIVED
+### Phase 3 완료 (4 PR 누적, 2026-05-07 밤 늦게)
+- **PR 3.1** (98f9277): CSS 통합 — `.a-actbar` / `.a-sidebar` / `.a-sb-*` / `.a-icb` / `.a-kbd` / `.a-detail` 통합 (시각 변경 0). +729 LOC.
+- **PR 3.2** (5ac22ef): activity-bar.tsx reskin — width 44→72px / label permanent / brand mark / per-space color inline
+- **PR 3.3** (8155530): linear-sidebar.tsx reskin — NavLink + Section + 11 inline button 일괄. +43/-61 (코드 18줄 감소)
+- **PR 3.4** (3761e42): brand mark을 Plot 로고 SVG (네트워크 그래프 6 nodes + edges + 강조 center node)
 
-### Group C PR-D 시리즈 5/5 완성 (이번 세션 핵심 결과물)
-- 5 entity (Tags / Labels / Stickers / References / Files) 모두 view-engine 통합
-- 각 thin fork hook + DisplayPanel + list+grid mode + idempotent migration
-- thin fork 패턴 영구 (Generic 화는 scope 폭발 — MEMORY.md 영구 결정)
+### PR 3.4 scope 변경 결정 (영구)
+- 원래 plan = `.a-shell` shell layout grid
+- ResizablePanel + custom resize drag + view-split + dynamic side panel과 충돌 → **Phase 6에서 grid 도입**
+- PR 3.4 = brand mark SVG 교체로 전환 (Phase 3 마무리 + 즉시 visual gain)
 
-### 디자인 인프라 보강 (이번 세션)
-- 4 design skills install (project-level, `.agents/skills/`)
-  - design-taste-frontend (Senior UI/UX, metric-based)
-  - high-end-visual-design (agency-grade)
-  - redesign-existing-projects (v3 visual refresh와 정합)
-  - minimalist-ui ("Gentle by default" 정합)
-- skills-lock.json (cross-machine sync). 새 머신: `npx skills experimental_install`로 symlink 재생성
+### Plot 6-space 색 보존 (활동바 inline override)
+- v3 mockup `.a-ab--space[data-active]`는 단일 `--space-notes`
+- Plot은 SPACE_COLORS 6색 — activity-bar.tsx에서 inline style로 보존 (color-mix bg + color + boxShadow inset)
 
-### 평가 후 적용 X 결정
-- **onlook** (visual code editor): production app 자동 코드 변경 회귀 위험. greenfield/marketing 사이트에 적합. Plot에는 X
-- **Front-End-Design-Checklist** (passive 40+ items): design-quality-gate + linear-design-mirror + 4 design skills과 중복. handoff 가이드라 1인 dev에 부적합
+### Sidebar는 단일 cyan (회귀 가능)
+- v3 `.a-sb-link[data-active] svg { color: var(--space-notes); }` 단일 cyan
+- visual confirm 후 회귀로 판단되면 fix PR (사이드바 svg 색 6-space 별)
 
-### shadcn-ui 확인
-- ✅ 이미 깊이 적용됨 (components.json "new-york" + components/ui/* 30+ + @radix-ui 28개)
-- v3 PRD에 "shadcn cascade 보존" 정책 명시 (line 28)
+### v3 mockup CSS 위치 (자주 사용)
+- `docs/v3-mockup/plot-v3-a.css` — Direction A (Linear × Obsidian Hybrid) 1018 lines
+- `docs/v3-mockup/plot-v3-app.jsx` / `plot-v3-a-browse.jsx` / `plot-v3-a-notes.jsx` — usage 예시
+
+### Preview tool cwd cache 이슈
+- 새 worktree에서 EnterWorktree + preview_start 시 cwd가 이전 worktree로 cache됨
+- workaround: ExitWorktree(keep) → EnterWorktree → preview_start
+- 아니면 manual `cd <worktree> && npm run dev`
 
 ---
 
@@ -76,33 +92,31 @@
 ### Plot v3 visual refresh
 - ✅ Phase 0: cleanup (v112) — ViewMode "table"→"list", --v3-priority-* namespace
 - ✅ Phase 1: token foundation (v3 tokens, accent #5E6AD2, status desaturated, Source Serif 4, `_legacy/` scaffold)
-- ⏸️ Phase 2: Imperial icons codemod **DEFERRED**
-- ⏳ Phase 3+: PRD 후속 phases (분해 plan 필요)
+- ⏸️ Phase 2: Imperial icons codemod **DEFERRED** (119 files, 시각 위화감 미미)
+- ✅ **Phase 3: Activity Bar / Sidebar Chrome** (4 PR — CSS / activity-bar / sidebar / brand mark logo)
+- ⏳ Phase 4: Table Mode Reskin (Notes / Tags / Labels list)
+- ⏳ Phase 5: View Switcher + 4 Modes (Gallery / Studio / Editorial / Graph)
+- ⏳ Phase 6: Filter Popover + Workspace Chrome (+ `.a-shell` shell grid 도입)
+- ⏳ Phase 7: QA + Polish
 
-### Group C PR-D (view-engine 통합 5/5)
-- ✅ PR 1: Tags v110 (#261)
-- ✅ PR 2: Labels v111 (#262)
-- ✅ PR 3: Stickers v113 (a055581)
-- ✅ PR 4: References v114 (c3700ad)
-- ✅ PR 5: Files v115 (f210fcf)
-
-### Store version 진화 (이번 세션)
-- v112 (이전) → v113 (Stickers) → v114 (References) → v115 (Files)
+### Group C PR-D (이전 세션 완료)
+- ✅ 5/5 entity (Tags v110 / Labels v111 / Stickers v113 / References v114 / Files v115)
 
 ---
 
 ## ⏸️ 보류 / 영구 폐기
 
-- **Imperial icon kit 전면 도입** — Phase 2 DEFERRED (위 참조)
-- **onlook visual editor** — Plot에 부적합
+- **Phase 2 (Imperial icon kit)** — DEFERRED (119 files scope, 시각 위화감 미미)
+- **PR 3.4 shell grid** — Phase 6으로 통합 (ResizablePanel 충돌 회피)
+- **onlook visual editor** — Plot 부적합
 - **Front-End-Design-Checklist** — 중복
 
 ---
 
 ## 🔧 작업 환경
 
-- worktree: `.claude/worktrees/magical-austin-019d72`
-- branch: `claude/magical-austin-019d72`
+- 이번 세션 worktree: `.claude/worktrees/v3-phase-3-plan` (작업 종료 후 삭제 또는 보존)
+- main: 4 commits 누적 (Phase 3) — after-work 후 머지됨
 - dev server: port 3002 (webpack mode, Next.js 16.1.6)
 - node_modules: 정상 install
 - 디자인 skills: project-level (`.agents/skills/`)
