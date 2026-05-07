@@ -8,6 +8,7 @@ import { SlidersHorizontal } from "@phosphor-icons/react/dist/ssr/SlidersHorizon
 import { SidebarSimple } from "@phosphor-icons/react/dist/ssr/SidebarSimple"
 import { Plus } from "@phosphor-icons/react/dist/ssr/Plus"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { PanelsMenu } from "@/components/panels-menu"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -176,6 +177,9 @@ export function ViewHeader({
   return (
     <>
       <div className="flex h-(--header-height) shrink-0 items-center gap-2 border-b border-border px-4">
+        {/* Panels toggle menu (mockup spec: hamburger ≡ → Activity bar / Sidebar / Detail toggle popover) */}
+        {pane === 'primary' && <PanelsMenu />}
+
         {/* Title area — in secondary pane, show space dropdown instead */}
         {pane === 'secondary' ? (
           <SecondaryTitleDropdown currentTitle={title} icon={icon} count={count} />
