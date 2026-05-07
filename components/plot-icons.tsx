@@ -189,14 +189,16 @@ export function IconBrick({ size = 20, ...rest }: IconProps) {
 }
 
 /**
- * Keystone — 3 isometric cube silhouettes (1 top + 2 base), filled solid.
+ * Block (currently exported as `IconKeystone` until the keystone→block
+ * rename PR lands) — 2 isometric cubes side-by-side, sharing their
+ * inner edge.
  *
- * Solid hex silhouettes matching the user's reference image — reads as
- * a small assembled structure of 3 cubes without the visual clutter of
- * internal Y-edges that the outlined version has at 20px.
+ * Outlined hex silhouettes + Y-internal edges in the same language as
+ * phosphor `Cube`. Reads as "Brick (single Cube) joined with another —
+ * a Block."
  *
- * Hexagon (raw 2D crystal) → Cube (single 3D unit) → 3 stacked cubes
- * (assembled structure).
+ * Hexagon (raw 2D crystal) → Cube (single 3D unit) → 2 Cubes joined
+ * (a Block).
  */
 export function IconKeystone({ size = 20, ...rest }: IconProps) {
   return (
@@ -204,16 +206,19 @@ export function IconKeystone({ size = 20, ...rest }: IconProps) {
       width={size}
       height={size}
       viewBox="0 0 24 24"
-      fill="currentColor"
-      stroke="none"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={1.5}
+      strokeLinecap="round"
+      strokeLinejoin="round"
       {...rest}
     >
-      {/* Top cube */}
-      <path d="M 12 2 L 16 4.5 L 16 9.5 L 12 12 L 8 9.5 L 8 4.5 Z" />
-      {/* Base-left cube */}
-      <path d="M 7 11 L 11 13.5 L 11 18.5 L 7 21 L 3 18.5 L 3 13.5 Z" />
-      {/* Base-right cube */}
-      <path d="M 17 11 L 21 13.5 L 21 18.5 L 17 21 L 13 18.5 L 13 13.5 Z" />
+      {/* Left cube */}
+      <path d="M 7 6 L 12 9 L 12 15 L 7 18 L 2 15 L 2 9 Z" />
+      <path d="M 7 12 L 7 6 M 7 12 L 2 15 M 7 12 L 12 15" />
+      {/* Right cube — shares left edge (12,9)→(12,15) with the left cube */}
+      <path d="M 17 6 L 22 9 L 22 15 L 17 18 L 12 15 L 12 9 Z" />
+      <path d="M 17 12 L 17 6 M 17 12 L 12 15 M 17 12 L 22 15" />
     </svg>
   )
 }
