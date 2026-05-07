@@ -3,20 +3,25 @@
 > 우선순위 기반 작업 목록. NEXT-ACTION.md는 즉시 액션, 이 파일은 전체 우선순위 큰그림.
 > 완료 항목은 즉시 삭제 또는 "완료" 섹션으로 이동.
 
-**마지막 갱신**: 2026-05-07 (밤 늦게)
+**마지막 갱신**: 2026-05-08 (새벽)
 
 ---
 
 ## 🔴 P0 — 즉시 (다음 세션)
 
-### 0. Visual confirm Phase 3 4 PR (사용자 manual)
-- `cd C:\Users\kwonkyunghun\Desktop\리니어 노트앱 && npm run dev`
-- ActivityBar (72px / brand SVG / 6 spaces label) + Sidebar (a-sb-link / 색 dot / count) 정상 확인
-- dark/light mode 양쪽
+### 0. Phase A: NoteStatus rename (atomic 단일 PR)
+- `.omc/plans/note-status-rename.md` 정독
+- inbox/capture/permanent → stone/brick/keystone (53 files / 274 occ)
+- IDB v116 migration + route redirect
+- executor agent 위임 권장 (단순 rename = 자동)
 
-### 1. Phase 4 또는 Phase 5 / 6 시작
-- 새 worktree (`git worktree add ../v3-phase-X-XXX -b claude/v3-phase-X-XXX origin/main`) + EnterWorktree
-- 추천 순서: **Phase 4 (Table reskin)** → Phase 5 (View Switcher) → Phase 6 (Filter + Shell grid)
+### 1. Phase B: Inbox layer (4-5 PR, Phase A 완료 후)
+- `.omc/plans/inbox-layer.md` 정독
+- 단일 통합 Inbox = home 안 카드 + `/inbox` full-page
+- 자동 entity별 필터 + dismiss/snooze
+
+### 2. Phase 4 재개 (Phase A/B 완료 후)
+- PR 4.2 notes-table.tsx reskin (새 명칭 사용)
 
 ---
 
