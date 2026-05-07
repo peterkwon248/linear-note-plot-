@@ -190,15 +190,15 @@ export function IconBrick({ size = 20, ...rest }: IconProps) {
 
 /**
  * Block (currently exported as `IconKeystone` until the keystone→block
- * rename lands) — 2 isometric cubes side-by-side, drawn in the same
- * outlined hex-silhouette + Y-internal-edges language as phosphor Cube.
+ * rename lands) — a single 1×2 isometric block (NOT two separate cube
+ * silhouettes drawn next to each other).
  *
- * Outline only (no fill, no face shading) — matches the existing Cube's
- * drawing style. User wants visual coherence with Brick (Cube), not a
- * full 3D rendering.
+ * Drawn as one combined silhouette + the visible internal edges where
+ * faces meet. Matches the user's reference image — same outlined
+ * 1.5px-stroke language as phosphor Cube and Hexagon.
  *
- * Hexagon (raw 2D crystal) → Cube (single 3D unit) → 2 Cubes joined
- * (a Block — paired processed units).
+ * Hexagon (raw 2D crystal) → Cube (single 3D unit) → Block (two cubes
+ * joined into one assembled unit).
  */
 export function IconKeystone({ size = 20, ...rest }: IconProps) {
   return (
@@ -213,12 +213,15 @@ export function IconKeystone({ size = 20, ...rest }: IconProps) {
       strokeLinejoin="round"
       {...rest}
     >
-      {/* Left cube — hex outline + Y internal */}
-      <path d="M 7 6 L 12 9 L 12 15 L 7 18 L 2 15 L 2 9 Z" />
-      <path d="M 7 12 L 7 6 M 7 12 L 2 15 M 7 12 L 12 15" />
-      {/* Right cube — shares the (12,9)→(12,15) edge with the left cube */}
-      <path d="M 17 6 L 22 9 L 22 15 L 17 18 L 12 15 L 12 9 Z" />
-      <path d="M 17 12 L 17 6 M 17 12 L 12 15 M 17 12 L 22 15" />
+      {/* Outer silhouette of the 1×2 block (6 vertices) */}
+      <path d="M 9 8 L 16 12 L 16 16 L 12.5 18 L 5.5 14 L 5.5 10 Z" />
+      {/* Top face back edge — runs through the back-top corner cluster */}
+      <path d="M 5.5 10 L 9 12 L 12.5 14 L 16 12" />
+      {/* Cube-1 front-left vertical edge + front-bottom edges of the block */}
+      <path d="M 9 8 L 9 12 L 12.5 14 L 16 16" />
+      {/* Top seam diagonal + front seam vertical + cube-2 right-back vertical
+          (all collinear after isometric projection — single straight path) */}
+      <path d="M 9 12 L 12.5 10 L 12.5 18" />
     </svg>
   )
 }
