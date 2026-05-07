@@ -56,7 +56,6 @@ import { useBacklinksIndex } from "@/lib/search/use-backlinks-index"
 import { getSnoozeTime, type SnoozePreset } from "@/lib/queries/notes"
 import { useNotesView } from "@/lib/view-engine/use-notes-view"
 import type { ViewContextKey, ViewMode, SortField, SortDirection, GroupBy, FilterRule, NoteGroup } from "@/lib/view-engine/types"
-import { StatusDropdown, StatusBadge } from "@/components/note-fields"
 import { format } from "date-fns"
 import { shortRelative } from "@/lib/format-utils"
 import type { Note, NoteStatus, Folder, NoteSource, Tag, Label, NoteTemplate, Attachment, Reference } from "@/lib/types"
@@ -172,7 +171,7 @@ function TH({
 }) {
   if (!col) {
     return (
-      <span className={`inline-flex items-center text-note font-medium text-foreground/80 ${className}`}>
+      <span className={`a-th__cell inline-flex items-center ${className}`}>
         {label}
       </span>
     )
@@ -180,7 +179,7 @@ function TH({
   const active = sortCol === col
   return (
     <button
-      className={`group/th inline-flex items-center gap-1 text-note font-medium text-foreground/80 transition-colors hover:text-foreground ${className}`}
+      className={`a-th__cell group/th inline-flex items-center gap-1 transition-colors hover:text-foreground ${className}`}
       onClick={() => onSort(col)}
     >
       {label}
@@ -853,10 +852,12 @@ export function NotesTable({
     getScrollElement: () => scrollContainerRef.current,
     estimateSize: (i) => {
       const t = virtualItems[i].type
-      if (t === "header") return 36
-      if (t === "subheader") return 32
+      // .a-tg group divider: 16+22+6 = 44 (padding-top 16 + content + padding-bottom 6)
+      if (t === "header") return 44
+      if (t === "subheader") return 36
       if (isCompact) return 32
-      return 40
+      // .a-row height = 38px (v3)
+      return 38
     },
     overscan: 5,
   })
@@ -1032,24 +1033,20 @@ export function NotesTable({
       >
         {/* Trash sub-filter tabs */}
         {isTrashView && (
-          <div className="flex shrink-0 items-center gap-0 border-b border-border px-5 pt-1 pb-0">
-            {TRASH_TABS.map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => setTrashFilter(tab.id)}
-                className={`relative px-3 py-2 text-ui font-medium transition-colors ${
-                  trashFilter === tab.id
-                    ? "text-foreground"
-                    : "text-muted-foreground hover:text-foreground"
-                }`}
-              >
-                {tab.label}
-                <span className="ml-1.5 rounded-sm bg-foreground/15 px-1.5 py-0.5 text-2xs font-medium tabular-nums text-foreground">{trashTabCounts[tab.id]}</span>
-                {trashFilter === tab.id && (
-                  <span className="absolute inset-x-0 bottom-0 h-[2px] rounded-full bg-accent" />
-                )}
-              </button>
-            ))}
+          <div className="a-tabs-row">
+            <div className="a-tabs">
+              {TRASH_TABS.map((tab) => (
+                <button
+                  key={tab.id}
+                  onClick={() => setTrashFilter(tab.id)}
+                  className="a-tab"
+                  data-active={trashFilter === tab.id ? "true" : undefined}
+                >
+                  <span>{tab.label}</span>
+                  <span className="a-tab__count tabular-nums">{trashTabCounts[tab.id]}</span>
+                </button>
+              ))}
+            </div>
           </div>
         )}
 
@@ -1168,11 +1165,13 @@ export function NotesTable({
                   }
                 }}
               >
-                {/* Column headers (table mode) */}
+                {/* Column headers (table mode) — v3 chrome via .a-th__cell labels (in TH component);
+                    keep dynamic gridTemplate (Plot has configurable columns vs v3 mockup's fixed 6) */}
                 {effectiveVisibleCols.length > 0 && (
                 <div
+                  data-header-row
                   style={{ display: "grid", gridTemplateColumns: gridTemplate }}
-                  className="sticky top-0 z-10 items-center border-b border-border-subtle bg-background px-5 py-2.5"
+                  className="a-th"
                 >
                   <div className="flex items-center justify-center">
                     <div
@@ -1275,7 +1274,7 @@ export function NotesTable({
                             onPointerDown={(e) => handleGroupPointerDown(e, item.groupKey)}
                             onPointerMove={handleGroupPointerMove}
                             onPointerUp={handleGroupPointerUp}
-                            className={`flex items-center gap-2.5 px-5 py-2 mt-4 mb-0.5 select-none transition-colors ${
+                            className={`a-tg select-none transition-colors ${
                               reorderSource ? "cursor-grabbing" : "cursor-pointer"
                             } ${
                               reorderTarget === item.groupKey ? "bg-accent/10 border-l-2 border-l-accent" : "hover:bg-hover-bg"
@@ -1286,12 +1285,13 @@ export function NotesTable({
                               if (!reorderMoved.current) toggleGroupCollapse(item.groupKey)
                             }}
                           >
-                            <CaretDown className={`text-muted-foreground transition-transform ${collapsedGroups.has(item.groupKey) ? "-rotate-90" : ""}`} size={12} weight="regular" />
+                            <CaretDown className={`transition-transform ${collapsedGroups.has(item.groupKey) ? "-rotate-90" : ""}`} size={11} weight="regular" />
                             <GroupHeaderIcon groupBy={item.groupBy} groupKey={item.groupKey} label={item.label} folders={folders} labels={labels} />
-                            <span className="text-note font-semibold text-foreground">
+                            <span className="a-tg__label">
                               {resolveGroupLabel(item.groupBy, item.groupKey, item.label, folders, labels)}
                             </span>
-                            <span className="text-2xs text-muted-foreground tabular-nums">{item.count}</span>
+                            <span className="a-tg__count tabular-nums">{item.count}</span>
+                            <div className="a-tg__line" />
                           </div>
                           ) : (
                           <div
@@ -1324,23 +1324,25 @@ export function NotesTable({
                             onPointerDown={(e) => handleSubGroupPointerDown(e, item.groupKey)}
                             onPointerMove={handleSubGroupPointerMove}
                             onPointerUp={handleSubGroupPointerUp}
-                            className={`flex items-center gap-2 pl-10 pr-5 py-1.5 select-none transition-colors ${
+                            className={`a-tg select-none transition-colors ${
                               subReorderSource ? "cursor-grabbing" : "cursor-pointer"
                             } ${
                               subReorderTarget === item.groupKey ? "bg-accent/10 border-l-2 border-l-accent" : "hover:bg-hover-bg"
                             } ${
                               subReorderSource === item.groupKey ? "opacity-50 bg-secondary/30" : ""
                             }`}
+                            style={{ paddingLeft: 40 }}
                             onClick={() => {
                               if (!subReorderMoved.current) toggleGroupCollapse(item.groupKey)
                             }}
                           >
-                            <CaretDown className={`text-muted-foreground transition-transform ${collapsedGroups.has(item.groupKey) ? "-rotate-90" : ""}`} size={10} weight="regular" />
+                            <CaretDown className={`transition-transform ${collapsedGroups.has(item.groupKey) ? "-rotate-90" : ""}`} size={10} weight="regular" />
                             <GroupHeaderIcon groupBy={item.groupBy} groupKey={item.groupKey.split("::")[1] ?? item.groupKey} label={item.label} folders={folders} labels={labels} />
-                            <span className="text-2xs font-medium text-foreground">
+                            <span className="a-tg__label" style={{ fontSize: 10.5 }}>
                               {resolveGroupLabel(item.groupBy, item.groupKey.split("::")[1] ?? item.groupKey, item.label, folders, labels)}
                             </span>
-                            <span className="text-2xs text-muted-foreground tabular-nums">{item.count}</span>
+                            <span className="a-tg__count tabular-nums">{item.count}</span>
+                            <div className="a-tg__line" />
                           </div>
                         ) : (
                           <div style={item.depth ? { paddingLeft: `${item.depth * 24}px` } : undefined}>
@@ -1641,15 +1643,10 @@ function NoteRowInner({
           data-note-row
           draggable
           onDragStart={(e) => setNoteDragData(e, note.id)}
-          style={{ display: "grid", gridTemplateColumns: gridTemplate }}
-          className={`group items-center transition-colors cursor-pointer ${
-            isCompact ? "px-3 py-1.5" : "px-5 py-2"
-          } ${
-            isSelected
-              ? "bg-accent/5"
-              : isActive
-                ? "bg-accent/8 border-l-2 border-l-accent"
-                : "hover:bg-hover-bg"
+          style={{ display: "grid", gridTemplateColumns: gridTemplate, paddingLeft: isCompact ? 12 : 20, paddingRight: isCompact ? 12 : 20 }}
+          data-active={isActive ? "true" : undefined}
+          className={`a-row group items-center cursor-pointer ${
+            isSelected ? "bg-accent/5" : ""
           }`}
           onClick={onClick ?? onOpen}
           onDoubleClick={onDoubleClick}
@@ -1679,11 +1676,15 @@ function NoteRowInner({
         </div>
       </div>
 
-      {/* Name */}
-      <div className="flex flex-col min-w-0 pr-4">
-        <div className="flex items-center gap-2">
-          {groupBy !== "status" && <StatusShapeIcon status={note.status} size={14} />}
-          <span className={`truncate text-foreground ${isCompact ? "text-note" : "text-ui"}`}>
+      {/* Name — v3: .a-row__lead (icon + title) */}
+      <div className="flex flex-col min-w-0">
+        <div className="a-row__lead">
+          {groupBy !== "status" && (
+            <span className="a-row__icon" data-tone={note.status}>
+              <StatusShapeIcon status={note.status} size={13} />
+            </span>
+          )}
+          <span className="a-row__title">
             {note.title || "Untitled"}
           </span>
           {(() => {
@@ -1712,10 +1713,13 @@ function NoteRowInner({
         )}
       </div>
 
-      {/* Status — left-aligned to match the column header (Wiki list parity) */}
+      {/* Status — v3 .a-stchip with data-st attribute */}
       {visibleCols.includes("status") && (
         <div className="flex items-center justify-start">
-          <StatusBadge status={note.status} />
+          <span className="a-stchip" data-st={note.status}>
+            <span className="a-stchip__dot" />
+            {note.status === "stone" ? "Stone" : note.status === "brick" ? "Brick" : "Keystone"}
+          </span>
         </div>
       )}
 
@@ -1728,7 +1732,7 @@ function NoteRowInner({
           duplicate-row appearance across folder groups intentional and
           the column compact. */}
       {visibleCols.includes("folder") && (
-        <div className="flex items-center justify-center gap-1.5 px-2 overflow-hidden">
+        <div className="a-row__cell flex items-center justify-center gap-1.5">
           {note.folderIds.length === 0 ? (
             <span className="text-note text-muted-foreground">—</span>
           ) : (() => {
@@ -1785,24 +1789,24 @@ function NoteRowInner({
         </div>
       )}
 
-      {/* Parent */}
+      {/* Parent — v3 .a-row__cell */}
       {visibleCols.includes("parent") && (
-        <div className="flex items-center px-1 overflow-hidden" title={parentTitle || undefined}>
+        <div className="a-row__cell flex items-center" title={parentTitle || undefined}>
           {parentTitle ? (
-            <span className="truncate text-note text-muted-foreground">{parentTitle}</span>
+            <span className="truncate">{parentTitle}</span>
           ) : (
-            <span className="text-note text-muted-foreground/70">{"—"}</span>
+            <span className="opacity-70">{"—"}</span>
           )}
         </div>
       )}
 
-      {/* Children */}
+      {/* Children — v3 .a-row__cell */}
       {visibleCols.includes("children") && (
-        <div className="text-center px-1">
+        <div className="a-row__cell" style={{ textAlign: "center" }}>
           {(childTitles?.length ?? 0) > 0 ? (
             <Tooltip>
               <TooltipTrigger asChild>
-                <span className="tabular-nums text-note text-foreground cursor-help">
+                <span className="tabular-nums cursor-help">
                   {childTitles!.length}
                 </span>
               </TooltipTrigger>
@@ -1815,44 +1819,38 @@ function NoteRowInner({
               </TooltipContent>
             </Tooltip>
           ) : (
-            <span className="tabular-nums text-note text-muted-foreground/70">—</span>
+            <span className="tabular-nums opacity-70">—</span>
           )}
         </div>
       )}
 
-      {/* Links */}
+      {/* Links — v3 .a-row__links (right-aligned, soft-fg, tabular) */}
       {visibleCols.includes("links") && (
-        <div className="text-center px-1">
-          <span className={`tabular-nums text-note ${links === 0 ? "text-muted-foreground" : "text-foreground"}`}>
-            {links}
-          </span>
+        <div className="a-row__cell a-row__links" style={{ textAlign: "center" }}>
+          <span className="tabular-nums">{links}</span>
         </div>
       )}
 
-      {/* Reads */}
+      {/* Reads — v3 .a-row__links style (compact tabular) */}
       {visibleCols.includes("reads") && (
-        <div className="text-center px-1">
-          <span className={`tabular-nums text-note ${note.reads === 0 ? "text-muted-foreground" : "text-foreground"}`}>
-            {note.reads}
-          </span>
+        <div className="a-row__cell a-row__links" style={{ textAlign: "center" }}>
+          <span className="tabular-nums">{note.reads}</span>
         </div>
       )}
 
-      {/* Word Count */}
+      {/* Word Count — v3 .a-row__words */}
       {visibleCols.includes("wordCount") && (
-        <div className="text-right px-1">
-          <span className={`tabular-nums text-note ${wordCount === 0 ? "text-muted-foreground" : "text-foreground"}`}>
-            {wordCount}
-          </span>
+        <div className="a-row__cell a-row__words">
+          <span className="tabular-nums">{wordCount}</span>
         </div>
       )}
 
-      {/* Updated - relative time like Linear */}
+      {/* Updated — v3 .a-row__updated (right-aligned, tabular) */}
       {visibleCols.includes("updatedAt") && (
-        <div className="text-right px-1">
+        <div className="a-row__cell a-row__updated">
           <Tooltip>
             <TooltipTrigger asChild>
-              <span className="tabular-nums text-note text-muted-foreground cursor-default">
+              <span className="tabular-nums cursor-default">
                 {shortRelative(note.updatedAt)}
               </span>
             </TooltipTrigger>
@@ -1863,12 +1861,12 @@ function NoteRowInner({
         </div>
       )}
 
-      {/* Created - absolute date like Linear */}
+      {/* Created — v3 .a-row__updated (right-aligned, tabular) */}
       {visibleCols.includes("createdAt") && (
-        <div className="text-right px-1">
+        <div className="a-row__cell a-row__updated">
           <Tooltip>
             <TooltipTrigger asChild>
-              <span className="tabular-nums text-note text-muted-foreground cursor-default">
+              <span className="tabular-nums cursor-default">
                 {absDate(note.createdAt)}
               </span>
             </TooltipTrigger>
