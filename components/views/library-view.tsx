@@ -15,6 +15,9 @@ import {
   ContextMenuSeparator,
 } from "@/components/ui/context-menu"
 import { ViewHeader } from "@/components/view-header"
+import { useReferencesView } from "@/lib/view-engine/use-references-view"
+import { REFERENCES_VIEW_CONFIG } from "@/lib/view-engine/view-configs"
+import { RefTypeChip, RefFieldCountChip, RefImageChip } from "@/components/property-chips"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -1234,15 +1237,16 @@ function ReferencesView() {
   const [search, setSearch] = useState("")
   const [quickFilter, setQuickFilter] = useState<QuickFilterType>("all")
   const [activeFieldKeys, setActiveFieldKeys] = useState<Set<string>>(new Set())
-  const [sortBy, setSortBy] = useState<SortField>("updatedAt")
-  const [sortDir, setSortDir] = useState<SortDir>("desc")
+  // PR group-c-d-4: sort moved into viewState (persisted via view-engine).
+  // groupBy / groupFieldKey kept local — multi-state with dynamic field key
+  // selector doesn't fit viewState.groupBy union (future PR can lift).
   const [groupBy, setGroupBy] = useState<"none" | "type" | "fieldKey">("none")
   const [groupFieldKey, setGroupFieldKey] = useState<string | null>(null)
   const lastClickedIdRef = useRef<string | null>(null)
 
   const isMultiMode = selectedIds.size > 0
 
-  /* ── Filter/Sort helpers ── */
+  /* ── Filter helpers ── */
 
   const toggleFieldKey = useCallback((key: string) => {
     setActiveFieldKeys((prev) => {
@@ -1250,17 +1254,6 @@ function ReferencesView() {
       if (next.has(key)) next.delete(key)
       else next.add(key)
       return next
-    })
-  }, [])
-
-  const toggleSort = useCallback((field: SortField) => {
-    setSortBy((prev) => {
-      if (prev === field) {
-        setSortDir((d) => (d === "asc" ? "desc" : "asc"))
-      } else {
-        setSortDir(field === "title" ? "asc" : "desc")
-      }
-      return field
     })
   }, [])
 
@@ -1295,7 +1288,8 @@ function ReferencesView() {
     return [...keys].sort()
   }, [activeRefs])
 
-  const referenceList = useMemo(() => {
+  // Stage 1: filter only (no sort) — sort handled by useReferencesView (viewState).
+  const filteredRefs = useMemo(() => {
     let arr = activeRefs
 
     // Quick filter
@@ -1311,7 +1305,7 @@ function ReferencesView() {
       })
     }
 
-    // Search
+    // Search (local — ViewHeader searchValue/onSearchChange).
     if (search.trim()) {
       const q = search.toLowerCase()
       arr = arr.filter(
@@ -1321,21 +1315,31 @@ function ReferencesView() {
       )
     }
 
-    // Sort
-    arr.sort((a, b) => {
-      let cmp = 0
-      if (sortBy === "title") {
-        cmp = (a.title || "").localeCompare(b.title || "")
-      } else if (sortBy === "createdAt") {
-        cmp = new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
-      } else {
-        cmp = new Date(a.updatedAt).getTime() - new Date(b.updatedAt).getTime()
-      }
-      return sortDir === "asc" ? cmp : -cmp
-    })
-
     return arr
-  }, [activeRefs, quickFilter, activeFieldKeys, search, sortBy, sortDir])
+  }, [activeRefs, quickFilter, activeFieldKeys, search])
+
+  // Stage 2: enrich + sort via view-engine (sort persisted in viewState).
+  const {
+    flatRefs: referenceList,
+    viewState,
+    updateViewState,
+  } = useReferencesView(filteredRefs)
+  const isGridMode = viewState.viewMode === "grid"
+  const sortField = viewState.sortFields[0]?.field ?? "updatedAt"
+  const sortDirection = viewState.sortFields[0]?.direction ?? "desc"
+
+  // Sort toggle helper — used by display popover and list-mode column header.
+  const handleSortToggle = useCallback((field: SortField) => {
+    const currentField = viewState.sortFields[0]?.field
+    const currentDir = viewState.sortFields[0]?.direction
+    let nextDir: "asc" | "desc"
+    if (currentField === field) {
+      nextDir = currentDir === "asc" ? "desc" : "asc"
+    } else {
+      nextDir = field === "title" ? "asc" : "desc"
+    }
+    updateViewState({ sortFields: [{ field, direction: nextDir }] })
+  }, [viewState.sortFields, updateViewState])
 
   const groupedReferences = useMemo(() => {
     if (groupBy === "none") return null
@@ -1527,9 +1531,31 @@ function ReferencesView() {
             )}
           </div>
         }
-        showDisplay
+        showDisplay={REFERENCES_VIEW_CONFIG.showDisplay}
         displayContent={
           <div className="p-3 w-[240px]">
+            {/* View Mode (PR group-c-d-4) */}
+            <div className="text-2xs font-medium text-muted-foreground mb-2">View as</div>
+            <div className="flex gap-1 mb-3">
+              {([
+                { mode: "list" as const, label: "List" },
+                { mode: "grid" as const, label: "Grid" },
+              ]).map(({ mode, label }) => (
+                <button
+                  key={mode}
+                  onClick={() => updateViewState({ viewMode: mode })}
+                  className={cn(
+                    "px-2.5 py-1 rounded-md text-2xs font-medium transition-colors capitalize",
+                    viewState.viewMode === mode
+                      ? "bg-accent/10 text-accent"
+                      : "text-muted-foreground hover:bg-hover-bg hover:text-foreground"
+                  )}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+
             {/* Sort */}
             <div className="text-2xs font-medium text-muted-foreground mb-2">Sort by</div>
             <div className="flex flex-wrap gap-1 mb-3">
@@ -1540,17 +1566,17 @@ function ReferencesView() {
               ]).map(({ field, label }) => (
                 <button
                   key={field}
-                  onClick={() => toggleSort(field)}
+                  onClick={() => handleSortToggle(field)}
                   className={cn(
                     "flex items-center gap-1 px-2.5 py-1 rounded-md text-2xs font-medium transition-colors",
-                    sortBy === field
+                    sortField === field
                       ? "bg-accent/10 text-accent"
                       : "text-muted-foreground hover:bg-hover-bg hover:text-foreground"
                   )}
                 >
                   {label}
-                  {sortBy === field && (
-                    sortDir === "asc" ? <CaretUp size={10} /> : <CaretDown size={10} />
+                  {sortField === field && (
+                    sortDirection === "asc" ? <CaretUp size={10} /> : <CaretDown size={10} />
                   )}
                 </button>
               ))}
@@ -1625,6 +1651,52 @@ function ReferencesView() {
           ) : (
             <EmptyReferences onCreate={handleCreate} />
           )
+        ) : isGridMode ? (
+          /* ── Grid Mode (PR group-c-d-4) ── */
+          <div className="grid grid-cols-[repeat(auto-fill,minmax(220px,1fr))] gap-3 p-4">
+            {referenceList.map((ref) => (
+              <div
+                key={ref.id}
+                onClick={() => handleRowClick(ref.id)}
+                className={cn(
+                  "group relative flex flex-col gap-2 rounded-lg border border-border/60 p-3 transition-all cursor-pointer",
+                  selectedIds.has(ref.id)
+                    ? "bg-accent/8 border-accent/40"
+                    : selectedId === ref.id
+                      ? "bg-accent/5 border-accent/30"
+                      : "bg-card hover:bg-hover-bg hover:border-border",
+                )}
+              >
+                {/* Image preview (if any) */}
+                {ref.hasImage && ref.imageUrl && (
+                  <img
+                    src={ref.imageUrl}
+                    alt=""
+                    className="w-full h-24 object-cover rounded shrink-0"
+                  />
+                )}
+
+                {/* Title */}
+                <h3 className="text-ui font-medium text-foreground line-clamp-2 leading-tight">
+                  {ref.title || "Untitled Reference"}
+                </h3>
+
+                {/* Content preview */}
+                {ref.content.trim() && (
+                  <p className="text-2xs text-muted-foreground line-clamp-3">
+                    {ref.content}
+                  </p>
+                )}
+
+                {/* PropertyChip row */}
+                <div className="flex items-center gap-1 mt-auto flex-wrap">
+                  <RefTypeChip type={ref.refType} />
+                  <RefFieldCountChip count={ref.fieldCount} />
+                  {ref.hasImage && <RefImageChip />}
+                </div>
+              </div>
+            ))}
+          </div>
         ) : (
           <>
             {/* Select All Header Row (PR #230 pattern, Notes-aligned) */}
@@ -1648,24 +1720,24 @@ function ReferencesView() {
                 {isPartiallySelected && <Minus size={10} weight="regular" className="text-accent-foreground" />}
               </div>
               <button
-                onClick={() => toggleSort("title")}
+                onClick={() => handleSortToggle("title")}
                 className="flex-1 flex items-center gap-0.5 hover:text-foreground transition-colors text-left"
               >
                 Name
-                {sortBy === "title" && (
-                  sortDir === "asc"
+                {sortField === "title" && (
+                  sortDirection === "asc"
                     ? <CaretUp size={10} weight="bold" className="text-accent" />
                     : <CaretDown size={10} weight="bold" className="text-accent" />
                 )}
               </button>
               <span className="w-16 text-right">Fields</span>
               <button
-                onClick={() => toggleSort("updatedAt")}
+                onClick={() => handleSortToggle("updatedAt")}
                 className="w-20 flex items-center justify-end gap-0.5 hover:text-foreground transition-colors"
               >
                 Updated
-                {sortBy === "updatedAt" && (
-                  sortDir === "asc"
+                {sortField === "updatedAt" && (
+                  sortDirection === "asc"
                     ? <CaretUp size={10} weight="bold" className="text-accent" />
                     : <CaretDown size={10} weight="bold" className="text-accent" />
                 )}

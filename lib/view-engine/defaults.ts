@@ -56,6 +56,11 @@ const CONTEXT_DEFAULTS: Partial<Record<ViewContextKey, Partial<ViewState>>> = {
   // PR group-c-d-3 (Stickers): cross-entity index. Sticker.color is required
   // (drives graph hull). memberCount is cross-entity (notes + wikis + tag/label/category/file/reference).
   "stickers":     { viewMode: "list", ...ctx("name", "asc"), groupBy: "none", visibleColumns: ["title", "memberCount", "color"] },
+
+  // PR group-c-d-4 (References): rich entity (title + content + fields + tags + image).
+  // fieldCount + image presence are domain-specific display properties.
+  // sort default: updatedAt desc (matches existing ReferencesView behavior).
+  "references":   { viewMode: "list", ...ctx("updatedAt"), groupBy: "none", visibleColumns: ["title", "fieldCount", "image"] },
 }
 
 /** Build a ViewState for a specific context, merging defaults */

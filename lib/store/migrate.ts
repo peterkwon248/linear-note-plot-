@@ -1712,5 +1712,19 @@ export function migrate(persistedState: unknown): PlotState {
     }
   }
 
+  // v114: References entity index view-engine integration (PR group-c-d-4).
+  //
+  // Inject viewStateByContext["references"] default if not already present.
+  // Idempotent — existing users who already have the key keep their persisted
+  // viewState. New key only injected for users upgrading from v113.
+  {
+    const vsc = state.viewStateByContext as Record<string, unknown> | undefined
+    if (vsc && !("references" in vsc)) {
+      const defaultState = buildViewStateForContext("references")
+      vsc["references"] = defaultState
+      console.log("[migrate] v113→v114: injected references viewState default")
+    }
+  }
+
   return state as unknown as PlotState
 }

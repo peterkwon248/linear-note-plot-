@@ -596,6 +596,40 @@ export const TAGS_LIST_VIEW_CONFIG: ViewConfig = {
   },
 }
 
+// References entity index view config (PR group-c-d-4).
+// References are rich entities (title + content + infobox fields + tags + image)
+// — first non-Note entity in this series. list+grid both supported.
+// Sort by updatedAt / createdAt / title / fieldCount. groupBy "type" (link vs
+// citation, derived from url field) is supported via the hook's classifier.
+// Note: quickFilter (all/linked/unlinked/links) and field-key filter are kept
+// LOCAL to ReferencesView for now — multi-state UI doesn't fit toggles
+// (boolean record). Future PR can lift them into viewState.filters.
+// Search is local (ViewHeader searchValue/onSearchChange) for the same reason.
+export const REFERENCES_VIEW_CONFIG: ViewConfig = {
+  showFilter: false,
+  showDisplay: true,
+  showDetailPanel: false,
+  filterCategories: [],
+  quickFilters: [],
+  displayConfig: {
+    supportedModes: ["list", "grid"],
+    orderingOptions: [
+      { value: "updatedAt", label: "Updated" },
+      { value: "createdAt", label: "Created" },
+      { value: "title", label: "Name" },
+      { value: "fieldCount", label: "Field count" },
+    ],
+    groupingOptions: [
+      { value: "none", label: "No grouping" },
+    ],
+    toggles: [],
+    properties: [
+      { key: "fieldCount", label: "Field count", icon: SortIcon },
+      { key: "image", label: "Image", icon: ContentIcon },
+    ],
+  },
+}
+
 // Stickers entity index view config (PR group-c-d-3).
 // Stickers are cross-everything bundling markers with required color (drives
 // graph hull). list+grid only. Sort by name (alpha) or memberCount (cross-
@@ -638,4 +672,5 @@ export const VIEW_CONFIGS: Record<string, ViewConfig> = {
   "tags-list": TAGS_LIST_VIEW_CONFIG,
   "labels-list": LABELS_LIST_VIEW_CONFIG,
   stickers: STICKERS_LIST_VIEW_CONFIG,
+  references: REFERENCES_VIEW_CONFIG,
 }

@@ -24,6 +24,7 @@ export type ViewContextKey =
   | "tags-list"      // /library/tags — Tag entity index (PR group-c-d-1)
   | "labels-list"    // /labels — Label entity index (PR group-c-d-2)
   | "stickers"       // /stickers — Sticker entity index (PR group-c-d-3)
+  | "references"     // /library/references — Reference entity index (PR group-c-d-4)
   | `query-${string}` // inline query blocks in editor
 
 /* ── View State ────────────────────────────────────────── */
@@ -48,6 +49,7 @@ export type SortField =
   | "name"        // tags-list / labels-list: alphabetical name sort
   | "noteCount"   // tags-list / labels-list: attached note count
   | "memberCount" // stickers: cross-entity members count (PR group-c-d-3)
+  | "fieldCount"  // references: infobox field count (PR group-c-d-4)
 
 export type SortDirection = "asc" | "desc"
 
@@ -196,13 +198,14 @@ export const VALID_VIEW_CONTEXT_KEYS: ViewContextKey[] = [
   "tags-list",
   "labels-list",
   "stickers",
+  "references",
 ]
 
 export const VALID_SORT_FIELDS: SortField[] = [
   "updatedAt", "createdAt", "priority", "title", "status", "links", "reads", "folder", "label",
   "sub", "tier", "parent",
   // Group C PR-D entity-specific
-  "name", "noteCount", "memberCount",
+  "name", "noteCount", "memberCount", "fieldCount",
 ]
 
 export const VALID_GROUP_BY: GroupBy[] = [
@@ -234,4 +237,6 @@ export const VALID_COLUMNS: string[] = [
   "noteCount", "color",
   // PR group-c-d-3 (Stickers): cross-entity member count display property.
   "memberCount",
+  // PR group-c-d-4 (References): field count + image presence display properties.
+  "fieldCount", "image",
 ]
