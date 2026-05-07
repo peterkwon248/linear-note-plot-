@@ -14,6 +14,8 @@ import { ArrowRight } from "@phosphor-icons/react/dist/ssr/ArrowRight"
 import { FileText } from "@phosphor-icons/react/dist/ssr/FileText"
 import { IconInbox } from "@/components/plot-icons"
 import { useBacklinksIndex } from "@/lib/search/use-backlinks-index"
+import { useInbox, type InboxItem } from "@/lib/hooks/use-inbox"
+import { Bell } from "@phosphor-icons/react/dist/ssr/Bell"
 import type { Note } from "@/lib/types"
 
 /**
@@ -24,11 +26,11 @@ export function HomeView() {
   const openNote = usePlotStore((s) => s.openNote)
   const tags = usePlotStore((s) => s.tags)
   const backlinkCounts = useBacklinksIndex()
+  const inboxItems = useInbox()
 
   // Compute insights
   const insights = useMemo(() => {
     const liveNotes = notes.filter((n: Note) => !n.trashed)
-    const inboxNotes = liveNotes.filter((n: Note) => n.status === "stone")
     const recentlyEdited = [...liveNotes]
       .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
       .slice(0, 5)
@@ -48,7 +50,7 @@ export function HomeView() {
       .sort((a, b) => b.count - a.count)
       .slice(0, 4)
 
-    return { inboxNotes, recentlyEdited, featured, withConnections }
+    return { recentlyEdited, featured, withConnections }
   }, [notes, backlinkCounts])
 
   function jumpToOntologyInsights() {
@@ -107,30 +109,42 @@ export function HomeView() {
           </button>
         )}
 
-        {/* Inbox Preview (if items exist) */}
-        {insights.inboxNotes.length > 0 && (
+        {/* Inbox card — action-based notification queue */}
+        {inboxItems.length > 0 && (
           <section className="mb-6">
             <ContentCard
               title="Inbox"
               icon={IconInbox}
-              iconColor="text-amber-500 dark:text-amber-400"
+              iconColor="text-muted-foreground"
               trailing={
-                <button
-                  onClick={() => setActiveRoute("/stone")}
-                  className="text-2xs text-muted-foreground hover:text-foreground transition-colors"
-                >
-                  View all <span aria-hidden>→</span>
-                </button>
+                <div className="flex items-center gap-2">
+                  <span className="rounded-full bg-muted px-1.5 py-0.5 text-2xs font-medium tabular-nums text-muted-foreground">
+                    {inboxItems.length}
+                  </span>
+                  <button
+                    onClick={() => setActiveRoute("/inbox")}
+                    className="text-2xs text-muted-foreground transition-colors hover:text-foreground"
+                  >
+                    View all <span aria-hidden>→</span>
+                  </button>
+                </div>
               }
             >
-              {insights.inboxNotes.slice(0, 3).map((note) => (
-                <NoteItem
-                  key={note.id}
-                  title={note.title || "Untitled"}
-                  meta={shortRelative(note.updatedAt)}
-                  onClick={() => handleOpenNote(note.id)}
+              {inboxItems.slice(0, 5).map((item) => (
+                <InboxRow
+                  key={`${item.kind}:${item.sourceId}`}
+                  item={item}
+                  onClick={() => handleOpenNote(item.sourceId)}
                 />
               ))}
+              {inboxItems.length > 5 && (
+                <button
+                  onClick={() => setActiveRoute("/inbox")}
+                  className="w-full px-2.5 py-1.5 text-left text-2xs text-muted-foreground/60 transition-colors hover:text-muted-foreground"
+                >
+                  +{inboxItems.length - 5} more
+                </button>
+              )}
             </ContentCard>
           </section>
         )}
@@ -245,6 +259,36 @@ function NoteItem({
       <FileText className="shrink-0 text-muted-foreground" size={14} weight="bold" />
       <span className="min-w-0 flex-1 truncate text-note text-foreground group-hover:text-foreground">{title}</span>
       <span className="shrink-0 text-2xs tabular-nums text-muted-foreground">{meta}</span>
+    </button>
+  )
+}
+
+function InboxRow({ item, onClick }: { item: InboxItem; onClick: () => void }) {
+  const isOverdue = item.action?.startsWith("Overdue")
+  return (
+    <button
+      onClick={onClick}
+      className="group flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-left transition-colors duration-100 hover:bg-hover-bg"
+    >
+      <Bell
+        className="shrink-0 text-muted-foreground/50 transition-colors group-hover:text-muted-foreground/70"
+        size={14}
+        weight="regular"
+      />
+      <span className="min-w-0 flex-1 truncate text-note text-foreground">
+        {item.title}
+      </span>
+      {item.action && (
+        <span
+          className={`shrink-0 text-2xs tabular-nums ${
+            isOverdue
+              ? "text-amber-500 dark:text-amber-400"
+              : "text-muted-foreground"
+          }`}
+        >
+          {item.action}
+        </span>
+      )}
     </button>
   )
 }
