@@ -29,6 +29,7 @@ import { ArrowUpRight } from "@phosphor-icons/react/dist/ssr/ArrowUpRight"
 import { ArrowDownLeft } from "@phosphor-icons/react/dist/ssr/ArrowDownLeft"
 import { Tray } from "@phosphor-icons/react/dist/ssr/Tray"
 import { StatusShapeIcon } from "@/components/status-icon"
+import { StatusBadge } from "@/components/note-fields"
 import { DotsThree } from "@phosphor-icons/react/dist/ssr/DotsThree"
 import { Bell } from "@phosphor-icons/react/dist/ssr/Bell"
 import { Clock as PhClock } from "@phosphor-icons/react/dist/ssr/Clock"
@@ -1718,13 +1719,10 @@ function NoteRowInner({
         )}
       </div>
 
-      {/* Status — v3 .a-stchip with data-st attribute */}
+      {/* Status — Plot StatusBadge (icon + label, Plot 정체성 보존) */}
       {visibleCols.includes("status") && (
         <div className="flex items-center justify-start">
-          <span className="a-stchip" data-st={note.status}>
-            <span className="a-stchip__dot" />
-            {note.status === "stone" ? "Stone" : note.status === "brick" ? "Brick" : "Keystone"}
-          </span>
+          <StatusBadge status={note.status} />
         </div>
       )}
 
