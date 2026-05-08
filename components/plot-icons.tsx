@@ -12,6 +12,7 @@
 import { type SVGProps } from "react"
 import { Hexagon } from "@phosphor-icons/react/dist/ssr/Hexagon"
 import { Cube } from "@phosphor-icons/react/dist/ssr/Cube"
+import { Cuboid } from "@/components/icons/Cuboid"
 
 type IconProps = SVGProps<SVGSVGElement> & { size?: number }
 
@@ -189,41 +190,16 @@ export function IconBrick({ size = 20, ...rest }: IconProps) {
 }
 
 /**
- * Block (currently exported as `IconKeystone` until the keystone→block
- * rename lands) — a single 1×2 isometric block (NOT two separate cube
- * silhouettes drawn next to each other).
+ * Block — same isometric angle as IconBrick (phosphor Cube), but a 1×2 cuboid
+ * (two cubes sharing one face) instead of a single cube. Composed from a
+ * single SVG (`Cuboid`), NOT two phosphor `Cube` silhouettes side-by-side
+ * (those would have a misaligned divider line).
  *
- * Drawn as one combined silhouette + the visible internal edges where
- * faces meet. Matches the user's reference image — same outlined
- * 1.5px-stroke language as phosphor Cube and Hexagon.
- *
- * Hexagon (raw 2D crystal) → Cube (single 3D unit) → Block (two cubes
- * joined into one assembled unit).
+ * Hexagon (raw 2D crystal) → Cube (single processed unit) → Block (two
+ * assembled units). Phosphor `regular` weight matches IconBrick stroke.
  */
-export function IconKeystone({ size = 20, ...rest }: IconProps) {
-  return (
-    <svg
-      width={size}
-      height={size}
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth={1.5}
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      {...rest}
-    >
-      {/* Outer silhouette of the 1×2 block (6 vertices) */}
-      <path d="M 9 8 L 16 12 L 16 16 L 12.5 18 L 5.5 14 L 5.5 10 Z" />
-      {/* Top face back edge — runs through the back-top corner cluster */}
-      <path d="M 5.5 10 L 9 12 L 12.5 14 L 16 12" />
-      {/* Cube-1 front-left vertical edge + front-bottom edges of the block */}
-      <path d="M 9 8 L 9 12 L 12.5 14 L 16 16" />
-      {/* Top seam diagonal + front seam vertical + cube-2 right-back vertical
-          (all collinear after isometric projection — single straight path) */}
-      <path d="M 9 12 L 12.5 10 L 12.5 18" />
-    </svg>
-  )
+export function IconBlock({ size = 20, ...rest }: IconProps) {
+  return <Cuboid size={size} weight="regular" {...rest} />
 }
 
 export function IconPin({ size = 14, ...props }: IconProps) {

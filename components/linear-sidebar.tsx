@@ -14,7 +14,7 @@ import {
   IconTemplate,
   IconInsight,
   IconBrick,
-  IconKeystone,
+  IconBlock,
   IconPin,
   IconTrash,
   IconClock,
@@ -820,8 +820,8 @@ export function LinearSidebar() {
               />
               <NavLink
                 href="/keystone"
-                icon={<IconKeystone size={20} />}
-                label="Keystone"
+                icon={<IconBlock size={20} />}
+                label="Block"
                 count={permanentCount > 0 ? permanentCount : undefined}
                 active={isActive("/keystone")}
               />
