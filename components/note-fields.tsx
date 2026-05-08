@@ -17,9 +17,9 @@ import { BookOpen } from "@phosphor-icons/react/dist/ssr/BookOpen"
 import { Archive as ArchiveIcon } from "@phosphor-icons/react/dist/ssr/Archive"
 import { CaretDown } from "@phosphor-icons/react/dist/ssr/CaretDown"
 import { Check as PhCheck } from "@phosphor-icons/react/dist/ssr/Check"
-import { CircleDashed } from "@phosphor-icons/react/dist/ssr/CircleDashed"
-import { CircleHalf } from "@phosphor-icons/react/dist/ssr/CircleHalf"
-import { CheckCircle } from "@phosphor-icons/react/dist/ssr/CheckCircle"
+import { Hexagon } from "@phosphor-icons/react/dist/ssr/Hexagon"
+import { Cube } from "@phosphor-icons/react/dist/ssr/Cube"
+import { Cuboid } from "@/components/icons/Cuboid"
 import { Tag as PhTag } from "@phosphor-icons/react/dist/ssr/Tag"
 import { Plus as PhPlus } from "@phosphor-icons/react/dist/ssr/Plus"
 import { X as PhX } from "@phosphor-icons/react/dist/ssr/X"
@@ -45,21 +45,21 @@ export const STATUS_CONFIG: Record<
     color: "var(--chart-2)",
     bg: "color-mix(in srgb, var(--chart-2) 18%, transparent)",
     border: "color-mix(in srgb, var(--chart-2) 35%, transparent)",
-    icon: <CircleDashed size={14} weight="bold" />,
+    icon: <Hexagon size={14} weight="regular" />,
   },
   brick: {
     label: "Brick",
     color: "var(--chart-3)",
     bg: "color-mix(in srgb, var(--chart-3) 18%, transparent)",
     border: "color-mix(in srgb, var(--chart-3) 35%, transparent)",
-    icon: <CircleHalf size={14} weight="fill" />,
+    icon: <Cube size={14} weight="regular" />,
   },
   keystone: {
-    label: "Keystone",
+    label: "Block",
     color: "var(--chart-5)",
     bg: "color-mix(in srgb, var(--chart-5) 18%, transparent)",
     border: "color-mix(in srgb, var(--chart-5) 35%, transparent)",
-    icon: <CheckCircle size={14} weight="fill" />,
+    icon: <Cuboid size={14} weight="regular" />,
   },
 }
 

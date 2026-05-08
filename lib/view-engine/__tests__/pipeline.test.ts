@@ -665,7 +665,7 @@ describe('applyGrouping', () => {
       expect(groups.map(g => g.label)).toEqual([
         'Stone',
         'Brick',
-        'Keystone',
+        'Block',
       ])
     })
   })

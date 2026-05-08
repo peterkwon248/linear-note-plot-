@@ -119,7 +119,7 @@ export function getFilterTitle(filter: NoteFilter, state: Pick<PlotState, "folde
     case "status-brick":
       return "Brick"
     case "status-keystone":
-      return "Keystone"
+      return "Block"
     case "folder": {
       const folder = state.folders.find((f) => f.id === filter.folderId)
       return folder?.name ?? "Folder"

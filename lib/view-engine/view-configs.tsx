@@ -1,6 +1,7 @@
 import type { ReactNode } from "react"
 import type { SortField, ViewMode, GroupBy } from "./types"
-import { CircleDashed, CircleHalf, CheckCircle, BookOpen } from "@phosphor-icons/react"
+import { Hexagon, Cube, BookOpen, CircleHalf } from "@phosphor-icons/react"
+import { Cuboid } from "@/components/icons/Cuboid"
 
 export interface FilterCategory {
   key: string
@@ -100,9 +101,9 @@ export const NOTES_VIEW_CONFIG: ViewConfig = {
   showDetailPanel: true,
   filterCategories: [
     { key: "status", label: "Status", icon: StatusIcon, values: [
-      { key: "stone", label: "Stone", color: "rgba(255,255,255,0.32)", icon: <CircleDashed size={14} weight="bold" style={{ color: "var(--chart-2)" }} /> },
-      { key: "brick", label: "Brick", color: "#f5a623", icon: <CircleHalf size={14} weight="fill" style={{ color: "var(--chart-3)" }} /> },
-      { key: "keystone", label: "Keystone", color: "#45d483", icon: <CheckCircle size={14} weight="fill" style={{ color: "var(--chart-5)" }} /> },
+      { key: "stone", label: "Stone", color: "rgba(255,255,255,0.32)", icon: <Hexagon size={14} weight="regular" style={{ color: "var(--chart-2)" }} /> },
+      { key: "brick", label: "Brick", color: "#f5a623", icon: <Cube size={14} weight="regular" style={{ color: "var(--chart-3)" }} /> },
+      { key: "keystone", label: "Block", color: "#45d483", icon: <Cuboid size={14} weight="regular" style={{ color: "var(--chart-5)" }} /> },
     ]},
     { key: "folder", label: "Folder", icon: FolderIcon, values: [] },
     { key: "label", label: "Label", icon: LabelIcon, values: [] },
@@ -355,9 +356,9 @@ export const GRAPH_VIEW_CONFIG: ViewConfig = {
   showDetailPanel: true,
   filterCategories: [
     { key: "status", label: "Status", icon: StatusIcon, values: [
-      { key: "stone", label: "Stone", color: "rgba(255,255,255,0.32)", icon: <CircleDashed size={14} weight="bold" style={{ color: "var(--chart-2)" }} /> },
-      { key: "brick", label: "Brick", color: "#f5a623", icon: <CircleHalf size={14} weight="fill" style={{ color: "var(--chart-3)" }} /> },
-      { key: "keystone", label: "Keystone", color: "#45d483", icon: <CheckCircle size={14} weight="fill" style={{ color: "var(--chart-5)" }} /> },
+      { key: "stone", label: "Stone", color: "rgba(255,255,255,0.32)", icon: <Hexagon size={14} weight="regular" style={{ color: "var(--chart-2)" }} /> },
+      { key: "brick", label: "Brick", color: "#f5a623", icon: <Cube size={14} weight="regular" style={{ color: "var(--chart-3)" }} /> },
+      { key: "keystone", label: "Block", color: "#45d483", icon: <Cuboid size={14} weight="regular" style={{ color: "var(--chart-5)" }} /> },
     ]},
     { key: "tags", label: "Tags", icon: TagIcon, values: [] },
     { key: "label", label: "Label", icon: LabelIcon, values: [] },
@@ -460,9 +461,9 @@ export const CALENDAR_VIEW_CONFIG: ViewConfig = {
   showDetailPanel: true,
   filterCategories: [
     { key: "status", label: "Status", icon: StatusIcon, values: [
-      { key: "stone", label: "Stone", color: "rgba(255,255,255,0.32)", icon: <CircleDashed size={14} weight="bold" style={{ color: "var(--chart-2)" }} /> },
-      { key: "brick", label: "Brick", color: "#f5a623", icon: <CircleHalf size={14} weight="fill" style={{ color: "var(--chart-3)" }} /> },
-      { key: "keystone", label: "Keystone", color: "#45d483", icon: <CheckCircle size={14} weight="fill" style={{ color: "var(--chart-5)" }} /> },
+      { key: "stone", label: "Stone", color: "rgba(255,255,255,0.32)", icon: <Hexagon size={14} weight="regular" style={{ color: "var(--chart-2)" }} /> },
+      { key: "brick", label: "Brick", color: "#f5a623", icon: <Cube size={14} weight="regular" style={{ color: "var(--chart-3)" }} /> },
+      { key: "keystone", label: "Block", color: "#45d483", icon: <Cuboid size={14} weight="regular" style={{ color: "var(--chart-5)" }} /> },
     ]},
     { key: "folder", label: "Folder", icon: FolderIcon, values: [] },
     { key: "label", label: "Label", icon: LabelIcon, values: [] },
@@ -494,9 +495,9 @@ export const TEMPLATES_VIEW_CONFIG: ViewConfig = {
   showDetailPanel: true,
   filterCategories: [
     { key: "status", label: "Status", icon: StatusIcon, values: [
-      { key: "stone", label: "Stone", color: "rgba(255,255,255,0.32)", icon: <CircleDashed size={14} weight="bold" style={{ color: "var(--chart-2)" }} /> },
-      { key: "brick", label: "Brick", color: "#f5a623", icon: <CircleHalf size={14} weight="fill" style={{ color: "var(--chart-3)" }} /> },
-      { key: "keystone", label: "Keystone", color: "#45d483", icon: <CheckCircle size={14} weight="fill" style={{ color: "var(--chart-5)" }} /> },
+      { key: "stone", label: "Stone", color: "rgba(255,255,255,0.32)", icon: <Hexagon size={14} weight="regular" style={{ color: "var(--chart-2)" }} /> },
+      { key: "brick", label: "Brick", color: "#f5a623", icon: <Cube size={14} weight="regular" style={{ color: "var(--chart-3)" }} /> },
+      { key: "keystone", label: "Block", color: "#45d483", icon: <Cuboid size={14} weight="regular" style={{ color: "var(--chart-5)" }} /> },
     ]},
     { key: "priority", label: "Priority", icon: PriorityIcon, values: [
       { key: "urgent", label: "Urgent" },

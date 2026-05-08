@@ -164,7 +164,7 @@ function LifecycleStats({ notes }: { notes: any[] }) {
         {[
           { label: "Stone", value: inbox, color: "text-chart-3" },
           { label: "Brick", value: capture, color: "text-chart-2" },
-          { label: "Keystone", value: permanent, color: "text-chart-5" },
+          { label: "Block", value: permanent, color: "text-chart-5" },
           { label: "Wiki", value: wiki, color: "text-accent" },
         ].map((s) => (
           <div key={s.label} className="text-center">

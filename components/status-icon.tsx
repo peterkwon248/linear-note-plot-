@@ -1,9 +1,9 @@
 import { cn } from "@/lib/utils"
 import { STATUS_CONFIG } from "@/components/note-fields"
 import type { NoteStatus } from "@/lib/types"
-import { CircleDashed } from "@phosphor-icons/react/dist/ssr/CircleDashed"
-import { CircleHalf } from "@phosphor-icons/react/dist/ssr/CircleHalf"
-import { CheckCircle } from "@phosphor-icons/react/dist/ssr/CheckCircle"
+import { Hexagon } from "@phosphor-icons/react/dist/ssr/Hexagon"
+import { Cube } from "@phosphor-icons/react/dist/ssr/Cube"
+import { Cuboid } from "@/components/icons/Cuboid"
 import { NOTE_STATUS_COLORS } from "@/lib/colors"
 
 /**
@@ -45,10 +45,10 @@ export function StatusShapeIcon({
   const color = NOTE_STATUS_COLORS[status]?.css ?? "currentColor"
   const shared = cn("shrink-0", className)
   if (status === "stone") {
-    return <CircleDashed size={size} weight="regular" style={{ color }} className={shared} />
+    return <Hexagon size={size} weight="regular" style={{ color }} className={shared} />
   }
   if (status === "brick") {
-    return <CircleHalf size={size} weight="fill" style={{ color }} className={shared} />
+    return <Cube size={size} weight="regular" style={{ color }} className={shared} />
   }
-  return <CheckCircle size={size} weight="fill" style={{ color }} className={shared} />
+  return <Cuboid size={size} weight="regular" style={{ color }} className={shared} />
 }
