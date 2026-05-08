@@ -153,3 +153,98 @@ PR 4.3d (Templates + Stickers) ← 옵션
 - `docs/v3-mockup/plot-v3-a-notes.jsx`: notes table 사용 예시
 - `docs/PLOT-V3-VISUAL-REFRESH-PRD.md` Phase 4 section
 - `.omc/plans/v3-phase-4-decompose.md`: Phase 4 분해 plan (PR 4.1/4.2/4.3 원본)
+
+---
+
+## 9. Lessons learned (PR #282 → #283 → #284 cycle, 2026-05-08)
+
+### 9.1 `.a-th, .a-row`는 notes-table 전용 grid template
+PR #282로 tags/labels-view에 `.a-th + .a-row` 적용했더니 layout 깨짐 (#283으로 revert). 원인: globals.css에서
+
+```css
+.a-th, .a-row {
+  display: grid;
+  grid-template-columns: minmax(0, 2.4fr) minmax(0, 1.3fr) 110px 90px 70px 80px;
+  ...
+}
+```
+
+이 6-column 정의가 notes-table의 column set에 hardcoded. NotesTable은 inline `gridTemplateColumns` style로 덮어써서 OK. 단 다른 view (3-element flex row)는 inline 없음 → 6-col 강제 → name이 좁은 110px 컬럼에 wrap.
+
+**Refactor 필요**: globals.css `.a-th, .a-row`를 chrome-only (height/border/sticky/bg/font-size)로 분리. grid template는 consumer (notes-table) 책임.
+
+### 9.2 Filter model 통찰 (사용자 직관)
+
+```
+LIST/TABLE: column = passive attribute 노출 (visual scan, sort)
+            Filter button = column 외 또는 active narrow
+
+BOARD:      column 자체 = grouping attribute (status)
+            Filter button = 다른 axis로 좁히기
+
+GRID:       card 안 chip = attribute visualization
+            Filter button = chip 클릭 또는 popover로 좁히기
+```
+
+**함의**:
+- Notes table에 Filter button 있는 이유: column(Status/Folder/Backlinks 등) 외 다른 axis (Tag, Label, Source)로 좁히기
+- Tags master에 Filter button 없는 이유: column 자체가 단순 (Name + Notes만) — column으로 노출할 attribute가 적음 → filter도 부족
+- **Tags 잠재 확장**: `color`, `source` (manual/auto-extract) 등 column 추가 시 filter도 자연스레 가능
+
+이 model이 PR 4.3 chrome 통일의 north star — 단순 visual 통일이 아니라 **filter/column model 통일**.
+
+### 9.3 Visual 일관성 미세 항목
+
+| 항목 | Notes table | Tags/Labels (현) | 통일 방향 |
+|------|------------|-----------------|----------|
+| row 폰트 | 13px (`.a-row`) | `text-ui` (살짝 큼) | `.a-row` font-size 통일 (refactor 후) |
+| row 사이 구분선 | 없음 (hover bg + spacing) | `border-b border/50` (Tags만) | 제거 (Notes 패턴) — **#284에서 처리** |
+| row height | 38px | py-2.5 (varying) | `.a-row` 38px 통일 (refactor 후) |
+| row hover | bg-hover-bg | bg-hover-bg | OK |
+| active row | 좌측 2px bar (`::before`) | bg-accent (multi-check만) | column 추가 시 active row 통일 가능 |
+
+---
+
+## 10. Roadmap (revised after #283 revert)
+
+### Phase 4.3 재정의 (3-step)
+
+```
+Step A: globals.css refactor
+   ↓
+   `.a-th, .a-row` 정의에서 grid template 분리 → chrome-only
+   NotesTable은 inline grid 사용 (이미 그러는 듯)
+   다른 view에 plug-and-play 가능
+
+Step B: Tags + Labels chrome 통일 (#282 재시도)
+   ↓
+   `.a-th + .a-row` 적용 — 이번엔 grid 강제 안 받음
+   폰트 / row height 자동 통일
+
+Step C: column model 도입 (선택)
+   ↓
+   Tags 등에 displayProperties 확장 (color / source 등)
+   Filter button 자동 활성화 가능 (column 기반 옵션 생성)
+
+Step D: 다른 view 확장
+   ↓
+   wiki-list / library / templates / stickers
+```
+
+### 즉시 fix 항목 (#284)
+
+- ✅ Tags row의 `border-b border/50` 제거 (Notes 패턴 일관)
+- ⏳ 폰트 통일 — refactor 후 자동 (Step A 완료 후)
+- ⏳ 다른 view chrome — Step B 이후
+
+다음 세션 우선순위:
+- **Step A** (`.a-th/.a-row` grid 분리) — 1차 PR, 작은 refactor
+- **Step B** (Tags/Labels 재적용) — 2차 PR, Step A에 의존
+- Step C, D — 그 후
+
+### Out of scope (현 plan 외)
+
+- Studio + Editorial 제거 (별도 PR — 영구 규칙 위반 cleanup)
+- Gallery polishing (별도 PR — 편집 + Plot tokens)
+- view modes ViewSwitcher 단순화 (Display popover 통합) — Gallery polish 후
+

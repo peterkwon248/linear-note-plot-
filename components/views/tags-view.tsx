@@ -756,7 +756,7 @@ export function TagsView() {
                     <ContextMenuTrigger asChild>
                       <div
                         data-tag-index={index}
-                        className={`group flex items-center gap-3 px-6 py-2.5 border-b border-border/50 transition-colors ${
+                        className={`group flex items-center gap-3 px-6 py-2.5 transition-colors ${
                           checkedTags.has(tag.id) ? "bg-accent/8" : "hover:bg-hover-bg"
                         }`}
                         onClick={(e) => {
