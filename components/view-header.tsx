@@ -225,30 +225,28 @@ export function ViewHeader({
           <div className="flex items-center gap-0.5">
             {extraToolbarButtons}
 
-            {/* Save view button — Linear pattern. Update mode shows when dirty,
-                save-as mode shows when no active view exists. Either reveals
-                an explicit signal so the user knows there are unsaved changes. */}
+            {/* Save view button — icon-only, sized to match the rest of the
+                toolbar (16px). Update mode uses accent color to signal unsaved
+                changes; save-as mode is a neutral HBtn. */}
             {showSaveButton && (
               saveViewMode === "update" ? (
                 <button
                   onClick={() => onSaveView?.()}
-                  className="flex h-7 items-center gap-1 rounded-md border-none bg-accent/10 px-2 text-2xs font-medium text-accent transition-colors hover:bg-accent/15"
+                  className="inline-flex h-7 w-7 items-center justify-center rounded-md text-accent transition-colors hover:bg-accent/15"
                   title="Save changes to this view"
+                  aria-label="Save changes"
                 >
-                  <FloppyDisk size={12} weight="regular" />
-                  <span>Save</span>
+                  <FloppyDisk size={16} weight="regular" />
                 </button>
               ) : (
                 hydrated ? (
                   <Popover open={saveAsOpen} onOpenChange={(o) => { setSaveAsOpen(o); if (!o) setSaveAsName("") }}>
                     <PopoverTrigger asChild>
-                      <button
-                        className="flex h-7 items-center gap-1 rounded-md border-none bg-secondary/60 px-2 text-2xs font-medium text-foreground/80 transition-colors hover:bg-hover-bg hover:text-foreground"
-                        title="Save current filters/sort/grouping as a view"
-                      >
-                        <FloppyDisk size={12} weight="regular" />
-                        <span>Save view</span>
-                      </button>
+                      <div>
+                        <HBtn active={saveAsOpen}>
+                          <FloppyDisk size={16} weight="regular" />
+                        </HBtn>
+                      </div>
                     </PopoverTrigger>
                     <PopoverContent
                       align="end"
@@ -270,9 +268,12 @@ export function ViewHeader({
                     </PopoverContent>
                   </Popover>
                 ) : (
-                  <button className="flex h-7 items-center gap-1 rounded-md border-none bg-secondary/60 px-2 text-2xs font-medium text-foreground/80">
-                    <FloppyDisk size={12} weight="regular" />
-                    <span>Save view</span>
+                  <button
+                    className="inline-flex h-7 w-7 items-center justify-center rounded-md text-foreground/60"
+                    title="Save current view"
+                    aria-label="Save view"
+                  >
+                    <FloppyDisk size={16} weight="regular" />
                   </button>
                 )
               )
