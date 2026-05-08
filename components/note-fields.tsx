@@ -19,7 +19,7 @@ import { CaretDown } from "@phosphor-icons/react/dist/ssr/CaretDown"
 import { Check as PhCheck } from "@phosphor-icons/react/dist/ssr/Check"
 import { Hexagon } from "@phosphor-icons/react/dist/ssr/Hexagon"
 import { Cube } from "@phosphor-icons/react/dist/ssr/Cube"
-import { Cuboid } from "@/components/icons/Cuboid"
+import { Cuboid2x2 } from "@/components/icons/Cuboid2x2"
 import { Tag as PhTag } from "@phosphor-icons/react/dist/ssr/Tag"
 import { Plus as PhPlus } from "@phosphor-icons/react/dist/ssr/Plus"
 import { X as PhX } from "@phosphor-icons/react/dist/ssr/X"
@@ -59,7 +59,7 @@ export const STATUS_CONFIG: Record<
     color: "var(--chart-5)",
     bg: "color-mix(in srgb, var(--chart-5) 18%, transparent)",
     border: "color-mix(in srgb, var(--chart-5) 35%, transparent)",
-    icon: <Cuboid size={14} weight="regular" />,
+    icon: <Cuboid2x2 size={14} weight="regular" />,
   },
 }
 

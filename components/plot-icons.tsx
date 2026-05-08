@@ -12,7 +12,7 @@
 import { type SVGProps } from "react"
 import { Hexagon } from "@phosphor-icons/react/dist/ssr/Hexagon"
 import { Cube } from "@phosphor-icons/react/dist/ssr/Cube"
-import { Cuboid } from "@/components/icons/Cuboid"
+import { Cuboid2x2 } from "@/components/icons/Cuboid2x2"
 
 type IconProps = SVGProps<SVGSVGElement> & { size?: number }
 
@@ -201,16 +201,15 @@ export function IconBrick({ size = 20, ...rest }: IconProps) {
 }
 
 /**
- * Block — same isometric angle as IconBrick (phosphor Cube), but a 1×2 cuboid
- * (two cubes sharing one face) instead of a single cube. Composed from a
- * single SVG (`Cuboid`), NOT two phosphor `Cube` silhouettes side-by-side
- * (those would have a misaligned divider line).
+ * Block — same isometric angle as IconBrick (phosphor Cube), but a 2×2×1
+ * cuboid (four cubes in a square plane). Composed from a single SVG
+ * (`Cuboid2x2`), NOT four `Cube` silhouettes (divider lines would misalign).
  *
- * Hexagon (raw 2D crystal) → Cube (single processed unit) → Block (two
- * assembled units). Phosphor `regular` weight matches IconBrick stroke.
+ * Hexagon (raw 2D crystal) → Cube (single processed unit) → Block (four
+ * assembled units in 2×2 grid). Phosphor `regular` weight matches IconBrick.
  */
 export function IconBlock({ size = 20, ...rest }: IconProps) {
-  return <Cuboid size={size} weight="regular" {...rest} />
+  return <Cuboid2x2 size={size} weight="regular" {...rest} />
 }
 
 export function IconPin({ size = 14, ...props }: IconProps) {
