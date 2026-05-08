@@ -3,37 +3,51 @@
 > 우선순위 기반 작업 목록. NEXT-ACTION.md는 즉시 액션, 이 파일은 전체 우선순위 큰그림.
 > 완료 항목은 즉시 삭제 또는 "완료" 섹션으로 이동.
 
-**마지막 갱신**: 2026-05-07 (Phase A 작업 후)
+**마지막 갱신**: 2026-05-08 (5 PR 머지 + Phase 4.3 plan 보강 후)
 
 ---
 
 ## 🔴 P0 — 즉시 (다음 세션)
 
-### 0. PR #269 머지 (Phase A NoteStatus rename)
-- 사용자가 직접 squash merge — https://github.com/peterkwon248/linear-note-plot-/pull/269
-- 머지 후 IDB v115→v116 자동 migration (idempotent) — 첫 실행 시 1회
+### Path A — Filter coverage Section 11 (작은 PR 시리즈) ⭐ 추천
+plan: `.omc/plans/v3-phase-4-3-decompose.md` Section 11
 
-### 1. Brand mark fix (작은 follow-up PR)
-- PR 3.4의 네트워크 SVG → mockup 패턴 (`<div className="a-brand__mark">P</div>`) 복귀
-- 일단 하드코드 `"P"` (workspace name 설정 필드는 별도 작업)
-- `components/activity-bar.tsx` line 88-112 교체
-- ~3 files / 작은 diff
+```
+Step 1: Files type filter (image/url/file) ← 가장 작고 명확. 즉시 visual 효과
+Step 2: References type filter (book/article/url/quote)
+Step 3: Wiki Category filter 보강 (사용자 직접 우려 — 부실)
+Step 4: Tags / Labels color filter (선택)
+Step 5: Stickers / Inbox source filter (선택)
+```
 
-### 2. Status icons stone/brick/keystone metaphor 적용
-- 현재 `StatusShapeIcon` = 일반 phosphor (CircleDashed/CircleHalf/CheckCircle)
-- 새 컨셉: 돌멩이 윤곽 (불규칙 다각형) / 둥근 직사각형 + mortar line / 사다리꼴 (wider top, 키스톤)
-- 색은 그대로 (Q3 LOCKED — `--status-stone/brick/keystone`)
-- `components/status-icon.tsx` + `components/icons/imperial-extras.tsx`
-- 시안 보고 조정 — 작업 시 design mockup HTML 또는 Preview에서 확인
+각 Step = view-engine config 변경만 (showFilter true + filterCategories 채움). chrome refactor와 독립 — 병렬 PR 가능.
 
-### 3. Phase 4 재개
-- PR 4.2 notes-table.tsx reskin (stone/brick/keystone 새 명칭 사용)
-- PR 4.3 other list views
+### Path B — Chrome refactor Section 10 (큰 작업, 시각 일관성 prerequisite)
+plan: `.omc/plans/v3-phase-4-3-decompose.md` Section 10
 
-### 4. Phase B (Inbox 알림함) — ⏸️ DRAFT 미확정
-- `.omc/plans/inbox-layer.md` = Draft. 사용자 결정 필요
-- "Inbox 단어를 알림함 의미로 부여 + 기능 구현" 미확정
-- 나중에 새 layer로 추가 가능 (Phase A에서 `/inbox` redirect 제거 후 신규 page 생성 필요)
+```
+Step A: globals.css `.a-th, .a-row` grid 분리 (chrome-only로) ← 모든 view chrome 통일의 prerequisite
+Step B: Tags/Labels chrome 재적용 (#282 retry — 폰트/height 자동 통일)
+Step C: column model 확장 (displayProperties)
+Step D: 다른 view (wiki / library / templates / stickers)
+```
+
+### Path C — Studio + Editorial 제거 (영구 규칙 위반 cleanup)
+
+- Studio + Editorial shell 삭제 (`components/views/studio-view*.tsx`, `editorial-view*.tsx`)
+- ViewSwitcher tab 정리 (4-tab → 2-tab Table/Board)
+- viewMode type 축소 (`"list" | "board" | "gallery"`)
+- IDB migration (옛 `"studio" | "editorial"` 값 → `"list"` fallback)
+- SRS 기능 살아있으면 별도 path 보존 (Studio 외)
+
+근거: 메모리 영구 규칙 #1 + TODO 폐기 항목 ("매거진 pivot 폐기 2026-04-22") 위반
+
+### Path D — Gallery polishing (별도 sprint)
+
+- 편집 가능하게 (NotesGallery 신규 또는 NotesTable grid mode 통합)
+- Plot tokens 정합 (cream 강제 제거 → light/dark 반응)
+- Display popover 통합 (`[List | Board | Gallery]` 3-segment)
+- ViewSwitcher 제거
 
 ---
 
@@ -66,8 +80,9 @@
 - Tag 우클릭 메뉴 Rename 옵션 추가
 - Label 색 정책 재검토 (Tag opt-in 가능성)
 - ReferencesView quickFilter / fieldKey filter → viewState.filters lift (PR 4 follow-up)
-- FilesView type filter (all/image/document) → viewState.filters lift (PR 5 follow-up)
+- FilesView type filter (all/image/document) → viewState.filters lift (PR 5 follow-up — Path A Step 1과 정합)
 - File grid mode 실제 image preview (blob URL 처리, PR 5 follow-up)
+- `docs/status-icons-preview.html` 등 mockup HTML untracked 파일 정리 (.gitignore 또는 삭제)
 
 ---
 
@@ -90,6 +105,7 @@
 - 11가지 결정은 v3 PRD에 통합 보존
 
 ### 매거진/뉴스페이퍼/북 Pivot — 폐기 (2026-04-22)
+- ⚠️ Studio/Editorial view modes (PR #279/#280)가 이 폐기 항목 부활 — Path C로 cleanup 예정
 ### AI provider 연결 — 정체성 위반 (2026-04-27)
 ### Notion식 Row density toggle — Linear 코어 (PR #224 revert)
 ### Page entity 신규 — atomic 위배 (2026-05-03)
@@ -98,20 +114,22 @@
 
 ## ✅ 최근 완료
 
+### 2026-05-08 (오후) — Status icons + Phase 4.3 plan 보강 (5 PR + docs sync)
+- ✅ **PR #271**: Status icons + UI 라벨 "Block" + Cuboid (1×2 isometric block) + Save view 16px (HBtn pattern)
+- ✅ **PR #282**: PR 4.3a Tags+Labels chrome 통일 시도
+- ✅ **PR #283**: PR #282 partial revert (`.a-row` grid 6-col 강제 충돌)
+- ✅ **PR #284**: Tags row border-b 제거 + plan Section 9-10 (lessons + roadmap)
+- ✅ **PR #285**: plan Section 11 Filter coverage 분석 (Step 1-5)
+- ✅ **(이 PR)** docs sync — NEXT-ACTION / SESSION-LOG / MEMORY / TODO / CONTEXT
+
 ### 2026-05-07 (밤 늦게) — Plot v3 Phase 3 (4 PR)
-- ✅ PR 3.1 (98f9277): CSS 통합 — `.a-actbar` / `.a-sidebar` / `.a-sb-*` / `.a-icb` / `.a-kbd` / `.a-detail` / `.a-shell` (시각 변경 0)
+- ✅ PR 3.1 (98f9277): CSS 통합 — `.a-actbar` / `.a-sidebar` / `.a-sb-*` (시각 변경 0)
 - ✅ PR 3.2 (5ac22ef): activity-bar.tsx reskin (width 72px / label / brand mark / per-space 6색 inline)
-- ✅ PR 3.3 (8155530): linear-sidebar.tsx reskin (NavLink + Section + 11 inline 일괄)
-- ✅ PR 3.4 (3761e42): brand mark = Plot 로고 SVG (네트워크 그래프 — Zettelkasten × Palantir 정체성 정합)
+- ✅ PR 3.3 (8155530): linear-sidebar.tsx reskin
+- ✅ PR 3.4 (3761e42): brand mark = Plot 로고 SVG (네트워크 그래프) → 후 PR #270으로 mockup 패턴 P glyph 복귀
 
 ### 2026-05-07 (밤) — Group C PR-D 시리즈 5/5 완성
-- ✅ PR 1: Tags v110 (#261)
-- ✅ PR 2: Labels v111 (#262)
-- ✅ PR 3: Stickers v113 (a055581)
-- ✅ PR 4: References v114 (c3700ad)
-- ✅ PR 5: Files v115 (f210fcf)
+- ✅ Tags v110 / Labels v111 / Stickers v113 / References v114 / Files v115
 
 ### Plot v3 Phase 2 DEFER 결정 (3b84d7e)
-
 ### 4 design skills install (0f7e2ec)
-- design-taste-frontend / high-end-visual-design / redesign-existing-projects / minimalist-ui

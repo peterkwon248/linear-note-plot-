@@ -3,88 +3,79 @@
 > **다음 세션 즉시 시작할 액션.** 다른 컴퓨터에서 작업 이어받기 위한 source of truth.
 > before-work는 이 파일을 가장 먼저 읽는다.
 
-**마지막 갱신**: 2026-05-07 (Phase A 작업 후)
+**마지막 갱신**: 2026-05-08 (5 PR 머지 + Phase 4.3 north star plan)
 **머신**: 집 (Windows)
-**현재 Phase**: Plot v3 Phase 0/1 ✅, Phase 2 ⏸️ DEFER, Phase 3 ✅, **Phase 4 진행 중 (PR 4.1 ✅ 머지)**. **Phase A NoteStatus rename → PR #269 OPEN (머지 대기)**.
+**현재 Phase**: Plot v3 Phase 0/1/3/4.1/4.2 ✅, Phase 2 ⏸️ DEFER, **Phase 4.3 chrome 통일 (#282 시도 → #283 revert → #284 정리 → #285 plan 보강)**
 
 ---
 
 ## 🎯 다음 즉시 액션
 
-### 🔴 0. Phase A 머지 + 후속 정리
+### 🔴 0. 사용자 결정: 다음 작업 path 선택 (3 후보)
 
-**PR #269** (`claude/note-status-rename-phase-a`) OPEN / MERGEABLE / 머지 대기.
+이번 세션 plan에 정리된 두 series 중 진입점 선택:
 
-**완료된 작업** (executor-high 위임으로 6 commits):
-1. ✅ types + colors (lib/types.ts NoteStatus + lib/colors.ts)
-2. ✅ view-engine (ViewContextKey + defaults + context-filter)
-3. ✅ route directory rename (`/inbox`→`/stone`, `/capture`→`/brick`, `/permanent`→`/keystone`) + 옛 URL redirect
-4. ✅ inline literals (47 files +390/-390)
-5. ✅ IDB v116 migration (idempotent — notes status field + viewStateByContext keys)
-6. ✅ tests + AGENTS.md + globals.css CSS variables
+#### Path A — Filter coverage Section 11 (작은 PR 시리즈, 빠른 visual 효과)
+```
+Step 1: Files type filter (image/url/file) ← 추천 (가장 작고 명확)
+Step 2: References type filter
+Step 3: Wiki Category filter 보강 (사용자 직접 우려)
+Step 4: Tags / Labels color filter (선택)
+Step 5: Stickers / Inbox (선택)
+```
 
-**검증**: tsc 0 / build clean (36 routes) / 7771 tests pass (185 source + ~7600 worktree mirrors)
+#### Path B — Chrome refactor Section 10 (큰 작업, 시각 일관성 prerequisite)
+```
+Step A: globals.css `.a-th, .a-row` grid 분리 (chrome-only로) ← 모든 view chrome 통일의 prerequisite
+Step B: Tags/Labels chrome 재적용 (#282 retry — 폰트/height 자동 통일)
+Step C: column model 확장 (displayProperties)
+Step D: 다른 view (wiki / library / templates / stickers)
+```
 
-**머지 후 액션**:
-- main으로 squash merge
-- before-work 다음 세션부터: store version v116, app routes /stone /brick /keystone
+#### Path C — Studio/Editorial cleanup (영구 규칙 위반, 명백 cleanup)
+- 메모리 영구 규칙 #1 ("멋진 레이아웃 / 시각적 다양성 방향 제안 금지") + TODO.md "매거진 pivot 폐기 (2026-04-22)" 위반
+- Studio + Editorial shell 삭제 + viewSwitcher tab 정리 + IDB migration (옛 viewMode fallback)
+- Gallery는 polishing 후 재도입 (별도 PR)
 
-### 🟡 1. Brand mark fix + Status icons (Phase A 머지 후 follow-up PR)
+**추천**: Path A Step 1 (Files type filter) → 가장 빠른 작은 PR, 즉시 효과. 그 후 Path B Step A 또는 Path C.
 
-**Brand mark** (작은 PR, 즉시):
-- PR 3.4의 네트워크 SVG는 사용자 평가 "별로" — mockup 패턴 (`<div className="a-brand__mark">P</div>`) 복귀
-- 일단 하드코드 `"P"` (workspace name 설정 필드는 추후 별도)
-- `components/activity-bar.tsx` line 88-112 교체
+### 🟡 1. (참고) 이번 세션 마감 상태
 
-**Status icons** (디자인 + 코드, 시안 보고 조정):
-- stone/brick/keystone 메타포 SVG로 교체:
-  - stone = 돌멩이 윤곽 (5-6각형 불규칙)
-  - brick = 둥근 모서리 직사각형 + mortar line
-  - keystone = 사다리꼴 (wider top, 아치 위 wedge)
-- 1.5px stroke / currentColor / 14px default — 디자인 토큰 정합
-- 색은 Q3 LOCKED 그대로
-- `components/status-icon.tsx` `StatusShapeIcon` 함수 + `components/icons/imperial-extras.tsx` 새 icon
-
-### 🟡 1. Phase B: Inbox layer 구현 ⚠️ **미확정 (DRAFT)**
-
-`.omc/plans/inbox-layer.md` = **Draft 상태**. "Inbox 단어를 알림함으로 부여 + 기능 구현"은 사용자 합의 미완료 (2026-05-07 확인). Phase A 완료 후 사용자 추가 결정 필요.
-
-- **결론 안 난 부분**: Inbox = 알림함 명칭 + 기능 부여 자체
-- **결론 난 부분 (Phase A에 흡수)**: stone/brick/keystone status 명칭 + 섹션 아이콘
-- 새 세션이 plan만 보고 자동 진행하지 말 것
-
-### 🟢 2. Phase 4 재개 (Phase A/B 완료 후)
-
-`.omc/plans/v3-phase-4-decompose.md` PR 4.2 (notes-table.tsx reskin) — 새 명칭 (stone/brick/keystone) 사용. 그 후 PR 4.3, 4.4.
+- ✅ PR #271 (Status icons + Block label + Cuboid + Save view 16px)
+- ✅ PR #282 (PR 4.3a Tags+Labels chrome 통일 시도)
+- ✅ PR #283 (PR #282 partial revert — `.a-row` grid 충돌)
+- ✅ PR #284 (Tags row border-b 제거 + plan update)
+- ✅ PR #285 (plan Section 11 Filter coverage 분석 추가)
+- ✅ docs sync (NEXT-ACTION / SESSION-LOG / MEMORY / TODO / CONTEXT — 이 PR)
 
 ---
 
 ## 🧠 잊지 말 것 (이번 세션 핵심 결정)
 
-### Phase A vs Phase B 분리 (영구)
-- Phase A = NoteStatus 단순 atomic rename (53 files, 6 commits in 1 PR)
-- Phase B = Inbox layer 신규 (4-5 PR, 새 기능)
-- 분리 이유: 작업 원칙 #6 (UI + 데이터 모델 분리). atomic rename은 단일 PR.
+### Filter model 통찰 (사용자 직관, 영구)
+```
+LIST/TABLE: column = passive attribute view, Filter button = active narrow
+BOARD:      column = grouping attribute, Filter button = other axis
+GRID:       card chip = attribute viz, Filter button = chip narrow
+```
+→ Filter 없는 view는 도메인 attribute 부족. column 추가 시 자연스레 filter 가능.
 
-### 단일 통합 Inbox 결정 (영구)
-- **하나의 inbox = 모든 entity 처리 대기 통합** (Notes stone + Wiki stub + Book unfinished + Reference 미링크 + Files 미분류)
-- per-entity inbox 분산 X — 사용자 한 곳만 봄
-- Plot 정체성 ("Gentle by default") + IKEA 전략 + Linear/Things3 패턴 정합
-- 위치: home 안 카드 (v3 11결정 #1 7-space 보존) + `/inbox` full-page (filter tabs)
-- 정의: 하이브리드 (자동 + dismiss + snooze)
+### `.a-th, .a-row` grid hardcoded
+- globals.css에서 6-column grid template 강제 (notes-table 전용)
+- NotesTable은 inline grid로 덮어씀 → OK
+- 다른 view (3-element flex)는 inline 없어 6-col 강제 → layout 깨짐
+- **refactor 필요**: chrome-only 분리 (height/border/sticky/bg/font-size) + grid는 consumer 책임
 
-### v3 PRD 영향 (Phase 5 적용 범위)
-- 기존 5 view modes 적용: `/notes, /inbox, /capture, /permanent, ...`
-- 새: `/notes, /stone, /brick, /keystone, ...` — `/inbox` 제거 (별도 layer)
+### NoteStatus enum value `keystone` 유지 결정
+- UI 라벨만 "Block"로 (Cuboid 1×2 isometric block 아이콘)
+- internal `keystone` 그대로 (URL `/keystone`, IDB key, type literal)
+- 이유: AddBlock / BlockTree / ContentBlock 등 기존 `block` identifier와 충돌 회피
+- 영구 결정 — mismatch는 디버그 콘솔 + URL bar에 한정 (사용자 영향 X)
 
-### 옛 URL 처리
-- `/inbox`, `/capture`, `/permanent` → server-side redirect to `/stone`, `/brick`, `/keystone`
-- Phase A에서 처리 — 사용자 북마크 보존
-
-### v3 mockup과 어우러짐
-- v3 mockup의 inbox/capture/permanent (status로) → stone/brick/keystone로 적용
-- inbox layer는 v3 mockup 외 신규 디자인 (home 안 카드 + /inbox 페이지)
-- conceptual mismatch 있지만 visual 호환
+### View modes (Studio / Editorial / Gallery) 사용자 평가
+- **Studio + Editorial**: 영구 규칙 위반 (멋진 레이아웃 + 매거진 pivot 부활) — **제거 예정**
+- **Gallery**: 카드 형태 자체는 좋음. 단 (1) 편집 불가 (read-only) (2) 하드코딩 styling (cream 강제, Plot tokens 무시). **polishing 후 재도입** — 일단 보류.
+- 통합 방향: Display popover의 `[List | Board | Gallery]` 3-segment로 (ViewSwitcher tab 제거)
 
 ---
 
@@ -96,29 +87,44 @@
 - ⏸️ Phase 2: Imperial icon kit DEFER
 - ✅ Phase 3: Activity Bar / Sidebar Chrome (4 PR)
 - ⏳ Phase 4: Table Mode Reskin
-  - ✅ PR 4.1 (CSS 통합)
-  - ⏳ PR 4.2 (notes-table.tsx reskin) — **NoteStatus rename 후 진행**
-  - ⏳ PR 4.3 (other list views)
-- ⏳ Phase 5-7: 후속
+  - ✅ PR 4.1 (CSS 통합 #267)
+  - ✅ PR 4.2 (notes-table.tsx #276)
+  - ⏳ PR 4.3 (other list views) — **현재 plan 보강 단계, refactor prerequisite 필요**
+  - ⏳ PR 4.4 (옵션)
+- ⏳ Phase 5: View Modes — **재검토 (Studio/Editorial 제거 + Gallery polish)**
+- ⏳ Phase 6-7: 후속
 
 ### 별도 트랙
-- ⏳ NoteStatus rename Phase A — 다음 세션 (atomic, 53 files / 274 occ)
-- ⏳ Inbox layer Phase B — 그 다음 (4-5 PR, 새 기능)
+- ✅ Phase A NoteStatus rename (PR #269 머지) + UI 라벨 Block + Cuboid icon (PR #271)
+- ✅ Inbox layer (#272-#275 머지된 상태)
 
 ---
 
 ## ⏸️ 보류 / 영구 폐기
 
+- **Studio + Editorial view modes** — 영구 규칙 위반, 다음 세션 cleanup 후보
+- **Gallery view** — 편집 + Plot tokens polishing 후 재도입 (별도 sprint)
 - **Phase 2 (Imperial icon kit)** — DEFERRED
 - **PR 3.4 shell grid** — Phase 6으로 통합
-- **per-entity inbox 분산** — 단일 통합 inbox로 결정
 
 ---
 
 ## 🔧 작업 환경
 
-- 이번 세션 worktree: `.claude/worktrees/note-status-rename` (plan만 작성, 작업 X)
-- branch: `claude/note-status-rename` (origin/main 28b7474 + Phase 4.1 머지된 main 기반)
-- main: `28b7474` (Phase 4.1 CSS 통합 후 머지된 상태)
-- dev server: 미사용 (이번 세션 plan만)
-- 디자인 skills: project-level (`.agents/skills/`)
+- **현재 main brnach** = `d4f7ca1` (PR #285 머지 후)
+- **현 worktree**: `/리니어 노트앱` (main checkout)
+- 별도 worktree (`v3-phase-4-3` 등) 보존됨 — 다음 세션에 정리 가능
+- **dev server**: localhost:3002 (Next.js, 현 worktree 코드)
+- **store version**: v117 (inbox layer 1 IDB migration 적용 후)
+
+---
+
+## 📚 참고 plan
+
+- `.omc/plans/v3-phase-4-3-decompose.md` — **Section 9-11이 핵심**:
+  - Section 9: Lessons learned (이번 세션)
+  - Section 10: Roadmap chrome (Step A/B/C/D)
+  - Section 11: Filter coverage 분석 (Step 1-5)
+- `.omc/plans/v3-phase-4-decompose.md` — Phase 4 원본
+- `.omc/plans/inbox-layer.md` — Phase B (이미 main 머지 진행)
+- `.omc/plans/note-status-rename.md` — Phase A (이미 main 머지)

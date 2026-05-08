@@ -5,6 +5,74 @@
 
 ---
 
+## 2026-05-08 (오후) — 집
+
+### 완료 (5 PR 머지)
+- **PR #271**: Status icons + UI 라벨 "Keystone" → "Block" + Cuboid (1×2 isometric block) + Save view button icon-only 16px (HBtn pattern)
+  - 5 commits: Cuboid component / IconBlock rename / 12-site label rename + chip icon Hexagon/Cube/Cuboid 통일 / Save view reskin / merge resolution (origin/main 25+ commits behind 충돌)
+  - 충돌 해결: view-header.tsx (HEAD HBtn 채택) / home-view.tsx (origin/main IconInbox 채택) + IconInbox export 복원
+- **PR #282**: PR 4.3a Tags+Labels chrome 통일 (시도) — `.a-th` + `.a-row` 적용
+- **PR #283**: PR #282 partial revert — `.a-row`가 globals.css에서 6-column grid 강제로 layout 깨짐. tags/labels 원복.
+- **PR #284**: Tags row border-b 제거 (Notes/Labels 패턴 일관) + plan update Section 9-10
+- **PR #285**: plan Section 11 Filter coverage 분석 (entity별 도메인 + Step 1-5)
+
+### 브레인스토밍 & 큰 결정 (영구)
+
+#### 1. Filter model 통찰 (사용자 직관)
+```
+LIST/TABLE: column = passive attribute view, Filter button = active narrow
+BOARD:      column = grouping attribute, Filter button = other axis
+GRID:       card chip = attribute viz, Filter button = chip narrow
+```
+- Filter 없는 view = 도메인 attribute 부족 (column 자체가 단순)
+- column 추가 시 Filter도 자연스레 가능 (Tags color, Files type 등)
+- 이 model이 PR 4.3 chrome 통일의 north star
+
+#### 2. NoteStatus enum value `keystone` 유지 (영구)
+- UI 라벨만 "Block"로 (Cuboid 1×2 isometric block 아이콘)
+- internal `keystone` 그대로 (URL `/keystone`, IDB, type literal)
+- 이유: AddBlock / BlockTree / ContentBlock 등 기존 `block` identifier와 충돌 회피
+- mismatch는 디버그 콘솔 + URL bar에 한정 (사용자 영향 X)
+
+#### 3. View modes 평가 (Studio / Editorial / Gallery)
+- **Studio + Editorial**: 영구 규칙 위반 ("멋진 레이아웃 / 시각적 다양성 방향 제안 금지") + TODO 폐기 항목 ("매거진/뉴스페이퍼/북 Pivot — 폐기 2026-04-22") 부활. **제거 예정**.
+- **Gallery**: 카드 형태는 좋음. 단 (1) 편집 불가 (2) 하드코딩 styling (cream 강제). **polishing 후 재도입** — 일단 보류.
+- 통합 방향: Display popover `[List | Board | Gallery]` 3-segment (ViewSwitcher tab 제거)
+
+#### 4. `.a-th, .a-row` grid hardcoded 발견
+- globals.css에서 6-column grid template 강제 (notes-table 전용)
+- NotesTable은 inline grid로 덮어씀 → OK / 다른 view (3-element flex)는 layout 깨짐
+- **refactor 필요**: chrome-only 분리 (height/border/sticky/bg/font-size) + grid는 consumer 책임
+
+#### 5. Filter coverage 도메인 분석 (entity별)
+- 명확 가치: Files (type), References (type), Wiki Category (보강), Inbox (source)
+- 일관성 추가: Tags / Labels color
+- Filter 없는 게 자연스러움: Insights (analytics)
+- Step 1-5 series — view-engine config 변경만, chrome refactor와 독립 (병렬 PR 가능)
+
+### 다음 세션 (NEXT-ACTION.md 참조)
+- Path A 추천: Step 1 Files type filter (가장 작고 명확)
+- Path B: Step A globals.css refactor (chrome 통일 prerequisite)
+- Path C: Studio/Editorial cleanup
+
+### Watch Out
+- **`.a-th, .a-row` 사용 주의**: 다른 view에 적용 시 grid 6-col 강제로 layout 깨짐. globals.css refactor 후에만 적용.
+- **PR 머지 시 origin/main 25+ commits behind 충돌 가능**: 머지 전 conflict 점검 (특히 view-header.tsx, home-view.tsx 등 main에서 자주 변경되는 파일)
+- **IconInbox export 분리 vs IconStone**: 옛 inbox status 가 stone으로 rename되면서 IconStone 추가됐지만, 별도 inbox-layer 메타포로 IconInbox는 main에서 유지 — merge 시 분리해야 함
+
+### 머신
+집 (Windows)
+
+### 누적 commits (이번 세션, 5 PR + docs sync)
+1. PR #271 — feat(icons): Cuboid + IconBlock + label + Save view + merge fix (4 atomic commits + 1 merge commit)
+2. PR #282 — feat(v3-phase-4-3a): tags+labels chrome 시도 (2 commits)
+3. PR #283 — fix(v3-phase-4-3a): partial revert (1 commit)
+4. PR #284 — fix(v3-phase-4-3a): border-b 제거 + plan Section 9-10 (1 commit)
+5. PR #285 — docs(plan): Section 11 Filter coverage (1 commit)
+6. PR (이) — docs sync NEXT-ACTION/SESSION-LOG/MEMORY/TODO/CONTEXT
+
+---
+
 ## 2026-05-08 (새벽) — 집
 
 ### 완료
