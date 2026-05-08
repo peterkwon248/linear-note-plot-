@@ -692,10 +692,10 @@ export function TagsView() {
             {/* ── List Mode ── */}
             {!isGridMode && visibleTags.length > 0 && (
               <div>
-                {/* Header row with select-all checkbox — v3 .a-th chrome */}
+                {/* Header row with select-all checkbox */}
                 <div
                   data-header-row
-                  className="a-th sticky top-0 z-10 flex items-center gap-3 px-6"
+                  className="sticky top-0 z-10 flex items-center gap-3 border-b border-border-subtle bg-background px-6 py-2.5"
                 >
                   <div
                     onClick={toggleAll}
@@ -756,8 +756,7 @@ export function TagsView() {
                     <ContextMenuTrigger asChild>
                       <div
                         data-tag-index={index}
-                        data-active={checkedTags.has(tag.id) ? "true" : undefined}
-                        className={`a-row group flex items-center gap-3 px-6 transition-colors ${
+                        className={`group flex items-center gap-3 px-6 py-2.5 border-b border-border/50 transition-colors ${
                           checkedTags.has(tag.id) ? "bg-accent/8" : "hover:bg-hover-bg"
                         }`}
                         onClick={(e) => {
