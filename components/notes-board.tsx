@@ -698,6 +698,7 @@ export function NotesBoard({
   folderId,
   tagId,
   labelId,
+  headerExtras,
 }: {
   onRowClick?: (noteId: string) => void
   activePreviewId?: string | null
@@ -708,6 +709,9 @@ export function NotesBoard({
   folderId?: string
   tagId?: string
   labelId?: string
+  /** v3 Phase 5.1: extra toolbar nodes (e.g. ViewSwitcher) rendered before
+   *  the existing extras. Threaded through to ViewHeader.extraToolbarButtons. */
+  headerExtras?: React.ReactNode
 }) {
   const notes = usePlotStore((s) => s.notes)
   const updateNote = usePlotStore((s) => s.updateNote)
@@ -1106,6 +1110,7 @@ export function NotesBoard({
         count={flatNotes.length}
         saveViewMode={saveViewMode}
         onSaveView={onSaveView}
+        extraToolbarButtons={headerExtras}
         showFilter
         hasActiveFilters={viewState.filters.length > 0}
         filterContent={

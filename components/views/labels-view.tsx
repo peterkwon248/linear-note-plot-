@@ -767,10 +767,10 @@ export function LabelsView() {
                 {/* ── List Mode ── */}
                 {!isGridMode && (
                   <div>
-                    {/* Header row */}
+                    {/* Header row — v3 .a-th chrome */}
                     <div
                       data-header-row
-                      className="sticky top-0 z-10 flex items-center gap-3 border-b border-border-subtle bg-background px-6 py-2.5"
+                      className="a-th sticky top-0 z-10 flex items-center gap-3 px-6"
                     >
                       <div
                         onClick={toggleAll}
@@ -837,7 +837,8 @@ export function LabelsView() {
                           <ContextMenuTrigger asChild>
                             <div
                               data-label-index={index}
-                              className={`flex items-start gap-3 px-6 py-2.5 transition-colors group cursor-default${
+                              data-active={checkedLabels.has(label.id) ? "true" : undefined}
+                              className={`a-row flex items-start gap-3 px-6 transition-colors group cursor-default${
                                 checkedLabels.has(label.id) ? " bg-accent/10" : " hover:bg-hover-bg"
                               }`}
                               onClick={(e) => {

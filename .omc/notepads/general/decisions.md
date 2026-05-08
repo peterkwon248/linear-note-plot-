@@ -1,5 +1,119 @@
 # Architectural Decisions
 
+## 2026-05-07 (밤) — Mockup 직접 서빙 + PanelsMenu 통합 (PR #281)
+
+### 핵심 인사이트 (영구)
+
+**Mockup 직접 서빙 = 진짜 인터랙션 분석 도구**:
+- `.claude/launch.json`에 mockup server (port 3003) 추가
+- `npx serve docs/v3-mockup -l 3003` + preview MCP로 직접 작동
+- 코드만 읽기 → 인터랙션 누락. 작동 보기 → spec 정확
+- **다른 Claude 인스턴스 만들기 ≠ 빠름** (같은 한계 + 시간 두 배)
+
+### PanelsMenu 통합 패턴 (영구 결정)
+
+**분산 close button 패턴 폐기**:
+- ActivityBar의 close X button → 제거
+- ActivityBar의 edge re-open chevron → 제거
+- ActivityBar의 "Sidebar" button (sidebar collapsed 시) → 제거
+- Sidebar 자체 close button → 제거
+
+**PanelsMenu (햄버거 ≡) 통합**:
+- Workspace top-left (ViewHeader 좌측)
+- Popover: Activity bar / Sidebar / Detail 체크박스
+- Show all / Hide all preset
+- 단축키 hint 표시 (⌘⇧A / ⌘⇧F / ⌘B)
+- 모든 view 자동 (ViewHeader single source)
+
+### 단축키 매핑 (영구)
+- **⌘⇧F**: sidebar collapse (Plot 기존)
+- **⌘⇧A**: activity bar collapse (mockup ⌘⇧\ 충돌 회피, 신규)
+- **⌘B**: side panel toggle
+- **⌘\**: split view toggle
+
+### Save view 단어 제거 (모든 view)
+- view-header.tsx 3 위치
+- 플로피 disk icon만 (square 7x7px)
+- title + aria-label로 hover hint
+
+### 이번 세션 토론 보류
+- View modes / Display panel 통합 (사용자: 현재 그대로)
+- Editorial → Magazine rename (사용자: 접음)
+
+---
+
+## 2026-05-07 (저녁) — Mockup-first 한계 영구 정책
+
+### 사용자 통찰 (영구)
+"디자인만 가져오고 싶은데, 우리 코드/기능은 살리자"
+
+### Mockup vs Plot 결정 매트릭스
+| 영역 | 정책 |
+|------|------|
+| **Layout / structure / shell wrapper** | mockup ✅ |
+| **Cell / chip / card 패턴** (.u-card, .a-row, .a-stchip) | mockup ✅ |
+| **Dark Studio / Source Serif 4 magazine 룩** | mockup ✅ |
+| **Header typography** (column header) | Plot 위키 정합 (.a-th__cell 폐기) |
+| **Status badge / 컴포넌트** | Plot 정체성 (StatusBadge 보존) |
+| **Memo label** | Plot 보존 (사용자 명시 "무조건") |
+| **Default visibleColumns** | mockup-friendly + Plot 차별점 (folder) |
+| **Spacing** (gap, padding) | Plot 위키 정합 우선 |
+
+### PR #279에 누적된 7 fixes (이 패턴 정착)
+1. Header `.a-th__cell` 폐기 → 위키 typography (14px medium normal-case)
+2. Status chip `.a-stchip` 폐기 → Plot StatusBadge rollback
+3. Default visibleColumns mockup-friendly (title/tags/status/folder/links/words/updatedAt)
+4. `.a-th, .a-row gap` 16→8px (위키 wiki-list gap-2 정합)
+5. Title cell `marginLeft: -8` (grid gap 상쇄, 체크박스 가깝게)
+6. `.a-th, .a-row padding` 16→20px (헤더+row 체크박스 정렬, 위키 px-5 정합)
+7. (Phase 5.3 Editorial은 mockup 그대로 — magazine 룩이 Plot 정체성과 부합)
+
+### 향후 적용 원칙
+새 mockup 디자인 도입 시:
+1. Layout/cell/shell은 mockup CSS/JSX 그대로
+2. Typography/spacing/badges는 Plot 위키와 비교, 다르면 Plot 우선
+3. 사용자 정성껏 잡은 디자인은 무단 교체 X
+
+---
+
+## 2026-05-07 (오후) — Inbox = action notification queue (영구 결정)
+
+### 핵심 (entity-based 폐기)
+사용자 통찰: "스톤은 인박스가 아니야. 리니어의 인박스처럼."
+- 기존 inbox = stone status filter (Phase A에서 rename됨)
+- **새 inbox = action notification queue** ("내가 *반응*해야 할 일들")
+- entity-based "정리 안 된 dashboard"는 Ontology / Library cleanup 영역
+
+### 5 Sources (action source)
+- reminder (Note.reviewAt 도래)
+- srs (srsStateByNoteId.dueAt 도래)
+- snooze-expired (snoozedInboxItems 만료 재노출)
+- wiki-redlink (unresolved [[wiki-link]], refs >= 2)
+- auto-enroll (clusterSuggestions, status === pending)
+
+### 영구 키 결정
+- **dismiss/snooze identifier = (kind, sourceId)** — 5 source 호환 안정 키
+- **InboxItemKind ≠ EntityKind** — kind = "왜 inbox에 있는가" (action source)
+- **wiki-redlink threshold = 2** (noise 방지)
+- **clusterSuggestions filter = "pending"만**
+- **Sidebar Inbox link = Home space만** (다른 space 분리)
+
+### Plot 정체성 정합
+- 0 항목 시 카드 숨김 ("Gentle by default")
+- hover dismiss/snooze (Linear 패턴)
+- top 5 + "+N more" (cap)
+
+### 완성 인프라
+- `lib/store/slices/inbox.ts` — InboxItemKind + dismiss/snooze actions
+- `lib/hooks/use-inbox.ts` — 5 sources unified hook
+- `components/inbox/inbox-source-icon.tsx` — kind→icon 공용 매핑
+- `components/views/inbox-view.tsx` — full-page (filter tabs + popover snooze + toast undo)
+- IDB v117 migration (idempotent)
+
+### PR 시리즈 #272 → #273 → #274 → #275
+
+---
+
 ## 2026-05-07 — Plot 2.0 PRD 폐기 + v3 mockup 채택 (영구 결정)
 
 ### 핵심

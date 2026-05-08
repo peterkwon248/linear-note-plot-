@@ -30,6 +30,7 @@ import { CalendarView } from "@/components/calendar-view"
 import { SearchView } from "@/components/views/search-view"
 import { GraphInsightsView } from "@/components/views/graph-insights-view"
 import { HomeView } from "@/components/views/home-view"
+import { InboxView } from "@/components/views/inbox-view"
 import { TodoView } from "@/components/views/todo-view"
 import { LibraryView } from "@/components/views/library-view"
 import { MergeDialogGlobal } from "@/components/merge-dialog-global"
@@ -234,6 +235,12 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                 {(mountedViews.has("/home") || activeRoute === "/home") && (
                   <div className={activeRoute === "/home" ? "flex flex-1 overflow-hidden" : "hidden"}>
                     <HomeView />
+                  </div>
+                )}
+
+                {(mountedViews.has("/inbox") || activeRoute === "/inbox") && (
+                  <div className={activeRoute === "/inbox" ? "flex flex-1 overflow-hidden" : "hidden"}>
+                    <InboxView />
                   </div>
                 )}
 

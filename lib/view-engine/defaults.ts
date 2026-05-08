@@ -11,7 +11,10 @@ export const DEFAULT_VIEW_STATE: ViewState = {
   groupBy: "none",
   subGroupBy: "none",
   filters: [],
-  visibleColumns: ["title", "status", "folder", "links", "reads", "updatedAt", "createdAt"],
+  // v3 Phase 5: mockup-friendly default (title/tags/status/folder/links/words/updatedAt).
+  // Plot 차별점 (folder) 보존 + mockup default (tags/words) 추가. reads/createdAt은
+  // toggle on으로 사용자가 켤 수 있음 ("Gentle by default, powerful when needed").
+  visibleColumns: ["title", "tags", "status", "folder", "links", "words", "updatedAt"],
   showEmptyGroups: false,
   toggles: {},
   groupOrder: null,

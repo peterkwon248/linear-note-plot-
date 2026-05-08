@@ -1,4 +1,5 @@
 import type { Note, NoteBody, Folder, Tag, Label, Sticker, EntityRef, NoteTemplate, ActiveView, NoteEvent, Thread, AutopilotRule, AutopilotLogEntry, Relation, RelationType, Attachment, CoOccurrence, RelationSuggestion, WikiClusterSuggestion, WikiInfoboxEntry, WikiCollectionItem, SavedView, WikiArticle, WikiBlock, WikiCategory, Reference, GlobalBookmark, Comment, CommentAnchor } from "../types"
+import type { InboxDismissed, InboxSnoozed, InboxItemKind } from "./slices/inbox"
 import type { SRSState, SRSRating } from "@/lib/srs"
 import type { ViewState, ViewContextKey } from "../view-engine/types"
 import type { WorkspaceTab } from "../workspace/types"
@@ -76,6 +77,8 @@ export interface PlotState {
   sidebarWidth: number
   sidebarLastWidth: number
   sidebarCollapsed: boolean
+  /** v3 mockup spec: actbar collapse (data-actbar="open|collapsed"). 단축키 ⌘⇧A. */
+  activitybarCollapsed: boolean
   // View Engine
   viewStateByContext: Record<ViewContextKey, ViewState>
   _viewStateHydrated: boolean
@@ -248,6 +251,7 @@ export interface PlotState {
   toggleSidePanel: () => void
   setSidebarWidth: (width: number) => void
   setSidebarCollapsed: (collapsed: boolean) => void
+  setActivitybarCollapsed: (collapsed: boolean) => void
   restoreSidebar: () => void
   goBack: () => boolean
   goForward: () => boolean
@@ -408,6 +412,17 @@ export interface PlotState {
   rebuildTodoIndex: () => Promise<void>
   toggleTaskChecked: (noteId: string, position: number) => Promise<void>
   addQuickTask: (text: string) => Promise<void>
+
+  // ── Inbox (Phase B v117) ──
+  dismissedInboxItems: InboxDismissed[]
+  snoozedInboxItems: InboxSnoozed[]
+
+  // ── Inbox Actions ──
+  dismissInbox: (kind: InboxItemKind, sourceId: string) => void
+  undoDismissInbox: (kind: InboxItemKind, sourceId: string) => void
+  snoozeInbox: (kind: InboxItemKind, sourceId: string, until: Date) => void
+  unsnoozeInbox: (kind: InboxItemKind, sourceId: string) => void
+  clearExpiredSnoozed: () => void
 
   // ── Internal ──
   _hydrateNoteBodies: (bodies: NoteBody[]) => void

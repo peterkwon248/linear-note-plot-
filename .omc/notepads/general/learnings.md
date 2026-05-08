@@ -1,5 +1,52 @@
 # Technical Learnings
 
+## 2026-05-07 (오후) — Phase B Inbox Layer 학습
+
+### Memo backfill 함정 (영구 정책 인지 필요)
+- `lib/store/slices/notes.ts:16-28` — `createNote`가 `partial.labelId` 없으면 항상 Memo label 자동 부여
+- `lib/store/index.ts:326-338` — `onRehydrate`가 `labelId === null` 노트에 Memo backfill
+- 결과: 모든 노트는 항상 labelId 가짐 → entity-based "no label" 필터 무효화
+- inbox 시리즈 v1 plan ("stone + 미분류")이 실측 0 항목인 이유
+
+### VIEW_ROUTES 등록 필수
+- 새 always-mounted route는 `lib/table-route.ts:19` `VIEW_ROUTES`에 추가 필수
+- 빠뜨리면 mount 분기 (`mountedViews.has() || activeRoute ===`) 작동 X
+- designer 위임 시 누락 사례 발생 → prompt에 명시 권장
+
+### InboxItemKind ≠ EntityKind 분리 의미
+- EntityKind = entity 분류 ("note" / "wiki" / "tag" 등 7종)
+- InboxItemKind = action source ("왜 inbox에 있는가" — reminder/srs/snooze-expired/wiki-redlink/auto-enroll)
+- semantic 분리 명확화. 같은 type으로 통합하지 말 것.
+
+### Fast Refresh hook 순서 변경 = full reload (정상)
+- React가 hook 순서 변경 감지 → full reload 강제 (HMR 한계)
+- "Fast Refresh had to perform a full reload due to a runtime error" 메시지는 정보성
+- hook 추가 작업 시 정상 동작 — 두려워 말 것
+
+### isOverdue action 문자열 결합 fragility
+- 초기: `item.action?.startsWith("Overdue")` (reminder만 있을 때 OK)
+- srs 추가 시 "Review overdue Nd"도 fragile (startsWith X)
+- 해결: `item.action?.toLowerCase().includes("overdue") ?? false` 또는 kind 체크
+- 일반 원칙: action 문자열 매칭은 source 추가에 fragile — 별도 필드 또는 kind 체크 우선
+
+### 큰 방향 전환 패턴 (사용자 통찰 활용)
+- v1 plan을 디자이너 위임 후 시각 검증 단계에서 사용자가 "이건 아니야" 통찰 제공
+- 즉시 plan 재검토 + brainstorm + v2 채택
+- 작업 원칙 #8 ("사용자 직관 = 디자인 시그널") 정합
+- 패턴: 큰 방향 전환은 **현 PR 작업 polluting하지 않게** 별도 commit + description 명시
+
+### `useInbox` selector 6개 (5 sources 모두 호출)
+- notes, dismissedInboxItems, snoozedInboxItems, srsStateByNoteId, wikiArticles, clusterSuggestions
+- useMemo 안에서 5 source loop. ts asc 정렬.
+- sidebar에서도 호출 — useMemo 방어로 cheap
+
+### snooze-expired self-referential
+- 사용자가 reminder를 snooze → 만료 시 snooze-expired source로 재노출
+- 다시 snooze하면 (kind="snooze-expired", sourceId) 새 항목 추가
+- 의도된 동작 (재귀이지만 logic correct)
+
+---
+
 ## 2026-05-07 — Plot v3 visual refresh (Phase 0+1)
 
 ### Inventory vs critic estimate 16배 차이

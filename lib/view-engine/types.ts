@@ -30,7 +30,7 @@ export type ViewContextKey =
 
 /* ── View State ────────────────────────────────────────── */
 
-export type ViewMode = "list" | "board" | "grid" | "insights" | "calendar" | "graph" | "dashboard"
+export type ViewMode = "list" | "board" | "grid" | "insights" | "calendar" | "graph" | "dashboard" | "gallery" | "studio" | "editorial"
 
 export type SortField =
   | "updatedAt"
@@ -222,7 +222,7 @@ export const VALID_GROUP_BY: GroupBy[] = [
   "role",
 ]
 
-export const VALID_VIEW_MODES: ViewMode[] = ["list", "board", "grid", "insights", "calendar", "graph"]
+export const VALID_VIEW_MODES: ViewMode[] = ["list", "board", "grid", "insights", "calendar", "graph", "gallery", "studio", "editorial"]
 
 export const VALID_GROUP_SORT_BY: GroupSortBy[] = ["default", "manual", "name", "count"]
 

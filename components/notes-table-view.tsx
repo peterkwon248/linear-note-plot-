@@ -5,10 +5,14 @@ import { usePlotStore } from "@/lib/store"
 import { useSettingsStore } from "@/lib/settings-store"
 import { NotesTable } from "@/components/notes-table"
 import { NotesBoard } from "@/components/notes-board"
+import { GalleryViewShell } from "@/components/views/gallery-view-shell"
+import { StudioViewShell } from "@/components/views/studio-view-shell"
+import { EditorialViewShell } from "@/components/views/editorial-view-shell"
+import { ViewSwitcher, type ViewSwitcherMode } from "@/components/views/view-switcher"
 import { WorkspaceEditorArea } from "@/components/workspace/workspace-editor-area"
 import { usePane } from "@/components/workspace/pane-context"
 import { useActiveRoute, useActiveFolderId, useActiveTagId, useActiveLabelId, useActiveViewId } from "@/lib/table-route"
-import type { ViewContextKey } from "@/lib/view-engine/types"
+import type { ViewContextKey, ViewMode } from "@/lib/view-engine/types"
 import type { Note } from "@/lib/types"
 
 /* ── Route → View Config map ─────────────────────────── */
@@ -105,11 +109,86 @@ export function NotesTableView() {
     )
   }
 
+  // ── v3 Phase 5.1 / 5.2 / 5.3: Gallery + Studio + Editorial mode toggle ──
+  // ViewSwitcher exposes Table (list) ↔ Gallery ↔ Studio ↔ Editorial; Board
+  // lives behind the Display popover. Hidden on /trash where these have no
+  // useful semantics (a deleted-note "magazine" makes no sense).
+  const isTrashView = tableRoute === "/trash"
+  const switcherValue: ViewSwitcherMode =
+    viewMode === "gallery"   ? "gallery"
+    : viewMode === "studio"    ? "studio"
+    : viewMode === "editorial" ? "editorial"
+    : "list"
+  const handleSwitcherChange = (mode: ViewSwitcherMode) => {
+    setViewState(contextKey, { viewMode: mode as ViewMode })
+  }
+  const headerExtras = !isTrashView ? (
+    <ViewSwitcher value={switcherValue} onChange={handleSwitcherChange} />
+  ) : undefined
+
+  // Editorial shell (own ViewHeader chrome, warm canvas body)
+  if (viewMode === "editorial" && !isTrashView) {
+    return (
+      <div className="flex flex-1 overflow-hidden">
+        <EditorialViewShell
+          context={contextKey}
+          title={config.title}
+          hideCreateButton={config.hideCreateButton}
+          folderId={activeFolderId ?? undefined}
+          tagId={activeTagId ?? undefined}
+          labelId={activeLabelId ?? undefined}
+          headerExtras={headerExtras}
+          onNoteClick={(noteId) => setPreviewNoteId(noteId)}
+          activePreviewId={previewNoteId}
+        />
+      </div>
+    )
+  }
+
+  // Studio shell (own ViewHeader chrome, dark-forced body)
+  if (viewMode === "studio" && !isTrashView) {
+    return (
+      <div className="flex flex-1 overflow-hidden">
+        <StudioViewShell
+          context={contextKey}
+          title={config.title}
+          hideCreateButton={config.hideCreateButton}
+          folderId={activeFolderId ?? undefined}
+          tagId={activeTagId ?? undefined}
+          labelId={activeLabelId ?? undefined}
+          headerExtras={headerExtras}
+          onNoteClick={(noteId) => setPreviewNoteId(noteId)}
+          activePreviewId={previewNoteId}
+        />
+      </div>
+    )
+  }
+
+  // Gallery shell (own ViewHeader chrome, parallel to NotesTable/Board)
+  if (viewMode === "gallery" && !isTrashView) {
+    return (
+      <div className="flex flex-1 overflow-hidden">
+        <GalleryViewShell
+          context={contextKey}
+          title={config.title}
+          hideCreateButton={config.hideCreateButton}
+          folderId={activeFolderId ?? undefined}
+          tagId={activeTagId ?? undefined}
+          labelId={activeLabelId ?? undefined}
+          headerExtras={headerExtras}
+          onNoteClick={(noteId) => setPreviewNoteId(noteId)}
+          activePreviewId={previewNoteId}
+        />
+      </div>
+    )
+  }
+
   // Table / Board view + optional detail panel
   const ViewComponent = viewMode === "board" ? NotesBoard : NotesTable
+  const modeAttr = viewMode === "board" ? "board" : "table"
 
   return (
-    <div className="flex flex-1 overflow-hidden">
+    <div className="u-mode flex flex-1 overflow-hidden" data-mode={modeAttr}>
       <ViewComponent
         context={config.context}
         title={config.title}
@@ -120,6 +199,7 @@ export function NotesTableView() {
         labelId={activeLabelId ?? undefined}
         onRowClick={(noteId) => setPreviewNoteId(noteId)}
         activePreviewId={previewNoteId}
+        headerExtras={headerExtras}
       />
     </div>
   )
