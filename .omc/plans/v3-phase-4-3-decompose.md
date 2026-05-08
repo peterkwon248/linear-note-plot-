@@ -248,3 +248,89 @@ Step D: 다른 view 확장
 - Gallery polishing (별도 PR — 편집 + Plot tokens)
 - view modes ViewSwitcher 단순화 (Display popover 통합) — Gallery polish 후
 
+---
+
+## 11. Filter coverage 분석 (entity별, 2026-05-08)
+
+사용자 직관: "태그든 템플릿이든 라벨이든, 레퍼런시스든, 파일이든 다 필터랑 디스플레이 있어야 되는 거 아니냐?"
+
+### 11.1 현 상태 점검 (lib/view-engine/view-configs.tsx)
+
+| View | showFilter | filterCategories | 도메인 평가 |
+|------|-----------|------------------|------------|
+| **Notes** | ✅ true | 풍부 (status/folder/tag/label/source/dates...) | workflow entity, OK |
+| **Wiki** | ✅ true | 풍부 | workflow entity, OK |
+| **Wiki Category** | ✅ true | 일부 (사용자: "부실") | 보강 필요 |
+| **Calendar** | ✅ true | 풍부 | OK |
+| **Templates** | ✅ true | 풍부 | OK |
+| **Graph** | ✅ true | 풍부 | OK |
+| **Tags** | ❌ false | `[]` | color/source 가능 |
+| **Labels** | ❌ false | `[]` | color 가능 |
+| **References** | ❌ false | `[]` | **type 가능 (book/article/url/quote)** |
+| **Files** | ❌ false | `[]` | **type 가능 (image/url/file), size range** |
+| **Stickers** | ❌ false | `[]` | hasMembers / member entity type |
+| **Inbox** | ❌ false | `[]` | source (note-stone/wiki-stub/srs-due/snooze-expired) |
+| **Insights** | ❌ false | `[]` | analytics — filter 의미 X (의도) |
+
+**관찰**:
+- Display는 모두 `true` (universal) — 이미 일관 ✅
+- Filter는 entity별 차이 — 일부는 도메인상 가치 있는데도 비어있음
+
+### 11.2 도메인별 채울 수 있는 Filter (우선순위)
+
+#### 🟢 명확하게 가치 있음 (workflow / strong attribute)
+
+| Entity | 추가 filter | 가치 근거 |
+|--------|------------|----------|
+| **References** | type (book/article/url/quote), hasFields(boolean), fieldKey | type별 분류는 Reference 사용 패턴의 핵심 |
+| **Files** | type (image/url/file), size range, hasPreview | visual scan ↑, 100+ files 시 type filter 필수 |
+| **Wiki Category** | hasWikis(boolean), color, parent | 현재 부실 — 사용자 직접 우려 |
+| **Inbox** | source (note-stone/wiki-stub/srs-due/snooze-expired), unread | 처리 대기 분류 |
+
+#### 🟡 일관성 위해 추가 (도메인 빈약하지만 가치 있음)
+
+| Entity | 추가 filter | 가치 근거 |
+|--------|------------|----------|
+| **Tags** | color (set/unset, 또는 specific), source (manual/auto-extract — 기능 있을 시) | v109 opt-in color 활용 |
+| **Labels** | color (similar) | Tags 동일 패턴 |
+| **Stickers** | hasMembers, member entity type | 도메인 평가 후 |
+
+#### ❌ Filter 없는 게 자연스러움
+- **Insights** — analytics dashboard, 도메인상 filter 무의미
+
+### 11.3 Step series (Section 10 확장)
+
+```
+Step 1: Files type filter 추가 (image/url/file)
+   → 가장 명확한 도메인 가치 + 즉시 visual scan ↑
+Step 2: References type filter 추가
+   → 도메인 명확
+Step 3: Wiki Category filter 보강 (부실 → 풍부)
+   → 사용자 직접 우려한 항목
+Step 4: Tags / Labels color filter (선택)
+   → v109 opt-in color 활용
+Step 5: Stickers / Inbox filter (선택)
+   → 도메인 평가 후 진행
+```
+
+각 Step은 view-engine config 변경만 — chrome refactor (Step A/B)와 독립. **빠른 PR 시리즈 가능**.
+
+### 11.4 Phase 4 north star 정합
+
+이 분석은 9.2 Filter model 통찰의 직접 적용:
+- LIST/TABLE에서 **column = passive view, Filter button = active narrow**
+- 도메인 attribute가 있으면 column으로 노출 + filter로 좁히기 가능
+- "filter button 없는 view"는 도메인상 attribute가 부족한 경우만 (Insights)
+
+→ Filter coverage 보강 = column model 확장의 자연스러운 partner.
+
+### 11.5 머지된 PR cycle (2026-05-08)
+
+| PR | 작업 |
+|----|------|
+| #271 | Status icons + Block label + Cuboid + Save view 16px |
+| #282 | PR 4.3a Tags+Labels chrome 통일 (시도) |
+| #283 | PR #282 partial revert (`.a-row` grid 충돌) |
+| #284 | Tags row border-b 제거 + plan update (column model + 3-step roadmap) |
+| (이 PR) | plan update — Filter coverage 분석 (Step 1-5 추가) |
+
