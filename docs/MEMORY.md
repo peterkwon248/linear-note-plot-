@@ -28,6 +28,85 @@
 
 ---
 
+## 🚀 2026-05-08 (오후) — Status icons + Phase 4.3 chrome 통일 (시도→revert→정리) + Filter coverage plan (5 PR + docs sync)
+
+**범위**: 사용자 회귀 발견 (PR 4.3a `.a-row` grid 충돌) + 즉시 fix. Phase 4 north star (filter model 통찰) 명문화. 4.3 chrome 통일은 globals.css refactor prerequisite.
+
+### 머지된 PRs (이번 세션, 5 PR + docs sync)
+- **PR #271** (claude/status-icons-metaphor): Status icons + UI 라벨 "Keystone" → "Block" + Cuboid (1×2 isometric block) + Save view button icon-only 16px (HBtn pattern). 4 atomic commits + merge resolution (origin/main 25+ commits behind).
+- **PR #282** (claude/v3-phase-4-3): PR 4.3a Tags+Labels chrome 통일 시도. `.a-th` + `.a-row` 적용.
+- **PR #283** (claude/v3-phase-4-3a-fix): PR #282 partial revert. `.a-row`가 globals.css에서 6-column grid 강제로 layout 깨짐 (`#Knowledge Management` 두 줄 wrap + ~90px dead space).
+- **PR #284** (claude/v3-phase-4-3a-fix-2): Tags row `border-b border/50` 제거 (Notes/Labels 패턴 일관) + plan update Section 9-10 (lessons + revised roadmap).
+- **PR #285** (claude/v3-phase-4-3-plan-filter-coverage): plan Section 11 — Filter coverage 분석 (entity별 도메인 + Step 1-5 series).
+- **(docs sync PR)**: NEXT-ACTION / SESSION-LOG / MEMORY (이 entry) / TODO / CONTEXT 5/8 진척 반영.
+
+### 큰 결정 (영구)
+
+**1. Filter model 통찰 (사용자 직관)**:
+```
+LIST/TABLE: column = passive attribute view, Filter button = active narrow
+BOARD:      column = grouping attribute, Filter button = other axis
+GRID:       card chip = attribute viz, Filter button = chip narrow
+```
+- Filter 없는 view = 도메인 attribute 부족 (column 자체가 단순)
+- column 추가 시 Filter도 자연스레 가능 (Tags color, Files type 등)
+- **이 model이 PR 4.3 chrome 통일의 north star** — 단순 visual 통일이 아닌 filter/column model 통일
+
+**2. NoteStatus enum value `keystone` 유지** (UI 라벨만 "Block"):
+- internal `keystone` 그대로 (URL `/keystone`, IDB key, type literal)
+- 이유: AddBlock / BlockTree / ContentBlock 등 기존 `block` identifier와 충돌 회피
+- mismatch는 디버그 콘솔 + URL bar에 한정 (사용자 영향 X)
+- 영구 결정
+
+**3. Cuboid 컴포넌트 신규** (`components/icons/Cuboid.tsx`):
+- 두 큐브가 한 면을 공유한 1×2 isometric block (직육면체)
+- 단일 SVG, 11 line elements (outer hexagon 6 + Y junction 3 + cube divider 2)
+- Pre-computed isometric vertices (256 viewBox + 16px padding) — 수정 금지 (격자 정렬)
+- Phosphor wrapper 인터페이스 (size / weight / color / mirrored)
+- IconBlock = 단순 wrapper (`<Cuboid weight="regular" />`)
+
+**4. View modes 평가** (사용자 회의 직관):
+- **Studio + Editorial**: 영구 규칙 #1 위반 ("멋진 레이아웃 / 시각적 다양성 방향 제안 금지") + TODO 폐기 항목 ("매거진 pivot 폐기 2026-04-22") 부활 → **제거 예정** (Path C)
+- **Gallery**: 카드 형태 자체는 좋음. 단 (1) 편집 불가 read-only (2) 하드코딩 styling (cream 강제, Plot tokens 무시) → **polishing 후 재도입** (Path D)
+- 통합 방향: Display popover `[List | Board | Gallery]` 3-segment + ViewSwitcher tab 제거
+
+**5. `.a-th, .a-row` grid hardcoded 발견**:
+- globals.css에서 `display: grid; grid-template-columns: minmax(0, 2.4fr) minmax(0, 1.3fr) 110px 90px 70px 80px;` (notes-table 6-column 강제)
+- NotesTable은 inline grid로 덮어씀 → OK / 다른 view (3-element flex)는 layout 깨짐
+- **refactor 필요**: chrome-only 분리 (height/border/sticky/bg/font-size) + grid는 consumer 책임 (Path B Step A)
+
+**6. Filter coverage 도메인 분석**:
+- 명확 가치 (높음): Files (type), References (type), Wiki Category (보강), Inbox (source)
+- 일관성 추가 (중간): Tags / Labels color, Stickers
+- Filter 없는 게 자연스러움: Insights (analytics)
+- **Step 1-5 series** — view-engine config 변경만 (chrome refactor와 독립, 병렬 PR 가능)
+
+### v3 PRD 영향
+- Phase 4.3 분해 정정: chrome 통일 prerequisite (globals.css refactor) + Filter coverage 보강 (Step 1-5)
+- Phase 5 재검토: Studio/Editorial 제거 + Gallery polish 후 재도입
+
+### 다음 우선순위 (P0)
+1. **Path A Step 1** — Files type filter (가장 작고 명확) ⭐ 추천
+2. **Path B Step A** — globals.css `.a-th/.a-row` refactor (chrome 통일 prerequisite)
+3. **Path C** — Studio + Editorial 제거 (영구 규칙 위반 cleanup)
+4. **Path A Step 2-3** — References / Wiki Category filter
+
+### 이번 세션 기술 학습
+- **PR cycle (#282 → #283 → #284)**: 시도 → revert → 정리. globals.css 구조 문제는 단순 className 추가로 해결 안 됨 — 깊은 refactor 필요. 사용자 visual feedback이 가장 빠른 진단 path.
+- **NoteStatus rename 회피 결정**: 53 files atomic rename + IDB v118 + route redirect 큰 작업 회피. UI 라벨만 변경으로 90% 가치 + 10% 작업.
+- **Filter model 통찰 → roadmap**: 사용자 직관 ("필터/디스플레이 다 있어야 되는 거 아니냐")이 phase 4.3 진짜 의미를 명확화. 단순 visual 통일 X, **filter/column model 통일**.
+- **PR 머지 시 충돌 대응**: origin/main 25+ commits behind 시 view-header.tsx / home-view.tsx 등 자주 변경되는 파일에서 충돌. 머지 commit + 충돌 해결 + push의 표준 절차 수립.
+
+### 아직 PR 안 한 작업물 (이번 세션 untracked, secondary)
+- `docs/status-icons-preview.html` (시안 HTML) — 작업물, 정리 권장
+- `docs/WIKI-REDESIGN-INSTRUCTIONS.md`, `plot-wiki-collection-mockup.html`, `plot-wiki-full-flow.html` — 3/19 작성 mockup, 별 의미 없음 (정리 또는 .gitignore)
+
+### Plan 문서 보존
+- `.omc/plans/v3-phase-4-3-decompose.md` — Section 9-11 핵심 (Lessons + Roadmap chrome + Filter coverage)
+- `.omc/plans/v3-phase-4-decompose.md` — Phase 4 원본
+
+---
+
 ## 🚀 2026-05-07 (밤) — Mockup 직접 서빙 + PanelsMenu 통합 (PR #281)
 
 **범위**: 이전 after-work 후 사용자와 큰 토론. mockup HTML을 dev server에 직접 서빙해서 내가 직접 작동시켜 인터랙션 분석. 발견된 spec을 PR #281에 누적 5 commits로 적용.

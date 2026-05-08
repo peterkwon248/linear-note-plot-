@@ -35,6 +35,62 @@
 ### 위반 시 사례 (재발 방지)
 - 이전 세션 — Executor scope 초과 (Sticker UI 754줄 자동 추가): 명시적 prompt scope 정의 + 결과 검증 의무
 - 이전 세션 — Hull pointer-events 추측 fix (실제 원인 = visiblePainted): 사용자 reproduce 정보 받고 코드 분석 후 fix
+- 2026-05-08 — PR #282 chrome 통일 시도가 globals.css `.a-row` grid 강제로 layout 깨짐: 단순 className 추가로 해결 안 됨, 깊은 refactor 필요. 사용자 visual feedback이 가장 빠른 진단 path.
+
+---
+
+## 🚀 2026-05-08 (오후) — Status icons + Phase 4.3 north star (5 PR + docs sync) ⭐⭐⭐
+
+**범위**: PR #271 (Status icons rework) + PR 4.3a 시도→revert→정리 cycle (#282 → #283 → #284) + plan Section 11 Filter coverage 분석 (#285) + docs sync (이 PR).
+
+### 머지된 PRs
+- ✅ **#271** — Status icons + UI 라벨 "Block" + Cuboid (1×2 isometric block) + Save view 16px (HBtn pattern). 4 atomic commits + merge resolution
+- ✅ **#282** — PR 4.3a Tags+Labels chrome 통일 (`.a-th` + `.a-row`) 시도
+- ✅ **#283** — PR #282 partial revert (`.a-row` 6-col grid 강제로 layout 깨짐)
+- ✅ **#284** — Tags row border-b 제거 + plan Section 9-10 (lessons + roadmap)
+- ✅ **#285** — plan Section 11 Filter coverage 분석 (Step 1-5)
+
+### 영구 결정 (이번 세션)
+
+**1. Filter model 통찰 (★ 사용자 직관, 영구 north star)**:
+```
+LIST/TABLE: column = passive attribute view, Filter button = active narrow
+BOARD:      column = grouping attribute, Filter button = other axis
+GRID:       card chip = attribute viz, Filter button = chip narrow
+```
+- Filter 없는 view = 도메인 attribute 부족
+- column 추가 → Filter 자연스레 가능
+- Phase 4.3 chrome 통일의 진짜 의미: visual + filter/column model 통일
+
+**2. NoteStatus enum value `keystone` 유지** (UI만 "Block"):
+- 내부 코드 `keystone` 그대로 (URL `/keystone`, IDB, type literal)
+- 이유: AddBlock / BlockTree / ContentBlock 등 기존 `block` identifier 충돌 회피
+- mismatch는 디버그 콘솔 + URL bar에 한정 (사용자 영향 X)
+
+**3. Cuboid 컴포넌트** (`components/icons/Cuboid.tsx`):
+- 1×2 isometric block (두 큐브가 한 면 공유). 11 line elements (outer hexagon 6 + Y junction 3 + cube divider 2)
+- 256 viewBox + 16px padding + Phosphor wrapper API
+- `IconBlock` = `<Cuboid weight="regular" />` 단순 wrapper
+
+**4. View modes 평가** (사용자 회의 직관):
+- Studio + Editorial: 영구 규칙 #1 위반 + TODO 폐기 항목 ("매거진 pivot 폐기 2026-04-22") 부활 → **제거 예정** (Path C)
+- Gallery: 카드 형태는 좋음. 단 (1) 편집 X (2) 하드코딩 styling (cream 강제) → **polishing 후 재도입** (Path D)
+- 통합 방향: Display popover `[List | Board | Gallery]` 3-segment + ViewSwitcher tab 제거
+
+**5. `.a-th, .a-row` grid hardcoded 발견 + refactor 필요**:
+- globals.css에서 6-column grid template (notes-table 전용) 강제
+- NotesTable inline grid로 덮어씀 → OK / 다른 view (3-element flex) → layout 깨짐
+- **refactor 필요**: chrome-only 분리 (height/border/sticky/bg/font-size) + grid는 consumer 책임
+
+**6. Filter coverage 도메인 분석** (entity별):
+- 명확 가치: Files (type), References (type), Wiki Category 보강, Inbox (source)
+- 일관성 추가: Tags / Labels color
+- Filter 없는 게 자연스러움: Insights (analytics)
+
+### 다음 우선순위 (P0)
+- ⭐ **Path A Step 1** — Files type filter (가장 작고 명확)
+- **Path B Step A** — globals.css `.a-th/.a-row` refactor (chrome 통일 prerequisite)
+- **Path C** — Studio + Editorial 제거 (영구 규칙 위반 cleanup)
 
 ---
 
