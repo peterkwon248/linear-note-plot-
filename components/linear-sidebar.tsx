@@ -4,6 +4,7 @@ import { useState, useMemo, useRef, useEffect } from "react"
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
 import {
+  IconStone,
   IconInbox,
   IconNotes,
   IconCalendar,
@@ -13,8 +14,8 @@ import {
   IconLabel,
   IconTemplate,
   IconInsight,
-  IconCapture,
-  IconPermanent,
+  IconBrick,
+  IconBlock,
   IconPin,
   IconTrash,
   IconClock,
@@ -803,22 +804,22 @@ export function LinearSidebar() {
               />
               <NavLink
                 href="/stone"
-                icon={<IconInbox size={20} />}
+                icon={<IconStone size={20} />}
                 label="Stone"
                 count={inboxCount > 0 ? inboxCount : undefined}
                 active={isActive("/stone")}
               />
               <NavLink
                 href="/brick"
-                icon={<IconCapture size={20} />}
+                icon={<IconBrick size={20} />}
                 label="Brick"
                 count={captureCount > 0 ? captureCount : undefined}
                 active={isActive("/brick")}
               />
               <NavLink
                 href="/keystone"
-                icon={<IconPermanent size={20} />}
-                label="Keystone"
+                icon={<IconBlock size={20} />}
+                label="Block"
                 count={permanentCount > 0 ? permanentCount : undefined}
                 active={isActive("/keystone")}
               />
@@ -1591,7 +1592,7 @@ export function LinearSidebar() {
             />
             <NavLink
               href="/stone"
-              icon={<IconInbox size={20} />}
+              icon={<IconStone size={20} />}
               label="Stone"
               count={inboxCount > 0 ? inboxCount : undefined}
               active={isActive("/stone")}

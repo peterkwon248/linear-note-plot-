@@ -57,7 +57,7 @@ const STATUS_GROUP: PickerFilterGroup = {
   values: [
     { value: "stone", label: "Stone" },
     { value: "brick", label: "Brick" },
-    { value: "keystone", label: "Keystone" },
+    { value: "keystone", label: "Block" },
   ],
 }
 

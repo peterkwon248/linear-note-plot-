@@ -95,7 +95,7 @@ export function applyGrouping(notes: Note[], groupBy: GroupBy, extras?: { backli
 const STATUS_LABELS: Record<NoteStatus, string> = {
   stone: "Stone",
   brick: "Brick",
-  keystone: "Keystone",
+  keystone: "Block",
 }
 
 const STATUS_KEYS: NoteStatus[] = ["stone", "brick", "keystone"]

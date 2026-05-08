@@ -28,7 +28,7 @@ const TABLE_VIEW_MAP: Record<string, ViewConfig> = {
   "/notes": {},
   "/stone": { context: "stone", title: "Stone" },
   "/brick": { context: "brick", title: "Brick" },
-  "/keystone": { context: "keystone", title: "Keystone" },
+  "/keystone": { context: "keystone", title: "Block" },
   "/pinned": { context: "pinned", title: "Pinned", hideCreateButton: true },
   "/trash": { context: "trash", title: "Trash", hideCreateButton: true },
 }

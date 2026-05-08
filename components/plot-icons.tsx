@@ -10,6 +10,9 @@
  */
 
 import { type SVGProps } from "react"
+import { Hexagon } from "@phosphor-icons/react/dist/ssr/Hexagon"
+import { Cube } from "@phosphor-icons/react/dist/ssr/Cube"
+import { Cuboid } from "@/components/icons/Cuboid"
 
 type IconProps = SVGProps<SVGSVGElement> & { size?: number }
 
@@ -33,6 +36,17 @@ export function IconHome({ size = 20, ...props }: IconProps) {
   )
 }
 
+/**
+ * Stone — phosphor `Hexagon` (regular weight). Crystalline / mineral feel
+ * matching the raw-input architecture metaphor, in the same Linear-style
+ * 1.5px stroke language as the rest of the sidebar nav icons.
+ */
+export function IconStone({ size = 20, ...rest }: IconProps) {
+  return <Hexagon size={size} weight="regular" {...rest} />
+}
+
+/** Inbox — mailbox silhouette. Used by the inbox-layer (notification queue),
+ *  not by the stone status icon. Restored from origin/main during merge. */
 export function IconInbox({ size = 20, ...props }: IconProps) {
   return (
     <svg width={size} height={size} {...defaults} {...props}>
@@ -178,21 +192,25 @@ export function IconInsight({ size = 16, ...props }: IconProps) {
   )
 }
 
-export function IconCapture({ size = 16, ...props }: IconProps) {
-  return (
-    <svg width={size} height={size} {...defaults} {...props}>
-      <path d="M17 3a2.83 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" />
-    </svg>
-  )
+/**
+ * Brick — phosphor `Cube` (regular weight). 3D solid block fits the
+ * "regular processed unit" metaphor and reads cleanly at 20px.
+ */
+export function IconBrick({ size = 20, ...rest }: IconProps) {
+  return <Cube size={size} weight="regular" {...rest} />
 }
 
-export function IconPermanent({ size = 16, ...props }: IconProps) {
-  return (
-    <svg width={size} height={size} {...defaults} {...props}>
-      <path d="M6 3h12l4 6-10 13L2 9Z" />
-      <path d="M2 9h20" />
-    </svg>
-  )
+/**
+ * Block — same isometric angle as IconBrick (phosphor Cube), but a 1×2 cuboid
+ * (two cubes sharing one face) instead of a single cube. Composed from a
+ * single SVG (`Cuboid`), NOT two phosphor `Cube` silhouettes side-by-side
+ * (those would have a misaligned divider line).
+ *
+ * Hexagon (raw 2D crystal) → Cube (single processed unit) → Block (two
+ * assembled units). Phosphor `regular` weight matches IconBrick stroke.
+ */
+export function IconBlock({ size = 20, ...rest }: IconProps) {
+  return <Cuboid size={size} weight="regular" {...rest} />
 }
 
 export function IconPin({ size = 14, ...props }: IconProps) {
