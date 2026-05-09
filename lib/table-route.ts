@@ -16,7 +16,7 @@ export const TABLE_VIEW_ROUTES = ["/notes", "/stone", "/brick", "/keystone", "/p
 export const WORKFLOW_ROUTES = ["/stone", "/brick", "/keystone"]
 
 /** Routes handled by individual always-mounted view components */
-export const VIEW_ROUTES = ["/home", "/inbox", "/labels", "/stickers", "/templates", "/ontology", "/insights", "/wiki", "/search", "/calendar", "/graph-insights", "/todos", "/library", "/library/references", "/library/tags", "/library/files"]
+export const VIEW_ROUTES = ["/home", "/inbox", "/labels", "/stickers", "/templates", "/ontology", "/insights", "/wiki", "/search", "/calendar", "/graph-insights", "/todos", "/library", "/library/references", "/library/tags", "/library/files", "/books"]
 
 /** All routes that use instant switching (always-mounted in layout) */
 export const ALL_SIDEBAR_ROUTES = [...TABLE_VIEW_ROUTES, ...VIEW_ROUTES]
@@ -29,6 +29,7 @@ export const DEFAULT_ROUTES: Record<ActivitySpace, string> = {
   calendar: "/calendar",
   ontology: "/ontology",
   library: "/library",
+  books: "/books",
 }
 
 /* ── Store ───────────────────────────────────────────── */
@@ -92,7 +93,7 @@ export function routeGoForward(): boolean {
 
 /** Infer which activity space a route belongs to */
 export function inferSpace(route: string): ActivitySpace {
-  if (route === "/home") return "home"
+  if (route === "/home" || route === "/inbox") return "home"
   if (route === "/wiki") return "wiki"
   if (route.startsWith("/calendar") || route === "/todos") return "calendar"
   if (route === "/ontology" || route === "/graph-insights") return "ontology"
@@ -100,6 +101,7 @@ export function inferSpace(route: string): ActivitySpace {
   // Stickers — cross-everything index, lives in Library per 33-design-decisions §8.
   // Routed at /stickers (not /library/stickers) for URL brevity.
   if (route === "/stickers") return "library"
+  if (route.startsWith("/books")) return "books"
   // /notes, /stone, /tags, /labels, /templates, /insights, /brick, /keystone, /trash, /pinned, /search
   return "notes"
 }
@@ -214,9 +216,23 @@ export function subscribeActiveRoute(fn: () => void): () => void {
 export function syncFromPathname(pathname: string): void {
   if (ALL_SIDEBAR_ROUTES.includes(pathname)) {
     setActiveRoute(pathname)
+  } else if (pathname.startsWith("/books/")) {
+    // Dynamic book detail route /books/{id} — keep books-space mounted.
+    // Phase 3: BooksView branches internally on activeRoute (grid vs detail).
+    setActiveRoute(pathname)
   } else {
     setActiveRoute(null)
   }
+}
+
+/**
+ * Parse a `/books/{id}` route and return the book id.
+ * Returns null when route is `/books` (grid) or any non-book route.
+ */
+export function getBookIdFromRoute(route: string | null): string | null {
+  if (!route || !route.startsWith("/books/")) return null
+  const id = route.slice("/books/".length)
+  return id.length > 0 ? id : null
 }
 
 /* ── Pending Filters (one-shot injection from Home cards) ── */

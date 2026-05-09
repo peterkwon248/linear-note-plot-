@@ -1,12 +1,15 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useCallback } from "react"
 import { usePlotStore } from "@/lib/store"
 import { setActiveRoute } from "@/lib/table-route"
 import { useInbox, type InboxItem } from "@/lib/hooks/use-inbox"
 import type { InboxItemKind } from "@/lib/store/slices/inbox"
 import { ViewHeader } from "@/components/view-header"
 import { IconInbox } from "@/components/plot-icons"
+import { FilterPanel } from "@/components/filter-panel"
+import { INBOX_VIEW_CONFIG } from "@/lib/view-engine/view-configs"
+import type { FilterRule } from "@/lib/view-engine/types"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { toast } from "sonner"
 import { InboxSourceIcon } from "@/components/inbox/inbox-source-icon"
@@ -187,14 +190,82 @@ function InboxRowFull({
 
 /* ── Empty states ─────────────────────────────────────── */
 
+/**
+ * "Next up" — earliest future reminder/SRS/snooze across all sources.
+ * Returns null when nothing is scheduled. Plot "gentle by default" — single
+ * forward-looking line so empty inbox isn't dead space.
+ */
+function useNextUp(): { ts: string; label: string; kind: "reminder" | "srs" | "snooze" } | null {
+  const notes = usePlotStore((s) => s.notes)
+  const srsStateByNoteId = usePlotStore((s) => s.srsStateByNoteId)
+  const snoozedInboxItems = usePlotStore((s) => s.snoozedInboxItems)
+
+  return (() => {
+    const now = Date.now()
+    const candidates: Array<{ ts: string; label: string; kind: "reminder" | "srs" | "snooze" }> = []
+
+    // Future reminders
+    for (const note of notes) {
+      if (note.trashed || !note.reviewAt) continue
+      if (new Date(note.reviewAt).getTime() <= now) continue
+      candidates.push({ ts: note.reviewAt, label: note.title || "Untitled", kind: "reminder" })
+    }
+
+    // Future SRS due
+    for (const [noteId, state] of Object.entries(srsStateByNoteId)) {
+      if (!state?.dueAt) continue
+      if (new Date(state.dueAt).getTime() <= now) continue
+      const note = notes.find((n) => n.id === noteId)
+      if (!note || note.trashed) continue
+      candidates.push({ ts: state.dueAt, label: note.title || "Untitled", kind: "srs" })
+    }
+
+    // Snoozed (will reappear at snoozedUntil)
+    for (const item of snoozedInboxItems) {
+      if (new Date(item.snoozedUntil).getTime() <= now) continue
+      candidates.push({ ts: item.snoozedUntil, label: "Snoozed item", kind: "snooze" })
+    }
+
+    if (candidates.length === 0) return null
+    candidates.sort((a, b) => a.ts.localeCompare(b.ts))
+    return candidates[0]
+  })()
+}
+
+function relativeFuture(isoTs: string): string {
+  const diffMs = new Date(isoTs).getTime() - Date.now()
+  if (diffMs < 0) return "now"
+  const minutes = Math.floor(diffMs / 60000)
+  if (minutes < 60) return `in ${minutes}m`
+  const hours = Math.floor(minutes / 60)
+  if (hours < 24) return `in ${hours}h`
+  const days = Math.floor(hours / 24)
+  if (days < 7) return `in ${days}d`
+  if (days < 30) return `in ${Math.floor(days / 7)}w`
+  return new Date(isoTs).toLocaleDateString("en-US", { month: "short", day: "numeric" })
+}
+
 function EmptyAll() {
+  // Vertical 1/3 point — sits gracefully above center, avoids "lost in void" feel
+  // on tall viewports while keeping Plot's gentle restraint.
+  const nextUp = useNextUp()
   return (
-    <div className="flex flex-1 flex-col items-center justify-center gap-3 px-6 py-20 text-center">
+    <div className="flex flex-col items-center gap-3 px-6 pt-24 pb-12 text-center">
       <IconInbox size={32} className="text-muted-foreground/25" strokeWidth={1} />
       <div>
         <p className="text-sm font-medium text-foreground">Inbox zero</p>
         <p className="mt-0.5 text-2xs text-muted-foreground">All caught up. Nothing needs attention.</p>
       </div>
+      {nextUp && (
+        <div className="mt-6 flex max-w-xs items-center gap-2 rounded-md border border-border-subtle/40 bg-card/40 px-3 py-2 text-2xs text-muted-foreground">
+          <Clock size={12} weight="regular" className="shrink-0 opacity-70" />
+          <span className="truncate">
+            <span className="text-muted-foreground/70">Next up · </span>
+            <span className="text-foreground/80 font-medium">{nextUp.label}</span>
+            <span className="text-muted-foreground/70"> · {relativeFuture(nextUp.ts)}</span>
+          </span>
+        </div>
+      )}
     </div>
   )
 }
@@ -217,14 +288,37 @@ function EmptyFilter({ tab }: { tab: FilterTab }) {
 
 export function InboxView() {
   const [activeTab, setActiveTab] = useState<FilterTab>("all")
+  // Path-A-Step-5: local filter state (no IDB persistence — resets on reload, Linear pattern for inbox).
+  const [filterRules, setFilterRules] = useState<FilterRule[]>([])
 
   const allItems = useInbox()
   const dismissInbox = usePlotStore((s) => s.dismissInbox)
   const snoozeInbox = usePlotStore((s) => s.snoozeInbox)
   const openNote = usePlotStore((s) => s.openNote)
 
+  // Filter toggle handler — mirrors Files/References handleFilesFilterToggle pattern.
+  const handleInboxFilterToggle = useCallback((rule: FilterRule) => {
+    setFilterRules((prev) => {
+      const exists = prev.some(
+        f => f.field === rule.field && f.operator === rule.operator && f.value === rule.value
+      )
+      return exists
+        ? prev.filter(f => !(f.field === rule.field && f.operator === rule.operator && f.value === rule.value))
+        : [...prev, rule]
+    })
+  }, [])
+
+  /* Source filter (applied first) + tab filter (applied second) compose as AND. */
+  const sourceFiltered = filterRules.length === 0
+    ? allItems
+    : allItems.filter((item) => {
+        const sourceRules = filterRules.filter(f => f.field === "source")
+        if (sourceRules.length === 0) return true
+        return sourceRules.some(r => r.value === item.kind)
+      })
+
   /* Tab-filtered items */
-  const filtered = allItems.filter((item) => {
+  const filtered = sourceFiltered.filter((item) => {
     if (activeTab === "all") return true
     if (activeTab === "reminders") return item.kind === "reminder"
     if (activeTab === "srs") return item.kind === "srs"
@@ -252,11 +346,22 @@ export function InboxView() {
         icon={<IconInbox size={20} strokeWidth={1.5} />}
         title="Inbox"
         count={allItems.length}
+        showFilter={INBOX_VIEW_CONFIG.showFilter}
+        hasActiveFilters={filterRules.length > 0}
+        filterContent={
+          <FilterPanel
+            categories={INBOX_VIEW_CONFIG.filterCategories}
+            activeFilters={filterRules}
+            onToggle={handleInboxFilterToggle}
+            quickFilters={INBOX_VIEW_CONFIG.quickFilters as any}
+            onQuickFilter={(rules) => setFilterRules(rules)}
+          />
+        }
       />
 
       {/* Content area */}
       <div className="flex-1 overflow-y-auto">
-        <div className="mx-auto w-full max-w-3xl px-6 py-6">
+        <div className="mx-auto w-full max-w-2xl px-6 py-6">
 
           {/* Filter tabs */}
           <div className="mb-4 flex items-center gap-1">
@@ -274,15 +379,19 @@ export function InboxView() {
                   }`}
                 >
                   {tab.label}
-                  {count > 0 && (
-                    <span
-                      className={`tabular-nums ${
-                        active ? "text-foreground/70" : "text-muted-foreground/60"
-                      }`}
-                    >
-                      {count}
-                    </span>
-                  )}
+                  {/* Always-on count chip (B2): 0 = muted, >0 = readable. Lets users
+                      see "what's queued" without clicking each tab first. */}
+                  <span
+                    className={`tabular-nums ${
+                      count === 0
+                        ? "text-muted-foreground/35"
+                        : active
+                          ? "text-foreground/70"
+                          : "text-muted-foreground/60"
+                    }`}
+                  >
+                    {count}
+                  </span>
                 </button>
               )
             })}

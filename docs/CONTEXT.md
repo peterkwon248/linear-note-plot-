@@ -36,6 +36,61 @@
 - 이전 세션 — Executor scope 초과 (Sticker UI 754줄 자동 추가): 명시적 prompt scope 정의 + 결과 검증 의무
 - 이전 세션 — Hull pointer-events 추측 fix (실제 원인 = visiblePainted): 사용자 reproduce 정보 받고 코드 분석 후 fix
 - 2026-05-08 — PR #282 chrome 통일 시도가 globals.css `.a-row` grid 강제로 layout 깨짐: 단순 className 추가로 해결 안 됨, 깊은 refactor 필요. 사용자 visual feedback이 가장 빠른 진단 path.
+- 2026-05-09 — Dual mode PRD에서 "Split" 이름 충돌 (NoteSplitOverlay): Critic 검토로 발견 → "Dual" rename. PRD 신선할 때 critic review 가치 큼.
+
+---
+
+## 🚀 2026-05-09 (마라톤) — Book entity + Dual mode + Filter Path A 완전 종결 (~45 변경) ⭐⭐⭐⭐⭐
+
+**범위**: 단일 squash PR로 머지. polish 시리즈 + Path A 완성 + Book/Dual 두 entity 도입 + plot-frontend plugin install.
+
+### 머지 예정
+- 단일 squash PR (`session: Book entity + Dual mode + Filter Path A 완전 종결`)
+- 49 files (+1912 / -1512)
+- 5 파일 삭제 (Studio/Editorial/ViewSwitcher/Cuboid 1×2)
+- ~10 신규 파일 (DualListEditor, BookDetailPage, BookItemRow, AddItemDialog, books-view, in-books-section, books slice/utils, BookContextNav, useBookContextNav, useEffectiveViewMode)
+
+### 큰 결정 (영구)
+
+**1. Books 색상 = Burgundy `#be123c`** (rose-700, 6 다른 space와 distinct).
+
+**2. Book entity = cross-entity ordered sequence**:
+- 4사분면 컨테이너 모델 마지막 자리 (Sticker=unordered, Book=ordered)
+- Heading-as-divider 단일 데이터 모델 (flat + nested 자연스럽게 통합)
+- N:M 다중 멤버십, 책 내 dedup
+- fractional-indexing string order
+- Smart Book = AutoSource는 v2 (별도 PRD)
+
+**3. Dual mode = "Split" 이름 회피**:
+- 기존 NoteSplitOverlay와 충돌 → "Dual" rename
+- DisplayPanel "Dual" mode entry + ⌘⇧E 단축키
+- 1200px viewport 자동 fallback (transition-only debounced toast)
+- Pane-scoped state (primary 전용 MVP), URL 비동기 (mac Mail 패턴)
+- NoteSplitOverlay 우선순위 (z-40 overlay)
+
+**4. Filter coverage Path A 완전 종결 — 6 entity** (Files/References/Wiki Category/Tags/Inbox/Stickers).
+
+**5. Plot 사이드바 active icon = 공간별 색상** (data-active-space 기반).
+
+### 기술 학습 (영구)
+
+- **fractional-indexing**: sparse integer halving underflow 회피. lexicographic key 사용.
+- **VALID_VIEW_MODES**: TS union만 update하면 IDB hydration 시 silent fallback. 두 곳 (union + array) 같이 update 필수.
+- **autoSaveId**: react-resizable-panels controlled X. autoSaveId로 라이브러리 자체 persistence.
+- **SSR-safe hook**: mounted guard + transition-only debounced toast로 hydration mismatch + resize spam 회피.
+- **Critic 가치**: PRD 신선할 때 review = mid-implementation pivot 위험 회피. 두 PRD 모두 6 issues 정확히 잡음.
+
+### 환경 변경
+- Store version 119 → 120 (v120 = Books migration)
+- npm: `fractional-indexing@^3.2.0`
+- Plugin global: `plot-frontend@plot-frontend`
+
+### 다음 우선순위 (P0)
+- Smart Book (Phase 5) — AutoSource resolver, 별도 PRD (~4-5h)
+- /trash 페이지 books section 통합 (~1h)
+- Path B Step A — globals.css `.a-th/.a-row` 6-col grid hardcoded refactor (~1.5h)
+- 나무위키 인포박스 고도화 Tier 1 (~3-4h)
+- 다중 기기 sync Phase 1 (PRD LOCKED, ~몇 세션)
 
 ---
 

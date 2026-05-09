@@ -30,7 +30,7 @@ export type ViewContextKey =
 
 /* ── View State ────────────────────────────────────────── */
 
-export type ViewMode = "list" | "board" | "grid" | "insights" | "calendar" | "graph" | "dashboard" | "gallery" | "studio" | "editorial"
+export type ViewMode = "list" | "board" | "grid" | "insights" | "calendar" | "graph" | "dashboard" | "gallery" | "dual"
 
 export type SortField =
   | "updatedAt"
@@ -92,6 +92,13 @@ export type FilterField =
   | "category" | "wikiTier"
   // Knowledge-graph filter fields
   | "wikiRegistered"
+  // Files-entity filter fields (PR Path-A-Step-1)
+  | "type"
+  // Tags-entity filter fields (PR Path-A-Step-4)
+  | "colorStatus"
+  // Stickers-entity filter fields (Plan §11.2 Path-A bonus)
+  | "memberStatus"
+  | "memberKind"
   // Connection filter — "show entities connected to this one in the graph".
   // Lets users do in-place backlink/linksOut filtering inside Notes/Wiki
   // views without jumping to the Ontology graph.
@@ -222,7 +229,7 @@ export const VALID_GROUP_BY: GroupBy[] = [
   "role",
 ]
 
-export const VALID_VIEW_MODES: ViewMode[] = ["list", "board", "grid", "insights", "calendar", "graph", "gallery", "studio", "editorial"]
+export const VALID_VIEW_MODES: ViewMode[] = ["list", "board", "grid", "insights", "calendar", "graph", "gallery", "dual"]
 
 export const VALID_GROUP_SORT_BY: GroupSortBy[] = ["default", "manual", "name", "count"]
 

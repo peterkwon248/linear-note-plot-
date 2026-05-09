@@ -1,7 +1,7 @@
 import type { ReactNode } from "react"
 import type { SortField, ViewMode, GroupBy } from "./types"
 import { Hexagon, Cube, BookOpen, CircleHalf } from "@phosphor-icons/react"
-import { Cuboid } from "@/components/icons/Cuboid"
+import { Cuboid2x2 } from "@/components/icons/Cuboid2x2"
 
 export interface FilterCategory {
   key: string
@@ -103,7 +103,7 @@ export const NOTES_VIEW_CONFIG: ViewConfig = {
     { key: "status", label: "Status", icon: StatusIcon, values: [
       { key: "stone", label: "Stone", color: "rgba(255,255,255,0.32)", icon: <Hexagon size={14} weight="regular" style={{ color: "var(--chart-2)" }} /> },
       { key: "brick", label: "Brick", color: "#f5a623", icon: <Cube size={14} weight="regular" style={{ color: "var(--chart-3)" }} /> },
-      { key: "keystone", label: "Block", color: "#45d483", icon: <Cuboid size={14} weight="regular" style={{ color: "var(--chart-5)" }} /> },
+      { key: "keystone", label: "Block", color: "#45d483", icon: <Cuboid2x2 size={14} weight="regular" style={{ color: "var(--chart-5)" }} /> },
     ]},
     { key: "folder", label: "Folder", icon: FolderIcon, values: [] },
     { key: "label", label: "Label", icon: LabelIcon, values: [] },
@@ -161,7 +161,9 @@ export const NOTES_VIEW_CONFIG: ViewConfig = {
     ]},
   ],
   displayConfig: {
-    supportedModes: ["list", "board"],
+    // Phase 2: "dual" added to supportedModes — surfaces in DisplayPanel mode
+    // segmented control. Per split-mode-prd LOCKED #1, Notes are MVP target.
+    supportedModes: ["list", "board", "gallery", "dual"],
     orderingOptions: [
       { value: "updatedAt", label: "Updated" },
       { value: "createdAt", label: "Created" },
@@ -266,7 +268,10 @@ export const WIKI_VIEW_CONFIG: ViewConfig = {
     ]},
   ],
   displayConfig: {
-    supportedModes: ["list", "board"],
+    // Phase 3 (split-mode-prd): "dual" added to supportedModes — surfaces in
+    // DisplayPanel mode segmented control. Per LOCKED #1, Wiki is MVP target
+    // (Notes Phase 2 already shipped). Books skip — LOCKED.
+    supportedModes: ["list", "board", "dual"],
     // Wiki has no `status` field (article/stub is heuristic, not enum), so
     // when switching to board mode from groupBy="none" fall back to
     // "label" (Category) — the canonical Wiki grouping axis.
@@ -319,9 +324,15 @@ export const WIKI_CATEGORY_VIEW_CONFIG: ViewConfig = {
   showDetailPanel: true,
   filterCategories: [
     { key: "wikiTier", label: "Tier", icon: TagIcon, values: [
-      { key: "1", label: "Tier 1 (Top)" },
-      { key: "2", label: "Tier 2" },
-      { key: "3", label: "Tier 3" },
+      { key: "1st", label: "Tier 1 (Top)" },
+      { key: "2nd", label: "Tier 2" },
+      { key: "3rd+", label: "Tier 3+" },
+    ]},
+    // Path-A-Step-3: Wiki Category status filter — populated vs empty.
+    // Mirrors the existing statusFilter logic in wiki-category-page (count===0).
+    { key: "status", label: "Wikis", icon: TagIcon, values: [
+      { key: "has-articles", label: "Has wikis" },
+      { key: "empty", label: "Empty" },
     ]},
   ],
   quickFilters: [],
@@ -358,7 +369,7 @@ export const GRAPH_VIEW_CONFIG: ViewConfig = {
     { key: "status", label: "Status", icon: StatusIcon, values: [
       { key: "stone", label: "Stone", color: "rgba(255,255,255,0.32)", icon: <Hexagon size={14} weight="regular" style={{ color: "var(--chart-2)" }} /> },
       { key: "brick", label: "Brick", color: "#f5a623", icon: <Cube size={14} weight="regular" style={{ color: "var(--chart-3)" }} /> },
-      { key: "keystone", label: "Block", color: "#45d483", icon: <Cuboid size={14} weight="regular" style={{ color: "var(--chart-5)" }} /> },
+      { key: "keystone", label: "Block", color: "#45d483", icon: <Cuboid2x2 size={14} weight="regular" style={{ color: "var(--chart-5)" }} /> },
     ]},
     { key: "tags", label: "Tags", icon: TagIcon, values: [] },
     { key: "label", label: "Label", icon: LabelIcon, values: [] },
@@ -407,10 +418,21 @@ export const GRAPH_VIEW_CONFIG: ViewConfig = {
 }
 
 export const INBOX_VIEW_CONFIG: ViewConfig = {
-  showFilter: false,
+  showFilter: true,
   showDisplay: true,
   showDetailPanel: false,
-  filterCategories: [],
+  filterCategories: [
+    // Path-A-Step-5: source filter — 5 InboxItemKind values.
+    // Quick tabs cover 4 popular ones (All/Reminders/SRS/Snoozed); this filter
+    // adds wiki-redlink + auto-enroll + multi-select.
+    { key: "source", label: "Source", icon: SourceIcon, values: [
+      { key: "reminder", label: "Reminder" },
+      { key: "srs", label: "SRS due" },
+      { key: "snooze-expired", label: "Snooze expired" },
+      { key: "wiki-redlink", label: "Wiki red links" },
+      { key: "auto-enroll", label: "Auto-enroll suggestions" },
+    ]},
+  ],
   quickFilters: [],
   displayConfig: {
     supportedModes: ["list"],
@@ -463,7 +485,7 @@ export const CALENDAR_VIEW_CONFIG: ViewConfig = {
     { key: "status", label: "Status", icon: StatusIcon, values: [
       { key: "stone", label: "Stone", color: "rgba(255,255,255,0.32)", icon: <Hexagon size={14} weight="regular" style={{ color: "var(--chart-2)" }} /> },
       { key: "brick", label: "Brick", color: "#f5a623", icon: <Cube size={14} weight="regular" style={{ color: "var(--chart-3)" }} /> },
-      { key: "keystone", label: "Block", color: "#45d483", icon: <Cuboid size={14} weight="regular" style={{ color: "var(--chart-5)" }} /> },
+      { key: "keystone", label: "Block", color: "#45d483", icon: <Cuboid2x2 size={14} weight="regular" style={{ color: "var(--chart-5)" }} /> },
     ]},
     { key: "folder", label: "Folder", icon: FolderIcon, values: [] },
     { key: "label", label: "Label", icon: LabelIcon, values: [] },
@@ -497,7 +519,7 @@ export const TEMPLATES_VIEW_CONFIG: ViewConfig = {
     { key: "status", label: "Status", icon: StatusIcon, values: [
       { key: "stone", label: "Stone", color: "rgba(255,255,255,0.32)", icon: <Hexagon size={14} weight="regular" style={{ color: "var(--chart-2)" }} /> },
       { key: "brick", label: "Brick", color: "#f5a623", icon: <Cube size={14} weight="regular" style={{ color: "var(--chart-3)" }} /> },
-      { key: "keystone", label: "Block", color: "#45d483", icon: <Cuboid size={14} weight="regular" style={{ color: "var(--chart-5)" }} /> },
+      { key: "keystone", label: "Block", color: "#45d483", icon: <Cuboid2x2 size={14} weight="regular" style={{ color: "var(--chart-5)" }} /> },
     ]},
     { key: "priority", label: "Priority", icon: PriorityIcon, values: [
       { key: "urgent", label: "Urgent" },
@@ -574,11 +596,18 @@ export const LABELS_LIST_VIEW_CONFIG: ViewConfig = {
 // Tags are hashtag markers — no status/priority/board axis. list+grid only.
 // Sort by name (alpha) or noteCount. No filter categories (tags don't have
 // folder/label membership). Search is handled globally via searchQuery.
+// Filter: colorStatus category added (Path-A-Step-4 — v109 opt-in color policy).
 export const TAGS_LIST_VIEW_CONFIG: ViewConfig = {
-  showFilter: false,
+  showFilter: true,
   showDisplay: true,
   showDetailPanel: false,
-  filterCategories: [],
+  filterCategories: [
+    // Path-A-Step-4: opt-in color status filter (v109 policy — tags can have null color).
+    { key: "colorStatus", label: "Color", icon: ColorDotIcon, values: [
+      { key: "set", label: "Has color" },
+      { key: "unset", label: "No color" },
+    ]},
+  ],
   quickFilters: [],
   displayConfig: {
     supportedModes: ["list", "grid"],
@@ -597,17 +626,23 @@ export const TAGS_LIST_VIEW_CONFIG: ViewConfig = {
   },
 }
 
-// Files entity index view config (PR group-c-d-5).
+// Files entity index view config (PR group-c-d-5 / Path-A-Step-1).
 // Files are media entities (Attachment — type "image" | "url" | "file").
 // list+grid both supported — image previews drive grid value. Sort by name /
-// createdAt / size / fileType. groupBy "none" 1차 (filter by type kept local
-// — multi-state UI doesn't fit viewState.groupBy union). Search not exposed
-// (no global SearchHandled at view-engine level for this entity).
+// createdAt / size / fileType. groupBy "none" 1차.
+// Filter: type category lifted into viewState.filters (Path-A-Step-1);
+// local chip bar removed from library-view.tsx.
 export const FILES_VIEW_CONFIG: ViewConfig = {
-  showFilter: false,
+  showFilter: true,
   showDisplay: true,
   showDetailPanel: false,
-  filterCategories: [],
+  filterCategories: [
+    { key: "type", label: "Type", icon: SortIcon, values: [
+      { key: "image", label: "Image" },
+      { key: "url", label: "Link" },
+      { key: "file", label: "File" },
+    ]},
+  ],
   quickFilters: [],
   displayConfig: {
     supportedModes: ["list", "grid"],
@@ -628,23 +663,33 @@ export const FILES_VIEW_CONFIG: ViewConfig = {
   },
 }
 
-// References entity index view config (PR group-c-d-4).
+// References entity index view config (PR group-c-d-4 / §11.3 Path-A-Step-2).
 // References are rich entities (title + content + infobox fields + tags + image)
 // — first non-Note entity in this series. list+grid both supported.
 // Sort by updatedAt / createdAt / title / fieldCount. groupBy "type" (link vs
 // citation, derived from url field) is supported via the hook's classifier.
+// Filter: "type" category (link/citation) lifted into viewState.filters (Path-A-Step-2).
 // Note: quickFilter (all/linked/unlinked/links) and field-key filter are kept
-// LOCAL to ReferencesView for now — multi-state UI doesn't fit toggles
-// (boolean record). Future PR can lift them into viewState.filters.
+// LOCAL to ReferencesView — multi-state UI doesn't fit toggles (boolean record).
+// Future PR can lift those into viewState.filters.
 // Search is local (ViewHeader searchValue/onSearchChange) for the same reason.
+const RefLinkIcon = <svg width={14} height={14} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"><path d="M6.7 8.7a3.3 3.3 0 005 .4l2-2a3.3 3.3 0 00-4.7-4.7L8.4 3"/><path d="M9.3 7.3a3.3 3.3 0 00-5-.4l-2 2a3.3 3.3 0 004.7 4.7l.6-.6"/></svg>
+const RefCitationIcon = <svg width={14} height={14} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 11.5V9.5a2 2 0 00-2-2H3"/><path d="M11 11.5V9.5a2 2 0 00-2-2H8"/><path d="M4 7.5V5.5"/><path d="M9 7.5V5.5"/></svg>
 export const REFERENCES_VIEW_CONFIG: ViewConfig = {
-  showFilter: false,
+  showFilter: true,
   showDisplay: true,
   showDetailPanel: false,
-  filterCategories: [],
+  filterCategories: [
+    { key: "type", label: "Type", icon: SortIcon, values: [
+      { key: "link", label: "Link", icon: RefLinkIcon },
+      { key: "citation", label: "Citation", icon: RefCitationIcon },
+    ]},
+  ],
   quickFilters: [],
   displayConfig: {
-    supportedModes: ["list", "grid"],
+    // Phase 5 (split-mode-prd): "dual" added — left=ReferencesView list,
+    // right=ReferenceDetailPanel as editor. Mirrors Notes/Wiki dual wiring.
+    supportedModes: ["list", "grid", "dual"],
     orderingOptions: [
       { value: "updatedAt", label: "Updated" },
       { value: "createdAt", label: "Created" },
@@ -670,10 +715,24 @@ export const REFERENCES_VIEW_CONFIG: ViewConfig = {
 // Key difference from Tags/Labels: members are cross-entity (note + wiki +
 // tag/label/category/file/reference) — count semantics differ accordingly.
 export const STICKERS_LIST_VIEW_CONFIG: ViewConfig = {
-  showFilter: false,
+  showFilter: true,
   showDisplay: true,
   showDetailPanel: false,
-  filterCategories: [],
+  filterCategories: [
+    { key: "memberStatus", label: "Members", icon: SortIcon, values: [
+      { key: "has-members", label: "Has members" },
+      { key: "empty", label: "Empty" },
+    ]},
+    { key: "memberKind", label: "Member type", icon: TagIcon, values: [
+      { key: "note", label: "Note" },
+      { key: "wiki", label: "Wiki" },
+      { key: "tag", label: "Tag" },
+      { key: "label", label: "Label" },
+      { key: "category", label: "Category" },
+      { key: "file", label: "File" },
+      { key: "reference", label: "Reference" },
+    ]},
+  ],
   quickFilters: [],
   displayConfig: {
     supportedModes: ["list", "grid"],

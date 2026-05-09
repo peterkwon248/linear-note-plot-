@@ -40,6 +40,7 @@ const SPACE_LABELS: Record<ActivitySpace, string> = {
   calendar: "Calendar",
   ontology: "Ontology",
   library: "Library",
+  books: "Books",
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -50,9 +51,10 @@ const SPACE_ICONS: Record<ActivitySpace, any> = {
   calendar: CalendarBlank,
   ontology: Graph,
   library: Books,
+  books: Books,
 }
 
-const ALL_SPACES: ActivitySpace[] = ["home", "notes", "wiki", "calendar", "ontology", "library"]
+const ALL_SPACES: ActivitySpace[] = ["home", "notes", "wiki", "calendar", "ontology", "library", "books"]
 
 export function EditorBreadcrumb({ note, onClose, pane = 'primary' }: EditorBreadcrumbProps) {
   const router = useRouter()

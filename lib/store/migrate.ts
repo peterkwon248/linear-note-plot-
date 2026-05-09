@@ -1800,5 +1800,43 @@ export function migrate(persistedState: unknown): PlotState {
     state.activitybarCollapsed = false
   }
 
+  // v119: Remove Studio + Editorial view modes (영구 규칙 #1 cleanup).
+  // Convert viewMode "studio" / "editorial" → "list" in savedViews + viewStateByContext.
+  // Idempotent — re-running is safe.
+  {
+    // savedViews fallback
+    if (state.savedViews && Array.isArray(state.savedViews)) {
+      state.savedViews = (state.savedViews as Record<string, unknown>[]).map((v) => {
+        const viewState = v.viewState as Record<string, unknown> | undefined
+        if (viewState && (viewState.viewMode === "studio" || viewState.viewMode === "editorial")) {
+          return { ...v, viewState: { ...viewState, viewMode: "list" } }
+        }
+        return v
+      })
+    }
+    // viewStateByContext fallback
+    if (state.viewStateByContext && typeof state.viewStateByContext === "object") {
+      const vsMap = state.viewStateByContext as Record<string, Record<string, unknown>>
+      let resetCount = 0
+      for (const key of Object.keys(vsMap)) {
+        const vs = vsMap[key]
+        if (vs && (vs.viewMode === "studio" || vs.viewMode === "editorial")) {
+          vs.viewMode = "list"
+          resetCount++
+        }
+      }
+      if (resetCount > 0) {
+        console.log(`[migrate] v118→v119: reset ${resetCount} contexts from studio/editorial → list`)
+      }
+    }
+  }
+
+  // v120: Book entity infrastructure (Phase 1).
+  // Initialize empty books array for users upgrading from v119. Idempotent —
+  // existing array preserved, only seeds when missing/wrong-type.
+  if (!Array.isArray(state.books)) {
+    state.books = []
+  }
+
   return state as unknown as PlotState
 }

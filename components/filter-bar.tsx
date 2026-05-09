@@ -796,6 +796,13 @@ const FIELD_TO_GROUP: Record<FilterField, FilterGroupKey> = {
   // jumping to the Ontology view). Grouped under "links" since it's
   // semantically a link/reference relationship.
   connectedTo: "links",
+  // Files-entity filter (Path-A-Step-1)
+  type: "content",
+  // Tags-entity filter (Path-A-Step-4)
+  colorStatus: "content",
+  // Stickers-entity filters (Plan §11.2 Path-A bonus)
+  memberStatus: "content",
+  memberKind: "content",
 }
 
 export function getFilterGroupKey(field: FilterField): FilterGroupKey {

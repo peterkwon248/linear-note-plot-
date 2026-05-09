@@ -20,6 +20,7 @@ export const SPACE_COLORS = {
   ontology: "#0f766e",   // Teal-700 — graph / connection (deep, calm)
   calendar: "#ec4899",   // Pink    — time / events
   library:  "#b45309",   // Amber-700 — storage / archive (bronze, easier on eyes)
+  books:    "#be123c",   // Rose-700 burgundy — leather book cover, distinct from all 6 sibling spaces
 } as const
 
 export type Space = keyof typeof SPACE_COLORS
@@ -32,6 +33,7 @@ export const SPACE_COLOR_CLASSES = {
   ontology: { text: "text-[#0f766e]", bg: "bg-[#0f766e]" },
   calendar: { text: "text-[#ec4899]", bg: "bg-[#ec4899]" },
   library:  { text: "text-[#b45309]", bg: "bg-[#b45309]" },
+  books:    { text: "text-[#be123c]", bg: "bg-[#be123c]" },
 } as const
 
 /* ── Status Colors (system semantics) ─────────────

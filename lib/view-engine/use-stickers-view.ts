@@ -2,7 +2,7 @@
 
 import { useMemo, useCallback } from "react"
 import { usePlotStore } from "../store"
-import type { ViewState, ViewContextKey } from "./types"
+import type { ViewState, ViewContextKey, FilterRule } from "./types"
 import { buildViewStateForContext } from "./defaults"
 import type { Sticker } from "../types"
 
@@ -51,6 +51,34 @@ function applyStickerSearch(stickers: StickerWithCount[], query: string): Sticke
   const q = query.trim().toLowerCase()
   if (!q) return stickers
   return stickers.filter((s) => s.name.toLowerCase().includes(q))
+}
+
+/* ── Stage 1b: Filter ─────────────────────────────────── */
+
+function applyStickerFilters(stickers: StickerWithCount[], filters: FilterRule[]): StickerWithCount[] {
+  if (filters.length === 0) return stickers
+  const byField = new Map<string, FilterRule[]>()
+  for (const r of filters) {
+    if (!byField.has(r.field)) byField.set(r.field, [])
+    byField.get(r.field)!.push(r)
+  }
+  return stickers.filter((sticker) => {
+    for (const [field, rules] of byField) {
+      const matchesAny = rules.some((rule) => {
+        if (field === "memberStatus") {
+          if (rule.value === "has-members") return sticker.memberCount > 0
+          if (rule.value === "empty") return sticker.memberCount === 0
+          return false
+        }
+        if (field === "memberKind") {
+          return (sticker.members ?? []).some((m) => m.kind === rule.value)
+        }
+        return false
+      })
+      if (!matchesAny) return false
+    }
+    return true
+  })
 }
 
 /* ── Stage 2: Sort ────────────────────────────────────── */
@@ -156,10 +184,16 @@ export function useStickersView(contextKey: ViewContextKey = "stickers"): UseSti
     [stickersWithCount, searchQuery],
   )
 
+  // Stage 1b: filter
+  const filtered = useMemo(
+    () => applyStickerFilters(searched, viewState.filters),
+    [searched, viewState.filters],
+  )
+
   // Stage 2: sort
   const sorted = useMemo(
-    () => applyStickerSort(searched, viewState),
-    [searched, viewState],
+    () => applyStickerSort(filtered, viewState),
+    [filtered, viewState],
   )
 
   // Stage 3: group (none-only in this PR)

@@ -1,6 +1,6 @@
 "use client"
 
-import { useMemo, useState } from "react"
+import { useMemo, useState, useEffect } from "react"
 import { cn } from "@/lib/utils"
 import { groupByInitial } from "@/lib/korean-utils"
 import { shortRelative } from "@/lib/format-utils"
@@ -122,6 +122,15 @@ interface WikiListProps {
   wikiGroups?: WikiGroup[]
   /** Current groupBy from ViewState. Used to decide if group headers should be shown. */
   groupBy?: GroupBy
+  /** Phase 3 (split-mode-prd): when true, this list is rendered inside the
+   *  dual-mode left pane. Active row highlight comes from `activeArticleId`
+   *  (mirrors NotesTable's `activePreviewId`). Caller routes row clicks
+   *  through `onOpenArticle` which writes `dualSelection` instead of
+   *  navigating into the article reader. */
+  dualMode?: boolean
+  /** Phase 3: active wiki article id in the editor pane (highlights the
+   *  matching row). Mirrors `NotesTable.activePreviewId`. */
+  activeArticleId?: string | null
 }
 
 /* ── Column Header ── */
@@ -217,6 +226,7 @@ function ArticleTableRow({
   onDelete,
   onShowConnected,
   isSelected,
+  isActive,
   selectionActive,
   onSelect,
   visibleColumns,
@@ -233,6 +243,9 @@ function ArticleTableRow({
   onDelete?: () => void
   onShowConnected?: (direction: "both" | "in" | "out") => void
   isSelected?: boolean
+  /** Phase 3 (split-mode-prd): article currently shown in the dual editor
+   *  pane — drives row highlight while keeping selection state separate. */
+  isActive?: boolean
   selectionActive?: boolean
   onSelect?: (opts: { multi?: boolean; shift?: boolean; index?: number }) => void
   visibleColumns?: string[]
@@ -254,7 +267,11 @@ function ArticleTableRow({
     <div
       className={cn(
         "group flex w-full items-center px-5 py-2.5 hover:bg-hover-bg transition-colors duration-100",
-        isSelected && "bg-accent/5"
+        isSelected && "bg-accent/5",
+        // Phase 3: highlight the row whose article is mirrored in the dual
+        // editor pane. Stronger background than `isSelected` so multi-select
+        // checkmarks and the active editor row remain visually distinct.
+        isActive && "bg-accent/10"
       )}
       onContextMenu={(e) => {
         if (onMerge || onSplit || onDelete) {
@@ -299,11 +316,21 @@ function ArticleTableRow({
             title row even when the optional Status column is hidden. Mirrors
             Notes' StatusShapeIcon pattern (inline color from WIKI_STATUS_HEX
             — stub=orange, article=emerald). */}
-        {isWikiStub(note) ? (
-          <IconWikiStub size={14} className="shrink-0" style={{ color: WIKI_STATUS_HEX.stub }} />
-        ) : (
-          <IconWikiArticle size={14} className="shrink-0" style={{ color: WIKI_STATUS_HEX.article }} />
-        )}
+        {(() => {
+          const isStub = isWikiStub(note)
+          const color = isStub ? WIKI_STATUS_HEX.stub : WIKI_STATUS_HEX.article
+          return (
+            <span
+              className="a-row__icon shrink-0"
+              style={{
+                color,
+                background: `color-mix(in srgb, ${color} 24%, transparent)`,
+              }}
+            >
+              {isStub ? <IconWikiStub size={13} /> : <IconWikiArticle size={13} />}
+            </span>
+          )
+        })()}
         <span className="min-w-0 flex-1 truncate text-note font-medium text-foreground/90">
           {note.title || "Untitled"}
         </span>
@@ -317,7 +344,7 @@ function ArticleTableRow({
           {isWikiStub(note) ? (
             <span
               className="inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-2xs font-medium"
-              style={{ color: WIKI_STATUS_HEX.stub, backgroundColor: `${WIKI_STATUS_HEX.stub}26` }}
+              style={{ color: WIKI_STATUS_HEX.stub, backgroundColor: `${WIKI_STATUS_HEX.stub}3D` }}
             >
               <IconWikiStub size={11} />
               Stub
@@ -325,7 +352,7 @@ function ArticleTableRow({
           ) : (
             <span
               className="inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-2xs font-medium"
-              style={{ color: WIKI_STATUS_HEX.article, backgroundColor: `${WIKI_STATUS_HEX.article}26` }}
+              style={{ color: WIKI_STATUS_HEX.article, backgroundColor: `${WIKI_STATUS_HEX.article}3D` }}
             >
               <IconWikiArticle size={11} />
               Article
@@ -579,6 +606,14 @@ export function WikiList({
   wikiCategories,
   wikiGroups,
   groupBy,
+  // Phase 3 (split-mode-prd): dual mode wiring — `activeArticleId` drives
+  // the row highlight that mirrors the editor pane. Row click routes through
+  // `onOpenArticle`, which the caller wires to
+  // `setDualSelection({ kind: "wiki", refId })` when in dual mode.
+  // Phase 6: when dualMode === true, ↑↓ keyboard nav drives the editor
+  // pane through `onOpenArticle` (same callback as click).
+  dualMode = false,
+  activeArticleId,
 }: WikiListProps) {
   const selectionActive = selectedIds ? selectedIds.size > 0 : false
   const groupedArticles = groupByInitial(filteredWikiNotes, (n: WikiArticle) => n.title || "Untitled")
@@ -627,6 +662,42 @@ export function WikiList({
     }
     return map
   }, [wikiArticles])
+
+  // ── Phase 6 (split-mode-prd): keyboard ↑↓ nav for dual list pane ──
+  // When dualMode is true, ↑↓ moves through `visibleNotes` (the same flat
+  // list used by select-all) and writes through `onOpenArticle`, which the
+  // parent wires to `setDualSelection({ kind: "wiki", refId })`. Mirrors the
+  // pattern in NotesTable (Phase 6) and ReferencesView (Phase 6).
+  // No-ops when target is an input / textarea / contenteditable so we don't
+  // fight TipTap or filter inputs.
+  useEffect(() => {
+    if (!dualMode) return
+    const handler = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement | null
+      if (target && target.matches('input, textarea, [contenteditable="true"]')) return
+      if (e.key !== "ArrowUp" && e.key !== "ArrowDown") return
+      if (visibleNotes.length === 0) return
+      // No selection: pick the first article.
+      if (!activeArticleId) {
+        e.preventDefault()
+        onOpenArticle(visibleNotes[0].id)
+        return
+      }
+      const currentIdx = visibleNotes.findIndex((n) => n.id === activeArticleId)
+      if (currentIdx < 0) {
+        e.preventDefault()
+        onOpenArticle(visibleNotes[0].id)
+        return
+      }
+      const delta = e.key === "ArrowDown" ? 1 : -1
+      const nextIdx = currentIdx + delta
+      if (nextIdx < 0 || nextIdx >= visibleNotes.length) return
+      e.preventDefault()
+      onOpenArticle(visibleNotes[nextIdx].id)
+    }
+    window.addEventListener("keydown", handler)
+    return () => window.removeEventListener("keydown", handler)
+  }, [dualMode, activeArticleId, visibleNotes, onOpenArticle])
 
   return (
     <div className="flex-1 flex flex-col overflow-hidden">
@@ -777,6 +848,7 @@ export function WikiList({
                             onDelete={onDeleteArticle ? () => onDeleteArticle(note.id) : undefined}
                             onShowConnected={onShowConnectedArticle ? (dir) => onShowConnectedArticle(note.id, dir) : undefined}
                             isSelected={selectedIds?.has(note.id)}
+                            isActive={activeArticleId === note.id}
                             selectionActive={selectionActive}
                             onSelect={onSelect ? (opts) => onSelect(note.id, { ...opts, index: idx }) : undefined}
                             visibleColumns={visibleColumns}
@@ -819,6 +891,7 @@ export function WikiList({
                   onSplit={onSplitArticle ? () => onSplitArticle(note.id) : undefined}
                   onDelete={onDeleteArticle ? () => onDeleteArticle(note.id) : undefined}
                   isSelected={selectedIds?.has(note.id)}
+                  isActive={activeArticleId === note.id}
                   selectionActive={selectionActive}
                   onSelect={onSelect ? (opts) => onSelect(note.id, { ...opts, index: idx }) : undefined}
                   visibleColumns={visibleColumns}

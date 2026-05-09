@@ -23,6 +23,7 @@ import {
 } from "@/components/plot-icons"
 // Sidebar / CaretRight / PhX removed — PanelsMenu replaces actbar's own panel controls
 import { WikiBook, OntologyWide, Bookshelf } from "@/components/icons/imperial-extras"
+import { Books as BooksIcon } from "@phosphor-icons/react/dist/ssr/Books"
 import { useSettingsStore } from "@/lib/settings-store"
 import { SPACE_COLORS } from "@/lib/colors"
 
@@ -37,6 +38,7 @@ const SPACES: {
   { id: "home",     label: "Home",     icon: IconHome,     shortcut: "G then H" },
   { id: "notes",    label: "Notes",    icon: IconNotes,    shortcut: "G then N" },
   { id: "wiki",     label: "Wiki",     icon: WikiBook,       shortcut: "" },
+  { id: "books",    label: "Books",    icon: (p: { size?: number }) => <BooksIcon size={p.size} weight="regular" />, shortcut: "" },
   { id: "calendar", label: "Calendar", icon: IconCalendar,  shortcut: "" },
   { id: "ontology", label: "Ontology", icon: OntologyWide,  shortcut: "" },
   { id: "library",  label: "Library",  icon: Bookshelf,     shortcut: "" },

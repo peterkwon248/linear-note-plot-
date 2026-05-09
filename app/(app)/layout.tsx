@@ -33,6 +33,7 @@ import { HomeView } from "@/components/views/home-view"
 import { InboxView } from "@/components/views/inbox-view"
 import { TodoView } from "@/components/views/todo-view"
 import { LibraryView } from "@/components/views/library-view"
+import { BooksView } from "@/components/views/books-view"
 import { MergeDialogGlobal } from "@/components/merge-dialog-global"
 import { LinkDialogGlobal } from "@/components/link-dialog-global"
 import { WikiAssemblyDialog } from "@/components/wiki-assembly-dialog"
@@ -104,22 +105,30 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   // Once mounted, a view stays mounted (keep-alive) for instant re-visits
   const [mountedViews, setMountedViews] = useState<Set<string>>(() => new Set())
   useEffect(() => {
-    if (activeRoute && VIEW_ROUTES.includes(activeRoute)) {
-      setMountedViews((prev) => {
-        const next = new Set(prev)
-        let changed = false
-        if (!next.has(activeRoute)) {
-          next.add(activeRoute)
-          changed = true
-        }
-        // For sub-routes like /library/references, also mark the parent /library as mounted
-        if (activeRoute.startsWith("/library") && !next.has("/library")) {
-          next.add("/library")
-          changed = true
-        }
-        return changed ? next : prev
-      })
-    }
+    if (!activeRoute) return
+    // VIEW_ROUTES entries OR dynamic sub-routes that share an always-mounted view.
+    const isViewRoute = VIEW_ROUTES.includes(activeRoute)
+    const isBookSubRoute = activeRoute.startsWith("/books/")
+    if (!isViewRoute && !isBookSubRoute) return
+    setMountedViews((prev) => {
+      const next = new Set(prev)
+      let changed = false
+      if (isViewRoute && !next.has(activeRoute)) {
+        next.add(activeRoute)
+        changed = true
+      }
+      // For sub-routes like /library/references, also mark the parent /library as mounted
+      if (activeRoute.startsWith("/library") && !next.has("/library")) {
+        next.add("/library")
+        changed = true
+      }
+      // Same pattern for /books/{id} — keep BooksView keep-alive across detail visits.
+      if (isBookSubRoute && !next.has("/books")) {
+        next.add("/books")
+        changed = true
+      }
+      return changed ? next : prev
+    })
   }, [activeRoute])
 
   // Clear selected note when navigating to a different route
@@ -307,6 +316,12 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                 {(mountedViews.has("/library") || activeRoute?.startsWith("/library")) && (
                   <div className={activeRoute?.startsWith("/library") ? "flex flex-1 overflow-hidden" : "hidden"}>
                     <LibraryView />
+                  </div>
+                )}
+
+                {(mountedViews.has("/books") || activeRoute?.startsWith("/books")) && (
+                  <div className={activeRoute?.startsWith("/books") ? "flex flex-1 overflow-hidden" : "hidden"}>
+                    <BooksView />
                   </div>
                 )}
 

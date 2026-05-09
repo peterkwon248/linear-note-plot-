@@ -13,7 +13,7 @@ export type NoteType = "note" | "wiki"
 export type WikiLayout = "default" | "encyclopedia"
 
 /** Activity Bar spaces — top-level navigation */
-export type ActivitySpace = "home" | "notes" | "wiki" | "calendar" | "ontology" | "library"
+export type ActivitySpace = "home" | "notes" | "wiki" | "calendar" | "ontology" | "library" | "books"
 
 export interface WikiInfoboxEntry {
   key: string
@@ -84,6 +84,53 @@ export interface WikiCategory {
   createdAt: string
   updatedAt: string
 }
+
+/* ── Book (Cross-entity Ordered Sequence) ────────── */
+
+/**
+ * Book — cross-entity ordered sequence (33-design-decisions §1).
+ *
+ * Items can be notes, wiki articles, or chapter-heading dividers.
+ * Items maintain explicit order via `order` field — a fractional-indexing
+ * key (string), enabling insertion between items without renumbering.
+ *
+ * Same entity can appear in multiple books (N:M membership).
+ * Within a single book, an entity appears at most once (deduplicated by ref).
+ *
+ * Phase 1 covers Note + Wiki Article only. Reference/File/Sticker are v2.
+ */
+export interface Book {
+  id: string
+  title: string                    // required
+  description?: string             // optional plain text (rich text v2)
+  coverEmoji?: string | null       // optional single emoji (cover image is v2)
+  color?: string | null            // optional accent color
+  items: BookItem[]                // ordered list of items + chapter headings
+  createdAt: string
+  updatedAt: string
+  trashed?: boolean                // soft delete
+  trashedAt?: string | null
+  pinned?: boolean                 // pin to home/sidebar (mirrors Note/Wiki)
+}
+
+/**
+ * Book item — discriminated union. `note` and `wiki` reference existing
+ * entities; `chapter-heading` is a Book-internal divider with title only
+ * (no body content).
+ *
+ * `id` is a unique book-internal id (for React keys, drag, removal).
+ * `refId` points to the actual Note/WikiArticle id.
+ * `order` is a fractional-indexing string (lexicographically sortable),
+ * generated via `generateKeyBetween` from the `fractional-indexing` package.
+ *
+ * Deduplication: a Note's `refId` appears at most once across all
+ * `kind: "note"` items in a single book (same for `kind: "wiki"`).
+ * Adding a duplicate is silently rejected.
+ */
+export type BookItem =
+  | { kind: "note"; id: string; refId: string; order: string }
+  | { kind: "wiki"; id: string; refId: string; order: string }
+  | { kind: "chapter-heading"; id: string; title: string; order: string }
 
 /* ── Wiki Article (Assembly Model) ────────────────── */
 
@@ -313,7 +360,7 @@ export interface SavedView {
   description?: string
   icon?: string
   color: string
-  space: "stone" | "notes" | "wiki" | "calendar" | "ontology" | "all"
+  space: "stone" | "notes" | "wiki" | "calendar" | "ontology" | "books" | "all"
   viewState: {
     /** @migrated v112 — legacy "table" mapped to "list" */
     viewMode: "list" | "board" | "grid" | "insights" | "calendar" | "graph" | "dashboard"

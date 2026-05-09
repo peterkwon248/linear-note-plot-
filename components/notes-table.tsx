@@ -310,6 +310,7 @@ export function NotesTable({
   tagId,
   labelId,
   headerExtras,
+  dualMode = false,
 }: {
   onRowClick?: (noteId: string) => void
   activePreviewId?: string | null
@@ -323,6 +324,11 @@ export function NotesTable({
   /** v3 Phase 5.1: extra toolbar nodes (e.g. ViewSwitcher) rendered before
    *  the existing extras. Threaded through to ViewHeader.extraToolbarButtons. */
   headerExtras?: React.ReactNode
+  /** Phase 2 (split-mode-prd): when true, row click sets `dualSelection`
+   *  instead of opening the note. Caller (NotesTableView dual branch) uses
+   *  this so the editor pane updates without URL change. Double-click still
+   *  invokes openNote() to escape into the full editor. */
+  dualMode?: boolean
 }) {
   const notes = usePlotStore((s) => s.notes)
   const updateNote = usePlotStore((s) => s.updateNote)
@@ -601,6 +607,43 @@ export function NotesTable({
     window.addEventListener("keydown", handler)
     return () => window.removeEventListener("keydown", handler)
   }, [selectedIds.size, flatNotes.length])
+
+  // ── Phase 6 (split-mode-prd): keyboard ↑↓ nav for dual list pane ──
+  // When dualMode is true, ↑↓ moves dualSelection through flatNotes, mirroring
+  // the editor pane focus. Skips when target is an input / textarea /
+  // contenteditable so we don't fight TipTap or filter inputs.
+  // No-op when dualMode is false — the existing single-mode navigation
+  // (preview panel, click handlers) is unchanged.
+  const dualSelection = usePlotStore((s) => s.dualSelection)
+  const setDualSelection = usePlotStore((s) => s.setDualSelection)
+  useEffect(() => {
+    if (!dualMode) return
+    const handler = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement | null
+      if (target && target.matches('input, textarea, [contenteditable="true"]')) return
+      if (e.key !== "ArrowUp" && e.key !== "ArrowDown") return
+      if (flatNotes.length === 0) return
+      // No selection: pick the first note.
+      if (!dualSelection || dualSelection.kind !== "note") {
+        e.preventDefault()
+        setDualSelection({ kind: "note", refId: flatNotes[0].id })
+        return
+      }
+      const currentIdx = flatNotes.findIndex((n) => n.id === dualSelection.refId)
+      if (currentIdx < 0) {
+        e.preventDefault()
+        setDualSelection({ kind: "note", refId: flatNotes[0].id })
+        return
+      }
+      const delta = e.key === "ArrowDown" ? 1 : -1
+      const nextIdx = currentIdx + delta
+      if (nextIdx < 0 || nextIdx >= flatNotes.length) return
+      e.preventDefault()
+      setDualSelection({ kind: "note", refId: flatNotes[nextIdx].id })
+    }
+    window.addEventListener("keydown", handler)
+    return () => window.removeEventListener("keydown", handler)
+  }, [dualMode, dualSelection, flatNotes, setDualSelection])
 
   const handleRowClick = useCallback((noteId: string, rowIndex: number, e: React.MouseEvent) => {
     // If we just finished a drag-select, ignore the click
@@ -962,7 +1005,11 @@ export function NotesTable({
     <main ref={tableContainerRef} onMouseDown={handleDragMouseDown} className="flex h-full flex-1 flex-col overflow-hidden bg-background">
       {/* ── Page title ─────────────────────────────────── */}
       <ViewHeader
-        icon={<FileText size={20} weight="regular" />}
+        icon={
+          context === "stone" || context === "brick" || context === "keystone"
+            ? <StatusShapeIcon status={context as NoteStatus} size={20} />
+            : <FileText size={20} weight="regular" />
+        }
         title={title ?? "Notes"}
         count={flatNotes.length}
         saveViewMode={saveViewMode}

@@ -32,6 +32,7 @@ import { createReferencesSlice } from "./slices/references"
 import { createGlobalBookmarksSlice } from "./slices/global-bookmarks"
 import { createCommentsSlice } from "./slices/comments"
 import { createInboxSlice } from "./slices/inbox"
+import { createBooksSlice } from "./slices/books"
 import { DEFAULT_AUTOPILOT_RULES } from "../autopilot/defaults"
 import { migrate } from "./migrate"
 import type { PlotState } from "./types"
@@ -89,6 +90,11 @@ export const usePlotStore = create<PlotState>()(
         references: {} as Record<string, import("../types").Reference>,
         globalBookmarks: {} as Record<string, import("../types").GlobalBookmark>,
         comments: {} as Record<string, import("../types").Comment>,
+        books: [] as import("../types").Book[],
+        bookContext: { primary: null, secondary: null } as { primary: import("./types").BookContextState | null; secondary: import("./types").BookContextState | null },
+        // Dual mode (split-mode-prd) — list+editor split-of-main, distinct from NoteSplitOverlay
+        dualSelection: null as import("./types").DualSelection | null,
+        dualRatio: 0.4,
         listPaneWidth: 320,
         srsStateByNoteId: {} as Record<string, SRSState>,
         autopilotEnabled: true,
@@ -129,6 +135,7 @@ export const usePlotStore = create<PlotState>()(
         ...createGlobalBookmarksSlice(set),
         ...createCommentsSlice(set),
         ...createInboxSlice(set),
+        ...createBooksSlice(set, get),
 
         // ── Todo Index ──
         rebuildTodoIndex: async () => {
@@ -247,11 +254,11 @@ export const usePlotStore = create<PlotState>()(
     },
     {
       name: "plot-store",
-      version: 118,
+      version: 120,
       storage: createIDBStorage<PlotState>(),
       partialize: (state) => {
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        const { _viewStateHydrated, mergePickerOpen, mergePickerSourceId, linkPickerOpen, linkPickerSourceId, previewNoteId, sidePanelOpen, sidePanelContext, _savedPrimaryContext, todoTasks, secondaryHistory, secondaryHistoryIndex, secondaryEntityContext, ...rest } = state
+        const { _viewStateHydrated, mergePickerOpen, mergePickerSourceId, linkPickerOpen, linkPickerSourceId, previewNoteId, sidePanelOpen, sidePanelContext, _savedPrimaryContext, todoTasks, secondaryHistory, secondaryHistoryIndex, secondaryEntityContext, bookContext, dualSelection, ...rest } = state
         return {
           ...rest,
           notes: state.notes.map((n) => ({ ...n, content: "", contentJson: null })),
@@ -273,6 +280,19 @@ export const usePlotStore = create<PlotState>()(
           state.secondaryHistoryIndex = -1
           state.secondaryEntityContext = null
           state._savedPrimaryContext = null
+          // Phase 4: in-book navigation context is session-only — reload
+          // returns to plain note/wiki view (mirrors Linear's "1/5" UX).
+          state.bookContext = { primary: null, secondary: null }
+          // Dual mode (split-mode-prd LOCKED #5/#9) — selection is session-only,
+          // dualRatio persists. Reset selection to null on reload so editor pane
+          // shows DefaultEmptyState until user selects.
+          state.dualSelection = null
+          // Defensive: clamp dualRatio in case persisted value drifted out of range.
+          if (typeof state.dualRatio !== "number" || isNaN(state.dualRatio)) {
+            state.dualRatio = 0.4
+          } else {
+            state.dualRatio = Math.max(0.25, Math.min(0.65, state.dualRatio))
+          }
 
           // Force re-seed if notes are empty (user deleted all data)
           if (state.notes.length === 0) {

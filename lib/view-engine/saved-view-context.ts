@@ -67,11 +67,12 @@ export function getCurrentViewContextKey(
  */
 export function getSavedViewSpaceForActivity(
   space: ActivitySpace | string,
-): "stone" | "notes" | "wiki" | "calendar" | "ontology" | "all" {
+): "stone" | "notes" | "wiki" | "calendar" | "ontology" | "books" | "all" {
   if (space === "notes") return "notes"
   if (space === "wiki") return "wiki"
   if (space === "calendar") return "calendar"
   if (space === "ontology") return "ontology"
+  if (space === "books") return "books"
   return "all"
 }
 
