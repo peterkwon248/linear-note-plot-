@@ -4,8 +4,9 @@
  * v3 Phase 5.1 — Gallery shell.
  *
  * Wraps `<GalleryView>` with the same workspace `<ViewHeader>` chrome that
- * `<NotesTable>` / `<NotesBoard>` use, so swapping modes via `<ViewSwitcher>`
- * keeps the Filter / Display / Save / Detail / Create toolbar identical.
+ * `<NotesTable>` / `<NotesBoard>` use, keeping the Filter / Display / Save /
+ * Detail / Create toolbar identical. Gallery mode is selected via the Display
+ * popover (supportedModes: ["list", "board", "gallery"]).
  *
  * Why a separate shell rather than reusing NotesTable/Board?
  *   - Gallery's body is a card grid; the table virtualization, sticky column
@@ -38,7 +39,7 @@ interface GalleryViewShellProps {
   folderId?: string
   tagId?: string
   labelId?: string
-  /** Toolbar slot — receives the <ViewSwitcher> from NotesTableView. */
+  /** Optional extra toolbar nodes rendered before the standard buttons. */
   headerExtras?: ReactNode
   /** Card click handler — wires to preview pane. */
   onNoteClick: (id: string) => void

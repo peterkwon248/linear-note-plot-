@@ -12,7 +12,8 @@ import { Sparkle } from "@phosphor-icons/react/dist/ssr/Sparkle"
 import { TrendUp } from "@phosphor-icons/react/dist/ssr/TrendUp"
 import { ArrowRight } from "@phosphor-icons/react/dist/ssr/ArrowRight"
 import { FileText } from "@phosphor-icons/react/dist/ssr/FileText"
-import { IconInbox } from "@/components/plot-icons"
+import { IconInbox, IconHome } from "@/components/plot-icons"
+import { ViewHeader } from "@/components/view-header"
 import { useBacklinksIndex } from "@/lib/search/use-backlinks-index"
 import { useInbox, type InboxItem } from "@/lib/hooks/use-inbox"
 import { InboxSourceIcon } from "@/components/inbox/inbox-source-icon"
@@ -69,7 +70,12 @@ export function HomeView() {
   }
 
   return (
-    <div className="flex-1 overflow-y-auto">
+    <div className="flex flex-1 flex-col overflow-hidden">
+      <ViewHeader
+        icon={<IconHome size={20} />}
+        title="Home"
+      />
+      <div className="flex-1 overflow-y-auto">
       <div className="mx-auto w-full max-w-5xl px-6 py-10">
         {/* Quick Capture (centered, narrow) */}
         <div className="mx-auto mb-10 max-w-2xl">
@@ -215,6 +221,7 @@ export function HomeView() {
             Improve your knowledge graph <span aria-hidden>→</span>
           </button>
         </div>
+      </div>
       </div>
     </div>
   )

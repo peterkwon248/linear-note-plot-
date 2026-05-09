@@ -3,7 +3,7 @@ import { STATUS_CONFIG } from "@/components/note-fields"
 import type { NoteStatus } from "@/lib/types"
 import { Hexagon } from "@phosphor-icons/react/dist/ssr/Hexagon"
 import { Cube } from "@phosphor-icons/react/dist/ssr/Cube"
-import { Cuboid } from "@/components/icons/Cuboid"
+import { Cuboid2x2 } from "@/components/icons/Cuboid2x2"
 import { NOTE_STATUS_COLORS } from "@/lib/colors"
 
 /**
@@ -28,7 +28,7 @@ export function StatusIcon({ status, className }: { status: NoteStatus; classNam
  * icon shape in addition to color.
  * - stone    = dashed circle (gray)
  * - brick    = half-filled circle (orange)
- * - keystone = check circle (teal)
+ * - keystone = block (Cuboid2x2, 2×2 grid)
  *
  * Used in notes-table, peek picker, and anywhere a richer affordance is wanted
  * over a plain colored dot.
@@ -50,5 +50,5 @@ export function StatusShapeIcon({
   if (status === "brick") {
     return <Cube size={size} weight="regular" style={{ color }} className={shared} />
   }
-  return <Cuboid size={size} weight="regular" style={{ color }} className={shared} />
+  return <Cuboid2x2 size={size} weight="regular" style={{ color }} className={shared} />
 }

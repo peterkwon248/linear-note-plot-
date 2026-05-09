@@ -6,7 +6,39 @@ import { toast } from "sonner"
 import { usePlotStore } from "@/lib/store"
 import { isEditableTarget } from "@/lib/keyboard-utils"
 import { popUndo, popRedo } from "@/lib/undo-manager"
-import { setActiveRoute, routeGoBack } from "@/lib/table-route"
+import { setActiveRoute, routeGoBack, getActiveRoute } from "@/lib/table-route"
+import type { ViewContextKey, ViewMode } from "@/lib/view-engine/types"
+
+/**
+ * Resolve the ViewContextKey for the active route — used by ⌘⇧E (dual mode toggle).
+ *
+ * Mirrors NotesTableView's TABLE_VIEW_MAP plus wiki/library/etc. routes. Returns
+ * "all" as the safe default when the route doesn't directly map to a context
+ * (the dual mode toggle becomes a no-op visually but still updates state).
+ */
+function inferActiveContextKey(): ViewContextKey {
+  const route = getActiveRoute()
+  if (!route) return "all"
+  switch (route) {
+    case "/notes": return "all"
+    case "/stone": return "stone"
+    case "/brick": return "brick"
+    case "/keystone": return "keystone"
+    case "/pinned": return "pinned"
+    case "/trash": return "trash"
+    case "/wiki": return "wiki"
+    case "/calendar": return "calendar"
+    case "/ontology": return "graph"
+    case "/templates": return "templates"
+    case "/library/tags": return "tags-list"
+    case "/labels": return "labels-list"
+    case "/stickers": return "stickers"
+    case "/library/references": return "references"
+    case "/library/files": return "files"
+    default:
+      return "all"
+  }
+}
 
 /**
  * Single global keydown listener that consolidates all app-wide keyboard
@@ -152,6 +184,34 @@ export function useGlobalShortcuts() {
         }
         const s = usePlotStore.getState()
         s.setActivitybarCollapsed(!s.activitybarCollapsed)
+        return
+      }
+
+      // ── 2b-3. Ctrl/Cmd+Shift+E — toggle dual mode (split-mode-prd LOCKED #2) ──
+      // Toggles current viewState.viewMode between "dual" and a previous mode.
+      // - When current === "dual": revert to "list" (safe default).
+      // - When current !== "dual": switch to "dual" (caller can store previous
+      //   mode internally if it wants to restore on the next toggle).
+      // Conflict-checked: ⌘⇧A actbar / ⌘⇧F sidebar / ⌘B detail / ⌘\ split-pane
+      // — no overlap with E. (PRD §5.)
+      if (
+        (e.key === "e" || e.key === "E") &&
+        e.shiftKey &&
+        (e.metaKey || e.ctrlKey)
+      ) {
+        if (isEditableTarget(target)) return
+        if (
+          target.closest("[role='dialog']") ||
+          target.closest("[data-radix-popper-content-wrapper]")
+        ) {
+          return
+        }
+        e.preventDefault()
+        const ctx = inferActiveContextKey()
+        const s = usePlotStore.getState()
+        const current = (s.viewStateByContext[ctx]?.viewMode ?? "list") as ViewMode
+        const next: ViewMode = current === "dual" ? "list" : "dual"
+        s.setViewState(ctx, { viewMode: next })
         return
       }
 

@@ -1,5 +1,50 @@
 # Technical Learnings
 
+## 2026-05-09 (마라톤) — Book + Dual mode + Filter Path A 완성
+
+### fractional-indexing 패턴 (Book Phase 1)
+- sparse integer halving `(prev + next) / 2` → 50회 후 underflow (Number.MIN_VALUE)
+- 해법: `fractional-indexing` npm package (~1KB, Linear/Figma/Tldraw 사용)
+- `generateKeyBetween(prev, next)` → lexicographic key string
+- Storage cost: ~5-10 bytes vs ~8 bytes (number) — acceptable
+- Critic이 Book PRD에서 정확히 발견 (HIGH-2)
+
+### VALID_VIEW_MODES 함정 (Dual mode)
+- `lib/view-engine/types.ts`에 `ViewMode` union (TS) + `VALID_VIEW_MODES` array (runtime) 둘 다 존재
+- TS union만 update하면 IDB hydration 시 `normalizeViewState`에서 silent fallback (default mode로 복귀)
+- 두 곳 같이 update 필수
+- Critic이 Dual PRD에서 정확히 발견 (HIGH-2)
+
+### autoSaveId pattern (react-resizable-panels)
+- `defaultSize={controlledValue}` 안 작동 (uncontrolled)
+- `onResize → setState` 한 방향만 작동 (rehydrate 후 패널 위치 안 변경)
+- 해법: `autoSaveId="dual-list-editor"` — 라이브러리 자체 persistence
+- 별도 store 불필요
+
+### SSR-safe hook 패턴
+- `useEffect`로 mount 감지: `const [mounted, setMounted] = useState(false); useEffect(() => setMounted(true), [])`
+- pre-mount: persisted state 그대로 (hydration mismatch 회피)
+- post-mount: viewport-aware logic
+- 추가: transition-only debounced toast로 resize spam 방지 (200ms debounce + wasNarrow ref)
+
+### Pane-scoped state 패턴 (bookContext)
+- Plot의 SmartSidePanel dual pane 인프라 정합
+- `bookContext: { primary: ... | null; secondary: ... | null }`
+- `usePane()` hook으로 현재 pane 인지
+- Same note in book A (primary) AND book B (secondary) 동시 가능
+
+### Critic agent 가치
+- 두 PRD (Book + Dual) 모두 6 issues 정확히 잡음
+- "이름 충돌" / "runtime validator" / "shape mismatch" 같은 hidden assumptions 검출
+- PRD 신선할 때 review = mid-implementation pivot 위험 회피
+
+### NoteSplitOverlay vs Dual mode 이름 충돌
+- 기존 `lib/note-split-mode.ts` + `NoteSplitOverlay` (`app/(app)/layout.tsx`) — 전혀 다른 개념인데 "split" 같은 단어 사용
+- 해결: 새 기능 = "Dual mode" (rename)
+- 우선순위: NoteSplitOverlay (z-40 overlay) 활성 시 Dual mode 시각 suppressed but state 보존
+
+---
+
 ## 2026-05-07 (오후) — Phase B Inbox Layer 학습
 
 ### Memo backfill 함정 (영구 정책 인지 필요)

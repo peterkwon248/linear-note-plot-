@@ -6,14 +6,15 @@ import { useSettingsStore } from "@/lib/settings-store"
 import { NotesTable } from "@/components/notes-table"
 import { NotesBoard } from "@/components/notes-board"
 import { GalleryViewShell } from "@/components/views/gallery-view-shell"
-import { StudioViewShell } from "@/components/views/studio-view-shell"
-import { EditorialViewShell } from "@/components/views/editorial-view-shell"
-import { ViewSwitcher, type ViewSwitcherMode } from "@/components/views/view-switcher"
 import { WorkspaceEditorArea } from "@/components/workspace/workspace-editor-area"
 import { usePane } from "@/components/workspace/pane-context"
 import { useActiveRoute, useActiveFolderId, useActiveTagId, useActiveLabelId, useActiveViewId } from "@/lib/table-route"
-import type { ViewContextKey, ViewMode } from "@/lib/view-engine/types"
+import type { ViewContextKey } from "@/lib/view-engine/types"
 import type { Note } from "@/lib/types"
+// ── Phase 2 (split-mode-prd): dual mode wiring ─────────────────────────────
+import { useEffectiveViewMode } from "@/hooks/use-effective-view-mode"
+import { DualListEditor } from "@/components/dual/dual-list-editor"
+import { NoteEditor } from "@/components/note-editor"
 
 /* ── Route → View Config map ─────────────────────────── */
 
@@ -69,6 +70,23 @@ export function NotesTableView() {
   )
   const viewMode = contextViewMode ?? settingsViewMode
 
+  // ── Phase 2 (split-mode-prd): viewport-aware effective mode + dual selection ──
+  // useEffectiveViewMode auto-falls back to "list" below 1200px (LOCKED #4) and
+  // toasts on transition. Returns the persisted mode pre-mount (SSR-safe).
+  const effectiveMode = useEffectiveViewMode(contextKey)
+  const dualSelection = usePlotStore((s) => s.dualSelection)
+  const setDualSelection = usePlotStore((s) => s.setDualSelection)
+  const notes = usePlotStore((s) => s.notes)
+
+  // Mid-session entity deletion cleanup (LOCKED #10): when the selected note
+  // is trashed or removed while the dual editor pane is showing it, clear the
+  // selection so DefaultEmptyState shows instead of a stale editor.
+  useEffect(() => {
+    if (!dualSelection || dualSelection.kind !== "note") return
+    const exists = notes.some((n) => n.id === dualSelection.refId && !n.trashed)
+    if (!exists) setDualSelection(null)
+  }, [notes, dualSelection, setDualSelection])
+
   // ESC closes preview panel
   const handleKeyDown = useCallback(
     (e: KeyboardEvent) => {
@@ -100,66 +118,54 @@ export function NotesTableView() {
     }
   }, [activeViewId]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  // ── Workspace editor area: show when editing in any layout mode ──
+  const isTrashView = tableRoute === "/trash"
+
+  // ── Phase 2 (split-mode-prd) — Dual mode branch ──
+  // Renders NotesTable in the left pane (with row click → setDualSelection)
+  // and NoteEditor in the right pane. Trash view skips dual (kept simple
+  // for MVP — trash already has its own sub-filter UX). Dual mode takes
+  // precedence over the WorkspaceEditorArea branch: even if a note is
+  // currently selected (selectedNoteId != null), dual layout shows the
+  // list+editor split — which is the whole point of dual mode.
+  if (effectiveMode === "dual" && !isTrashView) {
+    return (
+      <div className="u-mode flex flex-1 overflow-hidden" data-mode="dual">
+        <DualListEditor
+          storageId="dual-notes"
+          list={
+            <NotesTable
+              context={config.context}
+              title={config.title}
+              hideCreateButton={config.hideCreateButton}
+              createNoteOverrides={config.createNoteOverrides}
+              folderId={activeFolderId ?? undefined}
+              tagId={activeTagId ?? undefined}
+              labelId={activeLabelId ?? undefined}
+              dualMode
+              onRowClick={(noteId) => setDualSelection({ kind: "note", refId: noteId })}
+              activePreviewId={
+                dualSelection?.kind === "note" ? dualSelection.refId : null
+              }
+            />
+          }
+          editor={
+            dualSelection?.kind === "note" ? (
+              <div className="flex h-full flex-col overflow-hidden">
+                <NoteEditor noteId={dualSelection.refId} />
+              </div>
+            ) : null
+          }
+        />
+      </div>
+    )
+  }
+
+  // ── Workspace editor area: show when editing in any non-dual layout mode ──
+  // (Dual mode handles its own editor pane via DualListEditor above.)
   if (isEditing) {
     return (
       <div className="flex flex-1 overflow-hidden animate-in fade-in duration-200">
         <WorkspaceEditorArea />
-      </div>
-    )
-  }
-
-  // ── v3 Phase 5.1 / 5.2 / 5.3: Gallery + Studio + Editorial mode toggle ──
-  // ViewSwitcher exposes Table (list) ↔ Gallery ↔ Studio ↔ Editorial; Board
-  // lives behind the Display popover. Hidden on /trash where these have no
-  // useful semantics (a deleted-note "magazine" makes no sense).
-  const isTrashView = tableRoute === "/trash"
-  const switcherValue: ViewSwitcherMode =
-    viewMode === "gallery"   ? "gallery"
-    : viewMode === "studio"    ? "studio"
-    : viewMode === "editorial" ? "editorial"
-    : "list"
-  const handleSwitcherChange = (mode: ViewSwitcherMode) => {
-    setViewState(contextKey, { viewMode: mode as ViewMode })
-  }
-  const headerExtras = !isTrashView ? (
-    <ViewSwitcher value={switcherValue} onChange={handleSwitcherChange} />
-  ) : undefined
-
-  // Editorial shell (own ViewHeader chrome, warm canvas body)
-  if (viewMode === "editorial" && !isTrashView) {
-    return (
-      <div className="flex flex-1 overflow-hidden">
-        <EditorialViewShell
-          context={contextKey}
-          title={config.title}
-          hideCreateButton={config.hideCreateButton}
-          folderId={activeFolderId ?? undefined}
-          tagId={activeTagId ?? undefined}
-          labelId={activeLabelId ?? undefined}
-          headerExtras={headerExtras}
-          onNoteClick={(noteId) => setPreviewNoteId(noteId)}
-          activePreviewId={previewNoteId}
-        />
-      </div>
-    )
-  }
-
-  // Studio shell (own ViewHeader chrome, dark-forced body)
-  if (viewMode === "studio" && !isTrashView) {
-    return (
-      <div className="flex flex-1 overflow-hidden">
-        <StudioViewShell
-          context={contextKey}
-          title={config.title}
-          hideCreateButton={config.hideCreateButton}
-          folderId={activeFolderId ?? undefined}
-          tagId={activeTagId ?? undefined}
-          labelId={activeLabelId ?? undefined}
-          headerExtras={headerExtras}
-          onNoteClick={(noteId) => setPreviewNoteId(noteId)}
-          activePreviewId={previewNoteId}
-        />
       </div>
     )
   }
@@ -175,7 +181,6 @@ export function NotesTableView() {
           folderId={activeFolderId ?? undefined}
           tagId={activeTagId ?? undefined}
           labelId={activeLabelId ?? undefined}
-          headerExtras={headerExtras}
           onNoteClick={(noteId) => setPreviewNoteId(noteId)}
           activePreviewId={previewNoteId}
         />
@@ -199,7 +204,6 @@ export function NotesTableView() {
         labelId={activeLabelId ?? undefined}
         onRowClick={(noteId) => setPreviewNoteId(noteId)}
         activePreviewId={previewNoteId}
-        headerExtras={headerExtras}
       />
     </div>
   )

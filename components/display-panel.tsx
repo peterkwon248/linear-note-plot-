@@ -6,6 +6,8 @@ import type { ReactNode } from "react"
 import { List } from "@phosphor-icons/react/dist/ssr/List"
 import { Kanban } from "@phosphor-icons/react/dist/ssr/Kanban"
 import { GridFour } from "@phosphor-icons/react/dist/ssr/GridFour"
+import { Images } from "@phosphor-icons/react/dist/ssr/Images"
+import { Columns } from "@phosphor-icons/react/dist/ssr/Columns"
 import { Graph } from "@phosphor-icons/react/dist/ssr/Graph"
 import { ChartLine } from "@phosphor-icons/react/dist/ssr/ChartLine"
 import { SortAscending } from "@phosphor-icons/react/dist/ssr/SortAscending"
@@ -60,6 +62,11 @@ export const SortIcon = () => (
 const MODE_DEFS: { mode: ViewMode; icon: ReactNode; label: string }[] = [
   { mode: "list",     icon: <List size={14} weight="regular" />,     label: "List" },
   { mode: "board",    icon: <Kanban size={14} weight="regular" />,   label: "Board" },
+  { mode: "gallery",  icon: <Images size={14} weight="regular" />,   label: "Gallery" },
+  // Phase 2: "Dual" entry. Phosphor `Columns` icon — two vertical panes.
+  // Surfaces alongside other view-mode buttons; gated by per-context
+  // supportedModes (Notes/Wiki only per LOCKED #1, Books skip).
+  { mode: "dual",     icon: <Columns size={14} weight="regular" />,  label: "Dual" },
   { mode: "grid",     icon: <GridFour size={14} weight="regular" />, label: "Grid" },
   { mode: "graph",    icon: <Graph size={14} weight="regular" />,    label: "Graph" },
   { mode: "insights", icon: <ChartLine size={14} weight="regular" />, label: "Insights" },
@@ -126,9 +133,15 @@ export function DisplayPanel({
           <div className="flex rounded-lg border border-border-subtle bg-card p-0.5">
             {MODE_DEFS.filter((d) => supportedModes.includes(d.mode)).map((def) => {
               const isActive = currentMode === def.mode
+              // Phase 6 polish: surface the ⌘⇧E shortcut on the Dual button
+              // via title attribute (hover tooltip) — discoverable without
+              // adding visual chrome that competes with other mode buttons.
+              const buttonTitle =
+                def.mode === "dual" ? `${def.label} — ⌘⇧E` : def.label
               return (
                 <button
                   key={def.mode}
+                  title={buttonTitle}
                   onClick={() => {
                     const patch: Partial<ViewState> = { viewMode: def.mode as ViewMode }
                     // Board needs a non-"none" groupBy — fall back to the

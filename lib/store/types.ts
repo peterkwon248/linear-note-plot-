@@ -1,4 +1,4 @@
-import type { Note, NoteBody, Folder, Tag, Label, Sticker, EntityRef, NoteTemplate, ActiveView, NoteEvent, Thread, AutopilotRule, AutopilotLogEntry, Relation, RelationType, Attachment, CoOccurrence, RelationSuggestion, WikiClusterSuggestion, WikiInfoboxEntry, WikiCollectionItem, SavedView, WikiArticle, WikiBlock, WikiCategory, Reference, GlobalBookmark, Comment, CommentAnchor } from "../types"
+import type { Note, NoteBody, Folder, Tag, Label, Sticker, EntityRef, NoteTemplate, ActiveView, NoteEvent, Thread, AutopilotRule, AutopilotLogEntry, Relation, RelationType, Attachment, CoOccurrence, RelationSuggestion, WikiClusterSuggestion, WikiInfoboxEntry, WikiCollectionItem, SavedView, WikiArticle, WikiBlock, WikiCategory, Reference, GlobalBookmark, Comment, CommentAnchor, Book } from "../types"
 import type { InboxDismissed, InboxSnoozed, InboxItemKind } from "./slices/inbox"
 import type { SRSState, SRSRating } from "@/lib/srs"
 import type { ViewState, ViewContextKey } from "../view-engine/types"
@@ -33,6 +33,48 @@ export type SidePanelContext =
   | { type: "reference"; id: string }
   | { type: "template"; id: string }
   | null
+
+/**
+ * In-book navigation context for a single editor pane (Phase 4).
+ *
+ * Set when a user opens a note/wiki *from a book context* (i.e. clicked
+ * the item inside BookDetailPage). The editor header reads this to render
+ * Linear-style "N/M ↑↓" navigation.
+ *
+ * Pane-scoped — same note can be in book A in primary pane and book B in
+ * secondary pane simultaneously. NOT persisted (session-only, mirrors
+ * Linear behaviour). Cleared automatically when the user navigates away
+ * from a book-anchored entity.
+ *
+ * `itemIndex` and `total` count CONTENT items only (notes + wikis).
+ * Chapter-heading dividers are skipped in navigation and excluded from
+ * the M denominator.
+ *
+ * Spec: `.omc/plans/book-entity-prd.md` §8 (CRITIC #4 + #5).
+ */
+export interface BookContextState {
+  bookId: string
+  /** 0-based index into the content-only items list. */
+  itemIndex: number
+  /** Count of note + wiki items only (NOT chapter-headings). */
+  total: number
+}
+
+/**
+ * Dual mode selection (split-mode-prd LOCKED #9 — flat shape, primary-pane MVP).
+ *
+ * When viewMode === "dual", the editor pane displays the entity referenced
+ * here. Distinct from `NoteSplitOverlay` (`lib/note-split-mode.ts`) which is
+ * a full-overlay split feature — see PRD HIGH-1 for rationale.
+ *
+ * Books skip per LOCKED #1 (Books are themselves list structures).
+ * Phase 5: "reference" added (References dual mode in Library view).
+ * Session-only — NOT persisted across reload.
+ */
+export interface DualSelection {
+  kind: "note" | "wiki" | "reference"
+  refId: string
+}
 
 export interface PlotState {
   // ── Data ──
@@ -98,6 +140,14 @@ export interface PlotState {
   // Layout
   listPaneWidth: number  // 200~500
 
+  // ── Dual Mode (list+editor split-of-main, distinct from NoteSplitOverlay) ──
+  /** Currently selected entity in the editor pane (session-only, NOT persisted). */
+  dualSelection: DualSelection | null
+  /** List/editor ratio (0.25~0.65 clamped). Persisted via partialize. */
+  dualRatio: number
+  setDualSelection: (sel: DualSelection | null) => void
+  setDualRatio: (ratio: number) => void
+
   // SRS
   srsStateByNoteId: Record<string, SRSState>
 
@@ -126,6 +176,20 @@ export interface PlotState {
 
   // ── Global Bookmarks (Cross-note anchors) ──
   globalBookmarks: Record<string, GlobalBookmark>
+
+  // ── Books (Cross-entity Ordered Sequences) ──
+  books: Book[]
+
+  /**
+   * In-book navigation context per editor pane (Phase 4 — session only).
+   * Set by BookDetailPage when the user clicks an item; cleared when the
+   * user navigates away from a book-anchored entity. Stripped from
+   * persistence — reload returns to plain note/wiki view.
+   */
+  bookContext: {
+    primary: BookContextState | null
+    secondary: BookContextState | null
+  }
 
   // ── Comments (block/node-anchored annotations) ──
   comments: Record<string, Comment>
@@ -359,6 +423,24 @@ export interface PlotState {
   setCommentStatus: (commentId: string, status: import("../types").CommentStatus) => void
   toggleCommentResolved: (commentId: string) => void
   deleteComment: (commentId: string) => void
+
+  // ── Books (Cross-entity Ordered Sequences, Phase 1) ──
+  createBook: (title: string) => string
+  updateBook: (id: string, patch: Partial<Book>) => void
+  deleteBook: (id: string) => void
+  restoreBook: (id: string) => void
+  permanentlyDeleteBook: (id: string) => void
+  addItemToBook: (bookId: string, item: { kind: "note" | "wiki"; refId: string }) => void
+  addChapterHeading: (bookId: string, title: string, afterItemId?: string) => void
+  removeItemFromBook: (bookId: string, itemId: string) => void
+  reorderBookItems: (bookId: string, itemId: string, newPrevId: string | null, newNextId: string | null) => void
+  updateChapterHeading: (bookId: string, itemId: string, title: string) => void
+  /**
+   * Phase 4 — set or clear the in-book navigation context for a pane.
+   * Pass `null` for `ctx` to leave book-anchored navigation (clears the
+   * counter + ↑↓ chrome on that pane only).
+   */
+  setBookContext: (pane: "primary" | "secondary", ctx: BookContextState | null) => void
 
   // Ontology
   ontologyPositions: Record<string, { x: number; y: number }>

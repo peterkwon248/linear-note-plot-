@@ -19,6 +19,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { FolderPicker } from "@/components/folder-picker"
 import { IconWiki } from "@/components/plot-icons"
 import { setActiveRoute } from "@/lib/table-route"
+import { InBooksSection } from "@/components/books/in-books-section"
 import type { WikiArticle } from "@/lib/types"
 import { getEntityColor } from "@/lib/colors" // v109: opt-in color fallback
 
@@ -274,6 +275,11 @@ export function WikiArticleDetailPanel({ article }: { article: WikiArticle | nul
       {/* Infobox 사이드바 섹션 제거됨 (2026-04-14 밤)
           - Default/Encyclopedia 둘 다 이제 본문에 inline WikiInfobox 렌더링됨
           - 사이드바 중복 표시 방지. Infobox 편집/색상 변경 = 본문 인포박스에서 */}
+
+      {/* In Books — shows every non-trashed book containing this wiki article */}
+      <InBooksSection kind="wiki" refId={article.id} />
+
+      <div className="mx-4 border-b border-border" />
 
       {/* Sections (Outline) */}
       <InspectorSection title="Outline" icon={<TextAlignLeft size={16} weight="regular" />}>

@@ -2,7 +2,7 @@
 
 import { useMemo, useCallback } from "react"
 import { usePlotStore } from "../store"
-import type { ViewState, ViewContextKey } from "./types"
+import type { ViewState, ViewContextKey, FilterRule } from "./types"
 import { buildViewStateForContext } from "./defaults"
 import type { Reference } from "../types"
 
@@ -69,6 +69,30 @@ function enrich(refs: Reference[]): ReferenceWithMeta[] {
       ? "link"
       : "citation"
     return { ...r, fieldCount, hasImage, refType }
+  })
+}
+
+/* ── Stage 0.5: Filter (Path-A-Step-2) ────────────────── */
+
+function applyRefFilters(refs: ReferenceWithMeta[], filters: FilterRule[]): ReferenceWithMeta[] {
+  if (filters.length === 0) return refs
+  const byField = new Map<string, FilterRule[]>()
+  for (const r of filters) {
+    if (!byField.has(r.field)) byField.set(r.field, [])
+    byField.get(r.field)!.push(r)
+  }
+  return refs.filter((ref) => {
+    for (const [field, rules] of byField) {
+      // OR within field
+      const matchesAny = rules.some((rule) => {
+        if (field === "type") {
+          return rule.value === ref.refType
+        }
+        return false // unknown field → no-op (fail open)
+      })
+      if (!matchesAny) return false // AND across fields
+    }
+    return true
   })
 }
 
@@ -143,10 +167,16 @@ export function useReferencesView(
   // Stage 0: enrich — derived fieldCount / hasImage / refType
   const enriched = useMemo(() => enrich(filteredRefs), [filteredRefs])
 
+  // Stage 0.5: filter (Path-A-Step-2 — type filter from viewState.filters)
+  const postFilter = useMemo(
+    () => applyRefFilters(enriched, viewState.filters),
+    [enriched, viewState.filters],
+  )
+
   // Stage 1: sort
   const sorted = useMemo(
-    () => applyRefSort(enriched, viewState),
-    [enriched, viewState],
+    () => applyRefSort(postFilter, viewState),
+    [postFilter, viewState],
   )
 
   // Stage 2: group (none-only in this PR)

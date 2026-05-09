@@ -2,7 +2,7 @@
 
 import { useMemo, useCallback } from "react"
 import { usePlotStore } from "../store"
-import type { ViewState, ViewContextKey } from "./types"
+import type { ViewState, ViewContextKey, FilterRule } from "./types"
 import { buildViewStateForContext } from "./defaults"
 import type { Tag } from "../types"
 
@@ -45,6 +45,32 @@ function applyTagSearch(tags: TagWithCount[], query: string): TagWithCount[] {
   const q = query.trim().toLowerCase()
   if (!q) return tags
   return tags.filter((t) => t.name.toLowerCase().includes(q))
+}
+
+/* ── Stage 1b: Filter ─────────────────────────────────── */
+
+function applyTagFilters(tags: TagWithCount[], filters: FilterRule[]): TagWithCount[] {
+  if (filters.length === 0) return tags
+  const byField = new Map<string, FilterRule[]>()
+  for (const r of filters) {
+    if (!byField.has(r.field)) byField.set(r.field, [])
+    byField.get(r.field)!.push(r)
+  }
+  return tags.filter((tag) => {
+    for (const [field, rules] of byField) {
+      const matchesAny = rules.some((rule) => {
+        if (field === "colorStatus") {
+          const hasColor = tag.color != null && tag.color.length > 0
+          if (rule.value === "set") return hasColor
+          if (rule.value === "unset") return !hasColor
+          return false
+        }
+        return false
+      })
+      if (!matchesAny) return false
+    }
+    return true
+  })
 }
 
 /* ── Stage 2: Sort ────────────────────────────────────── */
@@ -131,10 +157,16 @@ export function useTagsView(contextKey: ViewContextKey = "tags-list"): UseTagsVi
     [tagsWithCount, searchQuery],
   )
 
+  // Stage 1b: filter (colorStatus — Path-A-Step-4)
+  const filtered = useMemo(
+    () => applyTagFilters(searched, viewState.filters),
+    [searched, viewState.filters],
+  )
+
   // Stage 2: sort
   const sorted = useMemo(
-    () => applyTagSort(searched, viewState),
-    [searched, viewState],
+    () => applyTagSort(filtered, viewState),
+    [filtered, viewState],
   )
 
   // Stage 3: group (none-only in this PR)

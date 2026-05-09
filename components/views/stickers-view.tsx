@@ -32,8 +32,10 @@ import { PRESET_COLORS } from "@/lib/colors"
 import type { Sticker } from "@/lib/types"
 import { ViewHeader } from "@/components/view-header"
 import { DisplayPanel } from "@/components/display-panel"
+import { FilterPanel } from "@/components/filter-panel"
 import { useStickersView } from "@/lib/view-engine/use-stickers-view"
 import { STICKERS_LIST_VIEW_CONFIG } from "@/lib/view-engine/view-configs"
+import type { FilterRule } from "@/lib/view-engine/types"
 import { StickerMemberCountChip } from "@/components/property-chips"
 import { navigateToWikiArticle } from "@/lib/wiki-article-nav"
 import { setActiveRoute } from "@/lib/table-route"
@@ -95,6 +97,17 @@ export function StickersView() {
     [notes]
   )
   const activeWiki = wikiArticles
+
+  // Filter toggle handler (mirrors tags-view handleTagsListFilterToggle pattern).
+  const handleStickersFilterToggle = useCallback((rule: FilterRule) => {
+    const exists = viewState.filters.some(
+      (f) => f.field === rule.field && f.operator === rule.operator && f.value === rule.value
+    )
+    const newFilters = exists
+      ? viewState.filters.filter((f) => !(f.field === rule.field && f.operator === rule.operator && f.value === rule.value))
+      : [...viewState.filters, rule]
+    updateViewState({ filters: newFilters })
+  }, [viewState.filters, updateViewState])
 
   // Sort handler — toggles direction when same field, otherwise switches field.
   const handleSortToggle = useCallback((field: "name" | "memberCount") => {
@@ -530,6 +543,17 @@ export function StickersView() {
             onToggleChange={(key, val) =>
               updateViewState({ toggles: { ...viewState.toggles, [key]: val } })
             }
+          />
+        }
+        showFilter={STICKERS_LIST_VIEW_CONFIG.showFilter}
+        hasActiveFilters={viewState.filters.length > 0}
+        filterContent={
+          <FilterPanel
+            categories={STICKERS_LIST_VIEW_CONFIG.filterCategories}
+            activeFilters={viewState.filters}
+            onToggle={handleStickersFilterToggle}
+            quickFilters={STICKERS_LIST_VIEW_CONFIG.quickFilters as any}
+            onQuickFilter={(rules) => updateViewState({ filters: rules })}
           />
         }
       />

@@ -15,9 +15,11 @@ import {
   ContextMenuSeparator,
 } from "@/components/ui/context-menu"
 import { ViewHeader } from "@/components/view-header"
+import { FilterPanel } from "@/components/filter-panel"
 import { useReferencesView } from "@/lib/view-engine/use-references-view"
 import { useFilesView } from "@/lib/view-engine/use-files-view"
 import { REFERENCES_VIEW_CONFIG, FILES_VIEW_CONFIG } from "@/lib/view-engine/view-configs"
+import type { FilterRule } from "@/lib/view-engine/types"
 import { RefTypeChip, RefFieldCountChip, RefImageChip, FileTypeChip, FileSizeChip } from "@/components/property-chips"
 import {
   DropdownMenu,
@@ -54,6 +56,10 @@ import { pickColor } from "@/components/note-fields"
 import { persistAttachmentBlob } from "@/lib/store/helpers"
 import type { Reference, Attachment } from "@/lib/types"
 import { STATUS_COLORS, KNOWLEDGE_INDEX_COLORS } from "@/lib/colors"
+// ── Phase 5 (split-mode-prd): dual mode wiring for References ─────────────
+import { useEffectiveViewMode } from "@/hooks/use-effective-view-mode"
+import { DualListEditor } from "@/components/dual/dual-list-editor"
+import { ReferenceDetailPanel } from "@/components/side-panel/reference-detail-panel"
 
 /* ── File size formatter ─────────────────────────── */
 function formatFileSize(bytes: number): string {
@@ -177,6 +183,8 @@ function ReferenceRow({
   onDelete,
   onCopyTitle,
   onEdit,
+  dualMode = false,
+  isDualActive = false,
 }: {
   ref_: Reference
   isSelected: boolean
@@ -187,6 +195,13 @@ function ReferenceRow({
   onDelete: () => void
   onCopyTitle: () => void
   onEdit: () => void
+  /** Phase 5: when true, the row is rendered inside the dual-mode left pane.
+   *  Click handler routes through `onClick` (which writes dualSelection) — the
+   *  parent supplies the dual-aware `onClick`. */
+  dualMode?: boolean
+  /** Phase 5: when in dual mode, true if this row matches `dualSelection`.
+   *  Drives an Active highlight that mirrors the editor pane focus. */
+  isDualActive?: boolean
 }) {
   const fieldCount = ref_.fields.length
   const timeAgo = ref_.updatedAt
@@ -210,7 +225,11 @@ function ReferenceRow({
             "group/ref w-full text-left px-5 py-3 border-b border-border/50 transition-colors duration-100",
             "hover:bg-hover-bg focus-visible:outline-none",
             isSelected && !isMultiMode && "bg-hover-bg",
-            isMultiSelected && "bg-accent/8"
+            isMultiSelected && "bg-accent/8",
+            // Phase 5: dual-mode active row highlight (mirrors editor pane).
+            // Stronger than the ordinary `isSelected` hover, weaker than
+            // multi-select chip — reads as "this is what the editor shows".
+            dualMode && isDualActive && "bg-accent/10 border-l-2 border-l-accent",
           )}
         >
           <div className="flex items-start gap-2.5">
@@ -874,10 +893,8 @@ function FilesView() {
   const attachments = usePlotStore((s) => s.attachments)
   const addAttachment = usePlotStore((s) => s.addAttachment)
   const removeAttachment = usePlotStore((s) => s.removeAttachment)
-  // PR group-c-d-5: sort moved into viewState (persisted via view-engine).
-  // type filter (all/image/document) kept local — multi-state radio doesn't
-  // fit viewState.toggles boolean record (future PR can lift).
-  const [filter, setFilter] = useState<"all" | "image" | "document">("all")
+  // Path-A-Step-1: type filter lifted into viewState.filters (view-engine).
+  // Local chip bar removed; Filter button in ViewHeader is now the single entry point.
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
   const lastClickedRef = useRef<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -904,20 +921,12 @@ function FilesView() {
     e.target.value = ""
   }
 
-  // Stage 1: filter only (no sort) — sort handled by useFilesView (viewState).
-  const filteredAttachments = useMemo(() => {
-    let arr = activeAttachments
-    if (filter === "image") arr = arr.filter((a) => a.type === "image")
-    else if (filter === "document") arr = arr.filter((a) => a.type !== "image")
-    return arr
-  }, [activeAttachments, filter])
-
-  // Stage 2: sort via view-engine (sort persisted in viewState).
+  // Filter + sort via view-engine (filter in viewState.filters, sort in viewState.sortFields).
   const {
     flatAttachments: filtered,
     viewState,
     updateViewState,
-  } = useFilesView(filteredAttachments)
+  } = useFilesView(activeAttachments)
   const isGridMode = viewState.viewMode === "grid"
   const sortField = viewState.sortFields[0]?.field ?? "createdAt"
   const sortDirection = viewState.sortFields[0]?.direction ?? "desc"
@@ -935,9 +944,6 @@ function FilesView() {
     }
     updateViewState({ sortFields: [{ field, direction: nextDir }] })
   }, [viewState.sortFields, updateViewState])
-
-  const imageCount = useMemo(() => activeAttachments.filter((a) => a.type === "image").length, [activeAttachments])
-  const docCount = useMemo(() => activeAttachments.filter((a) => a.type !== "image").length, [activeAttachments])
 
   /* ── Selection ── */
   const toggleSelect = useCallback((id: string, e?: React.MouseEvent) => {
@@ -976,6 +982,17 @@ function FilesView() {
     setSelectedIds(new Set())
     toast.success(`Moved ${count} file${count > 1 ? "s" : ""} to trash`)
   }, [selectedIds, removeAttachment])
+
+  // ── Filter toggle handler for FilterPanel ──
+  const handleFilesFilterToggle = useCallback((rule: FilterRule) => {
+    const exists = viewState.filters.some(
+      f => f.field === rule.field && f.operator === rule.operator && f.value === rule.value
+    )
+    const newFilters = exists
+      ? viewState.filters.filter(f => !(f.field === rule.field && f.operator === rule.operator && f.value === rule.value))
+      : [...viewState.filters, rule]
+    updateViewState({ filters: newFilters })
+  }, [viewState.filters, updateViewState])
 
   // Escape clears selection
   useEffect(() => {
@@ -1052,6 +1069,17 @@ function FilesView() {
             </div>
           </div>
         }
+        showFilter={FILES_VIEW_CONFIG.showFilter}
+        hasActiveFilters={viewState.filters.length > 0}
+        filterContent={
+          <FilterPanel
+            categories={FILES_VIEW_CONFIG.filterCategories}
+            activeFilters={viewState.filters}
+            onToggle={handleFilesFilterToggle}
+            quickFilters={FILES_VIEW_CONFIG.quickFilters as any}
+            onQuickFilter={(rules) => updateViewState({ filters: rules })}
+          />
+        }
       />
       <input
         ref={fileInputRef}
@@ -1060,21 +1088,6 @@ function FilesView() {
         className="hidden"
         onChange={handleUpload}
       />
-
-      {/* Filter bar */}
-      {activeAttachments.length > 0 && (
-        <div className="flex items-center gap-1.5 px-5 py-1.5 border-b border-border-subtle">
-          {(["all", "image", "document"] as const).map((f) => (
-            <QuickFilterButton
-              key={f}
-              label={f === "all" ? "All" : f === "image" ? "Images" : "Documents"}
-              active={filter === f}
-              onClick={() => setFilter(f)}
-              count={f === "all" ? activeAttachments.length : f === "image" ? imageCount : docCount}
-            />
-          ))}
-        </div>
-      )}
 
       <div className="flex-1 overflow-y-auto">
         {filtered.length === 0 ? (
@@ -1389,6 +1402,24 @@ function ReferencesView() {
 
   const isMultiMode = selectedIds.size > 0
 
+  // ── Phase 5 (split-mode-prd): viewport-aware effective mode + dual selection ──
+  // useEffectiveViewMode auto-falls back to "list" below 1200px (LOCKED #4) and
+  // toasts on transition. Returns the persisted mode pre-mount (SSR-safe).
+  // Mirrors NotesTableView Phase 2 + WikiView Phase 3 patterns.
+  const effectiveMode = useEffectiveViewMode("references")
+  const dualSelection = usePlotStore((s) => s.dualSelection)
+  const setDualSelection = usePlotStore((s) => s.setDualSelection)
+
+  // Mid-session entity deletion cleanup (LOCKED #10): when the selected
+  // reference is trashed or removed while the dual editor pane is showing it,
+  // clear the selection so DefaultEmptyState shows instead of a stale editor.
+  // Mirrors notes-table-view.tsx + wiki-view.tsx Phase 2/3 cleanup hooks.
+  useEffect(() => {
+    if (!dualSelection || dualSelection.kind !== "reference") return
+    const ref = references[dualSelection.refId]
+    if (!ref || ref.trashed) setDualSelection(null)
+  }, [references, dualSelection, setDualSelection])
+
   /* ── Filter helpers ── */
 
   const toggleFieldKey = useCallback((key: string) => {
@@ -1400,7 +1431,8 @@ function ReferencesView() {
     })
   }, [])
 
-  const hasActiveFilters = quickFilter !== "all" || activeFieldKeys.size > 0
+  // hasActiveFilters extended with viewState.filters (Path-A-Step-2 type filter)
+  // — references view-engine viewState.filters length appended below after hook call.
 
   /* ── Derived data ── */
 
@@ -1461,7 +1493,7 @@ function ReferencesView() {
     return arr
   }, [activeRefs, quickFilter, activeFieldKeys, search])
 
-  // Stage 2: enrich + sort via view-engine (sort persisted in viewState).
+  // Stage 2: enrich + filter + sort via view-engine (filter + sort persisted in viewState).
   const {
     flatRefs: referenceList,
     viewState,
@@ -1470,6 +1502,26 @@ function ReferencesView() {
   const isGridMode = viewState.viewMode === "grid"
   const sortField = viewState.sortFields[0]?.field ?? "updatedAt"
   const sortDirection = viewState.sortFields[0]?.direction ?? "desc"
+
+  // hasActiveFilters: quickFilter / fieldKey (local) ∪ viewState.filters (view-engine).
+  const hasActiveFilters =
+    quickFilter !== "all" || activeFieldKeys.size > 0 || viewState.filters.length > 0
+
+  // ── Filter toggle handler for Type filter (Path-A-Step-2) ──
+  const handleRefTypeToggle = useCallback(
+    (typeValue: "link" | "citation") => {
+      const exists = viewState.filters.some(
+        (f: FilterRule) => f.field === "type" && f.value === typeValue
+      )
+      const next: FilterRule[] = exists
+        ? viewState.filters.filter(
+            (f: FilterRule) => !(f.field === "type" && f.value === typeValue)
+          )
+        : [...viewState.filters, { field: "type", operator: "eq" as const, value: typeValue }]
+      updateViewState({ filters: next })
+    },
+    [viewState.filters, updateViewState]
+  )
 
   // Sort toggle helper — used by display popover and list-mode column header.
   const handleSortToggle = useCallback((field: SortField) => {
@@ -1588,9 +1640,15 @@ function ReferencesView() {
   const handleRowClick = useCallback((id: string) => {
     setSelectedIds(new Set())
     setSelectedId(id)
-    openReferencePanel(id)
+    // Phase 5: in dual mode the editor pane is the detail view — route the
+    // click through dualSelection instead of opening the side panel popover.
+    if (effectiveMode === "dual") {
+      setDualSelection({ kind: "reference", refId: id })
+    } else {
+      openReferencePanel(id)
+    }
     lastClickedIdRef.current = id
-  }, [openReferencePanel])
+  }, [openReferencePanel, effectiveMode, setDualSelection])
 
   const handleSelectAll = useCallback(() => {
     if (selectedIds.size === referenceList.length) {
@@ -1602,6 +1660,41 @@ function ReferencesView() {
 
   const isAllSelected = referenceList.length > 0 && selectedIds.size === referenceList.length
   const isPartiallySelected = selectedIds.size > 0 && selectedIds.size < referenceList.length
+
+  // ── Phase 6 (split-mode-prd): keyboard ↑↓ nav for dual list pane ──
+  // When dual mode is active, ↑↓ moves dualSelection through the (already
+  // sorted/filtered/grouped) flat reference list — skipping group headers.
+  // No-ops when the focus is in an input / textarea / contenteditable so we
+  // don't fight TipTap or filter inputs. Mirrors the same pattern in
+  // NotesTableView (Phase 2) + WikiView (Phase 3).
+  useEffect(() => {
+    if (effectiveMode !== "dual") return
+    const handler = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement | null
+      if (target && target.matches('input, textarea, [contenteditable="true"]')) return
+      if (e.key !== "ArrowUp" && e.key !== "ArrowDown") return
+      if (referenceList.length === 0) return
+      // No selection: pick the first item.
+      if (!dualSelection || dualSelection.kind !== "reference") {
+        e.preventDefault()
+        setDualSelection({ kind: "reference", refId: referenceList[0].id })
+        return
+      }
+      const currentIdx = referenceList.findIndex((r) => r.id === dualSelection.refId)
+      if (currentIdx < 0) {
+        e.preventDefault()
+        setDualSelection({ kind: "reference", refId: referenceList[0].id })
+        return
+      }
+      const delta = e.key === "ArrowDown" ? 1 : -1
+      const nextIdx = currentIdx + delta
+      if (nextIdx < 0 || nextIdx >= referenceList.length) return
+      e.preventDefault()
+      setDualSelection({ kind: "reference", refId: referenceList[nextIdx].id })
+    }
+    window.addEventListener("keydown", handler)
+    return () => window.removeEventListener("keydown", handler)
+  }, [effectiveMode, dualSelection, referenceList, setDualSelection])
 
   /* ── Render ── */
 
@@ -1638,6 +1731,31 @@ function ReferencesView() {
                 </button>
               ))}
             </div>
+            {/* Type filter (Path-A-Step-2 — viewState.filters) */}
+            <div className="text-2xs font-medium text-muted-foreground mb-2">
+              Type
+            </div>
+            <div className="flex flex-wrap gap-1 mb-3">
+              {(["link", "citation"] as const).map((t) => {
+                const active = viewState.filters.some(
+                  (f: FilterRule) => f.field === "type" && f.value === t
+                )
+                return (
+                  <button
+                    key={t}
+                    onClick={() => handleRefTypeToggle(t)}
+                    className={cn(
+                      "px-2.5 py-1 rounded-md text-2xs font-medium transition-colors capitalize",
+                      active
+                        ? "bg-accent/10 text-accent"
+                        : "text-muted-foreground hover:bg-hover-bg hover:text-foreground"
+                    )}
+                  >
+                    {t}
+                  </button>
+                )
+              })}
+            </div>
             {fieldKeys.length > 0 && (
               <>
                 <div className="text-2xs font-medium text-muted-foreground mb-2">
@@ -1666,6 +1784,7 @@ function ReferencesView() {
                 onClick={() => {
                   setQuickFilter("all")
                   setActiveFieldKeys(new Set())
+                  updateViewState({ filters: [] })
                 }}
                 className="mt-3 w-full text-2xs text-muted-foreground hover:text-foreground transition-colors"
               >
@@ -1786,7 +1905,134 @@ function ReferencesView() {
         />
       )}
 
-      {/* Body */}
+      {/* Body — Phase 5 (split-mode-prd): in dual mode, wrap the existing
+          list/grid renderer in DualListEditor with ReferenceDetailPanel as
+          the editor pane. Mirrors NotesTableView (Phase 2) and WikiView
+          (Phase 3) wiring. effectiveMode handles narrow-viewport fallback
+          (returns "list" below 1200px even when persisted is "dual"). */}
+      {effectiveMode === "dual" ? (
+        <div className="u-mode flex flex-1 overflow-hidden" data-mode="dual">
+          <DualListEditor
+            storageId="dual-references"
+            list={
+              <div className="flex-1 overflow-y-auto h-full">
+                {referenceList.length === 0 ? (
+                  search.trim() ? (
+                    <SearchEmpty query={search} />
+                  ) : (
+                    <EmptyReferences onCreate={handleCreate} />
+                  )
+                ) : (
+                  /* Force list rendering inside dual pane (grid is too wide
+                     for the 40% list column). Active highlight mirrors the
+                     editor via `isDualActive`. */
+                  <>
+                    {/* Select All Header Row */}
+                    <div
+                      data-header-row
+                      className="sticky top-0 z-10 flex items-center gap-2.5 px-5 py-2.5 border-b border-border-subtle bg-background text-2xs font-medium text-muted-foreground"
+                    >
+                      <div
+                        data-checkbox
+                        onClick={handleSelectAll}
+                        className={cn(
+                          "h-4 w-4 rounded-[4px] border flex items-center justify-center cursor-pointer transition-colors shadow-sm shrink-0",
+                          isAllSelected
+                            ? "bg-accent border-accent"
+                            : isPartiallySelected
+                              ? "bg-accent/50 border-accent"
+                              : "bg-card border-zinc-400 dark:border-zinc-600 hover:border-zinc-500 dark:hover:border-zinc-500"
+                        )}
+                      >
+                        {isAllSelected && <Check size={10} weight="bold" className="text-accent-foreground" />}
+                        {isPartiallySelected && <Minus size={10} weight="regular" className="text-accent-foreground" />}
+                      </div>
+                      <button
+                        onClick={() => handleSortToggle("title")}
+                        className="flex-1 flex items-center gap-0.5 hover:text-foreground transition-colors text-left"
+                      >
+                        Name
+                        {sortField === "title" && (
+                          sortDirection === "asc"
+                            ? <CaretUp size={10} weight="bold" className="text-accent" />
+                            : <CaretDown size={10} weight="bold" className="text-accent" />
+                        )}
+                      </button>
+                      <button
+                        onClick={() => handleSortToggle("updatedAt")}
+                        className="w-20 flex items-center justify-end gap-0.5 hover:text-foreground transition-colors"
+                      >
+                        Updated
+                        {sortField === "updatedAt" && (
+                          sortDirection === "asc"
+                            ? <CaretUp size={10} weight="bold" className="text-accent" />
+                            : <CaretDown size={10} weight="bold" className="text-accent" />
+                        )}
+                      </button>
+                    </div>
+                    {groupedReferences ? (
+                      groupedReferences.map((group) => (
+                        <div key={group.label}>
+                          <div className="sticky top-0 z-10 flex items-center gap-2 border-b border-border-subtle bg-background/95 backdrop-blur-sm px-5 py-1.5">
+                            <span className="text-2xs font-medium uppercase tracking-wide text-muted-foreground">{group.label}</span>
+                            <span className="text-2xs text-muted-foreground tabular-nums">{group.items.length}</span>
+                          </div>
+                          {group.items.map((ref) => (
+                            <ReferenceRow
+                              key={ref.id}
+                              ref_={ref}
+                              isSelected={selectedId === ref.id}
+                              isMultiSelected={selectedIds.has(ref.id)}
+                              isMultiMode={isMultiMode}
+                              onClick={() => handleRowClick(ref.id)}
+                              onMultiSelect={(e) => handleMultiSelect(ref.id, e)}
+                              onDelete={() => handleDelete(ref.id)}
+                              onCopyTitle={() => handleCopyTitle(ref.title)}
+                              onEdit={() => handleEdit(ref.id)}
+                              dualMode
+                              isDualActive={
+                                dualSelection?.kind === "reference" &&
+                                dualSelection.refId === ref.id
+                              }
+                            />
+                          ))}
+                        </div>
+                      ))
+                    ) : (
+                      referenceList.map((ref) => (
+                        <ReferenceRow
+                          key={ref.id}
+                          ref_={ref}
+                          isSelected={selectedId === ref.id}
+                          isMultiSelected={selectedIds.has(ref.id)}
+                          isMultiMode={isMultiMode}
+                          onClick={() => handleRowClick(ref.id)}
+                          onMultiSelect={(e) => handleMultiSelect(ref.id, e)}
+                          onDelete={() => handleDelete(ref.id)}
+                          onCopyTitle={() => handleCopyTitle(ref.title)}
+                          onEdit={() => handleEdit(ref.id)}
+                          dualMode
+                          isDualActive={
+                            dualSelection?.kind === "reference" &&
+                            dualSelection.refId === ref.id
+                          }
+                        />
+                      ))
+                    )}
+                  </>
+                )}
+              </div>
+            }
+            editor={
+              dualSelection?.kind === "reference" && references[dualSelection.refId] ? (
+                <div className="flex h-full flex-col overflow-hidden">
+                  <ReferenceDetailPanel referenceId={dualSelection.refId} />
+                </div>
+              ) : null
+            }
+          />
+        </div>
+      ) : (
       <div className="flex-1 overflow-y-auto">
         {referenceList.length === 0 ? (
           search.trim() ? (
@@ -1928,6 +2174,7 @@ function ReferencesView() {
           </>
         )}
       </div>
+      )}
 
       {/* Floating Action Bar */}
       {isMultiMode && (

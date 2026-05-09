@@ -38,6 +38,8 @@ import { NoteEditorAdapter } from "@/components/editor/NoteEditorAdapter"
 import { FixedToolbar } from "@/components/editor/FixedToolbar"
 import { getSecondarySpace, setSecondarySpace, getActiveSpace } from "@/lib/table-route"
 import { useIsActivePane } from "@/components/workspace/pane-context"
+import { useBookContextNav } from "@/hooks/use-book-context-nav"
+import { BookContextNav } from "@/components/books/book-context-nav"
 import type { Editor } from "@tiptap/react"
 
 /**
@@ -122,6 +124,11 @@ export function NoteEditor({ noteId: propNoteId, onClose, pane = 'primary' }: No
   const isActivePane = useIsActivePane()
 
   const note = notes.find((n) => n.id === activeNoteId) ?? null
+
+  // Phase 4: in-book navigation. Pane-aware — same note can be in two
+  // books across two panes. The hook auto-clears bookContext when the
+  // current note isn't in the recorded book (mid-session removal etc.).
+  const bookNav = useBookContextNav("note", note?.id ?? null)
 
   // Cycle-safe embed picker: exclude all note/wiki IDs reachable from current note
   const embedNoteExcludeIds = useMemo(() => {
@@ -261,10 +268,18 @@ export function NoteEditor({ noteId: propNoteId, onClose, pane = 'primary' }: No
         onClose ? onClose() : setSelectedNoteId(null)
         return
       }
+      // Phase 4: ⌘[ / ⌘] — in-book navigation (only active when this
+      // note is anchored to a book context). Skips chapter-headings.
+      if (mod && bookNav.active && (e.key === "[" || e.key === "]")) {
+        e.preventDefault()
+        if (e.key === "[") bookNav.goPrev()
+        else bookNav.goNext()
+        return
+      }
     }
     window.addEventListener("keydown", handler)
     return () => window.removeEventListener("keydown", handler)
-  }, [note, togglePin, deleteNote, setSelectedNoteId, confirmDelete])
+  }, [note, togglePin, deleteNote, setSelectedNoteId, confirmDelete, bookNav.active, bookNav.goPrev, bookNav.goNext])
 
   // Listen for embed note picker requests from SlashCommand / context menu (note tier only)
   useEffect(() => {
@@ -435,6 +450,17 @@ export function NoteEditor({ noteId: propNoteId, onClose, pane = 'primary' }: No
           <EditorBreadcrumb note={note} onClose={pane === 'secondary' ? () => closeSecondary() : onClose} pane={pane} />
           <ReferencedInBadges noteId={note.id} pane={pane} />
         </div>
+        {bookNav.active && (
+          <div className="mr-2 hidden md:flex">
+            <BookContextNav
+              bookId={bookNav.active.bookId}
+              itemIndex={bookNav.active.itemIndex}
+              total={bookNav.active.total}
+              onPrev={bookNav.goPrev}
+              onNext={bookNav.goNext}
+            />
+          </div>
+        )}
         <div className="flex items-center gap-0.5">
           <Tooltip>
               <TooltipTrigger asChild>

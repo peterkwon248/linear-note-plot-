@@ -70,6 +70,7 @@ function InspectorSection({
 }
 
 import { extractOutlineFromContentJson, type OutlineResult } from "@/lib/anchor-utils"
+import { InBooksSection } from "@/components/books/in-books-section"
 
 export function SidePanelContext({ noteId: propNoteId }: { noteId?: string | null }) {
   const selectedNoteId = usePlotStore((s) => s.selectedNoteId)
@@ -463,6 +464,11 @@ export function SidePanelContext({ noteId: propNoteId }: { noteId?: string | nul
           )}
         </div>
       </InspectorSection>
+
+      <div className="mx-4 border-b border-border" />
+
+      {/* In Books — shows every non-trashed book containing this note (hidden when 0) */}
+      <InBooksSection kind="note" refId={note.id} />
 
       <div className="mx-4 border-b border-border" />
 

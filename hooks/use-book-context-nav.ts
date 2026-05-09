@@ -1,0 +1,179 @@
+"use client"
+
+/**
+ * useBookContextNav — pane-aware in-book navigation hook (Phase 4).
+ *
+ * Reads the current pane's `bookContext` from the store, validates it
+ * against the live book + entity (auto-clears on staleness), and exposes
+ * prev/next handlers that:
+ *  - jump to the next/previous CONTENT item in the book (skipping
+ *    chapter-headings)
+ *  - update bookContext.itemIndex on the same pane
+ *  - dispatch the right open call for note vs. wiki kinds
+ *
+ * Pane awareness is mandatory — same note can be in book A in primary
+ * and book B in secondary simultaneously. The hook reads pane from
+ * `usePane()` and uses the matching slice in `bookContext`.
+ *
+ * Spec: `.omc/plans/book-entity-prd.md` §8.
+ */
+
+import { useCallback, useEffect, useMemo } from "react"
+import { useRouter } from "next/navigation"
+import { usePlotStore } from "@/lib/store"
+import { usePane } from "@/components/workspace/pane-context"
+import { setActiveRoute } from "@/lib/table-route"
+import { navigateToWikiArticle } from "@/lib/wiki-article-nav"
+import { bookContentItems, type ContentBookItem } from "@/lib/books/utils"
+
+export interface UseBookContextNavReturn {
+  /** Resolved active pane book context, or null if none / invalid. */
+  active: {
+    bookId: string
+    itemIndex: number
+    total: number
+  } | null
+  /** Move to the previous content item. No-op when already first. */
+  goPrev: () => void
+  /** Move to the next content item. No-op when already last. */
+  goNext: () => void
+}
+
+/**
+ * `kind` and `refId` describe the entity currently displayed in this pane.
+ * The hook validates the bookContext against them — if `(kind, refId)`
+ * isn't in the book at the recorded index (item removed from book, etc.),
+ * the bookContext is auto-cleared and `active` becomes null.
+ */
+export function useBookContextNav(
+  kind: "note" | "wiki",
+  refId: string | null | undefined,
+): UseBookContextNavReturn {
+  const router = useRouter()
+  const pane = usePane()
+  const books = usePlotStore((s) => s.books)
+  // Select only this pane's slice — avoids re-renders when the *other*
+  // pane's bookContext changes.
+  const ctx = usePlotStore((s) => s.bookContext?.[pane] ?? null)
+  const setBookContext = usePlotStore((s) => s.setBookContext)
+  const openNote = usePlotStore((s) => s.openNote)
+
+  // Resolve book + content items once per render.
+  const book = useMemo(
+    () => (ctx ? books.find((b) => b.id === ctx.bookId) ?? null : null),
+    [books, ctx],
+  )
+
+  const items: ContentBookItem[] = useMemo(
+    () => (book ? bookContentItems(book) : []),
+    [book],
+  )
+
+  // Locate the current entity inside the content items.
+  // Use refId as the source of truth — itemIndex on the stored ctx may be
+  // stale if items were reordered. The recomputed index becomes the
+  // displayed counter value.
+  const liveIndex = useMemo(() => {
+    if (!refId || items.length === 0) return -1
+    return items.findIndex((i) => i.kind === kind && i.refId === refId)
+  }, [items, kind, refId])
+
+  // Auto-clear stale contexts:
+  //  - Book deleted / hard-removed
+  //  - User opened a *different* entity that isn't in the book
+  //  - Item removed from this book mid-session
+  //
+  // We deliberately do NOT clear when `refId` is null — that just means
+  // the editor is between renders (route push, BookDetailPage handing
+  // off to /wiki, etc.). The bookContext is harmless while no entity
+  // is mounted (counter renders nothing because `active` requires a
+  // matched index), and the next entity-bearing render will validate.
+  //
+  // Cleanup happens in an effect so React doesn't get a setState-during-
+  // render warning. We compare to the stored ctx directly to avoid an
+  // infinite loop.
+  useEffect(() => {
+    if (!ctx) return
+    // Book deleted / hard-removed → orphaned ctx, clear.
+    if (!book) {
+      setBookContext(pane, null)
+      return
+    }
+    // No entity mounted (refId null) → leave ctx alone; the next
+    // entity-bearing render will validate and clear if needed.
+    if (!refId) return
+    // Entity mounted but not in book → user navigated away from
+    // book-anchored content. Clear ctx so other panes / future opens
+    // don't inherit a stale anchor.
+    if (liveIndex < 0) {
+      setBookContext(pane, null)
+      return
+    }
+    // Sync the stored ctx with the live values. If items were reordered
+    // (or another item was removed earlier in the list), the index/total
+    // shift and we re-persist. This keeps the displayed counter correct
+    // without tunneling everything through component state.
+    if (ctx.itemIndex !== liveIndex || ctx.total !== items.length) {
+      setBookContext(pane, {
+        bookId: ctx.bookId,
+        itemIndex: liveIndex,
+        total: items.length,
+      })
+    }
+  }, [ctx, book, refId, liveIndex, items.length, pane, setBookContext])
+
+  const navigateTo = useCallback(
+    (target: ContentBookItem, newIndex: number) => {
+      if (!book) return
+      // Update bookContext FIRST so the destination view picks up the
+      // anchor immediately (before its render settles). The
+      // pane-scoped setter leaves the other pane untouched.
+      setBookContext(pane, {
+        bookId: book.id,
+        itemIndex: newIndex,
+        total: items.length,
+      })
+      if (target.kind === "note") {
+        openNote(target.refId, { pane })
+      } else {
+        // Wiki articles: in primary pane, route to /wiki and use the
+        // pending-article store (matches the bookmark/sidebar pattern —
+        // WikiView is always-mounted, so no router.push is required;
+        // it consumes the pendingArticleId on its next render). In
+        // secondary pane, openInSecondary accepts any entity id
+        // (note or wiki) — the secondary panel resolves it via
+        // wikiArticles.find().
+        if (pane === "secondary") {
+          usePlotStore.getState().openInSecondary(target.refId)
+        } else {
+          // If we're not already on /wiki, push it so the URL reflects
+          // the new context. setActiveRoute is idempotent.
+          setActiveRoute("/wiki")
+          navigateToWikiArticle(target.refId)
+          router.push("/wiki")
+        }
+      }
+    },
+    [book, items.length, openNote, pane, router, setBookContext],
+  )
+
+  const goPrev = useCallback(() => {
+    if (!book || liveIndex <= 0) return
+    const target = items[liveIndex - 1]
+    if (!target) return
+    navigateTo(target, liveIndex - 1)
+  }, [book, items, liveIndex, navigateTo])
+
+  const goNext = useCallback(() => {
+    if (!book || liveIndex < 0 || liveIndex >= items.length - 1) return
+    const target = items[liveIndex + 1]
+    if (!target) return
+    navigateTo(target, liveIndex + 1)
+  }, [book, items, liveIndex, navigateTo])
+
+  const active = book && liveIndex >= 0
+    ? { bookId: book.id, itemIndex: liveIndex, total: items.length }
+    : null
+
+  return { active, goPrev, goNext }
+}

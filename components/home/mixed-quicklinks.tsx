@@ -6,10 +6,11 @@ import { usePlotStore } from "@/lib/store"
 import { setActiveRoute } from "@/lib/table-route"
 import { FileText } from "@phosphor-icons/react/dist/ssr/FileText"
 import { BookOpen } from "@phosphor-icons/react/dist/ssr/BookOpen"
+import { Books } from "@phosphor-icons/react/dist/ssr/Books"
 import { Folder as PhFolder } from "@phosphor-icons/react/dist/ssr/Folder"
 import { Funnel } from "@phosphor-icons/react/dist/ssr/Funnel"
 import { BookmarkSimple } from "@phosphor-icons/react/dist/ssr/BookmarkSimple"
-import type { Folder, GlobalBookmark, Note, SavedView, WikiArticle } from "@/lib/types"
+import type { Book, Folder, GlobalBookmark, Note, SavedView, WikiArticle } from "@/lib/types"
 
 /**
  * Home > Mixed Quicklinks (Plane-style, Plot data).
@@ -31,13 +32,14 @@ export function MixedQuicklinks({ limit = 8 }: { limit?: number }) {
   const wikiArticles = usePlotStore((s) => s.wikiArticles)
   const folders = usePlotStore((s) => s.folders)
   const savedViews = usePlotStore((s) => s.savedViews)
+  const books = usePlotStore((s) => s.books)
   const globalBookmarks = usePlotStore((s) => s.globalBookmarks) as Record<string, GlobalBookmark>
   const openNote = usePlotStore((s) => s.openNote)
 
   const items = useMemo(() => {
     type Item = {
       key: string
-      kind: "note" | "wiki" | "folder" | "view" | "bookmark"
+      kind: "note" | "wiki" | "folder" | "view" | "bookmark" | "book"
       title: string
       meta: string
       sortKey: string  // for stable ordering
@@ -73,6 +75,22 @@ export function MixedQuicklinks({ limit = 8 }: { limit?: number }) {
         onClick: () => {
           setActiveRoute("/wiki")
           router.push(`/wiki/${w.id}`)
+        },
+      })
+    }
+
+    /* ── Books (cross-entity ordered sequence — Phase 4 follow-up) ── */
+    for (const b of books as Book[]) {
+      if (!b.pinned || b.trashed) continue
+      result.push({
+        key: `book:${b.id}`,
+        kind: "book",
+        title: b.title || "Untitled book",
+        meta: `Book · ${b.items.length} item${b.items.length === 1 ? "" : "s"}`,
+        sortKey: `2.5-${b.updatedAt}`,
+        onClick: () => {
+          setActiveRoute(`/books/${b.id}`)
+          router.push(`/books/${b.id}`)
         },
       })
     }
@@ -155,7 +173,7 @@ export function MixedQuicklinks({ limit = 8 }: { limit?: number }) {
     // Sort: groups in priority order, within group by pinnedOrder/createdAt.
     result.sort((a, b) => a.sortKey.localeCompare(b.sortKey))
     return result.slice(0, limit)
-  }, [notes, wikiArticles, folders, savedViews, globalBookmarks, openNote, router, limit])
+  }, [notes, wikiArticles, folders, savedViews, books, globalBookmarks, openNote, router, limit])
 
   if (items.length === 0) return null
 
@@ -183,7 +201,7 @@ export function MixedQuicklinks({ limit = 8 }: { limit?: number }) {
 
 /* ── Helpers ──────────────────────────────────────────── */
 
-function iconFor(kind: "note" | "wiki" | "folder" | "view" | "bookmark") {
+function iconFor(kind: "note" | "wiki" | "folder" | "view" | "bookmark" | "book") {
   switch (kind) {
     case "note":
       return <FileText size={14} weight="regular" />
@@ -195,10 +213,12 @@ function iconFor(kind: "note" | "wiki" | "folder" | "view" | "bookmark") {
       return <Funnel size={14} weight="regular" />
     case "bookmark":
       return <BookmarkSimple size={14} weight="fill" />
+    case "book":
+      return <Books size={14} weight="regular" />
   }
 }
 
-function colorForKind(kind: "note" | "wiki" | "folder" | "view" | "bookmark") {
+function colorForKind(kind: "note" | "wiki" | "folder" | "view" | "bookmark" | "book") {
   switch (kind) {
     case "note":
       return "bg-blue-500/10 text-blue-600 dark:text-blue-400"
@@ -210,6 +230,9 @@ function colorForKind(kind: "note" | "wiki" | "folder" | "view" | "bookmark") {
       return "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
     case "bookmark":
       return "bg-rose-500/10 text-rose-600 dark:text-rose-400"
+    case "book":
+      // Books burgundy (#be123c, rose-700) — matches SPACE_COLORS.books
+      return "bg-rose-700/10 text-rose-700 dark:text-rose-400"
   }
 }
 

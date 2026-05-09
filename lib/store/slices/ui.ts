@@ -1,6 +1,6 @@
 import { nanoid } from "nanoid"
 import type { Note, ActiveView } from "../../types"
-import type { SidePanelContext } from "../types"
+import type { SidePanelContext, BookContextState, DualSelection } from "../types"
 import type { ViewState, ViewContextKey, SortRule } from "../../view-engine/types"
 import { MAX_SORT_RULES } from "../../view-engine/types"
 import type { WorkspaceTab } from "../../workspace/types"
@@ -221,6 +221,37 @@ export function createUISlice(set: Set, get: Get, appendEvent: AppendEventFn) {
     setPendingWikiAssembly: (noteIds: string[] | null) => {
       set({ pendingWikiAssemblyIds: noteIds })
     },
+
+    /**
+     * Phase 4 — pane-scoped in-book navigation context.
+     *
+     * Updates `bookContext.primary` or `bookContext.secondary` independently;
+     * the other pane is preserved (a single pane swap doesn't lose the
+     * other pane's book anchor). Pass `null` to clear that pane only.
+     */
+    setBookContext: (pane: "primary" | "secondary", ctx: BookContextState | null) => {
+      set((state: any) => ({
+        bookContext: {
+          ...((state.bookContext ?? { primary: null, secondary: null })),
+          [pane]: ctx,
+        },
+      }))
+    },
+
+    /**
+     * Dual mode (split-mode-prd) — set the entity displayed in the editor pane.
+     * Pass null to clear (returns to DefaultEmptyState placeholder).
+     * Session-only (NOT persisted across reload per LOCKED #5/#9).
+     */
+    setDualSelection: (sel: DualSelection | null) => set({ dualSelection: sel }),
+
+    /**
+     * Dual mode (split-mode-prd) — set the list/editor ratio.
+     * Clamped to 0.25~0.65 per LOCKED #6. Persisted via partialize.
+     * Note: ResizablePanelGroup uses autoSaveId for actual rendering;
+     * this value is informational (CRITIC MEDIUM-5).
+     */
+    setDualRatio: (ratio: number) => set({ dualRatio: Math.max(0.25, Math.min(0.65, ratio)) }),
 
     // View Engine
     setViewState: (ctx: ViewContextKey, patch: Partial<ViewState>) => {

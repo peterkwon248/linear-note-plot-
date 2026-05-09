@@ -17,13 +17,14 @@ import type { Attachment } from "../types"
  *
  * Context: `files` (Attachment entity index at /library/files).
  *
- * Design decision (PR group-c-d-5):
+ * Design decision (PR group-c-d-5 / Path-A-Step-1 §11.3):
  *   - Attachment is a **media entity** (type: "image" | "url" | "file").
- *   - Like References, the hook accepts a **pre-filtered** Attachment[] from
- *     the caller. FilesView keeps its existing local filter (all / image /
- *     document) — multi-state radio doesn't fit `viewState.toggles` (boolean
- *     record). Future PR can lift it into `viewState.filters`.
- *   - The hook owns **sort + group + viewState persist** only.
+ *   - The hook accepts the raw `Attachment[]` from the caller (pre-trash-filter
+ *     only). Filter stage (Section 11.3, Path A Step 1) is now owned by this
+ *     hook via `viewState.filters` — same-field OR, cross-field AND, matching
+ *     `attachment.type`. Local chip bar in library-view.tsx has been removed.
+ *   - The hook owns **filter + sort + group + viewState persist**.
+ *   - totalCount = input length (pre-filter); flatCount = post-filter length.
  */
 export interface FileGroup {
   key: string
@@ -39,6 +40,44 @@ export interface UseFilesViewResult {
   viewState: ViewState
   updateViewState: (patch: Partial<ViewState>) => void
   isHydrated: boolean
+}
+
+/* ── Stage 0: Filter ─────────────────────────────────── */
+
+/**
+ * Thin Attachment-specific filter implementation (Path-A-Step-1).
+ * Supports field="type" with operator="eq" (same-field rules are OR'd,
+ * cross-field rules are AND'd — matches the notes applyFilters contract).
+ * Does NOT import the notes applyFilters (typed against Note, scope creep).
+ */
+function applyFileFilters(attachments: Attachment[], filters: ViewState["filters"]): Attachment[] {
+  if (filters.length === 0) return attachments
+
+  // Group rules by field
+  const byField = new Map<string, typeof filters>()
+  for (const rule of filters) {
+    let bucket = byField.get(rule.field)
+    if (!bucket) { bucket = []; byField.set(rule.field, bucket) }
+    bucket.push(rule)
+  }
+
+  const fieldGroups = Array.from(byField.values())
+
+  return attachments.filter((a) =>
+    // AND across fields
+    fieldGroups.every((fieldRules) =>
+      // OR within same field
+      fieldRules.some((rule) => {
+        if (rule.field === "type") {
+          return rule.operator === "eq"
+            ? a.type === rule.value
+            : a.type !== rule.value
+        }
+        // Unknown field — pass-through (safe default)
+        return true
+      }),
+    ),
+  )
 }
 
 /* ── Stage 1: Sort ────────────────────────────────────── */
@@ -88,28 +127,34 @@ function applyFileGrouping(attachments: Attachment[]): FileGroup[] {
 /* ── Hook ──────────────────────────────────────────────── */
 
 /**
- * Files-list pipeline hook. Wraps sort/group stages with staged useMemo
+ * Files-list pipeline hook. Wraps filter/sort/group stages with staged useMemo
  * (mirrors useTagsView / useLabelsView / useStickersView / useReferencesView).
  *
  * `contextKey` is locked to "files" — passing it explicitly keeps the call
  * site consistent with sibling hooks.
  *
- * Caller passes a pre-filtered `Attachment[]` (after applying local
- * type filter: all / image / document). The hook handles sort + group
- * + viewState persist.
+ * Caller passes the raw (pre-trash-filter) `Attachment[]`. The hook handles
+ * filter (viewState.filters, Path-A-Step-1) + sort + group + viewState persist.
+ * totalCount = input length (pre-filter); flatCount = post-filter length.
  */
 export function useFilesView(
-  filteredAttachments: Attachment[],
+  attachments: Attachment[],
   contextKey: ViewContextKey = "files",
 ): UseFilesViewResult {
   const viewState = usePlotStore((s) => s.viewStateByContext[contextKey]) ?? buildViewStateForContext(contextKey)
   const isHydrated = usePlotStore((s) => s._viewStateHydrated)
   const setViewState = usePlotStore((s) => s.setViewState)
 
+  // Stage 0: filter (type filter via viewState.filters)
+  const filtered = useMemo(
+    () => applyFileFilters(attachments, viewState.filters),
+    [attachments, viewState.filters],
+  )
+
   // Stage 1: sort
   const sorted = useMemo(
-    () => applyFileSort(filteredAttachments, viewState),
-    [filteredAttachments, viewState],
+    () => applyFileSort(filtered, viewState),
+    [filtered, viewState],
   )
 
   // Stage 2: group (none-only in this PR)
@@ -127,7 +172,7 @@ export function useFilesView(
     groups,
     flatAttachments: sorted,
     flatCount: sorted.length,
-    totalCount: filteredAttachments.length,
+    totalCount: attachments.length,
     viewState,
     updateViewState,
     isHydrated,

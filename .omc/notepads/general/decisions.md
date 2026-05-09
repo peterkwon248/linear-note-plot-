@@ -1,5 +1,69 @@
 # Architectural Decisions
 
+## 2026-05-09 (마라톤) — Book entity + Dual mode + Filter Path A 완성
+
+### Book = cross-entity ordered sequence (4사분면 마지막 자리)
+
+**LOCKED 결정** (PRD `.omc/plans/book-entity-prd.md` v1.1):
+- **MVP scope**: Note + Wiki Article 만 (Reference/File/Sticker는 v2)
+- **다중 멤버십**: N:M 허용 (Sticker 패턴)
+- **챕터 구조**: Heading-as-divider 단일 모델 (flat + nested 자연스럽게)
+- **메타데이터**: title 만 필수
+- **Book template**: 종식 (Smart Book이 대체)
+- **Ordering UX**: drag + ↑/↓ 둘 다
+- **Activity Bar**: 7번째 (Wiki와 Calendar 사이)
+- **Trash**: Note/Wiki와 동일 시스템 (soft delete → /trash)
+- **중복**: 한 책에 같은 entity 1번만 (silent skip)
+- **In-book navigation**: `N/M ↑↓` (Linear 패턴)
+- **Smart Book**: AutoSource[] = v2 deferred
+
+### Books 색상 = Burgundy `#be123c`
+
+- Rose-700 (책 표지 가죽 메타포)
+- 6 다른 space (cyan/violet/teal/pink/amber/indigo)와 distinct
+- Plot 2.0 docs에 이미 정의된 rose 정합
+- ActivityBar 위치: Wiki 아래 (사용자 결정)
+
+### Dual mode = "Split" 이름 회피
+
+**LOCKED 결정** (PRD `.omc/plans/split-mode-prd.md` v1.1):
+- **이름**: "Dual" — 기존 NoteSplitOverlay와 충돌 회피 (Critic HIGH-1)
+- **MVP scope**: 전 entity (Notes/Wiki MVP, References Phase 5, Books skip LOCKED)
+- **Toggle**: D + B 둘 다 (DisplayPanel "Dual" mode + ⌘⇧E 단축키)
+- **URL 동작**: 비동기 (mac Mail 패턴) — list route만, editor는 internal state
+- **작은 화면**: 자동 fallback 1200px (transition-only debounced toast)
+- **Persist**: viewState.viewMode = "dual" 자동 저장 (entity별 다름 자동)
+- **Default ratio**: List 40% / Editor 60% (autoSaveId persistence)
+- **dualSelection shape**: flat (primary-pane-only MVP)
+- **Mid-session deletion**: 자동 cleanup (selected entity 삭제 시 dualSelection clear)
+- **NoteSplitOverlay 우선순위**: z-40 overlay, dual mode 시각 suppressed but state 보존
+
+### Filter coverage Path A 완전 종결 (6 entity)
+
+- Files / References / Wiki Category / Tags / Inbox / Stickers
+- 모든 필터 view-engine config + applyXxxFilters Stage 통일 패턴
+- view-engine 통합 vs local quick filter 공존 정책 (entity별):
+  - Files: 통합 (chips 제거)
+  - References: 통합 (Type 섹션 추가)
+  - Tags / Stickers: 통합 (showFilter true)
+  - Inbox: 공존 (tabs는 quick filter, Filter button은 power user)
+  - Wiki Category: 통합 (tier value mismatch fix + status 추가)
+
+### Plot 사이드바 active icon = 공간별 색상
+
+- 이전 (영구 결정): 모든 공간에서 `var(--space-notes)` (cyan) hardcoded
+- 지금: `aside.a-sidebar[data-active-space]` attribute 기반 6 공간 CSS 매핑
+- 코드 변경: linear-sidebar.tsx + globals.css
+
+### 큰 작업 패턴 (다음 적용)
+
+- 큰 entity 도입 시 PRD → Critic review → Phase 분해 → executor 위임 순서
+- Critic은 "이름 충돌", "runtime validator", "hidden assumptions" 잡는 데 매우 효과적
+- 단일 squash PR로 큰 batch 머지 (worktree 흐름 유지)
+- 각 phase 끝마다 tsc + build + tests 검증
+
+---
+
 ## 2026-05-07 (밤) — Mockup 직접 서빙 + PanelsMenu 통합 (PR #281)
 
 ### 핵심 인사이트 (영구)

@@ -28,6 +28,117 @@
 
 ---
 
+## 🚀 2026-05-09 (마라톤) — Book entity + Dual mode + Filter Path A 완전 종결 (~45 변경, 2 PRD, 단일 PR)
+
+**범위**: 하루에 polish 시리즈 + Path A 완성 + 두 큰 entity 도입 (Book + Dual mode) + plugin install. 단일 squash PR로 머지 예정.
+
+### 큰 작업 요약 (~45개 변경)
+
+**Polish + cleanup (12개)**
+- StatusShapeIcon `Cuboid` → `Cuboid2x2` 통일
+- `.a-row__icon` + `.a-stchip` chip 가시성 12% → 24% (라이트모드)
+- Wiki list leading icon `.a-row__icon` chip wrapper 추가
+- Studio + Editorial 제거 + migration v119 (영구 규칙 #1 cleanup)
+- ViewSwitcher 제거 → Display popover [List|Board|Gallery] 3-segment
+- 사이드바 active icon 공간별 색상 (`data-active-space` + 6 space CSS 매핑)
+- Stone/Brick/Block 헤더 status 아이콘 분기 (FileText → Hexagon/Cube/Cuboid2x2)
+- Wiki article 헤더 stub/article 아이콘 분기 (BookOpen → IconWikiStub/Article)
+- Inbox 라우팅 home space (`inferSpace` `/inbox` → `home`)
+- Inbox B1+B2+B3 (max-width + count chip + Next-up 카드)
+- Home sidebar 보강 (Pinned + Recent cross-entity Note+Wiki+Book)
+- PanelsMenu 미니어처 (4-region SVG, panel별 layout 시각화)
+- Old Cuboid (1×2) `components/icons/Cuboid.tsx` 삭제 + Notes config Cuboid2x2 통일
+
+**Filter coverage Path A 완전 종결 (6 entity)**
+- Step 1: Files type filter (image/url/file)
+- Step 2: References type filter (link/citation)
+- Step 3: Wiki Category status filter (has-articles/empty) + tier value fix
+- Step 4: Tags color filter (set/unset)
+- Step 5: Inbox source filter (5 InboxItemKind)
+- Bonus: Sticker memberStatus + memberKind (7-kind)
+
+**Book entity 도입 (PRD + Critic + Phase 1-4 + 통합)**
+- PRD: `.omc/plans/book-entity-prd.md` (revised v1.1, 6 critic issues 반영)
+- Phase 1: Data infra — Book/BookItem types + BooksSlice + 25 vitest tests + IDB v120 migration + `fractional-indexing` package
+- Phase 2: ActivityBar 7th space (Wiki와 Calendar 사이) + /books route + Burgundy 색 `#be123c` + sidebar
+- Phase 3: Manual book view — books grid + BookDetailPage + dnd-kit drag/↑↓ reorder + AddItemDialog + chapter heading insert + dropdown context menu
+- Phase 4: In-book navigation — `N/M ↑↓` counter + breadcrumb + ⌘[/⌘] 단축키 + pane-scoped bookContext (primary/secondary)
+- "In Books" 섹션 (note/wiki detail panel — 공용 InBooksSection 컴포넌트)
+- Book pin → Home Quicklinks 통합 (mixed-quicklinks book + sidebar HomePinnedItem)
+- Book trash UI 통합 (showTrashed toggle + restore/forever-delete)
+- Books 색상 burgundy (#be123c rose-700, 6 다른 space와 distinct)
+
+**Dual mode 도입 (PRD + Critic + Phase 1-3+5+6, Books skip locked)**
+- PRD: `.omc/plans/split-mode-prd.md` (revised v1.1, 6 critic issues 반영)
+- 핵심: 이름 "Split" → "Dual" rename — 기존 NoteSplitOverlay와 충돌 회피
+- Phase 1: 인프라 — DualListEditor (autoSaveId, controlled X) + useEffectiveViewMode (SSR-safe, transition-only debounced toast) + ⌘⇧E 단축키 + UI slice (dualSelection flat, dualRatio)
+- Phase 2: Notes view 통합 — DisplayPanel "Dual" entry + NotesTable dualMode + NoteEditor reuse
+- Phase 3: Wiki view 통합 — WikiList dualMode + WikiArticleView reuse (sub-modes 우선순위 보존)
+- Phase 4: Books skip — LOCKED (자체가 list 구조)
+- Phase 5: References 통합 — ReferenceDetailPanel reuse
+- Phase 6: Polish — 키보드 ↑↓ navigation (Notes/Wiki/References) + DefaultEmptyState 강화 (⌘⇧E hint) + Display button title hint
+- Mail-client 패턴 5-pane (AB / SB / List / Editor / Detail), 1200px viewport fallback
+
+**Plugin install**
+- plot-frontend 글로벌 등록 (~/claude-plugins/plot-frontend-plugin/ + known_marketplaces.json + settings.json)
+- 다음 세션부터 자동 활성: 3 skills (production-ui-refiner, mockup-faithful-implementation, frontend-orchestrator) + 4 hooks + 4 commands
+
+**Bug fixes**
+- FilterRule.op → operator typo fix (References filter)
+- VALID_VIEW_MODES runtime validator 누락 — Critic이 Dual PRD에서 발견 (TS union만으론 부족, IDB hydration 시 silent fallback 위험)
+
+### 큰 결정 (영구)
+
+**1. Books 색상 = Burgundy `#be123c`**:
+- 6 기존 space (cyan/violet/teal/pink/amber/indigo)와 distinct
+- Plot 2.0 docs에 이미 정의된 rose-700과 정합
+- 책 표지 가죽 메타포
+
+**2. Book = cross-entity ordered sequence (Note + Wiki MVP)**:
+- 4사분면 컨테이너 모델 마지막 자리 채움
+- Heading-as-divider 단일 모델 (flat + nested 자연스럽게 통합)
+- N:M 다중 멤버십, 책 내 dedup
+- fractional-indexing string order (sparse integer 대신 underflow 회피)
+- Smart Book = AutoSource는 v2 (별도 PRD)
+
+**3. Dual mode = "Split" 이름 회피**:
+- 기존 NoteSplitOverlay (`lib/note-split-mode.ts`)와 이름 충돌
+- "Dual"로 rename → "main viewport을 list+editor로 분할" 의미
+- NoteSplitOverlay 우선순위 (z-40 overlay, dual mode 시각 suppressed but state 보존)
+
+**4. Filter coverage Path A 완성 — 6 entity**:
+- Files / References / Wiki Category / Tags / Inbox / Stickers
+- 모든 필터 view-engine config + applyXxxFilters Stage 통일 패턴
+- Plan §11.2 우선순위 모두 적용
+
+**5. Plot 사이드바 active icon = 공간별 색상**:
+- 이전: 모든 공간에서 cyan (notes 색) hardcoded
+- 지금: `data-active-space` attribute 기반 6 공간 CSS 매핑
+
+### 기술 학습
+
+- **fractional-indexing 패턴**: sparse integer halving 대신 lexicographic key (`generateKeyBetween`). 50회 같은 위치 insert 후 underflow 회피. ~5-10 bytes 추가 storage.
+- **VALID_VIEW_MODES runtime validator**: TS union만 update하면 IDB hydration 시 silent fallback. 두 곳 같이 update 필수.
+- **autoSaveId pattern**: `react-resizable-panels`의 `defaultSize` controlled 시 안 작동 (uncontrolled). `autoSaveId`로 라이브러리 자체 persistence 활용.
+- **SSR-safe hook**: `mounted` state guard로 hydration mismatch 회피. `transition-only` debounced toast로 resize spam 방지.
+- **Pane-scoped state**: bookContext (primary/secondary 독립). Plot의 SmartSidePanel dual pane 인프라와 정합.
+- **Critic agent 가치**: 두 PRD (Book + Dual) 모두 6 issues씩 정확히 잡음. PRD 신선할 때 review = mid-implementation pivot 위험 회피.
+
+### Phase별 미완 (다음 세션 후보)
+
+- Smart Book (Phase 5) — AutoSource resolver, 별도 PRD 필요 (~4-5h)
+- /trash 페이지 books section 통합 (notes-table refactor, ~1h)
+- Path B Step A — globals.css `.a-th/.a-row` 6-col grid hardcoded refactor (~1.5h)
+- 나무위키 인포박스 고도화 Tier 1 — 대표 이미지+캡션, 헤더 색상 테마, 접기/펼치기 (~3-4h)
+- 다중 기기 sync Phase 1 (PRD LOCKED, ~몇 세션)
+
+### 환경 변경
+- Store version 119 → 120 (v120 = Books migration)
+- npm 패키지 추가: `fractional-indexing@^3.2.0`
+- Plugin global install: `plot-frontend@plot-frontend` (~/claude-plugins/)
+
+---
+
 ## 🚀 2026-05-08 (오후) — Status icons + Phase 4.3 chrome 통일 (시도→revert→정리) + Filter coverage plan (5 PR + docs sync)
 
 **범위**: 사용자 회귀 발견 (PR 4.3a `.a-row` grid 충돌) + 즉시 fix. Phase 4 north star (filter model 통찰) 명문화. 4.3 chrome 통일은 globals.css refactor prerequisite.

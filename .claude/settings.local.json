@@ -182,7 +182,16 @@
       "Bash(cp .omc/worklog/latest.md \"C:\\\\Users\\\\user\\\\.claude\\\\.omc-worklog\\\\latest.md\")",
       "Bash(cp .omc/worklog/latest.md \"C:\\\\Users\\\\user\\\\.claude\\\\.omc-worklog\\\\2026-05-07_0757.md\")",
       "Bash(tasklist)",
-      "Bash(rm .git/index.lock && echo \"Lock removed\" 2>&1)"
+      "Bash(rm .git/index.lock && echo \"Lock removed\" 2>&1)",
+      "Read(//c/Users/user/Downloads/**)",
+      "Bash(unzip -l plot-frontend-plugin.zip)",
+      "Read(//c/tmp/**)",
+      "Bash(unzip -o /c/Users/user/Downloads/plot-frontend-plugin.zip)",
+      "Bash(mkdir -p ~/claude-plugins)",
+      "Bash(unzip -o /c/Users/user/Downloads/plot-frontend-plugin.zip -d ~/claude-plugins/)",
+      "Bash(echo \"EXIT_CODE=$?\")",
+      "Bash(echo \"TSC_EXIT=$?\")",
+      "Bash(cp ~/.claude/.omc-worklog/latest.md ~/.claude/.omc-worklog/2026-05-09_1619.md)"
     ]
   }
 }

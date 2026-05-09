@@ -16,6 +16,8 @@ import {
   IconInsight,
   IconBrick,
   IconBlock,
+  IconWikiStub,
+  IconWikiArticle,
   IconPin,
   IconTrash,
   IconClock,
@@ -28,7 +30,8 @@ import { CaretRight } from "@phosphor-icons/react/dist/ssr/CaretRight"
 import { CaretLeft } from "@phosphor-icons/react/dist/ssr/CaretLeft"
 import { MagnifyingGlass } from "@phosphor-icons/react/dist/ssr/MagnifyingGlass"
 import { usePlotStore } from "@/lib/store"
-import { PRESET_COLORS, getEntityColor } from "@/lib/colors" // v109: opt-in color fallback
+import { PRESET_COLORS, getEntityColor, WIKI_STATUS_HEX } from "@/lib/colors" // v109: opt-in color fallback
+import { isWikiStub } from "@/lib/wiki-utils"
 import { setWikiViewMode, useWikiViewMode, setCategoryOverview } from "@/lib/wiki-view-mode"
 import { GitMerge } from "@phosphor-icons/react/dist/ssr/GitMerge"
 import { Scissors } from "@phosphor-icons/react/dist/ssr/Scissors"
@@ -283,6 +286,7 @@ export function LinearSidebar() {
   const labels = usePlotStore((s) => s.labels)
   const stickers = usePlotStore((s) => s.stickers)
   const templates = usePlotStore((s) => s.templates)
+  const books = usePlotStore((s) => s.books)
 
   const wikiCategories = usePlotStore((s) => s.wikiCategories)
   const createWikiCategory = usePlotStore((s) => s.createWikiCategory)
@@ -466,6 +470,43 @@ export function LinearSidebar() {
     notes.filter((n) => n.pinned && !n.trashed),
     [notes]
   )
+
+  // Pinned wiki articles for home sidebar (WikiArticle has no trashed field)
+  const pinnedWikiArticles = useMemo(() =>
+    wikiArticles.filter((w) => w.pinned),
+    [wikiArticles],
+  )
+
+  // Combined pinned items (note + wiki + book) for the Home block only
+  type HomePinnedItem =
+    | { kind: "note"; id: string; title: string; status: NoteStatus }
+    | { kind: "wiki"; id: string; title: string; isStub: boolean }
+    | { kind: "book"; id: string; title: string; coverEmoji: string | null | undefined; itemCount: number }
+
+  const homePinnedItems = useMemo<HomePinnedItem[]>(() => {
+    const noteItems: HomePinnedItem[] = pinnedNotes.map((n) => ({
+      kind: "note" as const,
+      id: n.id,
+      title: n.title || "Untitled",
+      status: n.status,
+    }))
+    const wikiItems: HomePinnedItem[] = pinnedWikiArticles.map((w) => ({
+      kind: "wiki" as const,
+      id: w.id,
+      title: w.title || "Untitled",
+      isStub: isWikiStub(w),
+    }))
+    const bookItems: HomePinnedItem[] = books
+      .filter((b) => b.pinned && !b.trashed)
+      .map((b) => ({
+        kind: "book" as const,
+        id: b.id,
+        title: b.title || "Untitled book",
+        coverEmoji: b.coverEmoji,
+        itemCount: b.items.length,
+      }))
+    return [...noteItems, ...wikiItems, ...bookItems]
+  }, [pinnedNotes, pinnedWikiArticles, books])
 
   // ── Home Intelligence Panel removed (PR 7).
   // Heavy insights (orphans, redlinks, suggestions, unlinked mentions, knowledge health)
@@ -715,7 +756,7 @@ export function LinearSidebar() {
     wikiArticles.filter((w) => w.folderIds.includes(folderId)).length
 
   return (
-    <aside className="a-sidebar h-full w-full shrink-0 select-none">
+    <aside className="a-sidebar h-full w-full shrink-0 select-none" data-active-space={activeSpace}>
       {/* Header: RecentlyViewed + Back/Forward + spacer + Search + Close */}
       <div className="flex items-center gap-0.5 px-2.5 pt-2.5 pb-1.5">
         {/* Recently Viewed */}
@@ -1578,28 +1619,185 @@ export function LinearSidebar() {
           </>
         )}
 
-        {/* ── Home: minimal sidebar — Inbox + cross-entity entry points.
-            Heavy insights moved to Ontology > Insights (PR 6).
-            Home view itself surfaces workflow + nudges. */}
+        {/* ── Books ──────────────────────────────── */}
+        {activeSpace === "books" && (
+          <>
+            <div className="space-y-px">
+              <NavLink
+                href="/books"
+                icon={<Books size={20} weight="regular" />}
+                label="All Books"
+                count={books.filter((b) => !b.trashed).length || undefined}
+                active={isActive("/books")}
+              />
+            </div>
+
+            {/* Pinned books — surfaces favorite collections (PRD §10) */}
+            {(() => {
+              const pinnedBooks = books
+                .filter((b) => b.pinned && !b.trashed)
+                .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt))
+              if (pinnedBooks.length === 0) return null
+              return (
+                <Section title="Pinned">
+                  {pinnedBooks.map((book) => {
+                    const href = `/books/${book.id}`
+                    return (
+                      <button
+                        key={book.id}
+                        onClick={() => {
+                          setActiveRoute(href)
+                          setSelectedNoteId(null)
+                          router.push(href)
+                        }}
+                        className="a-sb-link"
+                        data-active={activeRoute === href ? "true" : undefined}
+                      >
+                        <span className="flex shrink-0 items-center justify-center w-5 h-5">
+                          {book.coverEmoji ? (
+                            <span className="text-sm leading-none">{book.coverEmoji}</span>
+                          ) : (
+                            <BookOpen size={14} weight="regular" />
+                          )}
+                        </span>
+                        <span className="truncate text-left flex-1">{book.title || "Untitled"}</span>
+                        <span className="a-sb-link__count tabular-nums">
+                          {book.items.length}
+                        </span>
+                      </button>
+                    )
+                  })}
+                </Section>
+              )
+            })()}
+
+            {/* Recent books — top 5 by updatedAt (excludes trashed). */}
+            {(() => {
+              const recentBooks = books
+                .filter((b) => !b.trashed && !b.pinned)
+                .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt))
+                .slice(0, 5)
+              if (recentBooks.length === 0) return null
+              return (
+                <Section title="Recent">
+                  {recentBooks.map((book) => {
+                    const href = `/books/${book.id}`
+                    return (
+                      <button
+                        key={book.id}
+                        onClick={() => {
+                          setActiveRoute(href)
+                          setSelectedNoteId(null)
+                          router.push(href)
+                        }}
+                        className="a-sb-link"
+                        data-active={activeRoute === href ? "true" : undefined}
+                      >
+                        <span className="flex shrink-0 items-center justify-center w-5 h-5">
+                          {book.coverEmoji ? (
+                            <span className="text-sm leading-none">{book.coverEmoji}</span>
+                          ) : (
+                            <BookOpen size={14} weight="regular" />
+                          )}
+                        </span>
+                        <span className="truncate text-left flex-1">{book.title || "Untitled"}</span>
+                        <span className="a-sb-link__count tabular-nums">
+                          {book.items.length}
+                        </span>
+                      </button>
+                    )
+                  })}
+                </Section>
+              )
+            })()}
+          </>
+        )}
+
+        {/* ── Home: Inbox + Pinned + Recent. Cross-entity entry points only;
+            heavy insights moved to Ontology > Insights (PR 6). Home view itself
+            surfaces workflow + nudges. Pinned/Recent reuse Notes-sidebar pattern
+            so Home has meaningful nav (was previously sparse — Inbox + Stone only). */}
         {activeSpace === "home" && (
-          <div className="space-y-px">
-            <NavLink
-              href="/inbox"
-              icon={<IconInbox size={20} />}
-              label="Inbox"
-              count={inboxItemsCount > 0 ? inboxItemsCount : undefined}
-              active={isActive("/inbox")}
-            />
-            <NavLink
-              href="/stone"
-              icon={<IconStone size={20} />}
-              label="Stone"
-              count={inboxCount > 0 ? inboxCount : undefined}
-              active={isActive("/stone")}
-            />
-            {/* Stickers entry lives only in Library (33 design
-                decisions #8 — cross-cutting index). */}
-          </div>
+          <>
+            <div className="space-y-px">
+              <NavLink
+                href="/inbox"
+                icon={<IconInbox size={20} />}
+                label="Inbox"
+                count={inboxItemsCount > 0 ? inboxItemsCount : undefined}
+                active={isActive("/inbox")}
+              />
+            </div>
+
+            {/* Pinned section (cross-entity quick access: notes + wiki) */}
+            {homePinnedItems.length > 0 && (
+              <Section title="Pinned">
+                {homePinnedItems.map((item) => (
+                  <button
+                    key={`${item.kind}:${item.id}`}
+                    draggable={item.kind === "note"}
+                    onDragStart={item.kind === "note" ? (e) => setNoteDragData(e, item.id) : undefined}
+                    onClick={(e) => {
+                      if (item.kind === "note") {
+                        openNote(item.id, { forceNewTab: e.ctrlKey || e.metaKey })
+                      } else if (item.kind === "wiki") {
+                        setActiveRoute("/wiki")
+                        usePlotStore.getState().setSelectedNoteId(null)
+                        router.push(`/wiki/${item.id}`)
+                      } else {
+                        // book
+                        const href = `/books/${item.id}`
+                        setActiveRoute(href)
+                        setSelectedNoteId(null)
+                        router.push(href)
+                      }
+                    }}
+                    className="a-sb-link"
+                  >
+                    <span className="flex shrink-0 items-center justify-center w-5 h-5">
+                      {item.kind === "note" ? (
+                        <StatusShapeIcon status={item.status} size={14} />
+                      ) : item.kind === "wiki" ? (
+                        item.isStub ? (
+                          <IconWikiStub size={14} style={{ color: WIKI_STATUS_HEX.stub }} />
+                        ) : (
+                          <IconWikiArticle size={14} style={{ color: WIKI_STATUS_HEX.article }} />
+                        )
+                      ) : item.coverEmoji ? (
+                        <span className="text-sm leading-none">{item.coverEmoji}</span>
+                      ) : (
+                        <BookOpen size={14} weight="regular" style={{ color: "var(--space-books)" }} />
+                      )}
+                    </span>
+                    <span className="truncate text-left flex-1">{item.title}</span>
+                    {item.kind === "book" && (
+                      <span className="a-sb-link__count tabular-nums">{item.itemCount}</span>
+                    )}
+                  </button>
+                ))}
+              </Section>
+            )}
+
+            {/* Recent section */}
+            {recentNotes.length > 0 && (
+              <Section title="Recent">
+                {recentNotes.map((item) => (
+                  <button
+                    key={item.id}
+                    draggable
+                    onDragStart={(e) => setNoteDragData(e, item.id)}
+                    onClick={(e) => openNote(item.id, { forceNewTab: e.ctrlKey || e.metaKey })}
+                    className="a-sb-link"
+                  >
+                    <span className="flex shrink-0 items-center justify-center w-5 h-5">
+                      <StatusShapeIcon status={item.status} size={14} />
+                    </span>
+                    <span className="truncate text-left flex-1">{item.title || "Untitled"}</span>
+                  </button>
+                ))}
+              </Section>
+            )}
+          </>
         )}
       </nav>
 

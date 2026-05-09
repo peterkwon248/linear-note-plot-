@@ -44,6 +44,7 @@ import { ViewHeader } from "@/components/view-header"
 import { useNotesView } from "@/lib/view-engine/use-notes-view"
 import { useTagsView } from "@/lib/view-engine/use-tags-view"
 import { FilterButton, FilterChipBar } from "@/components/filter-bar"
+import { FilterPanel } from "@/components/filter-panel"
 import { DisplayPanel } from "@/components/display-panel"
 import { TAGS_LIST_VIEW_CONFIG } from "@/lib/view-engine/view-configs"
 import { TagNoteCountChip } from "@/components/property-chips"
@@ -156,6 +157,17 @@ export function TagsView() {
     viewState: tagsListViewState,
     updateViewState: updateTagsListView,
   } = useTagsView()
+
+  // ── Filter toggle for tags-list entity index (Path-A-Step-4) ──
+  const handleTagsListFilterToggle = useCallback((rule: FilterRule) => {
+    const exists = tagsListViewState.filters.some(
+      f => f.field === rule.field && f.operator === rule.operator && f.value === rule.value
+    )
+    const newFilters = exists
+      ? tagsListViewState.filters.filter(f => !(f.field === rule.field && f.operator === rule.operator && f.value === rule.value))
+      : [...tagsListViewState.filters, rule]
+    updateTagsListView({ filters: newFilters })
+  }, [tagsListViewState.filters, updateTagsListView])
 
   // hideEmpty toggle — stored in viewState.toggles
   const hideEmpty = tagsListViewState.toggles?.hideEmpty ?? false
@@ -570,6 +582,17 @@ export function TagsView() {
             onToggleChange={(key, val) =>
               updateTagsListView({ toggles: { ...tagsListViewState.toggles, [key]: val } })
             }
+          />
+        }
+        showFilter={TAGS_LIST_VIEW_CONFIG.showFilter}
+        hasActiveFilters={tagsListViewState.filters.length > 0}
+        filterContent={
+          <FilterPanel
+            categories={TAGS_LIST_VIEW_CONFIG.filterCategories}
+            activeFilters={tagsListViewState.filters}
+            onToggle={handleTagsListFilterToggle}
+            quickFilters={TAGS_LIST_VIEW_CONFIG.quickFilters as any}
+            onQuickFilter={(rules) => updateTagsListView({ filters: rules })}
           />
         }
       />

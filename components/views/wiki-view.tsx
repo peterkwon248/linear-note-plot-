@@ -16,7 +16,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover"
 import { BookOpen } from "@phosphor-icons/react/dist/ssr/BookOpen"
-import { IconWiki, IconChevronRight } from "@/components/plot-icons"
+import { IconWiki, IconChevronRight, IconWikiStub, IconWikiArticle } from "@/components/plot-icons"
 import { Plus as PhPlus } from "@phosphor-icons/react/dist/ssr/Plus"
 import { MagnifyingGlass } from "@phosphor-icons/react/dist/ssr/MagnifyingGlass"
 import { Warning } from "@phosphor-icons/react/dist/ssr/Warning"
@@ -63,6 +63,11 @@ import { WikiSplitPage } from "./wiki-split-page"
 import { WikiCategoryPage } from "./wiki-category-page"
 import { isWikiStub } from "@/lib/wiki-utils"
 import { useSaveViewProps } from "@/lib/view-engine/use-save-view-props"
+import { useBookContextNav } from "@/hooks/use-book-context-nav"
+import { BookContextNav } from "@/components/books/book-context-nav"
+// ── Phase 3 (split-mode-prd): dual mode wiring ─────────────────────────────
+import { useEffectiveViewMode } from "@/hooks/use-effective-view-mode"
+import { DualListEditor } from "@/components/dual/dual-list-editor"
 
 export function WikiView() {
   const notes = usePlotStore((s) => s.notes)
@@ -167,6 +172,26 @@ export function WikiView() {
     }
   }, [activeViewId]) // eslint-disable-line react-hooks/exhaustive-deps
 
+  // ── Phase 3 (split-mode-prd): viewport-aware effective mode + dual selection ──
+  // useEffectiveViewMode auto-falls back to "list" below 1200px (LOCKED #4) and
+  // toasts on transition. Returns the persisted mode pre-mount (SSR-safe).
+  // Mirrors NotesTableView Phase 2 pattern.
+  const effectiveWikiMode = useEffectiveViewMode("wiki" as ViewContextKey)
+  const dualSelection = usePlotStore((s) => s.dualSelection)
+  const setDualSelection = usePlotStore((s) => s.setDualSelection)
+
+  // Mid-session entity deletion cleanup (LOCKED #10): when the selected wiki
+  // article is trashed or removed while the dual editor pane is showing it,
+  // clear the selection so DefaultEmptyState shows instead of a stale editor.
+  // Mirrors notes-table-view.tsx Phase 2 cleanup hook.
+  useEffect(() => {
+    if (!dualSelection || dualSelection.kind !== "wiki") return
+    const exists = wikiArticles.some(
+      (a) => a.id === dualSelection.refId && !(a as { trashed?: boolean }).trashed
+    )
+    if (!exists) setDualSelection(null)
+  }, [wikiArticles, dualSelection, setDualSelection])
+
   // Save view button (snapshot UX) for Wiki list mode
   const { saveViewMode: wikiSaveViewMode, onSaveView: onSaveWikiView } = useSaveViewProps("wiki", "wiki")
   const wikiFilters = wikiViewState.filters
@@ -187,6 +212,36 @@ export function WikiView() {
   // WikiArticle viewer state (new Assembly Model)
   const [selectedWikiArticleId, setSelectedWikiArticleId] = useState<string | null>(null)
   const [isEditingWikiArticle, setIsEditingWikiArticle] = useState(false)
+
+  // Phase 4: in-book navigation. Pane-aware — same article can be in two
+  // books across two panes. Auto-clears when this article is no longer
+  // in the recorded book (mid-session removal etc.).
+  const wikiBookNav = useBookContextNav("wiki", selectedWikiArticleId)
+
+  // Phase 4: ⌘[ / ⌘] — in-book navigation (only active when this wiki
+  // article is anchored to a book context). Skips chapter-headings.
+  useEffect(() => {
+    if (!wikiBookNav.active) return
+    const handler = (e: KeyboardEvent) => {
+      const mod = e.metaKey || e.ctrlKey
+      if (!mod) return
+      const target = e.target as HTMLElement | null
+      if (target && (
+        target.tagName === "INPUT" ||
+        target.tagName === "TEXTAREA" ||
+        target.closest('[contenteditable="true"]')
+      )) return
+      if (e.key === "[") {
+        e.preventDefault()
+        wikiBookNav.goPrev()
+      } else if (e.key === "]") {
+        e.preventDefault()
+        wikiBookNav.goNext()
+      }
+    }
+    window.addEventListener("keydown", handler)
+    return () => window.removeEventListener("keydown", handler)
+  }, [wikiBookNav.active, wikiBookNav.goPrev, wikiBookNav.goNext])
 
   // Collapse/Expand all sections: null = idle, "collapse" | "expand" = command
   const [collapseAllCmd, setCollapseAllCmd] = useState<"collapse" | "expand" | null>(null)
@@ -745,14 +800,37 @@ export function WikiView() {
   const isDedicatedModePage =
     wikiViewMode === "merge" || wikiViewMode === "split" || wikiViewMode === "category"
 
-  if (selectedWikiArticleId && selectedWikiArticle && !isDedicatedModePage) {
+  // Phase 3 (split-mode-prd): when dual mode is active, the in-page article
+  // reader is suppressed so the list+editor split layout below renders. The
+  // editor pane shows the article via WikiArticleView keyed off
+  // dualSelection (NOT selectedWikiArticleId), letting users keep their
+  // article context while browsing the list.
+  const isDualMode =
+    effectiveWikiMode === "dual" && wikiViewState.viewMode === "dual"
+
+  if (selectedWikiArticleId && selectedWikiArticle && !isDedicatedModePage && !isDualMode) {
     return (
       <div className="flex flex-1 flex-col overflow-hidden">
         <ViewHeader
-          icon={<BookOpen size={20} weight="regular" />}
+          icon={
+            isWikiStub(selectedWikiArticle)
+              ? <IconWikiStub size={20} style={{ color: WIKI_STATUS_HEX.stub }} />
+              : <IconWikiArticle size={20} style={{ color: WIKI_STATUS_HEX.article }} />
+          }
           title={selectedWikiArticle.title || "Untitled"}
           actions={
             <div className="flex items-center gap-2">
+              {wikiBookNav.active && (
+                <div className="hidden md:flex">
+                  <BookContextNav
+                    bookId={wikiBookNav.active.bookId}
+                    itemIndex={wikiBookNav.active.itemIndex}
+                    total={wikiBookNav.active.total}
+                    onPrev={wikiBookNav.goPrev}
+                    onNext={wikiBookNav.goNext}
+                  />
+                </div>
+              )}
               {/* Font size dropdown */}
               <Popover>
                 <PopoverTrigger asChild>
@@ -912,7 +990,9 @@ export function WikiView() {
   }
 
   // ── Article Reader Mode (Legacy Note-based) ──
-  if (selectedArticleId && selectedNote) {
+  // Phase 3: also short-circuited by dual mode (same rationale as
+  // selectedWikiArticleId branch above).
+  if (selectedArticleId && selectedNote && !isDualMode) {
     return (
       <div className="flex flex-1 flex-col overflow-hidden">
         <ViewHeader
@@ -1204,7 +1284,7 @@ export function WikiView() {
           categoryViewMode={categoryViewMode}
           categoryOrdering={categoryOrdering}
           categoryTierFilter={categoryFilters.find(f => f.field === "wikiTier")?.value ?? null}
-          categoryStatusFilter={null}
+          categoryStatusFilter={categoryFilters.find(f => f.field === "status")?.value ?? null}
           categoryShowDescription={categoryShowDescription}
           categoryShowEmpty={categoryShowEmpty}
           categoryGrouping={categoryGrouping}
@@ -1249,6 +1329,91 @@ export function WikiView() {
               setWikiCategoryFilter(categoryId)
               setWikiViewMode("list")
             }}
+          />
+        </div>
+      ) : isDualMode ? (
+        /* ══════════════════════════════════════════════════
+           Phase 3 (split-mode-prd) — Dual Mode
+           List on the left, WikiArticleView on the right.
+           Wiki sub-modes (merge/split/category/dashboard) already
+           short-circuited above — dual only kicks in for the regular
+           list mode. effectiveWikiMode handles narrow-viewport fallback
+           (returns "list" below 1200px even when persisted is "dual").
+           ══════════════════════════════════════════════════ */
+        <div className="u-mode flex flex-1 overflow-hidden" data-mode="dual">
+          <DualListEditor
+            storageId="dual-wiki"
+            list={
+              <WikiList
+                filteredWikiNotes={filteredWikiNotes}
+                sortedFilteredWikiNotes={sortedFilteredWikiNotes}
+                backlinkCounts={backlinkCounts}
+                dashFilter={dashFilter}
+                setDashFilter={setDashFilter}
+                showAllArticles={showAllArticles}
+                setShowAllArticles={setShowAllArticles}
+                categoryFilterLabel={categoryFilterTagId ? wikiCategories.find(c => c.id === categoryFilterTagId)?.name ?? null : null}
+                onClearCategoryFilter={() => setWikiCategoryFilter(null)}
+                // Phase 3: row click sets dualSelection instead of opening
+                // the full article view. Mirrors Phase 2 NotesTable wiring.
+                onOpenArticle={(id) => setDualSelection({ kind: "wiki", refId: id })}
+                onMergeArticle={(sourceId) => setWikiMergeSourceId(sourceId)}
+                onSplitArticle={(id) => {
+                  setSelectedWikiArticleId(id)
+                  setIsEditingWikiArticle(true)
+                }}
+                onDeleteArticle={(id) => {
+                  deleteWikiArticle(id)
+                  toast.success("Article deleted")
+                }}
+                onShowConnectedArticle={(id, direction) => {
+                  const existingFilters = wikiViewState.filters ?? []
+                  const otherRules = existingFilters.filter((r) => r.field !== "connectedTo")
+                  updateWikiViewState({
+                    filters: [
+                      ...otherRules,
+                      { field: "connectedTo", operator: "eq", value: `${id}:${direction}` },
+                    ],
+                  })
+                  const article = wikiArticles.find((a) => a.id === id)
+                  const dirLabel =
+                    direction === "in" ? "backlinks" :
+                    direction === "out" ? "links out" :
+                    "both directions"
+                  toast(`Filtering: connected to "${article?.title ?? "article"}" (${dirLabel})`)
+                }}
+                redLinks={redLinks}
+                onCreateFromRedLink={handleCreateFromRedLink}
+                selectedIds={selectedArticleIds}
+                onSelect={(id, opts) => handleArticleSelect(id, opts)}
+                onSelectAll={handleArticleSelectAll}
+                stubCount={stubCount}
+                wikiArticles={wikiArticles}
+                visibleColumns={wikiViewState.visibleColumns}
+                wikiCategories={wikiCategories}
+                wikiGroups={wikiGroups}
+                groupBy={wikiViewState.groupBy}
+                dualMode
+                activeArticleId={
+                  dualSelection?.kind === "wiki" ? dualSelection.refId : null
+                }
+              />
+            }
+            editor={
+              dualSelection?.kind === "wiki" ? (
+                <div className="flex h-full flex-col overflow-hidden">
+                  <WikiArticleView
+                    articleId={dualSelection.refId}
+                    editable
+                    onDelete={() => {
+                      deleteWikiArticle(dualSelection.refId)
+                      setDualSelection(null)
+                      toast.success("Article deleted")
+                    }}
+                  />
+                </div>
+              ) : null
+            }
           />
         </div>
       ) : (

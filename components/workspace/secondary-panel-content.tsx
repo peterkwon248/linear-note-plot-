@@ -6,6 +6,8 @@ import { useSecondaryRoute, useSecondarySpace, setSecondarySpace, DEFAULT_ROUTES
 import { NoteEditor } from "@/components/note-editor"
 import { PaneProvider, useIsActivePane } from "./pane-context"
 import { WikiLayoutToggle } from "@/components/wiki-editor/wiki-layout-toggle"
+import { useBookContextNav } from "@/hooks/use-book-context-nav"
+import { BookContextNav } from "@/components/books/book-context-nav"
 import { cn } from "@/lib/utils"
 import { X as PhX } from "@phosphor-icons/react/dist/ssr/X"
 import { CaretDown } from "@phosphor-icons/react/dist/ssr/CaretDown"
@@ -47,6 +49,7 @@ const SPACE_LABELS: Record<ActivitySpace, string> = {
   calendar: "Calendar",
   ontology: "Ontology",
   library: "Library",
+  books: "Books",
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -57,9 +60,10 @@ const SPACE_ICONS: Record<ActivitySpace, any> = {
   calendar: CalendarBlank,
   ontology: Graph,
   library: Books,
+  books: Books,
 }
 
-const ALL_SPACES: ActivitySpace[] = ["home", "notes", "wiki", "calendar", "ontology", "library"]
+const ALL_SPACES: ActivitySpace[] = ["home", "notes", "wiki", "calendar", "ontology", "library", "books"]
 
 function ViewFallback() {
   return <div className="flex-1 flex items-center justify-center text-muted-foreground text-sm">Loading...</div>
@@ -134,6 +138,36 @@ function SecondaryWikiArticle({ articleId }: { articleId: string }) {
   const hasSections = article?.blocks.some((b) => b.type === "section") ?? false
   const isActivePane = useIsActivePane()
 
+  // Phase 4: in-book navigation for the secondary pane wiki article.
+  // The hook reads pane='secondary' via PaneContext (we're inside a
+  // PaneProvider pane="secondary"), so its bookContext slice and openNote
+  // routing both stay scoped to this pane.
+  const wikiBookNav = useBookContextNav("wiki", articleId)
+
+  // Phase 4: ⌘[ / ⌘] keyboard shortcuts (active pane only).
+  useEffect(() => {
+    if (!wikiBookNav.active || !isActivePane) return
+    const handler = (e: KeyboardEvent) => {
+      const mod = e.metaKey || e.ctrlKey
+      if (!mod) return
+      const target = e.target as HTMLElement | null
+      if (target && (
+        target.tagName === "INPUT" ||
+        target.tagName === "TEXTAREA" ||
+        target.closest('[contenteditable="true"]')
+      )) return
+      if (e.key === "[") {
+        e.preventDefault()
+        wikiBookNav.goPrev()
+      } else if (e.key === "]") {
+        e.preventDefault()
+        wikiBookNav.goNext()
+      }
+    }
+    window.addEventListener("keydown", handler)
+    return () => window.removeEventListener("keydown", handler)
+  }, [wikiBookNav.active, wikiBookNav.goPrev, wikiBookNav.goNext, isActivePane])
+
   return (
     <div data-editor-scope="wiki" className="flex flex-col h-full">
       <header className={cn(
@@ -177,6 +211,17 @@ function SecondaryWikiArticle({ articleId }: { articleId: string }) {
           </span>
         </nav>
         <div className="flex items-center gap-1">
+          {wikiBookNav.active && (
+            <div className="mr-1">
+              <BookContextNav
+                bookId={wikiBookNav.active.bookId}
+                itemIndex={wikiBookNav.active.itemIndex}
+                total={wikiBookNav.active.total}
+                onPrev={wikiBookNav.goPrev}
+                onNext={wikiBookNav.goNext}
+              />
+            </div>
+          )}
           {/* Aa font size / alignment popover */}
           {article && (
             <Popover>

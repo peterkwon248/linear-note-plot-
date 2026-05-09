@@ -60,18 +60,21 @@ export function PanelsMenu() {
         </div>
         <PanelToggle
           label="Activity bar"
+          panel="activity"
           checked={actbarOpen}
           onClick={() => setActivitybarCollapsed(!activitybarCollapsed)}
           shortcut="⌘⇧A"
         />
         <PanelToggle
           label="Sidebar"
+          panel="sidebar"
           checked={sidebarOpen}
           onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
           shortcut="⌘⇧F"
         />
         <PanelToggle
           label="Detail"
+          panel="detail"
           checked={detailOpen}
           onClick={() => setSidePanelOpen(!sidePanelOpen)}
           shortcut="⌘B"
@@ -96,11 +99,13 @@ export function PanelsMenu() {
 
 function PanelToggle({
   label,
+  panel,
   checked,
   onClick,
   shortcut,
 }: {
   label: string
+  panel: "activity" | "sidebar" | "detail"
   checked: boolean
   onClick: () => void
   shortcut?: string
@@ -111,11 +116,87 @@ function PanelToggle({
       className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-note text-foreground/80 transition-colors hover:bg-hover-bg hover:text-foreground"
       data-active={checked ? "true" : undefined}
     >
+      <PanelMini highlight={panel} active={checked} />
       <span className="flex-1 text-left">{label}</span>
       {shortcut && (
         <span className="text-2xs text-muted-foreground/60 tabular-nums">{shortcut}</span>
       )}
       {checked && <Check size={12} weight="bold" className="text-accent" />}
     </button>
+  )
+}
+
+/**
+ * 4-region layout miniature. Highlights the panel this row controls
+ * (filled when active, outlined when inactive). Other regions render
+ * as faint outlines for spatial context. Linear/Plain pattern.
+ */
+function PanelMini({
+  highlight,
+  active,
+}: {
+  highlight: "activity" | "sidebar" | "detail"
+  active: boolean
+}) {
+  // 4 regions in a 16×12 viewBox: actbar (1.5w) | sidebar (3.5w) | editor (5.5w) | detail (3w)
+  const fill = active ? "currentColor" : "none"
+  const opacity = active ? 0.85 : 0.45
+  return (
+    <svg
+      width={16}
+      height={12}
+      viewBox="0 0 16 12"
+      className="shrink-0 text-muted-foreground/70"
+      aria-hidden="true"
+    >
+      {/* Activity bar (leftmost narrow strip) */}
+      <rect
+        x={0.75}
+        y={0.75}
+        width={1.5}
+        height={10.5}
+        rx={0.5}
+        fill={highlight === "activity" ? fill : "none"}
+        stroke="currentColor"
+        strokeWidth={0.6}
+        opacity={highlight === "activity" ? opacity : 0.35}
+      />
+      {/* Sidebar */}
+      <rect
+        x={2.75}
+        y={0.75}
+        width={3.5}
+        height={10.5}
+        rx={0.5}
+        fill={highlight === "sidebar" ? fill : "none"}
+        stroke="currentColor"
+        strokeWidth={0.6}
+        opacity={highlight === "sidebar" ? opacity : 0.35}
+      />
+      {/* Editor (always faint outline — main content area, not toggleable here) */}
+      <rect
+        x={6.75}
+        y={0.75}
+        width={5.5}
+        height={10.5}
+        rx={0.5}
+        fill="none"
+        stroke="currentColor"
+        strokeWidth={0.6}
+        opacity={0.35}
+      />
+      {/* Detail */}
+      <rect
+        x={12.75}
+        y={0.75}
+        width={2.5}
+        height={10.5}
+        rx={0.5}
+        fill={highlight === "detail" ? fill : "none"}
+        stroke="currentColor"
+        strokeWidth={0.6}
+        opacity={highlight === "detail" ? opacity : 0.35}
+      />
+    </svg>
   )
 }
