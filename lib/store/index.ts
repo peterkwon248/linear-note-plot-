@@ -254,7 +254,7 @@ export const usePlotStore = create<PlotState>()(
     },
     {
       name: "plot-store",
-      version: 120,
+      version: 121,
       storage: createIDBStorage<PlotState>(),
       partialize: (state) => {
         // eslint-disable-next-line @typescript-eslint/no-unused-vars

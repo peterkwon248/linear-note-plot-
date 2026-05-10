@@ -1033,14 +1033,10 @@
   flex-direction: column;
 }
 .a-th, .a-row {
-  display: grid;
-  grid-template-columns: minmax(0, 2.4fr) minmax(0, 1.3fr) 110px 90px 70px 80px;
-  /* Plot: 8px gap (위키 wiki-list.tsx:150 gap-2 정합) — 체크박스 옆에 Title 가깝게.
-     mockup default 16px는 Title cell이 너무 멀어 보임. */
+  /* Path B Step A: chrome-only. grid template는 consumer 책임 (PR #282/#283
+     사례 회피 — 6-col grid 강제로 다른 view layout 깨졌음). */
   gap: 8px;
   align-items: center;
-  /* Plot: padding 20px (위키 px-5 정합) — 헤더와 row 체크박스 위치 정확히 정합.
-     mockup default 16px는 row inline paddingLeft 20px와 4px 어긋남. */
   padding: 0 20px;
 }
 .a-th {

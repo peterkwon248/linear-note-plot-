@@ -376,3 +376,25 @@ function next(depth: number): string {
 - 복잡한 작업 (예: Template PR b — UI unification) 전에 planner 호출
 - 결과: `.omc/plans/template-b-edit-ui-unification.md` (Q1-Q5 default + 3 phase 분할)
 - 사용자 합의 후 즉시 구현 → 효율적
+
+## 2026-05-10 마라톤 — 9 작업 + 12 polish iteration
+
+### Layout 발견
+- **flex item `w-full flex-1` 필수**: 누락 시 contents 폭만 차지 (intrinsic width). BookWikiReader 81% 원인
+- **Layout fallback double-mount**: `isFallback` 정의에서 sub-route 누락 시 children + view 동시 visible → flex-1 50%씩 폭 stealing. fix: `isViewRoute`에 `activeRoute.startsWith("/books/")` 추가
+- **Empty infobox = panel 22% 차지**: read 모드 + 비어있으면 hide 권장 (`!preview && (hasInfoboxContent || editable)`)
+
+### Smart Book Resolver
+- **lastManualOrder seeding**: manual items 모두 처리 후 max order 추출 → auto 시퀀스 시작 → manual top/auto bottom 자연 보장
+- **Multi-source dedup**: `seenAutoRefIds` Set으로 첫 source 우선 (LOCKED #11)
+- **Pure function**: store/book mutate X, deterministic, useMemo로 호출 (eager re-resolve)
+
+### 데이터 모델 silent assumption (PRD critic agent로 catch)
+- `Folder.noteIds` 없음 (Note.folderIds reverse N:M)
+- `WikiArticle.categoryIds: string[]` (DAG 다중 부모)
+- `Folder.kind = "note" | "wiki"` (둘 다 X, Phase A는 note only)
+- Folder + WikiArticle 모두 hard-delete only (trashed 필드 없음)
+
+### React/HMR 한계
+- 큰 파일 변경 시 HMR 못 잡고 stale view → dev 재시작 또는 Ctrl+Shift+R
+- preview MCP 시뮬레이션 + window.history.pushState로 React 인식 안 될 수 있음 → 실제 사이드바 클릭 필요

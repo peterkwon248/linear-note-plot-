@@ -34,8 +34,10 @@ import { shortRelative } from "@/lib/format-utils"
 import { cn } from "@/lib/utils"
 import { FileText } from "@phosphor-icons/react/dist/ssr/FileText"
 import { BookOpen } from "@phosphor-icons/react/dist/ssr/BookOpen"
+import { Folder as PhFolder } from "@phosphor-icons/react/dist/ssr/Folder"
+import { Sparkle } from "@phosphor-icons/react/dist/ssr/Sparkle"
 
-type Tab = "notes" | "wiki"
+type Tab = "notes" | "wiki" | "smart"
 
 interface AddItemDialogProps {
   open: boolean
@@ -55,6 +57,8 @@ export function AddItemDialog({
   const wikiArticles = usePlotStore((s) => s.wikiArticles)
   const books = usePlotStore((s) => s.books)
   const addItemToBook = usePlotStore((s) => s.addItemToBook)
+  const folders = usePlotStore((s) => s.folders)
+  const addSmartSource = usePlotStore((s) => s.addSmartSource)
 
   const book = books.find((b) => b.id === bookId)
 
@@ -102,6 +106,37 @@ export function AddItemDialog({
       .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt))
   }, [wikiArticles, wikiRefIds])
 
+  // Existing folder source refIds (filter out already-added)
+  const existingSourceRefIds = useMemo(() => {
+    if (!book) return new Set<string>()
+    return new Set(
+      (book.smartSources ?? [])
+        .filter((s) => s.kind === "folder")
+        .map((s) => s.refId),
+    )
+  }, [book])
+
+  // Folder candidates: kind="note" only (PRD §1 INVARIANT) + not already source.
+  // Tweak C: each candidate carries a preview count so users see how many
+  // notes will be auto-pulled (and how many are already manual in this book).
+  const folderCandidates = useMemo(() => {
+    const manualNoteRefIds = new Set(
+      (book?.items ?? [])
+        .filter((i): i is Extract<typeof i, { kind: "note" }> => i.kind === "note")
+        .map((i) => i.refId),
+    )
+    return folders
+      .filter((f) => f.kind === "note" && !existingSourceRefIds.has(f.id))
+      .map((folder) => {
+        const folderNotes = notes.filter(
+          (n) => n.folderIds.includes(folder.id) && !n.trashed,
+        )
+        const inBook = folderNotes.filter((n) => manualNoteRefIds.has(n.id)).length
+        return { folder, total: folderNotes.length, inBook }
+      })
+      .sort((a, b) => a.folder.name.localeCompare(b.folder.name))
+  }, [folders, existingSourceRefIds, notes, book])
+
   const handleAddNote = (noteId: string, title: string) => {
     addItemToBook(bookId, { kind: "note", refId: noteId })
     toast.success(`Added "${title || "Untitled"}"`)
@@ -111,6 +146,16 @@ export function AddItemDialog({
   const handleAddWiki = (articleId: string, title: string) => {
     addItemToBook(bookId, { kind: "wiki", refId: articleId })
     toast.success(`Added "${title || "Untitled"}"`)
+    setSearch("")
+  }
+
+  const handleAddFolder = (folderId: string, folderName: string) => {
+    const ok = addSmartSource(bookId, { kind: "folder", refId: folderId })
+    if (ok) {
+      toast.success(`Added source: ${folderName}`)
+    } else {
+      toast("Already added", { duration: 1500 })
+    }
     setSearch("")
   }
 
@@ -145,6 +190,13 @@ export function AddItemDialog({
               {wikiCandidates.length}
             </span>
           </TabButton>
+          <TabButton active={tab === "smart"} onClick={() => setTab("smart")}>
+            <Sparkle size={14} weight="regular" />
+            Smart
+            <span className="text-2xs text-muted-foreground/70 tabular-nums">
+              {folderCandidates.length}
+            </span>
+          </TabButton>
           <div className="flex-1" />
           <button
             type="button"
@@ -164,7 +216,11 @@ export function AddItemDialog({
           }}
         >
           <CommandInput
-            placeholder={tab === "notes" ? "Search notes..." : "Search wiki articles..."}
+            placeholder={
+              tab === "notes" ? "Search notes..." :
+              tab === "wiki" ? "Search wiki articles..." :
+              "Search folders..."
+            }
             value={search}
             onValueChange={setSearch}
           />
@@ -208,7 +264,7 @@ export function AddItemDialog({
                   ))}
                 </CommandGroup>
               </>
-            ) : (
+            ) : tab === "wiki" ? (
               <>
                 <CommandEmpty>
                   <div className="flex flex-col items-center gap-1.5 py-4">
@@ -248,6 +304,50 @@ export function AddItemDialog({
                         <span className="text-2xs tabular-nums text-muted-foreground/70 shrink-0">
                           {shortRelative(article.updatedAt)}
                         </span>
+                      </CommandItem>
+                    )
+                  })}
+                </CommandGroup>
+              </>
+            ) : (
+              <>
+                <CommandEmpty>
+                  <div className="flex flex-col items-center gap-1.5 py-4">
+                    <PhFolder className="text-muted-foreground/60" size={28} weight="regular" />
+                    <p className="text-note text-muted-foreground">
+                      {folderCandidates.length === 0
+                        ? "No folders available — every note folder is already a source."
+                        : "No matching folders."}
+                    </p>
+                  </div>
+                </CommandEmpty>
+                <CommandGroup>
+                  {folderCandidates.map(({ folder, total, inBook }) => {
+                    const newCount = total - inBook
+                    const subtitle =
+                      total === 0
+                        ? "Empty folder"
+                        : inBook === 0
+                          ? `${total} note${total === 1 ? "" : "s"} will auto-fill`
+                          : newCount === 0
+                            ? `All ${total} note${total === 1 ? "" : "s"} already in book`
+                            : `${newCount} new · ${inBook} already in book`
+                    return (
+                      <CommandItem
+                        key={folder.id}
+                        value={folder.name}
+                        onSelect={() => handleAddFolder(folder.id, folder.name)}
+                        className="flex items-center gap-3 px-3 py-2.5"
+                      >
+                        <PhFolder size={14} weight="regular" className="text-muted-foreground" />
+                        <div className="flex-1 min-w-0">
+                          <span className="truncate text-note font-medium text-foreground block">
+                            {folder.name}
+                          </span>
+                          <p className="truncate text-2xs text-muted-foreground/70 mt-0.5">
+                            {subtitle}
+                          </p>
+                        </div>
                       </CommandItem>
                     )
                   })}

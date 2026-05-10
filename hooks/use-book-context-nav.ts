@@ -24,7 +24,8 @@ import { usePlotStore } from "@/lib/store"
 import { usePane } from "@/components/workspace/pane-context"
 import { setActiveRoute } from "@/lib/table-route"
 import { navigateToWikiArticle } from "@/lib/wiki-article-nav"
-import { bookContentItems, type ContentBookItem } from "@/lib/books/utils"
+import { resolvedContentItems, type ResolvedContentBookItem } from "@/lib/books/utils"
+export type { ResolvedContentBookItem }
 
 export interface UseBookContextNavReturn {
   /** Resolved active pane book context, or null if none / invalid. */
@@ -37,6 +38,10 @@ export interface UseBookContextNavReturn {
   goPrev: () => void
   /** Move to the next content item. No-op when already last. */
   goNext: () => void
+  /** Resolved content items in this book (manual + auto, headings excluded). */
+  items: ResolvedContentBookItem[]
+  /** Jump to a specific item by index (used by the table-of-contents dropdown). */
+  jumpTo: (index: number) => void
 }
 
 /**
@@ -52,6 +57,8 @@ export function useBookContextNav(
   const router = useRouter()
   const pane = usePane()
   const books = usePlotStore((s) => s.books)
+  const notes = usePlotStore((s) => s.notes)
+  const folders = usePlotStore((s) => s.folders)
   // Select only this pane's slice — avoids re-renders when the *other*
   // pane's bookContext changes.
   const ctx = usePlotStore((s) => s.bookContext?.[pane] ?? null)
@@ -64,9 +71,11 @@ export function useBookContextNav(
     [books, ctx],
   )
 
-  const items: ContentBookItem[] = useMemo(
-    () => (book ? bookContentItems(book) : []),
-    [book],
+  // Use resolvedContentItems so auto items (smart source folder pulls)
+  // are included in the N/M counter and ↑↓ navigation sequence.
+  const items: ResolvedContentBookItem[] = useMemo(
+    () => (book ? resolvedContentItems(book, { notes, folders }) : []),
+    [book, notes, folders],
   )
 
   // Locate the current entity inside the content items.
@@ -123,7 +132,7 @@ export function useBookContextNav(
   }, [ctx, book, refId, liveIndex, items.length, pane, setBookContext])
 
   const navigateTo = useCallback(
-    (target: ContentBookItem, newIndex: number) => {
+    (target: ResolvedContentBookItem, newIndex: number) => {
       if (!book) return
       // Update bookContext FIRST so the destination view picks up the
       // anchor immediately (before its render settles). The
@@ -136,21 +145,14 @@ export function useBookContextNav(
       if (target.kind === "note") {
         openNote(target.refId, { pane })
       } else {
-        // Wiki articles: in primary pane, route to /wiki and use the
-        // pending-article store (matches the bookmark/sidebar pattern —
-        // WikiView is always-mounted, so no router.push is required;
-        // it consumes the pendingArticleId on its next render). In
-        // secondary pane, openInSecondary accepts any entity id
-        // (note or wiki) — the secondary panel resolves it via
-        // wikiArticles.find().
+        // Wiki articles: secondary pane uses openInSecondary (resolves
+        // note vs wiki via wikiArticles.find). Primary pane stays on
+        // the /books/{id} route — BookDetailPage mounts WikiArticleView
+        // when selectedNoteId references a wiki entity (Step 2.11b).
         if (pane === "secondary") {
           usePlotStore.getState().openInSecondary(target.refId)
         } else {
-          // If we're not already on /wiki, push it so the URL reflects
-          // the new context. setActiveRoute is idempotent.
-          setActiveRoute("/wiki")
-          navigateToWikiArticle(target.refId)
-          router.push("/wiki")
+          usePlotStore.getState().setSelectedNoteId(target.refId)
         }
       }
     },
@@ -171,9 +173,16 @@ export function useBookContextNav(
     navigateTo(target, liveIndex + 1)
   }, [book, items, liveIndex, navigateTo])
 
+  const jumpTo = useCallback((index: number) => {
+    if (!book || index < 0 || index >= items.length || index === liveIndex) return
+    const target = items[index]
+    if (!target) return
+    navigateTo(target, index)
+  }, [book, items, liveIndex, navigateTo])
+
   const active = book && liveIndex >= 0
     ? { bookId: book.id, itemIndex: liveIndex, total: items.length }
     : null
 
-  return { active, goPrev, goNext }
+  return { active, goPrev, goNext, items, jumpTo }
 }

@@ -28,6 +28,87 @@
 
 ---
 
+## 🚀 2026-05-10 (마라톤) — Phase A polish + Smart Book Phase A + 책 reading flow (33 files, 9 작업 + 12 polish steps)
+
+**범위**: 단일 worktree (`distracted-heyrovsky-f06ba0`)에 누적. 33 files (+1289 / -187), 4 신규 파일.
+
+### 큰 작업 요약
+
+**1. UI 버그/UX 5 fixes**
+- /trash 페이지에 Books entity 통합 (`components/notes-table.tsx`)
+- Path B Step A: globals.css `.a-th, .a-row` 6-col grid hardcoded 제거 (chrome-only)
+- Dual mode pane gating + i18n: 한글→영어 5 strings + secondary pane dual 비활성 (PRD §LOCKED #9)
+- ⌘⇧E pane-aware: secondary focus면 no-op + toast hint
+- DisplayPanel "Dual" 버튼 disabled in secondary (3-layer closure)
+
+**2. Smart Book PRD 작성**
+- `.omc/plans/smart-book-prd.md` (656 line, 12 LOCKED decisions)
+- draft → revision (BLOCKING 3 + recommended 7) → 2x critic 통과
+- INVARIANT: AutoSource는 공급원, BookItem kind는 note/wiki/chapter-heading만
+
+**3. Smart Book Phase A 10 sub-steps 완성**
+- Step 1: Schema (AutoSource type) + Store API (5 methods, dedup guard) + v121 migration + 11 tests
+- Step 2.1: Resolver pure function (folder source only, multi-source dedup) + 14 tests
+- Step 2.2: BookDetailPage 통합 (resolver useMemo + drag/up-down auto guard)
+- Step 2.3: SourcesSection UI (folder picker + add/remove)
+- Step 2.4: AddItemDialog "Smart" 탭
+- Step 2.5: BookItemRow source-aware (visual + remove branch)
+- Step 2.6 (Tweak A): empty source heading hide
+- Step 2.7 (Tweak B): manual override source badge
+- Step 2.8 (Tweak C): folder picker preview count
+- Step 2.9: In-book navigation includes auto items (`resolvedContentItems`)
+
+**4. 책 reading flow 도입 (Step 2.10~2.21)**
+- Read button + read mode + Linear ←→ navigation + TOC dropdown
+- BookDetailPage가 NoteEditor / BookWikiReader 직접 mount (URL `/books/{id}` 유지)
+- BookWikiReader full chrome (Aa font / collapse / WikiLayoutToggle / Edit/Done)
+- max-w 풀폭 default + sub-route fallback double-mount fix (50% → 100%)
+
+### 큰 결정 (영구, 이번 세션)
+
+**1. Plot 모토 = 풀페이지 default**: max-w 제한 없이 본문 풀폭. 우측 SmartSidePanel은 opt-in (⌘B). NotesView/WikiView/BookDetailPage 통일.
+
+**2. Books reading flow 패턴**: /books/{id} URL 유지 + BookDetailPage가 NoteEditor / WikiArticleView 직접 mount. Cleanup unmount 시 bookContext + selectedNoteId clear.
+
+**3. layout.tsx isViewRoute sub-route 포함**: `/books/{id}`, `/library/*` 같은 sub-route를 view-route로 인정 → fallback children div 동시 mount 방지 (50% 폭 stealing fix).
+
+**4. Empty infobox 자동 hide**: read 모드 + 콘텐츠 비어있으면 infobox rail 숨김. 본문이 22% 회수.
+
+**5. Smart Book INVARIANT**: AutoSource = "어디서(공급원)", 멤버 kind 아님. 모든 source는 note/wiki만 filter.
+
+**6. PRD §LOCKED #9 3-layer 일관**: 시각 fallback + 입력 가드 (⌘⇧E) + UI 가드 (Dual 버튼) — defense-in-depth.
+
+### 기술 학습 (영구)
+
+- **flex item에 `w-full flex-1` 필수** — 누락 시 contents 폭만 차지 (intrinsic width). BookWikiReader가 81%만 차지하던 진짜 원인
+- **Layout fallback double-mount 패턴** — `isFallback` 정의에서 sub-route 누락 시 children + view 동시 visible → flex-1 50%씩
+- **Resolver fractional key seeding** — `lastManualOrder` 추출 후 auto 시퀀스 → manual top + auto bottom 자연 보장
+- **Multi-source dedup** — `seenAutoRefIds` Set으로 첫 source 우선
+- **데이터 모델 silent assumption 위험**:
+  - `Folder.noteIds` 없음 (Note.folderIds reverse N:M)
+  - `WikiArticle.categoryIds: string[]` (DAG 다중 부모)
+  - `Folder.kind = "note" | "wiki"` (둘 다 X)
+  - Folder + WikiArticle 모두 hard-delete only
+- **PRD critic agent 2회 가치** — silent assumption catch (Plot codebase 직접 검증으로)
+- **HMR 한계** — 큰 파일 변경 시 HMR 못 잡고 stale view 표시 → dev server 재시작 또는 hard reload (Ctrl+Shift+R)
+
+### 환경 변경
+
+- Store version 120 → 121 (Smart Book: smartSources/excludeIds defaults)
+- 신규 파일 4: `smart-book-prd.md`, `resolver.ts`, `resolver.test.ts`, `sources-section.tsx`
+- Tests: 246 → 255 (+9 utils tests, 14 resolver tests, 11 books-slice tests)
+- Build/TSC: 모두 ✅ pass
+- Architect 7회 검증 통과
+
+### 다음 세션 P0 (사용자 명시)
+
+1. **Close 버튼** — 위키에만 있는데 노트에도 추가할지 vs 그냥 없애기 (의논)
+2. **Books 뒤로가기 별로** — 위키처럼 타이틀 헤더 아래 sub-nav 패턴 (`← All / Articles / Stubs`) 적용 검토
+3. **Books 리스트 무조건 그리드** — list mode/grid mode 통일 검토
+4. **Edit 버튼 색상/폰트** — 책 안 wiki reading의 Edit 버튼이 일반 wiki view와 색상/사이즈 다름 → 통일
+
+---
+
 ## 🚀 2026-05-09 (마라톤) — Book entity + Dual mode + Filter Path A 완전 종결 (~45 변경, 2 PRD, 단일 PR)
 
 **범위**: 하루에 polish 시리즈 + Path A 완성 + 두 큰 entity 도입 (Book + Dual mode) + plugin install. 단일 squash PR로 머지 예정.

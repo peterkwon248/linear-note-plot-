@@ -64,9 +64,9 @@ export function DualListEditor({
 function DefaultEmptyState() {
   return (
     <div className="flex h-full flex-col items-center justify-center gap-2 text-muted-foreground/70">
-      <p className="text-sm font-medium">선택된 항목 없음</p>
-      <p className="text-2xs">왼쪽 list에서 항목을 선택하거나 ↑↓로 이동하세요.</p>
-      <p className="text-2xs opacity-50">⌘⇧E로 dual mode 토글</p>
+      <p className="text-sm font-medium">Nothing selected</p>
+      <p className="text-2xs">Select an item from the list or press ↑↓ to navigate.</p>
+      <p className="text-2xs opacity-50">⌘⇧E to toggle dual mode</p>
     </div>
   )
 }

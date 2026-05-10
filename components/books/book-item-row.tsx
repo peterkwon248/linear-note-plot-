@@ -17,11 +17,13 @@
  * placeholder with only the × button so the user can clean up.
  */
 
-import { useState, useEffect, useRef } from "react"
+import { useState, useEffect, useMemo, useRef } from "react"
 import { useSortable } from "@dnd-kit/sortable"
 import { CSS } from "@dnd-kit/utilities"
 import { usePlotStore } from "@/lib/store"
-import type { BookItem } from "@/lib/types"
+import type { ResolvedBookItem } from "@/lib/books/resolver"
+import { Folder as PhFolder } from "@phosphor-icons/react/dist/ssr/Folder"
+import { toast } from "sonner"
 import { StatusShapeIcon } from "@/components/status-icon"
 import { IconWikiStub, IconWikiArticle } from "@/components/plot-icons"
 import { isWikiStub } from "@/lib/wiki-utils"
@@ -35,7 +37,7 @@ import { cn } from "@/lib/utils"
 
 interface BookItemRowProps {
   bookId: string
-  item: BookItem
+  item: ResolvedBookItem
   /** Whether ↑ should be enabled (false for first item in sorted list). */
   canMoveUp: boolean
   /** Whether ↓ should be enabled (false for last item). */
@@ -59,11 +61,13 @@ export function BookItemRow({
 }: BookItemRowProps) {
   const removeItemFromBook = usePlotStore((s) => s.removeItemFromBook)
   const updateChapterHeading = usePlotStore((s) => s.updateChapterHeading)
+  const addExcludeId = usePlotStore((s) => s.addExcludeId)
   const notes = usePlotStore((s) => s.notes)
   const wikiArticles = usePlotStore((s) => s.wikiArticles)
+  const folders = usePlotStore((s) => s.folders)
 
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
-    useSortable({ id: item.id })
+    useSortable({ id: item.id, disabled: item.source === "auto" })
 
   const style: React.CSSProperties = {
     transform: CSS.Transform.toString(transform),
@@ -71,7 +75,27 @@ export function BookItemRow({
     opacity: isDragging ? 0.5 : 1,
   }
 
-  const handleRemove = () => removeItemFromBook(bookId, item.id)
+  // isAuto + sourceFolderName hoisted above all conditional returns (hooks rules)
+  const isAuto = item.source === "auto"
+  // Tweak B: also resolve folder name for manual rows that match a smart
+  // source — used for the subtle "also in {folder}" hint badge.
+  const sourceFolderName = useMemo(() => {
+    if (!item.sourceRefId || item.kind === "chapter-heading") return null
+    return folders.find((f) => f.id === item.sourceRefId)?.name ?? null
+  }, [item.sourceRefId, item.kind, folders])
+  const showManualBadge = !isAuto && !!sourceFolderName
+
+  const handleRemove = () => {
+    if (item.source === "auto") {
+      if (item.kind === "note" || item.kind === "wiki") {
+        addExcludeId(bookId, item.refId)
+        toast("Excluded from auto-fill", { duration: 1500 })
+      }
+      // Auto chapter-heading: no-op (managed at SourcesSection level)
+      return
+    }
+    removeItemFromBook(bookId, item.id)
+  }
 
   /* ── Variant: chapter-heading ─────────────────────── */
   if (item.kind === "chapter-heading") {
@@ -82,17 +106,19 @@ export function BookItemRow({
         attributes={attributes}
         listeners={listeners as any}
         title={item.title}
-        canMoveUp={canMoveUp}
-        canMoveDown={canMoveDown}
+        canMoveUp={canMoveUp && !isAuto}
+        canMoveDown={canMoveDown && !isAuto}
         onMoveUp={onMoveUp}
         onMoveDown={onMoveDown}
         onTitleChange={(title) => updateChapterHeading(bookId, item.id, title)}
         onRemove={handleRemove}
+        isAuto={isAuto}
       />
     )
   }
 
   /* ── Variant: note / wiki ─────────────────────────── */
+
   let title = ""
   let icon: React.ReactNode = null
   let isStale = false
@@ -133,6 +159,10 @@ export function BookItemRow({
     )
   }
 
+  const autoTooltip = sourceFolderName
+    ? `Auto from "${sourceFolderName}" — click × to exclude`
+    : undefined
+
   return (
     <div
       ref={setNodeRef}
@@ -140,29 +170,40 @@ export function BookItemRow({
       className={cn(
         "group flex items-center gap-1 rounded-md pl-1 pr-2 py-1.5 transition-colors",
         "hover:bg-hover-bg",
+        isAuto && "bg-muted/15",
       )}
+      title={autoTooltip}
     >
-      {/* Drag handle (hover-only) */}
-      <button
-        {...attributes}
-        {...(listeners as any)}
-        type="button"
-        aria-label="Drag to reorder"
-        className="flex h-6 w-5 items-center justify-center text-muted-foreground/40 opacity-0 transition-opacity group-hover:opacity-100 cursor-grab active:cursor-grabbing"
-        title="Drag to reorder"
-      >
-        <DotsSixVertical size={14} weight="bold" />
-      </button>
+      {/* Drag handle (hover-only, hidden for auto) */}
+      {!isAuto ? (
+        <button
+          {...attributes}
+          {...(listeners as any)}
+          type="button"
+          aria-label="Drag to reorder"
+          className="flex h-6 w-5 items-center justify-center text-muted-foreground/40 opacity-0 transition-opacity group-hover:opacity-100 cursor-grab active:cursor-grabbing"
+          title="Drag to reorder"
+        >
+          <DotsSixVertical size={14} weight="bold" />
+        </button>
+      ) : (
+        <span
+          className="flex h-6 w-5 items-center justify-center"
+          title={autoTooltip}
+        >
+          <PhFolder size={11} weight="regular" className="text-muted-foreground/40" />
+        </span>
+      )}
 
-      {/* Up / Down buttons (always visible for accessibility) */}
+      {/* Up / Down buttons (always visible for accessibility, disabled for auto) */}
       <div className="flex items-center">
         <button
           type="button"
           aria-label="Move up"
           onClick={onMoveUp}
-          disabled={!canMoveUp}
+          disabled={!canMoveUp || isAuto}
           className="flex h-6 w-5 items-center justify-center rounded text-muted-foreground/60 hover:text-foreground hover:bg-hover-bg disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-          title="Move up"
+          title={isAuto ? "Auto items can't be reordered" : "Move up"}
         >
           <CaretUp size={11} weight="bold" />
         </button>
@@ -170,16 +211,19 @@ export function BookItemRow({
           type="button"
           aria-label="Move down"
           onClick={onMoveDown}
-          disabled={!canMoveDown}
+          disabled={!canMoveDown || isAuto}
           className="flex h-6 w-5 items-center justify-center rounded text-muted-foreground/60 hover:text-foreground hover:bg-hover-bg disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-          title="Move down"
+          title={isAuto ? "Auto items can't be reordered" : "Move down"}
         >
           <CaretDown size={11} weight="bold" />
         </button>
       </div>
 
-      {/* Entity icon */}
-      <span className="flex shrink-0 items-center justify-center w-5 h-5 ml-0.5">
+      {/* Entity icon (옅은 색 if auto) */}
+      <span className={cn(
+        "flex shrink-0 items-center justify-center w-5 h-5 ml-0.5",
+        isAuto && "opacity-70",
+      )}>
         {icon}
       </span>
 
@@ -187,12 +231,30 @@ export function BookItemRow({
       <button
         type="button"
         onClick={onOpen}
-        className="flex-1 truncate text-left text-note text-foreground hover:text-accent transition-colors"
+        className={cn(
+          "flex-1 truncate text-left text-note hover:text-accent transition-colors",
+          isAuto ? "text-foreground/70" : "text-foreground",
+        )}
       >
         {title}
       </button>
 
-      <RemoveButton onClick={handleRemove} />
+      {/* Tweak B: subtle hint when a manual note also lives in a smart
+          source folder. Helps users understand why adding the source
+          didn't surface this note as auto (it's already manual). */}
+      {showManualBadge && (
+        <span
+          className="flex shrink-0 items-center gap-0.5 text-2xs text-muted-foreground/40"
+          title={`Also in "${sourceFolderName}" folder source`}
+        >
+          <PhFolder size={10} weight="regular" />
+        </span>
+      )}
+
+      <RemoveButton
+        onClick={handleRemove}
+        title={isAuto ? "Exclude from auto-fill" : "Remove from book"}
+      />
     </div>
   )
 }
@@ -211,6 +273,7 @@ interface ChapterHeadingRowProps {
   listeners?: Record<string, any>
   style: React.CSSProperties
   nodeRef: (node: HTMLDivElement | null) => void
+  isAuto?: boolean
 }
 
 function ChapterHeadingRow({
@@ -225,6 +288,7 @@ function ChapterHeadingRow({
   listeners,
   style,
   nodeRef,
+  isAuto = false,
 }: ChapterHeadingRowProps) {
   const [editing, setEditing] = useState(false)
   const [draft, setDraft] = useState(title)
@@ -249,47 +313,65 @@ function ChapterHeadingRow({
   }
 
   return (
-    <div ref={nodeRef} style={style} className="group mt-4 mb-1 first:mt-0">
+    <div ref={nodeRef} style={style} className={cn(
+      "group mt-4 mb-1 first:mt-0",
+      isAuto && "opacity-60",
+    )}>
       <div className="flex items-center gap-2 px-1">
-        {/* Drag handle (hover-only) */}
-        <button
-          {...attributes}
-          {...listeners}
-          type="button"
-          aria-label="Drag heading"
-          className="flex h-6 w-5 items-center justify-center text-muted-foreground/40 opacity-0 transition-opacity group-hover:opacity-100 cursor-grab active:cursor-grabbing"
-          title="Drag to reorder"
-        >
-          <DotsSixVertical size={14} weight="bold" />
-        </button>
+        {/* Drag handle (hover-only, hidden for auto) */}
+        {!isAuto ? (
+          <button
+            {...attributes}
+            {...listeners}
+            type="button"
+            aria-label="Drag heading"
+            className="flex h-6 w-5 items-center justify-center text-muted-foreground/40 opacity-0 transition-opacity group-hover:opacity-100 cursor-grab active:cursor-grabbing"
+            title="Drag to reorder"
+          >
+            <DotsSixVertical size={14} weight="bold" />
+          </button>
+        ) : (
+          <div className="w-5" />
+        )}
 
-        {/* Up / Down */}
-        <div className="flex items-center">
-          <button
-            type="button"
-            aria-label="Move heading up"
-            onClick={onMoveUp}
-            disabled={!canMoveUp}
-            className="flex h-6 w-5 items-center justify-center rounded text-muted-foreground/60 hover:text-foreground hover:bg-hover-bg disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-            title="Move up"
-          >
-            <CaretUp size={11} weight="bold" />
-          </button>
-          <button
-            type="button"
-            aria-label="Move heading down"
-            onClick={onMoveDown}
-            disabled={!canMoveDown}
-            className="flex h-6 w-5 items-center justify-center rounded text-muted-foreground/60 hover:text-foreground hover:bg-hover-bg disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-            title="Move down"
-          >
-            <CaretDown size={11} weight="bold" />
-          </button>
-        </div>
+        {/* Up / Down (hidden for auto) */}
+        {!isAuto ? (
+          <div className="flex items-center">
+            <button
+              type="button"
+              aria-label="Move heading up"
+              onClick={onMoveUp}
+              disabled={!canMoveUp}
+              className="flex h-6 w-5 items-center justify-center rounded text-muted-foreground/60 hover:text-foreground hover:bg-hover-bg disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+              title="Move up"
+            >
+              <CaretUp size={11} weight="bold" />
+            </button>
+            <button
+              type="button"
+              aria-label="Move heading down"
+              onClick={onMoveDown}
+              disabled={!canMoveDown}
+              className="flex h-6 w-5 items-center justify-center rounded text-muted-foreground/60 hover:text-foreground hover:bg-hover-bg disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+              title="Move down"
+            >
+              <CaretDown size={11} weight="bold" />
+            </button>
+          </div>
+        ) : (
+          <div className="w-10" />
+        )}
 
         {/* Heading body — title + divider line */}
         <div className="flex-1 flex items-center gap-2 min-w-0">
-          {editing ? (
+          {isAuto ? (
+            <span
+              className="text-note font-semibold text-foreground/70 px-0.5 truncate text-left"
+              title="Auto-generated heading from smart source"
+            >
+              {title}
+            </span>
+          ) : editing ? (
             <input
               ref={inputRef}
               type="text"
@@ -325,7 +407,8 @@ function ChapterHeadingRow({
           <div className="flex-1 border-t border-border/60" />
         </div>
 
-        <RemoveButton onClick={onRemove} />
+        {/* Remove × hidden for auto heading (managed via SourcesSection) */}
+        {!isAuto && <RemoveButton onClick={onRemove} />}
       </div>
     </div>
   )
@@ -333,13 +416,13 @@ function ChapterHeadingRow({
 
 /* ── Remove × button (shared) ─────────────────────────────── */
 
-function RemoveButton({ onClick }: { onClick: () => void }) {
+function RemoveButton({ onClick, title = "Remove from book" }: { onClick: () => void; title?: string }) {
   return (
     <button
       type="button"
       onClick={onClick}
-      aria-label="Remove from book"
-      title="Remove from book"
+      aria-label={title}
+      title={title}
       className="flex h-6 w-6 shrink-0 items-center justify-center rounded text-muted-foreground/50 opacity-0 transition-all group-hover:opacity-100 hover:bg-destructive/10 hover:text-destructive"
     >
       <PhX size={12} weight="bold" />

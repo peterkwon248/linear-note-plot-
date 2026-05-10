@@ -191,7 +191,11 @@
       "Bash(unzip -o /c/Users/user/Downloads/plot-frontend-plugin.zip -d ~/claude-plugins/)",
       "Bash(echo \"EXIT_CODE=$?\")",
       "Bash(echo \"TSC_EXIT=$?\")",
-      "Bash(cp ~/.claude/.omc-worklog/latest.md ~/.claude/.omc-worklog/2026-05-09_1619.md)"
+      "Bash(cp ~/.claude/.omc-worklog/latest.md ~/.claude/.omc-worklog/2026-05-09_1619.md)",
+      "Bash(echo \"EXITCODE: $?\")",
+      "Bash(mkdir -p \"$HOME/.claude/.omc-worklog/\" .omc/worklog/ .omc/notepads/general/ 2>&1)",
+      "Bash(cp __TRACKED_VAR__/.claude/.omc-worklog/latest.md __TRACKED_VAR__/.claude/.omc-worklog/2026-05-10_1440.md)",
+      "Bash(cp __TRACKED_VAR__/.claude/.omc-worklog/latest.md .omc/worklog/latest.md)"
     ]
   }
 }
