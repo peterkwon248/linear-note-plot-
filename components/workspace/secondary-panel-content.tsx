@@ -39,6 +39,7 @@ const WikiView = lazy(() => import("@/components/views/wiki-view").then(m => ({ 
 const CalendarView = lazy(() => import("@/components/calendar-view").then(m => ({ default: m.CalendarView })))
 const OntologyView = lazy(() => import("@/components/views/ontology-view").then(m => ({ default: m.OntologyView })))
 const LibraryView = lazy(() => import("@/components/views/library-view").then(m => ({ default: m.LibraryView })))
+const BooksView = lazy(() => import("@/components/views/books-view").then(m => ({ default: m.BooksView })))
 
 const TABLE_VIEW_ROUTES = ["/notes", "/stone", "/brick", "/keystone", "/pinned", "/trash"]
 
@@ -144,29 +145,37 @@ function SecondaryWikiArticle({ articleId }: { articleId: string }) {
   // routing both stay scoped to this pane.
   const wikiBookNav = useBookContextNav("wiki", articleId)
 
-  // Phase 4: ⌘[ / ⌘] keyboard shortcuts (active pane only).
+  // Phase 4: ⌘[ / ⌘] (modifier) and plain ←/→ (read mode) keyboard
+  // shortcuts. Active pane only — preserves cursor / menu navigation
+  // when focus is in editable fields or a popper is open.
   useEffect(() => {
     if (!wikiBookNav.active || !isActivePane) return
     const handler = (e: KeyboardEvent) => {
       const mod = e.metaKey || e.ctrlKey
-      if (!mod) return
       const target = e.target as HTMLElement | null
-      if (target && (
+      const inEditableField = !!(target && (
         target.tagName === "INPUT" ||
         target.tagName === "TEXTAREA" ||
-        target.closest('[contenteditable="true"]')
-      )) return
-      if (e.key === "[") {
+        target.closest?.('[contenteditable="true"]')
+      ))
+      if (mod && (e.key === "[" || e.key === "]")) {
+        if (inEditableField) return
         e.preventDefault()
-        wikiBookNav.goPrev()
-      } else if (e.key === "]") {
+        if (e.key === "[") wikiBookNav.goPrev()
+        else wikiBookNav.goNext()
+        return
+      }
+      if (!isEditing && (e.key === "ArrowLeft" || e.key === "ArrowRight")) {
+        if (inEditableField) return
+        if (document.querySelector('[data-radix-popper-content-wrapper]')) return
         e.preventDefault()
-        wikiBookNav.goNext()
+        if (e.key === "ArrowLeft") wikiBookNav.goPrev()
+        else wikiBookNav.goNext()
       }
     }
     window.addEventListener("keydown", handler)
     return () => window.removeEventListener("keydown", handler)
-  }, [wikiBookNav.active, wikiBookNav.goPrev, wikiBookNav.goNext, isActivePane])
+  }, [wikiBookNav.active, wikiBookNav.goPrev, wikiBookNav.goNext, isActivePane, isEditing])
 
   return (
     <div data-editor-scope="wiki" className="flex flex-col h-full">
@@ -353,6 +362,26 @@ export function SecondaryPanelContent() {
     }
   }, [secondaryNoteId, activePane, notes, wikiArticles])
 
+  // Books route takes precedence — BookDetailPage handles reading mode
+  // internally (mounting NoteEditor / BookWikiReader) while keeping the
+  // book context alive across entity switches. Without this priority, an
+  // entity open via openInSecondary would unmount BookDetailPage and lose
+  // the secondary book context.
+  const isBooksRoute = !!secondaryRoute && (secondaryRoute === "/books" || secondaryRoute.startsWith("/books/"))
+  if (isBooksRoute) {
+    return (
+      <PaneProvider pane="secondary">
+        <div className="flex flex-col h-full">
+          <div className="flex-1 min-h-0 overflow-auto">
+            <Suspense fallback={<ViewFallback />}>
+              <SecondaryViewRouter route={secondaryRoute!} />
+            </Suspense>
+          </div>
+        </div>
+      </PaneProvider>
+    )
+  }
+
   // Editor mode: a specific note/wiki is open
   if (secondaryNoteId) {
     const isNote = notes.some((n) => n.id === secondaryNoteId && !n.trashed)
@@ -402,6 +431,7 @@ function SecondaryViewRouter({ route }: { route: string }) {
 
   const content = (() => {
     if (TABLE_VIEW_ROUTES.includes(route)) return <NotesTableView />
+    if (route === "/books" || route.startsWith("/books/")) return <BooksView />
     switch (route) {
       case "/home": return <HomeView />
       case "/wiki": return <WikiView />

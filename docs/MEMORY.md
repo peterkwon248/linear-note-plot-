@@ -28,6 +28,85 @@
 
 ---
 
+## 🚀 2026-05-11 (마라톤) — 책 split view + Dual mode 폐기 + 갤러리 entity-agnostic (27 files, 9 카테고리)
+
+**범위**: 단일 worktree (`lucid-agnesi-b963f3`). 27 files (+735 / -847), 2 파일 삭제 (dual mode).
+
+### 큰 작업 요약
+
+**1. 책 UX 개선 4 fixes (이슈 2/3/4 + ←→ 단축키)**
+- 책 목차 드롭다운 (BookContextNav): kind icon (Note cyan / BookOpen violet) + status icon (StatusShapeIcon / IconWikiStub/Article) 추가
+- NoteEditor BookContextNav 우측 → 좌측 통일 (EditorBreadcrumb 옆)
+- BookWikiReader "Books > Article Title" breadcrumb 추가
+- Read mode 키보드 ←/→ 네비 (NoteEditor + BookWikiReader + SecondaryWikiArticle)
+
+**2. 책 Split View 풀 지원 (이슈 1, ~4h)**
+- SecondaryViewRouter에 /books + /books/{id} case 추가
+- BookDetailPage pane-aware refactor (readingEntityId, cleanup pane-scoped)
+- BooksView pane-aware (useActiveRoute ↔ useSecondaryRoute)
+- layout.tsx `isEditingInTableView` (book route는 layout이 split panel 렌더)
+- SecondaryPanelContent priority (books route > secondaryNoteId)
+- 5 케이스 모두 동작 (같은 책 두 페이지, 다른 책 비교, 책 list + 메타, 메타 + reading, 같은 책 note+wiki)
+
+**3. Dual mode 완전 폐기 (10 파일, Store v122 migration)**
+- ViewMode + VALID_VIEW_MODES + view-configs supportedModes 정리
+- DisplayPanel "Dual" 버튼 + isDualDisabled 로직 제거
+- use-effective-view-mode.ts + dual-list-editor.tsx 파일 삭제
+- ⌘⇧E Dual toggle 제거 (NoteEditor read/edit toggle만 유지)
+- Store v122: viewMode === "dual" → "list" (viewStateByContext + savedViews idempotent)
+
+**4. 갤러리 entity-agnostic 리디자인 (Notes + Wiki + References)**
+- v3 mockup `u-*` 클래스 폐기 → Plot 토큰 (`bg-card`, `border-border`)
+- Generic GalleryView (GalleryItem/GalleryGroup interface)
+- 3 entity adapters (Notes/Wiki/References)
+- Wiki + References supportedModes에 `"gallery"` 추가
+- 클릭 = 풀 에디터 (preview pane → openNote)
+- `.gallery-cover` CSS class (light/dark alpha 분기, `--cover-color` 변수)
+
+**5. View-engine 그룹핑 + 그룹 헤더 아이콘 통일**
+- Gallery 시간 그룹핑 폐기 → view-engine groupBy 활용 (status/label/folder/tag/family/priority)
+- 그룹 헤더 아이콘: status=StatusShapeIcon, label=color dot, folder=Folder, tag=Hash, family=Tree
+- Notes Table/Board/Gallery 모두 통일
+- 버그 fix: notes-table GroupHeaderIcon `label.toLowerCase()` → `groupKey` (NoteStatus cast bug)
+
+**6. NOTE_STATUS_COLORS stale CSS var 버그 fix**
+- 기존: `var(--chart-2)` (cyan in dark) — 다크모드에서 stone이 cyan으로 보이던 버그
+- 새: `var(--status-stone)` (#cbd5e1 slate-300 → toasted sand #e8d5a3)
+- learnings.md의 v3 phase 1 의도와 코드 불일치 해소
+
+**7. Status 색 강화 (다크 모드)**
+- Stone: gray → toasted sand (warm earthy)
+- `--status-stone` light `#c9a87c` / dark `#e8d5a3`
+- Brick `#f59e0b` (dark), Keystone `#2dd4bf` (dark)
+- 다크 캔버스에서 모든 status 가시성 강화
+
+### 큰 결정 (영구, 이번 세션)
+
+**1. Dual mode 폐기 LOCKED**: Split view + list mode + editor pane으로 충분. 중복 메커니즘 제거. v3 mockup의 결정이었지만 Plot 정체성과 충돌 — "Gentle by default" 위배. v122 migration으로 사용자 데이터 자동 fix.
+
+**2. 갤러리 = entity-agnostic generic**: GalleryItem interface로 Note/Wiki/Reference 통합. 미래 entity 추가 시 adapter만 작성. v3 mockup CSS 클래스 (`u-*`) 영구 폐기 — Plot 디자인 토큰만 사용.
+
+**3. 단일 클릭 = 풀 에디터 (Plot 표준)**: preview pane → openNote 변경. List/Board/Gallery 모두 일관.
+
+**4. Books split view 풀 지원**: 5 케이스 모두 secondary pane 인프라 활용. URL은 primary 전유, secondary는 store-driven. `_interceptForSecondary` + PaneProvider 기존 인프라가 핵심.
+
+**5. Stone 색 = toasted sand**: neutral gray(zinc)에서 자연 돌(sandstone) 색으로 변경. brick(orange)과 같은 따뜻한 군이지만 saturation 다름. keystone(teal)과 cool/warm contrast.
+
+**6. 그룹 헤더 아이콘 view 간 통일**: list/board/gallery 모두 같은 (status shape / label color / folder icon). 학습 부담 0.
+
+**7. 키보드 단축키 두 패턴 공존**: ⌘[/⌘] (modifier, Safari/Chrome 패턴) + plain ←/→ (read mode, Reader app 패턴) 모두 지원.
+
+### 기술 학습 (영구)
+
+- **NOTE_STATUS_COLORS stale CSS var bug** — `var(--chart-2)` 가리켰는데 globals.css에 `--status-stone` 별도 정의. 매핑 mismatch. 1줄 fix로 Plot 전체 stone 색 일관성 회복.
+- **`e.target` window일 때 `closest` undefined** — synthetic `window.dispatchEvent` 시 target=window. Real keyboard input은 target=focused element. Optional chain `target.closest?.()` 방어.
+- **WorkspaceEditorArea NotesTableView 전용** — split panel을 자체 처리. 다른 view (BooksView, WikiView 등)는 layout.tsx가 처리해야. `isEditingInTableView = isTableView && !!selectedNoteId`.
+- **SecondaryPanelContent priority** — secondaryNoteId 우선이면 BookDetailPage가 unmount → cleanup이 bookContext 클리어. 책 라우트(`/books*`)는 secondary route 우선 처리해야 BookDetailPage가 reading mode 자체 처리.
+- **notes-table GroupHeaderIcon label vs groupKey** — label은 display alias ("Block" for keystone), groupKey는 raw value. NoteStatus cast 시 groupKey 필수. label.toLowerCase() 패턴은 잠재 버그.
+- **CSS-aware color via color-mix + custom property** — 인라인 style은 dark variant 불가. `.gallery-cover` 클래스 + `--cover-color` 변수로 light/dark 분기. Plot 토큰 패턴 정합.
+
+---
+
 ## 🚀 2026-05-10 (마라톤) — Phase A polish + Smart Book Phase A + 책 reading flow (33 files, 9 작업 + 12 polish steps)
 
 **범위**: 단일 worktree (`distracted-heyrovsky-f06ba0`)에 누적. 33 files (+1289 / -187), 4 신규 파일.

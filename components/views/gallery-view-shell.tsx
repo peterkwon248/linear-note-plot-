@@ -16,21 +16,28 @@
  *     mockup CSS to mockup-fed components.
  */
 
-import { useEffect } from "react"
+import { useEffect, useMemo, type ReactNode } from "react"
 import { FileText } from "@phosphor-icons/react/dist/ssr/FileText"
+import { Folder as FolderIcon } from "@phosphor-icons/react/dist/ssr/Folder"
+import { Tag as TagIcon } from "@phosphor-icons/react/dist/ssr/Tag"
+import { Hash } from "@phosphor-icons/react/dist/ssr/Hash"
+import { Tree } from "@phosphor-icons/react/dist/ssr/Tree"
 import { ViewHeader } from "@/components/view-header"
 import { FilterPanel } from "@/components/filter-panel"
 import { DisplayPanel } from "@/components/display-panel"
 import { FilterChipBar } from "@/components/filter-bar"
-import { GalleryView } from "@/components/views/gallery-view"
+import { GalleryView, type GalleryGroup, type GalleryItem } from "@/components/views/gallery-view"
+import { StatusShapeIcon } from "@/components/status-icon"
 import { useNotesView } from "@/lib/view-engine/use-notes-view"
 import { useBacklinksIndex } from "@/lib/search/use-backlinks-index"
 import { useSaveViewProps } from "@/lib/view-engine/use-save-view-props"
 import { NOTES_VIEW_CONFIG } from "@/lib/view-engine/view-configs"
+import { NOTE_STATUS_HEX, SPACE_COLORS } from "@/lib/colors"
+import { shortRelative } from "@/lib/format-utils"
 import { usePlotStore } from "@/lib/store"
 import { usePendingFilters, clearPendingFilters } from "@/lib/table-route"
-import type { ViewContextKey, FilterRule } from "@/lib/view-engine/types"
-import type { ReactNode } from "react"
+import type { ViewContextKey, FilterRule, GroupBy } from "@/lib/view-engine/types"
+import type { Note, NoteStatus } from "@/lib/types"
 
 interface GalleryViewShellProps {
   context: ViewContextKey
@@ -67,7 +74,7 @@ export function GalleryViewShell({
 
   const backlinksMap = useBacklinksIndex()
   const { saveViewMode, onSaveView } = useSaveViewProps(context as any, "notes")
-  const { flatNotes, viewState, updateViewState } = useNotesView(
+  const { flatNotes, groups, viewState, updateViewState } = useNotesView(
     context,
     { backlinksMap, folderId, tagId, labelId },
   )
@@ -100,6 +107,29 @@ export function GalleryViewShell({
     value: string,
     operator?: FilterRule["operator"],
   ) => handleFilterToggleRule({ field, operator: operator ?? "eq", value })
+
+  /* ── Notes → Gallery adapter ──
+   * Honor view-engine groupBy (status/folder/label/tags/priority/parent/...)
+   * and sortFields by reusing the `groups` returned from useNotesView.
+   * When groupBy = "none" the engine returns a single synthetic group; we
+   * pass the flat items directly so the gallery renders without a header. */
+  const { galleryItems, galleryGroups } = useMemo<{
+    galleryItems?: GalleryItem[]
+    galleryGroups?: GalleryGroup[]
+  }>(() => {
+    const isUngrouped = viewState.groupBy === "none" || groups.length <= 1
+    if (isUngrouped) {
+      return { galleryItems: flatNotes.map((n) => noteToGalleryItem(n, labels, tags)) }
+    }
+    return {
+      galleryGroups: groups.map((g) => ({
+        id: g.key,
+        label: g.label,
+        icon: getGroupIcon(viewState.groupBy, g.key, labels),
+        items: g.notes.map((n) => noteToGalleryItem(n, labels, tags)),
+      })),
+    }
+  }, [viewState.groupBy, groups, flatNotes, labels, tags])
 
   /* ── Hydrate filter category values (folders / labels / tags) ── */
   const filteredCategories = NOTES_VIEW_CONFIG.filterCategories.map((cat) => {
@@ -209,12 +239,79 @@ export function GalleryViewShell({
       {/* ── Gallery body ── */}
       <div className="flex flex-1 overflow-hidden">
         <GalleryView
-          notes={flatNotes}
-          activeNoteId={activePreviewId}
-          onNoteClick={onNoteClick}
-          title={title}
+          items={galleryItems}
+          groups={galleryGroups}
+          activeId={activePreviewId}
+          onItemClick={onNoteClick}
         />
       </div>
     </main>
   )
+}
+
+/* ── Group header icon mapping ──
+ * Mirrors list/board group iconography so the gallery doesn't feel
+ * orphaned. status uses Plot's stone/brick/keystone shapes; label
+ * uses a colored dot derived from the label entity. */
+
+function getGroupIcon(
+  groupBy: GroupBy | undefined,
+  key: string,
+  labels: Array<{ id: string; name: string; color?: string | null }>,
+): ReactNode {
+  if (!groupBy || groupBy === "none") return null
+  switch (groupBy) {
+    case "status": {
+      const statusKeys: NoteStatus[] = ["stone", "brick", "keystone"]
+      if (!statusKeys.includes(key as NoteStatus)) return null
+      return <StatusShapeIcon status={key as NoteStatus} size={14} />
+    }
+    case "label": {
+      const label = labels.find((l) => l.id === key)
+      const color = label?.color || "#6b7280"
+      return <span className="h-2.5 w-2.5 rounded-full shrink-0" style={{ backgroundColor: color }} />
+    }
+    case "folder":
+      return <FolderIcon size={14} weight="regular" className="text-muted-foreground" />
+    case "tag":
+      return <Hash size={14} weight="regular" className="text-muted-foreground" />
+    case "priority":
+      return <TagIcon size={14} weight="regular" className="text-muted-foreground" />
+    case "family":
+    case "parent":
+      return <Tree size={14} weight="regular" className="text-muted-foreground" />
+    default:
+      return null
+  }
+}
+
+/* ── Notes adapter: single-note → GalleryItem ────────────────────────────
+ * Accent priority: label color → status color → notes-space fallback.
+ * Grouping is delegated to the view-engine (`useNotesView`'s `groups`),
+ * so this helper only handles per-item presentation. */
+
+function noteToGalleryItem(
+  n: Note,
+  labels: Array<{ id: string; name: string; color?: string | null }>,
+  tags: Array<{ id: string; name: string }>,
+): GalleryItem {
+  const label = n.labelId ? labels.find((l) => l.id === n.labelId) : undefined
+  const accentColor =
+    (label?.color ?? null) ||
+    NOTE_STATUS_HEX[n.status as keyof typeof NOTE_STATUS_HEX] ||
+    SPACE_COLORS.notes
+
+  const tagNames = (n.tags ?? [])
+    .map((id) => tags.find((t) => t.id === id)?.name)
+    .filter(Boolean) as string[]
+
+  return {
+    id: n.id,
+    title: n.title || "Untitled",
+    excerpt: n.summary || n.preview || "",
+    accentColor,
+    badge: label ? { label: label.name } : undefined,
+    metaLeft: tagNames,
+    metaRight: [shortRelative(n.updatedAt)],
+  }
 }

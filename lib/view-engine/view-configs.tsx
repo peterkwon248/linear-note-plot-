@@ -161,9 +161,7 @@ export const NOTES_VIEW_CONFIG: ViewConfig = {
     ]},
   ],
   displayConfig: {
-    // Phase 2: "dual" added to supportedModes — surfaces in DisplayPanel mode
-    // segmented control. Per split-mode-prd LOCKED #1, Notes are MVP target.
-    supportedModes: ["list", "board", "gallery", "dual"],
+    supportedModes: ["list", "board", "gallery"],
     orderingOptions: [
       { value: "updatedAt", label: "Updated" },
       { value: "createdAt", label: "Created" },
@@ -268,10 +266,7 @@ export const WIKI_VIEW_CONFIG: ViewConfig = {
     ]},
   ],
   displayConfig: {
-    // Phase 3 (split-mode-prd): "dual" added to supportedModes — surfaces in
-    // DisplayPanel mode segmented control. Per LOCKED #1, Wiki is MVP target
-    // (Notes Phase 2 already shipped). Books skip — LOCKED.
-    supportedModes: ["list", "board", "dual"],
+    supportedModes: ["list", "board", "gallery"],
     // Wiki has no `status` field (article/stub is heuristic, not enum), so
     // when switching to board mode from groupBy="none" fall back to
     // "label" (Category) — the canonical Wiki grouping axis.
@@ -687,9 +682,7 @@ export const REFERENCES_VIEW_CONFIG: ViewConfig = {
   ],
   quickFilters: [],
   displayConfig: {
-    // Phase 5 (split-mode-prd): "dual" added — left=ReferencesView list,
-    // right=ReferenceDetailPanel as editor. Mirrors Notes/Wiki dual wiring.
-    supportedModes: ["list", "grid", "dual"],
+    supportedModes: ["list", "grid", "gallery"],
     orderingOptions: [
       { value: "updatedAt", label: "Updated" },
       { value: "createdAt", label: "Created" },

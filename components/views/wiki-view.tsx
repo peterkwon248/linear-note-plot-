@@ -8,7 +8,8 @@ import type { WikiGroup } from "@/lib/view-engine/wiki-list-pipeline"
 import { FilterPanel } from "@/components/filter-panel"
 import { DisplayPanel } from "@/components/display-panel"
 import { WIKI_VIEW_CONFIG, WIKI_CATEGORY_VIEW_CONFIG } from "@/lib/view-engine/view-configs"
-import { WIKI_STATUS_HEX } from "@/lib/colors"
+import { WIKI_STATUS_HEX, SPACE_COLORS } from "@/lib/colors"
+import { shortRelative } from "@/lib/format-utils"
 import { useRouter } from "next/navigation"
 import {
   Popover,
@@ -65,9 +66,8 @@ import { isWikiStub } from "@/lib/wiki-utils"
 import { useSaveViewProps } from "@/lib/view-engine/use-save-view-props"
 import { useBookContextNav } from "@/hooks/use-book-context-nav"
 import { BookContextNav } from "@/components/books/book-context-nav"
-// ── Phase 3 (split-mode-prd): dual mode wiring ─────────────────────────────
-import { useEffectiveViewMode } from "@/hooks/use-effective-view-mode"
-import { DualListEditor } from "@/components/dual/dual-list-editor"
+import { GalleryView, type GalleryGroup, type GalleryItem } from "@/components/views/gallery-view"
+import type { WikiArticle, WikiCategory } from "@/lib/types"
 
 export function WikiView() {
   const notes = usePlotStore((s) => s.notes)
@@ -171,26 +171,6 @@ export function WikiView() {
       setViewState("wiki" as ViewContextKey, view.viewState as Parameters<typeof setViewState>[1])
     }
   }, [activeViewId]) // eslint-disable-line react-hooks/exhaustive-deps
-
-  // ── Phase 3 (split-mode-prd): viewport-aware effective mode + dual selection ──
-  // useEffectiveViewMode auto-falls back to "list" below 1200px (LOCKED #4) and
-  // toasts on transition. Returns the persisted mode pre-mount (SSR-safe).
-  // Mirrors NotesTableView Phase 2 pattern.
-  const effectiveWikiMode = useEffectiveViewMode("wiki" as ViewContextKey)
-  const dualSelection = usePlotStore((s) => s.dualSelection)
-  const setDualSelection = usePlotStore((s) => s.setDualSelection)
-
-  // Mid-session entity deletion cleanup (LOCKED #10): when the selected wiki
-  // article is trashed or removed while the dual editor pane is showing it,
-  // clear the selection so DefaultEmptyState shows instead of a stale editor.
-  // Mirrors notes-table-view.tsx Phase 2 cleanup hook.
-  useEffect(() => {
-    if (!dualSelection || dualSelection.kind !== "wiki") return
-    const exists = wikiArticles.some(
-      (a) => a.id === dualSelection.refId && !(a as { trashed?: boolean }).trashed
-    )
-    if (!exists) setDualSelection(null)
-  }, [wikiArticles, dualSelection, setDualSelection])
 
   // Save view button (snapshot UX) for Wiki list mode
   const { saveViewMode: wikiSaveViewMode, onSaveView: onSaveWikiView } = useSaveViewProps("wiki", "wiki")
@@ -800,15 +780,7 @@ export function WikiView() {
   const isDedicatedModePage =
     wikiViewMode === "merge" || wikiViewMode === "split" || wikiViewMode === "category"
 
-  // Phase 3 (split-mode-prd): when dual mode is active, the in-page article
-  // reader is suppressed so the list+editor split layout below renders. The
-  // editor pane shows the article via WikiArticleView keyed off
-  // dualSelection (NOT selectedWikiArticleId), letting users keep their
-  // article context while browsing the list.
-  const isDualMode =
-    effectiveWikiMode === "dual" && wikiViewState.viewMode === "dual"
-
-  if (selectedWikiArticleId && selectedWikiArticle && !isDedicatedModePage && !isDualMode) {
+  if (selectedWikiArticleId && selectedWikiArticle && !isDedicatedModePage) {
     return (
       <div className="flex flex-1 flex-col overflow-hidden">
         <ViewHeader
@@ -992,9 +964,7 @@ export function WikiView() {
   }
 
   // ── Article Reader Mode (Legacy Note-based) ──
-  // Phase 3: also short-circuited by dual mode (same rationale as
-  // selectedWikiArticleId branch above).
-  if (selectedArticleId && selectedNote && !isDualMode) {
+  if (selectedArticleId && selectedNote) {
     return (
       <div className="flex flex-1 flex-col overflow-hidden">
         <ViewHeader
@@ -1333,97 +1303,18 @@ export function WikiView() {
             }}
           />
         </div>
-      ) : isDualMode ? (
-        /* ══════════════════════════════════════════════════
-           Phase 3 (split-mode-prd) — Dual Mode
-           List on the left, WikiArticleView on the right.
-           Wiki sub-modes (merge/split/category/dashboard) already
-           short-circuited above — dual only kicks in for the regular
-           list mode. effectiveWikiMode handles narrow-viewport fallback
-           (returns "list" below 1200px even when persisted is "dual").
-           ══════════════════════════════════════════════════ */
-        <div className="u-mode flex flex-1 overflow-hidden" data-mode="dual">
-          <DualListEditor
-            storageId="dual-wiki"
-            list={
-              <WikiList
-                filteredWikiNotes={filteredWikiNotes}
-                sortedFilteredWikiNotes={sortedFilteredWikiNotes}
-                backlinkCounts={backlinkCounts}
-                dashFilter={dashFilter}
-                setDashFilter={setDashFilter}
-                showAllArticles={showAllArticles}
-                setShowAllArticles={setShowAllArticles}
-                categoryFilterLabel={categoryFilterTagId ? wikiCategories.find(c => c.id === categoryFilterTagId)?.name ?? null : null}
-                onClearCategoryFilter={() => setWikiCategoryFilter(null)}
-                // Phase 3: row click sets dualSelection instead of opening
-                // the full article view. Mirrors Phase 2 NotesTable wiring.
-                onOpenArticle={(id) => setDualSelection({ kind: "wiki", refId: id })}
-                onMergeArticle={(sourceId) => setWikiMergeSourceId(sourceId)}
-                onSplitArticle={(id) => {
-                  setSelectedWikiArticleId(id)
-                  setIsEditingWikiArticle(true)
-                }}
-                onDeleteArticle={(id) => {
-                  deleteWikiArticle(id)
-                  toast.success("Article deleted")
-                }}
-                onShowConnectedArticle={(id, direction) => {
-                  const existingFilters = wikiViewState.filters ?? []
-                  const otherRules = existingFilters.filter((r) => r.field !== "connectedTo")
-                  updateWikiViewState({
-                    filters: [
-                      ...otherRules,
-                      { field: "connectedTo", operator: "eq", value: `${id}:${direction}` },
-                    ],
-                  })
-                  const article = wikiArticles.find((a) => a.id === id)
-                  const dirLabel =
-                    direction === "in" ? "backlinks" :
-                    direction === "out" ? "links out" :
-                    "both directions"
-                  toast(`Filtering: connected to "${article?.title ?? "article"}" (${dirLabel})`)
-                }}
-                redLinks={redLinks}
-                onCreateFromRedLink={handleCreateFromRedLink}
-                selectedIds={selectedArticleIds}
-                onSelect={(id, opts) => handleArticleSelect(id, opts)}
-                onSelectAll={handleArticleSelectAll}
-                stubCount={stubCount}
-                wikiArticles={wikiArticles}
-                visibleColumns={wikiViewState.visibleColumns}
-                wikiCategories={wikiCategories}
-                wikiGroups={wikiGroups}
-                groupBy={wikiViewState.groupBy}
-                dualMode
-                activeArticleId={
-                  dualSelection?.kind === "wiki" ? dualSelection.refId : null
-                }
-              />
-            }
-            editor={
-              dualSelection?.kind === "wiki" ? (
-                <div className="flex h-full flex-col overflow-hidden">
-                  <WikiArticleView
-                    articleId={dualSelection.refId}
-                    editable
-                    onDelete={() => {
-                      deleteWikiArticle(dualSelection.refId)
-                      setDualSelection(null)
-                      toast.success("Article deleted")
-                    }}
-                  />
-                </div>
-              ) : null
-            }
-          />
-        </div>
       ) : (
         /* ══════════════════════════════════════════════════
            List Mode (table-list view)
            ══════════════════════════════════════════════════ */
         <div className="flex flex-1 overflow-hidden">
-          {wikiViewState.viewMode === "board" ? (
+          {wikiViewState.viewMode === "gallery" ? (
+            <GalleryView
+              groups={buildWikiGalleryGroups(sortedFilteredWikiNotes, wikiCategories)}
+              activeId={selectedWikiArticleId}
+              onItemClick={openArticle}
+            />
+          ) : wikiViewState.viewMode === "board" ? (
             <WikiBoard
               groups={wikiGroups}
               groupBy={wikiViewState.groupBy}
@@ -1595,4 +1486,56 @@ function WikiPickerChevron({ currentArticleId, onSelect }: { currentArticleId: s
       </PopoverContent>
     </Popover>
   )
+}
+
+/* ── Wiki gallery adapter: groups articles by status (Article / Stub) ──── */
+
+function buildWikiGalleryGroups(
+  articles: WikiArticle[],
+  categories: WikiCategory[],
+): GalleryGroup[] {
+  const categoryById = new Map(categories.map((c) => [c.id, c]))
+  const articlesBucket: GalleryItem[] = []
+  const stubsBucket: GalleryItem[] = []
+
+  for (const a of articles) {
+    const stub = isWikiStub(a)
+    const firstCategory = a.categoryIds?.[0] ? categoryById.get(a.categoryIds[0]) : undefined
+    const categoryColor = firstCategory?.color ?? null
+    // Accent priority: category color → wiki status hex → wiki space color.
+    const accentColor =
+      categoryColor ||
+      (stub ? WIKI_STATUS_HEX.stub : WIKI_STATUS_HEX.article) ||
+      SPACE_COLORS.wiki
+
+    // Find first image block as cover (optional).
+    const firstImageBlock = a.blocks.find((b) => b.type === "image") as { url?: string } | undefined
+    const coverImage = firstImageBlock?.url
+
+    // Excerpt: first text block.
+    const firstTextBlock = a.blocks.find((b) => b.type === "text") as { text?: string } | undefined
+    const excerpt = (firstTextBlock?.text ?? "").slice(0, 200)
+
+    const categoryNames = (a.categoryIds ?? [])
+      .map((id) => categoryById.get(id)?.name)
+      .filter(Boolean) as string[]
+
+    const item: GalleryItem = {
+      id: a.id,
+      title: a.title || "Untitled",
+      excerpt,
+      accentColor,
+      coverImage,
+      badge: { label: stub ? "Stub" : "Article" },
+      metaLeft: categoryNames,
+      metaRight: [`${a.blocks.length} block${a.blocks.length === 1 ? "" : "s"}`, shortRelative(a.updatedAt)],
+    }
+    if (stub) stubsBucket.push(item)
+    else articlesBucket.push(item)
+  }
+
+  return [
+    { id: "articles", label: "Articles", items: articlesBucket },
+    { id: "stubs", label: "Stubs", items: stubsBucket },
+  ].filter((g) => g.items.length > 0)
 }

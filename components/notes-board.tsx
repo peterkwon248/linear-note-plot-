@@ -28,6 +28,11 @@ import { Tray as InboxIcon } from "@phosphor-icons/react/dist/ssr/Tray"
 import { Clock as PhClock } from "@phosphor-icons/react/dist/ssr/Clock"
 import { Bell } from "@phosphor-icons/react/dist/ssr/Bell"
 import { FolderOpen } from "@phosphor-icons/react/dist/ssr/FolderOpen"
+import { Folder as FolderIcon } from "@phosphor-icons/react/dist/ssr/Folder"
+import { Hash } from "@phosphor-icons/react/dist/ssr/Hash"
+import { Tree } from "@phosphor-icons/react/dist/ssr/Tree"
+import { Tag as TagIcon } from "@phosphor-icons/react/dist/ssr/Tag"
+import { StatusShapeIcon } from "@/components/status-icon"
 import type { DragEndEvent, DragStartEvent } from "@dnd-kit/core"
 import { SortableContext, horizontalListSortingStrategy, arrayMove, useSortable } from "@dnd-kit/sortable"
 import { CSS } from "@dnd-kit/utilities"
@@ -210,6 +215,31 @@ function BoardColumn({
     opacity: isDragging ? 0.5 : 1,
   }
 
+  // Group header icon — mirrors list/gallery iconography. Status keys use
+  // Plot's stone/brick/keystone shapes; folder/tag/family use Phosphor
+  // line icons; everything else falls back to the colored dot below.
+  const headerIcon = useMemo(() => {
+    if (groupBy === "status") {
+      const statusKeys: NoteStatus[] = ["stone", "brick", "keystone"]
+      if (statusKeys.includes(group.key as NoteStatus)) {
+        return <StatusShapeIcon status={group.key as NoteStatus} size={14} />
+      }
+    }
+    if (groupBy === "folder") {
+      return <FolderIcon size={14} weight="regular" className="text-muted-foreground" />
+    }
+    if (groupBy === "tag") {
+      return <Hash size={14} weight="regular" className="text-muted-foreground" />
+    }
+    if (groupBy === "family" || groupBy === "parent") {
+      return <Tree size={14} weight="regular" className="text-muted-foreground" />
+    }
+    if (groupBy === "priority") {
+      return <TagIcon size={14} weight="regular" className="text-muted-foreground" />
+    }
+    return null
+  }, [groupBy, group.key])
+
   const headerColor = useMemo(() => {
     if (groupBy === "status") {
       const cfg = STATUS_CONFIG[group.key as NoteStatus]
@@ -254,9 +284,11 @@ function BoardColumn({
         {...attributes}
         {...listeners}
       >
-        {headerColor && (
+        {headerIcon ? (
+          <span className="flex shrink-0 items-center">{headerIcon}</span>
+        ) : headerColor ? (
           <div className="h-2 w-2 rounded-full" style={{ backgroundColor: headerColor.color }} />
-        )}
+        ) : null}
         <span className="text-note font-semibold text-foreground">{group.label}</span>
         <span className="text-2xs text-muted-foreground">{group.notes.length}</span>
       </div>

@@ -7,7 +7,7 @@ import { usePlotStore } from "@/lib/store"
 import { isEditableTarget } from "@/lib/keyboard-utils"
 import { popUndo, popRedo } from "@/lib/undo-manager"
 import { setActiveRoute, routeGoBack, getActiveRoute } from "@/lib/table-route"
-import type { ViewContextKey, ViewMode } from "@/lib/view-engine/types"
+import type { ViewContextKey } from "@/lib/view-engine/types"
 
 /**
  * Resolve the ViewContextKey for the active route — used by ⌘⇧E (dual mode toggle).
@@ -184,40 +184,6 @@ export function useGlobalShortcuts() {
         }
         const s = usePlotStore.getState()
         s.setActivitybarCollapsed(!s.activitybarCollapsed)
-        return
-      }
-
-      // ── 2b-3. Ctrl/Cmd+Shift+E — toggle dual mode (split-mode-prd LOCKED #2) ──
-      // Toggles current viewState.viewMode between "dual" and a previous mode.
-      // - When current === "dual": revert to "list" (safe default).
-      // - When current !== "dual": switch to "dual" (caller can store previous
-      //   mode internally if it wants to restore on the next toggle).
-      // Conflict-checked: ⌘⇧A actbar / ⌘⇧F sidebar / ⌘B detail / ⌘\ split-pane
-      // — no overlap with E. (PRD §5.)
-      if (
-        (e.key === "e" || e.key === "E") &&
-        e.shiftKey &&
-        (e.metaKey || e.ctrlKey)
-      ) {
-        if (isEditableTarget(target)) return
-        if (
-          target.closest("[role='dialog']") ||
-          target.closest("[data-radix-popper-content-wrapper]")
-        ) {
-          return
-        }
-        e.preventDefault()
-        const s = usePlotStore.getState()
-        // PRD §LOCKED #9: dual mode is primary-pane only. Secondary focus → no-op
-        // with hint so the user knows the toggle isn't lost on the wrong pane.
-        if (s.activePane === "secondary") {
-          toast("Dual mode is primary pane only", { duration: 2500 })
-          return
-        }
-        const ctx = inferActiveContextKey()
-        const current = (s.viewStateByContext[ctx]?.viewMode ?? "list") as ViewMode
-        const next: ViewMode = current === "dual" ? "list" : "dual"
-        s.setViewState(ctx, { viewMode: next })
         return
       }
 

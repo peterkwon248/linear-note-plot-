@@ -99,10 +99,14 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const hasSplit = !!secondaryNoteId || !!secondarySpace
   // Editor split: WorkspaceEditorArea handles the split internally
   // View split: layout.tsx renders SecondaryPanelContent as a sibling panel
-  const isEditing = !!selectedNoteId
-  // View-mode split: layout.tsx renders Panel 2 only when NOT editing.
-  // When editing, WorkspaceEditorArea (inside NotesTableView) handles the split internally.
-  const hasViewSplit = !isEditing && hasSplit
+  // WorkspaceEditorArea is mounted ONLY inside NotesTableView. For book
+  // reading (BooksView → BookDetailPage → NoteEditor inline), layout must
+  // render the secondary panel itself. Same for any other view that opens
+  // an entity inline without delegating to WorkspaceEditorArea.
+  const isEditingInTableView = isTableView && !!selectedNoteId
+  // View-mode split: layout.tsx renders Panel 2 unless the editor-split
+  // path inside NotesTableView is already handling it.
+  const hasViewSplit = !isEditingInTableView && hasSplit
   const activePane = usePlotStore((s) => s.activePane)
   const primarySidePanelVisible = sidePanelOpen && (sidePanelMode === 'detail' || sidePanelMode === 'connections' || sidePanelMode === 'activity' || sidePanelMode === 'bookmarks')
   // Show side panel when it's open

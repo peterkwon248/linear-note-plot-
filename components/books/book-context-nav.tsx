@@ -29,9 +29,15 @@ import { CaretDown } from "@phosphor-icons/react/dist/ssr/CaretDown"
 import { Books } from "@phosphor-icons/react/dist/ssr/Books"
 import { Check } from "@phosphor-icons/react/dist/ssr/Check"
 import { Sparkle } from "@phosphor-icons/react/dist/ssr/Sparkle"
+import { Note } from "@phosphor-icons/react/dist/ssr/Note"
+import { BookOpen } from "@phosphor-icons/react/dist/ssr/BookOpen"
 import { usePlotStore } from "@/lib/store"
 import { setActiveRoute } from "@/lib/table-route"
+import { KNOWLEDGE_INDEX_COLORS, WIKI_STATUS_HEX } from "@/lib/colors"
 import { cn } from "@/lib/utils"
+import { StatusShapeIcon } from "@/components/status-icon"
+import { IconWikiStub, IconWikiArticle } from "@/components/plot-icons"
+import { isWikiStub } from "@/lib/wiki-utils"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -86,13 +92,6 @@ export function BookContextNav({
     router.push(route)
   }
 
-  const resolveTitle = (item: ResolvedContentBookItem): string => {
-    if (item.kind === "note") {
-      return notes.find((n) => n.id === item.refId)?.title || "Untitled"
-    }
-    return wikiArticles.find((w) => w.id === item.refId)?.title || "Untitled"
-  }
-
   // TOC dropdown is only available when the parent supplied items + jumpTo.
   // Otherwise the breadcrumb behaves like the old "Back to book" link.
   const tocAvailable = !!items && items.length > 0 && !!onJumpTo
@@ -125,7 +124,18 @@ export function BookContextNav({
               {items!.map((item, idx) => {
                 const isActive = idx === itemIndex
                 const isAuto = item.source === "auto"
-                const title = resolveTitle(item)
+                const note = item.kind === "note"
+                  ? notes.find((n) => n.id === item.refId)
+                  : null
+                const article = item.kind === "wiki"
+                  ? wikiArticles.find((w) => w.id === item.refId)
+                  : null
+                const title = note?.title || article?.title || "Untitled"
+                const KindIcon = item.kind === "note" ? Note : BookOpen
+                const kindColor = item.kind === "note"
+                  ? KNOWLEDGE_INDEX_COLORS.notes.text
+                  : KNOWLEDGE_INDEX_COLORS.wiki.text
+                const kindLabel = item.kind === "note" ? "Note" : "Wiki article"
                 return (
                   <DropdownMenuItem
                     key={item.id}
@@ -138,6 +148,31 @@ export function BookContextNav({
                     <span className="flex h-4 w-5 shrink-0 items-center justify-center text-2xs tabular-nums text-muted-foreground/60">
                       {isActive ? <Check size={11} weight="bold" className="text-accent" /> : idx + 1}
                     </span>
+                    <KindIcon
+                      size={13}
+                      weight="regular"
+                      aria-label={kindLabel}
+                      className={cn("shrink-0", kindColor)}
+                    />
+                    {note ? (
+                      <StatusShapeIcon status={note.status} size={13} />
+                    ) : article ? (
+                      isWikiStub(article) ? (
+                        <IconWikiStub
+                          size={13}
+                          aria-label="Stub"
+                          style={{ color: WIKI_STATUS_HEX.stub }}
+                          className="shrink-0"
+                        />
+                      ) : (
+                        <IconWikiArticle
+                          size={13}
+                          aria-label="Article"
+                          style={{ color: WIKI_STATUS_HEX.article }}
+                          className="shrink-0"
+                        />
+                      )
+                    ) : null}
                     <span className={cn("flex-1 truncate", isAuto && "text-foreground/70")}>
                       {title}
                     </span>

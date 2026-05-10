@@ -29,7 +29,7 @@
   --space-books:    #be123c;
 
   /* v3 Note status (Q3 = v3 desaturated) */
-  --status-stone:    #6B7280;
+  --status-stone:    #c9a87c;  /* toasted sand — warm earthy stone tone */
   --status-brick:    #D97706;
   --status-keystone: #0E9384;
 
@@ -205,6 +205,13 @@
   /* v3 Wiki status (dark) — mirrors lib/colors.ts WIKI_STATUS_HEX dark variant */
   --wiki-stub:    #fb923c;
   --wiki-article: #34d399;
+
+  /* v3 Note status (dark) — stone uses warm sand (sandstone tone) so the
+     icon reads against the charcoal canvas with a natural earthy hue
+     distinct from the brick/keystone palette. */
+  --status-stone:    #e8d5a3;  /* toasted sand — saturated beige (light: #c9a87c) */
+  --status-brick:    #f59e0b;  /* amber-500 */
+  --status-keystone: #2dd4bf;  /* teal-400  */
 
   /* v3 Shadow (dark) */
   --shadow-sm: 0 1px 2px rgba(0,0,0,0.30);
@@ -1300,6 +1307,24 @@
 /* Per-mode body backgrounds (so each mode keeps its identity) */
 .u-mode[data-mode="gallery"] { background: var(--gallery-bg, #f3eee2); }
 .dark .u-mode[data-mode="gallery"] { background: #1a1814; }
+
+/* Gallery cover band — accent gradient driven by `--cover-color` set on the
+   element. Light mode uses lower alpha so cards stay calm against the white
+   canvas; dark mode bumps the alpha so the gradient reads on a black canvas. */
+.gallery-cover {
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--cover-color, #5e6ad2) 75%, transparent) 0%,
+    var(--cover-color, #5e6ad2) 100%
+  );
+}
+.dark .gallery-cover {
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--cover-color, #5e6ad2) 50%, transparent) 0%,
+    color-mix(in srgb, var(--cover-color, #5e6ad2) 85%, transparent) 100%
+  );
+}
 
 /* ─── GALLERY MODE — Atelier cards on warm canvas ────────────── */
 .u-gallery {

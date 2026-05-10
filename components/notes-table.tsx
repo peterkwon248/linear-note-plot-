@@ -1634,7 +1634,10 @@ function GroupHeaderIcon({ groupBy, groupKey, label, folders, labels }: {
 }) {
   switch (groupBy) {
     case "status":
-      return <StatusShapeIcon status={label.toLowerCase() as NoteStatus} size={16} />
+      // Use groupKey (raw status value: "stone"/"brick"/"keystone") instead
+      // of label — labels are display aliases (e.g. "Block" for keystone)
+      // and would miss NOTE_STATUS_COLORS, falling back to currentColor.
+      return <StatusShapeIcon status={groupKey as NoteStatus} size={16} />
     case "folder":
       return <FolderOpen className="text-muted-foreground" size={16} weight="regular" />
     case "label": {

@@ -1,5 +1,101 @@
 # Architectural Decisions
 
+## 2026-05-11 — Dual mode 폐기 + 갤러리 entity-agnostic + 책 split view
+
+### Dual mode 영구 폐기 (LOCKED)
+
+**결정**: ViewMode union에서 "dual" 영구 제거. Store v122 migration으로 사용자 데이터 자동 fix.
+
+**이유**:
+- Split view (⌘\)로 list + editor 분할 가능 — 같은 기능
+- Dual mode는 view 내부 split, Split view는 entity 간 split — 사용자에게 차이 모호
+- Plot 모토 "Gentle by default, powerful when needed" 위배 — 중복 메커니즘
+- v3 mockup의 결정사항이었지만 Plot 정체성과 충돌
+
+**영향**:
+- DisplayPanel "Dual" 버튼 제거
+- ⌘⇧E Dual toggle 폐기 (NoteEditor read/edit toggle만 유지)
+- 10 파일 정리 (2 파일 삭제)
+- Store v122 (idempotent migration)
+
+### 갤러리 = entity-agnostic generic (LOCKED)
+
+**결정**: GalleryItem/GalleryGroup interface로 모든 entity 갤러리 통합. v3 mockup `u-*` CSS 클래스 영구 폐기.
+
+**이유**:
+- v3 mockup CSS는 노트 전용 hardcoded — Wiki/References 확장 시 코드 중복
+- Plot 디자인 토큰 (`bg-card`, `border-border`, `accent`) 사용해야 light/dark 일관
+- 미래 entity 추가 시 adapter 함수만 작성하면 됨
+
+**Adapter 패턴**:
+- `buildNotesGalleryGroups` — label/status 색 + view-engine groupBy 활용
+- `buildWikiGalleryGroups` — category 색 + article/stub 분류
+- `buildReferencesGalleryItems` — KNOWLEDGE_INDEX_COLORS.references
+
+### Cover band 디자인 (LOCKED)
+
+**결정**: `.gallery-cover` CSS class + `--cover-color` 변수. Light/dark mode 다른 alpha.
+
+**Light**: 75% → 100% (linear gradient, 끝이 pure color)
+**Dark**: 50% → 85% (transparent fade)
+
+**이유**: 라이트 캔버스(white)에 carpe diem cover는 더 saturated 필요. 다크 캔버스(black)에는 발광 효과로 alpha 줄여도 부각.
+
+### 책 Split View 풀 지원 (LOCKED)
+
+**결정**: 책 자체를 secondary pane에 mount 가능. 5 케이스 모두 지원 (같은 책 두 페이지 / 다른 책 비교 / 책 list + 메타 / 메타 + reading / 같은 책 note+wiki).
+
+**구현**:
+- SecondaryViewRouter에 `/books` + `/books/{id}` case
+- BookDetailPage pane-aware (readingEntityId = primary ? selectedNoteId : secondaryNoteId)
+- BooksView pane-aware (useActiveRoute ↔ useSecondaryRoute)
+- layout.tsx `isEditingInTableView` (book route는 layout이 split panel 렌더)
+- SecondaryPanelContent priority (books route > secondaryNoteId)
+
+**메타포**: 책장에서 책 두 권 펼치기. Plot의 4사분면 마지막 자리(ordered cross-entity sequence)인 Books가 1급 시민이 됨.
+
+### 단일 클릭 = 풀 에디터 (Plot 표준)
+
+**결정**: 갤러리 카드 클릭 → openNote (풀 에디터). preview pane 패턴 폐기.
+
+**이유**: list/board와 동일 패턴. 사용자가 카드 클릭 시 "보고 싶다" 의도가 강함 — preview는 부족, 풀 에디터가 직관.
+
+### Stone 색 = toasted sand (warm earthy)
+
+**결정**: `--status-stone` 라이트 `#c9a87c` / 다크 `#e8d5a3`.
+
+**이유**:
+- Neutral gray (#a1a1aa zinc)는 다크 캔버스에 묻힘
+- Stone 메타포 정합 (sandstone, 자연 돌의 따뜻한 색)
+- brick(orange)과 같은 따뜻한 군이지만 saturation 다름 — stone(raw) → brick(in progress) → keystone(settled) 진행 메타포
+- keystone(teal)과 cool/warm contrast로 distinct
+
+### 그룹 헤더 아이콘 view 간 통일
+
+**결정**: list/board/gallery 모두 같은 아이콘 패턴.
+
+**매핑**:
+- status: StatusShapeIcon (Hexagon/Cube/Cuboid2x2)
+- label: color dot (label.color)
+- folder: Folder icon
+- tag: Hash icon
+- family/parent: Tree icon
+- priority: Tag icon
+- default: dot 또는 null
+
+**이유**: 학습 부담 0. view 종류 변경해도 같은 아이콘으로 status 인지.
+
+### 키보드 단축키 두 패턴 공존
+
+**결정**: ⌘[ ⌘] (modifier, 모든 mode) + ←/→ (read mode 전용) 모두 지원.
+
+**이유**:
+- ⌘[ ⌘] = macOS Safari/Chrome 패턴, 익숙한 사용자 보존
+- ←/→ = Reader app 표준 (Kindle, Apple Books, Notion)
+- 두 패턴이 서로 다른 모드(edit/read)에서 활성 — 충돌 X
+
+---
+
 ## 2026-05-09 (마라톤) — Book entity + Dual mode + Filter Path A 완성
 
 ### Book = cross-entity ordered sequence (4사분면 마지막 자리)
