@@ -55,6 +55,7 @@ import {
   sortableKeyboardCoordinates,
 } from "@dnd-kit/sortable"
 import { Books } from "@phosphor-icons/react/dist/ssr/Books"
+import { IconChevronRight } from "@/components/plot-icons"
 import { ArrowLeft } from "@phosphor-icons/react/dist/ssr/ArrowLeft"
 import { Play } from "@phosphor-icons/react/dist/ssr/Play"
 import { Plus as PhPlus } from "@phosphor-icons/react/dist/ssr/Plus"
@@ -93,6 +94,10 @@ export function BookDetailPage({ bookId }: BookDetailPageProps) {
   const folders = usePlotStore((s) => s.folders)
   const wikiArticles = usePlotStore((s) => s.wikiArticles)
   const selectedNoteId = usePlotStore((s) => s.selectedNoteId)
+  const secondaryNoteId = usePlotStore((s) => s.secondaryNoteId)
+  // Reading mode entity id is pane-scoped — primary uses selectedNoteId,
+  // secondary uses secondaryNoteId.
+  const readingEntityId = pane === "primary" ? selectedNoteId : secondaryNoteId
 
   const book = books.find((b) => b.id === bookId)
 
@@ -104,34 +109,40 @@ export function BookDetailPage({ bookId }: BookDetailPageProps) {
   const [addOpen, setAddOpen] = useState(false)
   const [addInitialTab, setAddInitialTab] = useState<"notes" | "wiki">("notes")
 
-  // Books reading view = full-width single-column layout. Force-close the
-  // side panel on entry so the reading viewport is wide. The wiki article
-  // already has its own infobox/categories chrome inside the body — the
-  // store-level SmartSidePanel would just narrow things further.
-  // Sync sidePanelContext anyway, so if the user re-opens the panel via
-  // ⌘B it reflects the currently visible note/wiki.
+  // Books reading view (primary pane) = full-width single-column layout.
+  // Force-close the side panel on entry so the reading viewport is wide.
+  // The wiki article already has its own infobox/categories chrome inside
+  // the body — the store-level SmartSidePanel would just narrow things
+  // further. Sync sidePanelContext anyway, so if the user re-opens the
+  // panel via ⌘B it reflects the currently visible note/wiki.
+  // Secondary pane has its own panel chrome — we don't touch global
+  // sidePanel state from here.
   useEffect(() => {
-    if (selectedNoteId && pane === "primary") {
-      const isWiki = wikiArticles.some((w) => w.id === selectedNoteId)
+    if (readingEntityId && pane === "primary") {
+      const isWiki = wikiArticles.some((w) => w.id === readingEntityId)
       usePlotStore.setState({ sidePanelOpen: false })
       usePlotStore.getState().setSidePanelContext({
         type: isWiki ? "wiki" : "note",
-        id: selectedNoteId,
+        id: readingEntityId,
       })
     }
-  }, [selectedNoteId, pane, wikiArticles])
+  }, [readingEntityId, pane, wikiArticles])
 
   // Cleanup on unmount — when the user leaves /books/{id} (sidebar nav,
   // back, etc.), clear the book reading state so other views (NotesView
   // editor) don't keep showing the book's BookContextNav for whatever
-  // entity happens to be selected.
+  // entity happens to be selected. Pane-scoped — primary clears
+  // selectedNoteId; secondary's secondaryNoteId is managed by the
+  // parent SecondaryPanelContent (closeSecondary on panel close, etc.).
   useEffect(() => {
     return () => {
       const s = usePlotStore.getState()
-      s.setBookContext("primary", null)
-      s.setSelectedNoteId(null)
+      s.setBookContext(pane, null)
+      if (pane === "primary") {
+        s.setSelectedNoteId(null)
+      }
     }
-  }, [])
+  }, [pane])
 
   // Title inline edit
   const [editingTitle, setEditingTitle] = useState(false)
@@ -299,22 +310,21 @@ export function BookDetailPage({ bookId }: BookDetailPageProps) {
 
   // Step 2.10b/2.11: Reading mode — when an entity (note or wiki) is
   // opened from this book context, mount the corresponding view in place
-  // of the BookDetailPage UI. URL stays on /books/{id}; clicking the
-  // breadcrumb "Back to {book.title}" inside BookContextNav clears
-  // selectedNoteId and returns to the book overview. Default to read
-  // mode (not edit) — Books reading flow.
-  if (selectedNoteId && pane === "primary") {
-    const isWikiEntity = wikiArticles.some((w) => w.id === selectedNoteId)
+  // of the BookDetailPage UI. URL stays on /books/{id} for primary; the
+  // secondary pane is store-driven (no URL). Pane-aware — primary uses
+  // selectedNoteId, secondary uses secondaryNoteId.
+  if (readingEntityId) {
+    const isWikiEntity = wikiArticles.some((w) => w.id === readingEntityId)
     if (isWikiEntity) {
       return (
         <BookWikiReader
-          articleId={selectedNoteId}
+          articleId={readingEntityId}
           bookId={book.id}
           bookTitle={book.title || "Untitled book"}
         />
       )
     }
-    return <NoteEditor noteId={selectedNoteId} pane="primary" defaultReadMode />
+    return <NoteEditor noteId={readingEntityId} pane={pane} defaultReadMode />
   }
 
   const commitTitle = () => {
@@ -607,11 +617,17 @@ function BookWikiReader({
   bookId: string
   bookTitle: string
 }) {
+  const router = useRouter()
   const wikiBookNav = useBookContextNav("wiki", articleId)
   const setSelectedNoteId = usePlotStore((s) => s.setSelectedNoteId)
   const wikiArticles = usePlotStore((s) => s.wikiArticles)
   const updateWikiArticle = usePlotStore((s) => s.updateWikiArticle)
   const article = wikiArticles.find((a) => a.id === articleId)
+
+  const handleNavigateToBooks = () => {
+    setActiveRoute("/books")
+    router.push("/books")
+  }
 
   // Step 2.21: full wiki chrome (Aa / collapse / layout / Edit) so the
   // book reading experience matches the standalone wiki view header.
@@ -625,24 +641,67 @@ function BookWikiReader({
     setIsEditing(false)
   }, [articleId])
 
+  // Read-mode book navigation: ⌘[ / ⌘] (modifier) and plain ←/→ (read mode
+  // only, when not editing). Skips chapter-headings.
+  useEffect(() => {
+    if (!wikiBookNav.active) return
+    const handler = (e: KeyboardEvent) => {
+      const mod = e.metaKey || e.ctrlKey
+      const target = e.target as HTMLElement | null
+      const inEditableField = !!(target && (
+        target.tagName === "INPUT" ||
+        target.tagName === "TEXTAREA" ||
+        target.closest?.('[contenteditable="true"]')
+      ))
+      if (mod && (e.key === "[" || e.key === "]")) {
+        if (inEditableField) return
+        e.preventDefault()
+        if (e.key === "[") wikiBookNav.goPrev()
+        else wikiBookNav.goNext()
+        return
+      }
+      if (!isEditing && (e.key === "ArrowLeft" || e.key === "ArrowRight")) {
+        if (inEditableField) return
+        if (document.querySelector('[data-radix-popper-content-wrapper]')) return
+        e.preventDefault()
+        if (e.key === "ArrowLeft") wikiBookNav.goPrev()
+        else wikiBookNav.goNext()
+      }
+    }
+    window.addEventListener("keydown", handler)
+    return () => window.removeEventListener("keydown", handler)
+  }, [wikiBookNav.active, wikiBookNav.goPrev, wikiBookNav.goNext, isEditing])
+
   return (
     <div data-editor-scope="wiki" className="flex h-full w-full flex-1 flex-col">
       <header className="flex h-(--header-height) shrink-0 items-center gap-2 border-b border-border px-4">
         <PanelsMenu />
-        <div className="flex flex-1 items-center justify-between min-w-0">
-          {wikiBookNav.active ? (
-            <BookContextNav
-              bookId={wikiBookNav.active.bookId}
-              itemIndex={wikiBookNav.active.itemIndex}
-              total={wikiBookNav.active.total}
-              onPrev={wikiBookNav.goPrev}
-              onNext={wikiBookNav.goNext}
-              onJumpTo={wikiBookNav.jumpTo}
-              items={wikiBookNav.items}
-            />
-          ) : (
-            <span className="text-note text-muted-foreground truncate">{bookTitle}</span>
-          )}
+        <div className="flex flex-1 items-center justify-between gap-2 min-w-0">
+          <nav className="flex items-center gap-1 min-w-0">
+            <button
+              onClick={handleNavigateToBooks}
+              className="shrink-0 text-lg text-muted-foreground transition-colors hover:text-foreground cursor-pointer"
+            >
+              Books
+            </button>
+            <IconChevronRight size={16} className="shrink-0 text-muted-foreground/70" />
+            <span className="min-w-0 truncate text-lg font-medium text-foreground">
+              {article?.title || "Untitled"}
+            </span>
+            {wikiBookNav.active && (
+              <div className="hidden md:flex shrink-0 ml-2">
+                <BookContextNav
+                  bookId={wikiBookNav.active.bookId}
+                  itemIndex={wikiBookNav.active.itemIndex}
+                  total={wikiBookNav.active.total}
+                  onPrev={wikiBookNav.goPrev}
+                  onNext={wikiBookNav.goNext}
+                  onJumpTo={wikiBookNav.jumpTo}
+                  items={wikiBookNav.items}
+                />
+              </div>
+            )}
+          </nav>
           <div className="flex items-center gap-1">
             {/* Aa font size popover */}
             {article && (
@@ -707,14 +766,14 @@ function BookWikiReader({
             {isEditing ? (
               <button
                 onClick={() => setIsEditing(false)}
-                className="flex items-center gap-1 rounded-md bg-emerald-600 px-2 py-1 text-xs font-medium text-white transition-colors hover:bg-emerald-700"
+                className="flex items-center gap-1.5 rounded-md bg-emerald-600 px-2.5 py-1 text-note font-medium text-white transition-colors duration-150 hover:bg-emerald-700"
               >
                 Done
               </button>
             ) : (
               <button
                 onClick={() => setIsEditing(true)}
-                className="flex items-center gap-1 rounded-md bg-accent px-2 py-1 text-xs font-medium text-accent-foreground transition-colors hover:bg-accent/90"
+                className="flex items-center gap-1.5 rounded-md bg-accent px-2.5 py-1 text-note font-medium text-accent-foreground transition-colors duration-150 hover:bg-accent/90"
               >
                 Edit
               </button>

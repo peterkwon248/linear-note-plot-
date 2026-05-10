@@ -7,7 +7,6 @@ import { List } from "@phosphor-icons/react/dist/ssr/List"
 import { Kanban } from "@phosphor-icons/react/dist/ssr/Kanban"
 import { GridFour } from "@phosphor-icons/react/dist/ssr/GridFour"
 import { Images } from "@phosphor-icons/react/dist/ssr/Images"
-import { Columns } from "@phosphor-icons/react/dist/ssr/Columns"
 import { Graph } from "@phosphor-icons/react/dist/ssr/Graph"
 import { ChartLine } from "@phosphor-icons/react/dist/ssr/ChartLine"
 import { SortAscending } from "@phosphor-icons/react/dist/ssr/SortAscending"
@@ -16,7 +15,6 @@ import { Plus as PhPlus } from "@phosphor-icons/react/dist/ssr/Plus"
 import { X as PhX } from "@phosphor-icons/react/dist/ssr/X"
 import { ToggleSwitch } from "@/components/ui/toggle-switch"
 import { ChipDropdown } from "@/components/ui/chip-dropdown"
-import { usePane } from "@/components/workspace/pane-context"
 // Single source of truth — declared in the view-engine layer, re-exported here
 // for back-compat with any consumer that imports DisplayConfig from this module.
 import type { DisplayConfig, DisplayToggle, DisplayProperty } from "@/lib/view-engine/view-configs"
@@ -64,10 +62,6 @@ const MODE_DEFS: { mode: ViewMode; icon: ReactNode; label: string }[] = [
   { mode: "list",     icon: <List size={14} weight="regular" />,     label: "List" },
   { mode: "board",    icon: <Kanban size={14} weight="regular" />,   label: "Board" },
   { mode: "gallery",  icon: <Images size={14} weight="regular" />,   label: "Gallery" },
-  // Phase 2: "Dual" entry. Phosphor `Columns` icon — two vertical panes.
-  // Surfaces alongside other view-mode buttons; gated by per-context
-  // supportedModes (Notes/Wiki only per LOCKED #1, Books skip).
-  { mode: "dual",     icon: <Columns size={14} weight="regular" />,  label: "Dual" },
   { mode: "grid",     icon: <GridFour size={14} weight="regular" />, label: "Grid" },
   { mode: "graph",    icon: <Graph size={14} weight="regular" />,    label: "Graph" },
   { mode: "insights", icon: <ChartLine size={14} weight="regular" />, label: "Insights" },
@@ -91,10 +85,6 @@ export function DisplayPanel({
   const supportedModes = config.supportedModes ?? (["list", "board"] as ViewMode[])
   const currentMode = resolveViewMode(viewState.viewMode)
   const isBoard = currentMode === "board"
-  // PRD §LOCKED #9: dual mode is primary-pane only. In secondary the button
-  // is disabled with a hint tooltip — mirrors ⌘⇧E shortcut behavior.
-  const pane = usePane()
-  const isSecondaryPane = pane === "secondary"
 
   /* ── Grouping options ── */
   // "family" is List-only — exclude from Board column selector
@@ -138,18 +128,10 @@ export function DisplayPanel({
           <div className="flex rounded-lg border border-border-subtle bg-card p-0.5">
             {MODE_DEFS.filter((d) => supportedModes.includes(d.mode)).map((def) => {
               const isActive = currentMode === def.mode
-              const isDualDisabled = def.mode === "dual" && isSecondaryPane
-              // Phase 6 polish: surface the ⌘⇧E shortcut on the Dual button
-              // via title attribute (hover tooltip) — discoverable without
-              // adding visual chrome that competes with other mode buttons.
-              const buttonTitle = isDualDisabled
-                ? "Dual mode is primary pane only"
-                : def.mode === "dual" ? `${def.label} — ⌘⇧E` : def.label
               return (
                 <button
                   key={def.mode}
-                  title={buttonTitle}
-                  disabled={isDualDisabled}
+                  title={def.label}
                   onClick={() => {
                     const patch: Partial<ViewState> = { viewMode: def.mode as ViewMode }
                     // Board needs a non-"none" groupBy — fall back to the
@@ -163,9 +145,7 @@ export function DisplayPanel({
                     onViewStateChange(patch)
                   }}
                   className={`flex flex-1 items-center justify-center gap-1.5 rounded-md py-1.5 text-note font-medium transition-all ${
-                    isDualDisabled
-                      ? "text-muted-foreground/40 cursor-not-allowed"
-                      : isActive
+                    isActive
                       ? "bg-active-bg-strong text-foreground shadow-sm"
                       : "text-muted-foreground hover:text-foreground"
                   }`}

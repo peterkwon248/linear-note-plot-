@@ -40,6 +40,54 @@
 
 ---
 
+## 🚀 2026-05-11 (마라톤) — 책 split view + Dual mode 폐기 + 갤러리 entity-agnostic ⭐⭐⭐⭐⭐
+
+**범위**: 9 카테고리. 단일 worktree (`lucid-agnesi-b963f3`). 27 files (+735 / -847), 2 파일 삭제.
+
+### 9 카테고리
+
+1. **이슈 2 — 책 목차 드롭다운 (kind + status icons + 색 버그 fix)** — BookContextNav에 Note/BookOpen + StatusShapeIcon/IconWikiStub/Article 추가. NOTE_STATUS_COLORS stale var fix
+2. **이슈 3 — NoteEditor BookContextNav 좌측 통일** — 노트/위키 동일 layout
+3. **이슈 4 — BookWikiReader article breadcrumb** — "Books > Title"
+4. **Read mode ←/→** — NoteEditor + BookWikiReader + SecondaryWikiArticle 모두 + ⌘[ ⌘] modifier 공존
+5. **이슈 1 — 책 Split View 풀 지원 (~4h)** — secondary pane에 책 detail/reading mount, 5 케이스 모두 동작
+6. **Dual mode 완전 폐기 (10 파일, Store v122)** — Split view + list로 충분, 중복 제거
+7. **갤러리 entity-agnostic 리디자인** — Notes/Wiki/References 통합, Plot 토큰, 클릭=풀에디터, 그라데이션 cover (warm sand)
+8. **View-engine 그룹핑 + 그룹 헤더 아이콘 통일** — Notes Table/Board/Gallery 모두 같은 아이콘 패턴
+9. **Status 색 강화 (다크 모드)** — Stone toasted sand (warm earthy), Brick amber-500, Keystone teal-400
+
+### 큰 결정 (영구)
+
+**1. Dual mode 폐기 LOCKED**: Split view + list mode + editor pane 조합으로 dual mode 대체 가능. v3 mockup 결정사항이지만 Plot 정체성과 충돌. v122 migration으로 사용자 데이터 자동 fix.
+
+**2. 갤러리 = entity-agnostic generic**: GalleryItem interface로 Note/Wiki/Reference 통합. v3 `u-*` CSS 클래스 영구 폐기.
+
+**3. 단일 클릭 = 풀 에디터**: Plot 표준. List/Board/Gallery 일관.
+
+**4. Books split view 풀 지원**: 5 케이스 모두 secondary pane 인프라 활용. URL primary 전유 + store-driven secondary.
+
+**5. Stone 색 = toasted sand**: warm earthy stone tone. neutral gray(zinc) 폐기. brick(orange)과 같은 따뜻한 군.
+
+**6. 그룹 헤더 아이콘 view 간 통일**: list/board/gallery 모두 같은 아이콘 패턴.
+
+**7. 키보드 단축키 두 패턴 공존**: ⌘[/⌘] (modifier) + ←/→ (read mode only).
+
+### 기술 학습 (영구)
+
+- NOTE_STATUS_COLORS stale CSS var bug (chart vars → status vars, 1줄 fix로 전체 일관성)
+- `e.target` window일 때 `closest` undefined (synthetic event 방어)
+- WorkspaceEditorArea NotesTableView 전용 (layout.tsx가 외 처리)
+- SecondaryPanelContent priority (books route > secondaryNoteId)
+- notes-table GroupHeaderIcon label vs groupKey 차이
+- `.gallery-cover` + `--cover-color` 변수 (CSS class light/dark 분기)
+
+### 큰 작업 다음 후보
+
+- **Books view-engine 풀 통합** — filter (컨텐츠 타입/Smart vs Manual/Pinned) + sort + group + view modes (grid/list/gallery/board). 사용자 brainstorm 중. ~5-6h
+- **Wiki 그룹 헤더 아이콘** — WikiList/WikiBoard 미적용 (~30분)
+
+---
+
 ## 🚀 2026-05-10 (마라톤) — Phase A polish + Smart Book Phase A + 책 reading flow ⭐⭐⭐⭐⭐
 
 **범위**: 9 작업 + 12 polish iteration steps. 단일 worktree (`distracted-heyrovsky-f06ba0`)에서 누적. 33 files (+1289 / -187), 4 신규 파일.

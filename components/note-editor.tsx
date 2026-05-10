@@ -284,10 +284,30 @@ export function NoteEditor({ noteId: propNoteId, onClose, pane = 'primary', defa
         else bookNav.goNext()
         return
       }
+      // Read-mode plain ←/→ — book page navigation (no modifier).
+      // Skipped if focus is in an input/contenteditable or a popper/dialog
+      // is open (preserve native cursor / menu navigation).
+      if (
+        bookNav.active &&
+        isReadMode &&
+        (e.key === "ArrowLeft" || e.key === "ArrowRight")
+      ) {
+        const target = e.target as HTMLElement | null
+        if (target && (
+          target.tagName === "INPUT" ||
+          target.tagName === "TEXTAREA" ||
+          target.closest?.('[contenteditable="true"]')
+        )) return
+        if (document.querySelector('[data-radix-popper-content-wrapper]')) return
+        e.preventDefault()
+        if (e.key === "ArrowLeft") bookNav.goPrev()
+        else bookNav.goNext()
+        return
+      }
     }
     window.addEventListener("keydown", handler)
     return () => window.removeEventListener("keydown", handler)
-  }, [note, togglePin, deleteNote, setSelectedNoteId, confirmDelete, bookNav.active, bookNav.goPrev, bookNav.goNext])
+  }, [note, togglePin, deleteNote, setSelectedNoteId, confirmDelete, bookNav.active, bookNav.goPrev, bookNav.goNext, isReadMode])
 
   // Listen for embed note picker requests from SlashCommand / context menu (note tier only)
   useEffect(() => {
@@ -460,21 +480,21 @@ export function NoteEditor({ noteId: propNoteId, onClose, pane = 'primary', defa
             </div>
           )}
           <EditorBreadcrumb note={note} onClose={pane === 'secondary' ? () => closeSecondary() : onClose} pane={pane} />
+          {bookNav.active && (
+            <div className="hidden md:flex shrink-0">
+              <BookContextNav
+                bookId={bookNav.active.bookId}
+                itemIndex={bookNav.active.itemIndex}
+                total={bookNav.active.total}
+                onPrev={bookNav.goPrev}
+                onNext={bookNav.goNext}
+                onJumpTo={bookNav.jumpTo}
+                items={bookNav.items}
+              />
+            </div>
+          )}
           <ReferencedInBadges noteId={note.id} pane={pane} />
         </div>
-        {bookNav.active && (
-          <div className="mr-2 hidden md:flex">
-            <BookContextNav
-              bookId={bookNav.active.bookId}
-              itemIndex={bookNav.active.itemIndex}
-              total={bookNav.active.total}
-              onPrev={bookNav.goPrev}
-              onNext={bookNav.goNext}
-              onJumpTo={bookNav.jumpTo}
-              items={bookNav.items}
-            />
-          </div>
-        )}
         <div className="flex items-center gap-0.5">
           <Tooltip>
               <TooltipTrigger asChild>

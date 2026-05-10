@@ -23,7 +23,8 @@ import { useRouter } from "next/navigation"
 import { usePlotStore } from "@/lib/store"
 import { ViewHeader } from "@/components/view-header"
 import { BookDetailPage } from "@/components/views/book-detail-page"
-import { setActiveRoute, useActiveRoute, getBookIdFromRoute } from "@/lib/table-route"
+import { setActiveRoute, useActiveRoute, useSecondaryRoute, getBookIdFromRoute } from "@/lib/table-route"
+import { usePane } from "@/components/workspace/pane-context"
 import { shortRelative } from "@/lib/format-utils"
 import { toast } from "sonner"
 import { cn } from "@/lib/utils"
@@ -50,8 +51,11 @@ import {
 } from "@/components/ui/dialog"
 
 export function BooksView() {
-  const activeRoute = useActiveRoute()
-  const detailId = getBookIdFromRoute(activeRoute)
+  const pane = usePane()
+  const primaryRoute = useActiveRoute()
+  const secondaryRoute = useSecondaryRoute()
+  const route = pane === "secondary" ? secondaryRoute : primaryRoute
+  const detailId = getBookIdFromRoute(route)
 
   if (detailId) {
     return <BookDetailPage bookId={detailId} />

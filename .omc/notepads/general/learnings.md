@@ -1,5 +1,71 @@
 # Technical Learnings
 
+## 2026-05-11 (마라톤) — 책 split view + Dual mode 폐기 + 갤러리 리디자인
+
+### NOTE_STATUS_COLORS stale CSS var
+- `lib/colors.ts`의 `NOTE_STATUS_COLORS.css`가 `var(--chart-2/3/5)` 가리킴 — globals.css에 정확한 `--status-stone/brick/keystone`가 따로 정의돼 있는데 코드가 stale reference.
+- 다크 모드에서 stone이 cyan(#22d3ee)으로 보이던 진짜 원인.
+- learnings.md의 v3 phase 1 의도("Mirrors --status-{stone,brick,keystone}")와 실제 코드 불일치.
+- 1줄 fix로 Plot 전체 stone 색 일관성 회복 (사이드바, 그래프, 노트 테이블 등).
+
+### `e.target` window일 때 `closest` undefined (synthetic event)
+- `window.dispatchEvent(new KeyboardEvent(...))` 시 `event.target` = window.
+- window는 HTMLElement 아니므로 `target.closest` = undefined.
+- `target.closest('...')` 호출 → TypeError silent throw → 후속 코드 (preventDefault, goNext) 실행 안 됨.
+- Real user keyboard input은 target = focused element라 문제 없음.
+- **방어 패턴**: `target.closest?.()` optional chaining으로 graceful fallback.
+
+### WorkspaceEditorArea는 NotesTableView 전용
+- NotesTableView 안에서만 마운트되어 split panel을 자체 처리.
+- 다른 view (BooksView, WikiView, LibraryView 등)는 layout.tsx가 split을 그려야.
+- 기존 `hasViewSplit = !isEditing && hasSplit`은 `isEditing = !!selectedNoteId`라 book reading 시 ($selectedNoteId set) split panel 안 렌더.
+- **fix**: `isEditingInTableView = isTableView && !!selectedNoteId`로 TABLE_VIEW_ROUTES 한정.
+- 비-table route에서 selectedNoteId set이면 layout이 직접 split 렌더 (BookDetailPage가 reading mode 처리).
+
+### SecondaryPanelContent priority
+- 기본: `if (secondaryNoteId) return Editor`. secondaryNoteId 우선.
+- 책 라우트 (`/books/{id}`) + secondaryNoteId 둘 다 set이면 BookDetailPage가 unmount → cleanup이 bookContext 클리어 → 책 컨텍스트 잃음.
+- **fix**: `if (isBooksRoute) return SecondaryViewRouter` 우선. BookDetailPage가 reading mode를 자체 처리 (readingEntityId로 분기).
+
+### notes-table GroupHeaderIcon label vs groupKey
+- `label` = display alias ("Block" for keystone, "Article" for ...). 사용자 친화 이름.
+- `groupKey` = raw status value ("keystone", "stone", "brick"). DB 정확 값.
+- `<StatusShapeIcon status={label.toLowerCase() as NoteStatus}>` 패턴은 잠재 버그:
+  - "Block" → label.toLowerCase()="block" → cast `NoteStatus`이지만 실제 value 아님
+  - `NOTE_STATUS_COLORS["block"]` undefined → fallback `currentColor` → 부모 텍스트 색 (white in dark mode)
+- **fix**: `groupKey as NoteStatus` 사용.
+
+### CSS-aware color via color-mix + custom property
+- 인라인 `style={{ background: ... }}`는 dark variant 불가 (정적).
+- **해결**: CSS class + `--cover-color` 변수 set:
+  ```css
+  .gallery-cover {
+    background: linear-gradient(135deg,
+      color-mix(in srgb, var(--cover-color) 75%, transparent) 0%,
+      var(--cover-color) 100%);
+  }
+  .dark .gallery-cover {
+    background: linear-gradient(135deg,
+      color-mix(in srgb, var(--cover-color) 50%, transparent) 0%,
+      color-mix(in srgb, var(--cover-color) 85%, transparent) 100%);
+  }
+  ```
+- JSX는 `style={{ "--cover-color": hex } as CSSProperties}` 변수만 set.
+- Plot 토큰 패턴과 정합.
+
+### Book secondary pane infrastructure
+- Plot의 `_interceptForSecondary` 모듈 변수 + PaneProvider onClickCapture가 secondary pane 클릭 시 라우트 인터셉트.
+- `secondaryRoute` (string) + `secondaryNoteId` (string) + `bookContext.secondary` (object) 3개 state로 secondary 책 reading 충분.
+- BookDetailPage `pane === "primary"` 하드코딩만 제거하면 secondary mount 가능.
+- 5 케이스 모두 단일 인프라로 커버.
+
+### Stale wiki article trashed=true (test data)
+- 이전 테스트에서 wiki article들이 `trashed: true`로 남아 있어 wiki list가 0으로 보임.
+- Wiki list filter는 `!trashed`로 trash 항목 제외 — 정상 동작이지만 디버깅 시 헷갈림.
+- 테스트 cleanup 시 wiki article의 trashed 필드도 확인 필요.
+
+---
+
 ## 2026-05-09 (마라톤) — Book + Dual mode + Filter Path A 완성
 
 ### fractional-indexing 패턴 (Book Phase 1)

@@ -11,10 +11,6 @@ import { usePane } from "@/components/workspace/pane-context"
 import { useActiveRoute, useActiveFolderId, useActiveTagId, useActiveLabelId, useActiveViewId } from "@/lib/table-route"
 import type { ViewContextKey } from "@/lib/view-engine/types"
 import type { Note } from "@/lib/types"
-// ── Phase 2 (split-mode-prd): dual mode wiring ─────────────────────────────
-import { useEffectiveViewMode } from "@/hooks/use-effective-view-mode"
-import { DualListEditor } from "@/components/dual/dual-list-editor"
-import { NoteEditor } from "@/components/note-editor"
 
 /* ── Route → View Config map ─────────────────────────── */
 
@@ -48,6 +44,7 @@ export function NotesTableView() {
   const settingsViewMode = useSettingsStore((s) => s.viewMode)
   const setPreviewNoteId = usePlotStore((s) => s.setPreviewNoteId)
   const previewNoteId = usePlotStore((s) => s.previewNoteId)
+  const openNote = usePlotStore((s) => s.openNote)
   const pane = usePane()
   // In secondary pane, never show WorkspaceEditorArea (it's already the parent)
   const isEditing = pane === 'primary' && selectedNoteId !== null
@@ -69,23 +66,6 @@ export function NotesTableView() {
     useCallback((s) => s.viewStateByContext[contextKey]?.viewMode, [contextKey])
   )
   const viewMode = contextViewMode ?? settingsViewMode
-
-  // ── Phase 2 (split-mode-prd): viewport-aware effective mode + dual selection ──
-  // useEffectiveViewMode auto-falls back to "list" below 1200px (LOCKED #4) and
-  // toasts on transition. Returns the persisted mode pre-mount (SSR-safe).
-  const effectiveMode = useEffectiveViewMode(contextKey)
-  const dualSelection = usePlotStore((s) => s.dualSelection)
-  const setDualSelection = usePlotStore((s) => s.setDualSelection)
-  const notes = usePlotStore((s) => s.notes)
-
-  // Mid-session entity deletion cleanup (LOCKED #10): when the selected note
-  // is trashed or removed while the dual editor pane is showing it, clear the
-  // selection so DefaultEmptyState shows instead of a stale editor.
-  useEffect(() => {
-    if (!dualSelection || dualSelection.kind !== "note") return
-    const exists = notes.some((n) => n.id === dualSelection.refId && !n.trashed)
-    if (!exists) setDualSelection(null)
-  }, [notes, dualSelection, setDualSelection])
 
   // ESC closes preview panel
   const handleKeyDown = useCallback(
@@ -120,48 +100,7 @@ export function NotesTableView() {
 
   const isTrashView = tableRoute === "/trash"
 
-  // ── Phase 2 (split-mode-prd) — Dual mode branch ──
-  // Renders NotesTable in the left pane (with row click → setDualSelection)
-  // and NoteEditor in the right pane. Trash view skips dual (kept simple
-  // for MVP — trash already has its own sub-filter UX). Dual mode takes
-  // precedence over the WorkspaceEditorArea branch: even if a note is
-  // currently selected (selectedNoteId != null), dual layout shows the
-  // list+editor split — which is the whole point of dual mode.
-  if (effectiveMode === "dual" && !isTrashView) {
-    return (
-      <div className="u-mode flex flex-1 overflow-hidden" data-mode="dual">
-        <DualListEditor
-          storageId="dual-notes"
-          list={
-            <NotesTable
-              context={config.context}
-              title={config.title}
-              hideCreateButton={config.hideCreateButton}
-              createNoteOverrides={config.createNoteOverrides}
-              folderId={activeFolderId ?? undefined}
-              tagId={activeTagId ?? undefined}
-              labelId={activeLabelId ?? undefined}
-              dualMode
-              onRowClick={(noteId) => setDualSelection({ kind: "note", refId: noteId })}
-              activePreviewId={
-                dualSelection?.kind === "note" ? dualSelection.refId : null
-              }
-            />
-          }
-          editor={
-            dualSelection?.kind === "note" ? (
-              <div className="flex h-full flex-col overflow-hidden">
-                <NoteEditor noteId={dualSelection.refId} />
-              </div>
-            ) : null
-          }
-        />
-      </div>
-    )
-  }
-
-  // ── Workspace editor area: show when editing in any non-dual layout mode ──
-  // (Dual mode handles its own editor pane via DualListEditor above.)
+  // ── Workspace editor area: show when editing ──
   if (isEditing) {
     return (
       <div className="flex flex-1 overflow-hidden animate-in fade-in duration-200">
@@ -181,8 +120,8 @@ export function NotesTableView() {
           folderId={activeFolderId ?? undefined}
           tagId={activeTagId ?? undefined}
           labelId={activeLabelId ?? undefined}
-          onNoteClick={(noteId) => setPreviewNoteId(noteId)}
-          activePreviewId={previewNoteId}
+          onNoteClick={(noteId) => openNote(noteId)}
+          activePreviewId={selectedNoteId}
         />
       </div>
     )

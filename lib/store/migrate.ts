@@ -1849,5 +1849,26 @@ export function migrate(persistedState: unknown): PlotState {
     }))
   }
 
+  // v122: Dual mode polished off. viewMode === "dual" → "list".
+  // Idempotent: only mutates state when a stale "dual" value is found.
+  if (state.viewStateByContext && typeof state.viewStateByContext === "object") {
+    const ctx = state.viewStateByContext as Record<string, { viewMode?: string } | undefined>
+    for (const key of Object.keys(ctx)) {
+      const entry = ctx[key]
+      if (entry && entry.viewMode === "dual") {
+        entry.viewMode = "list"
+      }
+    }
+  }
+  if (Array.isArray(state.savedViews)) {
+    state.savedViews = (state.savedViews as Array<Record<string, unknown>>).map((v) => {
+      const vs = v.viewState as { viewMode?: string } | undefined
+      if (vs && vs.viewMode === "dual") {
+        return { ...v, viewState: { ...vs, viewMode: "list" } }
+      }
+      return v
+    })
+  }
+
   return state as unknown as PlotState
 }

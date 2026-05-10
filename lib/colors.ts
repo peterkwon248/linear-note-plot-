@@ -119,9 +119,9 @@ export type KnowledgeIndexEntity = keyof typeof KNOWLEDGE_INDEX_COLORS
 
 /** CSS-var references (for Tailwind / inline style with var()) */
 export const NOTE_STATUS_COLORS = {
-  stone:    { css: "var(--chart-2)", tw: "chart-2" },
-  brick:    { css: "var(--chart-3)", tw: "chart-3" },
-  keystone: { css: "var(--chart-5)", tw: "chart-5" },
+  stone:    { css: "var(--status-stone)",    tw: "status-stone" },
+  brick:    { css: "var(--status-brick)",    tw: "status-brick" },
+  keystone: { css: "var(--status-keystone)", tw: "status-keystone" },
 } as const
 
 /** Resolved hex values for canvas / SVG (dark theme canonical).

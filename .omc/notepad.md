@@ -1,46 +1,39 @@
-# Session Notepad (Updated: 2026-05-10 14:40 마라톤)
+# Session Notepad (Updated: 2026-05-11 09:30 마라톤)
 
 ## Critical Context
 
-### 이번 세션 마라톤 — 33 파일 (+1289 / -187)
-- **9 카테고리 작업**: /trash Books / Path B Step A / Dual mode i18n / ⌘⇧E pane-aware / DisplayPanel disabled / Smart Book PRD / Phase A 10 sub-steps / 책 reading flow / 책 reading polish 12 iteration steps
-- **Smart Book Phase A 100% 완성** (Step 1 + 2.1-2.9 + Tweaks A/B/C)
-- **책 reading flow 완성** (Step 2.10-2.21): Read button + read mode + Linear ←→ + TOC dropdown + 풀폭 default + wiki chrome
-- **PRD `.omc/plans/smart-book-prd.md`** (656 line, 12 LOCKED, 2x critic 통과)
+### 이번 세션 마라톤 — 27 파일 (+735 / -847), 2 파일 삭제
+- **9 카테고리 작업**: 이슈 2 (책 목차) / 이슈 3 (BookContextNav 좌측) / 이슈 4 (위키 breadcrumb) / Read mode ←/→ / 이슈 1 (책 split view 풀 지원) / Dual mode 완전 폐기 / 갤러리 entity-agnostic / 그룹 헤더 아이콘 통일 / Status 색 강화
+- **Store v122 migration**: viewMode "dual" → "list" (idempotent)
+- **TSC clean + Build pass** (exit 0)
 
 ### 큰 영구 결정 (이번 세션)
-- Plot 모토 = 풀페이지 default (max-w 제거, SmartSidePanel은 opt-in)
-- Books reading = books route 유지 + BookDetailPage가 NoteEditor/WikiArticleView 직접 mount
-- layout.tsx isViewRoute sub-route 포함 (`/books/*`, `/library/*`)
-- Empty infobox 자동 hide (read 모드 + 비어있을 시)
-- Smart Book INVARIANT: AutoSource는 공급원, BookItem kind는 note/wiki/chapter-heading만
-- LOCKED #5c manual top/auto bottom, #10 v1.2 empty source skip, #12 dedup guard
-- PRD §LOCKED #9 3-layer 일관 (시각/입력/UI)
+- **Dual mode 폐기 LOCKED** — Split view + list로 충분
+- **갤러리 = entity-agnostic generic** — GalleryItem interface (Notes/Wiki/Refs adapter)
+- **단일 클릭 = 풀 에디터** (preview pane → openNote)
+- **Books split view 풀 지원** — 5 케이스 모두 secondary pane 인프라 활용
+- **Stone 색 = toasted sand** — warm earthy (zinc neutral 폐기)
+- **그룹 헤더 아이콘 view 간 통일** — list/board/gallery 같은 패턴
+- **키보드 단축키 ⌘[/⌘] + ←/→ 공존** — modifier (Safari) + plain (Reader)
 
 ### 기술 학습
-- flex item `w-full flex-1` 필수 (BookWikiReader 81% 원인)
-- Layout fallback double-mount 패턴 (sub-route 누락 시 50% stealing)
-- Folder.noteIds 없음 (Note.folderIds reverse N:M)
-- WikiArticle.categoryIds: string[] (DAG)
-- Folder.kind 분리, hard-delete only
-- HMR 한계 — dev 재시작 권유
+- NOTE_STATUS_COLORS stale CSS var (chart vars → status vars, 1줄 fix로 전체 일관성)
+- `e.target` window일 때 `closest` undefined (synthetic event 방어, optional chain)
+- WorkspaceEditorArea NotesTableView 전용 (layout.tsx가 비-table route split 처리)
+- SecondaryPanelContent priority (books route > secondaryNoteId)
+- notes-table GroupHeaderIcon label vs groupKey (NoteStatus cast 시 groupKey 필수)
+- `.gallery-cover` + `--cover-color` 변수 (CSS class light/dark 분기 패턴)
 
-### 환경 변경
-- Store v121 (Smart Book: smartSources/excludeIds defaults)
-- 신규 4 파일: smart-book-prd.md, resolver.ts, resolver.test.ts, sources-section.tsx
-- Tests 246 → 255
+## Active Tasks (다음 세션 결정 대기)
 
-## Active Tasks (다음 세션 P0)
-
-- [ ] **Close 버튼 일관성** — 위키만 있는데 노트는 없음. 노트 추가 vs 그냥 없애기 (의논)
-- [ ] **Books 뒤로가기 redesign** — 위키 sub-nav 패턴 (`← All / Articles / Stubs`) 적용 검토
-- [ ] **Books 리스트 list mode 통일** — 그리드 외 옵션 검토
-- [ ] **Edit 버튼 색상/폰트 통일** — book wiki vs 일반 wiki (text-xs vs text-note + px-2 vs px-2.5)
+- [ ] **Books view-engine 풀 통합** — 사용자 brainstorm 중 (옵션 A 풀 vs 단계적). ~5-6h. filter(컨텐츠 타입/Smart vs Manual/Pinned) + sort + group + view modes(grid/list/gallery/board). 핵심 가치: 컨텐츠 타입 필터 (note-only / wiki-only / mixed)
+- [ ] **Wiki 그룹 헤더 아이콘** — WikiList/WikiBoard 미적용 (~30분, Notes 패턴 그대로)
 
 ## Blockers
-없음. 255/255 tests, tsc clean, build pass, architect 7회 통과.
+없음.
 
-## 다음 세션
-- `/before-work` 첫 명령
-- 추천 순서: Edit 버튼 통일 (10분) → Close 버튼 의논 → Books 뒤로가기 sub-nav (30분) → Books 리스트 mode (1-2h)
-- 주의: HMR 못 잡으면 dev 재시작 권장
+## 다음 세션 시작 시
+
+1. `/before-work` 첫 명령
+2. Books view-engine 통합 결정 (사용자 의논 대기 — A 풀 vs 단계적)
+3. 결정 후 작업 시작 (옵션 A면 ~5-6h, 단계적이면 sort/list부터)
