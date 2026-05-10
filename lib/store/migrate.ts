@@ -1838,5 +1838,16 @@ export function migrate(persistedState: unknown): PlotState {
     state.books = []
   }
 
+  // v121: Smart Book — initialize smartSources/excludeIds defaults.
+  // Idempotent: only seeds when missing. Existing arrays preserved.
+  // Spec: `.omc/plans/smart-book-prd.md` §3 LOCKED #7.
+  if (Array.isArray(state.books)) {
+    state.books = state.books.map((book: any) => ({
+      ...book,
+      smartSources: Array.isArray(book.smartSources) ? book.smartSources : [],
+      excludeIds: Array.isArray(book.excludeIds) ? book.excludeIds : [],
+    }))
+  }
+
   return state as unknown as PlotState
 }

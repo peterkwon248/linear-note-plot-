@@ -33,6 +33,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { cn } from "@/lib/utils"
 import { usePlotStore } from "@/lib/store"
 import { EditorBreadcrumb } from "@/components/editor-breadcrumb"
+import { PanelsMenu } from "@/components/panels-menu"
 import { useSettingsStore } from "@/lib/settings-store"
 import { NoteEditorAdapter } from "@/components/editor/NoteEditorAdapter"
 import { FixedToolbar } from "@/components/editor/FixedToolbar"
@@ -95,9 +96,14 @@ interface NoteEditorProps {
   noteId?: string
   onClose?: () => void
   pane?: 'primary' | 'secondary'
+  /** Initial read-mode state when a note opens. Default: edit mode (false).
+   *  Book reading flow passes `true` so notes open as a clean read view
+   *  (toolbar hidden, content uneditable) — user toggles edit via the
+   *  pencil button or ⌃⇧E. */
+  defaultReadMode?: boolean
 }
 
-export function NoteEditor({ noteId: propNoteId, onClose, pane = 'primary' }: NoteEditorProps = {}) {
+export function NoteEditor({ noteId: propNoteId, onClose, pane = 'primary', defaultReadMode = false }: NoteEditorProps = {}) {
   const storeSelectedNoteId = usePlotStore((s) => s.selectedNoteId)
   const activeNoteId = propNoteId ?? storeSelectedNoteId
   const setSelectedNoteId = usePlotStore((s) => s.setSelectedNoteId)
@@ -144,7 +150,7 @@ export function NoteEditor({ noteId: propNoteId, onClose, pane = 'primary' }: No
   }, [activeNoteId, notes, wikiArticles])
 
   const [editorInstance, setEditorInstance] = useState<Editor | null>(null)
-  const [isReadMode, setIsReadMode] = useState(false)
+  const [isReadMode, setIsReadMode] = useState(defaultReadMode)
   const [embedPickerOpen, setEmbedPickerOpen] = useState(false)
   const embedEditorRef = useRef<Editor | null>(null)
   const [wikiEmbedPickerOpen, setWikiEmbedPickerOpen] = useState(false)
@@ -231,7 +237,9 @@ export function NoteEditor({ noteId: propNoteId, onClose, pane = 'primary' }: No
   useEffect(() => {
     noteIdRef.current = note?.id
     if (note) {
-      setIsReadMode(false)
+      // Book reading flow passes defaultReadMode=true so each navigation
+      // (⌘[/⌘]) reopens in read mode. Edit mode is opt-in.
+      setIsReadMode(defaultReadMode)
     }
   }, [note?.id]) // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -417,6 +425,10 @@ export function NoteEditor({ noteId: propNoteId, onClose, pane = 'primary' }: No
         isActivePane && "bg-hover-bg"
       )}>
         <div className="flex items-center gap-2 min-w-0 flex-1">
+          {/* Panels toggle menu — same as ViewHeader so editor users can
+              hide/show activity bar / sidebar / detail panel without
+              leaving the note. (Mirrors view-header.tsx:181 pattern.) */}
+          {pane === 'primary' && <PanelsMenu />}
           {pane === 'secondary' && (
             <div className="flex items-center gap-0 mr-1">
               <button
@@ -458,6 +470,8 @@ export function NoteEditor({ noteId: propNoteId, onClose, pane = 'primary' }: No
               total={bookNav.active.total}
               onPrev={bookNav.goPrev}
               onNext={bookNav.goNext}
+              onJumpTo={bookNav.jumpTo}
+              items={bookNav.items}
             />
           </div>
         )}
@@ -731,7 +745,7 @@ function WikiReadLayout({
 
       {/* Center: Article content */}
       <div className="flex-1 overflow-y-auto">
-        <div className="wiki-read-content px-8 py-6 max-w-[780px]">
+        <div className="wiki-read-content mx-auto px-8 py-6 max-w-5xl">
           {/* Disambig banner */}
           <WikiDisambig noteId={note.id} noteTitle={note.title} />
 

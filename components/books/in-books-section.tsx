@@ -16,7 +16,7 @@ import { useRouter } from "next/navigation"
 import { Books as BooksIcon } from "@phosphor-icons/react/dist/ssr/Books"
 import { usePlotStore } from "@/lib/store"
 import { setActiveRoute } from "@/lib/table-route"
-import { booksContainingEntity } from "@/lib/books/utils"
+import { booksContainingEntityResolved } from "@/lib/books/utils"
 import { navigateToWikiArticle } from "@/lib/wiki-article-nav"
 
 interface InBooksSectionProps {
@@ -27,13 +27,15 @@ interface InBooksSectionProps {
 export function InBooksSection({ kind, refId }: InBooksSectionProps) {
   const router = useRouter()
   const books = usePlotStore((s) => s.books)
+  const notes = usePlotStore((s) => s.notes)
+  const folders = usePlotStore((s) => s.folders)
   const setBookContext = usePlotStore((s) => s.setBookContext)
   const openNote = usePlotStore((s) => s.openNote)
   const setSelectedNoteId = usePlotStore((s) => s.setSelectedNoteId)
 
   const memberships = useMemo(
-    () => booksContainingEntity(books, kind, refId),
-    [books, kind, refId],
+    () => booksContainingEntityResolved(books, { notes, folders }, kind, refId),
+    [books, notes, folders, kind, refId],
   )
 
   if (memberships.length === 0) return null

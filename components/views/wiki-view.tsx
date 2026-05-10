@@ -828,6 +828,8 @@ export function WikiView() {
                     total={wikiBookNav.active.total}
                     onPrev={wikiBookNav.goPrev}
                     onNext={wikiBookNav.goNext}
+                    onJumpTo={wikiBookNav.jumpTo}
+                    items={wikiBookNav.items}
                   />
                 </div>
               )}

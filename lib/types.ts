@@ -88,6 +88,28 @@ export interface WikiCategory {
 /* ── Book (Cross-entity Ordered Sequence) ────────── */
 
 /**
+ * AutoSource — Smart Book의 자동 채움 source 정의 (Phase 5).
+ *
+ * AutoSource는 "어디서 가져올지(공급원)"이지 BookItem kind가 아니다.
+ * 모든 source는 자신이 가진 entity 중 note/wiki만 filter해서 Book.items에 추가.
+ * - kind="folder" → notes only (Folder는 reverse N:M: Note.folderIds.includes(refId))
+ * - kind="category" → wiki articles only (DAG: WikiArticle.categoryIds.includes(refId))
+ * - kind="tag" → notes + wiki (cross-entity)
+ * - kind="label" → notes only (Plot label은 notes 전용)
+ * - kind="sticker" → sticker.members.filter(m => m.kind==="note" || m.kind==="wiki")
+ *
+ * Phase A는 kind="folder"만 구현. 나머지는 future phases.
+ *
+ * Spec: `.omc/plans/smart-book-prd.md` §2 INVARIANT + §5.
+ */
+export type AutoSourceKind = "folder" | "category" | "tag" | "label" | "sticker"
+
+export interface AutoSource {
+  kind: AutoSourceKind
+  refId: string
+}
+
+/**
  * Book — cross-entity ordered sequence (33-design-decisions §1).
  *
  * Items can be notes, wiki articles, or chapter-heading dividers.
@@ -111,6 +133,10 @@ export interface Book {
   trashed?: boolean                // soft delete
   trashedAt?: string | null
   pinned?: boolean                 // pin to home/sidebar (mirrors Note/Wiki)
+  // Smart Book (Phase 5) — auto-resolve sources + exclude list.
+  // Hybrid: items[] = manual, smartSources[] = auto, excludeIds[] = exclude from auto.
+  smartSources?: AutoSource[]
+  excludeIds?: string[]
 }
 
 /**

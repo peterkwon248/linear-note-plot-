@@ -207,8 +207,14 @@ export function useGlobalShortcuts() {
           return
         }
         e.preventDefault()
-        const ctx = inferActiveContextKey()
         const s = usePlotStore.getState()
+        // PRD §LOCKED #9: dual mode is primary-pane only. Secondary focus → no-op
+        // with hint so the user knows the toggle isn't lost on the wrong pane.
+        if (s.activePane === "secondary") {
+          toast("Dual mode is primary pane only", { duration: 2500 })
+          return
+        }
+        const ctx = inferActiveContextKey()
         const current = (s.viewStateByContext[ctx]?.viewMode ?? "list") as ViewMode
         const next: ViewMode = current === "dual" ? "list" : "dual"
         s.setViewState(ctx, { viewMode: next })

@@ -1,4 +1,4 @@
-import type { Note, NoteBody, Folder, Tag, Label, Sticker, EntityRef, NoteTemplate, ActiveView, NoteEvent, Thread, AutopilotRule, AutopilotLogEntry, Relation, RelationType, Attachment, CoOccurrence, RelationSuggestion, WikiClusterSuggestion, WikiInfoboxEntry, WikiCollectionItem, SavedView, WikiArticle, WikiBlock, WikiCategory, Reference, GlobalBookmark, Comment, CommentAnchor, Book } from "../types"
+import type { Note, NoteBody, Folder, Tag, Label, Sticker, EntityRef, NoteTemplate, ActiveView, NoteEvent, Thread, AutopilotRule, AutopilotLogEntry, Relation, RelationType, Attachment, CoOccurrence, RelationSuggestion, WikiClusterSuggestion, WikiInfoboxEntry, WikiCollectionItem, SavedView, WikiArticle, WikiBlock, WikiCategory, Reference, GlobalBookmark, Comment, CommentAnchor, Book, AutoSource, AutoSourceKind } from "../types"
 import type { InboxDismissed, InboxSnoozed, InboxItemKind } from "./slices/inbox"
 import type { SRSState, SRSRating } from "@/lib/srs"
 import type { ViewState, ViewContextKey } from "../view-engine/types"
@@ -435,6 +435,12 @@ export interface PlotState {
   removeItemFromBook: (bookId: string, itemId: string) => void
   reorderBookItems: (bookId: string, itemId: string, newPrevId: string | null, newNextId: string | null) => void
   updateChapterHeading: (bookId: string, itemId: string, title: string) => void
+  /* Phase 5 — Smart Book sources (auto-resolve) + exclude list (manual override) */
+  setBookSmartSources: (bookId: string, sources: AutoSource[]) => void
+  addSmartSource: (bookId: string, source: AutoSource) => boolean
+  removeSmartSource: (bookId: string, kind: AutoSourceKind, refId: string) => void
+  addExcludeId: (bookId: string, entityId: string) => void
+  removeExcludeId: (bookId: string, entityId: string) => void
   /**
    * Phase 4 — set or clear the in-book navigation context for a pane.
    * Pass `null` for `ctx` to leave book-anchored navigation (clears the

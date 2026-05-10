@@ -18,15 +18,21 @@
 
 import { useEffect, useState, useRef } from "react"
 import { usePlotStore } from "@/lib/store"
+import { usePane } from "@/components/workspace/pane-context"
 import { toast } from "sonner"
 import type { ViewContextKey, ViewMode } from "@/lib/view-engine/types"
 
 const FALLBACK_THRESHOLD = 1200
 
 export function useEffectiveViewMode(contextKey: ViewContextKey): ViewMode {
-  const viewMode = (usePlotStore(
+  const persistedMode = (usePlotStore(
     (s) => s.viewStateByContext[contextKey]?.viewMode,
   ) ?? "list") as ViewMode
+  const pane = usePane()
+  // PRD §LOCKED #9: secondary pane (⌘\) forces non-dual (primary-only MVP).
+  // Dual = list+editor 통합 viewport, secondary는 단일 entity detail용.
+  const viewMode: ViewMode =
+    pane === "secondary" && persistedMode === "dual" ? "list" : persistedMode
 
   const [mounted, setMounted] = useState(false)
   const [isNarrow, setIsNarrow] = useState(false)
@@ -46,9 +52,9 @@ export function useEffectiveViewMode(contextKey: ViewContextKey): ViewMode {
       debounceTimerRef.current = setTimeout(() => {
         if (narrow !== wasNarrowRef.current) {
           if (narrow) {
-            toast("화면이 좁아 single mode로 전환됩니다", { duration: 3000 })
+            toast("Viewport too narrow — falling back to list mode", { duration: 3000 })
           } else {
-            toast("Dual mode 복귀", { duration: 2000 })
+            toast("Dual mode resumed", { duration: 2000 })
           }
           wasNarrowRef.current = narrow
         }

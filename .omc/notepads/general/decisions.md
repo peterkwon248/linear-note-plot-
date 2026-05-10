@@ -513,3 +513,36 @@ Type-free       Sticker                   Book
 - legacy alias로 13 site 자동 마이그레이션
 - 새 코드는 BookOpen 직접 import 권장 (deprecated 마킹)
 - IconWikiArticle / IconWikiStub은 status icon으로 활성화 (이전 dead code)
+
+## 2026-05-10 — 책 reading flow + Smart Book Phase A
+
+### Plot 모토 = 풀페이지 default
+- mx-auto + max-w 제한 없이 본문 풀폭
+- 우측 SmartSidePanel은 opt-in (⌘B 토글)
+- NotesView/WikiView/BookDetailPage 모두 통일
+
+### Books reading = books route 유지
+- /books/{id} URL 유지하면서 BookDetailPage가 NoteEditor / WikiArticleView 직접 mount
+- handleOpen wiki branch도 setSelectedNoteId 직접 (route 변경 X)
+- BookDetailPage cleanup unmount 시 bookContext + selectedNoteId clear (NotesView로 이동 후 BookContextNav 잔존 방지)
+
+### Smart Book INVARIANT (영구)
+- Book.items kind = "note" | "wiki" | "chapter-heading"만
+- AutoSource는 공급원, 멤버 kind 아님
+- 모든 source는 note/wiki만 filter
+
+### Smart Book LOCKED 결정 (12개)
+- #5c: Manual top, Auto bottom (lastManualOrder seeding)
+- #10 v1.2: Empty source = silent skip (orphan heading 어색)
+- #12: addSmartSource dedup guard (boolean return)
+
+### PRD §LOCKED #9 3-layer 일관 (Dual mode)
+- 시각 fallback: useEffectiveViewMode (secondary면 dual → list 강제)
+- 입력 가드: ⌘⇧E (secondary focus면 no-op + toast)
+- UI 가드: DisplayPanel "Dual" 버튼 disabled in secondary
+- Defense-in-depth: saved view 외부 주입 path도 안전
+
+### layout.tsx isViewRoute sub-route 포함
+- VIEW_ROUTES include만으로는 부족 (`/books/{id}` 매칭 X)
+- `activeRoute.startsWith("/books/")`, `startsWith("/library/")` 추가
+- Fallback children div + view 동시 mount 50% 폭 stealing fix

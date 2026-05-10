@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from "vitest"
 import { createBooksSlice } from "../slices/books"
-import type { Book, BookItem } from "../../types"
+import type { AutoSource, Book, BookItem } from "../../types"
 
 /**
  * Book Entity Phase 1 — slice contract tests.
@@ -323,6 +323,92 @@ describe("BooksSlice — Reorder", () => {
     const refIds = sorted.map((i) => (i as any).refId)
     expect(refIds[0]).toBe("n99")
     expect(refIds[refIds.length - 1]).toBe("anchor")
+  })
+})
+
+describe("BooksSlice — Smart sources (Phase 5)", () => {
+  let env: ReturnType<typeof setupSlice>
+  let bookId: string
+
+  beforeEach(() => {
+    env = setupSlice()
+    bookId = env.slice.createBook("Smart Book Test")
+  })
+
+  it("addSmartSource adds a folder source", () => {
+    const ok = env.slice.addSmartSource(bookId, { kind: "folder", refId: "folder-1" })
+    expect(ok).toBe(true)
+    expect(env.getBook(bookId).smartSources).toEqual([{ kind: "folder", refId: "folder-1" }])
+  })
+
+  it("addSmartSource dedup guard returns false on duplicate (kind, refId)", () => {
+    env.slice.addSmartSource(bookId, { kind: "folder", refId: "folder-1" })
+    const ok = env.slice.addSmartSource(bookId, { kind: "folder", refId: "folder-1" })
+    expect(ok).toBe(false)
+    expect(env.getBook(bookId).smartSources).toHaveLength(1)
+  })
+
+  it("addSmartSource allows different kinds with same refId", () => {
+    env.slice.addSmartSource(bookId, { kind: "folder", refId: "id-1" })
+    const ok = env.slice.addSmartSource(bookId, { kind: "tag", refId: "id-1" })
+    expect(ok).toBe(true)
+    expect(env.getBook(bookId).smartSources).toHaveLength(2)
+  })
+
+  it("removeSmartSource removes by (kind, refId)", () => {
+    env.slice.addSmartSource(bookId, { kind: "folder", refId: "f1" })
+    env.slice.addSmartSource(bookId, { kind: "folder", refId: "f2" })
+    env.slice.removeSmartSource(bookId, "folder", "f1")
+    expect(env.getBook(bookId).smartSources).toEqual([{ kind: "folder", refId: "f2" }])
+  })
+
+  it("setBookSmartSources replaces entire array", () => {
+    env.slice.addSmartSource(bookId, { kind: "folder", refId: "f1" })
+    env.slice.setBookSmartSources(bookId, [
+      { kind: "tag", refId: "t1" },
+      { kind: "label", refId: "l1" },
+    ])
+    expect(env.getBook(bookId).smartSources).toHaveLength(2)
+    expect(env.getBook(bookId).smartSources![0].kind).toBe("tag")
+  })
+
+  it("setBookSmartSources empty array clears", () => {
+    env.slice.addSmartSource(bookId, { kind: "folder", refId: "f1" })
+    env.slice.setBookSmartSources(bookId, [])
+    expect(env.getBook(bookId).smartSources).toEqual([])
+  })
+
+  it("addExcludeId adds entity id idempotently", () => {
+    env.slice.addExcludeId(bookId, "note-1")
+    env.slice.addExcludeId(bookId, "note-1")  // idempotent
+    expect(env.getBook(bookId).excludeIds).toEqual(["note-1"])
+  })
+
+  it("addExcludeId appends new ids", () => {
+    env.slice.addExcludeId(bookId, "note-1")
+    env.slice.addExcludeId(bookId, "note-2")
+    expect(env.getBook(bookId).excludeIds).toEqual(["note-1", "note-2"])
+  })
+
+  it("removeExcludeId removes id", () => {
+    env.slice.addExcludeId(bookId, "note-1")
+    env.slice.addExcludeId(bookId, "note-2")
+    env.slice.removeExcludeId(bookId, "note-1")
+    expect(env.getBook(bookId).excludeIds).toEqual(["note-2"])
+  })
+
+  it("removeExcludeId idempotent (non-existent id)", () => {
+    env.slice.addExcludeId(bookId, "note-1")
+    env.slice.removeExcludeId(bookId, "non-existent")
+    expect(env.getBook(bookId).excludeIds).toEqual(["note-1"])
+  })
+
+  it("smartSources/excludeIds untouched when modifying other book", () => {
+    const otherBookId = env.slice.createBook("Other Book")
+    env.slice.addSmartSource(bookId, { kind: "folder", refId: "f1" })
+    env.slice.addSmartSource(otherBookId, { kind: "tag", refId: "t1" })
+    expect(env.getBook(bookId).smartSources).toEqual([{ kind: "folder", refId: "f1" }])
+    expect(env.getBook(otherBookId).smartSources).toEqual([{ kind: "tag", refId: "t1" }])
   })
 })
 

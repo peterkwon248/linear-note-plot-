@@ -20,15 +20,25 @@
 import { useMemo, useState, useEffect, useRef, useCallback } from "react"
 import { useRouter } from "next/navigation"
 import { usePlotStore } from "@/lib/store"
-import type { BookItem } from "@/lib/types"
+import { resolveBookItems, type ResolvedBookItem } from "@/lib/books/resolver"
 import { ViewHeader } from "@/components/view-header"
 import { BookItemRow } from "@/components/books/book-item-row"
 import { AddItemDialog } from "@/components/books/add-item-dialog"
+import { SourcesSection } from "@/components/books/sources-section"
+import { NoteEditor } from "@/components/note-editor"
+import { WikiArticleView } from "@/components/wiki-editor/wiki-article-view"
+import { BookContextNav } from "@/components/books/book-context-nav"
+import { useBookContextNav } from "@/hooks/use-book-context-nav"
+import { PanelsMenu } from "@/components/panels-menu"
+import { WikiLayoutToggle } from "@/components/wiki-editor/wiki-layout-toggle"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { TextAa } from "@phosphor-icons/react/dist/ssr/TextAa"
+import { cn } from "@/lib/utils"
 import { setActiveRoute } from "@/lib/table-route"
 import { navigateToWikiArticle } from "@/lib/wiki-article-nav"
 import { shortRelative } from "@/lib/format-utils"
 import { usePane } from "@/components/workspace/pane-context"
-import { bookContentItems } from "@/lib/books/utils"
+import { resolvedContentItems } from "@/lib/books/utils"
 import { toast } from "sonner"
 import {
   DndContext,
@@ -46,6 +56,7 @@ import {
 } from "@dnd-kit/sortable"
 import { Books } from "@phosphor-icons/react/dist/ssr/Books"
 import { ArrowLeft } from "@phosphor-icons/react/dist/ssr/ArrowLeft"
+import { Play } from "@phosphor-icons/react/dist/ssr/Play"
 import { Plus as PhPlus } from "@phosphor-icons/react/dist/ssr/Plus"
 import { TextH } from "@phosphor-icons/react/dist/ssr/TextH"
 import { FileText } from "@phosphor-icons/react/dist/ssr/FileText"
@@ -78,17 +89,49 @@ export function BookDetailPage({ bookId }: BookDetailPageProps) {
   const openNote = usePlotStore((s) => s.openNote)
   const setBookContext = usePlotStore((s) => s.setBookContext)
 
+  const notes = usePlotStore((s) => s.notes)
+  const folders = usePlotStore((s) => s.folders)
+  const wikiArticles = usePlotStore((s) => s.wikiArticles)
+  const selectedNoteId = usePlotStore((s) => s.selectedNoteId)
+
   const book = books.find((b) => b.id === bookId)
 
-  const sortedItems = useMemo<BookItem[]>(() => {
+  const resolvedItems = useMemo<ResolvedBookItem[]>(() => {
     if (!book) return []
-    return [...book.items].sort((a, b) =>
-      a.order < b.order ? -1 : a.order > b.order ? 1 : 0,
-    )
-  }, [book])
+    return resolveBookItems(book, { notes, folders })
+  }, [book, notes, folders])
 
   const [addOpen, setAddOpen] = useState(false)
   const [addInitialTab, setAddInitialTab] = useState<"notes" | "wiki">("notes")
+
+  // Books reading view = full-width single-column layout. Force-close the
+  // side panel on entry so the reading viewport is wide. The wiki article
+  // already has its own infobox/categories chrome inside the body — the
+  // store-level SmartSidePanel would just narrow things further.
+  // Sync sidePanelContext anyway, so if the user re-opens the panel via
+  // ⌘B it reflects the currently visible note/wiki.
+  useEffect(() => {
+    if (selectedNoteId && pane === "primary") {
+      const isWiki = wikiArticles.some((w) => w.id === selectedNoteId)
+      usePlotStore.setState({ sidePanelOpen: false })
+      usePlotStore.getState().setSidePanelContext({
+        type: isWiki ? "wiki" : "note",
+        id: selectedNoteId,
+      })
+    }
+  }, [selectedNoteId, pane, wikiArticles])
+
+  // Cleanup on unmount — when the user leaves /books/{id} (sidebar nav,
+  // back, etc.), clear the book reading state so other views (NotesView
+  // editor) don't keep showing the book's BookContextNav for whatever
+  // entity happens to be selected.
+  useEffect(() => {
+    return () => {
+      const s = usePlotStore.getState()
+      s.setBookContext("primary", null)
+      s.setSelectedNoteId(null)
+    }
+  }, [])
 
   // Title inline edit
   const [editingTitle, setEditingTitle] = useState(false)
@@ -123,13 +166,21 @@ export function BookDetailPage({ bookId }: BookDetailPageProps) {
     (event: DragEndEvent) => {
       const { active, over } = event
       if (!over || active.id === over.id) return
-      const fromIndex = sortedItems.findIndex((i) => i.id === active.id)
-      const toIndex = sortedItems.findIndex((i) => i.id === over.id)
+
+      // PRD §5.7: auto items are NOT draggable. If somehow user dragged
+      // an auto item (defensive — Step 2.5 disables drag handle visually),
+      // ignore. Auto items reorder is invalid in Phase A (LOCKED #5c forces
+      // them to fixed lexicographic position after manual).
+      const activeItem = resolvedItems.find((i) => i.id === active.id)
+      if (activeItem?.source === "auto") return
+
+      const fromIndex = resolvedItems.findIndex((i) => i.id === active.id)
+      const toIndex = resolvedItems.findIndex((i) => i.id === over.id)
       if (fromIndex === -1 || toIndex === -1) return
 
       // Compute neighbors AFTER the move (excluding the moved item itself).
-      const without = sortedItems.filter((_, idx) => idx !== fromIndex)
-      // toIndex is in the original sortedItems coordinate system. After
+      const without = resolvedItems.filter((_, idx) => idx !== fromIndex)
+      // toIndex is in the original resolvedItems coordinate system. After
       // removing the moved item, the insertion index needs adjustment when
       // the destination was after the source.
       const adjustedTo = fromIndex < toIndex ? toIndex - 1 : toIndex
@@ -143,21 +194,24 @@ export function BookDetailPage({ bookId }: BookDetailPageProps) {
         next ? next.id : null,
       )
     },
-    [bookId, sortedItems, reorderBookItems],
+    [bookId, resolvedItems, reorderBookItems],
   )
 
   /* ── Up / Down via slice (computes neighbors at swapped position) ── */
   const moveBy = useCallback(
     (itemId: string, delta: -1 | 1) => {
-      const idx = sortedItems.findIndex((i) => i.id === itemId)
+      const idx = resolvedItems.findIndex((i) => i.id === itemId)
       if (idx === -1) return
+      const item = resolvedItems[idx]
+      // PRD §5.7: auto items not reorderable
+      if (item.source === "auto") return
       const targetIdx = idx + delta
-      if (targetIdx < 0 || targetIdx >= sortedItems.length) return
+      if (targetIdx < 0 || targetIdx >= resolvedItems.length) return
       // Build a virtual re-ordered list, then snapshot the moved item's
       // new neighbors so the slice can compute a fractional-indexing key
       // between them. Single source of truth for both ↑ and ↓.
-      const movedItem = sortedItems[idx]
-      const without = sortedItems.filter((i) => i.id !== itemId)
+      const movedItem = resolvedItems[idx]
+      const without = resolvedItems.filter((i) => i.id !== itemId)
       // For both delta=-1 and delta=+1 the new index in `without` happens
       // to equal `targetIdx` (downward move falls into the slot vacated by
       // shifting the array left).
@@ -168,19 +222,19 @@ export function BookDetailPage({ bookId }: BookDetailPageProps) {
       const next = newPos < reordered.length - 1 ? reordered[newPos + 1] : null
       reorderBookItems(bookId, itemId, prev ? prev.id : null, next ? next.id : null)
     },
-    [bookId, sortedItems, reorderBookItems],
+    [bookId, resolvedItems, reorderBookItems],
   )
 
   /* ── Open referenced entity ────────────────────────── */
   const handleOpen = useCallback(
-    (item: BookItem) => {
+    (item: ResolvedBookItem) => {
       if (!book) return
       if (item.kind === "chapter-heading") return  // headings are not navigable
 
       // Phase 4: anchor the destination editor to this book.
-      // Counter is computed against content items only (notes + wikis);
-      // headings are NOT counted in M.
-      const contentItems = bookContentItems(book)
+      // Counter is computed against resolved content items (manual + auto);
+      // chapter-headings are NOT counted in M (Phase A Step 2.9).
+      const contentItems = resolvedContentItems(book, { notes, folders })
       const itemIndex = contentItems.findIndex(
         (i) => i.kind === item.kind && i.refId === item.refId,
       )
@@ -193,6 +247,9 @@ export function BookDetailPage({ bookId }: BookDetailPageProps) {
       }
 
       if (item.kind === "note") {
+        // BookDetailPage mounts NoteEditor (read mode) when selectedNoteId
+        // references a note, so we stay on /books/{id} route. The book's
+        // BookContextNav (1/N + ←→ + breadcrumb) renders inside the editor.
         openNote(item.refId, { pane })
       } else if (item.kind === "wiki") {
         if (pane === "secondary") {
@@ -200,14 +257,14 @@ export function BookDetailPage({ bookId }: BookDetailPageProps) {
           // panel resolves which view to render via wikiArticles.find().
           usePlotStore.getState().openInSecondary(item.refId)
         } else {
-          setSelectedNoteId(null)
-          setActiveRoute("/wiki")
-          navigateToWikiArticle(item.refId)
-          router.push(`/wiki/${item.refId}`)
+          // Books route reading flow: BookDetailPage mounts
+          // WikiArticleView when selectedNoteId references a wiki entity
+          // (Step 2.11b). Stays on /books/{id}.
+          setSelectedNoteId(item.refId)
         }
       }
     },
-    [book, openNote, pane, router, setBookContext, setSelectedNoteId],
+    [book, notes, folders, openNote, pane, router, setBookContext, setSelectedNoteId],
   )
 
   if (!book) {
@@ -238,6 +295,26 @@ export function BookDetailPage({ bookId }: BookDetailPageProps) {
         </div>
       </div>
     )
+  }
+
+  // Step 2.10b/2.11: Reading mode — when an entity (note or wiki) is
+  // opened from this book context, mount the corresponding view in place
+  // of the BookDetailPage UI. URL stays on /books/{id}; clicking the
+  // breadcrumb "Back to {book.title}" inside BookContextNav clears
+  // selectedNoteId and returns to the book overview. Default to read
+  // mode (not edit) — Books reading flow.
+  if (selectedNoteId && pane === "primary") {
+    const isWikiEntity = wikiArticles.some((w) => w.id === selectedNoteId)
+    if (isWikiEntity) {
+      return (
+        <BookWikiReader
+          articleId={selectedNoteId}
+          bookId={book.id}
+          bookTitle={book.title || "Untitled book"}
+        />
+      )
+    }
+    return <NoteEditor noteId={selectedNoteId} pane="primary" defaultReadMode />
   }
 
   const commitTitle = () => {
@@ -276,7 +353,7 @@ export function BookDetailPage({ bookId }: BookDetailPageProps) {
       <ViewHeader
         icon={headingIcon}
         title={book.title || "Untitled book"}
-        count={book.items.length > 0 ? book.items.length : undefined}
+        count={resolvedItems.length > 0 ? resolvedItems.length : undefined}
         extraToolbarButtons={
           <>
             <button
@@ -290,6 +367,26 @@ export function BookDetailPage({ bookId }: BookDetailPageProps) {
               aria-label="Back to all books"
             >
               <ArrowLeft size={16} weight="regular" />
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                const contentItems = resolvedItems.filter(
+                  (i) => i.kind !== "chapter-heading",
+                )
+                if (contentItems.length === 0) return
+                // Reuse handleOpen — sets bookContext + opens first page
+                handleOpen(contentItems[0])
+              }}
+              disabled={
+                !resolvedItems.some((i) => i.kind !== "chapter-heading")
+              }
+              className="flex h-7 items-center gap-1.5 rounded-md bg-accent px-2.5 text-2xs font-medium text-accent-foreground transition-opacity hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed"
+              title="Open the first page and start reading"
+              aria-label="Read from start"
+            >
+              <Play size={11} weight="fill" />
+              Read
             </button>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -335,7 +432,7 @@ export function BookDetailPage({ bookId }: BookDetailPageProps) {
       />
 
       <div className="flex-1 overflow-y-auto">
-        <div className="mx-auto max-w-3xl px-8 pt-8 pb-24">
+        <div className="px-10 pt-8 pb-24">
           {/* Inline title edit */}
           <div className="mb-2">
             {editingTitle ? (
@@ -412,8 +509,11 @@ export function BookDetailPage({ bookId }: BookDetailPageProps) {
             )}
           </div>
 
+          {/* Smart sources (Phase 5) */}
+          <SourcesSection bookId={book.id} />
+
           {/* Items list */}
-          {sortedItems.length === 0 ? (
+          {resolvedItems.length === 0 ? (
             <div className="flex flex-col items-center gap-3 py-12 border border-dashed border-border/60 rounded-lg">
               <Books size={28} weight="regular" className="text-muted-foreground/25" />
               <div className="text-center">
@@ -432,17 +532,17 @@ export function BookDetailPage({ bookId }: BookDetailPageProps) {
               onDragEnd={handleDragEnd}
             >
               <SortableContext
-                items={sortedItems.map((i) => i.id)}
+                items={resolvedItems.map((i) => i.id)}
                 strategy={verticalListSortingStrategy}
               >
                 <div className="space-y-px">
-                  {sortedItems.map((item, idx) => (
+                  {resolvedItems.map((item, idx) => (
                     <BookItemRow
                       key={item.id}
                       bookId={book.id}
                       item={item}
                       canMoveUp={idx > 0}
-                      canMoveDown={idx < sortedItems.length - 1}
+                      canMoveDown={idx < resolvedItems.length - 1}
                       onMoveUp={() => moveBy(item.id, -1)}
                       onMoveDown={() => moveBy(item.id, 1)}
                       onOpen={() => handleOpen(item)}
@@ -483,6 +583,161 @@ export function BookDetailPage({ bookId }: BookDetailPageProps) {
         onOpenChange={setAddOpen}
         bookId={book.id}
         initialTab={addInitialTab}
+      />
+    </div>
+  )
+}
+
+/* ── Wiki reader inside book context (Step 2.11) ───────────────────── */
+
+/**
+ * BookWikiReader — wraps WikiArticleView with a thin header that hosts
+ * BookContextNav (book title dropdown + counter + ← →). Mirrors the
+ * NoteEditor header role when a wiki article is opened from a book
+ * reading flow. Stays on /books/{id} URL — clicking "Back to book
+ * overview" inside the dropdown clears selectedNoteId and returns to
+ * the BookDetailPage UI.
+ */
+function BookWikiReader({
+  articleId,
+  bookId,
+  bookTitle,
+}: {
+  articleId: string
+  bookId: string
+  bookTitle: string
+}) {
+  const wikiBookNav = useBookContextNav("wiki", articleId)
+  const setSelectedNoteId = usePlotStore((s) => s.setSelectedNoteId)
+  const wikiArticles = usePlotStore((s) => s.wikiArticles)
+  const updateWikiArticle = usePlotStore((s) => s.updateWikiArticle)
+  const article = wikiArticles.find((a) => a.id === articleId)
+
+  // Step 2.21: full wiki chrome (Aa / collapse / layout / Edit) so the
+  // book reading experience matches the standalone wiki view header.
+  const [isEditing, setIsEditing] = useState(false)
+  const [collapseAllCmd, setCollapseAllCmd] = useState<"collapse" | "expand" | null>(null)
+  const [allSectionsCollapsed, setAllSectionsCollapsed] = useState(false)
+  const hasSections = article?.blocks.some((b) => b.type === "section") ?? false
+
+  // Reset editing state when the article changes (page navigation).
+  useEffect(() => {
+    setIsEditing(false)
+  }, [articleId])
+
+  return (
+    <div data-editor-scope="wiki" className="flex h-full w-full flex-1 flex-col">
+      <header className="flex h-(--header-height) shrink-0 items-center gap-2 border-b border-border px-4">
+        <PanelsMenu />
+        <div className="flex flex-1 items-center justify-between min-w-0">
+          {wikiBookNav.active ? (
+            <BookContextNav
+              bookId={wikiBookNav.active.bookId}
+              itemIndex={wikiBookNav.active.itemIndex}
+              total={wikiBookNav.active.total}
+              onPrev={wikiBookNav.goPrev}
+              onNext={wikiBookNav.goNext}
+              onJumpTo={wikiBookNav.jumpTo}
+              items={wikiBookNav.items}
+            />
+          ) : (
+            <span className="text-note text-muted-foreground truncate">{bookTitle}</span>
+          )}
+          <div className="flex items-center gap-1">
+            {/* Aa font size popover */}
+            {article && (
+              <Popover>
+                <PopoverTrigger asChild>
+                  <button
+                    className="flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground/70 hover:bg-hover-bg hover:text-muted-foreground transition-all"
+                    title="Font size"
+                  >
+                    <TextAa size={18} weight="regular" />
+                  </button>
+                </PopoverTrigger>
+                <PopoverContent align="end" className="w-auto p-2.5" sideOffset={4}>
+                  <div className="flex items-center gap-1.5">
+                    {([
+                      { label: "S", value: 0.85 },
+                      { label: "M", value: 1 },
+                      { label: "L", value: 1.15 },
+                      { label: "XL", value: 1.3 },
+                    ] as const).map((opt) => {
+                      const active = (article.fontSize ?? 1) === opt.value
+                      return (
+                        <button
+                          key={opt.label}
+                          onClick={() =>
+                            updateWikiArticle(articleId, {
+                              fontSize: opt.value === 1 ? undefined : opt.value,
+                            })
+                          }
+                          className={cn(
+                            "px-3 py-1.5 text-sm font-medium rounded-md transition-colors",
+                            active
+                              ? "bg-accent/20 text-accent"
+                              : "text-foreground/60 hover:bg-hover-bg",
+                          )}
+                        >
+                          {opt.label}
+                        </button>
+                      )
+                    })}
+                  </div>
+                </PopoverContent>
+              </Popover>
+            )}
+            {/* Collapse/Expand all */}
+            {hasSections && (
+              <button
+                onClick={() => setCollapseAllCmd(allSectionsCollapsed ? "expand" : "collapse")}
+                className="flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground/70 hover:bg-hover-bg hover:text-muted-foreground transition-all"
+                title={allSectionsCollapsed ? "Expand all" : "Collapse all"}
+              >
+                <svg width={17} height={17} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                  {allSectionsCollapsed ? <path d="M4 6l4 4 4-4" /> : <path d="M12 10l-4-4-4 4" />}
+                </svg>
+              </button>
+            )}
+            {/* Layout toggle (Default / Encyclopedia) */}
+            {article && (
+              <WikiLayoutToggle articleId={articleId} layout={article.layout} showIcon={false} />
+            )}
+            {/* Edit/Done toggle */}
+            {isEditing ? (
+              <button
+                onClick={() => setIsEditing(false)}
+                className="flex items-center gap-1 rounded-md bg-emerald-600 px-2 py-1 text-xs font-medium text-white transition-colors hover:bg-emerald-700"
+              >
+                Done
+              </button>
+            ) : (
+              <button
+                onClick={() => setIsEditing(true)}
+                className="flex items-center gap-1 rounded-md bg-accent px-2 py-1 text-xs font-medium text-accent-foreground transition-colors hover:bg-accent/90"
+              >
+                Edit
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={() => setSelectedNoteId(null)}
+              className="rounded-md px-2 py-1 text-2xs text-muted-foreground transition-colors hover:bg-hover-bg hover:text-foreground"
+              title="Back to book overview"
+              aria-label="Back to book overview"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      </header>
+      <WikiArticleView
+        articleId={articleId}
+        editable={isEditing}
+        collapseAllCmd={collapseAllCmd}
+        onCollapseAllDone={() => setCollapseAllCmd(null)}
+        onAllCollapsedChange={setAllSectionsCollapsed}
+        fontSize={article?.fontSize}
       />
     </div>
   )

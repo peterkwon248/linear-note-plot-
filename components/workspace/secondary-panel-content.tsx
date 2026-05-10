@@ -219,6 +219,8 @@ function SecondaryWikiArticle({ articleId }: { articleId: string }) {
                 total={wikiBookNav.active.total}
                 onPrev={wikiBookNav.goPrev}
                 onNext={wikiBookNav.goNext}
+                onJumpTo={wikiBookNav.jumpTo}
+                items={wikiBookNav.items}
               />
             </div>
           )}

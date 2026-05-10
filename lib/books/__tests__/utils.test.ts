@@ -1,7 +1,12 @@
 import { describe, it, expect } from "vitest"
 import { generateKeyBetween } from "fractional-indexing"
-import type { Book, BookItem } from "../../types"
-import { bookContentItems, findItemIndexInBook } from "../utils"
+import type { Book, BookItem, Note, Folder } from "../../types"
+import {
+  bookContentItems,
+  findItemIndexInBook,
+  resolvedContentItems,
+  booksContainingEntityResolved,
+} from "../utils"
 
 /**
  * Phase 4 — `lib/books/utils` contract tests.
@@ -10,8 +15,13 @@ import { bookContentItems, findItemIndexInBook } from "../utils"
  * The most important invariant tested here: chapter-headings are
  * EXCLUDED from both the sorted content list and the M denominator.
  *
+ * Phase A Step 2.9 additions: `resolvedContentItems` and
+ * `booksContainingEntityResolved` cover manual + auto item sequences.
+ *
  * Spec: `.omc/plans/book-entity-prd.md` §8 (CRITIC #5).
  */
+
+// ─── Manual-only factories (Phase 4 tests) ─────────────────────────────────
 
 function makeBook(items: BookItem[]): Book {
   return {
@@ -33,6 +43,44 @@ function makeWiki(refId: string, order: string): BookItem {
 
 function makeHeading(title: string, order: string): BookItem {
   return { kind: "chapter-heading", id: `head-${title}`, title, order }
+}
+
+// ─── Resolved-item factories (Phase A Step 2.9 tests) ──────────────────────
+
+function makeNoteEntity(
+  id: string,
+  folderIds: string[],
+  updatedAt = "2026-01-01",
+  trashed = false,
+): Note {
+  return {
+    id,
+    title: `Note ${id}`,
+    content: "",
+    status: "stone",
+    folderIds,
+    tags: [],
+    labelId: null,
+    reads: 0,
+    createdAt: updatedAt,
+    updatedAt,
+    trashed,
+  } as unknown as Note
+}
+
+function makeFolderEntity(id: string, name: string, kind: "note" | "wiki" = "note"): Folder {
+  return { id, name, kind } as unknown as Folder
+}
+
+function makeResolvedBook(overrides: Partial<Book> = {}): Book {
+  return {
+    id: "book-resolved",
+    title: "Resolved Book",
+    items: [],
+    createdAt: "2026-01-01",
+    updatedAt: "2026-01-01",
+    ...overrides,
+  }
 }
 
 describe("bookContentItems", () => {
@@ -160,5 +208,150 @@ describe("findItemIndexInBook", () => {
     }
     expect(findItemIndexInBook(reorderedBook, "note", "n3")).toEqual({ index: 1, total: 3 })
     expect(findItemIndexInBook(reorderedBook, "note", "n2")).toEqual({ index: 2, total: 3 })
+  })
+})
+
+// ─── Phase A Step 2.9: resolvedContentItems ────────────────────────────────
+
+describe("resolvedContentItems", () => {
+  it("includes auto items from folder source", () => {
+    const folder = makeFolderEntity("f1", "Daily")
+    const notes = [makeNoteEntity("n1", ["f1"]), makeNoteEntity("n2", ["f1"])]
+    const book = makeResolvedBook({ smartSources: [{ kind: "folder", refId: "f1" }] })
+    const items = resolvedContentItems(book, { notes, folders: [folder] })
+    expect(items).toHaveLength(2)
+    expect(items.every((i) => i.kind === "note")).toBe(true)
+  })
+
+  it("combines manual + auto in correct order (manual top, auto bottom)", () => {
+    const folder = makeFolderEntity("f1", "Daily")
+    const manualNote = makeNoteEntity("manual", [])
+    const autoNote = makeNoteEntity("auto", ["f1"])
+    const book = makeResolvedBook({
+      items: [{ kind: "note", id: "m1", refId: "manual", order: "a0" }],
+      smartSources: [{ kind: "folder", refId: "f1" }],
+    })
+    const items = resolvedContentItems(book, {
+      notes: [manualNote, autoNote],
+      folders: [folder],
+    })
+    expect(items).toHaveLength(2)
+    expect((items[0] as { refId: string }).refId).toBe("manual")
+    expect((items[1] as { refId: string }).refId).toBe("auto")
+    expect(items[0].source).toBe("manual")
+    expect(items[1].source).toBe("auto")
+  })
+
+  it("excludes chapter-headings (all returned items are note or wiki)", () => {
+    const folder = makeFolderEntity("f1", "Daily")
+    const book = makeResolvedBook({
+      smartSources: [{ kind: "folder", refId: "f1" }],
+    })
+    const items = resolvedContentItems(book, {
+      notes: [makeNoteEntity("n1", ["f1"])],
+      folders: [folder],
+    })
+    // ResolvedContentBookItem type guarantees kind is "note" | "wiki" —
+    // assert the runtime value confirms no chapter-heading slipped through.
+    expect(items.every((i) => i.kind === "note" || i.kind === "wiki")).toBe(true)
+  })
+
+  it("returns empty for empty book with no sources", () => {
+    const book = makeResolvedBook()
+    const items = resolvedContentItems(book, { notes: [], folders: [] })
+    expect(items).toEqual([])
+  })
+})
+
+// ─── Phase A Step 2.9: booksContainingEntityResolved ──────────────────────
+
+describe("booksContainingEntityResolved", () => {
+  it("finds entity in auto items (smart source membership)", () => {
+    const folder = makeFolderEntity("f1", "Daily")
+    const note = makeNoteEntity("n1", ["f1"])
+    const book = makeResolvedBook({
+      smartSources: [{ kind: "folder", refId: "f1" }],
+    })
+    const memberships = booksContainingEntityResolved(
+      [book],
+      { notes: [note], folders: [folder] },
+      "note",
+      "n1",
+    )
+    expect(memberships).toHaveLength(1)
+    expect(memberships[0].index).toBe(0)
+    expect(memberships[0].total).toBe(1)
+  })
+
+  it("excludes trashed books", () => {
+    const folder = makeFolderEntity("f1", "Daily")
+    const book = makeResolvedBook({
+      trashed: true,
+      smartSources: [{ kind: "folder", refId: "f1" }],
+    })
+    const memberships = booksContainingEntityResolved(
+      [book],
+      { notes: [makeNoteEntity("n1", ["f1"])], folders: [folder] },
+      "note",
+      "n1",
+    )
+    expect(memberships).toEqual([])
+  })
+
+  it("finds entity in manual items of a book with no smart sources", () => {
+    const book = makeResolvedBook({
+      items: [{ kind: "note", id: "m1", refId: "n1", order: "a0" }],
+    })
+    const memberships = booksContainingEntityResolved(
+      [book],
+      { notes: [], folders: [] },
+      "note",
+      "n1",
+    )
+    expect(memberships).toHaveLength(1)
+    expect(memberships[0].index).toBe(0)
+    expect(memberships[0].total).toBe(1)
+  })
+
+  it("returns empty when entity is not in any book", () => {
+    const book = makeResolvedBook({
+      items: [{ kind: "note", id: "m1", refId: "other", order: "a0" }],
+    })
+    const memberships = booksContainingEntityResolved(
+      [book],
+      { notes: [], folders: [] },
+      "note",
+      "n-missing",
+    )
+    expect(memberships).toEqual([])
+  })
+
+  it("reports correct index+total for entity alongside other pages", () => {
+    const folder = makeFolderEntity("f1", "Daily")
+    const notes = [
+      makeNoteEntity("n1", ["f1"], "2026-01-03"),
+      makeNoteEntity("n2", ["f1"], "2026-01-02"),
+    ]
+    const book = makeResolvedBook({
+      smartSources: [{ kind: "folder", refId: "f1" }],
+    })
+    // n1 newest → index 0, n2 → index 1; total = 2
+    const m1 = booksContainingEntityResolved(
+      [book],
+      { notes, folders: [folder] },
+      "note",
+      "n1",
+    )
+    expect(m1[0].index).toBe(0)
+    expect(m1[0].total).toBe(2)
+
+    const m2 = booksContainingEntityResolved(
+      [book],
+      { notes, folders: [folder] },
+      "note",
+      "n2",
+    )
+    expect(m2[0].index).toBe(1)
+    expect(m2[0].total).toBe(2)
   })
 })

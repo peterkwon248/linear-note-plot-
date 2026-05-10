@@ -85,7 +85,14 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     pathname?.startsWith("/tag/") ||
     false
   const isTableView = !isOnDynamicRoute && activeRoute !== null && TABLE_VIEW_ROUTES.includes(activeRoute)
-  const isViewRoute = !isOnDynamicRoute && activeRoute !== null && VIEW_ROUTES.includes(activeRoute)
+  // Sub-routes (e.g. /books/{id}, /library/references) share the parent's
+  // always-mounted view container; treat them as view-routes too so the
+  // fallback children div doesn't double-mount and steal half the width.
+  const isViewRoute = !isOnDynamicRoute && activeRoute !== null && (
+    VIEW_ROUTES.includes(activeRoute) ||
+    activeRoute.startsWith("/books/") ||
+    activeRoute.startsWith("/library/")
+  )
   const isFallback = !isTableView && !isViewRoute
 
   // Split state — covers both editor split and view-mode split

@@ -1,165 +1,142 @@
 ---
-session_date: "2026-05-09 16:19"
+session_date: "2026-05-10 14:40"
 project: "Plot"
-working_directory: "C:\\Users\\user\\Desktop\\linear-note-plot-\\.claude\\worktrees\\distracted-bassi-0a7ded"
-duration_estimate: "~12+ hours (마라톤 세션, 2 PRD + 9 Phase + 45 changes)"
+working_directory: "C:\\Users\\user\\Desktop\\linear-note-plot-\\.claude\\worktrees\\distracted-heyrovsky-f06ba0"
+duration_estimate: "~14h+ (마라톤 세션, 9 카테고리 + 12 polish iteration steps)"
 ---
 
-## Completed Work — ~45개 변경, 단일 squash PR 예정
+## Completed Work — 33 files (+1289 / -187), 4 신규 파일
 
-### Polish + Cleanup (12개)
-- StatusShapeIcon `Cuboid` (1×2) → `Cuboid2x2` (2×2 grid) 통일 (`status-icon.tsx`)
-- Chip 가시성 12% → 24% (`.a-row__icon` + `.a-stchip` 7곳, globals.css)
-- Wiki list leading icon `.a-row__icon` chip wrapper (wiki-list.tsx)
-- Studio + Editorial 제거 + IDB migration v119 (영구 규칙 #1 cleanup) — 5 파일 삭제
-- ViewSwitcher 제거 → Display popover [List|Board|Gallery] 3-segment 통합
-- 사이드바 active icon 공간별 색상 (`data-active-space` + globals.css 6 매핑)
-- Stone/Brick/Block 헤더 status 아이콘 (notes-table.tsx — context별 분기)
-- Wiki article 헤더 stub/article 아이콘 (wiki-view.tsx)
-- Inbox 라우팅 home space 매핑 (inferSpace에 `/inbox` 추가)
-- Inbox B1+B2+B3 (max-width 720px + count chip 항상 표시 + Next-up 카드 forward-looking)
-- Home sidebar 보강 (Inbox + Pinned + Recent cross-entity Note+Wiki+Book)
-- PanelsMenu 미니어처 (4-region SVG, 각 panel 옆 layout 시각화)
-- Old `components/icons/Cuboid.tsx` 삭제 + Notes filter config Cuboid2x2 통일
+### 9 카테고리 작업
 
-### Filter coverage Path A 완전 종결 (6 entity)
-- Step 1: Files type filter (image/url/file) — view-engine + ViewHeader filter wiring
-- Step 2: References type filter (link/citation) — refType derived
-- Step 3: Wiki Category status filter (has-articles/empty) + tier value mismatch fix
-- Step 4: Tags color filter (set/unset) — Labels skip (모든 label color set)
-- Step 5: Inbox source filter (5 InboxItemKind) — local state + tabs와 공존
-- Bonus: Sticker memberStatus + memberKind (7 EntityKind)
+1. **/trash 페이지에 Books 통합** — `components/notes-table.tsx` (TrashFilter union/TRASH_TABS/TrashEntityList/카운트/렌더 분기)
+2. **Path B Step A — chrome/grid 분리** — `app/globals.css` (`.a-th, .a-row` 6-col grid hardcoded 제거, PR #282/#283 사례 회피)
+3. **Dual mode pane gating + i18n** — `hooks/use-effective-view-mode.ts` + `components/dual/dual-list-editor.tsx` (secondary pane은 dual 비활성, 한글→영어 5 strings)
+4. **⌘⇧E pane-aware fix** — `hooks/use-global-shortcuts.ts` (secondary focus면 no-op + toast hint)
+5. **DisplayPanel "Dual" 버튼 disabled** — `components/display-panel.tsx` (PRD §LOCKED #9 3-layer closure)
+6. **Smart Book PRD draft → revision → critic** — `.omc/plans/smart-book-prd.md` (656 line, 12 LOCKED, 2x critic 통과)
+7. **Smart Book Phase A 10 sub-steps** — Step 1 + 2.1-2.9 + Tweaks A/B/C
+8. **책 reading flow** — Step 2.10-2.11 (Read button + read mode + Linear ←→ + TOC dropdown)
+9. **책 reading flow polish** — Step 2.12-2.21 (12 iteration steps: sidePanel/cleanup/풀폭/wiki chrome)
 
-### Book entity 도입 (PRD + Critic + Phase 1-4 + 통합)
-- PRD: `.omc/plans/book-entity-prd.md` (revised v1.1, 6 critic issues 반영)
-- **Phase 1**: Data infra — Book/BookItem types + BooksSlice + 25 vitest tests + IDB v120 migration + `fractional-indexing@^3.2.0` 추가
-- **Phase 2**: ActivityBar 7th space (Wiki와 Calendar 사이) + /books route + Burgundy 색 `#be123c` (rose-700) + sidebar
-- **Phase 3**: Manual book view — books grid + BookDetailPage + dnd-kit drag/↑↓ + AddItemDialog (검색 picker) + chapter heading insert + dropdown context menu (rename/pin/trash)
-- **Phase 4**: In-book navigation — `N/M ↑↓` counter + breadcrumb back-link + ⌘[/⌘] 단축키 + pane-scoped bookContext (primary/secondary 독립)
-- "In Books" 섹션 (note/wiki detail panel — 공용 InBooksSection 컴포넌트, click → bookContext set)
-- Book pin → Home Quicklinks 통합 (mixed-quicklinks book + sidebar HomePinnedItem book kind)
-- Book trash UI 통합 (showTrashed toggle + restore/forever-delete context menu)
+### Smart Book Phase A 10 sub-steps
 
-### Dual mode 도입 (PRD + Critic + Phase 1-3+5+6, Books skip locked)
-- PRD: `.omc/plans/split-mode-prd.md` (revised v1.1, 6 critic issues 반영)
-- **핵심 결정**: 이름 "Split" → "Dual" rename — 기존 `NoteSplitOverlay` (`lib/note-split-mode.ts`)와 충돌 회피
-- **Phase 1**: 인프라 — `DualListEditor` (autoSaveId, controlled X) + `useEffectiveViewMode` (SSR-safe + transition-only debounced toast) + ⌘⇧E 단축키 + UI slice (dualSelection flat, dualRatio)
-- **Phase 2**: Notes view 통합 — DisplayPanel "Dual" entry + NotesTable dualMode + NoteEditor reuse
-- **Phase 3**: Wiki view 통합 — WikiList dualMode + WikiArticleView reuse (wiki sub-modes 우선순위 보존)
-- **Phase 4**: Books skip — LOCKED (자체가 list 구조)
-- **Phase 5**: References 통합 — ReferenceDetailPanel reuse
-- **Phase 6**: Polish — 키보드 ↑↓ navigation + DefaultEmptyState 강화 (⌘⇧E hint) + Display button title hint
-- Mail-client 패턴 5-pane (AB / SB / List / Editor / Detail), 1200px viewport 자동 fallback
+```
+Step 1   — Schema + Store API (5 methods, dedup) + v121 migration
+Step 2.1 — Resolver pure function (folder source) + 14 tests
+Step 2.2 — BookDetailPage 통합 (resolver useMemo + drag/up-down auto guard)
+Step 2.3 — SourcesSection UI (folder picker + add/remove)
+Step 2.4 — AddItemDialog "Smart" 탭
+Step 2.5 — BookItemRow source-aware (visual + remove branch)
+Step 2.6 — Tweak A: empty source heading hide (LOCKED #10 v1.2)
+Step 2.7 — Tweak B: manual override source badge
+Step 2.8 — Tweak C: folder picker preview count
+Step 2.9 — In-book navigation includes auto items
+```
 
-### Plugin install
-- `plot-frontend` 글로벌 등록: `~/claude-plugins/plot-frontend-plugin/` + `~/.claude/plugins/known_marketplaces.json` + `~/.claude/settings.json` enabledPlugins
-- 다음 세션부터 자동 활성: 3 skills (production-ui-refiner, mockup-faithful-implementation, frontend-orchestrator) + 4 hooks + 4 commands
+### 책 reading flow Step 2.10-2.21
 
-### Bug fixes
-- FilterRule.op → operator typo fix (References filter)
-- VALID_VIEW_MODES runtime validator 누락 — Critic이 Dual PRD에서 발견
+```
+2.10 — Read button + NoteEditor defaultReadMode + BookDetailPage mount NoteEditor
+2.11 — ←→ arrows (CaretLeft/Right) + TOC dropdown
+2.12 — sidePanel force close on books reading
+2.13 — BookDetailPage cleanup unmount + max-w fix
+2.17 — list-mode pattern (max-w 완전 제거 = 풀페이지 default)
+2.18 — layout.tsx isViewRoute include /books/* (FALLBACK 50% double-mount fix)
+2.19 — Empty infobox auto-hide
+2.20 — BookWikiReader root w-full flex-1 (81% → 100%)
+2.21 — BookWikiReader full wiki chrome (Aa / collapse / WikiLayoutToggle / Edit)
+```
 
 ## In Progress
-- 없음. 모든 작업 완료 + tsc clean + build pass + 221/221 tests pass.
+없음. 모든 작업 tsc clean + 255/255 tests pass. Build ✅ pass. Architect 7회 통과.
 
-## Remaining Tasks (다음 세션 후보)
+## Remaining Tasks (다음 세션 P0, 사용자 명시)
 
-- [ ] **Smart Book (Phase 5)** — AutoSource[] resolver (folder/category/tag/label/sticker), 별도 PRD 필요. Memory: 33-design-decisions §4. ~4-5h.
-- [ ] **/trash 페이지 books section 통합** — 현재 deleteBook은 작동하지만 /trash UI에 책 안 보임. notes-table 기반 trash view에 cross-entity section 추가. ~1h.
-- [ ] **Path B Step A — globals.css `.a-th/.a-row` 6-col grid hardcoded refactor** — chrome (height/border/sticky/bg/font-size) vs grid (consumer 책임) 분리. before-work P0 #2. ~1.5h.
-- [ ] **나무위키 인포박스 고도화 Tier 1** — 대표 이미지+캡션, 헤더 색상 테마, 접기/펼치기. Memory P2 항목. ~3-4h.
-- [ ] **다중 기기 sync Phase 1** — Supabase B + E2E + Yjs setup. PRD LOCKED 2026-04-29. ~몇 세션.
+- [ ] **Close 버튼 일관성** — 책 안 wiki reading에는 "Close" 있는데 노트는 없음. 노트에도 추가 vs 그냥 없애기 — 의논 필요. 사용자 의도: "위키에만 있는데, 노트에도 추가하기 vs 그냥 없애기 너랑 이야기나눠보고 싶어"
+- [ ] **Books 뒤로가기 버튼 redesign** — 사용자: "ＢＯＯＫＳ의 뒤로 가기 버튼이 별로야". 위키처럼 타이틀 헤더 아래 sub-nav 패턴 (`← All / Articles / Stubs`)을 books에도 적용 검토. 참고: `components/views/wiki-view.tsx`의 Overview/Articles/Stubs 탭
+- [ ] **Books 리스트 그리드 vs list mode 통일 검토** — 사용자: "ＢＯＯＫＳ의 경우 리스트는 지금처럼 무조건 그리드¿ 느낌으로 통일이야¿". 다른 view (Notes/Wiki)는 list/board/gallery 같은 multi-mode 지원. Books도 list mode 옵션 추가 가능?
+- [ ] **Edit 버튼 색상/폰트 통일** — 책 안 wiki reading의 Edit 버튼이 일반 wiki view와 색상/사이즈 다름. 사용자: "왜 에디트 버튼 색상이랑 폰트 사이즈 등이 실제 위키 내부의 사이즈랑 컬러랑 달라". 코드: `components/views/book-detail-page.tsx` BookWikiReader `bg-accent px-2 py-1 text-xs font-medium` vs `components/views/wiki-view.tsx` line ~1033 `bg-accent px-2.5 py-1 text-note font-medium`. text-xs vs text-note + px-2 vs px-2.5 차이
 
 ## Key Decisions
 
-- **Books burgundy** `#be123c` (rose-700) — 6 다른 space와 distinct, 책 표지 가죽 메타포
-- **Book = ordered sequence** (4사분면 컨테이너 모델 마지막 자리, Sticker=unordered와 짝)
-- **Heading-as-divider 단일 모델** — flat + nested 자연스럽게 통합 (Notion sub-heading 패턴)
-- **Dual mode 이름** (Split→Dual, NoteSplitOverlay 충돌 회피)
-- **N:M 다중 멤버십** — 한 entity가 여러 book에 (Sticker 패턴)
-- **fractional-indexing string order** — sparse integer 대신 (50회 underflow 회피)
-- **Filter coverage Path A 완성** — 6 entity (Files/References/Wiki Cat/Tags/Inbox/Stickers)
-- **사이드바 active icon = 공간별** — data-active-space CSS 매핑
+- **Plot 모토 = 풀페이지 default** — max-w 제거. SmartSidePanel은 opt-in (⌘B). NotesView/WikiView/BookDetailPage 통일
+- **Books reading = books route 유지** — /books/{id} URL 그대로 + BookDetailPage가 NoteEditor / WikiArticleView 직접 mount
+- **layout.tsx isViewRoute sub-route 포함** — `/books/*`, `/library/*` 추가 (fallback double-mount 50% fix)
+- **Empty infobox 자동 hide** — read 모드 + 비어있으면 22% 회수
+- **Smart Book INVARIANT** — AutoSource는 공급원, 멤버 kind 아님. note/wiki만 filter
+- **LOCKED #5c** — Manual top, Auto bottom (lastManualOrder seeding)
+- **LOCKED #10 v1.2** — Empty source = silent skip
+- **LOCKED #12** — addSmartSource dedup guard (boolean return)
+- **PRD §LOCKED #9 3-layer** — 시각 (useEffectiveViewMode) + 입력 (⌘⇧E) + UI (Dual 버튼)
 
 ## Technical Learnings
 
-- **fractional-indexing**: sparse integer halving은 50회 후 underflow → lexicographic key string (Linear/Figma 패턴)
-- **VALID_VIEW_MODES**: TS union + runtime validator array 둘 다 update 필수. IDB hydration 시 silent fallback 위험
-- **ResizablePanelGroup autoSaveId**: defaultSize controlled X. autoSaveId로 라이브러리 자체 persistence
-- **SSR-safe hook**: mounted state guard + transition-only debounced toast (resize spam 방지)
-- **Pane-scoped state**: bookContext / dualSelection 패턴, primary/secondary 독립 (SmartSidePanel dual pane 정합)
-- **Critic agent 가치**: 두 PRD 모두 6 issues 정확히 잡음 (이름 충돌 / runtime validator / shape mismatch / SSR / hydration / autoSaveId)
-- **NoteSplitOverlay vs Dual mode 이름 충돌** — 기존 기능과 새 기능이 같은 단어 사용 → rename 필수
+- **flex item `w-full flex-1` 필수** — 누락 시 contents 폭만 (BookWikiReader 81% 원인)
+- **Layout fallback double-mount** — sub-route 누락 시 children + view 둘 다 visible → 50%씩 폭 stealing
+- **Resolver lastManualOrder seeding** — manual top/auto bottom 자연 보장
+- **데이터 모델 silent assumption**:
+  - Folder.noteIds 없음 (Note.folderIds reverse N:M)
+  - WikiArticle.categoryIds: string[] (DAG)
+  - Folder.kind = "note" | "wiki" 분리
+  - Folder + WikiArticle hard-delete only (trash 시스템 없음)
+- **PRD critic agent 가치** — Plot codebase 직접 검증으로 silent assumption catch
+- **HMR 한계** — 큰 파일 변경 시 stale view, dev 재시작 또는 hard reload 필요
 
 ## Blockers / Issues
-- 없음.
+없음. 모든 작업 architect APPROVED + tests pass.
 
 ## Environment & Config
-- Working dir: `C:\Users\user\Desktop\linear-note-plot-\.claude\worktrees\distracted-bassi-0a7ded`
-- Branch: `claude/distracted-bassi-0a7ded` (squash PR 예정)
-- Remote default: **main**
-- Stack: Next.js 16, React 19, TypeScript, Zustand 5, TipTap 3, Tailwind v4
-- Store: **v120** (Books migration)
-- 추가 npm 패키지: `fractional-indexing@^3.2.0`
-- Build: ✅ exit 0 / TSC: ✅ 0 errors / Tests: ✅ 221/221
-- dev port 3002
-- Plugin global: `plot-frontend@plot-frontend` (~/claude-plugins/plot-frontend-plugin/)
+
+- Branch: `claude/distracted-heyrovsky-f06ba0`
+- Remote: `origin/main` (default)
+- Store version: **121** (Smart Book: smartSources/excludeIds defaults)
+- 신규 npm 패키지: 없음 (fractional-indexing은 직전 세션 추가)
+- Build: ✅ exit 0 / TSC: ✅ 0 errors / Tests: ✅ 255/255
+- dev port: 3002
 
 ## Notes for Next Session
 
 - **첫 명령**: `/before-work`
-- **Plugin 검증**: plot-frontend skill 자동 활성 정확도 관찰 (production-ui-refiner / mockup-faithful-implementation / frontend-orchestrator description 매칭)
-- **추천 다음 작업** (우선순위):
-  1. /trash 페이지 books section 통합 (~1h, 작은 finishing)
-  2. Smart Book Phase 5 PRD 작성 (큰 작업 시작)
-  3. Path B Step A — globals.css refactor (P0 #2)
-- **Critic agent 패턴**: 큰 PRD 작성 후 항상 critic review (이번 세션 검증된 가치)
-- **Plot에서 큰 entity 도입 시 표준 절차**: PRD → Critic → Phase 분해 → executor 위임 → 단계별 tsc/build/tests 검증
-- **워크트리 흐름**: 단일 squash PR로 큰 batch 머지 (오늘 ~45 변경 한 PR)
+- **추천 시작 작업 순서**:
+  1. Edit 버튼 색상/폰트 통일 (~10분, 가장 작음)
+  2. Close 버튼 일관성 의논 (사용자 결정)
+  3. Books 뒤로가기 sub-nav 패턴 (~30분, wiki view 패턴 모방)
+  4. Books 리스트 list mode 옵션 (~1-2h, multi-mode 지원)
+- **주의 사항**:
+  - HMR 못 잡으면 dev 재시작 (npm run dev) 권유
+  - 사용자 viewport 1404px 정도 (preview MCP 측정 기준)
+- **Smart Book Phase B-F 진입 전 검증**:
+  - WikiArticle.trashed 필드 미존재 (hard-delete only)
+  - WikiCategory.trashed 검증 필요
+  - Folder/Tag/Label/Sticker 각자 delete 동작 검증
+- **참고 PRD**: `.omc/plans/smart-book-prd.md` (656 line, 12 LOCKED)
 
-## Files Modified — 49 files (+1912 / -1512)
+## Files Modified — 33 files (+1289 / -187)
 
-### 삭제 (5)
-- `components/views/studio-view.tsx`, `studio-view-shell.tsx`, `editorial-view.tsx`, `editorial-view-shell.tsx` — 영구 규칙 #1 cleanup
-- `components/views/view-switcher.tsx` — Display popover로 통합
-- `components/icons/Cuboid.tsx` (1×2) — 미사용
-
-### 신규 (~10)
-- `components/dual/dual-list-editor.tsx` (Dual Phase 1)
-- `hooks/use-effective-view-mode.ts` (Dual Phase 1)
-- `components/views/book-detail-page.tsx` (Book Phase 3)
-- `components/books/book-item-row.tsx`, `add-item-dialog.tsx`, `book-context-nav.tsx` (Book Phase 3-4)
-- `components/views/books-view.tsx` (Book Phase 2)
-- `components/books/in-books-section.tsx` (Book follow-up)
-- `lib/store/slices/books.ts` + `lib/store/__tests__/books-slice.test.ts` (Book Phase 1)
-- `lib/books/utils.ts` + tests (Book Phase 4)
-- `hooks/use-book-context-nav.ts` (Book Phase 4)
-- `app/(app)/books/page.tsx` + `app/(app)/books/[id]/page.tsx` (Book route)
+### 신규 (4)
+- `.omc/plans/smart-book-prd.md` (656 line) — Smart Book PRD v1.1
+- `lib/books/resolver.ts` (167 line) — Pure function resolver
+- `lib/books/__tests__/resolver.test.ts` (~245 line) — 14 tests
+- `components/books/sources-section.tsx` (183 line) — SourcesSection UI
 
 ### 수정 (주요)
-- `lib/types.ts` (Book + BookItem + DualSelection types)
-- `lib/store/types.ts` + `index.ts` + `migrate.ts` (v120 + Books slice + DualState + bookContext)
-- `lib/store/slices/ui.ts` (bookContext + dualSelection setters)
-- `lib/view-engine/types.ts` (ViewMode + VALID_VIEW_MODES + FilterField 확장)
-- `lib/view-engine/view-configs.tsx` (모든 entity supportedModes + filterCategories)
-- `lib/view-engine/use-{notes,wiki,files,references,tags,stickers}-view.ts` (filter stage 추가)
-- `lib/colors.ts` (Books burgundy)
-- `lib/table-route.ts` (/books route + /inbox → home space + /books/{id} dynamic)
-- `app/globals.css` (chip 24% + active icon 공간별 + 5 파일 cleanup)
-- `app/(app)/layout.tsx` (BooksView + BookDetailPage mount)
-- `components/activity-bar.tsx` (7th Books)
-- `components/linear-sidebar.tsx` (Books space + Home pinned cross-entity)
-- `components/views/{wiki,notes-table,inbox,library,tags,stickers}-view.tsx` (filter wiring + dual branches)
-- `components/notes-table.tsx` + `wiki-list.tsx` (dualMode + 키보드 ↑↓)
-- `components/note-editor.tsx` + `wiki-view.tsx` (BookContextNav 통합)
-- `components/side-panel/{side-panel-context,wiki-article-detail-panel}.tsx` (InBooksSection 삽입)
-- `components/dual/dual-list-editor.tsx` (Phase 6 polish)
-- `components/display-panel.tsx` (Dual mode entry)
-- `components/panels-menu.tsx` (4-region 미니어처 SVG)
-- `components/status-icon.tsx` (Cuboid → Cuboid2x2)
-- `components/home/mixed-quicklinks.tsx` (Book pin)
-- `hooks/use-global-shortcuts.ts` (⌘⇧E)
-- `package.json` + `package-lock.json` (fractional-indexing)
-- `docs/MEMORY.md` + `docs/CONTEXT.md` (이번 세션 기록)
-- `.omc/notepads/general/{learnings,decisions}.md` + `.omc/notepad.md` (wisdom)
-- `.omc/plans/book-entity-prd.md` + `split-mode-prd.md` (신규 2 PRD)
+- `app/(app)/layout.tsx` — isViewRoute sub-route 포함
+- `app/globals.css` — `.a-th, .a-row` chrome-only
+- `components/views/book-detail-page.tsx` (+319 line) — Smart Book 통합 + Read button + BookWikiReader
+- `components/note-editor.tsx` — defaultReadMode prop + PanelsMenu
+- `components/notes-table.tsx` — Trash Books 통합
+- `components/display-panel.tsx` — Dual 버튼 secondary disabled
+- `components/dual/dual-list-editor.tsx` — i18n
+- `components/books/{book-context-nav,book-item-row,add-item-dialog,in-books-section}.tsx` — Smart Book 통합
+- `components/wiki-editor/wiki-article-view.tsx` — Empty infobox hide
+- `components/views/wiki-view.tsx` + `components/workspace/secondary-panel-content.tsx` — BookContextNav items/jumpTo props
+- `hooks/use-book-context-nav.ts` — items + jumpTo + resolved content items
+- `hooks/use-effective-view-mode.ts` — pane gating + i18n
+- `hooks/use-global-shortcuts.ts` — ⌘⇧E pane-aware
+- `lib/books/utils.ts` — `resolvedContentItems`, `findItemIndexInResolvedBook`, `booksContainingEntityResolved`
+- `lib/books/__tests__/utils.test.ts` (+9 tests)
+- `lib/store/{types,index,migrate,slices/books}.ts` — Smart Book schema + v121 migration
+- `lib/store/__tests__/books-slice.test.ts` (+11 tests)
+- `lib/types.ts` — AutoSource type + Book extension
+- `docs/MEMORY.md` + `docs/CONTEXT.md` — 이번 세션 기록

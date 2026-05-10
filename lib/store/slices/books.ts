@@ -1,5 +1,5 @@
 import { generateKeyBetween } from "fractional-indexing"
-import type { Book, BookItem } from "../../types"
+import type { AutoSource, AutoSourceKind, Book, BookItem } from "../../types"
 import { genId, now } from "../helpers"
 
 type Set = (fn: ((state: any) => any) | any) => void
@@ -80,6 +80,27 @@ export interface BooksSlice {
   ) => void
   /** Update the title of a chapter-heading item. */
   updateChapterHeading: (bookId: string, itemId: string, title: string) => void
+
+  /* ── Smart sources (Phase 5) ── */
+  /**
+   * Replace all smartSources of a book. Used for batch update (e.g.,
+   * Smart tab in book creation dialog). Empty array clears all sources.
+   */
+  setBookSmartSources: (bookId: string, sources: AutoSource[]) => void
+  /**
+   * Add a single smartSource. Silently no-op if `(kind, refId)` already
+   * exists (LOCKED #12 dedup guard). Returns true on add, false on dedup.
+   */
+  addSmartSource: (bookId: string, source: AutoSource) => boolean
+  /** Remove a single smartSource by `(kind, refId)`. */
+  removeSmartSource: (bookId: string, kind: AutoSourceKind, refId: string) => void
+  /**
+   * Add an entity id to excludeIds (idempotent). Used when user
+   * removes an auto-resolved item from a Smart Book.
+   */
+  addExcludeId: (bookId: string, entityId: string) => void
+  /** Remove an entity id from excludeIds (idempotent). */
+  removeExcludeId: (bookId: string, entityId: string) => void
 }
 
 export function createBooksSlice(set: Set, _get: Get): Omit<BooksSlice, "books"> {
@@ -259,6 +280,66 @@ export function createBooksSlice(set: Set, _get: Get): Omit<BooksSlice, "books">
               : i,
           )
           return { ...book, items }
+        }),
+      )
+    },
+
+    /* ── Smart sources (Phase 5) ── */
+
+    setBookSmartSources: (bookId: string, sources: AutoSource[]) => {
+      set((state: any) =>
+        touchBook(state, bookId, (book) => ({
+          ...book,
+          smartSources: sources,
+        })),
+      )
+    },
+
+    addSmartSource: (bookId: string, source: AutoSource): boolean => {
+      let added = false
+      set((state: any) =>
+        touchBook(state, bookId, (book) => {
+          const existing = book.smartSources ?? []
+          // LOCKED #12: dedup guard — silent no-op if (kind, refId) already exists.
+          const isDup = existing.some(
+            (s) => s.kind === source.kind && s.refId === source.refId,
+          )
+          if (isDup) return book
+          added = true
+          return { ...book, smartSources: [...existing, source] }
+        }),
+      )
+      return added
+    },
+
+    removeSmartSource: (bookId: string, kind: AutoSourceKind, refId: string) => {
+      set((state: any) =>
+        touchBook(state, bookId, (book) => {
+          const existing = book.smartSources ?? []
+          const next = existing.filter((s) => !(s.kind === kind && s.refId === refId))
+          if (next.length === existing.length) return book
+          return { ...book, smartSources: next }
+        }),
+      )
+    },
+
+    addExcludeId: (bookId: string, entityId: string) => {
+      set((state: any) =>
+        touchBook(state, bookId, (book) => {
+          const existing = book.excludeIds ?? []
+          if (existing.includes(entityId)) return book
+          return { ...book, excludeIds: [...existing, entityId] }
+        }),
+      )
+    },
+
+    removeExcludeId: (bookId: string, entityId: string) => {
+      set((state: any) =>
+        touchBook(state, bookId, (book) => {
+          const existing = book.excludeIds ?? []
+          const next = existing.filter((id) => id !== entityId)
+          if (next.length === existing.length) return book
+          return { ...book, excludeIds: next }
         }),
       )
     },

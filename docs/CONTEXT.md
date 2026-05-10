@@ -40,6 +40,120 @@
 
 ---
 
+## 🚀 2026-05-10 (마라톤) — Phase A polish + Smart Book Phase A + 책 reading flow ⭐⭐⭐⭐⭐
+
+**범위**: 9 작업 + 12 polish iteration steps. 단일 worktree (`distracted-heyrovsky-f06ba0`)에서 누적. 33 files (+1289 / -187), 4 신규 파일.
+
+### 9 카테고리 작업
+
+1. **/trash 페이지에 Books 통합** (`components/notes-table.tsx`) — TrashFilter union/TRASH_TABS/TrashEntityList/카운트/렌더 분기 books 추가
+2. **Path B Step A** (`app/globals.css`) — `.a-th, .a-row` 6-col grid hardcoded 제거, chrome-only로. PR #282/#283 사례 회피
+3. **Dual mode pane gating + i18n** (`hooks/use-effective-view-mode.ts` + `components/dual/dual-list-editor.tsx`) — secondary pane은 dual 비활성 (PRD §LOCKED #9 정확 구현). 한글→영어 5 strings
+4. **⌘⇧E pane-aware fix** (`hooks/use-global-shortcuts.ts`) — secondary focus면 no-op + toast hint
+5. **DisplayPanel "Dual" 버튼 disabled in secondary** (`components/display-panel.tsx`) — PRD §LOCKED #9 3-layer 일관 종결 (시각/입력/UI)
+6. **Smart Book PRD** (`.omc/plans/smart-book-prd.md` 656 line) — draft → revision → 2x critic 통과. 12 LOCKED decisions
+7. **Smart Book Phase A** (10 sub-steps) — Step 1 + 2.1-2.9 + Tweaks A/B/C
+8. **책 reading flow** (Step 2.10-2.11) — Read 버튼 + read mode + ←→ + TOC dropdown
+9. **책 reading flow polish** (Step 2.12-2.21) — sidePanel/cleanup/풀폭 fix iteration
+
+### Smart Book Phase A 10 sub-steps
+
+```
+Step 1   — Schema (AutoSource) + Store API (5 methods, LOCKED #12 dedup) + v121 migration
+Step 2.1 — Resolver pure function (folder source only, +14 tests)
+Step 2.2 — BookDetailPage 통합 (resolver useMemo + drag/up-down auto guard)
+Step 2.3 — SourcesSection UI (folder picker + add/remove)
+Step 2.4 — AddItemDialog "Smart" 탭
+Step 2.5 — BookItemRow source-aware (visual + remove branch)
+Step 2.6 — Tweak A: empty source heading hide (LOCKED #10 v1.2)
+Step 2.7 — Tweak B: manual override source badge
+Step 2.8 — Tweak C: folder picker preview count
+Step 2.9 — In-book navigation includes auto items (resolvedContentItems)
+```
+
+### 책 reading flow (Step 2.10~2.21)
+
+```
+2.10 — "Read from start" button + NoteEditor defaultReadMode + BookDetailPage mount NoteEditor
+2.11 — ←→ arrows (CaretLeft/Right) + TOC dropdown (page list with active highlight)
+2.12 — Books reading 진입 시 sidePanel force close (full-width)
+2.13 — BookDetailPage cleanup unmount (bookContext + selectedNoteId clear)
+2.14-16 — max-w iteration (제거 → restore → wider)
+2.17 — BookDetailPage list-mode pattern (max-w 완전 제거 = 풀페이지 default)
+2.18 — layout.tsx isViewRoute include /books/* sub-routes (FALLBACK double-mount 50% fix)
+2.19 — Empty infobox auto-hide (showInfoboxRail = !preview && (hasContent || editable))
+2.20 — BookWikiReader root w-full flex-1 (81% → 100% width)
+2.21 — BookWikiReader full wiki chrome (Aa font / collapse / WikiLayoutToggle / Edit/Done)
+```
+
+### 큰 결정 (영구)
+
+**1. Plot 모토 = 풀페이지 default** (mx-auto + max-w 제한 없음). 우측 SmartSidePanel은 opt-in (⌘B 토글). NotesView/WikiView/BookDetailPage 모두 동일.
+
+**2. Books reading flow = books route 유지**:
+- /books/{id} URL 그대로 유지하면서 BookDetailPage가 NoteEditor / WikiArticleView 직접 mount
+- handleOpen wiki branch도 setSelectedNoteId 직접 사용 (route 변경 X)
+- BookDetailPage cleanup unmount 시 bookContext + selectedNoteId clear
+
+**3. layout.tsx `isViewRoute` 정의 보강**:
+- VIEW_ROUTES include만으로는 `/books/{id}` 같은 sub-route 누락
+- `activeRoute.startsWith("/books/")`, `startsWith("/library/")` 추가
+- Fallback children div가 BooksView와 동시 mount되어 50% 폭 stealing 버그 fix
+
+**4. Empty infobox 자동 hide**:
+- 이전: `showInfoboxRail = !preview` (항상 22% 차지)
+- 지금: `!preview && (hasInfoboxContent || editable)` — read 모드 + 비어있으면 hide
+- 본문이 22% 회수 → wider reading
+
+**5. Smart Book INVARIANT** (§2):
+- Book.items kind = "note" | "wiki" | "chapter-heading"만
+- AutoSource는 공급원, 멤버 kind 아님
+- folder/category/tag/label/sticker 모든 source가 note/wiki만 filter
+
+**6. Smart Book LOCKED #5c** — Manual top, Auto bottom (lastManualOrder seeding). LOCKED #10 v1.2 — empty source = silent skip (orphan heading 어색). LOCKED #12 — addSmartSource dedup guard (boolean return).
+
+**7. PRD §LOCKED #9 3-layer 일관** — 시각 fallback (useEffectiveViewMode) + 입력 가드 (⌘⇧E) + UI 가드 (DisplayPanel Dual 버튼).
+
+### 기술 학습 (영구)
+
+- **flex item w-full / flex-1 누락 시 contents 폭만** — `<div className="flex h-full flex-col">`은 부모 폭 안 채움. `w-full flex-1` 필수
+- **Layout fallback double-mount** — `isFallback` 정의가 sub-route 누락하면 children + view 둘 다 visible → flex-1로 50%씩
+- **Resolver의 manual/auto fractional key** — `lastManualOrder` 추출 후 auto 시퀀스 시작 (`generateKeyBetween(lastManualOrder, null)`) → manual top + auto bottom 자연 보장
+- **Multi-source dedup** — `seenAutoRefIds` Set으로 첫 source 우선 (LOCKED #11)
+- **`Folder.kind = "note" | "wiki"`** — 폴더에는 note 또는 wiki만 (둘 다 X). Smart Book Phase A는 `kind="note"` only
+- **`Note.folderIds` reverse N:M** — Folder엔 noteIds 없음, Note에서 forward reference
+- **`WikiArticle.categoryIds: string[]`** — DAG 다중 부모 (scalar X)
+- **Folder hard-delete only** (`lib/store/slices/folders.ts:54-82`) — trash 시스템 없음
+- **WikiArticle hard-delete only** — wiki는 trashed 필드 없음 (Phase B 진입 전 검증)
+- **HMR 한계** — note-editor / book-detail-page 같이 큰 파일 변경 시 HMR 못 잡고 stale view. dev server 재시작 또는 hard reload 권장
+
+### 다음 세션 P0 (사용자 명시)
+
+1. **Close 버튼** — 위키에만 있는데 노트에도 추가할지 vs 그냥 없애기 (의논 필요)
+2. **Books 뒤로가기 별로** — 위키처럼 타이틀 헤더 아래 sub-nav 패턴 (`← All / Articles / Stubs`) 적용 검토
+3. **Books 리스트 무조건 그리드** — list mode/grid mode 통일 검토
+4. **Edit 버튼 색상/폰트** — 책 안 wiki reading의 Edit 버튼이 일반 wiki view와 색상/사이즈 다름 → 통일 필요
+
+### 환경 변경
+
+- Store version 120 → 121 (Smart Book migration: smartSources/excludeIds defaults)
+- 신규 파일: `.omc/plans/smart-book-prd.md`, `lib/books/resolver.ts`, `lib/books/__tests__/resolver.test.ts`, `components/books/sources-section.tsx`
+- Tests: 246 → 255 (+9 utils.test, +11 books-slice.test, +14 resolver.test)
+- Build: ✅ exit 0 / TSC: ✅ 0 errors / Tests: ✅ 255/255
+
+### Architect 검증
+
+총 7회 진행:
+- /trash Books 통합 (APPROVED)
+- Path B Step A (APPROVED)
+- Dual mode i18n + secondary fix (APPROVED + N1-N6 minor)
+- ⌘⇧E pane-aware (APPROVED)
+- DisplayPanel Dual 버튼 (APPROVED + defense-in-depth 검증)
+- Smart Book PRD critic 2회 (NEEDS REVISION → APPROVED)
+- Smart Book Phase A step별 (Step 1, 2.1, 2.2, 2.3, 2.4, 2.5, 종결)
+
+---
+
 ## 🚀 2026-05-09 (마라톤) — Book entity + Dual mode + Filter Path A 완전 종결 (~45 변경) ⭐⭐⭐⭐⭐
 
 **범위**: 단일 squash PR로 머지. polish 시리즈 + Path A 완성 + Book/Dual 두 entity 도입 + plot-frontend plugin install.

@@ -475,8 +475,12 @@ export function WikiArticleView({ articleId, editable = false, preview = false, 
   const showTOCRail     = !preview
   // Infobox panel is always present (parallels TOC) so layout stays stable
   // and the resize handle is reachable. Empty + read-only shows a subtle hint.
-  const showInfoboxRail = !preview
   const hasInfoboxContent = (article.infobox?.length ?? 0) > 0
+  // Hide the infobox rail when reading and the article has no structured
+  // data — the empty placeholder otherwise steals 22% of the viewport
+  // and makes the body column feel narrower than necessary. In edit mode
+  // we keep it visible so the author can fill it in.
+  const showInfoboxRail = !preview && (hasInfoboxContent || editable)
   // Default sizes — sum to 100. When a side panel is hidden the content
   // takes its share so the layout stays balanced.
   const tocDefault     = showTOCRail     ? 16 : 0
