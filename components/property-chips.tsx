@@ -550,17 +550,51 @@ export function BookItemCountChip({ count }: { count: number }) {
  * or Hybrid (both). Drives the kind filter and surfaces the book's
  * organizational approach at a glance.
  *
- * Neutral muted styling (no color tint) for PR 2 — keeps card visual budget
- * for cover emoji + title. Color variants reserved for future iteration.
+ * Notes StatusBadge 패턴 정합 (2026-05-12): color + bg + border + icon + label.
+ * BookKindIcon (leading)과 같은 shape이지만 chip 자체 색이 다르므로 시각 분리.
  */
+const BOOK_KIND_CONFIG: Record<
+  "smart" | "manual" | "hybrid",
+  { label: string; color: string; bg: string; border: string; Icon: typeof PhLightning }
+> = {
+  smart: {
+    label: "Smart",
+    // violet — Plot v3 accent
+    color: "#5E6AD2",
+    bg: "color-mix(in srgb, #7C8AE7 18%, transparent)",
+    border: "color-mix(in srgb, #7C8AE7 35%, transparent)",
+    Icon: PhLightning,
+  },
+  manual: {
+    label: "Manual",
+    // neutral — muted-foreground via currentColor inheritance
+    color: "var(--muted-foreground)",
+    bg: "color-mix(in srgb, var(--muted-foreground) 14%, transparent)",
+    border: "color-mix(in srgb, var(--muted-foreground) 28%, transparent)",
+    Icon: PhPencilSimple,
+  },
+  hybrid: {
+    label: "Hybrid",
+    // amber — mix signal
+    color: "#D97706",
+    bg: "color-mix(in srgb, #f59e0b 18%, transparent)",
+    border: "color-mix(in srgb, #f59e0b 35%, transparent)",
+    Icon: PhSparkle,
+  },
+}
+
 export function BookKindChip({ kind }: { kind: "smart" | "manual" | "hybrid" }) {
-  const label = kind === "smart" ? "Smart" : kind === "manual" ? "Manual" : "Hybrid"
-  const Icon = kind === "smart" ? PhLightning : kind === "manual" ? PhPencilSimple : PhSparkle
+  const cfg = BOOK_KIND_CONFIG[kind]
+  const Icon = cfg.Icon
   return (
-    <ChipShell title={label} className="bg-secondary/60 text-muted-foreground">
+    <span
+      title={cfg.label}
+      className="inline-flex items-center gap-1 rounded-md border px-1.5 py-0.5 text-2xs font-medium leading-none whitespace-nowrap shrink-0"
+      style={{ backgroundColor: cfg.bg, color: cfg.color, borderColor: cfg.border }}
+    >
       <Icon size={10} weight="regular" />
-      {label}
-    </ChipShell>
+      {cfg.label}
+    </span>
   )
 }
 
