@@ -343,11 +343,7 @@ function BookBoardCardInner({
     >
       <div className="flex items-start gap-2">
         <span className="flex h-5 w-5 shrink-0 items-center justify-center text-muted-foreground/70">
-          {book.coverEmoji ? (
-            <span className="text-base leading-none">{book.coverEmoji}</span>
-          ) : (
-            <BookKindIcon kind={kind} size={14} />
-          )}
+          <BookKindIcon kind={kind} size={14} />
         </span>
         <span className="min-w-0 flex-1 text-note font-medium text-foreground line-clamp-2 leading-snug">
           {book.title || "Untitled book"}

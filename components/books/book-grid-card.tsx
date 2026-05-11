@@ -69,14 +69,10 @@ export function BookGridCard({
             />
           )}
 
-          {/* Cover icon — kind-shape fallback when no emoji (Option C).
-              Plot status pattern: shape + color carries meaning. */}
+          {/* Cover icon — BookKindIcon (kind-shape carries meaning).
+              emoji 영구 폐기 (2026-05-12 결정): Plot phosphor 시스템 정합. */}
           <div className="flex h-12 w-12 items-center justify-center rounded-md bg-secondary/40 text-muted-foreground/70">
-            {book.coverEmoji ? (
-              <span className="text-2xl leading-none">{book.coverEmoji}</span>
-            ) : (
-              <BookKindIcon kind={getBookKind(book)} size={22} />
-            )}
+            <BookKindIcon kind={getBookKind(book)} size={22} />
           </div>
 
           {/* Title */}

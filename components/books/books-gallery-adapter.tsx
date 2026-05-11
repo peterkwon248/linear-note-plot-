@@ -62,9 +62,7 @@ function bookToGalleryItem(book: Book): GalleryItem {
     excerpt: book.description,
     accentColor: accentFor(book),
     badge: { label: badgeLabel },
-    coverIcon: book.coverEmoji
-      ? <span className="text-base leading-none">{book.coverEmoji}</span>
-      : <BookKindIcon kind={kind} size={14} />,
+    coverIcon: <BookKindIcon kind={kind} size={14} />,
     metaLeft,
     metaRight,
   }

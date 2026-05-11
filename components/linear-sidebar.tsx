@@ -481,7 +481,7 @@ export function LinearSidebar() {
   type HomePinnedItem =
     | { kind: "note"; id: string; title: string; status: NoteStatus }
     | { kind: "wiki"; id: string; title: string; isStub: boolean }
-    | { kind: "book"; id: string; title: string; coverEmoji: string | null | undefined; itemCount: number }
+    | { kind: "book"; id: string; title: string; itemCount: number }
 
   const homePinnedItems = useMemo<HomePinnedItem[]>(() => {
     const noteItems: HomePinnedItem[] = pinnedNotes.map((n) => ({
@@ -502,7 +502,6 @@ export function LinearSidebar() {
         kind: "book" as const,
         id: b.id,
         title: b.title || "Untitled book",
-        coverEmoji: b.coverEmoji,
         itemCount: b.items.length,
       }))
     return [...noteItems, ...wikiItems, ...bookItems]
@@ -1654,11 +1653,7 @@ export function LinearSidebar() {
                         data-active={activeRoute === href ? "true" : undefined}
                       >
                         <span className="flex shrink-0 items-center justify-center w-5 h-5">
-                          {book.coverEmoji ? (
-                            <span className="text-sm leading-none">{book.coverEmoji}</span>
-                          ) : (
-                            <BookOpen size={14} weight="regular" />
-                          )}
+                          <BookOpen size={14} weight="regular" />
                         </span>
                         <span className="truncate text-left flex-1">{book.title || "Untitled"}</span>
                         <span className="a-sb-link__count tabular-nums">
@@ -1694,11 +1689,7 @@ export function LinearSidebar() {
                         data-active={activeRoute === href ? "true" : undefined}
                       >
                         <span className="flex shrink-0 items-center justify-center w-5 h-5">
-                          {book.coverEmoji ? (
-                            <span className="text-sm leading-none">{book.coverEmoji}</span>
-                          ) : (
-                            <BookOpen size={14} weight="regular" />
-                          )}
+                          <BookOpen size={14} weight="regular" />
                         </span>
                         <span className="truncate text-left flex-1">{book.title || "Untitled"}</span>
                         <span className="a-sb-link__count tabular-nums">
@@ -1763,8 +1754,6 @@ export function LinearSidebar() {
                         ) : (
                           <IconWikiArticle size={14} style={{ color: WIKI_STATUS_HEX.article }} />
                         )
-                      ) : item.coverEmoji ? (
-                        <span className="text-sm leading-none">{item.coverEmoji}</span>
                       ) : (
                         <BookOpen size={14} weight="regular" style={{ color: "var(--space-books)" }} />
                       )}

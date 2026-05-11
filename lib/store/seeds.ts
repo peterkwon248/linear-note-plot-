@@ -739,7 +739,6 @@ export const SEED_BOOKS: Book[] = [
     id: "book-1",
     title: "Getting Started Guide",
     description: "Hand-curated intro notes for new readers.",
-    coverEmoji: null,
     color: null,
     items: [
       { kind: "note", id: "bi-1-1", refId: "note-1", order: "a0" },
@@ -757,7 +756,6 @@ export const SEED_BOOKS: Book[] = [
     id: "book-2",
     title: "Reading Journal",
     description: "Books I finished this season.",
-    coverEmoji: null,
     color: null,
     items: [
       { kind: "note", id: "bi-2-1", refId: "note-2", order: "a0" },
@@ -775,7 +773,6 @@ export const SEED_BOOKS: Book[] = [
     id: "book-3",
     title: "Zettelkasten Hub",
     description: "Auto-pulled by Zettelkasten tag.",
-    coverEmoji: null,
     color: null,
     items: [],
     smartSources: [{ kind: "tag", refId: "tag-2" }],
@@ -789,7 +786,6 @@ export const SEED_BOOKS: Book[] = [
     id: "book-4",
     title: "Project Tracker",
     description: "Everything in the Projects folder.",
-    coverEmoji: null,
     color: null,
     items: [],
     smartSources: [{ kind: "folder", refId: "folder-1" }],
@@ -803,7 +799,6 @@ export const SEED_BOOKS: Book[] = [
     id: "book-5",
     title: "Research Library",
     description: "Spans multiple research topics.",
-    coverEmoji: null,
     color: null,
     items: [],
     smartSources: [
@@ -821,7 +816,6 @@ export const SEED_BOOKS: Book[] = [
     id: "book-6",
     title: "Knowledge Compilation",
     description: "Hand-picked notes blended with tag-based auto-fill.",
-    coverEmoji: null,
     color: null,
     items: [
       { kind: "chapter-heading", id: "bi-6-h1", title: "Foundations", order: "a0" },
@@ -840,7 +834,6 @@ export const SEED_BOOKS: Book[] = [
     id: "book-7",
     title: "Daily + Inspiration",
     description: "Daily log entries plus auto-pulled ideas.",
-    coverEmoji: null,
     color: null,
     items: [
       { kind: "note", id: "bi-7-1", refId: "note-4", order: "a0" },
@@ -861,7 +854,6 @@ export const SEED_BOOKS: Book[] = [
     id: "book-8",
     title: "Old Project Notes",
     description: "Archived after Q1 wrap-up.",
-    coverEmoji: null,
     color: null,
     items: [
       { kind: "note", id: "bi-8-1", refId: "note-9", order: "a0" },
