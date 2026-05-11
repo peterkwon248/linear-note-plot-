@@ -14,6 +14,7 @@ import type { GroupBy } from "@/lib/view-engine/types"
 import type { WikiGroup } from "@/lib/view-engine/wiki-list-pipeline"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Check as PhCheck } from "@phosphor-icons/react/dist/ssr/Check"
+import { PushPin } from "@phosphor-icons/react/dist/ssr/PushPin"
 import { Minus } from "@phosphor-icons/react/dist/ssr/Minus"
 import { ArrowLeft } from "@phosphor-icons/react/dist/ssr/ArrowLeft"
 import { BookOpen } from "@phosphor-icons/react/dist/ssr/BookOpen"
@@ -334,6 +335,13 @@ function ArticleTableRow({
         <span className="min-w-0 flex-1 truncate text-note font-medium text-foreground/90">
           {note.title || "Untitled"}
         </span>
+        {(note as { pinned?: boolean }).pinned && (
+          <PushPin
+            size={11}
+            weight="fill"
+            className="shrink-0 text-amber-500 mx-1"
+          />
+        )}
       </button>
       {isVisible("status") && (
         <div className="w-[72px] shrink-0 flex items-center px-2">
