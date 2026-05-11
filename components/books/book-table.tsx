@@ -46,6 +46,7 @@ import { ArrowDown } from "@phosphor-icons/react/dist/ssr/ArrowDown"
 import { ArrowsDownUp } from "@phosphor-icons/react/dist/ssr/ArrowsDownUp"
 import { Check as PhCheck } from "@phosphor-icons/react/dist/ssr/Check"
 import { Minus as PhMinus } from "@phosphor-icons/react/dist/ssr/Minus"
+import { X as PhX } from "@phosphor-icons/react/dist/ssr/X"
 import {
   ContextMenu,
   ContextMenuContent,
@@ -175,8 +176,22 @@ export function BookTable({
     })
   }
 
+  const onClearSelection = () => setSelectedIds(new Set())
+
   return (
-    <div className="flex flex-col">
+    <div className="relative flex flex-col">
+      {/* Floating action bar — visible when 1+ rows checked.
+          Notes/Wiki 정합 (사용자 시그널 2026-05-12). */}
+      {selectedIds.size > 0 && (
+        <BookFloatingBar
+          ids={selectedIds}
+          books={books}
+          onClear={onClearSelection}
+          onTogglePin={onTogglePin}
+          onDelete={onDelete}
+        />
+      )}
+
       {/* Sticky header */}
       <div className="sticky top-0 z-10 flex h-9 items-center gap-3 border-b border-border bg-background pl-3 pr-6">
         {/* Select-all checkbox (notes-table parity) */}
@@ -217,6 +232,86 @@ export function BookTable({
             onPermanentDelete={onPermanentDelete}
           />
         ))}
+      </div>
+    </div>
+  )
+}
+
+/* ── BookFloatingBar ───────────────────────────────────── */
+
+/**
+ * Bulk-action floating bar visible when one or more rows are checked.
+ * Notes FloatingActionBar 패턴 정합 (책 도메인은 액션 적음 — Pin/Trash만).
+ * Bulk pin: 선택된 모든 책이 이미 pinned면 Unpin, 아니면 Pin (mixed=Pin).
+ */
+function BookFloatingBar({
+  ids,
+  books,
+  onClear,
+  onTogglePin,
+  onDelete,
+}: {
+  ids: Set<string>
+  books: Book[]
+  onClear: () => void
+  onTogglePin: (id: string, pinned: boolean | undefined) => void
+  onDelete: (id: string, title: string) => void
+}) {
+  const selectedBooks = books.filter((b) => ids.has(b.id))
+  const count = selectedBooks.length
+  if (count === 0) return null
+  const allPinned = selectedBooks.every((b) => Boolean(b.pinned))
+
+  const handlePin = () => {
+    // allPinned면 모두 unpin / 아니면 모두 pin (mixed→pin, batch UX 표준)
+    for (const b of selectedBooks) {
+      if (allPinned) {
+        if (b.pinned) onTogglePin(b.id, true)
+      } else {
+        if (!b.pinned) onTogglePin(b.id, false)
+      }
+    }
+    onClear()
+  }
+
+  const handleTrash = () => {
+    for (const b of selectedBooks) {
+      onDelete(b.id, b.title)
+    }
+    onClear()
+  }
+
+  return (
+    <div className="fixed bottom-6 left-1/2 z-30 -translate-x-1/2">
+      <div className="flex items-center gap-1 rounded-lg border border-border bg-popover px-2 py-1.5 shadow-lg">
+        <button
+          type="button"
+          onClick={onClear}
+          className="flex h-7 items-center gap-1 rounded-md px-2 text-2xs font-medium text-muted-foreground hover:bg-hover-bg hover:text-foreground transition-colors"
+          title="Clear selection (Esc)"
+        >
+          <PhX size={12} weight="regular" />
+          <span className="tabular-nums">{count} selected</span>
+        </button>
+        <div className="h-5 w-px bg-border mx-0.5" />
+        <button
+          type="button"
+          onClick={handlePin}
+          className="flex h-7 items-center gap-1.5 rounded-md px-2 text-2xs font-medium text-foreground hover:bg-hover-bg transition-colors"
+        >
+          {allPinned
+            ? <PushPinSlash size={13} weight="regular" />
+            : <PushPin size={13} weight="regular" className="text-amber-500" />}
+          {allPinned ? "Unpin" : "Pin"}
+        </button>
+        <button
+          type="button"
+          onClick={handleTrash}
+          className="flex h-7 items-center gap-1.5 rounded-md px-2 text-2xs font-medium text-destructive hover:bg-destructive/10 transition-colors"
+        >
+          <Trash size={13} weight="regular" />
+          Trash
+        </button>
       </div>
     </div>
   )
