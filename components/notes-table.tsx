@@ -42,11 +42,8 @@ import { setSplitTargetNoteId } from "@/lib/note-split-mode"
 import { Minus as PhMinus } from "@phosphor-icons/react/dist/ssr/Minus"
 import { FolderOpen } from "@phosphor-icons/react/dist/ssr/FolderOpen"
 import { ArrowCounterClockwise } from "@phosphor-icons/react/dist/ssr/ArrowCounterClockwise"
-import { Globe } from "@phosphor-icons/react/dist/ssr/Globe"
-import { DownloadSimple } from "@phosphor-icons/react/dist/ssr/DownloadSimple"
-import { ShareNetwork } from "@phosphor-icons/react/dist/ssr/ShareNetwork"
-import { Lightning } from "@phosphor-icons/react/dist/ssr/Lightning"
-import { PencilSimple } from "@phosphor-icons/react/dist/ssr/PencilSimple"
+import { Tree } from "@phosphor-icons/react/dist/ssr/Tree"
+import { Stack } from "@phosphor-icons/react/dist/ssr/Stack"
 import { NotePencil as PhNotePencil } from "@phosphor-icons/react/dist/ssr/NotePencil"
 import {
   Tooltip,
@@ -61,7 +58,7 @@ import { useNotesView } from "@/lib/view-engine/use-notes-view"
 import type { ViewContextKey, ViewMode, SortField, SortDirection, GroupBy, FilterRule, NoteGroup } from "@/lib/view-engine/types"
 import { format } from "date-fns"
 import { shortRelative } from "@/lib/format-utils"
-import type { Note, NoteStatus, Folder, NoteSource, Tag, Label, NoteTemplate, Attachment, Reference, Book } from "@/lib/types"
+import type { Note, NoteStatus, Folder, Tag, Label, NoteTemplate, Attachment, Reference, Book } from "@/lib/types"
 import { File as PhFile } from "@phosphor-icons/react/dist/ssr/File"
 import { BookOpen } from "@phosphor-icons/react/dist/ssr/BookOpen"
 import { toast } from "sonner"
@@ -105,7 +102,6 @@ const TRASH_TABS: { id: TrashFilter; label: string }[] = [
 const SORT_FIELD_LABELS: Record<SortField, string> = {
   updatedAt: "Updated",
   createdAt: "Created",
-  priority: "Priority",
   title: "Name",
   status: "Status",
   links: "Links",
@@ -177,7 +173,7 @@ function TH({
 }) {
   if (!col) {
     return (
-      <span className={`inline-flex items-center text-note font-medium text-foreground/80 ${className}`}>
+      <span className={`inline-flex items-center text-note font-medium text-foreground ${className}`}>
         {label}
       </span>
     )
@@ -185,7 +181,7 @@ function TH({
   const active = sortCol === col
   return (
     <button
-      className={`group/th inline-flex items-center gap-1 text-note font-medium text-foreground/80 transition-colors hover:text-foreground ${className}`}
+      className={`group/th inline-flex items-center gap-1 text-note font-medium text-foreground transition-colors hover:text-foreground ${className}`}
       onClick={() => onSort(col)}
     >
       {label}
@@ -1611,19 +1607,6 @@ interface NoteRowProps {
   childTitles?: string[]
 }
 
-function SourceIcon({ source }: { source: NoteSource }) {
-  const Icon = {
-    manual: PencilSimple,
-    webclip: Globe,
-    import: DownloadSimple,
-    share: ShareNetwork,
-    api: Lightning,
-  }[source ?? "manual"]
-  if (!Icon) return null
-  return <Icon className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-}
-
-
 /** Resolve display label for group headers (folder/label use IDs as keys) */
 function resolveGroupLabel(groupBy: GroupBy, groupKey: string, fallback: string, folders: Folder[], labels: Label[]): string {
   if (groupBy === "folder" && groupKey !== "_no_folder") {
@@ -1659,8 +1642,15 @@ function GroupHeaderIcon({ groupBy, groupKey, label, folders, labels }: {
         <span className="h-2.5 w-2.5 rounded-full shrink-0 bg-muted-foreground" />
       )
     }
+    case "family":
+      return <Tree className="text-muted-foreground" size={16} weight="regular" />
+    case "tier":
+      return <Stack className="text-muted-foreground" size={16} weight="regular" />
+    case "role":
+      // role is text-only (Root/Parent/Child/Solo)
+      return null
     default:
-      // priority, date, triage, linkCount — text-only, no special icon
+      // date, triage, linkCount — text-only, no special icon
       return null
   }
 }
@@ -1794,7 +1784,6 @@ function NoteRowInner({
             }
             return null
           })()}
-          <SourceIcon source={note.source} />
         </div>
         {showCardPreview && note.preview && (
           <span className="text-2xs text-muted-foreground truncate pl-6 mt-0.5">{note.preview}</span>

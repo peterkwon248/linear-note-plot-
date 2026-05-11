@@ -7,7 +7,7 @@ import { isToday, isThisWeek, isThisMonth, isYesterday } from "date-fns"
  *
  * Logic:
  *   - Same field → OR  (e.g. status:inbox + status:capture → inbox OR capture)
- *   - Different fields → AND  (e.g. status:inbox + priority:high → inbox AND high)
+ *   - Different fields → AND  (e.g. status:inbox + label:foo → inbox AND foo)
  *
  * This matches the standard filter behaviour of Linear, Notion, etc.
  */
@@ -100,9 +100,6 @@ function matchesRule(note: Note, rule: FilterRule, extras?: Pick<PipelineExtras,
   switch (field) {
     case "status":
       return compareString(note.status, operator, value)
-
-    case "priority":
-      return compareString(note.priority, operator, value)
 
     case "links": {
       const outCount = note.linksOut?.length ?? 0

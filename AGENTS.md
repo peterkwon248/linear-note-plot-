@@ -208,9 +208,9 @@ ViewMode = "list" | "table" | "board" | "insights" | "calendar"
 ### Valid Enums (for migration normalization)
 
 ```ts
-VALID_SORT_FIELDS: ["updatedAt", "createdAt", "priority", "title", "status", "links", "reads", "folder", "label"]
-VALID_GROUP_BY: ["none", "status", "priority", "date", "folder", "label", "triage", "linkCount"]
-VALID_COLUMNS: ["title", "status", "folder", "links", "reads", "priority", "createdAt", "updatedAt"]
+VALID_SORT_FIELDS: ["updatedAt", "createdAt", "title", "status", "links", "reads", "folder", "label"]
+VALID_GROUP_BY: ["none", "status", "date", "folder", "label", "triage", "linkCount"]
+VALID_COLUMNS: ["title", "status", "folder", "links", "reads", "createdAt", "updatedAt"]
 ```
 
 ---
@@ -252,9 +252,9 @@ Rule-based automation engine. Rules evaluate conditions on notes and apply actio
 - Defaults: `lib/autopilot/defaults.ts` — `DEFAULT_AUTOPILOT_RULES`
 - Types: `lib/autopilot/types.ts` — `AutopilotContext`, `AutopilotEvalResult`, `AutopilotRunResult`
 
-Condition fields: `status`, `priority`, `content_length`, `word_count`, `reads`, `age_days`, `has_links`, `has_tags`, `has_label`, `has_folder`, `link_count`, `tag_count`, `title_length`, `snooze_count`, `triage_status`
+Condition fields: `status`, `content_length`, `word_count`, `reads`, `age_days`, `has_links`, `has_tags`, `has_label`, `has_folder`, `link_count`, `tag_count`, `title_length`, `snooze_count`, `triage_status`
 
-Action types: `set_status`, `set_priority`, `set_label`, `set_triage`, `archive`, `pin`, `add_tag`, `remove_tag`
+Action types: `set_status`, `set_label`, `set_triage`, `archive`, `pin`, `add_tag`, `remove_tag`
 
 Store fields: `autopilotEnabled`, `autopilotRules`, `autopilotLog`
 

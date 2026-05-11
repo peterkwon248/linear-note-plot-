@@ -7,14 +7,6 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { Warning } from "@phosphor-icons/react/dist/ssr/Warning"
-import { ArrowUp } from "@phosphor-icons/react/dist/ssr/ArrowUp"
-import { ArrowRight } from "@phosphor-icons/react/dist/ssr/ArrowRight"
-import { ArrowDown } from "@phosphor-icons/react/dist/ssr/ArrowDown"
-import { Minus as PhMinus } from "@phosphor-icons/react/dist/ssr/Minus"
-import { Lightning } from "@phosphor-icons/react/dist/ssr/Lightning"
-import { BookOpen } from "@phosphor-icons/react/dist/ssr/BookOpen"
-import { Archive as ArchiveIcon } from "@phosphor-icons/react/dist/ssr/Archive"
 import { CaretDown } from "@phosphor-icons/react/dist/ssr/CaretDown"
 import { Check as PhCheck } from "@phosphor-icons/react/dist/ssr/Check"
 import { Hexagon } from "@phosphor-icons/react/dist/ssr/Hexagon"
@@ -24,9 +16,8 @@ import { Tag as PhTag } from "@phosphor-icons/react/dist/ssr/Tag"
 import { Plus as PhPlus } from "@phosphor-icons/react/dist/ssr/Plus"
 import { X as PhX } from "@phosphor-icons/react/dist/ssr/X"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import { cn } from "@/lib/utils"
 import { PRESET_COLORS, getEntityColor } from "@/lib/colors" // v109: opt-in color fallback
-import type { NoteStatus, NotePriority } from "@/lib/types"
+import type { NoteStatus } from "@/lib/types"
 
 export function pickColor(name: string): string {
   let hash = 0
@@ -65,41 +56,6 @@ export const STATUS_CONFIG: Record<
 
 const STATUS_OPTIONS: NoteStatus[] = ["stone", "brick", "keystone"]
 
-/* ── Priority config ──────────────────────────────────── */
-
-export const PRIORITY_CONFIG: Record<
-  NotePriority,
-  { label: string; color: string; icon: React.ReactNode }
-> = {
-  none: {
-    label: "No priority",
-    color: "var(--muted-foreground)",
-    icon: <PhMinus size={14} weight="regular" />,
-  },
-  urgent: {
-    label: "Urgent",
-    color: "var(--chart-4)",
-    icon: <Warning size={14} weight="regular" />,
-  },
-  high: {
-    label: "High",
-    color: "var(--chart-3)",
-    icon: <ArrowUp size={14} weight="regular" />,
-  },
-  medium: {
-    label: "Medium",
-    color: "var(--chart-3)",
-    icon: <ArrowRight size={14} weight="regular" />,
-  },
-  low: {
-    label: "Low",
-    color: "var(--accent)",
-    icon: <ArrowDown size={14} weight="regular" />,
-  },
-}
-
-const PRIORITY_OPTIONS: NotePriority[] = ["none", "urgent", "high", "medium", "low"]
-
 /* ── StatusBadge ──────────────────────────────────────── */
 
 export function StatusBadge({ status }: { status: NoteStatus }) {
@@ -111,20 +67,6 @@ export function StatusBadge({ status }: { status: NoteStatus }) {
     >
       {cfg.icon}
       {cfg.label}
-    </span>
-  )
-}
-
-/* ── PriorityBadge ────────────────────────────────────── */
-
-export function PriorityBadge({ priority }: { priority: NotePriority }) {
-  const cfg = PRIORITY_CONFIG[priority]
-  return (
-    <span
-      className="inline-flex items-center gap-1 text-note"
-      style={{ color: cfg.color }}
-    >
-      {cfg.icon}
     </span>
   )
 }
@@ -184,68 +126,6 @@ export function StatusDropdown({
                 <span className="text-foreground">{cfg.label}</span>
               </span>
               {value === s && <PhCheck className="text-muted-foreground" size={14} weight="bold" />}
-            </DropdownMenuItem>
-          )
-        })}
-      </DropdownMenuContent>
-    </DropdownMenu>
-  )
-}
-
-/* ── PriorityDropdown ─────────────────────────────────── */
-
-export function PriorityDropdown({
-  value,
-  onChange,
-  variant = "button",
-}: {
-  value: NotePriority
-  onChange: (priority: NotePriority) => void
-  variant?: "button" | "inline"
-}) {
-  const current = PRIORITY_CONFIG[value]
-
-  return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        {variant === "inline" ? (
-          <button
-            className="inline-flex items-center rounded-md p-1 transition-colors hover:bg-hover-bg"
-            style={{ color: current.color }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            {current.icon}
-          </button>
-        ) : (
-          <button
-            className="flex w-full items-center justify-between rounded-md border border-border bg-secondary/30 px-2.5 py-1.5 text-note text-foreground transition-colors hover:bg-hover-bg"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <span className="flex items-center gap-2" style={{ color: current.color }}>
-              {current.icon}
-              <span className="text-foreground">{current.label}</span>
-            </span>
-            <CaretDown className="text-muted-foreground" size={14} weight="regular" />
-          </button>
-        )}
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="start" className="w-44">
-        {PRIORITY_OPTIONS.map((p) => {
-          const cfg = PRIORITY_CONFIG[p]
-          return (
-            <DropdownMenuItem
-              key={p}
-              onClick={(e) => {
-                e.stopPropagation()
-                onChange(p)
-              }}
-              className="flex items-center justify-between"
-            >
-              <span className="flex items-center gap-2" style={{ color: cfg.color }}>
-                {cfg.icon}
-                <span className="text-foreground">{cfg.label}</span>
-              </span>
-              {value === p && <PhCheck className="text-muted-foreground" size={14} weight="bold" />}
             </DropdownMenuItem>
           )
         })}

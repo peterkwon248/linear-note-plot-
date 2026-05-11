@@ -16,7 +16,6 @@ import { X as PhX } from "@phosphor-icons/react/dist/ssr/X"
 import { Plus as PhPlus } from "@phosphor-icons/react/dist/ssr/Plus"
 import { CaretDown } from "@phosphor-icons/react/dist/ssr/CaretDown"
 import { CircleDashed } from "@phosphor-icons/react/dist/ssr/CircleDashed"
-import { WifiHigh } from "@phosphor-icons/react/dist/ssr/WifiHigh"
 import { Hash as PhHash } from "@phosphor-icons/react/dist/ssr/Hash"
 import { Check as PhCheck } from "@phosphor-icons/react/dist/ssr/Check"
 import type { Icon as PhIcon } from "@phosphor-icons/react"
@@ -27,10 +26,10 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { StatusBadge, PriorityBadge } from "@/components/note-fields"
+import { StatusBadge } from "@/components/note-fields"
 import { applyFilters } from "@/lib/view-engine/filter"
 import type { FilterRule, FilterField } from "@/lib/view-engine/types"
-import type { NoteStatus, NotePriority } from "@/lib/types"
+import type { NoteStatus } from "@/lib/types"
 import { getEntityColor } from "@/lib/colors" // v109: opt-in color fallback
 /* ── Picker Filter Types ──────────────────────────────── */
 
@@ -58,20 +57,6 @@ const STATUS_GROUP: PickerFilterGroup = {
     { value: "stone", label: "Stone" },
     { value: "brick", label: "Brick" },
     { value: "keystone", label: "Block" },
-  ],
-}
-
-const PRIORITY_GROUP: PickerFilterGroup = {
-  key: "priority",
-  label: "Priority",
-  icon: WifiHigh,
-  field: "priority" as FilterField,
-  values: [
-    { value: "urgent", label: "Urgent" },
-    { value: "high", label: "High" },
-    { value: "medium", label: "Medium" },
-    { value: "low", label: "Low" },
-    { value: "none", label: "No Priority" },
   ],
 }
 
@@ -153,7 +138,7 @@ export function NotePickerDialog({
   }), [tags])
 
   const allGroups = useMemo<PickerFilterGroup[]>(
-    () => [STATUS_GROUP, PRIORITY_GROUP, tagsGroup],
+    () => [STATUS_GROUP, tagsGroup],
     [tagsGroup],
   )
 
@@ -319,11 +304,6 @@ export function NotePickerDialog({
                     <PhCheck className={`shrink-0 ${selected.has(value) ? "text-accent opacity-100" : "opacity-0"}`} size={14} weight="bold" />
                     {groupKey === "status" ? (
                       <StatusBadge status={value as NoteStatus} />
-                    ) : groupKey === "priority" ? (
-                      <>
-                        <PriorityBadge priority={value as NotePriority} />
-                        <span className="ml-1 text-note">{label}</span>
-                      </>
                     ) : groupKey === "tags" && value !== "_none" ? (
                       <>
                         {(() => {

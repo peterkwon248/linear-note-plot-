@@ -19,7 +19,6 @@
 import { useEffect, useMemo, type ReactNode } from "react"
 import { FileText } from "@phosphor-icons/react/dist/ssr/FileText"
 import { Folder as FolderIcon } from "@phosphor-icons/react/dist/ssr/Folder"
-import { Tag as TagIcon } from "@phosphor-icons/react/dist/ssr/Tag"
 import { Hash } from "@phosphor-icons/react/dist/ssr/Hash"
 import { Tree } from "@phosphor-icons/react/dist/ssr/Tree"
 import { ViewHeader } from "@/components/view-header"
@@ -109,7 +108,7 @@ export function GalleryViewShell({
   ) => handleFilterToggleRule({ field, operator: operator ?? "eq", value })
 
   /* ── Notes → Gallery adapter ──
-   * Honor view-engine groupBy (status/folder/label/tags/priority/parent/...)
+   * Honor view-engine groupBy (status/folder/label/tags/parent/...)
    * and sortFields by reusing the `groups` returned from useNotesView.
    * When groupBy = "none" the engine returns a single synthetic group; we
    * pass the flat items directly so the gallery renders without a header. */
@@ -275,8 +274,6 @@ function getGroupIcon(
       return <FolderIcon size={14} weight="regular" className="text-muted-foreground" />
     case "tag":
       return <Hash size={14} weight="regular" className="text-muted-foreground" />
-    case "priority":
-      return <TagIcon size={14} weight="regular" className="text-muted-foreground" />
     case "family":
     case "parent":
       return <Tree size={14} weight="regular" className="text-muted-foreground" />

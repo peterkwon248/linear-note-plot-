@@ -1,4 +1,4 @@
-import type { Note, NoteStatus, NotePriority } from "../types"
+import type { Note, NoteStatus } from "../types"
 
 /* ── View Context ──────────────────────────────────────── */
 
@@ -36,7 +36,6 @@ export type ViewMode = "list" | "board" | "grid" | "insights" | "calendar" | "gr
 export type SortField =
   | "updatedAt"
   | "createdAt"
-  | "priority"
   | "title"
   | "status"
   | "links"
@@ -68,7 +67,7 @@ export interface SortRule {
 export const MAX_SORT_RULES = 3
 
 export type GroupBy =
-  | "none" | "status" | "priority" | "date" | "folder" | "label" | "triage" | "linkCount"
+  | "none" | "status" | "date" | "folder" | "label" | "triage" | "linkCount"
   // Wiki-specific groupings (Notes pipeline ignores these — handled by wiki-list-pipeline)
   | "tier" | "parent"
   // Tree grouping: same root ancestor → one group, depth indentation in List view only
@@ -88,7 +87,7 @@ export type GroupSortBy = "default" | "manual" | "name" | "count"
 export type FilterOperator = "eq" | "neq" | "gt" | "lt"
 
 export type FilterField =
-  | "status" | "priority" | "links" | "reads" | "folder" | "label"
+  | "status" | "links" | "reads" | "folder" | "label"
   | "updatedAt" | "createdAt" | "content" | "tags" | "pinned" | "reviewAt"
   | "source" | "wordCount" | "title" | "noteType"
   // Graph-specific filter fields
@@ -196,14 +195,6 @@ export const STATUS_ORDER: Record<NoteStatus, number> = {
   keystone: 2,
 }
 
-export const PRIORITY_ORDER: Record<NotePriority, number> = {
-  none: 0,
-  low: 1,
-  medium: 2,
-  high: 3,
-  urgent: 4,
-}
-
 /* ── Valid Keys (for migration normalization) ──────────── */
 
 export const VALID_VIEW_CONTEXT_KEYS: ViewContextKey[] = [
@@ -223,7 +214,7 @@ export const VALID_VIEW_CONTEXT_KEYS: ViewContextKey[] = [
 ]
 
 export const VALID_SORT_FIELDS: SortField[] = [
-  "updatedAt", "createdAt", "priority", "title", "status", "links", "reads", "folder", "label",
+  "updatedAt", "createdAt", "title", "status", "links", "reads", "folder", "label",
   "sub", "tier", "parent",
   // Group C PR-D entity-specific
   "name", "noteCount", "memberCount", "fieldCount", "size", "fileType",
@@ -232,7 +223,7 @@ export const VALID_SORT_FIELDS: SortField[] = [
 ]
 
 export const VALID_GROUP_BY: GroupBy[] = [
-  "none", "status", "priority", "date", "folder", "label", "triage", "linkCount",
+  "none", "status", "date", "folder", "label", "triage", "linkCount",
   // Wiki-specific
   "tier", "parent",
   // Tree grouping
@@ -253,10 +244,10 @@ export const VALID_COLUMNS: string[] = [
   "tags", "aliases",
   // Wiki-category-specific columns
   "parent", "tier", "sub",
-  // PR e: notes board now exposes priority/label/tags as toggleable chip
+  // PR e: notes board now exposes label/tags as toggleable chip
   // columns so the Display popover affects the board surface too. children
   // was already rendered by notes-table; whitelist it for visibleColumns.
-  "priority", "label", "children",
+  "label", "children",
   // PR group-c-d-1 (Tags): Tag entity index display properties.
   // noteCount = TagNoteCountChip toggle, color = leading color dot toggle.
   "noteCount", "color",

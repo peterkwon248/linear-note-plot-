@@ -37,7 +37,6 @@ export function migrate(persistedState: unknown): PlotState {
       return {
         ...rest,
         status: mergedStatus,
-        priority: n.priority ?? "none",
         reads: n.reads ?? 0,
         triageStatus: n.triageStatus ?? (n.isInbox ? "untriaged" : "kept"),
         reviewAt: n.reviewAt ?? null,
@@ -1936,6 +1935,90 @@ export function migrate(persistedState: unknown): PlotState {
       if (b && "coverEmoji" in b) {
         b.coverEmoji = null
       }
+    }
+  }
+
+  // v130: Note.priority 영구 폐기 (2026-05-12 사용자 결정).
+  // Plot은 지식 관리 + Zettelkasten 앱 — 이슈 트래킹/투두리스트 앱이 아니므로
+  // priority 개념 자체를 데이터 모델에서 제거. NotePriority 타입, Note.priority
+  // 필드, view-engine priority sort/group/filter, autopilot set_priority action,
+  // PRIORITY_HEX/PRIORITY_COLORS, 모든 UI surface 삭제. 사용자 데이터 무손실 —
+  // priority는 부가 메타데이터였고 다른 필드와 의존성 없음.
+  if (Array.isArray(state.notes)) {
+    for (const n of state.notes as any[]) {
+      if (n && "priority" in n) {
+        delete n.priority
+      }
+    }
+  }
+  // Autopilot rules: strip set_priority actions + priority conditions from
+  // user rules (legacy rules persisted with these field/action types). Empty
+  // actions/conditions arrays are safe — engine skips rules with no actions.
+  if (Array.isArray(state.autopilotRules)) {
+    for (const rule of state.autopilotRules as any[]) {
+      if (!rule) continue
+      if (Array.isArray(rule.actions)) {
+        rule.actions = rule.actions.filter(
+          (a: any) => a && a.type !== "set_priority"
+        )
+      }
+      if (Array.isArray(rule.conditions)) {
+        rule.conditions = rule.conditions.filter(
+          (c: any) => c && c.field !== "priority"
+        )
+      }
+    }
+  }
+  // Autopilot log: strip set_priority entries from persisted log so undo path
+  // can't materialize a Note.priority. Log entry order preserved.
+  if (Array.isArray(state.autopilotLog)) {
+    for (const entry of state.autopilotLog as any[]) {
+      if (!entry) continue
+      if (Array.isArray(entry.actions)) {
+        entry.actions = entry.actions.filter(
+          (a: any) => a && a.type !== "set_priority"
+        )
+      }
+    }
+  }
+  // View-engine state: strip priority from sortFields/filters/visibleColumns
+  // across all persisted viewStateByContext entries + savedViews.
+  const stripPriorityFromViewState = (vs: any) => {
+    if (!vs || typeof vs !== "object") return
+    if (Array.isArray(vs.sortFields)) {
+      vs.sortFields = vs.sortFields.filter(
+        (r: any) => r && r.field !== "priority"
+      )
+      if (vs.sortFields.length === 0) {
+        vs.sortFields = [{ field: "updatedAt", direction: "desc" }]
+      }
+    }
+    if (vs.sortField === "priority") vs.sortField = "updatedAt"
+    if (vs.groupBy === "priority") vs.groupBy = "none"
+    if (vs.subGroupBy === "priority") vs.subGroupBy = "none"
+    if (Array.isArray(vs.filters)) {
+      vs.filters = vs.filters.filter((f: any) => f && f.field !== "priority")
+    }
+    if (Array.isArray(vs.visibleColumns)) {
+      vs.visibleColumns = vs.visibleColumns.filter(
+        (c: any) => c !== "priority"
+      )
+    }
+    if (vs.groupOrder && typeof vs.groupOrder === "object") {
+      delete vs.groupOrder.priority
+    }
+    if (vs.subGroupOrder && typeof vs.subGroupOrder === "object") {
+      delete vs.subGroupOrder.priority
+    }
+  }
+  if (state.viewStateByContext && typeof state.viewStateByContext === "object") {
+    for (const vs of Object.values(state.viewStateByContext as Record<string, unknown>)) {
+      stripPriorityFromViewState(vs)
+    }
+  }
+  if (Array.isArray(state.savedViews)) {
+    for (const sv of state.savedViews as any[]) {
+      if (sv && sv.viewState) stripPriorityFromViewState(sv.viewState)
     }
   }
 

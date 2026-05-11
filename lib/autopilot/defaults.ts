@@ -37,21 +37,4 @@ export const DEFAULT_AUTOPILOT_RULES: AutopilotRule[] = [
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
   },
-  {
-    id: "rule-high-priority-stone",
-    name: "긴 Stone 노트 우선순위 자동 부여",
-    description: "내용이 긴 Stone 노트에 High 우선순위 자동 부여",
-    enabled: false,  // disabled by default
-    trigger: "on_save",
-    conditions: [
-      { field: "status", operator: "eq", value: "stone" },
-      { field: "word_count", operator: "gte", value: 50 },
-      { field: "priority", operator: "eq", value: "none" },
-    ],
-    actions: [
-      { type: "set_priority", value: "high" },
-    ],
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  },
 ]

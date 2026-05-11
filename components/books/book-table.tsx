@@ -67,10 +67,10 @@ interface BookColumnDef {
 
 const BOOK_COLUMNS: BookColumnDef[] = [
   { id: "title",     label: "Name",     width: "flex-1 min-w-0", sortField: "title" },
+  { id: "index",     label: "Index",    width: "w-[40px] shrink-0", align: "center" },
   { id: "kind",      label: "Kind",     width: "w-[110px] shrink-0", align: "left" },
   { id: "itemCount", label: "Items",    width: "w-[72px] shrink-0",  align: "right", sortField: "itemCount" },
   { id: "sources",   label: "Sources",  width: "w-[100px] shrink-0", align: "left" },
-  { id: "pinned",    label: "Pin",      width: "w-[48px] shrink-0",  align: "center" },
   { id: "updatedAt", label: "Updated",  width: "w-[80px] shrink-0",  align: "right", sortField: "updatedAt" },
   { id: "createdAt", label: "Created",  width: "w-[80px] shrink-0",  align: "right", sortField: "createdAt" },
 ]
@@ -98,7 +98,7 @@ function TH({
 
   if (!col) {
     return (
-      <span className={cn("inline-flex items-center text-note font-medium text-foreground/80", alignClass)}>
+      <span className={cn("inline-flex items-center text-note font-medium text-foreground", alignClass)}>
         {label}
       </span>
     )
@@ -108,7 +108,7 @@ function TH({
     <button
       type="button"
       className={cn(
-        "group/th inline-flex items-center gap-1 text-note font-medium text-foreground/80 transition-colors hover:text-foreground",
+        "group/th inline-flex items-center gap-1 text-note font-medium text-foreground transition-colors hover:text-foreground",
         alignClass,
       )}
       onClick={() => onSort(col)}
@@ -217,11 +217,12 @@ export function BookTable({
 
       {/* Body */}
       <div className="flex flex-col">
-        {books.map((book) => (
+        {books.map((book, idx) => (
           <BookRow
             key={book.id}
             book={book}
             cols={cols}
+            rowIndex={idx}
             checked={selectedIds.has(book.id)}
             onToggleCheck={() => toggleOne(book.id)}
             onOpen={onOpen}
@@ -363,6 +364,7 @@ function CheckboxBox({
 function BookRow({
   book,
   cols,
+  rowIndex,
   checked,
   onToggleCheck,
   onOpen,
@@ -374,6 +376,7 @@ function BookRow({
 }: {
   book: Book
   cols: BookColumnDef[]
+  rowIndex: number
   checked: boolean
   onToggleCheck: () => void
   onOpen: (id: string) => void
@@ -410,7 +413,7 @@ function BookRow({
           </div>
           {cols.map((c) => (
             <div key={c.id} className={cn("flex items-center", c.width)}>
-              {renderCell(c.id, book, kind, sourceKinds)}
+              {renderCell(c.id, book, kind, sourceKinds, rowIndex)}
             </div>
           ))}
         </div>
@@ -478,6 +481,7 @@ function renderCell(
   book: Book,
   kind: "smart" | "manual" | "hybrid",
   sourceKinds: Array<"folder" | "category" | "tag" | "label" | "sticker">,
+  rowIndex?: number,
 ): React.ReactNode {
   switch (colId) {
     case "title":
@@ -486,13 +490,21 @@ function renderCell(
           <span className="flex h-5 w-5 shrink-0 items-center justify-center text-muted-foreground/70">
             <BookKindIcon kind={kind} size={14} />
           </span>
-          <span className="min-w-0 flex-1 truncate text-note text-foreground pl-2">
-            {book.title || "Untitled book"}
+          <span className="min-w-0 flex-1 inline-flex items-center gap-1.5 pl-2">
+            <span className="truncate text-note text-foreground">
+              {book.title || "Untitled book"}
+            </span>
+            {book.pinned && (
+              <PushPin size={11} weight="fill" className="shrink-0 text-amber-500" />
+            )}
           </span>
-          {book.pinned && (
-            <PushPin size={11} weight="fill" className="ml-1 shrink-0 text-amber-500" />
-          )}
         </>
+      )
+    case "index":
+      return (
+        <span className="w-full text-center text-2xs text-muted-foreground tabular-nums">
+          {(rowIndex ?? 0) + 1}
+        </span>
       )
     case "kind":
       return <BookKindChip kind={kind} />
@@ -505,10 +517,6 @@ function renderCell(
     case "sources":
       return sourceKinds.length > 0
         ? <BookSourceKindChip kinds={sourceKinds} />
-        : <span className="text-2xs text-muted-foreground/40">—</span>
-    case "pinned":
-      return book.pinned
-        ? <PushPin size={11} weight="fill" className="text-amber-500" />
         : <span className="text-2xs text-muted-foreground/40">—</span>
     case "updatedAt":
       return (

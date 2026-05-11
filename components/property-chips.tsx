@@ -39,9 +39,9 @@ import { PencilSimple as PhPencilSimple } from "@phosphor-icons/react/dist/ssr/P
 import { Sparkle as PhSparkle } from "@phosphor-icons/react/dist/ssr/Sparkle"
 import { BookOpen as PhBookOpen } from "@phosphor-icons/react/dist/ssr/BookOpen"
 import { Sticker as PhSticker } from "@phosphor-icons/react/dist/ssr/Sticker"
-import { StatusBadge, PriorityBadge } from "@/components/note-fields"
+import { StatusBadge } from "@/components/note-fields"
 import { shortRelative } from "@/lib/format-utils"
-import type { NoteStatus, NotePriority } from "@/lib/types"
+import type { NoteStatus } from "@/lib/types"
 import { getEntityColor } from "@/lib/colors" // v109: opt-in color fallback
 
 /* ── Common chip skeleton ─────────────────────────────── */
@@ -79,18 +79,6 @@ function ChipShell({
  */
 export function StatusChip({ status }: { status: NoteStatus }) {
   return <StatusBadge status={status} />
-}
-
-/* ── Priority chip (notes) ────────────────────────────── */
-
-/**
- * PriorityChip is intentionally icon-only (matches PriorityBadge's existing
- * inline behaviour). When priority === "none" the parent should not render
- * this chip at all — the icon would be a meaningless dash.
- */
-export function PriorityChip({ priority }: { priority: NotePriority }) {
-  if (priority === "none") return null
-  return <PriorityBadge priority={priority} />
 }
 
 /* ── Folder chip ──────────────────────────────────────── */
@@ -608,7 +596,7 @@ export function BookKindChip({ kind }: { kind: "smart" | "manual" | "hybrid" }) 
  *
  * Color mapping mirrors BooksGalleryAdapter accentColor (PR 4): Smart
  * violet / Hybrid amber / Manual neutral. Dark-mode tone shift kept subtle
- * via Tailwind dark variant; values harmonize with v3 priority palette.
+ * via Tailwind dark variant.
  */
 export function BookKindIcon({
   kind,

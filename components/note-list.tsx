@@ -22,7 +22,7 @@ import { Trash } from "@phosphor-icons/react/dist/ssr/Trash"
 import { usePlotStore, filterNotesByRoute, getFilterTitle } from "@/lib/store"
 import { useSettingsStore } from "@/lib/settings-store"
 import type { Note, NoteFilter } from "@/lib/types"
-import { StatusDropdown, PriorityDropdown } from "@/components/note-fields"
+import { StatusDropdown } from "@/components/note-fields"
 import { setNoteDragData } from "@/lib/drag-helpers"
 import { getEntityColor } from "@/lib/colors" // v109: opt-in color fallback
 
@@ -79,13 +79,6 @@ const NoteRow = memo(function NoteRow({ note }: { note: Note }) {
       className="note-row group flex items-center gap-3 px-3 transition-colors hover:bg-hover-bg cursor-pointer"
       onClick={() => openNote(note.id)}
     >
-      {/* Priority indicator */}
-      <PriorityDropdown
-        value={note.priority}
-        onChange={(p) => updateNote(note.id, { priority: p })}
-        variant="inline"
-      />
-
       {/* PushPin icon */}
       {note.pinned && (
         <PushPin className="shrink-0 text-chart-3 fill-chart-3" size={14} weight="regular" />

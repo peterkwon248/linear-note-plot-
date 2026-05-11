@@ -45,14 +45,12 @@ const SORT_OPTIONS: { value: SortField; label: string }[] = [
   { value: "createdAt", label: "Created" },
   { value: "title", label: "Title" },
   { value: "status", label: "Status" },
-  { value: "priority", label: "Priority" },
   { value: "links", label: "Links" },
 ]
 
 const GROUP_OPTIONS: { value: GroupBy; label: string }[] = [
   { value: "none", label: "No grouping" },
   { value: "status", label: "Status" },
-  { value: "priority", label: "Priority" },
   { value: "folder", label: "Folder" },
 ]
 

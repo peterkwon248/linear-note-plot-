@@ -117,13 +117,6 @@
      Notes-permanent green semantic. Sole consumer today: FixedToolbar peek-mode
      bg (`bg-wiki-complete/[0.06]`) — emerald tint reads as "viewing wiki article". */
   --wiki-complete: #10b981;
-  /* Plot --priority-* 5-tier (preserved 100% — see lib/colors.ts PRIORITY_HEX) */
-  --priority-medium: #d97706;
-  /* Q8 LOCKED: v3 priority tokens — namespace-isolated from Plot 5-tier above.
-     Values from plot-v3-tokens.css. */
-  --v3-priority-high:   #DC6803;
-  --v3-priority-medium: #5E6AD2;
-  --v3-priority-low:    #98A2B3;
   --radius: 0.5rem;
   --sidebar-bg: #fafafa;
   --sidebar-foreground: #18181b;
@@ -251,13 +244,6 @@
   /* Wiki "complete" / article state — emerald-400 for dark mode. See light
      theme above for full rationale. */
   --wiki-complete: #34d399;
-  --priority-medium: #fbbf24;
-  /* Q8 LOCKED: v3 priority tokens (dark) — same values as light per
-     plot-v3-tokens.css (mockup uses shared priority tokens for both modes).
-     Plot --priority-* 5-tier remains untouched. */
-  --v3-priority-high:   #DC6803;
-  --v3-priority-medium: #5E6AD2;
-  --v3-priority-low:    #98A2B3;
   /* Sidebar: subtle layering */
   --sidebar-bg: #141416;
   --sidebar-foreground: #d4d4d8;
@@ -334,7 +320,6 @@
   --color-chart-4: var(--chart-4);
   --color-chart-5: var(--chart-5);
   --color-wiki-complete: var(--wiki-complete);
-  --color-priority-medium: var(--priority-medium);
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
@@ -386,10 +371,6 @@
   --color-status-keystone: var(--status-keystone);
   --color-wiki-stub:        var(--wiki-stub);
   --color-wiki-article:     var(--wiki-article);
-  /* v3 Priority (namespace-isolated from Plot 5-tier) */
-  --color-v3-priority-high:   var(--v3-priority-high);
-  --color-v3-priority-medium: var(--v3-priority-medium);
-  --color-v3-priority-low:    var(--v3-priority-low);
 
   /* 에디터 제목 사이즈 토큰 */
   --font-size-title: 1.75rem;
@@ -1057,9 +1038,7 @@
 .a-th__cell {
   font-size: 10.5px;
   font-weight: 600;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: var(--whisper-fg);
+  color: var(--fg);
 }
 
 /* Group divider (Today / Yesterday / This week / Older) */
@@ -1076,10 +1055,8 @@
 }
 .a-tg svg { color: var(--whisper-fg); }
 .a-tg__label {
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 600;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
   color: var(--fg);
 }
 .a-tg__range {
@@ -1120,7 +1097,7 @@
   border-radius: 0 2px 2px 0;
 }
 
-/* Row lead (priority bar + icon + title) */
+/* Row lead (status bar + icon + title) */
 .a-row__lead {
   display: flex;
   align-items: center;

@@ -197,7 +197,12 @@
       "Bash(cp __TRACKED_VAR__/.claude/.omc-worklog/latest.md __TRACKED_VAR__/.claude/.omc-worklog/2026-05-10_1440.md)",
       "Bash(cp __TRACKED_VAR__/.claude/.omc-worklog/latest.md .omc/worklog/latest.md)",
       "Bash(cat /c/Users/user/AppData/Local/Temp/claude/C--Users-user-Desktop-linear-note-plot---claude-worktrees-lucid-agnesi-b963f3/b1650869-40c1-4dc6-acc1-bc250f603504/tasks/byzx4sfdh.output 2>&1)",
-      "Bash(grep -n \"^      \\)}\\\\$\\\\|^      \\)}\\\\\\\\b\" \"C:/Users/user/Desktop/linear-note-plot-/.claude/worktrees/lucid-agnesi-b963f3/components/views/library-view.tsx\")"
+      "Bash(grep -n \"^      \\)}\\\\$\\\\|^      \\)}\\\\\\\\b\" \"C:/Users/user/Desktop/linear-note-plot-/.claude/worktrees/lucid-agnesi-b963f3/components/views/library-view.tsx\")",
+      "Bash(ls C:/Users/user/.claude/plugins/ 2>&1 | head -20)",
+      "Bash(gh auth *)",
+      "Bash(gh repo *)",
+      "Bash(gh api *)",
+      "Bash(python -c \"import sys, json; data=json.load\\(sys.stdin\\); print\\(f'Total top-level entries: {len\\(data\\)}'\\); [print\\(f'  {e[\\\\\"type\\\\\"]}: {e[\\\\\"name\\\\\"]}'\\) for e in data[:15]]\")"
     ]
   }
 }

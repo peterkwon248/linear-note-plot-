@@ -123,7 +123,7 @@ function BoardColumn({
         {...attributes}
         {...listeners}
       >
-        <WikiGroupHeaderIcon groupBy={groupBy} groupKey={group.key} wikiCategories={wikiCategories} size={14} />
+        <WikiGroupHeaderIcon groupBy={groupBy} groupKey={group.key} wikiCategories={wikiCategories} size={16} />
         <span className="text-note font-semibold text-foreground truncate">{group.label || "Untitled"}</span>
         <span className="text-2xs text-muted-foreground">{group.articles.length}</span>
       </div>

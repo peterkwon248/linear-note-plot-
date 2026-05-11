@@ -67,7 +67,6 @@ export interface ViewConfig {
 
 // SVG Icons (14px, strokeWidth 1.2)
 const StatusIcon = <svg width={14} height={14} viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="5.5" stroke="currentColor" strokeWidth="1.2"/><path d="M8 2.5a5.5 5.5 0 010 11" fill="currentColor" opacity="0.15"/></svg>
-const PriorityIcon = <svg width={14} height={14} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"><line x1="3" y1="13" x2="3" y2="10"/><line x1="6.5" y1="13" x2="6.5" y2="7"/><line x1="10" y1="13" x2="10" y2="4"/><line x1="13" y1="13" x2="13" y2="2"/></svg>
 const FolderIcon = <svg width={14} height={14} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinejoin="round"><path d="M14 12.5a1 1 0 01-1 1H3a1 1 0 01-1-1V3.5a1 1 0 011-1h3.5l1.5 2H13a1 1 0 011 1z"/></svg>
 const LabelIcon = <svg width={14} height={14} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"><path d="M1.5 4.5h12l2.5 3.5-2.5 3.5h-12z"/></svg>
 const TagIcon = <svg width={14} height={14} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinejoin="round"><path d="M8.5 1.5H2v6.5l5.65 5.65a1 1 0 001.41 0l4.59-4.59a1 1 0 000-1.41z"/><circle cx="5" cy="5" r="1" fill="currentColor" stroke="none"/></svg>
@@ -189,12 +188,11 @@ export const NOTES_VIEW_CONFIG: ViewConfig = {
       // display-mode flag, not a column.
       { key: "showAlphaIndex", label: "Index", icon: IndexIcon },
       { key: "status", label: "Status", icon: StatusIcon },
-      // PR e: priority/label/tags now toggleable on the board card. They
+      // PR e: label/tags now toggleable on the board card. They
       // were always-rendered before — moving them under Display Properties
       // gives users the same visibility control as the list view.
       // pinned is intentionally NOT here: pinned notes always show the pin
       // icon (Linear pattern — pinned-state is identity, not a meta toggle).
-      { key: "priority", label: "Priority", icon: PriorityIcon },
       { key: "label", label: "Label", icon: LabelIcon },
       { key: "tags", label: "Tags", icon: TagIcon },
       { key: "folder", label: "Folder", icon: FolderIcon },
@@ -210,7 +208,6 @@ export const NOTES_VIEW_CONFIG: ViewConfig = {
 
 // Wiki-specific filter/display options.
 // 의도된 차이 (Notes 대비):
-//   - priority sort 제외: wiki에 priority 개념 없음
 //   - status filter 제외: stub/article은 런타임 파생 (isWikiStub) → toggle로 처리
 //   - groupingOptions: tier(depth)/linkCount/parent/category — wiki 위계 반영
 //   - filterCategories: category(WikiCategory)/links/dates/aliases/parent
@@ -271,7 +268,6 @@ export const WIKI_VIEW_CONFIG: ViewConfig = {
     // when switching to board mode from groupBy="none" fall back to
     // "label" (Category) — the canonical Wiki grouping axis.
     boardDefaultGroupBy: "label",
-    // priority 제외 (wiki에 의미 없음)
     orderingOptions: [
       { value: "updatedAt", label: "Updated" },
       { value: "createdAt", label: "Created" },
@@ -448,6 +444,10 @@ export const INBOX_VIEW_CONFIG: ViewConfig = {
   },
 }
 
+// Insights view sorts by analysis severity internally (SEVERITY_ORDER in
+// components/insights-view.tsx); no user-facing sort options are wired today.
+// orderingOptions intentionally empty — DisplayPanel falls back to no ordering
+// when the list is empty.
 export const INSIGHTS_VIEW_CONFIG: ViewConfig = {
   showFilter: false,
   showDisplay: true,
@@ -457,7 +457,6 @@ export const INSIGHTS_VIEW_CONFIG: ViewConfig = {
   displayConfig: {
     supportedModes: [],
     orderingOptions: [
-      { value: "priority", label: "Severity" },
       { value: "reads", label: "Count" },
     ],
     groupingOptions: [],
@@ -466,7 +465,6 @@ export const INSIGHTS_VIEW_CONFIG: ViewConfig = {
       { key: "showResolved", label: "Show resolved", icon: ArchiveIcon },
     ],
     properties: [
-      { key: "priority", label: "Severity", icon: PriorityIcon },
       { key: "reads", label: "Count", icon: ContentIcon },
     ],
   },
@@ -516,13 +514,6 @@ export const TEMPLATES_VIEW_CONFIG: ViewConfig = {
       { key: "brick", label: "Brick", color: "#f5a623", icon: <Cube size={14} weight="regular" style={{ color: "var(--chart-3)" }} /> },
       { key: "keystone", label: "Block", color: "#45d483", icon: <Cuboid2x2 size={14} weight="regular" style={{ color: "var(--chart-5)" }} /> },
     ]},
-    { key: "priority", label: "Priority", icon: PriorityIcon, values: [
-      { key: "urgent", label: "Urgent" },
-      { key: "high", label: "High" },
-      { key: "medium", label: "Medium" },
-      { key: "low", label: "Low" },
-      { key: "none", label: "No priority" },
-    ]},
     { key: "label", label: "Label", icon: LabelIcon, values: [] },  // hydrated at runtime
     { key: "folder", label: "Folder", icon: FolderIcon, values: [] },  // hydrated at runtime
     { key: "tags", label: "Tags", icon: TagIcon, values: [] },  // hydrated at runtime
@@ -546,7 +537,6 @@ export const TEMPLATES_VIEW_CONFIG: ViewConfig = {
     groupingOptions: [
       { value: "none", label: "No grouping" },
       { value: "status", label: "Status" },
-      { value: "priority", label: "Priority" },
       { value: "label", label: "Label" },
       { value: "folder", label: "Folder" },
     ],
@@ -801,10 +791,10 @@ export const BOOKS_VIEW_CONFIG: ViewConfig = {
     // showTrashed toggle is handled in books-view.tsx ViewHeader actions.
     toggles: [],
     properties: [
+      { key: "index",     label: "Index",         icon: SortIcon },
       { key: "itemCount", label: "Item count",    icon: SortIcon },
       { key: "kind",      label: "Kind",          icon: SourceIcon },
       { key: "sources",   label: "Smart sources", icon: SourceIcon },
-      { key: "pinned",    label: "Pin",           icon: PinIcon },
     ],
   },
 }

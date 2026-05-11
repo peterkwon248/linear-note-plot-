@@ -156,24 +156,6 @@ export const WIKI_STATUS_HEX = {
   article: "#10b981",   // emerald — complete (same hue as Notes permanent)
 } as const
 
-/* ── Priority ────────────────────────────────── */
-
-export const PRIORITY_COLORS = {
-  none:   { css: "var(--muted-foreground)", tw: "muted-foreground" },
-  urgent: { css: "var(--chart-4)",          tw: "chart-4" },
-  high:   { css: "var(--chart-3)",          tw: "chart-3" },
-  medium: { css: "var(--priority-medium)",  tw: "priority-medium" },
-  low:    { css: "var(--accent)",           tw: "accent" },
-} as const
-
-export const PRIORITY_HEX = {
-  none:   "#6b7280",
-  urgent: "#ef4444",   // red
-  high:   "#f97316",   // orange
-  medium: "#f59e0b",   // amber  ← distinct from high
-  low:    "#6366f1",   // indigo
-} as const
-
 /* ── Triage ──────────────────────────────────── */
 
 export const TRIAGE_HEX = {
@@ -331,8 +313,8 @@ export const EVENT_HEX = {
  * - MOTION: motion durations (fast / mid / slow)
  * - RADIUS: 8 radius scale (r2..r12)
  *
- * Plot existing tokens (PRIORITY_HEX 5-tier, SPACE_COLORS, PRESET_COLORS)
- * are PRESERVED — these aliases are additive only.
+ * Plot existing tokens (SPACE_COLORS, PRESET_COLORS) are PRESERVED — these
+ * aliases are additive only.
  */
 
 export const TEXT_HIERARCHY = {

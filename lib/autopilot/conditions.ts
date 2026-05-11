@@ -10,8 +10,6 @@ function getFieldValue(ctx: AutopilotContext, field: string): string | number | 
   switch (field) {
     case "status":
       return note.status
-    case "priority":
-      return note.priority
     case "triage_status":
       return note.triageStatus
     case "content_length":

@@ -52,10 +52,9 @@ import { toast } from "sonner"
 import { getSnoozeTime, type SnoozePreset } from "@/lib/queries/notes"
 import { useNotesView } from "@/lib/view-engine/use-notes-view"
 import type { ViewContextKey, SortField, GroupBy, NoteGroup, FilterRule } from "@/lib/view-engine/types"
-import { STATUS_CONFIG, PRIORITY_CONFIG } from "@/components/note-fields"
+import { STATUS_CONFIG } from "@/components/note-fields"
 import {
   StatusChip,
-  PriorityChip,
   FolderChip,
   MultiFolderMarker,
   LabelChip,
@@ -70,7 +69,7 @@ import {
   PropertyChipRow,
 } from "@/components/property-chips"
 import { BoardWorkbench } from "@/components/board-workbench"
-import type { Note, NoteStatus, NotePriority, TriageStatus, Folder, Tag, Label } from "@/lib/types"
+import type { Note, NoteStatus, TriageStatus, Folder, Tag, Label } from "@/lib/types"
 import { FilterChipBar } from "@/components/filter-bar"
 import { ViewHeader } from "@/components/view-header"
 import { useSaveViewProps } from "@/lib/view-engine/use-save-view-props"
@@ -155,7 +154,6 @@ const SINGLE_STATUS_TABS: ViewContextKey[] = ["stone", "brick", "keystone"]
 const GROUP_OPTIONS: { value: GroupBy; label: string }[] = [
   { value: "none", label: "No grouping" },
   { value: "status", label: "Status" },
-  { value: "priority", label: "Priority" },
   { value: "triage", label: "Triage" },
   { value: "linkCount", label: "Links" },
   { value: "date", label: "Date" },
@@ -168,7 +166,6 @@ const SORT_OPTIONS: { value: SortField; label: string }[] = [
   { value: "folder", label: "Folder" },
   { value: "links", label: "Links" },
   { value: "reads", label: "Reads" },
-  { value: "priority", label: "Priority" },
   { value: "updatedAt", label: "Updated" },
   { value: "createdAt", label: "Created" },
 ]
@@ -234,9 +231,6 @@ function BoardColumn({
     if (groupBy === "family" || groupBy === "parent") {
       return <Tree size={14} weight="regular" className="text-muted-foreground" />
     }
-    if (groupBy === "priority") {
-      return <TagIcon size={14} weight="regular" className="text-muted-foreground" />
-    }
     return null
   }, [groupBy, group.key])
 
@@ -244,10 +238,6 @@ function BoardColumn({
     if (groupBy === "status") {
       const cfg = STATUS_CONFIG[group.key as NoteStatus]
       return cfg ? { color: cfg.color, bg: cfg.bg } : null
-    }
-    if (groupBy === "priority") {
-      const cfg = PRIORITY_CONFIG[group.key as NotePriority]
-      return cfg ? { color: cfg.color, bg: `${cfg.color}1a` } : null
     }
     if (groupBy === "triage") {
       const c = TRIAGE_HEX[group.key as keyof typeof TRIAGE_HEX]
@@ -339,7 +329,6 @@ interface BoardCardProps {
   onDoubleClick?: () => void
   onSelect?: (noteId: string, e: React.MouseEvent) => void
   onStatus: (s: NoteStatus) => void
-  onPriority: (p: NotePriority) => void
   onKeep: () => void
   onSnooze: (opt: SnoozePreset) => void
   onTrash: () => void
@@ -421,16 +410,7 @@ function BoardCardInner({
   // PropertyChipRow caps at 3 visible + "+N" overflow regardless.
   const propertyChips = useMemo(() => {
     const out: React.ReactNode[] = []
-    // Priority is not redundant when groupBy="priority" — column header
-    // already shows the level — so suppress in that case (matches old
-    // behaviour). Same for status (handled in title row).
-    if (
-      isVisible("priority") &&
-      groupBy !== "priority" &&
-      note.priority !== "none"
-    ) {
-      out.push(<PriorityChip key="priority" priority={note.priority} />)
-    }
+    // Status is handled in title row, not as a chip — skipped here.
     if (isVisible("folder") && noteFolderObjs.length > 0) {
       // PR (b): multi-folder render — one chip per membership. Overflow
       // ("+N") is collapsed at the row level by PropertyChipRow's
@@ -496,7 +476,7 @@ function BoardCardInner({
     }
     return out
   }, [
-    note.priority, note.updatedAt, note.createdAt,
+    note.updatedAt, note.createdAt,
     noteFolderObjs, label, noteTagObjs, parentTitle, childrenCount,
     links, wordCount, groupBy, groupKey, visibleColumns,
   ]) // eslint-disable-line react-hooks/exhaustive-deps
@@ -675,7 +655,6 @@ const BoardCard = memo(BoardCardInner, (prev, next) =>
   prev.note.updatedAt === next.note.updatedAt &&
   prev.note.createdAt === next.note.createdAt &&
   prev.note.status === next.note.status &&
-  prev.note.priority === next.note.priority &&
   // v107 N:M: equality is reference-based on the array. A new array
   // (mutated membership) → re-render. Same identity skips re-render.
   prev.note.folderIds === next.note.folderIds &&
@@ -708,7 +687,6 @@ const BoardCard = memo(BoardCardInner, (prev, next) =>
 function getFieldUpdate(groupBy: GroupBy, targetKey: string): Partial<Note> | null {
   switch (groupBy) {
     case "status": return { status: targetKey as NoteStatus }
-    case "priority": return { priority: targetKey as NotePriority }
     case "triage": return { triageStatus: targetKey as TriageStatus }
     // v107 N:M: dropping a note onto a folder column overwrites the entire
     // folderIds set with [target]. PR (c) introduces add-vs-move modifier
@@ -794,9 +772,6 @@ export function NotesBoard({
       if (cat.key === "status") {
         return { ...cat, values: cat.values.map(v => ({ ...v, count: notes.filter(n => !n.trashed && n.status === v.key).length })) }
       }
-      if (cat.key === "priority") {
-        return { ...cat, values: cat.values.map(v => ({ ...v, count: notes.filter(n => !n.trashed && n.priority === v.key).length })) }
-      }
       return cat
     })
   }, [folders, labels, tags, notes])
@@ -821,7 +796,7 @@ export function NotesBoard({
       updateViewState({ groupBy: tabDefault ?? "status" })
     } else if (viewState.groupBy === "status" && isSingleStatusTab) {
       // Single-status tab + status grouping = 1 column → use tab default
-      updateViewState({ groupBy: tabDefault ?? "priority" })
+      updateViewState({ groupBy: tabDefault ?? "triage" })
     }
   }, [effectiveTab, isSingleStatusTab, tabDefault, viewState.groupBy, updateViewState])
 
@@ -1006,7 +981,7 @@ export function NotesBoard({
     //     users who want exclusive membership.
     //   * `_no_folder` column: shift modifier ignored (no semantic for
     //     "add to no folder" — clearing is always exclusive).
-    // Other groupBy modes (status / priority / triage) are inherently
+    // Other groupBy modes (status / triage) are inherently
     // single-valued, so the modifier doesn't apply; the existing
     // fieldUpdate path always runs.
     const isFolderTarget =
@@ -1299,7 +1274,6 @@ export function NotesBoard({
                     }}
                     onSelect={handleCardSelect}
                     onStatus={(s) => updateNote(note.id, { status: s })}
-                    onPriority={(p) => updateNote(note.id, { priority: p })}
                     onKeep={() => triageKeep(note.id)}
                     onSnooze={(opt) => triageSnooze(note.id, getSnoozeTime(opt))}
                     onTrash={() => triageTrash(note.id)}
@@ -1324,7 +1298,7 @@ export function NotesBoard({
                               const subKey = `${group.key}::${sub.key}`
                               const isCollapsed = collapsedSubGroups.has(subKey)
                               const subLabel = sub.key === "_none"
-                                ? `No ${viewState.subGroupBy === "folder" ? "Folder" : viewState.subGroupBy === "label" ? "Label" : viewState.subGroupBy === "priority" ? "Priority" : viewState.subGroupBy === "status" ? "Status" : "Group"}`
+                                ? `No ${viewState.subGroupBy === "folder" ? "Folder" : viewState.subGroupBy === "label" ? "Label" : viewState.subGroupBy === "status" ? "Status" : "Group"}`
                                 : sub.label
                               // Calculate how many cards we can show in this sub-group
                               const remaining = cardLimit - cardCount
@@ -1430,7 +1404,6 @@ export function NotesBoard({
                     visibleColumns={viewState.visibleColumns}
                     onClick={() => {}}
                     onStatus={() => {}}
-                    onPriority={() => {}}
                     onKeep={() => {}}
                     onSnooze={() => {}}
                     onTrash={() => {}}

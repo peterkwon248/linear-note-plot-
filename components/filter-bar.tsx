@@ -767,7 +767,6 @@ export type FilterGroupKey = "status" | "folder" | "label" | "tags" | "source" |
 
 const FIELD_TO_GROUP: Record<FilterField, FilterGroupKey> = {
   status: "status",
-  priority: "status",
   folder: "folder",
   tags: "tags",
   source: "source",

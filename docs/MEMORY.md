@@ -29,6 +29,60 @@
 
 ---
 
+## 🚀 2026-05-12 (밤, 거대 cleanup) — Priority 영구 폐기 + UI 선명화 + Books polish + Wiki 그룹 헤더 (Store v129 → v130)
+
+**범위**: 1 worktree (`vigilant-williams-c2db1c`). 45 파일 변경 (220 insertions, 605 deletions). PR #304 통합 누적.
+
+### 큰 결정 (영구)
+
+**1. Priority 영구 폐기 (LOCKED)**:
+- Plot 정체성 = Zettelkasten 지식관리. 이슈 트래킹/투두리스트 X
+- NotePriority type / Note.priority 필드 / PRIORITY_HEX / PRIORITY_COLORS / PriorityBadge/Chip/Dropdown 완전 제거
+- autopilot `set_priority` action / `priority` condition 제거
+- view-engine priority sort/filter/group 제거
+- store v130 migration: 기존 노트의 priority 필드 strip (idempotent), autopilotRules/savedViews/viewStateByContext 모두 cleanup
+- 247 tests pass (priority 테스트는 status/reads로 대체)
+
+**2. Pin = identity, not meta toggle (Linear 패턴 LOCKED)**:
+- Pin은 entity identity (status처럼) — DisplayProperties 토글 X
+- Notes/Wiki/Books 모두 Pin = Name 옆 inline (title 우측). column 별도 X
+- PR #303 (어제 Pin을 status chip 옆으로 이동) 폐기 → close
+- Books의 Pin 컬럼 + Pin DisplayProperties 토글 제거
+
+**3. SourceIcon 완전 제거**:
+- 기존: 모든 row title 옆에 SourceIcon (manual=PencilSimple, webclip=Globe 등) 항상 표시
+- 문제: 대부분 사용자 노트 = manual → 모든 row에 ✏️ → visual noise
+- 결정: 완전 제거. source 정보는 detail panel에만
+
+**4. 그룹 헤더 = Linear list-grouped 스타일**:
+- 글자: `text-note text-foreground font-semibold` (14px, 선명)
+- Case: 자연 (uppercase 제거)
+- 아이콘: 16px, text-muted-foreground (dim anchor)
+- Notes GroupHeaderIcon에 family/tier/role 매핑 추가 (Tree/Stack/null)
+- Wiki/Books 동일 패턴
+
+**5. 컬럼 헤더 + Toolbar 아이콘 선명화**:
+- 컬럼 헤더 (`.a-th__cell`): `text-foreground font-medium` (uppercase/tracking 제거)
+- Toolbar buttons (view-header HBtn): inactive `text-muted-foreground` (full opacity, /65 제거)
+
+**6. Books index 컬럼 추가**:
+- BOOK_COLUMNS에 `index` 추가 (w-[40px], center)
+- renderCell + DisplayProperties properties + visibleColumns defaults에 추가
+
+### 기술 학습
+
+- v130 migration scope: notes (priority strip) + autopilotRules (set_priority action strip) + autopilotLog (set_priority entries strip) + viewStateByContext (priority sort/filter/group/visibleColumns strip) + savedViews (동일)
+- `.a-tg__label` `.a-th__cell` CSS 클래스가 group/column header 공통 스타일 source (globals.css)
+- WikiGroupHeaderIcon 별도 컴포넌트 (groupBy=family/tier/linkCount/label/role 분기)
+- 사용자 직관 = 디자인 시그널 (✦ 아이콘을 "Book 소속"으로 오해 → SourceIcon 자체 폐기 판단 근거)
+
+### 부수 작업
+
+- **Imperial Design System publish**: GitHub public repo 생성 + push v0.3.0 ([peterkwon248/imperial-design-system](https://github.com/peterkwon248/imperial-design-system)). Plot과 별개 프로젝트 (Claude Code plugin).
+- **Imperial Local install**: `~/.claude/plugins/imperial-design-system/`
+
+---
+
 ## 🚀 2026-05-12 (저녁~밤, 거대) — Books view-engine 10 PR polish + Pin 통일 + emoji 폐기 (Store v126 → v129)
 
 **범위**: 오후 4 PR 시리즈에 이어 거대한 polish + extension. 매 사용자 manual verify 후 회귀 즉시 fix → commit → 머지 반복. 6 추가 PR (#296-#301) + emoji 영구 폐기 결정.

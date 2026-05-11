@@ -42,6 +42,24 @@
 
 ---
 
+## 🚀 2026-05-12 (밤) — Priority 영구 폐기 + UI 선명화 + Books polish + Wiki 그룹 헤더 ⭐⭐⭐⭐⭐
+
+**범위**: PR #304 통합 commit. 45 파일 변경 (Store v129 → v130).
+
+### 핵심 결정 (영구)
+- **Priority 영구 폐기**: NotePriority type/필드/모든 사용처 제거. Plot 정체성 = Zettelkasten, 이슈 트래킹 X
+- **Pin = identity (Linear 패턴)**: DisplayProperties 토글 X. Name 옆 inline only. PR #303 (status chip 옆 이동) 폐기
+- **SourceIcon 완전 제거**: 모든 row에 표시되는 visual noise. detail panel에만 source 정보
+- **그룹 헤더 = Linear list-grouped**: 큰 폰트 + foreground + 자연 case + dim icon
+- **컬럼 헤더 + toolbar 아이콘 선명화**: text-foreground + font-medium
+
+### Imperial Design System (별개)
+- GitHub repo: peterkwon248/imperial-design-system (PUBLIC, v0.3.0)
+- Local install: ~/.claude/plugins/imperial-design-system/
+- Claude Code plugin (skills/commands/hooks/assets). Plot에 적용 가능 (reference A) 하지만 코드 분리
+
+---
+
 ## 🚀 2026-05-12 (저녁~밤, 거대) — Books view-engine polish 6 PR + emoji 영구 폐기 + Pin 통일 ⭐⭐⭐⭐⭐
 
 **범위**: 1 worktree, 오후 시리즈에 이어 사용자 manual verify 흐름과 강하게 결합. 6 추가 PR (#296-#301). Store v126 → v129.

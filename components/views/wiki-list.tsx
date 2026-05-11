@@ -158,7 +158,7 @@ function ColumnHeaders({
   // undefined visibleColumns => all visible (backwards compat).
   const isVisible = (key: string) => !visibleColumns || visibleColumns.includes(key)
   return (
-    <div className="flex items-center px-5 py-2 text-note font-medium text-foreground/80 border-b border-border bg-secondary/30">
+    <div className="flex items-center px-5 py-2 text-note font-medium text-foreground border-b border-border bg-secondary/30">
       {hasSelection && (
         <div className="w-8 shrink-0 flex items-center justify-center">
           {onSelectAll ? (
@@ -834,9 +834,9 @@ export function WikiList({
                 return (
                   <div key={group.key}>
                     {group.label && (
-                      <div className="flex items-center gap-2.5 px-5 py-2 mt-3 mb-0.5 border-b border-border-subtle">
-                        <WikiGroupHeaderIcon groupBy={groupBy!} groupKey={group.key} wikiCategories={wikiCategories ?? []} size={14} />
-                        <span className="text-2xs font-semibold text-muted-foreground/60 uppercase tracking-wide">
+                      <div className="flex items-center gap-2 px-5 py-2 mt-3 mb-0.5 border-b border-border-subtle">
+                        <WikiGroupHeaderIcon groupBy={groupBy!} groupKey={group.key} wikiCategories={wikiCategories ?? []} size={16} />
+                        <span className="text-note font-semibold text-foreground">
                           {group.label}
                         </span>
                         <span className="text-2xs text-muted-foreground/70 tabular-nums">

@@ -9,7 +9,6 @@
  * a wiki-specific pipeline that mirrors the same patterns at the data layer.
  *
  * 의도된 차이 (vs Notes):
- *   - priority sort 제외: wiki에 priority 개념 없음
  *   - status filter 제외: stub/article은 런타임 파생 (isWikiStub) → showStubs 토글
  *   - tier/parent grouping은 위계 (parentArticleId) 기반
  *   - links sort/filter: backlink count 기반 (Notes는 outbound counts)
@@ -318,7 +317,7 @@ function compareSingleWiki(
       return dir * (ar - br)
     }
 
-    // Notes-specific fields (priority/folder/label) — fail-safe 0
+    // Notes-specific fields (folder/label) — fail-safe 0
     default:
       return 0
   }

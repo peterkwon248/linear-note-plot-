@@ -16,7 +16,6 @@ function makeNote(overrides: Partial<Note> = {}): Note {
     tags: [],
     labelId: null,
     status: "stone",
-    priority: "none",
     reads: 0,
     pinned: false,
     trashed: false,
@@ -242,7 +241,7 @@ describe("runAutopilot", () => {
         id: "r1",
         trigger: "on_open",
         conditions: [{ field: "status", operator: "eq", value: "stone" }],
-        actions: [{ type: "set_priority", value: "high" }],
+        actions: [{ type: "set_status", value: "brick" }],
       }),
     ]
     const result = runAutopilot(note, rules, "on_save")

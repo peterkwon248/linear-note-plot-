@@ -37,8 +37,8 @@ function templateMatchesRule(t: NoteTemplate, rule: FilterRule): boolean {
   const { field, operator, value } = rule
   const eq = (a: unknown, b: unknown) => operator === "eq" ? a === b : a !== b
 
-  // v108: status / priority filter cases retired alongside the field removal.
-  // Stale rules referencing those fields fall through to `default: true` and
+  // v108: status filter case retired alongside the field removal.
+  // Stale rules referencing that field fall through to `default: true` and
   // are no-ops until the user clears them via the filter UI.
   switch (field) {
     case "label": {
@@ -92,8 +92,8 @@ function applyTemplateSearch(templates: NoteTemplate[], query: string): NoteTemp
 
 function compareTemplate(a: NoteTemplate, b: NoteTemplate, rule: SortRule): number {
   const dir = rule.direction === "asc" ? 1 : -1
-  // v108: status / priority sort cases retired with the field removal. Stale
-  // saved sort rules referencing them fall through to `default: 0` (stable).
+  // v108: status sort case retired with the field removal. Stale
+  // saved sort rules referencing it fall through to `default: 0` (stable).
   switch (rule.field) {
     case "title":     return dir * a.name.localeCompare(b.name)
     case "createdAt": return dir * (a.createdAt < b.createdAt ? -1 : a.createdAt > b.createdAt ? 1 : 0)
@@ -130,7 +130,7 @@ function applyTemplateGrouping(
     return [{ key: "_all", label: "", templates }]
   }
 
-  // v108: status / priority groupBy retired. Stale saved groupBy values fall
+  // v108: status groupBy retired. Stale saved groupBy values fall
   // through to the unknown-grouping fallback below (single bucket).
 
   if (groupBy === "label") {

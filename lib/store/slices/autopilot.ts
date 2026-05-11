@@ -1,4 +1,4 @@
-import type { Note, AutopilotRule, AutopilotAction, AutopilotLogEntry, NoteStatus, NotePriority, TriageStatus } from "../../types"
+import type { Note, AutopilotRule, AutopilotAction, AutopilotLogEntry, NoteStatus, TriageStatus } from "../../types"
 import { genId, now, type AppendEventFn } from "../helpers"
 import { runAutopilot } from "../../autopilot"
 
@@ -12,8 +12,6 @@ function applyAction(note: Note, action: AutopilotAction): Partial<Note> {
   switch (action.type) {
     case "set_status":
       return { status: action.value as NoteStatus, updatedAt: now(), lastTouchedAt: now() }
-    case "set_priority":
-      return { priority: action.value as NotePriority, updatedAt: now() }
     case "set_label":
       return { labelId: action.value ?? null, updatedAt: now() }
     case "set_triage":
@@ -154,9 +152,6 @@ export function createAutopilotSlice(set: Set, get: Get, appendEvent: AppendEven
             // For Stone→Brick, reverse to stone. For Brick→Keystone, reverse to brick.
             if (action.value === "brick") reverseUpdates.status = "stone"
             else if (action.value === "keystone") reverseUpdates.status = "brick"
-            break
-          case "set_priority":
-            reverseUpdates.priority = "none"
             break
           case "set_label":
             reverseUpdates.labelId = null

@@ -51,7 +51,6 @@ const GROUP_BY_OPTIONS: { value: GroupBy; label: string }[] = [
   { value: "status", label: "Status" },
   { value: "folder", label: "Folder" },
   { value: "label", label: "Label" },
-  { value: "priority", label: "Priority" },
   { value: "date", label: "Date" },
 ]
 

@@ -20,7 +20,6 @@ export function useAutopilotRunner() {
       const actionLabels = logEntry.actions.map((a) => {
         switch (a.type) {
           case "set_status": return `→ ${a.value}`
-          case "set_priority": return `priority: ${a.value}`
           case "set_label": return "label assigned"
           case "set_triage": return `triage: ${a.value}`
           case "pin": return "pinned"

@@ -1,7 +1,6 @@
 import { isToday, isThisWeek, isThisMonth } from "date-fns"
-import type { Note, NoteStatus, NotePriority, TriageStatus } from "../types"
+import type { Note, NoteStatus, TriageStatus } from "../types"
 import type { GroupBy, GroupSortBy, NoteGroup } from "./types"
-import { STATUS_ORDER, PRIORITY_ORDER } from "./types"
 import { classifyNoteRole, type NoteRole } from "../note-hierarchy"
 
 /**
@@ -17,8 +16,6 @@ export function applyGrouping(notes: Note[], groupBy: GroupBy, extras?: { backli
 
     case "status":
       groups = groupByStatus(notes); break
-    case "priority":
-      groups = groupByPriority(notes); break
     case "date":
       groups = groupByDate(notes); break
     case "folder":
@@ -113,36 +110,6 @@ function groupByStatus(notes: Note[]): NoteGroup[] {
     .map((key) => ({
       key,
       label: STATUS_LABELS[key],
-      notes: buckets.get(key) ?? [],
-    }))
-}
-
-/* ── Priority grouping ────────────────────────────────── */
-
-const PRIORITY_LABELS: Record<NotePriority, string> = {
-  urgent: "Urgent",
-  high: "High",
-  medium: "Medium",
-  low: "Low",
-  none: "No Priority",
-}
-
-// Display order: urgent first
-const PRIORITY_KEYS: NotePriority[] = ["urgent", "high", "medium", "low", "none"]
-
-function groupByPriority(notes: Note[]): NoteGroup[] {
-  const buckets = new Map<NotePriority, Note[]>()
-  for (const key of PRIORITY_KEYS) buckets.set(key, [])
-
-  for (const note of notes) {
-    const bucket = buckets.get(note.priority)
-    if (bucket) bucket.push(note)
-  }
-
-  return PRIORITY_KEYS
-    .map((key) => ({
-      key,
-      label: PRIORITY_LABELS[key],
       notes: buckets.get(key) ?? [],
     }))
 }

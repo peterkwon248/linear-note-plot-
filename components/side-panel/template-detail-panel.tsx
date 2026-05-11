@@ -5,7 +5,7 @@
  *
  * Plot Template PR b (2026-05-03): templates dropped their standalone
  * "Editing template" page in favor of NoteEditor reuse. All metadata
- * (status / priority / label / folder / tags / pinned + actions) lives
+ * (status / label / folder / tags / pinned + actions) lives
  * here in the side panel, mirroring how note metadata works.
  *
  * The panel is simple by design — no Activity / Connections / Bookmarks

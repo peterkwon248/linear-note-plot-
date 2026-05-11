@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest"
-import type { Note, NoteStatus, NotePriority } from "../../types"
+import type { Note, NoteStatus } from "../../types"
 import type { SRSState } from "../../srs"
 import type { AnalysisRule } from "../types"
 import { runAnalysis } from "../engine"
@@ -23,7 +23,6 @@ function makeNote(overrides: Partial<Note> = {}): Note {
     folderIds: [],
     tags: [],
     status: "stone" as NoteStatus,
-    priority: "none" as NotePriority,
     reads: 0,
     pinned: false,
     createdAt: now,

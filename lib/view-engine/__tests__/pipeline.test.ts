@@ -1,9 +1,8 @@
 import { describe, it, expect } from 'vitest'
-import type { Note, NoteStatus, NotePriority } from '../../types'
+import type { Note, NoteStatus } from '../../types'
 import { applySort } from '../sort'
 import { applyFilters } from '../filter'
 import { applyGrouping } from '../group'
-import { STATUS_ORDER, PRIORITY_ORDER } from '../types'
 
 /* ── Helper: Create minimal valid Note object ────────────────────────── */
 
@@ -17,7 +16,6 @@ function makeNote(overrides: Partial<Note> = {}): Note {
     folderIds: [],
     tags: [],
     status: 'stone' as NoteStatus,
-    priority: 'none' as NotePriority,
     reads: 0,
     pinned: false,
     createdAt: now,
@@ -109,44 +107,6 @@ describe('applySort', () => {
         'keystone',
         'brick',
         'stone',
-      ])
-    })
-  })
-
-  describe('sort by priority', () => {
-    it('should sort by priority order: none < low < medium < high < urgent', () => {
-      const notes = [
-        makeNote({ id: '1', priority: 'urgent' }),
-        makeNote({ id: '2', priority: 'none' }),
-        makeNote({ id: '3', priority: 'high' }),
-        makeNote({ id: '4', priority: 'medium' }),
-        makeNote({ id: '5', priority: 'low' }),
-      ]
-      const sorted = applySort(notes, 'priority', 'asc')
-      expect(sorted.map(n => n.priority)).toEqual([
-        'none',
-        'low',
-        'medium',
-        'high',
-        'urgent',
-      ])
-    })
-
-    it('should reverse priority order when descending', () => {
-      const notes = [
-        makeNote({ id: '1', priority: 'none' }),
-        makeNote({ id: '2', priority: 'low' }),
-        makeNote({ id: '3', priority: 'medium' }),
-        makeNote({ id: '4', priority: 'high' }),
-        makeNote({ id: '5', priority: 'urgent' }),
-      ]
-      const sorted = applySort(notes, 'priority', 'desc')
-      expect(sorted.map(n => n.priority)).toEqual([
-        'urgent',
-        'high',
-        'medium',
-        'low',
-        'none',
       ])
     })
   })
@@ -323,9 +283,9 @@ describe('applySort', () => {
 
     it('should be a stable sort', () => {
       const notes = [
-        makeNote({ id: '1', title: 'A', priority: 'high' }),
-        makeNote({ id: '2', title: 'A', priority: 'low' }),
-        makeNote({ id: '3', title: 'A', priority: 'medium' }),
+        makeNote({ id: '1', title: 'A', reads: 3 }),
+        makeNote({ id: '2', title: 'A', reads: 1 }),
+        makeNote({ id: '3', title: 'A', reads: 2 }),
       ]
       const sorted = applySort(notes, 'title', 'asc')
       // All have same title, so order should be preserved
@@ -375,34 +335,6 @@ describe('applyFilters', () => {
         { field: 'status', operator: 'neq', value: 'stone' },
       ])
       expect(filtered.map(n => n.id)).toEqual(['2', '3'])
-    })
-  })
-
-  describe('filter by priority', () => {
-    it('should filter by priority eq "high"', () => {
-      const notes = [
-        makeNote({ id: '1', priority: 'none' }),
-        makeNote({ id: '2', priority: 'high' }),
-        makeNote({ id: '3', priority: 'urgent' }),
-        makeNote({ id: '4', priority: 'high' }),
-      ]
-      const filtered = applyFilters(notes, [
-        { field: 'priority', operator: 'eq', value: 'high' },
-      ])
-      expect(filtered.map(n => n.id)).toEqual(['2', '4'])
-    })
-
-    it('should filter by priority neq "none"', () => {
-      const notes = [
-        makeNote({ id: '1', priority: 'none' }),
-        makeNote({ id: '2', priority: 'low' }),
-        makeNote({ id: '3', priority: 'none' }),
-        makeNote({ id: '4', priority: 'high' }),
-      ]
-      const filtered = applyFilters(notes, [
-        { field: 'priority', operator: 'neq', value: 'none' },
-      ])
-      expect(filtered.map(n => n.id)).toEqual(['2', '4'])
     })
   })
 
@@ -513,41 +445,41 @@ describe('applyFilters', () => {
   describe('multiple filters (AND logic)', () => {
     it('should apply multiple filters with AND logic', () => {
       const notes = [
-        makeNote({ id: '1', status: 'stone', priority: 'high' }),
-        makeNote({ id: '2', status: 'brick', priority: 'high' }),
-        makeNote({ id: '3', status: 'stone', priority: 'low' }),
-        makeNote({ id: '4', status: 'brick', priority: 'low' }),
+        makeNote({ id: '1', status: 'stone', reads: 10 }),
+        makeNote({ id: '2', status: 'brick', reads: 10 }),
+        makeNote({ id: '3', status: 'stone', reads: 1 }),
+        makeNote({ id: '4', status: 'brick', reads: 1 }),
       ]
       const filtered = applyFilters(notes, [
         { field: 'status', operator: 'eq', value: 'stone' },
-        { field: 'priority', operator: 'eq', value: 'high' },
+        { field: 'reads', operator: 'gt', value: '5' },
       ])
       expect(filtered.map(n => n.id)).toEqual(['1'])
     })
 
     it('should require all filters to pass', () => {
       const notes = [
-        makeNote({ id: '1', reads: 5, priority: 'high' }),
-        makeNote({ id: '2', reads: 10, priority: 'high' }),
-        makeNote({ id: '3', reads: 5, priority: 'low' }),
-        makeNote({ id: '4', reads: 15, priority: 'high' }),
+        makeNote({ id: '1', reads: 5, status: 'brick' }),
+        makeNote({ id: '2', reads: 10, status: 'brick' }),
+        makeNote({ id: '3', reads: 5, status: 'stone' }),
+        makeNote({ id: '4', reads: 15, status: 'brick' }),
       ]
       const filtered = applyFilters(notes, [
         { field: 'reads', operator: 'gt', value: '4' },
-        { field: 'priority', operator: 'eq', value: 'high' },
+        { field: 'status', operator: 'eq', value: 'brick' },
       ])
       expect(filtered.map(n => n.id)).toEqual(['1', '2', '4'])
     })
 
     it('should return empty when no notes match all filters', () => {
       const notes = [
-        makeNote({ id: '1', status: 'stone', priority: 'high' }),
-        makeNote({ id: '2', status: 'brick', priority: 'high' }),
-        makeNote({ id: '3', status: 'stone', priority: 'low' }),
+        makeNote({ id: '1', status: 'stone', reads: 10 }),
+        makeNote({ id: '2', status: 'brick', reads: 10 }),
+        makeNote({ id: '3', status: 'stone', reads: 1 }),
       ]
       const filtered = applyFilters(notes, [
         { field: 'status', operator: 'eq', value: 'keystone' },
-        { field: 'priority', operator: 'eq', value: 'urgent' },
+        { field: 'reads', operator: 'gt', value: '100' },
       ])
       expect(filtered).toEqual([])
     })
@@ -556,11 +488,11 @@ describe('applyFilters', () => {
   describe('invalid operators', () => {
     it('should return all notes when operator is invalid', () => {
       const notes = [
-        makeNote({ id: '1', priority: 'high' }),
-        makeNote({ id: '2', priority: 'low' }),
+        makeNote({ id: '1', status: 'stone' }),
+        makeNote({ id: '2', status: 'brick' }),
       ]
       const filtered = applyFilters(notes, [
-        { field: 'priority', operator: 'invalid' as any, value: 'high' },
+        { field: 'status', operator: 'invalid' as any, value: 'stone' },
       ])
       expect(filtered).toEqual(notes)
     })
@@ -667,68 +599,6 @@ describe('applyGrouping', () => {
         'Brick',
         'Block',
       ])
-    })
-  })
-
-  describe('groupBy "priority"', () => {
-    it('should return 5 groups in priority order: urgent, high, medium, low, none', () => {
-      const notes = [
-        makeNote({ id: '1', priority: 'none' }),
-        makeNote({ id: '2', priority: 'low' }),
-        makeNote({ id: '3', priority: 'medium' }),
-        makeNote({ id: '4', priority: 'high' }),
-        makeNote({ id: '5', priority: 'urgent' }),
-      ]
-      const groups = applyGrouping(notes, 'priority')
-      expect(groups).toHaveLength(5)
-      expect(groups.map(g => g.key)).toEqual([
-        'urgent',
-        'high',
-        'medium',
-        'low',
-        'none',
-      ])
-    })
-
-    it('should populate correct notes in each priority group', () => {
-      const notes = [
-        makeNote({ id: '1', priority: 'high' }),
-        makeNote({ id: '2', priority: 'high' }),
-        makeNote({ id: '3', priority: 'low' }),
-        makeNote({ id: '4', priority: 'none' }),
-      ]
-      const groups = applyGrouping(notes, 'priority')
-      const highGroup = groups.find(g => g.key === 'high')!
-      const lowGroup = groups.find(g => g.key === 'low')!
-      const noneGroup = groups.find(g => g.key === 'none')!
-
-      expect(highGroup.notes.map(n => n.id)).toEqual(['1', '2'])
-      expect(lowGroup.notes.map(n => n.id)).toEqual(['3'])
-      expect(noneGroup.notes.map(n => n.id)).toEqual(['4'])
-    })
-
-    it('should have correct labels for priority groups', () => {
-      const groups = applyGrouping([], 'priority')
-      expect(groups.map(g => g.label)).toEqual([
-        'Urgent',
-        'High',
-        'Medium',
-        'Low',
-        'No Priority',
-      ])
-    })
-
-    it('should return all 5 priority groups even if some are empty', () => {
-      const notes = [
-        makeNote({ id: '1', priority: 'urgent' }),
-      ]
-      const groups = applyGrouping(notes, 'priority')
-      expect(groups).toHaveLength(5)
-      expect(groups[0].notes.map(n => n.id)).toEqual(['1'])
-      expect(groups[1].notes).toEqual([])
-      expect(groups[2].notes).toEqual([])
-      expect(groups[3].notes).toEqual([])
-      expect(groups[4].notes).toEqual([])
     })
   })
 

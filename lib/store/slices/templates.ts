@@ -120,8 +120,8 @@ export function createTemplatesSlice(set: Set, get: Get, appendEvent: AppendEven
       const seedFolder = folderFromTemplate ?? folderFromView
       const folderIds = seedFolder ? [seedFolder] : []
 
-      // v108: NoteTemplate dropped `status` / `priority` fields — new notes
-      // start at sensible defaults ("stone" / "none"), matching createNote's
+      // v108: NoteTemplate dropped `status` field — new notes
+      // start at sensible default ("stone"), matching createNote's
       // baseline. Users override on first edit if needed.
       const newNote: Note = {
         id,
@@ -132,7 +132,6 @@ export function createTemplatesSlice(set: Set, get: Get, appendEvent: AppendEven
         tags: [...template.tags],
         labelId: template.labelId,
         status: "stone",
-        priority: "none",
         reads: 0,
         pinned: false,
         trashed: false,

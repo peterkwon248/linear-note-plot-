@@ -40,7 +40,6 @@ export function computeInboxRank(note: Note, backlinks: Map<string, number>): nu
  * +2 if links >= 1
  * +2 if backlinks >= 1
  * +1 if outline headings >= 1
- * +1 if priority is "high"
  */
 export function computeReadyScore(note: Note, backlinks: Map<string, number>): number {
   let score = 0
@@ -53,7 +52,6 @@ export function computeReadyScore(note: Note, backlinks: Map<string, number>): n
   // Outline headings
   const headingCount = (note.content.match(/^#{1,6}\s+.+/gm) || []).length
   if (headingCount >= 1) score += 1
-  if (note.priority === "high") score += 1
   return score
 }
 

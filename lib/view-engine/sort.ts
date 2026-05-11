@@ -1,6 +1,6 @@
 import type { Note } from "../types"
 import type { SortField, SortDirection, SortRule } from "./types"
-import { STATUS_ORDER, PRIORITY_ORDER } from "./types"
+import { STATUS_ORDER } from "./types"
 
 /**
  * Compare two notes against one sort rule. Stable for ties (returns 0).
@@ -20,9 +20,6 @@ function compareSingle(
 
     case "status":
       return dir * (STATUS_ORDER[a.status] - STATUS_ORDER[b.status])
-
-    case "priority":
-      return dir * (PRIORITY_ORDER[a.priority] - PRIORITY_ORDER[b.priority])
 
     case "folder": {
       // v107 N:M: a note can belong to multiple folders. Use the first

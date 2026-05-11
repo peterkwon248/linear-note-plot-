@@ -51,8 +51,8 @@ import { TemplatesFloatingActionBar } from "@/components/templates-floating-acti
 /* ── Constants ─────────────────────────────────────────── */
 
 // PR template-b: dialog now collects only the two fields the user must
-// pick at create time. Everything else (title pattern, status, priority,
-// label, folder, tags, pinned, content) defaults and becomes editable
+// pick at create time. Everything else (title pattern, status, label,
+// folder, tags, pinned, content) defaults and becomes editable
 // in the side panel + main editor right after the template is created.
 interface TemplateFormData {
   name: string
@@ -454,7 +454,7 @@ export function TemplatesView() {
   /* ── Handlers ──────────────────────────────────────── */
 
   const handleCreateSubmit = (data: TemplateFormData) => {
-    // v108: `description`, `status`, `priority` fields retired from NoteTemplate.
+    // v108: `description`, `status` fields retired from NoteTemplate.
     // The legacy create dialog still collects `data.description` for now —
     // ignored here. Dialog cleanup tracked separately.
     const newId = createTemplate({

@@ -1,5 +1,4 @@
 export type NoteStatus = "stone" | "brick" | "keystone"
-export type NotePriority = "none" | "urgent" | "high" | "medium" | "low"
 /** Triage status for stone notes */
 export type TriageStatus = "untriaged" | "kept" | "snoozed" | "trashed"
 
@@ -423,7 +422,6 @@ export interface Note {
   // lookup via `useStickerMembers({ kind: "note", id })` hook.
   labelId: string | null
   status: NoteStatus
-  priority: NotePriority
   reads: number
   pinned: boolean
   trashed: boolean
@@ -590,7 +588,7 @@ export interface Sticker {
 export type AutopilotTrigger = "on_save" | "on_open" | "on_interval"
 
 export type AutopilotConditionField =
-  | "status" | "priority" | "content_length" | "word_count"
+  | "status" | "content_length" | "word_count"
   | "reads" | "age_days" | "has_links" | "has_tags" | "has_label"
   | "has_folder" | "link_count" | "tag_count" | "title_length"
   | "snooze_count" | "triage_status"
@@ -605,12 +603,12 @@ export interface AutopilotCondition {
 }
 
 export type AutopilotActionType =
-  | "set_status" | "set_priority" | "set_label" | "set_triage"
+  | "set_status" | "set_label" | "set_triage"
   | "pin" | "add_tag" | "remove_tag"
 
 export interface AutopilotAction {
   type: AutopilotActionType
-  value?: string  // status value, priority value, labelId, tagId, etc.
+  value?: string  // status value, labelId, tagId, etc.
 }
 
 export interface AutopilotRule {
@@ -645,12 +643,12 @@ export interface NoteTemplate {
   // Templates take their visual cues from the linked `labelId` like notes
   // do — single source of truth. Migration v102 strips the legacy fields.
   //
-  // Note: `description`, `status`, `priority` fields were removed in v108.
+  // Note: `description`, `status` fields were removed in v108.
   // The card-display retirement (PR template-c, e) made these fields invisible
   // surfaces; v108 follows up by deleting them from the data model itself.
   // - description: name carries enough; UpNote-style picker no longer shows it
-  // - status / priority: too weak as defaults — users override on first edit;
-  //   new notes from a template now start at "stone" / "none" sensibly.
+  // - status: too weak as a default — users override on first edit;
+  //   new notes from a template now start at "stone" sensibly.
   // Pre-filled fields
   title: string          // template for title (can contain {date}, {time} placeholders)
   content: string        // markdown body template
