@@ -16,6 +16,8 @@ import { X as PhX } from "@phosphor-icons/react/dist/ssr/X"
 import { Lightning } from "@phosphor-icons/react/dist/ssr/Lightning"
 import { Check as PhCheck } from "@phosphor-icons/react/dist/ssr/Check"
 import { Trash } from "@phosphor-icons/react/dist/ssr/Trash"
+import { PushPin } from "@phosphor-icons/react/dist/ssr/PushPin"
+import { PushPinSlash } from "@phosphor-icons/react/dist/ssr/PushPinSlash"
 import { ArrowUpRight } from "@phosphor-icons/react/dist/ssr/ArrowUpRight"
 import { ArrowDownLeft } from "@phosphor-icons/react/dist/ssr/ArrowDownLeft"
 import { Tray } from "@phosphor-icons/react/dist/ssr/Tray"
@@ -386,6 +388,29 @@ export function FloatingActionBar({
                 </div>
               </>
             )}
+
+            {/* Pin/Unpin (2026-05-12: Books 정합 — Notes/Wiki 일관성).
+                allPinned면 모두 unpin, 아니면 모두 pin (mixed→pin 표준 UX) */}
+            <Divider />
+            <button
+              onClick={() => {
+                const allPinned = selectedNotes.every((n) => n.pinned)
+                const nextPinned = !allPinned
+                batchUpdateNotes(ids, { pinned: nextPinned })
+                toast.success(
+                  nextPinned
+                    ? `Pinned ${count} note${count === 1 ? "" : "s"}`
+                    : `Unpinned ${count} note${count === 1 ? "" : "s"}`,
+                )
+              }}
+              className="inline-flex items-center gap-1 rounded-md bg-secondary/60 px-3 py-2 text-ui font-medium text-muted-foreground hover:bg-hover-bg hover:text-foreground transition-colors"
+            >
+              {selectedNotes.every((n) => n.pinned) ? (
+                <><PushPinSlash size={16} weight="regular" /> Unpin</>
+              ) : (
+                <><PushPin size={16} weight="regular" className="text-amber-500" /> Pin</>
+              )}
+            </button>
 
             {/* Trash (always visible outside trash tab) */}
             <Divider />

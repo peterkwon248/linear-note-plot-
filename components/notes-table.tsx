@@ -19,6 +19,8 @@ import { ArrowsDownUp } from "@phosphor-icons/react/dist/ssr/ArrowsDownUp"
 import { ArrowUp } from "@phosphor-icons/react/dist/ssr/ArrowUp"
 import { ArrowDown } from "@phosphor-icons/react/dist/ssr/ArrowDown"
 import { FileText } from "@phosphor-icons/react/dist/ssr/FileText"
+import { PushPin } from "@phosphor-icons/react/dist/ssr/PushPin"
+import { PushPinSlash } from "@phosphor-icons/react/dist/ssr/PushPinSlash"
 import { Link as PhLink } from "@phosphor-icons/react/dist/ssr/Link"
 import { CaretDown } from "@phosphor-icons/react/dist/ssr/CaretDown"
 import { X as PhX } from "@phosphor-icons/react/dist/ssr/X"
@@ -1447,6 +1449,11 @@ export function NotesTable({
                               onRemind={(isoDate) => { setReminder(item.note.id, isoDate); toast("Reminder set") }}
                               onMergeWith={() => setMergePickerOpen(true, item.note.id)}
                               onLinkWith={() => setLinkPickerOpen(true, item.note.id)}
+                              onTogglePin={() => {
+                                const nextPinned = !item.note.pinned
+                                updateNote(item.note.id, { pinned: nextPinned })
+                                toast.success(nextPinned ? "Pinned note" : "Unpinned note")
+                              }}
                               onShowConnected={(direction) => {
                                 // Replace any existing connectedTo rule (one connection
                                 // filter at a time keeps results predictable) and add
@@ -1591,6 +1598,8 @@ interface NoteRowProps {
    *  place without leaving the Notes view. */
   onShowConnected: (direction: "both" | "in" | "out") => void
   onLinkWith: () => void
+  /** 2026-05-12: Pin/Unpin in ContextMenu (Books 정합). Toggles note.pinned. */
+  onTogglePin: () => void
   showCardPreview?: boolean
   groupBy?: string
   /** PR (c) — when groupBy="folder", the folder id this row is rendered
@@ -1687,6 +1696,7 @@ function NoteRowInner({
   onMergeWith,
   onShowConnected,
   onLinkWith,
+  onTogglePin,
   showCardPreview,
   groupBy,
   groupKey,
@@ -2048,6 +2058,21 @@ function NoteRowInner({
           </ContextMenuSubContent>
         </ContextMenuSub>
         <ContextMenuSeparator />
+
+        {/* Pin/Unpin (2026-05-12: Books 정합) */}
+        <ContextMenuItem onClick={onTogglePin} className="text-note">
+          {note.pinned ? (
+            <>
+              <PushPinSlash className="mr-2 text-muted-foreground" size={16} weight="regular" />
+              Unpin
+            </>
+          ) : (
+            <>
+              <PushPin className="mr-2 text-muted-foreground" size={16} weight="regular" />
+              Pin to sidebar
+            </>
+          )}
+        </ContextMenuItem>
 
         {/* Common actions */}
         <ContextMenuItem onClick={onOpen} className="text-note">
