@@ -25,6 +25,93 @@
 ### 재발 방지 사례
 - Executor scope 초과 → 명시적 prompt + 결과 검증
 - 추측 fix → reproduce + 원인 분석 후 fix
+- 거대 PR 시리즈 (10+ PR) 후 conflict 빈번: 매 PR 머지 후 즉시 fetch+merge origin/main 습관
+
+---
+
+## 🚀 2026-05-12 (저녁~밤, 거대) — Books view-engine 10 PR polish + Pin 통일 + emoji 폐기 (Store v126 → v129)
+
+**범위**: 오후 4 PR 시리즈에 이어 거대한 polish + extension. 매 사용자 manual verify 후 회귀 즉시 fix → commit → 머지 반복. 6 추가 PR (#296-#301) + emoji 영구 폐기 결정.
+
+### PR 누적 (10 PR squash 머지)
+
+| # | PR | 핵심 |
+|---|---|---|
+| 1 | [#292](https://github.com/peterkwon248/linear-note-plot-/pull/292) | view-engine 4 viewMode (grid/list/board/gallery, v122→v126) |
+| 2 | [#293](https://github.com/peterkwon248/linear-note-plot-/pull/293) | BookTable column-rich + checkbox (NotesTable 정합) |
+| 3 | [#294](https://github.com/peterkwon248/linear-note-plot-/pull/294) | Kind-shape carries meaning (Lightning/Sparkle/PencilSimple + 색) |
+| 4 | [#295](https://github.com/peterkwon248/linear-note-plot-/pull/295) | SEED_BOOKS 8 demo books |
+| 5 | [#296](https://github.com/peterkwon248/linear-note-plot-/pull/296) | v127 migration backfill (기존 사용자에도 seed inject) |
+| 6 | [#297](https://github.com/peterkwon248/linear-note-plot-/pull/297) | Polish 1 (emoji/properties/groupBy validation, v128) |
+| 7 | [#298](https://github.com/peterkwon248/linear-note-plot-/pull/298) | **emoji 영구 폐기** (Phosphor BookKindIcon 통일, v129) |
+| 8 | [#299](https://github.com/peterkwon248/linear-note-plot-/pull/299) | Polish 2 (chip 색 + filter icon + Save view) |
+| 9 | [#300](https://github.com/peterkwon248/linear-note-plot-/pull/300) | Pin 통일 (Books floating + Notes pin) |
+| 10 | [#301](https://github.com/peterkwon248/linear-note-plot-/pull/301) | Pin indicator (Notes/Wiki title 옆) |
+
+### 큰 결정 (영구)
+
+**1. emoji 영구 폐기 (PR #298 LOCKED)**:
+- Apple/Unicode color emoji ↔ Phosphor outline 시스템 mismatch
+- Plot icon 시스템 = Phosphor outline only (Linear-style)
+- BookKindIcon이 cover 책임 (kind 표현)
+- Book.coverEmoji 타입 보존 (round-trip), UI 안 읽음
+- 미래 unique cover icon = Phosphor icon picker (Book.coverIcon 필드, follow-up)
+
+**2. Books 자체 정체성 = kind 유지 (status 도입 X)**:
+- 사용자 통찰: "config에 status 빼고 kind 넣기 = 이미 그렇게 됨"
+- normalizeViewState books-specific validation (`CONTEXT_VALID_GROUP_BY.books = [none/kind/pinned/date]`)
+- stale "status" 자동 reset
+- kind config = Smart/Manual/Hybrid (derived)
+
+**3. BookKindChip = StatusBadge 패턴 (색 + bg 18% + border 35% + icon + label)**:
+- Smart: violet `#5E6AD2` / `#7C8AE7`
+- Manual: muted-foreground (neutral)
+- Hybrid: amber `#D97706` / `#f59e0b`
+- BookKindIcon (leading)도 동일 색 + 모양
+
+**4. Pin 통일 = 모든 entity 표준 (Notes/Wiki/Books)**:
+- 우클릭 메뉴 + 플로팅 바 + inline indicator
+- batch pin UX: mixed → pin (allPinned 시만 unpin)
+- 위치 (현재 PR #301): title 옆. 사용자 마지막 시그널: **status chip 옆으로 이동 필요** (follow-up)
+
+**5. Plot ViewHeader actions 표준 = Save view 버튼 (Trash chip 거부)**:
+- Books trashed 책은 `/trash` 페이지 (2026-05-10 통합)
+- Save view = 모든 entity 일관
+
+**6. Books DisplayPanel properties 4 toggle**:
+- Item count / Kind / Sources / Pin (사용자 column 자유도)
+- BookTable에 column 정의 + renderCell 분기
+
+**7. Books DisplayPanel groupingOptions = [none/kind/pinned]**:
+- normalizeViewState books-specific validation으로 stale "status" 차단
+
+### 기술 학습 (영구)
+
+- **emoji 데이터 wipe migration 패턴**: 타입 필드 보존 (round-trip) + `state.books.forEach(b => b.coverEmoji = null)` (UI는 무관)
+- **CONTEXT_VALID_GROUP_BY map**: entity-specific validation을 normalize 단계에서 적용. `isGroupByValidForContext(g, ctx)` helper
+- **store version bump = normalizeViewStatesMap 재실행 트리거**: migrate gate가 persisted version 기준. types union 확장 후에도 version bump 필요 (사용자 viewState 재normalize 위해)
+- **id-dedup append backfill (v127 패턴)**: `existingIds.has(seed.id)` 확인 후 push. 사용자 기존 데이터 보존 + 누락 시드만 추가
+- **BookKindChip vs BookKindIcon 분리**: chip은 색 + bg + 작은 icon (StatusBadge 패턴), leading icon은 모양만 (큰 size). 같은 row에서 둘 다 보여도 시각 분리 — 색이 분리 도구
+- **Conflict resolve pattern**: 매 PR squash 후 base divergence. `git fetch + merge origin/main` → conflict 있으면 `git checkout --ours <file>` (HEAD 우선) → `git commit --no-edit`
+- **dnd-kit BookFloatingBar inline**: 단순 entity는 floating bar를 BookTable 안 inline 정의 가능 (Notes FloatingActionBar처럼 별도 파일 추출 안 함)
+
+### 다음 세션 P0
+
+🔴 **Pin indicator 위치 fix** — Notes/Wiki status chip 옆으로 이동 (사용자 시그널 끝)
+🟡 **Wiki 우클릭 메뉴 + 플로팅 바 Pin 추가** — PR #300 follow-up
+🟢 **Books view-engine 시리즈 manual verify** — 회귀 발견 시 fix
+
+### 환경 변경
+
+- Store version v126 → v129 (3 step — v127 backfill, v128 groupBy validation, v129 emoji wipe)
+- Tests: 255/255 (변화 없음)
+- 신규 파일 (이번 세션 추가): `components/books/book-table.tsx` (BookTable + BookFloatingBar inline)
+- launch.json `npx next` (한글 경로 안전성)
+- BookKindChip / BookKindIcon (property-chips.tsx) — Plot status 패턴 정합
+
+### Architect 검증
+
+자동: tsc 0 errors + npm run build 0 / 0 + npm run test 255/255. 시각 verify는 사용자 manual.
 
 ---
 

@@ -5,6 +5,92 @@
 
 ---
 
+## 2026-05-12 (저녁~밤) — 집, 거대한 세션 (10 PR 시리즈 + polish)
+
+### 완료
+
+직전 entry "2026-05-12 (오후)"의 PR #291/#292 (시리즈 시작)에 이어 거대한 polish + extension 세션. 사용자 manual verify 흐름과 강하게 결합 — 매 verify 후 회귀 시 즉시 fix → commit → 머지 반복.
+
+**PR 시리즈 10 (Store v122 → v129)**:
+- PR #292 — view-engine 4 viewMode 통합 (grid/list/board/gallery)
+- PR #293 — BookTable column-rich + checkbox (NotesTable 정합)
+- PR #294 — Kind-shape carries meaning (Lightning/Sparkle/PencilSimple + 색)
+- PR #295 — SEED_BOOKS 8 demo books (manual verify 가능 데이터)
+- PR #296 — v127 migration backfill (기존 사용자 books 있어도 seed inject)
+- PR #297 — Polish 1: SEED emoji 제거 + Display properties 확장 (Sources/Pin column toggle) + groupBy "status" stale validation
+- PR #298 — **emoji 영구 폐기** + Phosphor BookKindIcon 통일 (Plot icon 시스템 정합)
+- PR #299 — Polish 2: BookKindChip 색 (StatusBadge 패턴) + Filter Kind values icon + Save view 버튼 통일 (Trash chip 제거)
+- PR #300 — Pin 통일: Books floating action bar 신규 + Notes 우클릭 메뉴 + Notes FloatingActionBar Pin
+- PR #301 — Notes/Wiki title 옆 inline pinned indicator (Books 정합)
+
+**부속**:
+- Plan: `.omc/plans/books-view-engine-integration.md`
+- launch.json: `node next/dist/bin/next` → `npx next` (한글 경로 안전성)
+- Plot icon 시스템 = Phosphor outline only (color emoji 영구 X)
+- 4 store migrations (v126→v127→v128→v129)
+
+### 브레인스토밍 & 큰 결정 (영구)
+
+#### 1. 사용자 결정 4가지 (AskUserQuestion)
+- PR 분할: C 점진 4 PR
+- viewMode default: grid (cover emoji 활용)
+- default sort: updatedAt desc
+- default groupBy: none
+
+#### 2. Option A — Plot 일관성 풀 (Books dnd-kit)
+- column drag/reorder + card drag/drop
+- card drag UX 분기:
+  - pinned: 즉시 toggle (안전)
+  - kind smart/hybrid → manual: confirm dialog (destructive)
+  - kind manual → smart/hybrid: toast hint (BookDetailPage 안내)
+
+#### 3. Books 자체 정체성 — kind 유지 (status 도입 X)
+사용자 brainstorm 끝 통찰: "config에 status 빼고 kind 넣기" — BOOKS_VIEW_CONFIG가 이미 그렇게 됨 + normalizeViewState books-specific validation으로 stale "status" 자동 reset. **Books에 status 추가 거부** — kind 자체로 충분.
+
+#### 4. emoji 영구 폐기 (Plot icon 시스템)
+- Apple/Unicode color emoji는 Plot 미니멀리즘 + Phosphor outline 시스템과 mismatch
+- BookKindIcon이 cover 책임 (kind 표현)
+- Book.coverEmoji 타입 필드 보존 (round-trip), UI 안 읽음
+- 미래 Phosphor icon picker 시 Book.coverIcon 신규 필드
+
+#### 5. Pin 통일 = 모든 entity 표준
+- 우클릭 메뉴 + 플로팅 바 + inline indicator
+- Wiki도 inline indicator 적용. 단 Wiki 우클릭/플로팅 Pin은 follow-up
+
+#### 6. Books DisplayPanel groupingOptions = [none/kind/pinned]
+- normalizeViewState books-specific validation (CONTEXT_VALID_GROUP_BY map)
+- stale "status" 자동 reset to "none"
+
+#### 7. Notes/Wiki/Books cover/leading icon 시스템
+- Notes leading: StatusShapeIcon (Hexagon/Cube/Cuboid2x2)
+- Books cover/leading: BookKindIcon (Lightning/Sparkle/PencilSimple)
+- Wiki: IconWikiStub/IconWikiArticle
+- 모두 phosphor outline + 색 (kind/status별 차별)
+- Sidebar entity identity = 단일 icon (Books=BookOpen, Wiki=BookOpen with color 등) — kind 차별 안 함
+
+### 다음 (NEXT-ACTION.md 참조)
+
+🔴 **Pin indicator 위치 fix** — Notes/Wiki는 현재 title 옆이지만 사용자 시그널은 **status chip 옆**. notes-table row + wiki-list row의 status column 안 또는 옆.
+🟡 **Wiki 우클릭 메뉴 + 플로팅 바 Pin** — PR #300 follow-up.
+🟢 **Books view-engine 시리즈 manual verify** — 회귀 발견 시 즉시 fix.
+
+### Watch Out
+
+- **emoji UI 분기 제거됐지만 데이터는 보존** — `Book.coverEmoji` 필드는 IDB round-trip 위해 보존. 미래 picker UI 도입 시 `Book.coverIcon` 신규 필드 사용 (emoji 재활성화 X).
+- **사용자 manual verify 시 stale viewState**: Store v128 migration이 books-specific groupBy validation 재실행. 사용자가 한 번 reload 후 stale "status" → "none" 자동 fix.
+- **Trash chip 제거** — trashed 책 보려면 `/trash` 페이지로 (2026-05-10에 Books 통합됨). ViewHeader actions에서 trash chip 안 노출 (Save view 버튼만).
+- **v3 mockup CSS class `u-*` 영구 폐기** — 갤러리 entity-agnostic 패턴 (2026-05-11)이 이미 정합.
+- **conflicts 빈번 발생**: PR 순차 squash 머지 시 같은 worktree의 base가 squash commit과 diverge. 매 PR마다 `git fetch origin main && git merge origin/main` 필요. 보통 `git checkout --ours` resolve로 충분 (HEAD 우선).
+
+### 머신
+집 (Windows)
+
+### 누적 commits
+
+10 squash PR (#292-#301). 모두 main에 squash 머지. branch는 머지 후 worktree 사용 중이라 `--delete-branch` skip (remote 잔류, 수동 정리 가능).
+
+---
+
 ## 2026-05-12 (오후) — 집
 
 ### 완료 (1 통합 PR, 4 PR 시리즈)

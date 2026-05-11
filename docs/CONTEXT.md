@@ -38,6 +38,35 @@
 - 2026-05-08 — PR #282 chrome 통일 시도가 globals.css `.a-row` grid 강제로 layout 깨짐: 단순 className 추가로 해결 안 됨, 깊은 refactor 필요. 사용자 visual feedback이 가장 빠른 진단 path.
 - 2026-05-09 — Dual mode PRD에서 "Split" 이름 충돌 (NoteSplitOverlay): Critic 검토로 발견 → "Dual" rename. PRD 신선할 때 critic review 가치 큼.
 - 2026-05-12 — Books view-engine 통합에서 dangling JSX 삽입 사고: Edit이 분기 추가 후 기존 JSX가 dangling으로 남음. read로 정확히 확인 후 분기 추출 (BookGridCard 별도 컴포넌트)으로 정리. **교훈: 큰 JSX 분기 변경은 Read → 분기 헬퍼 추출 → Edit 순서가 안전.**
+- 2026-05-12 (저녁) — 거대 PR 시리즈 (10 PR) 후 매번 squash 머지 conflict 발생: HEAD 우선 (`git checkout --ours`) resolve 패턴 안정. **교훈: 매 PR 머지 직후 fetch+merge 습관, 같은 worktree에서 시리즈 진행 시 안전.**
+
+---
+
+## 🚀 2026-05-12 (저녁~밤, 거대) — Books view-engine polish 6 PR + emoji 영구 폐기 + Pin 통일 ⭐⭐⭐⭐⭐
+
+**범위**: 1 worktree, 오후 시리즈에 이어 사용자 manual verify 흐름과 강하게 결합. 6 추가 PR (#296-#301). Store v126 → v129.
+
+### 핵심 결정 (영구)
+
+**1. emoji 영구 폐기 (PR #298)**: Plot icon = Phosphor outline only. Apple/Unicode emoji 폐기. BookKindIcon이 cover 책임.
+
+**2. Books 자체 정체성 = kind 유지**: status 도입 거부. normalizeViewState books-specific validation으로 stale "status" 자동 reset.
+
+**3. BookKindChip = StatusBadge 패턴**: Smart=violet / Manual=neutral / Hybrid=amber. 색 + bg 18% + border 35% + icon + label.
+
+**4. Pin 통일 모든 entity**: 우클릭 + 플로팅 바 + inline indicator. batch UX = mixed → pin.
+
+**5. Plot ViewHeader actions 표준 = Save view 버튼**: Trash chip 거부 (Books). trashed 책은 /trash 페이지.
+
+**6. Books DisplayPanel**: 4 properties toggle (Item count / Kind / Sources / Pin), groupingOptions = [none/kind/pinned].
+
+### 기술 학습
+
+- emoji 데이터 wipe migration 패턴 (필드 보존 + UI 안 읽음)
+- CONTEXT_VALID_GROUP_BY entity-specific validation
+- store version bump = normalize 재실행 트리거
+- id-dedup append backfill (사용자 기존 데이터 보존 + 시드 추가)
+- BookKindChip vs BookKindIcon 분리 (색이 시각 분리 도구)
 
 ---
 

@@ -3,13 +3,38 @@
 > 우선순위 기반 작업 목록. NEXT-ACTION.md는 즉시 액션, 이 파일은 전체 우선순위 큰그림.
 > 완료 항목은 즉시 삭제 또는 "완료" 섹션으로 이동.
 
-**마지막 갱신**: 2026-05-12 (Books view-engine 4 PR 시리즈 종료)
+**마지막 갱신**: 2026-05-12 (Books view-engine 10 PR + emoji 폐기 + Pin 통일)
 
 ---
 
 ## 🔴 P0 — 즉시 (다음 세션)
 
-### Manual verify Books 4 viewMode + 회귀 fix ⭐ 추천
+### Pin indicator 위치 fix — Notes/Wiki status chip 옆 ⭐
+사용자 시그널 (세션 끝): "노트, 위키의 status chip 옆에 핀 아이콘이 있어야 되는 거 아니냐?"
+
+현재 PR #301: title 옆 inline pin. 사용자 의도 = status column 안 또는 status chip 옆.
+
+- components/notes-table.tsx: status column cell 안 pin 추가 (또는 status chip 옆 inline)
+- components/views/wiki-list.tsx: WikiStub/Article badge 옆 pin 이동
+
+### Wiki 우클릭 메뉴 + 플로팅 바 Pin 추가 (PR #300 follow-up)
+- WikiList의 row ContextMenu에 Pin/Unpin
+- Wiki Floating bar 있다면 Pin 액션 추가 (없으면 신규)
+
+### Books view-engine 시리즈 manual verify
+- 4 viewMode (grid/list/board/gallery) 토글
+- Filter Kind values icon 노출
+- BookKindChip 색
+- BookFloatingBar (1+ 선택 시)
+- Save view 버튼
+
+회귀 발견 시 즉시 fix.
+
+---
+
+## 🔵 보류
+
+### Manual verify Books 4 viewMode + 회귀 fix
 다음 세션 시작 시 진행. NEXT-ACTION.md 7 step 절차.
 
 ```
@@ -119,6 +144,14 @@
 ---
 
 ## ✅ 최근 완료
+
+### 2026-05-12 (저녁~밤, 거대) — Books polish 6 PR + emoji 폐기 + Pin 통일 (Store v126 → v129)
+- ✅ **PR #296** (v127): SEED_BOOKS migration backfill (기존 사용자에도 inject)
+- ✅ **PR #297** (v128): Polish 1 — SEED emoji 제거 + Display properties Sources/Pin toggle + groupBy "status" stale validation
+- ✅ **PR #298** (v129): emoji 영구 폐기 + Phosphor BookKindIcon 통일 (Plot icon 시스템)
+- ✅ **PR #299**: Polish 2 — BookKindChip 색 (StatusBadge 패턴) + Filter Kind values icon + Save view 통일 (Trash chip 제거)
+- ✅ **PR #300**: Pin 통일 — Books FloatingBar + Notes 우클릭 + Notes FloatingActionBar Pin
+- ✅ **PR #301**: Pin indicator (Notes/Wiki title 옆 inline)
 
 ### 2026-05-12 (마라톤) — Books view-engine 풀 통합 4 viewMode (Store v122 → v126)
 - ✅ **PR 1 (v123)**: 인프라 + grid 보존. useBooksView thin fork. 시각 변경 0
