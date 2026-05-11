@@ -15,13 +15,13 @@
  *  - groups: maps useBooksView groups (kind / pinned / none) to GalleryGroup
  */
 
-import { Books as PhBooks } from "@phosphor-icons/react/dist/ssr/Books"
 import { Lightning } from "@phosphor-icons/react/dist/ssr/Lightning"
 import { PencilSimple } from "@phosphor-icons/react/dist/ssr/PencilSimple"
 import { Sparkle } from "@phosphor-icons/react/dist/ssr/Sparkle"
 import { PushPin } from "@phosphor-icons/react/dist/ssr/PushPin"
 import { PushPinSimple } from "@phosphor-icons/react/dist/ssr/PushPinSimple"
 import { GalleryView, type GalleryItem, type GalleryGroup } from "@/components/views/gallery-view"
+import { BookKindIcon } from "@/components/property-chips"
 import { getBookKind, type BookGroup } from "@/lib/view-engine/use-books-view"
 import type { Book } from "@/lib/types"
 import type { GroupBy } from "@/lib/view-engine/types"
@@ -64,7 +64,7 @@ function bookToGalleryItem(book: Book): GalleryItem {
     badge: { label: badgeLabel },
     coverIcon: book.coverEmoji
       ? <span className="text-base leading-none">{book.coverEmoji}</span>
-      : <PhBooks size={14} weight="regular" />,
+      : <BookKindIcon kind={kind} size={14} />,
     metaLeft,
     metaRight,
   }

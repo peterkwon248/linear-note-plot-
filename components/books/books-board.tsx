@@ -48,6 +48,7 @@ import type { GroupBy, ViewState } from "@/lib/view-engine/types"
 import {
   BookItemCountChip,
   BookKindChip,
+  BookKindIcon,
   BookSourceKindChip,
 } from "@/components/property-chips"
 import { shortRelative } from "@/lib/format-utils"
@@ -345,7 +346,7 @@ function BookBoardCardInner({
           {book.coverEmoji ? (
             <span className="text-base leading-none">{book.coverEmoji}</span>
           ) : (
-            <PhBooks size={14} weight="regular" />
+            <BookKindIcon kind={kind} size={14} />
           )}
         </span>
         <span className="min-w-0 flex-1 text-note font-medium text-foreground line-clamp-2 leading-snug">

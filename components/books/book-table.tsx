@@ -5,7 +5,8 @@
  *
  * Replaces the simpler BookListRow (PR 2, books-view-engine-2) per user
  * feedback 2026-05-12: NotesTable 수준 일관성 기대 (column header + sort
- * toggle + multi-column). Mirrors notes-table.tsx COLUMN_DEFS / TH pattern.
+ * toggle + multi-column + multi-select checkbox). Mirrors notes-table.tsx
+ * COLUMN_DEFS / TH / checkbox pattern.
  *
  * Columns (toggleable via visibleColumns):
  *   - title:     book cover + title (always visible, flex-1)
@@ -15,16 +16,21 @@
  *   - updatedAt: relative time
  *   - createdAt: relative time
  *
+ * Leading 32px checkbox column (notes-table parity) — header toggles select-all,
+ * per-row toggles individual. Selection state lives locally for now;
+ * bulk-action bar is a follow-up.
  * Pin indicator stays inline next to the title (column-free, matches grid).
  * Context menu (Rename / Pin / Trash) preserved.
  */
 
+import { useState } from "react"
 import type { Book } from "@/lib/types"
 import type { SortField, SortDirection } from "@/lib/view-engine/types"
 import { getBookKind } from "@/lib/view-engine/use-books-view"
 import {
   BookItemCountChip,
   BookKindChip,
+  BookKindIcon,
   BookSourceKindChip,
 } from "@/components/property-chips"
 import { shortRelative } from "@/lib/format-utils"
@@ -38,6 +44,8 @@ import { PencilSimple } from "@phosphor-icons/react/dist/ssr/PencilSimple"
 import { ArrowUp } from "@phosphor-icons/react/dist/ssr/ArrowUp"
 import { ArrowDown } from "@phosphor-icons/react/dist/ssr/ArrowDown"
 import { ArrowsDownUp } from "@phosphor-icons/react/dist/ssr/ArrowsDownUp"
+import { Check as PhCheck } from "@phosphor-icons/react/dist/ssr/Check"
+import { Minus as PhMinus } from "@phosphor-icons/react/dist/ssr/Minus"
 import {
   ContextMenu,
   ContextMenuContent,
@@ -147,10 +155,36 @@ export function BookTable({
   // `title` is always visible (it's the entity identity column).
   const cols = BOOK_COLUMNS.filter((c) => c.id === "title" || visibleColumns.includes(c.id))
 
+  // Multi-select state (mirrors notes-table selectedIds pattern). Local to
+  // the table for now — surfaced to a bulk-action bar when needed.
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
+  const allChecked = selectedIds.size === books.length && books.length > 0
+  const someChecked = selectedIds.size > 0 && !allChecked
+
+  const toggleAll = () => {
+    if (allChecked) setSelectedIds(new Set())
+    else setSelectedIds(new Set(books.map((b) => b.id)))
+  }
+  const toggleOne = (id: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+  }
+
   return (
     <div className="flex flex-col">
       {/* Sticky header */}
-      <div className="sticky top-0 z-10 flex h-9 items-center gap-3 border-b border-border bg-background px-6">
+      <div className="sticky top-0 z-10 flex h-9 items-center gap-3 border-b border-border bg-background pl-3 pr-6">
+        {/* Select-all checkbox (notes-table parity) */}
+        <div className="flex w-6 shrink-0 items-center justify-center">
+          <CheckboxBox
+            state={allChecked ? "all" : someChecked ? "partial" : "none"}
+            onClick={toggleAll}
+          />
+        </div>
         {cols.map((c) => (
           <div key={c.id} className={cn("flex items-center", c.width)}>
             <TH
@@ -172,6 +206,8 @@ export function BookTable({
             key={book.id}
             book={book}
             cols={cols}
+            checked={selectedIds.has(book.id)}
+            onToggleCheck={() => toggleOne(book.id)}
             onOpen={onOpen}
             onRename={onRename}
             onTogglePin={onTogglePin}
@@ -185,11 +221,54 @@ export function BookTable({
   )
 }
 
+/* ── CheckboxBox ───────────────────────────────────────── */
+
+function CheckboxBox({
+  state,
+  onClick,
+}: {
+  state: "all" | "partial" | "none"
+  onClick: () => void
+}) {
+  return (
+    <div
+      data-checkbox
+      role="checkbox"
+      aria-checked={state === "all" ? true : state === "partial" ? "mixed" : false}
+      tabIndex={0}
+      onClick={(e) => {
+        e.stopPropagation()
+        onClick()
+      }}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault()
+          e.stopPropagation()
+          onClick()
+        }
+      }}
+      className={cn(
+        "h-4 w-4 rounded-[4px] border flex items-center justify-center cursor-pointer transition-colors shadow-sm",
+        state === "all"
+          ? "bg-accent border-accent"
+          : state === "partial"
+            ? "bg-accent/50 border-accent"
+            : "bg-card border-zinc-400 dark:border-zinc-600 hover:border-zinc-500 dark:hover:border-zinc-500",
+      )}
+    >
+      {state === "all" && <PhCheck className="text-accent-foreground" size={10} weight="bold" />}
+      {state === "partial" && <PhMinus className="text-accent-foreground" size={10} weight="regular" />}
+    </div>
+  )
+}
+
 /* ── BookRow ───────────────────────────────────────────── */
 
 function BookRow({
   book,
   cols,
+  checked,
+  onToggleCheck,
   onOpen,
   onRename,
   onTogglePin,
@@ -199,6 +278,8 @@ function BookRow({
 }: {
   book: Book
   cols: BookColumnDef[]
+  checked: boolean
+  onToggleCheck: () => void
   onOpen: (id: string) => void
   onRename: (id: string, currentTitle: string) => void
   onTogglePin: (id: string, pinned: boolean | undefined) => void
@@ -212,22 +293,31 @@ function BookRow({
   return (
     <ContextMenu>
       <ContextMenuTrigger asChild>
-        <button
-          type="button"
-          onClick={() => !book.trashed && onOpen(book.id)}
+        <div
+          onClick={(e) => {
+            // Don't open when click landed on the checkbox.
+            if ((e.target as HTMLElement).closest('[data-checkbox]')) return
+            if (!book.trashed) onOpen(book.id)
+          }}
           className={cn(
-            "group flex h-9 w-full items-center gap-3 border-b border-border/30 px-6 text-left transition-colors",
+            "group flex h-9 w-full items-center gap-3 border-b border-border/30 pl-3 pr-6 text-left transition-colors",
             book.trashed
               ? "opacity-50 hover:bg-hover-bg cursor-default"
-              : "hover:bg-hover-bg",
+              : "hover:bg-hover-bg cursor-pointer",
           )}
         >
+          <div className="flex w-6 shrink-0 items-center justify-center">
+            <CheckboxBox
+              state={checked ? "all" : "none"}
+              onClick={onToggleCheck}
+            />
+          </div>
           {cols.map((c) => (
             <div key={c.id} className={cn("flex items-center", c.width)}>
               {renderCell(c.id, book, kind, sourceKinds)}
             </div>
           ))}
-        </button>
+        </div>
       </ContextMenuTrigger>
       <ContextMenuContent className="w-44">
         {book.trashed ? (
@@ -301,7 +391,7 @@ function renderCell(
             {book.coverEmoji ? (
               <span className="text-base leading-none">{book.coverEmoji}</span>
             ) : (
-              <PhBooks size={14} weight="regular" />
+              <BookKindIcon kind={kind} size={14} />
             )}
           </span>
           <span className="min-w-0 flex-1 truncate text-note text-foreground pl-2">

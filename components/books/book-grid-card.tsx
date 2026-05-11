@@ -10,6 +10,8 @@
  */
 
 import type { Book } from "@/lib/types"
+import { getBookKind } from "@/lib/view-engine/use-books-view"
+import { BookKindIcon } from "@/components/property-chips"
 import { shortRelative } from "@/lib/format-utils"
 import { cn } from "@/lib/utils"
 import { Books as PhBooks } from "@phosphor-icons/react/dist/ssr/Books"
@@ -67,12 +69,13 @@ export function BookGridCard({
             />
           )}
 
-          {/* Cover icon */}
+          {/* Cover icon — kind-shape fallback when no emoji (Option C).
+              Plot status pattern: shape + color carries meaning. */}
           <div className="flex h-12 w-12 items-center justify-center rounded-md bg-secondary/40 text-muted-foreground/70">
             {book.coverEmoji ? (
               <span className="text-2xl leading-none">{book.coverEmoji}</span>
             ) : (
-              <PhBooks size={22} weight="regular" />
+              <BookKindIcon kind={getBookKind(book)} size={22} />
             )}
           </div>
 
