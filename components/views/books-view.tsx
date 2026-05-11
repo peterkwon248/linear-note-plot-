@@ -22,6 +22,7 @@ import { useState, useMemo, useCallback } from "react"
 import { useRouter } from "next/navigation"
 import { usePlotStore } from "@/lib/store"
 import { useBooksView } from "@/lib/view-engine/use-books-view"
+import { useSaveViewProps } from "@/lib/view-engine/use-save-view-props"
 import { BOOKS_VIEW_CONFIG } from "@/lib/view-engine/view-configs"
 import type { FilterRule, SortField } from "@/lib/view-engine/types"
 import { ViewHeader } from "@/components/view-header"
@@ -119,6 +120,10 @@ function BooksGrid() {
     }
     updateViewState({ sortFields: [{ field, direction: nextDir }] })
   }, [viewState.sortFields, updateViewState])
+
+  // Save view props (Notes/Wiki 정합 — ViewHeader actions에 Save view 버튼).
+  // 2026-05-12: trashedCount chip 제거하고 표준 Save view 버튼으로 통일.
+  const { saveViewMode, onSaveView } = useSaveViewProps("books", "books")
 
   // Filter toggle handler (mirrors stickers-view handleStickersFilterToggle).
   const handleBooksFilterToggle = useCallback((rule: FilterRule) => {
@@ -230,24 +235,8 @@ function BooksGrid() {
             onQuickFilter={(rules) => updateViewState({ filters: rules })}
           />
         }
-        actions={
-          trashedCount > 0 ? (
-            <button
-              type="button"
-              onClick={() => setShowTrashed(!showTrashed)}
-              className={cn(
-                "flex h-7 items-center gap-1 rounded-md px-2 text-2xs font-medium transition-colors",
-                showTrashed
-                  ? "bg-hover-bg text-foreground"
-                  : "text-muted-foreground hover:bg-hover-bg hover:text-foreground",
-              )}
-              title={showTrashed ? "Hide trashed books" : "Show trashed books"}
-            >
-              <TrashSimple size={13} weight="regular" />
-              <span className="tabular-nums">{trashedCount}</span>
-            </button>
-          ) : undefined
-        }
+        saveViewMode={saveViewMode}
+        onSaveView={onSaveView}
       />
 
       <div className="flex-1 overflow-y-auto">

@@ -1,6 +1,6 @@
 import type { ReactNode } from "react"
 import type { SortField, ViewMode, GroupBy } from "./types"
-import { Hexagon, Cube, BookOpen, CircleHalf, Sticker as StickerIcon } from "@phosphor-icons/react"
+import { Hexagon, Cube, BookOpen, CircleHalf, Sticker as StickerIcon, Lightning, PencilSimple, Sparkle } from "@phosphor-icons/react"
 import { Cuboid2x2 } from "@/components/icons/Cuboid2x2"
 
 export interface FilterCategory {
@@ -753,10 +753,12 @@ export const BOOKS_VIEW_CONFIG: ViewConfig = {
   showDisplay: true,
   showDetailPanel: false,
   filterCategories: [
+    // Notes filter status sub-menu 정합 — 각 value에 icon + color.
+    // BookKindIcon (cover/leading) + BookKindChip (column chip) 패턴과 동일.
     { key: "kind", label: "Kind", icon: SortIcon, values: [
-      { key: "smart", label: "Smart" },
-      { key: "manual", label: "Manual" },
-      { key: "hybrid", label: "Hybrid" },
+      { key: "smart",  label: "Smart",  icon: <Lightning     size={14} weight="regular" className="text-[#5E6AD2] dark:text-[#7C8AE7]" /> },
+      { key: "manual", label: "Manual", icon: <PencilSimple  size={14} weight="regular" className="text-muted-foreground" /> },
+      { key: "hybrid", label: "Hybrid", icon: <Sparkle       size={14} weight="regular" className="text-amber-600 dark:text-amber-400" /> },
     ]},
     // Which smart source(s) are configured. "_none" surfaces pure-manual books
     // for users converging on a tidier collection (mirrors Files _none pattern).
