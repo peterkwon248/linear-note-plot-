@@ -125,7 +125,11 @@ export interface Book {
   id: string
   title: string                    // required
   description?: string             // optional plain text (rich text v2)
-  coverEmoji?: string | null       // optional single emoji (cover image is v2)
+  /** @deprecated 2026-05-12 — emoji 영구 폐기. BookKindIcon이 cover 책임.
+   *  필드는 IDB persistence round-trip 위해 type에 보존 (V129 migration이
+   *  데이터를 null로 wipe). UI 코드 어디서도 읽지 않음. 미래 Phosphor
+   *  icon picker 도입 시 Book.coverIcon (Phosphor icon name) 신규 필드. */
+  coverEmoji?: string | null
   color?: string | null            // optional accent color
   items: BookItem[]                // ordered list of items + chapter headings
   createdAt: string

@@ -1925,5 +1925,19 @@ export function migrate(persistedState: unknown): PlotState {
   // bump re-triggers the normalize pass; no explicit migration code needed.
   // Spec: `.omc/plans/books-view-engine-integration.md` §8 (PR 6 polish).
 
+  // v129: Books emoji 영구 폐기 (2026-05-12 사용자 결정).
+  // Plot 미니멀리즘 정합 — Apple/Unicode emoji 시스템 vs Phosphor outline
+  // icon 시스템 mismatch. BookKindIcon이 cover 책임. 모든 사용자 books
+  // coverEmoji 필드 wipe — IDB 잔존 emoji 표시 제거. Book.coverEmoji 타입
+  // 필드는 보존 (round-trip 호환), 단 UI 코드 어디서도 읽지 않음.
+  // 미래 Phosphor icon picker 도입 시 Book.coverIcon 신규 필드.
+  if (Array.isArray(state.books)) {
+    for (const b of state.books as any[]) {
+      if (b && "coverEmoji" in b) {
+        b.coverEmoji = null
+      }
+    }
+  }
+
   return state as unknown as PlotState
 }

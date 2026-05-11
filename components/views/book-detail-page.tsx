@@ -55,6 +55,8 @@ import {
   sortableKeyboardCoordinates,
 } from "@dnd-kit/sortable"
 import { Books } from "@phosphor-icons/react/dist/ssr/Books"
+import { BookKindIcon } from "@/components/property-chips"
+import { getBookKind } from "@/lib/view-engine/use-books-view"
 import { IconChevronRight } from "@/components/plot-icons"
 import { ArrowLeft } from "@phosphor-icons/react/dist/ssr/ArrowLeft"
 import { Play } from "@phosphor-icons/react/dist/ssr/Play"
@@ -352,11 +354,9 @@ export function BookDetailPage({ bookId }: BookDetailPageProps) {
     router.push("/books")
   }
 
-  const headingIcon = book.coverEmoji ? (
-    <span className="text-lg leading-none">{book.coverEmoji}</span>
-  ) : (
-    <Books size={20} weight="regular" />
-  )
+  // emoji 영구 폐기 (2026-05-12): heading icon = BookKindIcon (kind 표현)
+  const headingIcon = <BookKindIcon kind={getBookKind(book)} size={20} />
+  void Books // legacy import — kept for unrelated callers in this file
 
   return (
     <div className="flex flex-1 flex-col overflow-hidden">

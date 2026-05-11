@@ -71,7 +71,7 @@ export function InBooksSection({ kind, refId }: InBooksSectionProps) {
             className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left transition-colors duration-100 hover:bg-hover-bg"
           >
             <span className="flex h-4 w-4 shrink-0 items-center justify-center text-base leading-none">
-              {book.coverEmoji ?? <BooksIcon size={14} weight="regular" className="text-muted-foreground" />}
+              <BooksIcon size={14} weight="regular" className="text-muted-foreground" />
             </span>
             <span className="flex-1 truncate text-note font-medium text-foreground">
               {book.title || "Untitled book"}

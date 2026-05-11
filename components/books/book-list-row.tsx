@@ -74,13 +74,11 @@ export function BookListRow({
               : "hover:bg-hover-bg",
           )}
         >
-          {/* Cover */}
+          {/* Cover — emoji 영구 폐기 (2026-05-12), BookKindIcon 사용 분기는
+              BookTable로 이관됨 (PR #293). 이 파일은 사용 안 되지만 빌드
+              cleanliness 위해 BookKindIcon 분기 정리. */}
           <span className="flex h-5 w-5 shrink-0 items-center justify-center text-muted-foreground/70">
-            {book.coverEmoji ? (
-              <span className="text-base leading-none">{book.coverEmoji}</span>
-            ) : (
-              <PhBooks size={14} weight="regular" />
-            )}
+            <PhBooks size={14} weight="regular" />
           </span>
 
           {/* Title (flex-1 truncate) */}
