@@ -12,6 +12,7 @@ import { IconWikiStub, IconWikiArticle } from "@/components/plot-icons"
 import type { WikiArticle, WikiCategory } from "@/lib/types"
 import type { GroupBy } from "@/lib/view-engine/types"
 import type { WikiGroup } from "@/lib/view-engine/wiki-list-pipeline"
+import { WikiGroupHeaderIcon } from "@/components/views/wiki-group-header-icon"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Check as PhCheck } from "@phosphor-icons/react/dist/ssr/Check"
 import { PushPin } from "@phosphor-icons/react/dist/ssr/PushPin"
@@ -834,6 +835,7 @@ export function WikiList({
                   <div key={group.key}>
                     {group.label && (
                       <div className="flex items-center gap-2.5 px-5 py-2 mt-3 mb-0.5 border-b border-border-subtle">
+                        <WikiGroupHeaderIcon groupBy={groupBy!} groupKey={group.key} wikiCategories={wikiCategories ?? []} size={14} />
                         <span className="text-2xs font-semibold text-muted-foreground/60 uppercase tracking-wide">
                           {group.label}
                         </span>
