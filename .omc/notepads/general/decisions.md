@@ -642,3 +642,29 @@ Type-free       Sticker                   Book
 - VIEW_ROUTES include만으로는 부족 (`/books/{id}` 매칭 X)
 - `activeRoute.startsWith("/books/")`, `startsWith("/library/")` 추가
 - Fallback children div + view 동시 mount 50% 폭 stealing fix
+
+## 2026-05-11 (Wiki UX follow-up) — Pin 위치 / WikiArticleMenuItems DRY / forwardRef 패턴
+
+### Pin indicator 위치 = status chip 옆 (3 entity 통일) LOCKED
+- PR #301에서 추가했던 inline pin (title 옆) → status chip 옆으로 이동.
+- 사용자 시그널: "title 옆 어색, status chip 옆이 자연스럽다."
+- "Pin 통일 = 모든 entity 표준" LOCKED 원칙 적용 — Notes/Wiki/Books 3개 모두.
+- Books는 inline + dedicated pinned column 둘 다 옵션이지만, 기본 inline 위치는 kind chip 옆.
+
+### WikiArticleMenuItems helper DRY (메뉴 콘텐츠 단일화) LOCKED
+- 메뉴 콘텐츠를 `wiki-list.tsx`에서 export. 3 surface 공유:
+  1. Row 우클릭 (Radix ContextMenuContent)
+  2. DotsThree 클릭 Popover (hover affordance 보존)
+  3. Gallery 카드 우클릭 (renderContextMenu로 wiki-view에서 mount)
+- close 콜백 매개변수로 caller가 dismiss 방식 제어 (Popover는 setMenuOpen(false), Radix는 자동).
+- 미래 entity 추가 시 동일 패턴 권장.
+
+### GalleryView renderContextMenu render-prop API
+- Gallery는 entity-agnostic (Notes/Wiki/References). 카드 콘텐츠 메뉴는 entity-specific.
+- API: `renderContextMenu?: (item: GalleryItem, card: ReactNode) => ReactNode`
+- caller가 card를 `<ContextMenu>` wrapper로 감싸 entity별 메뉴 mount. Notes/References는 미사용 (현재).
+
+### GalleryCard forwardRef 패턴 (Radix Slot 호환)
+- function component를 Radix `asChild`의 자식으로 사용하려면 `React.forwardRef` + `{...rest}` spread 필수.
+- 패턴 정착: `const GalleryCard = React.forwardRef<HTMLElement, Props & React.HTMLAttributes<HTMLElement>>(function GalleryCard({...specific, ...rest}, ref) { return <article ref={ref} {...rest}>...</article> })`
+- Slot 안에 넣을 가능성이 있는 모든 함수 컴포넌트는 forwardRef로 작성하는 게 안전 (보험).

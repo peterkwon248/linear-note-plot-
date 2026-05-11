@@ -464,3 +464,31 @@ function next(depth: number): string {
 ### React/HMR 한계
 - 큰 파일 변경 시 HMR 못 잡고 stale view → dev 재시작 또는 Ctrl+Shift+R
 - preview MCP 시뮬레이션 + window.history.pushState로 React 인식 안 될 수 있음 → 실제 사이드바 클릭 필요
+
+## 2026-05-11 (Wiki UX follow-up) — Radix ContextMenu vs Popover, asChild 한계
+
+### Radix `<ContextMenu>` vs `<Popover>` (cursor anchoring)
+- `<ContextMenu>`는 `clientX/clientY`에 자동 anchor (cursor 추적). Right-click 시 마우스 위치에 정확히 출현.
+- `<Popover>`는 PopoverTrigger element 위치에 고정. setOpen으로 열어도 trigger DOM에 anchor.
+- Wiki list row의 우클릭이 row 오른쪽 끝에 메뉴를 띄우던 버그 = `onContextMenu`에서 `setMenuOpen(true)`로 DotsThree Popover를 연 결과.
+- **Cursor-aware UX는 무조건 `<ContextMenu>` wrapper 사용.** DotsThree click affordance는 Popover로 별도 유지 가능.
+
+### Radix `asChild` + function component 한계
+- `asChild`는 Slot/cloneElement로 immediate child에 props(ref/onClick/onContextMenu 등)를 inject.
+- 자식이 **function component**면 그 내부에서 `forwardRef` + props spread (`{...rest}`)로 underlying DOM에 명시적 forward 안 하면 prop이 사라짐.
+- 이번 세션: `<ContextMenuTrigger asChild>{<GalleryCard ...>}` → article element에 onContextMenu prop 도달 X (React fiber로 확인). `GalleryCard`를 `React.forwardRef<HTMLElement, ...>` + `{...rest}` spread로 변경하니 해결.
+- **패턴**: Slot 안에 넣을 모든 function component는 forwardRef로 작성하고 rest props/className은 합쳐서 underlying DOM에 spread.
+
+### `display: contents` div wrapper
+- Grid item 안 wrapper div가 box 생성 안 해도 자식이 직접 grid item으로 렌더됨. event는 정상 bubble.
+- `<Grid> { items.map(it => <div className="contents">{renderContextMenu(it, card)}</div>) }` 패턴에서 layout 영향 없이 wrapper 추가 가능.
+
+### React fiber inspection 디버깅 패턴
+- `Object.keys(element).find(k => k.startsWith('__reactProps'))` 키로 React 컴포넌트의 actual props 즉시 dump.
+- dev tool 없이 dev server eval로 컴포넌트 prop 검증 가능 — 이번 세션에서 GalleryCard onContextMenu가 undefined임을 확인하는 데 핵심.
+- 또한 `__reactFiber$xxx` 키로 fiber.memoizedProps 추적 → ancestor 컴포넌트별 props 디버깅.
+
+### WikiArticle.id 시드 ID 규칙
+- 기존 seeds: `wiki-zettelkasten` 같은 sluggified ID. dump 시 `wiki-1/wiki-2` 같은 일반 ID도 혼재.
+- Store toggleWikiArticlePin(id) 호출 시 정확한 ID 확인 필수 — store dump 결과의 ID 형식 신뢰.
+- IDB persisted state와 component prop 불일치 가능성: 디버깅 시 React fiber로 실제 prop 값 확인.

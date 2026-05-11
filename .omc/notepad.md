@@ -1,39 +1,36 @@
-# Session Notepad (Updated: 2026-05-11 09:30 마라톤)
+# Session Notepad (Updated: 2026-05-11 21:00)
 
 ## Critical Context
 
-### 이번 세션 마라톤 — 27 파일 (+735 / -847), 2 파일 삭제
-- **9 카테고리 작업**: 이슈 2 (책 목차) / 이슈 3 (BookContextNav 좌측) / 이슈 4 (위키 breadcrumb) / Read mode ←/→ / 이슈 1 (책 split view 풀 지원) / Dual mode 완전 폐기 / 갤러리 entity-agnostic / 그룹 헤더 아이콘 통일 / Status 색 강화
-- **Store v122 migration**: viewMode "dual" → "list" (idempotent)
-- **TSC clean + Build pass** (exit 0)
+### 이번 세션 — PR #303 (2 commit, 6 files, +412 -104)
+1. **Pin 위치 이동** (1d8b30f): title 옆 → status chip 옆, 3 entity 통일 (Notes/Wiki/Books)
+2. **Wiki UX 3 이슈** (42c6e59):
+   - 우클릭 위치 fix (Popover anchor → Radix ContextMenu)
+   - 플로팅 바 확장 (Pin/Move/Add to category 추가)
+   - 갤러리 우클릭 fix (forwardRef + renderContextMenu render-prop)
 
-### 큰 영구 결정 (이번 세션)
-- **Dual mode 폐기 LOCKED** — Split view + list로 충분
-- **갤러리 = entity-agnostic generic** — GalleryItem interface (Notes/Wiki/Refs adapter)
-- **단일 클릭 = 풀 에디터** (preview pane → openNote)
-- **Books split view 풀 지원** — 5 케이스 모두 secondary pane 인프라 활용
-- **Stone 색 = toasted sand** — warm earthy (zinc neutral 폐기)
-- **그룹 헤더 아이콘 view 간 통일** — list/board/gallery 같은 패턴
-- **키보드 단축키 ⌘[/⌘] + ←/→ 공존** — modifier (Safari) + plain (Reader)
+### 영구 결정 (이번 세션)
+- **Pin 위치 = status chip 옆** (3 entity 통일 LOCKED)
+- **WikiArticleMenuItems DRY** (3 surface 공유)
+- **Radix asChild + function component**: forwardRef + `{...rest}` 표준 패턴
+- **GalleryView renderContextMenu API**: entity-agnostic + 카드 메뉴 entity-specific
 
 ### 기술 학습
-- NOTE_STATUS_COLORS stale CSS var (chart vars → status vars, 1줄 fix로 전체 일관성)
-- `e.target` window일 때 `closest` undefined (synthetic event 방어, optional chain)
-- WorkspaceEditorArea NotesTableView 전용 (layout.tsx가 비-table route split 처리)
-- SecondaryPanelContent priority (books route > secondaryNoteId)
-- notes-table GroupHeaderIcon label vs groupKey (NoteStatus cast 시 groupKey 필수)
-- `.gallery-cover` + `--cover-color` 변수 (CSS class light/dark 분기 패턴)
+- Radix ContextMenu = cursor anchor, Popover = trigger element anchor
+- React fiber inspection (`__reactProps$xxx`) — dev tool 없이 props 디버깅
+- `display: contents` wrapper로 grid layout 영향 없이 prop wrapping
 
-## Active Tasks (다음 세션 결정 대기)
+## Active Tasks
 
-- [ ] **Books view-engine 풀 통합** — 사용자 brainstorm 중 (옵션 A 풀 vs 단계적). ~5-6h. filter(컨텐츠 타입/Smart vs Manual/Pinned) + sort + group + view modes(grid/list/gallery/board). 핵심 가치: 컨텐츠 타입 필터 (note-only / wiki-only / mixed)
-- [ ] **Wiki 그룹 헤더 아이콘** — WikiList/WikiBoard 미적용 (~30분, Notes 패턴 그대로)
+- [ ] **PR #303 머지 대기** — 사용자 manual verify 후 squash merge
+- [ ] **Wiki 그룹 헤더 아이콘** — Notes 패턴 그대로 적용 (~30분)
+- [ ] **Books view-engine 회귀 점검** (P2)
 
 ## Blockers
 없음.
 
 ## 다음 세션 시작 시
-
-1. `/before-work` 첫 명령
-2. Books view-engine 통합 결정 (사용자 의논 대기 — A 풀 vs 단계적)
-3. 결정 후 작업 시작 (옵션 A면 ~5-6h, 단계적이면 sort/list부터)
+1. `/before-work`
+2. PR #303 머지 여부 체크
+3. 머지 → Wiki 그룹 헤더 아이콘 P1
+4. 미머지 → 추가 요청/회귀 fix

@@ -29,6 +29,67 @@
 
 ---
 
+## 🚀 2026-05-11 (저녁) — Pin 위치 이동 + Wiki UX 3 이슈 fix (PR #303, 2 commit)
+
+**범위**: PR #300/#301 follow-up. 사용자 manual verify 시그널 5가지를 2 commit으로 정리. 단일 worktree (`elastic-darwin-382a48`). 6 파일 +412 / -104.
+
+### 2 commit 요약
+
+**Commit 1 (1d8b30f) — Pin indicator 위치 이동 (3 entity 통일)**:
+- Notes: a-row__lead title 뒤 → status cell StatusBadge 뒤 (gap-1.5)
+- Wiki: title span 직후 → status column 안 Stub/Article 배지 뒤 (gap-1.5, mx-1 제거)
+- Books: title case inline → kind case BookKindChip 뒤 (`inline-flex gap-1.5` wrapper)
+- 사용자 통찰: "1 하면 자동으로 2가 되는 거 아니냐" → Books도 같이 통일.
+
+**Commit 2 (42c6e59) — Wiki UX 3 이슈 일괄 fix**:
+1. **우클릭 메뉴 위치 fix** — Radix `<ContextMenu>` wrapper로 cursor 추적. 기존 `onContextMenu + Popover anchor` 패턴 (메뉴가 DotsThree 버튼 위치 고정되던 버그) 폐기. DotsThree click Popover는 hover affordance로 보존.
+2. **플로팅 바 확장** — wiki-floating-action-bar에 Pin/Unpin (mixed→pin batch) / Move to folder (FolderPicker kind="wiki") / Add to category (multi-pick CategoryAddPopover, union add) 3 액션 추가.
+3. **갤러리 카드 우클릭 fix** — GalleryViewProps.renderContextMenu render-prop 추가 + GalleryCard `forwardRef` + `{...rest}` spread (Radix `asChild` Slot 프롭 전파). wiki-view에서 동일 WikiArticleMenuItems helper mount.
+
+**DRY refactor**: `WikiArticleMenuItems` helper export (wiki-list.tsx:82-176). 3 surface 공유 — row 우클릭 / DotsThree Popover / gallery 카드 우클릭.
+
+### 큰 결정 (영구)
+
+**1. Pin 위치 = status chip 옆 (3 entity 통일) LOCKED**: PR #301 inline pin 위치 잘못 → 사용자 시그널 후 정정. "Pin 통일 = 모든 entity 표준" 원칙 강화.
+
+**2. WikiArticleMenuItems helper DRY LOCKED**: 메뉴 콘텐츠 export → 3 surface 공유. 미래 entity 추가 시 동일 패턴.
+
+**3. GalleryCard forwardRef 패턴 LOCKED**: Radix `asChild` Slot 호환을 위해 모든 함수 컴포넌트 자식은 forwardRef + `{...rest}` spread. `GalleryCard` 표준화.
+
+**4. GalleryView renderContextMenu render-prop API LOCKED**: gallery-view는 entity-agnostic, 카드 메뉴는 entity-specific → render-prop으로 caller가 wrap. Notes/References는 미사용 (현재).
+
+**5. DotsThree click Popover 보존 (이중 진입로) LOCKED**: ContextMenu refactor 후에도 hover affordance 유지. 사용자가 우클릭 모를 수도 있음.
+
+### 기술 학습 (영구)
+
+- **Radix `<ContextMenu>` vs `<Popover>`**: ContextMenu는 cursor (clientX/clientY) 자동 anchor, Popover는 trigger element anchor. cursor-aware UX는 무조건 ContextMenu.
+- **Radix `asChild` + function component 한계**: Slot/cloneElement는 immediate child에만 props inject. function component면 forwardRef + `{...rest}` spread 필수. 안 그러면 onContextMenu 등이 underlying DOM에 도달 X.
+- **`display: contents` div wrapper**: Grid layout에서 wrapper div가 box 생성 안 해도 자식이 grid item으로 직접 참여. event bubble 정상. renderContextMenu 패턴에서 유용.
+- **React fiber inspection 디버깅**: `Object.keys(el).find(k => k.startsWith('__reactProps'))` → 컴포넌트 actual props dump. dev tool 없이 dev server eval로 즉시 검증 가능.
+- **WikiArticle.id 시드 ID 규칙**: 기존 seeds는 `wiki-zettelkasten` 같은 sluggified. dump 시 wiki-1/wiki-2도 혼재 가능 → 디버깅 시 React fiber로 실제 prop 확인.
+
+### 다음 세션 P0/P1
+
+🟢 **PR #303 머지 대기** — 사용자 manual verify 후 squash merge to main
+🟡 **Wiki 그룹 헤더 아이콘** — WikiList/WikiBoard 미적용 (~30분, Notes 패턴 그대로)
+🟢 **Books view-engine 회귀 점검** (P2)
+
+### 환경 변경
+
+- Store version: v129 (변경 없음)
+- Tests: 변경 없음 (테스트 추가 X)
+- 신규 export/컴포넌트:
+  - `WikiArticleMenuItems` (wiki-list.tsx) — 메뉴 콘텐츠 helper
+  - `CategoryAddPopover` (wiki-floating-action-bar.tsx) — 새 multi-pick popover
+  - `GalleryViewProps.renderContextMenu` (gallery-view.tsx) — render-prop
+- 패턴 변경: GalleryCard → forwardRef
+- import React 추가: gallery-view.tsx
+
+### Architect 검증
+자동: tsc 0 errors + npm run build 0 / 0 (37/37 static pages). Dev server eval-test로 cursor/menu 위치 정량 비교 (1-2px 오프셋). 스크린샷 시각 confirm.
+
+---
+
 ## 🚀 2026-05-12 (저녁~밤, 거대) — Books view-engine 10 PR polish + Pin 통일 + emoji 폐기 (Store v126 → v129)
 
 **범위**: 오후 4 PR 시리즈에 이어 거대한 polish + extension. 매 사용자 manual verify 후 회귀 즉시 fix → commit → 머지 반복. 6 추가 PR (#296-#301) + emoji 영구 폐기 결정.

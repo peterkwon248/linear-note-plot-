@@ -42,6 +42,36 @@
 
 ---
 
+## 🚀 2026-05-11 (저녁) — Pin 위치 이동 + Wiki UX 3 이슈 fix (PR #303, 2 commit) ⭐⭐⭐⭐
+
+**범위**: PR #300/#301 follow-up. 사용자 manual verify 시그널 5가지 → 2 commit 정리. 단일 worktree (`elastic-darwin-382a48`). 6 파일 +412/-104.
+
+### 핵심 결정 (영구)
+
+**1. Pin 위치 = status chip 옆 (3 entity 통일)**: PR #301 inline pin (title 옆) → status chip 옆으로 이동. Notes/Wiki/Books 모두. "1 하면 자동으로 2 되는 거 아니냐" 통찰 — 통일 원칙.
+
+**2. WikiArticleMenuItems helper DRY**: 메뉴 콘텐츠 export. 3 surface 공유 (row 우클릭 / DotsThree Popover / gallery 카드 우클릭).
+
+**3. Radix `<ContextMenu>` cursor 추적 vs Popover anchor**: 우클릭 위치 fix의 근본. Popover는 trigger element 위치 고정 → cursor-aware는 무조건 ContextMenu wrapper.
+
+**4. GalleryCard forwardRef + `{...rest}` spread**: Radix `asChild` Slot 호환. function component 자식이 Slot 안에 있으면 명시적 forward 필수. 미래 entity 추가 시 동일 패턴.
+
+**5. GalleryView renderContextMenu render-prop API**: entity-agnostic gallery + entity-specific 카드 메뉴. caller가 wrap 결정.
+
+**6. DotsThree click Popover 보존 (이중 진입로)**: ContextMenu refactor 후에도 hover affordance 유지. 우클릭 모를 사용자 위해 click 진입로 보존.
+
+**7. Wiki floating bar 확장**: Pin/Unpin (batch mixed→pin) + Move (FolderPicker kind="wiki") + Add to category (multi-pick popover, union add via categoryIds). Notes/Books 정합.
+
+### 기술 학습 (영구)
+
+- Radix `<ContextMenu>` vs `<Popover>` anchor 차이 (cursor vs trigger element)
+- Radix `asChild` + function component → forwardRef + `{...rest}` 표준
+- `display: contents` div wrapper로 layout 영향 없이 prop wrapping
+- React fiber inspection (`__reactProps$xxx`) 디버깅 패턴
+- WikiArticle.id 시드 ID 규칙 (`wiki-zettelkasten` sluggified) — store dump 신뢰
+
+---
+
 ## 🚀 2026-05-12 (저녁~밤, 거대) — Books view-engine polish 6 PR + emoji 영구 폐기 + Pin 통일 ⭐⭐⭐⭐⭐
 
 **범위**: 1 worktree, 오후 시리즈에 이어 사용자 manual verify 흐름과 강하게 결합. 6 추가 PR (#296-#301). Store v126 → v129.
