@@ -799,8 +799,10 @@ export const BOOKS_VIEW_CONFIG: ViewConfig = {
     // showTrashed toggle is handled in books-view.tsx ViewHeader actions.
     toggles: [],
     properties: [
-      { key: "itemCount", label: "Item count", icon: SortIcon },
-      { key: "kind",      label: "Kind",       icon: SourceIcon },
+      { key: "itemCount", label: "Item count",    icon: SortIcon },
+      { key: "kind",      label: "Kind",          icon: SourceIcon },
+      { key: "sources",   label: "Smart sources", icon: SourceIcon },
+      { key: "pinned",    label: "Pin",           icon: PinIcon },
     ],
   },
 }

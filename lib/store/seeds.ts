@@ -739,7 +739,7 @@ export const SEED_BOOKS: Book[] = [
     id: "book-1",
     title: "Getting Started Guide",
     description: "Hand-curated intro notes for new readers.",
-    coverEmoji: "📚",
+    coverEmoji: null,
     color: null,
     items: [
       { kind: "note", id: "bi-1-1", refId: "note-1", order: "a0" },
@@ -757,7 +757,7 @@ export const SEED_BOOKS: Book[] = [
     id: "book-2",
     title: "Reading Journal",
     description: "Books I finished this season.",
-    coverEmoji: "📖",
+    coverEmoji: null,
     color: null,
     items: [
       { kind: "note", id: "bi-2-1", refId: "note-2", order: "a0" },
@@ -803,7 +803,7 @@ export const SEED_BOOKS: Book[] = [
     id: "book-5",
     title: "Research Library",
     description: "Spans multiple research topics.",
-    coverEmoji: "🧪",
+    coverEmoji: null,
     color: null,
     items: [],
     smartSources: [
@@ -840,7 +840,7 @@ export const SEED_BOOKS: Book[] = [
     id: "book-7",
     title: "Daily + Inspiration",
     description: "Daily log entries plus auto-pulled ideas.",
-    coverEmoji: "⭐",
+    coverEmoji: null,
     color: null,
     items: [
       { kind: "note", id: "bi-7-1", refId: "note-4", order: "a0" },

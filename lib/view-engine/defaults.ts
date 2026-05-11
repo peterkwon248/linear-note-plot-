@@ -93,6 +93,24 @@ export function buildDefaultViewStates(): Record<ViewContextKey, ViewState> {
   return result
 }
 
+/* ── Context-specific valid GroupBy (books-view-engine-6) ─
+
+   Notes/Wiki accept the full VALID_GROUP_BY union, but Books only makes
+   sense with a tiny subset (none/kind/pinned/date). Stale persisted values
+   like "status" (carried over from Notes via copy or pre-Books defaults)
+   would otherwise render as "Grouping: status" in the DisplayPanel even
+   though BOOKS_VIEW_CONFIG.groupingOptions doesn't expose it. */
+const CONTEXT_VALID_GROUP_BY: Partial<Record<ViewContextKey, GroupBy[]>> = {
+  books: ["none", "kind", "pinned", "date"],
+}
+
+function isGroupByValidForContext(g: unknown, ctx: ViewContextKey): g is GroupBy {
+  if (!VALID_GROUP_BY.includes(g as GroupBy)) return false
+  const allow = CONTEXT_VALID_GROUP_BY[ctx]
+  if (allow && !allow.includes(g as GroupBy)) return false
+  return true
+}
+
 /* ── Shape Normalization (for migrations) ──────────────── */
 
 /** Columns that must always be present, in guaranteed order (last = rightmost) */
@@ -167,8 +185,8 @@ export function normalizeViewState(raw: Partial<ViewState>, ctx: ViewContextKey)
     sortFields,
     sortField: sortFields[0].field,
     sortDirection: sortFields[0].direction,
-    groupBy: VALID_GROUP_BY.includes(merged.groupBy) ? merged.groupBy : base.groupBy,
-    subGroupBy: VALID_GROUP_BY.includes(merged.subGroupBy as GroupBy) ? (merged.subGroupBy as GroupBy) : "none",
+    groupBy: isGroupByValidForContext(merged.groupBy, ctx) ? merged.groupBy : base.groupBy,
+    subGroupBy: isGroupByValidForContext(merged.subGroupBy, ctx) ? merged.subGroupBy : "none",
     filters: Array.isArray(merged.filters) ? merged.filters : [],
     visibleColumns: ensureRequiredColumns(
       Array.isArray(merged.visibleColumns)

@@ -68,7 +68,8 @@ const BOOK_COLUMNS: BookColumnDef[] = [
   { id: "title",     label: "Name",     width: "flex-1 min-w-0", sortField: "title" },
   { id: "kind",      label: "Kind",     width: "w-[110px] shrink-0", align: "left" },
   { id: "itemCount", label: "Items",    width: "w-[72px] shrink-0",  align: "right", sortField: "itemCount" },
-  { id: "sources",   label: "Sources",  width: "w-[88px] shrink-0",  align: "left" },
+  { id: "sources",   label: "Sources",  width: "w-[100px] shrink-0", align: "left" },
+  { id: "pinned",    label: "Pin",      width: "w-[48px] shrink-0",  align: "center" },
   { id: "updatedAt", label: "Updated",  width: "w-[80px] shrink-0",  align: "right", sortField: "updatedAt" },
   { id: "createdAt", label: "Created",  width: "w-[80px] shrink-0",  align: "right", sortField: "createdAt" },
 ]
@@ -413,6 +414,10 @@ function renderCell(
     case "sources":
       return sourceKinds.length > 0
         ? <BookSourceKindChip kinds={sourceKinds} />
+        : <span className="text-2xs text-muted-foreground/40">—</span>
+    case "pinned":
+      return book.pinned
+        ? <PushPin size={11} weight="fill" className="text-amber-500" />
         : <span className="text-2xs text-muted-foreground/40">—</span>
     case "updatedAt":
       return (

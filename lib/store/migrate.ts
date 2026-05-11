@@ -1919,5 +1919,11 @@ export function migrate(persistedState: unknown): PlotState {
     }
   }
 
+  // v128: Books DisplayPanel polish (PR books-view-engine-6).
+  // normalizeViewStatesMap (called above at v16 step) now rejects context-
+  // invalid GroupBy values — e.g. stale "status" on books context. Version
+  // bump re-triggers the normalize pass; no explicit migration code needed.
+  // Spec: `.omc/plans/books-view-engine-integration.md` §8 (PR 6 polish).
+
   return state as unknown as PlotState
 }

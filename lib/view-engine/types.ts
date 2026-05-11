@@ -268,5 +268,6 @@ export const VALID_COLUMNS: string[] = [
   "size", "fileType",
   // books-view-engine-2 (Books): item count + book kind (Smart/Manual/Hybrid)
   // display properties for list mode chips.
-  "itemCount", "kind",
+  // books-view-engine-6 (polish): sources + pinned toggleable columns.
+  "itemCount", "kind", "sources", "pinned",
 ]
