@@ -4,7 +4,7 @@ import { extractPreview, extractLinksOut } from "../body-helpers"
 import { buildDefaultViewStates, normalizeViewStatesMap, buildViewStateForContext } from "../view-engine/defaults"
 import type { WorkspaceTab } from "../workspace/types"
 import type { PlotState } from "./types"
-import { SEED_TEMPLATES } from "./seeds"
+import { SEED_TEMPLATES, SEED_BOOKS } from "./seeds"
 
 export function migrate(persistedState: unknown): PlotState {
   const state = persistedState as Record<string, unknown>
@@ -1900,6 +1900,24 @@ export function migrate(persistedState: unknown): PlotState {
   // 영구 결정 — Notes/Wiki/References 패턴). Click = full editor (Plot
   // standard). No data migration.
   // Spec: `.omc/plans/books-view-engine-integration.md` §8 (PR 4).
+
+  // v127: SEED_BOOKS one-time backfill for existing users (idempotent
+  // id-dedup append). Manual-verify demo set ships now that the
+  // view-engine series is merged, but existing users with at least one
+  // book (e.g. the "1234" they created during testing) miss the
+  // onRehydrateStorage backfill which only triggers on empty arrays.
+  // This appends missing seed books while preserving everything the user
+  // created. Runs once per user — `migrate` is gated by persisted version.
+  if (!Array.isArray(state.books)) state.books = []
+  {
+    const books = state.books as any[]
+    const existingBookIds = new Set(books.map((b: any) => b?.id))
+    for (const seed of SEED_BOOKS) {
+      if (!existingBookIds.has(seed.id)) {
+        books.push(seed)
+      }
+    }
+  }
 
   return state as unknown as PlotState
 }
