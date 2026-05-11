@@ -3,128 +3,148 @@
 > **다음 세션 즉시 시작할 액션.** 다른 컴퓨터에서 작업 이어받기 위한 source of truth.
 > before-work는 이 파일을 가장 먼저 읽는다.
 
-**마지막 갱신**: 2026-05-08 (5 PR 머지 + Phase 4.3 north star plan)
+**마지막 갱신**: 2026-05-12 (Books view-engine 풀 통합 4 PR 시리즈 종료)
 **머신**: 집 (Windows)
-**현재 Phase**: Plot v3 Phase 0/1/3/4.1/4.2 ✅, Phase 2 ⏸️ DEFER, **Phase 4.3 chrome 통일 (#282 시도 → #283 revert → #284 정리 → #285 plan 보강)**
+**현재 main HEAD**: PR 머지 후 갱신 예정 (이 세션 = `books-view-engine-1~4` 통합 PR)
+**현재 Phase**: Books view-engine 4 viewMode (grid/list/board/gallery) 완성. Store v122 → v126.
 
 ---
 
 ## 🎯 다음 즉시 액션
 
-### 🔴 0. 사용자 결정: 다음 작업 path 선택 (3 후보)
+### 🔴 0. Manual verify Books 4 viewMode + 회귀 fix
 
-이번 세션 plan에 정리된 두 series 중 진입점 선택:
+이번 세션 LOC 큼 (~1200 net) — 사용자 직접 시각 확인 필수.
 
-#### Path A — Filter coverage Section 11 (작은 PR 시리즈, 빠른 visual 효과)
-```
-Step 1: Files type filter (image/url/file) ← 추천 (가장 작고 명확)
-Step 2: References type filter
-Step 3: Wiki Category filter 보강 (사용자 직접 우려)
-Step 4: Tags / Labels color filter (선택)
-Step 5: Stickers / Inbox (선택)
-```
+**verify 절차 (브라우저 `/books`)**:
 
-#### Path B — Chrome refactor Section 10 (큰 작업, 시각 일관성 prerequisite)
-```
-Step A: globals.css `.a-th, .a-row` grid 분리 (chrome-only로) ← 모든 view chrome 통일의 prerequisite
-Step B: Tags/Labels chrome 재적용 (#282 retry — 폰트/height 자동 통일)
-Step C: column model 확장 (displayProperties)
-Step D: 다른 view (wiki / library / templates / stickers)
-```
+1. **Grid mode** (default): cover emoji + 책 카드 정상 표시. 우클릭 컨텍스트 메뉴 (Rename/Pin/Trash) 동작.
+2. **Search**: ViewHeader "Search books" input → title/description 실시간 필터링.
+3. **List mode** (Display popover → List):
+   - BookListRow 각 행: cover + title + **BookKindChip** (Lightning/PencilSimple/Sparkle) + **BookItemCountChip** + **BookSourceKindChip** mini-bar + Pin indicator + updated time.
+   - 우클릭 컨텍스트 메뉴 동일 동작.
+4. **Filter popover** (4 categories): Kind (Smart/Manual/Hybrid) / Smart source (folder/category/tag/label/sticker/_none) / Pin (true/false) / Updated (today/this-week/...).
+5. **Pinned-first sort**: 한 책 Pin → 새로고침 후에도 상단 유지.
+6. **viewState persist**: viewMode/sort/filter 변경 후 reload → 유지.
+7. **Board mode** (Display popover → Board):
+   - groupBy "Kind" → 3 column (Smart / Hybrid / Manual), 각각 icon (Lightning/Sparkle/PencilSimple).
+   - groupBy "Pin status" → 2 column (Pinned / Others).
+   - Column header drag → 순서 변경, reload 후 유지 (`groupOrder` persist).
+   - Card drag (groupBy=pinned) → pinned toggle (immediate + toast).
+   - Card drag Smart → Manual (groupBy=kind) → confirm dialog ("Convert ...? This will remove N sources").
+   - Card drag Manual → Smart → toast hint ("Configure on detail page").
+8. **Gallery mode** (Display popover → Gallery):
+   - Entity-agnostic GalleryView (Notes/Wiki/References 일관).
+   - kind-based accent color (Smart=violet / Hybrid=amber / Manual=slate).
+   - badge (Smart/Manual/Hybrid), cover icon (emoji or Books glyph).
+   - 클릭 = 풀 에디터 (Plot 표준).
+   - groupBy 적용 시 그룹 헤더 + 분리 그리드.
 
-#### Path C — Studio/Editorial cleanup (영구 규칙 위반, 명백 cleanup)
-- 메모리 영구 규칙 #1 ("멋진 레이아웃 / 시각적 다양성 방향 제안 금지") + TODO.md "매거진 pivot 폐기 (2026-04-22)" 위반
-- Studio + Editorial shell 삭제 + viewSwitcher tab 정리 + IDB migration (옛 viewMode fallback)
-- Gallery는 polishing 후 재도입 (별도 PR)
+회귀 발견 시 보고 → 즉시 fix → 추가 commit.
 
-**추천**: Path A Step 1 (Files type filter) → 가장 빠른 작은 PR, 즉시 효과. 그 후 Path B Step A 또는 Path C.
+### 🟡 1. (verify 없으면) Wiki 그룹 헤더 아이콘 (~30분)
+- WikiList/WikiBoard 미적용 (Notes Table/Board/Gallery는 5-11에서 통일)
+- 자투리 시간 정리 후보
 
-### 🟡 1. (참고) 이번 세션 마감 상태
-
-- ✅ PR #271 (Status icons + Block label + Cuboid + Save view 16px)
-- ✅ PR #282 (PR 4.3a Tags+Labels chrome 통일 시도)
-- ✅ PR #283 (PR #282 partial revert — `.a-row` grid 충돌)
-- ✅ PR #284 (Tags row border-b 제거 + plan update)
-- ✅ PR #285 (plan Section 11 Filter coverage 분석 추가)
-- ✅ docs sync (NEXT-ACTION / SESSION-LOG / MEMORY / TODO / CONTEXT — 이 PR)
+### 🟢 2. (manual verify 통과 후) 다음 큰 트랙 brainstorm
+- Smart Book v2 (AutoSource picker UX 강화)
+- Wiki view-engine board 도입 (Plot 일관성)
+- Notes/Wiki/Books 통합 entity-agnostic ListRow/BoardCard 패턴 일반화
 
 ---
 
-## 🧠 잊지 말 것 (이번 세션 핵심 결정)
+## 🧠 잊지 말 것 (영구 결정 — 직전 세션)
 
-### Filter model 통찰 (사용자 직관, 영구)
-```
-LIST/TABLE: column = passive attribute view, Filter button = active narrow
-BOARD:      column = grouping attribute, Filter button = other axis
-GRID:       card chip = attribute viz, Filter button = chip narrow
-```
-→ Filter 없는 view는 도메인 attribute 부족. column 추가 시 자연스레 filter 가능.
+### Books view-engine 4 PR 시리즈 영구 결정
+- **사용자 결정 4가지** (AskUserQuestion 2026-05-12):
+  - PR 분할: C 점진 4 PR
+  - viewMode default: **grid 유지** (cover emoji 활용)
+  - default sort: **updatedAt desc 유지**
+  - default groupBy: **none**
+- **Option A**: Plot 일관성 풀 (column drag + card drag) 채택 — Notes/Wiki와 동일 패턴
+- **kind column card drag UX**:
+  - smart/hybrid → manual: **confirm dialog** (smartSources 제거)
+  - manual → smart/hybrid: **toast hint** ("Configure on detail page")
+  - pinned column drag: immediate toggle
+- **thin fork hook**: `useBooksView` (Generic 추출 X — Plot 영구 결정)
+- **Smart Book INVARIANT 보존**: resolver/BookDetailPage/SourcesSection 동작 변화 0
+- **마이그레이션 옵션 A**: idempotent skip — 기존 사용자 데이터 보존
 
-### `.a-th, .a-row` grid hardcoded
-- globals.css에서 6-column grid template 강제 (notes-table 전용)
-- NotesTable은 inline grid로 덮어씀 → OK
-- 다른 view (3-element flex)는 inline 없어 6-col 강제 → layout 깨짐
-- **refactor 필요**: chrome-only 분리 (height/border/sticky/bg/font-size) + grid는 consumer 책임
+### Books PropertyChip 3종 신규
+- `BookItemCountChip` (List icon + count)
+- `BookKindChip` (Lightning/PencilSimple/Sparkle + label)
+- `BookSourceKindChip` mini-bar (5 source kinds icon만)
 
-### NoteStatus enum value `keystone` 유지 결정
-- UI 라벨만 "Block"로 (Cuboid 1×2 isometric block 아이콘)
-- internal `keystone` 그대로 (URL `/keystone`, IDB key, type literal)
-- 이유: AddBlock / BlockTree / ContentBlock 등 기존 `block` identifier와 충돌 회피
-- 영구 결정 — mismatch는 디버그 콘솔 + URL bar에 한정 (사용자 영향 X)
+### Books 본질별 viewMode 결정 행렬
+| Mode | 적합 |
+|---|---|
+| Grid (default) | 5/5 cover emoji 활용 |
+| List | 5/5 정보 밀집 + chip |
+| Board | 4/5 binary attribute (kind/pinned) 적합 |
+| Gallery | 4/5 entity-agnostic adapter 활용 |
 
-### View modes (Studio / Editorial / Gallery) 사용자 평가
-- **Studio + Editorial**: 영구 규칙 위반 (멋진 레이아웃 + 매거진 pivot 부활) — **제거 예정**
-- **Gallery**: 카드 형태 자체는 좋음. 단 (1) 편집 불가 (read-only) (2) 하드코딩 styling (cream 강제, Plot tokens 무시). **polishing 후 재도입** — 일단 보류.
-- 통합 방향: Display popover의 `[List | Board | Gallery]` 3-segment로 (ViewSwitcher tab 제거)
+### launch.json 수정
+- `node node_modules/next/dist/bin/next` → **`npx next`** (한글 경로 안전성)
 
 ---
 
 ## 📊 현재 Phase 진행 상황
 
-### Plot v3 visual refresh
-- ✅ Phase 0: cleanup (v112)
-- ✅ Phase 1: token foundation
-- ⏸️ Phase 2: Imperial icon kit DEFER
-- ✅ Phase 3: Activity Bar / Sidebar Chrome (4 PR)
-- ⏳ Phase 4: Table Mode Reskin
-  - ✅ PR 4.1 (CSS 통합 #267)
-  - ✅ PR 4.2 (notes-table.tsx #276)
-  - ⏳ PR 4.3 (other list views) — **현재 plan 보강 단계, refactor prerequisite 필요**
-  - ⏳ PR 4.4 (옵션)
-- ⏳ Phase 5: View Modes — **재검토 (Studio/Editorial 제거 + Gallery polish)**
-- ⏳ Phase 6-7: 후속
+### 직전 큰 작업 종결
+- ✅ 2026-05-12 마라톤: **Books view-engine 풀 통합 4 PR**
+  - PR 1 (v123): 인프라 + grid 보존
+  - PR 2 (v124): list mode + sort/group/filter UI + 3 chip
+  - PR 3 (v125): board mode + Option A dnd-kit
+  - PR 4 (v126): gallery mode (entity-agnostic adapter)
+- ✅ 2026-05-11 마라톤 (PR #291) — 책 split view + Dual mode 폐기 + 갤러리 entity-agnostic
+- ✅ 2026-05-10 마라톤 (PR #290) — Smart Book Phase A + 책 reading flow
+- ✅ 2026-05-09 마라톤 (PR #289) — Book entity + Dual mode + Filter Path A
 
-### 별도 트랙
-- ✅ Phase A NoteStatus rename (PR #269 머지) + UI 라벨 Block + Cuboid icon (PR #271)
-- ✅ Inbox layer (#272-#275 머지된 상태)
+### Plot v3 visual refresh
+- ✅ Phase 0/1/3/4.1/4.2
+- ⏸️ Phase 2 (Imperial icons) — DEFER
+- ⏳ Phase 4.3 (other list views chrome 통일) — Path B Step A 완료
+- ✅ Phase 5: Studio/Editorial 제거 (v119) + Gallery polish (5-11)
+
+### Smart Book 진행
+- ✅ Phase A (Step 1 + 2.1-2.9 + Tweaks A/B/C)
+- ✅ 책 reading flow (Step 2.10-2.21)
+- ✅ **Books view-engine 4 viewMode 통합** (2026-05-12)
+- ⏳ Phase B (Wiki source 등) 후속
 
 ---
 
 ## ⏸️ 보류 / 영구 폐기
 
-- **Studio + Editorial view modes** — 영구 규칙 위반, 다음 세션 cleanup 후보
-- **Gallery view** — 편집 + Plot tokens polishing 후 재도입 (별도 sprint)
-- **Phase 2 (Imperial icon kit)** — DEFERRED
-- **PR 3.4 shell grid** — Phase 6으로 통합
+- **Dual mode** — 영구 폐기 (Store v122)
+- **Studio + Editorial view modes** — 제거됨 (Store v119)
+- **v3 mockup `u-*` CSS 클래스** — 영구 폐기
+- **Plot v3 Phase 2 (Imperial icon kit)** — DEFERRED
+- **Generic `useEntityView<T>` hook 추출** — 영구 거부 (scope 폭발)
 
 ---
 
 ## 🔧 작업 환경
 
-- **현재 main brnach** = `d4f7ca1` (PR #285 머지 후)
-- **현 worktree**: `/리니어 노트앱` (main checkout)
-- 별도 worktree (`v3-phase-4-3` 등) 보존됨 — 다음 세션에 정리 가능
-- **dev server**: localhost:3002 (Next.js, 현 worktree 코드)
-- **store version**: v117 (inbox layer 1 IDB migration 적용 후)
+- **현재 main branch HEAD**: PR 머지 후 갱신 (이 세션 = `books-view-engine-1~4` 통합 PR)
+- **현 worktree**: `suspicious-williamson-3670e0`
+- **dev server**: localhost:3002 (Next.js webpack, launch.json `npx next` 기반)
+- **store version**: v126 (Books gallery 통합 후)
+- **Tests**: 255/255 passing
+- **신규 파일 (이번 세션, 5개)**:
+  - `lib/view-engine/use-books-view.ts`
+  - `components/books/book-list-row.tsx`
+  - `components/books/book-grid-card.tsx`
+  - `components/books/books-board.tsx`
+  - `components/books/books-gallery-adapter.tsx`
+  - `.omc/plans/books-view-engine-integration.md`
 
 ---
 
 ## 📚 참고 plan
 
-- `.omc/plans/v3-phase-4-3-decompose.md` — **Section 9-11이 핵심**:
-  - Section 9: Lessons learned (이번 세션)
-  - Section 10: Roadmap chrome (Step A/B/C/D)
-  - Section 11: Filter coverage 분석 (Step 1-5)
-- `.omc/plans/v3-phase-4-decompose.md` — Phase 4 원본
-- `.omc/plans/inbox-layer.md` — Phase B (이미 main 머지 진행)
-- `.omc/plans/note-status-rename.md` — Phase A (이미 main 머지)
+- `.omc/plans/books-view-engine-integration.md` ⭐ **이번 시리즈 plan**
+- `.omc/plans/group-c-prd-view-engine-integration.md` — 본보기 (Tags/Labels/Stickers/References/Files)
+- `.omc/plans/smart-book-prd.md` — Smart Book PRD
+- `.omc/plans/book-entity-prd.md` — Book entity PRD
+- `.omc/plans/v3-phase-4-3-decompose.md` — Phase 4.3

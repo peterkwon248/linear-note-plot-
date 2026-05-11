@@ -69,6 +69,14 @@ const CONTEXT_DEFAULTS: Partial<Record<ViewContextKey, Partial<ViewState>>> = {
   // size + fileType are domain-specific. sort default: createdAt desc
   // (matches existing FilesView behavior). Image previews drive grid mode value.
   "files":        { viewMode: "list", ...ctx("createdAt"), groupBy: "none", visibleColumns: ["title", "fileType", "size"] },
+
+  // books-view-engine-1: Book entity index.
+  // User decision (2026-05-12): viewMode default = grid (cover emoji 활용 강함,
+  // 기존 사용자 reload 시 변화 0), sort = updatedAt desc, groupBy = none.
+  // books-view-engine-2: visibleColumns expanded to surface list-mode chips
+  // (itemCount + kind). Stale rules referencing removed columns fall through
+  // to filtered-out via ensureRequiredColumns.
+  "books":        { viewMode: "grid", ...ctx("updatedAt"), groupBy: "none", visibleColumns: ["title", "itemCount", "kind"], toggles: { showTrashed: false } },
 }
 
 /** Build a ViewState for a specific context, merging defaults */

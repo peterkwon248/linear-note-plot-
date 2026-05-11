@@ -18,11 +18,20 @@
  *  - click → /books/{id}; right-click → context menu (Pin / Trash)
  */
 
-import { useState, useMemo } from "react"
+import { useState, useMemo, useCallback } from "react"
 import { useRouter } from "next/navigation"
 import { usePlotStore } from "@/lib/store"
+import { useBooksView } from "@/lib/view-engine/use-books-view"
+import { BOOKS_VIEW_CONFIG } from "@/lib/view-engine/view-configs"
+import type { FilterRule } from "@/lib/view-engine/types"
 import { ViewHeader } from "@/components/view-header"
+import { DisplayPanel } from "@/components/display-panel"
+import { FilterPanel } from "@/components/filter-panel"
 import { BookDetailPage } from "@/components/views/book-detail-page"
+import { BookListRow } from "@/components/books/book-list-row"
+import { BookGridCard } from "@/components/books/book-grid-card"
+import { BooksBoard } from "@/components/books/books-board"
+import { BooksGalleryAdapter } from "@/components/books/books-gallery-adapter"
 import { setActiveRoute, useActiveRoute, useSecondaryRoute, getBookIdFromRoute } from "@/lib/table-route"
 import { usePane } from "@/components/workspace/pane-context"
 import { shortRelative } from "@/lib/format-utils"
@@ -75,27 +84,46 @@ function BooksGrid() {
   const restoreBook = usePlotStore((s) => s.restoreBook)
   const permanentlyDeleteBook = usePlotStore((s) => s.permanentlyDeleteBook)
 
-  const [showTrashed, setShowTrashed] = useState(false)
+  // books-view-engine-1/2/3: filter/search/sort/group via view-engine pipeline.
+  // `flatBooks` already respects showTrashed toggle + pinned-first sort.
+  // showTrashed lives in viewState.toggles (persists across reload).
+  // `groups` is the grouped view used by board mode (kind/pinned/none).
+  const { flatBooks: visibleBooks, groups, viewState, updateViewState } = useBooksView()
+  const showTrashed = Boolean(viewState.toggles?.showTrashed)
+  const setShowTrashed = (next: boolean) =>
+    updateViewState({ toggles: { ...viewState.toggles, showTrashed: next } })
 
-  const liveBooks = useMemo(
-    () =>
-      books
-        .filter((b) => !b.trashed)
-        .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt)),
+  // books-view-engine-2/3/4: viewMode = grid | list | board | gallery.
+  const isListMode = viewState.viewMode === "list"
+  const isBoardMode = viewState.viewMode === "board"
+  const isGalleryMode = viewState.viewMode === "gallery"
+
+  // books-view-engine-3: card-drag in board mode (groupBy="kind") can request
+  // a Smart → Manual conversion. Strips smartSources; Book.items preserved.
+  const handleConvertToManual = useCallback((id: string, _title: string) => {
+    updateBook(id, { smartSources: [] })
+  }, [updateBook])
+
+  // Filter toggle handler (mirrors stickers-view handleStickersFilterToggle).
+  const handleBooksFilterToggle = useCallback((rule: FilterRule) => {
+    const exists = viewState.filters.some(
+      (f) => f.field === rule.field && f.operator === rule.operator && f.value === rule.value,
+    )
+    const newFilters = exists
+      ? viewState.filters.filter((f) => !(f.field === rule.field && f.operator === rule.operator && f.value === rule.value))
+      : [...viewState.filters, rule]
+    updateViewState({ filters: newFilters })
+  }, [viewState.filters, updateViewState])
+
+  // Live + trashed counts (independent of view-engine filter/search) — drive
+  // ViewHeader count + the trash toggle chip visibility.
+  const liveCount = useMemo(
+    () => books.reduce((n, b) => (b.trashed ? n : n + 1), 0),
     [books],
   )
-
-  const trashedBooks = useMemo(
-    () =>
-      books
-        .filter((b) => b.trashed)
-        .sort((a, b) => (b.trashedAt ?? b.updatedAt).localeCompare(a.trashedAt ?? a.updatedAt)),
+  const trashedCount = useMemo(
+    () => books.reduce((n, b) => (b.trashed ? n + 1 : n), 0),
     [books],
-  )
-
-  const visibleBooks = useMemo(
-    () => (showTrashed ? [...liveBooks, ...trashedBooks] : liveBooks),
-    [showTrashed, liveBooks, trashedBooks],
   )
 
   const [createOpen, setCreateOpen] = useState(false)
@@ -156,16 +184,41 @@ function BooksGrid() {
       <ViewHeader
         icon={<Books size={20} weight="regular" />}
         title="Books"
-        count={liveBooks.length > 0 ? liveBooks.length : undefined}
+        count={liveCount > 0 ? liveCount : undefined}
+        searchPlaceholder="Search books"
         onCreateNew={() => {
           setCreateTitle("")
           setCreateOpen(true)
         }}
+        showDisplay={BOOKS_VIEW_CONFIG.showDisplay}
+        displayContent={
+          <DisplayPanel
+            config={BOOKS_VIEW_CONFIG.displayConfig}
+            viewState={viewState}
+            onViewStateChange={updateViewState}
+            showViewMode={true}
+            toggleStates={viewState.toggles}
+            onToggleChange={(key, val) =>
+              updateViewState({ toggles: { ...viewState.toggles, [key]: val } })
+            }
+          />
+        }
+        showFilter={BOOKS_VIEW_CONFIG.showFilter}
+        hasActiveFilters={viewState.filters.length > 0}
+        filterContent={
+          <FilterPanel
+            categories={BOOKS_VIEW_CONFIG.filterCategories}
+            activeFilters={viewState.filters}
+            onToggle={handleBooksFilterToggle}
+            quickFilters={BOOKS_VIEW_CONFIG.quickFilters as any}
+            onQuickFilter={(rules) => updateViewState({ filters: rules })}
+          />
+        }
         actions={
-          trashedBooks.length > 0 ? (
+          trashedCount > 0 ? (
             <button
               type="button"
-              onClick={() => setShowTrashed((v) => !v)}
+              onClick={() => setShowTrashed(!showTrashed)}
               className={cn(
                 "flex h-7 items-center gap-1 rounded-md px-2 text-2xs font-medium transition-colors",
                 showTrashed
@@ -175,143 +228,74 @@ function BooksGrid() {
               title={showTrashed ? "Hide trashed books" : "Show trashed books"}
             >
               <TrashSimple size={13} weight="regular" />
-              <span className="tabular-nums">{trashedBooks.length}</span>
+              <span className="tabular-nums">{trashedCount}</span>
             </button>
           ) : undefined
         }
       />
 
       <div className="flex-1 overflow-y-auto">
-        {liveBooks.length === 0 ? (
-          <div className="flex flex-col items-center gap-3 px-6 pt-20">
-            <Books size={32} weight="regular" className="text-muted-foreground/25" />
-            <div className="text-center">
-              <p className="text-sm font-medium text-foreground">No books yet</p>
-              <p className="mt-0.5 text-xs text-muted-foreground">
-                Create your first book to organize related notes and wiki articles in order.
-              </p>
-            </div>
-            <button
-              type="button"
-              onClick={() => {
-                setCreateTitle("")
-                setCreateOpen(true)
-              }}
-              className="mt-2 rounded-md bg-accent px-3 py-1.5 text-2xs font-medium text-accent-foreground transition-opacity hover:opacity-90"
-            >
-              Create book
-            </button>
+        {liveCount === 0 ? (
+          <EmptyBooks
+            onCreate={() => {
+              setCreateTitle("")
+              setCreateOpen(true)
+            }}
+          />
+        ) : isListMode ? (
+          // books-view-engine-2: list mode rendering (BookListRow).
+          // ViewHeader's display popover toggles viewMode.viewState.
+          <div className="flex flex-col">
+            {visibleBooks.map((book) => (
+              <BookListRow
+                key={book.id}
+                book={book}
+                onOpen={openBook}
+                onRename={startRename}
+                onTogglePin={handleTogglePin}
+                onDelete={handleDelete}
+                onRestore={handleRestore}
+                onPermanentDelete={handlePermanentDelete}
+              />
+            ))}
           </div>
+        ) : isBoardMode ? (
+          // books-view-engine-3: board mode (column-grouped, dnd-kit).
+          // Column drag/reorder + card drop (pinned toggle / kind conversion).
+          <BooksBoard
+            groups={groups}
+            groupBy={viewState.groupBy}
+            viewState={viewState}
+            updateViewState={updateViewState}
+            onOpen={openBook}
+            onTogglePin={handleTogglePin}
+            onConvertToManual={handleConvertToManual}
+          />
+        ) : isGalleryMode ? (
+          // books-view-engine-4: gallery mode via the entity-agnostic
+          // GalleryView (2026-05-11 generic). BooksGalleryAdapter maps Book[]
+          // and BookGroup[] into GalleryItem/GalleryGroup; clicks open the
+          // full editor (Plot standard, NEXT-ACTION 2026-05-11 영구 결정).
+          <BooksGalleryAdapter
+            books={visibleBooks}
+            groups={groups}
+            groupBy={viewState.groupBy}
+            onOpen={openBook}
+          />
         ) : (
+          // books-view-engine-1: grid mode (default, preserved from before).
           <div className="grid grid-cols-[repeat(auto-fill,minmax(220px,1fr))] gap-3 p-6">
             {visibleBooks.map((book) => (
-              <ContextMenu key={book.id}>
-                <ContextMenuTrigger asChild>
-                  <button
-                    type="button"
-                    onClick={() => !book.trashed && openBook(book.id)}
-                    className={cn(
-                      "group relative flex flex-col items-start gap-2 rounded-lg border border-border/60 bg-card p-4 text-left transition-all",
-                      book.trashed
-                        ? "opacity-50 hover:bg-hover-bg cursor-default"
-                        : "hover:bg-hover-bg hover:border-border hover:shadow-sm",
-                    )}
-                  >
-                    {/* Pin indicator */}
-                    {book.pinned && (
-                      <PushPin
-                        size={11}
-                        weight="fill"
-                        className="absolute right-2 top-2 text-amber-500"
-                      />
-                    )}
-
-                    {/* Cover icon */}
-                    <div className="flex h-12 w-12 items-center justify-center rounded-md bg-secondary/40 text-muted-foreground/70">
-                      {book.coverEmoji ? (
-                        <span className="text-2xl leading-none">{book.coverEmoji}</span>
-                      ) : (
-                        <Books size={22} weight="regular" />
-                      )}
-                    </div>
-
-                    {/* Title */}
-                    <h3 className="text-note font-medium text-foreground line-clamp-2 leading-snug">
-                      {book.title || "Untitled book"}
-                    </h3>
-
-                    {/* Description (optional) */}
-                    {book.description && (
-                      <p className="text-2xs text-muted-foreground line-clamp-2 leading-snug">
-                        {book.description}
-                      </p>
-                    )}
-
-                    <div className="flex-1" />
-
-                    {/* Footer */}
-                    <div className="mt-1 flex items-center gap-2 text-2xs text-muted-foreground/70">
-                      <span className="tabular-nums">
-                        {book.items.length} item{book.items.length === 1 ? "" : "s"}
-                      </span>
-                      <span>·</span>
-                      <span>{shortRelative(book.updatedAt)}</span>
-                    </div>
-                  </button>
-                </ContextMenuTrigger>
-                <ContextMenuContent className="w-44">
-                  {book.trashed ? (
-                    <>
-                      <ContextMenuItem
-                        onClick={() => handleRestore(book.id, book.title)}
-                        className="text-note"
-                      >
-                        <ArrowCounterClockwise size={14} weight="regular" className="mr-2 text-muted-foreground" />
-                        Restore
-                      </ContextMenuItem>
-                      <ContextMenuSeparator />
-                      <ContextMenuItem
-                        onClick={() => handlePermanentDelete(book.id, book.title)}
-                        className="text-note text-destructive focus:text-destructive"
-                      >
-                        <Trash size={14} weight="regular" className="mr-2" />
-                        Delete forever
-                      </ContextMenuItem>
-                    </>
-                  ) : (
-                    <>
-                      <ContextMenuItem onClick={() => startRename(book.id, book.title)} className="text-note">
-                        <PencilSimple size={14} weight="regular" className="mr-2 text-muted-foreground" />
-                        Rename
-                      </ContextMenuItem>
-                      <ContextMenuItem
-                        onClick={() => handleTogglePin(book.id, book.pinned)}
-                        className="text-note"
-                      >
-                        {book.pinned ? (
-                          <>
-                            <PushPinSlash size={14} weight="regular" className="mr-2 text-muted-foreground" />
-                            Unpin
-                          </>
-                        ) : (
-                          <>
-                            <PushPin size={14} weight="regular" className="mr-2 text-muted-foreground" />
-                            Pin to sidebar
-                          </>
-                        )}
-                      </ContextMenuItem>
-                      <ContextMenuSeparator />
-                      <ContextMenuItem
-                        onClick={() => handleDelete(book.id, book.title)}
-                        className="text-note text-destructive focus:text-destructive"
-                      >
-                        <Trash size={14} weight="regular" className="mr-2" />
-                        Move to trash
-                      </ContextMenuItem>
-                    </>
-                  )}
-                </ContextMenuContent>
-              </ContextMenu>
+              <BookGridCard
+                key={book.id}
+                book={book}
+                onOpen={openBook}
+                onRename={startRename}
+                onTogglePin={handleTogglePin}
+                onDelete={handleDelete}
+                onRestore={handleRestore}
+                onPermanentDelete={handlePermanentDelete}
+              />
             ))}
           </div>
         )}
@@ -408,6 +392,33 @@ function BooksGrid() {
           </div>
         </DialogContent>
       </Dialog>
+    </div>
+  )
+}
+
+/* ── EmptyBooks helper ─────────────────────────────────── */
+
+/**
+ * Empty-state CTA shown when liveCount === 0. Extracted from BooksGrid so
+ * the main render branches (empty / list / grid) read clearly.
+ */
+function EmptyBooks({ onCreate }: { onCreate: () => void }) {
+  return (
+    <div className="flex flex-col items-center gap-3 px-6 pt-20">
+      <Books size={32} weight="regular" className="text-muted-foreground/25" />
+      <div className="text-center">
+        <p className="text-sm font-medium text-foreground">No books yet</p>
+        <p className="mt-0.5 text-xs text-muted-foreground">
+          Create your first book to organize related notes and wiki articles in order.
+        </p>
+      </div>
+      <button
+        type="button"
+        onClick={onCreate}
+        className="mt-2 rounded-md bg-accent px-3 py-1.5 text-2xs font-medium text-accent-foreground transition-opacity hover:opacity-90"
+      >
+        Create book
+      </button>
     </div>
   )
 }

@@ -33,6 +33,12 @@ import { NoteBlank as PhNoteBlank } from "@phosphor-icons/react/dist/ssr/NoteBla
 import { Stack as PhStack } from "@phosphor-icons/react/dist/ssr/Stack"
 import { Image as PhImage } from "@phosphor-icons/react/dist/ssr/Image"
 import { Quotes as PhQuotes } from "@phosphor-icons/react/dist/ssr/Quotes"
+import { List as PhList } from "@phosphor-icons/react/dist/ssr/List"
+import { Lightning as PhLightning } from "@phosphor-icons/react/dist/ssr/Lightning"
+import { PencilSimple as PhPencilSimple } from "@phosphor-icons/react/dist/ssr/PencilSimple"
+import { Sparkle as PhSparkle } from "@phosphor-icons/react/dist/ssr/Sparkle"
+import { BookOpen as PhBookOpen } from "@phosphor-icons/react/dist/ssr/BookOpen"
+import { Sticker as PhSticker } from "@phosphor-icons/react/dist/ssr/Sticker"
 import { StatusBadge, PriorityBadge } from "@/components/note-fields"
 import { shortRelative } from "@/lib/format-utils"
 import type { NoteStatus, NotePriority } from "@/lib/types"
@@ -510,6 +516,92 @@ export function FileSizeChip({ size }: { size: number }) {
       className="inline-flex items-center h-5 text-2xs text-muted-foreground tabular-nums leading-none whitespace-nowrap shrink-0"
     >
       {formatBytesShort(size)}
+    </span>
+  )
+}
+
+/* ── BookItemCountChip (books-view-engine-2) ─────────── */
+
+/**
+ * Displays Book.items.length (manual + chapter-heading items). Auto-resolved
+ * Smart-source items are NOT counted — resolver runs on the detail page only,
+ * so list/grid cards stay store-local. Acceptable approximation for sort/
+ * filter signals; if accuracy matters, lift resolvedContentItems to view.
+ *
+ * Hidden when count === 0 (clean blank-book cards).
+ */
+export function BookItemCountChip({ count }: { count: number }) {
+  if (count === 0) return null
+  return (
+    <span
+      title={`${count} ${count === 1 ? "item" : "items"}`}
+      className="inline-flex items-center gap-0.5 h-5 text-2xs text-muted-foreground leading-none whitespace-nowrap shrink-0"
+    >
+      <PhList size={10} weight="regular" />
+      {count}
+    </span>
+  )
+}
+
+/* ── BookKindChip (books-view-engine-2) ──────────────── */
+
+/**
+ * Book kind indicator: Smart (auto-resolved sources), Manual (curated items),
+ * or Hybrid (both). Drives the kind filter and surfaces the book's
+ * organizational approach at a glance.
+ *
+ * Neutral muted styling (no color tint) for PR 2 — keeps card visual budget
+ * for cover emoji + title. Color variants reserved for future iteration.
+ */
+export function BookKindChip({ kind }: { kind: "smart" | "manual" | "hybrid" }) {
+  const label = kind === "smart" ? "Smart" : kind === "manual" ? "Manual" : "Hybrid"
+  const Icon = kind === "smart" ? PhLightning : kind === "manual" ? PhPencilSimple : PhSparkle
+  return (
+    <ChipShell title={label} className="bg-secondary/60 text-muted-foreground">
+      <Icon size={10} weight="regular" />
+      {label}
+    </ChipShell>
+  )
+}
+
+/* ── BookSourceKindChip mini-bar (books-view-engine-2) ─ */
+
+const SOURCE_KIND_ICON: Record<"folder" | "category" | "tag" | "label" | "sticker", typeof PhFolder> = {
+  folder:   PhFolder,
+  category: PhBookOpen,
+  tag:      PhHash,
+  label:    PhTag,
+  sticker:  PhSticker,
+}
+
+const SOURCE_KIND_LABEL: Record<"folder" | "category" | "tag" | "label" | "sticker", string> = {
+  folder:   "Folder",
+  category: "Wiki category",
+  tag:      "Tag",
+  label:    "Label",
+  sticker:  "Sticker",
+}
+
+/**
+ * Mini-bar showing which Smart-source kinds are configured for this book.
+ * Icons only (no labels) — fits in a single chip slot even when 5 source
+ * types are present. Mirrors StickerKindChip pattern (per Group C PR-D §6).
+ *
+ * `kinds` should be deduped before passing in (use a Set on Book.smartSources).
+ * Hidden when array is empty (manual-only books).
+ */
+export function BookSourceKindChip({ kinds }: { kinds: Array<"folder" | "category" | "tag" | "label" | "sticker"> }) {
+  if (!kinds || kinds.length === 0) return null
+  const title = `Smart sources: ${kinds.map((k) => SOURCE_KIND_LABEL[k]).join(", ")}`
+  return (
+    <span
+      title={title}
+      className="inline-flex items-center gap-1 h-5 text-2xs text-muted-foreground leading-none whitespace-nowrap shrink-0"
+    >
+      {kinds.map((k) => {
+        const Icon = SOURCE_KIND_ICON[k]
+        return <Icon key={k} size={10} weight="regular" />
+      })}
     </span>
   )
 }

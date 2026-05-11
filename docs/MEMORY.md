@@ -28,6 +28,99 @@
 
 ---
 
+## 🚀 2026-05-12 (마라톤) — Books view-engine 풀 통합 4 viewMode (Store v122 → v126, ~1200 LOC)
+
+**범위**: 단일 worktree (`suspicious-williamson-3670e0`). 4 PR 시리즈 통합 squash 머지. Books entity가 view-engine pipeline에 완전 통합되어 grid/list/board/gallery 4 viewMode 지원.
+
+### 큰 작업 요약
+
+**1. PR 1 (v123) — 인프라 + grid 보존**
+- `useBooksView` thin fork hook (8번째 thin fork, use-templates-view 패턴)
+- `"books"` ViewContextKey + CONTEXT_DEFAULTS
+- BooksGrid → useBooksView 통합. showTrashed → viewState.toggles persist
+- 시각 변경 0 — grid 모드 보존, 인프라만 깔기
+
+**2. PR 2 (v124) — list mode + sort/group/filter UI + 3 PropertyChip**
+- SortField `itemCount`, FilterField `kind`/`sourceType` 추가
+- `BOOKS_VIEW_CONFIG` (filter 4 cats + display config)
+- 3 신규 chip: BookItemCountChip / BookKindChip (Lightning/PencilSimple/Sparkle) / BookSourceKindChip mini-bar
+- `book-list-row.tsx` + `book-grid-card.tsx` 신규 (grid 카드 별도 분리)
+- ViewHeader Search/Filter/Display popover 활성화
+- pinned-first sort 활성화
+
+**3. PR 3 (v125) — board mode (Option A: column drag + card drag)**
+- GroupBy `kind`/`pinned` 추가
+- `books-board.tsx` 신규 (320 LOC, dnd-kit) — NotesBoard 패턴 정합
+- Column drag/reorder + groupOrder persist
+- Card drag UX:
+  - pinned column → 즉시 toggle
+  - kind smart/hybrid → manual: confirm dialog (smartSources 제거)
+  - kind manual → smart/hybrid: toast hint
+- 3 column for kind (Smart/Hybrid/Manual), 2 column for pinned (Pinned/Others)
+
+**4. PR 4 (v126) — gallery mode (entity-agnostic adapter)**
+- `books-gallery-adapter.tsx` 신규 — Book → GalleryItem 매핑
+- 2026-05-11 entity-agnostic GalleryView 재사용 (Notes/Wiki/References 일관)
+- kind-based accent color (Smart=violet `#7C8AE7` / Hybrid=amber `#f59e0b` / Manual=slate `#94a3b8`)
+
+**부속**:
+- Plan: `.omc/plans/books-view-engine-integration.md` (~600 line, 15 sections)
+- launch.json: `node next/dist/bin/next` → **`npx next`** (한글 경로 안전성)
+
+### 큰 결정 (영구)
+
+**1. 사용자 결정 4가지 (AskUserQuestion 2026-05-12) LOCKED**:
+- PR 분할: C 점진 4 PR
+- viewMode default: grid 유지 (cover emoji 활용)
+- default sort: updatedAt desc 유지
+- default groupBy: none (UI 옵션은 노출)
+
+**2. Option A — Plot 일관성 풀 (column drag + card drag)**: Notes/Wiki와 동일 dnd-kit 패턴. 학습 부담 0. card drag의 destructive 행동은 confirmation으로 안전화.
+
+**3. kind column card drag UX 분기**: 
+- smart/hybrid → manual: confirm ("Remove N sources?")
+- manual → smart/hybrid: toast hint (BookDetailPage 안내)
+- pinned column: 즉시 toggle (안전)
+
+**4. Smart Book INVARIANT 보존**: resolver / BookDetailPage / SourcesSection 동작 변화 0. view-engine 통합은 Books **list view 자체**만 변경.
+
+**5. thin fork hook 영구 (Generic 추출 X)**: `useBooksView`가 8번째 thin fork. Notes pipeline 격리. "Scope guard" 헤더 주석.
+
+**6. 마이그레이션 옵션 A 영구 (idempotent skip)**: 모든 4 store version (v123-v126) — 데이터 변경 0, types union 확장만. 기존 사용자 viewState 보존.
+
+**7. BooksGalleryAdapter accent color kind-based**: 단순 entity-color 매핑보다 책 본질 (Smart/Hybrid/Manual) 반영. 의미적 시각 정체성.
+
+### 기술 학습 (영구)
+
+- **VALID_VIEW_CONTEXT_KEYS 확장만으로 자동 마이그레이션**: `normalizeViewStatesMap`이 진입 시 모든 valid key에 default 채움. 명시적 마이그레이션 코드 불필요.
+- **store version bump는 boundary 표시 목적**: 데이터 모델 변경 시만 필수. types union 확장은 normalize가 처리.
+- **NotesBoard column drag 패턴**: `SortableContext` + `horizontalListSortingStrategy` + `useSortable({ id: col-${key} })` + `useDroppable({ id: groupKey })` for cards. Books도 동일 적용.
+- **dnd-kit DragOverlay**: 드래그 중인 카드의 visual 복제. Books의 BookBoardCardInner를 별도 함수로 두어 재사용.
+- **확인 다이얼로그 + 토스트 분기 UX**: destructive (smart→manual) = confirm. non-destructive (manual→smart) = toast hint. 사용자 직관 부담 ↓.
+- **launch.json `node` → `npx` 전환**: 한글 경로에서 node module resolution 일시적 실패 → npx PATH lookup으로 안정.
+- **`.next/dev` stale cache**: build 시 종종 발생. dev server 재시작 또는 `rm -rf .next/dev .next/cache`.
+- **GalleryView entity-agnostic 활용 가능성**: 2026-05-11 generic이 잘 작동. Books도 adapter 1개로 통합. 미래 entity 추가 시 동일 패턴.
+
+### 다음 세션 P0
+
+🔴 **Manual verify Books 4 viewMode** (NEXT-ACTION.md 7 step 절차) — 사용자 직접 시각 확인 + 회귀 fix
+🟡 Wiki 그룹 헤더 아이콘 (~30분)
+🟢 다음 큰 트랙 (Smart Book v2 / Wiki view-engine board) brainstorm
+
+### 환경 변경
+
+- Store version v122 → v126 (4 step, 모두 idempotent / types union 확장)
+- Tests: 255/255 (변화 없음)
+- Build/TSC: 0 errors
+- launch.json: `npx next` 기반
+- 신규 파일 6개 (`use-books-view.ts`, `book-list-row.tsx`, `book-grid-card.tsx`, `books-board.tsx`, `books-gallery-adapter.tsx`, plan)
+
+### Architect 검증
+
+자동 verify: tsc + build + tests OK (255/255). dnd-kit visual verify는 사용자 manual 필수.
+
+---
+
 ## 🚀 2026-05-11 (마라톤) — 책 split view + Dual mode 폐기 + 갤러리 entity-agnostic (27 files, 9 카테고리)
 
 **범위**: 단일 worktree (`lucid-agnesi-b963f3`). 27 files (+735 / -847), 2 파일 삭제 (dual mode).

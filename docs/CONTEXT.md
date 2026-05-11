@@ -37,6 +37,42 @@
 - 이전 세션 — Hull pointer-events 추측 fix (실제 원인 = visiblePainted): 사용자 reproduce 정보 받고 코드 분석 후 fix
 - 2026-05-08 — PR #282 chrome 통일 시도가 globals.css `.a-row` grid 강제로 layout 깨짐: 단순 className 추가로 해결 안 됨, 깊은 refactor 필요. 사용자 visual feedback이 가장 빠른 진단 path.
 - 2026-05-09 — Dual mode PRD에서 "Split" 이름 충돌 (NoteSplitOverlay): Critic 검토로 발견 → "Dual" rename. PRD 신선할 때 critic review 가치 큼.
+- 2026-05-12 — Books view-engine 통합에서 dangling JSX 삽입 사고: Edit이 분기 추가 후 기존 JSX가 dangling으로 남음. read로 정확히 확인 후 분기 추출 (BookGridCard 별도 컴포넌트)으로 정리. **교훈: 큰 JSX 분기 변경은 Read → 분기 헬퍼 추출 → Edit 순서가 안전.**
+
+---
+
+## 🚀 2026-05-12 (마라톤) — Books view-engine 풀 통합 4 viewMode ⭐⭐⭐⭐⭐
+
+**범위**: 1 worktree (`suspicious-williamson-3670e0`). 4 PR 시리즈 통합. Store v122 → v126. ~1200 net LOC.
+
+### 4 PR 요약
+
+1. **PR 1 (v123)** — 인프라 + grid 보존. `useBooksView` thin fork hook. 시각 변경 0.
+2. **PR 2 (v124)** — list mode + sort/group/filter UI + 3 PropertyChip (BookItemCountChip / BookKindChip / BookSourceKindChip mini-bar). ViewHeader Search/Filter/Display popover 활성화. pinned-first sort.
+3. **PR 3 (v125)** — board mode (Option A: column drag + card drag, dnd-kit, NotesBoard 패턴). groupBy kind (Smart/Hybrid/Manual) / pinned. card drag UX: pinned 즉시 toggle, kind smart→manual confirm, kind manual→smart toast hint.
+4. **PR 4 (v126)** — gallery mode (entity-agnostic adapter). 2026-05-11 GalleryView 재사용. kind-based accent color.
+
+### 큰 결정 (영구)
+
+**1. 사용자 결정 4가지 (AskUserQuestion 2026-05-12)**: PR 분할 C / viewMode grid default / sort updatedAt desc / groupBy none.
+
+**2. Option A — Plot 일관성 풀**: Notes/Wiki와 동일 dnd-kit 패턴. card drag의 destructive 행동은 confirmation 안전화.
+
+**3. Smart Book INVARIANT 보존**: resolver / BookDetailPage / SourcesSection 동작 변화 0.
+
+**4. thin fork 패턴 영구**: useBooksView가 8번째 thin fork. Generic 추출 X (Plot 영구 결정).
+
+**5. 마이그레이션 옵션 A 영구 (idempotent)**: 모든 4 store version (v123-v126) 데이터 변경 0, types union 확장만.
+
+**6. launch.json `npx next` 전환**: 한글 경로 안전성. `node node_modules/.../next` 직접 호출은 일시적 module resolution 실패 가능.
+
+### 기술 학습 (영구)
+
+- **VALID_VIEW_CONTEXT_KEYS 확장만으로 자동 마이그레이션**: `normalizeViewStatesMap`이 normalize 진입 시 default 채움. 명시적 마이그레이션 코드 불필요.
+- **NotesBoard column drag 패턴**: `SortableContext` + `horizontalListSortingStrategy` + `useSortable({ id: col-${key} })` + `useDroppable({ id: groupKey })` for cards.
+- **확인 다이얼로그 + 토스트 분기 UX**: destructive (smart→manual) = confirm; non-destructive (manual→smart) = toast hint.
+- **`.next/dev` stale cache**: build/dev 충돌 시 `rm -rf .next/dev .next/cache` 후 dev server 재시작.
+- **dangling JSX 삽입 회피**: 큰 분기 추가 시 Read → helper component 추출 (BookGridCard / EmptyBooks) → Edit.
 
 ---
 
