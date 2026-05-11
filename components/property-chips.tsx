@@ -564,6 +564,34 @@ export function BookKindChip({ kind }: { kind: "smart" | "manual" | "hybrid" }) 
   )
 }
 
+/* ── BookKindIcon (books-view-engine-6: kind-shape carries meaning) ─ */
+
+/**
+ * Cover/leading icon variant of BookKindChip. Plot status pattern
+ * (stone/brick/keystone) uses shape + color to express meaning; Books kind
+ * gets the same treatment in card/row leading positions. Cover emoji
+ * (when present on the book) still wins — this is the icon fallback path.
+ *
+ * Color mapping mirrors BooksGalleryAdapter accentColor (PR 4): Smart
+ * violet / Hybrid amber / Manual neutral. Dark-mode tone shift kept subtle
+ * via Tailwind dark variant; values harmonize with v3 priority palette.
+ */
+export function BookKindIcon({
+  kind,
+  size = 14,
+}: {
+  kind: "smart" | "manual" | "hybrid"
+  size?: number
+}) {
+  if (kind === "smart") {
+    return <PhLightning size={size} weight="regular" className="text-[#5E6AD2] dark:text-[#7C8AE7]" />
+  }
+  if (kind === "hybrid") {
+    return <PhSparkle size={size} weight="regular" className="text-amber-600 dark:text-amber-400" />
+  }
+  return <PhPencilSimple size={size} weight="regular" className="text-muted-foreground" />
+}
+
 /* ── BookSourceKindChip mini-bar (books-view-engine-2) ─ */
 
 const SOURCE_KIND_ICON: Record<"folder" | "category" | "tag" | "label" | "sticker", typeof PhFolder> = {
