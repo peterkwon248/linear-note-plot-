@@ -1768,6 +1768,13 @@ function NoteRowInner({
           <span className="a-row__title">
             {note.title || "Untitled"}
           </span>
+          {note.pinned && (
+            <PushPin
+              size={11}
+              weight="fill"
+              className="shrink-0 text-amber-500"
+            />
+          )}
           {(() => {
             const label = note.labelId ? labels.find((l: { id: string; name: string; color: string }) => l.id === note.labelId) : null
             if (label) {
