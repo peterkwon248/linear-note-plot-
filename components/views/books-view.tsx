@@ -23,12 +23,12 @@ import { useRouter } from "next/navigation"
 import { usePlotStore } from "@/lib/store"
 import { useBooksView } from "@/lib/view-engine/use-books-view"
 import { BOOKS_VIEW_CONFIG } from "@/lib/view-engine/view-configs"
-import type { FilterRule } from "@/lib/view-engine/types"
+import type { FilterRule, SortField } from "@/lib/view-engine/types"
 import { ViewHeader } from "@/components/view-header"
 import { DisplayPanel } from "@/components/display-panel"
 import { FilterPanel } from "@/components/filter-panel"
 import { BookDetailPage } from "@/components/views/book-detail-page"
-import { BookListRow } from "@/components/books/book-list-row"
+import { BookTable } from "@/components/books/book-table"
 import { BookGridCard } from "@/components/books/book-grid-card"
 import { BooksBoard } from "@/components/books/books-board"
 import { BooksGalleryAdapter } from "@/components/books/books-gallery-adapter"
@@ -103,6 +103,22 @@ function BooksGrid() {
   const handleConvertToManual = useCallback((id: string, _title: string) => {
     updateBook(id, { smartSources: [] })
   }, [updateBook])
+
+  // books-view-engine-5 (fix): column header sort toggle (NotesTable pattern).
+  // Same field → flip direction. New field → sensible default per field type.
+  const sortField = viewState.sortFields[0]?.field ?? "updatedAt"
+  const sortDirection = viewState.sortFields[0]?.direction ?? "desc"
+  const handleSortToggle = useCallback((field: SortField) => {
+    const current = viewState.sortFields[0]
+    let nextDir: "asc" | "desc"
+    if (current?.field === field) {
+      nextDir = current.direction === "asc" ? "desc" : "asc"
+    } else {
+      // title → asc default (alpha); other fields → desc default (recent first).
+      nextDir = field === "title" || field === "name" ? "asc" : "desc"
+    }
+    updateViewState({ sortFields: [{ field, direction: nextDir }] })
+  }, [viewState.sortFields, updateViewState])
 
   // Filter toggle handler (mirrors stickers-view handleStickersFilterToggle).
   const handleBooksFilterToggle = useCallback((rule: FilterRule) => {
@@ -243,22 +259,22 @@ function BooksGrid() {
             }}
           />
         ) : isListMode ? (
-          // books-view-engine-2: list mode rendering (BookListRow).
-          // ViewHeader's display popover toggles viewMode.viewState.
-          <div className="flex flex-col">
-            {visibleBooks.map((book) => (
-              <BookListRow
-                key={book.id}
-                book={book}
-                onOpen={openBook}
-                onRename={startRename}
-                onTogglePin={handleTogglePin}
-                onDelete={handleDelete}
-                onRestore={handleRestore}
-                onPermanentDelete={handlePermanentDelete}
-              />
-            ))}
-          </div>
+          // books-view-engine-5 (fix): list mode = BookTable (column-rich,
+          // NotesTable 패턴). Column header sort toggle + visibleColumns
+          // (DisplayPanel 토글로 사용자가 선택). PR 2 BookListRow 폐기.
+          <BookTable
+            books={visibleBooks}
+            visibleColumns={viewState.visibleColumns}
+            sortField={sortField}
+            sortDirection={sortDirection}
+            onSort={handleSortToggle}
+            onOpen={openBook}
+            onRename={startRename}
+            onTogglePin={handleTogglePin}
+            onDelete={handleDelete}
+            onRestore={handleRestore}
+            onPermanentDelete={handlePermanentDelete}
+          />
         ) : isBoardMode ? (
           // books-view-engine-3: board mode (column-grouped, dnd-kit).
           // Column drag/reorder + card drop (pinned toggle / kind conversion).
