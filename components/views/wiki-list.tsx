@@ -335,16 +335,9 @@ function ArticleTableRow({
         <span className="min-w-0 flex-1 truncate text-note font-medium text-foreground/90">
           {note.title || "Untitled"}
         </span>
-        {(note as { pinned?: boolean }).pinned && (
-          <PushPin
-            size={11}
-            weight="fill"
-            className="shrink-0 text-amber-500 mx-1"
-          />
-        )}
       </button>
       {isVisible("status") && (
-        <div className="w-[72px] shrink-0 flex items-center px-2">
+        <div className="w-[72px] shrink-0 flex items-center gap-1.5 px-2">
           {/* Status badges use the dedicated IconWikiStub / IconWikiArticle
               icons (defined in components/plot-icons.tsx) — distinct from
               the BookOpen used for the wiki ENTITY in the activity bar /
@@ -365,6 +358,13 @@ function ArticleTableRow({
               <IconWikiArticle size={11} />
               Article
             </span>
+          )}
+          {(note as { pinned?: boolean }).pinned && (
+            <PushPin
+              size={11}
+              weight="fill"
+              className="shrink-0 text-amber-500"
+            />
           )}
         </div>
       )}

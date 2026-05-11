@@ -489,13 +489,17 @@ function renderCell(
           <span className="min-w-0 flex-1 truncate text-note text-foreground pl-2">
             {book.title || "Untitled book"}
           </span>
-          {book.pinned && (
-            <PushPin size={11} weight="fill" className="ml-1 shrink-0 text-amber-500" />
-          )}
         </>
       )
     case "kind":
-      return <BookKindChip kind={kind} />
+      return (
+        <span className="inline-flex items-center gap-1.5">
+          <BookKindChip kind={kind} />
+          {book.pinned && (
+            <PushPin size={11} weight="fill" className="shrink-0 text-amber-500" />
+          )}
+        </span>
+      )
     case "itemCount":
       return (
         <span className="w-full text-right text-2xs text-muted-foreground tabular-nums">
