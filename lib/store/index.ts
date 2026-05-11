@@ -6,7 +6,7 @@ import type { SRSState } from "@/lib/srs"
 import { buildDefaultViewStates } from "../view-engine/defaults"
 import { createIDBStorage } from "../idb-storage"
 import { createAppendEvent } from "./helpers"
-import { SEED_NOTES, SEED_FOLDERS, SEED_TAGS, SEED_LABELS, SEED_TEMPLATES, SEED_WIKI_ARTICLES, SEED_WIKI_CATEGORIES } from "./seeds"
+import { SEED_NOTES, SEED_FOLDERS, SEED_TAGS, SEED_LABELS, SEED_TEMPLATES, SEED_WIKI_ARTICLES, SEED_WIKI_CATEGORIES, SEED_BOOKS } from "./seeds"
 import { persistBody, persistBlockBody } from "./helpers"
 import { createNotesSlice } from "./slices/notes"
 import { createWorkflowSlice } from "./slices/workflow"
@@ -90,7 +90,7 @@ export const usePlotStore = create<PlotState>()(
         references: {} as Record<string, import("../types").Reference>,
         globalBookmarks: {} as Record<string, import("../types").GlobalBookmark>,
         comments: {} as Record<string, import("../types").Comment>,
-        books: [] as import("../types").Book[],
+        books: SEED_BOOKS,
         bookContext: { primary: null, secondary: null } as { primary: import("./types").BookContextState | null; secondary: import("./types").BookContextState | null },
         // Dual mode (split-mode-prd) — list+editor split-of-main, distinct from NoteSplitOverlay
         dualSelection: null as import("./types").DualSelection | null,
@@ -303,6 +303,16 @@ export const usePlotStore = create<PlotState>()(
             state.tags = SEED_TAGS
             state.labels = SEED_LABELS
             state.templates = SEED_TEMPLATES
+            // books seed shipped 2026-05-12 (books-view-engine demo set)
+            state.books = SEED_BOOKS
+          }
+
+          // Independent books backfill — existing users (notes already seeded)
+          // who never created a book still get the demo set so view-engine
+          // surfaces (board / gallery / kind icons) are exercise-able without
+          // hand-creating books. Idempotent: only seeds when array is empty.
+          if (!Array.isArray(state.books) || state.books.length === 0) {
+            state.books = SEED_BOOKS
           }
           state.previewNoteId = null
 

@@ -1,4 +1,4 @@
-import type { Note, Folder, Tag, Label, NoteTemplate, WikiArticle, WikiBlock, WikiCategory } from "../types"
+import type { Note, Folder, Tag, Label, NoteTemplate, WikiArticle, WikiBlock, WikiCategory, Book } from "../types"
 import { workflowDefaults } from "./helpers"
 import { buildSectionIndex } from "../wiki-section-index"
 
@@ -718,3 +718,159 @@ export const SEED_WIKI_ARTICLES: WikiArticle[] = _SEED_WIKI_ARTICLES_RAW.map((a)
   ...a,
   sectionIndex: buildSectionIndex(a.blocks),
 }))
+
+/* ── SEED_BOOKS (books-view-engine demo set) ──────────────────
+   8 books covering all kind/visual states for manual verification:
+   - kind: 3 Manual / 2 Smart / 2 Hybrid / 1 Trashed
+   - emoji vs no-emoji: 4 with cover emoji, 4 fallback to BookKindIcon
+   - pinned: 2 pinned (one Manual, one Hybrid)
+   - smartSources span all 5 kinds across the set (folder/tag/label only —
+     category/sticker reserved for future seeds; sourceType filter still
+     surfaces "_none" branch correctly).
+   Fractional-indexing keys use simple "a0","a1",... — lexicographically
+   correct, no generateKeyBetween call needed at seed time. */
+const now = Date.now()
+const hoursAgo = (h: number) => new Date(now - h * 3600_000).toISOString()
+const daysAgo = (d: number) => new Date(now - d * 86_400_000).toISOString()
+
+export const SEED_BOOKS: Book[] = [
+  // 1. Manual + Pinned + Emoji — featured curated guide
+  {
+    id: "book-1",
+    title: "Getting Started Guide",
+    description: "Hand-curated intro notes for new readers.",
+    coverEmoji: "📚",
+    color: null,
+    items: [
+      { kind: "note", id: "bi-1-1", refId: "note-1", order: "a0" },
+      { kind: "note", id: "bi-1-2", refId: "note-2", order: "a1" },
+    ],
+    pinned: true,
+    smartSources: [],
+    excludeIds: [],
+    createdAt: daysAgo(14),
+    updatedAt: hoursAgo(2),
+  },
+
+  // 2. Manual + Emoji — themed compilation
+  {
+    id: "book-2",
+    title: "Reading Journal",
+    description: "Books I finished this season.",
+    coverEmoji: "📖",
+    color: null,
+    items: [
+      { kind: "note", id: "bi-2-1", refId: "note-2", order: "a0" },
+      { kind: "chapter-heading", id: "bi-2-h", title: "Q2 Reflections", order: "a1" },
+      { kind: "note", id: "bi-2-2", refId: "note-7", order: "a2" },
+    ],
+    smartSources: [],
+    excludeIds: [],
+    createdAt: daysAgo(10),
+    updatedAt: hoursAgo(8),
+  },
+
+  // 3. Smart (no emoji → ⚡ Lightning icon) — single tag source
+  {
+    id: "book-3",
+    title: "Zettelkasten Hub",
+    description: "Auto-pulled by Zettelkasten tag.",
+    coverEmoji: null,
+    color: null,
+    items: [],
+    smartSources: [{ kind: "tag", refId: "tag-2" }],
+    excludeIds: [],
+    createdAt: daysAgo(7),
+    updatedAt: hoursAgo(24),
+  },
+
+  // 4. Smart (no emoji) — folder source
+  {
+    id: "book-4",
+    title: "Project Tracker",
+    description: "Everything in the Projects folder.",
+    coverEmoji: null,
+    color: null,
+    items: [],
+    smartSources: [{ kind: "folder", refId: "folder-1" }],
+    excludeIds: [],
+    createdAt: daysAgo(5),
+    updatedAt: hoursAgo(48),
+  },
+
+  // 5. Smart + Emoji — multi-source aggregation
+  {
+    id: "book-5",
+    title: "Research Library",
+    description: "Spans multiple research topics.",
+    coverEmoji: "🧪",
+    color: null,
+    items: [],
+    smartSources: [
+      { kind: "tag", refId: "tag-3" },
+      { kind: "tag", refId: "tag-4" },
+      { kind: "label", refId: "label-2" },
+    ],
+    excludeIds: [],
+    createdAt: daysAgo(4),
+    updatedAt: hoursAgo(36),
+  },
+
+  // 6. Hybrid (no emoji → ✨ Sparkle icon) — manual + auto
+  {
+    id: "book-6",
+    title: "Knowledge Compilation",
+    description: "Hand-picked notes blended with tag-based auto-fill.",
+    coverEmoji: null,
+    color: null,
+    items: [
+      { kind: "chapter-heading", id: "bi-6-h1", title: "Foundations", order: "a0" },
+      { kind: "note", id: "bi-6-1", refId: "note-1", order: "a1" },
+      { kind: "note", id: "bi-6-2", refId: "note-3", order: "a2" },
+      { kind: "chapter-heading", id: "bi-6-h2", title: "Recent Captures", order: "a3" },
+    ],
+    smartSources: [{ kind: "tag", refId: "tag-1" }],
+    excludeIds: [],
+    createdAt: daysAgo(3),
+    updatedAt: hoursAgo(12),
+  },
+
+  // 7. Hybrid + Pinned + Emoji — daily-driver mix
+  {
+    id: "book-7",
+    title: "Daily + Inspiration",
+    description: "Daily log entries plus auto-pulled ideas.",
+    coverEmoji: "⭐",
+    color: null,
+    items: [
+      { kind: "note", id: "bi-7-1", refId: "note-4", order: "a0" },
+      { kind: "note", id: "bi-7-2", refId: "note-5", order: "a1" },
+    ],
+    pinned: true,
+    smartSources: [
+      { kind: "folder", refId: "folder-2" },
+      { kind: "label", refId: "label-1" },
+    ],
+    excludeIds: [],
+    createdAt: daysAgo(2),
+    updatedAt: hoursAgo(4),
+  },
+
+  // 8. Trashed — surfaces the trash chip in ViewHeader + restore flow
+  {
+    id: "book-8",
+    title: "Old Project Notes",
+    description: "Archived after Q1 wrap-up.",
+    coverEmoji: null,
+    color: null,
+    items: [
+      { kind: "note", id: "bi-8-1", refId: "note-9", order: "a0" },
+    ],
+    smartSources: [],
+    excludeIds: [],
+    trashed: true,
+    trashedAt: daysAgo(1),
+    createdAt: daysAgo(20),
+    updatedAt: daysAgo(1),
+  },
+]
