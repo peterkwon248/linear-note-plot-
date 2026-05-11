@@ -120,6 +120,8 @@ const SORT_FIELD_LABELS: Record<SortField, string> = {
   fieldCount: "Field count",
   size: "Size",
   fileType: "Type",
+  // books-view-engine-2
+  itemCount: "Item count",
 }
 
 const COLUMN_DEFS: { id: string; label: string; width: string; align?: string; sortField?: SortField; minWidth?: number }[] = [

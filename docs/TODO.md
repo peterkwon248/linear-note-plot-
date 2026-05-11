@@ -3,51 +3,54 @@
 > 우선순위 기반 작업 목록. NEXT-ACTION.md는 즉시 액션, 이 파일은 전체 우선순위 큰그림.
 > 완료 항목은 즉시 삭제 또는 "완료" 섹션으로 이동.
 
-**마지막 갱신**: 2026-05-08 (5 PR 머지 + Phase 4.3 plan 보강 후)
+**마지막 갱신**: 2026-05-12 (Books view-engine 4 PR 시리즈 종료)
 
 ---
 
 ## 🔴 P0 — 즉시 (다음 세션)
 
-### Path A — Filter coverage Section 11 (작은 PR 시리즈) ⭐ 추천
-plan: `.omc/plans/v3-phase-4-3-decompose.md` Section 11
+### Manual verify Books 4 viewMode + 회귀 fix ⭐ 추천
+다음 세션 시작 시 진행. NEXT-ACTION.md 7 step 절차.
 
 ```
-Step 1: Files type filter (image/url/file) ← 가장 작고 명확. 즉시 visual 효과
-Step 2: References type filter (book/article/url/quote)
-Step 3: Wiki Category filter 보강 (사용자 직접 우려 — 부실)
-Step 4: Tags / Labels color filter (선택)
-Step 5: Stickers / Inbox source filter (선택)
+1. Grid mode 정상 (cover emoji + 카드, 우클릭 메뉴)
+2. Search "Search books" → title/description 실시간 필터링
+3. List mode → BookListRow chip (Kind/ItemCount/SourceKind/Pin/Time)
+4. Filter popover 4 categories (Kind/SmartSource/Pin/Updated)
+5. Pinned-first sort → reload 후 유지
+6. viewState persist (viewMode/sort/filter)
+7. Board mode → column drag + card drag (pinned toggle / kind confirm)
+8. Gallery mode → entity-agnostic GalleryView (accent kind-based)
 ```
 
-각 Step = view-engine config 변경만 (showFilter true + filterCategories 채움). chrome refactor와 독립 — 병렬 PR 가능.
+회귀 발견 시 즉시 fix → 추가 commit.
 
-### Path B — Chrome refactor Section 10 (큰 작업, 시각 일관성 prerequisite)
-plan: `.omc/plans/v3-phase-4-3-decompose.md` Section 10
+### (verify 통과 시) Wiki 그룹 헤더 아이콘 (~30분)
+- WikiList/WikiBoard 미적용 (Notes Table/Board/Gallery는 5-11에서 통일됨, Books는 5-12)
+- 자투리 시간 정리 후보
 
-```
-Step A: globals.css `.a-th, .a-row` grid 분리 (chrome-only로) ← 모든 view chrome 통일의 prerequisite
-Step B: Tags/Labels chrome 재적용 (#282 retry — 폰트/height 자동 통일)
-Step C: column model 확장 (displayProperties)
-Step D: 다른 view (wiki / library / templates / stickers)
-```
+---
 
-### Path C — Studio + Editorial 제거 (영구 규칙 위반 cleanup)
+## 🟡 P1 — 큰 작업 후보
 
-- Studio + Editorial shell 삭제 (`components/views/studio-view*.tsx`, `editorial-view*.tsx`)
-- ViewSwitcher tab 정리 (4-tab → 2-tab Table/Board)
-- viewMode type 축소 (`"list" | "board" | "gallery"`)
-- IDB migration (옛 `"studio" | "editorial"` 값 → `"list"` fallback)
-- SRS 기능 살아있으면 별도 path 보존 (Studio 외)
+### Smart Book v2 — AutoSource picker UX 강화
+- folder/category/tag/label/sticker source picker 풀 도입
+- chapter 정렬 (Manual drag default + Auto-sort)
+- Hull + Sequence edge 시각화
 
-근거: 메모리 영구 규칙 #1 + TODO 폐기 항목 ("매거진 pivot 폐기 2026-04-22") 위반
+### Wiki view-engine board 도입
+- Plot 일관성 (Notes/Books와 동일 viewMode 토글)
+- WikiList → WikiBoard 라우트 통합
 
-### Path D — Gallery polishing (별도 sprint)
+### Notes/Wiki/Books 통합 entity-agnostic ListRow/BoardCard 패턴
+- Books의 BookListRow + BookGridCard 패턴 일반화
+- generic 추출 없이도 reuse 패턴 (`renderListRow` prop) 도입
 
-- 편집 가능하게 (NotesGallery 신규 또는 NotesTable grid mode 통합)
-- Plot tokens 정합 (cream 강제 제거 → light/dark 반응)
-- Display popover 통합 (`[List | Board | Gallery]` 3-segment)
-- ViewSwitcher 제거
+### Note UI toolbar (UpNote-style)
+- 미루기 — 별도 큰 작업
+
+### House (계보 시각화)
+- 미루기 — 토론 필요
 
 ---
 
@@ -105,14 +108,31 @@ Step D: 다른 view (wiki / library / templates / stickers)
 - 11가지 결정은 v3 PRD에 통합 보존
 
 ### 매거진/뉴스페이퍼/북 Pivot — 폐기 (2026-04-22)
-- ⚠️ Studio/Editorial view modes (PR #279/#280)가 이 폐기 항목 부활 — Path C로 cleanup 예정
+- ✅ Studio/Editorial view modes 제거 완료 (Store v119, 2026-05-09)
+### Dual mode — 폐기 (2026-05-11)
+- Split view + list mode + editor pane으로 충분. v122 migration으로 자동 fix.
 ### AI provider 연결 — 정체성 위반 (2026-04-27)
 ### Notion식 Row density toggle — Linear 코어 (PR #224 revert)
 ### Page entity 신규 — atomic 위배 (2026-05-03)
+### Generic `useEntityView<T>` hook 추출 — 영구 거부 (scope 폭발)
 
 ---
 
 ## ✅ 최근 완료
+
+### 2026-05-12 (마라톤) — Books view-engine 풀 통합 4 viewMode (Store v122 → v126)
+- ✅ **PR 1 (v123)**: 인프라 + grid 보존. useBooksView thin fork. 시각 변경 0
+- ✅ **PR 2 (v124)**: list mode + sort/group/filter UI + 3 chip (BookItemCount/BookKind/BookSourceKind mini-bar). ViewHeader Search/Filter/Display 활성화. pinned-first sort
+- ✅ **PR 3 (v125)**: board mode Option A (column drag + card drag, dnd-kit). groupBy kind/pinned. card drag UX: pinned 즉시 toggle / kind smart→manual confirm / manual→smart toast hint
+- ✅ **PR 4 (v126)**: gallery mode (entity-agnostic adapter). 2026-05-11 GalleryView 재사용. kind-based accent color
+- ✅ launch.json `npx next` 전환 (한글 경로 안전성)
+- ✅ Plan `.omc/plans/books-view-engine-integration.md` 작성
+
+### 2026-05-11 (마라톤) — 책 split view + Dual mode 폐기 + 갤러리 entity-agnostic (PR #291)
+
+### 2026-05-10 (마라톤) — Smart Book Phase A + 책 reading flow (PR #290)
+
+### 2026-05-09 (마라톤) — Book entity + Dual mode + Filter Path A 완전 종결 (PR #289)
 
 ### 2026-05-08 (오후) — Status icons + Phase 4.3 plan 보강 (5 PR + docs sync)
 - ✅ **PR #271**: Status icons + UI 라벨 "Block" + Cuboid (1×2 isometric block) + Save view 16px (HBtn pattern)

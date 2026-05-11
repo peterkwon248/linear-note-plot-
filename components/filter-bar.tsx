@@ -803,6 +803,9 @@ const FIELD_TO_GROUP: Record<FilterField, FilterGroupKey> = {
   // Stickers-entity filters (Plan §11.2 Path-A bonus)
   memberStatus: "content",
   memberKind: "content",
+  // Books-entity filters (books-view-engine-2)
+  kind: "source",
+  sourceType: "source",
 }
 
 export function getFilterGroupKey(field: FilterField): FilterGroupKey {

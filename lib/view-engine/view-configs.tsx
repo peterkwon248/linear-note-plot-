@@ -1,6 +1,6 @@
 import type { ReactNode } from "react"
 import type { SortField, ViewMode, GroupBy } from "./types"
-import { Hexagon, Cube, BookOpen, CircleHalf } from "@phosphor-icons/react"
+import { Hexagon, Cube, BookOpen, CircleHalf, Sticker as StickerIcon } from "@phosphor-icons/react"
 import { Cuboid2x2 } from "@/components/icons/Cuboid2x2"
 
 export interface FilterCategory {
@@ -744,6 +744,67 @@ export const STICKERS_LIST_VIEW_CONFIG: ViewConfig = {
   },
 }
 
+// books-view-engine-2: Books list/grid config. Filter on Smart vs Manual,
+// which smart sources are configured, pinned state, and date.
+// supportedModes = grid + list now; PR 3 will add "board" + groupBy kind/pinned,
+// PR 4 will add "gallery". groupingOptions/toggles intentionally minimal until then.
+export const BOOKS_VIEW_CONFIG: ViewConfig = {
+  showFilter: true,
+  showDisplay: true,
+  showDetailPanel: false,
+  filterCategories: [
+    { key: "kind", label: "Kind", icon: SortIcon, values: [
+      { key: "smart", label: "Smart" },
+      { key: "manual", label: "Manual" },
+      { key: "hybrid", label: "Hybrid" },
+    ]},
+    // Which smart source(s) are configured. "_none" surfaces pure-manual books
+    // for users converging on a tidier collection (mirrors Files _none pattern).
+    { key: "sourceType", label: "Smart source", icon: SourceIcon, values: [
+      { key: "folder",   label: "Folder",       icon: FolderIcon },
+      { key: "category", label: "Wiki Category", icon: TagIcon },
+      { key: "tag",      label: "Tag",          icon: TagIcon },
+      { key: "label",    label: "Label",        icon: LabelIcon },
+      { key: "sticker",  label: "Sticker",      icon: <StickerIcon size={14} weight="regular" /> },
+      { key: "_none",    label: "No smart source" },
+    ]},
+    { key: "pinned", label: "Pin", icon: PinIcon, values: [
+      { key: "true",  label: "Pinned" },
+      { key: "false", label: "Not pinned" },
+    ]},
+    { key: "updatedAt", label: "Updated", icon: CalendarIcon, values: [
+      { key: "today",        label: "Today" },
+      { key: "yesterday",    label: "Yesterday" },
+      { key: "this-week",    label: "This week" },
+      { key: "last-7-days",  label: "Last 7 days" },
+      { key: "this-month",   label: "This month" },
+      { key: "last-30-days", label: "Last 30 days" },
+    ]},
+  ],
+  quickFilters: [],
+  displayConfig: {
+    // books-view-engine-3/4: board mode + gallery mode (entity-agnostic).
+    supportedModes: ["grid", "list", "board", "gallery"],
+    orderingOptions: [
+      { value: "updatedAt", label: "Updated" },
+      { value: "createdAt", label: "Created" },
+      { value: "title",     label: "Title" },
+      { value: "itemCount", label: "Item count" },
+    ],
+    groupingOptions: [
+      { value: "none",   label: "No grouping" },
+      { value: "kind",   label: "Kind" },
+      { value: "pinned", label: "Pin status" },
+    ],
+    // showTrashed toggle is handled in books-view.tsx ViewHeader actions.
+    toggles: [],
+    properties: [
+      { key: "itemCount", label: "Item count", icon: SortIcon },
+      { key: "kind",      label: "Kind",       icon: SourceIcon },
+    ],
+  },
+}
+
 export const VIEW_CONFIGS: Record<string, ViewConfig> = {
   notes: NOTES_VIEW_CONFIG,
   wiki: WIKI_VIEW_CONFIG,
@@ -758,4 +819,5 @@ export const VIEW_CONFIGS: Record<string, ViewConfig> = {
   stickers: STICKERS_LIST_VIEW_CONFIG,
   references: REFERENCES_VIEW_CONFIG,
   files: FILES_VIEW_CONFIG,
+  books: BOOKS_VIEW_CONFIG,
 }

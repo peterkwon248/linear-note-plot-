@@ -5,6 +5,112 @@
 
 ---
 
+## 2026-05-12 (오후) — 집
+
+### 완료 (1 통합 PR, 4 PR 시리즈)
+
+**Books view-engine 풀 통합 4 viewMode** (Store v122 → v126, ~1200 net LOC):
+
+- **PR 1** (v123) — 인프라 + grid 보존
+  - `lib/view-engine/types.ts`: `"books"` ViewContextKey + VALID_VIEW_CONTEXT_KEYS
+  - `lib/view-engine/defaults.ts`: CONTEXT_DEFAULTS.books (grid + updatedAt desc + none groupBy)
+  - `lib/view-engine/use-books-view.ts` **신규** — thin fork hook (use-templates-view 패턴)
+  - `components/views/books-view.tsx`: BooksGrid → useBooksView 통합. showTrashed → viewState.toggles
+  - 시각 변경 0 (grid 모드 보존)
+
+- **PR 2** (v124) — list mode + sort/group/filter UI + 3 PropertyChip
+  - SortField `itemCount`, FilterField `kind`/`sourceType` 추가
+  - `view-configs.tsx`: **BOOKS_VIEW_CONFIG** 신규 (filter 4 cats + display config)
+  - `property-chips.tsx`: **3 신규 chip** (BookItemCountChip + BookKindChip + BookSourceKindChip mini-bar)
+  - `book-list-row.tsx` **신규** — list 모드 row
+  - `book-grid-card.tsx` **신규** (refactor — grid card 별도 분리)
+  - `books-view.tsx`: ViewHeader showSearch/showFilter/showDisplay 활성화 + viewMode list 분기 + EmptyBooks helper
+  - pinned-first sort 활성화
+
+- **PR 3** (v125) — board mode (Option A: column drag + card drag)
+  - GroupBy `kind`/`pinned` 추가 + VALID_GROUP_BY 확장
+  - `use-books-view.ts`: applyBookGrouping에 kind (Smart/Hybrid/Manual) + pinned 분기
+  - `view-configs.tsx`: supportedModes에 "board" + groupingOptions kind/pinned
+  - `books-board.tsx` **신규** (320 LOC, dnd-kit) — BoardColumn + BoardCard + drag handler
+  - card drag UX:
+    - pinned column: 즉시 toggle + 토스트
+    - kind column smart/hybrid → manual: **confirm dialog** (smartSources 제거)
+    - kind column manual → smart/hybrid: **toast hint** ("Configure on detail page")
+  - column drag/reorder + groupOrder persist (Notes/Wiki 패턴)
+
+- **PR 4** (v126) — gallery mode (entity-agnostic adapter)
+  - `books-gallery-adapter.tsx` **신규** — Book → GalleryItem 매핑
+  - accent color kind-based (Smart=violet / Hybrid=amber / Manual=slate)
+  - badge + cover icon + metaLeft (source kinds) + metaRight (count + time)
+  - `view-configs.tsx`: supportedModes에 "gallery"
+  - 2026-05-11 entity-agnostic GalleryView 재사용
+
+**부속 작업**:
+- `.omc/plans/books-view-engine-integration.md` (~600 line plan 작성)
+- `.claude/launch.json`: `node next/dist/bin/next` → **`npx next`** (한글 경로 안전성)
+- 4 store migration 주석 (v123/v124/v125/v126 boundary)
+
+### 브레인스토밍 & 큰 결정 (영구)
+
+#### 1. 사용자 결정 4가지 (AskUserQuestion 2026-05-12)
+- **PR 분할**: C 점진 4 PR (안전 + 매 단계 visual confirm 가능)
+- **viewMode default**: grid 유지 (cover emoji 활용 강함, 기존 사용자 reload 시 변화 0)
+- **default sort**: updatedAt desc 유지
+- **default groupBy**: none (보수, UI에는 옵션 노출)
+
+#### 2. Option A — Plot 일관성 풀 (column drag + card drag)
+- Notes/Wiki와 동일 dnd-kit 패턴 — 사용자 직관 부담 0
+- card drag의 의미 분기:
+  - pinned: 즉시 toggle (안전)
+  - kind smart→manual: confirmation (destructive)
+  - kind manual→smart: toast hint (가이드)
+
+#### 3. thin fork 패턴 영구 (Generic 추출 X)
+- `useBooksView`가 8번째 thin fork hook (use-templates-view 패턴)
+- Notes pipeline의 applyFilters/Sort/Grouping은 Note 타입 전용 — Books는 격리
+- "Scope guard" 헤더 주석 명시
+
+#### 4. Smart Book INVARIANT 보존
+- resolver/BookDetailPage/SourcesSection 동작 변화 0
+- view-engine 통합은 Books **list view 자체**만 변경
+
+#### 5. 마이그레이션 옵션 A 영구 (idempotent skip)
+- v123 (books context 자동 seed via VALID_VIEW_CONTEXT_KEYS expansion)
+- v124-v126 (types union 확장만 — 데이터 변경 X)
+
+#### 6. Books PropertyChip 3종 + accent color kind-based
+- BookKindChip 색 옵션 결정: PR 2에서 neutral muted-foreground (1차 보수)
+- gallery accent color: Smart=violet `#7C8AE7` / Hybrid=amber `#f59e0b` / Manual=slate `#94a3b8`
+
+### 다음 (NEXT-ACTION.md 참조)
+
+🔴 **Manual verify Books 4 viewMode** + 회귀 fix (사용자 manual 절차 7 step)
+🟡 Wiki 그룹 헤더 아이콘 (~30분 후보)
+🟢 다음 큰 트랙 brainstorm (Smart Book v2 / Wiki view-engine board)
+
+### Watch Out
+
+- **kind column card drag**: 데이터 손실 가능성 (smartSources 제거). confirm dialog 필수. test 시 confirm 동작 확인.
+- **groupOrder persist 일관성**: NotesBoard와 동일 패턴 (`useSortable` + `horizontalListSortingStrategy`). 회귀 시 NotesBoard 비교.
+- **`.next/dev` stale type 캐시**: build 시 종종 발생. `rm -rf .next/dev .next/cache` 후 재빌드. 또는 dev server 재시작.
+- **launch.json npx next 전환 영향**: 좀 전 일시적 dev server crash → npx 기반으로 회복. 한글 경로 안전성 ↑.
+- **사용자 manual verify dnd-kit drag**: preview tools로 자동 click drag 어려움 — 사용자 직접 시각 확인 필수.
+- **gallery groupBy=none && groups.length<=1**: BooksGalleryAdapter는 flat items 렌더 (조건 fall-through). 단순 list로 보이게.
+
+### 머신
+집 (Windows)
+
+### 누적 commits (이번 세션)
+시리즈 단일 통합 PR (4 PR 통합 squash 머지 후 main에 반영):
+- types/defaults/use-books-view (PR 1, v123)
+- view-configs/property-chips/book-list-row/book-grid-card/books-view (PR 2, v124)
+- books-board/books-view dnd-kit (PR 3, v125)
+- books-gallery-adapter/books-view gallery (PR 4, v126)
+- launch.json `npx next` 전환
+- plan + docs sync
+
+---
+
 ## 2026-05-08 (오후) — 집
 
 ### 완료 (5 PR 머지)

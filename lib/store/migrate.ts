@@ -1870,5 +1870,36 @@ export function migrate(persistedState: unknown): PlotState {
     })
   }
 
+  // v123: Books view-engine integration (PR books-view-engine-1).
+  // Adding "books" to VALID_VIEW_CONTEXT_KEYS causes normalizeViewStatesMap
+  // (called above at v16 step) to auto-seed viewStateByContext.books with
+  // the CONTEXT_DEFAULTS entry on the next rehydration — no explicit data
+  // migration needed here. Version bump documents the boundary.
+  // Spec: `.omc/plans/books-view-engine-integration.md` §8 (PR 1).
+
+  // v124: Books list mode + sort/group/filter UI (PR books-view-engine-2).
+  // Adds SortField "itemCount", FilterField "kind"/"sourceType", expanded
+  // visibleColumns for books context. All type union extensions — no data
+  // migration needed. Existing user viewState.books preserved through
+  // normalizeViewState (filters out unknown values gracefully). PR 2 also
+  // introduces pinned-first sort in useBooksView, which only affects display
+  // order; persisted state untouched.
+  // Spec: `.omc/plans/books-view-engine-integration.md` §8 (PR 2).
+
+  // v125: Books board mode + kind/pinned grouping (PR books-view-engine-3).
+  // Adds GroupBy "kind"/"pinned" + view-config supportedModes "board".
+  // No data migration — type union extensions only. groupOrder persistence
+  // continues to round-trip through normalizeViewState. Card drag/drop in
+  // groupBy=pinned toggles book.pinned (immediate); groupBy=kind requires
+  // confirmation for smart→manual conversion (clears smartSources only).
+  // Spec: `.omc/plans/books-view-engine-integration.md` §8 (PR 3).
+
+  // v126: Books gallery mode (PR books-view-engine-4).
+  // Adds view-config supportedModes "gallery". BooksGalleryAdapter maps
+  // Book + BookGroup into the entity-agnostic GalleryView (2026-05-11
+  // 영구 결정 — Notes/Wiki/References 패턴). Click = full editor (Plot
+  // standard). No data migration.
+  // Spec: `.omc/plans/books-view-engine-integration.md` §8 (PR 4).
+
   return state as unknown as PlotState
 }
