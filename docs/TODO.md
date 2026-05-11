@@ -3,186 +3,88 @@
 > 우선순위 기반 작업 목록. NEXT-ACTION.md는 즉시 액션, 이 파일은 전체 우선순위 큰그림.
 > 완료 항목은 즉시 삭제 또는 "완료" 섹션으로 이동.
 
-**마지막 갱신**: 2026-05-12 (Books view-engine 10 PR + emoji 폐기 + Pin 통일)
+**마지막 갱신**: 2026-05-12 (밤) — Priority 영구 폐기 + UI 선명화 + Books polish + Wiki 그룹 헤더
 
 ---
 
 ## 🔴 P0 — 즉시 (다음 세션)
 
-### Pin indicator 위치 fix — Notes/Wiki status chip 옆 ⭐
-사용자 시그널 (세션 끝): "노트, 위키의 status chip 옆에 핀 아이콘이 있어야 되는 거 아니냐?"
-
-현재 PR #301: title 옆 inline pin. 사용자 의도 = status column 안 또는 status chip 옆.
-
-- components/notes-table.tsx: status column cell 안 pin 추가 (또는 status chip 옆 inline)
-- components/views/wiki-list.tsx: WikiStub/Article badge 옆 pin 이동
-
-### Wiki 우클릭 메뉴 + 플로팅 바 Pin 추가 (PR #300 follow-up)
-- WikiList의 row ContextMenu에 Pin/Unpin
-- Wiki Floating bar 있다면 Pin 액션 추가 (없으면 신규)
-
-### Books view-engine 시리즈 manual verify
-- 4 viewMode (grid/list/board/gallery) 토글
-- Filter Kind values icon 노출
-- BookKindChip 색
-- BookFloatingBar (1+ 선택 시)
-- Save view 버튼
-
-회귀 발견 시 즉시 fix.
+### PR #304 visual 검증 + squash merge ⭐
+NEXT-ACTION.md 참조. 회귀 없으면 squash merge to main.
 
 ---
 
-## 🔵 보류
+## 🟡 P1 — 가까운 미래
 
-### Manual verify Books 4 viewMode + 회귀 fix
-다음 세션 시작 시 진행. NEXT-ACTION.md 7 step 절차.
+### Imperial Design System 사용 검증 (별개 프로젝트)
+- 새 Claude Code 세션 (빈 폴더)에서 `/plugin install github.com/peterkwon248/imperial-design-system`
+- 5 슬래시 커맨드 등록 확인 (new-mockup/new-landing/new-graphic/handoff/design-review)
+- 동작 안 하면 Local install (`~/.claude/plugins/imperial-design-system/`)로 fallback
 
-```
-1. Grid mode 정상 (cover emoji + 카드, 우클릭 메뉴)
-2. Search "Search books" → title/description 실시간 필터링
-3. List mode → BookListRow chip (Kind/ItemCount/SourceKind/Pin/Time)
-4. Filter popover 4 categories (Kind/SmartSource/Pin/Updated)
-5. Pinned-first sort → reload 후 유지
-6. viewState persist (viewMode/sort/filter)
-7. Board mode → column drag + card drag (pinned toggle / kind confirm)
-8. Gallery mode → entity-agnostic GalleryView (accent kind-based)
-```
+### docs/PLOT-CURRENT-STATE-FOR-2.0.md priority 제거
+Note 타입 정의 + SortField/GroupBy union + CSS 토큰에서 priority 제거. PRD 정확성 보장.
 
-회귀 발견 시 즉시 fix → 추가 commit.
-
-### (verify 통과 시) Wiki 그룹 헤더 아이콘 (~30분)
-- WikiList/WikiBoard 미적용 (Notes Table/Board/Gallery는 5-11에서 통일됨, Books는 5-12)
-- 자투리 시간 정리 후보
+### Wiki 우클릭 메뉴 + 플로팅 바 Pin 추가 follow-up
+PR #303 close됐지만 어제 Wiki 우클릭 메뉴/플로팅바 작업 일부 이미 main에 적용됐을 가능성 (PR #300/#301 commit). 확인 후 빈 부분 추가.
 
 ---
 
-## 🟡 P1 — 큰 작업 후보
+## 🟢 P2 — 추후
 
-### Smart Book v2 — AutoSource picker UX 강화
-- folder/category/tag/label/sticker source picker 풀 도입
-- chapter 정렬 (Manual drag default + Auto-sort)
-- Hull + Sequence edge 시각화
+### Books view-engine 10 PR 시리즈 회귀 점검
+4 viewMode (grid/list/board/gallery) manual verify. Filter Kind values icon 노출, BookKindChip 색, BookFloatingBar, Save view 버튼 등.
 
-### Wiki view-engine board 도입
-- Plot 일관성 (Notes/Books와 동일 viewMode 토글)
-- WikiList → WikiBoard 라우트 통합
-
-### Notes/Wiki/Books 통합 entity-agnostic ListRow/BoardCard 패턴
-- Books의 BookListRow + BookGridCard 패턴 일반화
-- generic 추출 없이도 reuse 패턴 (`renderListRow` prop) 도입
-
-### Note UI toolbar (UpNote-style)
-- 미루기 — 별도 큰 작업
-
-### House (계보 시각화)
-- 미루기 — 토론 필요
+### 나무위키 리서치 기능 도입
+- Tier 1 인포박스 고도화: 대표 이미지+캡션, 헤더 색상 테마, 접기/펼치기, 섹션 구분 행
+- Tier 2 새 블록: 배너 블록, 둘러보기 틀 (Navigation Box)
+- Tier 3 매크로: 나이 계산, D-Day, Include
+- 아키텍처: 모든 새 기능 = base 티어 (노트+위키 공용)
+- 인사이트 허브: 온톨로지 Single Source of Insights
 
 ---
 
-## 🟡 P1 — 큰 작업 후보
+## 🔵 보류 (Deferred)
 
-### Wiki template 3-layer
-- Layout Preset + Content Template + Typed Infobox
-- Wiki domain. v3 Phase 3+와 독립
+### Plot 사이드바 inline edit mode
+- DotsSix 핸들 + slide-right transition
+- 섹션 단위 재배열
+- 👁 hide/show 토글
+- sidebarCustomization.byContext
 
-### Smart Book v2 — AutoSource[5]
-- folder / category / tag / label / sticker 자동 source
-- Book entity 신규 (v3 7번째 space, rose 팔레트 #fb7185 dark / #e11d48 light)
-- chapter 정렬 (Manual drag default + Auto-sort)
-- Hull + Sequence edge 시각화 + Reading view
-
-### Note UI toolbar (UpNote-style)
-- 미루기 — 별도 큰 작업
-
-### House (계보 시각화)
-- 미루기 — 토론 필요
+### Quicklinks 위치 통일
+- Home 사이드바 prominent 섹션
+- 각 영역 사이드바 하단 collapsed
+- 키보드 shortcut (⌘K 또는 ⌘1~9)
 
 ---
 
-## 🟣 P2 — 작은 후속 정리
+## ✅ 최근 완료 (참고용, 다음 세션 시작 시 삭제)
 
-- Templates grid chip 시스템 완전 통일 (PR e deviation)
-- 키보드 shortcut (D/T/P 등) 노트 + templates 통합
-- Wiki bulk action bar (필요해지면)
-- FolderPicker 검색 필터 (50+ 폴더 시점)
-- Tag 우클릭 메뉴 Rename 옵션 추가
-- Label 색 정책 재검토 (Tag opt-in 가능성)
-- ReferencesView quickFilter / fieldKey filter → viewState.filters lift (PR 4 follow-up)
-- FilesView type filter (all/image/document) → viewState.filters lift (PR 5 follow-up — Path A Step 1과 정합)
-- File grid mode 실제 image preview (blob URL 처리, PR 5 follow-up)
-- `docs/status-icons-preview.html` 등 mockup HTML untracked 파일 정리 (.gitignore 또는 삭제)
-
----
-
-## ⏸️ 보류 / 영구 폐기
-
-### Plot v3 Phase 2 (Imperial icon kit) — DEFERRED
-- 119 files codemod scope 비대 + 시각 위화감 미미
-- partial work (activity-bar 등) 그대로 보존
-- 재개 조건: 정확한 인벤토리 + 매핑 coverage 검증 + 단일 책임 PR 분할
-
-### onlook (visual code editor) — 적용 X
-- production app 자동 코드 변경 회귀 위험
-- greenfield/marketing 사이트에 적합
-
-### Front-End-Design-Checklist — 적용 X
-- design-quality-gate + linear-design-mirror + 4 design skills과 중복
-- handoff 가이드 (디자이너↔개발자), 1인 dev audience 불일치
-
-### Plot 2.0 브랜딩 — v3 visual refresh로 리브랜드
-- 11가지 결정은 v3 PRD에 통합 보존
-
-### 매거진/뉴스페이퍼/북 Pivot — 폐기 (2026-04-22)
-- ✅ Studio/Editorial view modes 제거 완료 (Store v119, 2026-05-09)
-### Dual mode — 폐기 (2026-05-11)
-- Split view + list mode + editor pane으로 충분. v122 migration으로 자동 fix.
-### AI provider 연결 — 정체성 위반 (2026-04-27)
-### Notion식 Row density toggle — Linear 코어 (PR #224 revert)
-### Page entity 신규 — atomic 위배 (2026-05-03)
-### Generic `useEntityView<T>` hook 추출 — 영구 거부 (scope 폭발)
+- ~~Priority 전면 폐기~~ (2026-05-12 밤, PR #304 - 247 tests pass, Store v130)
+- ~~SourceIcon 완전 제거~~ (2026-05-12 밤, PR #304)
+- ~~그룹 헤더 디자인 통일~~ (2026-05-12 밤, PR #304)
+- ~~컬럼 헤더 + toolbar 아이콘 선명화~~ (2026-05-12 밤, PR #304)
+- ~~Books Pin 위치 (Notes 패턴) + index 컬럼~~ (2026-05-12 밤, PR #304)
+- ~~Books Pin 컬럼 + DisplayProperties 토글 제거~~ (2026-05-12 밤, PR #304)
+- ~~Wiki list/board 그룹 헤더 아이콘 추가~~ (2026-05-12 밤, PR #304)
+- ~~Imperial Design System v0.3.0 publish~~ (2026-05-12 밤, 별개 repo)
+- ~~PR #303 close~~ (Pin status chip 옆 이동 결정 폐기)
 
 ---
 
-## ✅ 최근 완료
+## 🧠 영구 결정 인덱스
 
-### 2026-05-12 (저녁~밤, 거대) — Books polish 6 PR + emoji 폐기 + Pin 통일 (Store v126 → v129)
-- ✅ **PR #296** (v127): SEED_BOOKS migration backfill (기존 사용자에도 inject)
-- ✅ **PR #297** (v128): Polish 1 — SEED emoji 제거 + Display properties Sources/Pin toggle + groupBy "status" stale validation
-- ✅ **PR #298** (v129): emoji 영구 폐기 + Phosphor BookKindIcon 통일 (Plot icon 시스템)
-- ✅ **PR #299**: Polish 2 — BookKindChip 색 (StatusBadge 패턴) + Filter Kind values icon + Save view 통일 (Trash chip 제거)
-- ✅ **PR #300**: Pin 통일 — Books FloatingBar + Notes 우클릭 + Notes FloatingActionBar Pin
-- ✅ **PR #301**: Pin indicator (Notes/Wiki title 옆 inline)
+상세는 docs/MEMORY.md / docs/CONTEXT.md / `.omc/notepads/general/decisions.md` 참조.
 
-### 2026-05-12 (마라톤) — Books view-engine 풀 통합 4 viewMode (Store v122 → v126)
-- ✅ **PR 1 (v123)**: 인프라 + grid 보존. useBooksView thin fork. 시각 변경 0
-- ✅ **PR 2 (v124)**: list mode + sort/group/filter UI + 3 chip (BookItemCount/BookKind/BookSourceKind mini-bar). ViewHeader Search/Filter/Display 활성화. pinned-first sort
-- ✅ **PR 3 (v125)**: board mode Option A (column drag + card drag, dnd-kit). groupBy kind/pinned. card drag UX: pinned 즉시 toggle / kind smart→manual confirm / manual→smart toast hint
-- ✅ **PR 4 (v126)**: gallery mode (entity-agnostic adapter). 2026-05-11 GalleryView 재사용. kind-based accent color
-- ✅ launch.json `npx next` 전환 (한글 경로 안전성)
-- ✅ Plan `.omc/plans/books-view-engine-integration.md` 작성
-
-### 2026-05-11 (마라톤) — 책 split view + Dual mode 폐기 + 갤러리 entity-agnostic (PR #291)
-
-### 2026-05-10 (마라톤) — Smart Book Phase A + 책 reading flow (PR #290)
-
-### 2026-05-09 (마라톤) — Book entity + Dual mode + Filter Path A 완전 종결 (PR #289)
-
-### 2026-05-08 (오후) — Status icons + Phase 4.3 plan 보강 (5 PR + docs sync)
-- ✅ **PR #271**: Status icons + UI 라벨 "Block" + Cuboid (1×2 isometric block) + Save view 16px (HBtn pattern)
-- ✅ **PR #282**: PR 4.3a Tags+Labels chrome 통일 시도
-- ✅ **PR #283**: PR #282 partial revert (`.a-row` grid 6-col 강제 충돌)
-- ✅ **PR #284**: Tags row border-b 제거 + plan Section 9-10 (lessons + roadmap)
-- ✅ **PR #285**: plan Section 11 Filter coverage 분석 (Step 1-5)
-- ✅ **(이 PR)** docs sync — NEXT-ACTION / SESSION-LOG / MEMORY / TODO / CONTEXT
-
-### 2026-05-07 (밤 늦게) — Plot v3 Phase 3 (4 PR)
-- ✅ PR 3.1 (98f9277): CSS 통합 — `.a-actbar` / `.a-sidebar` / `.a-sb-*` (시각 변경 0)
-- ✅ PR 3.2 (5ac22ef): activity-bar.tsx reskin (width 72px / label / brand mark / per-space 6색 inline)
-- ✅ PR 3.3 (8155530): linear-sidebar.tsx reskin
-- ✅ PR 3.4 (3761e42): brand mark = Plot 로고 SVG (네트워크 그래프) → 후 PR #270으로 mockup 패턴 P glyph 복귀
-
-### 2026-05-07 (밤) — Group C PR-D 시리즈 5/5 완성
-- ✅ Tags v110 / Labels v111 / Stickers v113 / References v114 / Files v115
-
-### Plot v3 Phase 2 DEFER 결정 (3b84d7e)
-### 4 design skills install (0f7e2ec)
+- **Priority 영구 폐기** (2026-05-12)
+- **Pin = identity, not meta toggle** (Linear 패턴, 2026-05-12)
+- **SourceIcon 폐기** (visual noise, 2026-05-12)
+- **그룹 헤더 = Linear list-grouped 스타일** (2026-05-12)
+- **emoji 영구 폐기** (Phosphor outline only, 2026-05-12)
+- **Pin 통일 모든 entity** (Name 옆 inline, 2026-05-12)
+- **Books 자체 정체성 = kind 유지** (status 도입 X, 2026-05-12)
+- **Dual mode 영구 폐기** (Split view + list로 충분, 2026-05-11)
+- **갤러리 = entity-agnostic** (2026-05-11)
+- **Note/Wiki 2-entity 영구 분리** (2026-04-14)
+- **"Gentle by default, powerful when needed"** (Plot 모토)
+- **LLM/API 미사용** (규칙 기반 + 통계 + 그래프 알고리즘)
