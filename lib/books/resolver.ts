@@ -274,8 +274,11 @@ export function resolveBookItems(
       // Phase C — Tag is the only cross-entity source: both Note.tags
       // and WikiArticle.tags are string[] referencing Tag.id. Combined
       // candidate list is sorted by updatedAt desc together (interleaved).
+      //
+      // Phase F (LOCKED #11): trashed tag → source silently skipped (lazy
+      // detection). Restore unticks `trashed` → source revives automatically.
       const tag = (store.tags ?? []).find((t) => t.id === source.refId)
-      if (!tag) continue
+      if (!tag || tag.trashed) continue
 
       const tagged: Array<{ id: string; kind: "note" | "wiki"; updatedAt?: string }> = [
         ...store.notes
@@ -293,8 +296,10 @@ export function resolveBookItems(
     if (source.kind === "label") {
       // Phase D — Label is notes-only. Note.labelId is a scalar (single
       // label per note), so the predicate is === (not includes).
+      //
+      // Phase F: trashed label → source skipped (LOCKED #11 lazy).
       const label = (store.labels ?? []).find((l) => l.id === source.refId)
-      if (!label) continue
+      if (!label || label.trashed) continue
 
       const candidates = store.notes
         .filter((n) => n.labelId === source.refId && noteIsCandidate(n))
@@ -310,8 +315,9 @@ export function resolveBookItems(
       // pulls note + wiki members (INVARIANT §2). Other kinds (tag /
       // label / category / file / reference) are filtered out at the
       // resolver — they never become book pages.
+      // Phase F: trashed sticker → source skipped (LOCKED #11 lazy).
       const sticker = (store.stickers ?? []).find((st) => st.id === source.refId)
-      if (!sticker) continue
+      if (!sticker || sticker.trashed) continue
 
       const memberNoteIds = new Set(
         sticker.members.filter((m) => m.kind === "note").map((m) => m.id),
