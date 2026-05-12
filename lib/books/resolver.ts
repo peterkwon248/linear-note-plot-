@@ -1,5 +1,5 @@
 /**
- * Smart Book resolver (Phase 5 / Phase A+B — folder + category sources).
+ * Smart Book resolver (Phase 5 — all 5 AutoSource kinds).
  *
  * Pure function that combines a Book's manual items with auto-resolved
  * items from `book.smartSources`. Manual items always render top, auto
@@ -8,19 +8,31 @@
  * for the UI to differentiate (e.g., disable drag handle on auto items).
  *
  * INVARIANT (smart-book-prd §2): AutoSource is a "supplier", not a
- * member kind. Folder source resolves Notes only via reverse N:M
- * (`Note.folderIds.includes(source.refId)`). Category source resolves
- * WikiArticles via the DAG-aware `WikiArticle.categoryIds` array — a
- * wiki can belong to multiple categories.
+ * member kind. All 5 source kinds resolve to note/wiki BookItems —
+ * never label/tag/sticker entities themselves.
  *
- * Phase A scope: kind="folder" (Notes). Phase B scope: kind="category"
- * (WikiArticles). Other kinds silently ignored (Phase C-E).
+ * Source kind map (PRD §2):
+ *   - folder (kind=note)  → notes via reverse N:M (Note.folderIds)
+ *   - category            → wikis via DAG (WikiArticle.categoryIds)
+ *   - tag                 → notes + wikis (cross-entity, both .tags[])
+ *   - label               → notes only (Note.labelId scalar)
+ *   - sticker             → note/wiki members (sticker.members.kind filter)
  *
  * Spec: `.omc/plans/smart-book-prd.md` §5.3 + §5.10.
  */
 
 import { generateKeyBetween } from "fractional-indexing"
-import type { Book, BookItem, Note, Folder, WikiArticle, WikiCategory } from "@/lib/types"
+import type {
+  Book,
+  BookItem,
+  Note,
+  Folder,
+  WikiArticle,
+  WikiCategory,
+  Tag,
+  Label,
+  Sticker,
+} from "@/lib/types"
 
 /**
  * BookItem with source provenance. The `source` field is in-memory only
@@ -40,17 +52,19 @@ export type ResolvedBookItem = BookItem & {
  * Minimal store snapshot the resolver needs. Decouples from PlotState
  * for testability.
  *
- * Phase B added `wikiArticles` + `wikiCategories` for category source
- * support. Both are optional to keep Phase A-only callers (and existing
- * tests covering folder source) backwards compatible — missing fields
- * cause category sources to silently skip, never crash.
+ * Phase B+ added wiki entities for category source. Phase C-E added
+ * tags/labels/stickers. All non-Phase-A fields are optional to keep
+ * older callers (folder-only) backwards compatible — missing fields
+ * cause that source kind to silently skip, never crash.
  */
 export interface ResolverStore {
   notes: Note[]
   folders: Folder[]
   wikiArticles?: WikiArticle[]
   wikiCategories?: WikiCategory[]
-  // Phase C-E will add: tags, labels, stickers
+  tags?: Tag[]
+  labels?: Label[]
+  stickers?: Sticker[]
 }
 
 /**
@@ -83,25 +97,49 @@ export function resolveBookItems(
   // 1. Manual items
   // Tweak B: tag manual notes/wikis with sourceRefId if they'd also match
   // a smart source — UI uses this to render a subtle source badge so users
-  // see "this manual note also lives in Daily Log folder" or "this manual
-  // wiki also lives in Algorithms category". First-match wins (multi-source
-  // dedup default per LOCKED §9).
-  const folderSources = (book.smartSources ?? []).filter((s) => s.kind === "folder")
-  const categorySources = (book.smartSources ?? []).filter((s) => s.kind === "category")
+  // see "this manual note also lives in Daily Log folder". First-match wins
+  // (multi-source dedup default per LOCKED §9). Probe order: most-specific
+  // first (folder/category) so a manual note tagged with both a folder and
+  // a tag shows the folder relation (more curatorial).
+  const allSources = book.smartSources ?? []
+  const folderSources = allSources.filter((s) => s.kind === "folder")
+  const categorySources = allSources.filter((s) => s.kind === "category")
+  const tagSources = allSources.filter((s) => s.kind === "tag")
+  const labelSources = allSources.filter((s) => s.kind === "label")
+  const stickerSources = allSources.filter((s) => s.kind === "sticker")
   const manualItems: ResolvedBookItem[] = book.items.map((item) => {
     let sourceRefId: string | undefined
-    if (item.kind === "note" && folderSources.length > 0) {
+    if (item.kind === "note") {
       const note = store.notes.find((n) => n.id === item.refId)
-      const matchingFolder = note
-        ? folderSources.find((s) => note.folderIds.includes(s.refId))
-        : undefined
-      sourceRefId = matchingFolder?.refId
-    } else if (item.kind === "wiki" && categorySources.length > 0) {
+      if (note) {
+        // Probe order: folder → label → tag → sticker
+        sourceRefId =
+          folderSources.find((s) => note.folderIds.includes(s.refId))?.refId ??
+          labelSources.find((s) => note.labelId === s.refId)?.refId ??
+          tagSources.find((s) => note.tags?.includes(s.refId))?.refId ??
+          stickerSources.find((s) =>
+            (store.stickers ?? []).some(
+              (st) =>
+                st.id === s.refId &&
+                st.members.some((m) => m.kind === "note" && m.id === note.id),
+            ),
+          )?.refId
+      }
+    } else if (item.kind === "wiki") {
       const wiki = (store.wikiArticles ?? []).find((w) => w.id === item.refId)
-      const matchingCategory = wiki
-        ? categorySources.find((s) => wiki.categoryIds?.includes(s.refId))
-        : undefined
-      sourceRefId = matchingCategory?.refId
+      if (wiki) {
+        // Probe order: category → tag → sticker (wiki has no folder/label here)
+        sourceRefId =
+          categorySources.find((s) => wiki.categoryIds?.includes(s.refId))?.refId ??
+          tagSources.find((s) => wiki.tags?.includes(s.refId))?.refId ??
+          stickerSources.find((s) =>
+            (store.stickers ?? []).some(
+              (st) =>
+                st.id === s.refId &&
+                st.members.some((m) => m.kind === "wiki" && m.id === wiki.id),
+            ),
+          )?.refId
+      }
     }
     return {
       ...item,
@@ -150,121 +188,150 @@ export function resolveBookItems(
     return cmp !== 0 ? cmp : a.id.localeCompare(b.id)
   }
 
-  // 3. Process each smart source (Phase A: folder, Phase B: category)
+  // Helper: emit one auto chapter — heading + (note|wiki) items. Pure
+  // append into autoItems; updates prevOrder + seenAutoRefIds in place.
+  // sourceRefId is shared across heading + items so UI can scope actions
+  // (e.g., addExcludeId for any auto child).
+  const emitSection = (
+    headingTitle: string,
+    sourceRefId: string,
+    candidates: Array<{ id: string; kind: "note" | "wiki" }>,
+  ): void => {
+    if (candidates.length === 0) return // LOCKED #10 v1.2
+
+    const headingOrder = generateKeyBetween(prevOrder, null)
+    autoItems.push({
+      kind: "chapter-heading",
+      id: `auto-heading-${sourceRefId}`,
+      title: headingTitle,
+      order: headingOrder,
+      source: "auto",
+      sourceRefId,
+    })
+    prevOrder = headingOrder
+
+    for (const entity of candidates) {
+      const entityOrder = generateKeyBetween(prevOrder, null)
+      autoItems.push({
+        kind: entity.kind,
+        id: `auto-${sourceRefId}-${entity.id}`,
+        refId: entity.id,
+        order: entityOrder,
+        source: "auto",
+        sourceRefId,
+      })
+      prevOrder = entityOrder
+      seenAutoRefIds.add(entity.id)
+    }
+  }
+
+  // Helper: predicate for an entity that's still a valid auto candidate
+  // (not excluded, not manual, not seen by an earlier source).
+  const noteIsCandidate = (n: Note): boolean =>
+    !n.trashed &&
+    !excludeSet.has(n.id) &&
+    !manualNoteRefIds.has(n.id) &&
+    !seenAutoRefIds.has(n.id)
+  const wikiIsCandidate = (w: WikiArticle): boolean =>
+    !(w as { trashed?: boolean }).trashed &&
+    !excludeSet.has(w.id) &&
+    !manualWikiRefIds.has(w.id) &&
+    !seenAutoRefIds.has(w.id)
+
+  // 3. Process each smart source (all 5 kinds)
   for (const source of book.smartSources ?? []) {
     if (source.kind === "folder") {
+      // Phase A — Note folder. Reverse N:M via Note.folderIds. Wiki
+      // folders skip silently (PRD §5.3 + lib/types.ts Folder.kind).
       const folder = store.folders.find((f) => f.id === source.refId)
-      if (!folder) continue // Hard delete safety
-      // Phase A: kind="note" folder only. Wiki folders skip silently
-      // (PRD §5.3 + lib/types.ts:485 Folder.kind invariant).
-      if (folder.kind !== "note") continue
+      if (!folder || folder.kind !== "note") continue
 
-      // Filter notes: live + in folder + not excluded + not manual + not seen
       const candidates = store.notes
-        .filter(
-          (n) =>
-            n.folderIds.includes(source.refId) &&
-            !n.trashed &&
-            !excludeSet.has(n.id) &&
-            !manualNoteRefIds.has(n.id) &&
-            !seenAutoRefIds.has(n.id),
-        )
+        .filter((n) => n.folderIds.includes(source.refId) && noteIsCandidate(n))
         .sort(byUpdatedDesc)
+        .map((n) => ({ id: n.id, kind: "note" as const }))
 
-      // LOCKED #10 (revised v1.2): empty auto source = silent skip (no heading,
-      // no items). Was "show heading only" — caused confusion when all notes
-      // are already manual (every note dedup'd → orphan heading). Source
-      // visibility is managed via SourcesSection chip; heading only adds
-      // value when auto items follow it.
-      if (candidates.length === 0) continue
-
-      // Mark seen (multi-source dedup)
-      for (const note of candidates) {
-        seenAutoRefIds.add(note.id)
-      }
-
-      // Auto chapter-heading
-      const headingOrder = generateKeyBetween(prevOrder, null)
-      autoItems.push({
-        kind: "chapter-heading",
-        id: `auto-heading-${source.refId}`,
-        title: `📁 ${folder.name}`,
-        order: headingOrder,
-        source: "auto",
-        sourceRefId: source.refId,
-      })
-      prevOrder = headingOrder
-
-      // Auto note items
-      for (const note of candidates) {
-        const noteOrder = generateKeyBetween(prevOrder, null)
-        autoItems.push({
-          kind: "note",
-          id: `auto-${source.refId}-${note.id}`,
-          refId: note.id,
-          order: noteOrder,
-          source: "auto",
-          sourceRefId: source.refId,
-        })
-        prevOrder = noteOrder
-      }
+      emitSection(`📁 ${folder.name}`, source.refId, candidates)
       continue
     }
 
     if (source.kind === "category") {
-      // Phase B — Wiki category source. DAG: WikiArticle.categoryIds is
-      // an optional array (a wiki can sit in multiple categories). We
-      // match if ANY of the wiki's categoryIds == source.refId.
+      // Phase B — Wiki category. DAG: WikiArticle.categoryIds is an
+      // optional array (a wiki can sit in multiple categories).
       const category = (store.wikiCategories ?? []).find((c) => c.id === source.refId)
-      if (!category) continue // Hard delete / stale ref safety
+      if (!category) continue
 
       const candidates = (store.wikiArticles ?? [])
-        .filter(
-          (w) =>
-            w.categoryIds?.includes(source.refId) &&
-            !(w as { trashed?: boolean }).trashed &&
-            !excludeSet.has(w.id) &&
-            !manualWikiRefIds.has(w.id) &&
-            !seenAutoRefIds.has(w.id),
-        )
+        .filter((w) => w.categoryIds?.includes(source.refId) && wikiIsCandidate(w))
         .sort(byUpdatedDesc)
+        .map((w) => ({ id: w.id, kind: "wiki" as const }))
 
-      if (candidates.length === 0) continue // LOCKED #10 v1.2
-
-      for (const wiki of candidates) {
-        seenAutoRefIds.add(wiki.id)
-      }
-
-      // Auto chapter-heading — 📚 emoji distinguishes category from folder
-      // (📁) in BookItemRow rendering. Tag with sourceRefId so UI can
-      // resolve back to WikiCategory for color/icon.
-      const headingOrder = generateKeyBetween(prevOrder, null)
-      autoItems.push({
-        kind: "chapter-heading",
-        id: `auto-heading-${source.refId}`,
-        title: `📚 ${category.name}`,
-        order: headingOrder,
-        source: "auto",
-        sourceRefId: source.refId,
-      })
-      prevOrder = headingOrder
-
-      for (const wiki of candidates) {
-        const wikiOrder = generateKeyBetween(prevOrder, null)
-        autoItems.push({
-          kind: "wiki",
-          id: `auto-${source.refId}-${wiki.id}`,
-          refId: wiki.id,
-          order: wikiOrder,
-          source: "auto",
-          sourceRefId: source.refId,
-        })
-        prevOrder = wikiOrder
-      }
+      emitSection(`📚 ${category.name}`, source.refId, candidates)
       continue
     }
 
-    // Phase C-E: tag / label / sticker — silently ignored
+    if (source.kind === "tag") {
+      // Phase C — Tag is the only cross-entity source: both Note.tags
+      // and WikiArticle.tags are string[] referencing Tag.id. Combined
+      // candidate list is sorted by updatedAt desc together (interleaved).
+      const tag = (store.tags ?? []).find((t) => t.id === source.refId)
+      if (!tag) continue
+
+      const tagged: Array<{ id: string; kind: "note" | "wiki"; updatedAt?: string }> = [
+        ...store.notes
+          .filter((n) => n.tags?.includes(source.refId) && noteIsCandidate(n))
+          .map((n) => ({ id: n.id, kind: "note" as const, updatedAt: n.updatedAt })),
+        ...(store.wikiArticles ?? [])
+          .filter((w) => w.tags?.includes(source.refId) && wikiIsCandidate(w))
+          .map((w) => ({ id: w.id, kind: "wiki" as const, updatedAt: w.updatedAt })),
+      ].sort(byUpdatedDesc)
+
+      emitSection(`# ${tag.name}`, source.refId, tagged)
+      continue
+    }
+
+    if (source.kind === "label") {
+      // Phase D — Label is notes-only. Note.labelId is a scalar (single
+      // label per note), so the predicate is === (not includes).
+      const label = (store.labels ?? []).find((l) => l.id === source.refId)
+      if (!label) continue
+
+      const candidates = store.notes
+        .filter((n) => n.labelId === source.refId && noteIsCandidate(n))
+        .sort(byUpdatedDesc)
+        .map((n) => ({ id: n.id, kind: "note" as const }))
+
+      emitSection(`🏷 ${label.name}`, source.refId, candidates)
+      continue
+    }
+
+    if (source.kind === "sticker") {
+      // Phase E — Sticker is 7-kind cross-entity, but Smart Book only
+      // pulls note + wiki members (INVARIANT §2). Other kinds (tag /
+      // label / category / file / reference) are filtered out at the
+      // resolver — they never become book pages.
+      const sticker = (store.stickers ?? []).find((st) => st.id === source.refId)
+      if (!sticker) continue
+
+      const memberNoteIds = new Set(
+        sticker.members.filter((m) => m.kind === "note").map((m) => m.id),
+      )
+      const memberWikiIds = new Set(
+        sticker.members.filter((m) => m.kind === "wiki").map((m) => m.id),
+      )
+
+      const candidates: Array<{ id: string; kind: "note" | "wiki"; updatedAt?: string }> = [
+        ...store.notes
+          .filter((n) => memberNoteIds.has(n.id) && noteIsCandidate(n))
+          .map((n) => ({ id: n.id, kind: "note" as const, updatedAt: n.updatedAt })),
+        ...(store.wikiArticles ?? [])
+          .filter((w) => memberWikiIds.has(w.id) && wikiIsCandidate(w))
+          .map((w) => ({ id: w.id, kind: "wiki" as const, updatedAt: w.updatedAt })),
+      ].sort(byUpdatedDesc)
+
+      emitSection(`✨ ${sticker.name}`, source.refId, candidates)
+      continue
+    }
   }
 
   // 4. Merge and sort by order

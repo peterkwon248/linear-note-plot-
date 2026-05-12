@@ -1,6 +1,16 @@
 import { describe, it, expect } from "vitest"
 import { resolveBookItems, type ResolverStore } from "../resolver"
-import type { Book, Note, Folder, WikiArticle, WikiCategory } from "@/lib/types"
+import type {
+  Book,
+  Note,
+  Folder,
+  WikiArticle,
+  WikiCategory,
+  Tag,
+  Label,
+  Sticker,
+  EntityRef,
+} from "@/lib/types"
 
 function makeWikiCategory(id: string, name: string, color = "#a78bfa"): WikiCategory {
   return { id, name, parentIds: [], color, createdAt: "2026-01-01", updatedAt: "2026-01-01" }
@@ -11,14 +21,50 @@ function makeWikiArticle(
   categoryIds: string[],
   updatedAt = "2026-01-01",
   trashed = false,
+  tags: string[] = [],
 ): WikiArticle {
   return {
     id,
     title: `Wiki ${id}`,
     categoryIds,
+    tags,
     updatedAt,
     trashed,
   } as unknown as WikiArticle
+}
+
+function makeTag(id: string, name: string, color: string | null = null): Tag {
+  return { id, name, color }
+}
+
+function makeLabel(id: string, name: string, color = "#f59e0b"): Label {
+  return { id, name, color }
+}
+
+function makeSticker(id: string, name: string, members: EntityRef[], color = "#22d3ee"): Sticker {
+  return { id, name, color, members, createdAt: "2026-01-01" }
+}
+
+function makeNoteWithTags(
+  id: string,
+  folderIds: string[],
+  tags: string[],
+  labelId: string | null = null,
+  updatedAt = "2026-01-01",
+): Note {
+  return {
+    id,
+    title: `Note ${id}`,
+    content: "",
+    status: "stone",
+    folderIds,
+    tags,
+    labelId,
+    reads: 0,
+    createdAt: updatedAt,
+    updatedAt,
+    trashed: false,
+  } as unknown as Note
 }
 
 function makeNote(
@@ -454,5 +500,219 @@ describe("resolveBookItems — category source (Phase B)", () => {
     expect(wikiItem.id).toBe("auto-c1-w1")
     const heading = result.find((r) => r.kind === "chapter-heading")!
     expect(heading.id).toBe("auto-heading-c1")
+  })
+})
+
+describe("resolveBookItems — tag source (Phase C, cross-entity)", () => {
+  it("auto-resolves both notes and wikis with # heading", () => {
+    const tag = makeTag("t1", "research")
+    const note = makeNoteWithTags("n1", [], ["t1"], null, "2026-01-02")
+    const wiki = makeWikiArticle("w1", [], "2026-01-03", false, ["t1"])
+    const book = makeBook({ smartSources: [{ kind: "tag", refId: "t1" }] })
+    const result = resolveBookItems(book, {
+      notes: [note],
+      folders: [],
+      wikiArticles: [wiki],
+      wikiCategories: [],
+      tags: [tag],
+    })
+
+    expect(result).toHaveLength(3) // heading + note + wiki
+    expect((result[0] as any).title).toBe("# research")
+    // Mixed sort: wiki w1 (2026-01-03) before note n1 (2026-01-02) by updatedAt desc
+    expect(result[1].kind).toBe("wiki")
+    expect((result[1] as any).refId).toBe("w1")
+    expect(result[2].kind).toBe("note")
+    expect((result[2] as any).refId).toBe("n1")
+  })
+
+  it("missing tag (stale ref) skips silently", () => {
+    const book = makeBook({ smartSources: [{ kind: "tag", refId: "deleted" }] })
+    const result = resolveBookItems(book, {
+      notes: [makeNoteWithTags("n1", [], ["deleted"])],
+      folders: [],
+      wikiArticles: [],
+      wikiCategories: [],
+      tags: [],
+    })
+    expect(result).toEqual([])
+  })
+
+  it("a tagged entity that is already manual is shadowed (sourceRefId)", () => {
+    const tag = makeTag("t1", "research")
+    const note = makeNoteWithTags("n1", [], ["t1"])
+    const book = makeBook({
+      items: [{ kind: "note", id: "m1", refId: "n1", order: "a0" }],
+      smartSources: [{ kind: "tag", refId: "t1" }],
+    })
+    const result = resolveBookItems(book, {
+      notes: [note],
+      folders: [],
+      wikiArticles: [],
+      wikiCategories: [],
+      tags: [tag],
+    })
+    // Manual top, no auto items (only candidate dedup'd by manual)
+    expect(result).toHaveLength(1)
+    expect(result[0].source).toBe("manual")
+    expect(result[0].sourceRefId).toBe("t1")
+  })
+})
+
+describe("resolveBookItems — label source (Phase D, notes only)", () => {
+  it("auto-resolves notes by Note.labelId scalar with 🏷 heading", () => {
+    const label = makeLabel("l1", "Important")
+    const notes = [
+      makeNoteWithTags("n1", [], [], "l1", "2026-01-02"),
+      makeNoteWithTags("n2", [], [], "l1", "2026-01-03"),
+      makeNoteWithTags("n3", [], [], "other"),
+    ]
+    const book = makeBook({ smartSources: [{ kind: "label", refId: "l1" }] })
+    const result = resolveBookItems(book, {
+      notes,
+      folders: [],
+      wikiArticles: [],
+      wikiCategories: [],
+      labels: [label],
+    })
+
+    expect(result).toHaveLength(3) // heading + 2 notes
+    expect((result[0] as any).title).toBe("🏷 Important")
+    expect((result[1] as any).refId).toBe("n2") // newer first
+    expect((result[2] as any).refId).toBe("n1")
+  })
+
+  it("does NOT match wikis (labelId is notes-only field)", () => {
+    const label = makeLabel("l1", "Important")
+    const wiki = makeWikiArticle("w1", []) // no labelId on wiki
+    const book = makeBook({ smartSources: [{ kind: "label", refId: "l1" }] })
+    const result = resolveBookItems(book, {
+      notes: [],
+      folders: [],
+      wikiArticles: [wiki],
+      wikiCategories: [],
+      labels: [label],
+    })
+    expect(result).toEqual([]) // empty source skipped
+  })
+
+  it("missing label (stale ref) skips silently", () => {
+    const book = makeBook({ smartSources: [{ kind: "label", refId: "deleted" }] })
+    const result = resolveBookItems(book, {
+      notes: [makeNoteWithTags("n1", [], [], "deleted")],
+      folders: [],
+      labels: [],
+    })
+    expect(result).toEqual([])
+  })
+})
+
+describe("resolveBookItems — sticker source (Phase E, 7-kind filtered to note/wiki)", () => {
+  it("only pulls note and wiki members (other kinds filtered out)", () => {
+    const sticker = makeSticker("st1", "Reading List", [
+      { kind: "note", id: "n1" },
+      { kind: "wiki", id: "w1" },
+      { kind: "tag", id: "t1" }, // ignored
+      { kind: "file", id: "f1" }, // ignored
+      { kind: "reference", id: "r1" }, // ignored
+    ])
+    const note = makeNoteWithTags("n1", [], [], null, "2026-01-02")
+    const wiki = makeWikiArticle("w1", [], "2026-01-03")
+    const book = makeBook({ smartSources: [{ kind: "sticker", refId: "st1" }] })
+    const result = resolveBookItems(book, {
+      notes: [note],
+      folders: [],
+      wikiArticles: [wiki],
+      wikiCategories: [],
+      stickers: [sticker],
+    })
+
+    expect(result).toHaveLength(3) // heading + 1 note + 1 wiki
+    expect((result[0] as any).title).toBe("✨ Reading List")
+    expect(result.filter((r) => r.kind === "note")).toHaveLength(1)
+    expect(result.filter((r) => r.kind === "wiki")).toHaveLength(1)
+  })
+
+  it("sticker with no note/wiki members is silently skipped (LOCKED #10 v1.2)", () => {
+    const sticker = makeSticker("st1", "Empty Sticker", [
+      { kind: "tag", id: "t1" },
+      { kind: "file", id: "f1" },
+    ])
+    const book = makeBook({ smartSources: [{ kind: "sticker", refId: "st1" }] })
+    const result = resolveBookItems(book, {
+      notes: [],
+      folders: [],
+      wikiArticles: [],
+      wikiCategories: [],
+      stickers: [sticker],
+    })
+    expect(result).toEqual([])
+  })
+
+  it("missing sticker (stale ref) skips silently", () => {
+    const book = makeBook({ smartSources: [{ kind: "sticker", refId: "deleted" }] })
+    const result = resolveBookItems(book, {
+      notes: [],
+      folders: [],
+      stickers: [],
+    })
+    expect(result).toEqual([])
+  })
+})
+
+describe("resolveBookItems — multi-kind source mixing (PRD §4 OR semantics)", () => {
+  it("folder + tag + label sources interleave their headings in source order", () => {
+    const folder = makeFolder("f1", "Projects")
+    const tag = makeTag("t1", "research")
+    const label = makeLabel("l1", "Important")
+    const book = makeBook({
+      smartSources: [
+        { kind: "folder", refId: "f1" },
+        { kind: "tag", refId: "t1" },
+        { kind: "label", refId: "l1" },
+      ],
+    })
+    const result = resolveBookItems(book, {
+      notes: [
+        makeNoteWithTags("nFolder", ["f1"], [], null),
+        makeNoteWithTags("nTag", [], ["t1"], null),
+        makeNoteWithTags("nLabel", [], [], "l1"),
+      ],
+      folders: [folder],
+      wikiArticles: [],
+      wikiCategories: [],
+      tags: [tag],
+      labels: [label],
+    })
+    // 3 sections → 3 headings + 3 notes
+    const headings = result.filter((r) => r.kind === "chapter-heading")
+    expect(headings).toHaveLength(3)
+    expect((headings[0] as any).title).toBe("📁 Projects")
+    expect((headings[1] as any).title).toBe("# research")
+    expect((headings[2] as any).title).toBe("🏷 Important")
+  })
+
+  it("same note matching folder + tag appears only under folder (first-source dedup)", () => {
+    const folder = makeFolder("f1", "Projects")
+    const tag = makeTag("t1", "research")
+    const note = makeNoteWithTags("n1", ["f1"], ["t1"])
+    const book = makeBook({
+      smartSources: [
+        { kind: "folder", refId: "f1" },
+        { kind: "tag", refId: "t1" },
+      ],
+    })
+    const result = resolveBookItems(book, {
+      notes: [note],
+      folders: [folder],
+      wikiArticles: [],
+      wikiCategories: [],
+      tags: [tag],
+    })
+    // Folder emits heading + n1. Tag has 0 candidates left → silent skip.
+    const headings = result.filter((r) => r.kind === "chapter-heading")
+    expect(headings).toHaveLength(1)
+    expect((headings[0] as any).title).toBe("📁 Projects")
+    expect(result.filter((r) => r.kind === "note")).toHaveLength(1)
   })
 })
