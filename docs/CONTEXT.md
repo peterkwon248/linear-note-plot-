@@ -51,6 +51,58 @@
 
 ---
 
+## 🚀 2026-05-12 (밤) — Smart Book Phase A-F 전체 완성 + 4 polish PR (6 PR 누적 #312-#317) ⭐⭐⭐⭐⭐
+
+**범위**: 1 worktree (`condescending-yonath-23775a`). 6 PR 단일 세션. Smart Book PRD §4 12 LOCKED 결정 모두 구현. 5 AutoSource kind 모두 활성.
+
+### 핵심 결정 (영구 LOCKED)
+
+**1. Smart Book INVARIANT 확정 (PRD §2)**:
+- `BookItem.kind = "note" | "wiki" | "chapter-heading"` 만
+- AutoSource는 **공급원**이지 멤버 kind 아님 — label/tag/sticker entity 자체가 책 페이지가 되지 않음
+- 5 source 매핑 (heading icon): folder→📁 / category→📚 / tag→# / label→🏷 / sticker→✨
+
+**2. `emitSection` helper 패턴 (영구)**:
+- resolver 5 source case 동일 흐름 (heading + items + dedup + LOCKED #10 v1.2 empty-skip)
+- 단일 지점에서 룰 보장. 미래 phase 확장(template source 등) 시 같은 패턴
+
+**3. Convert to manual 액션 (LOCKED #9)**:
+- sources 있을 때만 표시되는 버튼
+- 동작: resolveBookItems → auto items 추출 → fresh uuid + BookItem shape → book.items append + smartSources/excludeIds clear
+- Use case: source 변경 영향에서 freeze
+- destructive (undo path 없음) — window.confirm 가드
+
+**4. Trash guard LOCKED #11 lazy detection**:
+- Tag/Label/Sticker: `if (!entity || entity.trashed) continue`
+- WikiCategory + Folder: hard-delete only이므로 stale-ref guard로 충분
+
+**5. ResolverStore optional 확장 패턴**:
+- 새 phase 필드 `field?: T[]` + `(store.field ?? [])` fallback
+- 기존 caller silent compatible (test mock 14곳 영향 X)
+
+**6. 5-tab dialog UI**:
+- `sm:max-w-md` (~448px) + grid-cols-5 + icon-only tabs (title hint)
+- 6+ tab 도입 시 dropdown/segmented control 재검토
+
+**7. viewMode props 일관성 영구 룰**:
+- 새 viewMode 추가 시 모든 entity의 모든 view mode에 같은 prop 흐름
+- Notes/Wiki/Books × list/board/gallery/grid 16 조합 중 한 곳 누락 = 회귀
+- PR #317로 Books list mode 회귀 catch
+
+### 기술 학습 (영구)
+
+- **Plot routing이 module-level state** (`_activeRoute` in `lib/table-route.ts`) — preview MCP로 list/board mount 시각 verify 어려움. 사용자 dev server에서 직접 검증
+- **squash merge 후 base stale → conflict 패턴** — `git merge origin/main --no-ff` + `--ours` resolve
+- **nanoid import** — `import { nanoid } from "nanoid"` (package.json 이미 있음)
+
+### 다음 (TODO.md P0 참조)
+
+🔴 **Smart Book 5 source kind manual verify + buglist** — 5 AutoSource 모두 활성됐으니 실제 사용자 워크플로우로 검증
+
+🟡 Books list mode grouping + Wiki group header icon 시각 verify (사용자 hard refresh 후)
+
+---
+
 ## 🚀 2026-05-12 (저녁) — Trash All + Status-icon-stale root fix + Wiki pin + 9 fix mega-PR ⭐⭐⭐⭐⭐
 
 **범위**: 1 worktree (`quirky-colden-bcf3de`). 9 fix 통합 PR. Store v130 → v132.
