@@ -73,6 +73,7 @@ import {
 import { BoardWorkbench } from "@/components/board-workbench"
 import { useFolderPickerData } from "@/components/folder-picker"
 import { NoteContextMenuItems } from "@/components/note-context-menu-items"
+import { usePane } from "@/components/workspace/pane-context"
 import type { Note, NoteStatus, NotePriority, TriageStatus, Folder, Tag, Label } from "@/lib/types"
 import { FilterChipBar } from "@/components/filter-bar"
 import { ViewHeader } from "@/components/view-header"
@@ -750,6 +751,11 @@ export function NotesBoard({
   const searchQuery = usePlotStore((s) => s.searchQuery)
   const setSearchQuery = usePlotStore((s) => s.setSearchQuery)
   const sidePanelOpen = usePlotStore((s) => s.sidePanelOpen)
+  // 2026-05-12: Split view fix — BoardWorkbench (우측 시그니처 패널)는 primary
+  // pane에서만 렌더. secondary pane은 viewport 절반이라 workbench가 잘리고
+  // column까지 가려서 UX 망가짐. board 본체 (columns)는 양쪽 모두 보임.
+  const pane = usePane()
+  const isSecondaryPane = pane === "secondary"
 
   const effectiveTab = context ?? "all"
   // Save view button (snapshot UX) — board view shares context with table
@@ -1386,8 +1392,9 @@ export function NotesBoard({
               })}
             </SortableContext>
 
-            {/* Processing Workbench: fills remaining space */}
-            <BoardWorkbench
+            {/* Processing Workbench: fills remaining space.
+                Split view (secondary pane): hide — viewport 절반에서 잘림. */}
+            {!isSecondaryPane && <BoardWorkbench
               selectedIds={selectedIds}
               effectiveTab={effectiveTab}
               groupBy={viewState.groupBy}
@@ -1398,7 +1405,7 @@ export function NotesBoard({
               onSelectAll={() => setSelectedIds(new Set(flatNotes.map((n) => n.id)))}
               onSelectMany={handleSelectMany}
               onCardClick={onRowClick}
-            />
+            />}
           </div>
 
           <DragOverlay
