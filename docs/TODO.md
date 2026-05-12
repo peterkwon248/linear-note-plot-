@@ -3,13 +3,13 @@
 > 우선순위 기반 작업 목록. **P0 = 다음 세션 즉시 시작점** (NEXT-ACTION.md 폐지, 2026-05-12).
 > 완료 항목은 즉시 삭제 또는 "완료" 섹션으로 이동.
 
-**마지막 갱신**: 2026-05-12 (ContextMenu DRY + Wiki UX cherry-pick + Board polish + 워크플로우 재편)
+**마지막 갱신**: 2026-05-12 (Board/Gallery polish + Split view fix + hotfix 4 PR cascade)
 
 ---
 
 ## 🔴 P0 — 즉시 (다음 세션)
 
-### Trash "All" 통합 view 신규 ⭐
+### Trash "All" 통합 view 신규 ⭐⭐⭐
 사용자 의도 (이번 세션 명시): *"All은 모든 entity의 trashed 통합 표시"*. 현재 코드 = count 통합, display는 notes만 (모순).
 
 - **신규 컴포넌트** `components/views/trash-all-view.tsx` (~150-200 LOC)
@@ -46,9 +46,27 @@
 - gallery mode: entity-agnostic adapter — pin 표시 여부
 - 회귀 발견 시 list pattern 정합화
 
-### Notes Gallery 하단 floating bar (이번 세션 deferred)
-- Gallery card에 selection state + 하단 FloatingActionBar mount
-- List/Board와 정합 (Linear principle)
+### #2 Status icon stale — 사용자 reproduce 정보 필요
+보드에서 drag로 status 변경 후 어디선가 leading icon이 옛 status로 stale. 코드 분석 시 모든 leading icon = `note.status` 기반 + React memo trigger 정상. root cause 명확치 않아 skip.
+
+다음 세션에 사용자 시그널 받기:
+- 어느 view? (board / list / gallery / sidebar / preview pane / detail panel)
+- 어느 element? (카드 leading icon / top color band / status badge / group header)
+- drag 직후 vs page reload 후 stale?
+- 스크린샷
+
+### Block 색 + Gallery click parity + Split view 사용자 manual verify
+이번 세션 PR #305-#308 변경 — 시각 확인:
+- /notes Block status 카드/아이콘 → slate (회색 톤) 표시
+- /notes gallery → single click preview / double click 편집 / cmd-click select + 하단 floating bar / hover checkbox
+- /notes split view → secondary pane은 board column만 (workbench 안 보임, drop target 정상)
+- /notes 페이지 reload 후 — Board mode에 Stone/Brick/Block 3 column 모두 표시
+
+### STATUS_CONFIG 패턴 다른 lookup map에 적용
+이번 세션 hotfix (#308) — `STATUS_CONFIG[status]` null guard 추가. 다른 lookup map에 동일 패턴 적용 후보:
+- PRIORITY_CONFIG (priority lookup)
+- BOARD_DEFAULT_GROUP (effectiveTab lookup)
+- 기타 Record<X, Y> 타입 모든 access 점검
 
 ### 글로벌 commands 수동 삭제 (양 머신)
 ```bash
@@ -171,6 +189,13 @@ NEXT-ACTION 의존 옛 정의 제거. project-level (git tracked) 새 정의가 
 ---
 
 ## ✅ 최근 완료
+
+### 2026-05-12 (오후) — Board/Gallery polish + Split view fix + hotfix (4 PR cascade)
+- ✅ **PR #305** (앞서 entry — ContextMenu DRY + Wiki UX cherry-pick + 워크플로우 재편)
+- ✅ **PR #306**: Split view secondary pane workbench hide (`usePane()` 분기)
+- ✅ **PR #307**: Block 색 slate (Plot 메타포 정합) + Gallery click parity (preview/open/select + 하단 FloatingActionBar)
+- ✅ **PR #308**: Hotfix — notes-board JSX parser (parens 명시) + FloatingActionBar `STATUS_CONFIG` null guard
+- 5 사용자 보고 처리: Block 색 ✅ / Gallery click ✅ / Split view ✅ / 7개 표시 ✅(PR #305) / Status icon stale ⏭️(reproduce 정보 필요)
 
 ### 2026-05-12 (낮~오후) — ContextMenu DRY + Wiki UX cherry-pick + Board polish + 워크플로우 재편 (Store v129 → v130)
 - ✅ Dev server fix (npm install — node_modules 누락)

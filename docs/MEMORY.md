@@ -26,6 +26,74 @@
 - Executor scope 초과 → 명시적 prompt + 결과 검증
 - 추측 fix → reproduce + 원인 분석 후 fix
 - 거대 PR 시리즈 (10+ PR) 후 conflict 빈번: 매 PR 머지 후 즉시 fetch+merge origin/main 습관
+- 4 PR cascade (#305-#308) 단일 세션 — 같은 worktree에서 누적 변경 squash 머지 4회. conflict는 build artifact만 (`--ours` 패턴).
+
+---
+
+## 🚀 2026-05-12 (오후) — Board/Gallery polish + Split view + hotfix (4 PR cascade)
+
+**범위**: PR #305 직후 사용자 시그널 5건 follow-up. 4 PR 단일 worktree squash 머지 (#305 → #308). PR #306 split view → #307 Block 색 + Gallery click → #308 hotfix (JSX parser + null guard).
+
+### 큰 결정 (영구 LOCKED)
+
+**1. Block 색 = slate (Plot 건축 메타포)**:
+- teal `#0E9384/2dd4bf` 폐기. slate `#475569/94a3b8`.
+- stone (beige) → brick (orange) → block (slate) earthy progression
+- chart-5 accent와 시각 분리 + status "settled" 의미 유지
+
+**2. Gallery click 패턴 = list/board parity (Linear principle)**:
+- Single click → preview pane
+- Double click → open (편집)
+- cmd/ctrl-click 또는 selection 활성 중 click → toggle multi-select
+- Hover → 카드 우상단 checkbox
+- Selection 시 → 하단 FloatingActionBar
+- 모든 view mode 동일 패턴 = muscle memory 학습 부담 0
+
+**3. Split view 보드 = secondary pane workbench hide**:
+- viewport 절반에서 workbench `flex-1` grow가 column 잘림
+- primary pane만 workbench (시그니처 보존)
+- secondary pane은 board column만 (drop target 보존, batch action은 primary로 유도)
+
+**4. STATUS_CONFIG 패턴 — lookup map null guard 의무**:
+- 모든 `Record<X, Y>` lookup access에 `if (!value) return null` graceful skip
+- corruption / 옛 enum / 빈 값 대응
+- crash 대신 silent degradation
+
+**5. JSX expression parens 안전 패턴 (LOCKED)**:
+- conditional render `{cond && <X .../>}` 위험 (webpack/swc regex 오해석)
+- **무조건 parens**: `{cond && (<X ... />)}`
+- 향후 모든 conditional JSX 이 패턴
+
+### 기술 학습 (영구)
+
+- **webpack/swc JSX parser ambiguity**: `/>}` 시퀀스 → regex literal 오해석. "unterminated regexp literal" 에러 = 같은 패턴 의심. parens가 expression boundary 명확화.
+- **STATUS_CONFIG runtime undefined**: store normalize는 type-level 보호. user IDB stale enum / data corruption은 runtime에 lookup undefined → cfg.bg crash. lookup map access 의무 null guard.
+- **Gallery selection 진입 3 경로**: cmd/ctrl-click + hover checkbox + selection 활성 중 일반 click도 toggle. Linear principle 4 접근 경로 패턴 정합 (button/keyboard/context-menu/command-palette).
+- **GalleryCard onClick 시그니처 확장**: `() => void` → `(e: React.MouseEvent | React.KeyboardEvent) => void` (modifier key 검출). caller side 영향 — event arg 받도록.
+- **dropAnimation cubic-bezier 220ms polish**: dnd-kit 기본은 즉시 snap. `dropAnimation={{ duration: 220, easing: cubic-bezier(0.18, 0.67, 0.6, 1.0), sideEffects: defaultDropAnimationSideEffects(...) }}` 명시화로 부드러운 drop.
+- **빈 status group의 Kanban 의미**: drop target 유지 필수. `groupBy === "status"` 분기로 dynamic group (folder/label)과 격리.
+- **PR cascade 시 build artifact conflict 패턴**: `.omc/continuation-count.json`, `docs/.pdca-status.json`, `tsconfig.tsbuildinfo` — `--ours` resolve 매번 동일. 같은 worktree에서 시리즈 진행 시 정착.
+
+### PR 정보
+
+| PR | 핵심 |
+|----|---|
+| [#306](https://github.com/peterkwon248/linear-note-plot-/pull/306) | Split view secondary pane workbench hide |
+| [#307](https://github.com/peterkwon248/linear-note-plot-/pull/307) | Block 색 slate + Gallery click parity + 하단 FloatingActionBar |
+| [#308](https://github.com/peterkwon248/linear-note-plot-/pull/308) | Hotfix — notes-board JSX parser + FloatingActionBar cfg null guard |
+
+### 다음 세션 P0
+
+🔴 **Trash "All" 통합 view 신규** (~150-200 LOC)
+🔴 **#2 Status icon stale** — 사용자 reproduce 정보 받기
+🟡 Block 색 + Gallery click + Split view 사용자 manual verify
+🟢 STATUS_CONFIG 패턴 다른 lookup map 적용 (PRIORITY_CONFIG 등)
+
+### 환경 변경
+
+- Store version v130 (이번 세션 변경 X)
+- 4 PR squash merged
+- 사용자 IDB wiki-1/2/3 trashed=true 상태 (사용자 결정 대기)
 
 ---
 
