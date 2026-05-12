@@ -2,6 +2,121 @@
 
 > 세션 history. Append-only (오래된 entry 그대로 유지).
 > 가장 최신 세션이 위.
+> **NEXT-ACTION.md 폐지 (2026-05-12)**: 각 entry 첫 줄의 "다음 즉시 액션 hook"이 다음 세션 시작점.
+
+---
+
+## 2026-05-12 (낮~오후) — 집, ContextMenu DRY + Wiki UX cherry-pick + Board polish + 워크플로우 재편
+
+> 🎯 **다음 즉시 액션**: Trash "All" 통합 view 구현 (notes/wiki/books/tags/labels/templates/refs/files 통합 list — sample fix needed, ~150-200 LOC).
+> **머신**: 집 (Windows)
+> **현재 main HEAD**: PR 진행 예정 (이번 세션 변경 squash)
+
+### 완료 (11 작업)
+
+**1. Dev server fix** — `node_modules` 누락 → `npm install` (395 packages). 신규 worktree 진입 시 표준 사전 작업.
+
+**2. Books list mode pin 위치 fix** — title span의 `flex-1` 제거 → 짧은 title 옆 즉시 pin (이전: cell 우측 끝, Kind chip 옆으로 밀림). 측정 검증: gap title→pin 4px / pin→Kind 555px+.
+
+**3. Notes Source filter values 아이콘 추가** — Manual (PencilSimple) / Web Clip (Globe) / Import (DownloadSimple). PR #299의 Books Kind filter icon 패턴 정합. notes-table SourceIcon helper와 동일 매핑.
+
+**4. NEXT-ACTION.md 영구 폐지** — 정보 3중복 (NEXT-ACTION ↔ TODO P0 ↔ SESSION-LOG 끝 "다음") 해소.
+- 다음 세션 즉시 액션 = **SESSION-LOG entry 첫 줄 hook + TODO P0**
+- `~/.claude/commands/before-work.md` + `after-work.md` (글로벌, 머신마다 vergent) → `.claude/commands/` (project-level, git tracked) 이전 + 재편
+- docs 4곳 (CONTEXT/MEMORY/SYNC-PRD/TODO)에서 NEXT-ACTION 참조 정리
+
+**5. Split view popover에 Books 옵션 추가** — view-header.tsx `SECONDARY_SPACE_CONFIG`에 7번째 entity. icon = `BookOpen` (영구 결정: Sidebar entity identity = BookOpen, Library의 phosphor `Books` icon과 시각 구별). 분산된 다른 list (ALL_SPACES, DEFAULT_ROUTES, editor-breadcrumb) 모두 7-space 정합 확인.
+
+**6. Wiki seed 4개 확장 + v130 backfill migration** — Cherry-pick verify 위해 다양성 추가. wiki-4 (Linked Notes, pinned, Knowledge Mgmt) / wiki-5 (Atomic Notes, pinned, multi-category) / wiki-6 (Working Memory, stub — isWikiStub 분기 verify) / wiki-7 (Sönke Ahrens, note-ref backlink). 기존 사용자 IDB에도 inject (id-dedup append, Books v127 패턴).
+
+**7. Cherry-pick `42c6e59` — Wiki UX 3 issues fix** (ludimast가 어제 저녁 elastic-darwin branch에 작업, PR 미생성). 깔끔한 cherry-pick (Pin 위치 변경 1d8b30f는 자동 제외 — title 옆 영구 결정 보존).
+- **Wiki 우클릭 메뉴 cursor 추적** (Radix `<ContextMenu>` wrapper로 교체)
+- **WikiFloatingActionBar에 Pin/Move/Add to category 액션 3개 추가** (기존 Merge/Split/Delete만 → 6개)
+- **GalleryView 우클릭 핸들러 추가** (`renderContextMenu` render-prop + `GalleryCard` forwardRef)
+- DRY helper `WikiArticleMenuItems` (row/DotsThree popover/gallery 3 surface 공유)
+
+**8. ContextMenu DRY refactor — Notes 측 동일 패턴** (helper extraction + 3 surface mount). Linear principle (모든 surface에서 동일 action set).
+- `components/note-context-menu-items.tsx` 신규 helper (320 LOC) — 13 items (status별 conditional + Remind submenu + Pin + Open + Merge + Split + Link + Show connected + Move to folder + Add to folders + Open in Split View)
+- notes-table.tsx: ContextMenu body → helper call (refactor, 시각 변경 0)
+- notes-board.tsx: 3-item 메뉴 → 13-item (helper mount + 누락 callback wiring)
+- gallery-view-shell.tsx: `renderContextMenu` prop으로 helper mount (Notes Gallery 우클릭 신규)
+
+**9. BoardWorkbench보강 — Pin/Folder/Split 액션 추가** (Linear principle parity with list-mode FloatingActionBar). 우측 패널 시그니처 보존 + 신규 "Organize" 섹션 (mixed→pin batch, Move to folder picker, Split conditional for 1-selected).
+
+**10. Notes board UX polish** (3 fix)
+- Drag jitter fix: card className `transition-all` → `transition-colors` (transform/opacity 제외 = dnd-kit 프레임 업데이트와 충돌 X)
+- 빈 status column 항상 표시: `groupBy === "status"`이면 `notes.length === 0`이라도 render (Kanban 패턴 — drop target 유지)
+- Smooth drop animation: `<DragOverlay dropAnimation={{ duration: 220, easing: cubic-bezier, fadeOut }}>`
+
+**11. 시각 폴리시** (`app/globals.css`)
+- `.a-tg__label` font-size 11px → 13px (그루핑 헤더 키움, status icon은 이미 있음)
+- notes-table subheader inline override 10.5px → 12px
+- `.a-row__cell` font 12px / muted-fg → 13px / fg (메타데이터 선명)
+- `.a-row__links` / `.a-row__words` / `.a-row__updated` font 11.5px / soft-fg → 12.5px / fg
+
+### 브레인스토밍 & 큰 결정 (영구)
+
+**1. NEXT-ACTION.md 영구 폐지 (2026-05-12 LOCKED)**:
+- 정보 3중복 해소 (TODO P0 + SESSION-LOG hook = 단일 진실 두 source)
+- 글로벌 commands → project-level (git tracked) 이전. 두 머신 자동 동기화.
+- 새 before-work: SESSION-LOG 최신 entry + TODO P0 읽기. 새 after-work: SESSION-LOG entry 첫 줄에 "다음 즉시 액션 hook" 통합.
+
+**2. Pin indicator 위치 = title 옆 (name 오른쪽) 영구 결정 재확인**:
+- 직전 세션 끝 "status chip 옆"으로 정정된 줄 알았으나 실제 PR #301 commit message 영구 결정 = "title 옆 우측 (status chip / label chip 안 침범)"
+- `elastic-darwin-382a48` branch의 `1d8b30f` (status chip 옆 이동)은 사용자 폐기 결정
+- = title 옆 inline pin = 모든 entity (Notes/Wiki/Books) 표준
+
+**3. Multi-select UI 패턴 (Linear principle + Plot 도메인 분리)**:
+- **List mode** → 하단 FloatingActionBar (compact)
+- **Board mode** → 우측 BoardWorkbench (시그니처 패널, 풍부)
+- **Gallery mode** → 하단 FloatingActionBar (compact, 향후 신규 PR)
+- **공통 action set** (Pin/Folder/Trash 등)은 mode 무관 동일. **presentation만 mode-specific**.
+
+**4. ContextMenu DRY 패턴 (Linear principle)**:
+- 모든 surface (list row / board card / gallery card)가 동일 13-item 메뉴 (status별 conditional 포함)
+- `note-context-menu-items.tsx` helper가 단일 source
+- callback wiring은 caller-specific (store action 직접 호출)
+
+**5. Kanban 패턴 — 빈 status column 항상 표시**:
+- 카드를 drag로 다른 column에 옮긴 후 원래 column이 비어도 column 유지 (drop target)
+- `groupBy === "status"`일 때만 (folder/label 등 dynamic group은 기존 동작)
+
+**6. Books entity identity icon 분기**:
+- ActivityBar / Sidebar의 entity space = `BookOpen` (영구 결정, PR #298)
+- ViewHeader Secondary popover의 Books entry = `BookOpen` (이번 세션 추가)
+- Library의 phosphor `Books` (책 모음 메타포)와 시각 구별
+
+**7. Trash "All" tab 의미 = 통합 (모든 entity)**:
+- 현재 코드 = count 통합, display는 notes만 (모순 + 사용자 혼란)
+- 다음 세션 P0: 통합 view 컴포넌트 신규 (entity별 section, ~150-200 LOC)
+
+### 기술 학습 (영구)
+
+- **transition-all과 dnd-kit transform 충돌**: card의 `transition-all`이 transform property도 transition 처리 → 매 프레임 업데이트마다 부드럽게 따라가려다 jitter. `transition-colors`로 제한이 정답.
+- **DragOverlay dropAnimation**: dnd-kit 기본 동작은 즉시 snap. `dropAnimation={{ duration, easing, sideEffects: defaultDropAnimationSideEffects(...) }}` 명시로 부드러운 drop polish.
+- **Cherry-pick id-dedup pattern**: SEED backfill에 `existingIds = new Set(...)` + 누락분만 push (Books v127 → Wiki v130 동일 패턴). 사용자 IDB의 기존 데이터 보존.
+- **dnd-kit + transition-colors 조합**: Tailwind `transition-all`은 흔히 hover effect 위해 쓰이지만, dnd 컴포넌트에는 위험. specific transition class (`transition-colors`, `transition-shadow`) 권장.
+- **빈 group의 default hide 부작용**: kanban 패턴은 빈 column이 drop target. 단 dynamic group (folder/label)에는 자연스러운 hide. groupBy 분기 필수.
+- **Helper extraction 시 dual signature**: helper가 store action을 직접 호출 X (caller flexibility). callback prop으로 받음. 단 helper 내부에서 항상 동일한 store action (예: `usePlotStore.getState().openInSecondary`)는 직접 호출 OK.
+- **Cherry-pick으로 다른 머신 작업 통합**: `git cherry-pick -n <commit>`으로 staging만 하고 검토 후 우리 변경과 함께 commit. 1d8b30f (Pin 위치 폐기 변경)이 base여도 그 변경분이 묻어들어오지 않음 (auto-merge가 conflict 없이 처리).
+
+### Watch Out (다음 세션 주의사항)
+
+- **Trash 통합 view 작업 시**: entity별 restore action 분기 (toggleTrash for notes, updateWikiArticle for wiki, restoreBook/Tag/Label/Template/Reference/Attachment). delete forever는 deleteNote / deleteWikiArticle / ... 또는 store에 hard-delete 없는 entity는 trashed=true 유지 + 별도 처리.
+- **사용자 IDB의 wiki-1/2/3 trashed=true**: 사용자가 이전 세션에 의도적 trashed 또는 코드 버그. 다음 세션에 사용자가 restore 또는 영구 삭제 결정.
+- **Books grid/board/gallery pin 위치**: list mode만 이번 세션 fix. grid는 cover icon 큰 layout, board는 카드, gallery는 entity-agnostic adapter. 사용자 manual verify 후 필요 시 추가 fix.
+- **글로벌 commands 양 머신 수동 삭제**: `rm ~/.claude/commands/before-work.md` + `after-work.md` (두 머신 모두). 안 하면 글로벌과 project-level 충돌 (이번 세션 /after-work가 글로벌 정의로 invoked됐던 이유).
+- **`elastic-darwin-382a48` 브랜치**: cherry-pick 후 main 통합 완료. 브랜치 자체는 폐기 (사용자 의도 외 status chip 옆 Pin 변경 포함).
+- **Notes board drop animation cubic-bezier**: 220ms 가 너무 길거나 짧으면 사용자 manual verify로 조정 후보.
+- **Trash count vs display 모순 잔존**: trashTabCounts.all = 모든 entity 합 (1) but display = notes만 (0). 사용자가 "1인데 아무것도 없어" 시그널. 통합 view fix 시점에 해소.
+
+### 환경 변경
+
+- Store version v129 → **v130** (Wiki seed backfill — id-dedup append)
+- Tests: 255/255 (변화 없음 추정 — 코드 변경에 unit test 영향 없음)
+- 신규 파일: `components/note-context-menu-items.tsx` (DRY helper)
+- 삭제 파일: `docs/NEXT-ACTION.md` (영구 폐지)
+- Project-level commands: `.claude/commands/before-work.md` + `after-work.md` (새 정의)
 
 ---
 

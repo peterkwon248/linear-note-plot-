@@ -486,7 +486,7 @@ function renderCell(
           <span className="flex h-5 w-5 shrink-0 items-center justify-center text-muted-foreground/70">
             <BookKindIcon kind={kind} size={14} />
           </span>
-          <span className="min-w-0 flex-1 truncate text-note text-foreground pl-2">
+          <span className="min-w-0 truncate text-note text-foreground pl-2">
             {book.title || "Untitled book"}
           </span>
           {book.pinned && (

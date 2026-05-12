@@ -2,7 +2,7 @@
 
 > **⚠️ 상태 변경 (2026-04-29 오후 후반)**: 이 PRD는 **v2.0 미래 작업 가이드**.
 > 결정 #3 변경: (a) Sync 포함 출시 → **(c) Free 출시 후 6개월~1년 후 Sync 도입**.
-> **즉시 작업은 [`docs/NEXT-ACTION.md`](./NEXT-ACTION.md) — 출시 준비 + 폴리시 (1~2개월).**
+> **즉시 작업은 [`docs/TODO.md`](./TODO.md) P0 섹션 — 출시 준비 + 폴리시 (1~2개월).**
 > 이 문서는 Sync v2.0 진입 시점에 다시 활성화되며, 그 시점에 사용자 피드백 반영해서 보강.
 >
 > **참조**: [`docs/SYNC-DESIGN-DECISIONS.md`](./SYNC-DESIGN-DECISIONS.md) — 6개 결정 + 옵션 비교

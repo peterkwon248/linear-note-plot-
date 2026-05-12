@@ -1,6 +1,6 @@
 import type { ReactNode } from "react"
 import type { SortField, ViewMode, GroupBy } from "./types"
-import { Hexagon, Cube, BookOpen, CircleHalf, Sticker as StickerIcon, Lightning, PencilSimple, Sparkle } from "@phosphor-icons/react"
+import { Hexagon, Cube, BookOpen, CircleHalf, Sticker as StickerIcon, Lightning, PencilSimple, Sparkle, Globe, DownloadSimple } from "@phosphor-icons/react"
 import { Cuboid2x2 } from "@/components/icons/Cuboid2x2"
 
 export interface FilterCategory {
@@ -109,9 +109,9 @@ export const NOTES_VIEW_CONFIG: ViewConfig = {
     { key: "label", label: "Label", icon: LabelIcon, values: [] },
     { key: "tags", label: "Tags", icon: TagIcon, values: [] },
     { key: "source", label: "Source", icon: SourceIcon, values: [
-      { key: "manual", label: "Manual" },
-      { key: "webclip", label: "Web Clip" },
-      { key: "import", label: "Import" },
+      { key: "manual", label: "Manual", icon: <PencilSimple size={14} weight="regular" className="text-muted-foreground" /> },
+      { key: "webclip", label: "Web Clip", icon: <Globe size={14} weight="regular" className="text-muted-foreground" /> },
+      { key: "import", label: "Import", icon: <DownloadSimple size={14} weight="regular" className="text-muted-foreground" /> },
     ]},
     { key: "updatedAt", label: "Dates", icon: CalendarIcon, values: [
       { key: "today", label: "Today" },

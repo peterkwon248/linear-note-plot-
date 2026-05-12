@@ -13,6 +13,7 @@
  * borrowing the v3 mockup's noteId-hash hue (which ignored user color signal).
  */
 
+import React from "react"
 import { Hash } from "@phosphor-icons/react/dist/ssr/Hash"
 import { cn } from "@/lib/utils"
 
@@ -51,6 +52,13 @@ interface GalleryViewProps {
   /** Optional header above the first group. */
   title?: string
   subtitle?: string
+  /**
+   * Optional render-prop that wraps each card. Caller can mount a Radix
+   * ContextMenu (or similar) so right-click anchors to the cursor instead
+   * of triggering the browser default menu. Defaults to identity.
+   * Receives the item and the default card JSX — return the wrapped JSX.
+   */
+  renderContextMenu?: (item: GalleryItem, card: React.ReactNode) => React.ReactNode
 }
 
 export function GalleryView({
@@ -60,6 +68,7 @@ export function GalleryView({
   onItemClick,
   title,
   subtitle,
+  renderContextMenu,
 }: GalleryViewProps) {
   const hasGroups = !!groups && groups.length > 0
   const total = hasGroups ? groups!.reduce((n, g) => n + g.items.length, 0) : items?.length ?? 0
@@ -99,11 +108,11 @@ export function GalleryView({
                 {g.items.length}
               </span>
             </div>
-            <Grid items={g.items} activeId={activeId} onItemClick={onItemClick} />
+            <Grid items={g.items} activeId={activeId} onItemClick={onItemClick} renderContextMenu={renderContextMenu} />
           </section>
         ))
       ) : (
-        <Grid items={items!} activeId={activeId} onItemClick={onItemClick} />
+        <Grid items={items!} activeId={activeId} onItemClick={onItemClick} renderContextMenu={renderContextMenu} />
       )}
     </div>
   )
@@ -113,47 +122,57 @@ function Grid({
   items,
   activeId,
   onItemClick,
+  renderContextMenu,
 }: {
   items: GalleryItem[]
   activeId: string | null
   onItemClick: (id: string) => void
+  renderContextMenu?: (item: GalleryItem, card: React.ReactNode) => React.ReactNode
 }) {
   return (
     <div className="grid grid-cols-[repeat(auto-fill,minmax(240px,1fr))] gap-3">
-      {items.map((it) => (
-        <GalleryCard
-          key={it.id}
-          item={it}
-          active={activeId === it.id}
-          onClick={() => onItemClick(it.id)}
-        />
-      ))}
+      {items.map((it) => {
+        const card = (
+          <GalleryCard
+            item={it}
+            active={activeId === it.id}
+            onClick={() => onItemClick(it.id)}
+          />
+        )
+        return (
+          <div key={it.id} className="contents">
+            {renderContextMenu ? renderContextMenu(it, card) : card}
+          </div>
+        )
+      })}
     </div>
   )
 }
 
-function GalleryCard({
-  item,
-  active,
-  onClick,
-}: {
+// forwardRef + spread rest props so the article element can receive merged
+// props from Radix `<ContextMenuTrigger asChild>` (onContextMenu, ref, …).
+// Without this, gallery cards fall back to the browser's default right-click
+// menu because Slot can't inject props through a plain function component.
+const GalleryCard = React.forwardRef<HTMLElement, {
   item: GalleryItem
   active: boolean
   onClick: () => void
-}) {
-  // Cover gradient is light-/dark-aware via the `.gallery-cover` class in
-  // globals.css; the JSX only feeds the accent hex through `--cover-color`.
-  // For pages with a real image, we fall through to the inline background.
+} & React.HTMLAttributes<HTMLElement>>(function GalleryCard(
+  { item, active, onClick, onKeyDown, className, ...rest },
+  ref,
+) {
   const useImageCover = !!item.coverImage
 
   return (
     <article
+      ref={ref}
       onClick={onClick}
       onKeyDown={(e) => {
         if (e.key === "Enter" || e.key === " ") {
           e.preventDefault()
           onClick()
         }
+        onKeyDown?.(e)
       }}
       role="button"
       tabIndex={0}
@@ -165,7 +184,9 @@ function GalleryCard({
         active
           ? "border-accent/50 ring-1 ring-accent/20"
           : "border-border",
+        className,
       )}
+      {...rest}
     >
       {/* Cover band */}
       <div
@@ -239,4 +260,4 @@ function GalleryCard({
       )}
     </article>
   )
-}
+})

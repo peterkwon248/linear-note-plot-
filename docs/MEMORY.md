@@ -29,6 +29,84 @@
 
 ---
 
+## 🚀 2026-05-12 (낮~오후) — ContextMenu DRY + Wiki UX cherry-pick + Board polish + 워크플로우 재편 (Store v129 → v130)
+
+**범위**: 단일 worktree. 11 작업 통합. 사용자 manual verify 흐름과 결합. **NEXT-ACTION.md 영구 폐지 + ContextMenu DRY (3 surface 통일) + Wiki UX 통합 + Board polish**가 핵심.
+
+### 큰 결정 (영구)
+
+**1. NEXT-ACTION.md 영구 폐지 (2026-05-12 LOCKED)**:
+- 정보 3중복 해소 (NEXT-ACTION ↔ TODO P0 ↔ SESSION-LOG 끝 "다음")
+- 다음 세션 즉시 액션 = **SESSION-LOG entry 첫 줄 hook + TODO P0** 두 source
+- 글로벌 commands (`~/.claude/commands/`, 머신마다 vergent) → project-level (`.claude/commands/`, git tracked) 이전
+- 새 before-work: SESSION-LOG 최신 entry + TODO P0. 새 after-work: SESSION-LOG entry 첫 줄에 hook 통합.
+
+**2. Pin indicator 위치 = title 옆 영구 결정 재확인**:
+- PR #301 commit message 영구 결정 = "title 옆 우측 (status chip / label chip 안 침범)"
+- 직전 세션 끝 "status chip 옆" 정정 시그널은 잘못된 docs 기록 (commit이 진실)
+- `elastic-darwin-382a48` branch의 `1d8b30f` (status chip 옆 이동)은 사용자 폐기 결정
+
+**3. Multi-select UI 패턴 (Linear principle + Plot 도메인 분리)**:
+- **List mode** → 하단 FloatingActionBar (compact)
+- **Board mode** → 우측 BoardWorkbench (시그니처 패널, 풍부)
+- **Gallery mode** → 하단 FloatingActionBar (compact, 향후 신규 PR)
+- 공통 action set은 mode 무관 동일. presentation만 mode-specific.
+
+**4. ContextMenu DRY 패턴 (Linear principle)**:
+- 모든 surface (list row / board card / gallery card)가 동일 13-item 메뉴
+- `note-context-menu-items.tsx` helper가 단일 source
+- callback wiring은 caller-specific (store action 직접 호출). helper는 dumb component.
+
+**5. Kanban 패턴 — 빈 status column 항상 표시**:
+- 카드를 drag로 다른 column 이동 후 원래 column 비어도 column 유지 (drop target)
+- `groupBy === "status"`일 때만 (folder/label 등 dynamic group은 기존 동작)
+
+**6. Books entity icon 분기 (영구)**:
+- ActivityBar / Sidebar / ViewHeader Secondary popover = `BookOpen` icon
+- Library의 phosphor `Books` (책 모음 메타포)와 시각 구별 — 두 entity가 popover에 함께 나올 때 명확
+
+**7. Trash "All" tab 의미 = 통합 (모든 entity)**:
+- 현재 count는 통합, display는 notes만 = 모순
+- 다음 세션 P0: 통합 view 컴포넌트 신규 (entity별 section)
+
+### 기술 학습 (영구)
+
+- **transition-all과 dnd-kit transform 충돌**: card의 `transition-all`이 transform property도 transition 처리 → dnd-kit 매 프레임 transform 업데이트마다 jitter. `transition-colors`로 제한이 정답.
+- **DragOverlay dropAnimation polish**: dnd-kit 기본은 즉시 snap. `dropAnimation={{ duration: 220, easing: cubic-bezier(0.18, 0.67, 0.6, 1.0), sideEffects: defaultDropAnimationSideEffects({ styles: { active: { opacity: "0.4" } } }) }}` 명시.
+- **Cherry-pick id-dedup pattern**: SEED backfill에 `existingIds = new Set(...)` + 누락분만 push (Books v127 → Wiki v130 동일 패턴). 사용자 IDB의 기존 데이터 보존.
+- **빈 group의 default hide 부작용**: kanban 패턴은 빈 column이 drop target. dynamic group (folder/label)에는 자연스러운 hide. **groupBy 분기 필수**.
+- **Helper extraction signature**: helper가 store action을 직접 호출 X (caller flexibility). callback prop으로 받음. 단 helper 내부에서 *항상 동일* store action (예: `usePlotStore.getState().openInSecondary`)은 직접 호출 OK.
+- **Cherry-pick으로 다른 머신 작업 통합**: `git cherry-pick -n <commit>`으로 staging만 + 검토 후 우리 변경과 함께 commit. base의 폐기 변경은 cherry-pick 변경 안에 없으면 묻어들어오지 않음 (auto-merge).
+- **`text-2xs` (Tailwind ≈11px) vs `.a-tg__label` 11px**: 같은 크기지만 시각 비교 시 다르게 느낄 수 있음. 단순 13px로 키우는 게 명확 안전.
+- **flatNotes vs columns 합**: workbench의 "total notes"는 flatNotes.length (filter 후 sorted, group 전). columns의 cards 합은 groups.flatMap. 일반적으로 동일하지만 group이 hidden되면 차이 발생.
+
+### PR 정보
+
+이번 세션 단일 PR (squash merge 예정). 11 작업 + 25 파일 변경:
+- Helper 신규: `components/note-context-menu-items.tsx`
+- Cherry-pick: `42c6e59` Wiki UX 3 issues (gallery-view / wiki-list / wiki-view / wiki-floating-action-bar)
+- Major refactor: notes-table / notes-board / gallery-view-shell / board-workbench
+- Visual polish: globals.css (group header + metadata 폰트)
+- Data: seeds.ts (Wiki seed 4 추가) + migrate.ts (v130) + index.ts (version bump)
+- Workflow: .claude/commands/before-work.md + after-work.md (project-level 신규 정의) + docs/NEXT-ACTION.md 삭제
+
+### 다음 세션 P0
+
+🔴 **Trash "All" 통합 view 신규** (~150-200 LOC) — sample 통일 후 entity 통합 display
+🟡 사용자 manual verify (Wiki UX cherry-pick + ContextMenu 4 surface + Board drag/empty column)
+🟢 Notes Gallery 하단 floating bar (Linear parity 마무리)
+🟢 Books grid/board/gallery pin 위치 점검
+
+### 환경 변경
+
+- Store version v129 → **v130** (Wiki seed backfill)
+- Tests: 255/255 (변화 없음 추정)
+- 신규 파일: `components/note-context-menu-items.tsx`
+- 삭제 파일: `docs/NEXT-ACTION.md` (영구 폐지)
+- Project-level commands: `.claude/commands/before-work.md` + `after-work.md`
+
+---
+
 ## 🚀 2026-05-12 (저녁~밤, 거대) — Books view-engine 10 PR polish + Pin 통일 + emoji 폐기 (Store v126 → v129)
 
 **범위**: 오후 4 PR 시리즈에 이어 거대한 polish + extension. 매 사용자 manual verify 후 회귀 즉시 fix → commit → 머지 반복. 6 추가 PR (#296-#301) + emoji 영구 폐기 결정.
@@ -190,7 +268,7 @@
 
 ### 다음 세션 P0
 
-🔴 **Manual verify Books 4 viewMode** (NEXT-ACTION.md 7 step 절차) — 사용자 직접 시각 확인 + 회귀 fix
+🔴 **Manual verify Books 4 viewMode** (TODO.md P0의 7-step 절차) — 사용자 직접 시각 확인 + 회귀 fix
 🟡 Wiki 그룹 헤더 아이콘 (~30분)
 🟢 다음 큰 트랙 (Smart Book v2 / Wiki view-engine board) brainstorm
 
