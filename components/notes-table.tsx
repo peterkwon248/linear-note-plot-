@@ -78,6 +78,7 @@ import { setNoteDragData } from "@/lib/drag-helpers"
 import { pushUndo } from "@/lib/undo-manager"
 import { useFolderPickerData, FolderPicker } from "@/components/folder-picker"
 import { getEntityColor } from "@/lib/colors" // v109: opt-in color fallback
+import { TrashAllView } from "@/components/views/trash-all-view"
 
 /* ── Helpers ───────────────────────────────────────────── */
 
@@ -395,9 +396,11 @@ export function NotesTable({
   const storeTemplates = usePlotStore((s) => s.templates)
   const storeReferences = usePlotStore((s) => s.references)
   const storeAttachments = usePlotStore((s) => s.attachments)
+  const storeWikiArticles = usePlotStore((s) => s.wikiArticles)
   const trashTabCounts = useMemo((): Record<TrashFilter, number> => {
     if (!isTrashView) return { all: 0, notes: 0, wiki: 0, books: 0, tags: 0, labels: 0, templates: 0, references: 0, files: 0 }
     const trashed = notes.filter((n) => n.trashed)
+    const trashedWikiArticles = (storeWikiArticles || []).filter((w) => (w as any).trashed)
     const trashedBooks = (storeBooks || []).filter((b) => b.trashed)
     const trashedTags = tags.filter((t) => t.trashed)
     const trashedLabels = labels.filter((l) => l.trashed)
@@ -405,7 +408,7 @@ export function NotesTable({
     const trashedRefs = Object.values(storeReferences || {}).filter((r) => r.trashed)
     const trashedFiles = (storeAttachments || []).filter((a) => a.trashed)
     return {
-      all: trashed.length + trashedBooks.length + trashedTags.length + trashedLabels.length + trashedTemplates.length + trashedRefs.length + trashedFiles.length,
+      all: trashed.length + trashedWikiArticles.length + trashedBooks.length + trashedTags.length + trashedLabels.length + trashedTemplates.length + trashedRefs.length + trashedFiles.length,
       notes: trashed.filter((n) => n.noteType !== "wiki").length,
       wiki: trashed.filter((n) => n.noteType === "wiki").length,
       books: trashedBooks.length,
@@ -415,7 +418,7 @@ export function NotesTable({
       references: trashedRefs.length,
       files: trashedFiles.length,
     }
-  }, [notes, isTrashView, storeBooks, tags, labels, storeTemplates, storeReferences, storeAttachments])
+  }, [notes, isTrashView, storeBooks, storeWikiArticles, tags, labels, storeTemplates, storeReferences, storeAttachments])
 
   const trashFilterFn = useCallback((note: Note): boolean => {
     if (!isTrashView || trashFilter === "all") return true
@@ -1198,7 +1201,9 @@ export function NotesTable({
       )}
 
       {/* ── Entity trash list OR Note table ────────────── */}
-      {isTrashView && (trashFilter === "books" || trashFilter === "tags" || trashFilter === "labels" || trashFilter === "templates" || trashFilter === "references" || trashFilter === "files") ? (
+      {isTrashView && trashFilter === "all" ? (
+        <TrashAllView />
+      ) : isTrashView && (trashFilter === "books" || trashFilter === "tags" || trashFilter === "labels" || trashFilter === "templates" || trashFilter === "references" || trashFilter === "files") ? (
         <TrashEntityList type={trashFilter} />
       ) : (
       <ContextMenu>

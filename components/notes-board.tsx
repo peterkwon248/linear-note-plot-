@@ -662,6 +662,10 @@ const BoardCard = memo(BoardCardInner, (prev, next) =>
   prev.note.parentNoteId === next.note.parentNoteId &&
   prev.note.title === next.note.title &&
   prev.note.preview === next.note.preview &&
+  // Drag-to-status changes the `status` field via getFieldUpdate. Without
+  // this comparison the leading icon (StatusShapeIcon driven by note.status)
+  // stays stale until something else invalidates the card.
+  prev.note.status === next.note.status &&
   prev.links === next.links &&
   // Reference equality on the lookup arrays — parent ensures stable refs
   // (zustand selectors return the same array unless data changed).
@@ -953,7 +957,15 @@ export function NotesBoard({
 
     // ── Card drag (existing logic) ──
     const noteId = activeId
-    const targetKey = overId
+    // Column has both useSortable("col-${key}") and useDroppable("${key}")
+    // bound to the same DOM node (see BoardColumn line 277-283). dnd-kit's
+    // collision detection occasionally returns the sortable id rather than
+    // the droppable id — without this normalization, card drops wrote
+    // strings like "col-stone" into `note.status`, producing the leading-
+    // icon / status-chip mismatch tracked as "Status icon stale". Strip the
+    // prefix so the downstream getFieldUpdate() always receives the bare
+    // group key.
+    const targetKey = overId.startsWith("col-") ? overId.slice(4) : overId
 
     // Find which group the note is currently in
     const currentGroup = groups.find((g) => g.notes.some((n) => n.id === noteId))
@@ -985,20 +997,19 @@ export function NotesBoard({
       ? Array.from(selectedIds)
       : [noteId]
 
-    // PR (c) — DnD modifier branch for folder drops:
-    //   * Default (no modifier): "Add to folder" — preserve existing
-    //     memberships, just add this folder. Matches N:M semantics.
-    //   * Shift+drop: "Move to folder" — replace entire folderIds set
-    //     with [target]. Legacy single-folder semantic preserved for
-    //     users who want exclusive membership.
-    //   * `_no_folder` column: shift modifier ignored (no semantic for
-    //     "add to no folder" — clearing is always exclusive).
+    // DnD modifier branch for folder drops (2026-05-12 user feedback reversal):
+    //   * Default (no modifier): "Move to folder" — replace entire folderIds
+    //     set with [target]. Drag = true move, the intuitive default.
+    //   * Shift+drop: "Add to folder" — preserve existing memberships and
+    //     append this folder (N:M power user path).
+    //   * `_no_folder` column: shift modifier ignored — drop always clears
+    //     membership (the "remove from all folders" branch in getFieldUpdate).
     // Other groupBy modes (status / priority / triage) are inherently
     // single-valued, so the modifier doesn't apply; the existing
-    // fieldUpdate path always runs.
+    // fieldUpdate path always runs (= Move semantic).
     const isFolderTarget =
       viewState.groupBy === "folder" && targetKey !== "_no_folder"
-    const useAddSemantic = isFolderTarget && !shiftPressedRef.current
+    const useAddSemantic = isFolderTarget && shiftPressedRef.current
 
     if (useAddSemantic) {
       for (const id of idsToUpdate) {
@@ -1008,16 +1019,20 @@ export function NotesBoard({
         ? `Added ${idsToUpdate.length} notes`
         : `Added "${notes.find(n => n.id === idsToUpdate[0])?.title ?? "Note"}"`
       toast.success(`${verb} to ${targetGroup?.label ?? targetKey}`, {
-        description: "Hold Shift while dragging to move instead of add",
+        description: "Drop without Shift to move instead of add",
       })
     } else {
       if (idsToUpdate.length > 1) {
         batchUpdateNotes(idsToUpdate, fieldUpdate)
-        toast.success(`Moved ${idsToUpdate.length} notes to ${targetGroup?.label ?? targetKey}`)
+        toast.success(`Moved ${idsToUpdate.length} notes to ${targetGroup?.label ?? targetKey}`, {
+          description: isFolderTarget ? "Hold Shift to add (keep existing folders) instead" : undefined,
+        })
       } else {
         updateNote(idsToUpdate[0], fieldUpdate)
         const draggedNote = notes.find(n => n.id === idsToUpdate[0])
-        toast.success(`Moved "${draggedNote?.title ?? "Note"}" to ${targetGroup?.label ?? targetKey}`)
+        toast.success(`Moved "${draggedNote?.title ?? "Note"}" to ${targetGroup?.label ?? targetKey}`, {
+          description: isFolderTarget ? "Hold Shift to add (keep existing folders) instead" : undefined,
+        })
       }
     }
 

@@ -402,7 +402,15 @@ function BookRow({
               : "hover:bg-hover-bg cursor-pointer",
           )}
         >
-          <div className="flex w-6 shrink-0 items-center justify-center">
+          <div
+            className={cn(
+              "flex w-6 shrink-0 items-center justify-center",
+              // Notes/Wiki parity: hide checkbox until row hover unless the
+              // row is checked. Avoids the "always-visible empty squares"
+              // mismatch the user flagged vs notes/wiki list rows.
+              checked ? "visible" : "invisible group-hover:visible",
+            )}
+          >
             <CheckboxBox
               state={checked ? "all" : "none"}
               onClick={onToggleCheck}

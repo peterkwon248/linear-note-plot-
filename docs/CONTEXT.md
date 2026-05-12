@@ -43,6 +43,70 @@
 - 2026-05-12 (낮) — NEXT-ACTION.md 폐지 결정. 3중복 (NEXT-ACTION ↔ TODO P0 ↔ SESSION-LOG hook)이 stale 패턴 유발. **교훈: source of truth는 단일이어야. 단순화 우선.**
 - 2026-05-12 (오후) — JSX `{cond && <X .../>}` webpack/swc parser에서 "unterminated regexp literal" 오해석. 페이지 빈 화면. **교훈: conditional render 무조건 parens `{cond && (<X />)}`. 향후 PR review 시 같은 패턴 차단.**
 - 2026-05-12 (오후) — `STATUS_CONFIG[status]` undefined runtime crash. data corruption / 옛 enum / 빈 값에 graceful 대응 X. **교훈: 모든 `Record<X, Y>` lookup access에 null guard 의무.**
+- 2026-05-12 (저녁) — dnd-kit `useSortable("col-${key}")` + `useDroppable("${key}")` 동일 DOM ref bind 시 collision detection이 sortable id 우선 반환 가능. card drop handler에서 `targetKey = "col-stone"` garbage가 status/folderIds에 저장 → icon-chip mismatch. **교훈: dnd-kit DOM ref 합치기 신중. id format prefix 일관 + handler normalize (`overId.slice(4)`) 의무.**
+- 2026-05-12 (저녁) — 사용자 "위키 북마크 이상하다" 표현 = pin (즐겨찾기) icon 위치 문제. "북마크"가 bookmark 아닌 pin을 의미. **교훈: 사용자 표현 신중히 해석. 단어 의미 추측 시 사용자에게 직접 확인이 효율적.**
+- 2026-05-12 (저녁) — port 3002 (이전 worktree crazy-raman) + port 61869 (이번 worktree quirky-colden) dev server 동시 실행. 사용자가 port 3002 stale build 보고 fix 안 보인다고 보고. **교훈: 매 fix 후 사용자에게 정확한 port URL 안내. `preview_list` 로 multi-server inventory 확인.**
+- 2026-05-12 (저녁) — Trash All view에 wikiArticles 합산 누락 (count는 합산 X, display는 notes만) → "1개라는데 아무것도 안 보임" 모순. **교훈: count 통합 + display 통합 동기화. 한쪽만 변경 시 의도와 표시 mismatch 발생.**
+- 2026-05-12 (저녁) — Board drag default = Add (N:M) 패턴이 사용자 직관 "옮기면 옮겨져야"와 충돌. **교훈: 작업 원칙 #8 (사용자 직관 = 디자인 시그널) 우선. N:M 정책은 power user modifier (Shift+drop)로 노출.**
+
+---
+
+## 🚀 2026-05-12 (저녁) — Trash All + Status-icon-stale root fix + Wiki pin + 9 fix mega-PR ⭐⭐⭐⭐⭐
+
+**범위**: 1 worktree (`quirky-colden-bcf3de`). 9 fix 통합 PR. Store v130 → v132.
+
+### 핵심 결정 (영구 LOCKED)
+
+**1. Trash "All" 통합 view 신규 컴포넌트 (LOCKED)**:
+- `components/views/trash-all-view.tsx` — 8 entity (Notes/Wiki/Books/Tags/Labels/Templates/References/Files) trashed 통합 표시. 사용자 의도 *"ALL은 모든 entity의 trashed 통합"* 충족
+- multi-select + 하단 floating bulk action bar (Restore / Delete forever / Clear)
+- `trashTabCounts.all`에 wikiArticles 합산 보강 (count 모순 해소)
+
+**2. dnd-kit DOM ref 합치기 위험 패턴 (영구 학습 LOCKED)**:
+- `useSortable("col-${key}")` + `useDroppable("${key}")` 동일 DOM ref bind 시 collision detection 비결정
+- handler에서 무조건 id normalize: `overId.startsWith("col-") ? overId.slice(4) : overId`
+- 다른 컴포넌트에서 같은 패턴 사용 시 같은 normalize 필요 (books-board 등)
+
+**3. Board drag default = Move semantic (영구 결정 변경 LOCKED)**:
+- 이전 N:M 패턴: default = Add / Shift = Move
+- **신규**: default = **Move** (folderIds 교체) / Shift+drop = **Add** (N:M 기존 유지)
+- 사용자 직관 "옮기면 옮겨져야" 우선 (작업 원칙 #8)
+- status / priority / triage는 single-valued라 자동 Move (불변)
+
+**4. row checkbox 패턴 — 모든 entity 일관 (LOCKED)**:
+- 패턴: `selectionActive || isSelected ? "visible" : "invisible group-hover:visible"`
+- 적용: notes-table NoteRow / wiki-list ArticleRow / book-table BookRow / trash-all-view TrashRow
+
+**5. Pin 위치 = title 옆 (영구 결정 #301 재실현, Books book-table 패턴 reference)**:
+- title span에서 `flex-1` 제거 + pin `ml-1 shrink-0`
+- 모든 entity 표준: notes / wiki / books / templates 동일
+- elastic-darwin의 status chip 옆 이동(`1d8b30f`)은 영구 폐기 재확인
+
+**6. Migration 패턴 — root prevention + data recovery 2-layer (LOCKED)**:
+- 코드 fix만으로는 이미 corrupted된 IDB 데이터 정리 X
+- v131 NoteStatus garbage cleanup + v132 folderIds garbage cleanup. Idempotent.
+
+**7. Wiki "북마크" 표현 → pin 의미 (사용자 어휘 매핑)**:
+- 향후 비슷한 표현 시 pin/즐겨찾기 가능성 우선 검토
+
+### 기술 학습 (영구)
+
+- **dnd-kit sortable + droppable 합치기**: collision detection 비결정. id normalize 필수.
+- **Zustand persist multi-IDB**: `plot-zustand` (메타) + `plot-note-bodies` (콘텐츠 별도). migration 시 메타만 처리.
+- **preview_eval로 IDB 직접 dump**: zustand persist storage 검증에 효과적. `indexedDB.open` + `kv` store getAll.
+- **multi-server preview troubleshooting**: 사용자 본 화면 ≠ AI verify한 화면. `preview_list` + port URL 명시.
+- **Hover-only checkbox class 패턴**: 부모에 `group` className 필수. notes/wiki/books/trash 일관.
+- **Floating bulk action bar (sticky bottom)**: `sticky bottom-4 z-20 mx-auto w-fit ... backdrop-blur shadow-lg`. selectionActive 시 mount.
+- **Migration silent log**: console에 `[migrate] vN→vN+1: ...` 출력. dev tools 없으면 사용자 못 봄. toast 알림 follow-up 후보.
+
+### 다음 (TODO.md P0 참조)
+
+🔴 **BoardCard chip overflow fix** — 사용자 보고 *"박스 밖으로 `#Productivity` 글자가 빠져나오는 연출"*. BoardCard chips row에 overflow:hidden + truncate. Linear 패턴 (한 줄 + 잘림) 추천.
+
+🟡 9 fix manual verify (localhost:61869):
+- /trash All / /notes board drag / /library Books / /wiki pin
+
+🟢 TrashEntityList multi-select (entity별 탭) — follow-up
 
 ---
 

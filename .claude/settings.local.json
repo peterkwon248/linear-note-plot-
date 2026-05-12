@@ -199,7 +199,8 @@
       "Bash(cat /c/Users/user/AppData/Local/Temp/claude/C--Users-user-Desktop-linear-note-plot---claude-worktrees-lucid-agnesi-b963f3/b1650869-40c1-4dc6-acc1-bc250f603504/tasks/byzx4sfdh.output 2>&1)",
       "Bash(grep -n \"^      \\)}\\\\$\\\\|^      \\)}\\\\\\\\b\" \"C:/Users/user/Desktop/linear-note-plot-/.claude/worktrees/lucid-agnesi-b963f3/components/views/library-view.tsx\")",
       "Bash(ls ~/.claude/skills/ 2>&1 | head -20; echo \"---\"; ls .claude/skills/ 2>&1 | head -20; echo \"---\"; ls -la ~/.claude/plugins/ 2>&1 | head -10)",
-      "Bash(find ~/.claude -name \"before-work*\" -o -name \"after-work*\" 2>&1 | head -10)"
+      "Bash(find ~/.claude -name \"before-work*\" -o -name \"after-work*\" 2>&1 | head -10)",
+      "Bash(tasklist /FI \"IMAGENAME eq node.exe\")"
     ]
   }
 }

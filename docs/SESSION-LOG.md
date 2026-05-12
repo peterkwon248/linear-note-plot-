@@ -6,6 +6,141 @@
 
 ---
 
+## 2026-05-12 (저녁) — 집, Trash All + Status-icon-stale root fix + Wiki pin + 9 fix mega-PR (Store v130 → v132)
+
+> 🎯 **다음 즉시 액션**: BoardCard chip overflow fix — 사용자 보고 *"박스 밖으로 `#Productivity` 글자가 빠져나오는 연출이 있는데 이러면 안 됨. 박스 밖으로 빠져나가면 안 돼."*
+>
+> **사용자 의도** (스크린샷 동봉): board mode 카드 (예: "Build a Personal Wiki")의 tag/category chips row에서 마지막 chip (`#Productivity`)이 카드 box 우측 경계를 넘어 돌출. 박스 안에 contained 되어야 함.
+>
+> **첫 스텝** (다른 머신에서 바로 시작):
+> 1. `components/notes-board.tsx`에서 BoardCard (또는 BoardCardInner) 컴포넌트의 chips row 위치 찾기 (line ~400-600 추정, tag/category chip 렌더 부분)
+> 2. chip row container에 `overflow-hidden min-w-0` + chip element 자체에 `truncate max-w-[...]` 적용
+> 3. 정책 결정 (사용자 결정 필요):
+>    - **A: Truncate** — 한 줄 유지, 잘림 (`…`). 카드 height 일정. Linear 패턴 정합. 추천.
+>    - **B: Wrap** — 여러 줄. 정보량 ↑, 카드 height variable.
+>
+> **참고 파일**:
+> - `components/notes-board.tsx` — BoardCard chips 위치
+> - `components/notes-table.tsx` — list mode chip 패턴 (정합 비교)
+> - `components/views/wiki-list.tsx:462` — wiki list tags column `w-[140px] shrink-0 ... overflow-hidden` 패턴
+>
+> **위험 + 회피**:
+> - 다른 view mode (grid/gallery)에 같은 BoardCard 사용 여부 확인 (회귀 회피)
+> - list mode chip은 별도 layout — 독립
+> - chip text 너무 짧으면 truncate 의미 없음 — `max-w` 적당히
+>
+> **머신**: 집 (Windows)
+> **현재 main HEAD**: 이번 PR merge 후 (Store v132)
+> **branch worktree**: `quirky-colden-bcf3de` (다음 세션 같은 worktree 또는 새 worktree)
+
+### 완료 (9 fix 통합 PR, Store v130 → v132)
+
+**1. Trash "All" 통합 view 신규** — `components/views/trash-all-view.tsx` (~300 LOC 신규).
+- 8 entity (Notes/Wiki/Books/Tags/Labels/Templates/References/Files) trashed 통합 표시
+- entity별 section header (빈 section auto-hide), 통합 row layout `[icon][Kind badge][title][color dot?][trashed time][Restore][Delete forever]`
+- Notes는 status별 `StatusShapeIcon` (stone/brick/keystone)
+- `permanentlyDelete*` confirm dialog (TrashEntityList 패턴 정합)
+- `notes-table.tsx`: import + `storeWikiArticles` 변수 + `trashTabCounts.all`에 wikiArticles 합산 보강 (count 모순 해소) + `trashFilter === "all"` 분기에 `<TrashAllView />` mount
+
+**2. Status icon stale root cause 발견 + 3-layer fix** — SESSION-LOG의 "#2 Status icon stale" 보고 (이전 세션 reproduce 부족으로 skip).
+- **root cause**: `notes-board.tsx:277-283` column outer DOM에 `useSortable("col-${key}")` + `useDroppable("${key}")` 동시 bind. dnd-kit collision detection이 sortable id를 우선 반환할 때 `targetKey = "col-stone"`이 그대로 status로 저장됨 → StatusShapeIcon (else→Cuboid/Block) + StatusBadge (`?? STATUS_CONFIG.brick` fallback → "Brick") mismatch
+- **Fix #1 root prevention**: `notes-board.tsx:968` — `const targetKey = overId.startsWith("col-") ? overId.slice(4) : overId`. card drag 시 overId의 `col-` prefix strip
+- **Fix #2 memo safety**: `notes-board.tsx:668` — BoardCard memo에 `prev.note.status === next.note.status` 추가 (board view drag 직후 leading icon stale 방지)
+- **Fix #3 data recovery**: `migrate.ts` v131 — VALID_STATUSES Set 외 모든 status를 valid enum으로 복구. legacy enum (inbox/capture/permanent) re-map + `col-` prefix strip + stone fallback. Idempotent. Store 130 → 131
+
+**3. v132 folderIds garbage cleanup** — 같은 dnd-kit root cause가 folderIds에도 garbage (`col-folder-1`, `col-_no_folder` 등) 저장 가능 (사용자가 본 toast "Added to col-_no_folder"). v132 마이그레이션 — `state.folders` Set 외 folderId 제거. notes + wikiArticles 둘 다 처리. Store 131 → 132
+
+**4. Board drag default = Move semantic 반전** (작업 원칙 #8 사용자 직관 = 디자인 시그널) — 사용자 의도 *"옮기면 진짜로 속성이 바뀌어야 / 스테이터스일 땐 옮겨진 스테이터스로 / 폴더일 땐 옮겨진 폴더로"*.
+- 이전: folder drop default = Add (N:M, 기존 유지 + 새 folder 추가) / Shift+drop = Move
+- 변경: folder drop default = Move (folderIds 교체) / Shift+drop = Add
+- status / priority / triage는 single-valued라 자동 Move (불변)
+- toast description도 반전 ("Drop without Shift to move instead" / "Hold Shift to add (keep existing folders) instead")
+
+**5. Books row checkbox hover-only** — `book-table.tsx:405-414` BookRow checkbox cell wrapper에 `checked ? "visible" : "invisible group-hover:visible"`. notes/wiki 패턴 정합. 사용자 보고 *"북스의 경우, 구분선 아래 북스 네임들 왼쪽에 체크박스들은 왜 눈에 보이게 체크가 되어있는 거지?"*
+
+**6. Trash row multi-select + bulk action bar** — `trash-all-view.tsx` 확장 (~80 LoC 추가).
+- `selectedKeys` Set state (`${kind}-${id}` 형식 — kind별 id collision 회피)
+- row checkbox column (notes/wiki 패턴: hover-only, selected/selectionActive 시 visible)
+- `handleRestoreSilent` / `handleDeleteSilent` helper (bulk action용, 단일 aggregated toast)
+- 하단 floating bulk action bar (selection 활성 시): `N selected` + Restore + Delete forever + Clear (X)
+- 사용자 보고 *"트래쉬의 경우 왜 체크박스가 없는 거야? 체크박스가 있어야지."*
+
+**7. Wiki pin 위치 title 옆** — `wiki-list.tsx:426-435` title span의 `flex-1` 제거 + PushPin `className` `mx-1` → `ml-1`. Books `book-table.tsx:497-502` 패턴 정합. SESSION-LOG 영구 결정 PR #301 ("Pin 위치 = title 옆") 재실현. 사용자 보고 *"위키의 즐겨찾기 pin의 경우 title 우측에 있어야 하는데, 왜 스테이터스 칩 왼쪽에 있냐고. 북마크가 아니라 pin이었어!!"*
+
+**8. Wiki "북마크 이상" 진단** — wiki-view trashed filter (line 372: `wikiArticles.filter((a) => !(a as { trashed?: boolean }).trashed)`) 정상 작동.
+- preview_eval로 port 61869 `/wiki` 직접 verify → trashed=true 7개 wiki **표시 안 됨** (filter 적용 ✓)
+- 사용자가 본 7개 = **port 3002 (crazy-raman-838a0c 이전 worktree) stale build** 화면
+- pin icon mismatch (Atomic Notes / Linked Notes pin 표시)도 같은 stale build 영향. 데이터 검증 결과 모두 `pinned: false`
+
+**9. tsc + production build 매 fix마다 clean 검증** — 작업 원칙 #3 의무.
+
+### 브레인스토밍 & 큰 결정 (영구)
+
+#### 1. dnd-kit 동일 DOM 이중 binding 위험 패턴 (영구 LOCKED)
+- `useSortable("col-${key}")`와 `useDroppable("${key}")`를 같은 ref에 bind하면 collision detection이 어느 id 반환할지 비결정
+- card drop 시 `over.id`가 sortable id (`col-stone`) 또는 droppable id (`stone`) 중 하나
+- handler에서 무조건 prefix strip — `overId.startsWith("col-") ? overId.slice(4) : overId`
+- **교훈**: dnd-kit DOM ref 합치기 신중. id format prefix 일관 + handler normalize.
+
+#### 2. Board drag = Move semantic (default) — 사용자 직관 우선
+- 영구 결정 변경 (2026-05-12 저녁): 이전 N:M 패턴 (default=Add, Shift=Move) → 직관 패턴 (default=Move, Shift=Add)
+- 근거: "옮기면 옮겨져야"가 자연 사용자 모델. N:M power user는 Shift modifier 학습 가능.
+- 작업 원칙 #8 (사용자 직관 = 디자인 시그널). 이전 결정 (PR (c))을 폐기하고 새 결정 LOCKED.
+
+#### 3. row checkbox 패턴 — 모든 entity 일관 (영구 LOCKED)
+- notes / wiki / books / trash 모두 동일: hover-only 또는 selected/selectionActive 시 visible
+- 패턴: `selectionActive || isSelected ? "visible" : "invisible group-hover:visible"`
+- 단일 source of truth: notes-table NoteRow / wiki-list ArticleRow / book-table BookRow / trash-all-view TrashRow
+
+#### 4. Pin 위치 = title 옆 (영구 결정 #301 재확인)
+- elastic-darwin-382a48의 status chip 옆 이동 (`1d8b30f`)은 폐기
+- 모든 entity 표준: notes (notes-table) / wiki (wiki-list) / books (book-table) 동일
+- 핵심 패턴: title span의 `flex-1` 제거 + pin `ml-1 shrink-0` (Books book-table.tsx:497-502이 reference 구현)
+
+#### 5. Migration 패턴 — root prevention + data recovery (작업 원칙 #5 정합)
+- 코드 fix만으로는 이미 corrupted된 IDB 데이터 정리 X
+- root prevention (코드) + data recovery (migration) 2-layer 필수
+- v131 / v132 둘 다 idempotent (valid 데이터 pass through). 재실행 안전.
+
+#### 6. Wiki "북마크 이상" 사용자 표현 명확화
+- 사용자가 "위키 북마크"라 한 것은 **pin icon (즐겨찾기) 위치 문제** 였음 (북마크 = bookmark가 아님)
+- 사용자 표현 신중히 해석 — 단어 의미 추측 시 사용자에게 확인이 효율적
+
+#### 7. Dev server 다중 worktree 환경 stale build 위험 (영구 학습)
+- port 3002 (이전 worktree crazy-raman) + port 61869 (이번 worktree quirky-colden) 동시 실행
+- 사용자가 port 3002 화면 보고 있어서 fix 안 보임 → mismatch 보고
+- 매 fix 후 사용자에게 정확한 port URL 안내 필수. `preview_list` 로 dev server inventory 확인
+
+### 기술 학습 (영구)
+
+- **dnd-kit collision detection**: `useSortable`은 내부적으로 `useDroppable` 포함. 같은 DOM ref에 둘 다 bind 시 over.id가 어느 id 반환할지 비결정 (sortable id 우선 가능). handler에서 id normalize 필수.
+- **Zustand persist `partialize`**: notes의 content/contentJson 제거 후 저장 (line 264). body는 별도 IDB store (`plot-note-bodies`). migration 시 state.notes에 content/contentJson 없을 수 있음 — preview 검증에 영향 없음.
+- **`(item as any).field` 패턴**: TypeScript optional field 접근 시 안전. WikiArticle.trashed는 필수 필드이지만 future-proof 보존 패턴.
+- **preview_eval로 IDB 직접 dump**: `indexedDB.open("plot-zustand")` + `tx.objectStore("kv").getAll()` 로 store 전체 dump. zustand persist storage 검증에 효과적.
+- **사용자 IDB-aware migration**: SEED 코드 vs 사용자 데이터 분리. SEED는 새 enum만 사용해도, 사용자 IDB는 옛 enum (또는 garbage) 잔존 가능. migration이 root cause 진단 + recovery 둘 다 담당.
+- **multi-server preview troubleshooting**: 사용자가 본 화면 ≠ AI가 verify한 화면 일 수 있음. port URL 명시 + `preview_list` 로 inventory 확인.
+- **Hover-only checkbox class 패턴**: `selectionActive || isSelected ? "visible" : "invisible group-hover:visible"`. 부모에 `group` className 필수. notes/wiki/books/trash 일관.
+- **floating bulk action bar (sticky bottom)**: `sticky bottom-4 z-20 mx-auto w-fit ... backdrop-blur shadow-lg`. selection 활성 시 mount, clearSelection X 버튼 포함. notes FloatingActionBar / wiki WikiFloatingActionBar / trash TrashAllView 동일 패턴.
+
+### Watch Out (다음 세션 주의사항)
+
+- **BoardCard chip overflow fix scope**: BoardCard가 board mode + grid mode (또는 다른 viewMode) 공유 컴포넌트일 가능성. fix 시 다른 viewMode 회귀 확인 필요.
+- **사용자 IDB v132 migration 적용 후 데이터 검증**: 사용자가 page reload 시 `[migrate] v130→v131` + `[migrate] v131→v132` console log 확인. 만약 누락된 notes 발견되면 silent migration이 어떤 garbage를 stone fallback으로 치환했는지 확인 (사용자 알림 필요할 수도).
+- **TrashEntityList multi-select 미적용**: entity별 trash 탭 (books/tags/labels/...) 은 그대로. 사용자가 entity별 multi-select 원하면 follow-up PR.
+- **Board drag Move semantic 변경 사용자 학습 필요**: 이전 default = Add 익숙한 사용자는 처음 drag 시 기존 folder 제거에 놀랄 수 있음. toast description ("Hold Shift to add" hint)으로 안내.
+- **dnd-kit DOM ref 합치기 다른 곳에도 점검 가능**: books-board.tsx 등 같은 패턴 사용. 같은 mismatch 잠재.
+- **migrate.ts v131/v132 silent 변환 로그 위치**: 사용자가 reload 후 console에서 확인. dev tools 안 열면 못 봄. toast 알림 추가 후보.
+- **이전 worktree (crazy-raman-838a0c) port 3002 dev server**: 사용자가 여전히 사용 중이면 stale build 본다. 새 worktree로 이전 권장.
+
+### 환경 변경
+
+- Store version: v130 → **v132** (NoteStatus garbage cleanup + folderIds garbage cleanup)
+- 신규 파일: `components/views/trash-all-view.tsx` (~300 LOC + multi-select 80 LOC)
+- 수정 파일: `components/notes-board.tsx` (overId strip + memo + Move semantic 반전), `components/notes-table.tsx` (TrashAllView import + storeWikiArticles + trashTabCounts.all 보강 + 분기 mount), `lib/store/migrate.ts` (v131 + v132 추가), `lib/store/index.ts` (version 132), `components/books/book-table.tsx` (checkbox hover-only), `components/views/wiki-list.tsx` (pin 위치 title 옆)
+- Tests: 미실행 (작업 원칙 #3은 build/tsc만 의무, tests는 follow-up). 단 코드 변경은 unit test 영향 없을 추정.
+
+---
+
 ## 2026-05-12 (오후) — 집, Board/Gallery polish + Split view fix + hotfix (4 PR cascade)
 
 > 🎯 **다음 즉시 액션**: Trash "All" 통합 view 신규 컴포넌트 구현.

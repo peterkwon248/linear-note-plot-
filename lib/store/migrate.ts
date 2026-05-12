@@ -1953,5 +1953,91 @@ export function migrate(persistedState: unknown): PlotState {
     }
   }
 
+  // v131: NoteStatus garbage cleanup — 2026-05-12 board-drag salvage.
+  //
+  // notes-board.tsx bound `useSortable("col-${key}")` AND `useDroppable("${key}")`
+  // to the same DOM node (column outer container). dnd-kit's collision
+  // detection sometimes reported the sortable id, so the card-drop handler
+  // wrote strings like "col-stone" into `note.status`. At render time
+  // StatusShapeIcon fell into its else-branch (Cuboid/Block) while
+  // StatusBadge's `STATUS_CONFIG[status] ?? STATUS_CONFIG.brick` fallback
+  // rendered the chip as "Brick" — producing the icon/chip mismatch the
+  // user reported (SESSION-LOG #2 "Status icon stale").
+  //
+  // notes-board now strips the "col-" prefix before status update. This
+  // migration repairs already-corrupted IDB entries: anything outside the
+  // valid stone/brick/keystone enum is restored. Legacy v116 enums are
+  // re-mapped as a belt-and-suspenders pass; "col-stone" style garbage is
+  // stripped back to the bare key; everything else falls back to "stone"
+  // (the safe inbox-equivalent). Idempotent — valid notes pass through.
+  if (Array.isArray(state.notes)) {
+    const VALID_STATUSES = new Set(["stone", "brick", "keystone"])
+    let repairedCount = 0
+    state.notes = (state.notes as Record<string, unknown>[]).map((n) => {
+      const s = n.status as string
+      if (typeof s === "string" && VALID_STATUSES.has(s)) return n
+      let recovered = "stone"
+      if (s === "inbox") recovered = "stone"
+      else if (s === "capture") recovered = "brick"
+      else if (s === "permanent") recovered = "keystone"
+      else if (typeof s === "string" && s.startsWith("col-")) {
+        const stripped = s.slice(4)
+        if (VALID_STATUSES.has(stripped)) recovered = stripped
+      }
+      repairedCount++
+      return { ...n, status: recovered }
+    })
+    if (repairedCount > 0) {
+      console.log(`[migrate] v130→v131: repaired NoteStatus on ${repairedCount} notes`)
+    }
+  }
+
+  // v132: folderIds garbage cleanup — same dnd-kit root cause as v131.
+  //
+  // notes-board's card-on-folder-column drop wrote strings like
+  // "col-folder-1" or "col-_no_folder" into `note.folderIds`. The board
+  // handler now strips the "col-" prefix, but already-corrupted memberships
+  // need explicit repair: drop any folderIds that don't resolve to a real
+  // folder. The `_no_folder` sentinel never appears in `folderIds` (it's
+  // the "clear membership" branch in getFieldUpdate), so any folderId not
+  // present in `state.folders` is garbage. Idempotent — clean folderIds
+  // pass through untouched.
+  if (Array.isArray(state.notes) && Array.isArray(state.folders)) {
+    const validFolderIds = new Set(
+      (state.folders as Array<{ id: string }>).map((f) => f.id)
+    )
+    let cleanedCount = 0
+    state.notes = (state.notes as Record<string, unknown>[]).map((n) => {
+      const ids = n.folderIds
+      if (!Array.isArray(ids)) return n
+      const filtered = (ids as string[]).filter((fid) => validFolderIds.has(fid))
+      if (filtered.length === ids.length) return n
+      cleanedCount++
+      return { ...n, folderIds: filtered }
+    })
+    if (cleanedCount > 0) {
+      console.log(`[migrate] v131→v132: cleaned garbage folderIds on ${cleanedCount} notes`)
+    }
+  }
+
+  // Same garbage pattern can land in wikiArticles.folderIds — repair both.
+  if (Array.isArray(state.wikiArticles) && Array.isArray(state.folders)) {
+    const validFolderIds = new Set(
+      (state.folders as Array<{ id: string }>).map((f) => f.id)
+    )
+    let cleanedCount = 0
+    state.wikiArticles = (state.wikiArticles as Record<string, unknown>[]).map((w) => {
+      const ids = w.folderIds
+      if (!Array.isArray(ids)) return w
+      const filtered = (ids as string[]).filter((fid) => validFolderIds.has(fid))
+      if (filtered.length === ids.length) return w
+      cleanedCount++
+      return { ...w, folderIds: filtered }
+    })
+    if (cleanedCount > 0) {
+      console.log(`[migrate] v131→v132: cleaned garbage folderIds on ${cleanedCount} wiki articles`)
+    }
+  }
+
   return state as unknown as PlotState
 }

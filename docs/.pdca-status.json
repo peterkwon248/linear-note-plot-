@@ -1,6 +1,6 @@
 {
   "version": "2.0",
-  "lastUpdated": "2026-05-12T05:32:33.027Z",
+  "lastUpdated": "2026-05-12T08:49:24.571Z",
   "activeFeatures": [
     "editor",
     "wizardly-kare",
@@ -33,7 +33,8 @@
     "pedantic-robinson-e8e2a1",
     "wizardly-shamir-32ff22",
     "books",
-    "crazy-raman-838a0c"
+    "crazy-raman-838a0c",
+    "quirky-colden-bcf3de"
   ],
   "primaryFeature": "editor",
   "features": {
@@ -215,9 +216,9 @@
       "documents": {},
       "timestamps": {
         "started": "2026-03-11T04:44:34.388Z",
-        "lastUpdated": "2026-05-12T01:46:18.741Z"
+        "lastUpdated": "2026-05-12T07:59:04.323Z"
       },
-      "lastFile": "C:\\Users\\kwonkyunghun\\Desktop\\리니어 노트앱\\.claude\\worktrees\\crazy-raman-838a0c\\lib\\store\\index.ts"
+      "lastFile": "C:\\Users\\kwonkyunghun\\Desktop\\리니어 노트앱\\.claude\\worktrees\\quirky-colden-bcf3de\\lib\\store\\index.ts"
     },
     "__tests__": {
       "phase": "do",
@@ -436,9 +437,9 @@
       "documents": {},
       "timestamps": {
         "started": "2026-05-12T00:30:50.080Z",
-        "lastUpdated": "2026-05-12T00:30:50.080Z"
+        "lastUpdated": "2026-05-12T08:43:04.874Z"
       },
-      "lastFile": "C:\\Users\\kwonkyunghun\\Desktop\\리니어 노트앱\\.claude\\worktrees\\crazy-raman-838a0c\\components\\books\\book-table.tsx"
+      "lastFile": "C:\\Users\\kwonkyunghun\\Desktop\\리니어 노트앱\\.claude\\worktrees\\quirky-colden-bcf3de\\components\\books\\book-table.tsx"
     },
     "crazy-raman-838a0c": {
       "phase": "do",
@@ -452,6 +453,19 @@
         "lastUpdated": "2026-05-12T05:32:33.027Z"
       },
       "lastFile": "C:\\Users\\kwonkyunghun\\Desktop\\리니어 노트앱\\.claude\\worktrees\\crazy-raman-838a0c\\components\\notes-board.tsx"
+    },
+    "quirky-colden-bcf3de": {
+      "phase": "do",
+      "phaseNumber": 3,
+      "matchRate": null,
+      "iterationCount": 0,
+      "requirements": [],
+      "documents": {},
+      "timestamps": {
+        "started": "2026-05-12T07:00:38.995Z",
+        "lastUpdated": "2026-05-12T08:49:24.571Z"
+      },
+      "lastFile": "C:\\Users\\kwonkyunghun\\Desktop\\리니어 노트앱\\.claude\\worktrees\\quirky-colden-bcf3de\\components\\views\\wiki-list.tsx"
     }
   },
   "pipeline": {
@@ -462,7 +476,7 @@
   "session": {
     "startedAt": "2026-03-05T00:16:19.956Z",
     "onboardingCompleted": false,
-    "lastActivity": "2026-05-12T05:32:33.027Z"
+    "lastActivity": "2026-05-12T08:49:24.571Z"
   },
   "history": [
     {
@@ -6738,6 +6752,120 @@
     {
       "timestamp": "2026-05-12T05:32:33.027Z",
       "feature": "crazy-raman-838a0c",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-12T07:00:38.995Z",
+      "feature": "quirky-colden-bcf3de",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-12T07:01:47.397Z",
+      "feature": "quirky-colden-bcf3de",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-12T07:01:52.483Z",
+      "feature": "quirky-colden-bcf3de",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-12T07:02:02.424Z",
+      "feature": "quirky-colden-bcf3de",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-12T07:02:05.011Z",
+      "feature": "quirky-colden-bcf3de",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-12T07:35:24.028Z",
+      "feature": "quirky-colden-bcf3de",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-12T07:35:28.937Z",
+      "feature": "quirky-colden-bcf3de",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-12T07:36:05.398Z",
+      "feature": "store",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-12T07:36:06.317Z",
+      "feature": "store",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-12T07:59:03.093Z",
+      "feature": "store",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-12T07:59:04.323Z",
+      "feature": "store",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-12T08:02:38.056Z",
+      "feature": "quirky-colden-bcf3de",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-12T08:43:04.874Z",
+      "feature": "books",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-12T08:43:32.954Z",
+      "feature": "quirky-colden-bcf3de",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-12T08:43:44.061Z",
+      "feature": "quirky-colden-bcf3de",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-12T08:43:54.321Z",
+      "feature": "quirky-colden-bcf3de",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-12T08:44:28.910Z",
+      "feature": "quirky-colden-bcf3de",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-12T08:44:46.571Z",
+      "feature": "quirky-colden-bcf3de",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-12T08:49:24.571Z",
+      "feature": "quirky-colden-bcf3de",
       "phase": "do",
       "action": "updated"
     }
