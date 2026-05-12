@@ -1394,18 +1394,20 @@ export function NotesBoard({
 
             {/* Processing Workbench: fills remaining space.
                 Split view (secondary pane): hide — viewport 절반에서 잘림. */}
-            {!isSecondaryPane && <BoardWorkbench
-              selectedIds={selectedIds}
-              effectiveTab={effectiveTab}
-              groupBy={viewState.groupBy}
-              notes={flatNotes}
-              folders={folders}
-              backlinksMap={backlinksMap}
-              onClearSelection={() => setSelectedIds(new Set())}
-              onSelectAll={() => setSelectedIds(new Set(flatNotes.map((n) => n.id)))}
-              onSelectMany={handleSelectMany}
-              onCardClick={onRowClick}
-            />}
+            {!isSecondaryPane && (
+              <BoardWorkbench
+                selectedIds={selectedIds}
+                effectiveTab={effectiveTab}
+                groupBy={viewState.groupBy}
+                notes={flatNotes}
+                folders={folders}
+                backlinksMap={backlinksMap}
+                onClearSelection={() => setSelectedIds(new Set())}
+                onSelectAll={() => setSelectedIds(new Set(flatNotes.map((n) => n.id)))}
+                onSelectMany={handleSelectMany}
+                onCardClick={onRowClick}
+              />
+            )}
           </div>
 
           <DragOverlay

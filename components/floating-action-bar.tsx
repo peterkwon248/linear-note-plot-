@@ -339,6 +339,10 @@ export function FloatingActionBar({
             {/* Status badges */}
             {Array.from(statusGroups.entries()).map(([status, groupNotes]) => {
               const cfg = STATUS_CONFIG[status]
+              // 2026-05-12 hotfix: STATUS_CONFIG는 stone/brick/keystone만.
+              // 노트의 status가 (data corruption / 옛 enum) 그 외 값이면
+              // 이 badge skip. crash 대신 silent skip이 안전.
+              if (!cfg) return null
               return (
                 <Popover key={status}>
                   <PopoverTrigger asChild>
