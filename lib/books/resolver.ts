@@ -1,5 +1,5 @@
 /**
- * Smart Book resolver (Phase 5 / Phase A — folder source only).
+ * Smart Book resolver (Phase 5 / Phase A+B — folder + category sources).
  *
  * Pure function that combines a Book's manual items with auto-resolved
  * items from `book.smartSources`. Manual items always render top, auto
@@ -9,17 +9,18 @@
  *
  * INVARIANT (smart-book-prd §2): AutoSource is a "supplier", not a
  * member kind. Folder source resolves Notes only via reverse N:M
- * (`Note.folderIds.includes(source.refId)`). Folder has no `noteIds`
- * field — `lib/types.ts:463` confirmed.
+ * (`Note.folderIds.includes(source.refId)`). Category source resolves
+ * WikiArticles via the DAG-aware `WikiArticle.categoryIds` array — a
+ * wiki can belong to multiple categories.
  *
- * Phase A scope: kind="folder" sources only. Other kinds silently
- * ignored (Phase B-E).
+ * Phase A scope: kind="folder" (Notes). Phase B scope: kind="category"
+ * (WikiArticles). Other kinds silently ignored (Phase C-E).
  *
  * Spec: `.omc/plans/smart-book-prd.md` §5.3 + §5.10.
  */
 
 import { generateKeyBetween } from "fractional-indexing"
-import type { Book, BookItem, Note, Folder } from "@/lib/types"
+import type { Book, BookItem, Note, Folder, WikiArticle, WikiCategory } from "@/lib/types"
 
 /**
  * BookItem with source provenance. The `source` field is in-memory only
@@ -38,11 +39,18 @@ export type ResolvedBookItem = BookItem & {
 /**
  * Minimal store snapshot the resolver needs. Decouples from PlotState
  * for testability.
+ *
+ * Phase B added `wikiArticles` + `wikiCategories` for category source
+ * support. Both are optional to keep Phase A-only callers (and existing
+ * tests covering folder source) backwards compatible — missing fields
+ * cause category sources to silently skip, never crash.
  */
 export interface ResolverStore {
   notes: Note[]
   folders: Folder[]
-  // Phase B-E will add: wikiArticles, tags, labels, stickers, wikiCategories
+  wikiArticles?: WikiArticle[]
+  wikiCategories?: WikiCategory[]
+  // Phase C-E will add: tags, labels, stickers
 }
 
 /**
@@ -74,10 +82,12 @@ export function resolveBookItems(
 ): ResolvedBookItem[] {
   // 1. Manual items
   // Tweak B: tag manual notes/wikis with sourceRefId if they'd also match
-  // a smart source — UI uses this to render a subtle folder badge so users
-  // see "this manual note also lives in Daily Log folder". Phase A: folder
-  // kind only, first-match wins (multi-source dedup default).
+  // a smart source — UI uses this to render a subtle source badge so users
+  // see "this manual note also lives in Daily Log folder" or "this manual
+  // wiki also lives in Algorithms category". First-match wins (multi-source
+  // dedup default per LOCKED §9).
   const folderSources = (book.smartSources ?? []).filter((s) => s.kind === "folder")
+  const categorySources = (book.smartSources ?? []).filter((s) => s.kind === "category")
   const manualItems: ResolvedBookItem[] = book.items.map((item) => {
     let sourceRefId: string | undefined
     if (item.kind === "note" && folderSources.length > 0) {
@@ -86,6 +96,12 @@ export function resolveBookItems(
         ? folderSources.find((s) => note.folderIds.includes(s.refId))
         : undefined
       sourceRefId = matchingFolder?.refId
+    } else if (item.kind === "wiki" && categorySources.length > 0) {
+      const wiki = (store.wikiArticles ?? []).find((w) => w.id === item.refId)
+      const matchingCategory = wiki
+        ? categorySources.find((s) => wiki.categoryIds?.includes(s.refId))
+        : undefined
+      sourceRefId = matchingCategory?.refId
     }
     return {
       ...item,
@@ -110,77 +126,145 @@ export function resolveBookItems(
       .filter((i): i is Extract<BookItem, { kind: "note" }> => i.kind === "note")
       .map((i) => i.refId),
   )
-  // Multi-source dedup: a note that matches multiple sources appears
+  const manualWikiRefIds = new Set(
+    book.items
+      .filter((i): i is Extract<BookItem, { kind: "wiki" }> => i.kind === "wiki")
+      .map((i) => i.refId),
+  )
+  // Multi-source dedup: an entity that matches multiple sources appears
   // under the FIRST source only (LOCKED #11 / §9 Q4 default policy).
+  // Single set is safe because Plot entity ids are UUIDs (no namespace
+  // collision between note and wiki ids).
   const seenAutoRefIds = new Set<string>()
 
   const autoItems: ResolvedBookItem[] = []
   let prevOrder: string | null = lastManualOrder
 
-  // 3. Process each smart source (Phase A: folder only)
+  // Helper: sort entities by updatedAt desc with id tiebreaker for
+  // deterministic output (notes + wikis share this pattern).
+  const byUpdatedDesc = <T extends { id: string; updatedAt?: string }>(
+    a: T,
+    b: T,
+  ): number => {
+    const cmp = (b.updatedAt ?? "").localeCompare(a.updatedAt ?? "")
+    return cmp !== 0 ? cmp : a.id.localeCompare(b.id)
+  }
+
+  // 3. Process each smart source (Phase A: folder, Phase B: category)
   for (const source of book.smartSources ?? []) {
-    if (source.kind !== "folder") continue // Phase B-E guard
+    if (source.kind === "folder") {
+      const folder = store.folders.find((f) => f.id === source.refId)
+      if (!folder) continue // Hard delete safety
+      // Phase A: kind="note" folder only. Wiki folders skip silently
+      // (PRD §5.3 + lib/types.ts:485 Folder.kind invariant).
+      if (folder.kind !== "note") continue
 
-    const folder = store.folders.find((f) => f.id === source.refId)
-    if (!folder) continue // Hard delete safety
-    // Phase A: kind="note" folder only. Wiki folders skip silently
-    // (PRD §5.3 + lib/types.ts:485 Folder.kind invariant). Phase B
-    // adds wiki folder support via wikiArticles filter.
-    if (folder.kind !== "note") continue
+      // Filter notes: live + in folder + not excluded + not manual + not seen
+      const candidates = store.notes
+        .filter(
+          (n) =>
+            n.folderIds.includes(source.refId) &&
+            !n.trashed &&
+            !excludeSet.has(n.id) &&
+            !manualNoteRefIds.has(n.id) &&
+            !seenAutoRefIds.has(n.id),
+        )
+        .sort(byUpdatedDesc)
 
-    // Filter notes: live + in folder + not excluded + not manual + not seen
-    const candidates = store.notes
-      .filter(
-        (n) =>
-          n.folderIds.includes(source.refId) &&
-          !n.trashed &&
-          !excludeSet.has(n.id) &&
-          !manualNoteRefIds.has(n.id) &&
-          !seenAutoRefIds.has(n.id),
-      )
-      .sort((a, b) => {
-        // updatedAt desc (newest first). Falls back to id for stability.
-        const cmp = (b.updatedAt ?? "").localeCompare(a.updatedAt ?? "")
-        return cmp !== 0 ? cmp : a.id.localeCompare(b.id)
-      })
+      // LOCKED #10 (revised v1.2): empty auto source = silent skip (no heading,
+      // no items). Was "show heading only" — caused confusion when all notes
+      // are already manual (every note dedup'd → orphan heading). Source
+      // visibility is managed via SourcesSection chip; heading only adds
+      // value when auto items follow it.
+      if (candidates.length === 0) continue
 
-    // LOCKED #10 (revised v1.2): empty auto source = silent skip (no heading,
-    // no items). Was "show heading only" — caused confusion when all notes
-    // are already manual (every note dedup'd → orphan heading). Source
-    // visibility is managed via SourcesSection chip; heading only adds
-    // value when auto items follow it.
-    if (candidates.length === 0) continue
+      // Mark seen (multi-source dedup)
+      for (const note of candidates) {
+        seenAutoRefIds.add(note.id)
+      }
 
-    // Mark seen (multi-source dedup)
-    for (const note of candidates) {
-      seenAutoRefIds.add(note.id)
-    }
-
-    // Auto chapter-heading
-    const headingOrder = generateKeyBetween(prevOrder, null)
-    autoItems.push({
-      kind: "chapter-heading",
-      id: `auto-heading-${source.refId}`,
-      title: `📁 ${folder.name}`,
-      order: headingOrder,
-      source: "auto",
-      sourceRefId: source.refId,
-    })
-    prevOrder = headingOrder
-
-    // Auto note items
-    for (const note of candidates) {
-      const noteOrder = generateKeyBetween(prevOrder, null)
+      // Auto chapter-heading
+      const headingOrder = generateKeyBetween(prevOrder, null)
       autoItems.push({
-        kind: "note",
-        id: `auto-${source.refId}-${note.id}`,
-        refId: note.id,
-        order: noteOrder,
+        kind: "chapter-heading",
+        id: `auto-heading-${source.refId}`,
+        title: `📁 ${folder.name}`,
+        order: headingOrder,
         source: "auto",
         sourceRefId: source.refId,
       })
-      prevOrder = noteOrder
+      prevOrder = headingOrder
+
+      // Auto note items
+      for (const note of candidates) {
+        const noteOrder = generateKeyBetween(prevOrder, null)
+        autoItems.push({
+          kind: "note",
+          id: `auto-${source.refId}-${note.id}`,
+          refId: note.id,
+          order: noteOrder,
+          source: "auto",
+          sourceRefId: source.refId,
+        })
+        prevOrder = noteOrder
+      }
+      continue
     }
+
+    if (source.kind === "category") {
+      // Phase B — Wiki category source. DAG: WikiArticle.categoryIds is
+      // an optional array (a wiki can sit in multiple categories). We
+      // match if ANY of the wiki's categoryIds == source.refId.
+      const category = (store.wikiCategories ?? []).find((c) => c.id === source.refId)
+      if (!category) continue // Hard delete / stale ref safety
+
+      const candidates = (store.wikiArticles ?? [])
+        .filter(
+          (w) =>
+            w.categoryIds?.includes(source.refId) &&
+            !(w as { trashed?: boolean }).trashed &&
+            !excludeSet.has(w.id) &&
+            !manualWikiRefIds.has(w.id) &&
+            !seenAutoRefIds.has(w.id),
+        )
+        .sort(byUpdatedDesc)
+
+      if (candidates.length === 0) continue // LOCKED #10 v1.2
+
+      for (const wiki of candidates) {
+        seenAutoRefIds.add(wiki.id)
+      }
+
+      // Auto chapter-heading — 📚 emoji distinguishes category from folder
+      // (📁) in BookItemRow rendering. Tag with sourceRefId so UI can
+      // resolve back to WikiCategory for color/icon.
+      const headingOrder = generateKeyBetween(prevOrder, null)
+      autoItems.push({
+        kind: "chapter-heading",
+        id: `auto-heading-${source.refId}`,
+        title: `📚 ${category.name}`,
+        order: headingOrder,
+        source: "auto",
+        sourceRefId: source.refId,
+      })
+      prevOrder = headingOrder
+
+      for (const wiki of candidates) {
+        const wikiOrder = generateKeyBetween(prevOrder, null)
+        autoItems.push({
+          kind: "wiki",
+          id: `auto-${source.refId}-${wiki.id}`,
+          refId: wiki.id,
+          order: wikiOrder,
+          source: "auto",
+          sourceRefId: source.refId,
+        })
+        prevOrder = wikiOrder
+      }
+      continue
+    }
+
+    // Phase C-E: tag / label / sticker — silently ignored
   }
 
   // 4. Merge and sort by order

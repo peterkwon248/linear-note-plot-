@@ -17,7 +17,7 @@
  * Spec: `.omc/plans/book-entity-prd.md` §8.
  */
 
-import type { Book, BookItem, Note, Folder } from "@/lib/types"
+import type { Book, BookItem, Note, Folder, WikiArticle, WikiCategory } from "@/lib/types"
 import { resolveBookItems, type ResolvedBookItem } from "@/lib/books/resolver"
 
 /** A BookItem that points at a real entity (not a divider). */
@@ -97,6 +97,10 @@ export function booksContainingEntity(
 export interface ResolverStoreSlice {
   notes: Note[]
   folders: Folder[]
+  // Phase B+: optional for backwards compatibility with Phase A callers.
+  // Missing → category sources silently skip (no crash).
+  wikiArticles?: WikiArticle[]
+  wikiCategories?: WikiCategory[]
 }
 
 /**

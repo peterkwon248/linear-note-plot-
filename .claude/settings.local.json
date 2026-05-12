@@ -201,7 +201,9 @@
       "Bash(ls ~/.claude/skills/ 2>&1 | head -20; echo \"---\"; ls .claude/skills/ 2>&1 | head -20; echo \"---\"; ls -la ~/.claude/plugins/ 2>&1 | head -10)",
       "Bash(find ~/.claude -name \"before-work*\" -o -name \"after-work*\" 2>&1 | head -10)",
       "Bash(tasklist /FI \"IMAGENAME eq node.exe\")",
-      "Bash(cat C:\\\\\\\\Users\\\\\\\\user\\\\\\\\AppData\\\\\\\\Local\\\\\\\\Temp\\\\\\\\claude\\\\\\\\C--Users-user-Desktop-linear-note-plot---claude-worktrees-condescending-yonath-23775a\\\\\\\\d9b3c7f1-f462-4802-9159-85747f4c4abd\\\\\\\\tasks\\\\\\\\bu3rmf25i.output)"
+      "Bash(cat C:\\\\\\\\Users\\\\\\\\user\\\\\\\\AppData\\\\\\\\Local\\\\\\\\Temp\\\\\\\\claude\\\\\\\\C--Users-user-Desktop-linear-note-plot---claude-worktrees-condescending-yonath-23775a\\\\\\\\d9b3c7f1-f462-4802-9159-85747f4c4abd\\\\\\\\tasks\\\\\\\\bu3rmf25i.output)",
+      "Bash(ls -la ~/.claude/commands/before-work.md ~/.claude/commands/after-work.md 2>&1)",
+      "Bash(rm ~/.claude/commands/before-work.md ~/.claude/commands/after-work.md && ls ~/.claude/commands/ | head -10)"
     ]
   }
 }
