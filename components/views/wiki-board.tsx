@@ -20,6 +20,7 @@ import { isWikiStub } from "@/lib/wiki-utils"
 import { usePlotStore } from "@/lib/store"
 import { WIKI_STATUS_HEX } from "@/lib/colors"
 import { IconWikiStub, IconWikiArticle } from "@/components/plot-icons"
+import { WikiGroupHeaderIcon } from "@/components/views/wiki-shared"
 import {
   LinksChip,
   ReadsChip,
@@ -73,12 +74,14 @@ interface WikiBoardProps {
 function BoardColumn({
   group,
   groupBy,
+  wikiCategories,
   children,
   isDragDisabled,
   activeDragId,
 }: {
   group: WikiGroup
   groupBy: GroupBy
+  wikiCategories: WikiCategory[]
   children: React.ReactNode
   isDragDisabled: boolean
   activeDragId: string | null
@@ -120,6 +123,7 @@ function BoardColumn({
         {...attributes}
         {...listeners}
       >
+        <WikiGroupHeaderIcon groupBy={groupBy} groupKey={group.key} wikiCategories={wikiCategories} />
         <span className="text-note font-semibold text-foreground truncate">{group.label || "Untitled"}</span>
         <span className="text-2xs text-muted-foreground">{group.articles.length}</span>
       </div>
@@ -549,6 +553,7 @@ export function WikiBoard({
                   key={group.key}
                   group={group}
                   groupBy={groupBy}
+                  wikiCategories={wikiCategories}
                   isDragDisabled={isDragDisabled}
                   activeDragId={activeDragId}
                 >

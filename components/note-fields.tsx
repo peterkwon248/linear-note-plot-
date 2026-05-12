@@ -118,7 +118,11 @@ export function StatusBadge({ status }: { status: NoteStatus }) {
 /* ── PriorityBadge ────────────────────────────────────── */
 
 export function PriorityBadge({ priority }: { priority: NotePriority }) {
-  const cfg = PRIORITY_CONFIG[priority]
+  // Null guard — IDB may carry legacy / dnd-kit collision residue (e.g.
+  // "col-urgent") that isn't a valid NotePriority key. Fall back to "none"
+  // to avoid crashing on cfg.color access. Same pattern as STATUS_CONFIG
+  // (note-fields.tsx:143).
+  const cfg = PRIORITY_CONFIG[priority] ?? PRIORITY_CONFIG.none
   return (
     <span
       className="inline-flex items-center gap-1 text-note"
@@ -203,7 +207,8 @@ export function PriorityDropdown({
   onChange: (priority: NotePriority) => void
   variant?: "button" | "inline"
 }) {
-  const current = PRIORITY_CONFIG[value]
+  // Null guard — see PriorityBadge above.
+  const current = PRIORITY_CONFIG[value] ?? PRIORITY_CONFIG.none
 
   return (
     <DropdownMenu>

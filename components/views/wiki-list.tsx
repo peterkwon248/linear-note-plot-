@@ -3,6 +3,7 @@
 import { useMemo, useState, useEffect } from "react"
 import { cn } from "@/lib/utils"
 import { groupByInitial } from "@/lib/korean-utils"
+import { WikiGroupHeaderIcon } from "@/components/views/wiki-shared"
 import { shortRelative } from "@/lib/format-utils"
 import { setWikiViewMode } from "@/lib/wiki-view-mode"
 import { isWikiStub } from "@/lib/wiki-utils"
@@ -886,7 +887,8 @@ export function WikiList({
                 return (
                   <div key={group.key}>
                     {group.label && (
-                      <div className="flex items-center gap-2.5 px-5 py-2 mt-3 mb-0.5 border-b border-border-subtle">
+                      <div className="flex items-center gap-2 px-5 py-2 mt-3 mb-0.5 border-b border-border-subtle">
+                        <WikiGroupHeaderIcon groupBy={groupBy ?? "none"} groupKey={group.key} wikiCategories={wikiCategories} />
                         <span className="text-2xs font-semibold text-muted-foreground/60 uppercase tracking-wide">
                           {group.label}
                         </span>

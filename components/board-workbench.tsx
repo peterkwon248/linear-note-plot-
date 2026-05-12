@@ -202,7 +202,11 @@ export function BoardWorkbench({
             <span className="text-note text-muted-foreground">Status</span>
             <div className="flex flex-wrap gap-1.5">
               {Array.from(statusGroups.entries()).map(([status, groupNotes]) => {
+                // Null guard — same pattern as floating-action-bar hotfix (#308).
+                // STATUS_CONFIG only has stone/brick/keystone; legacy or dnd-kit
+                // collision residue (e.g. "col-stone") would crash on cfg.bg.
                 const cfg = STATUS_CONFIG[status]
+                if (!cfg) return null
                 return (
                   <Popover key={status}>
                     <PopoverTrigger asChild>

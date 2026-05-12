@@ -706,7 +706,7 @@ function PropertyChipRowInner({
   const overflow = valid.length - visible.length
 
   return (
-    <div className={`flex items-center gap-1 min-w-0 ${className ?? ""}`}>
+    <div className={`flex items-center gap-1 min-w-0 overflow-hidden ${className ?? ""}`}>
       {visible.map((c, i) => (
         // ReactNode keys: rely on the parent to provide stable element keys
         // (chips are typically components with no key — we inject indices).
