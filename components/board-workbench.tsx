@@ -23,6 +23,15 @@ import { CheckCircle } from "@phosphor-icons/react/dist/ssr/CheckCircle"
 import { ArrowCounterClockwise } from "@phosphor-icons/react/dist/ssr/ArrowCounterClockwise"
 import { Bell } from "@phosphor-icons/react/dist/ssr/Bell"
 import { GitMerge } from "@phosphor-icons/react/dist/ssr/GitMerge"
+// 2026-05-12: Linear-principle parity — Pin/Folder/Split added to board
+// workbench so the action set matches the list-mode floating bar. Board's
+// signature side-panel chrome stays untouched.
+import { PushPin } from "@phosphor-icons/react/dist/ssr/PushPin"
+import { PushPinSlash } from "@phosphor-icons/react/dist/ssr/PushPinSlash"
+import { FolderOpen } from "@phosphor-icons/react/dist/ssr/FolderOpen"
+import { Scissors } from "@phosphor-icons/react/dist/ssr/Scissors"
+import { FolderPicker } from "@/components/folder-picker"
+import { setSplitTargetNoteId } from "@/lib/note-split-mode"
 import { MergeDialog } from "@/components/merge-dialog"
 import { NotePickerDialog } from "@/components/note-picker-dialog"
 import { WikiAssemblyDialog } from "@/components/wiki-assembly-dialog"
@@ -317,6 +326,87 @@ export function BoardWorkbench({
                 </button>
               }
             />
+          </div>
+        </div>
+
+        {/* Organize — 2026-05-12: Pin/Folder/Split parity with list floating bar */}
+        <div className="mt-4 space-y-3">
+          <h4 className="text-2xs font-medium text-muted-foreground">
+            Organize
+          </h4>
+          <div className="space-y-1">
+            {/* Pin/Unpin batch toggle — mixed-state defaults to "pin all"
+                (unpin only when every selection is already pinned). Mirrors
+                the FloatingActionBar pattern. */}
+            {(() => {
+              const ids = Array.from(selectedIds)
+              const allPinned = selectedNotes.every((n) => n.pinned)
+              const nextPinned = !allPinned
+              return (
+                <button
+                  onClick={() => {
+                    batchUpdateNotes(ids, { pinned: nextPinned })
+                    toast.success(
+                      allPinned
+                        ? `Unpinned ${ids.length} note${ids.length === 1 ? "" : "s"}`
+                        : `Pinned ${ids.length} note${ids.length === 1 ? "" : "s"}`,
+                    )
+                  }}
+                  className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-note font-medium text-foreground transition-colors hover:bg-hover-bg"
+                >
+                  {allPinned ? (
+                    <>
+                      <PushPinSlash className="text-muted-foreground" size={16} weight="regular" />
+                      Unpin
+                    </>
+                  ) : (
+                    <>
+                      <PushPin className="text-amber-500" size={16} weight="regular" />
+                      Pin
+                    </>
+                  )}
+                </button>
+              )
+            })()}
+
+            {/* Move to folder (batch, overwrite) — single-folder semantic
+                applied uniformly to every selection. Matches list mode's
+                Folder popover. */}
+            <Popover>
+              <PopoverTrigger asChild>
+                <button className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-note font-medium text-foreground transition-colors hover:bg-hover-bg">
+                  <FolderOpen className="text-muted-foreground" size={16} weight="regular" />
+                  Move to folder
+                </button>
+              </PopoverTrigger>
+              <PopoverContent align="end" className="w-56 p-1" sideOffset={4}>
+                <FolderPicker
+                  kind="note"
+                  currentFolderIds={[]}
+                  selectMode="single"
+                  onApply={(folderIds) => {
+                    const ids = Array.from(selectedIds)
+                    batchUpdateNotes(ids, { folderIds })
+                    toast(`Moved ${ids.length} note${ids.length === 1 ? "" : "s"} to folder`)
+                  }}
+                />
+              </PopoverContent>
+            </Popover>
+
+            {/* Split — only meaningful for a single note; gated by
+                selection count to avoid ambiguous batch semantics. */}
+            {selectedIds.size === 1 && (
+              <button
+                onClick={() => {
+                  const id = Array.from(selectedIds)[0]
+                  setSplitTargetNoteId(id)
+                }}
+                className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-note font-medium text-foreground transition-colors hover:bg-hover-bg"
+              >
+                <Scissors className="text-muted-foreground" size={16} weight="regular" />
+                Split this note…
+              </button>
+            )}
           </div>
         </div>
 

@@ -1,41 +1,68 @@
 # TODO
 
-> 우선순위 기반 작업 목록. NEXT-ACTION.md는 즉시 액션, 이 파일은 전체 우선순위 큰그림.
+> 우선순위 기반 작업 목록. **P0 = 다음 세션 즉시 시작점** (NEXT-ACTION.md 폐지, 2026-05-12).
 > 완료 항목은 즉시 삭제 또는 "완료" 섹션으로 이동.
 
-**마지막 갱신**: 2026-05-12 (Books view-engine 10 PR + emoji 폐기 + Pin 통일)
+**마지막 갱신**: 2026-05-12 (ContextMenu DRY + Wiki UX cherry-pick + Board polish + 워크플로우 재편)
 
 ---
 
 ## 🔴 P0 — 즉시 (다음 세션)
 
-### Pin indicator 위치 fix — Notes/Wiki status chip 옆 ⭐
-사용자 시그널 (세션 끝): "노트, 위키의 status chip 옆에 핀 아이콘이 있어야 되는 거 아니냐?"
+### Trash "All" 통합 view 신규 ⭐
+사용자 의도 (이번 세션 명시): *"All은 모든 entity의 trashed 통합 표시"*. 현재 코드 = count 통합, display는 notes만 (모순).
 
-현재 PR #301: title 옆 inline pin. 사용자 의도 = status column 안 또는 status chip 옆.
+- **신규 컴포넌트** `components/views/trash-all-view.tsx` (~150-200 LOC)
+- entity별 trashed 통합 list (notes / wikiArticles / books / tags / labels / templates / references / attachments)
+- 각 row: `{entityIcon} {entityBadge} {title} [Restore] [Delete forever]`
+- entity별 action 분기:
+  - notes → `toggleTrash(id)` restore / `deleteNote(id)` delete
+  - wikiArticles → `updateWikiArticle(id, { trashed: false })` / `deleteWikiArticle(id)`
+  - books / tags / labels / templates / references / attachments → 각자 `restoreXxx(id)` 사용
+- notes-table.tsx: `isTrashView && trashFilter === "all"` 시 TrashAllView mount
+- entity별 section (Notes (N) / Wiki (N) / Books (N) / ...) — 빈 section은 hide 또는 dim
+- count 통합과 display 통합 정합 보장
 
-- components/notes-table.tsx: status column cell 안 pin 추가 (또는 status chip 옆 inline)
-- components/views/wiki-list.tsx: WikiStub/Article badge 옆 pin 이동
+### Wiki UX cherry-pick 사용자 manual verify
+이번 세션 통합된 변경 — 시각 확인 필요:
+- `/wiki` list mode 우클릭 → cursor 추적 OK
+- Wiki 1+ row 선택 → 하단 플로팅바 6 액션 (Pin/Move/Add to category/Merge/Split/Delete)
+- `/wiki` gallery mode 우클릭 → ContextMenu 나타남
 
-### Wiki 우클릭 메뉴 + 플로팅 바 Pin 추가 (PR #300 follow-up)
-- WikiList의 row ContextMenu에 Pin/Unpin
-- Wiki Floating bar 있다면 Pin 액션 추가 (없으면 신규)
+### Notes 4 surface ContextMenu manual verify
+- `/notes` list mode 우클릭 → 13 items
+- `/notes` board mode 우클릭 → 동일 13 items
+- `/notes` gallery mode 우클릭 → 동일 13 items
+- board mode 카드 선택 → 우측 BoardWorkbench "Organize" 섹션 (Pin/Move/Split)
 
-### Books view-engine 시리즈 manual verify
-- 4 viewMode (grid/list/board/gallery) 토글
-- Filter Kind values icon 노출
-- BookKindChip 색
-- BookFloatingBar (1+ 선택 시)
-- Save view 버튼
+### Notes board drag/empty column manual verify
+- 카드 drag → drop 시 smooth animation (220ms cubic-bezier)
+- 카드를 다른 status로 옮긴 후 원래 column 유지 (drop target)
+- Stone/Brick/Block 3 column 항상 표시
 
-회귀 발견 시 즉시 fix.
+### Books grid/board/gallery pin 위치 점검 (이번 세션 list만 fix)
+- grid mode: cover icon 큰 layout — pin 위치 자연스러운가
+- board mode: card layout
+- gallery mode: entity-agnostic adapter — pin 표시 여부
+- 회귀 발견 시 list pattern 정합화
+
+### Notes Gallery 하단 floating bar (이번 세션 deferred)
+- Gallery card에 selection state + 하단 FloatingActionBar mount
+- List/Board와 정합 (Linear principle)
+
+### 글로벌 commands 수동 삭제 (양 머신)
+```bash
+rm ~/.claude/commands/before-work.md
+rm ~/.claude/commands/after-work.md
+```
+NEXT-ACTION 의존 옛 정의 제거. project-level (git tracked) 새 정의가 단일 진실.
 
 ---
 
 ## 🔵 보류
 
 ### Manual verify Books 4 viewMode + 회귀 fix
-다음 세션 시작 시 진행. NEXT-ACTION.md 7 step 절차.
+다음 세션 시작 시 진행. 7 step 절차 (아래).
 
 ```
 1. Grid mode 정상 (cover emoji + 카드, 우클릭 메뉴)
@@ -144,6 +171,20 @@
 ---
 
 ## ✅ 최근 완료
+
+### 2026-05-12 (낮~오후) — ContextMenu DRY + Wiki UX cherry-pick + Board polish + 워크플로우 재편 (Store v129 → v130)
+- ✅ Dev server fix (npm install — node_modules 누락)
+- ✅ Books list mode pin 위치 fix (title 옆, flex-1 제거)
+- ✅ Notes Source filter values icon 추가 (Manual/Web Clip/Import)
+- ✅ **NEXT-ACTION.md 영구 폐지** + before-work/after-work project-level 재편
+- ✅ Split view popover에 Books 옵션 추가 (BookOpen icon, 영구 결정)
+- ✅ Wiki seed 4개 확장 + v130 backfill migration (verify 데이터 다양성)
+- ✅ **Cherry-pick `42c6e59`** — Wiki UX 3 issues (우클릭 cursor / 플로팅바 Pin+Move+Category / Gallery 우클릭)
+- ✅ **ContextMenu DRY refactor** — `note-context-menu-items.tsx` helper + list/board/gallery 3 surfaces 통일 (Linear principle)
+- ✅ **BoardWorkbench 보강** — Pin/Folder/Split 액션 추가 (list FloatingActionBar parity)
+- ✅ Notes board polish — drag transition fix + 빈 status column 항상 표시 (Kanban) + smooth drop animation (220ms cubic-bezier)
+- ✅ 시각 폴리시 — group header 폰트 (11→13) + row metadata 폰트 (12→13, muted→fg)
+- Pin indicator 위치 = title 옆 (영구 결정 재확인, elastic-darwin의 status chip 옆 변경 폐기)
 
 ### 2026-05-12 (저녁~밤, 거대) — Books polish 6 PR + emoji 폐기 + Pin 통일 (Store v126 → v129)
 - ✅ **PR #296** (v127): SEED_BOOKS migration backfill (기존 사용자에도 inject)

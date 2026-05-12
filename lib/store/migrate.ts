@@ -1939,5 +1939,19 @@ export function migrate(persistedState: unknown): PlotState {
     }
   }
 
+  // v130: SEED_WIKI_ARTICLES backfill — Wiki UX verify (2026-05-12 cherry-pick
+  // 42c6e59 follow-up). 기존 사용자가 wiki seed 3개만 있어서 Wiki UX 3 이슈 fix
+  // (우클릭/플로팅바/갤러리) 시각 verify가 어려웠음. id-dedup append 패턴 (Books
+  // v127 정합) — 사용자 기존 articles 보존 + 누락 seed만 push.
+  if (Array.isArray(state.wikiArticles)) {
+    const { SEED_WIKI_ARTICLES } = require("./seeds")
+    const existingIds = new Set((state.wikiArticles as any[]).map((a: any) => a.id))
+    for (const seed of SEED_WIKI_ARTICLES) {
+      if (!existingIds.has(seed.id)) {
+        ;(state.wikiArticles as any[]).push(seed)
+      }
+    }
+  }
+
   return state as unknown as PlotState
 }

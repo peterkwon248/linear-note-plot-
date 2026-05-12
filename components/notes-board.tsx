@@ -4,6 +4,7 @@ import { useState, useEffect, useMemo, useRef, memo, useCallback } from "react"
 import {
   DndContext,
   DragOverlay,
+  defaultDropAnimationSideEffects,
   useDroppable,
   useDraggable,
   PointerSensor,
@@ -70,6 +71,8 @@ import {
   PropertyChipRow,
 } from "@/components/property-chips"
 import { BoardWorkbench } from "@/components/board-workbench"
+import { useFolderPickerData } from "@/components/folder-picker"
+import { NoteContextMenuItems } from "@/components/note-context-menu-items"
 import type { Note, NoteStatus, NotePriority, TriageStatus, Folder, Tag, Label } from "@/lib/types"
 import { FilterChipBar } from "@/components/filter-bar"
 import { ViewHeader } from "@/components/view-header"
@@ -347,6 +350,18 @@ interface BoardCardProps {
   onDemote: () => void
   onMoveBack: () => void
   onRemind: (isoDate: string) => void
+  // 2026-05-12: Linear-principle action set parity with notes-table list mode.
+  // Board card right-click menu now exposes the full 13-item set via the
+  // shared NoteContextMenuItems helper.
+  onTogglePin: () => void
+  onOpen: () => void
+  onMergeWith: () => void
+  onLinkWith: () => void
+  onShowConnected: (direction: "both" | "in" | "out") => void
+  onSetFolder: (folderId: string) => void
+  onSetFolders: (folderIds: string[]) => void
+  noteFolders: Folder[]
+  createFolderInline: (afterCreate: (newId: string) => void) => void
 }
 
 function BoardCardInner({
@@ -374,6 +389,15 @@ function BoardCardInner({
   onDemote,
   onMoveBack,
   onRemind,
+  onTogglePin,
+  onOpen,
+  onMergeWith,
+  onLinkWith,
+  onShowConnected,
+  onSetFolder,
+  onSetFolders,
+  noteFolders,
+  createFolderInline,
 }: BoardCardProps) {
   const isDragDisabled = groupBy === "date" || groupBy === "linkCount"
   // Honor Display Properties on the board card. Undefined = show all
@@ -520,7 +544,11 @@ function BoardCardInner({
         e.stopPropagation()
         onDoubleClick?.()
       }}
-      className={`group relative cursor-pointer rounded-md border bg-card shadow-sm p-2.5 transition-all hover:border-muted-foreground/30 ${
+      // 2026-05-12: `transition-all` was applying to transform/opacity too,
+      // making dnd-kit drag updates lag (transition would fight the
+      // frame-level transform translation). Limit transition to the
+      // visual properties that actually animate on hover/select.
+      className={`group relative cursor-pointer rounded-md border bg-card shadow-sm p-2.5 transition-colors hover:border-muted-foreground/30 ${
         isSelected ? "border-accent/50 bg-accent/5 ring-1 ring-accent/20"
         : isActive ? "border-accent ring-1 ring-accent/30"
         : "border-border"
@@ -583,82 +611,29 @@ function BoardCardInner({
     <ContextMenu>
       <ContextMenuTrigger asChild>{cardVisual}</ContextMenuTrigger>
       <ContextMenuContent className="w-52">
-        {note.status === "stone" && note.triageStatus !== "trashed" && (
-          <>
-            <ContextMenuItem onClick={onKeep} className="text-note">
-              <PhCheck className="mr-2 text-accent" size={16} weight="bold" /> Done
-            </ContextMenuItem>
-            <ContextMenuSub>
-              <ContextMenuSubTrigger className="text-note">
-                <Alarm className="mr-2 text-muted-foreground" size={16} weight="regular" /> Snooze
-              </ContextMenuSubTrigger>
-              <ContextMenuSubContent className="w-44">
-                <ContextMenuItem onClick={() => onSnooze("3h")} className="text-note">3 hours</ContextMenuItem>
-                <ContextMenuItem onClick={() => onSnooze("tomorrow")} className="text-note">Tomorrow 10:00 AM</ContextMenuItem>
-                <ContextMenuItem onClick={() => onSnooze("3-days")} className="text-note">In 3 days</ContextMenuItem>
-                <ContextMenuItem onClick={() => onSnooze("next-week")} className="text-note">Next week 10:00 AM</ContextMenuItem>
-                <ContextMenuItem onClick={() => onSnooze("1-week")} className="text-note">In 1 week</ContextMenuItem>
-              </ContextMenuSubContent>
-            </ContextMenuSub>
-            <ContextMenuItem onClick={onTrash} className="text-note text-destructive focus:text-destructive">
-              <Trash className="mr-2" size={16} weight="regular" /> Trash
-            </ContextMenuItem>
-            <ContextMenuSeparator />
-          </>
-        )}
-        {note.status === "brick" && (
-          <>
-            <ContextMenuItem onClick={onPromote} className="text-note">
-              <ArrowUpRight className="mr-2 text-chart-5" size={16} weight="regular" /> Promote to Keystone
-            </ContextMenuItem>
-            <ContextMenuItem onClick={onMoveBack} className="text-note">
-              <InboxIcon className="mr-2 text-muted-foreground" size={16} weight="regular" /> Back to Stone
-            </ContextMenuItem>
-            <ContextMenuSeparator />
-          </>
-        )}
-        {note.status === "keystone" && (
-          <>
-            <ContextMenuItem onClick={onDemote} className="text-note">
-              <ArrowDownLeft className="mr-2 text-muted-foreground" size={16} weight="regular" /> Demote to Brick
-            </ContextMenuItem>
-            <ContextMenuSeparator />
-          </>
-        )}
-        {/* Remind me (all notes) */}
-        <ContextMenuSub>
-          <ContextMenuSubTrigger className="text-note">
-            <Bell className="mr-2 text-muted-foreground" size={16} weight="regular" />
-            Remind me
-          </ContextMenuSubTrigger>
-          <ContextMenuSubContent className="w-48">
-            <ContextMenuItem onClick={() => onRemind(getSnoozeTime("3h"))} className="text-note">
-              <PhClock className="mr-2 text-muted-foreground" size={16} weight="regular" />
-              <span>Later today</span>
-            </ContextMenuItem>
-            <ContextMenuItem onClick={() => onRemind(getSnoozeTime("tomorrow"))} className="text-note">
-              <PhClock className="mr-2 text-muted-foreground" size={16} weight="regular" />
-              <span>Tomorrow</span>
-            </ContextMenuItem>
-            <ContextMenuItem onClick={() => onRemind(getSnoozeTime("3-days"))} className="text-note">
-              <PhClock className="mr-2 text-muted-foreground" size={16} weight="regular" />
-              <span>In 3 days</span>
-            </ContextMenuItem>
-            <ContextMenuItem onClick={() => onRemind(getSnoozeTime("next-week"))} className="text-note">
-              <PhClock className="mr-2 text-muted-foreground" size={16} weight="regular" />
-              <span>Next week</span>
-            </ContextMenuItem>
-            <ContextMenuItem onClick={() => onRemind(getSnoozeTime("1-week"))} className="text-note">
-              <PhClock className="mr-2 text-muted-foreground" size={16} weight="regular" />
-              <span>In 1 week</span>
-            </ContextMenuItem>
-          </ContextMenuSubContent>
-        </ContextMenuSub>
-        <ContextMenuSeparator />
-
-        <ContextMenuItem onClick={onClick} className="text-note">
-          <FileText className="mr-2 text-muted-foreground" size={16} weight="regular" /> Open
-        </ContextMenuItem>
+        {/* 2026-05-12: DRY refactor — full 13-item menu via shared helper
+            (Linear principle: list/board/gallery share identical action set).
+            Board's signature side panel (BoardWorkbench) remains untouched
+            for batch actions; this is the per-card right-click menu. */}
+        <NoteContextMenuItems
+          note={note}
+          noteFolders={noteFolders}
+          createFolderInline={createFolderInline}
+          onKeep={onKeep}
+          onSnooze={onSnooze}
+          onTrash={onTrash}
+          onPromote={onPromote}
+          onMoveBack={onMoveBack}
+          onDemote={onDemote}
+          onRemind={onRemind}
+          onTogglePin={onTogglePin}
+          onOpen={onOpen}
+          onMergeWith={onMergeWith}
+          onLinkWith={onLinkWith}
+          onShowConnected={onShowConnected}
+          onSetFolder={onSetFolder}
+          onSetFolders={onSetFolders}
+        />
       </ContextMenuContent>
     </ContextMenu>
   )
@@ -760,6 +735,12 @@ export function NotesBoard({
   const folders = usePlotStore((s) => s.folders)
   const tags = usePlotStore((s) => s.tags)
   const labels = usePlotStore((s) => s.labels)
+  // 2026-05-12: ContextMenu DRY refactor — board cards now share the full
+  // 13-item menu from NoteContextMenuItems (Linear principle: same action
+  // set across surfaces).
+  const setMergePickerOpen = usePlotStore((s) => s.setMergePickerOpen)
+  const setLinkPickerOpen = usePlotStore((s) => s.setLinkPickerOpen)
+  const { folders: noteFolders, createFolderInline } = useFolderPickerData("note")
   // PR (c) — DnD modifier: default drop = "Add to" (preserve existing
   // memberships via addNoteToFolder), Shift-drop = legacy "Move to"
   // (replace via the existing fieldUpdate path). Idempotent at the
@@ -1264,7 +1245,12 @@ export function NotesBoard({
               strategy={horizontalListSortingStrategy}
             >
               {resolvedGroups.map((group) => {
-                if (group.notes.length === 0 && !viewState.showEmptyGroups) return null
+                // 2026-05-12: Status grouping always shows all 3 columns
+                // (Kanban pattern — empty column = valid drop target).
+                // Other groupings (folder/label/...) honor showEmptyGroups
+                // toggle since dynamic groups can be empty by user choice.
+                const isStatusGrouping = viewState.groupBy === "status"
+                if (group.notes.length === 0 && !isStatusGrouping && !viewState.showEmptyGroups) return null
                 const isExpanded = expandedColumns.has(group.key)
                 const totalNotes = group.notes.length
                 const cardLimit = isExpanded ? Infinity : COLUMN_CARD_LIMIT
@@ -1307,6 +1293,31 @@ export function NotesBoard({
                     onDemote={() => undoPromote(note.id)}
                     onMoveBack={() => moveBackToInbox(note.id)}
                     onRemind={(isoDate) => { setReminder(note.id, isoDate); toast("Reminder set") }}
+                    onTogglePin={() => {
+                      const nextPinned = !note.pinned
+                      updateNote(note.id, { pinned: nextPinned })
+                      toast.success(nextPinned ? "Pinned note" : "Unpinned note")
+                    }}
+                    onOpen={() => openNote(note.id)}
+                    onMergeWith={() => setMergePickerOpen(true, note.id)}
+                    onLinkWith={() => setLinkPickerOpen(true, note.id)}
+                    onShowConnected={(direction) => {
+                      const otherRules = (viewState.filters ?? []).filter(
+                        (r) => r.field !== "connectedTo"
+                      )
+                      updateViewState({
+                        filters: [
+                          ...otherRules,
+                          { field: "connectedTo", operator: "eq", value: `${note.id}:${direction}` },
+                        ],
+                      })
+                      const dirLabel = direction === "in" ? "backlinks" : direction === "out" ? "links out" : "both directions"
+                      toast(`Filtering: connected to "${note.title || "Untitled"}" (${dirLabel})`)
+                    }}
+                    onSetFolder={(folderId) => updateNote(note.id, { folderIds: folderId ? [folderId] : [] })}
+                    onSetFolders={(folderIds) => usePlotStore.getState().setNoteFolders(note.id, folderIds)}
+                    noteFolders={noteFolders}
+                    createFolderInline={createFolderInline}
                   />
                 )
 
@@ -1390,7 +1401,18 @@ export function NotesBoard({
             />
           </div>
 
-          <DragOverlay>
+          <DragOverlay
+            // 2026-05-12: Smooth drop animation — card eases into the new
+            // column instead of snapping. Cubic-bezier (overshoot-light) +
+            // small fade on drop = Linear-style polish.
+            dropAnimation={{
+              duration: 220,
+              easing: "cubic-bezier(0.18, 0.67, 0.6, 1.0)",
+              sideEffects: defaultDropAnimationSideEffects({
+                styles: { active: { opacity: "0.4" } },
+              }),
+            }}
+          >
             {isColumnDrag && (() => {
               const key = activeDragId!.replace("col-", "")
               const group = resolvedGroups.find(g => g.key === key)
@@ -1438,6 +1460,15 @@ export function NotesBoard({
                     onDemote={() => {}}
                     onMoveBack={() => {}}
                     onRemind={() => {}}
+                    onTogglePin={() => {}}
+                    onOpen={() => {}}
+                    onMergeWith={() => {}}
+                    onLinkWith={() => {}}
+                    onShowConnected={() => {}}
+                    onSetFolder={() => {}}
+                    onSetFolders={() => {}}
+                    noteFolders={noteFolders}
+                    createFolderInline={createFolderInline}
                   />
                   {/* Count badge */}
                   {dragCount > 1 && (

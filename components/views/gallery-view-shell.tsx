@@ -17,6 +17,7 @@
  */
 
 import { useEffect, useMemo, type ReactNode } from "react"
+import { toast } from "sonner"
 import { FileText } from "@phosphor-icons/react/dist/ssr/FileText"
 import { Folder as FolderIcon } from "@phosphor-icons/react/dist/ssr/Folder"
 import { Tag as TagIcon } from "@phosphor-icons/react/dist/ssr/Tag"
@@ -36,8 +37,18 @@ import { NOTE_STATUS_HEX, SPACE_COLORS } from "@/lib/colors"
 import { shortRelative } from "@/lib/format-utils"
 import { usePlotStore } from "@/lib/store"
 import { usePendingFilters, clearPendingFilters } from "@/lib/table-route"
+import { getSnoozeTime } from "@/lib/queries/notes"
 import type { ViewContextKey, FilterRule, GroupBy } from "@/lib/view-engine/types"
 import type { Note, NoteStatus } from "@/lib/types"
+// 2026-05-12: Gallery shares the full 13-item right-click menu with
+// list/board via the NoteContextMenuItems helper (Linear principle).
+import {
+  ContextMenu,
+  ContextMenuContent,
+  ContextMenuTrigger,
+} from "@/components/ui/context-menu"
+import { useFolderPickerData } from "@/components/folder-picker"
+import { NoteContextMenuItems } from "@/components/note-context-menu-items"
 
 interface GalleryViewShellProps {
   context: ViewContextKey
@@ -71,6 +82,20 @@ export function GalleryViewShell({
   const sidePanelOpen = usePlotStore((s) => s.sidePanelOpen)
   const createNote = usePlotStore((s) => s.createNote)
   const openNote = usePlotStore((s) => s.openNote)
+  // 2026-05-12: store actions wired for the gallery card right-click menu
+  // (shared with list/board via NoteContextMenuItems).
+  const updateNote = usePlotStore((s) => s.updateNote)
+  const triageKeep = usePlotStore((s) => s.triageKeep)
+  const triageSnooze = usePlotStore((s) => s.triageSnooze)
+  const triageTrash = usePlotStore((s) => s.triageTrash)
+  const promoteToPermanent = usePlotStore((s) => s.promoteToPermanent)
+  const undoPromote = usePlotStore((s) => s.undoPromote)
+  const moveBackToInbox = usePlotStore((s) => s.moveBackToInbox)
+  const setReminder = usePlotStore((s) => s.setReminder)
+  const setMergePickerOpen = usePlotStore((s) => s.setMergePickerOpen)
+  const setLinkPickerOpen = usePlotStore((s) => s.setLinkPickerOpen)
+  const notesAll = usePlotStore((s) => s.notes)
+  const { folders: noteFolders, createFolderInline } = useFolderPickerData("note")
 
   const backlinksMap = useBacklinksIndex()
   const { saveViewMode, onSaveView } = useSaveViewProps(context as any, "notes")
@@ -243,6 +268,55 @@ export function GalleryViewShell({
           groups={galleryGroups}
           activeId={activePreviewId}
           onItemClick={onNoteClick}
+          renderContextMenu={(item, card) => {
+            // 2026-05-12: Gallery card right-click — match list/board via
+            // shared NoteContextMenuItems. GalleryItem only carries cosmetic
+            // fields, so look up the real Note from the store.
+            const note = notesAll.find((n) => n.id === item.id)
+            if (!note) return card
+            return (
+              <ContextMenu>
+                <ContextMenuTrigger asChild>{card}</ContextMenuTrigger>
+                <ContextMenuContent className="w-52">
+                  <NoteContextMenuItems
+                    note={note}
+                    noteFolders={noteFolders}
+                    createFolderInline={createFolderInline}
+                    onKeep={() => triageKeep(note.id)}
+                    onSnooze={(opt) => triageSnooze(note.id, getSnoozeTime(opt))}
+                    onTrash={() => triageTrash(note.id)}
+                    onPromote={() => promoteToPermanent(note.id)}
+                    onMoveBack={() => moveBackToInbox(note.id)}
+                    onDemote={() => undoPromote(note.id)}
+                    onRemind={(isoDate) => { setReminder(note.id, isoDate); toast("Reminder set") }}
+                    onTogglePin={() => {
+                      const nextPinned = !note.pinned
+                      updateNote(note.id, { pinned: nextPinned })
+                      toast.success(nextPinned ? "Pinned note" : "Unpinned note")
+                    }}
+                    onOpen={() => openNote(note.id)}
+                    onMergeWith={() => setMergePickerOpen(true, note.id)}
+                    onLinkWith={() => setLinkPickerOpen(true, note.id)}
+                    onShowConnected={(direction) => {
+                      const otherRules = (viewState.filters ?? []).filter(
+                        (r) => r.field !== "connectedTo"
+                      )
+                      updateViewState({
+                        filters: [
+                          ...otherRules,
+                          { field: "connectedTo", operator: "eq", value: `${note.id}:${direction}` },
+                        ],
+                      })
+                      const dirLabel = direction === "in" ? "backlinks" : direction === "out" ? "links out" : "both directions"
+                      toast(`Filtering: connected to "${note.title || "Untitled"}" (${dirLabel})`)
+                    }}
+                    onSetFolder={(folderId) => updateNote(note.id, { folderIds: folderId ? [folderId] : [] })}
+                    onSetFolders={(folderIds) => usePlotStore.getState().setNoteFolders(note.id, folderIds)}
+                  />
+                </ContextMenuContent>
+              </ContextMenu>
+            )
+          }}
         />
       </div>
     </main>

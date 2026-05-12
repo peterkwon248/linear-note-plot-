@@ -13,6 +13,11 @@ import type { WikiArticle, WikiCategory } from "@/lib/types"
 import type { GroupBy } from "@/lib/view-engine/types"
 import type { WikiGroup } from "@/lib/view-engine/wiki-list-pipeline"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import {
+  ContextMenu,
+  ContextMenuTrigger,
+  ContextMenuContent,
+} from "@/components/ui/context-menu"
 import { Check as PhCheck } from "@phosphor-icons/react/dist/ssr/Check"
 import { PushPin } from "@phosphor-icons/react/dist/ssr/PushPin"
 import { Minus } from "@phosphor-icons/react/dist/ssr/Minus"
@@ -73,6 +78,96 @@ function ShowConnectedSubmenu({
  * "FolderPickerSubmenu" in this file lands on the explanation rather
  * than nothing. The shared component is kind-aware — wiki-list passes
  * `kind="wiki"` so the picker only shows / creates wiki-kind folders. */
+
+/* ── WikiArticleMenuItems ─────────────────────────────────────
+ * Menu body shared between the row's DotsThree click Popover, the row's
+ * right-click ContextMenu, and (Task 3) the gallery card's ContextMenu.
+ * Caller provides `close()` so each container can dismiss itself.
+ * Items render as plain buttons + the existing `FolderPickerInlineSubmenu`
+ * so the same content works inside both Popover and Radix ContextMenu
+ * (Radix's `ContextMenuItem` would lose the inline-submenu open state). */
+export function WikiArticleMenuItems({
+  note,
+  close,
+  onMerge,
+  onSplit,
+  onDelete,
+  onShowConnected,
+}: {
+  note: WikiArticle
+  close: () => void
+  onMerge?: () => void
+  onSplit?: () => void
+  onDelete?: () => void
+  onShowConnected?: (direction: "both" | "in" | "out") => void
+}) {
+  return (
+    <>
+      {onMerge && (
+        <button
+          onClick={() => { close(); onMerge() }}
+          className="flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-2xs text-foreground/80 hover:bg-active-bg transition-colors"
+        >
+          <GitMerge size={14} weight="regular" /> Merge into...
+        </button>
+      )}
+      {onSplit && (
+        <button
+          onClick={() => { close(); onSplit() }}
+          className="flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-2xs text-foreground/80 hover:bg-active-bg transition-colors"
+        >
+          <Scissors size={14} weight="regular" /> Split wiki
+        </button>
+      )}
+      {(onMerge || onSplit) && onShowConnected && (
+        <div className="my-1 h-px bg-border/40" />
+      )}
+      {onShowConnected && (
+        <ShowConnectedSubmenu
+          onSelect={(direction) => {
+            close()
+            onShowConnected(direction)
+          }}
+        />
+      )}
+      {onShowConnected && <div className="my-1 h-px bg-border/40" />}
+      <FolderPickerInlineSubmenu
+        kind="wiki"
+        currentFolderIds={note.folderIds}
+        triggerLabel="Move to folder"
+        triggerIcon={<FolderOpen size={14} weight="regular" />}
+        onSelect={(folderId) => {
+          close()
+          usePlotStore.getState().updateWikiArticle(note.id, {
+            folderIds: folderId ? [folderId] : [],
+          })
+        }}
+      />
+      <FolderPickerInlineSubmenu
+        kind="wiki"
+        currentFolderIds={note.folderIds}
+        selectMode="multi"
+        triggerLabel="Add to folders…"
+        triggerIcon={<FolderOpen size={14} weight="regular" />}
+        onApply={(folderIds) => {
+          close()
+          usePlotStore.getState().setWikiFolders(note.id, folderIds)
+        }}
+      />
+      {(onMerge || onSplit) && onDelete && (
+        <div className="my-1 h-px bg-border/40" />
+      )}
+      {onDelete && (
+        <button
+          onClick={() => { close(); onDelete() }}
+          className="flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-2xs text-destructive hover:bg-active-bg transition-colors"
+        >
+          <Trash size={14} weight="regular" /> Delete
+        </button>
+      )}
+    </>
+  )
+}
 
 /* ── Types ── */
 
@@ -264,7 +359,9 @@ function ArticleTableRow({
     : undefined
   const [menuOpen, setMenuOpen] = useState(false)
 
-  return (
+  const hasMenu = !!(onMerge || onSplit || onDelete || onShowConnected)
+
+  const rowContent = (
     <div
       className={cn(
         "group flex w-full items-center px-5 py-2.5 hover:bg-hover-bg transition-colors duration-100",
@@ -274,12 +371,6 @@ function ArticleTableRow({
         // checkmarks and the active editor row remain visually distinct.
         isActive && "bg-accent/10"
       )}
-      onContextMenu={(e) => {
-        if (onMerge || onSplit || onDelete) {
-          e.preventDefault()
-          setMenuOpen(true)
-        }
-      }}
     >
       {/* Checkbox */}
       {onSelect && (
@@ -438,9 +529,11 @@ function ArticleTableRow({
         </span>
       )}
 
-      {/* Context menu */}
+      {/* DotsThree click menu — hover affordance. Cursor-anchored right-click
+          uses Radix ContextMenu (wraps this row, see return below). Both
+          surface the same content via the shared `WikiArticleMenuItems`. */}
       <span className="w-[36px] shrink-0 flex justify-center">
-        {(onMerge || onSplit || onDelete) ? (
+        {hasMenu ? (
           <Popover open={menuOpen} onOpenChange={setMenuOpen}>
             <PopoverTrigger asChild>
               <button
@@ -451,80 +544,14 @@ function ArticleTableRow({
               </button>
             </PopoverTrigger>
             <PopoverContent align="end" className="w-44 p-1" onOpenAutoFocus={(e) => e.preventDefault()}>
-              {onMerge && (
-                <button
-                  onClick={() => { setMenuOpen(false); onMerge() }}
-                  className="flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-2xs text-foreground/80 hover:bg-active-bg transition-colors"
-                >
-                  <GitMerge size={14} weight="regular" /> Merge into...
-                </button>
-              )}
-              {onSplit && (
-                <button
-                  onClick={() => { setMenuOpen(false); onSplit() }}
-                  className="flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-2xs text-foreground/80 hover:bg-active-bg transition-colors"
-                >
-                  <Scissors size={14} weight="regular" /> Split wiki
-                </button>
-              )}
-              {/* Show connected — in-place backlink filter inside the
-                  Wiki view. Wikis use linksOut (extracted [[wiki-link]]s)
-                  and a backlinks index just like notes do. */}
-              {(onMerge || onSplit) && (
-                <div className="my-1 h-px bg-border/40" />
-              )}
-              {onShowConnected && (
-                <ShowConnectedSubmenu
-                  onSelect={(direction) => {
-                    setMenuOpen(false)
-                    onShowConnected(direction)
-                  }}
-                />
-              )}
-
-              {/* Move to folder — PR (b): kind-aware shared picker. Wiki rows
-                  always operate on a wiki article → kind="wiki". Single
-                  semantic preserved for users who want exclusive membership;
-                  the "Add to folders…" entry below is the N:M surface. */}
-              {onShowConnected && <div className="my-1 h-px bg-border/40" />}
-              <FolderPickerInlineSubmenu
-                kind="wiki"
-                currentFolderIds={note.folderIds}
-                triggerLabel="Move to folder"
-                triggerIcon={<FolderOpen size={14} weight="regular" />}
-                onSelect={(folderId) => {
-                  setMenuOpen(false)
-                  usePlotStore.getState().updateWikiArticle(note.id, {
-                    folderIds: folderId ? [folderId] : [],
-                  })
-                }}
+              <WikiArticleMenuItems
+                note={note}
+                close={() => setMenuOpen(false)}
+                onMerge={onMerge}
+                onSplit={onSplit}
+                onDelete={onDelete}
+                onShowConnected={onShowConnected}
               />
-              {/* Add to folders… (PR c) — multi-toggle picker. Apply
-                  commits the entire new set via setWikiFolders, layered
-                  on the same inline-submenu chrome to avoid Popover-in-
-                  Popover portal collisions. */}
-              <FolderPickerInlineSubmenu
-                kind="wiki"
-                currentFolderIds={note.folderIds}
-                selectMode="multi"
-                triggerLabel="Add to folders…"
-                triggerIcon={<FolderOpen size={14} weight="regular" />}
-                onApply={(folderIds) => {
-                  setMenuOpen(false)
-                  usePlotStore.getState().setWikiFolders(note.id, folderIds)
-                }}
-              />
-              {(onMerge || onSplit) && onDelete && (
-                <div className="my-1 h-px bg-border/40" />
-              )}
-              {onDelete && (
-                <button
-                  onClick={() => { setMenuOpen(false); onDelete() }}
-                  className="flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-2xs text-destructive hover:bg-active-bg transition-colors"
-                >
-                  <Trash size={14} weight="regular" /> Delete
-                </button>
-              )}
             </PopoverContent>
           </Popover>
         ) : null}
@@ -541,6 +568,27 @@ function ArticleTableRow({
         </span>
       )}
     </div>
+  )
+
+  // Cursor-anchored right-click menu. Without this wrap, Popover was
+  // anchored to the DotsThree button so the menu opened on the row's right
+  // edge instead of at the cursor. ContextMenuContent portals to <body> at
+  // the cursor location automatically (Radix).
+  if (!hasMenu) return rowContent
+  return (
+    <ContextMenu>
+      <ContextMenuTrigger asChild>{rowContent}</ContextMenuTrigger>
+      <ContextMenuContent className="w-44 p-1">
+        <WikiArticleMenuItems
+          note={note}
+          close={() => {/* Radix auto-closes after item click */}}
+          onMerge={onMerge}
+          onSplit={onSplit}
+          onDelete={onDelete}
+          onShowConnected={onShowConnected}
+        />
+      </ContextMenuContent>
+    </ContextMenu>
   )
 }
 

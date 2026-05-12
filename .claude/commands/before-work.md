@@ -1,185 +1,97 @@
-# Before Work - Session Start Briefing
+# before-work: Pull latest + Restore mental state (project-level, git tracked)
 
-You are now executing the **before-work** session briefing. Your job is to help the user quickly resume where they left off, ensuring NO context is lost.
+> ⚠️ **이 명령어는 *다른 컴퓨터에서 작업을 이어받기 위한* 크로스-머신 동기화 명령어다.**
+> - 진짜 source of truth = **git tracked `docs/*.md`**. Local memory(`~/.claude/.../memory/`)는 *그것의 캐시*.
+> - Local memory가 없거나 stale이어도 docs를 source로 mental state를 복원해야 한다.
+> - 다른 컴퓨터에서 처음 시작 시 local memory가 비어있는 게 정상 — 단계 7이 그걸 채운다.
+>
+> **NEXT-ACTION.md 폐지 (2026-05-12)**: 정보 중복 (NEXT-ACTION ↔ TODO P0 ↔ SESSION-LOG 끝 "다음" 3중복) 해소.
+> 다음 액션은 **TODO.md P0** + **SESSION-LOG 최신 entry의 "다음 hook"** 두 곳만 본다.
+>
+> **글로벌 `~/.claude/commands/before-work.md`는 폐지**. 이 project-level 정의가 단일 진실.
 
-## Step 0: Sync Latest Code from Master (MANDATORY - run FIRST)
+크로스 머신 워크플로우. 가장 중요한 건 **즉시 다음 액션 복원**.
 
-**이 단계는 무조건 가장 먼저 실행. 다른 모든 것보다 우선.**
+## Steps
 
-```bash
-git fetch origin master
-git merge origin/master -X theirs  # master의 최신 코드를 현재 브랜치에 반영
-```
+### 1. Git sync
+- Run `git pull origin main` to fetch and merge latest main changes
+- **Worktree인 경우**: `git merge origin/main`으로 worktree 브랜치에도 반영
+- 충돌 자동 해결:
+  - Import 충돌: 합집합 (more imports)
+  - 버전 번호 (e.g., persist version): 더 높은 값
+  - 코드 충돌: origin/main 우선
+- 충돌 해결 후: stage + `merge: sync with origin/main` 커밋
+- **Uncommitted 체크**: `git status` 실행. 직전 머신에서 commit 안 한 변경이 있으면 사용자에게 큰소리로 알림
 
-- 충돌 발생 시: `-X theirs` (master 우선)로 자동 해결. master가 가장 최신이므로.
-- 이미 master인 경우: `git pull origin master`
-- **결과:** 집/회사 어디서든 세션 시작 시 항상 최신 코드로 시작
+### 1.5. Dependencies sync
+- `node_modules` 누락 시 (새 worktree 또는 cross-machine) `npm install` — package.json에 새 패키지 추가됐을 수 있음
+- 에러 나면 무시하고 진행. 빌드 시점에서 다시 잡힘.
 
-## Step 0.3: Install Dependencies (after sync)
+### 2. 머신 변경 감지 (가장 빠르게 알림)
+- `docs/SESSION-LOG.md` 최신 entry의 머신 표기 확인
+- 다른 머신이면 사용자에게 **큰 글씨로 알림**: "직전은 {이전 머신}, 지금은 {현재 머신}"
+- IDB/local-only 데이터(노트 콘텐츠, 인증 토큰, 환경별 설정 등)는 머신마다 분리됨을 인지
 
-다른 컴퓨터에서 작업할 수 있으므로 패키지 동기화:
+### 3. 🎯 SESSION-LOG.md 최신 1~2 entry 읽기 (mental state 복원)
+**다른 모든 것보다 우선**. 직전 세션의 흐름 + 결정 + 다음 hook 파악.
 
-```bash
-npm install 2>/dev/null
-```
+- `docs/SESSION-LOG.md`의 가장 최근 entry 1~2개 read
+- 각 entry 구조:
+  - **"다음 즉시 액션" 1~2줄 hook** (entry 가장 위, `> 🎯 다음 즉시 액션: ...`)
+  - 완료한 작업
+  - 브레인스토밍 & 큰 결정 (영구)
+  - 기술 학습 (영구)
+  - Watch Out (다음 세션 주의사항)
+  - 환경 변경 (store version, tests, 신규 파일)
+  - 머신
+- 비어있거나 entry 없으면 직전 after-work 누락 신호 → 사용자에게 보고 + 수동 복원 모드로
 
-- 새 패키지가 추가됐을 수 있음 (다른 머신에서 작업 후)
-- 에러 나면 무시하고 진행
+### 4. 🔴 TODO.md P0 섹션 읽기 (즉시 액션 source)
+- `docs/TODO.md` 가장 위 P0 섹션 read
+- P0 = 다음 세션 즉시 작업 후보
+- 비어있으면 직전 after-work 누락 또는 모든 P0 완료 신호
 
-## Step 0.5: Read Project Memory (MANDATORY - after sync)
+### 5. Project context 읽기 (꼼꼼히)
+- `docs/MEMORY.md` — Source of Truth. PR history, architecture notes, phase status, current direction
+- `docs/CONTEXT.md` — Current features, design decisions, 작업 원칙
+- `CLAUDE.md` — Project conventions, stack info, store version
 
-**코드 pull 후 즉시 프로젝트 메모리를 읽어 컨텍스트 확보.**
+### 6. 정합성 확인
+- **TODO.md P0 ↔ SESSION-LOG 최신 entry "다음 hook" ↔ MEMORY.md "다음 우선순위"** 정합성
+  - 모두 다르면 모순 — MEMORY.md 기준으로 다른 두 파일 맞춤
+  - 완료된 항목이 P0/hook에 남아있으면 코드 직접 확인 후 정리
+- **stale 시그널 발견 시**: 코드 ground truth > docs. commit log 또는 코드 grep으로 검증
 
-```bash
-cat docs/MEMORY.md 2>/dev/null || echo "No docs/MEMORY.md found"
-```
+### 7. Local memory rehydrate from docs (보조 캐시 채우기)
+- Read local memory: `~/.claude/projects/.../memory/MEMORY.md`
+- **docs/MEMORY.md를 master로** 동기화. local이 비어있거나 stale이면 docs에서 재생성.
+- 동기화 항목: 현재 진행 방향, P0/P1/P2 우선순위, Key Design Decisions, Store version, 완료된 기능
+- docs에 없는 로컬 전용 정보(Architecture, Cross-Machine Workflow 등)는 유지
+- `currentDate`를 오늘 날짜로 갱신
+- ⚠️ 다른 컴퓨터에서 처음 시작이면 local memory가 비어있는 게 정상 — 이 단계가 채운다. local 없다고 에러로 멈추지 말 것.
 
-- `docs/MEMORY.md`는 프로젝트 전체 컨텍스트 (아키텍처, PR 히스토리, 패턴, 진행 상황)
-- 이 파일의 내용을 기반으로 세션 시작 컨텍스트를 잡음
-- 없으면 스킵하고 다른 소스로 보충
-
-## Step 1: Gather ALL Context Sources (run ALL in parallel)
-
-### 1-1. Worklog (Primary Memory)
-- Primary: `~/.claude/.omc-worklog/latest.md`
-- Fallback: `.omc/worklog/latest.md` (project-level)
-- If both exist, merge (project-level has priority for project context)
-
-### 1-2. Git Recent Activity
-```bash
-git log --oneline -10 --since="7 days ago" 2>/dev/null
-```
-
-### 1-3. Uncommitted Changes
-```bash
-git status --short 2>/dev/null
-```
-
-### 1-4. Notepad (Session Notes)
-- Read `.omc/notepad.md` if exists
-
-### 1-5. Plan-Scoped Wisdom (CRITICAL - often missed!)
-Scan and read ALL files in these directories:
-- `.omc/notepads/*/learnings.md` - Technical discoveries
-- `.omc/notepads/*/decisions.md` - Architectural decisions
-- `.omc/notepads/*/issues.md` - Known issues
-- `.omc/notepads/*/problems.md` - Blockers and challenges
-- Use `Glob(".omc/notepads/**/*.md")` to find all
-
-### 1-6. Project Documentation
-- Read `CLAUDE.md` in project root if exists (project-specific instructions)
-- Read `.claude/CLAUDE.md` if exists (local project config)
-- Read `AGENTS.md` if exists (codebase architecture map)
-
-### 1-7. Additional Memo Files
-Scan for any memo/note files the user may have created:
-```
-Glob("**/*.memo.md")
-Glob("**/MEMO.md")
-Glob("**/TODO.md")
-Glob("**/NOTES.md")
-Glob(".omc/**/*.md")
-```
-
-### 1-8. Worklog Archive (for context depth)
-- List files in `~/.claude/.omc-worklog/` to show recent sessions
-- Read the 2nd most recent worklog (if different from latest) for continuity
-
-### 1-9. Build Health Check
-```bash
-npx tsc --noEmit 2>&1 | tail -5
-```
-- 빌드 에러가 있으면 브리핑에 포함 (세션 시작 전 인지)
-- 클린하면 "Build: OK" 한 줄로 표시
-
-## Step 2: Present Briefing
-
-Format the briefing as follows:
+### 8. 최종 Report
 
 ```
-## Session Briefing
+🎯 NEXT ACTION (TODO.md P0 + SESSION-LOG hook 통합)
+─────────────
+{P0 최상단 1~2줄 + SESSION-LOG hook 검증}
 
-### Previous Session Summary
-**Date:** [from worklog session_date]
-**Project:** [from worklog project field]
-**Working Directory:** [from worklog]
+📅 직전 세션 (요약 3줄)
+- {SESSION-LOG.md 최근 entry 핵심}
 
-[Summarize completed work from worklog]
+📊 우선순위
+- P0: {TODO.md P0 1줄}
+- 진행 중 Phase: {있으면}
 
-### Remaining Tasks (from last session)
-1. [ ] [task] - [context with enough detail to resume cold]
-2. [ ] [task] - [context]
+✅ 동기화
+- Pull: {clean / conflicts resolved}
+- TODO ↔ SESSION-LOG ↔ MEMORY 정합성: {OK / 정정함}
+- Local memory: {rehydrated from docs / OK}
 
-### Active Memos & Notes
-[Content from notepad.md, plan wisdom, MEMO.md, etc.]
-[HIGHLIGHT any decisions, blockers, or known issues]
-
-### Recent Git Activity
-[Last commits in short format]
-
-### Uncommitted Changes
-[Any staged/unstaged changes still pending]
-
-### Key Decisions & Context
-[Decisions from plan wisdom + worklog]
-[Technical notes that affect current work]
-
-### Suggested Starting Point
-> [Recommend which task to start with and why]
+⚠️ 경고 (있으면)
+- Uncommitted changes: {파일 목록}
+- 머신 변경: {이전 → 현재}
+- 직전 after-work 누락 의심: {SESSION-LOG 비어있거나 TODO P0 stale}
 ```
-
-## Step 3: Inject Remember Tags
-
-After presenting the briefing, inject critical context as `<remember>` tags so they survive conversation compaction:
-
-```
-<remember priority>
-SESSION CONTEXT (loaded from before-work):
-- Project: [project name]
-- Key remaining tasks: [list]
-- Critical decisions: [list]
-- Known blockers: [list]
-- Important notes: [from notepad/memos]
-- REMINDER: Run /after-work before ending this session
-</remember>
-```
-
-This ensures that even if the conversation gets compacted mid-session, the critical context persists.
-
-## Step 4: Ask How to Proceed
-
-Use `AskUserQuestion` with these options:
-
-- **Start with suggested task** - Begin the recommended task
-- **Show full previous worklog** - Display complete after-work log
-- **Show all memos & notes** - Display every memo file found
-- **I have a different task** - User will direct
-- **Just the summary** - End briefing here
-
-## Edge Cases
-
-**No worklog found:**
-```
-No previous session worklog found. Fresh start!
-[Show git status + project overview instead]
-[Check for AGENTS.md, CLAUDE.md for project orientation]
-```
-
-**Stale worklog (>7 days):**
-Add a note: "Last session was N days ago - context may be outdated. Consider reviewing more recent git history."
-
-**No git repo:**
-Skip git sections, focus on worklog, notepad, and memo content.
-
-**Multiple projects in worklog:**
-If latest.md refers to a different project than current directory, note this clearly and offer to show project-specific worklog from `.omc/worklog/latest.md` instead.
-
-## Rules
-
-- Keep briefing under 50 lines total - concise and actionable
-- File paths should be project-relative where possible
-- Don't start any actual work until user confirms direction
-- ALWAYS inject remember tags - this is the key anti-amnesia mechanism
-- If plan wisdom directories exist, ALWAYS read them - these contain critical decisions
-- Use `explore` agent for any codebase scanning if needed
-- Highlight any BLOCKERS or ISSUES prominently - these need attention first

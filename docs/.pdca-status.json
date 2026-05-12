@@ -1,6 +1,6 @@
 {
   "version": "2.0",
-  "lastUpdated": "2026-04-30T08:28:03.126Z",
+  "lastUpdated": "2026-05-12T03:18:18.918Z",
   "activeFeatures": [
     "editor",
     "wizardly-kare",
@@ -31,7 +31,9 @@
     "block-registry",
     "insights",
     "pedantic-robinson-e8e2a1",
-    "wizardly-shamir-32ff22"
+    "wizardly-shamir-32ff22",
+    "books",
+    "crazy-raman-838a0c"
   ],
   "primaryFeature": "editor",
   "features": {
@@ -187,9 +189,9 @@
       "documents": {},
       "timestamps": {
         "started": "2026-03-11T04:44:20.714Z",
-        "lastUpdated": "2026-04-30T08:27:48.010Z"
+        "lastUpdated": "2026-05-12T00:45:45.556Z"
       },
-      "lastFile": "C:\\Users\\kwonkyunghun\\Desktop\\리니어 노트앱\\.claude\\worktrees\\wizardly-shamir-32ff22\\lib\\view-engine\\wiki-list-pipeline.ts"
+      "lastFile": "C:\\Users\\kwonkyunghun\\Desktop\\리니어 노트앱\\.claude\\worktrees\\crazy-raman-838a0c\\lib\\view-engine\\view-configs.tsx"
     },
     "slices": {
       "phase": "do",
@@ -213,9 +215,9 @@
       "documents": {},
       "timestamps": {
         "started": "2026-03-11T04:44:34.388Z",
-        "lastUpdated": "2026-04-30T08:02:34.040Z"
+        "lastUpdated": "2026-05-12T01:46:18.741Z"
       },
-      "lastFile": "C:\\Users\\kwonkyunghun\\Desktop\\리니어 노트앱\\.claude\\worktrees\\wizardly-shamir-32ff22\\lib\\store\\types.ts"
+      "lastFile": "C:\\Users\\kwonkyunghun\\Desktop\\리니어 노트앱\\.claude\\worktrees\\crazy-raman-838a0c\\lib\\store\\index.ts"
     },
     "__tests__": {
       "phase": "do",
@@ -424,6 +426,32 @@
         "lastUpdated": "2026-04-30T08:28:03.126Z"
       },
       "lastFile": "C:\\Users\\kwonkyunghun\\Desktop\\리니어 노트앱\\.claude\\worktrees\\wizardly-shamir-32ff22\\components\\views\\wiki-view.tsx"
+    },
+    "books": {
+      "phase": "do",
+      "phaseNumber": 3,
+      "matchRate": null,
+      "iterationCount": 0,
+      "requirements": [],
+      "documents": {},
+      "timestamps": {
+        "started": "2026-05-12T00:30:50.080Z",
+        "lastUpdated": "2026-05-12T00:30:50.080Z"
+      },
+      "lastFile": "C:\\Users\\kwonkyunghun\\Desktop\\리니어 노트앱\\.claude\\worktrees\\crazy-raman-838a0c\\components\\books\\book-table.tsx"
+    },
+    "crazy-raman-838a0c": {
+      "phase": "do",
+      "phaseNumber": 3,
+      "matchRate": null,
+      "iterationCount": 0,
+      "requirements": [],
+      "documents": {},
+      "timestamps": {
+        "started": "2026-05-12T01:24:17.991Z",
+        "lastUpdated": "2026-05-12T03:18:18.918Z"
+      },
+      "lastFile": "C:\\Users\\kwonkyunghun\\Desktop\\리니어 노트앱\\.claude\\worktrees\\crazy-raman-838a0c\\components\\notes-board.tsx"
     }
   },
   "pipeline": {
@@ -434,7 +462,7 @@
   "session": {
     "startedAt": "2026-03-05T00:16:19.956Z",
     "onboardingCompleted": false,
-    "lastActivity": "2026-04-30T08:28:03.126Z"
+    "lastActivity": "2026-05-12T03:18:18.918Z"
   },
   "history": [
     {
@@ -6386,6 +6414,180 @@
     {
       "timestamp": "2026-04-30T08:28:03.126Z",
       "feature": "wizardly-shamir-32ff22",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-12T00:30:50.080Z",
+      "feature": "books",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-12T00:45:42.924Z",
+      "feature": "view-engine",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-12T00:45:45.556Z",
+      "feature": "view-engine",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-12T01:24:17.991Z",
+      "feature": "crazy-raman-838a0c",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-12T01:45:50.397Z",
+      "feature": "store",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-12T01:46:06.043Z",
+      "feature": "store",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-12T01:46:18.741Z",
+      "feature": "store",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-12T02:01:49.666Z",
+      "feature": "crazy-raman-838a0c",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-12T02:46:16.772Z",
+      "feature": "crazy-raman-838a0c",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-12T02:47:06.082Z",
+      "feature": "crazy-raman-838a0c",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-12T02:48:01.662Z",
+      "feature": "crazy-raman-838a0c",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-12T02:48:10.708Z",
+      "feature": "crazy-raman-838a0c",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-12T02:48:31.095Z",
+      "feature": "crazy-raman-838a0c",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-12T02:50:56.996Z",
+      "feature": "crazy-raman-838a0c",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-12T02:51:00.940Z",
+      "feature": "crazy-raman-838a0c",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-12T02:51:11.310Z",
+      "feature": "crazy-raman-838a0c",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-12T02:51:25.512Z",
+      "feature": "crazy-raman-838a0c",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-12T02:51:48.224Z",
+      "feature": "crazy-raman-838a0c",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-12T02:52:03.347Z",
+      "feature": "crazy-raman-838a0c",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-12T02:52:19.570Z",
+      "feature": "crazy-raman-838a0c",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-12T02:53:32.352Z",
+      "feature": "crazy-raman-838a0c",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-12T02:53:52.371Z",
+      "feature": "crazy-raman-838a0c",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-12T02:54:08.877Z",
+      "feature": "crazy-raman-838a0c",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-12T02:55:14.151Z",
+      "feature": "crazy-raman-838a0c",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-12T02:55:35.087Z",
+      "feature": "crazy-raman-838a0c",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-12T02:59:16.857Z",
+      "feature": "crazy-raman-838a0c",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-12T03:17:44.274Z",
+      "feature": "crazy-raman-838a0c",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-12T03:18:17.495Z",
+      "feature": "crazy-raman-838a0c",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-12T03:18:18.918Z",
+      "feature": "crazy-raman-838a0c",
       "phase": "do",
       "action": "updated"
     }

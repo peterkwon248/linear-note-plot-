@@ -51,7 +51,12 @@ import { useBacklinksIndex } from "@/lib/search/use-backlinks-index"
 import { toast } from "sonner"
 import { WikiArticleReader } from "./wiki-article-reader"
 import { WikiDashboard } from "./wiki-dashboard"
-import { WikiList } from "./wiki-list"
+import { WikiList, WikiArticleMenuItems } from "./wiki-list"
+import {
+  ContextMenu,
+  ContextMenuTrigger,
+  ContextMenuContent,
+} from "@/components/ui/context-menu"
 import { WikiBoard } from "./wiki-board"
 import { WikiFloatingActionBar } from "@/components/wiki-floating-action-bar"
 import { WikiArticleView } from "@/components/wiki-editor/wiki-article-view"
@@ -1313,6 +1318,48 @@ export function WikiView() {
               groups={buildWikiGalleryGroups(sortedFilteredWikiNotes, wikiCategories)}
               activeId={selectedWikiArticleId}
               onItemClick={openArticle}
+              renderContextMenu={(item, card) => {
+                // Match wiki-list's row right-click — same handlers, same
+                // menu body via `WikiArticleMenuItems`. Lookup is required
+                // because GalleryItem only carries `id`/cosmetic fields.
+                const article = wikiArticles.find((a) => a.id === item.id)
+                if (!article) return card
+                return (
+                  <ContextMenu>
+                    <ContextMenuTrigger asChild>{card}</ContextMenuTrigger>
+                    <ContextMenuContent className="w-44 p-1">
+                      <WikiArticleMenuItems
+                        note={article}
+                        close={() => {/* Radix auto-closes after item click */}}
+                        onMerge={() => setWikiMergeSourceId(article.id)}
+                        onSplit={() => {
+                          setSelectedWikiArticleId(article.id)
+                          setIsEditingWikiArticle(true)
+                        }}
+                        onDelete={() => {
+                          deleteWikiArticle(article.id)
+                          toast.success("Article deleted")
+                        }}
+                        onShowConnected={(direction) => {
+                          const existingFilters = wikiViewState.filters ?? []
+                          const otherRules = existingFilters.filter((r) => r.field !== "connectedTo")
+                          updateWikiViewState({
+                            filters: [
+                              ...otherRules,
+                              { field: "connectedTo", operator: "eq", value: `${article.id}:${direction}` },
+                            ],
+                          })
+                          const dirLabel =
+                            direction === "in" ? "backlinks" :
+                            direction === "out" ? "links out" :
+                            "both directions"
+                          toast(`Filtering: connected to "${article.title}" (${dirLabel})`)
+                        }}
+                      />
+                    </ContextMenuContent>
+                  </ContextMenu>
+                )
+              }}
             />
           ) : wikiViewState.viewMode === "board" ? (
             <WikiBoard

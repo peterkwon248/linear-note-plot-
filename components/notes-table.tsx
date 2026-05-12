@@ -37,6 +37,7 @@ import { Bell } from "@phosphor-icons/react/dist/ssr/Bell"
 import { Clock as PhClock } from "@phosphor-icons/react/dist/ssr/Clock"
 import { GitMerge } from "@phosphor-icons/react/dist/ssr/GitMerge"
 import { SplitHorizontal } from "@phosphor-icons/react/dist/ssr/SplitHorizontal"
+import { NoteContextMenuItems } from "@/components/note-context-menu-items"
 import { Scissors } from "@phosphor-icons/react/dist/ssr/Scissors"
 import { setSplitTargetNoteId } from "@/lib/note-split-mode"
 import { Minus as PhMinus } from "@phosphor-icons/react/dist/ssr/Minus"
@@ -1407,7 +1408,7 @@ export function NotesTable({
                           >
                             <CaretDown className={`transition-transform ${collapsedGroups.has(item.groupKey) ? "-rotate-90" : ""}`} size={10} weight="regular" />
                             <GroupHeaderIcon groupBy={item.groupBy} groupKey={item.groupKey.split("::")[1] ?? item.groupKey} label={item.label} folders={folders} labels={labels} />
-                            <span className="a-tg__label" style={{ fontSize: 10.5 }}>
+                            <span className="a-tg__label" style={{ fontSize: 12 }}>
                               {resolveGroupLabel(item.groupBy, item.groupKey.split("::")[1] ?? item.groupKey, item.label, folders, labels)}
                             </span>
                             <span className="a-tg__count tabular-nums">{item.count}</span>
@@ -1965,241 +1966,28 @@ function NoteRowInner({
       </ContextMenuTrigger>
 
       <ContextMenuContent className="w-52">
-        {/* Stone actions */}
-        {note.status === "stone" && note.triageStatus !== "trashed" && (
-          <>
-            <ContextMenuItem onClick={onKeep} className="text-note">
-              <PhCheck className="mr-2 text-accent" size={16} weight="bold" />
-              Done
-              <span className="ml-auto text-2xs text-muted-foreground">D</span>
-            </ContextMenuItem>
-            <ContextMenuSub>
-              <ContextMenuSubTrigger className="text-note">
-                <Alarm className="mr-2 text-muted-foreground" size={16} weight="regular" />
-                Snooze
-                <span className="ml-auto text-2xs text-muted-foreground">S</span>
-              </ContextMenuSubTrigger>
-              <ContextMenuSubContent className="w-44">
-                <ContextMenuItem onClick={() => onSnooze("3h")} className="text-note">
-                  3 hours
-                </ContextMenuItem>
-                <ContextMenuItem onClick={() => onSnooze("tomorrow")} className="text-note">
-                  Tomorrow 10:00 AM
-                </ContextMenuItem>
-                <ContextMenuItem onClick={() => onSnooze("3-days")} className="text-note">
-                  In 3 days
-                </ContextMenuItem>
-                <ContextMenuItem onClick={() => onSnooze("next-week")} className="text-note">
-                  Next week 10:00 AM
-                </ContextMenuItem>
-                <ContextMenuItem onClick={() => onSnooze("1-week")} className="text-note">
-                  In 1 week
-                </ContextMenuItem>
-              </ContextMenuSubContent>
-            </ContextMenuSub>
-            <ContextMenuItem onClick={onTrash} className="text-note text-destructive focus:text-destructive">
-              <Trash className="mr-2" size={16} weight="regular" />
-              Trash
-              <span className="ml-auto text-2xs">T</span>
-            </ContextMenuItem>
-            <ContextMenuSeparator />
-          </>
-        )}
-
-        {/* Brick actions */}
-        {note.status === "brick" && (
-          <>
-            <ContextMenuItem onClick={onPromote} className="text-note">
-              <ArrowUpRight className="mr-2 text-chart-5" size={16} weight="regular" />
-              Promote to Keystone
-              <span className="ml-auto text-2xs text-muted-foreground">P</span>
-            </ContextMenuItem>
-            <ContextMenuItem onClick={onMoveBack} className="text-note">
-              <Tray className="mr-2 text-muted-foreground" size={16} weight="regular" />
-              Back to Stone
-              <span className="ml-auto text-2xs text-muted-foreground">B</span>
-            </ContextMenuItem>
-            <ContextMenuSeparator />
-          </>
-        )}
-
-        {/* Keystone actions */}
-        {note.status === "keystone" && (
-          <>
-            <ContextMenuItem onClick={onDemote} className="text-note">
-              <ArrowDownLeft className="mr-2 text-muted-foreground" size={16} weight="regular" />
-              Demote to Brick
-              <span className="ml-auto text-2xs text-muted-foreground">D</span>
-            </ContextMenuItem>
-            <ContextMenuSeparator />
-          </>
-        )}
-
-        {/* Remind me (all notes) */}
-        <ContextMenuSub>
-          <ContextMenuSubTrigger className="text-note">
-            <Bell className="mr-2 text-muted-foreground" size={16} weight="regular" />
-            Remind me
-          </ContextMenuSubTrigger>
-          <ContextMenuSubContent className="w-48">
-            <ContextMenuItem onClick={() => onRemind(getSnoozeTime("3h"))} className="text-note">
-              <PhClock className="mr-2 text-muted-foreground" size={16} weight="regular" />
-              <span>Later today</span>
-            </ContextMenuItem>
-            <ContextMenuItem onClick={() => onRemind(getSnoozeTime("tomorrow"))} className="text-note">
-              <PhClock className="mr-2 text-muted-foreground" size={16} weight="regular" />
-              <span>Tomorrow</span>
-            </ContextMenuItem>
-            <ContextMenuItem onClick={() => onRemind(getSnoozeTime("3-days"))} className="text-note">
-              <PhClock className="mr-2 text-muted-foreground" size={16} weight="regular" />
-              <span>In 3 days</span>
-            </ContextMenuItem>
-            <ContextMenuItem onClick={() => onRemind(getSnoozeTime("next-week"))} className="text-note">
-              <PhClock className="mr-2 text-muted-foreground" size={16} weight="regular" />
-              <span>Next week</span>
-            </ContextMenuItem>
-            <ContextMenuItem onClick={() => onRemind(getSnoozeTime("1-week"))} className="text-note">
-              <PhClock className="mr-2 text-muted-foreground" size={16} weight="regular" />
-              <span>In 1 week</span>
-            </ContextMenuItem>
-          </ContextMenuSubContent>
-        </ContextMenuSub>
-        <ContextMenuSeparator />
-
-        {/* Pin/Unpin (2026-05-12: Books 정합) */}
-        <ContextMenuItem onClick={onTogglePin} className="text-note">
-          {note.pinned ? (
-            <>
-              <PushPinSlash className="mr-2 text-muted-foreground" size={16} weight="regular" />
-              Unpin
-            </>
-          ) : (
-            <>
-              <PushPin className="mr-2 text-muted-foreground" size={16} weight="regular" />
-              Pin to sidebar
-            </>
-          )}
-        </ContextMenuItem>
-
-        {/* Common actions */}
-        <ContextMenuItem onClick={onOpen} className="text-note">
-          <FileText className="mr-2 text-muted-foreground" size={16} weight="regular" />
-          Open
-        </ContextMenuItem>
-        <ContextMenuItem onClick={onMergeWith} className="text-note">
-          <GitMerge className="mr-2 text-muted-foreground" size={16} weight="regular" />
-          GitMerge with...
-        </ContextMenuItem>
-        <ContextMenuItem
-          onClick={() => setSplitTargetNoteId(note.id)}
-          className="text-note"
-        >
-          <Scissors className="mr-2 text-muted-foreground" size={16} weight="regular" />
-          Split this note...
-        </ContextMenuItem>
-        <ContextMenuItem onClick={onLinkWith} className="text-note">
-          <PhLink className="mr-2 text-muted-foreground" size={16} weight="regular" />
-          Link to...
-        </ContextMenuItem>
-
-        {/* ── Show connected (in-place backlinks/refs filter) ── *
-         * Filter the current Notes view to only entities connected to this
-         * note. Default = both directions. Sub-options for backlinks
-         * (incoming refs) or links-out (outgoing refs) only. */}
-        <ContextMenuSub>
-          <ContextMenuSubTrigger className="text-note">
-            <PhLink className="mr-2 text-muted-foreground" size={16} weight="regular" />
-            Show connected
-          </ContextMenuSubTrigger>
-          <ContextMenuSubContent className="w-44">
-            <ContextMenuItem onClick={() => onShowConnected("both")} className="text-note">
-              <span className="mr-2 text-muted-foreground">↔</span> Both directions
-            </ContextMenuItem>
-            <ContextMenuItem onClick={() => onShowConnected("in")} className="text-note">
-              <span className="mr-2 text-muted-foreground">←</span> Backlinks only
-            </ContextMenuItem>
-            <ContextMenuItem onClick={() => onShowConnected("out")} className="text-note">
-              <span className="mr-2 text-muted-foreground">→</span> Links out only
-            </ContextMenuItem>
-          </ContextMenuSubContent>
-        </ContextMenuSub>
-
-        {/* ── Move to folder (single-replace) ── *
-         * Single-folder semantic: replaces the entire folderIds set with
-         * the chosen folder. PR (c) keeps this for users who want
-         * exclusive membership; the new "Add to folders…" submenu below
-         * exposes the N:M multi-toggle path. */}
-        <ContextMenuSub>
-          <ContextMenuSubTrigger className="text-note">
-            <FolderOpen className="mr-2 text-muted-foreground" size={16} weight="regular" />
-            Move to folder
-          </ContextMenuSubTrigger>
-          <ContextMenuSubContent className="w-48">
-            <ContextMenuItem
-              onClick={() => onSetFolder("")}
-              className={`text-note ${note.folderIds.length === 0 ? "font-medium" : ""}`}
-            >
-              <span className="text-muted-foreground">No folder</span>
-              {note.folderIds.length === 0 && <PhCheck className="ml-auto text-accent" size={14} weight="bold" />}
-            </ContextMenuItem>
-            {/* PR (b): kind-aware via useFolderPickerData hook — only
-                `kind="note"` folders appear, sourced through the shared
-                folder-picker module so wiki folders can never leak in. */}
-            {noteFolders.length > 0 && <ContextMenuSeparator />}
-            {noteFolders.map((f) => (
-              <ContextMenuItem
-                key={f.id}
-                onClick={() => onSetFolder(f.id)}
-                className={`text-note ${note.folderIds.includes(f.id) ? "font-medium" : ""}`}
-              >
-                <span className="h-2 w-2 rounded-full mr-2 shrink-0" style={{ backgroundColor: getEntityColor(f.color) }} />
-                <span className="truncate">{f.name}</span>
-                {note.folderIds.includes(f.id) && <PhCheck className="ml-auto text-accent shrink-0" size={14} weight="bold" />}
-              </ContextMenuItem>
-            ))}
-            <ContextMenuSeparator />
-            {/* Inline folder creation — delegates to shared
-                `createFolderInline` which uses PRESET_COLORS and creates
-                with the correct kind ("note" here). */}
-            <ContextMenuItem
-              onClick={() => createFolderInline((newId) => onSetFolder(newId))}
-              className="text-note text-muted-foreground hover:text-foreground"
-            >
-              <PhPlus className="mr-2" size={14} weight="bold" />
-              New folder…
-            </ContextMenuItem>
-          </ContextMenuSubContent>
-        </ContextMenuSub>
-
-        {/* ── Add to folders… (multi-toggle, PR c) ── *
-         * The N:M surface in the right-click menu. Embeds the shared
-         * FolderPicker in selectMode="multi" inside a ContextMenuSubContent
-         * — Apply commits the entire new set via setNoteFolders. Loses
-         * native ContextMenu keyboard nav inside the picker (Radix doesn't
-         * propagate arrow keys into nested non-MenuItem children) but
-         * gains the discoverable checkbox UX that single-toggle
-         * MenuItems can't produce in a single click. */}
-        <ContextMenuSub>
-          <ContextMenuSubTrigger className="text-note">
-            <FolderOpen className="mr-2 text-muted-foreground" size={16} weight="regular" />
-            Add to folders…
-          </ContextMenuSubTrigger>
-          <ContextMenuSubContent className="w-56 p-1">
-            <FolderPicker
-              kind="note"
-              currentFolderIds={note.folderIds}
-              selectMode="multi"
-              onApply={(ids) => onSetFolders(ids)}
-            />
-          </ContextMenuSubContent>
-        </ContextMenuSub>
-
-        <ContextMenuSeparator />
-        <ContextMenuItem onClick={() => usePlotStore.getState().openInSecondary(note.id)} className="text-note">
-          <SplitHorizontal className="mr-2 text-muted-foreground" size={16} weight="regular" />
-          Open in Split View
-          <span className="ml-auto text-2xs text-muted-foreground">{navigator?.platform?.includes("Mac") ? "⌘\\" : "Ctrl+\\"}</span>
-        </ContextMenuItem>
+        {/* 2026-05-12: DRY refactor — body extracted to NoteContextMenuItems
+            so list/board/gallery share an identical menu. Linear principle:
+            same action set across surfaces, presentation varies per mode. */}
+        <NoteContextMenuItems
+          note={note}
+          noteFolders={noteFolders}
+          createFolderInline={createFolderInline}
+          onKeep={onKeep}
+          onSnooze={onSnooze}
+          onTrash={onTrash}
+          onPromote={onPromote}
+          onMoveBack={onMoveBack}
+          onDemote={onDemote}
+          onRemind={onRemind}
+          onTogglePin={onTogglePin}
+          onOpen={onOpen}
+          onMergeWith={onMergeWith}
+          onLinkWith={onLinkWith}
+          onShowConnected={onShowConnected}
+          onSetFolder={onSetFolder}
+          onSetFolders={onSetFolders}
+        />
       </ContextMenuContent>
     </ContextMenu>
   )

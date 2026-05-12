@@ -379,11 +379,13 @@ export function ViewHeader({
 import { IconHome, IconNotes, IconWiki, IconCalendar } from "@/components/plot-icons"
 import { Graph as GraphIcon } from "@phosphor-icons/react/dist/ssr/Graph"
 import { Books } from "@phosphor-icons/react/dist/ssr/Books"
+import { BookOpen } from "@phosphor-icons/react/dist/ssr/BookOpen"
 
 const SECONDARY_SPACE_CONFIG: Array<{ key: string; label: string; Icon: any }> = [
   { key: "home", label: "Home", Icon: IconHome },
   { key: "notes", label: "Notes", Icon: IconNotes },
   { key: "wiki", label: "Wiki", Icon: IconWiki },
+  { key: "books", label: "Books", Icon: BookOpen },
   { key: "calendar", label: "Calendar", Icon: IconCalendar },
   { key: "ontology", label: "Ontology", Icon: GraphIcon },
   { key: "library", label: "Library", Icon: Books },
