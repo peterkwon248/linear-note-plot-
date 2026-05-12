@@ -2,6 +2,11 @@
 
 import { cn } from "@/lib/utils"
 import type { Icon as PhIcon } from "@phosphor-icons/react"
+import { Tree as PhTree } from "@phosphor-icons/react/dist/ssr/Tree"
+import { Stack as PhStack } from "@phosphor-icons/react/dist/ssr/Stack"
+import { Link as PhLink } from "@phosphor-icons/react/dist/ssr/Link"
+import type { GroupBy } from "@/lib/view-engine/types"
+import type { WikiCategory } from "@/lib/types"
 
 /* ── Stat Card ── */
 
@@ -92,6 +97,52 @@ export function ArticleRow({ note, onOpen, backlinkCount }: {
       </span>
     </button>
   )
+}
+
+/* ── Group Header Icon (Wiki) ──────────────────────────
+ *
+ * Mirrors notes-table's GroupHeaderIcon for visual parity across views.
+ * Per-groupBy icon mapping (영구 결정 2026-05-11):
+ *   - family / parent / role  → Tree icon (계층)
+ *   - tier                    → Stack icon (depth)
+ *   - linkCount               → Link icon
+ *   - label                   → wiki-category color dot
+ *   - none / default          → null (text-only header)
+ *
+ * groupKey carries the bucket identity (e.g. "label-${catId}" or
+ * "_no_label"). For label groups we parse the catId out and resolve color
+ * from wikiCategories; missing categories fall back to muted dot.
+ */
+export function WikiGroupHeaderIcon({
+  groupBy,
+  groupKey,
+  wikiCategories,
+}: {
+  groupBy: GroupBy
+  groupKey: string
+  wikiCategories?: WikiCategory[]
+}) {
+  switch (groupBy) {
+    case "family":
+    case "parent":
+    case "role":
+      return <PhTree className="text-muted-foreground shrink-0" size={14} weight="regular" />
+    case "tier":
+      return <PhStack className="text-muted-foreground shrink-0" size={14} weight="regular" />
+    case "linkCount":
+      return <PhLink className="text-muted-foreground shrink-0" size={14} weight="regular" />
+    case "label": {
+      const catId = groupKey.startsWith("label-") ? groupKey.slice("label-".length) : null
+      const color = catId ? wikiCategories?.find((c) => c.id === catId)?.color : null
+      return color ? (
+        <span className="h-2.5 w-2.5 rounded-full shrink-0" style={{ backgroundColor: color }} />
+      ) : (
+        <span className="h-2.5 w-2.5 rounded-full shrink-0 bg-muted-foreground" />
+      )
+    }
+    default:
+      return null
+  }
 }
 
 /* ── Helpers ── */
