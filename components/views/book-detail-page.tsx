@@ -96,6 +96,9 @@ export function BookDetailPage({ bookId }: BookDetailPageProps) {
   const folders = usePlotStore((s) => s.folders)
   const wikiArticles = usePlotStore((s) => s.wikiArticles)
   const wikiCategories = usePlotStore((s) => s.wikiCategories)
+  const tags = usePlotStore((s) => s.tags)
+  const labels = usePlotStore((s) => s.labels)
+  const stickers = usePlotStore((s) => s.stickers)
   const selectedNoteId = usePlotStore((s) => s.selectedNoteId)
   const secondaryNoteId = usePlotStore((s) => s.secondaryNoteId)
   // Reading mode entity id is pane-scoped — primary uses selectedNoteId,
@@ -106,8 +109,16 @@ export function BookDetailPage({ bookId }: BookDetailPageProps) {
 
   const resolvedItems = useMemo<ResolvedBookItem[]>(() => {
     if (!book) return []
-    return resolveBookItems(book, { notes, folders, wikiArticles, wikiCategories })
-  }, [book, notes, folders, wikiArticles, wikiCategories])
+    return resolveBookItems(book, {
+      notes,
+      folders,
+      wikiArticles,
+      wikiCategories,
+      tags,
+      labels,
+      stickers,
+    })
+  }, [book, notes, folders, wikiArticles, wikiCategories, tags, labels, stickers])
 
   const [addOpen, setAddOpen] = useState(false)
   const [addInitialTab, setAddInitialTab] = useState<"notes" | "wiki">("notes")
