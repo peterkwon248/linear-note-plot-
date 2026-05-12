@@ -716,3 +716,65 @@ describe("resolveBookItems — multi-kind source mixing (PRD §4 OR semantics)",
     expect(result.filter((r) => r.kind === "note")).toHaveLength(1)
   })
 })
+
+describe("resolveBookItems — Phase F trash guards (LOCKED #11 lazy detection)", () => {
+  it("trashed tag → source skipped (auto items disappear)", () => {
+    const tag: Tag = { id: "t1", name: "research", color: null, trashed: true }
+    const note = makeNoteWithTags("n1", [], ["t1"])
+    const book = makeBook({ smartSources: [{ kind: "tag", refId: "t1" }] })
+    const result = resolveBookItems(book, {
+      notes: [note],
+      folders: [],
+      wikiArticles: [],
+      wikiCategories: [],
+      tags: [tag],
+    })
+    expect(result).toEqual([])
+  })
+
+  it("trashed label → source skipped", () => {
+    const label: Label = { id: "l1", name: "Important", color: "#f59e0b", trashed: true }
+    const note = makeNoteWithTags("n1", [], [], "l1")
+    const book = makeBook({ smartSources: [{ kind: "label", refId: "l1" }] })
+    const result = resolveBookItems(book, {
+      notes: [note],
+      folders: [],
+      labels: [label],
+    })
+    expect(result).toEqual([])
+  })
+
+  it("trashed sticker → source skipped", () => {
+    const sticker: Sticker = {
+      id: "st1",
+      name: "Reading",
+      color: "#22d3ee",
+      members: [{ kind: "note", id: "n1" }],
+      trashed: true,
+      createdAt: "2026-01-01",
+    }
+    const note = makeNoteWithTags("n1", [], [])
+    const book = makeBook({ smartSources: [{ kind: "sticker", refId: "st1" }] })
+    const result = resolveBookItems(book, {
+      notes: [note],
+      folders: [],
+      stickers: [sticker],
+    })
+    expect(result).toEqual([])
+  })
+
+  it("restore tag (trashed:false) → source revives auto items", () => {
+    const tag: Tag = { id: "t1", name: "research", color: null, trashed: false }
+    const note = makeNoteWithTags("n1", [], ["t1"])
+    const book = makeBook({ smartSources: [{ kind: "tag", refId: "t1" }] })
+    const result = resolveBookItems(book, {
+      notes: [note],
+      folders: [],
+      wikiArticles: [],
+      wikiCategories: [],
+      tags: [tag],
+    })
+    expect(result).toHaveLength(2) // heading + note
+    expect(result[1].kind).toBe("note")
+  })
+})

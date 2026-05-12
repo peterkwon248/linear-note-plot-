@@ -21,6 +21,9 @@
 import { useState, useMemo, type ReactNode } from "react"
 import { usePlotStore } from "@/lib/store"
 import { toast } from "sonner"
+import { nanoid } from "nanoid"
+import { resolveBookItems } from "@/lib/books/resolver"
+import type { BookItem } from "@/lib/types"
 import {
   Dialog,
   DialogContent,
@@ -64,6 +67,7 @@ export function SourcesSection({ bookId }: SourcesSectionProps) {
   const stickers = usePlotStore((s) => s.stickers)
   const addSmartSource = usePlotStore((s) => s.addSmartSource)
   const removeSmartSource = usePlotStore((s) => s.removeSmartSource)
+  const updateBook = usePlotStore((s) => s.updateBook)
 
   const book = books.find((b) => b.id === bookId)
   const sources = book?.smartSources ?? []
@@ -247,6 +251,57 @@ export function SourcesSection({ bookId }: SourcesSectionProps) {
     toast(`Removed source: ${name}`)
   }
 
+  // Phase F — "Convert to manual" pins every current auto item into
+  // book.items as a real BookItem (new uuid, source/sourceRefId stripped)
+  // and clears smartSources + excludeIds. Use case: user has curated the
+  // auto-resolved book and wants it frozen against future source changes
+  // (e.g., new wikis appearing in the Algorithms category).
+  const handleConvertToManual = () => {
+    if (!book) return
+    const resolved = resolveBookItems(book, {
+      notes,
+      folders,
+      wikiArticles,
+      wikiCategories,
+      tags,
+      labels,
+      stickers,
+    })
+    const autoItems = resolved.filter((r) => r.source === "auto")
+    if (autoItems.length === 0) {
+      toast("No auto items to convert")
+      return
+    }
+    if (
+      !window.confirm(
+        `Convert ${autoItems.length} auto items to manual? Smart sources will be removed and the book becomes static.`,
+      )
+    )
+      return
+
+    // Strip ResolvedBookItem metadata back to plain BookItem with fresh ids.
+    // Auto headings need their own ids (the `auto-heading-${refId}` form
+    // would collide if the same source is re-added later — give them new
+    // ones). Order is preserved (manual items keep their fractional keys;
+    // auto items keep the resolver-generated keys).
+    const newItems: BookItem[] = autoItems.map((r) => {
+      if (r.kind === "chapter-heading") {
+        return { kind: "chapter-heading", id: nanoid(), title: r.title, order: r.order }
+      }
+      if (r.kind === "wiki") {
+        return { kind: "wiki", id: nanoid(), refId: r.refId, order: r.order }
+      }
+      return { kind: "note", id: nanoid(), refId: r.refId, order: r.order }
+    })
+
+    updateBook(bookId, {
+      items: [...book.items, ...newItems],
+      smartSources: [],
+      excludeIds: [],
+    })
+    toast.success(`Converted ${autoItems.length} items to manual`)
+  }
+
   const formatHint = (total: number, inBook: number): string => {
     const newCount = total - inBook
     if (total === 0) return "empty"
@@ -290,15 +345,27 @@ export function SourcesSection({ bookId }: SourcesSectionProps) {
           <Sparkle size={12} weight="regular" />
           Smart sources
         </div>
-        <button
-          type="button"
-          onClick={() => setPickerOpen(true)}
-          className="flex items-center gap-1 rounded-md px-2 py-0.5 text-2xs font-medium text-muted-foreground transition-colors hover:bg-hover-bg hover:text-foreground"
-          title="Add source"
-        >
-          <PhPlus size={12} weight="bold" />
-          Add source
-        </button>
+        <div className="flex items-center gap-1">
+          {resolvedSources.length > 0 && (
+            <button
+              type="button"
+              onClick={handleConvertToManual}
+              className="flex items-center gap-1 rounded-md px-2 py-0.5 text-2xs font-medium text-muted-foreground transition-colors hover:bg-hover-bg hover:text-foreground"
+              title="Pin every auto item into book.items and remove smart sources"
+            >
+              Convert to manual
+            </button>
+          )}
+          <button
+            type="button"
+            onClick={() => setPickerOpen(true)}
+            className="flex items-center gap-1 rounded-md px-2 py-0.5 text-2xs font-medium text-muted-foreground transition-colors hover:bg-hover-bg hover:text-foreground"
+            title="Add source"
+          >
+            <PhPlus size={12} weight="bold" />
+            Add source
+          </button>
+        </div>
       </div>
 
       {/* Source list / empty state */}
