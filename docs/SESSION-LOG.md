@@ -8,9 +8,75 @@
 
 ## 2026-05-12 (오후) — 집, Board/Gallery polish + Split view fix + hotfix (4 PR cascade)
 
-> 🎯 **다음 즉시 액션**: Trash "All" 통합 view 신규 컴포넌트 구현 (notes/wiki/books/tags/labels/templates/refs/files entity별 section, ~150-200 LOC). 사용자 의도: "All = 모든 entity의 trashed 통합 표시".
+> 🎯 **다음 즉시 액션**: Trash "All" 통합 view 신규 컴포넌트 구현.
+>
+> **사용자 의도** (이번 세션 명시): *"ALL은 모든 entity의 trashed 통합 표시. 노트든 위키든 태그든 라벨이든 삭제된 것들은 전부 ALL에 나와야"*. 현재 코드 = count 통합, display는 notes만 (모순 — 사용자가 "All에 1인데 아무것도 없어" 본 이유).
+>
+> **첫 스텝** (다른 머신에서 바로 시작):
+> 1. `components/views/trash-all-view.tsx` 신규 파일 작성
+> 2. `notes-table.tsx`의 `isTrashView && trashFilter === "all"` 분기에 TrashAllView mount
+>
+> **컴포넌트 구조**:
+> ```
+> <TrashAllView>
+>   {/* entity별 section, 빈 section은 hide */}
+>   <Section title="Notes" count={notesTrashed.length}>
+>     {notesTrashed.map(n => <TrashRow note kind="note" />)}
+>   </Section>
+>   <Section title="Wiki Articles" count={wikiTrashed.length}>...</Section>
+>   <Section title="Books" count={booksTrashed.length}>...</Section>
+>   <Section title="Tags">...</Section>
+>   <Section title="Labels">...</Section>
+>   <Section title="Templates">...</Section>
+>   <Section title="References">...</Section>
+>   <Section title="Files">...</Section>
+> </TrashAllView>
+> ```
+>
+> **TrashRow layout** (단일 통합 — entity 무관):
+> ```
+> [icon] [entity badge] [title]                    [Restore] [Delete forever]
+> ```
+>
+> **Store action 매핑** (entity별 restore + delete forever):
+> | Entity | Restore | Delete forever |
+> |--------|---------|----------------|
+> | Note | `toggleTrash(id)` | `deleteNote(id)` |
+> | WikiArticle | `updateWikiArticle(id, { trashed: false })` | `deleteWikiArticle(id)` |
+> | Book | `restoreBook(id)` | (store action 없음, 사용자에게 toast로 안내) |
+> | Tag | `restoreTag(id)` | (별도 — 또는 trashed=true 유지) |
+> | Label | `restoreLabel(id)` | (별도) |
+> | Template | `restoreTemplate(id)` | (별도) |
+> | Reference | `restoreReference(id)` | (별도) |
+> | Attachment | `restoreAttachment(id)` | (별도) |
+>
+> 각 entity의 hard-delete action 존재 여부는 `lib/store/slices/*.ts`에서 확인. 없으면 trashed=true 유지 + 사용자에게 안내.
+>
+> **데이터 source**:
+> - `state.notes.filter(n => n.trashed)`
+> - `state.wikiArticles.filter(w => w.trashed)`
+> - `state.books.filter(b => b.trashed)`
+> - `state.tags.filter(t => t.trashed)`
+> - `state.labels.filter(l => l.trashed)`
+> - `state.templates.filter(t => t.trashed)`
+> - `Object.values(state.references).filter(r => r.trashed)`
+> - `state.attachments.filter(a => a.trashed)`
+>
+> **trashTabCounts.all 보강** (notes-table.tsx:408): 현재 wikiArticles 누락. wiki도 추가.
+>
+> **위험 + 회피**:
+> - JSX conditional render: 모든 `{cond && <X .../>}` → `{cond && (<X />)}` (이번 세션 hotfix 교훈)
+> - lookup map: `STATUS_CONFIG`처럼 entity-specific lookup도 null guard
+> - 각 entity의 `restoreXxx` 시그니처 차이 — `(id: string) => void` 일관 가정
+>
+> **참고 파일**:
+> - notes-table.tsx 의 `trashTabCounts` (line 398-418) — count 통합 logic
+> - lib/store/slices/{notes,wiki,books,tags,labels,templates,references,attachments}.ts — restore action
+> - components/note-context-menu-items.tsx — Trash/Delete forever action 패턴 참고 (notes-table)
+>
 > **머신**: 집 (Windows)
-> **현재 main HEAD**: PR #308 머지 후
+> **현재 main HEAD**: PR #309 머지 후 (docs sync)
+> **branch worktree**: `crazy-raman-838a0c` (다음 세션 같은 worktree 사용 가능, 또는 새 worktree)
 
 ### 완료 (4 PR + 5 user-reported issues)
 

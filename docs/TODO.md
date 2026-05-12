@@ -9,19 +9,90 @@
 
 ## 🔴 P0 — 즉시 (다음 세션)
 
-### Trash "All" 통합 view 신규 ⭐⭐⭐
-사용자 의도 (이번 세션 명시): *"All은 모든 entity의 trashed 통합 표시"*. 현재 코드 = count 통합, display는 notes만 (모순).
+### Trash "All" 통합 view 신규 ⭐⭐⭐ — 다음 세션 최우선
+**사용자 의도** (이번 세션 명시): *"ALL은 모든 entity의 trashed 통합 표시. 노트든 위키든 태그든 라벨이든 삭제된 것들은 전부 ALL에 나와야"*.
 
-- **신규 컴포넌트** `components/views/trash-all-view.tsx` (~150-200 LOC)
-- entity별 trashed 통합 list (notes / wikiArticles / books / tags / labels / templates / references / attachments)
-- 각 row: `{entityIcon} {entityBadge} {title} [Restore] [Delete forever]`
-- entity별 action 분기:
-  - notes → `toggleTrash(id)` restore / `deleteNote(id)` delete
-  - wikiArticles → `updateWikiArticle(id, { trashed: false })` / `deleteWikiArticle(id)`
-  - books / tags / labels / templates / references / attachments → 각자 `restoreXxx(id)` 사용
-- notes-table.tsx: `isTrashView && trashFilter === "all"` 시 TrashAllView mount
-- entity별 section (Notes (N) / Wiki (N) / Books (N) / ...) — 빈 section은 hide 또는 dim
-- count 통합과 display 통합 정합 보장
+**현재 상태**: count 통합 (`trashTabCounts.all = sum`), display는 notes만 (notes-table.tsx) → "1개라는데 아무것도 안 보임" 모순.
+
+#### Sub-tasks (단계별)
+
+**Step 1**: `components/views/trash-all-view.tsx` 신규 (~150-200 LOC)
+- Props: 없음 (store hook으로 모든 entity 직접)
+- imports: `usePlotStore`, entity restore actions, entity icons, ContextMenu
+- 8 entity별 데이터 추출:
+  ```ts
+  const notesTrashed = usePlotStore(s => s.notes.filter(n => n.trashed))
+  const wikiTrashed = usePlotStore(s => s.wikiArticles.filter(w => w.trashed))
+  const booksTrashed = usePlotStore(s => s.books.filter(b => b.trashed))
+  const tagsTrashed = usePlotStore(s => s.tags.filter(t => t.trashed))
+  const labelsTrashed = usePlotStore(s => s.labels.filter(l => l.trashed))
+  const templatesTrashed = usePlotStore(s => s.templates.filter(t => t.trashed))
+  const refsTrashed = Object.values(usePlotStore(s => s.references)).filter(r => r.trashed)
+  const attachmentsTrashed = usePlotStore(s => s.attachments.filter(a => a.trashed))
+  ```
+
+**Step 2**: entity별 section render (빈 section hide)
+```tsx
+<TrashAllView>
+  {notesTrashed.length > 0 && <Section title="Notes" count={notesTrashed.length}>
+    {notesTrashed.map(n => <TrashRow kind="note" item={n} />)}
+  </Section>}
+  {/* ... 7 entity 동일 패턴 ... */}
+</TrashAllView>
+```
+
+**Step 3**: TrashRow 통합 layout (entity 무관)
+```tsx
+<TrashRow kind item>
+  <span className="icon">{entityIcon(kind)}</span>
+  <span className="entity-badge">{kindLabel}</span>
+  <span className="title">{item.title || item.name}</span>
+  <button onClick={() => restore(kind, item.id)}>Restore</button>
+  <button onClick={() => deleteForever(kind, item.id)}>Delete forever</button>
+</TrashRow>
+```
+
+**Step 4**: Store action 매핑 helper
+```ts
+function restore(kind, id) {
+  const s = usePlotStore.getState()
+  switch (kind) {
+    case "note": s.toggleTrash(id); break
+    case "wiki": s.updateWikiArticle(id, { trashed: false } as any); break
+    case "book": s.restoreBook(id); break
+    case "tag": s.restoreTag(id); break
+    case "label": s.restoreLabel(id); break
+    case "template": s.restoreTemplate(id); break
+    case "reference": s.restoreReference(id); break
+    case "attachment": s.restoreAttachment(id); break
+  }
+}
+```
+delete forever는 entity별 hard-delete action 존재 여부 확인 (lib/store/slices/*.ts). 없으면 trashed=true 유지 + toast.
+
+**Step 5**: notes-table.tsx 분기
+```tsx
+if (isTrashView && trashFilter === "all") {
+  return <TrashAllView />
+}
+```
+
+**Step 6**: `trashTabCounts.all` 보강 (notes-table.tsx:408)
+- wikiArticles 누락 — `trashedWiki.length` 추가
+- `all: trashed.length + trashedWiki.length + trashedBooks.length + ...`
+
+#### 위험 + 회피
+- JSX conditional render: `{cond && (<X />)}` parens (이번 세션 hotfix 패턴)
+- Store action 시그니처: 각 entity restore signature `(id: string) => void` 가정. 확인 후 진행.
+- Empty state: 모든 entity trashed.length === 0 시 "Trash is empty" 표시
+- entity별 icon: notes (Hexagon/Cube/Cuboid2x2 status icon), wiki (IconWikiArticle/Stub), books (BookOpen), tags (Hash), labels (LabelIcon), templates (FileText), references (BookmarkSimple), attachments (Paperclip) — 각 entity별 fallback
+
+#### 참고 파일
+- `components/notes-table.tsx:398-418` — trashTabCounts logic (count source)
+- `lib/store/slices/{notes,wikiArticles,books,tags,labels,templates,references,attachments}.ts` — restore + delete actions
+- `components/note-context-menu-items.tsx` — Trash 메뉴 패턴 (notes context)
+- `components/views/wiki-list.tsx` — wiki trashed handling
+- `components/books/book-table.tsx` — book trashed handling (ContextMenu)
 
 ### Wiki UX cherry-pick 사용자 manual verify
 이번 세션 통합된 변경 — 시각 확인 필요:
