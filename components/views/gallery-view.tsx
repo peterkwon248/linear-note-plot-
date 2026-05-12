@@ -48,7 +48,15 @@ interface GalleryViewProps {
   items?: GalleryItem[]
   groups?: GalleryGroup[]
   activeId: string | null
+  /** Single-click — typically wires to preview pane (list/board parity). */
   onItemClick: (id: string) => void
+  /** 2026-05-12: Double-click — typically opens the note for editing. */
+  onItemDoubleClick?: (id: string) => void
+  /** 2026-05-12: Multi-select state (list/board parity).
+   *  Caller supplies set; card shows checkbox on hover / when selected. */
+  selectedIds?: Set<string>
+  /** Toggle selection (checkbox click 또는 cmd/ctrl-click). */
+  onItemToggleSelect?: (id: string) => void
   /** Optional header above the first group. */
   title?: string
   subtitle?: string
@@ -66,6 +74,9 @@ export function GalleryView({
   groups,
   activeId,
   onItemClick,
+  onItemDoubleClick,
+  selectedIds,
+  onItemToggleSelect,
   title,
   subtitle,
   renderContextMenu,
@@ -108,11 +119,11 @@ export function GalleryView({
                 {g.items.length}
               </span>
             </div>
-            <Grid items={g.items} activeId={activeId} onItemClick={onItemClick} renderContextMenu={renderContextMenu} />
+            <Grid items={g.items} activeId={activeId} onItemClick={onItemClick} onItemDoubleClick={onItemDoubleClick} selectedIds={selectedIds} onItemToggleSelect={onItemToggleSelect} renderContextMenu={renderContextMenu} />
           </section>
         ))
       ) : (
-        <Grid items={items!} activeId={activeId} onItemClick={onItemClick} renderContextMenu={renderContextMenu} />
+        <Grid items={items!} activeId={activeId} onItemClick={onItemClick} onItemDoubleClick={onItemDoubleClick} selectedIds={selectedIds} onItemToggleSelect={onItemToggleSelect} renderContextMenu={renderContextMenu} />
       )}
     </div>
   )
@@ -122,21 +133,39 @@ function Grid({
   items,
   activeId,
   onItemClick,
+  onItemDoubleClick,
+  selectedIds,
+  onItemToggleSelect,
   renderContextMenu,
 }: {
   items: GalleryItem[]
   activeId: string | null
   onItemClick: (id: string) => void
+  onItemDoubleClick?: (id: string) => void
+  selectedIds?: Set<string>
+  onItemToggleSelect?: (id: string) => void
   renderContextMenu?: (item: GalleryItem, card: React.ReactNode) => React.ReactNode
 }) {
   return (
     <div className="grid grid-cols-[repeat(auto-fill,minmax(240px,1fr))] gap-3">
       {items.map((it) => {
+        const isSelected = selectedIds?.has(it.id) ?? false
         const card = (
           <GalleryCard
             item={it}
             active={activeId === it.id}
-            onClick={() => onItemClick(it.id)}
+            isSelected={isSelected}
+            onClick={(e) => {
+              // cmd/ctrl-click 또는 selection 활성 중 click = toggle select.
+              const isMod = (e as React.MouseEvent).metaKey || (e as React.MouseEvent).ctrlKey
+              if ((isMod || (selectedIds && selectedIds.size > 0)) && onItemToggleSelect) {
+                onItemToggleSelect(it.id)
+              } else {
+                onItemClick(it.id)
+              }
+            }}
+            onToggleSelect={onItemToggleSelect ? () => onItemToggleSelect(it.id) : undefined}
+            onDoubleClick={onItemDoubleClick ? () => onItemDoubleClick(it.id) : undefined}
           />
         )
         return (
@@ -156,9 +185,13 @@ function Grid({
 const GalleryCard = React.forwardRef<HTMLElement, {
   item: GalleryItem
   active: boolean
-  onClick: () => void
-} & React.HTMLAttributes<HTMLElement>>(function GalleryCard(
-  { item, active, onClick, onKeyDown, className, ...rest },
+  isSelected?: boolean
+  onClick: (e: React.MouseEvent | React.KeyboardEvent) => void
+  onDoubleClick?: () => void
+  /** Checkbox click (top-right) — toggle multi-select. */
+  onToggleSelect?: () => void
+} & Omit<React.HTMLAttributes<HTMLElement>, "onClick">>(function GalleryCard(
+  { item, active, isSelected = false, onClick, onDoubleClick, onToggleSelect, onKeyDown, className, ...rest },
   ref,
 ) {
   const useImageCover = !!item.coverImage
@@ -166,28 +199,55 @@ const GalleryCard = React.forwardRef<HTMLElement, {
   return (
     <article
       ref={ref}
-      onClick={onClick}
+      onClick={onClick as unknown as React.MouseEventHandler<HTMLElement>}
+      onDoubleClick={onDoubleClick}
       onKeyDown={(e) => {
         if (e.key === "Enter" || e.key === " ") {
           e.preventDefault()
-          onClick()
+          // Enter는 명시적 open 의도 — onDoubleClick(편집) 우선, fallback으로 onClick(preview)
+          if (onDoubleClick) onDoubleClick()
+          else onClick(e)
         }
         onKeyDown?.(e)
       }}
       role="button"
       tabIndex={0}
       data-active={active ? "true" : undefined}
+      data-selected={isSelected ? "true" : undefined}
       className={cn(
-        "group flex flex-col overflow-hidden rounded-lg border bg-card cursor-pointer",
+        "group relative flex flex-col overflow-hidden rounded-lg border bg-card cursor-pointer",
         "shadow-sm hover:shadow-md transition-all duration-150",
         "hover:border-accent/40",
-        active
+        isSelected
+          ? "border-accent ring-2 ring-accent/30"
+          : active
           ? "border-accent/50 ring-1 ring-accent/20"
           : "border-border",
         className,
       )}
       {...rest}
     >
+      {/* Selection checkbox — hover or selected (Notes board pattern parity) */}
+      {onToggleSelect && (
+        <div
+          onClick={(e) => {
+            e.stopPropagation()
+            onToggleSelect()
+          }}
+          className={cn(
+            "absolute top-2 right-2 z-10 flex h-5 w-5 items-center justify-center rounded border cursor-pointer transition-all",
+            isSelected
+              ? "bg-accent border-accent text-accent-foreground"
+              : "border-border bg-background/90 opacity-0 group-hover:opacity-100 hover:border-foreground/50",
+          )}
+        >
+          {isSelected && (
+            <svg width="11" height="11" viewBox="0 0 16 16" fill="none">
+              <path d="M3 8l3.5 3.5L13 5" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          )}
+        </div>
+      )}
       {/* Cover band */}
       <div
         className={cn(

@@ -28,10 +28,13 @@
   --space-library:  #b45309;
   --space-books:    #be123c;
 
-  /* v3 Note status (Q3 = v3 desaturated) */
+  /* v3 Note status (Q3 = v3 desaturated)
+     2026-05-12: keystone = slate (Plot 건축 메타포 — 자연석 → 가공 벽돌 →
+     완성 블록 earthy progression). 기존 teal `#0E9384`는 다른 두 status와
+     색 unrelated. slate는 stone/brick과 정합. */
   --status-stone:    #c9a87c;  /* toasted sand — warm earthy stone tone */
-  --status-brick:    #D97706;
-  --status-keystone: #0E9384;
+  --status-brick:    #D97706;  /* amber-600 — kiln-fired brick */
+  --status-keystone: #475569;  /* slate-600 — settled granite block */
 
   /* v3 Wiki status — mirrors WIKI_STATUS_HEX in lib/colors.ts */
   --wiki-stub:    #f97316;
@@ -211,7 +214,7 @@
      distinct from the brick/keystone palette. */
   --status-stone:    #e8d5a3;  /* toasted sand — saturated beige (light: #c9a87c) */
   --status-brick:    #f59e0b;  /* amber-500 */
-  --status-keystone: #2dd4bf;  /* teal-400  */
+  --status-keystone: #94a3b8;  /* slate-400 — settled granite block (dark) */
 
   /* v3 Shadow (dark) */
   --shadow-sm: 0 1px 2px rgba(0,0,0,0.30);
