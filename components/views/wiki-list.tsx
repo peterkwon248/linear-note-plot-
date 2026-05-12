@@ -423,14 +423,19 @@ function ArticleTableRow({
             </span>
           )
         })()}
-        <span className="min-w-0 flex-1 truncate text-note font-medium text-foreground/90">
+        {/* Title + pin: pin sits immediately to the right of the title text
+            (영구 결정 — Books book-table.tsx:497-502 pattern). Removing
+            `flex-1` from the title span prevents the title from stretching
+            and pushing the pin to the cell's right edge / next to the status
+            chip — the layout bug the user flagged. */}
+        <span className="min-w-0 truncate text-note font-medium text-foreground/90">
           {note.title || "Untitled"}
         </span>
         {(note as { pinned?: boolean }).pinned && (
           <PushPin
             size={11}
             weight="fill"
-            className="shrink-0 text-amber-500 mx-1"
+            className="ml-1 shrink-0 text-amber-500"
           />
         )}
       </button>

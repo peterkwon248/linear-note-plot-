@@ -27,6 +27,97 @@
 - 추측 fix → reproduce + 원인 분석 후 fix
 - 거대 PR 시리즈 (10+ PR) 후 conflict 빈번: 매 PR 머지 후 즉시 fetch+merge origin/main 습관
 - 4 PR cascade (#305-#308) 단일 세션 — 같은 worktree에서 누적 변경 squash 머지 4회. conflict는 build artifact만 (`--ours` 패턴).
+- 2026-05-12 (저녁) — multi-server dev (port 3002 + port 61869 동시) 환경에서 stale build 화면 보고 사용자가 fix 안 보인다고 보고. **교훈: 매 fix 후 정확한 port URL 안내. `preview_list` 로 inventory 확인.**
+- 2026-05-12 (저녁) — 사용자 "위키 북마크" = pin 의미 (bookmark 아님). 추측으로 진행하다 fix 의도 달라짐. **교훈: 사용자 어휘 매핑 명확화 후 진행.**
+
+---
+
+## 🚀 2026-05-12 (저녁) — Trash All + Status-icon-stale root fix + Wiki pin + 9 fix mega-PR (Store v130 → v132)
+
+**범위**: 1 worktree (`quirky-colden-bcf3de`). 9 fix 통합 단일 PR. Store v130 → v132. 사용자가 보고한 다섯 가지 issue (Trash All, Status icon stale, Board drag move semantic, Books checkbox visibility, Trash checkbox 부재, Wiki pin 위치) + 그 연쇄 root cause fix.
+
+### 큰 결정 (영구 LOCKED)
+
+**1. Trash "All" 통합 view 신규**:
+- `components/views/trash-all-view.tsx` (~380 LOC final including multi-select)
+- 8 entity (Notes/Wiki/Books/Tags/Labels/Templates/References/Files) trashed 통합 표시
+- entity별 section header, 통합 row layout, status별 leading icon (Notes만 StatusShapeIcon)
+- multi-select + 하단 floating bulk action bar (Restore / Delete forever / Clear)
+- `trashTabCounts.all`에 wikiArticles 합산 보강 — count 모순 해소
+- 사용자 의도 *"ALL은 모든 entity의 trashed 통합 표시"*
+
+**2. dnd-kit DOM ref 합치기 위험 패턴 (영구 학습 LOCKED)**:
+- `useSortable("col-${key}")`와 `useDroppable("${key}")`를 같은 ref에 bind 시 collision detection 비결정
+- card drop의 `over.id`가 sortable id (`col-stone`) 또는 droppable id (`stone`) 중 비결정 반환
+- handler에서 무조건 id normalize: `overId.startsWith("col-") ? overId.slice(4) : overId`
+- 같은 패턴 사용 시 (books-board 등) 같은 normalize 적용
+
+**3. Status icon stale root cause + 3-layer fix (영구 결정)**:
+- root cause 명확: dnd-kit DOM ref 이중 binding (위 #2). garbage `col-stone` 등이 `note.status`에 저장 → StatusShapeIcon (else→Cuboid/Block) + StatusBadge (fallback→brick) mismatch
+- **Fix #1 root prevention**: `notes-board.tsx:968` overId strip
+- **Fix #2 memo safety**: BoardCard memo에 status 비교 추가
+- **Fix #3 data recovery**: `migrate.ts` v131 NoteStatus garbage cleanup (idempotent)
+- Store version: 130 → **131**
+
+**4. v132 folderIds garbage cleanup**:
+- 같은 dnd-kit root cause가 folderIds에도 garbage (`col-folder-1`, `col-_no_folder` 등) 저장 가능
+- 사용자 toast 본 *"Added X to col-_no_folder"* 가 직접 증거
+- v132 마이그레이션: `state.folders` Set 외 folderId 제거. notes + wikiArticles 둘 다
+- Store version: 131 → **132**
+
+**5. Board drag default = Move semantic (영구 결정 변경 LOCKED)**:
+- 이전 N:M 패턴: folder drop default = Add / Shift = Move
+- **신규** (2026-05-12 저녁 user feedback): default = **Move** (folderIds 교체) / Shift+drop = **Add** (N:M 기존 유지)
+- 사용자 직관 *"옮기면 진짜로 속성이 바뀌어야"* 우선. 작업 원칙 #8.
+- status / priority / triage는 single-valued라 항상 Move (불변)
+- 이전 결정 (PR (c) Add-default) 폐기, 새 결정 LOCKED
+
+**6. row checkbox 패턴 — 모든 entity 일관 (영구 LOCKED)**:
+- 패턴: `selectionActive || isSelected ? "visible" : "invisible group-hover:visible"`
+- 부모에 `group` className 필수
+- 적용: notes-table NoteRow / wiki-list ArticleRow / book-table BookRow (이번 세션 fix) / trash-all-view TrashRow (이번 세션 신규)
+- 사용자 보고: Books visible mismatch + Trash 부재
+
+**7. Pin 위치 = title 옆 (영구 결정 #301 재실현, Books 패턴 reference)**:
+- title span에서 `flex-1` 제거 + pin `ml-1 shrink-0`
+- 모든 entity 표준
+- elastic-darwin의 status chip 옆 이동(`1d8b30f`) 영구 폐기 재확인
+- 사용자 보고 *"왜 스테이터스 칩 왼쪽에 있냐고. 북마크가 아니라 pin이었어!!"*
+
+**8. Migration 2-layer 패턴 (영구 LOCKED)**:
+- 코드 fix만으로는 이미 corrupted된 IDB 데이터 정리 X
+- root prevention (코드) + data recovery (migration) 둘 다 필수
+- v131 / v132 idempotent — valid 데이터 pass through. 재실행 안전.
+
+### 기술 학습 (영구)
+
+- **dnd-kit collision detection**: useSortable이 내부적으로 useDroppable wrap. 같은 DOM ref bind 시 over.id가 어느 id 반환할지 비결정. handler normalize 필수.
+- **Zustand persist `partialize`**: notes의 content/contentJson 제거 후 저장. body는 별도 IDB store. migration 시 state.notes에 body 없음.
+- **preview_eval로 IDB 직접 dump**: `indexedDB.open("plot-zustand")` + `tx.objectStore("kv").getAll()`. zustand persist 검증 효과적.
+- **사용자 IDB-aware migration**: SEED 코드 vs 사용자 데이터 분리. SEED는 valid enum 사용해도 사용자 IDB에 옛 enum/garbage 잔존 가능. migration이 root cause 진단 + recovery 둘 다 담당.
+- **multi-server preview troubleshooting**: 사용자 본 화면 ≠ AI verify 화면. port URL 명시 + `preview_list` 로 inventory.
+- **Hover-only checkbox**: `selectionActive || isSelected ? "visible" : "invisible group-hover:visible"`. 부모 `group` className. 모든 entity 일관.
+- **Floating bulk action bar (sticky bottom)**: `sticky bottom-4 z-20 mx-auto w-fit ... backdrop-blur shadow-lg`. selection 활성 시 mount.
+- **Migration silent log**: console `[migrate] vN→vN+1`. dev tools 없으면 사용자 못 봄. toast 알림 follow-up 후보.
+- **Wiki list rendering chain**: wiki-view (line 372 trashed filter) → filteredWikiNotes → wikiGroups → WikiList (filteredWikiNotes prop). 단 wikiArticles 원본 prop도 별도 (backlink resolution용, 표시 X).
+- **`overId.slice(4)` vs `.replace("col-", "")` 비교**: slice가 prefix 일관 처리 더 안전 (replace는 모든 occurrence 처리, 한 번만 처리해야).
+
+### 다음 (TODO.md P0 참조)
+
+🔴 **BoardCard chip overflow fix** — 사용자 보고 *"박스 밖으로 `#Productivity` 글자가 빠져나오는 연출"*. notes-board.tsx의 BoardCard chips row에 overflow:hidden + truncate. 정책 A (truncate, 한 줄 유지) 추천.
+
+🟡 9 fix manual verify (localhost:61869):
+- /trash All / /notes board drag / /library Books / /wiki pin / migration log
+
+🟢 TrashEntityList multi-select (entity별 탭) — follow-up
+
+### 머신
+집 (Windows)
+
+### 누적 commits (이번 세션, 1 mega-PR)
+- v131 migration (NoteStatus garbage cleanup) + Trash All view 신규 + 9 fix 통합
+- 모든 코드 변경 + docs sync (TODO + SESSION-LOG + CONTEXT + MEMORY)
+- tsc / build / preview console clean 매 fix마다 검증
 
 ---
 

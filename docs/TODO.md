@@ -3,138 +3,57 @@
 > 우선순위 기반 작업 목록. **P0 = 다음 세션 즉시 시작점** (NEXT-ACTION.md 폐지, 2026-05-12).
 > 완료 항목은 즉시 삭제 또는 "완료" 섹션으로 이동.
 
-**마지막 갱신**: 2026-05-12 (Board/Gallery polish + Split view fix + hotfix 4 PR cascade)
+**마지막 갱신**: 2026-05-12 (Trash All + Status-icon-stale root fix + Wiki pin + 9 fix mega-PR)
 
 ---
 
 ## 🔴 P0 — 즉시 (다음 세션)
 
-### Trash "All" 통합 view 신규 ⭐⭐⭐ — 다음 세션 최우선
-**사용자 의도** (이번 세션 명시): *"ALL은 모든 entity의 trashed 통합 표시. 노트든 위키든 태그든 라벨이든 삭제된 것들은 전부 ALL에 나와야"*.
+### BoardCard chip overflow fix ⭐⭐⭐ — 다음 세션 최우선
+**사용자 의도** (이번 세션 명시, 스크린샷 동봉): *"이런 식으로 박스 밖으로 `#Productivity` 글자가 빠져나오는 연출이 있는데 이러면 안 됨. 박스 밖으로 빠져나가면 안 돼."*
 
-**현재 상태**: count 통합 (`trashTabCounts.all = sum`), display는 notes만 (notes-table.tsx) → "1개라는데 아무것도 안 보임" 모순.
+**현재 상태**: `components/notes-board.tsx`의 BoardCard에서 tag/category chips row가 가로로 풀려서 카드 box width 초과 시 마지막 chip text가 잘리지 않고 box 밖으로 돌출됨. 스크린샷 예: "Build a Personal Wiki" 카드에 `[📁 Projects] [# Knowle…] [# Producti`...`vity]` — 마지막 chip이 box 우측 경계 넘김.
 
-#### Sub-tasks (단계별)
+#### 추정 root cause
+- BoardCard chips row의 flex container가 `overflow-hidden` / `min-w-0` 없음 → child chip이 grow + 잘림 처리 X
+- 또는 chip element 자체가 `truncate` / `max-w` 없음 → 긴 tag name이 자기 자연 width로 stretch
 
-**Step 1**: `components/views/trash-all-view.tsx` 신규 (~150-200 LOC)
-- Props: 없음 (store hook으로 모든 entity 직접)
-- imports: `usePlotStore`, entity restore actions, entity icons, ContextMenu
-- 8 entity별 데이터 추출:
-  ```ts
-  const notesTrashed = usePlotStore(s => s.notes.filter(n => n.trashed))
-  const wikiTrashed = usePlotStore(s => s.wikiArticles.filter(w => w.trashed))
-  const booksTrashed = usePlotStore(s => s.books.filter(b => b.trashed))
-  const tagsTrashed = usePlotStore(s => s.tags.filter(t => t.trashed))
-  const labelsTrashed = usePlotStore(s => s.labels.filter(l => l.trashed))
-  const templatesTrashed = usePlotStore(s => s.templates.filter(t => t.trashed))
-  const refsTrashed = Object.values(usePlotStore(s => s.references)).filter(r => r.trashed)
-  const attachmentsTrashed = usePlotStore(s => s.attachments.filter(a => a.trashed))
-  ```
-
-**Step 2**: entity별 section render (빈 section hide)
-```tsx
-<TrashAllView>
-  {notesTrashed.length > 0 && <Section title="Notes" count={notesTrashed.length}>
-    {notesTrashed.map(n => <TrashRow kind="note" item={n} />)}
-  </Section>}
-  {/* ... 7 entity 동일 패턴 ... */}
-</TrashAllView>
-```
-
-**Step 3**: TrashRow 통합 layout (entity 무관)
-```tsx
-<TrashRow kind item>
-  <span className="icon">{entityIcon(kind)}</span>
-  <span className="entity-badge">{kindLabel}</span>
-  <span className="title">{item.title || item.name}</span>
-  <button onClick={() => restore(kind, item.id)}>Restore</button>
-  <button onClick={() => deleteForever(kind, item.id)}>Delete forever</button>
-</TrashRow>
-```
-
-**Step 4**: Store action 매핑 helper
-```ts
-function restore(kind, id) {
-  const s = usePlotStore.getState()
-  switch (kind) {
-    case "note": s.toggleTrash(id); break
-    case "wiki": s.updateWikiArticle(id, { trashed: false } as any); break
-    case "book": s.restoreBook(id); break
-    case "tag": s.restoreTag(id); break
-    case "label": s.restoreLabel(id); break
-    case "template": s.restoreTemplate(id); break
-    case "reference": s.restoreReference(id); break
-    case "attachment": s.restoreAttachment(id); break
-  }
-}
-```
-delete forever는 entity별 hard-delete action 존재 여부 확인 (lib/store/slices/*.ts). 없으면 trashed=true 유지 + toast.
-
-**Step 5**: notes-table.tsx 분기
-```tsx
-if (isTrashView && trashFilter === "all") {
-  return <TrashAllView />
-}
-```
-
-**Step 6**: `trashTabCounts.all` 보강 (notes-table.tsx:408)
-- wikiArticles 누락 — `trashedWiki.length` 추가
-- `all: trashed.length + trashedWiki.length + trashedBooks.length + ...`
+#### Sub-tasks
+**Step 1**: BoardCard 컴포넌트 chips row 위치 정확히 찾기 (notes-board.tsx — chips 렌더 부분, line ~400-600 추정)
+**Step 2**: chip row container에 `overflow-hidden min-w-0` + `flex-wrap` 또는 `flex` + chip 자체 `truncate max-w-[...]`
+**Step 3**: 두 가지 정책 중 사용자 결정:
+  - **A: Truncate** — 한 줄 유지, chip text 잘림 (`…`). 카드 height 일정. Linear 패턴 정합.
+  - **B: Wrap** — chip 여러 줄로 wrap. 카드 height variable. 표시 정보량 ↑.
+  - 추천: A (Linear principle, board card height 일정 = 시각 정돈).
 
 #### 위험 + 회피
-- JSX conditional render: `{cond && (<X />)}` parens (이번 세션 hotfix 패턴)
-- Store action 시그니처: 각 entity restore signature `(id: string) => void` 가정. 확인 후 진행.
-- Empty state: 모든 entity trashed.length === 0 시 "Trash is empty" 표시
-- entity별 icon: notes (Hexagon/Cube/Cuboid2x2 status icon), wiki (IconWikiArticle/Stub), books (BookOpen), tags (Hash), labels (LabelIcon), templates (FileText), references (BookmarkSimple), attachments (Paperclip) — 각 entity별 fallback
+- chip 너무 짧으면 truncate 의미 없음 — `max-w` 적당히 조정
+- card grid layout 영향 (flex/grid template) — `min-w-0`는 flex item shrink 허용
+- board mode 외 grid/gallery에도 같은 BoardCard 사용하는지 확인 (회귀 회피)
+- list mode의 chip layout과 별개 (list mode는 별도 cell)
 
 #### 참고 파일
-- `components/notes-table.tsx:398-418` — trashTabCounts logic (count source)
-- `lib/store/slices/{notes,wikiArticles,books,tags,labels,templates,references,attachments}.ts` — restore + delete actions
-- `components/note-context-menu-items.tsx` — Trash 메뉴 패턴 (notes context)
-- `components/views/wiki-list.tsx` — wiki trashed handling
-- `components/books/book-table.tsx` — book trashed handling (ContextMenu)
+- `components/notes-board.tsx` (BoardCard 또는 BoardCardInner)
+- `components/notes-table.tsx` (list mode chip 패턴 비교용 — 정합 가이드)
+- `components/views/wiki-list.tsx:462` (wiki list tags column — `w-[140px] shrink-0 ... overflow-hidden` 패턴)
 
-### Wiki UX cherry-pick 사용자 manual verify
+### 9 fix manual verify (localhost:61869)
 이번 세션 통합된 변경 — 시각 확인 필요:
-- `/wiki` list mode 우클릭 → cursor 추적 OK
-- Wiki 1+ row 선택 → 하단 플로팅바 6 액션 (Pin/Move/Add to category/Merge/Split/Delete)
-- `/wiki` gallery mode 우클릭 → ContextMenu 나타남
+1. `/trash` "All" 탭 → 모든 entity 통합 표시 + row checkbox hover-only + 선택 시 하단 floating bar (Restore / Delete forever / Clear X)
+2. `/notes` board mode → keystone(Block) 카드를 stone/brick column으로 drag → 노트 status 진짜 변경 + icon-chip 일치
+3. `/notes` board mode (folder grouping) → 노트를 다른 folder column으로 drag → 노트 folderIds 진짜 교체 (이전 folder 제거, Move semantic). Shift+drop = Add (N:M 기존 유지)
+4. 페이지 reload → console에 `[migrate] v130→v131: repaired NoteStatus on N notes` + `[migrate] v131→v132: cleaned garbage folderIds on N notes` log
+5. `/library` (Books) → row checkbox는 hover 시에만 visible (notes/wiki 정합)
+6. `/wiki` → pinned wiki article의 pin icon이 title 바로 옆 (cell 우측 끝 X)
+7. `/wiki` trashed article 자동 제외 (filter 정상 작동)
 
-### Notes 4 surface ContextMenu manual verify
-- `/notes` list mode 우클릭 → 13 items
-- `/notes` board mode 우클릭 → 동일 13 items
-- `/notes` gallery mode 우클릭 → 동일 13 items
-- board mode 카드 선택 → 우측 BoardWorkbench "Organize" 섹션 (Pin/Move/Split)
+### #2 Status icon stale (root cause + fix 둘 다 완료) — verify만 남음
+- root cause = notes-board column에 useSortable + useDroppable 동시 bind. dnd-kit이 sortable id 반환 시 `col-stone` 같은 garbage가 status에 저장
+- fix 3-layer: notes-board.tsx line 968 overId.slice(4) + BoardCard memo status 비교 + v131 NoteStatus garbage cleanup
+- 사용자가 다시 보드에서 drag 시도 → 옛 mismatch 재발 X 확인 필요
 
-### Notes board drag/empty column manual verify
-- 카드 drag → drop 시 smooth animation (220ms cubic-bezier)
-- 카드를 다른 status로 옮긴 후 원래 column 유지 (drop target)
-- Stone/Brick/Block 3 column 항상 표시
-
-### Books grid/board/gallery pin 위치 점검 (이번 세션 list만 fix)
-- grid mode: cover icon 큰 layout — pin 위치 자연스러운가
-- board mode: card layout
-- gallery mode: entity-agnostic adapter — pin 표시 여부
-- 회귀 발견 시 list pattern 정합화
-
-### #2 Status icon stale — 사용자 reproduce 정보 필요
-보드에서 drag로 status 변경 후 어디선가 leading icon이 옛 status로 stale. 코드 분석 시 모든 leading icon = `note.status` 기반 + React memo trigger 정상. root cause 명확치 않아 skip.
-
-다음 세션에 사용자 시그널 받기:
-- 어느 view? (board / list / gallery / sidebar / preview pane / detail panel)
-- 어느 element? (카드 leading icon / top color band / status badge / group header)
-- drag 직후 vs page reload 후 stale?
-- 스크린샷
-
-### Block 색 + Gallery click parity + Split view 사용자 manual verify
-이번 세션 PR #305-#308 변경 — 시각 확인:
-- /notes Block status 카드/아이콘 → slate (회색 톤) 표시
-- /notes gallery → single click preview / double click 편집 / cmd-click select + 하단 floating bar / hover checkbox
-- /notes split view → secondary pane은 board column만 (workbench 안 보임, drop target 정상)
-- /notes 페이지 reload 후 — Board mode에 Stone/Brick/Block 3 column 모두 표시
-
-### STATUS_CONFIG 패턴 다른 lookup map에 적용
-이번 세션 hotfix (#308) — `STATUS_CONFIG[status]` null guard 추가. 다른 lookup map에 동일 패턴 적용 후보:
+### STATUS_CONFIG 패턴 다른 lookup map에 적용 (계속)
+이전 hotfix (#308) — `STATUS_CONFIG[status]` null guard 추가. 다른 lookup map에 동일 패턴 적용 후보:
 - PRIORITY_CONFIG (priority lookup)
 - BOARD_DEFAULT_GROUP (effectiveTab lookup)
 - 기타 Record<X, Y> 타입 모든 access 점검
@@ -145,6 +64,9 @@ rm ~/.claude/commands/before-work.md
 rm ~/.claude/commands/after-work.md
 ```
 NEXT-ACTION 의존 옛 정의 제거. project-level (git tracked) 새 정의가 단일 진실.
+
+### TrashEntityList multi-select (이번 세션은 TrashAllView만 fix)
+TrashAllView에 multi-select + bulk action 추가 완료. TrashEntityList (entity별 탭: books/tags/labels/templates/references/files) 도 동일 패턴 적용 후보. 사용자가 entity별 탭에서 multi-select 원하면 follow-up.
 
 ---
 
@@ -260,6 +182,21 @@ NEXT-ACTION 의존 옛 정의 제거. project-level (git tracked) 새 정의가 
 ---
 
 ## ✅ 최근 완료
+
+### 2026-05-12 (저녁) — Trash All + Status-icon-stale root fix + Wiki pin + 9 fix mega-PR (Store v130 → v132)
+- ✅ **Trash "All" 통합 view 신규** — `components/views/trash-all-view.tsx` (~300 LOC). 8 entity (Notes/Wiki/Books/Tags/Labels/Templates/References/Files) trashed 통합 표시. 사용자 의도 *"ALL은 모든 entity의 trashed 통합"* 충족. `trashTabCounts.all`에 wikiArticles 합산 보강 (count 모순 해소).
+- ✅ **Status icon stale root cause 발견 + 3-layer fix**:
+  - root cause: `notes-board.tsx:277-283` column DOM에 `useSortable("col-${key}")` + `useDroppable("${key}")` 동시 bind. dnd-kit collision detection이 sortable id 반환 시 `targetKey = "col-stone"`이 status로 저장 → StatusShapeIcon (else→Cuboid) + StatusBadge (fallback→brick) mismatch
+  - **#1 root prevention**: `notes-board.tsx:968` — `overId.startsWith("col-") ? overId.slice(4) : overId`
+  - **#2 memo safety**: BoardCard memo에 `prev.note.status === next.note.status` 추가
+  - **#3 data recovery**: `migrate.ts` v131 — VALID_STATUSES Set + legacy enum re-map + `col-` prefix strip + stone fallback. Store version 130 → 131
+- ✅ **v132 folderIds garbage cleanup** — 같은 dnd-kit root cause가 folderIds에도 garbage (`col-folder-1` 등) 저장 가능. v132 마이그레이션 — `state.folders`에 없는 folderId 제거. notes + wikiArticles 둘 다. Store version 131 → 132
+- ✅ **Board drag default = Move semantic 반전** (작업 원칙 #8 사용자 직관) — folder drop default = Move (folderIds 교체) / Shift+drop = Add (N:M 기존 유지). status/priority/triage는 single-valued라 자동 Move. 사용자 의도 *"옮기면 진짜 옮겨져야"*
+- ✅ **Books row checkbox hover-only** — `book-table.tsx:405-414` wrapper에 `checked ? "visible" : "invisible group-hover:visible"`. notes/wiki 패턴 정합 (사용자 보고: "Books의 경우 체크박스가 눈에 보이게")
+- ✅ **Trash row multi-select + bulk action bar** — `trash-all-view.tsx`에 selectedKeys state + row checkbox + 하단 floating bar (Restore / Delete forever / Clear). 사용자 보고: *"트래쉬의 경우 왜 체크박스가 없는 거야"*
+- ✅ **Wiki pin 위치 title 옆** — `wiki-list.tsx:426-435` title span `flex-1` 제거 + pin `ml-1`. Books book-table.tsx 패턴 정합. SESSION-LOG 영구 결정 #301 ("title 옆") 재실현. 사용자 보고: *"왜 스테이터스 칩 왼쪽에 있냐고"*
+- ✅ Wiki "북마크 이상" 진단 — wiki-view trashed filter (line 372) 정상. 사용자가 본 7개 trashed wiki = port 3002 (이전 worktree crazy-raman) stale build. port 61869는 정상
+- ✅ tsc + production build clean 매 fix마다 검증
 
 ### 2026-05-12 (오후) — Board/Gallery polish + Split view fix + hotfix (4 PR cascade)
 - ✅ **PR #305** (앞서 entry — ContextMenu DRY + Wiki UX cherry-pick + 워크플로우 재편)
