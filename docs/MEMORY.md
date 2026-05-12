@@ -29,6 +29,77 @@
 - 4 PR cascade (#305-#308) 단일 세션 — 같은 worktree에서 누적 변경 squash 머지 4회. conflict는 build artifact만 (`--ours` 패턴).
 - 2026-05-12 (저녁) — multi-server dev (port 3002 + port 61869 동시) 환경에서 stale build 화면 보고 사용자가 fix 안 보인다고 보고. **교훈: 매 fix 후 정확한 port URL 안내. `preview_list` 로 inventory 확인.**
 - 2026-05-12 (저녁) — 사용자 "위키 북마크" = pin 의미 (bookmark 아님). 추측으로 진행하다 fix 의도 달라짐. **교훈: 사용자 어휘 매핑 명확화 후 진행.**
+- 2026-05-12 (밤) — Books list mode grouping 회귀 (PR #317): board/gallery는 `groups + groupBy` 받지만 list만 누락. 사용자 스크린샷 한 장으로 발견. **교훈: viewMode 추가/변경 시 모든 entity의 모든 view mode에 같은 prop 흐름 적용 영구 룰.**
+- 2026-05-12 (밤) — Smart Book 5 source case 작성 중 emit helper 추출. **교훈: case 5+ 비슷한 흐름은 helper 추출이 *논리 단일화*. LOCKED #10 v1.2 같은 미묘 룰을 단일 지점에서 보장.**
+- 2026-05-12 (밤) — ResolverStore 새 필드 추가 시 test mock 14곳 수정 부담. **교훈: 새 필드는 optional + `?? []` fallback 패턴. 기존 caller silent compatible.**
+
+---
+
+## 🚀 2026-05-12 (밤) — Smart Book Phase A-F 전체 완성 + 4 polish PR (6 PR 누적 #312-#317)
+
+**범위**: 1 worktree (`condescending-yonath-23775a`). 단일 세션에서 6 PR. Smart Book PRD §4 LOCKED 12개 결정 모두 구현. 5 AutoSource kind 모두 활성.
+
+### 큰 결정 (영구 LOCKED)
+
+**1. Smart Book INVARIANT 영구 확정 (PRD §2)**:
+- BookItem.kind = `note` | `wiki` | `chapter-heading` 만
+- AutoSource는 **공급원**이지 멤버 kind가 아님 — label/tag/sticker entity가 책 페이지가 되는 게 X
+- Sticker는 7-kind 중 note/wiki만 추출 (다른 kind 무시)
+- 5 source 매핑: folder(note) / category(wiki) / tag(cross-entity) / label(notes-only) / sticker(note+wiki filter)
+
+**2. Smart Book 5 heading icon 매핑 (LOCKED)**:
+- folder → 📁 / category → 📚 / tag → # / label → 🏷 / sticker → ✨
+
+**3. `emitSection` helper 패턴 (영구)**:
+- resolver의 5 source case가 동일 흐름: heading + items + dedup + LOCKED #10 v1.2 empty-skip
+- helper 추출로 단일 지점에서 룰 보장. Phase G+ 시 같은 패턴 (template source 등 추가 가능성)
+
+**4. Convert to manual (LOCKED #9 manual override 액션화)**:
+- sources 있을 때만 표시되는 버튼
+- resolveBookItems → auto items 추출 → fresh uuid + clean BookItem shape → book.items append + smartSources/excludeIds clear
+- Use case: 자동 curate된 책을 source 변경 영향에서 freeze
+- window.confirm 가드 (destructive, undo path 없음)
+
+**5. Trash guard LOCKED #11 lazy detection 패턴**:
+- Tag/Label/Sticker → `if (!entity || entity.trashed) continue`
+- WikiCategory + Folder → hard-delete only이므로 기존 stale-ref guard로 충분
+- restore 시 자동 revive (별도 path 불필요)
+
+**6. ResolverStore optional 확장 패턴 (영구)**:
+- 새 phase 추가 시 `field?: T[]` + `(store.field ?? [])` fallback
+- 기존 caller (Phase A-only test mock 14곳) silent compatible
+- 모든 entity slice 확장 시 같은 패턴
+
+**7. 5-tab dialog UI (`sm:max-w-md` ~448px)**:
+- grid-cols-5 + icon-only tabs (title hint)
+- 좁은 dialog에 깔끔. label 길면 잘림 → tooltip 보완
+- 미래 6 tab 이상이면 dropdown 또는 segmented control 재검토
+
+**8. viewMode props 일관성 영구 룰**:
+- 새 viewMode 추가 시 모든 entity의 모든 view mode에 같은 prop 흐름 (`books + groups + groupBy + viewMode...`)
+- Notes/Wiki/Books × list/board/gallery/grid 16 조합 중 한 곳 누락 = 사용자 직관 깨짐
+- PR #317로 Books list mode 회귀 catch
+
+### 기술 학습 (영구)
+
+- **Plot routing이 module-level state** (`_activeRoute` in `lib/table-route.ts`) — preview MCP로 wiki/books list 시각 검증 어려움. `setActiveView('books')` 만으로는 view mount 안 됨. 시각 verify는 사용자가 dev server에서 직접 하는 게 효율적.
+- **squash merge 후 base stale → conflict 패턴** — `git merge origin/main --no-ff` 후 `--ours`로 resolve. tsconfig.tsbuildinfo + .omc/continuation-count.json 등 auto-gen 파일은 무조건 ours.
+- **nanoid import** — `import { nanoid } from "nanoid"` (package.json 이미 있음). Convert to manual에서 fresh book item id 만들 때 사용.
+
+### Phase 분해 시간
+
+| Phase | PR | Estimate | 실제 |
+|---|---|---|---|
+| B (Category) | #314 | ~1-2h | ~1h |
+| C+D+E (Tag/Label/Sticker) | #315 | ~5h | ~2h (helper 추출로 단축) |
+| F (trash + Convert) | #316 | ~2-3h | ~1h |
+| Polish (list grouping fix) | #317 | — | ~30분 (사용자 보고 즉시) |
+
+### 환경
+- Branch: `claude/condescending-yonath-23775a`
+- Store version: 변경 없음 (Phase A migration 이미 v121, B-F는 additive)
+- Tests: 55 → 59/59 pass (+4 trash guard tests)
+- Build: ✅ / TSC: ✅ 0 errors
 
 ---
 

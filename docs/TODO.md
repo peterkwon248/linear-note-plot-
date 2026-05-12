@@ -3,70 +3,56 @@
 > 우선순위 기반 작업 목록. **P0 = 다음 세션 즉시 시작점** (NEXT-ACTION.md 폐지, 2026-05-12).
 > 완료 항목은 즉시 삭제 또는 "완료" 섹션으로 이동.
 
-**마지막 갱신**: 2026-05-12 (Trash All + Status-icon-stale root fix + Wiki pin + 9 fix mega-PR)
+**마지막 갱신**: 2026-05-12 밤 (Smart Book Phase A-F 전체 완성 + 4 polish PR, 6 PR 누적 #312-#317)
 
 ---
 
 ## 🔴 P0 — 즉시 (다음 세션)
 
-### BoardCard chip overflow fix ⭐⭐⭐ — 다음 세션 최우선
-**사용자 의도** (이번 세션 명시, 스크린샷 동봉): *"이런 식으로 박스 밖으로 `#Productivity` 글자가 빠져나오는 연출이 있는데 이러면 안 됨. 박스 밖으로 빠져나가면 안 돼."*
+### Smart Book 5 source kind manual verify + buglist ⭐⭐⭐ — 다음 세션 최우선
+**사용자 의도**: 어제 Phase A (folder)만 사용해본 상태. Phase B-F (PR #314-#316)는 코드 + 단위 test pass했지만 사용자 manual verify 안 됨. PRD §4 12 LOCKED 결정이 실제 UX와 맞는지 검증.
 
-**현재 상태**: `components/notes-board.tsx`의 BoardCard에서 tag/category chips row가 가로로 풀려서 카드 box width 초과 시 마지막 chip text가 잘리지 않고 box 밖으로 돌출됨. 스크린샷 예: "Build a Personal Wiki" 카드에 `[📁 Projects] [# Knowle…] [# Producti`...`vity]` — 마지막 chip이 box 우측 경계 넘김.
+#### 첫 스텝 (집/회사 어디서든)
+1. `/library` Books → 임의 book 열기 (또는 신규 생성) → "Add source" 클릭 → 5 tab 순회 (Folder / Category / Tag / Label / Sticker)
+2. 각 tab에서 entity 1개씩 추가 → 본문 list에 `📁 / 📚 / # / 🏷 / ✨` heading + items auto-resolve 확인
+3. 같은 entity가 여러 source에 매칭될 때 first-source 하위에만 (dedup) 확인
+4. "Convert to manual" 버튼 클릭 → confirm → 모든 auto items가 manual로 변환 + smartSources clear
+5. Tag/Label/Sticker trash → 책 본문 auto items 자동 사라짐 (lazy detection). restore → 자동 revive
 
-#### 추정 root cause
-- BoardCard chips row의 flex container가 `overflow-hidden` / `min-w-0` 없음 → child chip이 grow + 잘림 처리 X
-- 또는 chip element 자체가 `truncate` / `max-w` 없음 → 긴 tag name이 자기 자연 width로 stretch
+#### 확인 포인트
+- 5 tab 시각 일관성 (icon / preview count / empty state)
+- SourcesSection chip vs 본문 chapter heading icon 매핑 일관
+- manual 노트가 tag source와 매칭될 때 sourceRefId tag (subtle badge로 UI 표시되는지 — 현재 미구현 가능성, BookItemRow 확인 필요)
+- Convert to manual 후 새 source 추가 시 freeze (앞서 변환된 items 흔들리지 않음)
 
-#### Sub-tasks
-**Step 1**: BoardCard 컴포넌트 chips row 위치 정확히 찾기 (notes-board.tsx — chips 렌더 부분, line ~400-600 추정)
-**Step 2**: chip row container에 `overflow-hidden min-w-0` + `flex-wrap` 또는 `flex` + chip 자체 `truncate max-w-[...]`
-**Step 3**: 두 가지 정책 중 사용자 결정:
-  - **A: Truncate** — 한 줄 유지, chip text 잘림 (`…`). 카드 height 일정. Linear 패턴 정합.
-  - **B: Wrap** — chip 여러 줄로 wrap. 카드 height variable. 표시 정보량 ↑.
-  - 추천: A (Linear principle, board card height 일정 = 시각 정돈).
-
-#### 위험 + 회피
-- chip 너무 짧으면 truncate 의미 없음 — `max-w` 적당히 조정
-- card grid layout 영향 (flex/grid template) — `min-w-0`는 flex item shrink 허용
-- board mode 외 grid/gallery에도 같은 BoardCard 사용하는지 확인 (회귀 회피)
-- list mode의 chip layout과 별개 (list mode는 별도 cell)
+#### 구멍 가능성 (예상)
+- Empty book 상태에서 source 추가 flow 자연스러운지
+- 5 tab 5 source picker dialog 좁아서 답답하지 않은지 (`sm:max-w-md` ~448px)
+- 같은 source 재추가 dedup guard toast 검증
+- sticker source는 멤버 없으면 silent skip — 사용자 confusion 가능 (UI에 "0 members" preview 있음)
+- `WikiArticle.tags` 필드가 실제 wiki seed에 있는지 (현재 wiki-4/5/7만 tag-2 매칭) — empty state로 더 다양한 시나리오 필요
 
 #### 참고 파일
-- `components/notes-board.tsx` (BoardCard 또는 BoardCardInner)
-- `components/notes-table.tsx` (list mode chip 패턴 비교용 — 정합 가이드)
-- `components/views/wiki-list.tsx:462` (wiki list tags column — `w-[140px] shrink-0 ... overflow-hidden` 패턴)
+- `lib/books/resolver.ts` — 5 case + emit helper (~150 line)
+- `components/books/sources-section.tsx` — 5 tab dialog
+- `components/views/book-detail-page.tsx` — caller (store wire)
+- `lib/books/__tests__/resolver.test.ts` — 39 tests
+- `.omc/plans/smart-book-prd.md` — PRD spec
 
-### 9 fix manual verify (localhost:61869)
-이번 세션 통합된 변경 — 시각 확인 필요:
-1. `/trash` "All" 탭 → 모든 entity 통합 표시 + row checkbox hover-only + 선택 시 하단 floating bar (Restore / Delete forever / Clear X)
-2. `/notes` board mode → keystone(Block) 카드를 stone/brick column으로 drag → 노트 status 진짜 변경 + icon-chip 일치
-3. `/notes` board mode (folder grouping) → 노트를 다른 folder column으로 drag → 노트 folderIds 진짜 교체 (이전 folder 제거, Move semantic). Shift+drop = Add (N:M 기존 유지)
-4. 페이지 reload → console에 `[migrate] v130→v131: repaired NoteStatus on N notes` + `[migrate] v131→v132: cleaned garbage folderIds on N notes` log
-5. `/library` (Books) → row checkbox는 hover 시에만 visible (notes/wiki 정합)
-6. `/wiki` → pinned wiki article의 pin icon이 title 바로 옆 (cell 우측 끝 X)
-7. `/wiki` trashed article 자동 제외 (filter 정상 작동)
+#### 위험 + 회피
+- dev server :3002 stale build 가능성 → 방문 시 hard refresh (Ctrl+Shift+R)
+- dnd-kit 패턴 — Books도 같은 collision risk 있는지 cross-check (`books-board.tsx`)
+- 옛 IDB에 book.smartSources 형식 다를 수 있음 — migrate.ts 확인
 
-### #2 Status icon stale (root cause + fix 둘 다 완료) — verify만 남음
-- root cause = notes-board column에 useSortable + useDroppable 동시 bind. dnd-kit이 sortable id 반환 시 `col-stone` 같은 garbage가 status에 저장
-- fix 3-layer: notes-board.tsx line 968 overId.slice(4) + BoardCard memo status 비교 + v131 NoteStatus garbage cleanup
-- 사용자가 다시 보드에서 drag 시도 → 옛 mismatch 재발 X 확인 필요
+### Books list mode grouping (PR #317) — visual verify만 남음
+`/library` Books → list mode → Display panel → Grouping = Kind / Pinned 변경 시 group section header 표시 (smart/hybrid/manual 또는 pinned/others). flat 동작도 (Grouping=None) 보존 확인.
 
-### STATUS_CONFIG 패턴 다른 lookup map에 적용 (계속)
-이전 hotfix (#308) — `STATUS_CONFIG[status]` null guard 추가. 다른 lookup map에 동일 패턴 적용 후보:
-- PRIORITY_CONFIG (priority lookup)
-- BOARD_DEFAULT_GROUP (effectiveTab lookup)
-- 기타 Record<X, Y> 타입 모든 access 점검
-
-### 글로벌 commands 수동 삭제 (양 머신)
-```bash
-rm ~/.claude/commands/before-work.md
-rm ~/.claude/commands/after-work.md
-```
-NEXT-ACTION 의존 옛 정의 제거. project-level (git tracked) 새 정의가 단일 진실.
-
-### TrashEntityList multi-select (이번 세션은 TrashAllView만 fix)
-TrashAllView에 multi-select + bulk action 추가 완료. TrashEntityList (entity별 탭: books/tags/labels/templates/references/files) 도 동일 패턴 적용 후보. 사용자가 entity별 탭에서 multi-select 원하면 follow-up.
+### Wiki group header icon (PR #312) — visual verify만 남음
+`/wiki` → All Articles → list / board mode → group header에 icon 표시:
+- family/parent/role → Tree
+- tier → Stack
+- linkCount → Link
+- label → category color dot
 
 ---
 
@@ -182,6 +168,16 @@ TrashAllView에 multi-select + bulk action 추가 완료. TrashEntityList (entit
 ---
 
 ## ✅ 최근 완료
+
+### 2026-05-12 (밤) — Smart Book Phase A-F 전체 완성 + 4 polish PR (6 PR 누적 #312-#317)
+- ✅ **PR #312** — BoardCard chip overflow (PropertyChipRow `overflow-hidden` 1줄) + Wiki 그룹 헤더 아이콘 (`WikiGroupHeaderIcon` 신규: family/parent/role→Tree, tier→Stack, linkCount→Link, label→color dot) + PRIORITY_CONFIG/STATUS_CONFIG null guard 확산 (PR #308 패턴)
+- ✅ **PR #313** — TrashEntityList multi-select (books/tags/labels/templates/references/files 탭에 TrashAllView 패턴 적용). hover-only checkbox + floating bar
+- ✅ **PR #314** — Smart Book Phase B (Wiki Category source, DAG `categoryIds?` array, 📚 heading). +10 tests
+- ✅ **PR #315** — Smart Book Phase C+D+E (Tag/Label/Sticker, all 5 kinds active). `emitSection` helper 추출 + 5-col tab UI + sourceRefId tagging probe. +11 tests
+- ✅ **PR #316** — Smart Book Phase F (trash guard tag/label/sticker + Convert to manual button). LOCKED #11 lazy detection + manual freeze. +4 tests
+- ✅ **PR #317** — Books list mode grouping 회귀 fix (BookTable에 `groups + groupBy` props 추가). 사용자 스크린샷 보고로 발견. board/gallery는 이미 처리, list만 누락이었음
+- 사용자 합의 — Smart Book Phase A-F 전체 완성 ("전부 다 진행해"). PRD §4 12 LOCKED 결정 모두 구현
+- tsc + 59/59 tests pass 매 PR마다 검증
 
 ### 2026-05-12 (저녁) — Trash All + Status-icon-stale root fix + Wiki pin + 9 fix mega-PR (Store v130 → v132)
 - ✅ **Trash "All" 통합 view 신규** — `components/views/trash-all-view.tsx` (~300 LOC). 8 entity (Notes/Wiki/Books/Tags/Labels/Templates/References/Files) trashed 통합 표시. 사용자 의도 *"ALL은 모든 entity의 trashed 통합"* 충족. `trashTabCounts.all`에 wikiArticles 합산 보강 (count 모순 해소).

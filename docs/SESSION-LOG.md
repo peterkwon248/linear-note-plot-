@@ -6,6 +6,143 @@
 
 ---
 
+## 2026-05-12 (밤) — 집, Smart Book 전체 완성 (Phase A-F) + 4 polish PR (6 PR 누적)
+
+> 🎯 **다음 즉시 액션**: Smart Book 5 source kind manual verify + buglist 수집 — 5 AutoSource 모두 활성됐으니 실제 사용자 워크플로우로 검증 + UX 구멍 발견 시 P0 follow-up.
+>
+> **사용자 의도**: 어제 작업한 Phase A (folder)만 사용해본 상태. Phase B-F는 코드 완성 + 단위 test pass 했지만 사용자 manual verify 안 됨. PRD §4 12 LOCKED 결정이 실제 UX와 맞는지 검증 필요.
+>
+> **첫 스텝** (다른 머신에서 바로 시작):
+> 1. `/library` Books → 임의 book 열기 (예: "Reading Journal" 또는 신규 생성) → "Add source" 클릭 → 5 tab 순회 (Folder / Category / Tag / Label / Sticker)
+> 2. 각 tab에서 entity 1개씩 추가 → 본문 list에 해당 heading + items auto-resolve 확인
+> 3. 같은 entity가 여러 source에 매칭될 때 first-source 하위에만 표시 (dedup) 확인
+> 4. "Convert to manual" 클릭 → confirm → 모든 auto items가 manual items로 변환 + smartSources 비워짐 확인
+> 5. Tag/Label/Sticker trash → 책 본문 auto items 자동 사라짐 (lazy detection). restore → 자동 revive
+> 6. **Books list mode grouping** (PR #317 fix) — Display panel Grouping = Kind / Pinned 변경 시 group section header 표시 확인
+>
+> **확인 포인트**:
+> - 5 tab 시각 일관성 (icon / preview count format / empty state)
+> - SourcesSection chip 표시 vs 본문 chapter heading icon (📁/📚/#/🏷/✨) 매핑 일관
+> - manual 노트가 tag source와 매칭될 때 sourceRefId tag (subtle badge로 UI 표시되는지 — 현재 미구현 가능성, BookItemRow 확인 필요)
+> - Convert to manual 후 새 source 추가 시 freeze 작동 (앞서 변환된 items 안 흔들림)
+>
+> **구멍 가능성** (예상):
+> - Empty book 상태에서 source 추가 → flow 자연스러운지
+> - 5 tab 5 source picker dialog 좁아서 답답하지 않은지 (sm:max-w-md = ~448px)
+> - 같은 source 재추가 dedup guard 토스트 표시 검증
+> - sticker source는 sticker 자체에 멤버 없으면 silent skip — 사용자 confusion 가능 (UI에 "0 members" preview 있음)
+> - `WikiArticle.tags` 필드가 실제 wiki seed에 있는지 (현재 wiki-4/5/7만 tag-2 매칭) — empty state로 더 다양한 시나리오 필요
+>
+> **참고 파일**:
+> - `lib/books/resolver.ts` — 5 case + emit helper
+> - `components/books/sources-section.tsx` — 5 tab dialog
+> - `components/views/book-detail-page.tsx` — caller (store wire)
+> - `lib/books/__tests__/resolver.test.ts` — 39 tests (각 case별)
+> - `.omc/plans/smart-book-prd.md` — PRD spec (LOCKED 12개)
+>
+> **위험 + 회피**:
+> - dev server :3002 stale build 가능성 (앞 세션 패턴) → 방문 시 hard refresh (Ctrl+Shift+R)
+> - dnd-kit 패턴 (notes-board pattern) — Books도 같은 collision risk 있는지 cross-check (books-board.tsx)
+> - 옛 IDB에 book.smartSources 형식 다를 수 있음 — migrate.ts 확인
+>
+> **머신**: 집 (Windows)
+> **현재 main HEAD**: PR #317 merge 후
+> **branch worktree**: `condescending-yonath-23775a` (다음 세션 새 worktree 권장)
+
+### 완료 (6 PR 누적)
+
+**1. polish PR #312 — BoardCard chip overflow + Wiki 그룹 헤더 아이콘 + lookup null guard**
+- `components/property-chips.tsx:709` PropertyChipRow row container `overflow-hidden` 1줄 추가. chip wrapper + ChipShell `shrink-0`이라 row가 카드 폭 초과 시 chip이 박스 밖으로 빠져나오던 케이스 차단. Linear 패턴 (한 줄 + clip)
+- `components/views/wiki-shared.tsx` — `WikiGroupHeaderIcon` 신규 (family/parent/role → Tree, tier → Stack, linkCount → Link, label → category color dot)
+- `wiki-list.tsx:889` group header + `wiki-board.tsx:124` column header에 icon 적용 (Notes Table/Board/Gallery + Books와 정합)
+- `note-fields.tsx` PRIORITY_CONFIG[value]에 `?? .none` fallback 2곳, `board-workbench.tsx` STATUS_CONFIG[status]에 `if (!cfg) return null` (PR #308 hotfix 패턴 확산)
+
+**2. feat PR #313 — TrashEntityList multi-select (entity별 탭)**
+- PR #311 TrashAllView 패턴을 books/tags/labels/templates/references/files 탭에도 동일하게 적용
+- `notes-table.tsx` TrashEntityList: selectedIds Set state + hover-only row checkbox + isSelected 시 bg-accent/10 + 하단 floating bar (Restore / Delete forever / Clear)
+- handleBulkRestore / handleBulkDelete (entity별 store action dispatch) + singularNoun helper
+
+**3. feat PR #314 — Smart Book Phase B (Wiki Category source)**
+- PRD §4 Phase B (~1-2h). Folder(A) → Category(B) 확장
+- `ResolverStore`에 wikiArticles + wikiCategories optional 추가 (Phase A 호환)
+- resolver `case "category"`: DAG (`WikiArticle.categoryIds?` array, any-match) → 📚 heading + wiki items
+- `sources-section.tsx`: "Add folder" → "Add source" 단일 진입점 + Dialog 안에 Tabs (Folder / Category)
+- ResolvedSource 단일 list에 두 kind 시각 통합 (folder icon vs category color dot + "FOLDER"/"CATEGORY" 태그)
+- +10 category tests (DAG dedup, excludeIds, manual shadowing, stale ref, trashed wiki, empty skip, mixed folder+category, deterministic id)
+
+**4. feat PR #315 — Smart Book Phase C+D+E (Tag/Label/Sticker, all 5 kinds active)**
+- 3 source kind 한 번에 (~5h estimate, 1 PR로 통합)
+- `emitSection` helper 추출 → folder/category/tag/label/sticker 모두 동일 흐름 (~80 line dedup)
+- `noteIsCandidate` / `wikiIsCandidate` predicates 단일화
+- **tag** (cross-entity) — Note.tags + WikiArticle.tags 같은 section 안에 mixed sort → `# {tag.name}` heading
+- **label** (notes only) — `Note.labelId === refId` → `🏷 {label.name}`
+- **sticker** (7-kind → 2-kind filter) — `members.kind === "note" || "wiki"`만 → `✨ {sticker.name}`
+- Manual items `sourceRefId` tagging 5 kind 모두 probe (note: folder→label→tag→sticker / wiki: category→tag→sticker)
+- UI: 5-col grid Tabs (icon-only, title hint), 5 candidate builder + preview count
+- +11 tests (cross-entity, DAG, manual shadowing, label notes-only, sticker filter, mixed source dedup)
+
+**5. feat PR #316 — Smart Book Phase F (trash guard + Convert to manual)**
+- **Trash guard (LOCKED #11 lazy detection)**: tag/label/sticker source에 `if (!entity || entity.trashed) continue` 추가. trashed → silent skip, restore → 자동 revive
+- WikiCategory + Folder는 hard-delete only라 기존 stale-ref guard로 충분
+- **Convert to manual**: 새 button (sources 있을 때만). resolveBookItems → auto items 추출 → fresh uuid + clean BookItem shape → book.items append + smartSources/excludeIds clear. window.confirm 가드
+- +4 trash guard tests (39 → 59/59 total resolver+utils pass)
+
+**6. fix PR #317 — BookTable list mode grouping 무시 버그**
+- 사용자 보고 (스크린샷): Display panel Grouping=Kind 선택 시 books list mode가 flat list만 표시 → 회귀 (board/gallery는 이미 groups 처리)
+- `BookTable` props에 `groups?: BookGroup[]` + `groupBy?: GroupBy` optional 추가
+- `isGrouped` 분기 + group section header (sticky band, top-9) + 내부 BookRow
+- kind → BookKindIcon, pinned → PushPin/PushPinSlash
+- `books-view.tsx` list mode에 `groups + groupBy` 전달
+
+### 브레인스토밍 & 큰 결정 (영구)
+
+**1. Smart Book 5 AutoSource INVARIANT 확정 (영구 LOCKED)** — PRD §2 그대로:
+- BookItem.kind = `note` | `wiki` | `chapter-heading` 만
+- AutoSource는 **공급원**이지 멤버 kind가 아님
+- label/tag/sticker entity 자체가 책 페이지가 되는 게 X — label로 분류된 note들이 들어감
+- Sticker는 7-kind 중 note/wiki만 추출 (다른 kind 무시)
+- 사용자 헷갈림 가능 포인트로 PRD에 명시 — 다음 세션 사용자가 직접 사용해보면서 INVARIANT 체감 가능
+
+**2. Phase A-F 전체 한 세션 완성 (incremental → 통합 PR 전략)** — PRD §4가 "각 phase 1 PR씩" 권장했지만 동일 패턴이라 C+D+E (1 PR) + F (1 PR) 통합 더 효율적. 사용자가 "전부 다 진행해"로 통합 승인. 시간 ~5h 추정, 실제 ~3h.
+
+**3. `emitSection` helper 추출 → resolver pure function이 5 source 모두 동일 흐름** — Phase B만 있을 땐 inline OK였지만 5 source 추가하면서 dedup 압박. 추출 후 +25% 코드 가독성, 동시에 buggy edge case 줄어듦 (heading/items/seenAutoRefIds 업데이트 한 곳에서).
+
+**4. Convert to manual button은 sources 있을 때만 표시** — 항상 표시하면 사용자 confusion (clicking unrelated thing). conditional render UX 더 자연스러움.
+
+**5. Books list mode가 board/gallery와 패턴 갈리던 회귀 발견 — 사용자 시그널이 가장 빠른 진단** — 사용자 스크린샷 한 장으로 다음 워크플로우 잡음. 다음 작업 원칙 #8 ("사용자 직관 = 디자인 시그널") 재확인.
+
+### 기술 학습 (영구)
+
+**1. ResolverStore 새 필드는 optional + `?? []` fallback 패턴 안전** — Phase B 추가 시 test files 14곳 mock store 수정 부담. ResolverStore.wikiArticles?: WikiArticle[] (optional) + resolver 내부에서 `(store.wikiArticles ?? [])` 사용으로 Phase A-only caller (folder source만 쓰는 testー) silent compatible. 매번 phase 확장 시 같은 패턴 추천.
+
+**2. `emit helper + predicate helper 분리`로 5-case 흐름 통일** — pure function 안에 case문 5개가 비슷한 코드 80% 중복일 때 helper 추출은 단순 짧음이 아니라 *논리 단일화* (heading + items + seenAutoRefIds 업데이트 한 곳에서). LOCKED #10 v1.2 (empty source silent skip) 같은 미묘한 룰도 단일 지점에서 보장.
+
+**3. 5 tab UI grid 패턴** — Tabs grid-cols-5 + icon-only tabs (title hint) — 좁은 dialog (`sm:max-w-md`)에 5 tab 깔끔. Label은 길면 잘림 → tooltip으로 보완. 미래 6 tab 이상이면 dropdown 또는 segmented control 재검토.
+
+**4. `groups + groupBy` props 누락 회귀 — view mode별 일관성 의무** — Notes/Wiki/Books 3 entity × 4 view mode (list/board/gallery/grid) 16 조합 중 한 곳 패턴 누락 = 사용자 직관 깨짐. 새 viewMode 추가 시 *모든 entity의 모든 view mode에 같은 prop 흐름 적용* 영구 룰. board/gallery만 적용하고 list 누락 같은 버그가 또 발생할 가능성 있음 (Wiki view-engine board 도입 시 회피).
+
+**5. nanoid import는 npm package에서** — `import { nanoid } from "nanoid"` (already in `package.json`). uuid 생성에 사용. Convert to manual에서 fresh book item id 만들 때.
+
+**6. PR #312-#317 6 PR 연속 squash merge — main conflict 패턴 정착** — 각 PR 머지 직후 다음 PR base가 stale (main 머지 결과 c5c5936→...). `git merge origin/main --no-ff` 후 `--ours`로 resolve 패턴 안정. tsconfig.tsbuildinfo + .omc/continuation-count.json 등 auto-gen 파일은 무조건 ours.
+
+**7. Plot routing이 module-level state (`_activeRoute` in `lib/table-route.ts`)** — preview MCP로 wiki list/board 시각 검증 어려운 이유. `setActiveView('books')` 만으로는 view mount 안 됨. layout.tsx의 `isViewRoute` + `mountedViews` 로직 거쳐야. 시각 verify는 사용자가 dev server에서 직접 하는 게 더 효율적.
+
+### Watch Out (다음 세션 주의사항)
+
+- **Smart Book manual verify가 사용자 책임** — 5 source kind 코드 다 작성됐지만 사용자가 실제 워크플로우로 점검 안 했음. dev server :3002 새로고침 후 첫 verify에서 UX 구멍 나올 가능성 ↑
+- **Convert to manual은 destructive (smartSources clear)** — undo path 없음. window.confirm 가드 있지만 사용자가 실수로 Yes 누르면 영구 변환. 다음 세션 사용자가 첫 시도 시 confirm dialog 명확한지 점검
+- **5 tab dialog 너비 부족 우려** — sm:max-w-md = ~448px. 5 col icon tabs 빡빡할 수 있음. 사용자 시도 후 조정
+- **사용자가 보고한 BoardCard chip overflow는 fix 됐지만 다른 view mode (Notes list mode chip / Books list mode)에 동일 issue 있을 수 있음** — 추가 보고 시 같은 패턴 (`overflow-hidden` row container) 적용
+- **Smart Book FAQ — "왜 5 source가 다 필요해?"** — 사용자가 의문 제기. folder + category로 80% 가치, 다른 3은 edge case. 사용자가 사용 안 하면 Phase D/E는 dormant (UI 일관성으로 유지)
+
+### 환경 변경
+- Store version: 변경 없음 (Smart Book Phase A에서 이미 v121, B+은 idempotent additive)
+- Tests: 55 → 59 (+4 trash guard)
+- 신규 파일: 없음 (모두 기존 파일 확장)
+- 사용자 IDB stale data: 없음
+
+---
+
 ## 2026-05-12 (저녁) — 집, Trash All + Status-icon-stale root fix + Wiki pin + 9 fix mega-PR (Store v130 → v132)
 
 > 🎯 **다음 즉시 액션**: BoardCard chip overflow fix — 사용자 보고 *"박스 밖으로 `#Productivity` 글자가 빠져나오는 연출이 있는데 이러면 안 됨. 박스 밖으로 빠져나가면 안 돼."*
