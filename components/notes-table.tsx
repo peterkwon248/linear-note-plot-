@@ -205,6 +205,21 @@ function TH({
 function TrashEntityList({ type }: { type: "books" | "tags" | "labels" | "templates" | "references" | "files" }) {
   const store = usePlotStore()
 
+  // Multi-select state — mirrors TrashAllView. Single entity type per list so
+  // ID-only keys are sufficient (no kind prefix needed). Hover-only row
+  // checkbox + sticky floating bar matches notes/wiki/books selection UX.
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
+  const selectionActive = selectedIds.size > 0
+  const toggleSelect = useCallback((id: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+  }, [])
+  const clearSelection = useCallback(() => setSelectedIds(new Set()), [])
+
   const items: (Book | Tag | Label | NoteTemplate | Reference | Attachment)[] = type === "books"
     ? (store.books || []).filter((b: Book) => b.trashed)
     : type === "tags"
@@ -217,25 +232,54 @@ function TrashEntityList({ type }: { type: "books" | "tags" | "labels" | "templa
     ? Object.values(store.references || {}).filter((r: Reference) => r.trashed)
     : (store.attachments || []).filter((a: Attachment) => a.trashed)
 
-  const handleRestore = (id: string) => {
+  const labelOf = (item: Book | Tag | Label | NoteTemplate | Reference | Attachment): string =>
+    (item as any).title ?? (item as any).name ?? "Untitled"
+
+  const singularNoun = type === "files" ? "file" : type === "books" ? "book" : type.slice(0, -1)
+
+  const restoreSilent = (id: string) => {
     if (type === "books") store.restoreBook(id)
     else if (type === "tags") store.restoreTag(id)
     else if (type === "labels") store.restoreLabel(id)
     else if (type === "templates") store.restoreTemplate(id)
     else if (type === "references") store.restoreReference(id)
     else store.restoreAttachment(id)
-    toast(`Restored ${type === "files" ? "file" : type === "books" ? "book" : type.slice(0, -1)}`)
   }
 
-  const handleDelete = (id: string, name: string) => {
-    if (!window.confirm(`Permanently delete "${name}"? This cannot be undone.`)) return
+  const deleteSilent = (id: string) => {
     if (type === "books") store.permanentlyDeleteBook(id)
     else if (type === "tags") store.permanentlyDeleteTag(id)
     else if (type === "labels") store.permanentlyDeleteLabel(id)
     else if (type === "templates") store.permanentlyDeleteTemplate(id)
     else if (type === "references") store.permanentlyDeleteReference(id)
     else store.permanentlyDeleteAttachment(id)
-    toast(`Deleted ${type === "files" ? "file" : type === "books" ? "book" : type.slice(0, -1)}`)
+  }
+
+  const handleRestore = (id: string) => {
+    restoreSilent(id)
+    toast(`Restored ${singularNoun}`)
+  }
+
+  const handleDelete = (id: string, name: string) => {
+    if (!window.confirm(`Permanently delete "${name}"? This cannot be undone.`)) return
+    deleteSilent(id)
+    toast(`Deleted ${singularNoun}`)
+  }
+
+  const handleBulkRestore = () => {
+    const ids = Array.from(selectedIds)
+    if (ids.length === 0) return
+    for (const id of ids) restoreSilent(id)
+    toast.success(`Restored ${ids.length} ${singularNoun}${ids.length === 1 ? "" : "s"}`)
+    clearSelection()
+  }
+
+  const handleBulkDelete = () => {
+    if (!window.confirm(`Permanently delete ${selectedIds.size} item(s)? This cannot be undone.`)) return
+    const ids = Array.from(selectedIds)
+    for (const id of ids) deleteSilent(id)
+    toast.success(`Deleted ${ids.length} ${singularNoun}${ids.length === 1 ? "" : "s"} permanently`)
+    clearSelection()
   }
 
   if (items.length === 0) {
@@ -250,9 +294,10 @@ function TrashEntityList({ type }: { type: "books" | "tags" | "labels" | "templa
   }
 
   return (
-    <div className="flex-1 overflow-y-auto">
+    <div className="flex-1 overflow-y-auto relative">
       {/* Header row */}
       <div className="sticky top-0 z-10 flex items-center border-b border-border bg-background px-5 py-2">
+        <div className="w-8 shrink-0" />
         <div className="flex-1 text-note font-medium text-foreground/80">Name</div>
         <div className="w-16 shrink-0 text-center text-note font-medium text-foreground/80">Color</div>
         <div className="w-32 shrink-0 text-right text-note font-medium text-foreground/80">Trashed</div>
@@ -261,14 +306,37 @@ function TrashEntityList({ type }: { type: "books" | "tags" | "labels" | "templa
       {items.map((item) => {
         const color = (item as Tag).color ?? ""
         const trashedAt = (item as Tag).trashedAt ?? null
+        const isSelected = selectedIds.has(item.id)
         return (
           <div
             key={item.id}
-            className="flex items-center border-b border-border px-5 py-2.5 hover:bg-hover-bg transition-colors"
+            className={`group flex items-center border-b border-border px-5 py-2.5 transition-colors ${
+              isSelected ? "bg-accent/10 hover:bg-accent/15" : "hover:bg-hover-bg"
+            }`}
           >
+            {/* Checkbox — hover-only unless selected (notes/wiki parity) */}
+            <div
+              className={`w-8 shrink-0 flex items-center justify-center cursor-pointer ${
+                selectionActive || isSelected ? "visible" : "invisible group-hover:visible"
+              }`}
+              onClick={(e) => {
+                e.stopPropagation()
+                toggleSelect(item.id)
+              }}
+            >
+              <div
+                className={`h-4 w-4 rounded-[4px] border flex items-center justify-center transition-colors shadow-sm ${
+                  isSelected
+                    ? "bg-accent border-accent"
+                    : "bg-card border-zinc-400 dark:border-zinc-600 hover:border-zinc-500"
+                }`}
+              >
+                {isSelected && <PhCheck size={10} weight="bold" className="text-accent-foreground" />}
+              </div>
+            </div>
             <div className="flex-1 min-w-0">
               <span className="text-note font-medium text-foreground truncate">
-                {(item as any).title ?? (item as any).name}
+                {labelOf(item)}
               </span>
             </div>
             <div className="w-16 shrink-0 flex items-center justify-center">
@@ -294,7 +362,7 @@ function TrashEntityList({ type }: { type: "books" | "tags" | "labels" | "templa
                 Restore
               </button>
               <button
-                onClick={() => handleDelete(item.id, (item as any).title ?? (item as any).name)}
+                onClick={() => handleDelete(item.id, labelOf(item))}
                 className="flex items-center gap-1 rounded-md px-2 py-1 text-note text-destructive transition-colors hover:bg-destructive/10"
                 title="Delete permanently"
               >
@@ -304,6 +372,35 @@ function TrashEntityList({ type }: { type: "books" | "tags" | "labels" | "templa
           </div>
         )
       })}
+      {/* Floating bulk action bar — mirrors TrashAllView + notes/wiki selection UX. */}
+      {selectionActive && (
+        <div className="sticky bottom-4 z-20 mx-auto mt-4 flex w-fit items-center gap-2 rounded-lg border border-border bg-popover/95 px-3 py-2 shadow-lg backdrop-blur">
+          <span className="text-note text-muted-foreground tabular-nums">
+            {selectedIds.size} selected
+          </span>
+          <button
+            onClick={handleBulkRestore}
+            className="flex items-center gap-1.5 rounded-md px-2.5 py-1 text-note text-foreground transition-colors hover:bg-hover-bg"
+          >
+            <ArrowCounterClockwise size={14} weight="regular" />
+            Restore
+          </button>
+          <button
+            onClick={handleBulkDelete}
+            className="flex items-center gap-1.5 rounded-md px-2.5 py-1 text-note text-destructive transition-colors hover:bg-destructive/10"
+          >
+            <Trash size={14} weight="regular" />
+            Delete forever
+          </button>
+          <button
+            onClick={clearSelection}
+            className="flex items-center justify-center rounded-md p-1 text-muted-foreground transition-colors hover:bg-hover-bg hover:text-foreground"
+            title="Clear selection"
+          >
+            <PhX size={14} weight="regular" />
+          </button>
+        </div>
+      )}
     </div>
   )
 }
