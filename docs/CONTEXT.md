@@ -41,6 +41,37 @@
 - 2026-05-12 (저녁) — 거대 PR 시리즈 (10 PR) 후 매번 squash 머지 conflict 발생: HEAD 우선 (`git checkout --ours`) resolve 패턴 안정. **교훈: 매 PR 머지 직후 fetch+merge 습관, 같은 worktree에서 시리즈 진행 시 안전.**
 - 2026-05-12 (낮) — `transition-all` Tailwind class가 dnd-kit transform 업데이트와 충돌. transition class는 hover/select 시각 변경에만 사용. `transition-colors`, `transition-shadow`로 specific 제한. **교훈: drag/transform 컴포넌트에 `transition-all` 위험.**
 - 2026-05-12 (낮) — NEXT-ACTION.md 폐지 결정. 3중복 (NEXT-ACTION ↔ TODO P0 ↔ SESSION-LOG hook)이 stale 패턴 유발. **교훈: source of truth는 단일이어야. 단순화 우선.**
+- 2026-05-12 (오후) — JSX `{cond && <X .../>}` webpack/swc parser에서 "unterminated regexp literal" 오해석. 페이지 빈 화면. **교훈: conditional render 무조건 parens `{cond && (<X />)}`. 향후 PR review 시 같은 패턴 차단.**
+- 2026-05-12 (오후) — `STATUS_CONFIG[status]` undefined runtime crash. data corruption / 옛 enum / 빈 값에 graceful 대응 X. **교훈: 모든 `Record<X, Y>` lookup access에 null guard 의무.**
+
+---
+
+## 🚀 2026-05-12 (오후) — Board/Gallery polish + Split view + hotfix (4 PR cascade) ⭐⭐⭐⭐
+
+**범위**: PR #305 직후 사용자 시그널 5건 follow-up. 4 PR 단일 worktree squash (#305-#308).
+
+### 핵심 결정 (영구 LOCKED)
+
+**1. Block 색 = slate**: Plot 건축 메타포 (stone beige → brick orange → block slate earthy progression). teal `#0E9384` 폐기.
+
+**2. Gallery click = list/board parity (Linear principle)**:
+- Single = preview / Double = open / Mod+click = select / Hover = checkbox / Selection 시 = 하단 FloatingActionBar
+- 모든 view mode 동일 muscle memory
+
+**3. Split view 보드**: secondary pane workbench hide. primary만 시그니처 보존. secondary는 board column drop target만.
+
+**4. STATUS_CONFIG / 모든 lookup map null guard 의무**: `if (!cfg) return null` graceful skip.
+
+**5. JSX conditional render parens 의무**: `{cond && (<X />)}`. webpack/swc parser 안전.
+
+### 기술 학습
+
+- JSX parser ambiguity 해결책 (parens)
+- STATUS_CONFIG runtime corruption 대응 (null guard)
+- Gallery selection 진입 3 경로 (cmd-click + hover checkbox + selection 중 click)
+- GalleryCard onClick 시그니처 확장 (modifier key 검출)
+- dropAnimation cubic-bezier polish
+- 빈 status group의 Kanban drop target
 
 ---
 

@@ -6,6 +6,96 @@
 
 ---
 
+## 2026-05-12 (오후) — 집, Board/Gallery polish + Split view fix + hotfix (4 PR cascade)
+
+> 🎯 **다음 즉시 액션**: Trash "All" 통합 view 신규 컴포넌트 구현 (notes/wiki/books/tags/labels/templates/refs/files entity별 section, ~150-200 LOC). 사용자 의도: "All = 모든 entity의 trashed 통합 표시".
+> **머신**: 집 (Windows)
+> **현재 main HEAD**: PR #308 머지 후
+
+### 완료 (4 PR + 5 user-reported issues)
+
+**PR #305** ContextMenu DRY + Wiki UX cherry-pick + Board polish + 워크플로우 재편 (이전 entry 참조)
+
+**PR #306** Split view secondary pane workbench hide
+- `usePane()` 사용. `pane === "secondary"`일 때 BoardWorkbench hide.
+- viewport 절반에서 column 잘림 + workbench 안 보임 UX 부자연 해소.
+- primary pane: 그대로 (workbench 시그니처 보존).
+
+**PR #307** Block 색 slate + Gallery click parity + 하단 FloatingActionBar
+- **Block 색**: teal `#0E9384/2dd4bf` → slate `#475569/94a3b8` (Plot 건축 메타포 정합 — stone beige + brick orange + block slate earthy progression).
+- **Gallery click parity** (list/board와 동일 muscle memory):
+  - Single click → preview pane
+  - Double click → 편집 모드
+  - cmd/ctrl-click 또는 selection 활성 중 click → toggle multi-select
+  - Hover 시 카드 우상단 checkbox UI
+  - Selection 활성 시 하단 FloatingActionBar mount
+- 5 파일 변경: notes-table-view (callback wiring), gallery-view-shell (selection state + FloatingActionBar), gallery-view (props 확장 + GalleryCard checkbox), property-chips (이미)
+
+**PR #308** Hotfix — notes-board JSX parser + FloatingActionBar cfg null guard
+- **JSX parser fix**: PR #306의 `{!isSecondaryPane && <BoardWorkbench .../>}` 가 webpack/swc parser에서 "unterminated regexp literal"로 오해석 → 페이지 빈 화면. parens 명시화 `(<BoardWorkbench ... />)`로 해결.
+- **TypeError null guard**: `STATUS_CONFIG[status]` undefined 시 `cfg.bg` crash → `if (!cfg) return null` graceful skip.
+
+**5 사용자 보고 처리**:
+- ✅ Block 아이콘 색 (#1) → PR #307
+- ⏭️ Status icon stale (#2) → root cause 정보 부족, skip (사용자 reproduce 필요)
+- ✅ 보드/갤러리 7개 (#3) → PR #305 (빈 status column 항상 표시 fix)
+- ✅ 갤러리 click → selection (#4) → PR #307
+- ✅ 스플릿 뷰 보드 잘림 (#5) → PR #306
+
+### 브레인스토밍 & 큰 결정 (영구)
+
+**1. Block 색 = slate (Plot 건축 메타포 LOCKED)**: teal 폐기. 자연석 (stone beige) → 가공 벽돌 (brick orange) → 완성 granite block (slate) earthy progression. chart-5 accent와 시각 분리 + status "settled" 의미 보존.
+
+**2. Gallery click 패턴 = list/board parity (Linear principle LOCKED)**:
+- Single click = preview (list/board와 동일 muscle memory)
+- Double click = open (편집 — 명시적 의도)
+- cmd/ctrl-click 또는 selection 중 click = multi-select toggle
+- Hover → checkbox UI
+- Selection 활성 시 → 하단 FloatingActionBar (list 정합)
+- 모든 view mode가 동일 패턴 = 학습 부담 0
+
+**3. Split view 보드 = secondary pane workbench hide**:
+- viewport 절반에서 workbench `flex-1` grow가 column 잘림
+- primary pane만 workbench (시그니처 패널 유지)
+- secondary pane은 board column만 (drop target 보존, batch action은 primary로 유도)
+
+**4. STATUS_CONFIG 패턴 — lookup map null guard 의무**:
+- `STATUS_CONFIG[status]` 등 lookup이 corruption/옛 enum/빈 값으로 undefined 가능
+- 모든 caller에 `if (!cfg) return null` graceful skip — crash 대신
+- 다른 lookup map 동일 패턴 검토 후보 (PRIORITY_CONFIG, STATUS_LABELS, BOARD_DEFAULT_GROUP)
+
+**5. JSX `{condition && <X .../>}` 위험 패턴**:
+- webpack/swc parser가 `/>}` 시퀀스를 regex literal로 오해석 (잠재적 버그)
+- parens 명시화 `{condition && (<X ... />)}` 가 안전
+- 향후 conditional JSX는 무조건 parens.
+
+### 기술 학습 (영구)
+
+- **JSX parser ambiguity**: webpack/swc는 `/>}` 를 regex literal 시작으로 오해석 가능. parens가 expression boundary 명확화. dev server "unterminated regexp literal" 에러 = 같은 패턴 의심.
+- **STATUS_CONFIG runtime corruption**: store의 normalize는 type-level 보호. 단 user IDB의 stale enum / data corruption은 runtime에 cfg undefined. 모든 lookup access에 null guard.
+- **Gallery selection 진입 패턴 (Linear principle 정합)**: cmd/ctrl-click + hover checkbox + selection 활성 중 일반 click도 toggle = 3 entry points. selection 종료 = ESC 또는 X 버튼 또는 빈 영역 click.
+- **GalleryCard onClick 시그니처 변경**: `() => void` → `(e: React.MouseEvent | React.KeyboardEvent) => void` (modifier key 검출). 외부 caller signature 영향 — 사용자 callback도 event arg 받도록.
+- **dropAnimation cubic-bezier 220ms**: 즉시 snap (default) → 부드러운 transition. easing `(0.18, 0.67, 0.6, 1.0)` overshoot-light, sideEffects `defaultDropAnimationSideEffects + active opacity 0.4`.
+- **빈 status group의 Kanban 의미**: drop target 유지 필수. `groupBy === "status"` 분기로 dynamic group (folder/label)과 격리.
+
+### Watch Out (다음 세션 주의사항)
+
+- **#2 Status icon stale**: 사용자가 본 시그널의 정확한 reproduce 정보 필요 (어느 view / 어느 element / drag 직후 vs reload 후). store status 값은 정상 (stone/brick/keystone) — corruption은 다른 layer 의심.
+- **PR cascade 시 conflict 빈번**: 매 PR squash 머지 후 다음 PR base가 diverge. `git fetch + merge origin/main` + build artifact (.omc/continuation-count.json, docs/.pdca-status.json, tsconfig.tsbuildinfo) `--ours` resolve 패턴 정착.
+- **JSX expression 위험 패턴 회피**: 모든 conditional render는 parens (`{cond && (<X />)}`). HMR에서 dev parser 에러 시 같은 패턴 의심.
+- **Gallery selection state는 GalleryViewShell 안만**: Wiki Gallery (gallery-view 직접 사용)는 selection prop optional이라 back-compat. Notes Gallery만 multi-select 활성.
+- **STATUS_CONFIG null guard pattern**: 다른 lookup map (PRIORITY_CONFIG 등)도 동일 패턴 적용 후보. 다음 PR로 점검.
+
+### 환경 변경
+
+- Store version v130 (이번 세션 변경 없음)
+- Tests: 255/255 (변화 없음 추정)
+- 신규 파일: 없음
+- 4 PR squash merged (#305-#308)
+- 사용자 IDB에 wiki-1/2/3 trashed=true (이전 세션에서 발견, 사용자 결정 대기 — restore or 영구 삭제)
+
+---
+
 ## 2026-05-12 (낮~오후) — 집, ContextMenu DRY + Wiki UX cherry-pick + Board polish + 워크플로우 재편
 
 > 🎯 **다음 즉시 액션**: Trash "All" 통합 view 구현 (notes/wiki/books/tags/labels/templates/refs/files 통합 list — sample fix needed, ~150-200 LOC).
