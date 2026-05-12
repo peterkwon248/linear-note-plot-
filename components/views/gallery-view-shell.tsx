@@ -16,7 +16,7 @@
  *     mockup CSS to mockup-fed components.
  */
 
-import { useEffect, useMemo, type ReactNode } from "react"
+import { useEffect, useMemo, useState, type ReactNode } from "react"
 import { toast } from "sonner"
 import { FileText } from "@phosphor-icons/react/dist/ssr/FileText"
 import { Folder as FolderIcon } from "@phosphor-icons/react/dist/ssr/Folder"
@@ -49,6 +49,8 @@ import {
 } from "@/components/ui/context-menu"
 import { useFolderPickerData } from "@/components/folder-picker"
 import { NoteContextMenuItems } from "@/components/note-context-menu-items"
+// 2026-05-12: Multi-select + 하단 FloatingActionBar (list/board parity).
+import { FloatingActionBar } from "@/components/floating-action-bar"
 
 interface GalleryViewShellProps {
   context: ViewContextKey
@@ -61,6 +63,8 @@ interface GalleryViewShellProps {
   headerExtras?: ReactNode
   /** Card click handler — wires to preview pane. */
   onNoteClick: (id: string) => void
+  /** 2026-05-12: Double-click opens the note (list/board parity). */
+  onNoteDoubleClick?: (id: string) => void
   /** Currently active / previewed note id. */
   activePreviewId: string | null
 }
@@ -74,6 +78,7 @@ export function GalleryViewShell({
   labelId,
   headerExtras,
   onNoteClick,
+  onNoteDoubleClick,
   activePreviewId,
 }: GalleryViewShellProps) {
   const folders = usePlotStore((s) => s.folders)
@@ -96,6 +101,19 @@ export function GalleryViewShell({
   const setLinkPickerOpen = usePlotStore((s) => s.setLinkPickerOpen)
   const notesAll = usePlotStore((s) => s.notes)
   const { folders: noteFolders, createFolderInline } = useFolderPickerData("note")
+
+  // 2026-05-12: Multi-select state — Linear-principle parity with list/board.
+  // Single click = preview, cmd/ctrl-click 또는 checkbox click = toggle select.
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
+  const handleToggleSelect = (id: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+  }
+  const handleClearSelection = () => setSelectedIds(new Set())
 
   const backlinksMap = useBacklinksIndex()
   const { saveViewMode, onSaveView } = useSaveViewProps(context as any, "notes")
@@ -261,13 +279,30 @@ export function GalleryViewShell({
         />
       </ViewHeader>
 
+      {/* ── Multi-select FloatingActionBar (list/board parity) ── */}
+      {selectedIds.size > 0 && (
+        <FloatingActionBar
+          selectedIds={selectedIds}
+          effectiveTab={context}
+          notes={notesAll}
+          onClearSelection={handleClearSelection}
+        />
+      )}
+
       {/* ── Gallery body ── */}
       <div className="flex flex-1 overflow-hidden">
         <GalleryView
           items={galleryItems}
           groups={galleryGroups}
           activeId={activePreviewId}
-          onItemClick={onNoteClick}
+          selectedIds={selectedIds}
+          onItemToggleSelect={handleToggleSelect}
+          onItemClick={(id) => {
+            // Selection 활성 중에 일반 click = selection clear + preview (list 패턴)
+            if (selectedIds.size > 0) handleClearSelection()
+            onNoteClick(id)
+          }}
+          onItemDoubleClick={onNoteDoubleClick}
           renderContextMenu={(item, card) => {
             // 2026-05-12: Gallery card right-click — match list/board via
             // shared NoteContextMenuItems. GalleryItem only carries cosmetic

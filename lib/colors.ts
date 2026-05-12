@@ -136,7 +136,7 @@ export const NOTE_STATUS_COLORS = {
 export const NOTE_STATUS_HEX = {
   stone:    "#6B7280",   // neutral gray   — needs triage
   brick:    "#D97706",   // brown-orange   — in progress
-  keystone: "#0E9384",   // teal-green     — settled / verified
+  keystone: "#475569",   // slate-600      — settled (Plot 건축 메타포 정합, 2026-05-12)
 } as const
 
 /* ── Wiki Status ─────────────────────────────── */

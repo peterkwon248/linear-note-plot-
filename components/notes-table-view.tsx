@@ -120,8 +120,12 @@ export function NotesTableView() {
           folderId={activeFolderId ?? undefined}
           tagId={activeTagId ?? undefined}
           labelId={activeLabelId ?? undefined}
-          onNoteClick={(noteId) => openNote(noteId)}
-          activePreviewId={selectedNoteId}
+          // 2026-05-12: Gallery click parity with list/board — single click =
+          // preview (사이드 패널), double click = open. 이전엔 single click이
+          // 즉시 편집 모드라 list/board와 muscle memory 분기.
+          onNoteClick={(noteId) => setPreviewNoteId(noteId)}
+          onNoteDoubleClick={(noteId) => openNote(noteId)}
+          activePreviewId={previewNoteId}
         />
       </div>
     )
