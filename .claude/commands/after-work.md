@@ -28,6 +28,12 @@
 ### 1. 🎯 SESSION-LOG.md에 새 entry 추가 (가장 중요, 스킵 금지)
 `docs/SESSION-LOG.md`의 **최상단에** 새 entry 추가. **entry 첫 줄에 "다음 즉시 액션 hook"** — 다음 세션 시작점.
 
+**핵심 원칙 (LOCKED 2026-05-12)**: hook + 다음 작업 정보는 **다른 컴퓨터에서 before-work만 해도 바로 작업 시작 가능한 detail** 수준이어야. 즉:
+- ❌ 단순 작업명 ("Trash unified view 신규")
+- ✅ 작업명 + 사용자 의도 + 첫 스텝 (파일/명령) + 컴포넌트 구조 + store action 매핑 + 위험 회피 + 참고 파일
+
+다른 머신에서 작업 즉시 진입 가능해야 함. 부족하면 before-work 시점에 "지금 뭐부터?" 망설임 발생.
+
 사용자에게 묻기:
 - "다음에 가장 먼저 할 작업은?" (1~3개) → hook
 - "잊지 말아야 할 결정사항?" → "브레인스토밍 & 큰 결정" 섹션
@@ -37,12 +43,28 @@ Entry 구조:
 ```markdown
 ## YYYY-MM-DD 시간대 (머신)
 
-> 🎯 **다음 즉시 액션**: {1~2줄 hook — TODO.md P0와 정합}
+> 🎯 **다음 즉시 액션**: {작업명 + 한 줄 요약}
+>
+> **사용자 의도**: {그대로 인용 또는 핵심 요약 — 의도 stale 방지}
+>
+> **첫 스텝** (다른 머신에서 바로 시작):
+> 1. {신규 파일 또는 수정 파일 경로}
+> 2. {다음 step ...}
+>
+> **컴포넌트 구조 / 데이터 흐름**: {신규 컴포넌트 sketch / store hook 호출 / callback chain}
+>
+> **Store action 매핑**: {필요한 store action 목록 + 시그니처}
+>
+> **위험 + 회피**: {예상 함정 + 대응 패턴 (이번 세션 교훈 반영)}
+>
+> **참고 파일**: {bookmark — 작업 시 read할 파일 경로 + 라인 번호}
+>
 > **머신**: {집 / 회사}
-> **현재 main HEAD**: {PR 번호 또는 commit}
+> **현재 main HEAD**: {PR 번호 또는 commit hash}
+> **branch worktree**: {worktree 이름 또는 새 worktree 생성 안내}
 
 ### 완료
-- {완료한 작업 목록 + PR 번호}
+- {완료한 작업 목록 + PR 번호 (링크)}
 
 ### 브레인스토밍 & 큰 결정 (영구)
 - {중요 결정사항 + 이유 — MEMORY.md에도 push}
@@ -51,12 +73,13 @@ Entry 구조:
 - {재발 방지 사례 / 패턴 / 함정 — MEMORY.md에도 push}
 
 ### Watch Out (다음 세션 주의사항)
-- {미들 작업 / 회귀 가능성 / IDB migration 등}
+- {미들 작업 / 회귀 가능성 / IDB migration / 사용자 명시 보고 / reproduce 정보 부족 등}
 
 ### 환경 변경
 - Store version: {v??? → v???}
 - Tests: {N/N pass}
 - 신규 파일: {목록}
+- 사용자 IDB stale data: {있으면 명시 — 사용자 결정 대기 항목}
 ```
 
 오래된 entry는 그대로 유지 (append-only).
