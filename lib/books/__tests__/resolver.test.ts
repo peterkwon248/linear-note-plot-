@@ -1,6 +1,25 @@
 import { describe, it, expect } from "vitest"
 import { resolveBookItems, type ResolverStore } from "../resolver"
-import type { Book, Note, Folder } from "@/lib/types"
+import type { Book, Note, Folder, WikiArticle, WikiCategory } from "@/lib/types"
+
+function makeWikiCategory(id: string, name: string, color = "#a78bfa"): WikiCategory {
+  return { id, name, parentIds: [], color, createdAt: "2026-01-01", updatedAt: "2026-01-01" }
+}
+
+function makeWikiArticle(
+  id: string,
+  categoryIds: string[],
+  updatedAt = "2026-01-01",
+  trashed = false,
+): WikiArticle {
+  return {
+    id,
+    title: `Wiki ${id}`,
+    categoryIds,
+    updatedAt,
+    trashed,
+  } as unknown as WikiArticle
+}
 
 function makeNote(
   id: string,
@@ -243,5 +262,197 @@ describe("resolveBookItems — folder source", () => {
     expect(headings).toHaveLength(0)
     expect(result).toHaveLength(2) // only manual items
     expect(result.every((r) => r.source === "manual")).toBe(true)
+  })
+})
+
+describe("resolveBookItems — category source (Phase B)", () => {
+  it("auto-resolves wikis from category source with 📚 heading", () => {
+    const cat = makeWikiCategory("c1", "Algorithms")
+    const wikis = [
+      makeWikiArticle("w1", ["c1"], "2026-01-02"),
+      makeWikiArticle("w2", ["c1"], "2026-01-03"),
+      makeWikiArticle("w3", ["other"], "2026-01-04"),
+    ]
+    const book = makeBook({ smartSources: [{ kind: "category", refId: "c1" }] })
+    const result = resolveBookItems(book, {
+      notes: [],
+      folders: [],
+      wikiArticles: wikis,
+      wikiCategories: [cat],
+    })
+
+    expect(result).toHaveLength(3) // heading + 2 wikis
+    expect(result[0].kind).toBe("chapter-heading")
+    expect((result[0] as any).title).toBe("📚 Algorithms")
+    expect(result[0].source).toBe("auto")
+    // updatedAt desc: w2 (2026-01-03) before w1 (2026-01-02)
+    expect((result[1] as any).refId).toBe("w2")
+    expect((result[2] as any).refId).toBe("w1")
+    expect(result[1].kind).toBe("wiki")
+  })
+
+  it("DAG: a wiki appears under each of its category sources (first-match dedup)", () => {
+    const catA = makeWikiCategory("ca", "CompSci")
+    const catB = makeWikiCategory("cb", "Math")
+    const wiki = makeWikiArticle("w1", ["ca", "cb"], "2026-01-02")
+    const book = makeBook({
+      smartSources: [
+        { kind: "category", refId: "ca" },
+        { kind: "category", refId: "cb" },
+      ],
+    })
+    const result = resolveBookItems(book, {
+      notes: [],
+      folders: [],
+      wikiArticles: [wiki],
+      wikiCategories: [catA, catB],
+    })
+    // First source ca emits heading + wiki. Second source cb finds the
+    // wiki already in seenAutoRefIds → empty candidates → silent skip.
+    const headings = result.filter((r) => r.kind === "chapter-heading")
+    expect(headings).toHaveLength(1)
+    expect((headings[0] as any).title).toBe("📚 CompSci")
+    const wikiItems = result.filter((r) => r.kind === "wiki")
+    expect(wikiItems).toHaveLength(1)
+  })
+
+  it("excludeIds removes wikis from category source auto-resolve", () => {
+    const cat = makeWikiCategory("c1", "Algorithms")
+    const wikis = [
+      makeWikiArticle("w1", ["c1"], "2026-01-02"),
+      makeWikiArticle("w2", ["c1"], "2026-01-03"),
+    ]
+    const book = makeBook({
+      smartSources: [{ kind: "category", refId: "c1" }],
+      excludeIds: ["w1"],
+    })
+    const result = resolveBookItems(book, {
+      notes: [],
+      folders: [],
+      wikiArticles: wikis,
+      wikiCategories: [cat],
+    })
+    // Only w2 remains
+    const wikiItems = result.filter((r) => r.kind === "wiki")
+    expect(wikiItems).toHaveLength(1)
+    expect((wikiItems[0] as any).refId).toBe("w2")
+  })
+
+  it("manual wiki shadows auto candidate (no duplicate)", () => {
+    const cat = makeWikiCategory("c1", "Algorithms")
+    const wikis = [makeWikiArticle("w1", ["c1"]), makeWikiArticle("w2", ["c1"])]
+    const book = makeBook({
+      items: [{ kind: "wiki", id: "m1", refId: "w1", order: "a0" }],
+      smartSources: [{ kind: "category", refId: "c1" }],
+    })
+    const result = resolveBookItems(book, {
+      notes: [],
+      folders: [],
+      wikiArticles: wikis,
+      wikiCategories: [cat],
+    })
+    // Manual w1 + auto heading + auto w2 = 3
+    expect(result).toHaveLength(3)
+    expect(result[0].source).toBe("manual") // top
+    expect(result[0].kind).toBe("wiki")
+    expect((result[0] as any).refId).toBe("w1")
+    expect(result[1].kind).toBe("chapter-heading")
+    expect((result[2] as any).refId).toBe("w2")
+  })
+
+  it("manual wiki carries sourceRefId tag when it matches a category", () => {
+    const cat = makeWikiCategory("c1", "Algorithms")
+    const wiki = makeWikiArticle("w1", ["c1"])
+    const book = makeBook({
+      items: [{ kind: "wiki", id: "m1", refId: "w1", order: "a0" }],
+      smartSources: [{ kind: "category", refId: "c1" }],
+    })
+    const result = resolveBookItems(book, {
+      notes: [],
+      folders: [],
+      wikiArticles: [wiki],
+      wikiCategories: [cat],
+    })
+    const manual = result.find((r) => r.source === "manual")
+    expect(manual?.sourceRefId).toBe("c1")
+  })
+
+  it("missing category (stale ref) skips silently", () => {
+    const book = makeBook({ smartSources: [{ kind: "category", refId: "deleted" }] })
+    const result = resolveBookItems(book, {
+      notes: [],
+      folders: [],
+      wikiArticles: [makeWikiArticle("w1", ["deleted"])],
+      wikiCategories: [],
+    })
+    expect(result).toEqual([])
+  })
+
+  it("trashed wikis are excluded from category auto-resolve", () => {
+    const cat = makeWikiCategory("c1", "Algorithms")
+    const wikis = [
+      makeWikiArticle("w1", ["c1"], "2026-01-02", true), // trashed
+      makeWikiArticle("w2", ["c1"], "2026-01-03"),
+    ]
+    const book = makeBook({ smartSources: [{ kind: "category", refId: "c1" }] })
+    const result = resolveBookItems(book, {
+      notes: [],
+      folders: [],
+      wikiArticles: wikis,
+      wikiCategories: [cat],
+    })
+    const wikiItems = result.filter((r) => r.kind === "wiki")
+    expect(wikiItems).toHaveLength(1)
+    expect((wikiItems[0] as any).refId).toBe("w2")
+  })
+
+  it("empty category source skips heading entirely (LOCKED #10 v1.2)", () => {
+    const cat = makeWikiCategory("c1", "Empty Category")
+    const book = makeBook({ smartSources: [{ kind: "category", refId: "c1" }] })
+    const result = resolveBookItems(book, {
+      notes: [],
+      folders: [],
+      wikiArticles: [],
+      wikiCategories: [cat],
+    })
+    expect(result).toEqual([])
+  })
+
+  it("mixed folder + category sources both resolve in order", () => {
+    const folder = makeFolder("f1", "Projects")
+    const cat = makeWikiCategory("c1", "Algorithms")
+    const book = makeBook({
+      smartSources: [
+        { kind: "folder", refId: "f1" },
+        { kind: "category", refId: "c1" },
+      ],
+    })
+    const result = resolveBookItems(book, {
+      notes: [makeNote("n1", ["f1"])],
+      folders: [folder],
+      wikiArticles: [makeWikiArticle("w1", ["c1"])],
+      wikiCategories: [cat],
+    })
+    // Folder heading + note + category heading + wiki = 4
+    expect(result).toHaveLength(4)
+    expect((result[0] as any).title).toBe("📁 Projects")
+    expect(result[1].kind).toBe("note")
+    expect((result[2] as any).title).toBe("📚 Algorithms")
+    expect(result[3].kind).toBe("wiki")
+  })
+
+  it("auto book-internal id is deterministic (`auto-{categoryId}-{wikiId}`)", () => {
+    const cat = makeWikiCategory("c1", "Algorithms")
+    const book = makeBook({ smartSources: [{ kind: "category", refId: "c1" }] })
+    const result = resolveBookItems(book, {
+      notes: [],
+      folders: [],
+      wikiArticles: [makeWikiArticle("w1", ["c1"])],
+      wikiCategories: [cat],
+    })
+    const wikiItem = result.find((r) => r.kind === "wiki")!
+    expect(wikiItem.id).toBe("auto-c1-w1")
+    const heading = result.find((r) => r.kind === "chapter-heading")!
+    expect(heading.id).toBe("auto-heading-c1")
   })
 })
