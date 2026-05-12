@@ -25,8 +25,8 @@
 
 import { useState } from "react"
 import type { Book } from "@/lib/types"
-import type { SortField, SortDirection } from "@/lib/view-engine/types"
-import { getBookKind } from "@/lib/view-engine/use-books-view"
+import type { SortField, SortDirection, GroupBy } from "@/lib/view-engine/types"
+import { getBookKind, type BookGroup } from "@/lib/view-engine/use-books-view"
 import {
   BookItemCountChip,
   BookKindChip,
@@ -129,6 +129,11 @@ function TH({
 
 interface BookTableProps {
   books: Book[]
+  /** Optional grouped view. When `groupBy !== "none"` and `groups.length > 0`,
+   * the table renders one section per group with a sticky-style header row.
+   * Otherwise falls back to the flat `books` list. */
+  groups?: BookGroup[]
+  groupBy?: GroupBy
   visibleColumns: string[]
   sortField: SortField
   sortDirection: SortDirection
@@ -143,6 +148,8 @@ interface BookTableProps {
 
 export function BookTable({
   books,
+  groups,
+  groupBy,
   visibleColumns,
   sortField,
   sortDirection,
@@ -154,6 +161,14 @@ export function BookTable({
   onRestore,
   onPermanentDelete,
 }: BookTableProps) {
+  // Grouping is active when caller passed non-trivial groups + a groupBy
+  // dimension other than "none". When inactive, fall back to flat `books`.
+  const isGrouped =
+    !!groupBy &&
+    groupBy !== "none" &&
+    Array.isArray(groups) &&
+    groups.length > 0 &&
+    !(groups.length === 1 && groups[0].key === "_all")
   // `title` is always visible (it's the entity identity column).
   const cols = BOOK_COLUMNS.filter((c) => c.id === "title" || visibleColumns.includes(c.id))
 
@@ -217,21 +232,62 @@ export function BookTable({
 
       {/* Body */}
       <div className="flex flex-col">
-        {books.map((book) => (
-          <BookRow
-            key={book.id}
-            book={book}
-            cols={cols}
-            checked={selectedIds.has(book.id)}
-            onToggleCheck={() => toggleOne(book.id)}
-            onOpen={onOpen}
-            onRename={onRename}
-            onTogglePin={onTogglePin}
-            onDelete={onDelete}
-            onRestore={onRestore}
-            onPermanentDelete={onPermanentDelete}
-          />
-        ))}
+        {isGrouped ? (
+          // Grouped view — one section per BookGroup. Header row mirrors
+          // notes-table group header style (sticky-ish band + label + count).
+          groups!.map((group) => (
+            <div key={group.key}>
+              <div className="sticky top-9 z-[9] flex items-center gap-2 border-b border-border-subtle bg-background/95 px-5 py-2 backdrop-blur">
+                {(group.key === "smart" || group.key === "manual" || group.key === "hybrid") && (
+                  <BookKindIcon kind={group.key} size={12} />
+                )}
+                {group.key === "pinned" && (
+                  <PushPin size={12} weight="fill" className="text-amber-500" />
+                )}
+                {group.key === "others" && (
+                  <PushPinSlash size={12} weight="regular" className="text-muted-foreground/60" />
+                )}
+                <span className="text-2xs font-semibold uppercase tracking-wide text-muted-foreground">
+                  {group.label || "Untitled"}
+                </span>
+                <span className="text-2xs text-muted-foreground/70 tabular-nums">
+                  {group.books.length}
+                </span>
+              </div>
+              {group.books.map((book) => (
+                <BookRow
+                  key={book.id}
+                  book={book}
+                  cols={cols}
+                  checked={selectedIds.has(book.id)}
+                  onToggleCheck={() => toggleOne(book.id)}
+                  onOpen={onOpen}
+                  onRename={onRename}
+                  onTogglePin={onTogglePin}
+                  onDelete={onDelete}
+                  onRestore={onRestore}
+                  onPermanentDelete={onPermanentDelete}
+                />
+              ))}
+            </div>
+          ))
+        ) : (
+          books.map((book) => (
+            <BookRow
+              key={book.id}
+              book={book}
+              cols={cols}
+              checked={selectedIds.has(book.id)}
+              onToggleCheck={() => toggleOne(book.id)}
+              onOpen={onOpen}
+              onRename={onRename}
+              onTogglePin={onTogglePin}
+              onDelete={onDelete}
+              onRestore={onRestore}
+              onPermanentDelete={onPermanentDelete}
+            />
+          ))
+        )}
       </div>
     </div>
   )

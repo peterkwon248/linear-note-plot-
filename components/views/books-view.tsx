@@ -253,6 +253,8 @@ function BooksGrid() {
           // (DisplayPanel 토글로 사용자가 선택). PR 2 BookListRow 폐기.
           <BookTable
             books={visibleBooks}
+            groups={groups}
+            groupBy={viewState.groupBy}
             visibleColumns={viewState.visibleColumns}
             sortField={sortField}
             sortDirection={sortDirection}
