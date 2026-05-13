@@ -3,18 +3,26 @@
 > 우선순위 기반 작업 목록. **P0 = 다음 세션 즉시 시작점** (NEXT-ACTION.md 폐지, 2026-05-12).
 > 완료 항목은 즉시 삭제 또는 "완료" 섹션으로 이동.
 
-**마지막 갱신**: 2026-05-13 (Status 색 메타포 재정렬 + Home stats card icon 위치 + BookTable 회귀 fix + i18n 정리)
+**마지막 갱신**: 2026-05-13 밤 (PR #321 11 commits — Status 색 재정렬 + Templates UpNote 패턴 + 9 follow-up)
 
 ---
 
-## 🔴 P0 — 즉시 (다음 세션)
+## 🔴 P0 — 즉시 (다음 세션, cross-machine)
 
-### 사용자 manual verify
-**dev:3002 hard refresh** 후:
-1. **Status 색 메타포 재정렬 확인** — Stone(slate 회색) / Brick(amber 그대로) / Block(emerald 신규). 모든 chip + row icon 정확 동일 색
-2. **Home stats card** — REFERENCES 카드 icon 좌측 + 라벨 충돌 없음
-3. **BookTable list view** — 좁은 viewport에서도 Name 컬럼 visible (min-w-[120px]), Kind 헤더 겹침 없음
-4. **i18n 영어 통일** — Add source 다이얼로그 "Multi-select" / "Click items to select" / "N selected" / 책 detail "Start over"
+### 다음 머신에서 시작 절차
+1. `git pull origin main` (PR #321 머지된 main 받음)
+2. `npm install` (새 worktree 또는 dependency drift 가능)
+3. `npm run dev` → :3002 hard refresh (Ctrl+Shift+R)
+
+### Manual verify 8 surface
+1. **Status 색 일치** — /notes list에서 Stone/Brick/Block chip + row icon 같은 색 (slate-600 / amber-600 / emerald-600)
+2. **빈 노트 inline hint** — 새 노트 첫 paragraph 안에 "Insert from a template · or press / for menu". 클릭 → dialog open. 입력 시 자동 사라짐.
+3. **Template placeholder** — template에 `{{YYYY}}-{{MM}}-{{DD}}` 작성 → 새 노트에서 inline button 또는 slash "Insert template…" → title `2026-05-14` 치환
+4. **Slash 메뉴 깔끔** — `/` 입력 → block items + 단일 "Insert template…" entry (개별 templates 13+ 안 펴짐)
+5. **Editor footer** — words/chars가 toolbar 바로 위 (body 안 floating X)
+6. **Wiki/Books 그룹 헤더** — Notes `.a-tg` 패턴 통일 (var(--fg) 진함 + divider)
+7. **Home stats** — REFERENCES card icon 좌측 + 충돌 없음
+8. **i18n** — Add source dialog "Multi-select" / "Click items to select" 영어
 
 ---
 

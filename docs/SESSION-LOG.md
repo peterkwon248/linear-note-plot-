@@ -6,7 +6,174 @@
 
 ---
 
-## 2026-05-13 (밤) — 집, Status 색 메타포 재정렬 + 6 follow-up (PR #319 manual verify 결과)
+## 2026-05-13 (밤) — 집, PR #321 11 commits (Status 색 재정렬 + Templates UpNote 패턴 + 9 follow-up)
+
+> 🎯 **다음 즉시 액션** (다른 머신에서 cross-machine):
+> 1. `git pull origin main` (PR #321 머지된 main 받음)
+> 2. dev:3002 hard refresh (Ctrl+Shift+R) — HMR 캐시 stale 가능성
+> 3. Manual verify 5 surface — 아래 "verify list" 참고
+>
+> **PR #321 11 commits 종합**:
+> - **Status 색 재정렬**: Stone slate(회색,raw) → Brick amber(중간) → Block emerald(완성). 마지막 단계 가장 vivid color 메타포.
+> - **STATUS_CONFIG var 통일**: stone/brick 모두 `var(--status-*)` (chip ↔ icon 정확 동일 색).
+> - **Templates UpNote 패턴**: TemplatesPickerDialog 신규 / slash entry 일원화 / 빈 paragraph **ProseMirror Decoration**으로 inline clickable placeholder ("Insert from a template · or press / for menu") / placeholder 가시성 ↑ (opacity 0.4→0.75, 0.5→0.9).
+> - **Template placeholder expansion fix**: `createNoteFromTemplate` + slash command 둘 다 `contentJson` 재귀 expand (`{{YYYY}}-{{MM}}-{{DD}}` → `2026-05-14`).
+> - **TitlePatternBar 제거** + editor counts row footer 위치 (toolbar 위, `flex flex-col` scroll container).
+> - **6 UX follow-up**: Home stats icon 좌측 / BookTable overflow + min-w / Wiki/Books 그룹 헤더 `.a-tg` / i18n 영어 통일 / status icon weight bold.
+>
+> **Manual verify list** (다른 컴퓨터 dev에서):
+> 1. **Status 색 일치** — /notes list mode에서 Stone/Brick/Block chip + row icon 모두 동일 색 (slate-600 / amber-600 / emerald-600)
+> 2. **빈 노트 inline hint** — 새 노트 열기 → 첫 paragraph 안에 "Insert from a template · or press / for menu" 표시. 클릭 시 dialog open. 입력 시작 시 자동 사라짐.
+> 3. **Template placeholder** — template에 `{{YYYY}}-{{MM}}-{{DD}}` 작성 → 빈 노트에서 slash "Insert template…" 또는 inline button → title이 `2026-05-14`로 자동 치환
+> 4. **Slash 메뉴 깔끔** — `/` 입력 → block items + 단일 "Insert template…" entry (개별 templates 13+ 안 펴짐)
+> 5. **Editor footer** — words/chars가 toolbar 바로 위 (body 안 floating X)
+> 6. **Wiki/Books 그룹 헤더** — Notes 패턴 `.a-tg` (var(--fg) 진함 + 우측 divider line)
+> 7. **Home stats** — REFERENCES card icon 좌측 + 충돌 없음
+> 8. **i18n** — Add source dialog "Multi-select" / "Click items to select" 영어
+>
+> **위험 + 회피**:
+> - **HMR 캐시** — dev 첫 진입 시 stale build 가능. **hard refresh 의무**.
+> - **사용자 IDB stale**: 사용자 본인 template 데이터에 `{{YYYY}}-{{MM}}-{{DD}}` contentJson 들어가 있어야 expansion 작동. template editor에서 작성 안 됐으면 expansion 효과 없음 — template 새로 만들기 권장.
+> - **routing module-level state** — preview MCP에서 view mount 자동 verify 어려움. 사용자 dev 직접 검증.
+> - **EmptyHintPlaceholder는 "note" tier만 등록** — wiki/template/comment editor에 영향 X.
+>
+> **참고 파일** (작업 시 read):
+> - `app/globals.css` line 31-37 (light), 211-217 (dark), 1069-1101 (.a-tg)
+> - `lib/colors.ts` line 136-140 (NOTE_STATUS_HEX)
+> - `lib/store/slices/templates.ts` line 24-49 (expandPlaceholders), 51-79 (expandPlaceholdersInJson), 104-160 (createNoteFromTemplate)
+> - `components/note-fields.tsx` STATUS_CONFIG
+> - `components/editor/extensions/empty-hint-placeholder.ts` (신규 — ProseMirror Decoration)
+> - `components/editor/templates-picker-dialog.tsx` (신규 — CommandDialog)
+> - `components/editor/NoteEditorAdapter.tsx` (handleTemplateSelect + event listener)
+> - `components/editor/SlashCommand.tsx` (단일 entry → custom event)
+> - `components/editor/core/shared-editor-config.ts` line 693+ ("note" tier에 EmptyHintPlaceholder 등록)
+>
+> **머신**: 집 (Windows)
+> **branch worktree**: `claude/elegant-jepsen-2b3731` → PR #321 머지 후 main으로 (다른 머신에서 새 worktree 생성)
+>
+> **PR #321 11 commits**:
+> 1. `438853c` feat: status 색 재정렬 + 6 UX follow-up
+> 2. `b5b6eb6` feat: template 생성 다이얼로그 제거 (UpNote 패턴)
+> 3. `ce6ed10` feat: TitlePatternBar 제거 + counts row 위치
+> 4. `dd1e880` fix: counts row sticky bottom
+> 5. `509a564` fix: TemplateEditorAdapter `flex flex-col`
+> 6. `5cfbed0` fix: template placeholder expansion contentJson
+> 7. `4b2b84d` fix: slash command template — contentJson 우선
+> 8. `0ef3803` feat: Templates entry UpNote 패턴 (inline CTA + dialog)
+> 9. `3e61e1a` fix: hint absolute → 별도 row + UpNote 카피 회피
+> 10. `3bf9a95` fix: ProseMirror Decoration으로 paragraph 안 inline
+> 11. `bce50cb` fix: placeholder light mode 가시성 ↑
+
+### 사용자 시그널 (이번 세션 흐름 — 즉 next session에서 참고)
+
+PR #319 머지 후 manual verify 결과로 발견된 시그널 누적:
+1. **Status 색 메타포** — "마지막 단계가 가장 옅은 회색이라 메타포 어색"
+2. **chip ↔ icon mismatch** — STATUS_CONFIG의 stone/brick이 var(--chart-N) 사용 (PR #319 keystone fix follow-up)
+3. **Home stats REFERENCES 충돌** — flex justify-between label-icon 겹침
+4. **BookTable 회귀** — narrow viewport flex-1 min-w-0 collapse → text overflow
+5. **Wiki/Books 그룹 헤더 모양새 다름** — opacity 약함, divider 없음
+6. **i18n 혼합** — "다중 선택" / "처음부터" vs 영어
+7. **Template 다이얼로그 friction** — UpNote 패턴 (즉시 editor 진입) 원함
+8. **TitlePatternBar 불필요** — UpNote는 그런 bar 없음
+9. **counts row 위치 어색** — body 안 floating, toolbar 바로 위로
+10. **Template placeholder 작동 X** — slash command가 plain text만 사용
+11. **slash 메뉴 templates 개별 펴짐 noisy** — dialog로 일원화
+12. **별도 row hint 거부 (위아래 swap뿐)** — UpNote처럼 paragraph 안 inline
+13. **light mode placeholder 흐림** — opacity ↑
+
+### 완료 (15 files modified + 2 신규)
+
+| # | File | Change |
+|---|---|---|
+| 1 | `app/globals.css` light + dark | Stone slate, Block emerald, .a-stchip color 통일 |
+| 2 | `lib/colors.ts` | NOTE_STATUS_HEX dark canonical |
+| 3 | `components/status-icon.tsx` | weight bold |
+| 4 | `components/note-fields.tsx` | STATUS_CONFIG var(--status-*) 통일 |
+| 5 | `components/home/stats-row.tsx` | icon 좌측 + px-3 + tracking 제거 |
+| 6 | `components/books/book-table.tsx` | overflow-hidden + min-w-[120px] + .a-tg |
+| 7 | `components/views/wiki-list.tsx` | .a-tg group header |
+| 8 | `components/books/sources-section.tsx` + `book-detail-page.tsx` | 영어 i18n |
+| 9 | `components/views/templates-view.tsx` | TemplateFormDialog 제거 (handleCreateNew 즉시 생성) |
+| 10 | `components/views/template-edit-page.tsx` | TitlePatternBar 제거 + scroll container flex flex-col |
+| 11 | `components/editor/TipTapEditor.tsx` | counts row sticky bottom + toolbar 아래 |
+| 12 | `lib/store/slices/templates.ts` | expandPlaceholdersInJson 신규 + createNoteFromTemplate contentJson expand |
+| 13 | `components/editor/SlashCommand.tsx` | 개별 templates 제거 → 단일 "Insert template…" + custom event |
+| 14 | **`components/editor/templates-picker-dialog.tsx`** (신규) | CommandDialog 기반 templates picker |
+| 15 | **`components/editor/extensions/empty-hint-placeholder.ts`** (신규) | ProseMirror Decoration — paragraph 안 inline clickable |
+| 16 | `components/editor/NoteEditorAdapter.tsx` | handleTemplateSelect + custom event listener |
+| 17 | `components/editor/core/shared-editor-config.ts` | "note" tier에 EmptyHintPlaceholder 등록 |
+| 18 | `components/editor/EditorStyles.css` | "Untitled" placeholder opacity 0.4→0.75 |
+
+### 브레인스토밍 & 큰 결정 (영구 LOCKED, 2026-05-13 밤)
+
+**1. Status 색 메타포 (영구 LOCKED)**:
+- Stone = slate (회색, raw) — light slate-600 `#475569` / dark slate-400 `#94a3b8`
+- Brick = amber (kiln, in progress) — light amber-600 `#D97706` / dark amber-500 `#f59e0b`
+- Block (keystone) = emerald (finished crystal) — light emerald-600 `#059669` / dark emerald-400 `#34d399`
+- 마지막 단계 가장 vivid color로 끝나는 progression. 색 변경 시 3곳 동시 update (globals.css light/dark + NOTE_STATUS_HEX).
+
+**2. STATUS_CONFIG var(--status-*) 의무**:
+- `note-fields.tsx` STATUS_CONFIG color/bg/border 모두 var(--status-*)만 사용. var(--chart-N) 금지.
+- chip ↔ row icon 색 정확 동일 보장.
+
+**3. 그룹 헤더 `.a-tg` 통일 (Notes/Wiki/Books)**:
+- 3 entity 모두 `.a-tg` 클래스 사용. globals.css line 1069-1101.
+- grid: chevron / icon / label (var(--fg) 진함) / count / divider line (1fr).
+
+**4. BookTable narrow viewport overflow 룰**:
+- list table cells `overflow-hidden`. flex-1 column `min-w-[N]`.
+
+**5. Home stats card icon 좌측 정렬**:
+- `flex items-center gap-1.5`. `justify-between` X — label 길이 무관.
+
+**6. i18n 영어 통일**:
+- 다이얼로그 / 버튼 / footer 영어. 한/영 혼합 금지.
+
+**7. Templates UpNote 패턴 (영구 LOCKED)**:
+- 템플릿 생성 시 다이얼로그 없이 즉시 editor 진입 (createNoteFromTemplate은 별개 — note 적용 시).
+- 템플릿 적용 시 contentJson 우선 (rich content + title heading 다 포함). plain content는 fallback.
+- placeholder expansion 시 contentJson도 재귀 expand 의무 (text node만 expand, attrs/meta 보존).
+- 빈 노트 hint는 ProseMirror Decoration으로 paragraph 안 inline (absolute overlay X / 별도 row X).
+- slash 메뉴는 개별 templates 안 펴고 단일 "Insert template…" entry만 → custom event "plot:open-templates-picker" dispatch.
+- 모든 entry path (inline button / slash / 향후 toolbar) 동일 dialog + event.
+
+**8. EmptyHintPlaceholder는 "note" tier만**:
+- wiki / template / comment / footnote editor에는 등록 X.
+- 새 entity editor 도입 시 EmptyHintPlaceholder 추가 의무 검토.
+
+### 기술 학습 (영구)
+
+- **CSS var vs TS const 동기화 의무** — globals.css `--status-*` 변경 시 NOTE_STATUS_HEX 같이 update. mismatch → ontology canvas / graph stale.
+- **chip 패턴 root cause 진단** — chip이 쓰는 var와 row icon이 쓰는 var가 다르면 사용자 시각 "다른 색" 인식. 통일 의무.
+- **SVG weight "fill" 한계** — Cuboid2x2 같은 line-only custom SVG는 fill 작동 X. weight "bold"가 일관 안전.
+- **flex-1 min-w-0 narrow viewport collapse** — title column 0px squeeze 가능. min-w-[N] 추가 의무.
+- **scroll container flex column** — 안 자식이 flex-1로 늘어나려면 scroll container 자체에 `flex flex-col` 필요. counts row가 자연스럽게 끝에 위치.
+- **TipTap contentJson vs content** — editor는 contentJson 우선. plain content만 expand는 효과 없음. JSON tree text node 재귀 expand 의무.
+- **ProseMirror Decoration vs Placeholder extension** — `@tiptap/extension-placeholder`는 `:before` pseudo (clickable 불가). inline clickable 필요 시 ProseMirror Plugin + `Decoration.widget` 사용.
+- **Decoration widget contentEditable=false** — DOM mount 시 cursor 들어가지 않게 + selection 무시 (`ignoreSelection: true`).
+- **Custom event for editor↔outer state bridge** — extension에서 dialog open 시 callback prop 전달 어려움 (TipTap re-init 무거움). `window.dispatchEvent(CustomEvent)` + parent listener 패턴이 가볍.
+
+### Watch Out (다음 세션)
+
+- **빈 노트 hint placeholder 우선순위** — TipTap Placeholder extension의 placeholder text와 EmptyHintPlaceholder decoration이 같은 paragraph에 동시 발현 가능. NoteEditorAdapter에서 placeholder="" 두어 충돌 회피. 다른 editor에 EmptyHintPlaceholder 추가 시 같은 패턴.
+- **EmptyHintPlaceholder가 ProseMirror Plugin이라 매 transaction 시 decorations 재계산** — performance 영향 작지만 대형 doc + 매 keystroke마다 doc.descendants 순회. 첫 빈 paragraph 찾으면 break이라 OK.
+- **template editor에선 EmptyHintPlaceholder X** — 본 hint가 template 작성 중 노이즈. "note" tier에만 등록 (shared-editor-config.ts case "note").
+- **사용자 IDB stale template** — 사용자가 PR #319 이전에 만든 template은 contentJson에 placeholder 없을 수 있음. PR #321 이후 새 template 작성 + placeholder 사용 권장.
+- **Gallery card enrichment (P1 보류)** — Notes/Wiki/Books 갤러리 카드 status chip + metadata. GalleryItem interface + 3 adapter 매핑. 사용자 "휑함" 시그널.
+- **Home stats References 2px truncate** — viewport 1400 / 카드 134 width에서 90vs88 미세. 사용자 시그널 시 short label 또는 padding 추가 축소.
+- **status icon weight bold 영향** — 13곳 사용. 일부 작은 영역에서 너무 굵으면 size별 weight 조정.
+- **Wiki/Books `.a-tg` sticky top:30** — Notes 패턴 따라가지만 wiki/books 페이지 sticky 컨테이너 height 다를 수도. 스크롤 시 헤더 잘려보이면 sticky position 조정.
+
+### 환경 변경
+- Store version: 변경 없음
+- Tests: 변경 없음 (UI/CSS + extension 변경만)
+- 신규 파일 2개:
+  - `components/editor/templates-picker-dialog.tsx`
+  - `components/editor/extensions/empty-hint-placeholder.ts`
+
+---
+
+## 2026-05-13 (밤, 초기) — 집, Status 색 메타포 재정렬 + 6 follow-up (PR #319 manual verify 결과) [DEPRECATED — 위 entry로 흡수됨]
 
 > 🎯 **다음 즉시 액션**: 사용자 manual verify (dev hard refresh) — (1) Notes/Wiki/Books 모두 grouping `.a-tg` 통일 자연스러운지, (2) Status 색 메타포 (Stone slate회색 / Brick amber / Block emerald) chip ↔ row icon 정확 일치, (3) Home stats card REFERENCES 더 이상 icon 충돌 없음, (4) BookTable narrow viewport에서 Name visible.
 >
