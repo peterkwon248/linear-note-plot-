@@ -438,6 +438,10 @@ export const GRAPH_VIEW_CONFIG: ViewConfig = {
       // Edge / label visibility
       { key: "showWikilinks", label: "Show wikilinks", icon: LinkIcon },
       { key: "showLabels",    label: "Show labels",    icon: EyeIcon },
+      // v2 Ontology Hull Phase 3 — Book sequence edge (opt-in, default
+      // off). groupBy="book" + 활성 시 hull 안의 노드들 사이를 책 순서
+      // (book.items order)대로 dashed thin arrow로 연결.
+      { key: "showBookSequence", label: "Show book sequence", icon: <Sparkle size={14} weight="regular" /> },
     ],
     properties: [],
   },

@@ -74,6 +74,10 @@ interface OntologyGraphCanvasProps {
    *  render as hulls. Empty set / undefined = render all (default).
    *  Non-empty = only render hulls whose group key is in the set. */
   visibleHullKeys?: Set<string>
+  /** v2 Ontology Hull Phase 3 — Book sequence edge toggle. When true
+   *  and groupBy === "book", render dashed thin arrows connecting
+   *  consecutive nodes within each book's reading order. */
+  showBookSequence?: boolean
   /** Group by mode (= hull rule). "none" disables hulls; "connections" keeps
    *  legacy BFS connected-component behavior. Other values group nodes by
    *  the matching entity field (label/tag/category/folder/status). */
@@ -347,6 +351,7 @@ export function OntologyGraphCanvas({
   books,
   bookMembership,
   visibleHullKeys,
+  showBookSequence,
   groupBy = "connections",
   onRequestGroupBy,
   hiddenEdgeIds,
@@ -958,6 +963,38 @@ export function OntologyGraphCanvas({
     // hulls stayed frozen at the drag-start positions while nodes moved.
   }, [groupBy, visibleEdges, graph.nodes, labels, tags, wikiCategories, folders, stickers, books, bookMembership, visibleHullKeys, nodeMap, renderTick])
 
+  /**
+   * v2 Ontology Hull Phase 3 — Book sequence edges. Connects consecutive
+   * nodes within each book's reading order using dashed thin arrows.
+   * Only active when groupBy === "book" + showBookSequence toggle.
+   * Respects visibleHullKeys (hull picker) — hidden books contribute
+   * no sequence edges.
+   */
+  const bookSequenceEdges = useMemo(() => {
+    if (!showBookSequence || groupBy !== "book" || !books) return []
+    const hullFilterActive = !!visibleHullKeys && visibleHullKeys.size > 0
+    const edges: Array<{ id: string; from: { x: number; y: number }; to: { x: number; y: number }; color: string }> = []
+    for (const book of books) {
+      if (book.trashed) continue
+      if (hullFilterActive && !visibleHullKeys!.has(book.id)) continue
+      // sorted content items only (chapter-heading 제외).
+      const ordered = book.items
+        .filter((i) => i.kind !== "chapter-heading")
+        .slice()
+        .sort((a, b) => (a.order < b.order ? -1 : a.order > b.order ? 1 : 0))
+        .map((i) => (i as { refId: string }).refId)
+      const color = book.color ?? "#94a3b8"
+      for (let i = 0; i < ordered.length - 1; i++) {
+        const from = positionsRef.current.get(ordered[i])
+        const to = positionsRef.current.get(ordered[i + 1])
+        if (from && to) {
+          edges.push({ id: `bookseq-${book.id}-${i}`, from, to, color })
+        }
+      }
+    }
+    return edges
+  }, [showBookSequence, groupBy, books, visibleHullKeys, renderTick])
+
   /* ── Node adjacency for hover highlight ────────────── */
   const connectedToHovered = useCallback(
     (nodeId: string): boolean => {
@@ -1494,6 +1531,20 @@ export function OntologyGraphCanvas({
               animation: dash-flow 3s linear infinite;
             }
           `}</style>
+
+          {/* v2 Ontology Hull Phase 3 — book sequence arrow marker.
+              currentColor inherit으로 각 line의 stroke 색 자동 매칭. */}
+          <marker
+            id="book-seq-arrow"
+            viewBox="0 0 10 7"
+            refX="9"
+            refY="3.5"
+            markerWidth="6"
+            markerHeight="5"
+            orient="auto-start-reverse"
+          >
+            <polygon points="0 0, 10 3.5, 0 7" fill="currentColor" opacity="0.7" />
+          </marker>
         </defs>
 
         <g transform={`translate(${transform.x},${transform.y}) scale(${transform.scale})`}>
@@ -1585,6 +1636,26 @@ export function OntologyGraphCanvas({
               )
             })
           })()}
+
+          {/* ── v2 Ontology Hull Phase 3 — Book sequence edges ──── *
+           * Dashed thin arrows connecting consecutive content items
+           * within each book's reading order. Only when
+           * groupBy="book" + showBookSequence toggle. */}
+          {bookSequenceEdges.map((e) => (
+            <line
+              key={e.id}
+              x1={e.from.x}
+              y1={e.from.y}
+              x2={e.to.x}
+              y2={e.to.y}
+              stroke={e.color}
+              strokeWidth={1}
+              strokeDasharray="3 3"
+              strokeOpacity={0.55}
+              markerEnd="url(#book-seq-arrow)"
+              style={{ color: e.color, pointerEvents: "none" }}
+            />
+          ))}
 
           {/* ── Edges (bezier curves) ─────────────── */}
           {culledEdges.map((edge, i) => {

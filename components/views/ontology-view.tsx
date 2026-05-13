@@ -403,6 +403,7 @@ export function OntologyView() {
             books={books}
             bookMembership={bookMembership}
             visibleHullKeys={visibleHullKeys}
+            showBookSequence={Boolean(graphToggles.showBookSequence)}
             groupBy={graphViewState.groupBy}
             onRequestGroupBy={(g) => updateGraphViewState({ groupBy: g })}
             // Visual filters (declutter the canvas, no data mutation)
