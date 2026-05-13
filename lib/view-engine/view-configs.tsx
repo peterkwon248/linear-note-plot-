@@ -361,10 +361,24 @@ export const GRAPH_VIEW_CONFIG: ViewConfig = {
   showDisplay: true,
   showDetailPanel: true,
   filterCategories: [
+    // v2 Ontology Hull Phase 1 — Status filter entity별 분리.
+    // Note status (stone/brick/block) + Wiki status (stub/article) +
+    // Book kind (smart/manual/hybrid)를 flat values로 한 카테고리에
+    // 묶음 (LOCKED #7 Option B nested의 일차 구현 — UI nested
+    // sub-section은 follow-up, 우선은 flat list로 cross-entity
+    // 필터링 활성).
     { key: "status", label: "Status", icon: StatusIcon, values: [
-      { key: "stone", label: "Stone", color: "rgba(255,255,255,0.32)", icon: <Hexagon size={14} weight="regular" style={{ color: "var(--chart-2)" }} /> },
-      { key: "brick", label: "Brick", color: "#f5a623", icon: <Cube size={14} weight="regular" style={{ color: "var(--chart-3)" }} /> },
-      { key: "keystone", label: "Block", color: "#45d483", icon: <Cuboid2x2 size={14} weight="regular" style={{ color: "var(--chart-5)" }} /> },
+      // — Note status (3) —
+      { key: "stone", label: "Stone (Note)", color: "rgba(255,255,255,0.32)", icon: <Hexagon size={14} weight="regular" style={{ color: "var(--chart-2)" }} /> },
+      { key: "brick", label: "Brick (Note)", color: "#f5a623", icon: <Cube size={14} weight="regular" style={{ color: "var(--chart-3)" }} /> },
+      { key: "keystone", label: "Block (Note)", color: "#45d483", icon: <Cuboid2x2 size={14} weight="regular" style={{ color: "var(--chart-5)" }} /> },
+      // — Wiki status (2) — runtime-derived isWikiStub()
+      { key: "wiki-stub", label: "Stub (Wiki)", color: "#94a3b8" },
+      { key: "wiki-article", label: "Article (Wiki)", color: "#8b5cf6" },
+      // — Book kind (3) — derived getBookKind()
+      { key: "book-smart", label: "Smart (Book)", color: "#5E6AD2" },
+      { key: "book-manual", label: "Manual (Book)", color: "#6b7280" },
+      { key: "book-hybrid", label: "Hybrid (Book)", color: "#D97706" },
     ]},
     { key: "tags", label: "Tags", icon: TagIcon, values: [] },
     { key: "label", label: "Label", icon: LabelIcon, values: [] },
@@ -392,6 +406,11 @@ export const GRAPH_VIEW_CONFIG: ViewConfig = {
       // notes + wikis. Listed first so users discover it as the default
       // explicit-grouping mechanism.
       { value: "sticker",     label: "Sticker" },
+      // v2 Ontology Hull Phase 2 — Book hull. Book.items의 refIds로
+      // 멤버 결정 (note + wiki). Sticker/Folder/Category 패턴 정합.
+      // (Multi-source 동시 toggle은 follow-up — 현재는 single hull
+      // source select 시스템 그대로 활용.)
+      { value: "book",        label: "Book" },
       { value: "tag",         label: "Tag" },
       { value: "label",       label: "Label" },
       { value: "category",    label: "Wiki Category" },

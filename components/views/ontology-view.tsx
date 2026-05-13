@@ -99,6 +99,7 @@ export function OntologyView() {
   const wikiCategories = usePlotStore((s) => s.wikiCategories)
   const folders = usePlotStore((s) => s.folders)
   const stickers = usePlotStore((s) => s.stickers)
+  const books = usePlotStore((s) => s.books)
   const openNote = usePlotStore((s) => s.openNote)
   const ontologyPositions = usePlotStore((s) => s.ontologyPositions)
   const updateOntologyPositions = usePlotStore((s) => s.updateOntologyPositions)
@@ -341,6 +342,7 @@ export function OntologyView() {
             wikiCategories={wikiCategories}
             folders={folders}
             stickers={stickers}
+            books={books}
             groupBy={graphViewState.groupBy}
             onRequestGroupBy={(g) => updateGraphViewState({ groupBy: g })}
             // Visual filters (declutter the canvas, no data mutation)

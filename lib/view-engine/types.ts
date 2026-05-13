@@ -78,7 +78,9 @@ export type GroupBy =
   // Graph-specific grouping (Ontology view hull): tag/category for unified
   // note+wiki grouping; connections = legacy BFS connected component fallback.
   // sticker = explicit cross-entity bundling marker (Sticker entity).
-  | "tag" | "category" | "connections" | "sticker"
+  // book (v2 Ontology Hull Phase 2) = Book.items의 refIds로 hull 멤버 결정
+  // (cross-entity user curation, sticker 패턴 정합).
+  | "tag" | "category" | "connections" | "sticker" | "book"
   // books-view-engine-3: book-specific grouping
   | "kind"    // Smart / Manual / Hybrid (Books)
   | "pinned"  // Pinned / Others (Books; reusable by other entities)

@@ -29,7 +29,7 @@ import {
 import type { OntologyGraph, OntologyNode, OntologyEdge, OntologyEdgeKind } from "@/lib/graph"
 import { computeForceConfig } from "@/lib/graph"
 import { RELATION_TYPE_CONFIG } from "@/lib/relation-helpers"
-import type { RelationType, Label, WikiCategory, Folder, Sticker } from "@/lib/types"
+import type { RelationType, Label, WikiCategory, Folder, Sticker, Book } from "@/lib/types"
 import type { GroupBy } from "@/lib/view-engine/types"
 import { GRAPH_NODE_HEX, GRAPH_CLUSTER_PALETTE, WIKI_STATUS_HEX, NOTE_STATUS_HEX } from "@/lib/colors"
 import { NodeContextMenu } from "@/components/ontology/node-context-menu"
@@ -61,6 +61,10 @@ interface OntologyGraphCanvasProps {
   folders?: Folder[]
   /** Stickers — used to look up hull color when grouping by sticker. */
   stickers?: Sticker[]
+  /** Books (v2 Ontology Hull Phase 2) — book.items refIds define hull
+   *  membership when grouping by "book". `book.color` (when set) is
+   *  used for hull color, falls back to neutral. */
+  books?: Book[]
   /** Group by mode (= hull rule). "none" disables hulls; "connections" keeps
    *  legacy BFS connected-component behavior. Other values group nodes by
    *  the matching entity field (label/tag/category/folder/status). */
@@ -331,6 +335,7 @@ export function OntologyGraphCanvas({
   wikiCategories,
   folders,
   stickers,
+  books,
   groupBy = "connections",
   onRequestGroupBy,
   hiddenEdgeIds,
@@ -825,6 +830,26 @@ export function OntologyGraphCanvas({
     const tagsFor         = (node: OntologyNode): string[] => node.tags ?? []
     const stickersFor     = (node: OntologyNode): string[] => node.stickerIds ?? []
 
+    // v2 Ontology Hull Phase 2 — node → book ids reverse lookup. Built
+    // once per books update, O(N×M) but books typically small (≤20).
+    // Note/wiki ids appear at most once per book (BookItem dedup
+    // invariant). Trashed books skipped. Smart source auto items NOT
+    // included in MVP — only manual book.items[] are hull members
+    // (follow-up: include resolvedContentItems for full hull).
+    const nodeToBookIds = new Map<string, string[]>()
+    for (const book of books ?? []) {
+      if (book.trashed) continue
+      for (const item of book.items) {
+        if (item.kind === "chapter-heading") continue
+        const refId = (item as { refId?: string }).refId
+        if (!refId) continue
+        const existing = nodeToBookIds.get(refId)
+        if (existing) existing.push(book.id)
+        else nodeToBookIds.set(refId, [book.id])
+      }
+    }
+    const booksFor = (node: OntologyNode): string[] => nodeToBookIds.get(node.id) ?? []
+
     for (const node of graph.nodes) {
       // Skip tag nodes — they're metadata markers, not group members
       if (node.nodeType === "tag") continue
@@ -834,6 +859,13 @@ export function OntologyGraphCanvas({
           // Cross-entity (notes + wikis) explicit grouping marker.
           // First in the switch since it's the recommended default.
           keys = stickersFor(node)
+          break
+        case "book":
+          // v2 Ontology Hull Phase 2 — cross-entity user curation.
+          // A node belongs to all books that include its refId in
+          // book.items (manual sources). Multi-membership = multiple
+          // hull memberships (same as folder/tag).
+          keys = booksFor(node)
           break
         case "label":
           if (node.labelId) keys = [node.labelId]
@@ -868,6 +900,13 @@ export function OntologyGraphCanvas({
       const fallback = CLUSTER_COLORS[fallbackIdx % CLUSTER_COLORS.length]
       switch (groupBy) {
         case "sticker":  return stickers?.find((s) => s.id === key)?.color ?? fallback
+        case "book": {
+          // v2 Ontology Hull Phase 2 — Book.color 우선, 없으면 fallback
+          // palette. BookKind 별 색 분기는 follow-up (현재 Book.color
+          // 미설정 시 palette로 충분).
+          const book = books?.find((b) => b.id === key)
+          return book?.color ?? fallback
+        }
         case "label":    return labels.find((l) => l.id === key)?.color ?? fallback
         case "tag":      return tags?.find((t) => t.id === key)?.color ?? fallback
         case "folder":   return folders?.find((f) => f.id === key)?.color ?? fallback
@@ -897,7 +936,7 @@ export function OntologyGraphCanvas({
     // positions. Earlier versions used `transform` here, but that only
     // changes during panning — node drags never invalidated the memo, so
     // hulls stayed frozen at the drag-start positions while nodes moved.
-  }, [groupBy, visibleEdges, graph.nodes, labels, tags, wikiCategories, folders, stickers, nodeMap, renderTick])
+  }, [groupBy, visibleEdges, graph.nodes, labels, tags, wikiCategories, folders, stickers, books, nodeMap, renderTick])
 
   /* ── Node adjacency for hover highlight ────────────── */
   const connectedToHovered = useCallback(
