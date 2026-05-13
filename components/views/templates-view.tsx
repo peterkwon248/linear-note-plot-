@@ -321,7 +321,6 @@ export function TemplatesView() {
   // null → list/grid is shown; non-null → <TemplateEditPage> takes over the
   // primary panel (Back button returns).
   const [selectedTemplateId, setSelectedTemplateId] = useState<string | null>(null)
-  const [showCreateDialog, setShowCreateDialog] = useState(false)
   // Local search (templates context doesn't pollute the global store query).
   const [search, setSearch] = useState("")
   // Multi-select — lifted up from TemplatesTable so FAB can be rendered here.
@@ -453,12 +452,12 @@ export function TemplatesView() {
 
   /* ── Handlers ──────────────────────────────────────── */
 
-  const handleCreateSubmit = (data: TemplateFormData) => {
-    // v108: `description`, `status`, `priority` fields retired from NoteTemplate.
-    // The legacy create dialog still collects `data.description` for now —
-    // ignored here. Dialog cleanup tracked separately.
+  // 2026-05-13: UpNote 패턴 — 다이얼로그 없이 즉시 빈 템플릿 생성 + 자동
+  // editor 진입. "노트 만들듯이 만들어두면 그게 템플릿" (사용자 시그널).
+  // 사용자가 name은 editor 안 또는 listing에서 rename. friction 최소화.
+  const handleCreateNew = () => {
     const newId = createTemplate({
-      name: data.name,
+      name: "Untitled",
       title: "",
       content: "",
       contentJson: null,
@@ -467,7 +466,6 @@ export function TemplatesView() {
       tags: [],
       folderId: null,
     })
-    setShowCreateDialog(false)
     setSelectedTemplateId(newId)
   }
 
@@ -561,7 +559,7 @@ export function TemplatesView() {
             usePlotStore.setState({ sidePanelMode: 'detail' })
           }
         }}
-        onCreateNew={() => setShowCreateDialog(true)}
+        onCreateNew={handleCreateNew}
       />
 
       {/* Body — list (table) or grid (cards). When list-mode is selected
@@ -573,7 +571,7 @@ export function TemplatesView() {
           <Layout className="text-muted-foreground/60" size={32} weight="regular" />
           <span className="text-2xs text-muted-foreground text-center">No templates yet</span>
           <button
-            onClick={() => setShowCreateDialog(true)}
+            onClick={handleCreateNew}
             className="mt-1 flex items-center gap-1 px-2.5 py-1.5 rounded-md text-2xs bg-accent text-accent-foreground hover:bg-accent/90 transition-colors"
           >
             <PhPlus size={12} weight="regular" />
@@ -591,7 +589,7 @@ export function TemplatesView() {
           onUseTemplate={handleUseTemplate}
           onDelete={handleDelete}
           onTogglePin={toggleTemplatePin}
-          onCreateNew={() => setShowCreateDialog(true)}
+          onCreateNew={handleCreateNew}
           showAlphaIndex={showAlphaIndex}
           onToggleAlphaIndex={onToggleAlphaIndex}
           selectedIds={selectedIds}
@@ -614,15 +612,6 @@ export function TemplatesView() {
             ))}
           </div>
         </div>
-      )}
-
-      {showCreateDialog && (
-        <TemplateFormDialog
-          initial={DEFAULT_FORM}
-          onSubmit={handleCreateSubmit}
-          onCancel={() => setShowCreateDialog(false)}
-          title="New Template"
-        />
       )}
 
       {selectedIds.size > 0 && (
