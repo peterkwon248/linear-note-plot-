@@ -9,6 +9,7 @@
 import { InputRule } from "@tiptap/core"
 import StarterKit from "@tiptap/starter-kit"
 import Placeholder from "@tiptap/extension-placeholder"
+import { EmptyHintPlaceholder } from "@/components/editor/extensions/empty-hint-placeholder"
 import TaskList from "@tiptap/extension-task-list"
 import TaskItem from "@tiptap/extension-task-item"
 import Highlight from "@tiptap/extension-highlight"
@@ -702,6 +703,11 @@ export function createEditorExtensions(
         WikilinkNode as Extension,
         WikilinkInteractionExtension as Extension,
         SlashCommandExtension as Extension,
+        // 2026-05-13: 빈 paragraph inline clickable hint (UpNote 패턴).
+        // 첫 빈 paragraph에 "Insert from a template" 버튼 + " · or press /
+        // for menu" 텍스트를 ProseMirror Decoration widget으로 mount. 클릭 시
+        // custom event dispatch → NoteEditorAdapter가 TemplatesPickerDialog 열음.
+        EmptyHintPlaceholder as Extension,
       )
       noteExtensions.push(
         Mention.extend({

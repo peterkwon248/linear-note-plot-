@@ -35,15 +35,8 @@ export function NoteEditorAdapter({ note, onEditorReady, editable = true }: Note
   const [editorInstance, setEditorInstance] = useState<any>(null)
   // UpNote 패턴 (2026-05-13): 빈 노트일 때 inline CTA + Templates dialog.
   const [templatesPickerOpen, setTemplatesPickerOpen] = useState(false)
-  const [isEditorEmpty, setIsEditorEmpty] = useState(true)
-  useEffect(() => {
-    if (!editorInstance) return
-    const sync = () => setIsEditorEmpty(editorInstance.isEmpty)
-    sync()
-    editorInstance.on("update", sync)
-    return () => editorInstance.off("update", sync)
-  }, [editorInstance])
-  // Slash command "Insert template…" dispatches this event; opens the dialog.
+  // EmptyHintPlaceholder extension의 inline 버튼, slash 메뉴의
+  // "Insert template…" entry 모두 이 custom event를 dispatch한다.
   useEffect(() => {
     if (!editable) return
     const handler = () => setTemplatesPickerOpen(true)
@@ -480,30 +473,18 @@ export function NoteEditorAdapter({ note, onEditorReady, editable = true }: Note
           let Collaboration bind to the empty fragment and emit a flood of
           empty onUpdate events, which the empty-content guard then has to
           chase down. Cheaper and safer to just wait. */}
-      {/* 2026-05-13: 빈 노트일 때 작은 hint row — editor 위 별도 행으로
-          push (absolute overlay는 heading/paragraph 위치와 어긋나 들여쓰기
-          느낌). 사용자 입력 시작하면 자동 사라짐. 문구는 Plot 자체 표현
-          (UpNote 문구 그대로 복사 회피). */}
-      {editable && ydocReady && isEditorEmpty && editorInstance && (
-        <div className="px-[var(--editor-padding-x,1.5rem)] pt-1 pb-2 text-2xs text-muted-foreground/50">
-          <button
-            type="button"
-            onClick={() => setTemplatesPickerOpen(true)}
-            className="underline decoration-dotted underline-offset-2 hover:text-foreground hover:decoration-solid"
-          >
-            Insert from a template
-          </button>
-          <span className="mx-1.5 opacity-50">·</span>
-          <span>or press / for menu</span>
-        </div>
-      )}
+      {/* 2026-05-13: 빈 paragraph inline hint는 EmptyHintPlaceholder extension
+          이 ProseMirror Decoration으로 직접 mount (paragraph 내부에 inline
+          clickable). 별도 row / absolute overlay 회피 — 위치 정확. 클릭 시
+          custom event "plot:open-templates-picker" dispatch → 아래 listener가
+          TemplatesPickerDialog open. */}
       {ydocReady ? (
         <TipTapEditor
           key={`${note.id}-${ydoc ? "yjs" : "std"}`}
           content={initialContent}
           onChange={editable ? handleChange : undefined}
           editable={editable}
-          placeholder={isEditorEmpty ? "" : "Press / for menu"}
+          placeholder=""
           onEditorReady={handleEditorReady}
           noteId={note.id}
           ydoc={ydoc ?? undefined}
