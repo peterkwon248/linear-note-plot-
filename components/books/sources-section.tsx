@@ -48,6 +48,8 @@ import { Plus as PhPlus } from "@phosphor-icons/react/dist/ssr/Plus"
 import { X as PhX } from "@phosphor-icons/react/dist/ssr/X"
 import { Sparkle } from "@phosphor-icons/react/dist/ssr/Sparkle"
 import { ArrowsClockwise } from "@phosphor-icons/react/dist/ssr/ArrowsClockwise"
+import { Check as PhCheck } from "@phosphor-icons/react/dist/ssr/Check"
+import { cn } from "@/lib/utils"
 import type { AutoSourceKind } from "@/lib/types"
 
 interface SourcesSectionProps {
@@ -76,6 +78,24 @@ export function SourcesSection({ bookId }: SourcesSectionProps) {
   const [pickerOpen, setPickerOpen] = useState(false)
   const [activeTab, setActiveTab] = useState<TabKey>("folder")
   const [search, setSearch] = useState("")
+  // v2 Phase K follow-up — bulk select. Cmd/Ctrl+Click on a candidate
+  // toggles it in the selection set; the footer "Add N selected" button
+  // adds all at once. Single click without modifier is immediate add
+  // (preserves existing UX for one-off picks).
+  const [bulkSelected, setBulkSelected] = useState<Map<string, { kind: AutoSourceKind; refId: string; name: string }>>(new Map())
+  // bulkMode 활성 시 candidate click이 toggle 동작. 비활성 시 기존
+  // immediate add (single one-off pick). 사용자 explicit trigger.
+  const [bulkMode, setBulkMode] = useState(false)
+  const toggleBulk = (kind: AutoSourceKind, refId: string, name: string) => {
+    const key = `${kind}::${refId}`
+    setBulkSelected((prev) => {
+      const next = new Map(prev)
+      if (next.has(key)) next.delete(key)
+      else next.set(key, { kind, refId, name })
+      return next
+    })
+  }
+  const clearBulk = () => setBulkSelected(new Map())
 
   // Resolved source entries for display (skip stale refs).
   type ResolvedEntry =
@@ -245,6 +265,22 @@ export function SourcesSection({ bookId }: SourcesSectionProps) {
     else toast("Already added", { duration: 1500 })
     setSearch("")
     // Keep dialog open for multi-add
+  }
+
+  const handleBulkAdd = () => {
+    if (bulkSelected.size === 0) return
+    let added = 0
+    let dup = 0
+    for (const { kind, refId } of bulkSelected.values()) {
+      const ok = addSmartSource(bookId, { kind, refId })
+      if (ok) added++
+      else dup++
+    }
+    if (added > 0 && dup === 0) toast.success(`${added}개 소스 추가됨`)
+    else if (added > 0 && dup > 0) toast.success(`${added}개 추가, ${dup}개는 이미 있음`)
+    else toast(`이미 모두 추가된 소스 (${dup}개)`, { duration: 1500 })
+    clearBulk()
+    setSearch("")
   }
 
   const handleRemove = (kind: AutoSourceKind, refId: string, name: string) => {
@@ -453,11 +489,33 @@ export function SourcesSection({ bookId }: SourcesSectionProps) {
           discoverability). */}
       <Dialog open={pickerOpen} onOpenChange={setPickerOpen}>
         <DialogContent className="sm:max-w-lg gap-0 p-0">
-          <DialogHeader className="px-4 pb-2 pt-4">
-            <DialogTitle className="text-sm">Add smart source</DialogTitle>
-            <DialogDescription className="text-2xs">
-              Auto-fill this book from any of 5 source kinds. Notes / wikis only — source entities themselves are never added as pages.
-            </DialogDescription>
+          <DialogHeader className="flex flex-row items-start justify-between gap-2 px-4 pb-2 pt-4">
+            <div className="min-w-0">
+              <DialogTitle className="text-sm">Add smart source</DialogTitle>
+              <DialogDescription className="text-2xs">
+                Auto-fill this book from any of 5 source kinds. Notes / wikis only — source entities themselves are never added as pages.
+              </DialogDescription>
+            </div>
+            {/* v2 Phase K follow-up — Multi-select 토글. 활성 시
+                candidate click이 toggle, 비활성 시 immediate add. */}
+            <button
+              type="button"
+              onClick={() => {
+                setBulkMode((m) => {
+                  if (m) clearBulk()
+                  return !m
+                })
+              }}
+              className={cn(
+                "shrink-0 rounded-md px-2 py-1 text-2xs font-medium transition-colors",
+                bulkMode
+                  ? "bg-accent/15 text-accent hover:bg-accent/25"
+                  : "text-muted-foreground hover:bg-hover-bg hover:text-foreground",
+              )}
+              title={bulkMode ? "다중 선택 모드 끄기" : "다중 선택 모드 켜기 — 여러 소스 한 번에 추가"}
+            >
+              {bulkMode ? "다중 선택 ✓" : "다중 선택"}
+            </button>
           </DialogHeader>
           {/* Unified search input — shared across all 5 tabs (Q11 LOCKED:
               cross-tab search). Each tab's candidates list is already
@@ -530,7 +588,7 @@ export function SourcesSection({ bookId }: SourcesSectionProps) {
                       <CommandItem
                         key={folder.id}
                         value={folder.id}
-                        onSelect={() => handleAdd("folder", folder.id, folder.name)}
+                        onSelect={() => bulkMode ? toggleBulk("folder", folder.id, folder.name) : handleAdd("folder", folder.id, folder.name)}
                         className="flex cursor-pointer items-center gap-2"
                       >
                         <PhFolder size={14} weight="regular" className="text-muted-foreground" />
@@ -554,7 +612,7 @@ export function SourcesSection({ bookId }: SourcesSectionProps) {
                       <CommandItem
                         key={category.id}
                         value={category.id}
-                        onSelect={() => handleAdd("category", category.id, category.name)}
+                        onSelect={() => bulkMode ? toggleBulk("category", category.id, category.name) : handleAdd("category", category.id, category.name)}
                         className="flex cursor-pointer items-center gap-2"
                       >
                         <span
@@ -581,7 +639,7 @@ export function SourcesSection({ bookId }: SourcesSectionProps) {
                       <CommandItem
                         key={tag.id}
                         value={tag.id}
-                        onSelect={() => handleAdd("tag", tag.id, tag.name)}
+                        onSelect={() => bulkMode ? toggleBulk("tag", tag.id, tag.name) : handleAdd("tag", tag.id, tag.name)}
                         className="flex cursor-pointer items-center gap-2"
                       >
                         <PhHash
@@ -610,7 +668,7 @@ export function SourcesSection({ bookId }: SourcesSectionProps) {
                       <CommandItem
                         key={label.id}
                         value={label.id}
-                        onSelect={() => handleAdd("label", label.id, label.name)}
+                        onSelect={() => bulkMode ? toggleBulk("label", label.id, label.name) : handleAdd("label", label.id, label.name)}
                         className="flex cursor-pointer items-center gap-2"
                       >
                         <span
@@ -637,7 +695,7 @@ export function SourcesSection({ bookId }: SourcesSectionProps) {
                       <CommandItem
                         key={sticker.id}
                         value={sticker.id}
-                        onSelect={() => handleAdd("sticker", sticker.id, sticker.name)}
+                        onSelect={() => bulkMode ? toggleBulk("sticker", sticker.id, sticker.name) : handleAdd("sticker", sticker.id, sticker.name)}
                         className="flex cursor-pointer items-center gap-2"
                       >
                         <PhSticker size={14} weight="regular" style={{ color: sticker.color }} />
@@ -652,6 +710,37 @@ export function SourcesSection({ bookId }: SourcesSectionProps) {
               </Command>
             </TabsContent>
           </Tabs>
+          {/* v2 Phase K follow-up — Bulk select footer. bulkMode 활성
+              + selected > 0 시 표시. "Add N selected" 누르면 batch add. */}
+          {bulkMode && (
+            <div className="flex items-center justify-between border-t border-border/40 px-4 py-2.5">
+              <span className="text-2xs text-muted-foreground">
+                {bulkSelected.size > 0
+                  ? `${bulkSelected.size}개 선택됨`
+                  : "항목을 클릭해서 선택하세요"}
+              </span>
+              <div className="flex items-center gap-1.5">
+                {bulkSelected.size > 0 && (
+                  <button
+                    type="button"
+                    onClick={clearBulk}
+                    className="rounded-md px-2 py-1 text-2xs text-muted-foreground hover:bg-hover-bg hover:text-foreground transition-colors"
+                  >
+                    Clear
+                  </button>
+                )}
+                <button
+                  type="button"
+                  onClick={handleBulkAdd}
+                  disabled={bulkSelected.size === 0}
+                  className="flex items-center gap-1 rounded-md bg-accent px-2.5 py-1 text-2xs font-medium text-accent-foreground transition-opacity hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed"
+                >
+                  <PhCheck size={11} weight="bold" />
+                  Add {bulkSelected.size > 0 ? bulkSelected.size : ""} selected
+                </button>
+              </div>
+            </div>
+          )}
         </DialogContent>
       </Dialog>
     </div>
