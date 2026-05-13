@@ -42,6 +42,19 @@ export interface UseBookContextNavReturn {
   items: ResolvedContentBookItem[]
   /** Jump to a specific item by index (used by the table-of-contents dropdown). */
   jumpTo: (index: number) => void
+  /**
+   * v2 Phase H follow-up — current "chapter" derived from sourceRefId
+   * grouping. Auto items + manual items tagged with a smart source
+   * (Tweak B, PR #319) cluster together; sourceRefId-less manual items
+   * → null (no chapter context). UI caller (BookContextNav) looks up
+   * the source name + icon by `sourceRefId` across folder / category /
+   * tag / label / sticker stores. `indexInChapter` is 0-based.
+   */
+  currentChapter: {
+    sourceRefId: string
+    indexInChapter: number
+    chapterTotal: number
+  } | null
 }
 
 /**
@@ -184,5 +197,27 @@ export function useBookContextNav(
     ? { bookId: book.id, itemIndex: liveIndex, total: items.length }
     : null
 
-  return { active, goPrev, goNext, items, jumpTo }
+  // v2 Phase H follow-up — derive current chapter from sourceRefId
+  // clustering. Same-source items form a chapter; manual items without
+  // sourceRefId are uncategorized (null chapter). Auto items always have
+  // sourceRefId. Cheap O(N) scan of items.
+  const currentChapter = useMemo(() => {
+    if (liveIndex < 0 || items.length === 0) return null
+    const current = items[liveIndex]
+    const sourceRefId = (current as { sourceRefId?: string }).sourceRefId
+    if (!sourceRefId) return null
+    const sameSource = items.filter(
+      (i) => (i as { sourceRefId?: string }).sourceRefId === sourceRefId,
+    )
+    const indexInChapter = sameSource.findIndex(
+      (i) => i.kind === current.kind && i.refId === current.refId,
+    )
+    return {
+      sourceRefId,
+      indexInChapter: indexInChapter >= 0 ? indexInChapter : 0,
+      chapterTotal: sameSource.length,
+    }
+  }, [items, liveIndex])
+
+  return { active, goPrev, goNext, items, jumpTo, currentChapter }
 }

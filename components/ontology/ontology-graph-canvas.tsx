@@ -29,7 +29,7 @@ import {
 import type { OntologyGraph, OntologyNode, OntologyEdge, OntologyEdgeKind } from "@/lib/graph"
 import { computeForceConfig } from "@/lib/graph"
 import { RELATION_TYPE_CONFIG } from "@/lib/relation-helpers"
-import type { RelationType, Label, WikiCategory, Folder, Sticker } from "@/lib/types"
+import type { RelationType, Label, WikiCategory, Folder, Sticker, Book } from "@/lib/types"
 import type { GroupBy } from "@/lib/view-engine/types"
 import { GRAPH_NODE_HEX, GRAPH_CLUSTER_PALETTE, WIKI_STATUS_HEX, NOTE_STATUS_HEX } from "@/lib/colors"
 import { NodeContextMenu } from "@/components/ontology/node-context-menu"
@@ -61,6 +61,23 @@ interface OntologyGraphCanvasProps {
   folders?: Folder[]
   /** Stickers — used to look up hull color when grouping by sticker. */
   stickers?: Sticker[]
+  /** Books (v2 Ontology Hull Phase 2) — book.items refIds define hull
+   *  membership when grouping by "book". `book.color` (when set) is
+   *  used for hull color, falls back to neutral. */
+  books?: Book[]
+  /** Optional override of node → bookIds mapping. Caller (ontology-view)
+   *  computes via resolveBookItems so Smart Book auto items also
+   *  participate in the hull. When absent, canvas falls back to the
+   *  cheap manual-only book.items[] reverse lookup (v1 behavior). */
+  bookMembership?: Map<string, string[]>
+  /** v2 Ontology Hull Phase 4 — hull picker filter. Entity ids to
+   *  render as hulls. Empty set / undefined = render all (default).
+   *  Non-empty = only render hulls whose group key is in the set. */
+  visibleHullKeys?: Set<string>
+  /** v2 Ontology Hull Phase 3 — Book sequence edge toggle. When true
+   *  and groupBy === "book", render dashed thin arrows connecting
+   *  consecutive nodes within each book's reading order. */
+  showBookSequence?: boolean
   /** Group by mode (= hull rule). "none" disables hulls; "connections" keeps
    *  legacy BFS connected-component behavior. Other values group nodes by
    *  the matching entity field (label/tag/category/folder/status). */
@@ -331,6 +348,10 @@ export function OntologyGraphCanvas({
   wikiCategories,
   folders,
   stickers,
+  books,
+  bookMembership,
+  visibleHullKeys,
+  showBookSequence,
   groupBy = "connections",
   onRequestGroupBy,
   hiddenEdgeIds,
@@ -825,6 +846,30 @@ export function OntologyGraphCanvas({
     const tagsFor         = (node: OntologyNode): string[] => node.tags ?? []
     const stickersFor     = (node: OntologyNode): string[] => node.stickerIds ?? []
 
+    // v2 Ontology Hull Phase 2 — node → book ids reverse lookup.
+    // Prefer caller-supplied `bookMembership` (which uses
+    // `resolveBookItems` to include Smart Book auto items). Fall back to
+    // a cheap manual-only sweep of `book.items[]` when no override is
+    // provided. Trashed books always skipped.
+    let nodeToBookIds: Map<string, string[]>
+    if (bookMembership) {
+      nodeToBookIds = bookMembership
+    } else {
+      nodeToBookIds = new Map<string, string[]>()
+      for (const book of books ?? []) {
+        if (book.trashed) continue
+        for (const item of book.items) {
+          if (item.kind === "chapter-heading") continue
+          const refId = (item as { refId?: string }).refId
+          if (!refId) continue
+          const existing = nodeToBookIds.get(refId)
+          if (existing) existing.push(book.id)
+          else nodeToBookIds.set(refId, [book.id])
+        }
+      }
+    }
+    const booksFor = (node: OntologyNode): string[] => nodeToBookIds.get(node.id) ?? []
+
     for (const node of graph.nodes) {
       // Skip tag nodes — they're metadata markers, not group members
       if (node.nodeType === "tag") continue
@@ -834,6 +879,13 @@ export function OntologyGraphCanvas({
           // Cross-entity (notes + wikis) explicit grouping marker.
           // First in the switch since it's the recommended default.
           keys = stickersFor(node)
+          break
+        case "book":
+          // v2 Ontology Hull Phase 2 — cross-entity user curation.
+          // A node belongs to all books that include its refId in
+          // book.items (manual sources). Multi-membership = multiple
+          // hull memberships (same as folder/tag).
+          keys = booksFor(node)
           break
         case "label":
           if (node.labelId) keys = [node.labelId]
@@ -868,6 +920,13 @@ export function OntologyGraphCanvas({
       const fallback = CLUSTER_COLORS[fallbackIdx % CLUSTER_COLORS.length]
       switch (groupBy) {
         case "sticker":  return stickers?.find((s) => s.id === key)?.color ?? fallback
+        case "book": {
+          // v2 Ontology Hull Phase 2 — Book.color 우선, 없으면 fallback
+          // palette. BookKind 별 색 분기는 follow-up (현재 Book.color
+          // 미설정 시 palette로 충분).
+          const book = books?.find((b) => b.id === key)
+          return book?.color ?? fallback
+        }
         case "label":    return labels.find((l) => l.id === key)?.color ?? fallback
         case "tag":      return tags?.find((t) => t.id === key)?.color ?? fallback
         case "folder":   return folders?.find((f) => f.id === key)?.color ?? fallback
@@ -879,7 +938,12 @@ export function OntologyGraphCanvas({
 
     const hulls: { id: string; color: string; path: string; nodeIds: string[] }[] = []
     let idx = 0
+    // v2 Ontology Hull Phase 4 — hull picker filter: if visibleHullKeys
+    // is non-empty, only render hulls whose group key is in the set.
+    // Empty / undefined = render all (default).
+    const hullFilterActive = !!visibleHullKeys && visibleHullKeys.size > 0
     for (const [key, members] of groups.entries()) {
+      if (hullFilterActive && !visibleHullKeys!.has(key)) { idx++; continue }
       if (members.length < HULL.minNodes) { idx++; continue }
       const memberIds = members.map((m) => m.id)
       const points = gatherPoints(memberIds)
@@ -897,7 +961,39 @@ export function OntologyGraphCanvas({
     // positions. Earlier versions used `transform` here, but that only
     // changes during panning — node drags never invalidated the memo, so
     // hulls stayed frozen at the drag-start positions while nodes moved.
-  }, [groupBy, visibleEdges, graph.nodes, labels, tags, wikiCategories, folders, stickers, nodeMap, renderTick])
+  }, [groupBy, visibleEdges, graph.nodes, labels, tags, wikiCategories, folders, stickers, books, bookMembership, visibleHullKeys, nodeMap, renderTick])
+
+  /**
+   * v2 Ontology Hull Phase 3 — Book sequence edges. Connects consecutive
+   * nodes within each book's reading order using dashed thin arrows.
+   * Only active when groupBy === "book" + showBookSequence toggle.
+   * Respects visibleHullKeys (hull picker) — hidden books contribute
+   * no sequence edges.
+   */
+  const bookSequenceEdges = useMemo(() => {
+    if (!showBookSequence || groupBy !== "book" || !books) return []
+    const hullFilterActive = !!visibleHullKeys && visibleHullKeys.size > 0
+    const edges: Array<{ id: string; from: { x: number; y: number }; to: { x: number; y: number }; color: string }> = []
+    for (const book of books) {
+      if (book.trashed) continue
+      if (hullFilterActive && !visibleHullKeys!.has(book.id)) continue
+      // sorted content items only (chapter-heading 제외).
+      const ordered = book.items
+        .filter((i) => i.kind !== "chapter-heading")
+        .slice()
+        .sort((a, b) => (a.order < b.order ? -1 : a.order > b.order ? 1 : 0))
+        .map((i) => (i as { refId: string }).refId)
+      const color = book.color ?? "#94a3b8"
+      for (let i = 0; i < ordered.length - 1; i++) {
+        const from = positionsRef.current.get(ordered[i])
+        const to = positionsRef.current.get(ordered[i + 1])
+        if (from && to) {
+          edges.push({ id: `bookseq-${book.id}-${i}`, from, to, color })
+        }
+      }
+    }
+    return edges
+  }, [showBookSequence, groupBy, books, visibleHullKeys, renderTick])
 
   /* ── Node adjacency for hover highlight ────────────── */
   const connectedToHovered = useCallback(
@@ -1435,6 +1531,20 @@ export function OntologyGraphCanvas({
               animation: dash-flow 3s linear infinite;
             }
           `}</style>
+
+          {/* v2 Ontology Hull Phase 3 — book sequence arrow marker.
+              currentColor inherit으로 각 line의 stroke 색 자동 매칭. */}
+          <marker
+            id="book-seq-arrow"
+            viewBox="0 0 10 7"
+            refX="9"
+            refY="3.5"
+            markerWidth="6"
+            markerHeight="5"
+            orient="auto-start-reverse"
+          >
+            <polygon points="0 0, 10 3.5, 0 7" fill="currentColor" opacity="0.7" />
+          </marker>
         </defs>
 
         <g transform={`translate(${transform.x},${transform.y}) scale(${transform.scale})`}>
@@ -1526,6 +1636,26 @@ export function OntologyGraphCanvas({
               )
             })
           })()}
+
+          {/* ── v2 Ontology Hull Phase 3 — Book sequence edges ──── *
+           * Dashed thin arrows connecting consecutive content items
+           * within each book's reading order. Only when
+           * groupBy="book" + showBookSequence toggle. */}
+          {bookSequenceEdges.map((e) => (
+            <line
+              key={e.id}
+              x1={e.from.x}
+              y1={e.from.y}
+              x2={e.to.x}
+              y2={e.to.y}
+              stroke={e.color}
+              strokeWidth={1}
+              strokeDasharray="3 3"
+              strokeOpacity={0.55}
+              markerEnd="url(#book-seq-arrow)"
+              style={{ color: e.color, pointerEvents: "none" }}
+            />
+          ))}
 
           {/* ── Edges (bezier curves) ─────────────── */}
           {culledEdges.map((edge, i) => {
@@ -2456,7 +2586,7 @@ function LegendOverlay({ svgRef, legendRelationTypes, hasWikilinkEdges, isDarkMo
       </g>
       <g transform={`translate(10, ${10 + 2 * rowHeight})`}>
         <circle cx={6} cy={6} r={4} fill={GRAPH_NODE_HEX.keystone + nodeFillAlpha} stroke={GRAPH_NODE_HEX.keystone} strokeWidth={isDarkMode ? 1.3 : 1.8} />
-        <text x={26} y={10} fill={labelFill} fontSize={10} fontWeight={isDarkMode ? 500 : 600} fontFamily="-apple-system, system-ui, sans-serif">Keystone</text>
+        <text x={26} y={10} fill={labelFill} fontSize={10} fontWeight={isDarkMode ? 500 : 600} fontFamily="-apple-system, system-ui, sans-serif">Block</text>
       </g>
 
       {/* ── Wiki (hexagon — matches actual graph shape) ── */}

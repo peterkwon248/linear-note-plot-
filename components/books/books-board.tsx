@@ -150,9 +150,13 @@ export function BooksBoard({
       }
 
       // ── Card drop ──
-      // activeId = book id, overId = column key (current group)
+      // activeId = book id, overId = column key (current group).
+      // Same dnd-kit collision risk as notes-board (PR #311 fix):
+      // column DOM ref combines useSortable("col-${key}") + useDroppable(key),
+      // so over.id may come back as either form non-deterministically. Strip
+      // the "col-" prefix to always reach the bare group key downstream.
       const bookId = activeId
-      const targetKey = overId
+      const targetKey = overId.startsWith("col-") ? overId.slice(4) : overId
 
       // Find the source group of this book
       const sourceGroup = resolvedGroups.find((g) =>

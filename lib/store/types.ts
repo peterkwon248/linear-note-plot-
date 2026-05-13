@@ -441,6 +441,17 @@ export interface PlotState {
   removeSmartSource: (bookId: string, kind: AutoSourceKind, refId: string) => void
   addExcludeId: (bookId: string, entityId: string) => void
   removeExcludeId: (bookId: string, entityId: string) => void
+  /* v2 Phase G — chapter ordering for auto items (same-source scope). */
+  reorderAutoItem: (
+    bookId: string,
+    sourceRefId: string,
+    entityId: string,
+    prevSortKey: string | null,
+    nextSortKey: string | null,
+  ) => void
+  clearAutoUserOrder: (bookId: string, sourceRefId: string) => number
+  /* v2 Phase H — reading position tracking. */
+  setLastRead: (bookId: string, refId: string | null) => void
   /**
    * Phase 4 — set or clear the in-book navigation context for a pane.
    * Pass `null` for `ctx` to leave book-anchored navigation (clears the

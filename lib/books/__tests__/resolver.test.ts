@@ -778,3 +778,75 @@ describe("resolveBookItems — Phase F trash guards (LOCKED #11 lazy detection)"
     expect(result[1].kind).toBe("note")
   })
 })
+
+// ─────────────────────────────────────────────────────────────────────────
+// v2 Phase G — chapter ordering for auto items
+// ─────────────────────────────────────────────────────────────────────────
+
+describe("v2 Phase G: autoUserOrders sort priority", () => {
+  it("auto items respect userOrder over resolver-generated order (same source)", () => {
+    // Three notes in the same folder, updatedAt order: n3 (newest) > n2 > n1.
+    // Natural resolver order = [heading (a0), n3 (a1), n2 (a2), n1 (a3)]
+    // (heading first, then notes by updatedAt desc).
+    //
+    // User drags n1 to sit right after the heading. Resolver-generated
+    // keys start at "a0" — we place n1 between heading ("a0") and n3
+    // ("a1") with userOrder "a0V" (lexicographic "a0" < "a0V" < "a1").
+    // Final order: [heading, n1, n3, n2].
+    const folder = makeFolder("f1", "Algorithms", "note")
+    const n1 = makeNote("n1", ["f1"], "2026-01-01")
+    const n2 = makeNote("n2", ["f1"], "2026-01-02")
+    const n3 = makeNote("n3", ["f1"], "2026-01-03")
+    const book = makeBook({
+      smartSources: [{ kind: "folder", refId: "f1" }],
+      autoUserOrders: { "f1::n1": "a0V" },
+    })
+    const result = resolveBookItems(book, { notes: [n1, n2, n3], folders: [folder] })
+    expect(result).toHaveLength(4) // heading + 3 notes
+    expect(result[0].kind).toBe("chapter-heading")
+    expect((result[1] as { refId?: string }).refId).toBe("n1") // user pushed n1 up
+    expect((result[2] as { refId?: string }).refId).toBe("n3") // remaining: natural updatedAt desc
+    expect((result[3] as { refId?: string }).refId).toBe("n2")
+  })
+
+  it("autoUserOrders absent → resolver falls back to natural order (v1 compat)", () => {
+    const folder = makeFolder("f1", "Notes", "note")
+    const n1 = makeNote("n1", ["f1"], "2026-01-01")
+    const n2 = makeNote("n2", ["f1"], "2026-01-02")
+    const book = makeBook({ smartSources: [{ kind: "folder", refId: "f1" }] })
+    const result = resolveBookItems(book, { notes: [n1, n2], folders: [folder] })
+    expect(result).toHaveLength(3) // heading + 2 notes
+    expect(result[0].kind).toBe("chapter-heading")
+    expect((result[1] as { refId?: string }).refId).toBe("n2") // newest first
+    expect((result[2] as { refId?: string }).refId).toBe("n1")
+  })
+
+  it("autoUserOrders scoped per source — wrong key prefix is ignored", () => {
+    // n1 in folder f1 has a userOrder, but f2's userOrder map entry for
+    // the same note id must NOT affect f1's resolution.
+    const f1 = makeFolder("f1", "F1", "note")
+    const n1 = makeNote("n1", ["f1"], "2026-01-01")
+    const n2 = makeNote("n2", ["f1"], "2026-01-02")
+    const book = makeBook({
+      smartSources: [{ kind: "folder", refId: "f1" }],
+      autoUserOrders: { "f2::n1": "Z0" }, // wrong source — must be ignored
+    })
+    const result = resolveBookItems(book, { notes: [n1, n2], folders: [f1] })
+    // Natural order: heading, n2 (newest), n1
+    expect(result).toHaveLength(3)
+    expect(result[0].kind).toBe("chapter-heading")
+    expect((result[1] as { refId?: string }).refId).toBe("n2")
+    expect((result[2] as { refId?: string }).refId).toBe("n1")
+  })
+
+  it("autoUserOrders is empty map → identical to v1 behavior", () => {
+    const folder = makeFolder("f1", "Notes", "note")
+    const n1 = makeNote("n1", ["f1"], "2026-01-01")
+    const book = makeBook({
+      smartSources: [{ kind: "folder", refId: "f1" }],
+      autoUserOrders: {},
+    })
+    const result = resolveBookItems(book, { notes: [n1], folders: [folder] })
+    expect(result).toHaveLength(2) // heading + n1
+  })
+})

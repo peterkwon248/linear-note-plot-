@@ -6,6 +6,138 @@
 
 ---
 
+## 2026-05-13 — 집, Smart Book v2 풀 완성 + Ontology Hull P1-4 + 137 Linear refs + 11 follow-up (PR #319, 17 commits 단일 mega-PR)
+
+> 🎯 **다음 즉시 액션**: **PR #319 squash merge** (사용자 책임) + 머지 후 dev:3002에서 manual verify. 가장 큰 surface: (1) `/library` Books → 책 → "Add source" 다중 선택 모드 + Auto-sort toggle + Resume 버튼 + chapter context badge. (2) Ontology → Display > Group by = Book → hull / Filter > Status nested 8 values (Note/Wiki/Book) / Visible hulls picker / Show book sequence dashed arrow.
+>
+> **사용자 의도**: Smart Book v2 (chapter ordering / reading view / picker UX) + Ontology Hull 3-source + 그 모든 follow-up까지 한 큰 PR로 통합 완성. "잔여 follow-up까지 다 해" 명시.
+>
+> **첫 스텝** (다른 머신에서 바로 시작):
+> 1. `git pull origin main` (PR #319 머지된 상태 가정) → `npm install` (새 worktree 시 필수, 본 세션 시작 시 발생 사례 — 영구 룰 후보)
+> 2. `npm run dev` → hard refresh (Ctrl+Shift+R) IDB stale 회피
+> 3. `/library` Books → 임의 책 → "Add source" 다이얼로그
+>    - 다중 선택 토글 → 5 tab cross-tab search → "Add N selected" footer
+>    - 본문 auto items drag → cross-source reject toast (Q1 LOCKED) → Auto-sort 버튼 + 5초 undo toast
+>    - 책 detail header: lastReadItemId 있으면 "Resume" + 옆 "처음부터"
+> 4. 페이지 reading → BookContextNav 옆 mini progress bar + "· {kind icon} {sourceName} (N/M)" chapter badge (md+ only)
+> 5. Ontology graph
+>    - Filter > Status → 3 sub-section header (NOTE/WIKI/BOOK) + 8 values 모두 icon (Hexagon/Cube/Cuboid2x2/IconWikiStub/IconWikiArticle/Lightning/PencilSimple/Sparkle)
+>    - Display > Group by = Book → hull + book.color fallback. Smart Book auto items도 hull 멤버 (resolveBookItems via bookMembership prop)
+>    - Display > "Show book sequence" 토글 → dashed thin arrow 책 reading order
+>    - Filter > "Visible hulls" → 특정 entity만 hull 표시
+>    - Legend 박스: "Block" 표시 (이전엔 "Keystone" 잔존, 본 세션 fix)
+>    - Notes Table Block badge: slate color (이전엔 green `--chart-5` 잘못 사용)
+>
+> **확인 포인트**:
+> - dnd-kit collision 패턴 — wiki-board / notes-board / books-board 3 board 모두 normalize 의무 (PR #311/#319 패턴 정합). 새 board 추가 시 영구 룰.
+> - status 색은 `var(--status-{stone|brick|keystone})`만 — `var(--chart-N)`는 chart 시각화 전용 (LOCKED 색 변경 따라가지 않음). Stone/Brick도 같은 정리 가능 (사용자 시그널 후).
+>
+> **구멍 가능성**:
+> - bulk select 모드 — Cmd+Click 처리 cmdk와 충돌이라 explicit 토글로 우회 (사용자 UX 자연도 verify 필요)
+> - Phase H chapter context badge — sourceRefId clustering 기반이라 manual items without sourceRefId는 null (badge hide). PRD §5.3 예시 "in 📁 Algorithms"와 약간 다른 design.
+> - Ontology Book hull membership — resolveBookItems 비용 O(books × items). books 100+ 시 culling 필요 (현재 acceptable).
+> - chapter heading auto-generated 사용자 rename 불가 (PRD §6 명시). 사용자 시그널 시 v2.5 follow-up.
+>
+> **참고 파일**:
+> - `.omc/plans/smart-book-v2-prd.md` v1.0 LOCKED (Phase G/H/K, 13 Q resolved)
+> - `.omc/plans/ontology-hull-prd.md` v0.1 draft (Phase 1/2/3/4 모두 구현)
+> - `docs/reference/linear/README.md` (137 captures 14 카테고리 인덱스)
+>
+> **위험 + 회피**:
+> - PR #319 17 commits scope 매우 넓음 — squash merge 권장, title 머지 시 broader scope로 update
+> - 새 worktree 첫 setup 시 `npm install` 필수 (본 세션 시작 시 stale dev server로 fractional-indexing not found 에러 발생) — before-work 단계에 node_modules 체크 자동화 후보
+> - hydration mismatch (radix _R_xxx_ id) main pre-existing — 본 PR 무관, 별도 fix 후보
+>
+> **머신**: 집 (Windows)
+> **현재 main HEAD**: PR #319 머지 전 (45798d7)
+> **branch worktree**: `brave-ardinghelli-209f9b` (이번 세션, 머지 후 cleanup 가능)
+
+### 완료 (PR #319, 17 commits 단일 mega-PR)
+
+| # | sha | scope |
+|---|---|---|
+| 1 | `c96a5fe` | books-board normalize (Bug #1) + BookItemRow 5-source icon (Bug #2) |
+| 2 | `0eaa13f` | wiki-board normalize (Bug #3, 같은 dnd-kit collision risk 패턴) |
+| 3 | `d9e921d` | TrashAllView header select-all checkbox (tri-state) — 사용자 "전부 삭제" 요청 |
+| 4 | `65f1733` | docs: Linear 참고자료 137 captures + README 카테고리 인덱스 |
+| 5 | `f023701` | Smart Book v2 PRD v1.0 LOCKED + Ontology Hull PRD v0.1 draft + Phase G-1 (core) |
+| 6 | `e6e332c` | Phase G-2 (UI: auto entity drag + Auto-sort toggle + 5초 undo toast) |
+| 7 | `4e79d26` | Phase H (lastRead + Resume 버튼 + BookContextNav mini progress bar) |
+| 8 | `46786a9` | Phase K (dialog 너비 확장 + cross-tab unified search) |
+| 9 | `fead7c9` | Ontology Hull Phase 1+2 (Status cross-entity + Book hull groupBy) |
+| 10 | `964b257` | Phase H follow-up — chapter context badge |
+| 11 | `18583b4` | Ontology Hull Phase 1 follow-up — Status sub-section headers |
+| 12 | `3201ea7` | Phase K follow-up — bulk select (multi-mode 토글 + footer) |
+| 13 | `c5f975f` | Ontology Hull Phase 2 follow-up — Smart auto items in hull |
+| 14 | `43fe2e3` | Ontology Hull Phase 4 — Visible hulls picker filter |
+| 15 | `7270254` | Ontology Hull Phase 3 — Book sequence dashed arrow |
+| 16 | `0c4c644` | fix: legend Keystone → Block + Filter Status Wiki/Book icon 일관성 |
+| 17 | `44bef87` | fix: Block 색 var(--chart-5) green → var(--status-keystone) slate 통일 |
+
+### 브레인스토밍 & 큰 결정 (영구 LOCKED)
+
+**1. Smart Book v2 PRD v1.0 LOCKED 12 결정** — 모두 추천값 그대로:
+- Auto items reorder = same-source 내부만 (cross-source 시 reject toast)
+- Auto-sort 토글 = SourcesSection row 인라인 + 5초 undo toast
+- 진행률 = header 아래 1px subtle (이번엔 BookContextNav inline mini 36px로 변형 적용)
+- Resume = 명시적 버튼 (자동 점프 X)
+- Hull style outline / Book.color 우선 / overlap 허용 / dashed thin sequence / opt-in toggle / 5-tab picker 너비 + cross-tab search
+- userOrder 신규 필드 + autoUserOrders map (Book에 store)
+
+**2. Ontology Hull PRD v0.1 모든 LOCKED 결정**:
+- Hull = display rendering style (filter X)
+- 3 source: Sticker + Folder + Book (Tag/Label hull은 v3)
+- Status nested (Option B): Status > Note/Wiki/Book sub-section
+- Single hull source select 시스템 그대로 (multi-source 동시 toggle은 v3)
+- Smart Book auto items 포함 (resolveBookItems via bookMembership prop)
+
+**3. PRD 2개 분리 결정** — Smart Book v2 = Book entity 위주 / Ontology Hull = Ontology graph 위주. scope 명확, 독립 구현.
+
+**4. Block 색 var 일관성 영구 룰** — status 색은 `var(--status-{stone|brick|keystone})`만. `var(--chart-N)`는 chart 시각화 전용 — LOCKED 색 변경 (teal→slate 2026-05-12 같은) 따라가지 않으므로 status에 mapping 금지.
+
+**5. dnd-kit collision normalize 모든 board 영구 룰** — `useSortable("col-${key}")` + `useDroppable(key)` 이중 binding 시 over.id 비결정 반환. handler에서 `overId.startsWith("col-") ? overId.slice(4) : overId` 의무. notes/books/wiki 3 board 모두 적용 완료.
+
+**6. Filter values icon 일관성 영구 룰** — Status filter 같은 cross-entity values는 각 entity의 chip/badge에 쓰이는 icon 그대로 재사용 (color dot 단독 사용 X). 사용자 시각 식별 의미 보존.
+
+**7. Chapter context derive 패턴** — useBookContextNav 안에서 sourceRefId clustering (auto items + Tweak B로 매칭된 manual items). sourceRefId 없는 manual은 chapter context null (badge hide). UI caller가 5 store lookup으로 source name + glyph 표시.
+
+**8. resolveBookItems 활용 패턴** — Smart Book auto items가 다른 view (Ontology hull / Book Detail Resume button 등)에서도 참여하려면 ontology-view에서 useMemo로 미리 compute → 자식 컴포넌트에 prop으로 override 전달. canvas가 store coupling 없이 props-driven 유지.
+
+**9. `npm install` 첫 setup 영구 룰 후보** — 새 worktree 시 node_modules 없음 → dev server 시작 시 fractional-indexing 등 module not found. before-work 단계에 자동 체크 + install 또는 명시적 안내.
+
+### 기술 학습 (영구)
+
+- **dnd-kit DOM ref 이중 binding 회피** — collision detection 비결정 → 일관성 위해 모든 board 컴포넌트에 normalize 의무. 새 board 도입 시 동일 패턴 적용.
+- **cmdk CommandItem + modifier key** — onSelect는 keyboard/mouse 공통, mouse event detail 없음 → multi-select 도입 시 explicit toggle mode (cmdk와 호환). modifier key 직접 처리 어려움.
+- **FilterValue group field 패턴** — `group?: string` optional. FilterPanel이 group 변경 시점 detect → uppercase tracking label sub-header. nested UI 효과를 flat data shape로 달성.
+- **PRD 분리 trigger** — 한 PRD scope이 다른 도메인 (Smart Book v2 안 Ontology Hull I/J) 침범 시 사용자 한마디로 분리 ("그러면 북스만으로도 묶고 그래야 될 듯"). PRD draft 시점에 분리 가능성 미리 명시.
+- **Hull picker filter 패턴** — view-engine FilterCategory의 values runtime hydration. groupBy 따라 다른 entity list (sticker/book/folder/...) 동적 update. filter rule field name "hullEntity" + visibleHullKeys Set 추출 → canvas hull computation filter.
+- **Sequence edge SVG marker pattern** — `<defs><marker id="book-seq-arrow">` 한 번 정의 + `markerEnd="url(#book-seq-arrow)"` 모든 paths reuse. `currentColor` inherit으로 각 line stroke 색 자동 매칭.
+- **var(--chart-N) vs var(--status-*) 분리** — chart는 시각화 전용 (D3 등), status는 LOCKED 색. 잘못된 mapping이 LOCKED 색 변경 (이번 teal→slate) 따라가지 않는 회귀 원인.
+- **Resolver 재사용 (외부 view)** — resolveBookItems가 pure function이라 ontology-view 등 다른 view에서도 호출 가능. 다만 store coupling 회피 위해 caller가 useMemo로 compute → prop으로 전달.
+
+### Watch Out (다음 세션 주의사항)
+
+- **사용자 manual verify가 마지막 단계** — PR #319 17 commits 코드는 다 됐지만 실제 사용성 verify 안 됨. 머지 후 hard refresh로 다음 큰 surface 5개 점검 (위 "첫 스텝" 참조)
+- **bulk select 모드 UX** — Cmd+Click 충돌로 explicit 토글 우회. 사용자가 직관적인지 verify 필요. 자연 안 들면 modifier 기반 또는 별도 checkbox column 도입 follow-up
+- **chapter context badge null cases** — manual items without sourceRefId는 badge hide. 사용자가 "왜 어떤 페이지는 chapter 표시되고 어떤 페이지는 안 되지?" 직관 깨질 수 있음 — 향후 manual chapter rename 또는 auto sourceRefId tagging 강화
+- **Ontology hull 100+ entity 성능** — books/folders/stickers 다 합쳐서 100+ 시 hull computation 느려질 수 있음. Phase 4 hull picker filter로 부분적 mitigate, 본격 culling 미구현
+- **node_modules 누락 패턴** — 새 worktree 첫 시작 시 자동 check + install 권장 (before-work 룰 후보)
+
+### 환경 변경
+- Store version: 변경 없음 (Phase G-1 데이터 모델 additive optional)
+- Tests: 39 → 43 (Phase G-1 +4: userOrder priority / fallback / per-source scoping / empty map)
+- 신규 파일:
+  - `.omc/plans/smart-book-v2-prd.md`
+  - `.omc/plans/ontology-hull-prd.md`
+  - `docs/reference/linear/README.md` + 137 PNG
+- 신규 store API: setLastRead / reorderAutoItem / clearAutoUserOrder
+- 신규 types: BookItem.userOrder + Book.autoUserOrders + Book.lastReadItemId + Book.lastReadAt + FilterValue.group + FilterField "hullEntity" + GroupBy "book"
+- 신규 view config: hullEntity filter category + showBookSequence toggle
+- 영구 룰: status 색 var(--status-*) only / dnd-kit normalize all boards / filter values icon 일관성 / chapter context sourceRefId clustering / resolver 재사용 패턴
+
+---
+
 ## 2026-05-12 (밤) — 집, Smart Book 전체 완성 (Phase A-F) + 4 polish PR (6 PR 누적)
 
 > 🎯 **다음 즉시 액션**: Smart Book 5 source kind manual verify + buglist 수집 — 5 AutoSource 모두 활성됐으니 실제 사용자 워크플로우로 검증 + UX 구멍 발견 시 P0 follow-up.

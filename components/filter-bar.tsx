@@ -786,6 +786,7 @@ const FIELD_TO_GROUP: Record<FilterField, FilterGroupKey> = {
   relationType: "content",
   showWikilinks: "content",
   showTagNodes: "content",
+  hullEntity: "content",
   reviewAt: "dates",
   // Wiki-specific fields
   category: "tags",

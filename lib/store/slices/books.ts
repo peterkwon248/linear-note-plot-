@@ -101,6 +101,49 @@ export interface BooksSlice {
   addExcludeId: (bookId: string, entityId: string) => void
   /** Remove an entity id from excludeIds (idempotent). */
   removeExcludeId: (bookId: string, entityId: string) => void
+
+  /* ── Auto chapter ordering (v2 Phase G) ── */
+  /**
+   * Reorder a single auto item within its source group. Caller
+   * (drag-drop UI) inspects the resolved items list and supplies the
+   * neighbors' current sort keys (= `userOrder ?? order`). The store
+   * generates a fractional key between them and persists on
+   * `book.autoUserOrders[`${sourceRefId}::${entityId}`]`.
+   *
+   * `entityId` is the note/wiki id (NOT the auto book item id, since
+   * auto item ids change on re-resolve).
+   * `prevSortKey` / `nextSortKey` are the bordering items' effective
+   * orders (null = "before all" / "after all" within the resolved
+   * list). Caller is responsible for ensuring neighbors are in the
+   * same source — cross-source reorder is not supported (Q1 A).
+   *
+   * Resolver picks up the userOrder transparently — sort uses
+   * `(userOrder ?? order)` so unset items keep their natural updatedAt
+   * desc order.
+   */
+  reorderAutoItem: (
+    bookId: string,
+    sourceRefId: string,
+    entityId: string,
+    prevSortKey: string | null,
+    nextSortKey: string | null,
+  ) => void
+  /**
+   * Clear all per-source user reorder for a single source — used by
+   * the per-source "Auto-sort" toggle to revert back to `updatedAt desc`.
+   * Returns the number of keys removed (caller renders undo toast).
+   */
+  clearAutoUserOrder: (bookId: string, sourceRefId: string) => number
+
+  /* ── Reading position (v2 Phase H) ── */
+  /**
+   * Set the "last read" position for a book. Use the stable refId of
+   * the note/wiki entity (not the auto book item id, which changes on
+   * re-resolve). Caller is `NoteEditor` / `BookWikiReader` mount when
+   * a book-anchored page renders. Pass `null` to clear (rare —
+   * normally cleared by deleting the book or completing reading).
+   */
+  setLastRead: (bookId: string, refId: string | null) => void
 }
 
 export function createBooksSlice(set: Set, _get: Get): Omit<BooksSlice, "books"> {
@@ -340,6 +383,74 @@ export function createBooksSlice(set: Set, _get: Get): Omit<BooksSlice, "books">
           const next = existing.filter((id) => id !== entityId)
           if (next.length === existing.length) return book
           return { ...book, excludeIds: next }
+        }),
+      )
+    },
+
+    /* ── Auto chapter ordering (v2 Phase G) ── */
+
+    reorderAutoItem: (
+      bookId: string,
+      sourceRefId: string,
+      entityId: string,
+      prevSortKey: string | null,
+      nextSortKey: string | null,
+    ) => {
+      set((state: any) =>
+        touchBook(state, bookId, (book) => {
+          const map = book.autoUserOrders ?? {}
+          // Caller supplies the neighbors' effective sort keys
+          // (`userOrder ?? order`) — they own the resolved view and
+          // know exactly what bordering items look like. Store just
+          // generates a fractional key between them.
+          let newOrder: string
+          try {
+            newOrder = generateKeyBetween(prevSortKey, nextSortKey)
+          } catch {
+            // Neighbors out of order (rare race) — append at end of source.
+            newOrder = generateKeyBetween(prevSortKey, null)
+          }
+          const key = `${sourceRefId}::${entityId}`
+          if (map[key] === newOrder) return book
+          return {
+            ...book,
+            autoUserOrders: { ...map, [key]: newOrder },
+          }
+        }),
+      )
+    },
+
+    clearAutoUserOrder: (bookId: string, sourceRefId: string): number => {
+      let removed = 0
+      set((state: any) =>
+        touchBook(state, bookId, (book) => {
+          const map = book.autoUserOrders ?? {}
+          const prefix = `${sourceRefId}::`
+          const next: Record<string, string> = {}
+          for (const [k, v] of Object.entries(map)) {
+            if (k.startsWith(prefix)) {
+              removed++
+              continue
+            }
+            next[k] = v
+          }
+          if (removed === 0) return book
+          return { ...book, autoUserOrders: next }
+        }),
+      )
+      return removed
+    },
+
+    /* ── Reading position (v2 Phase H) ── */
+    setLastRead: (bookId: string, refId: string | null) => {
+      set((state: any) =>
+        touchBook(state, bookId, (book) => {
+          if (book.lastReadItemId === refId) return book
+          return {
+            ...book,
+            lastReadItemId: refId,
+            lastReadAt: refId ? now() : null,
+          }
         }),
       )
     },

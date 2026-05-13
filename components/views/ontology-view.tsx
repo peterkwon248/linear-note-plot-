@@ -15,6 +15,7 @@ import { FilterPanel } from "@/components/filter-panel"
 import type { FilterCategory } from "@/components/filter-panel"
 import { DisplayPanel } from "@/components/display-panel"
 import { GRAPH_VIEW_CONFIG } from "@/lib/view-engine/view-configs"
+import { resolveBookItems } from "@/lib/books/resolver"
 import type { FilterRule, ViewContextKey, ViewState } from "@/lib/view-engine/types"
 import { buildViewStateForContext } from "@/lib/view-engine/defaults"
 import { rulesToOntologyFilters } from "@/lib/view-engine/graph-filter-adapter"
@@ -99,6 +100,30 @@ export function OntologyView() {
   const wikiCategories = usePlotStore((s) => s.wikiCategories)
   const folders = usePlotStore((s) => s.folders)
   const stickers = usePlotStore((s) => s.stickers)
+  const books = usePlotStore((s) => s.books)
+
+  // v2 Ontology Hull Phase 2 follow-up — node → bookIds mapping that
+  // includes Smart Book auto items. Manual book.items[] + smartSources
+  // 둘 다 resolveBookItems로 한 번에 처리 (auto re-resolve safe).
+  // O(B × resolver-cost) per books/store change — books 보통 ≤20.
+  const bookMembership = useMemo(() => {
+    const map = new Map<string, string[]>()
+    for (const book of books) {
+      if (book.trashed) continue
+      const resolved = resolveBookItems(book, {
+        notes, folders, wikiArticles, wikiCategories, tags, labels, stickers,
+      })
+      for (const item of resolved) {
+        if (item.kind === "chapter-heading") continue
+        const refId = (item as { refId?: string }).refId
+        if (!refId) continue
+        const existing = map.get(refId)
+        if (existing) existing.push(book.id)
+        else map.set(refId, [book.id])
+      }
+    }
+    return map
+  }, [books, notes, folders, wikiArticles, wikiCategories, tags, labels, stickers])
   const openNote = usePlotStore((s) => s.openNote)
   const ontologyPositions = usePlotStore((s) => s.ontologyPositions)
   const updateOntologyPositions = usePlotStore((s) => s.updateOntologyPositions)
@@ -118,6 +143,17 @@ export function OntologyView() {
   }, [graphFilters, graphToggles])
 
   const filteredNotes = useMemo(() => applyFilters(notes, ontologyFilters), [notes, ontologyFilters])
+
+  // v2 Ontology Hull Phase 4 — picker filter. graphFilters에서
+  // "hullEntity" field 값들을 Set으로 추출. 빈 set = 모든 hull 표시
+  // (default). 있는 set = 그 entity ids만 hull 표시.
+  const visibleHullKeys = useMemo(() => {
+    const set = new Set<string>()
+    for (const rule of graphFilters) {
+      if (rule.field === "hullEntity") set.add(String(rule.value))
+    }
+    return set
+  }, [graphFilters])
 
   // Build dynamic filter categories (inject tags/labels from store)
   const dynamicCategories = useMemo<FilterCategory[]>(() => {
@@ -160,9 +196,32 @@ export function OntologyView() {
           })),
         }
       }
+      // v2 Ontology Hull Phase 4 — hullEntity values는 현재 groupBy에
+      // 따라 동적 hydration. groupBy가 "none"/"connections"이면 빈
+      // values (사용자가 hull source 선택해야 visible).
+      if (cat.key === "hullEntity") {
+        const groupBy = graphViewState.groupBy
+        let values: typeof cat.values = []
+        if (groupBy === "sticker") {
+          values = (stickers ?? []).map((s) => ({ key: s.id, label: s.name, color: s.color }))
+        } else if (groupBy === "book") {
+          values = books.filter((b) => !b.trashed).map((b) => ({
+            key: b.id, label: b.title || "Untitled", color: b.color ?? undefined,
+          }))
+        } else if (groupBy === "folder") {
+          values = folders.map((f) => ({ key: f.id, label: f.name, color: (f as { color?: string }).color }))
+        } else if (groupBy === "category") {
+          values = wikiCategories.map((c) => ({ key: c.id, label: c.name, color: c.color }))
+        } else if (groupBy === "tag") {
+          values = tags.map((t) => ({ key: t.id, label: t.name, color: t.color ?? undefined }))
+        } else if (groupBy === "label") {
+          values = labels.map((l) => ({ key: l.id, label: l.name, color: l.color }))
+        }
+        return { ...cat, values }
+      }
       return cat
     })
-  }, [tags, labels, graph])
+  }, [tags, labels, graph, graphViewState.groupBy, stickers, books, folders, wikiCategories])
 
   // Build graph data (no positions — fast, synchronous)
   const tagsMapped = useMemo(
@@ -341,6 +400,10 @@ export function OntologyView() {
             wikiCategories={wikiCategories}
             folders={folders}
             stickers={stickers}
+            books={books}
+            bookMembership={bookMembership}
+            visibleHullKeys={visibleHullKeys}
+            showBookSequence={Boolean(graphToggles.showBookSequence)}
             groupBy={graphViewState.groupBy}
             onRequestGroupBy={(g) => updateGraphViewState({ groupBy: g })}
             // Visual filters (declutter the canvas, no data mutation)

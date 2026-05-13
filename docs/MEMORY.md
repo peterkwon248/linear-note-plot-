@@ -6,6 +6,65 @@
 > 기본만으로 충분, 원할 때 강력. 소란스럽지 않게.
 > 모든 디자인 결정의 척도.
 
+---
+
+## 🚀 2026-05-13 — Smart Book v2 풀 완성 + Ontology Hull P1-4 + 11 follow-up (PR #319, 17 commits mega-PR)
+
+**범위**: 1 worktree (`brave-ardinghelli-209f9b`). 단일 세션, 17 commits 단일 PR. Smart Book v2 (Phase G/H/K 전체) + Ontology Hull (Phase 1/2/3/4 전체) + Linear refs 137 + 다수 bug fix.
+
+### 핵심 결정 (영구 LOCKED)
+
+**1. Smart Book v2 PRD v1.0 LOCKED 13 결정** — 모두 추천값 (same-source reorder / silent undo / outline / Book.color 우선 / overlap 허용 / dashed thin sequence / opt-in / picker 너비 + cross-tab / userOrder + autoUserOrders map / G+H+K MVP / Hull/Sequence 별도 PRD 분리).
+
+**2. Ontology Hull PRD v0.1 LOCKED**: Hull = display rendering (filter X) / Sticker+Folder+Book 3-source / Status nested (Note/Wiki/Book sub-section) / Smart Book auto items 포함 (resolveBookItems via prop) / picker filter "Visible hulls" / Sequence edge opt-in dashed.
+
+**3. status 색 영구 룰**: `var(--status-{stone|brick|keystone})`만. `var(--chart-N)`는 chart 시각화 전용 (LOCKED 색 변경 따라가지 않음 — 이번 teal→slate 사례). status에 chart-N mapping 금지.
+
+**4. dnd-kit collision normalize 모든 board 영구 룰**: `useSortable("col-${key}")` + `useDroppable(key)` 이중 binding 시 over.id 비결정 → handler에서 `overId.startsWith("col-") ? overId.slice(4) : overId` 의무. notes/books/wiki 3 board 적용 완료. 새 board 도입 시 동일.
+
+**5. Filter values icon 일관성 영구 룰** — 같은 카테고리 안 cross-entity values는 각 entity chip/badge icon 그대로 재사용 (color dot 단독 X). Status Note(Hexagon/Cube/Cuboid2x2) + Wiki(IconWikiStub/IconWikiArticle) + Book(Lightning/PencilSimple/Sparkle).
+
+**6. Chapter context derive 패턴**: useBookContextNav 안에서 sourceRefId clustering. auto items + manual items with Tweak B tag. UI caller가 5 store lookup으로 source name + glyph 표시. manual no-source items는 badge hide.
+
+**7. Resolver 외부 view 재사용 패턴**: ontology-view 등에서 useMemo로 resolveBookItems 호출 → child 컴포넌트에 prop으로 전달. canvas store coupling 회피, props-driven 유지.
+
+**8. `npm install` 새 worktree 첫 setup 룰**: node_modules 없는 상태에서 dev server 시작 시 module not found. before-work 단계 자동 체크 + install 후보.
+
+**9. PRD 분리 trigger**: 한 PRD scope 다른 도메인 침범 시 사용자 한마디로 분리 (이번 Smart Book v2 안 Ontology Hull I/J → 별도 PRD). draft 단계에 분리 가능성 미리 명시.
+
+**10. cmdk multi-select 패턴**: onSelect는 mouse event detail 없음 → modifier key 직접 처리 어려움 → explicit bulk mode 토글 우회 (cmdk와 호환).
+
+### 기술 학습 (영구)
+
+- **FilterValue group field 패턴**: `group?: string` optional + FilterPanel이 group 변경 시점 detect → uppercase tracking sub-header. nested UI 효과를 flat data shape로.
+- **Hull picker filter 패턴**: filterCategories.values runtime hydration (groupBy 따라 다른 entity list 동적). FilterRule "hullEntity" field → visibleHullKeys Set → canvas filter.
+- **Sequence edge SVG marker**: `<defs><marker>` 1번 정의 + `markerEnd="url(#book-seq-arrow)"` reuse. `currentColor` inherit으로 stroke 색 자동 매칭.
+- **var(--chart-N) vs var(--status-*) 분리**: chart는 시각화 (D3 등), status는 LOCKED 색. 잘못된 mapping이 LOCKED 색 변경 미반영 회귀 원인.
+
+### Phase 분해 시간
+
+| Phase | scope | 시간 |
+|---|---|---|
+| Smart Book v2 Phase G (chapter ordering) | G-1 core + G-2 UI + 1 follow-up (chapter context badge) | ~5h |
+| Smart Book v2 Phase H (reading view) | lastRead + Resume + progress bar | ~3h |
+| Smart Book v2 Phase K (picker UX) | dialog + cross-tab + 1 follow-up (bulk select) | ~3h |
+| Ontology Hull Phase 1 (Status nested) | flat + sub-section headers | ~2h |
+| Ontology Hull Phase 2 (Book hull) | groupBy + 1 follow-up (Smart auto items in hull) | ~3h |
+| Ontology Hull Phase 3 (Sequence edge) | dashed arrow + marker | ~2h |
+| Ontology Hull Phase 4 (Hull picker filter) | filter category dynamic | ~2h |
+| Linear refs + README | 137 captures 카테고리 인덱스 | ~30분 |
+| Bug fix (3 initial + 4 follow-up) | board normalize + select-all + icon mapping + Block 색 | ~3h |
+
+**합계**: ~23h 작업, 17 commits 단일 PR (squash merge 후보).
+
+### 환경
+- Branch: `claude/brave-ardinghelli-209f9b`
+- Store version: 변경 없음 (Phase G-1 데이터 모델 additive optional)
+- Tests: 39 → 43/43 pass (+4 userOrder priority/fallback/scoping/empty)
+- Build: ✅ / TSC: ✅ 0 errors (매 commit 검증)
+
+---
+
 ## ⭐ 작업 원칙 (영구, 모든 PR/작업에 적용)
 
 > **"정확도 + 버그 위험 최소화"**

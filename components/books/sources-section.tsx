@@ -35,7 +35,6 @@ import {
   Command,
   CommandEmpty,
   CommandGroup,
-  CommandInput,
   CommandItem,
   CommandList,
 } from "@/components/ui/command"
@@ -48,6 +47,9 @@ import { Sticker as PhSticker } from "@phosphor-icons/react/dist/ssr/Sticker"
 import { Plus as PhPlus } from "@phosphor-icons/react/dist/ssr/Plus"
 import { X as PhX } from "@phosphor-icons/react/dist/ssr/X"
 import { Sparkle } from "@phosphor-icons/react/dist/ssr/Sparkle"
+import { ArrowsClockwise } from "@phosphor-icons/react/dist/ssr/ArrowsClockwise"
+import { Check as PhCheck } from "@phosphor-icons/react/dist/ssr/Check"
+import { cn } from "@/lib/utils"
 import type { AutoSourceKind } from "@/lib/types"
 
 interface SourcesSectionProps {
@@ -68,6 +70,7 @@ export function SourcesSection({ bookId }: SourcesSectionProps) {
   const addSmartSource = usePlotStore((s) => s.addSmartSource)
   const removeSmartSource = usePlotStore((s) => s.removeSmartSource)
   const updateBook = usePlotStore((s) => s.updateBook)
+  const clearAutoUserOrder = usePlotStore((s) => s.clearAutoUserOrder)
 
   const book = books.find((b) => b.id === bookId)
   const sources = book?.smartSources ?? []
@@ -75,6 +78,24 @@ export function SourcesSection({ bookId }: SourcesSectionProps) {
   const [pickerOpen, setPickerOpen] = useState(false)
   const [activeTab, setActiveTab] = useState<TabKey>("folder")
   const [search, setSearch] = useState("")
+  // v2 Phase K follow-up — bulk select. Cmd/Ctrl+Click on a candidate
+  // toggles it in the selection set; the footer "Add N selected" button
+  // adds all at once. Single click without modifier is immediate add
+  // (preserves existing UX for one-off picks).
+  const [bulkSelected, setBulkSelected] = useState<Map<string, { kind: AutoSourceKind; refId: string; name: string }>>(new Map())
+  // bulkMode 활성 시 candidate click이 toggle 동작. 비활성 시 기존
+  // immediate add (single one-off pick). 사용자 explicit trigger.
+  const [bulkMode, setBulkMode] = useState(false)
+  const toggleBulk = (kind: AutoSourceKind, refId: string, name: string) => {
+    const key = `${kind}::${refId}`
+    setBulkSelected((prev) => {
+      const next = new Map(prev)
+      if (next.has(key)) next.delete(key)
+      else next.set(key, { kind, refId, name })
+      return next
+    })
+  }
+  const clearBulk = () => setBulkSelected(new Map())
 
   // Resolved source entries for display (skip stale refs).
   type ResolvedEntry =
@@ -246,9 +267,58 @@ export function SourcesSection({ bookId }: SourcesSectionProps) {
     // Keep dialog open for multi-add
   }
 
+  const handleBulkAdd = () => {
+    if (bulkSelected.size === 0) return
+    let added = 0
+    let dup = 0
+    for (const { kind, refId } of bulkSelected.values()) {
+      const ok = addSmartSource(bookId, { kind, refId })
+      if (ok) added++
+      else dup++
+    }
+    if (added > 0 && dup === 0) toast.success(`${added}개 소스 추가됨`)
+    else if (added > 0 && dup > 0) toast.success(`${added}개 추가, ${dup}개는 이미 있음`)
+    else toast(`이미 모두 추가된 소스 (${dup}개)`, { duration: 1500 })
+    clearBulk()
+    setSearch("")
+  }
+
   const handleRemove = (kind: AutoSourceKind, refId: string, name: string) => {
     removeSmartSource(bookId, kind, refId)
     toast(`Removed source: ${name}`)
+  }
+
+  // v2 Phase G: per-source "Auto-sort" button — clears all userOrder
+  // entries scoped to this sourceRefId, reverting items to the natural
+  // updatedAt desc order. Undo restores the snapshot via updateBook.
+  const sourcesWithUserOrder = useMemo(() => {
+    const map = book?.autoUserOrders ?? {}
+    const set = new Set<string>()
+    for (const k of Object.keys(map)) {
+      const [refId] = k.split("::")
+      if (refId) set.add(refId)
+    }
+    return set
+  }, [book?.autoUserOrders])
+
+  const handleAutoSort = (sourceRefId: string, sourceName: string) => {
+    if (!book) return
+    const snapshot = { ...(book.autoUserOrders ?? {}) }
+    const removed = clearAutoUserOrder(bookId, sourceRefId)
+    if (removed === 0) {
+      toast("이미 자동 정렬 상태입니다", { duration: 1500 })
+      return
+    }
+    toast.success(`${sourceName} 자동 정렬로 복원 (${removed}개)`, {
+      duration: 5000,
+      action: {
+        label: "되돌리기",
+        onClick: () => {
+          updateBook(bookId, { autoUserOrders: snapshot })
+          toast("순서 복원됨", { duration: 1500 })
+        },
+      },
+    })
   }
 
   // Phase F — "Convert to manual" pins every current auto item into
@@ -375,68 +445,142 @@ export function SourcesSection({ bookId }: SourcesSectionProps) {
         </div>
       ) : (
         <ul className="divide-y divide-border/30 border-t border-border/30">
-          {resolvedSources.map((entry) => (
-            <li
-              key={`${entry.kind}-${entry.refId}`}
-              className="group flex items-center gap-2 px-4 py-1.5 text-note transition-colors hover:bg-hover-bg/40"
-            >
-              {renderEntryIcon(entry)}
-              <span className="flex-1 truncate text-foreground">{entry.name}</span>
-              <span className="text-2xs uppercase tracking-wide text-muted-foreground/50">
-                {entry.kind}
-              </span>
-              <button
-                type="button"
-                onClick={() => handleRemove(entry.kind, entry.refId, entry.name)}
-                className="flex h-5 w-5 items-center justify-center rounded text-muted-foreground/50 opacity-0 transition-all group-hover:opacity-100 hover:bg-destructive/10 hover:text-destructive"
-                title={`Remove source: ${entry.name}`}
-                aria-label={`Remove source: ${entry.name}`}
+          {resolvedSources.map((entry) => {
+            const hasUserOrder = sourcesWithUserOrder.has(entry.refId)
+            return (
+              <li
+                key={`${entry.kind}-${entry.refId}`}
+                className="group flex items-center gap-2 px-4 py-1.5 text-note transition-colors hover:bg-hover-bg/40"
               >
-                <PhX size={12} weight="regular" />
-              </button>
-            </li>
-          ))}
+                {renderEntryIcon(entry)}
+                <span className="flex-1 truncate text-foreground">{entry.name}</span>
+                <span className="text-2xs uppercase tracking-wide text-muted-foreground/50">
+                  {entry.kind}
+                </span>
+                {hasUserOrder && (
+                  <button
+                    type="button"
+                    onClick={() => handleAutoSort(entry.refId, entry.name)}
+                    className="flex items-center gap-1 rounded-md px-1.5 py-0.5 text-2xs text-muted-foreground transition-colors hover:bg-hover-bg hover:text-foreground"
+                    title="이 소스의 사용자 정렬 해제 → updatedAt desc로 복원"
+                  >
+                    <ArrowsClockwise size={11} weight="regular" />
+                    Auto-sort
+                  </button>
+                )}
+                <button
+                  type="button"
+                  onClick={() => handleRemove(entry.kind, entry.refId, entry.name)}
+                  className="flex h-5 w-5 items-center justify-center rounded text-muted-foreground/50 opacity-0 transition-all group-hover:opacity-100 hover:bg-destructive/10 hover:text-destructive"
+                  title={`Remove source: ${entry.name}`}
+                  aria-label={`Remove source: ${entry.name}`}
+                >
+                  <PhX size={12} weight="regular" />
+                </button>
+              </li>
+            )
+          })}
         </ul>
       )}
 
-      {/* Source picker dialog — 5 tabs (Phase A-E). */}
+      {/* Source picker dialog — 5 tabs (Phase A-E) + v2 Phase K: wider
+          dialog + unified search input (one query filters all 5 tabs
+          simultaneously, each tab shows its count badge for cross-tab
+          discoverability). */}
       <Dialog open={pickerOpen} onOpenChange={setPickerOpen}>
-        <DialogContent className="sm:max-w-md gap-0 p-0">
-          <DialogHeader className="px-4 pb-2 pt-4">
-            <DialogTitle className="text-sm">Add smart source</DialogTitle>
-            <DialogDescription className="text-2xs">
-              Auto-fill this book from any of 5 source kinds. Notes / wikis only — source entities themselves are never added as pages.
-            </DialogDescription>
+        <DialogContent className="sm:max-w-lg gap-0 p-0">
+          <DialogHeader className="flex flex-row items-start justify-between gap-2 px-4 pb-2 pt-4">
+            <div className="min-w-0">
+              <DialogTitle className="text-sm">Add smart source</DialogTitle>
+              <DialogDescription className="text-2xs">
+                Auto-fill this book from any of 5 source kinds. Notes / wikis only — source entities themselves are never added as pages.
+              </DialogDescription>
+            </div>
+            {/* v2 Phase K follow-up — Multi-select 토글. 활성 시
+                candidate click이 toggle, 비활성 시 immediate add. */}
+            <button
+              type="button"
+              onClick={() => {
+                setBulkMode((m) => {
+                  if (m) clearBulk()
+                  return !m
+                })
+              }}
+              className={cn(
+                "shrink-0 rounded-md px-2 py-1 text-2xs font-medium transition-colors",
+                bulkMode
+                  ? "bg-accent/15 text-accent hover:bg-accent/25"
+                  : "text-muted-foreground hover:bg-hover-bg hover:text-foreground",
+              )}
+              title={bulkMode ? "다중 선택 모드 끄기" : "다중 선택 모드 켜기 — 여러 소스 한 번에 추가"}
+            >
+              {bulkMode ? "다중 선택 ✓" : "다중 선택"}
+            </button>
           </DialogHeader>
+          {/* Unified search input — shared across all 5 tabs (Q11 LOCKED:
+              cross-tab search). Each tab's candidates list is already
+              filtered by the same `q` state; this input is the single
+              entry point so users don't have to retype when switching. */}
+          <div className="border-b border-border/40 px-4 py-2">
+            <input
+              type="text"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search across all source kinds…"
+              className="w-full bg-transparent text-note text-foreground placeholder:text-muted-foreground/60 focus:outline-none"
+              autoFocus
+            />
+          </div>
           <Tabs
             value={activeTab}
-            onValueChange={(v) => {
-              setActiveTab(v as TabKey)
-              setSearch("")
-            }}
+            onValueChange={(v) => setActiveTab(v as TabKey)}
             className="gap-0"
           >
             <TabsList className="mx-4 mt-1 grid grid-cols-5 gap-0.5">
-              <TabsTrigger value="folder" title="Folder source (notes)">
+              <TabsTrigger value="folder" title={`Folder source — ${folderCandidates.length} matches`}>
                 <PhFolder size={12} weight="regular" />
+                {folderCandidates.length > 0 && (
+                  <span className="ml-1 text-2xs tabular-nums text-muted-foreground/70">
+                    {folderCandidates.length}
+                  </span>
+                )}
               </TabsTrigger>
-              <TabsTrigger value="category" title="Wiki category source">
+              <TabsTrigger value="category" title={`Wiki category source — ${categoryCandidates.length} matches`}>
                 <PhBookOpen size={12} weight="regular" />
+                {categoryCandidates.length > 0 && (
+                  <span className="ml-1 text-2xs tabular-nums text-muted-foreground/70">
+                    {categoryCandidates.length}
+                  </span>
+                )}
               </TabsTrigger>
-              <TabsTrigger value="tag" title="Tag source (notes + wikis)">
+              <TabsTrigger value="tag" title={`Tag source — ${tagCandidates.length} matches`}>
                 <PhHash size={12} weight="regular" />
+                {tagCandidates.length > 0 && (
+                  <span className="ml-1 text-2xs tabular-nums text-muted-foreground/70">
+                    {tagCandidates.length}
+                  </span>
+                )}
               </TabsTrigger>
-              <TabsTrigger value="label" title="Label source (notes)">
+              <TabsTrigger value="label" title={`Label source — ${labelCandidates.length} matches`}>
                 <PhTag size={12} weight="regular" />
+                {labelCandidates.length > 0 && (
+                  <span className="ml-1 text-2xs tabular-nums text-muted-foreground/70">
+                    {labelCandidates.length}
+                  </span>
+                )}
               </TabsTrigger>
-              <TabsTrigger value="sticker" title="Sticker source (note/wiki members)">
+              <TabsTrigger value="sticker" title={`Sticker source — ${stickerCandidates.length} matches`}>
                 <PhSticker size={12} weight="regular" />
+                {stickerCandidates.length > 0 && (
+                  <span className="ml-1 text-2xs tabular-nums text-muted-foreground/70">
+                    {stickerCandidates.length}
+                  </span>
+                )}
               </TabsTrigger>
             </TabsList>
 
             <TabsContent value="folder" className="mt-0">
               <Command shouldFilter={false}>
-                <CommandInput placeholder="Search folders..." value={search} onValueChange={setSearch} />
                 <CommandList className="max-h-72">
                   <CommandEmpty>No matching folders</CommandEmpty>
                   <CommandGroup>
@@ -444,7 +588,7 @@ export function SourcesSection({ bookId }: SourcesSectionProps) {
                       <CommandItem
                         key={folder.id}
                         value={folder.id}
-                        onSelect={() => handleAdd("folder", folder.id, folder.name)}
+                        onSelect={() => bulkMode ? toggleBulk("folder", folder.id, folder.name) : handleAdd("folder", folder.id, folder.name)}
                         className="flex cursor-pointer items-center gap-2"
                       >
                         <PhFolder size={14} weight="regular" className="text-muted-foreground" />
@@ -461,7 +605,6 @@ export function SourcesSection({ bookId }: SourcesSectionProps) {
 
             <TabsContent value="category" className="mt-0">
               <Command shouldFilter={false}>
-                <CommandInput placeholder="Search wiki categories..." value={search} onValueChange={setSearch} />
                 <CommandList className="max-h-72">
                   <CommandEmpty>No matching categories</CommandEmpty>
                   <CommandGroup>
@@ -469,7 +612,7 @@ export function SourcesSection({ bookId }: SourcesSectionProps) {
                       <CommandItem
                         key={category.id}
                         value={category.id}
-                        onSelect={() => handleAdd("category", category.id, category.name)}
+                        onSelect={() => bulkMode ? toggleBulk("category", category.id, category.name) : handleAdd("category", category.id, category.name)}
                         className="flex cursor-pointer items-center gap-2"
                       >
                         <span
@@ -489,7 +632,6 @@ export function SourcesSection({ bookId }: SourcesSectionProps) {
 
             <TabsContent value="tag" className="mt-0">
               <Command shouldFilter={false}>
-                <CommandInput placeholder="Search tags..." value={search} onValueChange={setSearch} />
                 <CommandList className="max-h-72">
                   <CommandEmpty>No matching tags</CommandEmpty>
                   <CommandGroup>
@@ -497,7 +639,7 @@ export function SourcesSection({ bookId }: SourcesSectionProps) {
                       <CommandItem
                         key={tag.id}
                         value={tag.id}
-                        onSelect={() => handleAdd("tag", tag.id, tag.name)}
+                        onSelect={() => bulkMode ? toggleBulk("tag", tag.id, tag.name) : handleAdd("tag", tag.id, tag.name)}
                         className="flex cursor-pointer items-center gap-2"
                       >
                         <PhHash
@@ -519,7 +661,6 @@ export function SourcesSection({ bookId }: SourcesSectionProps) {
 
             <TabsContent value="label" className="mt-0">
               <Command shouldFilter={false}>
-                <CommandInput placeholder="Search labels..." value={search} onValueChange={setSearch} />
                 <CommandList className="max-h-72">
                   <CommandEmpty>No matching labels</CommandEmpty>
                   <CommandGroup>
@@ -527,7 +668,7 @@ export function SourcesSection({ bookId }: SourcesSectionProps) {
                       <CommandItem
                         key={label.id}
                         value={label.id}
-                        onSelect={() => handleAdd("label", label.id, label.name)}
+                        onSelect={() => bulkMode ? toggleBulk("label", label.id, label.name) : handleAdd("label", label.id, label.name)}
                         className="flex cursor-pointer items-center gap-2"
                       >
                         <span
@@ -547,7 +688,6 @@ export function SourcesSection({ bookId }: SourcesSectionProps) {
 
             <TabsContent value="sticker" className="mt-0">
               <Command shouldFilter={false}>
-                <CommandInput placeholder="Search stickers..." value={search} onValueChange={setSearch} />
                 <CommandList className="max-h-72">
                   <CommandEmpty>No matching stickers</CommandEmpty>
                   <CommandGroup>
@@ -555,7 +695,7 @@ export function SourcesSection({ bookId }: SourcesSectionProps) {
                       <CommandItem
                         key={sticker.id}
                         value={sticker.id}
-                        onSelect={() => handleAdd("sticker", sticker.id, sticker.name)}
+                        onSelect={() => bulkMode ? toggleBulk("sticker", sticker.id, sticker.name) : handleAdd("sticker", sticker.id, sticker.name)}
                         className="flex cursor-pointer items-center gap-2"
                       >
                         <PhSticker size={14} weight="regular" style={{ color: sticker.color }} />
@@ -570,6 +710,37 @@ export function SourcesSection({ bookId }: SourcesSectionProps) {
               </Command>
             </TabsContent>
           </Tabs>
+          {/* v2 Phase K follow-up — Bulk select footer. bulkMode 활성
+              + selected > 0 시 표시. "Add N selected" 누르면 batch add. */}
+          {bulkMode && (
+            <div className="flex items-center justify-between border-t border-border/40 px-4 py-2.5">
+              <span className="text-2xs text-muted-foreground">
+                {bulkSelected.size > 0
+                  ? `${bulkSelected.size}개 선택됨`
+                  : "항목을 클릭해서 선택하세요"}
+              </span>
+              <div className="flex items-center gap-1.5">
+                {bulkSelected.size > 0 && (
+                  <button
+                    type="button"
+                    onClick={clearBulk}
+                    className="rounded-md px-2 py-1 text-2xs text-muted-foreground hover:bg-hover-bg hover:text-foreground transition-colors"
+                  >
+                    Clear
+                  </button>
+                )}
+                <button
+                  type="button"
+                  onClick={handleBulkAdd}
+                  disabled={bulkSelected.size === 0}
+                  className="flex items-center gap-1 rounded-md bg-accent px-2.5 py-1 text-2xs font-medium text-accent-foreground transition-opacity hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed"
+                >
+                  <PhCheck size={11} weight="bold" />
+                  Add {bulkSelected.size > 0 ? bulkSelected.size : ""} selected
+                </button>
+              </div>
+            </div>
+          )}
         </DialogContent>
       </Dialog>
     </div>

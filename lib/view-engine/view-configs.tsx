@@ -2,6 +2,8 @@ import type { ReactNode } from "react"
 import type { SortField, ViewMode, GroupBy } from "./types"
 import { Hexagon, Cube, BookOpen, CircleHalf, Sticker as StickerIcon, Lightning, PencilSimple, Sparkle, Globe, DownloadSimple } from "@phosphor-icons/react"
 import { Cuboid2x2 } from "@/components/icons/Cuboid2x2"
+import { IconWikiStub, IconWikiArticle } from "@/components/plot-icons"
+import { WIKI_STATUS_HEX } from "@/lib/colors"
 
 export interface FilterCategory {
   key: string
@@ -16,6 +18,14 @@ export interface FilterValue {
   color?: string
   count?: number
   icon?: ReactNode
+  /**
+   * Optional sub-section header. When set, FilterPanel renders a small
+   * group label above the first value of each group. Values must be
+   * pre-sorted by group in the source array. Used by Ontology Hull
+   * Phase 1 to organize cross-entity Status values
+   * (Note / Wiki / Book).
+   */
+  group?: string
 }
 
 export interface QuickFilter {
@@ -103,7 +113,7 @@ export const NOTES_VIEW_CONFIG: ViewConfig = {
     { key: "status", label: "Status", icon: StatusIcon, values: [
       { key: "stone", label: "Stone", color: "rgba(255,255,255,0.32)", icon: <Hexagon size={14} weight="regular" style={{ color: "var(--chart-2)" }} /> },
       { key: "brick", label: "Brick", color: "#f5a623", icon: <Cube size={14} weight="regular" style={{ color: "var(--chart-3)" }} /> },
-      { key: "keystone", label: "Block", color: "#45d483", icon: <Cuboid2x2 size={14} weight="regular" style={{ color: "var(--chart-5)" }} /> },
+      { key: "keystone", label: "Block", icon: <Cuboid2x2 size={14} weight="regular" style={{ color: "var(--status-keystone)" }} /> },
     ]},
     { key: "folder", label: "Folder", icon: FolderIcon, values: [] },
     { key: "label", label: "Label", icon: LabelIcon, values: [] },
@@ -361,10 +371,24 @@ export const GRAPH_VIEW_CONFIG: ViewConfig = {
   showDisplay: true,
   showDetailPanel: true,
   filterCategories: [
+    // v2 Ontology Hull Phase 1 — Status filter entity별 분리.
+    // Note status (stone/brick/block) + Wiki status (stub/article) +
+    // Book kind (smart/manual/hybrid)를 flat values로 한 카테고리에
+    // 묶음 (LOCKED #7 Option B nested의 일차 구현 — UI nested
+    // sub-section은 follow-up, 우선은 flat list로 cross-entity
+    // 필터링 활성).
     { key: "status", label: "Status", icon: StatusIcon, values: [
-      { key: "stone", label: "Stone", color: "rgba(255,255,255,0.32)", icon: <Hexagon size={14} weight="regular" style={{ color: "var(--chart-2)" }} /> },
-      { key: "brick", label: "Brick", color: "#f5a623", icon: <Cube size={14} weight="regular" style={{ color: "var(--chart-3)" }} /> },
-      { key: "keystone", label: "Block", color: "#45d483", icon: <Cuboid2x2 size={14} weight="regular" style={{ color: "var(--chart-5)" }} /> },
+      // Status는 entity별로 의미 다름 → sub-section header(group)로 묶음.
+      // FilterPanel이 group 변경 시점에 small label 렌더링 (LOCKED
+      // Ontology Hull #7 Option B nested의 본 구현).
+      { key: "stone",       label: "Stone",   icon: <Hexagon size={14} weight="regular" style={{ color: "var(--chart-2)" }} />, group: "Note" },
+      { key: "brick",       label: "Brick",   icon: <Cube size={14} weight="regular" style={{ color: "var(--chart-3)" }} />, group: "Note" },
+      { key: "keystone",    label: "Block",   icon: <Cuboid2x2 size={14} weight="regular" style={{ color: "var(--status-keystone)" }} />, group: "Note" },
+      { key: "wiki-stub",   label: "Stub",    icon: <IconWikiStub size={14} style={{ color: WIKI_STATUS_HEX.stub }} />, group: "Wiki" },
+      { key: "wiki-article", label: "Article", icon: <IconWikiArticle size={14} style={{ color: WIKI_STATUS_HEX.article }} />, group: "Wiki" },
+      { key: "book-smart",  label: "Smart",   icon: <Lightning size={14} weight="regular" style={{ color: "#5E6AD2" }} />, group: "Book" },
+      { key: "book-manual", label: "Manual",  icon: <PencilSimple size={14} weight="regular" style={{ color: "#6b7280" }} />, group: "Book" },
+      { key: "book-hybrid", label: "Hybrid",  icon: <Sparkle size={14} weight="regular" style={{ color: "#D97706" }} />, group: "Book" },
     ]},
     { key: "tags", label: "Tags", icon: TagIcon, values: [] },
     { key: "label", label: "Label", icon: LabelIcon, values: [] },
@@ -375,6 +399,10 @@ export const GRAPH_VIEW_CONFIG: ViewConfig = {
       { key: "extends", label: "Extends", color: "#3b82f6" },
       { key: "depends-on", label: "Depends on", color: "#f59e0b" },
     ]},
+    // v2 Ontology Hull Phase 4 — 특정 hull entity 만 표시. groupBy
+    // value에 따라 values 동적 hydration (ontology-view). 빈
+    // selection = 모두 표시 (default). selection 있으면 그 entity만.
+    { key: "hullEntity", label: "Visible hulls", icon: <Sparkle size={14} weight="regular" />, values: [] },
   ],
   quickFilters: [],
   displayConfig: {
@@ -392,6 +420,11 @@ export const GRAPH_VIEW_CONFIG: ViewConfig = {
       // notes + wikis. Listed first so users discover it as the default
       // explicit-grouping mechanism.
       { value: "sticker",     label: "Sticker" },
+      // v2 Ontology Hull Phase 2 — Book hull. Book.items의 refIds로
+      // 멤버 결정 (note + wiki). Sticker/Folder/Category 패턴 정합.
+      // (Multi-source 동시 toggle은 follow-up — 현재는 single hull
+      // source select 시스템 그대로 활용.)
+      { value: "book",        label: "Book" },
       { value: "tag",         label: "Tag" },
       { value: "label",       label: "Label" },
       { value: "category",    label: "Wiki Category" },
@@ -407,6 +440,10 @@ export const GRAPH_VIEW_CONFIG: ViewConfig = {
       // Edge / label visibility
       { key: "showWikilinks", label: "Show wikilinks", icon: LinkIcon },
       { key: "showLabels",    label: "Show labels",    icon: EyeIcon },
+      // v2 Ontology Hull Phase 3 — Book sequence edge (opt-in, default
+      // off). groupBy="book" + 활성 시 hull 안의 노드들 사이를 책 순서
+      // (book.items order)대로 dashed thin arrow로 연결.
+      { key: "showBookSequence", label: "Show book sequence", icon: <Sparkle size={14} weight="regular" /> },
     ],
     properties: [],
   },
@@ -480,7 +517,7 @@ export const CALENDAR_VIEW_CONFIG: ViewConfig = {
     { key: "status", label: "Status", icon: StatusIcon, values: [
       { key: "stone", label: "Stone", color: "rgba(255,255,255,0.32)", icon: <Hexagon size={14} weight="regular" style={{ color: "var(--chart-2)" }} /> },
       { key: "brick", label: "Brick", color: "#f5a623", icon: <Cube size={14} weight="regular" style={{ color: "var(--chart-3)" }} /> },
-      { key: "keystone", label: "Block", color: "#45d483", icon: <Cuboid2x2 size={14} weight="regular" style={{ color: "var(--chart-5)" }} /> },
+      { key: "keystone", label: "Block", icon: <Cuboid2x2 size={14} weight="regular" style={{ color: "var(--status-keystone)" }} /> },
     ]},
     { key: "folder", label: "Folder", icon: FolderIcon, values: [] },
     { key: "label", label: "Label", icon: LabelIcon, values: [] },
@@ -514,7 +551,7 @@ export const TEMPLATES_VIEW_CONFIG: ViewConfig = {
     { key: "status", label: "Status", icon: StatusIcon, values: [
       { key: "stone", label: "Stone", color: "rgba(255,255,255,0.32)", icon: <Hexagon size={14} weight="regular" style={{ color: "var(--chart-2)" }} /> },
       { key: "brick", label: "Brick", color: "#f5a623", icon: <Cube size={14} weight="regular" style={{ color: "var(--chart-3)" }} /> },
-      { key: "keystone", label: "Block", color: "#45d483", icon: <Cuboid2x2 size={14} weight="regular" style={{ color: "var(--chart-5)" }} /> },
+      { key: "keystone", label: "Block", icon: <Cuboid2x2 size={14} weight="regular" style={{ color: "var(--status-keystone)" }} /> },
     ]},
     { key: "priority", label: "Priority", icon: PriorityIcon, values: [
       { key: "urgent", label: "Urgent" },
