@@ -26,6 +26,7 @@ import { FileText } from "@phosphor-icons/react/dist/ssr/FileText"
 import { BookmarkSimple } from "@phosphor-icons/react/dist/ssr/BookmarkSimple"
 import { Paperclip } from "@phosphor-icons/react/dist/ssr/Paperclip"
 import { Check as PhCheck } from "@phosphor-icons/react/dist/ssr/Check"
+import { Minus as PhMinus } from "@phosphor-icons/react/dist/ssr/Minus"
 import { X as PhX } from "@phosphor-icons/react/dist/ssr/X"
 
 type EntityKind = "note" | "wiki" | "book" | "tag" | "label" | "template" | "reference" | "attachment"
@@ -356,6 +357,14 @@ export function TrashAllView() {
     return map
   }, [sections])
 
+  // Select-all state — drives header checkbox tri-state (none/some/all).
+  const allKeys = useMemo(() => Array.from(keyLookup.keys()), [keyLookup])
+  const isAllSelected = allKeys.length > 0 && selectedKeys.size === allKeys.length
+  const isSomeSelected = selectedKeys.size > 0 && !isAllSelected
+  const toggleAll = useCallback(() => {
+    setSelectedKeys((prev) => (prev.size === allKeys.length ? new Set() : new Set(allKeys)))
+  }, [allKeys])
+
   const handleBulkRestore = () => {
     const targets = Array.from(selectedKeys)
       .map((k) => keyLookup.get(k))
@@ -380,7 +389,34 @@ export function TrashAllView() {
     <div className="flex-1 overflow-y-auto relative">
       {/* Column header */}
       <div className="sticky top-0 z-10 flex items-center border-b border-border bg-background px-5 py-2">
-        <div className="w-8 shrink-0" />
+        {/* Select-all checkbox — tri-state (none / some / all). Lets the
+            user pick everything in trash for bulk Restore / Delete forever. */}
+        <div
+          className="w-8 shrink-0 flex items-center justify-center cursor-pointer"
+          onClick={(e) => {
+            e.stopPropagation()
+            toggleAll()
+          }}
+          title={isAllSelected ? "Deselect all" : "Select all"}
+        >
+          <div
+            className={cn(
+              "h-4 w-4 rounded-[4px] border flex items-center justify-center transition-colors shadow-sm",
+              isAllSelected || isSomeSelected
+                ? "bg-accent border-accent"
+                : "bg-card border-zinc-400 dark:border-zinc-600 hover:border-zinc-500",
+            )}
+            role="checkbox"
+            aria-checked={isAllSelected ? true : isSomeSelected ? "mixed" : false}
+            aria-label={isAllSelected ? "Deselect all trashed items" : "Select all trashed items"}
+          >
+            {isAllSelected ? (
+              <PhCheck size={10} weight="bold" className="text-accent-foreground" />
+            ) : isSomeSelected ? (
+              <PhMinus size={10} weight="bold" className="text-accent-foreground" />
+            ) : null}
+          </div>
+        </div>
         <div className="w-6 shrink-0" />
         <div className="w-24 shrink-0 text-2xs uppercase tracking-wide font-medium text-foreground/80">
           Kind
