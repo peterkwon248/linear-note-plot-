@@ -3,36 +3,26 @@
 > 우선순위 기반 작업 목록. **P0 = 다음 세션 즉시 시작점** (NEXT-ACTION.md 폐지, 2026-05-12).
 > 완료 항목은 즉시 삭제 또는 "완료" 섹션으로 이동.
 
-**마지막 갱신**: 2026-05-13 (Smart Book v2 풀 + Ontology Hull P1-4 + 11 follow-up, PR #319 17 commits mega-PR)
+**마지막 갱신**: 2026-05-13 밤 (PR #321 11 commits — Status 색 재정렬 + Templates UpNote 패턴 + 9 follow-up)
 
 ---
 
-## 🔴 P0 — 즉시 (다음 세션)
+## 🔴 P0 — 즉시 (다음 세션, cross-machine)
 
-### PR #319 머지 + manual verify ⭐⭐⭐ — 사용자 책임
-PR #319 (17 commits, scope 매우 넓음). **Squash merge 권장** — main에 1 commit으로 합쳐짐. 머지 시 PR title broader scope로 update.
+### 다음 머신에서 시작 절차
+1. `git pull origin main` (PR #321 머지된 main 받음)
+2. `npm install` (새 worktree 또는 dependency drift 가능)
+3. `npm run dev` → :3002 hard refresh (Ctrl+Shift+R)
 
-#### 머지 후 verify (dev:3002 hard refresh)
-1. **Smart Book** `/library` Books → 책 → "Add source"
-   - **다중 선택 토글** + 5 tab cross-tab search → "Add N selected" footer
-   - 본문 auto items **drag** → cross-source reject toast → **Auto-sort** 버튼 + 5초 undo toast
-   - 책 detail header **Resume** 버튼 (+ 옆 "처음부터") — lastReadItemId 있을 때
-2. **Phase H reading view**: 페이지 reading → BookContextNav 옆 **mini progress bar** + "· {icon} {source} (N/M)" **chapter context badge** (md+ only)
-3. **Ontology Hull**: Display > Group by = **Book** → hull 표시 (book.color 우선) + Smart Book auto items도 hull 멤버
-4. **Ontology Filter**: Status → **NOTE/WIKI/BOOK 3 sub-section header** + 8 values 모두 icon. **Visible hulls** picker로 entity 단위 선택
-5. **Ontology Sequence**: Display > **"Show book sequence"** 토글 → dashed thin arrow 책 reading order
-6. **Block 색**: Notes Table badge / Legend / Filter icon 모두 **slate** (이전엔 일부 green)
-
-#### 구멍 가능성 (manual verify 시 가장 시그널 잡힐 곳)
-- bulk select 모드 UX — Cmd+Click 충돌로 explicit 토글 우회, 사용자 직관 자연스러운지
-- chapter context badge null cases — manual items without sourceRefId는 hide. "왜 어떤 페이지는 chapter 표시 안 되지?" 직관 깨질 수 있음
-- Ontology hull 100+ entity 성능 — books/folders/stickers 합쳐서 100+ 시 hull computation 느려질 수 있음
-- bookSequence가 manual book.items order만 — userOrder 반영 안 됨 (auto items 사용자 reorder 후 시각 불일치)
-
-#### 참고 파일
-- `.omc/plans/smart-book-v2-prd.md` v1.0 LOCKED (Phase G/H/K)
-- `.omc/plans/ontology-hull-prd.md` v0.1 (Phase 1/2/3/4)
-- `docs/reference/linear/README.md` (137 captures 인덱스)
+### Manual verify 8 surface
+1. **Status 색 일치** — /notes list에서 Stone/Brick/Block chip + row icon 같은 색 (slate-600 / amber-600 / emerald-600)
+2. **빈 노트 inline hint** — 새 노트 첫 paragraph 안에 "Insert from a template · or press / for menu". 클릭 → dialog open. 입력 시 자동 사라짐.
+3. **Template placeholder** — template에 `{{YYYY}}-{{MM}}-{{DD}}` 작성 → 새 노트에서 inline button 또는 slash "Insert template…" → title `2026-05-14` 치환
+4. **Slash 메뉴 깔끔** — `/` 입력 → block items + 단일 "Insert template…" entry (개별 templates 13+ 안 펴짐)
+5. **Editor footer** — words/chars가 toolbar 바로 위 (body 안 floating X)
+6. **Wiki/Books 그룹 헤더** — Notes `.a-tg` 패턴 통일 (var(--fg) 진함 + divider)
+7. **Home stats** — REFERENCES card icon 좌측 + 충돌 없음
+8. **i18n** — Add source dialog "Multi-select" / "Click items to select" 영어
 
 ---
 
@@ -122,6 +112,9 @@ PR #319 (17 commits, scope 매우 넓음). **Squash merge 권장** — main에 1
 - FilesView type filter (all/image/document) → viewState.filters lift (PR 5 follow-up — Path A Step 1과 정합)
 - File grid mode 실제 image preview (blob URL 처리, PR 5 follow-up)
 - `docs/status-icons-preview.html` 등 mockup HTML untracked 파일 정리 (.gitignore 또는 삭제)
+- **Gallery card enrichment** (P1 follow-up) — Notes/Wiki/Books 갤러리 카드에 status chip + folder/category chip + updated badge. GalleryItem interface 변경 + 3 adapter 매핑. 사용자 시그널 "휑함" (2026-05-13).
+- **Home stats card "References" 2px truncate** — viewport 1400px / 카드 134px에서 90vs88 미세 잘림. 사용자 시그널 시 short label ("Refs") 또는 padding 추가 축소.
+- **status icon weight bold 영향** — 13곳 사용. 일부 작은 영역에서 너무 굵으면 size별 weight 조정.
 
 ---
 

@@ -120,14 +120,16 @@ export function StatsRow() {
           key={item.label}
           type="button"
           onClick={() => setActiveRoute(item.route)}
-          className="group flex flex-col items-start gap-2 rounded-lg border border-border bg-card px-4 py-4 text-left transition-all duration-150 hover:border-accent/30 hover:bg-accent/[0.03] hover:shadow-sm"
+          className="group flex flex-col items-start gap-2 rounded-lg border border-border bg-card px-3 py-4 text-left transition-all duration-150 hover:border-accent/30 hover:bg-accent/[0.03] hover:shadow-sm"
         >
-          <div className="flex items-center justify-between w-full">
-            <span className="text-2xs font-medium uppercase tracking-wider text-muted-foreground">
-              {item.label}
-            </span>
+          {/* 2026-05-13: icon을 label 좌측으로 이동. 이전 `justify-between` 패턴은
+              label이 길면 (예: "REFERENCES" 10자) icon과 충돌. 좌측 정렬은 길이 무관. */}
+          <div className="flex items-center gap-1.5 w-full">
             <span className={`flex h-5 w-5 items-center justify-center rounded ${item.bgColor} ${item.color}`}>
               {item.icon}
+            </span>
+            <span className="text-2xs font-medium uppercase text-muted-foreground truncate">
+              {item.label}
             </span>
           </div>
           <span className={`text-2xl font-semibold tabular-nums leading-none ${item.color}`}>

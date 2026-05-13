@@ -8,6 +8,111 @@
 
 ---
 
+## 🚀 2026-05-13 (밤) — PR #321 11 commits (Status 색 재정렬 + Templates UpNote 패턴 + 9 follow-up)
+
+**범위**: 1 worktree (`elegant-jepsen-2b3731`). PR #319 manual verify로 발견된 13 시그널 누적 한 PR. 18 files modified + 2 신규 (`templates-picker-dialog.tsx`, `empty-hint-placeholder.ts`).
+
+### 추가 핵심 결정 (영구 LOCKED, 위 entry에 이어)
+
+**7. Templates UpNote 패턴 (영구 LOCKED)**:
+- 템플릿 생성 다이얼로그 (Name+Description) 제거 — 즉시 빈 "Untitled" template + editor 진입
+- 빈 노트 hint = ProseMirror Decoration widget (paragraph 안 inline clickable). absolute overlay X / 별도 row X.
+- slash 메뉴 = 단일 "Insert template…" entry → `plot:open-templates-picker` custom event → TemplatesPickerDialog
+- 모든 entry path (inline / slash / 향후 toolbar) 동일 dialog + event 통일
+- contentJson 우선 적용 (heading title + rich body). plain content는 fallback.
+
+**8. Template placeholder expansion contentJson 의무**:
+- `expandPlaceholdersInJson` 재귀 traversal — text node `text` 필드만 expand
+- attrs / meta verbatim 보존 (URL params, IDs 보호)
+- `createNoteFromTemplate` + slash command apply path 둘 다 동일 expand 사용 (일관성)
+- 지원: UpNote `{{YYYY}}/{{MM}}/{{DD}}/{{HH}}/{{mm}}/{{date}}/{{time}}` + Plot legacy `{date}/{time}/{datetime}/{year}/{month}/{day}`
+
+**9. ProseMirror Decoration vs Placeholder extension**:
+- `@tiptap/extension-placeholder`는 `:before` pseudo (clickable 불가, plain text only)
+- inline clickable element 필요 시 ProseMirror Plugin + `Decoration.widget` 사용
+- widget DOM `contentEditable="false"` + `ignoreSelection: true` 의무 (cursor/selection 충돌 회피)
+- decoration plugin은 매 transaction시 doc 순회 — 첫 매치 후 break으로 비용 제어
+
+**10. Editor 영역 layout 패턴**:
+- scroll container `overflow-y-auto`에 `flex flex-col` 명시 의무 — 자식 flex-1 늘어남 보장 → counts row 자연스럽게 toolbar 위 footer 위치
+- counts row sticky bottom: 0 + `marginTop: auto` — scroll 안에서도 항상 visible
+- editor placeholder text 빈 시 hint extension에 위임 (충돌 회피)
+
+**11. Custom event editor ↔ outer state bridge**:
+- TipTap extension에서 dialog open 시 callback prop 전달은 무거움 (editor re-init 비용)
+- `window.dispatchEvent(new CustomEvent("plot:..."))` + parent useEffect listener 패턴이 가볍
+- listener cleanup (returnempty function) + dependency array 의무
+
+### 기술 학습 추가 (위 entry 학습에 이어)
+
+- **chip ↔ icon mismatch root cause** — 같은 status가 chip은 `var(--chart-N)` / icon은 `var(--status-*)` 사용 시 시각 다름. STATUS_CONFIG 같은 single source 의무.
+- **flex-1 min-w-0 narrow viewport collapse** — title column이 0px squeeze 시 text overflow + 옆 컬럼 위 겹침. `min-w-[N]` + cell `overflow-hidden` 둘 다 의무.
+- **scroll container flex column** — `overflow-y-auto`만으론 자식이 자연 height. `flex flex-col` 추가로 flex-1 자식이 늘어남.
+- **TipTap contentJson 우선 사용** — `NoteEditorAdapter.initialContent` (line 119) — contentJson 있으면 plain content 무시. expansion 시 둘 다 처리 의무.
+- **SVG weight "fill" 한계** — Phosphor Hexagon/Cube는 fill 작동, custom Cuboid2x2 (line-only)는 stroke 기반이라 fill 무효. 통일 weight 필요 시 "bold" 안전.
+- **ProseMirror Decoration widget mount** — `Decoration.widget(pos, dom, {side, ignoreSelection, key})`. side -1로 paragraph 시작 앞.
+- **빈 paragraph detect** — `node.type.name === "paragraph" && node.content.size === 0`. heading은 별도 placeholder extension 사용.
+
+### 추가 PR (11 commits in PR #321)
+1. `438853c` Status 색 재정렬 + 6 UX follow-up
+2. `b5b6eb6` template 생성 다이얼로그 제거
+3. `ce6ed10` TitlePatternBar 제거 + counts row 위치
+4. `dd1e880` counts row sticky bottom
+5. `509a564` TemplateEditorAdapter `flex flex-col`
+6. `5cfbed0` template placeholder expansion contentJson
+7. `4b2b84d` slash command template contentJson 우선
+8. `0ef3803` Templates entry UpNote 패턴
+9. `3e61e1a` hint 별도 row + UpNote 카피 회피
+10. `3bf9a95` ProseMirror Decoration paragraph 안 inline
+11. `bce50cb` placeholder light mode 가시성
+
+---
+
+## 🚀 2026-05-13 (밤, 초기) — Status 색 메타포 재정렬 + 6 follow-up (PR #319 manual verify 결과)
+
+**범위**: 1 worktree (`elegant-jepsen-2b3731`). 사용자 시각 시그널 6개 한 PR 묶음. 10 files modified.
+
+### 핵심 결정 (영구 LOCKED, 2026-05-13)
+
+**1. Status 색 메타포 재정렬** — 사용자 결정:
+- **Stone** = slate (회색, raw) — light `#475569` slate-600 / dark `#94a3b8` slate-400
+- **Brick** = amber (kiln-fired, in progress) — light `#D97706` amber-600 / dark `#f59e0b` amber-500 (유지)
+- **Block (keystone)** = emerald (finished crystal, settled) — light `#059669` emerald-600 / dark `#34d399` emerald-400
+- 메타포: 마지막 단계가 가장 vivid color로 끝나는 progression (이전엔 Block이 가장 옅은 slate라 어색).
+- 색 변경 시 3곳 동시 update 의무: `app/globals.css` (light + dark) + `lib/colors.ts NOTE_STATUS_HEX` (dark canonical).
+
+**2. STATUS_CONFIG var(--status-*) 통일 영구 룰**:
+- `components/note-fields.tsx` STATUS_CONFIG의 color/bg/border는 `var(--status-{stone|brick|keystone})`만 사용.
+- `var(--chart-N)`는 chart 시각화 전용 (PR #319 영구 룰). status에 chart-N mapping 금지.
+- chip ↔ row icon 색 정확 동일 보장 (둘 다 동일 CSS var 받음).
+
+**3. 그룹 헤더 `.a-tg` 영구 패턴 (모든 entity)**:
+- Notes/Wiki/Books 3 entity 모두 `.a-tg` CSS 클래스 + `.a-tg__label`/`.a-tg__count`/`.a-tg__line` 통일.
+- grid-template-columns: 11px auto auto auto 1fr (chevron / icon / label / count / divider line).
+- label color: var(--fg) (진함). count: var(--whisper-fg) (옅음). line: var(--border) flex 1fr.
+- 새 entity 도입 시 same pattern 사용 의무.
+
+**4. BookTable narrow viewport overflow 영구 룰**:
+- list table cells에 `overflow-hidden` 필수 (text overflow → 옆 cell 겹침 회피).
+- flex-1 title column에 `min-w-[120px]` (좁은 viewport 0 collapse 방지). Notes/Wiki 같은 pattern 시 동일.
+
+**5. Home stats card layout 영구 패턴**:
+- icon은 label **좌측** (`flex items-center gap-1.5`). `justify-between` X — label 길이 무관 일관성.
+- label 길면 `truncate`. tracking 자제 (uppercase font-medium 충분).
+
+**6. i18n 영어 통일 영구 룰**:
+- 다이얼로그 / 버튼 / footer 텍스트는 영어. 한국어 사용자라도 일관성 우선.
+- 위반 시 같은 다이얼로그 안 한/영 혼합 → 시각 일관성 ↓.
+
+### 기술 학습 (영구)
+
+- **CSS var vs TS const 동기화 의무** — globals.css `--status-*` 변경 시 lib/colors.ts `NOTE_STATUS_HEX` 같이 update. mismatch → ontology canvas stale.
+- **STATUS_CONFIG chip 패턴 root cause** — chip이 쓰는 var와 row icon이 쓰는 var가 다르면 사용자 시각 "다른 색" 인식. 통일 의무.
+- **SVG weight "fill" 한계** — Cuboid2x2 custom icon은 line-only SVG라 fill 작동 X. weight "bold"가 다른 weight들과 일관.
+- **flex-1 min-w-0 narrow viewport collapse** — title column이 0px squeeze 가능. min-w-[N] 추가로 minimum 보장.
+
+---
+
 ## 🚀 2026-05-13 — Smart Book v2 풀 완성 + Ontology Hull P1-4 + 11 follow-up (PR #319, 17 commits mega-PR)
 
 **범위**: 1 worktree (`brave-ardinghelli-209f9b`). 단일 세션, 17 commits 단일 PR. Smart Book v2 (Phase G/H/K 전체) + Ontology Hull (Phase 1/2/3/4 전체) + Linear refs 137 + 다수 bug fix.

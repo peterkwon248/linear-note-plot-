@@ -4,12 +4,14 @@ import { useState, useEffect, useCallback, useRef } from "react"
 import type * as Y from "yjs"
 import { TipTapEditor } from "./TipTapEditor"
 import { usePlotStore } from "@/lib/store"
-import type { Note } from "@/lib/types"
+import type { Note, NoteTemplate } from "@/lib/types"
 import { suggestLinks } from "@/lib/queries/notes"
 import { LinkSuggestion } from "@/components/link-suggestion"
 import { FootnotesFooter } from "./footnotes-footer"
 import { extractHashtags } from "@/lib/body-helpers"
 import { pickColor } from "@/components/note-fields"
+import { TemplatesPickerDialog } from "./templates-picker-dialog"
+import { expandPlaceholders, expandPlaceholdersInJson } from "@/lib/store/slices/templates"
 import {
   acquireYDoc,
   releaseYDoc,
@@ -31,6 +33,37 @@ export function NoteEditorAdapter({ note, onEditorReady, editable = true }: Note
   const [suggestions, setSuggestions] = useState<Note[]>([])
   const [showSuggestions, setShowSuggestions] = useState(false)
   const [editorInstance, setEditorInstance] = useState<any>(null)
+  // UpNote 패턴 (2026-05-13): 빈 노트일 때 inline CTA + Templates dialog.
+  const [templatesPickerOpen, setTemplatesPickerOpen] = useState(false)
+  // EmptyHintPlaceholder extension의 inline 버튼, slash 메뉴의
+  // "Insert template…" entry 모두 이 custom event를 dispatch한다.
+  useEffect(() => {
+    if (!editable) return
+    const handler = () => setTemplatesPickerOpen(true)
+    window.addEventListener("plot:open-templates-picker", handler)
+    return () => window.removeEventListener("plot:open-templates-picker", handler)
+  }, [editable])
+  const handleTemplateSelect = useCallback(
+    (template: NoteTemplate) => {
+      if (!editorInstance) return
+      const chain = editorInstance.chain().focus()
+      const hasJson =
+        template.contentJson &&
+        Object.keys(template.contentJson as Record<string, unknown>).length > 0
+      if (hasJson) {
+        const expanded = expandPlaceholdersInJson(template.contentJson)
+        if (editorInstance.isEmpty) {
+          chain.setContent(expanded as Record<string, unknown>).run()
+        } else {
+          chain.insertContent(expanded as Record<string, unknown>).run()
+        }
+      } else {
+        const expanded = expandPlaceholders(template.content || "")
+        chain.insertContent(expanded).run()
+      }
+    },
+    [editorInstance],
+  )
 
   // ── Experimental Y.Doc split-view sync (gated by ?yjs=1) ──
   //
@@ -440,13 +473,18 @@ export function NoteEditorAdapter({ note, onEditorReady, editable = true }: Note
           let Collaboration bind to the empty fragment and emit a flood of
           empty onUpdate events, which the empty-content guard then has to
           chase down. Cheaper and safer to just wait. */}
+      {/* 2026-05-13: 빈 paragraph inline hint는 EmptyHintPlaceholder extension
+          이 ProseMirror Decoration으로 직접 mount (paragraph 내부에 inline
+          clickable). 별도 row / absolute overlay 회피 — 위치 정확. 클릭 시
+          custom event "plot:open-templates-picker" dispatch → 아래 listener가
+          TemplatesPickerDialog open. */}
       {ydocReady ? (
         <TipTapEditor
           key={`${note.id}-${ydoc ? "yjs" : "std"}`}
           content={initialContent}
           onChange={editable ? handleChange : undefined}
           editable={editable}
-          placeholder="Press / for menu, or start with a template"
+          placeholder=""
           onEditorReady={handleEditorReady}
           noteId={note.id}
           ydoc={ydoc ?? undefined}
@@ -459,6 +497,11 @@ export function NoteEditorAdapter({ note, onEditorReady, editable = true }: Note
         suggestions={suggestions}
         onSelect={handleSuggestionSelect}
         visible={showSuggestions}
+      />
+      <TemplatesPickerDialog
+        open={templatesPickerOpen}
+        onOpenChange={setTemplatesPickerOpen}
+        onSelect={handleTemplateSelect}
       />
     </div>
   )

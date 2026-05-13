@@ -512,9 +512,9 @@ export function SourcesSection({ bookId }: SourcesSectionProps) {
                   ? "bg-accent/15 text-accent hover:bg-accent/25"
                   : "text-muted-foreground hover:bg-hover-bg hover:text-foreground",
               )}
-              title={bulkMode ? "다중 선택 모드 끄기" : "다중 선택 모드 켜기 — 여러 소스 한 번에 추가"}
+              title={bulkMode ? "Exit multi-select mode" : "Multi-select mode — add multiple sources at once"}
             >
-              {bulkMode ? "다중 선택 ✓" : "다중 선택"}
+              {bulkMode ? "Multi-select ✓" : "Multi-select"}
             </button>
           </DialogHeader>
           {/* Unified search input — shared across all 5 tabs (Q11 LOCKED:
@@ -716,8 +716,8 @@ export function SourcesSection({ bookId }: SourcesSectionProps) {
             <div className="flex items-center justify-between border-t border-border/40 px-4 py-2.5">
               <span className="text-2xs text-muted-foreground">
                 {bulkSelected.size > 0
-                  ? `${bulkSelected.size}개 선택됨`
-                  : "항목을 클릭해서 선택하세요"}
+                  ? `${bulkSelected.size} selected`
+                  : "Click items to select"}
               </span>
               <div className="flex items-center gap-1.5">
                 {bulkSelected.size > 0 && (

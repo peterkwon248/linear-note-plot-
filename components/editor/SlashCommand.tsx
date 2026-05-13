@@ -10,7 +10,6 @@ import type { SuggestionProps, SuggestionKeyDownProps } from "@tiptap/suggestion
 // Import to pick up module augmentation for setDetails / unsetDetails
 import "@tiptap/extension-details"
 import { usePlotStore } from "@/lib/store"
-import { expandPlaceholders } from "@/lib/store/slices/templates"
 import type { NoteTemplate } from "@/lib/types"
 import { Layout } from "@/lib/editor/editor-icons"
 import {
@@ -146,30 +145,33 @@ export const SlashCommandExtension = Extension.create({
             matchesQuery(item, q),
           )
 
-          // Dynamically add template items from the store.
-          // Templates don't live in the static registry because they're
-          // user-created; we adapt them to BlockRegistryEntry shape.
-          const templates = (usePlotStore.getState().templates ?? []) as NoteTemplate[]
-          const templateItems: SlashItem[] = templates
-            .filter((t) => t.name.toLowerCase().includes(q) || "template".includes(q))
-            .map<SlashItem>((t) => ({
-              id: `template-${t.id}`,
-              label: `Template: ${t.name}`,
-              // v108: NoteTemplate.description retired — generic hint instead.
-              description: "Insert template content",
-              icon: Layout,
-              surfaces: ["slash"],
-              group: "structure",
-              tier: "base",
-              execute: ({ editor, range }) => {
-                const expanded = expandPlaceholders(t.content)
-                const chain = editor.chain().focus()
-                if (range) chain.deleteRange(range)
-                chain.insertContent(expanded).run()
-              },
-            }))
+          // 2026-05-13: 개별 templates는 dialog로 일원화 (UpNote 패턴).
+          // slash 메뉴에는 단일 "Insert template…" entry만 — 클릭 시 custom
+          // event dispatch → NoteEditorAdapter가 TemplatesPickerDialog 열음.
+          // 이전엔 templates 13+ 개가 slash 메뉴 펴서 noisy + 다른 block과
+          // 시각 mix되어 scan 어려움 (사용자 시그널).
+          const hasTemplates = (usePlotStore.getState().templates ?? []).some(
+            (t: NoteTemplate) => !t.trashed,
+          )
+          const templateEntry: SlashItem[] = hasTemplates
+            ? [{
+                id: "template-picker",
+                label: "Insert template…",
+                description: "Browse and insert from your templates",
+                icon: Layout,
+                surfaces: ["slash"],
+                group: "structure",
+                tier: "base",
+                execute: ({ editor, range }) => {
+                  if (range) editor.chain().focus().deleteRange(range).run()
+                  if (typeof window !== "undefined") {
+                    window.dispatchEvent(new CustomEvent("plot:open-templates-picker"))
+                  }
+                },
+              }]
+            : []
 
-          return [...baseItems, ...templateItems]
+          return [...baseItems, ...templateEntry]
         },
         render: () => {
           let component: ReactRenderer<CommandListRef> | null = null

@@ -21,6 +21,37 @@ type Get = () => any
  * `{{date}}` would otherwise get consumed by the single-brace `{date}`
  * pass mid-replacement.
  */
+/**
+ * Recursively expand placeholders in a TipTap/ProseMirror JSON document.
+ *
+ * 2026-05-13: previously `createNoteFromTemplate` only expanded
+ * `template.content` (plain text), but TipTap editor uses `contentJson`
+ * (richer source of truth) when present — so placeholders like
+ * `{{YYYY}}-{{MM}}-{{DD}}` survived into the new note unchanged.
+ *
+ * Only `text` fields are expanded (TipTap text nodes). Attribute /
+ * metadata fields are passed through verbatim to avoid clobbering
+ * URL params, IDs, etc. that may legitimately contain `{...}`.
+ */
+export function expandPlaceholdersInJson<T>(node: T): T {
+  if (node === null || node === undefined) return node
+  if (Array.isArray(node)) {
+    return node.map(expandPlaceholdersInJson) as unknown as T
+  }
+  if (typeof node === "object") {
+    const result: Record<string, unknown> = {}
+    for (const [k, v] of Object.entries(node as Record<string, unknown>)) {
+      if (k === "text" && typeof v === "string") {
+        result[k] = expandPlaceholders(v)
+      } else {
+        result[k] = expandPlaceholdersInJson(v)
+      }
+    }
+    return result as unknown as T
+  }
+  return node
+}
+
 export function expandPlaceholders(template: string): string {
   const d = new Date()
   const yyyy = String(d.getFullYear())
@@ -109,6 +140,11 @@ export function createTemplatesSlice(set: Set, get: Get, appendEvent: AppendEven
       const id = genId()
       const title = expandPlaceholders(template.title)
       const content = expandPlaceholders(template.content)
+      // 2026-05-13: contentJson도 placeholder expand. TipTap editor가
+      // contentJson 우선 사용하므로 expand 누락 시 `{{YYYY}}` 등이 그대로 남음.
+      const contentJson = template.contentJson
+        ? expandPlaceholdersInJson(template.contentJson)
+        : null
       const activeView = state.activeView
 
       // Templates still use single `folderId` semantics (default folder for
@@ -127,7 +163,7 @@ export function createTemplatesSlice(set: Set, get: Get, appendEvent: AppendEven
         id,
         title,
         content,
-        contentJson: template.contentJson ?? null,
+        contentJson,
         folderIds,
         tags: [...template.tags],
         labelId: template.labelId,
@@ -152,7 +188,7 @@ export function createTemplatesSlice(set: Set, get: Get, appendEvent: AppendEven
         notes: [newNote, ...s.notes],
         selectedNoteId: id,
       }))
-      persistBody({ id, content, contentJson: template.contentJson ?? null })
+      persistBody({ id, content, contentJson })
       appendEvent(id, "created", { templateId, templateName: template.name })
       return id
     },

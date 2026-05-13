@@ -887,14 +887,16 @@ export function WikiList({
                 return (
                   <div key={group.key}>
                     {group.label && (
-                      <div className="flex items-center gap-2 px-5 py-2 mt-3 mb-0.5 border-b border-border-subtle">
+                      // Notes `.a-tg` 패턴 통일 (2026-05-13) — 사용자: 그룹 헤더
+                      // 모양새 entity별 다른 거 정리 + label opacity 흐린 거 (muted/60)
+                      // 진하게 (var(--fg)). 통일 grid: chevron / icon / label /
+                      // count / divider line.
+                      <div className="a-tg">
+                        <span />
                         <WikiGroupHeaderIcon groupBy={groupBy ?? "none"} groupKey={group.key} wikiCategories={wikiCategories} />
-                        <span className="text-2xs font-semibold text-muted-foreground/60 uppercase tracking-wide">
-                          {group.label}
-                        </span>
-                        <span className="text-2xs text-muted-foreground/70 tabular-nums">
-                          {groupArticles.length}
-                        </span>
+                        <span className="a-tg__label">{group.label}</span>
+                        <span className="a-tg__count tabular-nums">{groupArticles.length}</span>
+                        <div className="a-tg__line" />
                       </div>
                     )}
                     {groupArticles.map((note, idx) => {
