@@ -8,6 +8,75 @@
 
 ---
 
+## 🚀 2026-05-13 (오후~저녁) — Lineage 시각화 (PR #320) + Template UpNote-style 회귀 fix
+
+**범위**: 1 worktree (`condescending-mclaren-bb8475`). 단일 세션, 6 commits cascade. House (계보 시각화) 분산 구현 + 사용자 시그널 follow-up 3건 + 회귀 fix.
+
+### 핵심 결정 (영구 LOCKED)
+
+**1. House (계보 시각화) 분산 구현 — 별도 entity 영구 폐기**:
+- Family groupBy = List/Board (Notes/Wiki에 이미 구현, view-engine/group.ts + wiki-list-pipeline.ts)
+- Family Hull = Ontology graph (Smart Book Hull P2 패턴 fork). familyMembership Map.
+- Lineage Focus mode = Ontology graph. 우클릭 "Show lineage" + Shift+click. opacity 0.15 dim.
+- Wiki Lineage Sidebar = Wiki article detail (Ancestors breadcrumb + Descendants 직속 children)
+- P1 #5 House 완료 처리 (TODO.md에서 제거)
+
+**2. Title pattern UI 영구 폐기 (UpNote-style 일관)**:
+- TitlePatternBar 컴포넌트 + PLACEHOLDER_VARS chip strip 제거
+- Title은 항상 첫 블록 텍스트 (notes/templates/모든 곳 일관)
+- 변수 치환 ({date}/{{YYYY}}/...)은 본문 어디서나 작동 (`expandContentJsonPlaceholders` deep traverse)
+- 새 영구 룰 LOCKED: 별도 title 필드 도입 금지 (UpNote-style 위배). 새 패턴 도입 시 NoteEditorAdapter handleChange 호환 의무 검증.
+
+**3. Lineage Focus mode trigger + 해제 패턴**:
+- Trigger: 우클릭 메뉴 "Show lineage" (Tree icon) + Shift+click (Ctrl/Cmd+click multi-select 분기 앞)
+- 해제: ESC + 빈 공간 클릭 + Shift+focused 재클릭 (toggle 패턴)
+- Double-click 충돌 회피 (`handleNodeDblClick` 이미 openNote)
+- opacity 0.15 (Smart Book sequence 패턴 정합). edge dim 없음 — node dim만 (Gentle by default).
+
+**4. Family Hull color resolution**:
+- root entity의 label.color (notes) or categoryIds[0].color (wikis)
+- 둘 다 없으면 fallback palette (CLUSTER_COLORS)
+- Smart Book Hull P2 `book.color` 패턴 정합
+
+**5. ViewHeader `searchDropdownContent` prop 일반화**:
+- 향후 Notes/Wiki/Books 등 다른 view에서도 typeahead UX 재사용 가능
+- 영구 #2 최소 diff + 재사용성
+
+**6. Filter empty sub-menu placeholder 패턴**:
+- Hide (메뉴 자체 제거) 대신 안내 메시지 노출 (UI 일관성 + 사용자 안내)
+- hullEntity 특수 케이스만 special 안내, 일반 카테고리는 "No options available."
+
+### 기술 학습 (영구)
+
+- **UpNote-style title 일관 규칙**: Title은 항상 첫 블록 텍스트로 동기화. NoteEditorAdapter handleChange가 처리. 별도 title pattern UI/필드 도입 시 충돌. 본 PR이 영구 룰 #1 위반 사례 (Phase 1B title-node-removal 시 template 시스템 호환 검증 누락 → 회귀).
+- **expandContentJsonPlaceholders deep traverse**: contentJson nested 구조에서 `text` 필드만 재귀 변수 치환. paragraph/heading/table cell 등 어디서나 작동. `{ ...obj, text: expandPlaceholders(obj.text) }` 패턴.
+- **Lineage path computation**: ancestor chain (parent walk up, MAX_DEPTH 20 cycle guard) + descendant subtree (recursive children walk down). group.ts + wiki-list-pipeline.ts와 동일 규칙.
+- **node-context-menu 확장 패턴**: prop callback (`onShowLineage`) + UI button + icon import. Visual filters 그룹.
+- **filter-panel 빈 values 처리**: ternary로 분기. hullEntity 특수 안내 + 일반 fallback. 메뉴 자체 hide 대신 사용자에게 활성화 방법 노출.
+
+### 파일 변경 (PR #320 6 commits, 7개 파일)
+
+| 파일 | PR 번호 | 변경 |
+|---|---|---|
+| `docs/TODO.md` | 1 | stale 정리 |
+| `components/side-panel/wiki-article-detail-panel.tsx` | 2 | Lineage section (ancestors breadcrumb + descendants) |
+| `lib/view-engine/view-configs.tsx` | 3 | GRAPH_VIEW_CONFIG groupBy "family" |
+| `components/views/ontology-view.tsx` | 3 | familyMembership + lineageMembers + canvas props + hullEntity hydration |
+| `components/ontology/ontology-graph-canvas.tsx` | 3 | family hull switch + Lineage Focus handlers + opacity + 우클릭 메뉴 |
+| `components/ontology/node-context-menu.tsx` | 3 | onShowLineage prop + Tree icon |
+| `components/filter-panel.tsx` | 4 | 빈 sub-menu placeholder |
+| `components/view-header.tsx` | 5 | searchDropdownContent prop |
+| `components/views/template-edit-page.tsx` | 6 | TitlePatternBar 제거 + wrapper flex flex-col |
+| `lib/store/slices/templates.ts` | 6 | expandContentJsonPlaceholders helper + createNoteFromTemplate 단순화 |
+
+### 환경
+- Branch: `claude/condescending-mclaren-bb8475`
+- Store version: 변경 없음 (UI/로직 변경, 데이터 모델 unchanged)
+- Tests: 변경 없음 (테스트 추가 없음, 본 PR은 lineage 시각화 + 회귀 fix)
+- Build: ✅ / TSC: ✅ 0 errors (매 commit 검증)
+
+---
+
 ## 🚀 2026-05-13 — Smart Book v2 풀 완성 + Ontology Hull P1-4 + 11 follow-up (PR #319, 17 commits mega-PR)
 
 **범위**: 1 worktree (`brave-ardinghelli-209f9b`). 단일 세션, 17 commits 단일 PR. Smart Book v2 (Phase G/H/K 전체) + Ontology Hull (Phase 1/2/3/4 전체) + Linear refs 137 + 다수 bug fix.

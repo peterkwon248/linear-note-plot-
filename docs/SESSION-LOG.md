@@ -6,6 +6,119 @@
 
 ---
 
+## 2026-05-13 (오후~저녁) — 집, Lineage 시각화 (PR #320 5 commits) + Template UpNote-style 회귀 fix (PR #320 commit 6 cascade)
+
+> 🎯 **다음 즉시 액션**: **PR #320 squash merge** (사용자 책임, 다른 컴퓨터에서 가능) + 머지 후 dev:3002 hard refresh에서 6 surface manual verify. 가장 큰 surface: (1) Ontology Display > Group by = Family → hull, (2) 노드 우클릭/Shift+click → Lineage Focus mode (opacity 0.15 dim), (3) Wiki article detail → Lineage section (ancestors breadcrumb + descendants), (4) Filter Visible hulls placeholder, (5) Search nodes typeahead dropdown, (6) Templates 페이지 → TitlePatternBar 사라짐 + word/char 하단 위치.
+>
+> **사용자 의도**: P1 "House (계보 시각화)"를 Family Hull + Lineage Focus + Wiki sidebar로 분산 구현 → P1에서 제거 완료. 추가로 사용자가 "Visible hulls 별로", "검색창 typeahead 필요", "Template title pattern 이상해" 시그널 후 즉시 fix cascade.
+>
+> **첫 스텝** (다른 컴퓨터에서 바로 시작):
+> 1. `git pull origin main` (PR #320 squash merge 후 가정) 또는 `git fetch && git checkout claude/condescending-mclaren-bb8475`
+> 2. `npm install` (새 worktree 시 필수)
+> 3. `npm run dev` → http://localhost:3002 hard refresh (Ctrl+Shift+R)
+> 4. PR #320 6 surface verify (위 6개)
+> 5. PR #319 (이미 머지된 60c7e98) 6 surface도 같이 verify 가능 (Smart Book v2 G/H/K + Ontology Hull P1-4 + Block 색)
+>
+> **확인 포인트**:
+> - Family Hull: notes(parentNoteId chain) + wikis(parentArticleId chain) MAX_DEPTH 20 cycle guard. Hull color = root entity의 label.color or categoryIds[0].color → fallback palette
+> - Lineage Focus mode: 우클릭 메뉴 "Show lineage" + Shift+click. ESC/빈 공간 클릭/Shift+focused 재클릭 모두 해제
+> - Wiki sidebar: Ancestors breadcrumb + Descendants 직속 children. navigateToWikiArticle 클릭 navigation
+> - Filter Visible hulls placeholder: groupBy 안 정한 상태에서 "Choose a Group by in Display first" 안내 (이전 빈 sub-menu 회귀)
+> - Search typeahead: 매칭 노드 상위 10개 + "+N more". onMouseDown (input blur race 회피)
+> - Template UpNote-style: TitlePatternBar 사라짐. 본문 첫 줄에 "Weekly - {date}" → 노트 title = "Weekly - 2026-05-13". word/char counter 하단
+>
+> **구멍 가능성**:
+> - bulk select 모드 UX, chapter context badge null cases, 100+ entity hull 성능 (PR #319 보고됨, 본 PR 무관)
+> - Template 회귀 fix는 작은 변경이지만 기존 사용자 template 사용 시 fallback chain (template.name → legacy template.title → "Untitled") 동작 확인 필요
+> - dnd-kit collision normalize (notes/books/wiki 3 board 완료) — 새 board 도입 시 동일 패턴 적용 의무
+>
+> **참고 파일**:
+> - `.claude/plans/editor-unification.md` (Phase 1B 완료 + 본 PR title-pattern 회귀 fix)
+> - `.omc/plans/title-node-removal.md` (Phase 1B DoD 6/6)
+> - `lib/store/slices/templates.ts:78` `expandContentJsonPlaceholders` deep traverse helper (text 필드만 변수 치환)
+> - `components/views/template-edit-page.tsx` (TitlePatternBar 제거 + wrapper flex flex-col fix)
+> - `components/ontology/ontology-graph-canvas.tsx` (family hull switch + Lineage Focus opacity + 우클릭 메뉴)
+> - `components/side-panel/wiki-article-detail-panel.tsx` (Lineage section: ancestors breadcrumb + descendants list)
+>
+> **위험 + 회피**:
+> - PR #320 scope 6 commits (lineage 5개 + template fix 1개) — squash merge 권장
+> - 영구 작업 원칙 #1 위반 사례 (title-node-removal Phase 1B 시 template 시스템 호환 검증 누락 → 본 PR에서 fix). 향후 새 패턴 도입 시 NoteEditorAdapter handleChange 호환 검증 의무.
+>
+> **머신**: 집 (Windows) → 다른 컴퓨터로 이어받기 예정
+> **현재 main HEAD**: PR #319 머지된 60c7e98
+> **branch worktree**: `condescending-mclaren-bb8475` (이번 세션, 머지 후 cleanup 가능)
+
+### 완료 (PR #320, 6 commits cascade)
+
+| # | sha | scope |
+|---|---|---|
+| 1 | `e17b54a` | docs: TODO.md stale 정리 — 중복 P1 헤더 + PR #319/#315/v122-v126 완료 항목 이동 |
+| 2 | `8ae0a07` | feat(wiki): article detail Lineage sidebar — Ancestors breadcrumb + Descendants list |
+| 3 | `b195a04` | feat(ontology): Family Hull (groupBy) + Lineage Focus mode (우클릭/Shift+click, opacity 0.15 dim) |
+| 4 | `e410635` | fix(filter): empty sub-menu placeholder — Visible hulls "선택 후 노출" 안내 |
+| 5 | `1fc827c` | feat(ontology): search typeahead dropdown — 매칭 노드 title 목록 + 클릭 시 select |
+| 6 | `1c8cc3c` | fix(template): TitlePatternBar 제거 + UpNote-style 자유식 + contentJson 변수 치환 + word/char 위치 fix |
+
+### 브레인스토밍 & 큰 결정 (영구 LOCKED)
+
+**1. House (계보 시각화) → 분산 구현으로 결정**:
+- 별도 entity 폐기 (docs/MEMORY.md 1619 라인 결정)
+- Family groupBy = List/Board (이미 wiki/notes view에 구현)
+- Family Hull = Ontology graph (본 PR 1)
+- Lineage Focus mode = Ontology graph (본 PR 3)
+- Wiki Lineage Sidebar = Wiki article detail (본 PR 2)
+- P1 #5 House 항목 완료 처리
+
+**2. Title pattern UI 영구 폐기 (UpNote-style 일관)**:
+- TitlePatternBar 컴포넌트 + PLACEHOLDER_VARS chip strip 제거
+- Title은 항상 첫 블록 텍스트 (notes/templates/모든 곳 일관)
+- 변수 치환 ({date}/{{YYYY}}/...)은 본문 어디서나 작동 (expandContentJsonPlaceholders deep traverse)
+- 새 영구 룰: 별도 title 필드 도입 금지 (UpNote-style 위배). NoteEditorAdapter handleChange 호환 의무.
+
+**3. Lineage Focus trigger 결정**:
+- 우클릭 메뉴 "Show lineage" (Tree icon, Visual filters 그룹)
+- Shift+click (Ctrl/Cmd+click multi-select 분기 앞에 배치)
+- Double-click 충돌 회피 (`handleNodeDblClick` 이미 openNote)
+- 해제: ESC + 빈 공간 클릭 + Shift+focused 재클릭 (toggle)
+
+**4. Lineage opacity 0.15 결정**:
+- Smart Book sequence opacity 패턴 정합
+- Edge dim 없음 — node dim만으로 충분 ("Gentle by default")
+- transition 180ms ease-out
+
+**5. Family Hull color resolution**:
+- root entity의 label.color (notes) or categoryIds[0].color (wikis)
+- 둘 다 없으면 fallback palette (CLUSTER_COLORS)
+- Smart Book Hull P2 `book.color` 패턴 정합
+
+**6. ViewHeader searchDropdownContent prop 일반화**:
+- ontology 전용 X. 향후 Notes/Wiki/Books 등에서도 같은 typeahead UX 재사용 가능
+- 영구 #2 최소 diff + 재사용성
+
+**7. Filter empty sub-menu placeholder 패턴**:
+- Hide (메뉴 자체 제거) 대신 안내 메시지 노출 (UI 일관성 + 사용자 안내)
+- hullEntity 특수 케이스만 special 안내, 일반 카테고리는 "No options available."
+
+### 기술 학습 (영구)
+
+- **UpNote-style title 일관 규칙**: Title은 항상 첫 블록 텍스트로 동기화. 별도 title pattern 필드/UI 도입 시 NoteEditorAdapter handleChange 호환 검증 의무. 본 PR title-pattern 회귀 fix가 영구 룰 #1 위반 사례 (template 시스템 호환 검증 누락).
+- **expandContentJsonPlaceholders deep traverse 패턴**: contentJson nested 구조에서 text 필드만 재귀 치환. notes의 markdown text와 별개로 contentJson 변수 치환 가능. paragraph/heading/table cell 등 어디서나 작동.
+- **Lineage path computation 패턴**: ancestor chain (parent walk up) + descendant subtree (recursive children walk down). MAX_DEPTH=20 cycle guard. group.ts + wiki-list-pipeline.ts와 동일 규칙.
+- **node-context-menu 확장 패턴**: prop callback (onShowLineage) + UI item (Tree icon, Visual filters 그룹). 패턴 그대로 다른 액션 추가 가능.
+- **ViewHeader 일반화 패턴**: search input 옆에 absolute positioned content slot (`searchDropdownContent`). caller가 typeahead/suggestion/preview 등 자유롭게 정의. Notes/Wiki/Books 등 다른 view에 재사용 가능.
+- **filter-panel 빈 values 처리**: ternary로 분기 — 일반 fallback "No options available." + hullEntity 특수 안내. 메뉴 항목 자체 hide 대신 사용자에게 활성화 방법 노출.
+- **Template 회귀 fix 패턴**: TitlePatternBar 제거 + expandContentJsonPlaceholders 추가 + wrapper `flex flex-col`. 일반 노트 (note-editor.tsx:680) 패턴 정합.
+
+### Watch Out (다음 세션 주의사항)
+
+- **PR #320 squash merge 후 docs/MEMORY.md current main HEAD 갱신** (60c7e98 → squash sha)
+- **기존 사용자 template** 호환: `template.title` 필드는 deprecate (auto-sync stop). createNoteFromTemplate fallback chain (template.name → template.title → "Untitled") 동작 확인. 데이터 손실 0.
+- **다음 P1 main 4개 (TODO.md)** — 추천 순위: 1 Wiki template Layout/Content Preset (Plot 정체성) > 3 Partial Quote (Zettelkasten) > 2 entity-agnostic ListRow (일관성) > 4 Note Merge 풀페이지 + History (큰 작업)
+- **새 worktree → npm install 의무** (영구 룰 후보, 이번 세션도 fractional-indexing not found 발생)
+- **hydration mismatch radix id** — main pre-existing, 본 PR 무관, 별도 fix 후보
+
+---
+
 ## 2026-05-13 — 집, Smart Book v2 풀 완성 + Ontology Hull P1-4 + 137 Linear refs + 11 follow-up (PR #319, 17 commits 단일 mega-PR)
 
 > 🎯 **다음 즉시 액션**: **PR #319 squash merge** (사용자 책임) + 머지 후 dev:3002에서 manual verify. 가장 큰 surface: (1) `/library` Books → 책 → "Add source" 다중 선택 모드 + Auto-sort toggle + Resume 버튼 + chapter context badge. (2) Ontology → Display > Group by = Book → hull / Filter > Status nested 8 values (Note/Wiki/Book) / Visible hulls picker / Show book sequence dashed arrow.

@@ -51,6 +51,56 @@
 
 ---
 
+## 🚀 2026-05-13 (오후~저녁) — Lineage 시각화 (PR #320) + Template UpNote-style 회귀 fix ⭐⭐⭐⭐⭐
+
+**범위**: 1 worktree (`condescending-mclaren-bb8475`). 단일 세션, 6 commits cascade. House (계보 시각화) 분산 구현 + 사용자 시그널 follow-up + 회귀 fix.
+
+### 핵심 결정 (영구 LOCKED)
+
+**1. House (계보 시각화) 분산 구현 — 별도 entity 영구 폐기**:
+- Family groupBy = List/Board (이미 구현)
+- Family Hull = Ontology graph (Smart Book Hull P2 fork)
+- Lineage Focus mode = Ontology graph (우클릭/Shift+click → opacity 0.15 dim)
+- Wiki Lineage Sidebar = Wiki article detail (Ancestors breadcrumb + Descendants 직속 children)
+
+**2. Title pattern UI 영구 폐기 (UpNote-style 일관)**:
+- TitlePatternBar 제거 (Plot Template PR b, 2026-05-03 추가됐었음)
+- Title = 항상 첫 블록 텍스트 (notes/templates/모든 곳 일관)
+- 변수 치환은 본문 어디서나 (`expandContentJsonPlaceholders` deep traverse)
+- 새 패턴 도입 시 NoteEditorAdapter handleChange 호환 의무 검증
+
+**3. Lineage Focus opacity 0.15**: Smart Book sequence 패턴 정합. edge dim 없음 (Gentle by default).
+
+**4. Family Hull color**: root entity label/category color → fallback palette. Smart Book Hull P2 패턴.
+
+**5. ViewHeader 일반화**: `searchDropdownContent` prop. Notes/Wiki/Books 등 재사용 가능.
+
+### 기술 학습
+
+- UpNote-style title 일관 규칙 — 별도 title pattern 필드 도입 시 충돌. NoteEditorAdapter handleChange 호환 의무 검증.
+- expandContentJsonPlaceholders deep traverse — contentJson `text` 필드만 재귀 치환.
+- Lineage path computation — ancestor chain + descendant subtree, MAX_DEPTH 20 cycle guard.
+- node-context-menu 확장 패턴 — prop callback + UI item.
+- filter-panel 빈 values 처리 — Hide 대신 안내 메시지.
+
+### 다음 (TODO.md P0)
+
+🔴 **PR #320 squash merge 후 manual verify** (사용자 책임, 다른 컴퓨터 가능) — 6 surface 점검:
+1. Ontology Group by = Family → Family Hull (root entity color)
+2. Wiki article detail → Lineage section (ancestors + descendants)
+3. Ontology 우클릭/Shift+click → Lineage Focus mode (opacity 0.15)
+4. Filter Visible hulls placeholder (Group by 안 정한 상태)
+5. Search nodes typeahead dropdown (매칭 노드 list)
+6. Templates → TitlePatternBar 사라짐 + word/char 하단 위치
+
+🟡 **P1 main 4개** (사용자 선택):
+1. Wiki template Layout Preset + Content Template (Plot 정체성)
+2. Notes/Wiki/Books entity-agnostic ListRow
+3. editor-unification Phase 4 Partial Quote (Zettelkasten)
+4. editor-unification Phase 5A + 6 Note Merge 풀페이지 + History
+
+---
+
 ## 🚀 2026-05-13 — Smart Book v2 풀 완성 + Ontology Hull P1-4 + 11 follow-up (PR #319, 17 commits) ⭐⭐⭐⭐⭐
 
 **범위**: 1 worktree (`brave-ardinghelli-209f9b`). 단일 mega-PR. Smart Book v2 (G/H/K) + Ontology Hull (1/2/3/4) + Linear refs 137 + bug fix 다수.

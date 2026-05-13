@@ -3,14 +3,57 @@
 > 우선순위 기반 작업 목록. **P0 = 다음 세션 즉시 시작점** (NEXT-ACTION.md 폐지, 2026-05-12).
 > 완료 항목은 즉시 삭제 또는 "완료" 섹션으로 이동.
 
-**마지막 갱신**: 2026-05-13 (stale 정리 — 중복 P1 헤더 제거 + PR #319/#315/v122-v126 완료 항목 이동 + 부분 완료 항목 분리)
+**마지막 갱신**: 2026-05-13 (after-work — PR #320 6 commits push 완료, lineage 시각화 + template UpNote-style fix, 다른 컴퓨터 이어받기 준비)
 
 ---
 
-## 🔴 P0 — 즉시 (다음 세션)
+## 🔴 P0 — 즉시 (다음 세션, 다른 컴퓨터 가능)
 
-### PR #319 머지 + manual verify ⭐⭐⭐ — 사용자 책임
-PR #319 (17 commits, scope 매우 넓음). **Squash merge 권장** — main에 1 commit으로 합쳐짐. 머지 시 PR title broader scope로 update.
+### PR #320 manual verify ⭐⭐⭐ — 사용자 책임 (다른 컴퓨터에서 진행)
+PR #320 (6 commits, lineage 시각화 + template fix). **Squash merge 권장**. 머지 시 PR title broader scope로 update.
+
+#### 머지 후 verify (dev:3002 hard refresh + Ctrl+Shift+R)
+1. **Ontology Family Hull** (PR 1)
+   - Display popover → Group by → **Family** 선택 → hull 표시
+   - 같은 root ancestor 노드들이 한 hull로 묶임 (Notes는 parentNoteId chain, Wikis는 parentArticleId chain)
+   - hull color = root entity의 label.color 또는 categoryIds[0].color → fallback palette
+   - Filter > Visible hulls picker에 family root title 노출
+2. **Wiki Lineage Sidebar** (PR 2)
+   - Wiki article 열기 → Detail panel
+   - Categories 다음 "Lineage" section
+   - Ancestors breadcrumb (root → parent → ..., CaretRight 구분자)
+   - Descendants (N) 직속 children list
+   - 각 항목 클릭 → 해당 article navigation
+3. **Lineage Focus mode** (PR 3)
+   - 노드 우클릭 → "Show lineage" 메뉴 (Tree icon, Visual filters 그룹)
+   - 또는 노드 **Shift+click**
+   - 조상+후손만 normal opacity, 나머지 0.15 dim (transition 180ms)
+   - ESC / 빈 공간 클릭 / Shift+focused node 재클릭 → 해제
+4. **Filter Visible hulls placeholder** (PR 4)
+   - Group by 안 정한 상태에서 Filter > Visible hulls 클릭 → "Choose a Group by in Display first — hull options will appear here." 안내 (이전엔 빈 sub-menu만)
+5. **Ontology search typeahead** (PR 5)
+   - "Search nodes..." 입력 시 매칭 노드 list dropdown (입력란 아래)
+   - 상위 10개, 11+ 시 "+N more matches" 안내
+   - node type 색 dot (보라 = wiki / 회색 = note)
+   - 클릭 → 노드 select + query 자동 clear
+6. **Template UpNote-style 자유식** (PR 6 — 회귀 fix)
+   - Templates 메뉴 → 임의 template 열기 → **TITLE PATTERN bar 사라짐 확인**
+   - 본문 첫 줄에 "Weekly - {date}" 입력 → "Create note from template" → 노트 title = "Weekly - 2026-05-13" (변수 치환 + 첫 줄 추출)
+   - 본문 어디든 변수 작동 (paragraph/H2/table 등): `expandContentJsonPlaceholders` deep traverse
+   - **word/char 카운터 위치** — 일반 노트처럼 하단 (FixedToolbar 위)
+   - 기존 template 데이터 손실 0 — template.title field deprecate (legacy fallback)
+
+#### 구멍 가능성
+- bulk select 모드 UX, chapter context badge null cases, 100+ entity hull 성능 (PR #319 시 보고됨, 본 PR #320은 fix와 무관)
+- **Template 회귀 fix는 작은 변경이지만** — 기존 template 사용 시 fallback chain (template.name → template.title → "Untitled") 동작 확인
+
+#### 참고 파일
+- `.omc/plans/smart-book-v2-prd.md` v1.0 LOCKED (PR #319 참조)
+- `.omc/plans/ontology-hull-prd.md` v0.1 (Phase 1/2/3/4 = PR #319, Phase 5 lineage = 본 PR)
+- `.claude/plans/editor-unification.md` (Phase 1B 완료 + 회귀 fix 본 PR)
+
+### (선택) PR #319 manual verify — 이전 세션 누락된 P0
+PR #319 (이미 머지된 60c7e98). 본 PR과 같이 dev:3002에서 verify 가능. 6 surface 점검 (Smart Book v2 G/H/K + Ontology Hull P1-4 + Block 색). 한 번에 묶어서 진행 권장.
 
 #### 머지 후 verify (dev:3002 hard refresh)
 1. **Smart Book** `/library` Books → 책 → "Add source"
@@ -60,41 +103,56 @@ PR #319 (17 commits, scope 매우 넓음). **Squash merge 권장** — main에 1
 
 ---
 
-## 🟡 P1 — 큰 작업 후보
+## 🟡 P1 — 큰 작업 후보 (다음 세션 main 4개)
 
-### Notes/Wiki/Books 통합 entity-agnostic ListRow/BoardCard 패턴
+> **다른 컴퓨터에서 이어받기**: 본 4개 중 하나 선택 후 시작. 모두 독립적 진행 가능.
+> Plot 정체성 우선순위: 1 (Plot 위키 정체성) > 3 (Zettelkasten 인용) > 2 (일관성) > 4 (변경 추적)
+
+### 1. **Wiki template — Layout Preset + Content Template** ⭐ 추천 1순위 (Plot 정체성 핵심)
+- ✅ **Typed Infobox 구현됨**: `components/editor/wiki-infobox.tsx` + `lib/wiki-infobox-presets.ts` + `lib/wiki-infobox-collapse.ts`
+- ❌ Layout Preset 미구현 (article 단위 1열/2열/3열 column 레이아웃 preset)
+- ❌ Content Template 미구현 (인물/제품/이벤트 등 seed entries — 새 wiki article 생성 시 자동 채움)
+- Wiki domain. v3 Phase 3+와 독립
+- 3-layer 중 1 layer만 done → 나머지 2 layer **PRD 필요**
+- 사용자 가치: Plot 위키 정체성 (팔란티어×제텔카스텐) 강화
+
+### 2. **Notes/Wiki/Books 통합 entity-agnostic ListRow/BoardCard 패턴**
 - Books의 BookListRow + BookGridCard 패턴 일반화
 - generic 추출 없이도 reuse 패턴 (`renderListRow` prop) 도입
 - **검증 (2026-05-13)**: `renderListRow` 사용 사례 0 (docs만). BookListRow/NoteListRow/WikiListRow 각각 별도 존재. 진짜 미구현 P1.
+- 사용자 가치: 일관성 + 유지보수성 향상
 
-### Wiki template — Layout Preset + Content Template (Typed Infobox는 완료)
-- ✅ **Typed Infobox 구현됨**: `components/editor/wiki-infobox.tsx` + `lib/wiki-infobox-presets.ts` + `lib/wiki-infobox-collapse.ts`
-- ❌ Layout Preset 미구현
-- ❌ Content Template 미구현
-- Wiki domain. v3 Phase 3+와 독립
-- 3-layer 중 1 layer만 done → 나머지 2 layer PRD 필요
+### 3. **editor-unification Phase 4 — Partial Quote / WikiQuote 확장** ⭐ Zettelkasten 핵심
+- 참조: `.claude/plans/editor-unification.md` Phase 4
+- `[[노트]]` Peek 안에서 부분 드래그 선택 → "Insert" 클릭 → 현재 에디터에 부분만 삽입 (원본 영향 X)
+- WikiQuoteData 메타 풀셋: sourceNoteId / sourceNoteTitle / originalText / quotedText / quotedAt / **sourceHash** / context / comment
+- 원본 변경 감지 ("변경됨" 알림 sourceHash 비교)
+- 사용자 가치: Zettelkasten 인용 시스템 (Plot 코어 정체성)
 
-### editor-unification 잔여 Phase 검증 + 진행
-- 참조: `.claude/plans/editor-unification.md` (Phase 1-7)
-- ✅ **Phase 1B (Title Node) 완료**: `.omc/plans/title-node-removal.md` Definition of Done 6/6 [x]. UpNote-style first-block title 전환 완료, Store v65
-- ✅ **Phase 1C (Toolbar) 부분 완료**: `components/editor/EditorToolbar.tsx` 존재
-- ❓ Phase 1A (Shared editor config) — 검증 필요
-- ❓ Phase 1D (Columns, TOC, Infobox, NoteEmbed 커스텀 노드) — 검증 필요
-- ❓ Phase 2 (Wiki TextBlock → TipTap lazy mount) — 검증 필요
-- ❓ Phase 3 (Template 블록 레이아웃) — 검증 필요
-- ❓ Phase 4 (Partial Quote / WikiQuote 확장) — 검증 필요
-- ❓ Phase 5 (Merge/Split 풀페이지 + GitMerge 버튼) — 검증 필요
-- ❓ Phase 6 (Merge/Split History 시스템) — 검증 필요
-- 다음 세션 시작 시 git log + 코드 grep으로 각 Phase 완료 여부 정확히 파악 후 P1/P2 재분류
+### 4. **editor-unification Phase 5A + Phase 6 — Note Merge 풀페이지 + Merge/Split History 시스템** ⭐ 큰 작업
+- 참조: `.claude/plans/editor-unification.md` Phase 5A + 6
+- Phase 5A: 현재 `merge-dialog.tsx` 작은 Dialog → 풀페이지 (Wiki Merge 패턴 정합, `wiki-merge-page.tsx` 참조)
+- Phase 6: MergeHistory 데이터 모델 + Detail 패널 History section + 필터 + Insights History 탭 + Undo merge / Re-merge
+- 사용자 가치: 큰 변경 추적 + 회복
 
-### Note UI toolbar polish (미루기 — 별도 큰 작업)
-- `EditorToolbar.tsx` 토대 존재
-- 추가 후보: floating bubble 디자인 개선 / context-aware 버튼셋 (note/wiki/template) / 그룹 정리 (Text Format | Block Type | Insert | Alignment | History)
-- editor-unification Phase 1C 본격 진행과 묶임
+### editor-unification 잔여 — 검증된 상태 (2026-05-13)
+- ✅ **Phase 1A** (Shared editor config) — `components/editor/core/shared-editor-config.ts`
+- ✅ **Phase 1B** (Title Node UpNote-style) — DoD 6/6
+- ✅ **Phase 1C** (Toolbar) — `EditorToolbar.tsx` (bubble) + `FixedToolbar.tsx` (하단)
+- ✅ **Phase 1D** (Custom Nodes) — 18개 노드 (columns/toc/infobox/note-embed + 다수)
+- ✅ **Phase 2** (Wiki TextBlock → TipTap) — `wiki-block-renderer.tsx`에서 `useEditor from @tiptap/react`
+- ✅ **Phase 3** (Template 블록) — `template-edit-page.tsx` + `templateType`/`TemplateBlock` types
+- ❌ **Phase 4** (Partial Quote) — P1 main #3
+- ⚠️ **Phase 5A** (Note Merge 풀페이지) — 작은 Dialog만 (P1 main #4)
+- ✅ **Phase 5B** (Note Split 풀페이지) — `note-split-page.tsx`
+- ✅ **Phase 5C** (Wiki Merge 풀페이지) — `wiki-merge-page.tsx`
+- 보너스 ✅ **Wiki Split 풀페이지** — `wiki-split-page.tsx`
+- ❌ **Phase 6** (Merge/Split History) — P1 main #4
 
-### House (계보 시각화)
-- 미루기 — 토론 필요 (왜 필요한지, scope, 사용자 가치 명확화)
-- 미구현 확정 (`house*.tsx` 0 파일)
+### Note UI toolbar polish (미루기)
+- `EditorToolbar.tsx` (bubble) + `FixedToolbar.tsx` (하단) + `toolbar/arrange-mode.tsx` 토대 존재
+- 추가 polish 후보: floating bubble 디자인 / context-aware 버튼셋 (note/wiki/template) / 그룹 정리 (Text Format | Block Type | Insert | Alignment | History)
+- editor-unification Phase 4-6 본격 진행과 묶임
 
 ---
 
@@ -151,6 +209,26 @@ PR #319 (17 commits, scope 매우 넓음). **Squash merge 권장** — main에 1
 ---
 
 ## ✅ 최근 완료
+
+### 2026-05-13 (오후~저녁) — Lineage 시각화 + Template UpNote-style fix (PR #320, 6 commits cascade)
+- ✅ **PR 1 — Family Hull**: Ontology graph에 `groupBy: "family"` + Family Hull (Smart Book Hull P2 패턴 fork)
+  - familyMembership Map (Notes parentNoteId / Wikis parentArticleId, MAX_DEPTH 20)
+  - resolveColor — root entity의 label.color or categoryIds[0].color → fallback
+  - Visible hulls picker hydration에 family case
+- ✅ **PR 2 — Wiki Lineage Sidebar**: WikiArticleDetailPanel에 Ancestors breadcrumb + Descendants list (직속 children)
+  - navigateToWikiArticle 클릭 navigation
+  - Tree icon + CaretRight breadcrumb 구분자
+- ✅ **PR 3 — Lineage Focus mode**: 우클릭 "Show lineage" + Shift+click → opacity 0.15 dim
+  - ESC + 빈 공간 클릭 + Shift+focused 재클릭 모두 해제
+  - lineageMembers Set (ancestor chain + descendant subtree recursive)
+  - node-context-menu에 Tree icon + "Show lineage" item
+- ✅ **PR 4 polish — filter-panel placeholder**: Visible hulls 빈 sub-menu에 "Choose a Group by in Display first" 안내 (이전엔 안 보임 — 사용자 시그널 "별로인데")
+- ✅ **PR 5 — search typeahead dropdown**: ViewHeader에 `searchDropdownContent` prop + 매칭 노드 상위 10개 list + node type 색 dot + "+N more" footer + onMouseDown click race 회피
+- ✅ **PR 6 fix (회귀) — Template TitlePatternBar 제거 + UpNote-style 자유식 + word/char 위치 fix**:
+  - 회귀 진단: Phase 1B (title-node-removal) 이후 TitlePatternBar와 첫 블록 = title 동기화 충돌 → title pattern 무력화
+  - Fix A: TitlePatternBar UI 완전 제거 (PLACEHOLDER_VARS / Layout import / 함수 모두). createNoteFromTemplate 단순화. expandContentJsonPlaceholders helper 추가 (deep traverse, text 필드만 expandPlaceholders 호출).
+  - Fix B: editor wrapper에 `flex flex-col` 추가 (note-editor.tsx:680 패턴 정합) — word/char 카운터 하단으로 밀림
+  - 새 영구 룰 LOCKED: Title은 항상 첫 블록 텍스트 (notes/templates/모든 곳 일관). 별도 title pattern 필드 금지. 변수 치환 ({date}/{{YYYY}})은 본문 어디서나 작동.
 
 ### 2026-05-13 — TODO.md stale 정리 (메타 작업)
 - 중복 P1 헤더 (line 63 + 86) 제거
