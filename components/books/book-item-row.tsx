@@ -73,8 +73,12 @@ export function BookItemRow({
   const labels = usePlotStore((s) => s.labels)
   const stickers = usePlotStore((s) => s.stickers)
 
+  // v2 Phase G: auto entity items (note/wiki) are draggable within their
+  // source group; auto chapter-headings stay fixed (auto-generated).
+  // book-detail-page handleDragEnd enforces same-source restriction.
+  const isAutoHeading = item.source === "auto" && item.kind === "chapter-heading"
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
-    useSortable({ id: item.id, disabled: item.source === "auto" })
+    useSortable({ id: item.id, disabled: isAutoHeading })
 
   const style: React.CSSProperties = {
     transform: CSS.Transform.toString(transform),
@@ -221,15 +225,17 @@ export function BookItemRow({
       )}
       title={autoTooltip}
     >
-      {/* Drag handle (hover-only, hidden for auto) */}
-      {!isAuto ? (
+      {/* Drag handle — manual rows + auto entity rows (within source).
+          Auto chapter-headings stay non-draggable: show source-kind
+          icon instead (chapter title already identifies the source). */}
+      {!isAutoHeading ? (
         <button
           {...attributes}
           {...(listeners as any)}
           type="button"
           aria-label="Drag to reorder"
           className="flex h-6 w-5 items-center justify-center text-muted-foreground/40 opacity-0 transition-opacity group-hover:opacity-100 cursor-grab active:cursor-grabbing"
-          title="Drag to reorder"
+          title={isAuto ? "같은 소스 안에서 옮기기" : "Drag to reorder"}
         >
           <DotsSixVertical size={14} weight="bold" />
         </button>
@@ -242,15 +248,16 @@ export function BookItemRow({
         </span>
       )}
 
-      {/* Up / Down buttons (always visible for accessibility, disabled for auto) */}
+      {/* Up / Down buttons — same rule as drag handle: auto entity rows
+          can move within source; auto chapter-headings are fixed. */}
       <div className="flex items-center">
         <button
           type="button"
           aria-label="Move up"
           onClick={onMoveUp}
-          disabled={!canMoveUp || isAuto}
+          disabled={!canMoveUp || isAutoHeading}
           className="flex h-6 w-5 items-center justify-center rounded text-muted-foreground/60 hover:text-foreground hover:bg-hover-bg disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-          title={isAuto ? "Auto items can't be reordered" : "Move up"}
+          title={isAutoHeading ? "자동 챕터 헤딩은 옮길 수 없습니다" : "Move up"}
         >
           <CaretUp size={11} weight="bold" />
         </button>
@@ -258,9 +265,9 @@ export function BookItemRow({
           type="button"
           aria-label="Move down"
           onClick={onMoveDown}
-          disabled={!canMoveDown || isAuto}
+          disabled={!canMoveDown || isAutoHeading}
           className="flex h-6 w-5 items-center justify-center rounded text-muted-foreground/60 hover:text-foreground hover:bg-hover-bg disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-          title={isAuto ? "Auto items can't be reordered" : "Move down"}
+          title={isAutoHeading ? "자동 챕터 헤딩은 옮길 수 없습니다" : "Move down"}
         >
           <CaretDown size={11} weight="bold" />
         </button>

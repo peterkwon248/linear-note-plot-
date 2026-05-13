@@ -88,6 +88,7 @@ export function BookDetailPage({ bookId }: BookDetailPageProps) {
   const deleteBook = usePlotStore((s) => s.deleteBook)
   const addChapterHeading = usePlotStore((s) => s.addChapterHeading)
   const reorderBookItems = usePlotStore((s) => s.reorderBookItems)
+  const reorderAutoItem = usePlotStore((s) => s.reorderAutoItem)
   const setSelectedNoteId = usePlotStore((s) => s.setSelectedNoteId)
   const openNote = usePlotStore((s) => s.openNote)
   const setBookContext = usePlotStore((s) => s.setBookContext)
@@ -192,12 +193,8 @@ export function BookDetailPage({ bookId }: BookDetailPageProps) {
       const { active, over } = event
       if (!over || active.id === over.id) return
 
-      // PRD §5.7: auto items are NOT draggable. If somehow user dragged
-      // an auto item (defensive — Step 2.5 disables drag handle visually),
-      // ignore. Auto items reorder is invalid in Phase A (LOCKED #5c forces
-      // them to fixed lexicographic position after manual).
       const activeItem = resolvedItems.find((i) => i.id === active.id)
-      if (activeItem?.source === "auto") return
+      if (!activeItem) return
 
       const fromIndex = resolvedItems.findIndex((i) => i.id === active.id)
       const toIndex = resolvedItems.findIndex((i) => i.id === over.id)
@@ -205,12 +202,40 @@ export function BookDetailPage({ bookId }: BookDetailPageProps) {
 
       // Compute neighbors AFTER the move (excluding the moved item itself).
       const without = resolvedItems.filter((_, idx) => idx !== fromIndex)
-      // toIndex is in the original resolvedItems coordinate system. After
-      // removing the moved item, the insertion index needs adjustment when
-      // the destination was after the source.
       const adjustedTo = fromIndex < toIndex ? toIndex - 1 : toIndex
       const prev = adjustedTo > 0 ? without[adjustedTo - 1] : null
       const next = adjustedTo < without.length ? without[adjustedTo] : null
+
+      // v2 Phase G: auto entity items (note/wiki) reorder within their
+      // source group. Auto chapter-headings stay fixed (auto-generated,
+      // not user-reorderable). Cross-source drag = reject with toast
+      // (Q1 LOCKED: same source only).
+      if (activeItem.source === "auto") {
+        if (activeItem.kind === "chapter-heading") {
+          toast.info("자동 챕터 헤딩은 옮길 수 없습니다")
+          return
+        }
+        const activeSourceRefId = activeItem.sourceRefId
+        if (!activeSourceRefId) return
+        const prevSameSource =
+          !prev || (prev.source === "auto" && prev.sourceRefId === activeSourceRefId)
+        const nextSameSource =
+          !next || (next.source === "auto" && next.sourceRefId === activeSourceRefId)
+        if (!prevSameSource || !nextSameSource) {
+          toast.info("같은 소스 안에서만 옮길 수 있습니다")
+          return
+        }
+        const prevSortKey = prev ? prev.userOrder ?? prev.order : null
+        const nextSortKey = next ? next.userOrder ?? next.order : null
+        reorderAutoItem(
+          bookId,
+          activeSourceRefId,
+          (activeItem as { refId: string }).refId,
+          prevSortKey,
+          nextSortKey,
+        )
+        return
+      }
 
       reorderBookItems(
         bookId,
@@ -219,7 +244,7 @@ export function BookDetailPage({ bookId }: BookDetailPageProps) {
         next ? next.id : null,
       )
     },
-    [bookId, resolvedItems, reorderBookItems],
+    [bookId, resolvedItems, reorderBookItems, reorderAutoItem],
   )
 
   /* ── Up / Down via slice (computes neighbors at swapped position) ── */
@@ -228,8 +253,6 @@ export function BookDetailPage({ bookId }: BookDetailPageProps) {
       const idx = resolvedItems.findIndex((i) => i.id === itemId)
       if (idx === -1) return
       const item = resolvedItems[idx]
-      // PRD §5.7: auto items not reorderable
-      if (item.source === "auto") return
       const targetIdx = idx + delta
       if (targetIdx < 0 || targetIdx >= resolvedItems.length) return
       // Build a virtual re-ordered list, then snapshot the moved item's
@@ -237,17 +260,42 @@ export function BookDetailPage({ bookId }: BookDetailPageProps) {
       // between them. Single source of truth for both ↑ and ↓.
       const movedItem = resolvedItems[idx]
       const without = resolvedItems.filter((i) => i.id !== itemId)
-      // For both delta=-1 and delta=+1 the new index in `without` happens
-      // to equal `targetIdx` (downward move falls into the slot vacated by
-      // shifting the array left).
       const reordered = [...without]
       reordered.splice(targetIdx, 0, movedItem)
       const newPos = reordered.findIndex((i) => i.id === itemId)
       const prev = newPos > 0 ? reordered[newPos - 1] : null
       const next = newPos < reordered.length - 1 ? reordered[newPos + 1] : null
+
+      // v2 Phase G: auto entity ↑↓ within source. Same cross-source
+      // reject as drag (Q1 LOCKED). Auto chapter-heading buttons are
+      // already disabled in BookItemRow; defensive guard here.
+      if (item.source === "auto") {
+        if (item.kind === "chapter-heading") return
+        const activeSourceRefId = item.sourceRefId
+        if (!activeSourceRefId) return
+        const prevSameSource =
+          !prev || (prev.source === "auto" && prev.sourceRefId === activeSourceRefId)
+        const nextSameSource =
+          !next || (next.source === "auto" && next.sourceRefId === activeSourceRefId)
+        if (!prevSameSource || !nextSameSource) {
+          toast.info("같은 소스 안에서만 옮길 수 있습니다")
+          return
+        }
+        const prevSortKey = prev ? prev.userOrder ?? prev.order : null
+        const nextSortKey = next ? next.userOrder ?? next.order : null
+        reorderAutoItem(
+          bookId,
+          activeSourceRefId,
+          (item as { refId: string }).refId,
+          prevSortKey,
+          nextSortKey,
+        )
+        return
+      }
+
       reorderBookItems(bookId, itemId, prev ? prev.id : null, next ? next.id : null)
     },
-    [bookId, resolvedItems, reorderBookItems],
+    [bookId, resolvedItems, reorderBookItems, reorderAutoItem],
   )
 
   /* ── Open referenced entity ────────────────────────── */

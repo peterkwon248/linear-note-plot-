@@ -48,6 +48,7 @@ import { Sticker as PhSticker } from "@phosphor-icons/react/dist/ssr/Sticker"
 import { Plus as PhPlus } from "@phosphor-icons/react/dist/ssr/Plus"
 import { X as PhX } from "@phosphor-icons/react/dist/ssr/X"
 import { Sparkle } from "@phosphor-icons/react/dist/ssr/Sparkle"
+import { ArrowsClockwise } from "@phosphor-icons/react/dist/ssr/ArrowsClockwise"
 import type { AutoSourceKind } from "@/lib/types"
 
 interface SourcesSectionProps {
@@ -68,6 +69,7 @@ export function SourcesSection({ bookId }: SourcesSectionProps) {
   const addSmartSource = usePlotStore((s) => s.addSmartSource)
   const removeSmartSource = usePlotStore((s) => s.removeSmartSource)
   const updateBook = usePlotStore((s) => s.updateBook)
+  const clearAutoUserOrder = usePlotStore((s) => s.clearAutoUserOrder)
 
   const book = books.find((b) => b.id === bookId)
   const sources = book?.smartSources ?? []
@@ -251,6 +253,39 @@ export function SourcesSection({ bookId }: SourcesSectionProps) {
     toast(`Removed source: ${name}`)
   }
 
+  // v2 Phase G: per-source "Auto-sort" button — clears all userOrder
+  // entries scoped to this sourceRefId, reverting items to the natural
+  // updatedAt desc order. Undo restores the snapshot via updateBook.
+  const sourcesWithUserOrder = useMemo(() => {
+    const map = book?.autoUserOrders ?? {}
+    const set = new Set<string>()
+    for (const k of Object.keys(map)) {
+      const [refId] = k.split("::")
+      if (refId) set.add(refId)
+    }
+    return set
+  }, [book?.autoUserOrders])
+
+  const handleAutoSort = (sourceRefId: string, sourceName: string) => {
+    if (!book) return
+    const snapshot = { ...(book.autoUserOrders ?? {}) }
+    const removed = clearAutoUserOrder(bookId, sourceRefId)
+    if (removed === 0) {
+      toast("이미 자동 정렬 상태입니다", { duration: 1500 })
+      return
+    }
+    toast.success(`${sourceName} 자동 정렬로 복원 (${removed}개)`, {
+      duration: 5000,
+      action: {
+        label: "되돌리기",
+        onClick: () => {
+          updateBook(bookId, { autoUserOrders: snapshot })
+          toast("순서 복원됨", { duration: 1500 })
+        },
+      },
+    })
+  }
+
   // Phase F — "Convert to manual" pins every current auto item into
   // book.items as a real BookItem (new uuid, source/sourceRefId stripped)
   // and clears smartSources + excludeIds. Use case: user has curated the
@@ -375,27 +410,41 @@ export function SourcesSection({ bookId }: SourcesSectionProps) {
         </div>
       ) : (
         <ul className="divide-y divide-border/30 border-t border-border/30">
-          {resolvedSources.map((entry) => (
-            <li
-              key={`${entry.kind}-${entry.refId}`}
-              className="group flex items-center gap-2 px-4 py-1.5 text-note transition-colors hover:bg-hover-bg/40"
-            >
-              {renderEntryIcon(entry)}
-              <span className="flex-1 truncate text-foreground">{entry.name}</span>
-              <span className="text-2xs uppercase tracking-wide text-muted-foreground/50">
-                {entry.kind}
-              </span>
-              <button
-                type="button"
-                onClick={() => handleRemove(entry.kind, entry.refId, entry.name)}
-                className="flex h-5 w-5 items-center justify-center rounded text-muted-foreground/50 opacity-0 transition-all group-hover:opacity-100 hover:bg-destructive/10 hover:text-destructive"
-                title={`Remove source: ${entry.name}`}
-                aria-label={`Remove source: ${entry.name}`}
+          {resolvedSources.map((entry) => {
+            const hasUserOrder = sourcesWithUserOrder.has(entry.refId)
+            return (
+              <li
+                key={`${entry.kind}-${entry.refId}`}
+                className="group flex items-center gap-2 px-4 py-1.5 text-note transition-colors hover:bg-hover-bg/40"
               >
-                <PhX size={12} weight="regular" />
-              </button>
-            </li>
-          ))}
+                {renderEntryIcon(entry)}
+                <span className="flex-1 truncate text-foreground">{entry.name}</span>
+                <span className="text-2xs uppercase tracking-wide text-muted-foreground/50">
+                  {entry.kind}
+                </span>
+                {hasUserOrder && (
+                  <button
+                    type="button"
+                    onClick={() => handleAutoSort(entry.refId, entry.name)}
+                    className="flex items-center gap-1 rounded-md px-1.5 py-0.5 text-2xs text-muted-foreground transition-colors hover:bg-hover-bg hover:text-foreground"
+                    title="이 소스의 사용자 정렬 해제 → updatedAt desc로 복원"
+                  >
+                    <ArrowsClockwise size={11} weight="regular" />
+                    Auto-sort
+                  </button>
+                )}
+                <button
+                  type="button"
+                  onClick={() => handleRemove(entry.kind, entry.refId, entry.name)}
+                  className="flex h-5 w-5 items-center justify-center rounded text-muted-foreground/50 opacity-0 transition-all group-hover:opacity-100 hover:bg-destructive/10 hover:text-destructive"
+                  title={`Remove source: ${entry.name}`}
+                  aria-label={`Remove source: ${entry.name}`}
+                >
+                  <PhX size={12} weight="regular" />
+                </button>
+              </li>
+            )
+          })}
         </ul>
       )}
 
