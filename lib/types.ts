@@ -154,6 +154,17 @@ export interface Book {
    * (the per-source "Auto-sort" toggle). Spec: smart-book-v2-prd.md §4.
    */
   autoUserOrders?: Record<string, string>
+
+  /**
+   * Smart Book v2 Phase H — reading position. `lastReadItemId` is the
+   * resolved book item id (or refId — caller decides; we use the
+   * stable refId so it survives auto re-resolve). `lastReadAt` is an
+   * ISO timestamp. BookDetailPage shows a "Resume from {chapter}"
+   * button when set. NoteEditor / BookWikiReader updates this when
+   * a book-anchored page mounts. Spec: smart-book-v2-prd.md §5.
+   */
+  lastReadItemId?: string | null
+  lastReadAt?: string | null
 }
 
 /**

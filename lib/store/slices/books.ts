@@ -134,6 +134,16 @@ export interface BooksSlice {
    * Returns the number of keys removed (caller renders undo toast).
    */
   clearAutoUserOrder: (bookId: string, sourceRefId: string) => number
+
+  /* ── Reading position (v2 Phase H) ── */
+  /**
+   * Set the "last read" position for a book. Use the stable refId of
+   * the note/wiki entity (not the auto book item id, which changes on
+   * re-resolve). Caller is `NoteEditor` / `BookWikiReader` mount when
+   * a book-anchored page renders. Pass `null` to clear (rare —
+   * normally cleared by deleting the book or completing reading).
+   */
+  setLastRead: (bookId: string, refId: string | null) => void
 }
 
 export function createBooksSlice(set: Set, _get: Get): Omit<BooksSlice, "books"> {
@@ -429,6 +439,20 @@ export function createBooksSlice(set: Set, _get: Get): Omit<BooksSlice, "books">
         }),
       )
       return removed
+    },
+
+    /* ── Reading position (v2 Phase H) ── */
+    setLastRead: (bookId: string, refId: string | null) => {
+      set((state: any) =>
+        touchBook(state, bookId, (book) => {
+          if (book.lastReadItemId === refId) return book
+          return {
+            ...book,
+            lastReadItemId: refId,
+            lastReadAt: refId ? now() : null,
+          }
+        }),
+      )
     },
   }
 }

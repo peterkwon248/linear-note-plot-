@@ -216,6 +216,25 @@ export function BookContextNav({
       >
         {itemIndex + 1} <span className="text-muted-foreground/40">/</span> {total}
       </span>
+      {/* v2 Phase H: mini progress bar (Linear "gentle by default") —
+          inline next to the counter, ~36px wide, 2px tall accent fill on
+          subtle muted track. Shows reading progress at a glance without
+          taking the full header width. */}
+      {total > 0 && (
+        <div
+          className="hidden h-1 w-9 shrink-0 overflow-hidden rounded-full bg-muted-foreground/15 md:block"
+          title={`${Math.round(((itemIndex + 1) / total) * 100)}% 진행`}
+          role="progressbar"
+          aria-valuemin={0}
+          aria-valuemax={total}
+          aria-valuenow={itemIndex + 1}
+        >
+          <div
+            className="h-full rounded-full bg-accent transition-all duration-300 ease-out"
+            style={{ width: `${((itemIndex + 1) / total) * 100}%` }}
+          />
+        </div>
+      )}
       <div className="flex items-center gap-px">
         <button
           type="button"

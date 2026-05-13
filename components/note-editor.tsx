@@ -136,6 +136,16 @@ export function NoteEditor({ noteId: propNoteId, onClose, pane = 'primary', defa
   // current note isn't in the recorded book (mid-session removal etc.).
   const bookNav = useBookContextNav("note", note?.id ?? null)
 
+  // v2 Phase H: persist last-read position whenever a note mounts in a
+  // book-anchored context. Resolves the book's "Resume from {chapter}"
+  // button on next visit. refId (stable) survives auto re-resolve.
+  const setLastRead = usePlotStore((s) => s.setLastRead)
+  useEffect(() => {
+    if (bookNav.active && note?.id) {
+      setLastRead(bookNav.active.bookId, note.id)
+    }
+  }, [bookNav.active?.bookId, note?.id, setLastRead])
+
   // Cycle-safe embed picker: exclude all note/wiki IDs reachable from current note
   const embedNoteExcludeIds = useMemo(() => {
     if (!activeNoteId) return []

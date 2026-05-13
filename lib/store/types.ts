@@ -450,6 +450,8 @@ export interface PlotState {
     nextSortKey: string | null,
   ) => void
   clearAutoUserOrder: (bookId: string, sourceRefId: string) => number
+  /* v2 Phase H — reading position tracking. */
+  setLastRead: (bookId: string, refId: string | null) => void
   /**
    * Phase 4 — set or clear the in-book navigation context for a pane.
    * Pass `null` for `ctx` to leave book-anchored navigation (clears the

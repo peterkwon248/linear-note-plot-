@@ -60,6 +60,7 @@ import { getBookKind } from "@/lib/view-engine/use-books-view"
 import { IconChevronRight } from "@/components/plot-icons"
 import { ArrowLeft } from "@phosphor-icons/react/dist/ssr/ArrowLeft"
 import { Play } from "@phosphor-icons/react/dist/ssr/Play"
+import { Rewind } from "@phosphor-icons/react/dist/ssr/Rewind"
 import { Plus as PhPlus } from "@phosphor-icons/react/dist/ssr/Plus"
 import { TextH } from "@phosphor-icons/react/dist/ssr/TextH"
 import { FileText } from "@phosphor-icons/react/dist/ssr/FileText"
@@ -438,26 +439,54 @@ export function BookDetailPage({ bookId }: BookDetailPageProps) {
             >
               <ArrowLeft size={16} weight="regular" />
             </button>
-            <button
-              type="button"
-              onClick={() => {
-                const contentItems = resolvedItems.filter(
-                  (i) => i.kind !== "chapter-heading",
-                )
-                if (contentItems.length === 0) return
-                // Reuse handleOpen — sets bookContext + opens first page
-                handleOpen(contentItems[0])
-              }}
-              disabled={
-                !resolvedItems.some((i) => i.kind !== "chapter-heading")
-              }
-              className="flex h-7 items-center gap-1.5 rounded-md bg-accent px-2.5 text-2xs font-medium text-accent-foreground transition-opacity hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed"
-              title="Open the first page and start reading"
-              aria-label="Read from start"
-            >
-              <Play size={11} weight="fill" />
-              Read
-            </button>
+            {/* v2 Phase H: "Resume from {chapter}" when lastReadItemId
+                set, otherwise "Read from start". `lastReadItem` is
+                resolved from current items (auto re-resolve safe). */}
+            {(() => {
+              const contentItems = resolvedItems.filter(
+                (i) => i.kind !== "chapter-heading",
+              )
+              const lastReadItem = book.lastReadItemId
+                ? contentItems.find(
+                    (i) =>
+                      (i.kind === "note" || i.kind === "wiki") &&
+                      (i as { refId: string }).refId === book.lastReadItemId,
+                  )
+                : null
+              const targetItem = lastReadItem ?? contentItems[0]
+              const disabled = contentItems.length === 0
+              return (
+                <>
+                  {lastReadItem && (
+                    <button
+                      type="button"
+                      onClick={() => handleOpen(contentItems[0])}
+                      className="flex h-7 items-center gap-1.5 rounded-md px-2 text-2xs font-medium text-muted-foreground transition-colors hover:bg-hover-bg hover:text-foreground"
+                      title="처음부터 다시 읽기"
+                      aria-label="Start over"
+                    >
+                      <Rewind size={11} weight="regular" />
+                      처음부터
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => targetItem && handleOpen(targetItem)}
+                    disabled={disabled}
+                    className="flex h-7 items-center gap-1.5 rounded-md bg-accent px-2.5 text-2xs font-medium text-accent-foreground transition-opacity hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed"
+                    title={
+                      lastReadItem
+                        ? "이전에 읽던 위치에서 이어 읽기"
+                        : "Open the first page and start reading"
+                    }
+                    aria-label={lastReadItem ? "Resume reading" : "Read from start"}
+                  >
+                    <Play size={11} weight="fill" />
+                    {lastReadItem ? "Resume" : "Read"}
+                  </button>
+                </>
+              )
+            })()}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <button
@@ -683,6 +712,14 @@ function BookWikiReader({
   const wikiArticles = usePlotStore((s) => s.wikiArticles)
   const updateWikiArticle = usePlotStore((s) => s.updateWikiArticle)
   const article = wikiArticles.find((a) => a.id === articleId)
+  // v2 Phase H: persist last-read position when a wiki article mounts
+  // in book context. Mirrors NoteEditor behavior.
+  const setLastRead = usePlotStore((s) => s.setLastRead)
+  useEffect(() => {
+    if (wikiBookNav.active && articleId) {
+      setLastRead(wikiBookNav.active.bookId, articleId)
+    }
+  }, [wikiBookNav.active?.bookId, articleId, setLastRead])
 
   const handleNavigateToBooks = () => {
     setActiveRoute("/books")
