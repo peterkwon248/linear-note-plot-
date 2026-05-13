@@ -807,6 +807,7 @@ export function WikiView() {
                     onNext={wikiBookNav.goNext}
                     onJumpTo={wikiBookNav.jumpTo}
                     items={wikiBookNav.items}
+                    currentChapter={wikiBookNav.currentChapter}
                   />
                 </div>
               )}

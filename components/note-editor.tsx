@@ -500,6 +500,7 @@ export function NoteEditor({ noteId: propNoteId, onClose, pane = 'primary', defa
                 onNext={bookNav.goNext}
                 onJumpTo={bookNav.jumpTo}
                 items={bookNav.items}
+                currentChapter={bookNav.currentChapter}
               />
             </div>
           )}

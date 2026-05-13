@@ -62,6 +62,17 @@ interface BookContextNavProps {
   items?: ResolvedContentBookItem[]
   /** Optional: render the breadcrumb (book title /) inline before the counter. */
   showBreadcrumb?: boolean
+  /**
+   * v2 Phase H follow-up — chapter context. Caller (useBookContextNav)
+   * derives `sourceRefId` clustering; we look up the source's name +
+   * icon across folder/category/tag/label/sticker and render a subtle
+   * "in 📁 {name} (N/M)" badge.
+   */
+  currentChapter?: {
+    sourceRefId: string
+    indexInChapter: number
+    chapterTotal: number
+  } | null
 }
 
 export function BookContextNav({
@@ -73,11 +84,35 @@ export function BookContextNav({
   onJumpTo,
   items,
   showBreadcrumb = true,
+  currentChapter,
 }: BookContextNavProps) {
   const router = useRouter()
   const book = usePlotStore((s) => s.books.find((b) => b.id === bookId))
   const notes = usePlotStore((s) => s.notes)
   const wikiArticles = usePlotStore((s) => s.wikiArticles)
+  const folders = usePlotStore((s) => s.folders)
+  const wikiCategories = usePlotStore((s) => s.wikiCategories)
+  const tags = usePlotStore((s) => s.tags)
+  const labels = usePlotStore((s) => s.labels)
+  const stickers = usePlotStore((s) => s.stickers)
+
+  // v2 Phase H follow-up — resolve sourceRefId → source's name + icon
+  // glyph. Mirrors emit headings in resolver.ts (📁/📚/#/🏷/✨).
+  const chapterInfo = (() => {
+    if (!currentChapter) return null
+    const refId = currentChapter.sourceRefId
+    const folder = folders.find((f) => f.id === refId)
+    if (folder) return { name: folder.name, glyph: "📁" }
+    const category = wikiCategories.find((c) => c.id === refId)
+    if (category) return { name: category.name, glyph: "📚" }
+    const tag = tags.find((t) => t.id === refId)
+    if (tag) return { name: tag.name, glyph: "#" }
+    const label = labels.find((l) => l.id === refId)
+    if (label) return { name: label.name, glyph: "🏷" }
+    const sticker = stickers?.find((st) => st.id === refId)
+    if (sticker) return { name: sticker.name, glyph: "✨" }
+    return null
+  })()
 
   // Empty book or item not in book — render nothing (caller should clear
   // bookContext, but render-time guard keeps us safe).
@@ -234,6 +269,22 @@ export function BookContextNav({
             style={{ width: `${((itemIndex + 1) / total) * 100}%` }}
           />
         </div>
+      )}
+      {/* v2 Phase H follow-up: chapter context badge — "in 📁 Folder
+          (3/7)". Hidden on mobile (header 너비 부담). chapterInfo이
+          없으면 hide (manual items with no sourceRefId). */}
+      {chapterInfo && currentChapter && (
+        <span
+          className="hidden items-center gap-1 text-2xs text-muted-foreground/60 md:inline-flex"
+          title={`이 chapter: ${chapterInfo.glyph} ${chapterInfo.name}`}
+        >
+          <span className="text-muted-foreground/40">·</span>
+          <span>{chapterInfo.glyph}</span>
+          <span className="max-w-[100px] truncate">{chapterInfo.name}</span>
+          <span className="tabular-nums text-muted-foreground/40">
+            ({currentChapter.indexInChapter + 1}/{currentChapter.chapterTotal})
+          </span>
+        </span>
       )}
       <div className="flex items-center gap-px">
         <button
