@@ -95,6 +95,9 @@ export type FilterField =
   | "source" | "wordCount" | "title" | "noteType"
   // Graph-specific filter fields
   | "nodeType" | "relationType" | "showWikilinks" | "showTagNodes"
+  // v2 Ontology Hull Phase 4 — hull picker (visible hull entity ids).
+  // value = entity id (folder/category/tag/label/sticker/book/etc).
+  | "hullEntity"
   // Wiki-specific filter fields
   | "category" | "wikiTier"
   // Knowledge-graph filter fields

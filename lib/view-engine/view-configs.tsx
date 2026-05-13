@@ -397,6 +397,10 @@ export const GRAPH_VIEW_CONFIG: ViewConfig = {
       { key: "extends", label: "Extends", color: "#3b82f6" },
       { key: "depends-on", label: "Depends on", color: "#f59e0b" },
     ]},
+    // v2 Ontology Hull Phase 4 — 특정 hull entity 만 표시. groupBy
+    // value에 따라 values 동적 hydration (ontology-view). 빈
+    // selection = 모두 표시 (default). selection 있으면 그 entity만.
+    { key: "hullEntity", label: "Visible hulls", icon: <Sparkle size={14} weight="regular" />, values: [] },
   ],
   quickFilters: [],
   displayConfig: {

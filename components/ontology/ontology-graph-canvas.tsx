@@ -70,6 +70,10 @@ interface OntologyGraphCanvasProps {
    *  participate in the hull. When absent, canvas falls back to the
    *  cheap manual-only book.items[] reverse lookup (v1 behavior). */
   bookMembership?: Map<string, string[]>
+  /** v2 Ontology Hull Phase 4 — hull picker filter. Entity ids to
+   *  render as hulls. Empty set / undefined = render all (default).
+   *  Non-empty = only render hulls whose group key is in the set. */
+  visibleHullKeys?: Set<string>
   /** Group by mode (= hull rule). "none" disables hulls; "connections" keeps
    *  legacy BFS connected-component behavior. Other values group nodes by
    *  the matching entity field (label/tag/category/folder/status). */
@@ -342,6 +346,7 @@ export function OntologyGraphCanvas({
   stickers,
   books,
   bookMembership,
+  visibleHullKeys,
   groupBy = "connections",
   onRequestGroupBy,
   hiddenEdgeIds,
@@ -928,7 +933,12 @@ export function OntologyGraphCanvas({
 
     const hulls: { id: string; color: string; path: string; nodeIds: string[] }[] = []
     let idx = 0
+    // v2 Ontology Hull Phase 4 — hull picker filter: if visibleHullKeys
+    // is non-empty, only render hulls whose group key is in the set.
+    // Empty / undefined = render all (default).
+    const hullFilterActive = !!visibleHullKeys && visibleHullKeys.size > 0
     for (const [key, members] of groups.entries()) {
+      if (hullFilterActive && !visibleHullKeys!.has(key)) { idx++; continue }
       if (members.length < HULL.minNodes) { idx++; continue }
       const memberIds = members.map((m) => m.id)
       const points = gatherPoints(memberIds)
@@ -946,7 +956,7 @@ export function OntologyGraphCanvas({
     // positions. Earlier versions used `transform` here, but that only
     // changes during panning — node drags never invalidated the memo, so
     // hulls stayed frozen at the drag-start positions while nodes moved.
-  }, [groupBy, visibleEdges, graph.nodes, labels, tags, wikiCategories, folders, stickers, books, bookMembership, nodeMap, renderTick])
+  }, [groupBy, visibleEdges, graph.nodes, labels, tags, wikiCategories, folders, stickers, books, bookMembership, visibleHullKeys, nodeMap, renderTick])
 
   /* ── Node adjacency for hover highlight ────────────── */
   const connectedToHovered = useCallback(

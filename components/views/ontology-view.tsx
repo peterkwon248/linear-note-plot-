@@ -144,6 +144,17 @@ export function OntologyView() {
 
   const filteredNotes = useMemo(() => applyFilters(notes, ontologyFilters), [notes, ontologyFilters])
 
+  // v2 Ontology Hull Phase 4 — picker filter. graphFilters에서
+  // "hullEntity" field 값들을 Set으로 추출. 빈 set = 모든 hull 표시
+  // (default). 있는 set = 그 entity ids만 hull 표시.
+  const visibleHullKeys = useMemo(() => {
+    const set = new Set<string>()
+    for (const rule of graphFilters) {
+      if (rule.field === "hullEntity") set.add(String(rule.value))
+    }
+    return set
+  }, [graphFilters])
+
   // Build dynamic filter categories (inject tags/labels from store)
   const dynamicCategories = useMemo<FilterCategory[]>(() => {
     const base = GRAPH_VIEW_CONFIG.filterCategories
@@ -185,9 +196,32 @@ export function OntologyView() {
           })),
         }
       }
+      // v2 Ontology Hull Phase 4 — hullEntity values는 현재 groupBy에
+      // 따라 동적 hydration. groupBy가 "none"/"connections"이면 빈
+      // values (사용자가 hull source 선택해야 visible).
+      if (cat.key === "hullEntity") {
+        const groupBy = graphViewState.groupBy
+        let values: typeof cat.values = []
+        if (groupBy === "sticker") {
+          values = (stickers ?? []).map((s) => ({ key: s.id, label: s.name, color: s.color }))
+        } else if (groupBy === "book") {
+          values = books.filter((b) => !b.trashed).map((b) => ({
+            key: b.id, label: b.title || "Untitled", color: b.color ?? undefined,
+          }))
+        } else if (groupBy === "folder") {
+          values = folders.map((f) => ({ key: f.id, label: f.name, color: (f as { color?: string }).color }))
+        } else if (groupBy === "category") {
+          values = wikiCategories.map((c) => ({ key: c.id, label: c.name, color: c.color }))
+        } else if (groupBy === "tag") {
+          values = tags.map((t) => ({ key: t.id, label: t.name, color: t.color ?? undefined }))
+        } else if (groupBy === "label") {
+          values = labels.map((l) => ({ key: l.id, label: l.name, color: l.color }))
+        }
+        return { ...cat, values }
+      }
       return cat
     })
-  }, [tags, labels, graph])
+  }, [tags, labels, graph, graphViewState.groupBy, stickers, books, folders, wikiCategories])
 
   // Build graph data (no positions — fast, synchronous)
   const tagsMapped = useMemo(
@@ -368,6 +402,7 @@ export function OntologyView() {
             stickers={stickers}
             books={books}
             bookMembership={bookMembership}
+            visibleHullKeys={visibleHullKeys}
             groupBy={graphViewState.groupBy}
             onRequestGroupBy={(g) => updateGraphViewState({ groupBy: g })}
             // Visual filters (declutter the canvas, no data mutation)
