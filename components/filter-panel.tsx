@@ -129,12 +129,30 @@ export function FilterPanel({
 
   return (
     <div ref={containerRef} className="relative flex">
-      {/* ── Sub Panel (values) — LEFT side, positioned at hovered row's y ── */}
-      {activeCategory && activeCategory.values.length > 0 && (
+      {/* ── Sub Panel (values) — LEFT side, positioned at hovered row's y ── *
+       * Empty values:
+       *  - hullEntity = groupBy-dependent (Visible hulls): show hint
+       *    ("Group by 먼저 정해야 옵션 노출"). 사용자 시그널: "메뉴 항목은
+       *     있는데 클릭하면 아무것도 안 떠서 별로" → hide 대신 안내.
+       *  - 그 외 빈 카테고리: 일반 "No options" fallback. */}
+      {activeCategory && (
         <div
-          className="absolute right-full w-[220px] max-h-[400px] overflow-y-auto border border-border-subtle bg-surface-overlay rounded-lg py-1 shrink-0 shadow-lg z-10 -mr-px"
+          className="absolute right-full w-[240px] max-h-[400px] overflow-y-auto border border-border-subtle bg-surface-overlay rounded-lg py-1 shrink-0 shadow-lg z-10 -mr-px"
           style={{ top: subPanelTop }}
         >
+          {activeCategory.values.length === 0 ? (
+            <div className="px-3 py-3 text-note text-muted-foreground leading-relaxed">
+              {activeCategory.key === "hullEntity" ? (
+                <>
+                  Choose a <span className="font-medium text-foreground">Group by</span> in Display first —
+                  hull options will appear here.
+                </>
+              ) : (
+                "No options available."
+              )}
+            </div>
+          ) : (
+          <>
           <div className="px-2 pb-1">
             <input
               type="text"
@@ -196,6 +214,8 @@ export function FilterPanel({
               )
             })
           })()}
+          </>
+          )}
         </div>
       )}
 
