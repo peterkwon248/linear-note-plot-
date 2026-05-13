@@ -480,20 +480,21 @@ export function NoteEditorAdapter({ note, onEditorReady, editable = true }: Note
           let Collaboration bind to the empty fragment and emit a flood of
           empty onUpdate events, which the empty-content guard then has to
           chase down. Cheaper and safer to just wait. */}
-      {/* 2026-05-13: UpNote 패턴 — 빈 노트일 때 inline CTA. "Select from
-          Templates" 버튼 클릭 시 TemplatesPickerDialog 열림. 사용자 입력
-          시작하면 자동 사라짐. slash 메뉴에 templates 펴던 noisy 패턴 대신
-          명시적 dialog entry. */}
+      {/* 2026-05-13: 빈 노트일 때 작은 hint row — editor 위 별도 행으로
+          push (absolute overlay는 heading/paragraph 위치와 어긋나 들여쓰기
+          느낌). 사용자 입력 시작하면 자동 사라짐. 문구는 Plot 자체 표현
+          (UpNote 문구 그대로 복사 회피). */}
       {editable && ydocReady && isEditorEmpty && editorInstance && (
-        <div className="pointer-events-none absolute inset-x-0 top-0 z-10 px-[var(--editor-padding-x,1.5rem)] pt-[var(--editor-padding-y,1.5rem)] text-note text-muted-foreground/60">
-          <span>Type / for menu or </span>
+        <div className="px-[var(--editor-padding-x,1.5rem)] pt-1 pb-2 text-2xs text-muted-foreground/50">
           <button
             type="button"
             onClick={() => setTemplatesPickerOpen(true)}
-            className="pointer-events-auto text-accent underline decoration-dotted underline-offset-2 hover:decoration-solid"
+            className="underline decoration-dotted underline-offset-2 hover:text-foreground hover:decoration-solid"
           >
-            select from Templates
+            Insert from a template
           </button>
+          <span className="mx-1.5 opacity-50">·</span>
+          <span>or press / for menu</span>
         </div>
       )}
       {ydocReady ? (
