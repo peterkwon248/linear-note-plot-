@@ -17,12 +17,15 @@
  * placeholder with only the × button so the user can clean up.
  */
 
-import { useState, useEffect, useMemo, useRef } from "react"
+import { useState, useEffect, useMemo, useRef, type ReactNode } from "react"
 import { useSortable } from "@dnd-kit/sortable"
 import { CSS } from "@dnd-kit/utilities"
 import { usePlotStore } from "@/lib/store"
 import type { ResolvedBookItem } from "@/lib/books/resolver"
 import { Folder as PhFolder } from "@phosphor-icons/react/dist/ssr/Folder"
+import { BookOpen as PhBookOpen } from "@phosphor-icons/react/dist/ssr/BookOpen"
+import { Hash as PhHash } from "@phosphor-icons/react/dist/ssr/Hash"
+import { Sticker as PhSticker } from "@phosphor-icons/react/dist/ssr/Sticker"
 import { toast } from "sonner"
 import { StatusShapeIcon } from "@/components/status-icon"
 import { IconWikiStub, IconWikiArticle } from "@/components/plot-icons"
@@ -65,6 +68,10 @@ export function BookItemRow({
   const notes = usePlotStore((s) => s.notes)
   const wikiArticles = usePlotStore((s) => s.wikiArticles)
   const folders = usePlotStore((s) => s.folders)
+  const wikiCategories = usePlotStore((s) => s.wikiCategories)
+  const tags = usePlotStore((s) => s.tags)
+  const labels = usePlotStore((s) => s.labels)
+  const stickers = usePlotStore((s) => s.stickers)
 
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
     useSortable({ id: item.id, disabled: item.source === "auto" })
@@ -75,15 +82,33 @@ export function BookItemRow({
     opacity: isDragging ? 0.5 : 1,
   }
 
-  // isAuto + sourceFolderName hoisted above all conditional returns (hooks rules)
+  // isAuto + sourceInfo hoisted above all conditional returns (hooks rules).
   const isAuto = item.source === "auto"
-  // Tweak B: also resolve folder name for manual rows that match a smart
-  // source — used for the subtle "also in {folder}" hint badge.
-  const sourceFolderName = useMemo(() => {
+  // Tweak B (Phase F): resolve the smart-source provenance across all 5
+  // kinds — folder / category / tag / label / sticker. The resolver tags
+  // sourceRefId on both auto items and manual items that also match a
+  // smart source (probe order in resolver). UI uses this for a subtle
+  // "also in {source}" hint badge so users understand why a manual note
+  // didn't surface as auto (it's already manual).
+  const sourceInfo = useMemo<{
+    kind: "folder" | "category" | "tag" | "label" | "sticker"
+    name: string
+  } | null>(() => {
     if (!item.sourceRefId || item.kind === "chapter-heading") return null
-    return folders.find((f) => f.id === item.sourceRefId)?.name ?? null
-  }, [item.sourceRefId, item.kind, folders])
-  const showManualBadge = !isAuto && !!sourceFolderName
+    const refId = item.sourceRefId
+    const folder = folders.find((f) => f.id === refId)
+    if (folder) return { kind: "folder", name: folder.name }
+    const category = wikiCategories.find((c) => c.id === refId)
+    if (category) return { kind: "category", name: category.name }
+    const tag = tags.find((t) => t.id === refId)
+    if (tag) return { kind: "tag", name: tag.name }
+    const label = labels.find((l) => l.id === refId)
+    if (label) return { kind: "label", name: label.name }
+    const sticker = stickers?.find((st) => st.id === refId)
+    if (sticker) return { kind: "sticker", name: sticker.name }
+    return null
+  }, [item.sourceRefId, item.kind, folders, wikiCategories, tags, labels, stickers])
+  const showManualBadge = !isAuto && !!sourceInfo
 
   const handleRemove = () => {
     if (item.source === "auto") {
@@ -159,9 +184,31 @@ export function BookItemRow({
     )
   }
 
-  const autoTooltip = sourceFolderName
-    ? `Auto from "${sourceFolderName}" — click × to exclude`
+  const autoTooltip = sourceInfo
+    ? `Auto from ${sourceInfo.kind} "${sourceInfo.name}" — click × to exclude`
     : undefined
+
+  // Leading slot icon for auto rows: matches the smart source kind so the
+  // user can scan provenance at a glance (📁 folder, 📚 category, # tag,
+  // 🏷 label, ✨ sticker). Falls back to folder for legacy rows where the
+  // source no longer resolves.
+  const renderSourceIcon = (size: number): ReactNode => {
+    const kind = sourceInfo?.kind
+    if (kind === "category")
+      return <PhBookOpen size={size} weight="regular" className="text-muted-foreground/40" />
+    if (kind === "tag")
+      return <PhHash size={size} weight="regular" className="text-muted-foreground/40" />
+    if (kind === "label")
+      return (
+        <span
+          className="h-1.5 w-1.5 rounded-full bg-muted-foreground/40"
+          aria-hidden="true"
+        />
+      )
+    if (kind === "sticker")
+      return <PhSticker size={size} weight="regular" className="text-muted-foreground/40" />
+    return <PhFolder size={size} weight="regular" className="text-muted-foreground/40" />
+  }
 
   return (
     <div
@@ -191,7 +238,7 @@ export function BookItemRow({
           className="flex h-6 w-5 items-center justify-center"
           title={autoTooltip}
         >
-          <PhFolder size={11} weight="regular" className="text-muted-foreground/40" />
+          {renderSourceIcon(11)}
         </span>
       )}
 
@@ -240,14 +287,15 @@ export function BookItemRow({
       </button>
 
       {/* Tweak B: subtle hint when a manual note also lives in a smart
-          source folder. Helps users understand why adding the source
-          didn't surface this note as auto (it's already manual). */}
-      {showManualBadge && (
+          source. Helps users understand why adding the source didn't
+          surface this note as auto (it's already manual). Phase F: icon
+          matches the source kind across all 5 source kinds. */}
+      {showManualBadge && sourceInfo && (
         <span
           className="flex shrink-0 items-center gap-0.5 text-2xs text-muted-foreground/40"
-          title={`Also in "${sourceFolderName}" folder source`}
+          title={`Also in "${sourceInfo.name}" ${sourceInfo.kind} source`}
         >
-          <PhFolder size={10} weight="regular" />
+          {renderSourceIcon(10)}
         </span>
       )}
 
