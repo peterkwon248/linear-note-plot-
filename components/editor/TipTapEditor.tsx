@@ -232,8 +232,9 @@ export function TipTapEditor({
       </div>
       {editable && <EditorToolbar editor={editor} />}
       {editor && (
-        // 2026-05-13: counts row를 toolbar 아래(footer)로 이동. 이전엔
-        // body와 toolbar 사이에 떠서 body 안 floating처럼 보임 (사용자 시그널).
+        // 2026-05-13: counts row sticky bottom — scroll container 안에서도
+        // 항상 footer 위치 고정. 이전엔 body content 짧을 때 중간에 떠보임
+        // (사용자 "아래로 내려가야지" 시그널 2회).
         <div
           className="text-2xs"
           style={{
@@ -245,6 +246,10 @@ export function TipTapEditor({
             opacity: 0.6,
             userSelect: "none",
             flexShrink: 0,
+            position: "sticky",
+            bottom: 0,
+            background: "var(--bg)",
+            marginTop: "auto",
           }}
         >
           <span>{counts?.words ?? 0} words</span>
