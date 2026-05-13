@@ -9,6 +9,8 @@ import { TextAlignLeft } from "@phosphor-icons/react/dist/ssr/TextAlignLeft"
 import { Tag as PhTag } from "@phosphor-icons/react/dist/ssr/Tag"
 import { Info as PhInfo } from "@phosphor-icons/react/dist/ssr/Info"
 import { Layout } from "@phosphor-icons/react/dist/ssr/Layout"
+import { Tree } from "@phosphor-icons/react/dist/ssr/Tree"
+import { CaretRight } from "@phosphor-icons/react/dist/ssr/CaretRight"
 import { Trash } from "@phosphor-icons/react/dist/ssr/Trash"
 import { Image as PhImage } from "@phosphor-icons/react/dist/ssr/Image"
 import { PushPin } from "@phosphor-icons/react/dist/ssr/PushPin"
@@ -20,6 +22,7 @@ import { FolderPicker } from "@/components/folder-picker"
 import { IconWiki } from "@/components/plot-icons"
 import { setActiveRoute } from "@/lib/table-route"
 import { InBooksSection } from "@/components/books/in-books-section"
+import { navigateToWikiArticle } from "@/lib/wiki-article-nav"
 import type { WikiArticle } from "@/lib/types"
 import { getEntityColor } from "@/lib/colors" // v109: opt-in color fallback
 
@@ -50,6 +53,7 @@ export function WikiArticleDetailPanel({ article }: { article: WikiArticle | nul
   const toggleWikiArticlePin = usePlotStore((s) => s.toggleWikiArticlePin)
   const tags = usePlotStore((s) => s.tags)
   const notes = usePlotStore((s) => s.notes)
+  const wikiArticles = usePlotStore((s) => s.wikiArticles)
   const attachments = usePlotStore((s) => s.attachments)
   const folders = usePlotStore((s) => s.folders)
   // PR (c): N:M membership actions for the wiki Folders chip strip.
@@ -75,6 +79,34 @@ export function WikiArticleDetailPanel({ article }: { article: WikiArticle | nul
     if (!article?.tags?.length) return []
     return tags.filter((t) => article.tags.includes(t.id) && !t.trashed)
   }, [article?.tags, tags])
+
+  // Lineage (Ontology Hull P5 — PR 2): ancestor chain root→parent and direct
+  // descendants. parentArticleId chain matches view-engine/wiki-list-pipeline
+  // family grouping (root ancestor 기준). MAX_DEPTH=20 cycle guard.
+  // Descendants는 직속 children만 (recursive tree는 follow-up, scope 폭발 회피).
+  const ancestors = useMemo(() => {
+    if (!article?.parentArticleId) return [] as WikiArticle[]
+    const wikiMap = new Map(wikiArticles.map((w) => [w.id, w]))
+    const chain: WikiArticle[] = []
+    const visited = new Set<string>()
+    let current: string | null | undefined = article.parentArticleId
+    let steps = 0
+    while (current && steps < 20) {
+      if (visited.has(current)) break
+      visited.add(current)
+      const a = wikiMap.get(current)
+      if (!a) break
+      chain.unshift(a)  // root first
+      current = a.parentArticleId
+      steps++
+    }
+    return chain
+  }, [article?.parentArticleId, wikiArticles])
+
+  const descendants = useMemo(() => {
+    if (!article) return [] as WikiArticle[]
+    return wikiArticles.filter((w) => w.parentArticleId === article.id)
+  }, [article, wikiArticles])
 
   const sources = useMemo(() => {
     if (!article) return []
@@ -192,6 +224,58 @@ export function WikiArticleDetailPanel({ article }: { article: WikiArticle | nul
                 </span>
               ))}
             </div>
+          </InspectorSection>
+          <div className="mx-4 border-b border-border" />
+        </>
+      )}
+
+      {/* Lineage — Ontology Hull P5 PR 2.
+          Ancestor chain (root→parent breadcrumb) + direct descendants list.
+          Only render when at least one side has entries (avoid empty noise).
+          Click navigates via wiki-article-nav (same path as wiki-merge-page). */}
+      {(ancestors.length > 0 || descendants.length > 0) && (
+        <>
+          <InspectorSection title="Lineage" icon={<Tree size={16} weight="regular" />}>
+            {ancestors.length > 0 && (
+              <div className="mb-2">
+                <div className="mb-1 text-2xs text-muted-foreground">Ancestors</div>
+                <div className="flex flex-wrap items-center gap-0.5">
+                  {ancestors.map((a, i) => (
+                    <span key={a.id} className="flex items-center gap-0.5">
+                      {i > 0 && <CaretRight size={10} weight="regular" className="text-muted-foreground/60" />}
+                      <button
+                        type="button"
+                        onClick={() => navigateToWikiArticle(a.id)}
+                        className="rounded-md px-1.5 py-0.5 text-note text-foreground/80 hover:bg-hover-bg hover:text-foreground transition-colors truncate max-w-[160px]"
+                        title={a.title || "Untitled"}
+                      >
+                        {a.title || "Untitled"}
+                      </button>
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+            {descendants.length > 0 && (
+              <div>
+                <div className="mb-1 text-2xs text-muted-foreground">
+                  Descendants ({descendants.length})
+                </div>
+                <div className="flex flex-col gap-0.5">
+                  {descendants.map((d) => (
+                    <button
+                      key={d.id}
+                      type="button"
+                      onClick={() => navigateToWikiArticle(d.id)}
+                      className="text-left rounded-md px-1.5 py-0.5 text-note text-foreground/80 hover:bg-hover-bg hover:text-foreground transition-colors truncate"
+                      title={d.title || "Untitled"}
+                    >
+                      {d.title || "Untitled"}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
           </InspectorSection>
           <div className="mx-4 border-b border-border" />
         </>
