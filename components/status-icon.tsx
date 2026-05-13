@@ -26,12 +26,16 @@ export function StatusIcon({ status, className }: { status: NoteStatus; classNam
 /**
  * Shape-differentiated status icon (Linear-style): workflow stage expressed through
  * icon shape in addition to color.
- * - stone    = dashed circle (gray)
- * - brick    = half-filled circle (orange)
- * - keystone = block (Cuboid2x2, 2×2 grid)
+ * - stone    = Hexagon  (raw granite)
+ * - brick    = Cube     (fired brick)
+ * - keystone = Cuboid2x2 (finished crystal)
  *
- * Used in notes-table, peek picker, and anywhere a richer affordance is wanted
- * over a plain colored dot.
+ * 2026-05-13: SVG weight "bold"로 두꺼운 outline 렌더. bg badge 없이 icon
+ * 자체 선명도 ↑로 chip과 visual weight 매치. (이전 outline regular + bg
+ * badge 시도는 사용자가 "선명한 호버가 항시 있어 눈 피로"로 보고 → revert.
+ * fill weight은 Cuboid2x2가 line-only SVG라 작동 X → bold로 통일.)
+ *
+ * Used in notes-table, sidebar, breadcrumb, gallery, trash, books, and group headers.
  */
 export function StatusShapeIcon({
   status,
@@ -45,10 +49,10 @@ export function StatusShapeIcon({
   const color = NOTE_STATUS_COLORS[status]?.css ?? "currentColor"
   const shared = cn("shrink-0", className)
   if (status === "stone") {
-    return <Hexagon size={size} weight="regular" style={{ color }} className={shared} />
+    return <Hexagon size={size} weight="bold" style={{ color }} className={shared} />
   }
   if (status === "brick") {
-    return <Cube size={size} weight="regular" style={{ color }} className={shared} />
+    return <Cube size={size} weight="bold" style={{ color }} className={shared} />
   }
-  return <Cuboid2x2 size={size} weight="regular" style={{ color }} className={shared} />
+  return <Cuboid2x2 size={size} weight="bold" style={{ color }} className={shared} />
 }

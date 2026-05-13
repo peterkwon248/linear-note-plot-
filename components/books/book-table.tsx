@@ -66,7 +66,7 @@ interface BookColumnDef {
 }
 
 const BOOK_COLUMNS: BookColumnDef[] = [
-  { id: "title",     label: "Name",     width: "flex-1 min-w-0", sortField: "title" },
+  { id: "title",     label: "Name",     width: "flex-1 min-w-[120px]", sortField: "title" },
   { id: "kind",      label: "Kind",     width: "w-[110px] shrink-0", align: "left" },
   { id: "itemCount", label: "Items",    width: "w-[72px] shrink-0",  align: "right", sortField: "itemCount" },
   { id: "sources",   label: "Sources",  width: "w-[100px] shrink-0", align: "left" },
@@ -217,7 +217,7 @@ export function BookTable({
           />
         </div>
         {cols.map((c) => (
-          <div key={c.id} className={cn("flex items-center", c.width)}>
+          <div key={c.id} className={cn("flex items-center overflow-hidden", c.width)}>
             <TH
               label={c.label}
               col={c.sortField}
@@ -237,7 +237,10 @@ export function BookTable({
           // notes-table group header style (sticky-ish band + label + count).
           groups!.map((group) => (
             <div key={group.key}>
-              <div className="sticky top-9 z-[9] flex items-center gap-2 border-b border-border-subtle bg-background/95 px-5 py-2 backdrop-blur">
+              {/* Notes `.a-tg` 패턴 통일 (2026-05-13) — entity별 그룹 헤더
+                  모양새 일관성. chevron column 비워두고 icon/label/count/line. */}
+              <div className="a-tg">
+                <span />
                 {(group.key === "smart" || group.key === "manual" || group.key === "hybrid") && (
                   <BookKindIcon kind={group.key} size={12} />
                 )}
@@ -247,12 +250,10 @@ export function BookTable({
                 {group.key === "others" && (
                   <PushPinSlash size={12} weight="regular" className="text-muted-foreground/60" />
                 )}
-                <span className="text-2xs font-semibold uppercase tracking-wide text-muted-foreground">
-                  {group.label || "Untitled"}
-                </span>
-                <span className="text-2xs text-muted-foreground/70 tabular-nums">
-                  {group.books.length}
-                </span>
+                {!["smart", "manual", "hybrid", "pinned", "others"].includes(group.key) && <span />}
+                <span className="a-tg__label">{group.label || "Untitled"}</span>
+                <span className="a-tg__count tabular-nums">{group.books.length}</span>
+                <div className="a-tg__line" />
               </div>
               {group.books.map((book) => (
                 <BookRow
@@ -473,7 +474,7 @@ function BookRow({
             />
           </div>
           {cols.map((c) => (
-            <div key={c.id} className={cn("flex items-center", c.width)}>
+            <div key={c.id} className={cn("flex items-center overflow-hidden", c.width)}>
               {renderCell(c.id, book, kind, sourceKinds)}
             </div>
           ))}

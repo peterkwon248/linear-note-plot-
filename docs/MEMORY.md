@@ -8,6 +8,51 @@
 
 ---
 
+## 🚀 2026-05-13 (밤) — Status 색 메타포 재정렬 + 6 follow-up (PR #319 manual verify 결과)
+
+**범위**: 1 worktree (`elegant-jepsen-2b3731`). 사용자 시각 시그널 6개 한 PR 묶음. 10 files modified.
+
+### 핵심 결정 (영구 LOCKED, 2026-05-13)
+
+**1. Status 색 메타포 재정렬** — 사용자 결정:
+- **Stone** = slate (회색, raw) — light `#475569` slate-600 / dark `#94a3b8` slate-400
+- **Brick** = amber (kiln-fired, in progress) — light `#D97706` amber-600 / dark `#f59e0b` amber-500 (유지)
+- **Block (keystone)** = emerald (finished crystal, settled) — light `#059669` emerald-600 / dark `#34d399` emerald-400
+- 메타포: 마지막 단계가 가장 vivid color로 끝나는 progression (이전엔 Block이 가장 옅은 slate라 어색).
+- 색 변경 시 3곳 동시 update 의무: `app/globals.css` (light + dark) + `lib/colors.ts NOTE_STATUS_HEX` (dark canonical).
+
+**2. STATUS_CONFIG var(--status-*) 통일 영구 룰**:
+- `components/note-fields.tsx` STATUS_CONFIG의 color/bg/border는 `var(--status-{stone|brick|keystone})`만 사용.
+- `var(--chart-N)`는 chart 시각화 전용 (PR #319 영구 룰). status에 chart-N mapping 금지.
+- chip ↔ row icon 색 정확 동일 보장 (둘 다 동일 CSS var 받음).
+
+**3. 그룹 헤더 `.a-tg` 영구 패턴 (모든 entity)**:
+- Notes/Wiki/Books 3 entity 모두 `.a-tg` CSS 클래스 + `.a-tg__label`/`.a-tg__count`/`.a-tg__line` 통일.
+- grid-template-columns: 11px auto auto auto 1fr (chevron / icon / label / count / divider line).
+- label color: var(--fg) (진함). count: var(--whisper-fg) (옅음). line: var(--border) flex 1fr.
+- 새 entity 도입 시 same pattern 사용 의무.
+
+**4. BookTable narrow viewport overflow 영구 룰**:
+- list table cells에 `overflow-hidden` 필수 (text overflow → 옆 cell 겹침 회피).
+- flex-1 title column에 `min-w-[120px]` (좁은 viewport 0 collapse 방지). Notes/Wiki 같은 pattern 시 동일.
+
+**5. Home stats card layout 영구 패턴**:
+- icon은 label **좌측** (`flex items-center gap-1.5`). `justify-between` X — label 길이 무관 일관성.
+- label 길면 `truncate`. tracking 자제 (uppercase font-medium 충분).
+
+**6. i18n 영어 통일 영구 룰**:
+- 다이얼로그 / 버튼 / footer 텍스트는 영어. 한국어 사용자라도 일관성 우선.
+- 위반 시 같은 다이얼로그 안 한/영 혼합 → 시각 일관성 ↓.
+
+### 기술 학습 (영구)
+
+- **CSS var vs TS const 동기화 의무** — globals.css `--status-*` 변경 시 lib/colors.ts `NOTE_STATUS_HEX` 같이 update. mismatch → ontology canvas stale.
+- **STATUS_CONFIG chip 패턴 root cause** — chip이 쓰는 var와 row icon이 쓰는 var가 다르면 사용자 시각 "다른 색" 인식. 통일 의무.
+- **SVG weight "fill" 한계** — Cuboid2x2 custom icon은 line-only SVG라 fill 작동 X. weight "bold"가 다른 weight들과 일관.
+- **flex-1 min-w-0 narrow viewport collapse** — title column이 0px squeeze 가능. min-w-[N] 추가로 minimum 보장.
+
+---
+
 ## 🚀 2026-05-13 — Smart Book v2 풀 완성 + Ontology Hull P1-4 + 11 follow-up (PR #319, 17 commits mega-PR)
 
 **범위**: 1 worktree (`brave-ardinghelli-209f9b`). 단일 세션, 17 commits 단일 PR. Smart Book v2 (Phase G/H/K 전체) + Ontology Hull (Phase 1/2/3/4 전체) + Linear refs 137 + 다수 bug fix.

@@ -42,28 +42,29 @@ export const STATUS_CONFIG: Record<
 > = {
   stone: {
     label: "Stone",
-    color: "var(--chart-2)",
-    bg: "color-mix(in srgb, var(--chart-2) 18%, transparent)",
-    border: "color-mix(in srgb, var(--chart-2) 35%, transparent)",
-    icon: <Hexagon size={14} weight="regular" />,
+    // 2026-05-13: var(--chart-2)는 chart 시각화 전용 — status 색과 unrelated.
+    // var(--status-stone)으로 통일 → row icon(NOTE_STATUS_COLORS)과 정확
+    // 동일 색. (이전 PR #319에서 keystone만 fix되고 stone/brick은 lazy
+    // 남았던 follow-up.)
+    color: "var(--status-stone)",
+    bg: "color-mix(in srgb, var(--status-stone) 18%, transparent)",
+    border: "color-mix(in srgb, var(--status-stone) 35%, transparent)",
+    icon: <Hexagon size={14} weight="bold" />,
   },
   brick: {
     label: "Brick",
-    color: "var(--chart-3)",
-    bg: "color-mix(in srgb, var(--chart-3) 18%, transparent)",
-    border: "color-mix(in srgb, var(--chart-3) 35%, transparent)",
-    icon: <Cube size={14} weight="regular" />,
+    // 2026-05-13: var(--chart-3) → var(--status-brick) 통일 (위 stone 동일 이유).
+    color: "var(--status-brick)",
+    bg: "color-mix(in srgb, var(--status-brick) 18%, transparent)",
+    border: "color-mix(in srgb, var(--status-brick) 35%, transparent)",
+    icon: <Cube size={14} weight="bold" />,
   },
   keystone: {
     label: "Block",
-    // 2026-05-13: var(--chart-5)는 green (#15803d) — Block 색 LOCKED
-    // (slate, 2026-05-12)와 불일치. var(--status-keystone)로 통일 →
-    // Notes Table badge / Smart sidebar / filter icon 등 모든 곳에서
-    // slate 표시 (Plot 건축 메타포 정합).
     color: "var(--status-keystone)",
     bg: "color-mix(in srgb, var(--status-keystone) 18%, transparent)",
     border: "color-mix(in srgb, var(--status-keystone) 35%, transparent)",
-    icon: <Cuboid2x2 size={14} weight="regular" />,
+    icon: <Cuboid2x2 size={14} weight="bold" />,
   },
 }
 

@@ -126,17 +126,17 @@ export const NOTE_STATUS_COLORS = {
 
 /** Resolved hex values for canvas / SVG (dark theme canonical).
  *
- * v3 desaturated palette (Q3 LOCKED) — phase 1 refresh:
- * - Previously saturated cyan/orange/green were visually loud and competed
- *   with workspace colors. v3 mockup tones them down: neutral gray for
- *   stone (= "needs triage"), warm brown-orange for brick (= "in
- *   progress"), teal-green for keystone (= "settled / verified").
- * - Mirrors --status-{stone,brick,keystone} CSS vars in app/globals.css.
+ * 2026-05-13 메타포 재정렬 (사용자 요청):
+ * Stone (slate, raw) → Brick (amber, 정리 중) → Block (emerald, 완성).
+ * 마지막 단계가 가장 선명한 색으로 끝나는 progression.
+ * 이전: stone=gray / brick=amber / keystone=slate — keystone이 가장 옅어 메타포 어색.
+ *
+ * Mirrors --status-{stone,brick,keystone} CSS vars in app/globals.css (dark 값).
  */
 export const NOTE_STATUS_HEX = {
-  stone:    "#6B7280",   // neutral gray   — needs triage
-  brick:    "#D97706",   // brown-orange   — in progress
-  keystone: "#475569",   // slate-600      — settled (Plot 건축 메타포 정합, 2026-05-12)
+  stone:    "#94a3b8",   // slate-400      — neutral granite (raw)
+  brick:    "#f59e0b",   // amber-500      — kiln-fired brick
+  keystone: "#34d399",   // emerald-400    — finished crystal (settled)
 } as const
 
 /* ── Wiki Status ─────────────────────────────── */

@@ -462,11 +462,11 @@ export function BookDetailPage({ bookId }: BookDetailPageProps) {
                       type="button"
                       onClick={() => handleOpen(contentItems[0])}
                       className="flex h-7 items-center gap-1.5 rounded-md px-2 text-2xs font-medium text-muted-foreground transition-colors hover:bg-hover-bg hover:text-foreground"
-                      title="처음부터 다시 읽기"
+                      title="Start over"
                       aria-label="Start over"
                     >
                       <Rewind size={11} weight="regular" />
-                      처음부터
+                      Start over
                     </button>
                   )}
                   <button

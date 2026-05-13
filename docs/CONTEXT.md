@@ -51,6 +51,41 @@
 
 ---
 
+## 🚀 2026-05-13 (밤) — Status 색 메타포 재정렬 + 6 follow-up ⭐⭐⭐⭐
+
+**범위**: 1 worktree (`elegant-jepsen-2b3731`). 사용자 manual verify 결과 발견 시그널 6개 한 PR 묶음.
+
+### 핵심 결정 (영구 LOCKED)
+
+**1. Status 색 메타포 재정렬 (사용자 결정, 2026-05-13)**:
+- Stone = slate (회색, raw) / Brick = amber (kiln, in progress) / Block = emerald (crystal, finished)
+- 마지막 단계가 가장 vivid color로 끝나는 progression. 메타포 자연스러움.
+- 3곳 동시 update: `globals.css` light + dark + `lib/colors.ts NOTE_STATUS_HEX`.
+
+**2. STATUS_CONFIG var 통일** (PR #319 keystone fix follow-up 완성):
+- `note-fields.tsx` STATUS_CONFIG의 stone/brick/keystone 모두 `var(--status-*)` 사용. `var(--chart-N)` 금지.
+- chip ↔ row icon 색 정확 동일 보장.
+
+**3. 그룹 헤더 `.a-tg` 통일** (Notes/Wiki/Books):
+- 3 entity 모두 `.a-tg` CSS 클래스 사용 (`globals.css` line 1069-1101).
+- chevron / icon / label (var(--fg) 진함) / count / divider line (1fr) 5 column grid.
+
+**4. BookTable narrow viewport overflow 룰**:
+- cells `overflow-hidden` + title `min-w-[120px]`. 좁은 viewport에서도 visible.
+
+**5. Home stats card layout**:
+- icon 좌측 정렬 (`flex gap-1.5`). label 길이 무관 일관성.
+
+**6. i18n 영어 통일**:
+- 다이얼로그 / 버튼 / footer 영어. 사용자 한국어라도 일관성 우선.
+
+### 다음 (TODO.md P0)
+
+🔴 **사용자 manual verify** (dev hard refresh) — Status 색 메타포 / 그룹 헤더 통일 / Home stats / BookTable / i18n.
+🟡 **Gallery enrichment** (보류) — GalleryItem interface 변경 + 3 adapter 매핑 필요. 별도 PR.
+
+---
+
 ## 🚀 2026-05-13 — Smart Book v2 풀 완성 + Ontology Hull P1-4 + 11 follow-up (PR #319, 17 commits) ⭐⭐⭐⭐⭐
 
 **범위**: 1 worktree (`brave-ardinghelli-209f9b`). 단일 mega-PR. Smart Book v2 (G/H/K) + Ontology Hull (1/2/3/4) + Linear refs 137 + bug fix 다수.

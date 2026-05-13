@@ -6,6 +6,113 @@
 
 ---
 
+## 2026-05-13 (밤) — 집, Status 색 메타포 재정렬 + 6 follow-up (PR #319 manual verify 결과)
+
+> 🎯 **다음 즉시 액션**: 사용자 manual verify (dev hard refresh) — (1) Notes/Wiki/Books 모두 grouping `.a-tg` 통일 자연스러운지, (2) Status 색 메타포 (Stone slate회색 / Brick amber / Block emerald) chip ↔ row icon 정확 일치, (3) Home stats card REFERENCES 더 이상 icon 충돌 없음, (4) BookTable narrow viewport에서 Name visible.
+>
+> **사용자 의도** (4 시그널):
+> 1. **Status 색 메타포 재정렬** — 마지막 단계(Block)가 가장 옅은 슬레이트 회색이라 직관 어긋남. 사용자 제안: Stone(회색,raw) → Brick(주황,중간) → Block(emerald 가장 선명,완성).
+> 2. **chip ↔ icon 색 mismatch** — Stone/Brick의 STATUS_CONFIG가 var(--chart-2/3) 사용 (PR #319 keystone만 fix). chip은 chart 색 / row icon은 var(--status-*). **본질적으로 다른 CSS var**. 사용자가 시각으로 "다른 색" 정확 인식. fix: STATUS_CONFIG 모든 status를 var(--status-*)로 통일.
+> 3. **Home stats card REFERENCES 충돌** — `flex justify-between` label 길면 icon 겹침. fix: icon 좌측 정렬.
+> 4. **BookTable list view 회귀** — Name `flex-1 min-w-0`이 좁은 viewport에서 0px collapse → text overflow → Kind 헤더 겹침. fix: overflow-hidden + min-w-[120px].
+> 5. **i18n 혼합** — "다중 선택" / "처음부터" 한국어 vs "Add selected" / "Resume" 영어. fix: 영어 통일.
+> 6. **Wiki/Books 그룹 헤더 모양새 다름** — Wiki "NO PARENT 5" 흐림 (muted-foreground/60), Notes는 진함 (var(--fg)). fix: `.a-tg` 패턴 통일.
+>
+> **첫 스텝** (다른 머신에서 바로 시작):
+> 1. `git pull origin main` (이번 PR 머지됐다 가정) → dev:3002 hard refresh (Ctrl+Shift+R)
+> 2. /notes list mode 진입 → Stone/Brick/Block 3 group 확인. chip + row icon 색 정확 동일.
+> 3. /wiki list 진입 → "NO PARENT" 헤더가 Notes처럼 진하게 + line divider 확인.
+> 4. /books list mode → "SMART/HYBRID/MANUAL" 헤더 동일 패턴.
+> 5. /home → KNOWLEDGE BASE 6 cards에 icon 좌측 + REFERENCES 충돌 없음.
+> 6. /books 책 detail → Resume / Start over (영어). Smart Book Add source 다이얼로그 "Multi-select" / "Click items to select".
+>
+> **참고 파일**:
+> - `app/globals.css` line 35-37 (light status vars), 215-217 (dark), 1069-1101 (.a-tg)
+> - `lib/colors.ts` line 136-140 (NOTE_STATUS_HEX dark canonical)
+> - `components/status-icon.tsx` (weight bold)
+> - `components/note-fields.tsx` (STATUS_CONFIG)
+> - `components/home/stats-row.tsx` (icon 좌측)
+> - `components/books/book-table.tsx` (overflow + min-w + .a-tg)
+> - `components/views/wiki-list.tsx` (.a-tg)
+> - `components/books/sources-section.tsx`, `book-detail-page.tsx` (i18n 영어)
+>
+> **위험 + 회피**:
+> - **status 색 변경 영향 범위** — ontology-graph-canvas는 NOTE_STATUS_HEX 사용 (자동 반영). books-gallery-adapter는 #94a3b8 hardcoded (Manual 기본색, status 무관 — 영향 X). 다른 hardcoded hex 검색해도 거의 없음.
+> - **`.a-tg` sticky behavior** — Wiki/Books에 sticky top: 30px 적용됨 (Notes 동일). 스크롤 시 헤더 살아있음. 사용자 의도 부합.
+> - Gallery enrichment (Notes/Wiki/Books 카드에 status chip + metadata) — 별도 PR 보류. interface change + 3 adapter 매핑이라 scope 큼.
+>
+> **머신**: 집 (Windows)
+> **branch worktree**: `claude/elegant-jepsen-2b3731`
+
+### 완료
+
+| # | File | Change |
+|---|---|---|
+| 1 | `app/globals.css` light | Stone `#c9a87c` → `#475569` slate-600 / Block `#475569` → `#059669` emerald-600 |
+| 2 | `app/globals.css` dark | Stone `#e8d5a3` → `#94a3b8` slate-400 / Block `#94a3b8` → `#34d399` emerald-400 |
+| 3 | `lib/colors.ts` | NOTE_STATUS_HEX dark canonical 미러 (slate-400/amber-500/emerald-400) |
+| 4 | `components/status-icon.tsx` | StatusShapeIcon weight regular → bold (선명도 ↑, bg badge 없음) |
+| 5 | `components/note-fields.tsx` | STATUS_CONFIG stone/brick var(--chart-N) → var(--status-*) + weight bold |
+| 6 | `components/home/stats-row.tsx` | icon 좌측 정렬 + px-3 padding + tracking 제거 (REFERENCES 충돌 fix) |
+| 7 | `components/books/book-table.tsx` | overflow-hidden cells + Name min-w-[120px] + `.a-tg` group header |
+| 8 | `components/views/wiki-list.tsx` | `.a-tg` group header (Notes 패턴 통일) |
+| 9 | `components/books/sources-section.tsx` | "다중 선택" 등 → 영어 |
+| 10 | `components/views/book-detail-page.tsx` | "처음부터" → "Start over" |
+
+### 브레인스토밍 & 큰 결정 (영구 LOCKED)
+
+**1. Status 색 메타포 재정렬 (영구 LOCKED, 2026-05-13 사용자 결정)**:
+- **Stone** = slate (회색, raw, needs triage) — light slate-600 `#475569` / dark slate-400 `#94a3b8`
+- **Brick** = amber (kiln-fired, in progress) — light amber-600 `#D97706` / dark amber-500 `#f59e0b` (유지)
+- **Block (keystone)** = emerald (finished crystal, settled) — light emerald-600 `#059669` / dark emerald-400 `#34d399`
+- 마지막 단계가 가장 선명한 vivid color로 끝나는 progression (이전엔 Block이 가장 옅은 slate라 메타포 어색).
+- 새 변경 시 globals.css + NOTE_STATUS_HEX + STATUS_CONFIG 3곳 동시 update 의무.
+
+**2. STATUS_CONFIG var(--status-*) 통일 영구 룰 (PR #319 keystone fix follow-up 완성)**:
+- chip color/bg/border는 var(--status-*)만 사용. var(--chart-N) 사용 금지.
+- 이전 PR #319에서 keystone만 fix했고 stone/brick은 lazy 남았었음 → 사용자 시그널 (chip ↔ icon 색 mismatch)로 발견. fix.
+
+**3. 그룹 헤더 `.a-tg` 영구 패턴 (모든 entity)**:
+- Notes/Wiki/Books 3 entity 모두 `.a-tg` CSS 클래스 + `.a-tg__label`/`.a-tg__count`/`.a-tg__line` 통일.
+- grid-template-columns: 11px auto auto auto 1fr (chevron / icon / label / count / divider line).
+- label color: var(--fg) (진함). count: var(--whisper-fg) (옅음). line: var(--border).
+- 새 entity의 list/group view 도입 시 같은 패턴 사용 의무.
+
+**4. BookTable narrow viewport overflow 영구 룰**:
+- list table cells에 `overflow-hidden` 의무 (text overflow → 옆 cell 겹침 회피).
+- Title (flex-1 column)에 `min-w-[120px]` (좁은 viewport에서 0 collapse 방지). Notes/Wiki 같은 pattern 사용 시 동일 룰.
+
+**5. Home stats card layout 영구 패턴**:
+- icon은 label **좌측에** (`flex items-center gap-1.5`). `justify-between` X — label 길이 무관 일관성.
+- label 길면 `truncate` 적용. tracking 자제 (text-2xs uppercase font-medium 충분).
+
+**6. i18n 영어 통일 영구 룰**:
+- 다이얼로그 / 버튼 / footer 텍스트는 영어. 한국어 사용자라도 일관성 우선.
+- 위반 시: 같은 다이얼로그 안 영어/한국어 혼합 → 시각 일관성 떨어짐.
+
+### 기술 학습 (영구)
+
+- **CSS var vs TS const 동기화 의무** — globals.css `--status-*` 변경 시 lib/colors.ts `NOTE_STATUS_HEX` (canvas/SVG canonical) 같이 update. mismatch → ontology-graph-canvas 같은 canvas user가 stale 색 사용.
+- **STATUS_CONFIG chip 패턴 root cause** — chip이 사용하는 var와 row icon이 사용하는 var가 다르면 사용자 시각 "다른 색" 인식. 통일 의무.
+- **SVG weight "fill" 한계** — Cuboid2x2 custom icon은 line-only SVG라 weight "fill" 작동 X. weight "bold"가 다른 weight들과 일관 (Hexagon/Cube). status icon 3종 통일 weight 필요 시 "bold" 안전.
+- **flex-1 min-w-0 narrow viewport collapse** — title column이 0px로 squeeze 가능. min-w-[N] 추가로 minimum 보장.
+- **`.a-tg` CSS grid 패턴** — chevron / icon / label / count / line 5 column. 마지막 line이 flex 1fr로 남는 공간 채움. divider visual 깔끔.
+
+### Watch Out (다음 세션)
+
+- **Wiki/Books `.a-tg` sticky behavior** — `top: 30px` Notes 패턴 따라가는데 wiki/books 페이지의 sticky 컨테이너 height 다를 수도. 스크롤 시 헤더 잘려보이면 sticky position 조정 follow-up.
+- **status icon weight bold 영향** — sidebar / breadcrumb / book-context-nav / gallery 등 13곳에서 StatusShapeIcon 사용. weight bold가 일부 작은 영역에서 너무 굵을 수도 — 사용자 시그널 시 size별 weight 조정.
+- **Gallery enrichment 별도 PR 대기** — Notes/Books/Wiki 카드에 status chip + folder/category chip + updated badge. GalleryItem interface 변경 + 3 adapter (notes/books/wiki) 매핑. 사용자가 "휑함" 시그널 줬으니 후속 우선순위.
+- **Home stats card "References" 라벨 2px truncate** — viewport 1400 + 카드 134px width에서 90vs88 미세 truncate. 거의 invisible하지만 사용자 시그널 시 short label ("Refs") 또는 padding 더 축소.
+
+### 환경 변경
+- Store version: 변경 없음
+- Tests: 변경 없음 (UI 변경만)
+- 신규 파일: 없음 (10 파일 수정)
+- 영구 룰 6개 추가 (위 LOCKED 참조)
+
+---
+
 ## 2026-05-13 — 집, Smart Book v2 풀 완성 + Ontology Hull P1-4 + 137 Linear refs + 11 follow-up (PR #319, 17 commits 단일 mega-PR)
 
 > 🎯 **다음 즉시 액션**: **PR #319 squash merge** (사용자 책임) + 머지 후 dev:3002에서 manual verify. 가장 큰 surface: (1) `/library` Books → 책 → "Add source" 다중 선택 모드 + Auto-sort toggle + Resume 버튼 + chapter context badge. (2) Ontology → Display > Group by = Book → hull / Filter > Status nested 8 values (Note/Wiki/Book) / Visible hulls picker / Show book sequence dashed arrow.
