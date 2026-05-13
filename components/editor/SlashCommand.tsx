@@ -10,7 +10,7 @@ import type { SuggestionProps, SuggestionKeyDownProps } from "@tiptap/suggestion
 // Import to pick up module augmentation for setDetails / unsetDetails
 import "@tiptap/extension-details"
 import { usePlotStore } from "@/lib/store"
-import { expandPlaceholders } from "@/lib/store/slices/templates"
+import { expandPlaceholders, expandPlaceholdersInJson } from "@/lib/store/slices/templates"
 import type { NoteTemplate } from "@/lib/types"
 import { Layout } from "@/lib/editor/editor-icons"
 import {
@@ -162,10 +162,29 @@ export const SlashCommandExtension = Extension.create({
               group: "structure",
               tier: "base",
               execute: ({ editor, range }) => {
-                const expanded = expandPlaceholders(t.content)
+                // 2026-05-13: contentJson 우선 사용 — template editor에서
+                // 작성한 heading (title) + rich body 전부 적용. 이전엔
+                // `t.content` (plain text)만 insert해서 title도 안 채워지고
+                // rich formatting (heading/list/table) 손실. (사용자 시그널:
+                // "title이 2026-05-14로 바뀌어야 할 거 아니야?")
+                //
+                // 빈 노트면 setContent로 전체 replace (UpNote 패턴 정합).
+                // content 있는 노트는 insertContent로 append (데이터 손실 회피).
                 const chain = editor.chain().focus()
                 if (range) chain.deleteRange(range)
-                chain.insertContent(expanded).run()
+                const hasJson =
+                  t.contentJson && Object.keys(t.contentJson as Record<string, unknown>).length > 0
+                if (hasJson) {
+                  const expanded = expandPlaceholdersInJson(t.contentJson)
+                  if (editor.isEmpty) {
+                    chain.setContent(expanded as Record<string, unknown>).run()
+                  } else {
+                    chain.insertContent(expanded as Record<string, unknown>).run()
+                  }
+                } else {
+                  const expanded = expandPlaceholders(t.content || "")
+                  chain.insertContent(expanded).run()
+                }
               },
             }))
 
