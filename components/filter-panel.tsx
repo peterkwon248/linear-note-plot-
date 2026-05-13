@@ -1,6 +1,6 @@
 "use client"
 
-import { useMemo, useState, useRef, useCallback } from "react"
+import React, { useMemo, useState, useRef, useCallback } from "react"
 import type { ReactNode } from "react"
 import type { FilterRule, FilterField } from "@/lib/view-engine/types"
 
@@ -32,7 +32,15 @@ export interface FilterValue {
   color?: string
   count?: number
   icon?: ReactNode
+  /** Sub-section header — when set, rendered as a small group label
+   *  before the first value of each group. Values must be pre-sorted
+   *  by group. Used by Ontology Status filter (Note / Wiki / Book). */
+  group?: string
 }
+
+// (FilterValue extended in lib/view-engine/view-configs.tsx with optional
+// `group` field for sub-section headers — kept loosely typed here since
+// filter-panel imports its own minimal shape.)
 
 export interface FilterCategory {
   key: string
@@ -138,42 +146,56 @@ export function FilterPanel({
               className="w-full bg-transparent border-b border-border px-2 py-1.5 text-note outline-none placeholder:text-muted-foreground"
             />
           </div>
-          {activeCategory.values.filter((val) =>
-            !subSearch || val.label.toLowerCase().includes(subSearch.toLowerCase())
-          ).map((val) => {
-            const isActive = activeFilters.some(
-              (f) => f.field === activeCategory.key && f.value === val.key
+          {(() => {
+            const filtered = activeCategory.values.filter((val) =>
+              !subSearch || val.label.toLowerCase().includes(subSearch.toLowerCase())
             )
-            return (
-              <button
-                key={val.key}
-                className="group/row w-full flex items-center gap-2.5 px-3 py-2 hover:bg-hover-bg transition-colors cursor-default"
-                onClick={() =>
-                  onToggle({
-                    field: activeCategory.key as FilterField,
-                    operator: "eq",
-                    value: val.key,
-                  })
-                }
-              >
-                <Checkbox checked={isActive} />
-                {val.icon ? (
-                  <span className="shrink-0 flex items-center">{val.icon}</span>
-                ) : val.color ? (
-                  <span
-                    className="w-2 h-2 rounded-full shrink-0"
-                    style={{ backgroundColor: val.color }}
-                  />
-                ) : null}
-                <span className={`flex-1 text-left text-note ${isActive ? "text-foreground font-medium" : "text-foreground"}`}>
-                  {val.label}
-                </span>
-                {val.count !== undefined && (
-                  <span className="text-2xs text-muted-foreground/70 tabular-nums">{val.count}</span>
-                )}
-              </button>
-            )
-          })}
+            return filtered.map((val, idx) => {
+              const isActive = activeFilters.some(
+                (f) => f.field === activeCategory.key && f.value === val.key
+              )
+              // v2 Ontology Hull Phase 1 — sub-section header when group
+              // changes. First value of each group gets a small label
+              // above it; values without group render without header.
+              const prevGroup = idx > 0 ? filtered[idx - 1].group : undefined
+              const showGroupHeader = val.group && val.group !== prevGroup
+              return (
+                <React.Fragment key={val.key}>
+                  {showGroupHeader && (
+                    <div className="px-3 pt-2 pb-1 text-2xs font-medium uppercase tracking-wide text-muted-foreground/60">
+                      {val.group}
+                    </div>
+                  )}
+                  <button
+                    className="group/row w-full flex items-center gap-2.5 px-3 py-2 hover:bg-hover-bg transition-colors cursor-default"
+                    onClick={() =>
+                      onToggle({
+                        field: activeCategory.key as FilterField,
+                        operator: "eq",
+                        value: val.key,
+                      })
+                    }
+                  >
+                    <Checkbox checked={isActive} />
+                    {val.icon ? (
+                      <span className="shrink-0 flex items-center">{val.icon}</span>
+                    ) : val.color ? (
+                      <span
+                        className="w-2 h-2 rounded-full shrink-0"
+                        style={{ backgroundColor: val.color }}
+                      />
+                    ) : null}
+                    <span className={`flex-1 text-left text-note ${isActive ? "text-foreground font-medium" : "text-foreground"}`}>
+                      {val.label}
+                    </span>
+                    {val.count !== undefined && (
+                      <span className="text-2xs text-muted-foreground/70 tabular-nums">{val.count}</span>
+                    )}
+                  </button>
+                </React.Fragment>
+              )
+            })
+          })()}
         </div>
       )}
 

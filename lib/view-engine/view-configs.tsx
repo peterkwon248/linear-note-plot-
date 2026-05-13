@@ -16,6 +16,14 @@ export interface FilterValue {
   color?: string
   count?: number
   icon?: ReactNode
+  /**
+   * Optional sub-section header. When set, FilterPanel renders a small
+   * group label above the first value of each group. Values must be
+   * pre-sorted by group in the source array. Used by Ontology Hull
+   * Phase 1 to organize cross-entity Status values
+   * (Note / Wiki / Book).
+   */
+  group?: string
 }
 
 export interface QuickFilter {
@@ -368,17 +376,17 @@ export const GRAPH_VIEW_CONFIG: ViewConfig = {
     // sub-section은 follow-up, 우선은 flat list로 cross-entity
     // 필터링 활성).
     { key: "status", label: "Status", icon: StatusIcon, values: [
-      // — Note status (3) —
-      { key: "stone", label: "Stone (Note)", color: "rgba(255,255,255,0.32)", icon: <Hexagon size={14} weight="regular" style={{ color: "var(--chart-2)" }} /> },
-      { key: "brick", label: "Brick (Note)", color: "#f5a623", icon: <Cube size={14} weight="regular" style={{ color: "var(--chart-3)" }} /> },
-      { key: "keystone", label: "Block (Note)", color: "#45d483", icon: <Cuboid2x2 size={14} weight="regular" style={{ color: "var(--chart-5)" }} /> },
-      // — Wiki status (2) — runtime-derived isWikiStub()
-      { key: "wiki-stub", label: "Stub (Wiki)", color: "#94a3b8" },
-      { key: "wiki-article", label: "Article (Wiki)", color: "#8b5cf6" },
-      // — Book kind (3) — derived getBookKind()
-      { key: "book-smart", label: "Smart (Book)", color: "#5E6AD2" },
-      { key: "book-manual", label: "Manual (Book)", color: "#6b7280" },
-      { key: "book-hybrid", label: "Hybrid (Book)", color: "#D97706" },
+      // Status는 entity별로 의미 다름 → sub-section header(group)로 묶음.
+      // FilterPanel이 group 변경 시점에 small label 렌더링 (LOCKED
+      // Ontology Hull #7 Option B nested의 본 구현).
+      { key: "stone",       label: "Stone",   color: "rgba(255,255,255,0.32)", icon: <Hexagon size={14} weight="regular" style={{ color: "var(--chart-2)" }} />, group: "Note" },
+      { key: "brick",       label: "Brick",   color: "#f5a623", icon: <Cube size={14} weight="regular" style={{ color: "var(--chart-3)" }} />, group: "Note" },
+      { key: "keystone",    label: "Block",   color: "#45d483", icon: <Cuboid2x2 size={14} weight="regular" style={{ color: "var(--chart-5)" }} />, group: "Note" },
+      { key: "wiki-stub",   label: "Stub",    color: "#94a3b8", group: "Wiki" },
+      { key: "wiki-article", label: "Article", color: "#8b5cf6", group: "Wiki" },
+      { key: "book-smart",  label: "Smart",   color: "#5E6AD2", group: "Book" },
+      { key: "book-manual", label: "Manual",  color: "#6b7280", group: "Book" },
+      { key: "book-hybrid", label: "Hybrid",  color: "#D97706", group: "Book" },
     ]},
     { key: "tags", label: "Tags", icon: TagIcon, values: [] },
     { key: "label", label: "Label", icon: LabelIcon, values: [] },
