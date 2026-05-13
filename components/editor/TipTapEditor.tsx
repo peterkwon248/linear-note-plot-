@@ -230,7 +230,10 @@ export function TipTapEditor({
         {editor && <TableBubbleMenu editor={editor} />}
         {editor && <FloatingToc editor={editor} />}
       </div>
+      {editable && <EditorToolbar editor={editor} />}
       {editor && (
+        // 2026-05-13: counts row를 toolbar 아래(footer)로 이동. 이전엔
+        // body와 toolbar 사이에 떠서 body 안 floating처럼 보임 (사용자 시그널).
         <div
           className="text-2xs"
           style={{
@@ -248,7 +251,6 @@ export function TipTapEditor({
           <span>{counts?.chars ?? 0} chars</span>
         </div>
       )}
-      {editable && <EditorToolbar editor={editor} />}
     </div>
   )
 }

@@ -210,10 +210,8 @@ export function TemplateEditPage({ template }: { template: NoteTemplate }) {
 
   return (
     <div className="flex flex-1 flex-col overflow-hidden">
-      <TitlePatternBar
-        value={template.title}
-        onChange={(v) => updateTemplate(template.id, { title: v })}
-      />
+      {/* 2026-05-13: TitlePatternBar 제거 — UpNote 패턴 정합 (사용자 시그널).
+          template.title 자체는 data 모델 유지 (필요 시 재도입 가능). */}
       <TemplateEditorAdapter template={template} />
     </div>
   )
