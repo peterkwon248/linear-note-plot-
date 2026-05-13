@@ -27,61 +27,14 @@ import { TipTapEditor } from "@/components/editor/TipTapEditor"
 import { FootnotesFooter } from "@/components/editor/footnotes-footer"
 import { FixedToolbar } from "@/components/editor/FixedToolbar"
 import { usePlotStore } from "@/lib/store"
-import { Layout } from "@phosphor-icons/react/dist/ssr/Layout"
 import type { NoteTemplate } from "@/lib/types"
 
-/**
- * Placeholder variables shown in the title-pattern bar. Mirrors the
- * v1 single-brace family from `expandPlaceholders`. UpNote-compatible
- * `{{YYYY}}` etc. are also supported by the runtime expander but not
- * promoted to the chip strip yet (avoids menu bloat).
- */
-const PLACEHOLDER_VARS = [
-  { key: "{date}", label: "Date", desc: "YYYY-MM-DD" },
-  { key: "{time}", label: "Time", desc: "HH:MM" },
-  { key: "{datetime}", label: "DateTime", desc: "YYYY-MM-DD HH:MM" },
-  { key: "{year}", label: "Year", desc: "YYYY" },
-  { key: "{month}", label: "Month", desc: "MM" },
-  { key: "{day}", label: "Day", desc: "DD" },
-] as const
-
-/* ── Title pattern bar ──────────────────────────────────────────────── */
-
-function TitlePatternBar({
-  value,
-  onChange,
-}: {
-  value: string
-  onChange: (v: string) => void
-}) {
-  return (
-    <div className="flex items-center gap-2 border-b border-border bg-secondary/10 px-6 py-2.5 shrink-0">
-      <Layout size={14} weight="regular" className="text-muted-foreground shrink-0" />
-      <span className="text-2xs font-medium uppercase tracking-wide text-muted-foreground shrink-0">
-        Title pattern
-      </span>
-      <input
-        type="text"
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        placeholder="e.g. Meeting - {date}"
-        className="flex-1 bg-transparent font-mono text-note text-foreground placeholder:text-muted-foreground/70 focus:outline-none"
-      />
-      <div className="flex items-center gap-1 shrink-0">
-        {PLACEHOLDER_VARS.map((v) => (
-          <button
-            key={v.key}
-            title={`${v.label} → ${v.desc}`}
-            onClick={() => onChange(value + v.key)}
-            className="rounded bg-secondary/60 px-1.5 py-0.5 font-mono text-2xs text-muted-foreground hover:bg-accent/20 hover:text-accent transition-colors"
-          >
-            {v.label}
-          </button>
-        ))}
-      </div>
-    </div>
-  )
-}
+/* TitlePatternBar removed (2026-05-13). Was conflicting with UpNote-style
+   first-block title — see `TemplateEditPage` comment below for context.
+   Variable substitution ({date}, {year}, {{YYYY}}, etc.) still works via
+   `expandPlaceholders` + `expandContentJsonPlaceholders` in templates.ts
+   (createNoteFromTemplate). Users now put "Weekly - {date}" in the first
+   line of the template body — UpNote-style. */
 
 /* ── Template editor adapter (thin fork of NoteEditorAdapter) ───────── */
 
@@ -180,7 +133,13 @@ function TemplateEditorAdapter({ template }: { template: NoteTemplate }) {
 
   return (
     <div className="flex flex-1 min-h-0 flex-col overflow-hidden">
-      <div className="flex-1 min-h-0 overflow-y-auto px-6 py-5">
+      {/* Wrapper now matches note-editor.tsx:680 (`flex flex-col`) so the
+          TipTapEditor's word/char counter (rendered as the last flex child
+          inside TipTapEditor) gets pushed to the bottom of the scroll area
+          — matching the regular note page. Previously this wrapper had no
+          flex direction, so the counter sat right under the (often empty)
+          content, appearing "near the top" — user-reported bug. */}
+      <div className="flex flex-1 min-h-0 flex-col overflow-y-auto px-6 py-5">
         <TipTapEditor
           key={template.id}
           content={initialContent as Record<string, unknown>}
@@ -199,7 +158,6 @@ function TemplateEditorAdapter({ template }: { template: NoteTemplate }) {
 /* ── Top-level page ─────────────────────────────────────────────────── */
 
 export function TemplateEditPage({ template }: { template: NoteTemplate }) {
-  const updateTemplate = usePlotStore((s) => s.updateTemplate)
   const setSidePanelContext = usePlotStore((s) => s.setSidePanelContext)
 
   // Keep the side panel pointed at this template — TemplateDetailPanel
@@ -208,12 +166,14 @@ export function TemplateEditPage({ template }: { template: NoteTemplate }) {
     setSidePanelContext({ type: "template", id: template.id })
   }, [template.id, setSidePanelContext])
 
+  // TitlePatternBar removed (2026-05-13) — UpNote-style first-block title
+  // makes the separate title-pattern field redundant + conflicting (template's
+  // title gets overwritten by NoteEditorAdapter's first-block extraction on
+  // first edit). Variable substitution ({date}, {year}, etc.) now happens in
+  // the body via expandContentJsonPlaceholders in createNoteFromTemplate —
+  // users put "Weekly - {date}" in the first line and it expands on use.
   return (
     <div className="flex flex-1 flex-col overflow-hidden">
-      <TitlePatternBar
-        value={template.title}
-        onChange={(v) => updateTemplate(template.id, { title: v })}
-      />
       <TemplateEditorAdapter template={template} />
     </div>
   )
