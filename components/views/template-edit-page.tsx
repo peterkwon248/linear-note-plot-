@@ -180,7 +180,11 @@ function TemplateEditorAdapter({ template }: { template: NoteTemplate }) {
 
   return (
     <div className="flex flex-1 min-h-0 flex-col overflow-hidden">
-      <div className="flex-1 min-h-0 overflow-y-auto px-6 py-5">
+      {/* 2026-05-13: scroll container에 `flex flex-col` 추가 — TipTapEditor의
+          flex-1이 늘어나 counts row가 자연스럽게 toolbar 위에 위치 (Notes 패턴
+          정합). 이전엔 scroll 안 자식이 자연 height라 content 짧으면 counts가
+          중간에 떠 보임 (사용자 시그널 3회). */}
+      <div className="flex-1 min-h-0 overflow-y-auto px-6 py-5 flex flex-col">
         <TipTapEditor
           key={template.id}
           content={initialContent as Record<string, unknown>}
