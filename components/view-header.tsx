@@ -61,6 +61,11 @@ interface ViewHeaderProps {
   searchPlaceholder?: string
   searchValue?: string
   onSearchChange?: (value: string) => void
+  /** Optional dropdown content rendered absolute-positioned below the search
+   *  input. Caller decides when to render (e.g. typeahead suggestions only when
+   *  query is non-empty + has matches). z-20 sits above filter chips, below
+   *  modal/popover layers. */
+  searchDropdownContent?: ReactNode
   /** Legacy: action button(s) on the right (before filter/display icons) */
   actions?: ReactNode
   /** Extra content after the header row (e.g. filter chips) */
@@ -114,6 +119,7 @@ export function ViewHeader({
   searchPlaceholder,
   searchValue,
   onSearchChange,
+  searchDropdownContent,
   actions,
   children,
   showFilter,
@@ -217,6 +223,14 @@ export function ViewHeader({
               >
                 <PhX size={14} weight="regular" />
               </button>
+            )}
+            {/* Typeahead dropdown — caller (e.g. ontology-view) decides when to
+                render content. Absolute-positioned just below the input so it
+                doesn't push other toolbar items. */}
+            {searchDropdownContent && (
+              <div className="absolute top-full left-0 right-0 mt-1 z-20 rounded-md border border-border-subtle bg-surface-overlay shadow-lg overflow-hidden">
+                {searchDropdownContent}
+              </div>
             )}
           </div>
         )}

@@ -476,6 +476,46 @@ export function OntologyView() {
         searchValue={searchQuery}
         onSearchChange={setSearchQuery}
         count={searchMatchIds ? searchMatchIds.size : undefined}
+        searchDropdownContent={
+          // Typeahead suggestions — only when query non-empty AND graph loaded
+          // AND has matches. Click selects the node (canvas highlights it via
+          // selectedNodeId prop) and clears query (auto-closes dropdown).
+          // Cap at 10 entries; show "+N more" footer when truncated.
+          searchQuery.trim() && graph && searchMatchIds && searchMatchIds.size > 0 ? (
+            <div className="max-h-64 overflow-y-auto py-1">
+              {graph.nodes
+                .filter((n) => searchMatchIds.has(n.id))
+                .slice(0, 10)
+                .map((node) => (
+                  <button
+                    key={node.id}
+                    type="button"
+                    onMouseDown={(e) => {
+                      // mousedown (not click) so the input's blur doesn't race
+                      // with the click and dismiss the dropdown before we read it.
+                      e.preventDefault()
+                      setSelectedNodeId(node.id)
+                      setSearchQuery("")
+                    }}
+                    className="w-full flex items-center gap-2 px-3 py-1.5 text-left text-note text-foreground hover:bg-hover-bg transition-colors"
+                  >
+                    {/* node type marker — wiki nodes prefixed "wiki:", others raw uuid */}
+                    <span
+                      className={`shrink-0 w-1.5 h-1.5 rounded-full ${
+                        node.id.startsWith("wiki:") ? "bg-chart-1" : "bg-muted-foreground/60"
+                      }`}
+                    />
+                    <span className="truncate">{node.label || "Untitled"}</span>
+                  </button>
+                ))}
+              {searchMatchIds.size > 10 && (
+                <div className="px-3 py-1.5 text-2xs text-muted-foreground border-t border-border-subtle">
+                  +{searchMatchIds.size - 10} more matches
+                </div>
+              )}
+            </div>
+          ) : null
+        }
         saveViewMode={graphSaveViewMode}
         onSaveView={onSaveGraphView}
         showFilter
