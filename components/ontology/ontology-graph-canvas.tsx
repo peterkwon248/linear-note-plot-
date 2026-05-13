@@ -2586,7 +2586,7 @@ function LegendOverlay({ svgRef, legendRelationTypes, hasWikilinkEdges, isDarkMo
       </g>
       <g transform={`translate(10, ${10 + 2 * rowHeight})`}>
         <circle cx={6} cy={6} r={4} fill={GRAPH_NODE_HEX.keystone + nodeFillAlpha} stroke={GRAPH_NODE_HEX.keystone} strokeWidth={isDarkMode ? 1.3 : 1.8} />
-        <text x={26} y={10} fill={labelFill} fontSize={10} fontWeight={isDarkMode ? 500 : 600} fontFamily="-apple-system, system-ui, sans-serif">Keystone</text>
+        <text x={26} y={10} fill={labelFill} fontSize={10} fontWeight={isDarkMode ? 500 : 600} fontFamily="-apple-system, system-ui, sans-serif">Block</text>
       </g>
 
       {/* ── Wiki (hexagon — matches actual graph shape) ── */}

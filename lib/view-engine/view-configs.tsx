@@ -2,6 +2,8 @@ import type { ReactNode } from "react"
 import type { SortField, ViewMode, GroupBy } from "./types"
 import { Hexagon, Cube, BookOpen, CircleHalf, Sticker as StickerIcon, Lightning, PencilSimple, Sparkle, Globe, DownloadSimple } from "@phosphor-icons/react"
 import { Cuboid2x2 } from "@/components/icons/Cuboid2x2"
+import { IconWikiStub, IconWikiArticle } from "@/components/plot-icons"
+import { WIKI_STATUS_HEX } from "@/lib/colors"
 
 export interface FilterCategory {
   key: string
@@ -379,14 +381,14 @@ export const GRAPH_VIEW_CONFIG: ViewConfig = {
       // Status는 entity별로 의미 다름 → sub-section header(group)로 묶음.
       // FilterPanel이 group 변경 시점에 small label 렌더링 (LOCKED
       // Ontology Hull #7 Option B nested의 본 구현).
-      { key: "stone",       label: "Stone",   color: "rgba(255,255,255,0.32)", icon: <Hexagon size={14} weight="regular" style={{ color: "var(--chart-2)" }} />, group: "Note" },
-      { key: "brick",       label: "Brick",   color: "#f5a623", icon: <Cube size={14} weight="regular" style={{ color: "var(--chart-3)" }} />, group: "Note" },
-      { key: "keystone",    label: "Block",   color: "#45d483", icon: <Cuboid2x2 size={14} weight="regular" style={{ color: "var(--chart-5)" }} />, group: "Note" },
-      { key: "wiki-stub",   label: "Stub",    color: "#94a3b8", group: "Wiki" },
-      { key: "wiki-article", label: "Article", color: "#8b5cf6", group: "Wiki" },
-      { key: "book-smart",  label: "Smart",   color: "#5E6AD2", group: "Book" },
-      { key: "book-manual", label: "Manual",  color: "#6b7280", group: "Book" },
-      { key: "book-hybrid", label: "Hybrid",  color: "#D97706", group: "Book" },
+      { key: "stone",       label: "Stone",   icon: <Hexagon size={14} weight="regular" style={{ color: "var(--chart-2)" }} />, group: "Note" },
+      { key: "brick",       label: "Brick",   icon: <Cube size={14} weight="regular" style={{ color: "var(--chart-3)" }} />, group: "Note" },
+      { key: "keystone",    label: "Block",   icon: <Cuboid2x2 size={14} weight="regular" style={{ color: "var(--chart-5)" }} />, group: "Note" },
+      { key: "wiki-stub",   label: "Stub",    icon: <IconWikiStub size={14} style={{ color: WIKI_STATUS_HEX.stub }} />, group: "Wiki" },
+      { key: "wiki-article", label: "Article", icon: <IconWikiArticle size={14} style={{ color: WIKI_STATUS_HEX.article }} />, group: "Wiki" },
+      { key: "book-smart",  label: "Smart",   icon: <Lightning size={14} weight="regular" style={{ color: "#5E6AD2" }} />, group: "Book" },
+      { key: "book-manual", label: "Manual",  icon: <PencilSimple size={14} weight="regular" style={{ color: "#6b7280" }} />, group: "Book" },
+      { key: "book-hybrid", label: "Hybrid",  icon: <Sparkle size={14} weight="regular" style={{ color: "#D97706" }} />, group: "Book" },
     ]},
     { key: "tags", label: "Tags", icon: TagIcon, values: [] },
     { key: "label", label: "Label", icon: LabelIcon, values: [] },
