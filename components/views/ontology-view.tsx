@@ -40,6 +40,10 @@ export function OntologyView() {
   const [graph, setGraph] = useState<OntologyGraph | null>(null)
   const [searchQuery, setSearchQuery] = useState("")
   const [graphFilters, setGraphFilters] = useState<FilterRule[]>([])
+  // Ontology Hull P5 PR 3 — Lineage Focus. focusedNodeId !== null = mode active.
+  // lineageMembers (computed below) is a Set of node ids in the focused node's
+  // ancestor chain + descendant subtree. Canvas dims everything else to 0.15.
+  const [focusedNodeId, setFocusedNodeId] = useState<string | null>(null)
 
   // Graph display state from store (unified via viewStateByContext)
   const graphViewState = usePlotStore((s) => s.viewStateByContext["graph"]) ?? buildViewStateForContext("graph")
@@ -124,6 +128,124 @@ export function OntologyView() {
     }
     return map
   }, [books, notes, folders, wikiArticles, wikiCategories, tags, labels, stickers])
+
+  // Family lineage hull (Ontology Hull P5) — node.id → root ancestor node.id.
+  // Notes: parentNoteId chain (raw uuid key/value).
+  // Wikis: parentArticleId chain (key/value prefixed with "wiki:" — matches
+  // OntologyNode.id format produced by buildOntologyGraphData).
+  // MAX_DEPTH=20 matches lib/view-engine/group.ts and wiki-list-pipeline.ts
+  // (cycle guard + bounded traversal). resolveColor in canvas reads root
+  // node's labelId / categoryIds[0] for color.
+  const familyMembership = useMemo(() => {
+    const MAX_DEPTH = 20
+    const map = new Map<string, string>()
+    const noteMap = new Map(notes.map((n) => [n.id, n]))
+    for (const note of notes) {
+      if (note.trashed) continue
+      const visited = new Set<string>()
+      let current = note.id
+      let steps = 0
+      while (steps < MAX_DEPTH) {
+        if (visited.has(current)) break
+        visited.add(current)
+        const n = noteMap.get(current)
+        if (!n || !n.parentNoteId || !noteMap.has(n.parentNoteId)) break
+        current = n.parentNoteId
+        steps++
+      }
+      map.set(note.id, current)
+    }
+    const wikiMap = new Map(wikiArticles.map((w) => [w.id, w]))
+    for (const wiki of wikiArticles) {
+      // WikiArticle has no `trashed` field — articles are deleted hard, not soft.
+      const visited = new Set<string>()
+      let current = wiki.id
+      let steps = 0
+      while (steps < MAX_DEPTH) {
+        if (visited.has(current)) break
+        visited.add(current)
+        const w = wikiMap.get(current)
+        if (!w || !w.parentArticleId || !wikiMap.has(w.parentArticleId)) break
+        current = w.parentArticleId
+        steps++
+      }
+      map.set(`wiki:${wiki.id}`, `wiki:${current}`)
+    }
+    return map
+  }, [notes, wikiArticles])
+
+  // Ontology Hull P5 PR 3 — Lineage Focus members. focusedNodeId의 ancestors
+  // chain (parent → root) + descendants subtree (recursive children) + self.
+  // Notes: parentNoteId chain + reverse lookup. Wikis: parentArticleId chain
+  // + reverse lookup. node id format = OntologyNode.id (note는 raw uuid,
+  // wiki는 "wiki:" prefix). null = focus inactive (canvas renders normally).
+  const lineageMembers = useMemo<Set<string> | null>(() => {
+    if (!focusedNodeId) return null
+    const MAX_DEPTH = 20
+    const set = new Set<string>([focusedNodeId])
+    if (focusedNodeId.startsWith("wiki:")) {
+      const startId = focusedNodeId.slice(5)
+      const wikiMap = new Map(wikiArticles.map((w) => [w.id, w]))
+      // Walk up (ancestors)
+      let current: string | null | undefined = wikiMap.get(startId)?.parentArticleId
+      const upVisited = new Set<string>()
+      let steps = 0
+      while (current && steps < MAX_DEPTH) {
+        if (upVisited.has(current)) break
+        upVisited.add(current)
+        set.add(`wiki:${current}`)
+        const w = wikiMap.get(current)
+        if (!w) break
+        current = w.parentArticleId
+        steps++
+      }
+      // Walk down (descendants, recursive)
+      const stack = [startId]
+      const downVisited = new Set<string>()
+      while (stack.length > 0) {
+        const id = stack.pop()!
+        if (downVisited.has(id)) continue
+        downVisited.add(id)
+        for (const w of wikiArticles) {
+          if (w.parentArticleId === id) {
+            set.add(`wiki:${w.id}`)
+            stack.push(w.id)
+          }
+        }
+      }
+    } else {
+      const noteMap = new Map(notes.map((n) => [n.id, n]))
+      // Walk up (ancestors)
+      let current: string | null | undefined = noteMap.get(focusedNodeId)?.parentNoteId
+      const upVisited = new Set<string>()
+      let steps = 0
+      while (current && steps < MAX_DEPTH) {
+        if (upVisited.has(current)) break
+        upVisited.add(current)
+        set.add(current)
+        const n = noteMap.get(current)
+        if (!n) break
+        current = n.parentNoteId
+        steps++
+      }
+      // Walk down (descendants, recursive)
+      const stack = [focusedNodeId]
+      const downVisited = new Set<string>()
+      while (stack.length > 0) {
+        const id = stack.pop()!
+        if (downVisited.has(id)) continue
+        downVisited.add(id)
+        for (const n of notes) {
+          if (n.parentNoteId === id) {
+            set.add(n.id)
+            stack.push(n.id)
+          }
+        }
+      }
+    }
+    return set
+  }, [focusedNodeId, notes, wikiArticles])
+
   const openNote = usePlotStore((s) => s.openNote)
   const ontologyPositions = usePlotStore((s) => s.ontologyPositions)
   const updateOntologyPositions = usePlotStore((s) => s.updateOntologyPositions)
@@ -216,12 +338,27 @@ export function OntologyView() {
           values = tags.map((t) => ({ key: t.id, label: t.name, color: t.color ?? undefined }))
         } else if (groupBy === "label") {
           values = labels.map((l) => ({ key: l.id, label: l.name, color: l.color }))
+        } else if (groupBy === "family") {
+          // Family hull values = root entity ids (unique values in familyMembership).
+          // Notes는 raw id, wikis는 "wiki:" prefix. label = root entity title.
+          const rootIds = new Set(familyMembership.values())
+          const list: typeof cat.values = []
+          for (const rid of rootIds) {
+            if (rid.startsWith("wiki:")) {
+              const article = wikiArticles.find((a) => a.id === rid.slice(5))
+              if (article) list.push({ key: rid, label: article.title || "Untitled" })
+            } else {
+              const note = notes.find((n) => n.id === rid)
+              if (note) list.push({ key: rid, label: note.title || "Untitled" })
+            }
+          }
+          values = list
         }
         return { ...cat, values }
       }
       return cat
     })
-  }, [tags, labels, graph, graphViewState.groupBy, stickers, books, folders, wikiCategories])
+  }, [tags, labels, graph, graphViewState.groupBy, stickers, books, folders, wikiCategories, familyMembership, notes, wikiArticles])
 
   // Build graph data (no positions — fast, synchronous)
   const tagsMapped = useMemo(
@@ -402,6 +539,10 @@ export function OntologyView() {
             stickers={stickers}
             books={books}
             bookMembership={bookMembership}
+            familyMembership={familyMembership}
+            lineageMembers={lineageMembers}
+            focusedNodeId={focusedNodeId}
+            onFocusNode={setFocusedNodeId}
             visibleHullKeys={visibleHullKeys}
             showBookSequence={Boolean(graphToggles.showBookSequence)}
             groupBy={graphViewState.groupBy}

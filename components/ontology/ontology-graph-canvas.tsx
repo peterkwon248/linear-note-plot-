@@ -70,6 +70,22 @@ interface OntologyGraphCanvasProps {
    *  participate in the hull. When absent, canvas falls back to the
    *  cheap manual-only book.items[] reverse lookup (v1 behavior). */
   bookMembership?: Map<string, string[]>
+  /** Ontology Hull P5 — Family lineage hull. node.id → root ancestor node.id.
+   *  Notes: parentNoteId chain (raw uuid). Wikis: parentArticleId chain
+   *  (prefixed "wiki:"). Caller (ontology-view) computes once; absent =
+   *  family hull disabled. */
+  familyMembership?: Map<string, string>
+  /** Ontology Hull P5 PR 3 — Lineage Focus members. When non-null, canvas
+   *  dims (opacity 0.15) any node/edge outside this set. Trigger: right-click
+   *  → "Show lineage" or Shift+click on a node. Caller computes ancestors +
+   *  descendants Set. null = focus inactive. */
+  lineageMembers?: Set<string> | null
+  /** Ontology Hull P5 PR 3 — currently focused node id (the lineage source).
+   *  Used for visual emphasis + handler short-circuit (Shift+click re-focus). */
+  focusedNodeId?: string | null
+  /** Ontology Hull P5 PR 3 — set focused node. Pass null to clear focus
+   *  (canvas calls this from ESC key + empty-space click). */
+  onFocusNode?: (id: string | null) => void
   /** v2 Ontology Hull Phase 4 — hull picker filter. Entity ids to
    *  render as hulls. Empty set / undefined = render all (default).
    *  Non-empty = only render hulls whose group key is in the set. */
@@ -350,6 +366,10 @@ export function OntologyGraphCanvas({
   stickers,
   books,
   bookMembership,
+  familyMembership,
+  lineageMembers,
+  focusedNodeId,
+  onFocusNode,
   visibleHullKeys,
   showBookSequence,
   groupBy = "connections",
@@ -906,6 +926,15 @@ export function OntologyGraphCanvas({
         case "status":
           keys = [node.status]
           break
+        case "family": {
+          // Ontology Hull P5 — Family lineage. familyMembership.get(node.id)
+          // returns the root ancestor's node.id (raw for notes, "wiki:" prefix
+          // for wikis). Same root → same hull. Caller (ontology-view) computes
+          // once via parentNoteId / parentArticleId chains.
+          const rootId = familyMembership?.get(node.id)
+          if (rootId) keys = [rootId]
+          break
+        }
         default:
           keys = []
       }
@@ -932,6 +961,23 @@ export function OntologyGraphCanvas({
         case "folder":   return folders?.find((f) => f.id === key)?.color ?? fallback
         case "category": return wikiCategories?.find((c) => c.id === key)?.color ?? fallback
         case "status":   return NOTE_STATUS_HEX[key as keyof typeof NOTE_STATUS_HEX] ?? fallback
+        case "family": {
+          // Ontology Hull P5 — Root entity의 색 우선 (Smart Book Hull P2
+          // book.color 패턴 정합). key = root node.id (raw 또는 "wiki:" prefix).
+          // Note root → label.color, Wiki root → first category.color.
+          // 둘 다 없으면 fallback palette.
+          const rootNode = nodeMap.get(key)
+          if (!rootNode) return fallback
+          if (rootNode.labelId) {
+            const color = labels.find((l) => l.id === rootNode.labelId)?.color
+            if (color) return color
+          }
+          if (rootNode.categoryIds && rootNode.categoryIds.length > 0) {
+            const color = wikiCategories?.find((c) => c.id === rootNode.categoryIds![0])?.color
+            if (color) return color
+          }
+          return fallback
+        }
         default:         return fallback
       }
     }
@@ -961,7 +1007,7 @@ export function OntologyGraphCanvas({
     // positions. Earlier versions used `transform` here, but that only
     // changes during panning — node drags never invalidated the memo, so
     // hulls stayed frozen at the drag-start positions while nodes moved.
-  }, [groupBy, visibleEdges, graph.nodes, labels, tags, wikiCategories, folders, stickers, books, bookMembership, visibleHullKeys, nodeMap, renderTick])
+  }, [groupBy, visibleEdges, graph.nodes, labels, tags, wikiCategories, folders, stickers, books, bookMembership, familyMembership, visibleHullKeys, nodeMap, renderTick])
 
   /**
    * v2 Ontology Hull Phase 3 — Book sequence edges. Connects consecutive
@@ -1313,15 +1359,41 @@ export function OntologyGraphCanvas({
       const empty = new Set<string>()
       setMultiSelectedIds(empty)
       multiSelectedIdsRef.current = empty
+      // Ontology Hull P5 PR 3 — empty-space click also clears Lineage Focus
+      // (parallels selection deselect, predictable single-gesture exit).
+      onFocusNode?.(null)
     },
-    [onSelectNode],
+    [onSelectNode, onFocusNode],
   )
+
+  /* ── ESC key: clear Lineage Focus (P5 PR 3) ───────── *
+   * Registered only while focus is active to avoid stealing ESC from
+   * other surfaces (context menu close, popovers, etc.). */
+  useEffect(() => {
+    if (!focusedNodeId) return
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        e.preventDefault()
+        onFocusNode?.(null)
+      }
+    }
+    window.addEventListener("keydown", onKeyDown)
+    return () => window.removeEventListener("keydown", onKeyDown)
+  }, [focusedNodeId, onFocusNode])
 
   /* ── Node click/dblclick ────────────────────────────── */
   const handleNodeClick = useCallback(
     (e: ReactMouseEvent, nodeId: string) => {
       if (didClickDrag.current) return // was a drag, not a click
       e.stopPropagation()
+
+      if (e.shiftKey) {
+        // Ontology Hull P5 PR 3 — Shift+click toggles Lineage Focus mode on
+        // the clicked node. Shift+click on the already-focused node = clear.
+        // Order matters: precedes Ctrl/Cmd since Shift is the lineage modifier.
+        onFocusNode?.(nodeId === focusedNodeId ? null : nodeId)
+        return
+      }
 
       if (e.ctrlKey || e.metaKey) {
         // Ctrl/Cmd+click: toggle node in multi-selection
@@ -1338,7 +1410,7 @@ export function OntologyGraphCanvas({
       setMultiSelectedIds(new Set())
       onSelectNode(nodeId === selectedNodeId ? null : nodeId)
     },
-    [onSelectNode, selectedNodeId],
+    [onSelectNode, selectedNodeId, onFocusNode, focusedNodeId],
   )
 
   const handleNodeDblClick = useCallback(
@@ -1783,6 +1855,12 @@ export function OntologyGraphCanvas({
 
             // n8n style: no dimming on hover/select — only search dimming
             const dimmed = searchMatchIds !== null && !searchMatchIds.has(node.id)
+            // Ontology Hull P5 PR 3 — Lineage Focus dim. When lineageMembers
+            // is set, anything outside is dimmed to 0.15 (Smart Book sequence
+            // opacity precedent). Search dim 0.3은 더 약한 효과라 lineage
+            // 우선. lineageMembers === null = focus inactive (no-op).
+            const lineageDimmed = lineageMembers !== null && lineageMembers !== undefined && !lineageMembers.has(node.id)
+            const isLineageFocus = focusedNodeId === node.id
 
             const r = nodeRadius(node.connectionCount)
             const fill = getNodeBaseColor(node, labels)
@@ -1799,7 +1877,8 @@ export function OntologyGraphCanvas({
                 key={node.id}
                 data-graph-node
                 data-node-id={node.id}
-                style={{ cursor: isDragging ? "grabbing" : "pointer" }}
+                opacity={lineageDimmed ? 0.15 : 1}
+                style={{ cursor: isDragging ? "grabbing" : "pointer", transition: "opacity 180ms ease-out" }}
                 onMouseDown={(e) => handleNodeMouseDown(e, node.id)}
                 onMouseEnter={() => {
                   if (!dragNodeIdRef.current) {
@@ -2132,6 +2211,14 @@ export function OntologyGraphCanvas({
             }
             onIsolate={
               onIsolateNodes ? () => onIsolateNodes(contextMenu.targets) : undefined
+            }
+            onShowLineage={
+              // Ontology Hull P5 PR 3 — Lineage Focus from context menu.
+              // Single-node only (lineage of a single root makes sense; for
+              // multi-select use Shift+click which already focuses one).
+              onFocusNode && contextMenu.targets.length > 0
+                ? () => onFocusNode(contextMenu.targets[0])
+                : undefined
             }
             hasHidden={hasAnyHidden}
             onShowAll={onShowAll}

@@ -430,6 +430,10 @@ export const GRAPH_VIEW_CONFIG: ViewConfig = {
       { value: "category",    label: "Wiki Category" },
       { value: "folder",      label: "Folder" },
       { value: "status",      label: "Status" },
+      // Family = 루트 조상 기준 lineage hull. notes는 parentNoteId chain,
+      // wikis는 parentArticleId chain을 거슬러 올라가 같은 root 묶음.
+      // (list/board에서는 이미 사용 중 — view-configs.tsx Notes:189 / Wiki:301)
+      { value: "family",      label: "Family" },
       { value: "connections", label: "Connections (legacy)" },
     ],
     toggles: [

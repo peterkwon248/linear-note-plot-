@@ -33,6 +33,7 @@ import { CaretRight } from "@phosphor-icons/react/dist/ssr/CaretRight"
 import { PencilSimple } from "@phosphor-icons/react/dist/ssr/PencilSimple"
 import { Palette } from "@phosphor-icons/react/dist/ssr/Palette"
 import { Trash } from "@phosphor-icons/react/dist/ssr/Trash"
+import { Tree } from "@phosphor-icons/react/dist/ssr/Tree"
 
 /** Default color shown in the new-sticker picker. Matches the first palette
  *  entry the slice would auto-assign so "auto" and "explicit pick" are
@@ -56,6 +57,10 @@ interface NodeContextMenuProps {
   onHideConnections?: () => void
   /** Show only the selected nodes (dim others). Pass empty array to clear. */
   onIsolate?: () => void
+  /** Ontology Hull P5 PR 3 — enter Lineage Focus mode on the right-clicked
+   *  node (ancestors chain + descendants subtree highlighted, others dim 0.15).
+   *  Single-node only — for multi-select use Shift+click trigger. */
+  onShowLineage?: () => void
   /** Whether any visual filter (hidden/isolate) is active — if so, show "Show all". */
   hasHidden?: boolean
   onShowAll?: () => void
@@ -78,6 +83,7 @@ export function NodeContextMenu({
   onCluster,
   onHideConnections,
   onIsolate,
+  onShowLineage,
   hasHidden,
   onShowAll,
   editingSticker,
@@ -323,8 +329,22 @@ export function NodeContextMenu({
           )}
 
           {/* ── Visual filters (declutter the canvas without touching data) ── */}
-          {(onIsolate || onHideConnections || (hasHidden && onShowAll)) && (
+          {(onShowLineage || onIsolate || onHideConnections || (hasHidden && onShowAll)) && (
             <div className="my-1 border-t border-border-subtle" />
+          )}
+          {onShowLineage && (
+            <button
+              type="button"
+              onClick={() => {
+                onShowLineage()
+                onClose()
+              }}
+              className="flex items-center gap-2 px-3 py-1.5 text-left hover:bg-accent"
+              title="Highlight this node's ancestors and descendants; dim others (ESC to clear)"
+            >
+              <Tree size={14} weight="regular" />
+              Show lineage
+            </button>
           )}
           {onIsolate && (
             <button
