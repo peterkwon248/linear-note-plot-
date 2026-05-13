@@ -35,7 +35,6 @@ import {
   Command,
   CommandEmpty,
   CommandGroup,
-  CommandInput,
   CommandItem,
   CommandList,
 } from "@/components/ui/command"
@@ -448,44 +447,82 @@ export function SourcesSection({ bookId }: SourcesSectionProps) {
         </ul>
       )}
 
-      {/* Source picker dialog — 5 tabs (Phase A-E). */}
+      {/* Source picker dialog — 5 tabs (Phase A-E) + v2 Phase K: wider
+          dialog + unified search input (one query filters all 5 tabs
+          simultaneously, each tab shows its count badge for cross-tab
+          discoverability). */}
       <Dialog open={pickerOpen} onOpenChange={setPickerOpen}>
-        <DialogContent className="sm:max-w-md gap-0 p-0">
+        <DialogContent className="sm:max-w-lg gap-0 p-0">
           <DialogHeader className="px-4 pb-2 pt-4">
             <DialogTitle className="text-sm">Add smart source</DialogTitle>
             <DialogDescription className="text-2xs">
               Auto-fill this book from any of 5 source kinds. Notes / wikis only — source entities themselves are never added as pages.
             </DialogDescription>
           </DialogHeader>
+          {/* Unified search input — shared across all 5 tabs (Q11 LOCKED:
+              cross-tab search). Each tab's candidates list is already
+              filtered by the same `q` state; this input is the single
+              entry point so users don't have to retype when switching. */}
+          <div className="border-b border-border/40 px-4 py-2">
+            <input
+              type="text"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search across all source kinds…"
+              className="w-full bg-transparent text-note text-foreground placeholder:text-muted-foreground/60 focus:outline-none"
+              autoFocus
+            />
+          </div>
           <Tabs
             value={activeTab}
-            onValueChange={(v) => {
-              setActiveTab(v as TabKey)
-              setSearch("")
-            }}
+            onValueChange={(v) => setActiveTab(v as TabKey)}
             className="gap-0"
           >
             <TabsList className="mx-4 mt-1 grid grid-cols-5 gap-0.5">
-              <TabsTrigger value="folder" title="Folder source (notes)">
+              <TabsTrigger value="folder" title={`Folder source — ${folderCandidates.length} matches`}>
                 <PhFolder size={12} weight="regular" />
+                {folderCandidates.length > 0 && (
+                  <span className="ml-1 text-2xs tabular-nums text-muted-foreground/70">
+                    {folderCandidates.length}
+                  </span>
+                )}
               </TabsTrigger>
-              <TabsTrigger value="category" title="Wiki category source">
+              <TabsTrigger value="category" title={`Wiki category source — ${categoryCandidates.length} matches`}>
                 <PhBookOpen size={12} weight="regular" />
+                {categoryCandidates.length > 0 && (
+                  <span className="ml-1 text-2xs tabular-nums text-muted-foreground/70">
+                    {categoryCandidates.length}
+                  </span>
+                )}
               </TabsTrigger>
-              <TabsTrigger value="tag" title="Tag source (notes + wikis)">
+              <TabsTrigger value="tag" title={`Tag source — ${tagCandidates.length} matches`}>
                 <PhHash size={12} weight="regular" />
+                {tagCandidates.length > 0 && (
+                  <span className="ml-1 text-2xs tabular-nums text-muted-foreground/70">
+                    {tagCandidates.length}
+                  </span>
+                )}
               </TabsTrigger>
-              <TabsTrigger value="label" title="Label source (notes)">
+              <TabsTrigger value="label" title={`Label source — ${labelCandidates.length} matches`}>
                 <PhTag size={12} weight="regular" />
+                {labelCandidates.length > 0 && (
+                  <span className="ml-1 text-2xs tabular-nums text-muted-foreground/70">
+                    {labelCandidates.length}
+                  </span>
+                )}
               </TabsTrigger>
-              <TabsTrigger value="sticker" title="Sticker source (note/wiki members)">
+              <TabsTrigger value="sticker" title={`Sticker source — ${stickerCandidates.length} matches`}>
                 <PhSticker size={12} weight="regular" />
+                {stickerCandidates.length > 0 && (
+                  <span className="ml-1 text-2xs tabular-nums text-muted-foreground/70">
+                    {stickerCandidates.length}
+                  </span>
+                )}
               </TabsTrigger>
             </TabsList>
 
             <TabsContent value="folder" className="mt-0">
               <Command shouldFilter={false}>
-                <CommandInput placeholder="Search folders..." value={search} onValueChange={setSearch} />
                 <CommandList className="max-h-72">
                   <CommandEmpty>No matching folders</CommandEmpty>
                   <CommandGroup>
@@ -510,7 +547,6 @@ export function SourcesSection({ bookId }: SourcesSectionProps) {
 
             <TabsContent value="category" className="mt-0">
               <Command shouldFilter={false}>
-                <CommandInput placeholder="Search wiki categories..." value={search} onValueChange={setSearch} />
                 <CommandList className="max-h-72">
                   <CommandEmpty>No matching categories</CommandEmpty>
                   <CommandGroup>
@@ -538,7 +574,6 @@ export function SourcesSection({ bookId }: SourcesSectionProps) {
 
             <TabsContent value="tag" className="mt-0">
               <Command shouldFilter={false}>
-                <CommandInput placeholder="Search tags..." value={search} onValueChange={setSearch} />
                 <CommandList className="max-h-72">
                   <CommandEmpty>No matching tags</CommandEmpty>
                   <CommandGroup>
@@ -568,7 +603,6 @@ export function SourcesSection({ bookId }: SourcesSectionProps) {
 
             <TabsContent value="label" className="mt-0">
               <Command shouldFilter={false}>
-                <CommandInput placeholder="Search labels..." value={search} onValueChange={setSearch} />
                 <CommandList className="max-h-72">
                   <CommandEmpty>No matching labels</CommandEmpty>
                   <CommandGroup>
@@ -596,7 +630,6 @@ export function SourcesSection({ bookId }: SourcesSectionProps) {
 
             <TabsContent value="sticker" className="mt-0">
               <Command shouldFilter={false}>
-                <CommandInput placeholder="Search stickers..." value={search} onValueChange={setSearch} />
                 <CommandList className="max-h-72">
                   <CommandEmpty>No matching stickers</CommandEmpty>
                   <CommandGroup>
