@@ -4,12 +4,14 @@ import { useState, useEffect, useCallback, useRef } from "react"
 import type * as Y from "yjs"
 import { TipTapEditor } from "./TipTapEditor"
 import { usePlotStore } from "@/lib/store"
-import type { Note } from "@/lib/types"
+import type { Note, NoteTemplate } from "@/lib/types"
 import { suggestLinks } from "@/lib/queries/notes"
 import { LinkSuggestion } from "@/components/link-suggestion"
 import { FootnotesFooter } from "./footnotes-footer"
 import { extractHashtags } from "@/lib/body-helpers"
 import { pickColor } from "@/components/note-fields"
+import { TemplatesPickerDialog } from "./templates-picker-dialog"
+import { expandPlaceholders, expandPlaceholdersInJson } from "@/lib/store/slices/templates"
 import {
   acquireYDoc,
   releaseYDoc,
@@ -31,6 +33,44 @@ export function NoteEditorAdapter({ note, onEditorReady, editable = true }: Note
   const [suggestions, setSuggestions] = useState<Note[]>([])
   const [showSuggestions, setShowSuggestions] = useState(false)
   const [editorInstance, setEditorInstance] = useState<any>(null)
+  // UpNote 패턴 (2026-05-13): 빈 노트일 때 inline CTA + Templates dialog.
+  const [templatesPickerOpen, setTemplatesPickerOpen] = useState(false)
+  const [isEditorEmpty, setIsEditorEmpty] = useState(true)
+  useEffect(() => {
+    if (!editorInstance) return
+    const sync = () => setIsEditorEmpty(editorInstance.isEmpty)
+    sync()
+    editorInstance.on("update", sync)
+    return () => editorInstance.off("update", sync)
+  }, [editorInstance])
+  // Slash command "Insert template…" dispatches this event; opens the dialog.
+  useEffect(() => {
+    if (!editable) return
+    const handler = () => setTemplatesPickerOpen(true)
+    window.addEventListener("plot:open-templates-picker", handler)
+    return () => window.removeEventListener("plot:open-templates-picker", handler)
+  }, [editable])
+  const handleTemplateSelect = useCallback(
+    (template: NoteTemplate) => {
+      if (!editorInstance) return
+      const chain = editorInstance.chain().focus()
+      const hasJson =
+        template.contentJson &&
+        Object.keys(template.contentJson as Record<string, unknown>).length > 0
+      if (hasJson) {
+        const expanded = expandPlaceholdersInJson(template.contentJson)
+        if (editorInstance.isEmpty) {
+          chain.setContent(expanded as Record<string, unknown>).run()
+        } else {
+          chain.insertContent(expanded as Record<string, unknown>).run()
+        }
+      } else {
+        const expanded = expandPlaceholders(template.content || "")
+        chain.insertContent(expanded).run()
+      }
+    },
+    [editorInstance],
+  )
 
   // ── Experimental Y.Doc split-view sync (gated by ?yjs=1) ──
   //
@@ -440,13 +480,29 @@ export function NoteEditorAdapter({ note, onEditorReady, editable = true }: Note
           let Collaboration bind to the empty fragment and emit a flood of
           empty onUpdate events, which the empty-content guard then has to
           chase down. Cheaper and safer to just wait. */}
+      {/* 2026-05-13: UpNote 패턴 — 빈 노트일 때 inline CTA. "Select from
+          Templates" 버튼 클릭 시 TemplatesPickerDialog 열림. 사용자 입력
+          시작하면 자동 사라짐. slash 메뉴에 templates 펴던 noisy 패턴 대신
+          명시적 dialog entry. */}
+      {editable && ydocReady && isEditorEmpty && editorInstance && (
+        <div className="pointer-events-none absolute inset-x-0 top-0 z-10 px-[var(--editor-padding-x,1.5rem)] pt-[var(--editor-padding-y,1.5rem)] text-note text-muted-foreground/60">
+          <span>Type / for menu or </span>
+          <button
+            type="button"
+            onClick={() => setTemplatesPickerOpen(true)}
+            className="pointer-events-auto text-accent underline decoration-dotted underline-offset-2 hover:decoration-solid"
+          >
+            select from Templates
+          </button>
+        </div>
+      )}
       {ydocReady ? (
         <TipTapEditor
           key={`${note.id}-${ydoc ? "yjs" : "std"}`}
           content={initialContent}
           onChange={editable ? handleChange : undefined}
           editable={editable}
-          placeholder="Press / for menu, or start with a template"
+          placeholder={isEditorEmpty ? "" : "Press / for menu"}
           onEditorReady={handleEditorReady}
           noteId={note.id}
           ydoc={ydoc ?? undefined}
@@ -459,6 +515,11 @@ export function NoteEditorAdapter({ note, onEditorReady, editable = true }: Note
         suggestions={suggestions}
         onSelect={handleSuggestionSelect}
         visible={showSuggestions}
+      />
+      <TemplatesPickerDialog
+        open={templatesPickerOpen}
+        onOpenChange={setTemplatesPickerOpen}
+        onSelect={handleTemplateSelect}
       />
     </div>
   )

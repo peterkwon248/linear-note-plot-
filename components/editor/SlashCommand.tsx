@@ -10,7 +10,6 @@ import type { SuggestionProps, SuggestionKeyDownProps } from "@tiptap/suggestion
 // Import to pick up module augmentation for setDetails / unsetDetails
 import "@tiptap/extension-details"
 import { usePlotStore } from "@/lib/store"
-import { expandPlaceholders, expandPlaceholdersInJson } from "@/lib/store/slices/templates"
 import type { NoteTemplate } from "@/lib/types"
 import { Layout } from "@/lib/editor/editor-icons"
 import {
@@ -146,49 +145,33 @@ export const SlashCommandExtension = Extension.create({
             matchesQuery(item, q),
           )
 
-          // Dynamically add template items from the store.
-          // Templates don't live in the static registry because they're
-          // user-created; we adapt them to BlockRegistryEntry shape.
-          const templates = (usePlotStore.getState().templates ?? []) as NoteTemplate[]
-          const templateItems: SlashItem[] = templates
-            .filter((t) => t.name.toLowerCase().includes(q) || "template".includes(q))
-            .map<SlashItem>((t) => ({
-              id: `template-${t.id}`,
-              label: `Template: ${t.name}`,
-              // v108: NoteTemplate.description retired — generic hint instead.
-              description: "Insert template content",
-              icon: Layout,
-              surfaces: ["slash"],
-              group: "structure",
-              tier: "base",
-              execute: ({ editor, range }) => {
-                // 2026-05-13: contentJson 우선 사용 — template editor에서
-                // 작성한 heading (title) + rich body 전부 적용. 이전엔
-                // `t.content` (plain text)만 insert해서 title도 안 채워지고
-                // rich formatting (heading/list/table) 손실. (사용자 시그널:
-                // "title이 2026-05-14로 바뀌어야 할 거 아니야?")
-                //
-                // 빈 노트면 setContent로 전체 replace (UpNote 패턴 정합).
-                // content 있는 노트는 insertContent로 append (데이터 손실 회피).
-                const chain = editor.chain().focus()
-                if (range) chain.deleteRange(range)
-                const hasJson =
-                  t.contentJson && Object.keys(t.contentJson as Record<string, unknown>).length > 0
-                if (hasJson) {
-                  const expanded = expandPlaceholdersInJson(t.contentJson)
-                  if (editor.isEmpty) {
-                    chain.setContent(expanded as Record<string, unknown>).run()
-                  } else {
-                    chain.insertContent(expanded as Record<string, unknown>).run()
+          // 2026-05-13: 개별 templates는 dialog로 일원화 (UpNote 패턴).
+          // slash 메뉴에는 단일 "Insert template…" entry만 — 클릭 시 custom
+          // event dispatch → NoteEditorAdapter가 TemplatesPickerDialog 열음.
+          // 이전엔 templates 13+ 개가 slash 메뉴 펴서 noisy + 다른 block과
+          // 시각 mix되어 scan 어려움 (사용자 시그널).
+          const hasTemplates = (usePlotStore.getState().templates ?? []).some(
+            (t: NoteTemplate) => !t.trashed,
+          )
+          const templateEntry: SlashItem[] = hasTemplates
+            ? [{
+                id: "template-picker",
+                label: "Insert template…",
+                description: "Browse and insert from your templates",
+                icon: Layout,
+                surfaces: ["slash"],
+                group: "structure",
+                tier: "base",
+                execute: ({ editor, range }) => {
+                  if (range) editor.chain().focus().deleteRange(range).run()
+                  if (typeof window !== "undefined") {
+                    window.dispatchEvent(new CustomEvent("plot:open-templates-picker"))
                   }
-                } else {
-                  const expanded = expandPlaceholders(t.content || "")
-                  chain.insertContent(expanded).run()
-                }
-              },
-            }))
+                },
+              }]
+            : []
 
-          return [...baseItems, ...templateItems]
+          return [...baseItems, ...templateEntry]
         },
         render: () => {
           let component: ReactRenderer<CommandListRef> | null = null
