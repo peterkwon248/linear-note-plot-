@@ -3,7 +3,7 @@
 > 우선순위 기반 작업 목록. **P0 = 다음 세션 즉시 시작점** (NEXT-ACTION.md 폐지, 2026-05-12).
 > 완료 항목은 즉시 삭제 또는 "완료" 섹션으로 이동.
 
-**마지막 갱신**: 2026-05-13 (Smart Book v2 풀 + Ontology Hull P1-4 + 11 follow-up, PR #319 17 commits mega-PR)
+**마지막 갱신**: 2026-05-13 (stale 정리 — 중복 P1 헤더 제거 + PR #319/#315/v122-v126 완료 항목 이동 + 부분 완료 항목 분리)
 
 ---
 
@@ -62,44 +62,39 @@ PR #319 (17 commits, scope 매우 넓음). **Squash merge 권장** — main에 1
 
 ## 🟡 P1 — 큰 작업 후보
 
-### Smart Book v2 — AutoSource picker UX 강화
-- folder/category/tag/label/sticker source picker 풀 도입
-- chapter 정렬 (Manual drag default + Auto-sort)
-- Hull + Sequence edge 시각화
-
-### Wiki view-engine board 도입
-- Plot 일관성 (Notes/Books와 동일 viewMode 토글)
-- WikiList → WikiBoard 라우트 통합
-
 ### Notes/Wiki/Books 통합 entity-agnostic ListRow/BoardCard 패턴
 - Books의 BookListRow + BookGridCard 패턴 일반화
 - generic 추출 없이도 reuse 패턴 (`renderListRow` prop) 도입
+- **검증 (2026-05-13)**: `renderListRow` 사용 사례 0 (docs만). BookListRow/NoteListRow/WikiListRow 각각 별도 존재. 진짜 미구현 P1.
 
-### Note UI toolbar (UpNote-style)
-- 미루기 — 별도 큰 작업
-
-### House (계보 시각화)
-- 미루기 — 토론 필요
-
----
-
-## 🟡 P1 — 큰 작업 후보
-
-### Wiki template 3-layer
-- Layout Preset + Content Template + Typed Infobox
+### Wiki template — Layout Preset + Content Template (Typed Infobox는 완료)
+- ✅ **Typed Infobox 구현됨**: `components/editor/wiki-infobox.tsx` + `lib/wiki-infobox-presets.ts` + `lib/wiki-infobox-collapse.ts`
+- ❌ Layout Preset 미구현
+- ❌ Content Template 미구현
 - Wiki domain. v3 Phase 3+와 독립
+- 3-layer 중 1 layer만 done → 나머지 2 layer PRD 필요
 
-### Smart Book v2 — AutoSource[5]
-- folder / category / tag / label / sticker 자동 source
-- Book entity 신규 (v3 7번째 space, rose 팔레트 #fb7185 dark / #e11d48 light)
-- chapter 정렬 (Manual drag default + Auto-sort)
-- Hull + Sequence edge 시각화 + Reading view
+### editor-unification 잔여 Phase 검증 + 진행
+- 참조: `.claude/plans/editor-unification.md` (Phase 1-7)
+- ✅ **Phase 1B (Title Node) 완료**: `.omc/plans/title-node-removal.md` Definition of Done 6/6 [x]. UpNote-style first-block title 전환 완료, Store v65
+- ✅ **Phase 1C (Toolbar) 부분 완료**: `components/editor/EditorToolbar.tsx` 존재
+- ❓ Phase 1A (Shared editor config) — 검증 필요
+- ❓ Phase 1D (Columns, TOC, Infobox, NoteEmbed 커스텀 노드) — 검증 필요
+- ❓ Phase 2 (Wiki TextBlock → TipTap lazy mount) — 검증 필요
+- ❓ Phase 3 (Template 블록 레이아웃) — 검증 필요
+- ❓ Phase 4 (Partial Quote / WikiQuote 확장) — 검증 필요
+- ❓ Phase 5 (Merge/Split 풀페이지 + GitMerge 버튼) — 검증 필요
+- ❓ Phase 6 (Merge/Split History 시스템) — 검증 필요
+- 다음 세션 시작 시 git log + 코드 grep으로 각 Phase 완료 여부 정확히 파악 후 P1/P2 재분류
 
-### Note UI toolbar (UpNote-style)
-- 미루기 — 별도 큰 작업
+### Note UI toolbar polish (미루기 — 별도 큰 작업)
+- `EditorToolbar.tsx` 토대 존재
+- 추가 후보: floating bubble 디자인 개선 / context-aware 버튼셋 (note/wiki/template) / 그룹 정리 (Text Format | Block Type | Insert | Alignment | History)
+- editor-unification Phase 1C 본격 진행과 묶임
 
 ### House (계보 시각화)
-- 미루기 — 토론 필요
+- 미루기 — 토론 필요 (왜 필요한지, scope, 사용자 가치 명확화)
+- 미구현 확정 (`house*.tsx` 0 파일)
 
 ---
 
@@ -110,6 +105,7 @@ PR #319 (17 commits, scope 매우 넓음). **Squash merge 권장** — main에 1
 - **Hull style toggle** — outline/filled/none per source. Display panel에 3-state radio
 - **Sequence edge manual reorder** — userOrder 반영 (현재 manual book.items order만)
 - **100+ entity hull culling** — viewport 안만 render (Phase 4 picker filter로 부분 mitigate 됐지만 본격 X)
+- **Wiki Gallery view-engine 통합** — `components/views/wiki-gallery*` 미구현. Notes/Books는 완료. 일관성 후보
 - **`npm install` 새 worktree 자동 체크** — before-work 단계 룰 후보 (본 세션 시작 시 stale dev server 발생)
 - **hydration mismatch radix id** — main pre-existing, 별도 fix 후보 (모든 dev session console error 다수)
 - Templates grid chip 시스템 완전 통일 (PR e deviation)
@@ -155,6 +151,18 @@ PR #319 (17 commits, scope 매우 넓음). **Squash merge 권장** — main에 1
 ---
 
 ## ✅ 최근 완료
+
+### 2026-05-13 — TODO.md stale 정리 (메타 작업)
+- 중복 P1 헤더 (line 63 + 86) 제거
+- PR #319 / #315 / v122-v126에서 완료된 항목 ✅로 이동:
+  - Smart Book v2 — AutoSource picker UX 강화 (chapter 정렬 / Hull + Sequence) → PR #319
+  - Smart Book v2 — AutoSource[5] (folder/category/tag/label/sticker) → PR #315 Phase C+D+E
+  - Book entity 신규 (v3 7번째 space, rose 팔레트) → v122-v126 Books view-engine 풀 통합
+  - Wiki view-engine board 도입 (`components/views/wiki-board.tsx` 존재) → 시점 미상, 이전 PR
+- 부분 완료 항목 분리:
+  - Wiki template 3-layer → Typed Infobox done, Layout Preset/Content Template만 남음
+  - editor-unification → Title Node 완료, 나머지 Phase 검증 필요
+- Note UI toolbar (UpNote-style) → EditorToolbar 토대 + title-node-removal 완료, polish는 P1 유지
 
 ### 2026-05-13 — Smart Book v2 풀 + Ontology Hull P1-4 + 11 follow-up (PR #319, 17 commits)
 - ✅ **Bug fix 3 + 4 follow-up** — books-board normalize / wiki-board normalize / TrashAllView select-all / BookItemRow 5-source icon / legend Keystone→Block / Filter Status Wiki·Book icon / Block 색 var(--chart-5)→var(--status-keystone) 통일
