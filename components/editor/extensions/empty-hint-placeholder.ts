@@ -40,7 +40,7 @@ export const EmptyHintPlaceholder = Extension.create({
                 widget.contentEditable = "false"
                 widget.style.cssText = [
                   "color: var(--muted-foreground)",
-                  "opacity: 0.5",
+                  "opacity: 0.9",
                   "user-select: none",
                   "pointer-events: none",
                   "font-size: 0.85em",
