@@ -188,6 +188,13 @@ export function resolveBookItems(
     return cmp !== 0 ? cmp : a.id.localeCompare(b.id)
   }
 
+  // v2 Phase G: per-source user reorder of auto items. Key format
+  // `${sourceRefId}::${entityId}` (entityId = note/wiki id, NOT the
+  // auto book item id, since auto item ids change on re-resolve).
+  // Resolver looks up userOrder; if set, that fractional key wins over
+  // the resolver-generated `order` (which mirrors `updatedAt desc`).
+  const autoUserOrders = book.autoUserOrders ?? {}
+
   // Helper: emit one auto chapter — heading + (note|wiki) items. Pure
   // append into autoItems; updates prevOrder + seenAutoRefIds in place.
   // sourceRefId is shared across heading + items so UI can scope actions
@@ -212,11 +219,17 @@ export function resolveBookItems(
 
     for (const entity of candidates) {
       const entityOrder = generateKeyBetween(prevOrder, null)
+      // v2: if user has reordered this auto item, attach userOrder.
+      // resolver sort uses `userOrder ?? order`, so absent key is
+      // transparent (falls back to natural updatedAt desc).
+      const userOrderKey = `${sourceRefId}::${entity.id}`
+      const userOrder = autoUserOrders[userOrderKey]
       autoItems.push({
         kind: entity.kind,
         id: `auto-${sourceRefId}-${entity.id}`,
         refId: entity.id,
         order: entityOrder,
+        ...(userOrder ? { userOrder } : {}),
         source: "auto",
         sourceRefId,
       })
@@ -340,8 +353,13 @@ export function resolveBookItems(
     }
   }
 
-  // 4. Merge and sort by order
-  return [...manualItems, ...autoItems].sort((a, b) =>
-    a.order < b.order ? -1 : a.order > b.order ? 1 : 0,
-  )
+  // 4. Merge and sort by (userOrder ?? order). v2 Phase G: user reorder
+  // wins over the resolver-generated order; absent userOrder is
+  // transparent to v1 callers (every item still has `order`).
+  const sortKey = (item: ResolvedBookItem): string => item.userOrder ?? item.order
+  return [...manualItems, ...autoItems].sort((a, b) => {
+    const ka = sortKey(a)
+    const kb = sortKey(b)
+    return ka < kb ? -1 : ka > kb ? 1 : 0
+  })
 }

@@ -101,6 +101,35 @@ export interface BooksSlice {
   addExcludeId: (bookId: string, entityId: string) => void
   /** Remove an entity id from excludeIds (idempotent). */
   removeExcludeId: (bookId: string, entityId: string) => void
+
+  /* ── Auto chapter ordering (v2 Phase G) ── */
+  /**
+   * Reorder a single auto item within its source group. Caller
+   * (drag-drop UI) supplies the new neighbor's `entityId`s; we resolve
+   * to current userOrder/order, compute a fractional key between them,
+   * and persist it on `book.autoUserOrders`.
+   *
+   * `entityId` is the note/wiki id (NOT the auto book item id).
+   * `prevEntityId` / `nextEntityId` are the new neighbors in the same
+   * source group (null = "before all" / "after all" within the source).
+   *
+   * Resolver picks up the userOrder transparently — sort uses
+   * `(userOrder ?? order)` so unset items keep their natural updatedAt
+   * desc order.
+   */
+  reorderAutoItem: (
+    bookId: string,
+    sourceRefId: string,
+    entityId: string,
+    prevEntityId: string | null,
+    nextEntityId: string | null,
+  ) => void
+  /**
+   * Clear all per-source user reorder for a single source — used by
+   * the per-source "Auto-sort" toggle to revert back to `updatedAt desc`.
+   * Returns the number of keys removed (caller renders undo toast).
+   */
+  clearAutoUserOrder: (bookId: string, sourceRefId: string) => number
 }
 
 export function createBooksSlice(set: Set, _get: Get): Omit<BooksSlice, "books"> {
@@ -342,6 +371,67 @@ export function createBooksSlice(set: Set, _get: Get): Omit<BooksSlice, "books">
           return { ...book, excludeIds: next }
         }),
       )
+    },
+
+    /* ── Auto chapter ordering (v2 Phase G) ── */
+
+    reorderAutoItem: (
+      bookId: string,
+      sourceRefId: string,
+      entityId: string,
+      prevEntityId: string | null,
+      nextEntityId: string | null,
+    ) => {
+      set((state: any) =>
+        touchBook(state, bookId, (book) => {
+          const map = book.autoUserOrders ?? {}
+          // Resolve neighbor orders from the same source. If a neighbor
+          // already has a userOrder set, use that; otherwise we can't
+          // place between them deterministically without re-resolving
+          // the whole book (caller normally provides at least one
+          // anchored neighbor, e.g. the previous auto item the user just
+          // moved past). When both neighbors are null we treat as
+          // "first within source".
+          const prevKey = prevEntityId ? `${sourceRefId}::${prevEntityId}` : null
+          const nextKey = nextEntityId ? `${sourceRefId}::${nextEntityId}` : null
+          const prevOrder = prevKey ? map[prevKey] ?? null : null
+          const nextOrder = nextKey ? map[nextKey] ?? null : null
+          let newOrder: string
+          try {
+            newOrder = generateKeyBetween(prevOrder, nextOrder)
+          } catch {
+            // Neighbors out of order (rare race) — append at end of source.
+            newOrder = generateKeyBetween(prevOrder, null)
+          }
+          const key = `${sourceRefId}::${entityId}`
+          if (map[key] === newOrder) return book
+          return {
+            ...book,
+            autoUserOrders: { ...map, [key]: newOrder },
+          }
+        }),
+      )
+    },
+
+    clearAutoUserOrder: (bookId: string, sourceRefId: string): number => {
+      let removed = 0
+      set((state: any) =>
+        touchBook(state, bookId, (book) => {
+          const map = book.autoUserOrders ?? {}
+          const prefix = `${sourceRefId}::`
+          const next: Record<string, string> = {}
+          for (const [k, v] of Object.entries(map)) {
+            if (k.startsWith(prefix)) {
+              removed++
+              continue
+            }
+            next[k] = v
+          }
+          if (removed === 0) return book
+          return { ...book, autoUserOrders: next }
+        }),
+      )
+      return removed
     },
   }
 }

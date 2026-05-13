@@ -141,6 +141,19 @@ export interface Book {
   // Hybrid: items[] = manual, smartSources[] = auto, excludeIds[] = exclude from auto.
   smartSources?: AutoSource[]
   excludeIds?: string[]
+
+  /**
+   * Smart Book v2 Phase G — per-source user reorder of auto items.
+   * Key format: `${sourceRefId}::${entityId}` where entityId is the
+   * note/wiki id (NOT the auto-generated book item id, since auto
+   * item ids change on re-resolve).
+   * Value: fractional-indexing key inserted by the user (overrides
+   * the source-natural `updatedAt desc` ordering).
+   *
+   * Cleared per-source by `clearAutoUserOrder(bookId, sourceRefId)`
+   * (the per-source "Auto-sort" toggle). Spec: smart-book-v2-prd.md §4.
+   */
+  autoUserOrders?: Record<string, string>
 }
 
 /**
@@ -157,10 +170,22 @@ export interface Book {
  * `kind: "note"` items in a single book (same for `kind: "wiki"`).
  * Adding a duplicate is silently rejected.
  */
+/**
+ * `userOrder` (Smart Book v2 Phase G — chapter ordering for auto items):
+ * Optional fractional-indexing key that overrides the source-natural
+ * `order` (which for auto items defaults to `updatedAt desc`).
+ *
+ * Set when the user drag-reorders an auto item within its source group.
+ * Cleared by `clearAutoUserOrder(bookId, sourceRefId)` — the per-source
+ * "Auto-sort" toggle reverts back to `updatedAt desc`. Resolver sorts
+ * by `(userOrder ?? order)`, so absence is transparent to v1 callers.
+ *
+ * Spec: `.omc/plans/smart-book-v2-prd.md` §3 LOCKED #13.
+ */
 export type BookItem =
-  | { kind: "note"; id: string; refId: string; order: string }
-  | { kind: "wiki"; id: string; refId: string; order: string }
-  | { kind: "chapter-heading"; id: string; title: string; order: string }
+  | { kind: "note"; id: string; refId: string; order: string; userOrder?: string }
+  | { kind: "wiki"; id: string; refId: string; order: string; userOrder?: string }
+  | { kind: "chapter-heading"; id: string; title: string; order: string; userOrder?: string }
 
 /* ── Wiki Article (Assembly Model) ────────────────── */
 
