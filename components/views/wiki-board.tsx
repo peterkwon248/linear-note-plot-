@@ -470,7 +470,13 @@ export function WikiBoard({
         setActiveDragId(null)
         return
       }
-      const targetGroupKey = overId
+      // Same dnd-kit collision risk as notes-board (PR #311) and
+      // books-board (PR #319): column DOM ref combines
+      // useSortable("col-${key}") + useDroppable(key), so over.id may
+      // come back as either form non-deterministically. Strip the
+      // "col-" prefix so downstream label/parent/etc. checks always
+      // see the bare group key.
+      const targetGroupKey = overId.startsWith("col-") ? overId.slice(4) : overId
       if (sourceGroupKey === targetGroupKey) {
         setActiveDragId(null)
         return
