@@ -65,6 +65,11 @@ interface OntologyGraphCanvasProps {
    *  membership when grouping by "book". `book.color` (when set) is
    *  used for hull color, falls back to neutral. */
   books?: Book[]
+  /** Optional override of node → bookIds mapping. Caller (ontology-view)
+   *  computes via resolveBookItems so Smart Book auto items also
+   *  participate in the hull. When absent, canvas falls back to the
+   *  cheap manual-only book.items[] reverse lookup (v1 behavior). */
+  bookMembership?: Map<string, string[]>
   /** Group by mode (= hull rule). "none" disables hulls; "connections" keeps
    *  legacy BFS connected-component behavior. Other values group nodes by
    *  the matching entity field (label/tag/category/folder/status). */
@@ -336,6 +341,7 @@ export function OntologyGraphCanvas({
   folders,
   stickers,
   books,
+  bookMembership,
   groupBy = "connections",
   onRequestGroupBy,
   hiddenEdgeIds,
@@ -830,22 +836,26 @@ export function OntologyGraphCanvas({
     const tagsFor         = (node: OntologyNode): string[] => node.tags ?? []
     const stickersFor     = (node: OntologyNode): string[] => node.stickerIds ?? []
 
-    // v2 Ontology Hull Phase 2 — node → book ids reverse lookup. Built
-    // once per books update, O(N×M) but books typically small (≤20).
-    // Note/wiki ids appear at most once per book (BookItem dedup
-    // invariant). Trashed books skipped. Smart source auto items NOT
-    // included in MVP — only manual book.items[] are hull members
-    // (follow-up: include resolvedContentItems for full hull).
-    const nodeToBookIds = new Map<string, string[]>()
-    for (const book of books ?? []) {
-      if (book.trashed) continue
-      for (const item of book.items) {
-        if (item.kind === "chapter-heading") continue
-        const refId = (item as { refId?: string }).refId
-        if (!refId) continue
-        const existing = nodeToBookIds.get(refId)
-        if (existing) existing.push(book.id)
-        else nodeToBookIds.set(refId, [book.id])
+    // v2 Ontology Hull Phase 2 — node → book ids reverse lookup.
+    // Prefer caller-supplied `bookMembership` (which uses
+    // `resolveBookItems` to include Smart Book auto items). Fall back to
+    // a cheap manual-only sweep of `book.items[]` when no override is
+    // provided. Trashed books always skipped.
+    let nodeToBookIds: Map<string, string[]>
+    if (bookMembership) {
+      nodeToBookIds = bookMembership
+    } else {
+      nodeToBookIds = new Map<string, string[]>()
+      for (const book of books ?? []) {
+        if (book.trashed) continue
+        for (const item of book.items) {
+          if (item.kind === "chapter-heading") continue
+          const refId = (item as { refId?: string }).refId
+          if (!refId) continue
+          const existing = nodeToBookIds.get(refId)
+          if (existing) existing.push(book.id)
+          else nodeToBookIds.set(refId, [book.id])
+        }
       }
     }
     const booksFor = (node: OntologyNode): string[] => nodeToBookIds.get(node.id) ?? []
@@ -936,7 +946,7 @@ export function OntologyGraphCanvas({
     // positions. Earlier versions used `transform` here, but that only
     // changes during panning — node drags never invalidated the memo, so
     // hulls stayed frozen at the drag-start positions while nodes moved.
-  }, [groupBy, visibleEdges, graph.nodes, labels, tags, wikiCategories, folders, stickers, books, nodeMap, renderTick])
+  }, [groupBy, visibleEdges, graph.nodes, labels, tags, wikiCategories, folders, stickers, books, bookMembership, nodeMap, renderTick])
 
   /* ── Node adjacency for hover highlight ────────────── */
   const connectedToHovered = useCallback(

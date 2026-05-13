@@ -15,6 +15,7 @@ import { FilterPanel } from "@/components/filter-panel"
 import type { FilterCategory } from "@/components/filter-panel"
 import { DisplayPanel } from "@/components/display-panel"
 import { GRAPH_VIEW_CONFIG } from "@/lib/view-engine/view-configs"
+import { resolveBookItems } from "@/lib/books/resolver"
 import type { FilterRule, ViewContextKey, ViewState } from "@/lib/view-engine/types"
 import { buildViewStateForContext } from "@/lib/view-engine/defaults"
 import { rulesToOntologyFilters } from "@/lib/view-engine/graph-filter-adapter"
@@ -100,6 +101,29 @@ export function OntologyView() {
   const folders = usePlotStore((s) => s.folders)
   const stickers = usePlotStore((s) => s.stickers)
   const books = usePlotStore((s) => s.books)
+
+  // v2 Ontology Hull Phase 2 follow-up — node → bookIds mapping that
+  // includes Smart Book auto items. Manual book.items[] + smartSources
+  // 둘 다 resolveBookItems로 한 번에 처리 (auto re-resolve safe).
+  // O(B × resolver-cost) per books/store change — books 보통 ≤20.
+  const bookMembership = useMemo(() => {
+    const map = new Map<string, string[]>()
+    for (const book of books) {
+      if (book.trashed) continue
+      const resolved = resolveBookItems(book, {
+        notes, folders, wikiArticles, wikiCategories, tags, labels, stickers,
+      })
+      for (const item of resolved) {
+        if (item.kind === "chapter-heading") continue
+        const refId = (item as { refId?: string }).refId
+        if (!refId) continue
+        const existing = map.get(refId)
+        if (existing) existing.push(book.id)
+        else map.set(refId, [book.id])
+      }
+    }
+    return map
+  }, [books, notes, folders, wikiArticles, wikiCategories, tags, labels, stickers])
   const openNote = usePlotStore((s) => s.openNote)
   const ontologyPositions = usePlotStore((s) => s.ontologyPositions)
   const updateOntologyPositions = usePlotStore((s) => s.updateOntologyPositions)
@@ -343,6 +367,7 @@ export function OntologyView() {
             folders={folders}
             stickers={stickers}
             books={books}
+            bookMembership={bookMembership}
             groupBy={graphViewState.groupBy}
             onRequestGroupBy={(g) => updateGraphViewState({ groupBy: g })}
             // Visual filters (declutter the canvas, no data mutation)
