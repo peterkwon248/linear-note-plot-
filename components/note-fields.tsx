@@ -56,9 +56,13 @@ export const STATUS_CONFIG: Record<
   },
   keystone: {
     label: "Block",
-    color: "var(--chart-5)",
-    bg: "color-mix(in srgb, var(--chart-5) 18%, transparent)",
-    border: "color-mix(in srgb, var(--chart-5) 35%, transparent)",
+    // 2026-05-13: var(--chart-5)는 green (#15803d) — Block 색 LOCKED
+    // (slate, 2026-05-12)와 불일치. var(--status-keystone)로 통일 →
+    // Notes Table badge / Smart sidebar / filter icon 등 모든 곳에서
+    // slate 표시 (Plot 건축 메타포 정합).
+    color: "var(--status-keystone)",
+    bg: "color-mix(in srgb, var(--status-keystone) 18%, transparent)",
+    border: "color-mix(in srgb, var(--status-keystone) 35%, transparent)",
     icon: <Cuboid2x2 size={14} weight="regular" />,
   },
 }

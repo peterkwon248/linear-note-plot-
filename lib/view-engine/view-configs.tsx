@@ -113,7 +113,7 @@ export const NOTES_VIEW_CONFIG: ViewConfig = {
     { key: "status", label: "Status", icon: StatusIcon, values: [
       { key: "stone", label: "Stone", color: "rgba(255,255,255,0.32)", icon: <Hexagon size={14} weight="regular" style={{ color: "var(--chart-2)" }} /> },
       { key: "brick", label: "Brick", color: "#f5a623", icon: <Cube size={14} weight="regular" style={{ color: "var(--chart-3)" }} /> },
-      { key: "keystone", label: "Block", color: "#45d483", icon: <Cuboid2x2 size={14} weight="regular" style={{ color: "var(--chart-5)" }} /> },
+      { key: "keystone", label: "Block", icon: <Cuboid2x2 size={14} weight="regular" style={{ color: "var(--status-keystone)" }} /> },
     ]},
     { key: "folder", label: "Folder", icon: FolderIcon, values: [] },
     { key: "label", label: "Label", icon: LabelIcon, values: [] },
@@ -383,7 +383,7 @@ export const GRAPH_VIEW_CONFIG: ViewConfig = {
       // Ontology Hull #7 Option B nested의 본 구현).
       { key: "stone",       label: "Stone",   icon: <Hexagon size={14} weight="regular" style={{ color: "var(--chart-2)" }} />, group: "Note" },
       { key: "brick",       label: "Brick",   icon: <Cube size={14} weight="regular" style={{ color: "var(--chart-3)" }} />, group: "Note" },
-      { key: "keystone",    label: "Block",   icon: <Cuboid2x2 size={14} weight="regular" style={{ color: "var(--chart-5)" }} />, group: "Note" },
+      { key: "keystone",    label: "Block",   icon: <Cuboid2x2 size={14} weight="regular" style={{ color: "var(--status-keystone)" }} />, group: "Note" },
       { key: "wiki-stub",   label: "Stub",    icon: <IconWikiStub size={14} style={{ color: WIKI_STATUS_HEX.stub }} />, group: "Wiki" },
       { key: "wiki-article", label: "Article", icon: <IconWikiArticle size={14} style={{ color: WIKI_STATUS_HEX.article }} />, group: "Wiki" },
       { key: "book-smart",  label: "Smart",   icon: <Lightning size={14} weight="regular" style={{ color: "#5E6AD2" }} />, group: "Book" },
@@ -517,7 +517,7 @@ export const CALENDAR_VIEW_CONFIG: ViewConfig = {
     { key: "status", label: "Status", icon: StatusIcon, values: [
       { key: "stone", label: "Stone", color: "rgba(255,255,255,0.32)", icon: <Hexagon size={14} weight="regular" style={{ color: "var(--chart-2)" }} /> },
       { key: "brick", label: "Brick", color: "#f5a623", icon: <Cube size={14} weight="regular" style={{ color: "var(--chart-3)" }} /> },
-      { key: "keystone", label: "Block", color: "#45d483", icon: <Cuboid2x2 size={14} weight="regular" style={{ color: "var(--chart-5)" }} /> },
+      { key: "keystone", label: "Block", icon: <Cuboid2x2 size={14} weight="regular" style={{ color: "var(--status-keystone)" }} /> },
     ]},
     { key: "folder", label: "Folder", icon: FolderIcon, values: [] },
     { key: "label", label: "Label", icon: LabelIcon, values: [] },
@@ -551,7 +551,7 @@ export const TEMPLATES_VIEW_CONFIG: ViewConfig = {
     { key: "status", label: "Status", icon: StatusIcon, values: [
       { key: "stone", label: "Stone", color: "rgba(255,255,255,0.32)", icon: <Hexagon size={14} weight="regular" style={{ color: "var(--chart-2)" }} /> },
       { key: "brick", label: "Brick", color: "#f5a623", icon: <Cube size={14} weight="regular" style={{ color: "var(--chart-3)" }} /> },
-      { key: "keystone", label: "Block", color: "#45d483", icon: <Cuboid2x2 size={14} weight="regular" style={{ color: "var(--chart-5)" }} /> },
+      { key: "keystone", label: "Block", icon: <Cuboid2x2 size={14} weight="regular" style={{ color: "var(--status-keystone)" }} /> },
     ]},
     { key: "priority", label: "Priority", icon: PriorityIcon, values: [
       { key: "urgent", label: "Urgent" },
