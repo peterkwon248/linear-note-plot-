@@ -125,24 +125,35 @@ export function BookDetailPage({ bookId }: BookDetailPageProps) {
   const [addOpen, setAddOpen] = useState(false)
   const [addInitialTab, setAddInitialTab] = useState<"notes" | "wiki">("notes")
 
-  // Books reading view (primary pane) = full-width single-column layout.
-  // Force-close the side panel on entry so the reading viewport is wide.
-  // The wiki article already has its own infobox/categories chrome inside
-  // the body — the store-level SmartSidePanel would just narrow things
-  // further. Sync sidePanelContext anyway, so if the user re-opens the
-  // panel via ⌘B it reflects the currently visible note/wiki.
+  // Sync sidePanelContext to reflect what's visible in the primary pane:
+  //   - With a selected item (readingEntityId): show that note/wiki in
+  //     the side panel (drill-down view).
+  //   - Without selection: show the book itself (overview — Properties,
+  //     Smart sources, Chapters, etc. via BookDetailPanel).
+  //
+  // 2026-05-14 (entity-side-panel-uniformity PR 2): previously forced
+  // `sidePanelOpen: false` on entry to keep the reading viewport wide,
+  // but the panel now hosts meaningful Book-level info (Items by kind &
+  // status, Chapters, Reading state). Users can still close it
+  // manually; we no longer prescribe it.
+  //
   // Secondary pane has its own panel chrome — we don't touch global
   // sidePanel state from here.
   useEffect(() => {
-    if (readingEntityId && pane === "primary") {
+    if (pane !== "primary") return
+    if (readingEntityId) {
       const isWiki = wikiArticles.some((w) => w.id === readingEntityId)
-      usePlotStore.setState({ sidePanelOpen: false })
       usePlotStore.getState().setSidePanelContext({
         type: isWiki ? "wiki" : "note",
         id: readingEntityId,
       })
+    } else {
+      usePlotStore.getState().setSidePanelContext({
+        type: "book",
+        id: bookId,
+      })
     }
-  }, [readingEntityId, pane, wikiArticles])
+  }, [readingEntityId, pane, wikiArticles, bookId])
 
   // Cleanup on unmount — when the user leaves /books/{id} (sidebar nav,
   // back, etc.), clear the book reading state so other views (NotesView

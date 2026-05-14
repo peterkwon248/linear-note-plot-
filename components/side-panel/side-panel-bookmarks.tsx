@@ -12,7 +12,9 @@ import { MagnifyingGlass } from "@phosphor-icons/react/dist/ssr/MagnifyingGlass"
 import { X } from "@phosphor-icons/react/dist/ssr/X"
 import { extractAnchorsFromContentJson } from "@/lib/anchor-utils"
 import { navigateToWikiArticle } from "@/lib/wiki-article-nav"
-import type { GlobalBookmark } from "@/lib/types"
+import { resolveBookItems } from "@/lib/books/resolver"
+import { Books as BooksIcon } from "@phosphor-icons/react/dist/ssr/Books"
+import type { GlobalBookmark, Book } from "@/lib/types"
 import { cn } from "@/lib/utils"
 import { SPACE_COLORS } from "@/lib/colors"
 
@@ -241,6 +243,40 @@ export function SidePanelBookmarks() {
         />
       )}
       {/* Wiki SECTIONS removed — Outline is shown in Detail tab */}
+      {/* Templates: anchor pinning enabled (PR 4a).
+          GlobalBookmark.targetKind extended to include "template" — the data
+          model + slice signature accept it; this surface reuses NoteLocalAnchors
+          since `extractAnchorsFromContentJson` is contentJson-only (same as
+          notes). The `note` prop name is a legacy artifact of the component's
+          notes origin — we keep it for minimal-diff. Future PR may rename to
+          `LocalAnchors` and accept any { id, contentJson } shape. */}
+      {entity.type === "template" && entity.template && (
+        <NoteLocalAnchors
+          note={entity.template}
+          pinnedList={pinnedList}
+          onPin={(anchorId, label, anchorType) =>
+            pinBookmark(entity.template!.id, anchorId, label, anchorType, "template")
+          }
+          onUnpin={unpinBookmark}
+        />
+      )}
+      {/* Books — "IN THIS BOOK" context filter.
+          The book entity itself has no contentJson, so it can't host
+          anchors directly. But the book's *items* (notes / wiki articles)
+          do — and the user already pins anchors in those entities via the
+          normal flow. This section surfaces just those existing
+          bookmarks, scoped to items that belong to *this* book. Manual
+          items + smart-resolved items are both included via the resolver.
+          No new data model — pure derived view. */}
+      {entity.type === "book" && entity.book && (
+        <BookContextBookmarks
+          book={entity.book}
+          pinnedList={pinnedList}
+          notesById={notesById}
+          articlesById={articlesById}
+          onNavigate={navigateToBookmark}
+        />
+      )}
     </div>
   )
 }
@@ -375,3 +411,146 @@ function NoteLocalAnchors({
   )
 }
 
+/* ── Book context bookmarks ───────────────────────────────
+   "IN THIS BOOK" — pure derived view that filters the global bookmark
+   list down to entries whose `noteId` (the target note/wiki id) belongs
+   to one of this book's items (manual `book.items` + smart-resolved
+   items via `resolveBookItems`). No new data model — bookmarks are still
+   pinned through the normal note/wiki flow; we just surface them in the
+   book's context so users don't lose their reading anchors when working
+   inside a book.
+
+   Design (PRD entity-side-panel-uniformity, 방향 4):
+     - Book entity has no contentJson, so it can't host direct anchors.
+     - But a book's purpose is to group notes/wikis for sequential
+       reading — and any anchor pinned in those items is implicitly
+       "this book's anchor" in context. This view makes that contextual
+       relationship navigable.
+     - Resolver pulls in smart-source items too, so Smart / Hybrid books
+       behave the same as Manual.
+*/
+function BookContextBookmarks({
+  book,
+  pinnedList,
+  notesById,
+  articlesById,
+  onNavigate,
+}: {
+  book: Book
+  pinnedList: GlobalBookmark[]
+  notesById: Record<string, any>
+  articlesById: Record<string, any>
+  onNavigate: (bm: GlobalBookmark) => void
+}) {
+  const notes = usePlotStore((s) => s.notes)
+  const folders = usePlotStore((s) => s.folders)
+  const wikiArticles = usePlotStore((s) => s.wikiArticles)
+  const wikiCategories = usePlotStore((s) => s.wikiCategories)
+  const tags = usePlotStore((s) => s.tags)
+  const labels = usePlotStore((s) => s.labels)
+  const stickers = usePlotStore((s) => s.stickers)
+
+  const bookItemRefIds = useMemo(() => {
+    const ids = new Set<string>()
+    for (const item of book.items) {
+      if (item.kind === "note" || item.kind === "wiki") {
+        ids.add(item.refId)
+      }
+    }
+    // Include smart-resolved items so Smart / Hybrid books behave the same
+    const resolved = resolveBookItems(book, {
+      notes,
+      folders,
+      wikiArticles,
+      wikiCategories,
+      tags,
+      labels,
+      stickers,
+    })
+    for (const r of resolved) {
+      if (r.kind === "note" || r.kind === "wiki") {
+        ids.add(r.refId)
+      }
+    }
+    return ids
+  }, [book, notes, folders, wikiArticles, wikiCategories, tags, labels, stickers])
+
+  const inThisBook = useMemo(
+    () => pinnedList.filter((bm) => bookItemRefIds.has(bm.noteId)),
+    [pinnedList, bookItemRefIds],
+  )
+
+  return (
+    <div className="p-3 border-t border-border-subtle">
+      <SectionHeader icon={BooksIcon} label="IN THIS BOOK" count={inThisBook.length} />
+      {bookItemRefIds.size === 0 ? (
+        <p className="text-2xs text-muted-foreground/70 italic px-1">
+          No items in this book yet
+        </p>
+      ) : inThisBook.length === 0 ? (
+        <p className="text-2xs text-muted-foreground/70 italic px-1">
+          No bookmarks in this book&apos;s items yet
+        </p>
+      ) : (
+        <ul className="space-y-0.5">
+          {inThisBook.map((bm) => {
+            const kind = bm.targetKind ?? "note"
+            const target = kind === "wiki" ? articlesById[bm.noteId] : notesById[bm.noteId]
+            const isDeleted = !target || (target as any).trashed
+            const targetTitle = target?.title || null
+            return (
+              <li
+                key={bm.id}
+                className="group flex items-start gap-2 px-2 py-1.5 rounded-md hover:bg-hover-bg transition-colors cursor-pointer"
+                onClick={() => !isDeleted && onNavigate(bm)}
+              >
+                {kind === "wiki" ? (
+                  <BookOpen
+                    size={13}
+                    weight="fill"
+                    className="mt-0.5 flex-shrink-0"
+                    style={{ color: isDeleted ? "var(--muted-foreground)" : SPACE_COLORS.wiki }}
+                  />
+                ) : (
+                  <MapPin
+                    size={13}
+                    weight="fill"
+                    className="mt-0.5 flex-shrink-0"
+                    style={{ color: isDeleted ? "var(--muted-foreground)" : SPACE_COLORS.notes }}
+                  />
+                )}
+                <div className="flex-1 min-w-0">
+                  <span
+                    className={cn(
+                      "text-note block truncate font-medium",
+                      isDeleted ? "text-muted-foreground" : "text-foreground",
+                    )}
+                  >
+                    {bm.label}
+                    {isDeleted && (
+                      <span className="ml-1 text-2xs text-muted-foreground/70">(deleted)</span>
+                    )}
+                  </span>
+                  <span className="flex items-center gap-1 text-2xs text-muted-foreground">
+                    <span
+                      className="uppercase tracking-wider font-semibold text-[9px]"
+                      style={{ color: kind === "wiki" ? SPACE_COLORS.wiki : SPACE_COLORS.notes }}
+                    >
+                      {kind}
+                    </span>
+                    {!isDeleted && targetTitle && (
+                      <>
+                        <span className="text-muted-foreground/60">·</span>
+                        <span className="truncate">{targetTitle}</span>
+                      </>
+                    )}
+                  </span>
+                </div>
+              </li>
+            )
+          })}
+        </ul>
+      )}
+    </div>
+  )
+}
