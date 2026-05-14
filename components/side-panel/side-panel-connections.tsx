@@ -499,45 +499,382 @@ export function SidePanelConnections() {
     return <BookConnections />
   }
 
-  // Library entities (Tag / Sticker / File / Reference) — the meaningful
-  // cross-entity relationships (Tag's tagged notes, Sticker's members,
-  // File's source + used-in, Reference's citing notes) already surface
-  // in the Detail tab. We avoid duplicating that here; a clear pointer to
-  // Detail keeps the entity-aware Connections tab honest. PR 5 (Activity
-  // entity-agnostic 통합) is the natural place to expand this with real
-  // cross-entity graph context.
+  // Library entities (Tag / Sticker / File / Reference) — entity-specific
+  // cross-entity charts. BookConnections "Items by kind & status" 패턴
+  // 정합 — Notes/Wikis status breakdown + cross-entity counts.
   if (sidePanelContext?.type === "tag") {
-    return <LibraryEntityConnectionsPlaceholder label="Tag" hint="Tag relationships (tagged notes) appear in the Detail tab under 'Used by'." />
+    return <TagConnections />
   }
   if (sidePanelContext?.type === "sticker") {
-    return <LibraryEntityConnectionsPlaceholder label="Sticker" hint="Sticker members (cross-entity) appear in the Detail tab under 'Used by'." />
+    return <StickerConnections />
   }
   if (sidePanelContext?.type === "file") {
-    return <LibraryEntityConnectionsPlaceholder label="File" hint="File source + used-in references appear in the Detail tab." />
+    return <FileConnections />
   }
   if (sidePanelContext?.type === "reference") {
-    return <LibraryEntityConnectionsPlaceholder label="Reference" hint="Reference citing notes appear in the Detail tab." />
+    return <ReferenceConnections />
   }
 
   return <NoteConnections />
 }
 
-/**
- * LibraryEntityConnectionsPlaceholder — empty-state for Library entities
- * (Tag / Sticker / File / Reference) where the meaningful relationships
- * already live in the Detail tab. Honest pointer instead of duplicating
- * those lists or rendering a misleading NoteConnections fallback.
- */
-function LibraryEntityConnectionsPlaceholder({ label, hint }: { label: string; hint: string }) {
+// ── Tag Connections ─────────────────────────────────────
+// "Tagged items by kind & status" — BookConnections 패턴 정합. 이 tag를
+// 가진 notes의 status breakdown + 통계.
+
+function TagConnections() {
+  const entity = useSidePanelEntity()
+  const tag = entity.type === "tag" ? entity.tag : null
+  const notes = usePlotStore((s) => s.notes)
+  const openInSecondary = usePlotStore((s) => s.openInSecondary)
+
+  const tagged = useMemo(() => {
+    if (!tag) return { byStatus: { stone: 0, brick: 0, keystone: 0 } as Record<string, number>, all: [] as typeof notes }
+    const matching = notes.filter((n) => !n.trashed && n.tags.includes(tag.id))
+    const byStatus = { stone: 0, brick: 0, keystone: 0 } as Record<string, number>
+    for (const n of matching) {
+      const s = (n.status ?? "stone") as string
+      byStatus[s] = (byStatus[s] ?? 0) + 1
+    }
+    return { byStatus, all: matching }
+  }, [tag, notes])
+
+  if (!tag) {
+    return (
+      <div className="flex flex-1 items-center justify-center p-8 text-center">
+        <p className="text-note text-muted-foreground">Select a tag to see connections</p>
+      </div>
+    )
+  }
+
+  const total = tagged.all.length
+
   return (
     <div className="flex-1 overflow-y-auto">
-      <div className="px-4 py-3">
-        <div className="mb-2 flex items-center gap-2">
-          <span className="text-muted-foreground"><LinkSimple size={16} weight="regular" /></span>
-          <span className="text-2xs font-medium text-muted-foreground">{label} connections</span>
-        </div>
-        <p className="text-note text-muted-foreground/70">{hint}</p>
+      <ConnectionSection
+        title="Tagged notes"
+        icon={<LinkSimple size={14} weight="regular" />}
+        count={total}
+        defaultOpen
+      >
+        {total === 0 ? (
+          <p className="text-note text-muted-foreground px-2">
+            No notes carry this tag yet
+          </p>
+        ) : (
+          <div className="space-y-3">
+            {/* Status breakdown */}
+            <div className="space-y-0.5">
+              <KindHeader label="By status" count={total} />
+              <StatusRow label="Stone" count={tagged.byStatus.stone} colorVar="var(--status-stone)" />
+              <StatusRow label="Brick" count={tagged.byStatus.brick} colorVar="var(--status-brick)" />
+              <StatusRow label="Block" count={tagged.byStatus.keystone} colorVar="var(--status-keystone)" />
+            </div>
+            {/* Recent notes list */}
+            <div className="space-y-0.5">
+              <SubLabel>Recent</SubLabel>
+              {tagged.all.slice(0, 8).map((n) => (
+                <button
+                  key={n.id}
+                  onClick={() => openInSecondary(n.id)}
+                  className="flex w-full items-center gap-2 rounded-md px-2 py-0.5 text-left text-note text-foreground hover:bg-hover-bg transition-colors"
+                >
+                  <FileText size={12} className="shrink-0 text-muted-foreground" weight="regular" />
+                  <span className="truncate flex-1">{n.title || "Untitled"}</span>
+                </button>
+              ))}
+              {tagged.all.length > 8 && (
+                <p className="px-2 py-1 text-2xs text-muted-foreground/70 italic">
+                  +{tagged.all.length - 8} more (see Detail tab for full list)
+                </p>
+              )}
+            </div>
+          </div>
+        )}
+      </ConnectionSection>
+    </div>
+  )
+}
+
+// ── Sticker Connections ─────────────────────────────────────
+// "Members by kind & status" — cross-entity (note/wiki) breakdown. members
+// 7 kinds 중 note/wiki만 status 분류 가능. 나머지 kinds는 count만.
+
+function StickerConnections() {
+  const entity = useSidePanelEntity()
+  const sticker = entity.type === "sticker" ? entity.sticker : null
+  const notes = usePlotStore((s) => s.notes)
+  const wikiArticles = usePlotStore((s) => s.wikiArticles)
+  const openInSecondary = usePlotStore((s) => s.openInSecondary)
+
+  const breakdown = useMemo(() => {
+    const result = {
+      noteStatus: { stone: 0, brick: 0, keystone: 0 } as Record<string, number>,
+      wikiStatus: { stub: 0, article: 0 },
+      otherCounts: { tag: 0, label: 0, category: 0, file: 0, reference: 0 } as Record<string, number>,
+      noteRefs: [] as { id: string; title: string }[],
+    }
+    if (!sticker) return result
+    for (const m of sticker.members ?? []) {
+      if (m.kind === "note") {
+        const n = notes.find((x) => x.id === m.id)
+        if (!n || n.trashed) continue
+        result.noteStatus[(n.status ?? "stone")] = (result.noteStatus[(n.status ?? "stone")] ?? 0) + 1
+        result.noteRefs.push({ id: n.id, title: n.title || "Untitled" })
+      } else if (m.kind === "wiki") {
+        const a = wikiArticles.find((x) => x.id === m.id)
+        if (!a || a.trashed) continue
+        if (isWikiStub(a)) result.wikiStatus.stub++
+        else result.wikiStatus.article++
+      } else if (m.kind in result.otherCounts) {
+        result.otherCounts[m.kind] = (result.otherCounts[m.kind] ?? 0) + 1
+      }
+    }
+    return result
+  }, [sticker, notes, wikiArticles])
+
+  if (!sticker) {
+    return (
+      <div className="flex flex-1 items-center justify-center p-8 text-center">
+        <p className="text-note text-muted-foreground">Select a sticker to see connections</p>
       </div>
+    )
+  }
+
+  const totalNotes = breakdown.noteStatus.stone + breakdown.noteStatus.brick + breakdown.noteStatus.keystone
+  const totalWikis = breakdown.wikiStatus.stub + breakdown.wikiStatus.article
+  const totalOther = Object.values(breakdown.otherCounts).reduce((a, b) => a + b, 0)
+  const total = totalNotes + totalWikis + totalOther
+
+  return (
+    <div className="flex-1 overflow-y-auto">
+      <ConnectionSection
+        title="Members by kind & status"
+        icon={<LinkSimple size={14} weight="regular" />}
+        count={total}
+        defaultOpen
+      >
+        {total === 0 ? (
+          <p className="text-note text-muted-foreground px-2">No members yet</p>
+        ) : (
+          <div className="space-y-3">
+            {totalNotes > 0 && (
+              <div className="space-y-0.5">
+                <KindHeader label="Notes" count={totalNotes} />
+                <StatusRow label="Stone" count={breakdown.noteStatus.stone} colorVar="var(--status-stone)" />
+                <StatusRow label="Brick" count={breakdown.noteStatus.brick} colorVar="var(--status-brick)" />
+                <StatusRow label="Block" count={breakdown.noteStatus.keystone} colorVar="var(--status-keystone)" />
+              </div>
+            )}
+            {totalWikis > 0 && (
+              <div className="space-y-0.5">
+                <KindHeader label="Wikis" count={totalWikis} />
+                <StatusRow label="Stub" count={breakdown.wikiStatus.stub} colorVar="var(--muted-foreground)" />
+                <StatusRow label="Article" count={breakdown.wikiStatus.article} colorVar="var(--chart-1)" />
+              </div>
+            )}
+            {(["tag", "label", "category", "file", "reference"] as const).map((k) => {
+              const c = breakdown.otherCounts[k]
+              if (!c) return null
+              return (
+                <div key={k} className="space-y-0.5">
+                  <KindHeader label={`${k.charAt(0).toUpperCase()}${k.slice(1)}s`} count={c} />
+                </div>
+              )
+            })}
+            {breakdown.noteRefs.length > 0 && (
+              <div className="space-y-0.5">
+                <SubLabel>Recent notes</SubLabel>
+                {breakdown.noteRefs.slice(0, 6).map((n) => (
+                  <button
+                    key={n.id}
+                    onClick={() => openInSecondary(n.id)}
+                    className="flex w-full items-center gap-2 rounded-md px-2 py-0.5 text-left text-note text-foreground hover:bg-hover-bg transition-colors"
+                  >
+                    <FileText size={12} className="shrink-0 text-muted-foreground" weight="regular" />
+                    <span className="truncate flex-1">{n.title}</span>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+      </ConnectionSection>
+    </div>
+  )
+}
+
+// ── File Connections ─────────────────────────────────────
+// Source note (1:1) + Used-in wiki articles (cross-reference via wiki
+// blocks[type="image", attachmentId]). File Detail에 같은 정보가 있지만
+// Connections는 cross-entity graph 시각 — 명시적 source/used-in 분리.
+
+function FileConnections() {
+  const entity = useSidePanelEntity()
+  const attachment = entity.type === "file" ? entity.attachment : null
+  const notes = usePlotStore((s) => s.notes)
+  const wikiArticles = usePlotStore((s) => s.wikiArticles)
+  const openInSecondary = usePlotStore((s) => s.openInSecondary)
+
+  const sourceNote = useMemo(
+    () => (attachment ? notes.find((n) => n.id === attachment.noteId) ?? null : null),
+    [attachment, notes],
+  )
+
+  const usedInWikis = useMemo(() => {
+    if (!attachment) return [] as typeof wikiArticles
+    return wikiArticles.filter((a) =>
+      (a.blocks ?? []).some(
+        (b: { type: string; attachmentId?: string }) =>
+          b.type === "image" && b.attachmentId === attachment.id,
+      ),
+    )
+  }, [attachment, wikiArticles])
+
+  if (!attachment) {
+    return (
+      <div className="flex flex-1 items-center justify-center p-8 text-center">
+        <p className="text-note text-muted-foreground">Select a file to see connections</p>
+      </div>
+    )
+  }
+
+  const total = (sourceNote ? 1 : 0) + usedInWikis.length
+
+  return (
+    <div className="flex-1 overflow-y-auto">
+      <ConnectionSection
+        title="Cross-entity"
+        icon={<LinkSimple size={14} weight="regular" />}
+        count={total}
+        defaultOpen
+      >
+        {total === 0 ? (
+          <p className="text-note text-muted-foreground px-2">
+            File is not referenced anywhere
+          </p>
+        ) : (
+          <div className="space-y-3">
+            {sourceNote && (
+              <div className="space-y-0.5">
+                <SubLabel>Source note</SubLabel>
+                <button
+                  onClick={() => openInSecondary(sourceNote.id)}
+                  className="flex w-full items-center gap-2 rounded-md px-2 py-0.5 text-left text-note text-foreground hover:bg-hover-bg transition-colors"
+                >
+                  <FileText size={12} className="shrink-0 text-muted-foreground" weight="regular" />
+                  <span className="truncate flex-1">{sourceNote.title || "Untitled"}</span>
+                </button>
+              </div>
+            )}
+            {usedInWikis.length > 0 && (
+              <div className="space-y-0.5">
+                <SubLabel>Used in wikis</SubLabel>
+                {usedInWikis.map((a) => (
+                  <button
+                    key={a.id}
+                    onClick={() => openInSecondary(a.id)}
+                    className="flex w-full items-center gap-2 rounded-md px-2 py-0.5 text-left text-note text-foreground hover:bg-hover-bg transition-colors"
+                  >
+                    <IconWiki size={12} className="shrink-0 text-muted-foreground" />
+                    <span className="truncate flex-1">{a.title || "Untitled"}</span>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+      </ConnectionSection>
+    </div>
+  )
+}
+
+// ── Reference Connections ─────────────────────────────────────
+// Citing notes / wikis — Note.referenceIds + WikiArticle.referenceIds
+// reverse lookup. Reference Detail은 이미 자체 정보 표시; Connections는
+// 이 reference를 인용하는 entities 명시.
+
+function ReferenceConnections() {
+  const sidePanelContext = usePlotStore((s) => s.sidePanelContext)
+  const referenceId = sidePanelContext?.type === "reference" ? sidePanelContext.id : null
+  const notes = usePlotStore((s) => s.notes)
+  const wikiArticles = usePlotStore((s) => s.wikiArticles)
+  const references = usePlotStore((s) => s.references)
+  const openInSecondary = usePlotStore((s) => s.openInSecondary)
+
+  const reference = referenceId ? (references as Record<string, { id: string; title: string }>)[referenceId] : null
+
+  const citingNotes = useMemo(() => {
+    if (!referenceId) return [] as typeof notes
+    return notes.filter(
+      (n) => !n.trashed && (n.referenceIds ?? []).includes(referenceId),
+    )
+  }, [referenceId, notes])
+
+  const citingWikis = useMemo(() => {
+    if (!referenceId) return [] as typeof wikiArticles
+    return wikiArticles.filter(
+      (a) => !a.trashed && (a.referenceIds ?? []).includes(referenceId),
+    )
+  }, [referenceId, wikiArticles])
+
+  if (!reference) {
+    return (
+      <div className="flex flex-1 items-center justify-center p-8 text-center">
+        <p className="text-note text-muted-foreground">Select a reference to see connections</p>
+      </div>
+    )
+  }
+
+  const total = citingNotes.length + citingWikis.length
+
+  return (
+    <div className="flex-1 overflow-y-auto">
+      <ConnectionSection
+        title="Cited by"
+        icon={<LinkSimple size={14} weight="regular" />}
+        count={total}
+        defaultOpen
+      >
+        {total === 0 ? (
+          <p className="text-note text-muted-foreground px-2">
+            No notes or wikis cite this reference yet
+          </p>
+        ) : (
+          <div className="space-y-3">
+            {citingNotes.length > 0 && (
+              <div className="space-y-0.5">
+                <SubLabel>Notes</SubLabel>
+                {citingNotes.map((n) => (
+                  <button
+                    key={n.id}
+                    onClick={() => openInSecondary(n.id)}
+                    className="flex w-full items-center gap-2 rounded-md px-2 py-0.5 text-left text-note text-foreground hover:bg-hover-bg transition-colors"
+                  >
+                    <FileText size={12} className="shrink-0 text-muted-foreground" weight="regular" />
+                    <span className="truncate flex-1">{n.title || "Untitled"}</span>
+                  </button>
+                ))}
+              </div>
+            )}
+            {citingWikis.length > 0 && (
+              <div className="space-y-0.5">
+                <SubLabel>Wikis</SubLabel>
+                {citingWikis.map((a) => (
+                  <button
+                    key={a.id}
+                    onClick={() => openInSecondary(a.id)}
+                    className="flex w-full items-center gap-2 rounded-md px-2 py-0.5 text-left text-note text-foreground hover:bg-hover-bg transition-colors"
+                  >
+                    <IconWiki size={12} className="shrink-0 text-muted-foreground" />
+                    <span className="truncate flex-1">{a.title || "Untitled"}</span>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+      </ConnectionSection>
     </div>
   )
 }
