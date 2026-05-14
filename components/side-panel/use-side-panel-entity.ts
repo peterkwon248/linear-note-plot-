@@ -1,14 +1,15 @@
 "use client"
 
 import { usePlotStore } from "@/lib/store"
-import type { Note, WikiArticle, Reference, NoteTemplate } from "@/lib/types"
+import type { Note, WikiArticle, Reference, NoteTemplate, Attachment } from "@/lib/types"
 
 export type SidePanelEntityResult =
-  | { type: "note"; noteId: string; wikiArticleId: null; referenceId: null; templateId: null; note: Note | null; wikiArticle: null; reference: null; template: null }
-  | { type: "wiki"; noteId: null; wikiArticleId: string; referenceId: null; templateId: null; note: null; wikiArticle: WikiArticle | null; reference: null; template: null }
-  | { type: "reference"; noteId: null; wikiArticleId: null; referenceId: string; templateId: null; note: null; wikiArticle: null; reference: Reference | null; template: null }
-  | { type: "template"; noteId: null; wikiArticleId: null; referenceId: null; templateId: string; note: null; wikiArticle: null; reference: null; template: NoteTemplate | null }
-  | { type: null; noteId: null; wikiArticleId: null; referenceId: null; templateId: null; note: null; wikiArticle: null; reference: null; template: null }
+  | { type: "note"; noteId: string; wikiArticleId: null; referenceId: null; templateId: null; attachmentId: null; note: Note | null; wikiArticle: null; reference: null; template: null; attachment: null }
+  | { type: "wiki"; noteId: null; wikiArticleId: string; referenceId: null; templateId: null; attachmentId: null; note: null; wikiArticle: WikiArticle | null; reference: null; template: null; attachment: null }
+  | { type: "reference"; noteId: null; wikiArticleId: null; referenceId: string; templateId: null; attachmentId: null; note: null; wikiArticle: null; reference: Reference | null; template: null; attachment: null }
+  | { type: "template"; noteId: null; wikiArticleId: null; referenceId: null; templateId: string; attachmentId: null; note: null; wikiArticle: null; reference: null; template: NoteTemplate | null; attachment: null }
+  | { type: "file"; noteId: null; wikiArticleId: null; referenceId: null; templateId: null; attachmentId: string; note: null; wikiArticle: null; reference: null; template: null; attachment: Attachment | null }
+  | { type: null; noteId: null; wikiArticleId: null; referenceId: null; templateId: null; attachmentId: null; note: null; wikiArticle: null; reference: null; template: null; attachment: null }
 
 const EMPTY: SidePanelEntityResult = {
   type: null,
@@ -16,10 +17,12 @@ const EMPTY: SidePanelEntityResult = {
   wikiArticleId: null,
   referenceId: null,
   templateId: null,
+  attachmentId: null,
   note: null,
   wikiArticle: null,
   reference: null,
   template: null,
+  attachment: null,
 }
 
 /** Resolve an entity ID to a note or wiki article. */
@@ -31,11 +34,11 @@ function resolveEntityById(
   if (!id) return null
   const note = notes.find((n) => n.id === id) ?? null
   if (note) {
-    return { type: "note" as const, noteId: id, wikiArticleId: null, referenceId: null, templateId: null, note, wikiArticle: null, reference: null, template: null }
+    return { type: "note" as const, noteId: id, wikiArticleId: null, referenceId: null, templateId: null, attachmentId: null, note, wikiArticle: null, reference: null, template: null, attachment: null }
   }
   const article = wikiArticles.find((a) => a.id === id) ?? null
   if (article) {
-    return { type: "wiki" as const, noteId: null, wikiArticleId: id, referenceId: null, templateId: null, note: null, wikiArticle: article, reference: null, template: null }
+    return { type: "wiki" as const, noteId: null, wikiArticleId: id, referenceId: null, templateId: null, attachmentId: null, note: null, wikiArticle: article, reference: null, template: null, attachment: null }
   }
   return null
 }
@@ -46,19 +49,28 @@ export function useSidePanelEntity(): SidePanelEntityResult {
   const wikiArticles = usePlotStore((s) => s.wikiArticles)
   const references = usePlotStore((s) => s.references)
   const templates = usePlotStore((s) => s.templates ?? [])
+  const attachments = usePlotStore((s) => s.attachments ?? [])
 
   // Reference
   if (sidePanelContext?.type === 'reference') {
     const ref = references[sidePanelContext.id] ?? null
     if (ref) {
-      return { type: "reference" as const, noteId: null, wikiArticleId: null, referenceId: sidePanelContext.id, templateId: null, note: null, wikiArticle: null, reference: ref, template: null }
+      return { type: "reference" as const, noteId: null, wikiArticleId: null, referenceId: sidePanelContext.id, templateId: null, attachmentId: null, note: null, wikiArticle: null, reference: ref, template: null, attachment: null }
     }
   }
 
   // Template (Plot PR template-b: side panel surfaces template properties)
   if (sidePanelContext?.type === 'template') {
     const tmpl = templates.find((t) => t.id === sidePanelContext.id) ?? null
-    return { type: "template" as const, noteId: null, wikiArticleId: null, referenceId: null, templateId: sidePanelContext.id, note: null, wikiArticle: null, reference: null, template: tmpl }
+    return { type: "template" as const, noteId: null, wikiArticleId: null, referenceId: null, templateId: sidePanelContext.id, attachmentId: null, note: null, wikiArticle: null, reference: null, template: tmpl, attachment: null }
+  }
+
+  // File (Attachment) — Library Files entity. PRD entity-side-panel-uniformity
+  // 확장 (2026-05-14): Library entity (Files / Tags / Stickers)도 사이드바
+  // Detail 노출. Attachment는 attachments slice에서 lookup.
+  if (sidePanelContext?.type === 'file') {
+    const att = attachments.find((a: Attachment) => a.id === sidePanelContext.id) ?? null
+    return { type: "file" as const, noteId: null, wikiArticleId: null, referenceId: null, templateId: null, attachmentId: sidePanelContext.id, note: null, wikiArticle: null, reference: null, template: null, attachment: att }
   }
 
   // Note or Wiki

@@ -1279,11 +1279,18 @@ function FilesView() {
                     <div
                       style={{ display: "grid", gridTemplateColumns: gridTemplate }}
                       className={cn(
-                        "group items-center border-b border-border/50 px-5 py-2.5 transition-colors duration-100",
+                        "group items-center border-b border-border/50 px-5 py-2.5 transition-colors duration-100 cursor-pointer",
                         isSelected ? "bg-accent/8" : "hover:bg-hover-bg"
                       )}
                       onClick={(e) => {
                         if ((e.target as HTMLElement).closest("[data-checkbox]")) return
+                        // 2026-05-14: file 클릭 시 사이드바 자동 노출 + Detail
+                        // 표시 (사용자 시그널: "라이브러리 파일은 클릭해도 보이지가
+                        // 않지? 보여줘야 의미가 있지"). Multi-select 동작은 보존.
+                        usePlotStore.setState({
+                          sidePanelContext: { type: "file", id: att.id },
+                          sidePanelOpen: true,
+                        })
                         toggleSelect(att.id, e)
                       }}
                     >

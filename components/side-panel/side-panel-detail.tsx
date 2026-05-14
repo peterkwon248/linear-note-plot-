@@ -6,6 +6,7 @@ import { SidePanelContext } from "./side-panel-context"
 import { WikiArticleDetailPanel } from "./wiki-article-detail-panel"
 import { ReferenceDetailPanel } from "./reference-detail-panel"
 import { TemplateDetailPanel } from "./template-detail-panel"
+import { FileDetailPanel } from "./file-detail-panel"
 
 /**
  * Entity-aware detail panel that renders appropriate detail content
@@ -31,6 +32,10 @@ export function SidePanelDetail() {
 
   if (entity.type === "template" && entity.template) {
     return <TemplateDetailPanel template={entity.template} />
+  }
+
+  if (entity.type === "file" && entity.attachment) {
+    return <FileDetailPanel attachment={entity.attachment} />
   }
 
   // type === "note" or null — pass resolved noteId for pane-aware rendering
