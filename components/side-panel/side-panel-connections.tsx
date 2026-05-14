@@ -130,6 +130,82 @@ function SubLabel({ children }: { children: React.ReactNode }) {
   )
 }
 
+// ── Status mini-stat breakdown ───────────────────────────
+// PRD entity-side-panel-uniformity PR 3: surface kind & status breakdown
+// inline beneath SubLabel headers, mirroring the Book Connections pattern.
+// Inline dot-count format keeps the visual weight low (one row, no grid).
+
+import type { NoteStatus } from "@/lib/types"
+import type { WikiArticle as WikiArticleType } from "@/lib/types"
+
+function NoteStatusBreakdown({
+  notes,
+}: {
+  notes: { status?: NoteStatus | null }[]
+}) {
+  const counts = useMemo(() => {
+    let stone = 0,
+      brick = 0,
+      keystone = 0
+    for (const n of notes) {
+      const s = (n.status ?? "stone") as NoteStatus
+      if (s === "stone") stone++
+      else if (s === "brick") brick++
+      else if (s === "keystone") keystone++
+    }
+    return { stone, brick, keystone }
+  }, [notes])
+  const total = counts.stone + counts.brick + counts.keystone
+  if (total === 0) return null
+  return (
+    <div className="flex items-center gap-2.5 px-2 pb-1 text-2xs text-muted-foreground/70">
+      {counts.stone > 0 && <DotCount color="var(--status-stone)" label="Stone" count={counts.stone} />}
+      {counts.brick > 0 && <DotCount color="var(--status-brick)" label="Brick" count={counts.brick} />}
+      {counts.keystone > 0 && <DotCount color="var(--status-keystone)" label="Block" count={counts.keystone} />}
+    </div>
+  )
+}
+
+function WikiStatusBreakdown({ articles }: { articles: WikiArticleType[] }) {
+  const counts = useMemo(() => {
+    let stub = 0,
+      article = 0
+    for (const a of articles) {
+      if (isWikiStub(a)) stub++
+      else article++
+    }
+    return { stub, article }
+  }, [articles])
+  const total = counts.stub + counts.article
+  if (total === 0) return null
+  return (
+    <div className="flex items-center gap-2.5 px-2 pb-1 text-2xs text-muted-foreground/70">
+      {counts.stub > 0 && <DotCount color="var(--muted-foreground)" label="Stub" count={counts.stub} />}
+      {counts.article > 0 && <DotCount color="var(--chart-1)" label="Article" count={counts.article} />}
+    </div>
+  )
+}
+
+function DotCount({
+  color,
+  label,
+  count,
+}: {
+  color: string
+  label: string
+  count: number
+}) {
+  return (
+    <span className="inline-flex items-center gap-1" title={`${label} ${count}`}>
+      <span
+        className="h-1.5 w-1.5 rounded-full shrink-0"
+        style={{ backgroundColor: color }}
+      />
+      <span className="tabular-nums">{count}</span>
+    </span>
+  )
+}
+
 // ── Wiki Article Connections ─────────────────────────────
 
 function WikiArticleConnections() {
@@ -332,6 +408,7 @@ function WikiArticleConnections() {
             {referencedBy.length > 0 && (
               <div className="space-y-0.5">
                 <SubLabel>Referenced By (Wiki)</SubLabel>
+                <WikiStatusBreakdown articles={referencedBy} />
                 {referencedBy.map((a) => (
                   <button
                     key={a.id}
@@ -352,6 +429,7 @@ function WikiArticleConnections() {
                   <DirArrow dir="in" />
                   <SubLabel>Linked from Notes</SubLabel>
                 </div>
+                <NoteStatusBreakdown notes={linkingNotes} />
                 <div className="space-y-px">
                   {linkingNotes.map((n) => {
                     const rich = wikiRichByKey.get(`note:${n.id}`)
@@ -649,7 +727,7 @@ function TemplateConnections() {
     if (!template) return []
     const notesById = new Map(notes.map((n) => [n.id, n]))
     const seen = new Set<string>()
-    const list: { id: string; title: string; at: string }[] = []
+    const list: { id: string; title: string; at: string; status: NoteStatus | null }[] = []
     for (const e of noteEvents) {
       if (e.type !== "created") continue
       if ((e.meta as { templateId?: string } | undefined)?.templateId !== template.id) continue
@@ -657,7 +735,12 @@ function TemplateConnections() {
       const note = notesById.get(e.noteId)
       if (!note || note.trashed) continue
       seen.add(e.noteId)
-      list.push({ id: e.noteId, title: note.title || "Untitled", at: e.at })
+      list.push({
+        id: e.noteId,
+        title: note.title || "Untitled",
+        at: e.at,
+        status: note.status ?? null,
+      })
     }
     list.sort((a, b) => new Date(b.at).getTime() - new Date(a.at).getTime())
     return list
@@ -687,6 +770,7 @@ function TemplateConnections() {
           </p>
         ) : (
           <div className="space-y-0.5">
+            <NoteStatusBreakdown notes={usedByNotes} />
             {usedByNotes.map((n) => (
               <button
                 key={n.id}
@@ -1149,6 +1233,7 @@ function NoteConnections() {
                   <DirArrow dir="in" />
                   <SubLabel>Notes</SubLabel>
                 </div>
+                <NoteStatusBreakdown notes={backlinkNotes} />
                 <div className="space-y-px">
                   {backlinkNotes.map((n) => {
                     const rich = richBacklinksByKey.get(`note:${n.id}`)
@@ -1208,6 +1293,11 @@ function NoteConnections() {
             {outboundNotes.length > 0 && (
               <div className="space-y-0.5">
                 <SubLabel>→ Notes</SubLabel>
+                <NoteStatusBreakdown
+                  notes={outboundNotes.map((n) => ({
+                    status: notes.find((nn) => nn.id === n.id)?.status ?? null,
+                  }))}
+                />
                 {outboundNotes.map((n) => (
                   <button
                     key={n.id}
