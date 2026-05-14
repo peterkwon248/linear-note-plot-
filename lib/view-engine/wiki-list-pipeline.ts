@@ -632,6 +632,32 @@ export function applyWikiGrouping(
       }))
     }
 
+    // 2026-05-14 time grouping: 5-tier Updated bucket (Today / Yesterday /
+    // This Week / This Month / Older). Mirrors Notes (group.ts) + Books
+    // (use-books-view.ts) date bucket logic. Empty buckets are hidden.
+    case "date": {
+      const today: WikiArticle[] = []
+      const yesterday: WikiArticle[] = []
+      const thisWeek: WikiArticle[] = []
+      const thisMonth: WikiArticle[] = []
+      const older: WikiArticle[] = []
+      for (const a of articles) {
+        const d = new Date(a.updatedAt)
+        if (isToday(d)) today.push(a)
+        else if (isYesterday(d)) yesterday.push(a)
+        else if (isThisWeek(d, { weekStartsOn: 1 })) thisWeek.push(a)
+        else if (isThisMonth(d)) thisMonth.push(a)
+        else older.push(a)
+      }
+      const groups: WikiGroup[] = []
+      if (today.length > 0)     groups.push({ key: "date-today",     label: "Today",      articles: today })
+      if (yesterday.length > 0) groups.push({ key: "date-yesterday", label: "Yesterday",  articles: yesterday })
+      if (thisWeek.length > 0)  groups.push({ key: "date-week",      label: "This Week",  articles: thisWeek })
+      if (thisMonth.length > 0) groups.push({ key: "date-month",     label: "This Month", articles: thisMonth })
+      if (older.length > 0)     groups.push({ key: "date-older",     label: "Older",      articles: older })
+      return groups
+    }
+
     default:
       return [{ key: "_all", label: "", articles }]
   }

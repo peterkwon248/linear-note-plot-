@@ -282,7 +282,7 @@ export function SearchView() {
 
   return (
     <div className="flex flex-1 flex-col overflow-hidden">
-      {/* MagnifyingGlass header */}
+      {/* Search header */}
       <div className="shrink-0 border-b border-border px-6 py-5">
         <div className="relative">
           <MagnifyingGlass className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground" size={20} weight="regular" />
@@ -291,7 +291,7 @@ export function SearchView() {
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="MagnifyingGlass notes, tags, and more..."
+            placeholder="Search notes, tags, and more..."
             className="h-12 w-full rounded-lg border border-border bg-background pl-12 pr-12 text-ui text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-accent"
           />
           {query && (

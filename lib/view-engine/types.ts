@@ -244,6 +244,8 @@ export const VALID_GROUP_BY: GroupBy[] = [
   "family",
   // Hierarchy role
   "role",
+  // Cross-entity Ontology hull groupings
+  "tag", "category", "sticker", "book", "connections",
   // books-view-engine-3 (Books)
   "kind", "pinned",
 ]

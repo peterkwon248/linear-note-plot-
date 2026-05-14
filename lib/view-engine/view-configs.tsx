@@ -187,6 +187,7 @@ export const NOTES_VIEW_CONFIG: ViewConfig = {
       { value: "parent", label: "Parent" },
       { value: "role", label: "Role" },
       { value: "family", label: "Family" },
+      { value: "date", label: "Updated" },
     ],
     toggles: [
       { key: "showTrashed", label: "Show trashed", icon: TrashIcon },
@@ -299,6 +300,7 @@ export const WIKI_VIEW_CONFIG: ViewConfig = {
       { value: "role", label: "Role" },
       { value: "label", label: "Category" },
       { value: "family", label: "Family" },
+      { value: "date", label: "Updated" },
     ],
     toggles: [
       { key: "showStubs", label: "Show stubs", icon: ContentIcon },
@@ -586,6 +588,7 @@ export const TEMPLATES_VIEW_CONFIG: ViewConfig = {
       { value: "priority", label: "Priority" },
       { value: "label", label: "Label" },
       { value: "folder", label: "Folder" },
+      { value: "date", label: "Updated" },
     ],
     toggles: [],
     properties: [
@@ -834,6 +837,7 @@ export const BOOKS_VIEW_CONFIG: ViewConfig = {
       { value: "none",   label: "No grouping" },
       { value: "kind",   label: "Kind" },
       { value: "pinned", label: "Pin status" },
+      { value: "date",   label: "Updated" },
     ],
     // showTrashed toggle is handled in books-view.tsx ViewHeader actions.
     toggles: [],

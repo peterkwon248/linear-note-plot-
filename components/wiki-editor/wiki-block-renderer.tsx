@@ -833,7 +833,7 @@ function NoteRefBlock({ block, editable, onUpdate, onDelete, dragHandleProps, ar
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             onKeyDown={(e) => { if (e.key === "Escape") setPicking(false) }}
-            placeholder="MagnifyingGlass notes to embed..."
+            placeholder="Search notes to embed..."
             className="flex-1 bg-transparent text-note outline-none placeholder:text-muted-foreground/60"
           />
           <button
