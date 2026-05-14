@@ -1,5 +1,5 @@
 import type { EntityRef, Sticker } from "../../types"
-import { genId, now } from "../helpers"
+import { genId, now, type AppendEventFn } from "../helpers"
 
 type Set = (fn: ((state: any) => any) | any) => void
 type Get = () => any
@@ -25,7 +25,7 @@ function refEquals(a: EntityRef, b: EntityRef): boolean {
  * to?") is provided by the `useStickerMembers` hook in
  * `lib/hooks/use-sticker-members.ts`.
  */
-export function createStickersSlice(set: Set, get: Get) {
+export function createStickersSlice(set: Set, get: Get, appendEvent: AppendEventFn) {
   return {
     /** Create a new sticker. Color cycles through the palette if omitted. */
     createSticker: (name: string, color?: string): string => {
@@ -43,6 +43,8 @@ export function createStickersSlice(set: Set, get: Get) {
       set((state: any) => ({
         stickers: [...(state.stickers ?? []), sticker],
       }))
+      // PR 5c: entity event log
+      appendEvent({ kind: "sticker", id }, "created", { name })
       return id
     },
 
@@ -52,6 +54,14 @@ export function createStickersSlice(set: Set, get: Get) {
           s.id === id ? { ...s, ...updates } : s
         ),
       }))
+      // PR 5c: entity event log — distinguish color/rename.
+      if (updates.color !== undefined) {
+        appendEvent({ kind: "sticker", id }, "color_changed", { color: updates.color })
+      } else if (updates.name !== undefined) {
+        appendEvent({ kind: "sticker", id }, "renamed", { name: updates.name })
+      } else {
+        appendEvent({ kind: "sticker", id }, "updated")
+      }
     },
 
     /** Soft delete — keeps the sticker (and its members) with trashed flag. */
@@ -61,6 +71,7 @@ export function createStickersSlice(set: Set, get: Get) {
           s.id === id ? { ...s, trashed: true, trashedAt: now() } : s
         ),
       }))
+      appendEvent({ kind: "sticker", id }, "trashed")
     },
 
     restoreSticker: (id: string) => {
@@ -69,6 +80,7 @@ export function createStickersSlice(set: Set, get: Get) {
           s.id === id ? { ...s, trashed: false, trashedAt: null } : s
         ),
       }))
+      appendEvent({ kind: "sticker", id }, "untrashed")
     },
 
     /**
@@ -79,6 +91,10 @@ export function createStickersSlice(set: Set, get: Get) {
     permanentlyDeleteSticker: (id: string) => {
       set((state: any) => ({
         stickers: (state.stickers ?? []).filter((s: Sticker) => s.id !== id),
+        // PR 5c: hard delete cascade — drop this sticker's events.
+        entityEvents: state.entityEvents.filter(
+          (e: any) => !(e.entity?.kind === "sticker" && e.entity?.id === id),
+        ),
       }))
     },
 
@@ -92,6 +108,8 @@ export function createStickersSlice(set: Set, get: Get) {
           return { ...s, members: [...members, ref] }
         }),
       }))
+      // PR 5c: sticker-side cross-entity membership event.
+      appendEvent({ kind: "sticker", id: stickerId }, "member_added", { ref })
     },
 
     /** Detach a single entity from a sticker. No-op if not a member. */
@@ -105,6 +123,7 @@ export function createStickersSlice(set: Set, get: Get) {
           return { ...s, members: next }
         }),
       }))
+      appendEvent({ kind: "sticker", id: stickerId }, "member_removed", { ref })
     },
 
     /**

@@ -1,9 +1,9 @@
 import type { Reference } from "../../types"
-import { genId, now } from "../helpers"
+import { genId, now, type AppendEventFn } from "../helpers"
 
 type Set = (fn: ((state: any) => any) | any) => void
 
-export function createReferencesSlice(set: Set) {
+export function createReferencesSlice(set: Set, appendEvent: AppendEventFn) {
   return {
     createReference: (partial: { title: string; content: string; contentJson?: Record<string, unknown> | null; fields?: Array<{ key: string; value: string }>; tags?: string[]; imageUrl?: string | null }): string => {
       const id = genId()
@@ -23,6 +23,9 @@ export function createReferencesSlice(set: Set) {
       set((state: any) => ({
         references: { ...state.references, [id]: ref },
       }))
+      // PR 5c: entity event log. Reference.history는 reference-internal
+      // audit (mark/edit detail) — entityEvents는 cross-entity timeline 일관성.
+      appendEvent({ kind: "reference", id }, "created", { title: partial.title })
       return id
     },
 
@@ -53,6 +56,8 @@ export function createReferencesSlice(set: Set) {
           },
         }
       })
+      // PR 5c: entity event log
+      appendEvent({ kind: "reference", id }, "updated")
     },
 
     deleteReference: (id: string) => {
@@ -66,6 +71,8 @@ export function createReferencesSlice(set: Set) {
           },
         }
       })
+      // PR 5c: entity event log
+      appendEvent({ kind: "reference", id }, "trashed")
     },
 
     restoreReference: (id: string) => {
@@ -79,12 +86,20 @@ export function createReferencesSlice(set: Set) {
           },
         }
       })
+      // PR 5c: entity event log
+      appendEvent({ kind: "reference", id }, "untrashed")
     },
 
     permanentlyDeleteReference: (id: string) => {
       set((state: any) => {
         const { [id]: _, ...rest } = state.references
-        return { references: rest }
+        return {
+          references: rest,
+          // PR 5c: hard delete cascade — drop this reference's events.
+          entityEvents: state.entityEvents.filter(
+            (e: any) => !(e.entity?.kind === "reference" && e.entity?.id === id),
+          ),
+        }
       })
     },
   }
