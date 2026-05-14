@@ -56,20 +56,18 @@ export function SidePanelActivity() {
     // already carry their own comments via this same surface when
     // selected). History wiring waits on entity-events unification
     // (PRD: entity-side-panel-uniformity, PR 5).
-    return (
-      <div className="flex-1 overflow-y-auto">
-        <div className="px-4 py-3">
-          <div className="mb-2 flex items-center gap-2">
-            <span className="text-muted-foreground"><ClockCounterClockwise size={16} weight="regular" /></span>
-            <span className="text-2xs font-medium text-muted-foreground">History</span>
-          </div>
-          <p className="text-note text-muted-foreground/70">
-            Book history is not yet available.
-          </p>
-        </div>
-      </div>
-    )
+    return <EntityHistoryPlaceholder label="Book" />
   }
+
+  // Library entities (Tag / Sticker / File / Reference) — none of these
+  // carry inline content or collaboration artifacts at the entity level
+  // (Tag is a label, Sticker is a cross-entity marker, File is an
+  // attachment, Reference is a citation entry). History wiring waits on
+  // entity-events unification (PRD: entity-side-panel-uniformity, PR 5).
+  if (entity.type === "tag") return <EntityHistoryPlaceholder label="Tag" />
+  if (entity.type === "sticker") return <EntityHistoryPlaceholder label="Sticker" />
+  if (entity.type === "file") return <EntityHistoryPlaceholder label="File" />
+  if (entity.type === "reference") return <EntityHistoryPlaceholder label="Reference" />
 
   // Note or null
   const noteId = entity.type === "note" ? entity.noteId : null
@@ -96,6 +94,30 @@ export function SidePanelActivity() {
           <span className="text-2xs font-medium text-muted-foreground">History</span>
         </div>
         <ActivityTimeline noteId={noteId} />
+      </div>
+    </div>
+  )
+}
+
+/**
+ * EntityHistoryPlaceholder — reusable empty-state for entities whose Activity
+ * tab has nothing to show yet (Template / Book / Tag / Sticker / File /
+ * Reference). All of these share the same shape: a History header + a
+ * one-liner explaining the absence. PRD entity-side-panel-uniformity PR 5
+ * (Activity entity-agnostic 통합) will replace these with real entity-event
+ * timelines once `entityEvents` slice ships.
+ */
+function EntityHistoryPlaceholder({ label }: { label: string }) {
+  return (
+    <div className="flex-1 overflow-y-auto">
+      <div className="px-4 py-3">
+        <div className="mb-2 flex items-center gap-2">
+          <span className="text-muted-foreground"><ClockCounterClockwise size={16} weight="regular" /></span>
+          <span className="text-2xs font-medium text-muted-foreground">History</span>
+        </div>
+        <p className="text-note text-muted-foreground/70">
+          {label} history is not yet available.
+        </p>
       </div>
     </div>
   )

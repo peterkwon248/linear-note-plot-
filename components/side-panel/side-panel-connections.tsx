@@ -484,7 +484,7 @@ function WikiArticleConnections() {
 // ── Main Component ───────────────────────────────────────
 
 export function SidePanelConnections() {
-  // Check sidePanelContext for wiki / template / book branch
+  // Check sidePanelContext for wiki / template / book / library entity branch
   const sidePanelContext = usePlotStore((s) => s.sidePanelContext)
 
   if (sidePanelContext?.type === "wiki") {
@@ -499,7 +499,47 @@ export function SidePanelConnections() {
     return <BookConnections />
   }
 
+  // Library entities (Tag / Sticker / File / Reference) — the meaningful
+  // cross-entity relationships (Tag's tagged notes, Sticker's members,
+  // File's source + used-in, Reference's citing notes) already surface
+  // in the Detail tab. We avoid duplicating that here; a clear pointer to
+  // Detail keeps the entity-aware Connections tab honest. PR 5 (Activity
+  // entity-agnostic 통합) is the natural place to expand this with real
+  // cross-entity graph context.
+  if (sidePanelContext?.type === "tag") {
+    return <LibraryEntityConnectionsPlaceholder label="Tag" hint="Tag relationships (tagged notes) appear in the Detail tab under 'Used by'." />
+  }
+  if (sidePanelContext?.type === "sticker") {
+    return <LibraryEntityConnectionsPlaceholder label="Sticker" hint="Sticker members (cross-entity) appear in the Detail tab under 'Used by'." />
+  }
+  if (sidePanelContext?.type === "file") {
+    return <LibraryEntityConnectionsPlaceholder label="File" hint="File source + used-in references appear in the Detail tab." />
+  }
+  if (sidePanelContext?.type === "reference") {
+    return <LibraryEntityConnectionsPlaceholder label="Reference" hint="Reference citing notes appear in the Detail tab." />
+  }
+
   return <NoteConnections />
+}
+
+/**
+ * LibraryEntityConnectionsPlaceholder — empty-state for Library entities
+ * (Tag / Sticker / File / Reference) where the meaningful relationships
+ * already live in the Detail tab. Honest pointer instead of duplicating
+ * those lists or rendering a misleading NoteConnections fallback.
+ */
+function LibraryEntityConnectionsPlaceholder({ label, hint }: { label: string; hint: string }) {
+  return (
+    <div className="flex-1 overflow-y-auto">
+      <div className="px-4 py-3">
+        <div className="mb-2 flex items-center gap-2">
+          <span className="text-muted-foreground"><LinkSimple size={16} weight="regular" /></span>
+          <span className="text-2xs font-medium text-muted-foreground">{label} connections</span>
+        </div>
+        <p className="text-note text-muted-foreground/70">{hint}</p>
+      </div>
+    </div>
+  )
 }
 
 // ── Book Connections ─────────────────────────────────────
