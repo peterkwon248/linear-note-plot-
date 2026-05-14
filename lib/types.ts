@@ -833,8 +833,11 @@ export interface GlobalBookmark {
   anchorId: string
   label: string
   anchorType: "inline" | "divider" | "heading" | "block"
-  /** Target entity kind. Default "note" for backward compat. */
-  targetKind?: "note" | "wiki"
+  /** Target entity kind. Default "note" for backward compat.
+   *  2026-05-14: extended with "template" — anchors pinned from within
+   *  a template's body. Wiki-block-based extraction is a separate PR
+   *  (see entity-side-panel-uniformity-prd.md PR 4b). */
+  targetKind?: "note" | "wiki" | "template"
   createdAt: string
 }
 
