@@ -16,7 +16,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { CaretDown } from "@phosphor-icons/react/dist/ssr/CaretDown"
-import { CaretRight } from "@phosphor-icons/react/dist/ssr/CaretRight"
 import { X as PhXIcon } from "@phosphor-icons/react/dist/ssr/X"
 import { SplitHorizontal } from "@phosphor-icons/react/dist/ssr/SplitHorizontal"
 import { setSecondarySpace, getSecondarySpace } from "@/lib/table-route"
@@ -194,12 +193,7 @@ export function ViewHeader({
             <span className="text-muted-foreground">{icon}</span>
             <h1 className="text-note font-medium text-foreground flex items-center gap-1.5">
               <span>{title}</span>
-              {subtitle && (
-                <>
-                  <CaretRight size={11} weight="regular" className="text-muted-foreground/60" />
-                  <span>{subtitle}</span>
-                </>
-              )}
+              {subtitle}
               {count !== undefined && (
                 <span className="ml-1.5 text-note font-normal text-muted-foreground">
                   {count}
