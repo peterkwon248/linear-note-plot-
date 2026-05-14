@@ -453,7 +453,10 @@ function BookRow({
             if (!book.trashed) onOpen(book.id)
           }}
           className={cn(
-            "group flex h-9 w-full items-center gap-3 border-b border-border/30 pl-3 pr-6 text-left transition-colors",
+            // 2026-05-14: row divider removed for Notes/Wiki list parity —
+            // user flagged that books was the only entity with a visible
+            // border between rows. Hover bg still provides row separation.
+            "group flex h-9 w-full items-center gap-3 pl-3 pr-6 text-left transition-colors",
             book.trashed
               ? "opacity-50 hover:bg-hover-bg cursor-default"
               : "hover:bg-hover-bg cursor-pointer",
