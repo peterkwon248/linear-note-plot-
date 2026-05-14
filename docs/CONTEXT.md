@@ -51,6 +51,37 @@
 
 ---
 
+## 🚀 2026-05-14 (낮~밤) — 6 PR 누적 (entity-side-panel-uniformity + time grouping + books-divider) ⭐⭐⭐⭐⭐
+
+**범위**: 단일 세션 6 PR 푸시. 사용자 시그널 "Plot UI 일관성: 4탭 사이드바 모든 entity 공통" 추진. 16 files modified + 5 신규.
+
+### 핵심 결정 (영구 LOCKED, 2026-05-14)
+
+**11. 모든 entity 4탭 사이드바 (Detail/Connections/Activity/Bookmarks) 통일** — Book 신설 (PR #323). entity별 Detail 내용 자유 / 4탭 골격 공유.
+
+**12. Properties = stats only 영구 룰**: 분류 메타는 별도 섹션. Properties는 read-only stats. entity별 본질 stats 정의.
+
+**13. Template = recipe, not collaboration** — Activity Comments 의도적 제외. "Template → Note" 변환 metaphor (PR #322).
+
+**14. Connections 분류 stats 패턴** — kind & status 2단 분류. `NoteStatusBreakdown` / `WikiStatusBreakdown` 공통 컴포넌트 (PR #323+#324).
+
+**15. "Used by N notes" event log reverse-lookup** — `noteEvents.meta.templateId` 기반. 신규 데이터 모델 없음 (PR #322).
+
+**16. Book Bookmarks "IN THIS BOOK" pure derive filter** (방향 4) — Book entity 자체엔 contentJson 없음 → 책 items의 anchor만 자동 grouping. resolveBookItems Smart/Hybrid 호환 (PR #325).
+
+**17. Wiki Stub vs Article badge 분리** — `isWikiStub()` 기반. 시각 색상 분리 (muted/accent) (PR #322 보너스).
+
+**18. Time grouping 5단** — Today/Yesterday/This Week/This Month/Older. updatedAt 기준. Yesterday 분기 우선. 빈 bucket hide. 모든 entity 적용 (PR #327).
+
+**19. Books list view flat (row divider X)** — Notes/Wiki 일관성. hover bg만으로 row separation (PR #326).
+
+### 다음 (TODO.md P0)
+
+🔴 **사용자 manual verify**: 6 PR 효과 dev hard refresh 후 검증.
+🟡 **다음 PR 후보**: PRD §4 PR 4a (Template anchor) / 4b (Wiki blocks anchor) / 5 (Activity 통합).
+
+---
+
 ## 🚀 2026-05-13 (밤) — PR #321 11 commits (Status 색 + Templates UpNote 패턴 + 9 follow-up) ⭐⭐⭐⭐⭐
 
 **범위**: PR #319 manual verify로 발견 13 시그널 누적 한 PR. 18 files modified + 2 신규.

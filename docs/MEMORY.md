@@ -8,6 +8,67 @@
 
 ---
 
+## 🚀 2026-05-14 (낮~밤) — 6 PR 누적 (entity-side-panel-uniformity + time grouping + books-divider) ⭐⭐⭐⭐⭐
+
+**범위**: 1 worktree (`brave-moore-ceaf44`). 단일 세션 6 PR 푸시. 사용자 시그널 "Plot UI 일관성: 4탭 사이드바 모든 entity 공통" 추진.
+
+**PR 목록**:
+- **#322** feat: Template Detail 재설계 + 4탭 entity별 분기 + Wiki Stub badge fix (PR 1)
+- **#323** feat: Book 우측 사이드바 신설 + Items by kind & status (PR 2)
+- **#324** feat: Connections 분류 stats Note/Wiki/Template 확장 (PR 3)
+- **#325** feat: Book Bookmarks "IN THIS BOOK" context filter (PR 4 — 방향 4)
+- **#326** fix: Books list view row divider 제거 (Notes/Wiki 일관성)
+- **#327** feat: Time grouping ("Updated" 5단) 모든 entity 적용
+
+### 핵심 결정 (영구 LOCKED, 2026-05-14)
+
+**1. 모든 entity 4탭 사이드바 통일** — Plot UI 일관성. Detail 자유 / 4탭 골격 공유. (`useSidePanelEntity` book 분기, SidePanelContext type 확장)
+
+**2. Properties = stats only** — 분류 메타는 별도 섹션. 각 entity별 본질 stats (Note Words/Chars/Headings/Source, Wiki Blocks/Sections/Text blocks/Note refs/Images/Layout, Template Words/Chars/Headings/Placeholders, Book Total/Notes/Wikis/Chapters/Smart/Manual).
+
+**3. Template = recipe, not collaboration** — Activity Comments 의도적 제외. "Template → Note" 변환 metaphor.
+
+**4. Connections 분류 stats 패턴** — kind & status 2단 (Notes → Stone/Brick/Block, Wikis → Stub/Article). `NoteStatusBreakdown` / `WikiStatusBreakdown` 공통 컴포넌트. dot + count, 0 status hide.
+
+**5. "Used by N notes" event log reverse-lookup** — `noteEvents.created.meta.templateId` 기반. 신규 데이터 모델 없음. 다른 entity-cross "사용 추적"도 같은 패턴.
+
+**6. Book Bookmarks "IN THIS BOOK" pure derive filter** — Book entity contentJson 없음 → 직접 anchor 불가. 책의 items의 anchor만 자동 grouping. `resolveBookItems` 활용 Smart/Hybrid 호환. 데이터 모델 변경 없음.
+
+**7. Wiki Stub vs Article badge** — `isWikiStub()` 기반. `IconWikiStub`/`IconWikiArticle` + muted/accent 색상 분리.
+
+**8. Time grouping 5단 ("Updated" 기준)** — Today/Yesterday/This Week/This Month/Older. Yesterday는 isThisWeek 전 체크 (week boundary edge case). 빈 bucket hide. 모든 entity (Notes/Wiki/Templates/Books) entity-specific pipeline에서 동일 로직.
+
+**9. Books list view row divider X** — flat (Notes/Wiki 일관성). hover bg만으로 row separation.
+
+### 기술 학습 (영구)
+
+- **entity별 사이드바 자유 + 4탭 골격 공유** — Plot UI 일관성. `useSidePanelEntity` entity-aware dispatch + 4 sub-panel branch (Detail/Connections/Activity/Bookmarks).
+- **`sidePanelContext` type 확장 패턴** — entity 추가 시 `{ type: "<kind>"; id }` union 확장 → useSidePanelEntity 분기 → 4 dispatch에 case → 신규 *DetailPanel 컴포넌트 신설.
+- **`noteEvents.meta.templateId`로 reverse-lookup** — 데이터 모델 신규 없이 "Used by N" 추적. event log 이미 있으면 활용 우선.
+- **`isWikiStub()` contentJson-only 헬퍼** — note outline extraction 같은 패턴. 재사용성 ↑.
+- **resolveBookItems의 ResolverStore** — 7 store hook (notes/folders/wikiArticles/wikiCategories/tags/labels/stickers) 한 번에. Smart/Hybrid/Manual book 통합 view.
+- **Plot `updateBook` direct pattern** — 별도 toggle* 액션 없이 `updateBook(id, { pinned: !pinned })` 직접 사용. `togglePin`은 note 전용.
+- **"date" GroupBy 누락 fix** — type union 정의는 있지만 VALID_GROUP_BY 검증 list 누락. 동기화 의무 (마이그레이션 fallback에 쓰임).
+- **빈 bucket filter 한 줄** — `.filter((key) => buckets[key].length > 0)`. 모든 grouping에 적용 가능.
+
+### 환경
+- Branch: `claude/sync-2026-05-14` (sync commit)
+- Store version: 변경 없음 (모두 derive view + UI 변경)
+- 신규 파일: `components/side-panel/book-detail-panel.tsx`, `.omc/plans/entity-side-panel-uniformity-prd.md`
+- 신규 컴포넌트: `BookDetailPanel`, `BookContextBookmarks`, `NoteStatusBreakdown`, `WikiStatusBreakdown`, `DotCount`
+- 신규 helper: `countPlaceholders` + `PLACEHOLDER_PATTERN` (templates.ts), `BookKind`/`getBookKind` 재사용
+- view-engine 확장: `VALID_GROUP_BY`에 `"date"` 등록 + cross-entity groupings
+
+### 다음 (TODO.md P0)
+
+🔴 **사용자 manual verify**: 6 PR 효과 dev hard refresh 후 7 surface 점검 (Template Detail / Wiki Stub / Book 사이드바 4탭 / Connections status dots / Book Bookmarks IN THIS BOOK / Books divider X / Time grouping 5단).
+🟡 **다음 PR 후보** (PRD §4):
+- **PR 4a** Template anchor pinning (`GlobalBookmark.targetKind` 확장 + Template anchor UI)
+- **PR 4b** Wiki blocks anchor extractor
+- **PR 5** Activity entity-agnostic 통합 (별도 PRD 작성 후)
+
+---
+
 ## 🚀 2026-05-13 (밤) — PR #321 11 commits (Status 색 재정렬 + Templates UpNote 패턴 + 9 follow-up)
 
 **범위**: 1 worktree (`elegant-jepsen-2b3731`). PR #319 manual verify로 발견된 13 시그널 누적 한 PR. 18 files modified + 2 신규 (`templates-picker-dialog.tsx`, `empty-hint-placeholder.ts`).

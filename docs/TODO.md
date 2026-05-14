@@ -3,26 +3,25 @@
 > 우선순위 기반 작업 목록. **P0 = 다음 세션 즉시 시작점** (NEXT-ACTION.md 폐지, 2026-05-12).
 > 완료 항목은 즉시 삭제 또는 "완료" 섹션으로 이동.
 
-**마지막 갱신**: 2026-05-13 밤 (PR #321 11 commits — Status 색 재정렬 + Templates UpNote 패턴 + 9 follow-up)
+**마지막 갱신**: 2026-05-14 밤 (PR #322-#327 6 PR — entity-side-panel-uniformity + time grouping + books-divider)
 
 ---
 
 ## 🔴 P0 — 즉시 (다음 세션, cross-machine)
 
 ### 다음 머신에서 시작 절차
-1. `git pull origin main` (PR #321 머지된 main 받음)
+1. `git pull origin main` (PR #322-#327 머지된 main 받음)
 2. `npm install` (새 worktree 또는 dependency drift 가능)
 3. `npm run dev` → :3002 hard refresh (Ctrl+Shift+R)
 
-### Manual verify 8 surface
-1. **Status 색 일치** — /notes list에서 Stone/Brick/Block chip + row icon 같은 색 (slate-600 / amber-600 / emerald-600)
-2. **빈 노트 inline hint** — 새 노트 첫 paragraph 안에 "Insert from a template · or press / for menu". 클릭 → dialog open. 입력 시 자동 사라짐.
-3. **Template placeholder** — template에 `{{YYYY}}-{{MM}}-{{DD}}` 작성 → 새 노트에서 inline button 또는 slash "Insert template…" → title `2026-05-14` 치환
-4. **Slash 메뉴 깔끔** — `/` 입력 → block items + 단일 "Insert template…" entry (개별 templates 13+ 안 펴짐)
-5. **Editor footer** — words/chars가 toolbar 바로 위 (body 안 floating X)
-6. **Wiki/Books 그룹 헤더** — Notes `.a-tg` 패턴 통일 (var(--fg) 진함 + divider)
-7. **Home stats** — REFERENCES card icon 좌측 + 충돌 없음
-8. **i18n** — Add source dialog "Multi-select" / "Click items to select" 영어
+### Manual verify 7 surface (PR #322-#327)
+1. **Template Detail 재설계** (#322) — /templates Daily Log 클릭 → Detail에 Dates / Outline / Properties=stats (Words/Chars/Headings/Placeholders) / Actions. Label/Folder/Tags 사라짐. "Template → Note" 버튼.
+2. **Wiki Stub badge** (#322 보너스) — /wiki Working Memory (stub) → Detail header에 "Wiki Stub" muted badge.
+3. **Book 사이드바 4탭** (#323) — /books Getting Started Guide → ⌘B → Detail (Kind/Smart sources/Chapters/Properties/Actions) / Connections (Items by kind & status: Notes → Stone/Brick/Block, Wikis → Stub/Article, Chapters / Smart sources collapsible) / Activity ("Book history not yet available") / Bookmarks (globalBookmarks + "Anchor bookmarks in books are not yet available").
+4. **Connections status dots** (#324) — /notes Getting Started with Plot → Connections 탭 → "→ Notes" 옆 status dots (Brick/Block dot+count).
+5. **Book Bookmarks IN THIS BOOK** (#325) — /books * → Bookmarks 탭 → "IN THIS BOOK" 섹션. 노트에 anchor pin하면 그 책의 IN THIS BOOK에 자동 표시.
+6. **Books list divider X** (#326) — /books list mode → 행 사이 구분선 사라짐.
+7. **Time grouping** (#327) — /notes Display panel → Group by → "Updated" 선택 → "Today / Yesterday / This Week / This Month / Older" 그룹 헤더 표시 (빈 bucket hide). /wiki, /books, /templates에도 동일 옵션.
 
 ---
 

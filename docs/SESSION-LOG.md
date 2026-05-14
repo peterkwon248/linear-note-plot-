@@ -6,6 +6,103 @@
 
 ---
 
+## 2026-05-14 (낮~밤) — 집/Windows, 6 PR 누적 (entity-side-panel-uniformity + time grouping + books-divider)
+
+> 🎯 **다음 즉시 액션** (다른 머신에서 cross-machine 또는 다음 세션):
+> 1. `git pull origin main` (PR #322-#327 머지 후 main 받음)
+> 2. **사용자 manual verify**: 6 PR 효과를 dev:3002 hard refresh로 한꺼번에 검증.
+>    - Template entity Detail/4탭 (PR #322): Daily Log template → Properties stats only / "Template → Note" 버튼 / 4탭 분기
+>    - Wiki Stub badge (PR #322 보너스): stub article → "Wiki Stub" badge (muted)
+>    - Book 사이드바 (PR #323): /books/* → ⌘B → 4탭 작동 + Connections "Items by kind & status"
+>    - Connections 분류 stats (PR #324): /notes → 노트 클릭 → Connections 탭 → "→ Notes" 옆 status dots
+>    - Book Bookmarks "IN THIS BOOK" (PR #325): /books/* → Bookmarks 탭 → 책 안 책갈피 자동 그룹
+>    - Books list divider 제거 (PR #326): /books list → 행 사이 구분선 사라짐 (Notes/Wiki 일관성)
+>    - Time grouping (PR #327): /notes Display → Group by "Updated" → Today/Yesterday/This Week 그룹 헤더
+> 3. **다음 작업 PR 4a**: Template anchor pinning (`GlobalBookmark.targetKind` 확장 + `extractAnchorsFromContentJson` 재사용).
+>    - Plot Template/Wiki 둘 다 anchor pinning 가능하게. PRD §4 의 PR 4.
+>    - branch base: `#322` cascade (countPlaceholders helper 등 필요) — 또는 머지 후 main에서 시작.
+>
+> **6 PR 종합** (entity-side-panel-uniformity PRD §4 추진):
+> - **#322** feat: Template Detail 재설계 + 4탭 entity별 분기 (+ Wiki Stub badge fix)
+> - **#323** feat: Book 우측 사이드바 신설 + Items by kind & status (PR 2)
+> - **#324** feat: Connections 분류 stats Note/Wiki/Template 확장 (PR 3, Book 패턴 횡적 확산)
+> - **#325** feat: Book Bookmarks "IN THIS BOOK" context filter (PR 4 — 방향 4)
+> - **#326** fix: Books list view row divider 제거 (Notes/Wiki 일관성)
+> - **#327** feat: Time grouping ("Updated" 5단) 모든 entity 적용
+>
+> **머신**: 집 (Windows)
+> **worktree**: `claude/brave-moore-ceaf44` (sync는 `claude/sync-2026-05-14`)
+
+### 핵심 결정 (영구 LOCKED, 2026-05-14)
+
+**1. 모든 entity 4탭 사이드바 (Detail/Connections/Activity/Bookmarks) 통일** — Plot UI 일관성:
+   - Book 신설 (PR #323) — entity별 사이드바 자유 패턴이지만 4탭 골격은 공유
+   - Detail 안 내용은 entity 본질 따라 자유 — Note 분류 메타 풍부 / Wiki 간소화 / Template = recipe stats only / Book = collection 본질 (Kind/Smart sources/Chapters/Reading)
+
+**2. "Properties = stats only" 영구 룰** (PR #322 LOCKED 재확인):
+   - 분류 메타 (label/folder/tags 등)는 별도 섹션
+   - Properties는 read-only stats (Words/Chars/Headings/Placeholders/Blocks/Sections/...)
+   - entity별 본질 stats: Note (Words/Chars/Headings/Source) / Wiki (Blocks/Sections/Text blocks/Note refs/Images/Layout) / Template (Words/Chars/Headings/Placeholders) / Book (Total items/Notes/Wikis/Chapters/Smart/Manual)
+
+**3. Template = recipe, not collaboration artifact** (PR #322):
+   - Activity Comments 의도적 제외 (template은 협업 단위 아님)
+   - "Use template" → "Template → Note" 변환 metaphor (사용자 시그널 정합)
+
+**4. Connections 분류 stats 패턴** (PR #323+#324 LOCKED):
+   - kind & status 2단 분류 (Notes → Stone/Brick/Block, Wikis → Stub/Article)
+   - NoteStatusBreakdown / WikiStatusBreakdown helper 공통 컴포넌트
+   - dot + count + label, 0인 status는 hide
+
+**5. "Used by N notes" event log 기반 reverse-lookup** (PR #322 LOCKED):
+   - noteEvents의 `created` event meta.templateId로 추적 (신규 데이터 모델 없음)
+   - 다른 entity-cross "사용 추적"도 같은 패턴
+
+**6. Book Bookmarks "IN THIS BOOK" pure derive filter** (PR #325 LOCKED — 방향 4):
+   - Book entity 자체엔 contentJson 없음 → 직접 anchor 불가
+   - 단 책의 items의 anchor는 책 context에서 의미 있음 → 자동 filter
+   - 데이터 모델 변경 X. resolveBookItems 활용해 Smart/Hybrid 호환.
+
+**7. Wiki Stub vs Article badge 분리** (PR #322 보너스):
+   - `isWikiStub()` 기반. IconWikiStub/IconWikiArticle + muted/accent 색상 분리.
+
+**8. Time grouping 5단 ("Updated" 기준)** (PR #327 LOCKED):
+   - Today / Yesterday / This Week / This Month / Older
+   - Yesterday는 isThisWeek 분기 *전* 체크 (week boundary edge case)
+   - 빈 bucket 자동 hide (UI noise 최소화)
+   - 모든 entity 적용 (Notes/Wiki/Templates/Books) — entity별 pipeline에서 동일 로직
+
+**9. Books list view row divider X** (PR #326 LOCKED):
+   - Notes/Wiki list view는 flat (border 없음, hover bg만)
+   - Books만 outlier였음 → 통일
+
+### 기술 학습 (영구)
+
+- **entity별 사이드바 자유 + 4탭 골격 공유** — Plot UI 일관성 원칙 정합. Detail은 자유 / 4탭 dispatch는 entity-aware (`useSidePanelEntity`).
+- **`sidePanelContext` type 확장 패턴** — entity 추가 시 `{ type: "<kind>"; id }` union 확장 + `useSidePanelEntity`에 분기 + `SidePanelDetail/Connections/Activity/Bookmarks` 4 dispatch에 case 추가.
+- **`noteEvents.meta.templateId`로 reverse-lookup** — 데이터 모델 신규 없이 "Used by N" 추적 가능. event log 이미 있으면 활용 우선.
+- **`isWikiStub()` 헬퍼는 contentJson-only** — note의 outline extraction과 같은 패턴. 재사용성 ↑.
+- **resolveBookItems의 ResolverStore 통일** — Smart/Hybrid/Manual book 통합 view 가능. 7 store hook (notes/folders/wikiArticles/wikiCategories/tags/labels/stickers) 한 번에 전달.
+- **`updateBook` direct call 패턴** — Plot은 별도 `toggleBookPin` 액션 없이 `updateBook(id, { pinned: !pinned })` 직접. `togglePin`은 다른 entity (note).
+- **"date" GroupBy는 group.ts에 이미 정의됐지만 VALID_GROUP_BY 누락** — type union과 validation list 동기화 의무 (마이그레이션 fallback에 쓰임). 이번에 fix (#327 commit).
+- **빈 bucket filter 패턴** — `.filter((key) => buckets[key].length > 0)` 한 줄로 UI noise 제거. 모든 entity의 grouping에 적용.
+
+### Watch Out (다음 세션)
+
+- **6 PR cascade + 독립 누적** — main에 머지 시 충돌 가능 (PR #322 → #323 → #324 → #325 cascade. PR #326/#327은 main 독립). Plot 패턴 (HEAD 우선 `--ours`) 적용 권장.
+- **React Hook order 경고 한 번 떴음** (PR #323 시점, clean reload 후 사라짐) — hot reload 영향 추정이지만 다음 세션 verify 시 모니터링 권장.
+- **`useSidePanelEntity` Book 분기 → store.books 의존** — store에 books slice 있다 가정. 빈 array fallback (`?? []`)으로 안전 처리됨.
+- **Time grouping의 Books pipeline은 별도** — `use-books-view.ts` `applyBookGrouping`에 if 분기 추가 (group.ts 공통 함수 호출 X). entity별 pipeline 패턴 따름.
+- **Templates entity는 group.ts 공통 호출 X** — `use-templates-view.ts`에 자체 `applyTemplateGrouping` 함수. date 추가 위해 별도 wire-up 필요했음. Plot의 entity-specific pipeline 패턴 이해 의무.
+
+### 환경 변경
+- Store version: 변경 없음 (모두 derive view + UI 변경)
+- 신규 파일: `components/side-panel/book-detail-panel.tsx`, `.omc/plans/entity-side-panel-uniformity-prd.md`
+- 신규 컴포넌트 (export): `BookDetailPanel`, `BookContextBookmarks`, `NoteStatusBreakdown`, `WikiStatusBreakdown`, `DotCount`
+- 신규 helper: `countPlaceholders` (templates.ts, PLACEHOLDER_PATTERN regex single source)
+- view-engine 확장: `VALID_GROUP_BY`에 `"date"` 등록 + cross-entity groupings (`tag/category/sticker/book/connections`)도 등록
+
+---
+
 ## 2026-05-13 (밤) — 집, PR #321 11 commits (Status 색 재정렬 + Templates UpNote 패턴 + 9 follow-up)
 
 > 🎯 **다음 즉시 액션** (다른 머신에서 cross-machine):
