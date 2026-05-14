@@ -30,6 +30,26 @@ export function SidePanelActivity() {
     )
   }
 
+  if (entity.type === "template") {
+    // Templates are recipes, not collaboration artifacts — Comments
+    // surface dropped on purpose. History wiring waits on a dedicated
+    // template event log (current `noteEvents` is keyed by noteId; a
+    // template's own edits don't generate entries there).
+    return (
+      <div className="flex-1 overflow-y-auto">
+        <div className="px-4 py-3">
+          <div className="mb-2 flex items-center gap-2">
+            <span className="text-muted-foreground"><ClockCounterClockwise size={16} weight="regular" /></span>
+            <span className="text-2xs font-medium text-muted-foreground">History</span>
+          </div>
+          <p className="text-note text-muted-foreground/70">
+            Template history is not yet available.
+          </p>
+        </div>
+      </div>
+    )
+  }
+
   // Note or null
   const noteId = entity.type === "note" ? entity.noteId : null
 

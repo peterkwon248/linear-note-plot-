@@ -1,6 +1,7 @@
 "use client"
 
 import { useMemo, useState, useCallback, useEffect, useRef } from "react"
+import { formatDistanceToNow } from "date-fns"
 import { usePlotStore } from "@/lib/store"
 import { getBody, getAllBodies } from "@/lib/note-body-store"
 import { extractMentionTargets } from "@/lib/body-helpers"
@@ -403,14 +404,94 @@ function WikiArticleConnections() {
 // ── Main Component ───────────────────────────────────────
 
 export function SidePanelConnections() {
-  // Check sidePanelContext for wiki branch
+  // Check sidePanelContext for wiki / template branch
   const sidePanelContext = usePlotStore((s) => s.sidePanelContext)
 
   if (sidePanelContext?.type === "wiki") {
     return <WikiArticleConnections />
   }
 
+  if (sidePanelContext?.type === "template") {
+    return <TemplateConnections />
+  }
+
   return <NoteConnections />
+}
+
+// ── Template Connections ─────────────────────────────────
+// Templates have no wikilinks / backlinks / hierarchy, so the only
+// meaningful connection surface is "Used by N notes" — notes that were
+// created from this template. Derived from the noteEvents log
+// (`created` event with `meta.templateId`), so no new data model is
+// needed.
+
+function TemplateConnections() {
+  const entity = useSidePanelEntity()
+  const template = entity.type === "template" ? entity.template : null
+  const notes = usePlotStore((s) => s.notes)
+  const noteEvents = usePlotStore((s) => s.noteEvents)
+  const openInSecondary = usePlotStore((s) => s.openInSecondary)
+
+  const usedByNotes = useMemo(() => {
+    if (!template) return []
+    const notesById = new Map(notes.map((n) => [n.id, n]))
+    const seen = new Set<string>()
+    const list: { id: string; title: string; at: string }[] = []
+    for (const e of noteEvents) {
+      if (e.type !== "created") continue
+      if ((e.meta as { templateId?: string } | undefined)?.templateId !== template.id) continue
+      if (seen.has(e.noteId)) continue
+      const note = notesById.get(e.noteId)
+      if (!note || note.trashed) continue
+      seen.add(e.noteId)
+      list.push({ id: e.noteId, title: note.title || "Untitled", at: e.at })
+    }
+    list.sort((a, b) => new Date(b.at).getTime() - new Date(a.at).getTime())
+    return list
+  }, [template, notes, noteEvents])
+
+  if (!template) {
+    return (
+      <div className="flex flex-1 items-center justify-center p-8 text-center">
+        <p className="text-note text-muted-foreground">
+          Select a template to see connections
+        </p>
+      </div>
+    )
+  }
+
+  return (
+    <div className="flex-1 overflow-y-auto">
+      <ConnectionSection
+        title="Used by"
+        icon={<FileText size={14} weight="regular" />}
+        count={usedByNotes.length}
+        defaultOpen
+      >
+        {usedByNotes.length === 0 ? (
+          <p className="text-note text-muted-foreground px-2">
+            No notes use this template yet
+          </p>
+        ) : (
+          <div className="space-y-0.5">
+            {usedByNotes.map((n) => (
+              <button
+                key={n.id}
+                onClick={() => openInSecondary(n.id)}
+                className="flex w-full items-center gap-2 rounded-md px-2 py-0.5 text-left text-note text-foreground hover:bg-hover-bg transition-colors"
+              >
+                <FileText size={12} className="shrink-0 text-muted-foreground" weight="regular" />
+                <span className="truncate flex-1">{n.title}</span>
+                <span className="text-2xs text-muted-foreground/70 shrink-0">
+                  {formatDistanceToNow(new Date(n.at), { addSuffix: true })}
+                </span>
+              </button>
+            ))}
+          </div>
+        )}
+      </ConnectionSection>
+    </div>
+  )
 }
 
 function NoteConnections() {

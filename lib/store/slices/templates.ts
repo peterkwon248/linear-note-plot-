@@ -52,6 +52,53 @@ export function expandPlaceholdersInJson<T>(node: T): T {
   return node
 }
 
+/**
+ * Regex matching every supported placeholder token (UpNote double-brace
+ * + Plot legacy single-brace). Shared with `countPlaceholders` so the
+ * Detail panel surfaces only patterns that `expandPlaceholders` actually
+ * substitutes — never a stat that lies about behavior.
+ */
+const PLACEHOLDER_PATTERN =
+  /\{\{(?:YYYY|MM|DD|HH|mm|date|time)\}\}|\{(?:date|time|datetime|year|month|day)\}/g
+
+/**
+ * Count placeholder tokens in a template body. ContentJson takes
+ * priority (it's what `createNoteFromTemplate` actually expands when
+ * present); plain `content` is the fallback for older templates.
+ *
+ * Only text nodes inside contentJson are scanned — attrs / metadata are
+ * skipped to avoid false positives from URL params or IDs that may
+ * legitimately contain `{...}`. Mirrors `expandPlaceholdersInJson`.
+ */
+export function countPlaceholders(
+  content: string,
+  contentJson?: Record<string, unknown> | null,
+): number {
+  if (contentJson) {
+    let count = 0
+    const walk = (node: unknown) => {
+      if (node === null || node === undefined) return
+      if (Array.isArray(node)) {
+        node.forEach(walk)
+        return
+      }
+      if (typeof node !== "object") return
+      for (const [k, v] of Object.entries(node as Record<string, unknown>)) {
+        if (k === "text" && typeof v === "string") {
+          const matches = v.match(PLACEHOLDER_PATTERN)
+          if (matches) count += matches.length
+        } else {
+          walk(v)
+        }
+      }
+    }
+    walk(contentJson)
+    return count
+  }
+  const matches = content.match(PLACEHOLDER_PATTERN)
+  return matches ? matches.length : 0
+}
+
 export function expandPlaceholders(template: string): string {
   const d = new Date()
   const yyyy = String(d.getFullYear())
