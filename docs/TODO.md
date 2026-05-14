@@ -3,25 +3,83 @@
 > 우선순위 기반 작업 목록. **P0 = 다음 세션 즉시 시작점** (NEXT-ACTION.md 폐지, 2026-05-12).
 > 완료 항목은 즉시 삭제 또는 "완료" 섹션으로 이동.
 
-**마지막 갱신**: 2026-05-14 밤 (PR #322-#327 6 PR — entity-side-panel-uniformity + time grouping + books-divider)
+**마지막 갱신**: 2026-05-14 밤 후속 (PR #322-#327 + #329-#331 9 PR — entity-uniformity 풀 + time grouping + books-divider + Library Files Detail + Template anchor)
 
 ---
 
 ## 🔴 P0 — 즉시 (다음 세션, cross-machine)
 
 ### 다음 머신에서 시작 절차
-1. `git pull origin main` (PR #322-#327 머지된 main 받음)
+1. `git pull origin main` (PR #322-#327, #329-#331 머지된 main 받음)
 2. `npm install` (새 worktree 또는 dependency drift 가능)
 3. `npm run dev` → :3002 hard refresh (Ctrl+Shift+R)
 
-### Manual verify 7 surface (PR #322-#327)
+### Manual verify 9 surface (PR #322-#327 + #329-#331)
+
+**낮~밤 6 PR** (entity-uniformity + time grouping + books-divider):
 1. **Template Detail 재설계** (#322) — /templates Daily Log 클릭 → Detail에 Dates / Outline / Properties=stats (Words/Chars/Headings/Placeholders) / Actions. Label/Folder/Tags 사라짐. "Template → Note" 버튼.
 2. **Wiki Stub badge** (#322 보너스) — /wiki Working Memory (stub) → Detail header에 "Wiki Stub" muted badge.
-3. **Book 사이드바 4탭** (#323) — /books Getting Started Guide → ⌘B → Detail (Kind/Smart sources/Chapters/Properties/Actions) / Connections (Items by kind & status: Notes → Stone/Brick/Block, Wikis → Stub/Article, Chapters / Smart sources collapsible) / Activity ("Book history not yet available") / Bookmarks (globalBookmarks + "Anchor bookmarks in books are not yet available").
-4. **Connections status dots** (#324) — /notes Getting Started with Plot → Connections 탭 → "→ Notes" 옆 status dots (Brick/Block dot+count).
-5. **Book Bookmarks IN THIS BOOK** (#325) — /books * → Bookmarks 탭 → "IN THIS BOOK" 섹션. 노트에 anchor pin하면 그 책의 IN THIS BOOK에 자동 표시.
-6. **Books list divider X** (#326) — /books list mode → 행 사이 구분선 사라짐.
-7. **Time grouping** (#327) — /notes Display panel → Group by → "Updated" 선택 → "Today / Yesterday / This Week / This Month / Older" 그룹 헤더 표시 (빈 bucket hide). /wiki, /books, /templates에도 동일 옵션.
+3. **Book 사이드바 4탭** (#323) — /books Getting Started Guide → ⌘B → Detail (Kind/Smart sources/Chapters/Properties/Actions) / Connections (Items by kind & status) / Activity / Bookmarks.
+4. **Connections status dots** (#324) — /notes 노트 클릭 → Connections 탭 → "→ Notes" 옆 status dots.
+5. **Book Bookmarks IN THIS BOOK** (#325) — /books * → Bookmarks 탭 → "IN THIS BOOK" 섹션.
+6. **Books list divider X + checkbox w-8** (#326 + #326 update) — /books list mode → 행 사이 구분선 사라짐 + Notes와 checkbox column 같은 위치 (w-8).
+7. **Time grouping** (#327) — /notes Display panel → Group by → "Updated" → "Today/Yesterday/This Week/This Month/Older" 그룹.
+
+**밤 후속 3 PR** (PR 4a + Library 확장):
+8. **Template anchor pinning** (#329) — /templates Daily Log → Bookmarks 탭 → 본문 anchor 보임 + pin/unpin 작동. globalBookmarks에 `targetKind: "template"` 저장.
+9. **Library Files Detail panel** (#330 + #331) — /library Files → 파일 클릭 → 사이드바 자동 open + Detail (Dates/Source/Used in/Properties + Open in new tab). row 사이 구분선 X.
+
+---
+
+## 🟡 P1 — 다음 PR 후보 (사용자 시그널 "다 순차" — 우선순위 1~4 순서)
+
+### 1. Library Tags Detail panel 신설
+PR #331 (Files Detail panel) 패턴 그대로 적용.
+- `SidePanelContext`에 "tag" 추가
+- `useSidePanelEntity` tag 분기 (Tag type lookup)
+- `tag-detail-panel.tsx` 신설 (Header/Dates/Properties=stats:note count/Used in:notes/Actions)
+- `SidePanelDetail` tag 분기 dispatch
+- Library Tags row 클릭 시 `setSidePanelContext({ type: "tag", id })`
+
+### 2. Library Stickers Detail panel 신설
+같은 패턴. Sticker의 `members` 필드 활용 → "Used by" cross-entity list.
+
+### 3. Ontology Legend redesign (Option A + B 합의됨)
+사용자 시그널: 색 충돌 (Brick orange ↔ Stub orange, Block emerald ↔ Article emerald) + Light mode 가시성.
+
+**Option A + B 결합** 확정:
+- Legend에 entity 그룹 헤더 (NOTES / WIKI / BOOKS / EDGES)
+- 각 status는 **color + icon silhouette** (단순 dot 대신)
+- Plot 이미 정의된 icons: `Hexagon`/`Cube`/`Cuboid2x2` (Notes) / `IconWikiStub`/`IconWikiArticle` (Wiki) / `Lightning`/`Sparkle`/`PencilSimple` (Books)
+- 색은 영구 LOCKED (WIKI_STATUS_HEX + NOTE_STATUS_HEX) 그대로
+
+**+ 별도 작업**: List Options 토글 mismatch 버그 (디폴트 OFF인데 graph는 모두 표시. 토글 한 번 켰다 꺼야 sync). view-engine defaults에 명시.
+
+### 4. PR 4b — Wiki blocks anchor extractor
+Wiki blocks 구조 (Notes contentJson과 다름). 새 `extractAnchorsFromWikiBlocks` helper 작성. Wiki Bookmarks 탭에 LocalAnchors 추가. GlobalBookmark.targetKind는 이미 "wiki" 지원.
+
+### 5. PR 5 — Activity entity-agnostic 통합 (별도 PRD 필수)
+큰 작업. `noteEvents` slice → `entityEvents` 통합 + 마이그레이션 + 모든 entity wire-up.
+
+진행 전 `.omc/plans/activity-unification-prd.md` 작성 의무:
+- 통합 event 모델 (entityKind + entityId)
+- 마이그레이션 전략 (기존 noteEvents → entityEvents)
+- 각 entity action 시점 wire-up 지점 정의
+- ActivityTimeline entity-agnostic 확장
+- Comments wire-up (template/book도)
+
+---
+
+## 🟣 P2 — 작은 후속 정리
+
+- **attachments slice에 `deleteAttachment` action 신설** (Files Detail panel Delete 활성화) — PR #331 follow-up
+- **GlobalBookmark.targetKind에 "book" 추가** (PR 4 후속) — Book entity anchor pinning. 단 Book entity 자체는 contentJson 없음 → chapter-heading anchor만 의미? 결정 필요.
+- **Reference Detail panel 호출 흐름 검증** — `ReferenceDetailPanel` 존재하지만 library-view 안에서 setSidePanelContext("reference") 호출 위치 확인 X
+- **NoteLocalAnchors → LocalAnchors rename** (polish) — entity-agnostic naming
+- **navigateToBookmark template 분기** + "Templates" filter chip (unified bookmarks list)
+- **Stone/Brick STATUS_CONFIG도 var(--status-*) 통일** (Block만 fix됨)
+- **Wiki Gallery view-engine 통합** (Notes/Books 완료, Wiki만 누락)
+- **dev hot reload stale state 모니터링** — 잦은 branch switch + cascade 작업 시 React Hook order 경고 또는 stale import 발생. hard refresh로 해소.
 
 ---
 

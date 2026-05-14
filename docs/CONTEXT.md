@@ -51,6 +51,29 @@
 
 ---
 
+## 🚀 2026-05-14 (밤 후속) — 4 PR 추가 (PR 4a Template anchor + Library 확장 + Books table 일관성) ⭐⭐⭐⭐
+
+**범위**: 낮~밤 6 PR 후속. PR #329-#331 + PR #326 update.
+
+### 추가 핵심 결정 (영구 LOCKED, 2026-05-14 밤 후속)
+
+**20. GlobalBookmark.targetKind 확장 패턴** — optional enum 확장 (backward compat). "template" 추가 + 미래 "book" 가능.
+
+**21. NoteLocalAnchors entity-agnostic 재사용** — prop name legacy, 실제 의존성은 `{ id, contentJson }` shape.
+
+**22. Library entity 4탭 사이드바 통합** — entity-uniformity PRD 확장. Files (#331) 완료, Tags/Stickers/Reference 다음.
+
+**23. Files Detail panel 본질** — Source (attachment.noteId) + Used in (wiki blocks). 이미지 thumbnail. Plot 패턴 정합.
+
+**24. Notes/Books table 시각 격자 통일 영구 룰** — 행 구분선 X + Checkbox w-8 (entity 무관 동일).
+
+### 다음 (TODO.md P0)
+
+🔴 **사용자 manual verify**: 누적 9 PR (#322-#327 + #329-#331) 한 번에 검증.
+🟡 **다음 PR**: Library Tags/Stickers Detail panel / Ontology legend / PR 4b Wiki anchor / PR 5 Activity.
+
+---
+
 ## 🚀 2026-05-14 (낮~밤) — 6 PR 누적 (entity-side-panel-uniformity + time grouping + books-divider) ⭐⭐⭐⭐⭐
 
 **범위**: 단일 세션 6 PR 푸시. 사용자 시그널 "Plot UI 일관성: 4탭 사이드바 모든 entity 공통" 추진. 16 files modified + 5 신규.

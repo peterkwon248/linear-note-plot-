@@ -6,6 +6,86 @@
 
 ---
 
+## 2026-05-14 (밤 후속) — 집/Windows, 4 PR 추가 + Books table 일관성 통합 (entity-uniformity + Library 확장)
+
+> 🎯 **다음 즉시 액션** (다음 세션 또는 다른 머신):
+> 1. `git pull origin main` (PR #322-#327, #329-#331 머지된 main)
+> 2. **사용자 manual verify** 5 surface (밤 후속 추가 PR):
+>    - **PR #329 Template anchor pinning**: /templates Daily Log → Bookmarks 탭 → 본문 anchor 보임 + pin/unpin 작동 (`targetKind: "template"` 저장)
+>    - **PR #330 Library list divider X**: /library Files → row 사이 구분선 사라짐 (header divider만 유지)
+>    - **PR #331 Files Detail panel**: /library Files → 파일 클릭 → 사이드바 자동 open + Detail (Dates / Source / Used in / Properties / Open in new tab)
+>    - **PR #326 update**: /books list → checkbox column w-8 (Notes 일관성, 위치 동일) + 행 구분선 X
+>    - 누적 합산 9 PR (#322-#327 + #329-#331)을 한 번에 검증 가능
+> 3. **다음 PR 후보** (TODO.md P1):
+>    - Library Tags Detail panel + Stickers Detail panel (PR #331 패턴 반복)
+>    - Ontology legend redesign (Option A + B: icon silhouette + entity 그룹화)
+>    - PR 4b Wiki blocks anchor extractor
+>    - PR 5 Activity entity-agnostic 통합 (별도 PRD 필수)
+>
+> **밤 후속 PR 4개 (낮~밤 6 PR + docs sync #328 추가)**:
+> - **#329** feat: Template anchor pinning (`GlobalBookmark.targetKind`에 "template" 추가, `NoteLocalAnchors` 재사용)
+> - **#330** fix: Library list view row divider 제거 (Notes/Wiki 일관성)
+> - **#331** feat: Library Files Detail panel 신설 (FileDetailPanel — Dates/Source/Used in/Properties)
+> - **#326 update**: Books table checkbox column w-6 → w-8 (Notes 일관성 통합, 기존 divider fix와 묶음)
+>
+> **머신**: 집 (Windows)
+> **worktree**: `claude/brave-moore-ceaf44`
+
+### 추가 핵심 결정 (영구 LOCKED, 2026-05-14 밤 후속)
+
+**10. GlobalBookmark.targetKind 확장 (안전 패턴)**:
+- `"note" | "wiki"` → `"note" | "wiki" | "template"` (optional 확장, backward compat)
+- entity-uniformity PRD에 정의된 PR 4 (anchor pinning 모든 entity) 시작
+- 다음 PR 4b: Wiki blocks anchor extractor (blocks 구조 다름, 새 extractor 필요)
+
+**11. NoteLocalAnchors entity-agnostic 재사용**:
+- 컴포넌트 prop name "note"는 legacy artifact이지만 실제 의존성은 `{ id, contentJson }` shape
+- Template 객체도 동일 shape → 그대로 재사용 (minimal-diff)
+- 미래 PR에서 `LocalAnchors`로 rename + entity 무관 처리 가능
+
+**12. Library entity도 4탭 사이드바 통합** (entity-uniformity 확장):
+- PRD 원래 scope: Note/Wiki/Template/Book. 사용자 시그널 "라이브러리 파일도 클릭해도 정보 안 보임" → Library 4 entity (Files/Tags/References/Stickers)도 통합 대상.
+- PR #331은 Files Detail panel만 (사용자 시그널 직접 처리). Tags/Stickers는 follow-up.
+- Reference는 이미 `ReferenceDetailPanel` 존재 — 4탭 dispatch도 기존 작동.
+
+**13. Files Detail panel 본질 — Source + Used in cross-reference**:
+- Attachment 데이터: `noteId` (source note) + `wiki blocks` 안 `attachmentId` reference (used in wiki)
+- Plot 일반 패턴 (Note/Wiki/Template/Book Detail) 정합: Dates / Properties=stats / Used in / Actions
+- 이미지 type만 thumbnail (max-h-48 object-contain) — 다른 file type은 icon
+- Delete 액션 미구현 (attachments slice 변경 별도 PR)
+
+**14. Notes/Books table 시각 격자 통일**:
+- 행 구분선 X (둘 다 flat) — PR #326
+- Checkbox column w-8 통일 — PR #326 update (사용자 "체크박스 위치 다르다" 시그널)
+- Plot table 일관성 영구 룰: 모든 entity table은 w-8 (32px) checkbox + hover bg row separation, 행 border X
+
+### 기술 학습 추가 (영구)
+
+- **Optional 데이터 모델 확장 패턴**: `"note" | "wiki"` → `"note" | "wiki" | "template"`처럼 enum 확장. 기존 데이터 변경 X (backward compat). 마이그레이션 불필요. 같은 패턴 다른 곳 — `GlobalBookmark.targetKind`에 "book" 추가도 가능 (PR 4 후속).
+- **legacy artifact prop name 재사용**: 컴포넌트 export name과 prop name이 historical이라도 실제 의존성 shape가 entity-agnostic하면 그대로 재사용 가능. rename은 별도 polish PR로 분리.
+- **attachment.noteId는 1:1 source 추적**: cross-reference (used in)는 wiki blocks 별도 추적. note body의 image src URL/attachmentId 추적은 별도 작업.
+- **사용자 시그널 "다 순차"**: 같은 패턴 작업 시리즈를 분리 PR로 진행. 묶음 PR보다 manual verify 쉬움 + 머지 충돌 risk ↓.
+- **PR cascade base 결정**: 데이터 모델 의존성 없으면 main에서 시작. 컴포넌트/타입 의존성 있으면 cascade. 본 세션 PR #331은 main 기반 (sidePanelContext 확장만 추가) — 다른 PR들과 독립.
+
+### Watch Out (다음 세션)
+
+- **PR 11개 누적** (#322-#327 + #329-#331 + #326 update + #328 머지) — main에 cascade로 머지 시 충돌 가능. Plot 패턴 (HEAD 우선 `--ours`) 적용 권장.
+- **dev server stale state**: branch switch 빈번 + 다른 component import path 변경. 사용자 hard refresh 필수. 한 번 React Hook order 경고 떠도 reload하면 사라짐 (PR #323 시점 확인).
+- **Files Detail panel Delete 액션 비활성**: attachments slice에 `deleteAttachment` 없음. trash flow는 별도 PR. 사용자가 file 삭제하려면 list view bulk action 사용.
+- **Tags / Stickers Detail panel 미구현**: 사용자 "다 순차" 시그널 → 다음 세션 P1.
+- **Reference Detail panel 호출 흐름 미검증**: `ReferenceDetailPanel` 존재하지만 library-view 안에서 setSidePanelContext("reference") 호출 위치 확인 X. 별도 검증 필요.
+
+### 환경 변경
+- Store version: 변경 없음 (모든 변경은 derive view 또는 optional 필드 확장)
+- 신규 파일: `components/side-panel/file-detail-panel.tsx`
+- 신규 컴포넌트: `FileDetailPanel`
+- 데이터 모델 확장 (optional, backward compat):
+  - `GlobalBookmark.targetKind`에 "template" 추가
+  - `SidePanelContext`에 `{ type: "file"; id }` 추가
+  - `SidePanelEntityResult` union에 file 분기 + attachmentId/attachment 필드
+
+---
+
 ## 2026-05-14 (낮~밤) — 집/Windows, 6 PR 누적 (entity-side-panel-uniformity + time grouping + books-divider)
 
 > 🎯 **다음 즉시 액션** (다른 머신에서 cross-machine 또는 다음 세션):
