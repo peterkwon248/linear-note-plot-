@@ -7,7 +7,7 @@ import { wouldCreateCycle } from "../../wiki-hierarchy"
 type Set = (fn: ((state: any) => any) | any) => void
 type Get = () => any
 
-export function createWikiArticlesSlice(set: Set, get: Get) {
+export function createWikiArticlesSlice(set: Set, get: Get, appendEvent: AppendEventFn) {
   return {
     /* ── CRUD ── */
 
@@ -57,6 +57,8 @@ export function createWikiArticlesSlice(set: Set, get: Get) {
       }
       // Persist block metadata to IDB
       persistArticleBlocks(id, article.blocks)
+      // PR 5b: entity event log
+      appendEvent({ kind: "wiki", id }, "created", { title: partial.title })
       return id
     },
 
@@ -74,6 +76,14 @@ export function createWikiArticlesSlice(set: Set, get: Get) {
           return updated
         }),
       }))
+      // PR 5b: entity event log. trashed/untrashed는 별도 event type 발화.
+      if (patch.trashed === true) {
+        appendEvent({ kind: "wiki", id: articleId }, "trashed")
+      } else if (patch.trashed === false) {
+        appendEvent({ kind: "wiki", id: articleId }, "untrashed")
+      } else {
+        appendEvent({ kind: "wiki", id: articleId }, "updated")
+      }
     },
 
     addArticleReference: (articleId: string, referenceId: string) => {
@@ -153,6 +163,13 @@ export function createWikiArticlesSlice(set: Set, get: Get) {
       }
       // Remove block metadata from IDB
       removeArticleBlocks(articleId)
+      // PR 5b: entity event log. Hard delete은 timeline에서도 사라지니
+      // entityEvents의 해당 wiki events도 cascade 삭제 (Note delete 패턴 정합).
+      set((state: any) => ({
+        entityEvents: state.entityEvents.filter(
+          (e: any) => !(e.entity?.kind === "wiki" && e.entity?.id === articleId),
+        ),
+      }))
       set((state: any) => ({
         wikiArticles: state.wikiArticles.filter((a: WikiArticle) => a.id !== articleId),
         // Sticker membership cascade — drop {kind:"wiki", id} refs from

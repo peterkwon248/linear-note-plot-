@@ -130,12 +130,12 @@ export const usePlotStore = create<PlotState>()(
         ...createWikiCollectionsSlice(set, get),
         ...createSavedViewsSlice(set),
         ...createWikiCategoriesSlice(set, get),
-        ...createWikiArticlesSlice(set, get),
+        ...createWikiArticlesSlice(set, get, appendEvent),
         ...createReferencesSlice(set),
         ...createGlobalBookmarksSlice(set),
         ...createCommentsSlice(set),
         ...createInboxSlice(set),
-        ...createBooksSlice(set, get),
+        ...createBooksSlice(set, get, appendEvent),
 
         // ── Todo Index ──
         rebuildTodoIndex: async () => {

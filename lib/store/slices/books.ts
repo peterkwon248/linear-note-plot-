@@ -1,6 +1,6 @@
 import { generateKeyBetween } from "fractional-indexing"
 import type { AutoSource, AutoSourceKind, Book, BookItem } from "../../types"
-import { genId, now } from "../helpers"
+import { genId, now, type AppendEventFn } from "../helpers"
 
 type Set = (fn: ((state: any) => any) | any) => void
 type Get = () => any
@@ -146,7 +146,7 @@ export interface BooksSlice {
   setLastRead: (bookId: string, refId: string | null) => void
 }
 
-export function createBooksSlice(set: Set, _get: Get): Omit<BooksSlice, "books"> {
+export function createBooksSlice(set: Set, _get: Get, appendEvent: AppendEventFn): Omit<BooksSlice, "books"> {
   const touchBook = (state: any, bookId: string, mutator: (book: Book) => Book) => {
     const books = (state.books ?? []) as Book[]
     let mutated = false
@@ -176,6 +176,8 @@ export function createBooksSlice(set: Set, _get: Get): Omit<BooksSlice, "books">
       set((state: any) => ({
         books: [...((state.books ?? []) as Book[]), book],
       }))
+      // PR 5b: entity event log
+      appendEvent({ kind: "book", id }, "created", { title })
       return id
     },
 
@@ -189,6 +191,10 @@ export function createBooksSlice(set: Set, _get: Get): Omit<BooksSlice, "books">
           createdAt: book.createdAt,
         })),
       )
+      // PR 5b: entity event log. Trash transitions get their own type below.
+      if (patch.trashed === undefined) {
+        appendEvent({ kind: "book", id }, "updated")
+      }
     },
 
     deleteBook: (id: string) => {
@@ -199,6 +205,8 @@ export function createBooksSlice(set: Set, _get: Get): Omit<BooksSlice, "books">
             : { ...book, trashed: true, trashedAt: now() },
         ),
       )
+      // PR 5b: entity event log
+      appendEvent({ kind: "book", id }, "trashed")
     },
 
     restoreBook: (id: string) => {
@@ -209,11 +217,17 @@ export function createBooksSlice(set: Set, _get: Get): Omit<BooksSlice, "books">
             : { ...book, trashed: false, trashedAt: null },
         ),
       )
+      // PR 5b: entity event log
+      appendEvent({ kind: "book", id }, "untrashed")
     },
 
     permanentlyDeleteBook: (id: string) => {
       set((state: any) => ({
         books: ((state.books ?? []) as Book[]).filter((b) => b.id !== id),
+        // Cascade — hard delete의 event도 같이 정리 (Note delete 패턴 정합).
+        entityEvents: state.entityEvents.filter(
+          (e: any) => !(e.entity?.kind === "book" && e.entity?.id === id),
+        ),
       }))
     },
 

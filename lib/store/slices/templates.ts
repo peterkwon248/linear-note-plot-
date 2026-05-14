@@ -138,6 +138,8 @@ export function createTemplatesSlice(set: Set, get: Get, appendEvent: AppendEven
       set((state: any) => ({
         templates: [...state.templates, newTemplate],
       }))
+      // PR 5b: entity event log
+      appendEvent({ kind: "template", id: newTemplate.id }, "created", { name: newTemplate.name })
       return newTemplate.id
     },
 
@@ -147,6 +149,8 @@ export function createTemplatesSlice(set: Set, get: Get, appendEvent: AppendEven
           t.id === id ? { ...t, ...updates, updatedAt: now() } : t
         ),
       }))
+      // PR 5b: entity event log
+      appendEvent({ kind: "template", id }, "updated")
     },
 
     deleteTemplate: (id: string) => {
@@ -155,6 +159,8 @@ export function createTemplatesSlice(set: Set, get: Get, appendEvent: AppendEven
           t.id === id ? { ...t, trashed: true, trashedAt: new Date().toISOString() } : t
         ),
       }))
+      // PR 5b: entity event log
+      appendEvent({ kind: "template", id }, "trashed")
     },
 
     restoreTemplate: (id: string) => {
@@ -163,6 +169,8 @@ export function createTemplatesSlice(set: Set, get: Get, appendEvent: AppendEven
           t.id === id ? { ...t, trashed: false, trashedAt: null } : t
         ),
       }))
+      // PR 5b: entity event log
+      appendEvent({ kind: "template", id }, "untrashed")
     },
 
     permanentlyDeleteTemplate: (id: string) => {
