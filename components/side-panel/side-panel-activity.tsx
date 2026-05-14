@@ -51,6 +51,9 @@ export function SidePanelActivity() {
   if (entity.type === "reference" && entity.referenceId) {
     return <SoloHistory entity={{ kind: "reference", id: entity.referenceId }} />
   }
+  if (entity.type === "label" && entity.labelId) {
+    return <SoloHistory entity={{ kind: "label", id: entity.labelId }} />
+  }
 
   // Note or null
   const noteId = entity.type === "note" ? entity.noteId : null

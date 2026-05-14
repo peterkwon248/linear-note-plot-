@@ -36,6 +36,7 @@ export type SidePanelContext =
   | { type: "book"; id: string }
   | { type: "tag"; id: string }
   | { type: "sticker"; id: string }
+  | { type: "label"; id: string }
   | null
 
 /**

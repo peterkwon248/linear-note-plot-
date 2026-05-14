@@ -37,6 +37,7 @@ import { LabelNoteCountChip } from "@/components/property-chips"
 import type { SortField, FilterRule, GroupBy } from "@/lib/view-engine/types"
 import type { Label } from "@/lib/types"
 import { ViewHeader } from "@/components/view-header"
+import { LibraryBreadcrumb } from "@/components/library/library-breadcrumb"
 
 /* ── Sort/Group options for detail view ─────────────────── */
 
@@ -612,6 +613,7 @@ export function LabelsView() {
       <ViewHeader
         icon={<BookmarkSimple size={20} weight="regular" />}
         title="Labels"
+        titleNode={<LibraryBreadcrumb current="labels" count={flatCount} />}
         count={flatCount}
         onCreateNew={() => setCreating(true)}
         showDisplay={LABELS_LIST_VIEW_CONFIG.showDisplay}
@@ -715,9 +717,18 @@ export function LabelsView() {
                               style={{ backgroundColor: label.color }}
                             />
 
-                            {/* Label name */}
+                            {/* Label name — click to drill-down + open side panel */}
                             <button
-                              onClick={() => setSelectedLabelId(label.id)}
+                              onClick={() => {
+                                // 2026-05-14 follow-up (Library Labels Detail panel):
+                                // 사이드바 자동 노출 + Detail 표시 (Tag/Sticker
+                                // 패턴 정합). drill-down 유지.
+                                setSelectedLabelId(label.id)
+                                usePlotStore.setState({
+                                  sidePanelContext: { type: "label", id: label.id },
+                                  sidePanelOpen: true,
+                                })
+                              }}
                               className="text-left text-ui text-foreground transition-colors hover:text-accent leading-tight"
                             >
                               {label.name}

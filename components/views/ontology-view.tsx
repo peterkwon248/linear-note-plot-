@@ -442,9 +442,11 @@ export function OntologyView() {
             : "hidden"
         }
       >
-        {/* Floating legend overlay — top-right, above the canvas. */}
+        {/* Floating legend overlay — 2026-05-15 사용자 시그널: 우상단 위치가
+            미니맵을 가림. 좌하단으로 이동. 기존 좌하단의 작은 stat-bar는
+            그대로 두되 (다른 컴포넌트), Legend가 그 위쪽에 stacked. */}
         {graph && (
-          <div className="pointer-events-none absolute right-3 top-3 z-20">
+          <div className="pointer-events-none absolute left-3 bottom-3 z-20">
             <OntologyLegend />
           </div>
         )}

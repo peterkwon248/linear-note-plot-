@@ -10,6 +10,7 @@ import { FileDetailPanel } from "./file-detail-panel"
 import { BookDetailPanel } from "./book-detail-panel"
 import { TagDetailPanel } from "./tag-detail-panel"
 import { StickerDetailPanel } from "./sticker-detail-panel"
+import { LabelDetailPanel } from "./label-detail-panel"
 
 /**
  * Entity-aware detail panel that renders appropriate detail content
@@ -51,6 +52,10 @@ export function SidePanelDetail() {
 
   if (entity.type === "sticker" && entity.sticker) {
     return <StickerDetailPanel sticker={entity.sticker} />
+  }
+
+  if (entity.type === "label" && entity.label) {
+    return <LabelDetailPanel label={entity.label} />
   }
 
   // type === "note" or null — pass resolved noteId for pane-aware rendering
