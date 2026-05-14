@@ -6,6 +6,7 @@ import { SidePanelContext } from "./side-panel-context"
 import { WikiArticleDetailPanel } from "./wiki-article-detail-panel"
 import { ReferenceDetailPanel } from "./reference-detail-panel"
 import { TemplateDetailPanel } from "./template-detail-panel"
+import { FileDetailPanel } from "./file-detail-panel"
 import { BookDetailPanel } from "./book-detail-panel"
 
 /**
@@ -32,6 +33,10 @@ export function SidePanelDetail() {
 
   if (entity.type === "template" && entity.template) {
     return <TemplateDetailPanel template={entity.template} />
+  }
+
+  if (entity.type === "file" && entity.attachment) {
+    return <FileDetailPanel attachment={entity.attachment} />
   }
 
   if (entity.type === "book" && entity.book) {
