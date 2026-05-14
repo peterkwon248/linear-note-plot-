@@ -8,6 +8,58 @@
 
 ---
 
+## 🚀 2026-05-14 (밤 후속) — 4 PR 추가 (PR 4a Template anchor + Library 확장 + Books table 일관성) ⭐⭐⭐⭐
+
+**범위**: 1 worktree (`brave-moore-ceaf44`). 낮~밤 6 PR 후속 — entity-uniformity PR 4 시작 + Library entity 확장 + Books table 시각 격자 통일.
+
+**PR 목록**:
+- **#329** feat: Template anchor pinning (PR 4a — GlobalBookmark.targetKind 확장)
+- **#330** fix: Library list view row divider 제거 (Notes/Wiki 일관성)
+- **#331** feat: Library Files Detail panel 신설 (entity-uniformity 확장)
+- **#326 update**: Books table checkbox column w-6 → w-8 (Notes 일관성 통합)
+
+### 추가 핵심 결정 (영구 LOCKED, 2026-05-14 밤 후속)
+
+**10. GlobalBookmark.targetKind 확장 패턴** — optional 필드 enum 확장 (backward compat). 같은 패턴 미래 "book" 추가도 가능.
+
+**11. NoteLocalAnchors entity-agnostic 재사용** — prop name "note"는 legacy artifact. 실제 의존성은 `{ id, contentJson }` shape. Template 객체 그대로 호환.
+
+**12. Library entity도 4탭 사이드바 통합** (entity-uniformity 확장) — Files/Tags/References/Stickers. Reference는 이미 panel 있음. Files (#331) 완료, Tags/Stickers 다음 세션.
+
+**13. Files Detail panel 본질 — Source + Used in cross-reference** — Plot 패턴 정합. attachment.noteId = source, wiki blocks attachmentId = used in. 이미지 thumbnail.
+
+**14. Notes/Books table 시각 격자 통일 영구 룰**:
+- 행 구분선 X (둘 다 flat) — hover bg만으로 row separation
+- Checkbox column w-8 (32px) — entity 무관 동일
+- 모든 entity table은 같은 격자 적용 (Notes/Wiki/Books/Library)
+
+### 기술 학습 추가 (영구)
+
+- **Optional 데이터 모델 확장 패턴** — enum 확장 (backward compat, 마이그레이션 X)
+- **Legacy artifact prop name 재사용** — entity-agnostic shape면 그대로 재사용. rename은 polish PR.
+- **사용자 시그널 "다 순차"** — 같은 패턴 작업 시리즈는 분리 PR로 (manual verify 쉬움, 머지 충돌 risk ↓)
+- **PR cascade base 결정 룰**: 데이터 모델 의존성 없으면 main 기반, 컴포넌트 의존성 있으면 cascade
+- **attachment cross-reference 추적**: noteId (1:1 source) + wiki blocks attachmentId reference (cross-entity)
+
+### 환경
+- Branch: `claude/sync-2026-05-14-evening`
+- Store version: 변경 없음 (모든 변경은 derive view 또는 optional 필드)
+- 신규 파일: `components/side-panel/file-detail-panel.tsx`
+- 데이터 모델 확장 (optional, backward compat):
+  - `GlobalBookmark.targetKind`에 "template" 추가
+  - `SidePanelContext`에 "file" type 추가
+
+### 다음 (TODO.md P0)
+
+🔴 **사용자 manual verify** 누적 9 PR (#322-#327 + #329-#331) — dev hard refresh 후 한 번에 검증
+🟡 **다음 PR 후보** (P1):
+- Library Tags Detail panel + Stickers Detail panel
+- Ontology legend redesign (Option A + B: icon silhouette + entity 그룹화)
+- PR 4b Wiki blocks anchor extractor
+- PR 5 Activity entity-agnostic 통합 (별도 PRD 필수)
+
+---
+
 ## 🚀 2026-05-14 (낮~밤) — 6 PR 누적 (entity-side-panel-uniformity + time grouping + books-divider) ⭐⭐⭐⭐⭐
 
 **범위**: 1 worktree (`brave-moore-ceaf44`). 단일 세션 6 PR 푸시. 사용자 시그널 "Plot UI 일관성: 4탭 사이드바 모든 entity 공통" 추진.
