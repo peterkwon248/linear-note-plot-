@@ -51,6 +51,48 @@
 
 ---
 
+## 🚀 2026-05-15 — 12 PR 머지 (Library 100% + Activity Unification + Connections charts) ⭐⭐⭐⭐⭐
+
+**범위**: 단일 day 12 PR. Library entity-uniformity 5 entity 완성 + Activity entity-agnostic PRD 4단계 + Library Connections 차트화 + Ontology Legend 위치.
+
+### 핵심 결정 (영구 LOCKED)
+
+**21. Library entity-uniformity 100% 완성** — References / Files / Tags / Stickers / Labels 5 entity 사이드바 4탭 (Detail/Connections/Activity/Bookmarks) entity-aware. row name 클릭 = drill-down + side panel detail 자동 open. checkbox = selection only.
+
+**22. Activity `EntityEvent` 데이터 모델** (Store v133):
+- `{ id, entity: EntityRef, type: EntityEventType, at: ⭐ required, meta? }`
+- `at` 필드 ⭐ required — Time grouping + recency sort + Tag/Label 같이 자체 createdAt 없는 entity timestamp source. **사용자 요구 (2026-05-14)**.
+- v132 → v133 migration: NoteEvent → EntityEvent (entity.kind="note"). Idempotent.
+- Backward compat 다 유지 (createAppendEvent string | EntityRef, getEventsForNote wrapper, ActivityTimeline noteId | entity)
+
+**23. EntityKind 10 kinds** — template/book/sticker 확장. Sticker.members[] backward compat.
+
+**24. Comments는 Note/Wiki만** — Template/Book/Library는 collaboration 단위 X. SoloHistory wrapper로 분리.
+
+**25. row 클릭 패턴 영구 룰** — row name 텍스트 = drill-down + side panel. checkbox = selection.
+
+**26. Ontology Legend 좌하단** — 미니맵 회피.
+
+**27. EVENT_CONFIG graceful fallback** — unknown type 스킵.
+
+**28. PRD 점진 분할** — 큰 작업 4-5 PR 분할. cascade 회피 + manual verify 명확.
+
+### 알려진 회귀 (다음 세션 P0)
+
+**🔴 Tags / Labels 사이드바 작동 안 함** — 사용자 보고 2026-05-15.
+- 코드 verified 정상 (tags-view line 820-823, labels-view 신규)
+- 진단 필요: HMR stale / 코드 회귀 / IDB 마이그레이션 실패
+- 다른 머신 fresh dev 재현 진단
+
+### 다음 (TODO.md P0)
+
+🔴 **P0-1**: Tags / Labels 회귀 진단 (다른 머신 cross-machine).
+🔴 **P0-2**: 12 PR 통합 manual verify (entity별 사이드바 + Activity timeline + Connections charts).
+🟡 **P1**: Calendar / Ontology graph 사이드바 의도 명확화.
+🟡 **P1**: Granular wiki/book events wire-up + Label entity events.
+
+---
+
 ## 🚀 2026-05-14 (저녁) — PR #333 7 commits 폴리시 (Linear-faithful sidebar + Ontology breadcrumb + search typo) ⭐⭐⭐⭐
 
 **범위**: 1 worktree. 사용자 시그널 "Linear 정합 + 일관성 무조건 신경써" — Notes 정확 패턴 mirror 4차 iter.

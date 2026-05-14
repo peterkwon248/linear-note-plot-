@@ -8,6 +8,80 @@
 
 ---
 
+## 🚀 2026-05-15 — **12 PR 머지** + Activity Unification PRD 완료 + Library entity-uniformity 100% ⭐⭐⭐⭐⭐
+
+**범위**: 1 worktree (`keen-bassi-afd1b6`). 단일 day 12 PR 누적 — Library entity-uniformity 5 entity 완성 + Activity Unification PRD 4 단계 + Library Connections 차트화 + Ontology Legend 위치 변경.
+
+**PR 목록 (12)**:
+- **#334** Library Tags Detail panel (Tag.createdAt 없음 → Dates 생략)
+- **#335** Library Stickers Detail panel (cascade #334, createdAt + members 7 kinds)
+- **#336** Wiki blocks anchor extractor (`extractAnchorsFromWikiBlocks` + WikiLocalAnchors)
+- **#337** Ontology Legend redesign (Option A+B, 3 그룹 + Plot icon system)
+- **#338** Header breadcrumb + 사이드바 토글 (ViewHeader titleNode prop + showDetailPanel default true)
+- **#339** Library 4탭 entity-aware 분기 (placeholder — sidebar Note Detail 회귀 fix)
+- **#340** PR 5a Activity Foundation (NoteEvent → EntityEvent v133 migration + backward compat)
+- **#341** PR 5b Activity Wire-up Wiki/Template/Book (CRUD events)
+- **#342** PR 5c Activity Wire-up Tag/Sticker/File/Reference (CRUD + membership events)
+- **#343** PR 5d Activity UI 활성화 (EVENT_CONFIG 17 신규 + ActivityTimeline 모든 entity)
+- **#344** Library Connections 차트화 (placeholder → TagConnections/StickerConnections/FileConnections/ReferenceConnections)
+- **#345** Labels Detail panel + Ontology Legend 위치 변경 (좌하단)
+
+### 핵심 결정 (영구 LOCKED, 2026-05-15)
+
+**21. Library entity-uniformity 100% 완성** — 5 entity (References / Files / Tags / Stickers / Labels) 모두 우측 사이드바 4탭 entity-aware. row name 클릭 → drill-down + side panel 동시 open. checkbox는 selection only.
+
+**22. Activity entity-agnostic 데이터 모델 `EntityEvent`** (Store v133):
+- `{ id, entity: EntityRef, type: EntityEventType, at: ⭐ required ISO, meta? }`
+- `at` 필드 ⭐ required (사용자 요구) — Time grouping + recency sort + 자체 createdAt 없는 entity (Tag/Label)의 유일 timestamp source
+- Migration v132 → v133: NoteEvent { noteId } → EntityEvent { entity: { kind: "note", id: noteId } }. Idempotent, 데이터 손실 X.
+- Backward compat: `createAppendEvent(string | EntityRef)`, `getEventsForNote = getEventsForEntity({ kind: "note", id })` wrapper, ActivityTimeline `noteId | entity` 둘 다 지원
+
+**23. EntityKind 10 kinds** (확장) — note / wiki / tag / label / category / file / reference / template / book / sticker. Sticker.members[] backward compat (template/book 추가 가능).
+
+**24. Comments wire-up은 Note/Wiki만** (영구) — Template/Book/Library는 collaboration 단위 X. SoloHistory wrapper로 분리.
+
+**25. row 클릭 패턴 영구 룰**:
+- **row name 텍스트** 클릭 → drill-down + 사이드바 detail 자동 open
+- **checkbox** 클릭 → selection only
+- 5 Library entity 모두 동일 패턴
+
+**26. Ontology Legend 좌하단** (영구) — 미니맵 (우상단) 가림 회피.
+
+**27. EVENT_CONFIG graceful fallback** — unknown type은 ActivityTimeline에서 `if (!config) return null` 스킵.
+
+**28. PRD 점진 분할 패턴** — 큰 작업 (Activity Unification)을 4 PR로 (Foundation / Wire-up Wiki+Template+Book / Wire-up Library / UI activation). review 명확 + manual verify 단계별 + cascade conflict 회피.
+
+### 기술 학습 (영구)
+
+- **NoteEvent → EntityEvent backward compat 패턴**: `createAppendEvent` overload `string | EntityRef`. 호출 site 안 변경 + 새 시스템 작동.
+- **`getEventsForNote` deprecated wrapper**: `getEventsForEntity({ kind: "note", id })`. 점진 마이그레이션.
+- **`extractAnchorsFromWikiBlocks` 재귀 패턴**: section block.title + text block contentJson (재귀 `extractAnchorsFromContentJson`) → AnchorItem[].
+- **`ViewHeader` titleNode + auto store wire-up**: `titleNode?: ReactNode` (있으면 default 타이틀 대체) + `showDetailPanel ?? true` (사이드바 토글 모든 entity 자동).
+- **EntityEvent 마이그레이션 idempotent 패턴**: `state.noteEvents` 있으면 변환, 없으면 fresh state. 재실행 안전.
+
+### 알려진 회귀 (Watch Out 다음 세션)
+
+**🔴 Tags / Labels 사이드바 작동 안 함** (사용자 보고 2026-05-15):
+- 코드 verified 정상 (tags-view line 820-823, labels-view 신규 onClick)
+- 사용자 dev:3002 hard refresh + IDB 마이그레이션 후에도 같은 시그널
+- 진단 후보: HMR stale (60%) / 코드 회귀 어딘가 (30%) / IDB v133 마이그레이션 실패 (10%)
+- 다른 머신 fresh dev로 재현 진단 필요 — fresh에서도 안 되면 회귀 fix
+- 후보 grep: `setSidePanelContext\(null\)` 또는 비슷한 reset useEffect
+
+### 환경
+- Branch: `claude/labels-detail-tags-fix-legend-position` (PR #345 base)
+- Store version: **v132 → v133** (entityEvents migration)
+- 신규 파일: tag-detail-panel / sticker-detail-panel / label-detail-panel / library-breadcrumb / book-breadcrumb / ontology-legend / activity-unification-prd
+- 데이터 모델: EntityEvent / EntityEventType / EntityKind 확장 / SidePanelContext 5 entity / SidePanelEntityResult 10 entity
+
+### 다음 (TODO.md P0)
+🔴 **P0-1**: Tags / Labels 사이드바 회귀 진단 (다른 머신 fresh dev)
+🔴 **P0-2**: 12 PR 누적 통합 manual verify
+🟡 **P1**: Calendar / Ontology graph 사이드바 의도 명확화 (사용자 결정)
+🟡 **P1**: Granular wiki/book events wire-up / Label entity events (PR 5e)
+
+---
+
 ## 🚀 2026-05-14 (저녁) — PR #333 폴리시 7 commits (Linear-faithful sidebar + Ontology breadcrumb + search typo) ⭐⭐⭐⭐
 
 **범위**: 1 worktree (`claude/relaxed-hodgkin-5a2905`). 사용자 시그널 "Linear 정합 + 일관성 무조건 신경써" — Notes 정확 패턴 mirror 4차 iter.
