@@ -8,6 +8,7 @@ import { ReferenceDetailPanel } from "./reference-detail-panel"
 import { TemplateDetailPanel } from "./template-detail-panel"
 import { FileDetailPanel } from "./file-detail-panel"
 import { BookDetailPanel } from "./book-detail-panel"
+import { TagDetailPanel } from "./tag-detail-panel"
 
 /**
  * Entity-aware detail panel that renders appropriate detail content
@@ -41,6 +42,10 @@ export function SidePanelDetail() {
 
   if (entity.type === "book" && entity.book) {
     return <BookDetailPanel book={entity.book} />
+  }
+
+  if (entity.type === "tag" && entity.tag) {
+    return <TagDetailPanel tag={entity.tag} />
   }
 
   // type === "note" or null — pass resolved noteId for pane-aware rendering
