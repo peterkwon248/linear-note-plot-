@@ -50,6 +50,27 @@ export function SidePanelActivity() {
     )
   }
 
+  if (entity.type === "book") {
+    // Books are collections, not collaboration artifacts at the entity
+    // level — Comments dropped on purpose (the items inside the book
+    // already carry their own comments via this same surface when
+    // selected). History wiring waits on entity-events unification
+    // (PRD: entity-side-panel-uniformity, PR 5).
+    return (
+      <div className="flex-1 overflow-y-auto">
+        <div className="px-4 py-3">
+          <div className="mb-2 flex items-center gap-2">
+            <span className="text-muted-foreground"><ClockCounterClockwise size={16} weight="regular" /></span>
+            <span className="text-2xs font-medium text-muted-foreground">History</span>
+          </div>
+          <p className="text-note text-muted-foreground/70">
+            Book history is not yet available.
+          </p>
+        </div>
+      </div>
+    )
+  }
+
   // Note or null
   const noteId = entity.type === "note" ? entity.noteId : null
 
