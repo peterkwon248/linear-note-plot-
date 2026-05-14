@@ -56,6 +56,7 @@ import {
 } from "@dnd-kit/sortable"
 import { Books } from "@phosphor-icons/react/dist/ssr/Books"
 import { BookKindIcon } from "@/components/property-chips"
+import { BookBreadcrumb } from "@/components/books/book-breadcrumb"
 import { getBookKind } from "@/lib/view-engine/use-books-view"
 import { IconChevronRight } from "@/components/plot-icons"
 import { ArrowLeft } from "@phosphor-icons/react/dist/ssr/ArrowLeft"
@@ -435,21 +436,15 @@ export function BookDetailPage({ bookId }: BookDetailPageProps) {
       <ViewHeader
         icon={headingIcon}
         title={book.title || "Untitled book"}
+        titleNode={
+          <BookBreadcrumb
+            book={book}
+            count={resolvedItems.length > 0 ? resolvedItems.length : undefined}
+          />
+        }
         count={resolvedItems.length > 0 ? resolvedItems.length : undefined}
         extraToolbarButtons={
           <>
-            <button
-              type="button"
-              onClick={() => {
-                setActiveRoute("/books")
-                router.push("/books")
-              }}
-              className="flex h-7 w-7 items-center justify-center rounded-md text-foreground/65 transition-colors hover:bg-hover-bg hover:text-foreground"
-              title="Back to all books"
-              aria-label="Back to all books"
-            >
-              <ArrowLeft size={16} weight="regular" />
-            </button>
             {/* v2 Phase H: "Resume from {chapter}" when lastReadItemId
                 set, otherwise "Read from start". `lastReadItem` is
                 resolved from current items (auto re-resolve safe). */}

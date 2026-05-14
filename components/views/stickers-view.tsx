@@ -31,6 +31,7 @@ import { ColorPickerGrid } from "@/components/color-picker-grid"
 import { PRESET_COLORS } from "@/lib/colors"
 import type { Sticker } from "@/lib/types"
 import { ViewHeader } from "@/components/view-header"
+import { LibraryBreadcrumb } from "@/components/library/library-breadcrumb"
 import { DisplayPanel } from "@/components/display-panel"
 import { FilterPanel } from "@/components/filter-panel"
 import { useStickersView } from "@/lib/view-engine/use-stickers-view"
@@ -530,6 +531,7 @@ export function StickersView() {
       <ViewHeader
         icon={<StickerIcon size={20} weight="regular" />}
         title="Stickers"
+        titleNode={<LibraryBreadcrumb current="stickers" count={flatCount} />}
         count={flatCount}
         onCreateNew={() => setCreating(true)}
         showDisplay={STICKERS_LIST_VIEW_CONFIG.showDisplay}

@@ -4,6 +4,7 @@ import { useState, useMemo, useCallback, useEffect, useRef } from "react"
 import { createPortal } from "react-dom"
 import { usePlotStore } from "@/lib/store"
 import { TagsView } from "@/components/views/tags-view"
+import { LibraryBreadcrumb } from "@/components/library/library-breadcrumb"
 import { formatDistanceToNow } from "date-fns"
 import { shortRelative } from "@/lib/format-utils"
 import { toast } from "sonner"
@@ -1014,6 +1015,7 @@ function FilesView() {
       <ViewHeader
         icon={<Folder weight="regular" className="h-4 w-4" />}
         title="Files"
+        titleNode={<LibraryBreadcrumb current="files" count={activeAttachments.length} />}
         count={activeAttachments.length}
         onCreateNew={() => fileInputRef.current?.click()}
         showDisplay={FILES_VIEW_CONFIG.showDisplay}
@@ -1653,6 +1655,7 @@ function ReferencesView() {
       <ViewHeader
         icon={<Quotes weight="regular" className="h-4 w-4" />}
         title="References"
+        titleNode={<LibraryBreadcrumb current="references" count={totalCount} />}
         count={totalCount}
         searchPlaceholder="Search references..."
         searchValue={search}
