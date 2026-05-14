@@ -335,6 +335,7 @@ export function OntologyView() {
       <ViewHeader
         icon={<Graph size={20} weight="regular" />}
         title="Ontology"
+        subtitle={tab === "graph" ? "Graph" : tab === "insights" ? "Insights" : "Dashboard"}
         searchPlaceholder="Search nodes..."
         searchValue={searchQuery}
         onSearchChange={setSearchQuery}
