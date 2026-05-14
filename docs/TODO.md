@@ -3,59 +3,135 @@
 > 우선순위 기반 작업 목록. **P0 = 다음 세션 즉시 시작점** (NEXT-ACTION.md 폐지, 2026-05-12).
 > 완료 항목은 즉시 삭제 또는 "완료" 섹션으로 이동.
 
-**마지막 갱신**: 2026-05-14 저녁 (PR #333 7 commits — sidebar polish + Ontology breadcrumb + search typo fix, Linear-faithful)
+**마지막 갱신**: 2026-05-15 (12 PR 머지 — Library entity-uniformity 100% + Activity Unification PRD 완료 + Library Connections 차트화 + Labels Detail + Legend 위치)
 
 ---
 
-## 🔴 P0 — 즉시 (다음 세션, cross-machine)
+## 🔴 P0 — 즉시 (다른 머신 cross-machine 진입점)
 
 ### 다음 머신에서 시작 절차
 
 ```bash
-# 1. main 받기 (직전 PR #332까지)
+# 1. main 받기 (12 PR + docs sync 모두 머지된 상태)
 git pull origin main
 
-# 2. 다른 컴퓨터면 PR branch checkout (PR #333은 머지 안 됨)
-git fetch origin claude/relaxed-hodgkin-5a2905
-git worktree add ../<name> claude/relaxed-hodgkin-5a2905
+# 2. 새 worktree (다른 컴퓨터)
+git worktree add ../<name> main
 cd ../<name>
 
 # 3. install + dev
 npm install
-npm run dev   # port 3002 또는 random
+npm run dev    # port 3002 또는 random
 
-# 4. Hard refresh (Ctrl+Shift+R) 의무
+# 4. Plot 페이지 포커스 후 Hard refresh (Ctrl+Shift+R) 의무
+# 5. Console에서 [migrate] v132→v133 로그 확인 (자동 마이그레이션 trigger)
 ```
 
-### PR #333 manual verify 5 surface (7 commits 누적)
+### 🔴 P0-1 회귀 진단 — Tags / Labels 사이드바 작동 안 함
 
-PR #333: `polish: sidebar typography + Ontology header breadcrumb (Linear-faithful)`
+**사용자 보고** (2026-05-15): tag/label row name 클릭해도 사이드바 detail panel 안 열림. 사이드바 자체는 떠있는데 "Select a note to see details" fallback 표시.
 
-1. **사이드바 헤더 폰트** (`/notes` `/wiki` `/books` `/home`): `Views` `Folders` `Pinned` `More` `Stats` 헤더 **12px normal case** (이전 10.5px uppercase에서 변경, weight 500)
-2. **사이드바 너비**: 220px → **240px** (Linear 정합)
-3. **Ontology 헤더 breadcrumb** (`/ontology`): `Ontology > Graph` — chevron `>` **자체** 클릭 → dropdown. Insights/Dashboard 선택 시 헤더 업데이트
-4. **Dropdown items**: Graph / IconInsight / ChartBar 아이콘 + 라벨, 활성 = `bg-accent/10 text-accent`
-5. **Search typo fix**: 검색 input placeholder `"Search notes, tags, and more..."` (이전 `"MagnifyingGlass notes..."` 사고)
+**코드 verified 정상**:
+- `components/views/tags-view.tsx` line 813-825: row name `<button onClick>` 에 `setSelectedTagId + usePlotStore.setState({ sidePanelContext: { type: "tag", id: tag.id }, sidePanelOpen: true })`
+- `components/views/labels-view.tsx` line 718-732 (PR #345 신규): 같은 패턴
+- `lib/store/types.ts` SidePanelContext에 `{type: "tag" | "label"}` union 포함
+- `components/side-panel/use-side-panel-entity.ts` tag / label 분기 + state.tags/labels lookup
+- `components/side-panel/side-panel-detail.tsx` tag → TagDetailPanel / label → LabelDetailPanel dispatch
 
-OK → `gh pr merge 333 --squash`
+**재현 단계** (다른 머신/incognito fresh dev):
+1. `npm run dev` + hard refresh
+2. `/library/tags` 또는 `/labels` 진입
+3. row name 텍스트 (`#Knowledge Management` 또는 `Idea` 등) 클릭 (checkbox 아님)
+4. 우측 사이드바에 TagDetailPanel/LabelDetailPanel 표시되는지
 
-### 다음 작은 PR (R1) — Library breadcrumb
+**진단 후보 (우선순위)**:
+- **(a) HMR stale** — 사용자 dev:3002에서 PR #345 코드가 hot reload 안 됨. 다른 머신 fresh dev로 재현 안 되면 stale 확정 → no-op (사용자 hard refresh 또는 dev restart)
+- **(b) IDB v133 마이그레이션 실패** — `[migrate] v132→v133` console.log 없으면 마이그레이션 trigger 안 됨. entityEvents 빈 array + 사이드바 dispatch 영향 없음 (Detail은 tag entity lookup이라 events 무관) — 그래도 마이그레이션 실패 시 dev 안정성 문제
+- **(c) 코드 회귀** — 어딘가 `setSidePanelContext`를 즉시 null로 reset하는 useEffect. 후보:
+  - `components/views/book-detail-page.tsx` useEffect (`readingEntityId` 분기 — Library 페이지에는 적용 안 돼야)
+  - `components/workspace/*` 또는 layout (active route 변경 시 sidePanelContext reset?)
+  - 검색 명령: `grep -rn "setSidePanelContext.*null\|sidePanelContext.*null" components/` 또는 `setSidePanelContext({` 다른 위치
+- **(d) Multi-worktree dev port 충돌** — 사용자가 이전 worktree dev:3002 stale + 새 worktree port (random). 사용자가 옛 port 보고 있을 수도. `preview_list` 또는 chrome devtools로 정확한 port 확인.
 
-Notes/Ontology 패턴 100% mirror:
-- `components/views/library-view.tsx` ViewHeader에 `subtitle` prop 전달
-- subtitle = `<>` + `[DropdownMenu trigger (chevron >)]` + `[Active sub-page label]`
-- Dropdown items: Overview / References / Tags / Files / Stickers (icon + 라벨 + 활성 bg)
-- chevron `>`가 PopoverTrigger button (Notes NotePickerChevron 패턴)
-- 활성 sub-page 라벨은 static span
+**fix 후 (회귀 확정 시)**: PR 하나로 `setSidePanelContext` reset 위치 fix + grep로 비슷한 패턴 다 점검.
 
-라우트 매핑:
-- `/library` (Overview)
-- `/library/references`
-- `/library/tags`
-- `/library/files`
-- `/library/stickers`
+### 🔴 P0-2 통합 manual verify (12 PR 누적)
 
-→ DropdownMenuItem onClick으로 `setActiveRoute(href)` 또는 `router.push(href)`
+cross-machine fresh dev에서 entity별 4탭 사이드바 통합 검증. 라운드 4-5에 들어간 변경이 다른 PR과 충돌 없는지:
+
+- [ ] **Tags** — row name 클릭 → TagDetailPanel (color dot, note count, Used by) + Connections "Tagged notes by status" + Activity (events) + Bookmarks (anchor placeholder)
+- [ ] **Stickers** — row name 클릭 → StickerDetailPanel (createdAt Dates, kind breakdown) + Connections "Members by kind & status" + Activity + Bookmarks
+- [ ] **Files** — file 클릭 → FileDetailPanel + Connections "Cross-entity" (source + used in)
+- [ ] **References** — 클릭 → ReferenceDetailPanel + Connections "Cited by" (citing notes/wikis)
+- [ ] **Labels** — row name 클릭 → LabelDetailPanel + Connections "Labeled notes by status"
+- [ ] **Books** — `Books > [book]` breadcrumb + chevron 클릭 → 책 picker. ArrowLeft 사라짐. 사이드바 4탭
+- [ ] **Library headers** — `Library > Tags/Files/References/Stickers/Labels` breadcrumb + 사이드바 토글 버튼 (헤더 우측 SidebarSimple icon)
+- [ ] **Notes** — Activity 탭 기존 timeline + 새 events (어디 추가) 다 나타남. EVENT_CONFIG 신규 type icons 적절
+- [ ] **Wiki** — block_added events 안 보여도 OK (granular wire-up P2). 단 createWikiArticle/update/trash events 보임
+- [ ] **Template** — Activity Comments 없음 (의도) + History timeline
+- [ ] **Ontology Legend** — 좌하단 floating overlay (우상단 아님). 미니맵 안 가림.
+
+### 🟡 P1 — 의도 명확화 후 작업
+
+#### 1. Calendar 사이드바 변화 (사용자 의도 미확정)
+사용자 시그널 (2026-05-15): "Calendar의 우측 사이드바도 뭔가 변화가 필요해. 좋은 의미로."
+
+옵션:
+- **(a) Day Summary panel** — 선택한 날짜의 notes 통계 (status breakdown + activity heatmap + recent events)
+- **(b) Calendar 자체 detail** — 월간 통계 (notes created/updated 합계, 활동 패턴)
+- **(c) 현재 노트 detail 강화** — 기존 fallback 위에 calendar context (예: "Created on this day")
+
+사용자 결정 후 진행. `sidePanelContext`에 `{type: "day"; date: string}` 추가 또는 다른 패턴.
+
+#### 2. Ontology graph node 클릭 시 사이드바 동기화 (사용자 의도 미확정)
+사용자 시그널: "온톨로지에도 사이드바가 없다"
+
+현재: Graph node 클릭 → `OntologyDetailPanel` (별도 panel) 표시. 4탭 사이드바와 별개.
+
+옵션:
+- **(a) Graph node → 4탭 사이드바 동기화** — node가 note면 note detail, wiki면 wiki detail. OntologyDetailPanel 폐기 또는 graph-only 정보로 축소. 추천.
+- **(b) 둘 다** — OntologyDetailPanel + 4탭 사이드바 (selection 유지)
+- **(c) 사이드바 자체에 Graph mode** — 노드 선택 시 4탭 사이드바가 graph node detail로 변환
+
+추천 (a) — 모든 entity 사이드바 4탭 일관성.
+
+---
+
+## 🟡 P1 — Activity Unification 후속 (granular events)
+
+### 3. Granular Wiki/Book events wire-up
+PR 5b/5c는 entity CRUD만. internal action (block_added/removed/reordered, item_added/removed/reordered, smart_source_added/removed, converted_to_manual, chapter_added)은 wire-up 안 됨. PR 5d에 EVENT_CONFIG entries는 있지만 발화 X. 후속 PR — 각 slice의 internal action에서 `appendEvent`.
+
+### 4. Label entity events 발화 (PR 5e)
+labels slice의 createLabel/updateLabel/deleteLabel/restoreLabel/+ membership actions에서 entityEvents.push. tags.ts 패턴 정합. Activity unification 보충.
+
+---
+
+## 🟡 P1 — UI polish 후보
+
+### 5. EVENT_HEX palette promotion
+PR 5d에서 17 신규 event types에 임시 hex 매핑 (#5e6ad2, #10b981, #8b5cf6, etc.). EVENT_HEX LOCKED palette에 정식 entry로 promotion 필요. lib/colors.ts EVENT_HEX 확장.
+
+### 6. EDGES section (Ontology Legend 확장)
+현재 OntologyLegend는 Notes/Wiki/Books 3 그룹만. EDGES section 추가 — wikilink / tag / relation type별 색 swatch + 라벨. RELATION_HEX (이미 정의됨) 활용.
+
+### 7. List Options 토글 mismatch (Ontology display panel)
+사용자 시그널 (이전 기록): "List Options 토글 mismatch — 디폴트 OFF인데 graph는 모두 표시. 토글 한 번 켰다 꺼야 sync"
+- `view-engine/defaults.ts` 또는 GRAPH_VIEW_CONFIG defaults 점검.
+
+---
+
+## 🟣 P2 — 작은 정리
+
+- LibraryEntityConnectionsPlaceholder 함수 — PR #344에서 제거됨 (placeholder X, 실제 컴포넌트로 교체). 만약 어딘가 import 남아있으면 unused warning.
+- `EntityHistoryPlaceholder` (side-panel-activity) — PR 5d에서 제거됨. 같은 검증.
+- NoteLocalAnchors + WikiLocalAnchors → 단일 `LocalAnchors` 컴포넌트로 통합 (`{ entityId, anchors }` prop). 코드 중복 ~50줄 줄임.
+- ActivityTimeline `noteId` prop @deprecated — call site 점진 마이그레이션 (`entity={{ kind: "note", id }}`).
+- Reference.history (reference-internal mark/edit detail) vs entityEvents 중복 — 통합 검토. 단 history는 detail 풍부 (action + detail 텍스트) — 별개 유지가 합리적.
+
+---
+
+## 🟣 P2 — 이전 후보 (PR #333 시점)
 
 ---
 

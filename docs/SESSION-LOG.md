@@ -6,6 +6,138 @@
 
 ---
 
+## 2026-05-15 — 집/Windows, **12 PR 머지** + Activity Unification PRD 완료 + Library 100% 완성
+
+> 🎯 **다음 즉시 액션** (다른 머신/세션 cross-machine 진입점):
+> 1. `git pull origin main` (12 PR + docs sync 머지된 main 받음)
+> 2. **다른 컴퓨터 새 worktree**:
+>    - `git worktree add ../<name> main`
+>    - `cd ../<name> && npm install`
+>    - `npm run dev` (port 3002 또는 random)
+>    - **Hard refresh (Ctrl+Shift+R) 의무** + IDB v133 마이그레이션 자동 trigger 확인 (console `[migrate] v132→v133` 로그)
+> 3. **🔴 P0 회귀 진단** — **Tags / Labels 사이드바 작동 안 함**:
+>    - 사용자 보고 (2026-05-15): tag/label row name 클릭해도 사이드바 detail panel 안 열림. 사이드바 자체는 떠있는데 "Select a note to see details" fallback 표시.
+>    - 코드 verified 정상 (tags-view.tsx line 820-823 / labels-view.tsx 신규 setSidePanelContext 호출). dev hard refresh + IDB 마이그레이션 후에도 같은 시그널.
+>    - 진단 후보:
+>      - (a) HMR stale 또는 dev:3002 stale build (다른 worktree port 충돌 가능성)
+>      - (b) 코드 회귀 — sidePanelContext를 즉시 null로 reset하는 useEffect 어딘가 (BookDetailPage 패턴 같이)
+>      - (c) v133 마이그레이션 실패 — entityEvents가 노트 events에 entity.kind 없는 상태로 남음 → useSidePanelEntity 분기 실패
+>      - (d) 사용자 IDB 상태 — `plot-store` IDB 직접 dump 확인 (sidePanelContext가 set되는지)
+>    - **다른 머신/incognito에서 fresh dev로 재현 시도 → 회귀 확정 또는 stale 결정**. fresh에서도 안 되면 회귀 fix (코드 어디에 sidePanelContext reset 있는지 grep).
+> 4. **P1 의도 명확화 후 작업** (사용자 시그널 2개 남음):
+>    - **Calendar 사이드바 변화** — 옵션 (a) Day Summary panel / (b) Calendar 자체 detail / (c) 현재 노트 detail 강화. 사용자 결정 받아야 진행.
+>    - **Ontology graph node 클릭 시 사이드바 동기화** — 옵션 (a) graph node → 4탭 사이드바 / (b) OntologyDetailPanel + 4탭 둘 다 / (c) 사이드바 자체에 graph mode. 사용자 결정.
+> 5. **P2 polish 후보**:
+>    - Granular Wiki/Book events wire-up (block_added, item_reordered 등 실제 발화)
+>    - Label entity events 발화 (labels slice CRUD에서 entityEvents.push)
+>    - EDGES section (Ontology Legend 확장 — wikilink/tag/relation color)
+>    - EVENT_HEX palette promotion (PR 5d 임시 hex → LOCKED)
+>    - List Options 토글 mismatch fix (view-engine defaults)
+>
+> **머신**: 집 (Windows)
+> **다음 worktree**: 다른 컴퓨터에서 새로 — main 기반 (12 PR 머지된 상태)
+
+### 본 세션 PR 12개 (#334-#345) — 큰 day
+
+#### 라운드 1 — entity-side-panel-uniformity 마무리 + Library entity-uniformity 진행 (#334-#338)
+- **#334** Library Tags Detail panel — Header / Properties / Used by (Tag.createdAt 없음 → Dates 생략)
+- **#335** Library Stickers Detail panel (cascade #334) — Sticker.createdAt 있음 + members[] cross-entity (7 kinds) → 풍부한 Detail
+- **#336** Wiki blocks anchor extractor (PR 4b) — `extractAnchorsFromWikiBlocks` (section block + text block contentJson 재귀) + WikiLocalAnchors 함수 (NoteLocalAnchors 패턴 복사)
+- **#337** Ontology Legend redesign — 우상단 floating overlay, Notes/Wiki/Books 3 그룹 + Plot icon system (IconStone/Brick/Block + IconWikiStub/Article + Lightning/Sparkle/PencilSimple) + Wiki entity violet footnote
+- **#338** Header breadcrumb (Library/Books) + 사이드바 토글 (모든 entity) — ViewHeader `titleNode` prop 추가 + `showDetailPanel` default true (auto store wire-up). `LibraryBreadcrumb` / `BookBreadcrumb` 신규 컴포넌트. book-detail-page ArrowLeft 버튼 제거.
+
+#### 라운드 2 — 사용자 시그널 fix (Library 4탭 entity-aware) #339
+- 스크린샷 회귀: Library entity Detail이 Note Detail로 잘못 렌더링 (Connections/Activity/Bookmarks fallback)
+- #339: 4 entity (Tag / Sticker / File / Reference) × 3 panel = 12 분기 entity-aware placeholder 추가
+  - Connections placeholder ("see Detail tab"), Activity placeholder ("history not yet available"), Bookmarks placeholder ("don't carry inline anchors")
+
+#### 라운드 3 — Activity Unification PRD 4단계 (#340-#343)
+- **PRD 작성**: `.omc/plans/activity-unification-prd.md` (v0.1)
+- **#340 PR 5a Foundation**: NoteEvent → EntityEvent, EntityKind 확장 (+template/book/sticker), `at` 필드 ⭐ required (사용자 요구), Store v132 → **v133** migration (idempotent, 데이터 손실 X), `addEntityEvent` / `getEventsForEntity` helper, ActivityTimeline `entity` prop (backward compat `noteId`)
+- **#341 PR 5b**: Wiki / Template / Book CRUD events wire-up. createXxx/updateXxx/deleteXxx/restoreXxx + hard delete cascade
+- **#342 PR 5c**: Tag / Sticker / File / Reference events. Tag color_changed/renamed 분기, Sticker member_added/removed, File 양방향 (note-side + file-side)
+- **#343 PR 5d UI 활성화**: EVENT_CONFIG에 17 신규 type entries (Wiki block_*, Book item_*, cross-entity member_*/color_changed/renamed) + icons (Cube/ArrowsDownUp/UserPlus/Palette/TextT 등) + 임시 hex. side-panel-activity 전체 rewrite — 모든 entity 분기 placeholder → 실제 ActivityTimeline (`HistorySection` + `SoloHistory` helpers). Note/Wiki만 Comments + History, 나머지 6 entity는 SoloHistory.
+
+#### 라운드 4 — Library Connections 차트화 (#344)
+- LibraryEntityConnectionsPlaceholder → 4 실제 entity-aware Connections 함수:
+  - **TagConnections**: "Tagged notes by status" (Stone/Brick/Block) + recent 8 + overflow
+  - **StickerConnections**: "Members by kind & status" (Notes status + Wikis stub/article + 5 other kinds count) + recent note refs
+  - **FileConnections**: "Cross-entity" — Source note (attachment.noteId) + Used in wikis (wiki blocks attachmentId reverse lookup)
+  - **ReferenceConnections**: "Cited by" — citing notes + citing wikis (referenceIds reverse lookup)
+- BookConnections 패턴 정합 (ConnectionSection/KindHeader/StatusRow 재사용)
+
+#### 라운드 5 — Labels Detail + Legend 위치 (#345)
+- **LabelDetailPanel 신규** — Tag Detail 패턴 (Label.color non-null + 1:N membership via Note.labelId 단일 id)
+- 4탭 entity-aware: label dispatch / LabelConnections (Labeled notes by status, TagConnections 패턴) / SoloHistory / EntityAnchorPlaceholder
+- LibraryBreadcrumb에 labels 추가 (5 entity 확장)
+- labels-view.tsx onClick에 setSidePanelContext + setSidePanelOpen
+- **Ontology Legend 위치 변경** — `right-3 top-3` → `left-3 bottom-3` (미니맵 가림 fix)
+
+### 핵심 결정 (영구 LOCKED, 2026-05-15)
+
+**21. Library entity-uniformity 100% 완성** — 5 entity (References / Files / Tags / Stickers / Labels) 모두 우측 사이드바 4탭 (Detail / Connections / Activity / Bookmarks) entity-aware. row name 클릭 → drill-down + side panel detail 동시 open 풍부 패턴. checkbox 클릭은 selection only.
+
+**22. Activity entity-agnostic 데이터 모델 — `EntityEvent`** (Store v133):
+- `{ id, entity: EntityRef, type: EntityEventType, at: ⭐ required ISO timestamp, meta? }`
+- `entity: { kind, id }` discriminator (sticker.members 패턴 정합)
+- `at` ⭐ required — Time grouping + recency sort + 자체 createdAt 없는 entity (Tag/Label)의 유일 timestamp source. **사용자 요구 2026-05-14**.
+- `getEventsForEntity(events, entity)` 신규 + `getEventsForNote` deprecated wrapper
+- ActivityTimeline `entity: EntityRef` 또는 `noteId: string` (backward compat)
+- `createAppendEvent` 새 signature: `EntityRef | string` (string은 자동 wrap as `{kind: "note", id}`)
+- 마이그레이션 v133 idempotent — old NoteEvent { noteId } → EntityEvent { entity: { kind: "note", id: noteId } }
+
+**23. EntityKind 확장** — template / book / sticker 추가 (총 10 kinds). Sticker.members[]는 backward compat (template/book도 가능).
+
+**24. Comments wire-up은 Note/Wiki만** (영구 룰) — Template/Book/Library entity는 collaboration 단위 X (PR #322 정합). side-panel-activity에서 SoloHistory wrapper로 Comments 생략.
+
+**25. Notes/Library entity row 클릭 패턴 영구 룰**:
+- **row name 텍스트** 클릭 → drill-down (selectedXxxId) + 사이드바 detail 자동 open (setSidePanelContext + setSidePanelOpen)
+- **checkbox** 클릭 → selection only. 사이드바 안 set.
+- Tag/Sticker/File/Reference/Label 모두 동일 패턴
+
+**26. Ontology Legend 위치 좌하단** (영구) — 미니맵 (우상단) 가림 회피.
+
+**27. EVENT_CONFIG fallback graceful** — unknown event type은 ActivityTimeline에서 `if (!config) return null` 스킵. EVENT_CONFIG 누락 시 UI 안 깨짐.
+
+### 기술 학습 (영구)
+
+- **NoteEvent → EntityEvent 마이그레이션 backward compat 패턴**: `createAppendEvent` overload (`string | EntityRef`) → 호출 site 안 변경하고도 EntityEvent 시스템 작동. `getEventsForNote` wrapper로 ActivityTimeline 등 기존 사용자도 정상.
+- **PRD 점진 분할 (5a-5d) 가성비 ↑**: 큰 작업 (Foundation + Wire-up 3 phases + UI activation) — 한 PR 대신 4 PR. review 명확 + manual verify 단계별 + cascade conflict 없음 (각 PR main 기반).
+- **`extractAnchorsFromWikiBlocks` 패턴**: section block.title + text block contentJson (재귀로 `extractAnchorsFromContentJson`) → AnchorItem[]. WikiLocalAnchors는 NoteLocalAnchors 패턴 복사 (minimal diff, 미래 polish 후보).
+- **Library 5 entity row 클릭 패턴 일관**: setSidePanelContext + setSidePanelOpen + drill-down. tags-view / stickers-view / labels-view 모두 동일 onClick.
+- **ViewHeader auto store wire-up**: `showDetailPanel ?? true` + `detailPanelOpen ?? storeSidePanelOpen` + `onDetailPanelToggle ?? storeToggleSidePanel`. 호출 site 안 변경하고 모든 entity 헤더에 사이드바 토글 자동 노출.
+
+### Watch Out (다음 세션)
+
+- **🔴 Tags / Labels 회귀**: 사용자 보고. 코드는 정상 verified — line 820-823 (tags-view) / labels-view 신규 onClick 모두 setSidePanelContext 호출. 단 실제 사용자 화면에서 사이드바 detail 안 열림. 다른 머신/incognito fresh dev로 재현 진단 필요. fresh에서도 안 되면 어딘가 useEffect가 sidePanelContext를 즉시 null로 reset 가능성 (grep — `setSidePanelContext\(null\)` 또는 `setSidePanelContext(\{` non-tag/label).
+- **Store v133 마이그레이션 idempotent verify**: 사용자 IDB가 v132 → v133 자동 마이그레이션 후 `[migrate] v132→v133` console.log 확인. 만약 마이그레이션 실패 시 entityEvents가 빈 array — Activity timeline 빈 화면. fresh로도 재현되면 마이그레이션 로직 점검.
+- **PR 12개 누적 후 manual verify 어려움**: 라운드 1/2/3/4/5 가 다 main에 들어가서 회귀 추적 어려움. 다음 세션에 통합 verify 시 entity별 (Tag/Label/Sticker/File/Reference) 사이드바 + Activity timeline + Connections charts 다 확인.
+- **EVENT_HEX palette 임시 hex 17개**: PR 5d에서 새 type별 hex 임시값 (gray/blue/emerald 등). 별도 polish PR에서 LOCKED palette로 promotion 가능. 미적용 시 색 일관성 떨어짐.
+- **Calendar / Ontology graph 사이드바 의도 미확정**: 사용자 시그널은 받았지만 정확한 design 결정 안 됨. P1로 의도 명확화 후 PR.
+
+### 환경 변경
+- Store version: **v132 → v133** (entityEvents migration)
+- 신규 파일:
+  - `components/side-panel/label-detail-panel.tsx`
+  - `components/side-panel/sticker-detail-panel.tsx`
+  - `components/side-panel/tag-detail-panel.tsx`
+  - `components/library/library-breadcrumb.tsx`
+  - `components/books/book-breadcrumb.tsx`
+  - `components/ontology/ontology-legend.tsx`
+  - `.omc/plans/activity-unification-prd.md`
+- 데이터 모델:
+  - `EntityKind` 확장 (template/book/sticker 추가)
+  - `EntityEvent` 신규 (NoteEvent deprecated alias)
+  - `EntityEventType` 신규 (NoteEventType + 17 신규 types)
+  - `SidePanelContext` union 5 entity 추가 (tag/sticker/file/book/label 다)
+  - `SidePanelEntityResult` 10 entity 분기
+
+### 사용자 feedback 영구 저장
+- **after-work는 PR 머지까지 완료 의무** (2026-05-14, [feedback_after_work_must_merge.md]) — 사용자 명시. push만 하고 PR OPEN 남기면 cross-machine mismatch.
+- **사용자 시그널 "일관성 무조건 신경써"** (이전 entry 17번 영구 룰) — 매 PR마다 entity 패턴 정합 검증 의무.
+
+---
+
 ## 2026-05-14 (저녁) — 집/Windows, PR #333 폴리시 7 commits (Linear-faithful sidebar + Ontology breadcrumb + search typo fix)
 
 > 🎯 **다음 즉시 액션** (다른 머신 또는 다음 세션 진입점):
