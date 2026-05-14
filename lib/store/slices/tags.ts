@@ -1,17 +1,20 @@
 import type { Note, Tag } from "../../types"
-import { genId, now } from "../helpers"
+import { genId, now, type AppendEventFn } from "../helpers"
 
 type Set = (fn: ((state: any) => any) | any) => void
 
-export function createTagsSlice(set: Set) {
+export function createTagsSlice(set: Set, appendEvent: AppendEventFn) {
   return {
     // v109: `color` defaults to null (opt-in). Tags created from hashtags or
     // the picker start uncolored; users set a color explicitly via context
     // menu when desired.
     createTag: (name: string, color: string | null = null) => {
+      const id = genId()
       set((state: any) => ({
-        tags: [...state.tags, { id: genId(), name, color }],
+        tags: [...state.tags, { id, name, color }],
       }))
+      // PR 5c: entity event log
+      appendEvent({ kind: "tag", id }, "created", { name })
     },
 
     updateTag: (id: string, updates: Partial<Tag>) => {
@@ -20,6 +23,14 @@ export function createTagsSlice(set: Set) {
           t.id === id ? { ...t, ...updates } : t
         ),
       }))
+      // PR 5c: entity event log — distinguish color/rename for richer UX.
+      if (updates.color !== undefined) {
+        appendEvent({ kind: "tag", id }, "color_changed", { color: updates.color })
+      } else if (updates.name !== undefined) {
+        appendEvent({ kind: "tag", id }, "renamed", { name: updates.name })
+      } else {
+        appendEvent({ kind: "tag", id }, "updated")
+      }
     },
 
     deleteTag: (id: string) => {
@@ -31,6 +42,8 @@ export function createTagsSlice(set: Set) {
           ? { activeView: { type: "all" } }
           : {}),
       }))
+      // PR 5c: entity event log
+      appendEvent({ kind: "tag", id }, "trashed")
     },
 
     restoreTag: (id: string) => {
@@ -39,11 +52,17 @@ export function createTagsSlice(set: Set) {
           t.id === id ? { ...t, trashed: false, trashedAt: null } : t
         ),
       }))
+      // PR 5c: entity event log
+      appendEvent({ kind: "tag", id }, "untrashed")
     },
 
     permanentlyDeleteTag: (id: string) => {
       set((state: any) => ({
         tags: state.tags.filter((t: Tag) => t.id !== id),
+        // PR 5c: hard delete cascade — drop this tag's events.
+        entityEvents: state.entityEvents.filter(
+          (e: any) => !(e.entity?.kind === "tag" && e.entity?.id === id),
+        ),
       }))
     },
 
@@ -55,6 +74,8 @@ export function createTagsSlice(set: Set) {
             : n
         ),
       }))
+      // PR 5c: tag-side cross-entity membership event.
+      appendEvent({ kind: "tag", id: tagId }, "member_added", { noteId })
     },
 
     removeTagFromNote: (noteId: string, tagId: string) => {
@@ -73,6 +94,8 @@ export function createTagsSlice(set: Set) {
           }),
         }
       })
+      // PR 5c: tag-side membership event (fires regardless of orphan-cleanup).
+      appendEvent({ kind: "tag", id: tagId }, "member_removed", { noteId })
     },
   }
 }
