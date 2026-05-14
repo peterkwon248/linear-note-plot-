@@ -21,7 +21,6 @@ import { buildViewStateForContext } from "@/lib/view-engine/defaults"
 import { rulesToOntologyFilters } from "@/lib/view-engine/graph-filter-adapter"
 import type { OntologyFilters } from "@/components/ontology/ontology-graph-canvas"
 import { Graph } from "@phosphor-icons/react/dist/ssr/Graph"
-import { CaretDown } from "@phosphor-icons/react/dist/ssr/CaretDown"
 import { Check } from "@phosphor-icons/react/dist/ssr/Check"
 import {
   DropdownMenu,
@@ -348,10 +347,9 @@ export function OntologyView() {
             <DropdownMenuTrigger asChild>
               <button
                 type="button"
-                className="inline-flex items-center gap-1 rounded px-1.5 -mx-1.5 py-0.5 hover:bg-hover-bg transition-colors duration-100"
+                className="inline-flex items-center rounded px-1.5 -mx-1.5 py-0.5 hover:bg-hover-bg transition-colors duration-100"
               >
-                <span>{tab === "graph" ? "Graph" : tab === "insights" ? "Insights" : "Dashboard"}</span>
-                <CaretDown size={10} weight="bold" className="text-muted-foreground/60" />
+                {tab === "graph" ? "Graph" : tab === "insights" ? "Insights" : "Dashboard"}
               </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="start" className="min-w-[140px]">
