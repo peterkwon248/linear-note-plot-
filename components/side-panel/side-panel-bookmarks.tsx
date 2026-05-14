@@ -292,6 +292,32 @@ export function SidePanelBookmarks() {
           onNavigate={navigateToBookmark}
         />
       )}
+      {/* Library entities (Tag / Sticker / File / Reference) carry no
+          inline content that can host anchors. The global bookmarks list
+          above is still cross-entity (works regardless of selection),
+          but there's no entity-local anchor surface to add. */}
+      {entity.type === "tag" && <EntityAnchorPlaceholder label="Tags" />}
+      {entity.type === "sticker" && <EntityAnchorPlaceholder label="Stickers" />}
+      {entity.type === "file" && <EntityAnchorPlaceholder label="Files" />}
+      {entity.type === "reference" && <EntityAnchorPlaceholder label="References" />}
+    </div>
+  )
+}
+
+/**
+ * EntityAnchorPlaceholder — empty-state for Library entities (Tag / Sticker
+ * / File / Reference) where anchor pinning isn't applicable (no inline
+ * contentJson, no wiki blocks). The global bookmarks list (above) still
+ * surfaces all pinned bookmarks cross-entity — this just clarifies why
+ * the entity-local section is empty.
+ */
+function EntityAnchorPlaceholder({ label }: { label: string }) {
+  return (
+    <div className="px-3 py-3 border-t border-border-subtle">
+      <p className="text-2xs text-muted-foreground/70 italic">
+        {label} don&apos;t carry inline anchors. Bookmarks pinned from notes
+        or wiki articles still appear above.
+      </p>
     </div>
   )
 }
