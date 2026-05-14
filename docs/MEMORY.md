@@ -8,6 +8,70 @@
 
 ---
 
+## 🚀 2026-05-14 (저녁) — PR #333 폴리시 7 commits (Linear-faithful sidebar + Ontology breadcrumb + search typo) ⭐⭐⭐⭐
+
+**범위**: 1 worktree (`claude/relaxed-hodgkin-5a2905`). 사용자 시그널 "Linear 정합 + 일관성 무조건 신경써" — Notes 정확 패턴 mirror 4차 iter.
+
+**PR**: **#333** (OPEN, manual verify 대기 후 머지)
+
+**7 commits** (한 흐름):
+- `3864651` polish(sidebar): typography + width (10.5→12px, weight 600→500, uppercase 제거, 220→240px)
+- `2bd44aa` feat(ontology): header breadcrumb (`ViewHeader.subtitle?: ReactNode` prop)
+- `62d2329` fix(ontology): subtitle → DropdownMenu trigger + CaretDown ⌄ (1차 사용자 시그널)
+- `64457ce` fix(ontology): CaretDown 제거 (2차)
+- `dde4122` fix(ontology): chevron `>` **자체**가 dropdown trigger (3차, Notes `NotePickerChevron` 정확 mirror)
+- `db7ff2c` feat(ontology): dropdown item 아이콘 + 활성 bg/text (4차)
+- `c9824cc` fix(search): `MagnifyingGlass` placeholder typo 5곳 → `Search`
+
+### 핵심 결정 (영구 LOCKED, 2026-05-14 저녁)
+
+**15. 사이드바 토큰 정합 룰** (`.a-sb-section__head` / `.a-sb-section__hint`):
+- font-size 12px (Plot 토큰 "보조 12px") / weight 500 / letter-spacing 0 / text-transform none
+- hint font-size 11px (Plot 토큰 "배지" 11px)
+- Linear 정합
+
+**16. 사이드바 너비 240px** (Linear 정합): `--sidebar-w` / `--sidebar-default-width` 220→240.
+
+**17. Breadcrumb 일관성 룰** (강한 사용자 시그널 "일관성 무조건 신경써", **영구 LOCKED**):
+- 모든 sub-view/sub-page entity 동일 패턴: `[Parent label]` → `[chevron > button → dropdown trigger]` → `[Active label]`
+- Notes `editor-breadcrumb.tsx:237 NotePickerChevron` **정확 mirror**
+- **chevron 자체가 button** (CaretDown ⌄ 등 추가 시그널 X)
+- DropdownMenuItem: 아이콘 + 라벨 + 활성 시 `bg-accent/10 text-accent` (Check icon 잉여)
+- Search input: 5개 이상 item일 때만. 3개 이하면 잉여.
+- **대상**: Ontology (DONE) / Library (TODO R1) / Wiki/Books (향후)
+
+**18. ViewHeader `subtitle` prop API**: `subtitle?: ReactNode` 그대로 렌더링 (chevron 자동 출력 X). 외부에서 chevron + label 직접 구성. Backward compat.
+
+**19. "엉망진창" 시그널 = 앱 전체 폴리시 PRD 필요**: 매 PR마다 fix 반복 = 비효율. R2부터 본격 PRD.
+
+**20. Linear 미러링 자료 통합 룰**: `.claude/skills/linear-design-mirror/` + `docs/reference/linear/` 50+ 스크린샷 + `GOTCHAS.md` 셋 다 활용.
+
+### 기술 학습 (영구)
+
+- **Notes breadcrumb 정확 패턴** (`editor-breadcrumb.tsx`): parent button + chevron PopoverTrigger button + title span
+- **DropdownMenuItem 활성 패턴**: `className={cn(active && "bg-accent/10 text-accent")}` (`editor-breadcrumb.tsx:132-141`)
+- **find-replace 사고 검출**: `"<IconName>\s+\w+"` grep 패턴. icon 이름이 string literal/comment에 있으면 사고. 이번 5곳 발견.
+- **Multi-server dev 환경 risk**: 매 fix 후 정확한 port URL + `preview_list` inventory 의무
+- **Browser cache risk**: 매 fix 후 hard refresh (Ctrl+Shift+R) 안내 의무
+- **Plot 토큰 vs CSS 갭**: DESIGN-TOKENS "보조 12px"인데 실 CSS 10.5px (토큰 위반). R2 audit에서 broader 점검.
+
+### 환경
+
+- Branch: `claude/relaxed-hodgkin-5a2905`
+- Store version: 변경 없음
+- API 확장 (backward compat): `ViewHeader.subtitle?: ReactNode` 신규 prop
+- 신규 파일: 없음 (모두 기존 수정)
+- CSS 토큰: `--sidebar-w` / `--sidebar-default-width` 220→240px
+
+### 다음 (TODO.md P0)
+
+🔴 **PR #333 manual verify 5 surface** + squash merge
+🟡 **R1 (작은 PR)**: Library breadcrumb (Notes/Ontology 패턴 mirror)
+🟡 **R2 (큰 그림)**: 앱 전체 폴리시 PRD 작성 (`linear-design-mirror` audit)
+🟡 **R3+**: 폴리시 PR 시리즈 / 커맨드 팔레트 ⌘K / 풀 검색 페이지 / Wiki·Books 폴더
+
+---
+
 ## 🚀 2026-05-14 (밤 후속) — 4 PR 추가 (PR 4a Template anchor + Library 확장 + Books table 일관성) ⭐⭐⭐⭐
 
 **범위**: 1 worktree (`brave-moore-ceaf44`). 낮~밤 6 PR 후속 — entity-uniformity PR 4 시작 + Library entity 확장 + Books table 시각 격자 통일.

@@ -6,6 +6,98 @@
 
 ---
 
+## 2026-05-14 (저녁) — 집/Windows, PR #333 폴리시 7 commits (Linear-faithful sidebar + Ontology breadcrumb + search typo fix)
+
+> 🎯 **다음 즉시 액션** (다른 머신 또는 다음 세션 진입점):
+> 1. `git pull origin main` (직전 머지 #332까지 반영 — PR #333은 아직 머지 안 됨)
+> 2. **다른 컴퓨터** branch checkout:
+>    - `git fetch origin claude/relaxed-hodgkin-5a2905`
+>    - `git worktree add ../<name> claude/relaxed-hodgkin-5a2905` (또는 checkout)
+>    - `npm install` (필수 — 새 worktree)
+>    - `npm run dev` → port 3002 (또는 random)
+>    - **Hard refresh (Ctrl+Shift+R) 의무**
+> 3. **PR #333 manual verify 5 surface** (7 commits 누적):
+>    - **a. 사이드바 헤더 폰트** (`/notes` `/wiki` `/books` `/home` 등): `Views` `Folders` `Pinned` `More` `Stats` 헤더가 **12px normal case** (이전 10.5px uppercase에서 변경)
+>    - **b. 사이드바 너비**: 220px → **240px** (Linear 정합)
+>    - **c. Ontology 헤더 breadcrumb**: `/ontology` → `Ontology > Graph` (chevron `>` **자체** 클릭 → dropdown). Insights/Dashboard 선택 시 헤더 업데이트
+>    - **d. Dropdown items**: Graph icon / IconInsight / ChartBar 아이콘 + 라벨, 활성 = `bg-accent/10 text-accent`
+>    - **e. Search typo fix**: 검색 input placeholder `"Search notes, tags, and more..."` (이전 `"MagnifyingGlass notes..."` 사고)
+> 4. OK → `gh pr merge 333 --squash`
+> 5. **R1 (다음 작은 PR)**: Library breadcrumb (Notes/Ontology 패턴 100% mirror — view-header.tsx subtitle 패턴 그대로 적용, library-view.tsx 헤더 수정)
+> 6. **R2 (큰 그림)**: 앱 전체 폴리시 PRD 작성 (`linear-design-mirror` skill audit + `docs/reference/linear/` 50+ 스크린샷 분석 → spec 도출)
+> 7. **R3+**: 폴리시 PR 시리즈 / 커맨드 팔레트 ⌘K 재설계 (자료 13장) / 풀 검색 페이지 신설 (자료 4장) / Wiki·Books 폴더
+>
+> **PR #333 7 commits 누적** (한 흐름):
+> - `3864651` polish(sidebar): typography + width (10.5/10px → 12/11px, weight 600→500, uppercase 제거, width 220→240px)
+> - `2bd44aa` feat(ontology): header breadcrumb 추가 (ViewHeader `subtitle?: ReactNode` prop + 정적 텍스트)
+> - `62d2329` fix(ontology): subtitle → DropdownMenu trigger button + CaretDown ⌄ (1차 사용자 시그널 fix)
+> - `64457ce` fix(ontology): CaretDown 제거 (2차 사용자 시그널, Notes 일관)
+> - `dde4122` fix(ontology): chevron `>` **자체**가 dropdown trigger (3차 사용자 시그널, Notes 정확 패턴 `NotePickerChevron` mirror)
+> - `db7ff2c` feat(ontology): dropdown item 아이콘 추가 + 활성 bg/text 색 (사용자 시그널: 아이콘+글자, search 잉여)
+> - `c9824cc` fix(search): `MagnifyingGlass` placeholder typo 5곳 fix (search-view, relation-picker, wiki-collection-sidebar, wiki-block-renderer, wiki-view)
+>
+> **머신**: 집 (Windows)
+> **worktree**: `claude/relaxed-hodgkin-5a2905`
+> **PR**: #333 (OPEN, manual verify 대기 후 squash merge)
+
+### 핵심 결정 (영구 LOCKED, 2026-05-14 저녁)
+
+**15. 사이드바 토큰 정합 룰** (`.a-sb-section__head` / `.a-sb-section__hint`):
+- font-size 12px (Plot 토큰 "보조 12px" 정합 — globals.css의 자체 fall-out 수정)
+- font-weight 500 (Linear 정합. 600은 너무 강조)
+- letter-spacing 0 (normal case에는 letter-spacing 0)
+- text-transform none (Linear는 normal case "Workspace" 패턴)
+- hint font-size 11px (Plot 토큰 "배지" 11px)
+
+**16. 사이드바 너비 240px** (Linear 정합): `--sidebar-w` / `--sidebar-default-width` 둘 다 220→240. Plot 다른 변수 `--a-sidebar-w` (240px)와 통일.
+
+**17. Breadcrumb 일관성 룰** (강한 사용자 시그널 "일관성 무조건 신경써", **영구 LOCKED**):
+- 모든 sub-view/sub-page entity 동일 패턴: `[Parent label]` → `[chevron > button → dropdown trigger]` → `[Active label]`
+- Notes `editor-breadcrumb.tsx:237 NotePickerChevron` **정확 mirror**
+- **chevron 자체가 button** (CaretDown ⌄ 등 추가 시그널 X)
+- DropdownMenuItem: 아이콘 + 라벨 + 활성 시 `bg-accent/10 text-accent` (Check icon 잉여)
+- Search input: 5개 이상 item일 때만 추가. 3개 이하면 잉여.
+- **대상**: Ontology (DONE) / Library (TODO 다음 R1) / Wiki/Books (향후 동일 적용 가능)
+
+**18. ViewHeader `subtitle` prop API**: `subtitle?: ReactNode` 그대로 렌더링 (chevron 자동 출력 X). 외부에서 chevron + label 직접 구성. Backward compat (다른 호출처 subtitle 미전달 → 기존 동작).
+
+**19. "엉망진창" 사용자 시그널 = 앱 전체 폴리시 PRD 필요** (영구): 매 PR마다 사용자 시그널 받고 fix 반복 = 비효율. PRD 한 번 작성해서 큰 그림 합의 후 진행. R2부터 본격.
+
+**20. Linear 미러링 자료 통합 룰**: `.claude/skills/linear-design-mirror/` 스킬 + `docs/reference/linear/` 50+ 스크린샷 + `GOTCHAS.md` 셋 다 활용. R2 PRD 작성 시 본격.
+
+### 기술 학습 (영구)
+
+- **Notes breadcrumb 정확 패턴** (`editor-breadcrumb.tsx`):
+  - `Notes` (parent) = button → `navigateToSpace` (note 닫고 list로)
+  - `>` chevron = `<PopoverTrigger asChild><button><IconChevronRight /></button></PopoverTrigger>` → 다른 노트 검색 popover
+  - `Quick Memo` (title) = static `<span>` (액션 없음)
+- **DropdownMenuItem 활성 패턴**: `className={cn(active && "bg-accent/10 text-accent")}` (Check icon 잉여, Plot 공식 패턴 — `editor-breadcrumb.tsx:132-141 SecondarySpaceSwitch`)
+- **find-replace 사고 검출법**: `"<IconName>\s+\w+"` grep 패턴. icon component 이름이 placeholder/comment string에 들어가있으면 글로벌 find-replace 사고. 이번 발견: `Search` → `MagnifyingGlass` 사고 5곳 (4 placeholder + 1 comment + 2 comment).
+- **Multi-server dev 환경 risk**: 한 사용자 컴퓨터에 dev server 2개 동시 (이전 worktree port 3002 + 새 worktree port 60384). 사용자가 stale 서버 보고 "fix 안 보인다" 보고. **매 fix 후 정확한 port URL 안내 + `preview_list` inventory 의무**.
+- **Browser cache risk**: Next.js HMR 정상 작동해도 브라우저 cache stale 가능. **매 fix 후 hard refresh (Ctrl+Shift+R) 안내 의무**.
+- **Plot 토큰 vs CSS 갭 발견**: DESIGN-TOKENS 정의 "보조 12px"인데 사이드바 globals.css는 10.5px (토큰 위반). 사용자 직관 "작다" = 토큰 갭 검출. 다른 CSS 토큰 갭 R2 audit에서 점검.
+- **사용자 시그널 자체 해석 룰**: "노트처럼" = Notes 코드 정확 읽고 mirror. "Graph 옆 ⌄" = chevron이 trigger인 듯한 미세 시그널. "엉망진창" = 큰 그림 PRD 필요. 직관 신중히.
+
+### Watch Out (다음 세션)
+
+- **PR #333 manual verify 5 surface 의무**: 7 commits 누적. 사용자가 직접 정확한 port + Hard refresh 후 검증.
+- **다른 글로벌 find-replace 사고 가능성**: `Search` → `MagnifyingGlass` 같은 사고가 다른 패턴에도 있을 수 있음. R2 audit에서 broader grep (다른 Phosphor icon 이름 검색).
+- **사이드바 spec 추가 audit 필요**: 그룹 헤더만 fix됨. 다른 사이드바 클래스 (`a-sb-link`, `a-sb-link__count`, `a-sb-title` 등) Plot 토큰 정합 확인 필요. `linear-design-mirror/references/surfaces/sidebar.md` 참고.
+- **NOTES/WIKI mini stat 카드 uppercase**: 사이드바 `NOTES 9` `WIKI 7` mini stat 카드는 여전히 uppercase. `a-sb-section` 클래스 아닌 별도 클래스 (확인 필요). 일관성 검토 R2 audit.
+- **dropdown content 일관성 본질**: Notes는 검색 input + list (검색 가능), Ontology는 라디오 메뉴 (3개 고정). 본질 다름 인정. Library 4 sub-page는 — 4개라 검색 input 잉여 가능 (확인).
+- **PR cascade 충돌 risk**: PR #333 7 commits squash 머지로 깔끔. R1 Library breadcrumb은 view-header.tsx 또 건드릴 가능성 — main 기반 진행 권장.
+
+### 환경 변경
+
+- Store version: 변경 없음
+- 신규 파일: 없음 (모두 기존 파일 수정)
+- API 확장 (backward compat):
+  - `ViewHeader.subtitle?: ReactNode` (신규 optional prop)
+- 데이터 모델 변경: 없음
+- CSS 토큰 변경: `--sidebar-w` 220→240, `--sidebar-default-width` 220→240
+
+---
+
 ## 2026-05-14 (밤 후속) — 집/Windows, 4 PR 추가 + Books table 일관성 통합 (entity-uniformity + Library 확장)
 
 > 🎯 **다음 즉시 액션** (다음 세션 또는 다른 머신):

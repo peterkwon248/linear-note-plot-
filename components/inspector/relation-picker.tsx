@@ -66,14 +66,14 @@ export function RelationPicker({ sourceNoteId, onAdd, onClose }: RelationPickerP
         ))}
       </div>
 
-      {/* MagnifyingGlass */}
+      {/* Search */}
       <div className="relative">
         <MagnifyingGlass className="absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground/60" size={14} weight="regular" />
         <input
           autoFocus
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          placeholder="MagnifyingGlass notes..."
+          placeholder="Search notes..."
           className="w-full pl-7 pr-2 py-1.5 text-note bg-secondary/50 border border-border rounded-md focus:outline-none focus:ring-1 focus:ring-ring"
         />
       </div>

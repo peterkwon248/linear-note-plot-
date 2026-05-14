@@ -51,6 +51,44 @@
 
 ---
 
+## 🚀 2026-05-14 (저녁) — PR #333 7 commits 폴리시 (Linear-faithful sidebar + Ontology breadcrumb + search typo) ⭐⭐⭐⭐
+
+**범위**: 1 worktree. 사용자 시그널 "Linear 정합 + 일관성 무조건 신경써" — Notes 정확 패턴 mirror 4차 iter.
+
+### 핵심 결정 (영구 LOCKED, 2026-05-14 저녁)
+
+**15. 사이드바 토큰 정합 룰** — `.a-sb-section__head` font-size 12px / weight 500 / letter-spacing 0 / text-transform none. hint 11px. Plot 토큰 "보조 12px" / "배지 11px" 정합.
+
+**16. 사이드바 너비 240px** (Linear 정합) — `--sidebar-w` / `--sidebar-default-width` 220→240.
+
+**17. Breadcrumb 일관성 룰** (강한 사용자 시그널 "일관성 무조건 신경써"):
+- 모든 sub-view/sub-page entity 동일 패턴: `[Parent label]` → `[chevron > button → dropdown trigger]` → `[Active label]`
+- Notes `editor-breadcrumb.tsx:237 NotePickerChevron` 정확 mirror
+- chevron 자체가 button (CaretDown ⌄ 등 시그널 X)
+- DropdownMenuItem: 아이콘 + 라벨 + 활성 `bg-accent/10 text-accent` (Check icon 잉여)
+- Search input: 5개 이상 item일 때만
+
+**18. ViewHeader `subtitle` prop API** — `subtitle?: ReactNode` 그대로 렌더링 (chevron 자동 출력 X). 외부에서 직접 구성.
+
+**19. "엉망진창" 시그널 = 앱 전체 폴리시 PRD 필요** — 매 PR fix 반복 = 비효율. R2부터 PRD 본격.
+
+**20. Linear 미러링 자료 통합 룰** — `.claude/skills/linear-design-mirror/` + `docs/reference/linear/` 50+ 스크린샷 + `GOTCHAS.md` 셋 다 활용.
+
+### 새 사례 (재발 방지)
+
+- 2026-05-14 (저녁) — find-replace 사고 검출: `Search` → `MagnifyingGlass` 글로벌 사고 흔적 5곳 발견. icon component 이름이 placeholder string에 textual로 잔존. **교훈: 글로벌 find-replace 후 string literal + comment까지 검수 의무. 검출 grep `"<IconName>\s+\w+"`**.
+- 2026-05-14 (저녁) — Multi-server worktree risk: dev server 2개 동시 (port 3002 이전 worktree + port 60384 새 worktree). 사용자가 stale 서버 보고 "fix 안 보인다" 보고. **교훈: 매 fix 후 정확한 port URL 안내 + `preview_list` inventory 의무**.
+- 2026-05-14 (저녁) — Browser cache risk: HMR 작동해도 브라우저 cache stale 가능. **교훈: 매 fix 후 hard refresh (Ctrl+Shift+R) 안내 의무**.
+- 2026-05-14 (저녁) — 4차 iter (subtitle→dropdown→CaretDown 제거→chevron-as-trigger→아이콘 추가): 매번 사용자 시그널 받고 fix 반복. **교훈: Notes 코드 정확 읽고 mirror 먼저. 추측 X. R2 PRD 작성 후 단번에 진행이 정석**.
+
+### 다음 (TODO.md P0)
+
+🔴 **PR #333 verify** (다른 컴퓨터 — branch checkout + 5 surface)
+🟡 **R1 (작은 PR)**: Library breadcrumb (Notes/Ontology 패턴 100% mirror)
+🟡 **R2 (큰 그림)**: 앱 전체 폴리시 PRD 작성
+
+---
+
 ## 🚀 2026-05-14 (밤 후속) — 4 PR 추가 (PR 4a Template anchor + Library 확장 + Books table 일관성) ⭐⭐⭐⭐
 
 **범위**: 낮~밤 6 PR 후속. PR #329-#331 + PR #326 update.

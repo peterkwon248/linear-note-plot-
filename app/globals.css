@@ -73,7 +73,7 @@
 
   /* v3 Layout spine (alias to Plot) */
   --activity-bar-w: 44px;
-  --sidebar-w:      220px;
+  --sidebar-w:      240px;
   --header-h:       52px;
   --workspace-header-h: 44px;
 
@@ -183,7 +183,7 @@
   /* Layout Spine */
   --header-height: 52px;
   --activity-bar-width: 44px;
-  --sidebar-default-width: 220px;
+  --sidebar-default-width: 240px;
 
   /* Transition Spine */
   --transition-fast: 120ms ease;
@@ -842,14 +842,14 @@
   gap: 4px;
   padding: 4px 8px 4px 10px;
   color: var(--sidebar-muted);
-  font-size: 10.5px;
-  font-weight: 600;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0;
+  text-transform: none;
 }
 .a-sb-section__hint {
   margin-left: auto;
-  font-size: 10px;
+  font-size: 11px;
   color: var(--sidebar-count);
   font-weight: 500;
   letter-spacing: 0;

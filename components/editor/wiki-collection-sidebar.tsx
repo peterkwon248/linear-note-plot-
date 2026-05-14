@@ -327,7 +327,7 @@ function AddNotePopover({
             autoFocus
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="MagnifyingGlass notes..."
+            placeholder="Search notes..."
             className="flex-1 text-note bg-transparent outline-none placeholder:text-muted-foreground"
           />
         </div>
