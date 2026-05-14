@@ -253,6 +253,14 @@ export function SidePanelBookmarks() {
           </p>
         </div>
       )}
+      {/* Books — same story (GlobalBookmark.targetKind extension pending). */}
+      {entity.type === "book" && (
+        <div className="px-3 py-3 border-t border-border-subtle">
+          <p className="text-2xs text-muted-foreground/70 italic">
+            Anchor bookmarks in books are not yet available.
+          </p>
+        </div>
+      )}
     </div>
   )
 }

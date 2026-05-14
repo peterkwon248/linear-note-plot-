@@ -3,6 +3,8 @@
 import { useMemo, useState, useCallback, useEffect, useRef } from "react"
 import { formatDistanceToNow } from "date-fns"
 import { usePlotStore } from "@/lib/store"
+import { resolveBookItems } from "@/lib/books/resolver"
+import { isWikiStub } from "@/lib/wiki-utils"
 import { getBody, getAllBodies } from "@/lib/note-body-store"
 import { extractMentionTargets } from "@/lib/body-helpers"
 import { ensureMentionIndexBuilt, getMentionSources } from "@/lib/mention-index-store"
@@ -404,7 +406,7 @@ function WikiArticleConnections() {
 // ── Main Component ───────────────────────────────────────
 
 export function SidePanelConnections() {
-  // Check sidePanelContext for wiki / template branch
+  // Check sidePanelContext for wiki / template / book branch
   const sidePanelContext = usePlotStore((s) => s.sidePanelContext)
 
   if (sidePanelContext?.type === "wiki") {
@@ -415,7 +417,218 @@ export function SidePanelConnections() {
     return <TemplateConnections />
   }
 
+  if (sidePanelContext?.type === "book") {
+    return <BookConnections />
+  }
+
   return <NoteConnections />
+}
+
+// ── Book Connections ─────────────────────────────────────
+// "Items by kind & status" — the primary connection surface for a book.
+// Notes are grouped by NoteStatus (Stone/Brick/Block); wiki articles by
+// Stub vs Article (computed via `isWikiStub`); chapters split out as
+// their own count. Smart sources (Smart/Hybrid kind) show beneath as a
+// derived list — the resolver already feeds the count, this just maps
+// it back to the source-kind labels for context.
+
+function BookConnections() {
+  const entity = useSidePanelEntity()
+  const book = entity.type === "book" ? entity.book : null
+  const notes = usePlotStore((s) => s.notes)
+  const folders = usePlotStore((s) => s.folders)
+  const wikiArticles = usePlotStore((s) => s.wikiArticles)
+  const wikiCategories = usePlotStore((s) => s.wikiCategories)
+  const tags = usePlotStore((s) => s.tags)
+  const labels = usePlotStore((s) => s.labels)
+  const stickers = usePlotStore((s) => s.stickers)
+  const openInSecondary = usePlotStore((s) => s.openInSecondary)
+
+  const resolved = useMemo(() => {
+    if (!book) return [] as ResolvedBookItemLite[]
+    return resolveBookItems(book, {
+      notes,
+      folders,
+      wikiArticles,
+      wikiCategories,
+      tags,
+      labels,
+      stickers,
+    })
+  }, [book, notes, folders, wikiArticles, wikiCategories, tags, labels, stickers])
+
+  // Group by kind → status. For notes, status is from Note.status; for
+  // wikis we derive Stub vs Article via `isWikiStub`. Resolver items
+  // already filter trashed entities, so the counts are accurate.
+  const breakdown = useMemo(() => {
+    const noteStatus = { stone: 0, brick: 0, keystone: 0 } as Record<string, number>
+    const wikiStatus = { stub: 0, article: 0 }
+    let chaptersCount = 0
+    const noteIds: string[] = []
+    const wikiIds: string[] = []
+    for (const r of resolved) {
+      if (r.kind === "note") {
+        const n = notes.find((x) => x.id === r.refId)
+        if (!n) continue
+        noteIds.push(n.id)
+        const s = n.status ?? "stone"
+        noteStatus[s] = (noteStatus[s] ?? 0) + 1
+      } else if (r.kind === "wiki") {
+        const a = wikiArticles.find((x) => x.id === r.refId)
+        if (!a) continue
+        wikiIds.push(a.id)
+        if (isWikiStub(a)) wikiStatus.stub++
+        else wikiStatus.article++
+      } else if (r.kind === "chapter-heading") {
+        chaptersCount++
+      }
+    }
+    return { noteStatus, wikiStatus, chaptersCount, noteIds, wikiIds }
+  }, [resolved, notes, wikiArticles])
+
+  const smartSources = useMemo(() => {
+    if (!book?.smartSources) return []
+    return book.smartSources.map((s) => {
+      let label = ""
+      switch (s.kind) {
+        case "folder":
+          label = folders.find((x) => x.id === s.refId)?.name ?? "(removed folder)"
+          break
+        case "category":
+          label = wikiCategories.find((x) => x.id === s.refId)?.name ?? "(removed category)"
+          break
+        case "tag":
+          label = tags.find((x) => x.id === s.refId)?.name ?? "(removed tag)"
+          break
+        case "label":
+          label = labels.find((x) => x.id === s.refId)?.name ?? "(removed label)"
+          break
+        case "sticker":
+          label = stickers.find((x) => x.id === s.refId)?.name ?? "(removed sticker)"
+          break
+      }
+      return { kind: s.kind, refId: s.refId, label }
+    })
+  }, [book?.smartSources, folders, wikiCategories, tags, labels, stickers])
+
+  if (!book) {
+    return (
+      <div className="flex flex-1 items-center justify-center p-8 text-center">
+        <p className="text-note text-muted-foreground">
+          Select a book to see connections
+        </p>
+      </div>
+    )
+  }
+
+  const totalNotes = breakdown.noteStatus.stone + breakdown.noteStatus.brick + breakdown.noteStatus.keystone
+  const totalWikis = breakdown.wikiStatus.stub + breakdown.wikiStatus.article
+  const itemsCount = totalNotes + totalWikis + breakdown.chaptersCount
+
+  return (
+    <div className="flex-1 overflow-y-auto">
+      {/* Items by kind & status */}
+      <ConnectionSection
+        title="Items"
+        icon={<LinkSimple size={14} weight="regular" />}
+        count={itemsCount}
+        defaultOpen
+      >
+        {itemsCount === 0 ? (
+          <p className="text-note text-muted-foreground px-2">
+            No items in this book yet
+          </p>
+        ) : (
+          <div className="space-y-3">
+            {/* Notes by status */}
+            {totalNotes > 0 && (
+              <div className="space-y-0.5">
+                <KindHeader label="Notes" count={totalNotes} />
+                <StatusRow label="Stone" count={breakdown.noteStatus.stone} colorVar="var(--status-stone)" />
+                <StatusRow label="Brick" count={breakdown.noteStatus.brick} colorVar="var(--status-brick)" />
+                <StatusRow label="Block" count={breakdown.noteStatus.keystone} colorVar="var(--status-keystone)" />
+              </div>
+            )}
+            {/* Wikis by stub/article */}
+            {totalWikis > 0 && (
+              <div className="space-y-0.5">
+                <KindHeader label="Wikis" count={totalWikis} />
+                <StatusRow label="Stub" count={breakdown.wikiStatus.stub} colorVar="var(--muted-foreground)" />
+                <StatusRow label="Article" count={breakdown.wikiStatus.article} colorVar="var(--chart-1)" />
+              </div>
+            )}
+            {/* Chapters */}
+            {breakdown.chaptersCount > 0 && (
+              <div className="space-y-0.5">
+                <KindHeader label="Chapters" count={breakdown.chaptersCount} />
+              </div>
+            )}
+          </div>
+        )}
+      </ConnectionSection>
+
+      {/* Smart Sources (Smart/Hybrid only) */}
+      {smartSources.length > 0 && (
+        <ConnectionSection
+          title="Smart sources"
+          icon={<Compass size={14} weight="regular" />}
+          count={smartSources.length}
+          defaultOpen={false}
+        >
+          <div className="space-y-0.5">
+            {smartSources.map((s, i) => (
+              <div
+                key={`${s.kind}-${s.refId}-${i}`}
+                className="flex items-center gap-2 px-2 py-0.5 text-note text-muted-foreground"
+              >
+                <span className="uppercase tracking-wider text-[9px] text-muted-foreground/60 w-14 shrink-0">
+                  {s.kind}
+                </span>
+                <span className="truncate flex-1 text-foreground/80">{s.label}</span>
+              </div>
+            ))}
+          </div>
+        </ConnectionSection>
+      )}
+    </div>
+  )
+}
+
+// Lite type alias to keep BookConnections decoupled from resolver's full
+// ResolvedBookItem (we only need kind/refId/source here).
+type ResolvedBookItemLite = { kind: string; refId?: string; source?: string }
+
+function KindHeader({ label, count }: { label: string; count: number }) {
+  return (
+    <div className="flex items-center gap-1 px-2 mb-0.5">
+      <SubLabel>{label}</SubLabel>
+      <span className="text-2xs text-muted-foreground/70 tabular-nums">{count}</span>
+    </div>
+  )
+}
+
+function StatusRow({
+  label,
+  count,
+  colorVar,
+}: {
+  label: string
+  count: number
+  colorVar: string
+}) {
+  if (count === 0) return null
+  return (
+    <div className="flex items-center gap-2 px-3 py-0.5 text-note">
+      <span
+        className="h-2 w-2 rounded-full shrink-0"
+        style={{ backgroundColor: colorVar }}
+      />
+      <span className="text-muted-foreground">{label}</span>
+      <span className="ml-auto text-2xs text-muted-foreground/70 tabular-nums">
+        {count}
+      </span>
+    </div>
+  )
 }
 
 // ── Template Connections ─────────────────────────────────

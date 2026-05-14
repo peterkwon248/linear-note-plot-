@@ -32,6 +32,7 @@ export type SidePanelContext =
   | { type: "wiki"; id: string }
   | { type: "reference"; id: string }
   | { type: "template"; id: string }
+  | { type: "book"; id: string }
   | null
 
 /**
