@@ -1,3 +1,5 @@
+import type { WikiBlock } from "@/lib/types"
+
 export interface AnchorItem {
   id: string
   label: string
@@ -53,6 +55,53 @@ function extractTextFromNode(node: any): string {
   if (node.type === "text") return node.text || ""
   if (!node.content) return ""
   return node.content.map(extractTextFromNode).join("")
+}
+
+/**
+ * Extract anchors from a WikiArticle's blocks array.
+ *
+ * Wiki blocks are structurally different from Note contentJson — articles
+ * are assembled from a sequence of typed blocks (section / text / image /
+ * table / ...). Anchor sources:
+ *   - `section` block → "heading"-typed anchor. block.id as anchor id,
+ *     block.title as label. (Sections are the natural headings of a wiki
+ *     article — see WikiBlockType.)
+ *   - `text` block with contentJson → recurse via
+ *     extractAnchorsFromContentJson (anchorMark / anchorDivider / heading
+ *     inside the TipTap document).
+ *   - Other block types (image / table / url / navbox / banner / nav /
+ *     note-ref) — no anchor surface, skipped.
+ *
+ * PR 4b (entity-side-panel-uniformity) — extends anchor pinning to Wiki
+ * articles. Pairs with `extractAnchorsFromContentJson` (notes/templates).
+ * GlobalBookmark.targetKind="wiki" is already supported by the data model,
+ * so this enables the Wiki Bookmarks surface end-to-end.
+ */
+export function extractAnchorsFromWikiBlocks(blocks: WikiBlock[] | undefined): AnchorItem[] {
+  if (!blocks?.length) return []
+
+  const items: AnchorItem[] = []
+
+  for (const block of blocks) {
+    if (block.type === "section") {
+      // Section heading — primary outline anchor for wiki articles.
+      const title = block.title?.trim()
+      if (title) {
+        items.push({
+          id: block.id,
+          label: title,
+          type: "heading",
+        })
+      }
+    } else if (block.type === "text" && block.contentJson) {
+      // Inline anchors / sub-headings inside a text block's TipTap doc.
+      // Reuse the note extractor — same node shapes.
+      items.push(...extractAnchorsFromContentJson(block.contentJson))
+    }
+    // Other block types carry no anchor-able content.
+  }
+
+  return items
 }
 
 /* ── Outline extraction ─────────────────────────────────── */
