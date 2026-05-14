@@ -8,6 +8,183 @@
 
 ---
 
+## 🚀 2026-05-14 (저녁) — PR #333 폴리시 7 commits (Linear-faithful sidebar + Ontology breadcrumb + search typo) ⭐⭐⭐⭐
+
+**범위**: 1 worktree (`claude/relaxed-hodgkin-5a2905`). 사용자 시그널 "Linear 정합 + 일관성 무조건 신경써" — Notes 정확 패턴 mirror 4차 iter.
+
+**PR**: **#333** (OPEN, manual verify 대기 후 머지)
+
+**7 commits** (한 흐름):
+- `3864651` polish(sidebar): typography + width (10.5→12px, weight 600→500, uppercase 제거, 220→240px)
+- `2bd44aa` feat(ontology): header breadcrumb (`ViewHeader.subtitle?: ReactNode` prop)
+- `62d2329` fix(ontology): subtitle → DropdownMenu trigger + CaretDown ⌄ (1차 사용자 시그널)
+- `64457ce` fix(ontology): CaretDown 제거 (2차)
+- `dde4122` fix(ontology): chevron `>` **자체**가 dropdown trigger (3차, Notes `NotePickerChevron` 정확 mirror)
+- `db7ff2c` feat(ontology): dropdown item 아이콘 + 활성 bg/text (4차)
+- `c9824cc` fix(search): `MagnifyingGlass` placeholder typo 5곳 → `Search`
+
+### 핵심 결정 (영구 LOCKED, 2026-05-14 저녁)
+
+**15. 사이드바 토큰 정합 룰** (`.a-sb-section__head` / `.a-sb-section__hint`):
+- font-size 12px (Plot 토큰 "보조 12px") / weight 500 / letter-spacing 0 / text-transform none
+- hint font-size 11px (Plot 토큰 "배지" 11px)
+- Linear 정합
+
+**16. 사이드바 너비 240px** (Linear 정합): `--sidebar-w` / `--sidebar-default-width` 220→240.
+
+**17. Breadcrumb 일관성 룰** (강한 사용자 시그널 "일관성 무조건 신경써", **영구 LOCKED**):
+- 모든 sub-view/sub-page entity 동일 패턴: `[Parent label]` → `[chevron > button → dropdown trigger]` → `[Active label]`
+- Notes `editor-breadcrumb.tsx:237 NotePickerChevron` **정확 mirror**
+- **chevron 자체가 button** (CaretDown ⌄ 등 추가 시그널 X)
+- DropdownMenuItem: 아이콘 + 라벨 + 활성 시 `bg-accent/10 text-accent` (Check icon 잉여)
+- Search input: 5개 이상 item일 때만. 3개 이하면 잉여.
+- **대상**: Ontology (DONE) / Library (TODO R1) / Wiki/Books (향후)
+
+**18. ViewHeader `subtitle` prop API**: `subtitle?: ReactNode` 그대로 렌더링 (chevron 자동 출력 X). 외부에서 chevron + label 직접 구성. Backward compat.
+
+**19. "엉망진창" 시그널 = 앱 전체 폴리시 PRD 필요**: 매 PR마다 fix 반복 = 비효율. R2부터 본격 PRD.
+
+**20. Linear 미러링 자료 통합 룰**: `.claude/skills/linear-design-mirror/` + `docs/reference/linear/` 50+ 스크린샷 + `GOTCHAS.md` 셋 다 활용.
+
+### 기술 학습 (영구)
+
+- **Notes breadcrumb 정확 패턴** (`editor-breadcrumb.tsx`): parent button + chevron PopoverTrigger button + title span
+- **DropdownMenuItem 활성 패턴**: `className={cn(active && "bg-accent/10 text-accent")}` (`editor-breadcrumb.tsx:132-141`)
+- **find-replace 사고 검출**: `"<IconName>\s+\w+"` grep 패턴. icon 이름이 string literal/comment에 있으면 사고. 이번 5곳 발견.
+- **Multi-server dev 환경 risk**: 매 fix 후 정확한 port URL + `preview_list` inventory 의무
+- **Browser cache risk**: 매 fix 후 hard refresh (Ctrl+Shift+R) 안내 의무
+- **Plot 토큰 vs CSS 갭**: DESIGN-TOKENS "보조 12px"인데 실 CSS 10.5px (토큰 위반). R2 audit에서 broader 점검.
+
+### 환경
+
+- Branch: `claude/relaxed-hodgkin-5a2905`
+- Store version: 변경 없음
+- API 확장 (backward compat): `ViewHeader.subtitle?: ReactNode` 신규 prop
+- 신규 파일: 없음 (모두 기존 수정)
+- CSS 토큰: `--sidebar-w` / `--sidebar-default-width` 220→240px
+
+### 다음 (TODO.md P0)
+
+🔴 **PR #333 manual verify 5 surface** + squash merge
+🟡 **R1 (작은 PR)**: Library breadcrumb (Notes/Ontology 패턴 mirror)
+🟡 **R2 (큰 그림)**: 앱 전체 폴리시 PRD 작성 (`linear-design-mirror` audit)
+🟡 **R3+**: 폴리시 PR 시리즈 / 커맨드 팔레트 ⌘K / 풀 검색 페이지 / Wiki·Books 폴더
+
+---
+
+## 🚀 2026-05-14 (밤 후속) — 4 PR 추가 (PR 4a Template anchor + Library 확장 + Books table 일관성) ⭐⭐⭐⭐
+
+**범위**: 1 worktree (`brave-moore-ceaf44`). 낮~밤 6 PR 후속 — entity-uniformity PR 4 시작 + Library entity 확장 + Books table 시각 격자 통일.
+
+**PR 목록**:
+- **#329** feat: Template anchor pinning (PR 4a — GlobalBookmark.targetKind 확장)
+- **#330** fix: Library list view row divider 제거 (Notes/Wiki 일관성)
+- **#331** feat: Library Files Detail panel 신설 (entity-uniformity 확장)
+- **#326 update**: Books table checkbox column w-6 → w-8 (Notes 일관성 통합)
+
+### 추가 핵심 결정 (영구 LOCKED, 2026-05-14 밤 후속)
+
+**10. GlobalBookmark.targetKind 확장 패턴** — optional 필드 enum 확장 (backward compat). 같은 패턴 미래 "book" 추가도 가능.
+
+**11. NoteLocalAnchors entity-agnostic 재사용** — prop name "note"는 legacy artifact. 실제 의존성은 `{ id, contentJson }` shape. Template 객체 그대로 호환.
+
+**12. Library entity도 4탭 사이드바 통합** (entity-uniformity 확장) — Files/Tags/References/Stickers. Reference는 이미 panel 있음. Files (#331) 완료, Tags/Stickers 다음 세션.
+
+**13. Files Detail panel 본질 — Source + Used in cross-reference** — Plot 패턴 정합. attachment.noteId = source, wiki blocks attachmentId = used in. 이미지 thumbnail.
+
+**14. Notes/Books table 시각 격자 통일 영구 룰**:
+- 행 구분선 X (둘 다 flat) — hover bg만으로 row separation
+- Checkbox column w-8 (32px) — entity 무관 동일
+- 모든 entity table은 같은 격자 적용 (Notes/Wiki/Books/Library)
+
+### 기술 학습 추가 (영구)
+
+- **Optional 데이터 모델 확장 패턴** — enum 확장 (backward compat, 마이그레이션 X)
+- **Legacy artifact prop name 재사용** — entity-agnostic shape면 그대로 재사용. rename은 polish PR.
+- **사용자 시그널 "다 순차"** — 같은 패턴 작업 시리즈는 분리 PR로 (manual verify 쉬움, 머지 충돌 risk ↓)
+- **PR cascade base 결정 룰**: 데이터 모델 의존성 없으면 main 기반, 컴포넌트 의존성 있으면 cascade
+- **attachment cross-reference 추적**: noteId (1:1 source) + wiki blocks attachmentId reference (cross-entity)
+
+### 환경
+- Branch: `claude/sync-2026-05-14-evening`
+- Store version: 변경 없음 (모든 변경은 derive view 또는 optional 필드)
+- 신규 파일: `components/side-panel/file-detail-panel.tsx`
+- 데이터 모델 확장 (optional, backward compat):
+  - `GlobalBookmark.targetKind`에 "template" 추가
+  - `SidePanelContext`에 "file" type 추가
+
+### 다음 (TODO.md P0)
+
+🔴 **사용자 manual verify** 누적 9 PR (#322-#327 + #329-#331) — dev hard refresh 후 한 번에 검증
+🟡 **다음 PR 후보** (P1):
+- Library Tags Detail panel + Stickers Detail panel
+- Ontology legend redesign (Option A + B: icon silhouette + entity 그룹화)
+- PR 4b Wiki blocks anchor extractor
+- PR 5 Activity entity-agnostic 통합 (별도 PRD 필수)
+
+---
+
+## 🚀 2026-05-14 (낮~밤) — 6 PR 누적 (entity-side-panel-uniformity + time grouping + books-divider) ⭐⭐⭐⭐⭐
+
+**범위**: 1 worktree (`brave-moore-ceaf44`). 단일 세션 6 PR 푸시. 사용자 시그널 "Plot UI 일관성: 4탭 사이드바 모든 entity 공통" 추진.
+
+**PR 목록**:
+- **#322** feat: Template Detail 재설계 + 4탭 entity별 분기 + Wiki Stub badge fix (PR 1)
+- **#323** feat: Book 우측 사이드바 신설 + Items by kind & status (PR 2)
+- **#324** feat: Connections 분류 stats Note/Wiki/Template 확장 (PR 3)
+- **#325** feat: Book Bookmarks "IN THIS BOOK" context filter (PR 4 — 방향 4)
+- **#326** fix: Books list view row divider 제거 (Notes/Wiki 일관성)
+- **#327** feat: Time grouping ("Updated" 5단) 모든 entity 적용
+
+### 핵심 결정 (영구 LOCKED, 2026-05-14)
+
+**1. 모든 entity 4탭 사이드바 통일** — Plot UI 일관성. Detail 자유 / 4탭 골격 공유. (`useSidePanelEntity` book 분기, SidePanelContext type 확장)
+
+**2. Properties = stats only** — 분류 메타는 별도 섹션. 각 entity별 본질 stats (Note Words/Chars/Headings/Source, Wiki Blocks/Sections/Text blocks/Note refs/Images/Layout, Template Words/Chars/Headings/Placeholders, Book Total/Notes/Wikis/Chapters/Smart/Manual).
+
+**3. Template = recipe, not collaboration** — Activity Comments 의도적 제외. "Template → Note" 변환 metaphor.
+
+**4. Connections 분류 stats 패턴** — kind & status 2단 (Notes → Stone/Brick/Block, Wikis → Stub/Article). `NoteStatusBreakdown` / `WikiStatusBreakdown` 공통 컴포넌트. dot + count, 0 status hide.
+
+**5. "Used by N notes" event log reverse-lookup** — `noteEvents.created.meta.templateId` 기반. 신규 데이터 모델 없음. 다른 entity-cross "사용 추적"도 같은 패턴.
+
+**6. Book Bookmarks "IN THIS BOOK" pure derive filter** — Book entity contentJson 없음 → 직접 anchor 불가. 책의 items의 anchor만 자동 grouping. `resolveBookItems` 활용 Smart/Hybrid 호환. 데이터 모델 변경 없음.
+
+**7. Wiki Stub vs Article badge** — `isWikiStub()` 기반. `IconWikiStub`/`IconWikiArticle` + muted/accent 색상 분리.
+
+**8. Time grouping 5단 ("Updated" 기준)** — Today/Yesterday/This Week/This Month/Older. Yesterday는 isThisWeek 전 체크 (week boundary edge case). 빈 bucket hide. 모든 entity (Notes/Wiki/Templates/Books) entity-specific pipeline에서 동일 로직.
+
+**9. Books list view row divider X** — flat (Notes/Wiki 일관성). hover bg만으로 row separation.
+
+### 기술 학습 (영구)
+
+- **entity별 사이드바 자유 + 4탭 골격 공유** — Plot UI 일관성. `useSidePanelEntity` entity-aware dispatch + 4 sub-panel branch (Detail/Connections/Activity/Bookmarks).
+- **`sidePanelContext` type 확장 패턴** — entity 추가 시 `{ type: "<kind>"; id }` union 확장 → useSidePanelEntity 분기 → 4 dispatch에 case → 신규 *DetailPanel 컴포넌트 신설.
+- **`noteEvents.meta.templateId`로 reverse-lookup** — 데이터 모델 신규 없이 "Used by N" 추적. event log 이미 있으면 활용 우선.
+- **`isWikiStub()` contentJson-only 헬퍼** — note outline extraction 같은 패턴. 재사용성 ↑.
+- **resolveBookItems의 ResolverStore** — 7 store hook (notes/folders/wikiArticles/wikiCategories/tags/labels/stickers) 한 번에. Smart/Hybrid/Manual book 통합 view.
+- **Plot `updateBook` direct pattern** — 별도 toggle* 액션 없이 `updateBook(id, { pinned: !pinned })` 직접 사용. `togglePin`은 note 전용.
+- **"date" GroupBy 누락 fix** — type union 정의는 있지만 VALID_GROUP_BY 검증 list 누락. 동기화 의무 (마이그레이션 fallback에 쓰임).
+- **빈 bucket filter 한 줄** — `.filter((key) => buckets[key].length > 0)`. 모든 grouping에 적용 가능.
+
+### 환경
+- Branch: `claude/sync-2026-05-14` (sync commit)
+- Store version: 변경 없음 (모두 derive view + UI 변경)
+- 신규 파일: `components/side-panel/book-detail-panel.tsx`, `.omc/plans/entity-side-panel-uniformity-prd.md`
+- 신규 컴포넌트: `BookDetailPanel`, `BookContextBookmarks`, `NoteStatusBreakdown`, `WikiStatusBreakdown`, `DotCount`
+- 신규 helper: `countPlaceholders` + `PLACEHOLDER_PATTERN` (templates.ts), `BookKind`/`getBookKind` 재사용
+- view-engine 확장: `VALID_GROUP_BY`에 `"date"` 등록 + cross-entity groupings
+
+### 다음 (TODO.md P0)
+
+🔴 **사용자 manual verify**: 6 PR 효과 dev hard refresh 후 7 surface 점검 (Template Detail / Wiki Stub / Book 사이드바 4탭 / Connections status dots / Book Bookmarks IN THIS BOOK / Books divider X / Time grouping 5단).
+🟡 **다음 PR 후보** (PRD §4):
+- **PR 4a** Template anchor pinning (`GlobalBookmark.targetKind` 확장 + Template anchor UI)
+- **PR 4b** Wiki blocks anchor extractor
+- **PR 5** Activity entity-agnostic 통합 (별도 PRD 작성 후)
+
+---
+
 ## 🚀 2026-05-13 (밤) — PR #321 11 commits (Status 색 재정렬 + Templates UpNote 패턴 + 9 follow-up)
 
 **범위**: 1 worktree (`elegant-jepsen-2b3731`). PR #319 manual verify로 발견된 13 시그널 누적 한 PR. 18 files modified + 2 신규 (`templates-picker-dialog.tsx`, `empty-hint-placeholder.ts`).

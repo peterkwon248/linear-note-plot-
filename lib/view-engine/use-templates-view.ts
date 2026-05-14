@@ -1,6 +1,7 @@
 "use client"
 
 import { useMemo, useCallback } from "react"
+import { isToday, isYesterday, isThisWeek, isThisMonth } from "date-fns"
 import { usePlotStore } from "../store"
 import type { ViewState, ViewContextKey, FilterRule, SortRule, GroupBy } from "./types"
 import { buildViewStateForContext } from "./defaults"
@@ -182,6 +183,32 @@ function applyTemplateGrouping(
     if (noFolder.length > 0) {
       groups.push({ key: "_no_folder", label: "No Folder", templates: noFolder })
     }
+    return groups
+  }
+
+  // 2026-05-14 time grouping: 5-tier Updated bucket (Today / Yesterday /
+  // This Week / This Month / Older). Mirrors Notes/Wiki/Books date bucket
+  // logic. Empty buckets are hidden to reduce UI noise.
+  if (groupBy === "date") {
+    const today: NoteTemplate[] = []
+    const yesterday: NoteTemplate[] = []
+    const thisWeek: NoteTemplate[] = []
+    const thisMonth: NoteTemplate[] = []
+    const older: NoteTemplate[] = []
+    for (const t of templates) {
+      const d = new Date(t.updatedAt)
+      if (isToday(d)) today.push(t)
+      else if (isYesterday(d)) yesterday.push(t)
+      else if (isThisWeek(d, { weekStartsOn: 1 })) thisWeek.push(t)
+      else if (isThisMonth(d)) thisMonth.push(t)
+      else older.push(t)
+    }
+    const groups: TemplateGroup[] = []
+    if (today.length > 0)     groups.push({ key: "date-today",     label: "Today",      templates: today })
+    if (yesterday.length > 0) groups.push({ key: "date-yesterday", label: "Yesterday",  templates: yesterday })
+    if (thisWeek.length > 0)  groups.push({ key: "date-week",      label: "This Week",  templates: thisWeek })
+    if (thisMonth.length > 0) groups.push({ key: "date-month",     label: "This Month", templates: thisMonth })
+    if (older.length > 0)     groups.push({ key: "date-older",     label: "Older",      templates: older })
     return groups
   }
 
