@@ -4,7 +4,16 @@ import { useSidePanelEntity } from "./use-side-panel-entity"
 import { ActivityTimeline } from "@/components/activity/activity-timeline"
 import { CommentsByEntity } from "@/components/comments/comments-by-entity"
 import { ClockCounterClockwise } from "@phosphor-icons/react/dist/ssr/ClockCounterClockwise"
+import type { EntityRef } from "@/lib/types"
 
+/**
+ * SidePanelActivity — entity-aware Activity tab.
+ *
+ * PR 5d (activity-unification, 2026-05-14): entityEvents 완비 후 모든 entity
+ * (Note / Wiki / Template / Book / Tag / Sticker / File / Reference) 의
+ * Activity 탭이 실제 timeline 표시. Comments는 Note / Wiki만 노출 (Template
+ * / Book / Library entity는 collaboration 단위 X — PR #322 결정).
+ */
 export function SidePanelActivity() {
   const entity = useSidePanelEntity()
 
@@ -16,58 +25,32 @@ export function SidePanelActivity() {
 
         <div className="mx-4 border-b border-border" />
 
-        {/* History — wiki events not yet wired up */}
-        <div className="px-4 py-3">
-          <div className="mb-2 flex items-center gap-2">
-            <span className="text-muted-foreground"><ClockCounterClockwise size={16} weight="regular" /></span>
-            <span className="text-2xs font-medium text-muted-foreground">History</span>
-          </div>
-          <p className="text-note text-muted-foreground/70">
-            Wiki article history is not yet available.
-          </p>
-        </div>
+        {/* History — wiki entityEvents */}
+        <HistorySection entity={{ kind: "wiki", id: entity.wikiArticleId }} />
       </div>
     )
   }
 
-  if (entity.type === "template") {
-    // Templates are recipes, not collaboration artifacts — Comments
-    // surface dropped on purpose. History wiring waits on a dedicated
-    // template event log (current `noteEvents` is keyed by noteId; a
-    // template's own edits don't generate entries there).
-    return (
-      <div className="flex-1 overflow-y-auto">
-        <div className="px-4 py-3">
-          <div className="mb-2 flex items-center gap-2">
-            <span className="text-muted-foreground"><ClockCounterClockwise size={16} weight="regular" /></span>
-            <span className="text-2xs font-medium text-muted-foreground">History</span>
-          </div>
-          <p className="text-note text-muted-foreground/70">
-            Template history is not yet available.
-          </p>
-        </div>
-      </div>
-    )
+  // Template / Book / Library entities (Tag / Sticker / File / Reference)
+  // — collaboration 단위 X, Comments 생략. History만 노출.
+  if (entity.type === "template" && entity.templateId) {
+    return <SoloHistory entity={{ kind: "template", id: entity.templateId }} />
   }
-
-  if (entity.type === "book") {
-    // Books are collections, not collaboration artifacts at the entity
-    // level — Comments dropped on purpose (the items inside the book
-    // already carry their own comments via this same surface when
-    // selected). History wiring waits on entity-events unification
-    // (PRD: entity-side-panel-uniformity, PR 5).
-    return <EntityHistoryPlaceholder label="Book" />
+  if (entity.type === "book" && entity.bookId) {
+    return <SoloHistory entity={{ kind: "book", id: entity.bookId }} />
   }
-
-  // Library entities (Tag / Sticker / File / Reference) — none of these
-  // carry inline content or collaboration artifacts at the entity level
-  // (Tag is a label, Sticker is a cross-entity marker, File is an
-  // attachment, Reference is a citation entry). History wiring waits on
-  // entity-events unification (PRD: entity-side-panel-uniformity, PR 5).
-  if (entity.type === "tag") return <EntityHistoryPlaceholder label="Tag" />
-  if (entity.type === "sticker") return <EntityHistoryPlaceholder label="Sticker" />
-  if (entity.type === "file") return <EntityHistoryPlaceholder label="File" />
-  if (entity.type === "reference") return <EntityHistoryPlaceholder label="Reference" />
+  if (entity.type === "tag" && entity.tagId) {
+    return <SoloHistory entity={{ kind: "tag", id: entity.tagId }} />
+  }
+  if (entity.type === "sticker" && entity.stickerId) {
+    return <SoloHistory entity={{ kind: "sticker", id: entity.stickerId }} />
+  }
+  if (entity.type === "file" && entity.attachmentId) {
+    return <SoloHistory entity={{ kind: "file", id: entity.attachmentId }} />
+  }
+  if (entity.type === "reference" && entity.referenceId) {
+    return <SoloHistory entity={{ kind: "reference", id: entity.referenceId }} />
+  }
 
   // Note or null
   const noteId = entity.type === "note" ? entity.noteId : null
@@ -88,37 +71,36 @@ export function SidePanelActivity() {
       <div className="mx-4 border-b border-border" />
 
       {/* History */}
-      <div className="px-4 py-3">
-        <div className="mb-2 flex items-center gap-2">
-          <span className="text-muted-foreground"><ClockCounterClockwise size={16} weight="regular" /></span>
-          <span className="text-2xs font-medium text-muted-foreground">History</span>
-        </div>
-        <ActivityTimeline noteId={noteId} />
-      </div>
+      <HistorySection entity={{ kind: "note", id: noteId }} />
     </div>
   )
 }
 
 /**
- * EntityHistoryPlaceholder — reusable empty-state for entities whose Activity
- * tab has nothing to show yet (Template / Book / Tag / Sticker / File /
- * Reference). All of these share the same shape: a History header + a
- * one-liner explaining the absence. PRD entity-side-panel-uniformity PR 5
- * (Activity entity-agnostic 통합) will replace these with real entity-event
- * timelines once `entityEvents` slice ships.
+ * SoloHistory — wrapper for entities without Comments (Template / Book /
+ * Library entities). Just renders the History section.
  */
-function EntityHistoryPlaceholder({ label }: { label: string }) {
+function SoloHistory({ entity }: { entity: EntityRef }) {
   return (
     <div className="flex-1 overflow-y-auto">
-      <div className="px-4 py-3">
-        <div className="mb-2 flex items-center gap-2">
-          <span className="text-muted-foreground"><ClockCounterClockwise size={16} weight="regular" /></span>
-          <span className="text-2xs font-medium text-muted-foreground">History</span>
-        </div>
-        <p className="text-note text-muted-foreground/70">
-          {label} history is not yet available.
-        </p>
+      <HistorySection entity={entity} />
+    </div>
+  )
+}
+
+/**
+ * HistorySection — shared History header + ActivityTimeline for any entity.
+ * Replaces the per-entity "X history is not yet available" placeholders that
+ * existed before PR 5 wire-up completed.
+ */
+function HistorySection({ entity }: { entity: EntityRef }) {
+  return (
+    <div className="px-4 py-3">
+      <div className="mb-2 flex items-center gap-2">
+        <span className="text-muted-foreground"><ClockCounterClockwise size={16} weight="regular" /></span>
+        <span className="text-2xs font-medium text-muted-foreground">History</span>
       </div>
+      <ActivityTimeline entity={entity} />
     </div>
   )
 }
