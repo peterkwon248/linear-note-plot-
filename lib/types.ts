@@ -580,6 +580,12 @@ export type EntityKind =
   | "category"
   | "file"
   | "reference"
+  // entity-unification (PR 5, 2026-05-14): Template / Book / Sticker도
+  // EntityRef 가능 entity로 추가. EntityEvent.entity와 미래 Sticker
+  // members[] 확장에 사용.
+  | "template"
+  | "book"
+  | "sticker"
 
 /**
  * EntityRef — typed pointer to any first-class entity in the store.
@@ -739,11 +745,58 @@ export type NoteEventType =
   | "reflection_added"
   | "split"
 
+/**
+ * @deprecated Use EntityEvent. Kept only for the v132 → v133 migration shape;
+ * existing readers should consume `state.entityEvents` (which carries note
+ * events as `{ entity: { kind: "note", id } }`) via `getEventsForEntity`.
+ */
 export interface NoteEvent {
   id: string
   noteId: string
   type: NoteEventType
   at: string
+  meta?: Record<string, unknown>
+}
+
+/**
+ * EntityEventType — unified action vocabulary across all entities.
+ *
+ * Common (모든 entity): created / updated / trashed / untrashed / opened.
+ * Note-specific: inherited verbatim via `NoteEventType` (20+ types).
+ * Wiki: block_added/removed/reordered, section_collapsed, merged/unmerged.
+ * Book: item_added/removed/reordered, smart_source_added/removed,
+ *       converted_to_manual, chapter_added.
+ * Tag / Sticker / File / Reference (cross-entity): member_added/removed,
+ *       color_changed, renamed.
+ *
+ * EVENT_CONFIG drives display — unknown types render nothing (safe fallback).
+ */
+export type EntityEventType =
+  | NoteEventType
+  // Wiki
+  | "block_added" | "block_removed" | "block_reordered"
+  | "section_collapsed" | "merged" | "unmerged"
+  // Book
+  | "item_added" | "item_removed" | "item_reordered"
+  | "smart_source_added" | "smart_source_removed"
+  | "converted_to_manual" | "chapter_added"
+  // Tag / Sticker / File / Reference (cross-entity helpers)
+  | "member_added" | "member_removed"
+  | "color_changed" | "renamed"
+
+/**
+ * EntityEvent — entity-agnostic audit log entry (PRD activity-unification §3-1).
+ *
+ * Replaces NoteEvent. Tracked in `state.entityEvents`. The `at` field is
+ * REQUIRED (⭐ user-mandated, 2026-05-14) — drives Time grouping
+ * (Today/Yesterday/...) + recency sort + the only timestamp source for
+ * entities without their own createdAt (e.g. Tag, Label).
+ */
+export interface EntityEvent {
+  id: string
+  entity: EntityRef       // { kind: EntityKind; id: string }
+  type: EntityEventType
+  at: string              // ⭐ required ISO timestamp
   meta?: Record<string, unknown>
 }
 

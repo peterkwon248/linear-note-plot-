@@ -1,4 +1,4 @@
-import type { NoteEvent, NoteEventType, Note } from "@/lib/types"
+import type { EntityEvent, EntityEventType, EntityRef, Note } from "@/lib/types"
 import {
   isToday,
   isYesterday,
@@ -10,27 +10,45 @@ import {
   startOfMonth,
 } from "date-fns"
 
-/** Get events for a specific note, newest first */
-export function getEventsForNote(
-  events: NoteEvent[],
-  noteId: string,
+/**
+ * Get events for a specific entity, newest first.
+ *
+ * Entity-unification (PR 5, 2026-05-14): NoteEvent → EntityEvent. The primary
+ * entry point now takes an `EntityRef` ({ kind, id }) to support all entity
+ * types. `getEventsForNote` below is a backward-compat wrapper.
+ */
+export function getEventsForEntity(
+  events: EntityEvent[],
+  entity: EntityRef,
   limit?: number
-): NoteEvent[] {
+): EntityEvent[] {
   const filtered = events
-    .filter((e) => e.noteId === noteId)
+    .filter((e) => e.entity.kind === entity.kind && e.entity.id === entity.id)
     .sort((a, b) => new Date(b.at).getTime() - new Date(a.at).getTime())
   return limit ? filtered.slice(0, limit) : filtered
 }
 
+/**
+ * @deprecated Use getEventsForEntity({ kind: "note", id }). Kept for callers
+ * still passing a bare noteId. Migrates by wrapping.
+ */
+export function getEventsForNote(
+  events: EntityEvent[],
+  noteId: string,
+  limit?: number
+): EntityEvent[] {
+  return getEventsForEntity(events, { kind: "note", id: noteId }, limit)
+}
+
 /** Group events by date label (Today, Yesterday, Mar 10...), newest first */
 export function groupEventsByDate(
-  events: NoteEvent[]
-): { label: string; date: string; events: NoteEvent[] }[] {
+  events: EntityEvent[]
+): { label: string; date: string; events: EntityEvent[] }[] {
   const sorted = [...events].sort(
     (a, b) => new Date(b.at).getTime() - new Date(a.at).getTime()
   )
 
-  const groups = new Map<string, NoteEvent[]>()
+  const groups = new Map<string, EntityEvent[]>()
   for (const event of sorted) {
     const date = parseISO(event.at)
     const dayKey = format(date, "yyyy-MM-dd")
@@ -50,16 +68,22 @@ export function groupEventsByDate(
 
 /** Filter events by allowed types */
 export function filterEventsByTypes(
-  events: NoteEvent[],
-  types: NoteEventType[]
-): NoteEvent[] {
+  events: EntityEvent[],
+  types: EntityEventType[]
+): EntityEvent[] {
   const set = new Set(types)
   return events.filter((e) => set.has(e.type))
 }
 
-/** Compute activity statistics */
+/**
+ * Compute activity statistics across notes only (existing semantics).
+ *
+ * Entity-unification (PR 5): only counts events whose `entity.kind === "note"`
+ * so existing dashboards (Home / Insights) keep their Note-centric metrics.
+ * A future "all-entity" variant can be added when those surfaces need it.
+ */
 export function computeActivityStats(
-  events: NoteEvent[],
+  events: EntityEvent[],
   notes: Note[]
 ): {
   todayCount: number
@@ -79,12 +103,13 @@ export function computeActivityStats(
   const openCounts = new Map<string, number>()
 
   for (const e of events) {
+    if (e.entity.kind !== "note") continue
     const d = parseISO(e.at)
     if (d >= todayStart) todayCount++
     if (d >= weekStart) weekCount++
     if (d >= monthStart) monthCount++
     if (e.type === "opened") {
-      openCounts.set(e.noteId, (openCounts.get(e.noteId) ?? 0) + 1)
+      openCounts.set(e.entity.id, (openCounts.get(e.entity.id) ?? 0) + 1)
     }
   }
 
@@ -99,7 +124,7 @@ export function computeActivityStats(
       count,
     }))
 
-  // Daily activity — last 7 days
+  // Daily activity — last 7 days (note-scoped to mirror existing dashboard math)
   const dailyActivity: { date: string; count: number }[] = []
   for (let i = 6; i >= 0; i--) {
     const day = subDays(now, i)
@@ -107,6 +132,7 @@ export function computeActivityStats(
     const dayStart = startOfDay(day)
     const dayEnd = startOfDay(subDays(now, i - 1))
     const count = events.filter((e) => {
+      if (e.entity.kind !== "note") return false
       const d = parseISO(e.at)
       return d >= dayStart && d < dayEnd
     }).length

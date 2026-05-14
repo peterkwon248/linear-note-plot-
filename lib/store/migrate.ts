@@ -2039,5 +2039,36 @@ export function migrate(persistedState: unknown): PlotState {
     }
   }
 
+  // v133: entity-unification — noteEvents → entityEvents. NoteEvent { noteId }
+  // → EntityEvent { entity: { kind: "note", id: noteId } }. Idempotent (재실행
+  // 안전 — noteEvents 없으면 skip). 데이터 손실 없음 (1:1 매핑).
+  // Detail: .omc/plans/activity-unification-prd.md §4
+  {
+    const old = (state as { noteEvents?: unknown }).noteEvents
+    if (Array.isArray(old)) {
+      const migrated = (old as Array<{ id?: string; noteId?: string; type?: string; at?: string; meta?: unknown }>).reduce<
+        Array<{ id: string; entity: { kind: "note"; id: string }; type: string; at: string; meta?: unknown }>
+      >((acc, e) => {
+        if (!e?.id || !e?.noteId || !e?.type || !e?.at) return acc
+        acc.push({
+          id: e.id,
+          entity: { kind: "note", id: e.noteId },
+          type: e.type,
+          at: e.at,
+          meta: e.meta,
+        })
+        return acc
+      }, [])
+      ;(state as Record<string, unknown>).entityEvents = migrated
+      delete (state as Record<string, unknown>).noteEvents
+      if (migrated.length > 0) {
+        console.log(`[migrate] v132→v133: noteEvents → entityEvents (${migrated.length} events; entity.kind="note")`)
+      }
+    } else if (!(state as { entityEvents?: unknown }).entityEvents) {
+      // Fresh state without either field — initialize.
+      ;(state as Record<string, unknown>).entityEvents = []
+    }
+  }
+
   return state as unknown as PlotState
 }

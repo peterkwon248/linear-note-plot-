@@ -1,6 +1,6 @@
 import { create } from "zustand"
 import { persist } from "zustand/middleware"
-import type { NoteEvent, AutopilotLogEntry, Relation } from "../types"
+import type { EntityEvent, AutopilotLogEntry, Relation } from "../types"
 import type { Attachment, CoOccurrence, RelationSuggestion } from "../types"
 import type { SRSState } from "@/lib/srs"
 import { buildDefaultViewStates } from "../view-engine/defaults"
@@ -73,7 +73,7 @@ export const usePlotStore = create<PlotState>()(
         linkPickerSourceId: null,
         pendingWikiAssemblyIds: null,
 
-        noteEvents: [] as NoteEvent[],
+        entityEvents: [] as EntityEvent[],
         threads: [],
         graphFocusDepth: 0,
         commandPaletteMode: "commands" as const,
@@ -254,7 +254,7 @@ export const usePlotStore = create<PlotState>()(
     },
     {
       name: "plot-store",
-      version: 132,
+      version: 133,
       storage: createIDBStorage<PlotState>(),
       partialize: (state) => {
         // eslint-disable-next-line @typescript-eslint/no-unused-vars

@@ -1,4 +1,4 @@
-import type { NoteBody, NoteStatus, Note, NoteEvent, NoteEventType, WikiBlock } from "../types"
+import type { NoteBody, NoteStatus, Note, NoteEvent, NoteEventType, EntityEvent, EntityEventType, EntityRef, WikiBlock } from "../types"
 import { saveBody as saveBodyToIDB, deleteBody as deleteBodyFromIDB } from "../note-body-store"
 import { saveBlob as saveBlobToIDB, deleteBlob as deleteBlobFromIDB } from "../attachment-store"
 import type { AttachmentBlob } from "../attachment-store"
@@ -84,16 +84,31 @@ export function workflowDefaults(status: NoteStatus = "stone"): Pick<
 
 const MAX_EVENTS_TOTAL = 10000
 
-/** Create the appendEvent helper bound to a Zustand set function */
-export function createAppendEvent(set: (fn: (state: { noteEvents: NoteEvent[] }) => { noteEvents: NoteEvent[] }) => void) {
-  return (noteId: string, type: NoteEventType, meta?: Record<string, unknown>) => {
-    const event: NoteEvent = { id: genId(), noteId, type, at: now(), meta }
+/**
+ * Create the appendEvent helper bound to a Zustand set function.
+ *
+ * Entity-unification (PR 5, 2026-05-14): NoteEvent → EntityEvent. The helper
+ * accepts either a bare `noteId: string` (backward compat — wraps as
+ * `{ kind: "note", id }`) or an `EntityRef`. Records to `state.entityEvents`.
+ */
+export function createAppendEvent(
+  set: (fn: (state: { entityEvents: EntityEvent[] }) => { entityEvents: EntityEvent[] }) => void
+) {
+  return (
+    entityOrNoteId: EntityRef | string,
+    type: EntityEventType,
+    meta?: Record<string, unknown>,
+  ) => {
+    const entity: EntityRef = typeof entityOrNoteId === "string"
+      ? { kind: "note", id: entityOrNoteId }
+      : entityOrNoteId
+    const event: EntityEvent = { id: genId(), entity, type, at: now(), meta }
     set((state) => {
-      const updated = [...state.noteEvents, event]
+      const updated = [...state.entityEvents, event]
       if (updated.length > MAX_EVENTS_TOTAL) {
-        return { noteEvents: updated.slice(updated.length - MAX_EVENTS_TOTAL) }
+        return { entityEvents: updated.slice(updated.length - MAX_EVENTS_TOTAL) }
       }
-      return { noteEvents: updated }
+      return { entityEvents: updated }
     })
   }
 }
