@@ -210,7 +210,7 @@ export function BookTable({
       {/* Sticky header */}
       <div className="sticky top-0 z-10 flex h-9 items-center gap-3 border-b border-border bg-background pl-3 pr-6">
         {/* Select-all checkbox (notes-table parity) */}
-        <div className="flex w-6 shrink-0 items-center justify-center">
+        <div className="flex w-8 shrink-0 items-center justify-center">
           <CheckboxBox
             state={allChecked ? "all" : someChecked ? "partial" : "none"}
             onClick={toggleAll}
@@ -453,7 +453,10 @@ function BookRow({
             if (!book.trashed) onOpen(book.id)
           }}
           className={cn(
-            "group flex h-9 w-full items-center gap-3 border-b border-border/30 pl-3 pr-6 text-left transition-colors",
+            // 2026-05-14: row divider removed for Notes/Wiki list parity —
+            // user flagged that books was the only entity with a visible
+            // border between rows. Hover bg still provides row separation.
+            "group flex h-9 w-full items-center gap-3 pl-3 pr-6 text-left transition-colors",
             book.trashed
               ? "opacity-50 hover:bg-hover-bg cursor-default"
               : "hover:bg-hover-bg cursor-pointer",
@@ -461,7 +464,7 @@ function BookRow({
         >
           <div
             className={cn(
-              "flex w-6 shrink-0 items-center justify-center",
+              "flex w-8 shrink-0 items-center justify-center",
               // Notes/Wiki parity: hide checkbox until row hover unless the
               // row is checked. Avoids the "always-visible empty squares"
               // mismatch the user flagged vs notes/wiki list rows.

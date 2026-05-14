@@ -688,7 +688,7 @@ export function WikiView() {
   )
 
 
-  // MagnifyingGlass results (simple title/alias filter)
+  // Search results (simple title/alias filter)
   const searchResults = useMemo(() => {
     if (!searchQuery.trim()) return []
     const q = searchQuery.toLowerCase()

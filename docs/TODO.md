@@ -3,26 +3,174 @@
 > 우선순위 기반 작업 목록. **P0 = 다음 세션 즉시 시작점** (NEXT-ACTION.md 폐지, 2026-05-12).
 > 완료 항목은 즉시 삭제 또는 "완료" 섹션으로 이동.
 
-**마지막 갱신**: 2026-05-13 밤 (PR #321 11 commits — Status 색 재정렬 + Templates UpNote 패턴 + 9 follow-up)
+**마지막 갱신**: 2026-05-14 저녁 (PR #333 7 commits — sidebar polish + Ontology breadcrumb + search typo fix, Linear-faithful)
 
 ---
 
 ## 🔴 P0 — 즉시 (다음 세션, cross-machine)
 
 ### 다음 머신에서 시작 절차
-1. `git pull origin main` (PR #321 머지된 main 받음)
-2. `npm install` (새 worktree 또는 dependency drift 가능)
-3. `npm run dev` → :3002 hard refresh (Ctrl+Shift+R)
 
-### Manual verify 8 surface
-1. **Status 색 일치** — /notes list에서 Stone/Brick/Block chip + row icon 같은 색 (slate-600 / amber-600 / emerald-600)
-2. **빈 노트 inline hint** — 새 노트 첫 paragraph 안에 "Insert from a template · or press / for menu". 클릭 → dialog open. 입력 시 자동 사라짐.
-3. **Template placeholder** — template에 `{{YYYY}}-{{MM}}-{{DD}}` 작성 → 새 노트에서 inline button 또는 slash "Insert template…" → title `2026-05-14` 치환
-4. **Slash 메뉴 깔끔** — `/` 입력 → block items + 단일 "Insert template…" entry (개별 templates 13+ 안 펴짐)
-5. **Editor footer** — words/chars가 toolbar 바로 위 (body 안 floating X)
-6. **Wiki/Books 그룹 헤더** — Notes `.a-tg` 패턴 통일 (var(--fg) 진함 + divider)
-7. **Home stats** — REFERENCES card icon 좌측 + 충돌 없음
-8. **i18n** — Add source dialog "Multi-select" / "Click items to select" 영어
+```bash
+# 1. main 받기 (직전 PR #332까지)
+git pull origin main
+
+# 2. 다른 컴퓨터면 PR branch checkout (PR #333은 머지 안 됨)
+git fetch origin claude/relaxed-hodgkin-5a2905
+git worktree add ../<name> claude/relaxed-hodgkin-5a2905
+cd ../<name>
+
+# 3. install + dev
+npm install
+npm run dev   # port 3002 또는 random
+
+# 4. Hard refresh (Ctrl+Shift+R) 의무
+```
+
+### PR #333 manual verify 5 surface (7 commits 누적)
+
+PR #333: `polish: sidebar typography + Ontology header breadcrumb (Linear-faithful)`
+
+1. **사이드바 헤더 폰트** (`/notes` `/wiki` `/books` `/home`): `Views` `Folders` `Pinned` `More` `Stats` 헤더 **12px normal case** (이전 10.5px uppercase에서 변경, weight 500)
+2. **사이드바 너비**: 220px → **240px** (Linear 정합)
+3. **Ontology 헤더 breadcrumb** (`/ontology`): `Ontology > Graph` — chevron `>` **자체** 클릭 → dropdown. Insights/Dashboard 선택 시 헤더 업데이트
+4. **Dropdown items**: Graph / IconInsight / ChartBar 아이콘 + 라벨, 활성 = `bg-accent/10 text-accent`
+5. **Search typo fix**: 검색 input placeholder `"Search notes, tags, and more..."` (이전 `"MagnifyingGlass notes..."` 사고)
+
+OK → `gh pr merge 333 --squash`
+
+### 다음 작은 PR (R1) — Library breadcrumb
+
+Notes/Ontology 패턴 100% mirror:
+- `components/views/library-view.tsx` ViewHeader에 `subtitle` prop 전달
+- subtitle = `<>` + `[DropdownMenu trigger (chevron >)]` + `[Active sub-page label]`
+- Dropdown items: Overview / References / Tags / Files / Stickers (icon + 라벨 + 활성 bg)
+- chevron `>`가 PopoverTrigger button (Notes NotePickerChevron 패턴)
+- 활성 sub-page 라벨은 static span
+
+라우트 매핑:
+- `/library` (Overview)
+- `/library/references`
+- `/library/tags`
+- `/library/files`
+- `/library/stickers`
+
+→ DropdownMenuItem onClick으로 `setActiveRoute(href)` 또는 `router.push(href)`
+
+---
+
+## 🟡 P1 — 큰 그림 정비 (R2부터)
+
+### R2. 앱 전체 폴리시 PRD 작성
+
+**필수**: `linear-design-mirror` skill audit + `docs/reference/linear/` 50+ 스크린샷 분석
+
+PRD scope:
+- 사이드바 spec 추가 audit (`a-sb-link`, `a-sb-link__count`, `a-sb-title` 토큰 정합)
+- NOTES/WIKI mini stat 카드 uppercase 일관성 검토
+- 트랜지션 통일 (150ms Plot vs 160ms Linear)
+- 텍스트 밝기 (Plot 0.65 → Linear 0.82)
+- 다른 글로벌 find-replace 사고 검출 (broad grep)
+- 화면 풀폭 (PR-3 9 화면 max-w 제거)
+- Breadcrumb 일관성 확장 (Wiki/Books/Library도 적용 여부)
+
+진행 전 `.omc/plans/linear-mirror-polish-prd.md` 작성:
+- audit 결과
+- 폴리시 PR 분할안 (각 PR 본질 + 범위 + 검증 방법)
+- 사용자 합의 후 R3부터 시리즈 진행
+
+### R3+. 폴리시 PR 시리즈 (PRD 결과 순서대로)
+
+R2 PRD 결과에 따라 분할:
+- (예) Breadcrumb 일관성 확장 PR (Library/Wiki/Books)
+- (예) 화면 풀폭 9 화면 PR (max-w 제거 + grid 반응형)
+- (예) 토큰 정합 PR (사이드바/typography spec audit)
+- (예) 트랜지션 통일 PR
+- (예) 텍스트 밝기 PR
+
+### 커맨드 팔레트 ⌘K Linear 식 재설계 (R4 또는 별도)
+
+- `docs/reference/linear/커맨드팔레트*` 13장 분석
+- 현재 Plot ⌘K vs Linear ⌘K 갭 spec 도출
+- PRD `.omc/plans/command-palette-redesign-prd.md` 작성
+- Linear scroll 12 surface 패턴 부분 적용 (Plot 본질에 맞게)
+
+### 풀 검색 페이지 신설 (R5 또는 별도)
+
+- `docs/reference/linear/메인화면-Search*.png` 4장 분석
+- 새 라우트 `/search` 또는 expanded view
+- Display/Filter/Ordering 옵션 + 결과 리스트
+- 백엔드: 기존 SearchClient 재사용
+
+---
+
+## 🟡 P1 — 이전 PR verify 잔여 (사용자 manual verify 안 된 경우만)
+
+이전 9 PR (#322-#327, #329-#331) 사용자 manual verify:
+
+1. **Template Detail 재설계** (#322) — /templates Daily Log 클릭 → Detail에 Dates / Outline / Properties=stats / Actions
+2. **Wiki Stub badge** (#322 보너스) — /wiki Working Memory → "Wiki Stub" muted badge
+3. **Book 사이드바 4탭** (#323) — /books * → ⌘B → 4탭 (Detail/Connections/Activity/Bookmarks)
+4. **Connections status dots** (#324) — /notes 노트 클릭 → Connections 탭 → status dots
+5. **Book Bookmarks IN THIS BOOK** (#325) — /books * → Bookmarks 탭
+6. **Books list divider X + checkbox w-8** (#326) — /books list mode → 행 구분선 X
+7. **Time grouping** (#327) — /notes Display → Group by "Updated"
+8. **Template anchor pinning** (#329) — /templates Daily Log → Bookmarks 탭
+9. **Library Files Detail panel** (#330 + #331) — /library Files → 파일 클릭
+
+→ 이번 세션 스크린샷에서 일부 surface는 보임 (사이드바 등). 명시 OK는 못 받음 — 다음 세션 확인.
+
+---
+
+## 🟡 P1 — 다음 PR 후보 (사용자 시그널 "다 순차" — 우선순위 1~4 순서)
+
+### 1. Library Tags Detail panel 신설
+PR #331 (Files Detail panel) 패턴 그대로 적용.
+- `SidePanelContext`에 "tag" 추가
+- `useSidePanelEntity` tag 분기 (Tag type lookup)
+- `tag-detail-panel.tsx` 신설 (Header/Dates/Properties=stats:note count/Used in:notes/Actions)
+- `SidePanelDetail` tag 분기 dispatch
+- Library Tags row 클릭 시 `setSidePanelContext({ type: "tag", id })`
+
+### 2. Library Stickers Detail panel 신설
+같은 패턴. Sticker의 `members` 필드 활용 → "Used by" cross-entity list.
+
+### 3. Ontology Legend redesign (Option A + B 합의됨)
+사용자 시그널: 색 충돌 (Brick orange ↔ Stub orange, Block emerald ↔ Article emerald) + Light mode 가시성.
+
+**Option A + B 결합** 확정:
+- Legend에 entity 그룹 헤더 (NOTES / WIKI / BOOKS / EDGES)
+- 각 status는 **color + icon silhouette** (단순 dot 대신)
+- Plot 이미 정의된 icons: `Hexagon`/`Cube`/`Cuboid2x2` (Notes) / `IconWikiStub`/`IconWikiArticle` (Wiki) / `Lightning`/`Sparkle`/`PencilSimple` (Books)
+- 색은 영구 LOCKED (WIKI_STATUS_HEX + NOTE_STATUS_HEX) 그대로
+
+**+ 별도 작업**: List Options 토글 mismatch 버그 (디폴트 OFF인데 graph는 모두 표시. 토글 한 번 켰다 꺼야 sync). view-engine defaults에 명시.
+
+### 4. PR 4b — Wiki blocks anchor extractor
+Wiki blocks 구조 (Notes contentJson과 다름). 새 `extractAnchorsFromWikiBlocks` helper 작성. Wiki Bookmarks 탭에 LocalAnchors 추가. GlobalBookmark.targetKind는 이미 "wiki" 지원.
+
+### 5. PR 5 — Activity entity-agnostic 통합 (별도 PRD 필수)
+큰 작업. `noteEvents` slice → `entityEvents` 통합 + 마이그레이션 + 모든 entity wire-up.
+
+진행 전 `.omc/plans/activity-unification-prd.md` 작성 의무:
+- 통합 event 모델 (entityKind + entityId)
+- 마이그레이션 전략 (기존 noteEvents → entityEvents)
+- 각 entity action 시점 wire-up 지점 정의
+- ActivityTimeline entity-agnostic 확장
+- Comments wire-up (template/book도)
+
+---
+
+## 🟣 P2 — 작은 후속 정리
+
+- **attachments slice에 `deleteAttachment` action 신설** (Files Detail panel Delete 활성화) — PR #331 follow-up
+- **GlobalBookmark.targetKind에 "book" 추가** (PR 4 후속) — Book entity anchor pinning. 단 Book entity 자체는 contentJson 없음 → chapter-heading anchor만 의미? 결정 필요.
+- **Reference Detail panel 호출 흐름 검증** — `ReferenceDetailPanel` 존재하지만 library-view 안에서 setSidePanelContext("reference") 호출 위치 확인 X
+- **NoteLocalAnchors → LocalAnchors rename** (polish) — entity-agnostic naming
+- **navigateToBookmark template 분기** + "Templates" filter chip (unified bookmarks list)
+- **Stone/Brick STATUS_CONFIG도 var(--status-*) 통일** (Block만 fix됨)
+- **Wiki Gallery view-engine 통합** (Notes/Books 완료, Wiki만 누락)
+- **dev hot reload stale state 모니터링** — 잦은 branch switch + cascade 작업 시 React Hook order 경고 또는 stale import 발생. hard refresh로 해소.
 
 ---
 

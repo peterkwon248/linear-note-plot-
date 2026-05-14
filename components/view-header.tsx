@@ -56,6 +56,10 @@ export { HBtn }
 interface ViewHeaderProps {
   icon: ReactNode
   title: string
+  /** Optional sub-page label rendered after title with chevron prefix
+   *  (e.g. Ontology / Graph). Used when a view has internal sub-modes
+   *  (Graph / Insights / Dashboard) that aren't separate routes. */
+  subtitle?: ReactNode
   count?: number
   /** Search placeholder (if provided, search bar is shown) */
   searchPlaceholder?: string
@@ -110,6 +114,7 @@ interface ViewHeaderProps {
 export function ViewHeader({
   icon,
   title,
+  subtitle,
   count,
   searchPlaceholder,
   searchValue,
@@ -186,8 +191,9 @@ export function ViewHeader({
         ) : (
           <div className="flex items-center gap-2">
             <span className="text-muted-foreground">{icon}</span>
-            <h1 className="text-note font-medium text-foreground">
-              {title}
+            <h1 className="text-note font-medium text-foreground flex items-center gap-1.5">
+              <span>{title}</span>
+              {subtitle}
               {count !== undefined && (
                 <span className="ml-1.5 text-note font-normal text-muted-foreground">
                   {count}
