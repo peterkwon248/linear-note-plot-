@@ -1,4 +1,4 @@
-import type { Note, NoteBody, Folder, Tag, Label, Sticker, EntityRef, NoteTemplate, ActiveView, NoteEvent, Thread, AutopilotRule, AutopilotLogEntry, Relation, RelationType, Attachment, CoOccurrence, RelationSuggestion, WikiClusterSuggestion, WikiInfoboxEntry, WikiCollectionItem, SavedView, WikiArticle, WikiBlock, WikiCategory, Reference, GlobalBookmark, Comment, CommentAnchor, Book, AutoSource, AutoSourceKind } from "../types"
+import type { Note, NoteBody, Folder, Tag, Label, Sticker, EntityRef, NoteTemplate, ActiveView, EntityEvent, Thread, AutopilotRule, AutopilotLogEntry, Relation, RelationType, Attachment, CoOccurrence, RelationSuggestion, WikiClusterSuggestion, WikiInfoboxEntry, WikiCollectionItem, SavedView, WikiArticle, WikiBlock, WikiCategory, Reference, GlobalBookmark, Comment, CommentAnchor, Book, AutoSource, AutoSourceKind } from "../types"
 import type { InboxDismissed, InboxSnoozed, InboxItemKind } from "./slices/inbox"
 import type { SRSState, SRSRating } from "@/lib/srs"
 import type { ViewState, ViewContextKey } from "../view-engine/types"
@@ -129,8 +129,11 @@ export interface PlotState {
   viewStateByContext: Record<ViewContextKey, ViewState>
   _viewStateHydrated: boolean
 
-  // Phase 2 state
-  noteEvents: NoteEvent[]
+  // Phase 2 state — entity-unification (PR 5): noteEvents 폐기.
+  // 모든 entity (note/wiki/template/book/tag/sticker/file/reference)의
+  // 시간순 audit log. EntityEvent { entity: EntityRef, type, at, meta }.
+  // Backward compat reader: getEventsForNote(events, id) = getEventsForEntity(events, { kind:"note", id }).
+  entityEvents: EntityEvent[]
   threads: Thread[]
   graphFocusDepth: number
   commandPaletteMode: "commands" | "links"

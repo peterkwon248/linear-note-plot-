@@ -752,15 +752,14 @@ function StatusRow({
 // ── Template Connections ─────────────────────────────────
 // Templates have no wikilinks / backlinks / hierarchy, so the only
 // meaningful connection surface is "Used by N notes" — notes that were
-// created from this template. Derived from the noteEvents log
-// (`created` event with `meta.templateId`), so no new data model is
-// needed.
+// created from this template. Derived from the entityEvents log (PR 5 —
+// `created` event for entity.kind="note" with `meta.templateId`).
 
 function TemplateConnections() {
   const entity = useSidePanelEntity()
   const template = entity.type === "template" ? entity.template : null
   const notes = usePlotStore((s) => s.notes)
-  const noteEvents = usePlotStore((s) => s.noteEvents)
+  const entityEvents = usePlotStore((s) => s.entityEvents)
   const openInSecondary = usePlotStore((s) => s.openInSecondary)
 
   const usedByNotes = useMemo(() => {
@@ -768,15 +767,16 @@ function TemplateConnections() {
     const notesById = new Map(notes.map((n) => [n.id, n]))
     const seen = new Set<string>()
     const list: { id: string; title: string; at: string; status: NoteStatus | null }[] = []
-    for (const e of noteEvents) {
+    for (const e of entityEvents) {
       if (e.type !== "created") continue
+      if (e.entity.kind !== "note") continue
       if ((e.meta as { templateId?: string } | undefined)?.templateId !== template.id) continue
-      if (seen.has(e.noteId)) continue
-      const note = notesById.get(e.noteId)
+      if (seen.has(e.entity.id)) continue
+      const note = notesById.get(e.entity.id)
       if (!note || note.trashed) continue
-      seen.add(e.noteId)
+      seen.add(e.entity.id)
       list.push({
-        id: e.noteId,
+        id: e.entity.id,
         title: note.title || "Untitled",
         at: e.at,
         status: note.status ?? null,
@@ -784,7 +784,7 @@ function TemplateConnections() {
     }
     list.sort((a, b) => new Date(b.at).getTime() - new Date(a.at).getTime())
     return list
-  }, [template, notes, noteEvents])
+  }, [template, notes, entityEvents])
 
   if (!template) {
     return (

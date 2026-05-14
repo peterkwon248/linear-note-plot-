@@ -149,7 +149,7 @@ export function createNotesSlice(set: Set, get: Get, appendEvent: AppendEventFn)
             .map((n: Note) => n.parentNoteId === id ? { ...n, parentNoteId: null } : n)
             .filter((n: Note) => n.id !== id),
           selectedNoteId: state.selectedNoteId === id ? null : state.selectedNoteId,
-          noteEvents: state.noteEvents.filter((e: any) => e.noteId !== id),
+          entityEvents: state.entityEvents.filter((e: any) => !(e.entity?.kind === "note" && e.entity?.id === id)),
           srsStateByNoteId: restSRS,
           threads: state.threads.filter((c: any) => c.noteId !== id),
           relations: state.relations.filter(
