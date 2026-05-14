@@ -4,6 +4,7 @@ import { useState, useMemo, useEffect, useRef, useCallback } from "react"
 import { usePlotStore } from "@/lib/store"
 import { buildOntologyGraphData, type OntologyGraph, type OntologyNode } from "@/lib/graph"
 import { OntologyGraphCanvas } from "@/components/ontology/ontology-graph-canvas"
+import { OntologyLegend } from "@/components/ontology/ontology-legend"
 import { OntologyDetailPanel } from "@/components/ontology/ontology-detail-panel"
 // OntologyTabBar removed in Phase 7 — view mode lives in Display popover
 import { OntologyInsightsPanel } from "@/components/ontology/ontology-insights-panel"
@@ -437,10 +438,16 @@ export function OntologyView() {
       <div
         className={
           tab === "graph"
-            ? "flex flex-1 min-h-0 overflow-hidden"
+            ? "relative flex flex-1 min-h-0 overflow-hidden"
             : "hidden"
         }
       >
+        {/* Floating legend overlay — top-right, above the canvas. */}
+        {graph && (
+          <div className="pointer-events-none absolute right-3 top-3 z-20">
+            <OntologyLegend />
+          </div>
+        )}
         {graph ? (
           <OntologyGraphCanvas
             graph={graph}
