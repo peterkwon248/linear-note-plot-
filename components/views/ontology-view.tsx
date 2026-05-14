@@ -22,13 +22,15 @@ import { rulesToOntologyFilters } from "@/lib/view-engine/graph-filter-adapter"
 import type { OntologyFilters } from "@/components/ontology/ontology-graph-canvas"
 import { Graph } from "@phosphor-icons/react/dist/ssr/Graph"
 import { CaretRight } from "@phosphor-icons/react/dist/ssr/CaretRight"
-import { Check } from "@phosphor-icons/react/dist/ssr/Check"
+import { ChartBar } from "@phosphor-icons/react/dist/ssr/ChartBar"
+import { IconInsight } from "@/components/plot-icons"
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { cn } from "@/lib/utils"
 import { useActiveViewId } from "@/lib/table-route"
 import { useSaveViewProps } from "@/lib/view-engine/use-save-view-props"
 import { getEntityColor } from "@/lib/colors" // v109: opt-in color fallback
@@ -356,22 +358,25 @@ export function OntologyView() {
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="start" className="min-w-[140px]">
-                <DropdownMenuItem onClick={() => updateGraphViewState({ viewMode: "graph" })}>
-                  <span className="flex w-4 items-center justify-center">
-                    {tab === "graph" && <Check size={12} weight="bold" />}
-                  </span>
+                <DropdownMenuItem
+                  onClick={() => updateGraphViewState({ viewMode: "graph" })}
+                  className={cn(tab === "graph" && "bg-accent/10 text-accent")}
+                >
+                  <Graph size={16} weight="regular" />
                   Graph
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => updateGraphViewState({ viewMode: "insights" })}>
-                  <span className="flex w-4 items-center justify-center">
-                    {tab === "insights" && <Check size={12} weight="bold" />}
-                  </span>
+                <DropdownMenuItem
+                  onClick={() => updateGraphViewState({ viewMode: "insights" })}
+                  className={cn(tab === "insights" && "bg-accent/10 text-accent")}
+                >
+                  <IconInsight size={16} />
                   Insights
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => updateGraphViewState({ viewMode: "dashboard" })}>
-                  <span className="flex w-4 items-center justify-center">
-                    {tab === "dashboard" && <Check size={12} weight="bold" />}
-                  </span>
+                <DropdownMenuItem
+                  onClick={() => updateGraphViewState({ viewMode: "dashboard" })}
+                  className={cn(tab === "dashboard" && "bg-accent/10 text-accent")}
+                >
+                  <ChartBar size={16} weight="regular" />
                   Dashboard
                 </DropdownMenuItem>
               </DropdownMenuContent>
