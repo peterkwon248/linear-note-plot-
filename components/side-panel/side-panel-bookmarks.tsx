@@ -10,11 +10,11 @@ import { FileText } from "@phosphor-icons/react/dist/ssr/FileText"
 import { BookOpen } from "@phosphor-icons/react/dist/ssr/BookOpen"
 import { MagnifyingGlass } from "@phosphor-icons/react/dist/ssr/MagnifyingGlass"
 import { X } from "@phosphor-icons/react/dist/ssr/X"
-import { extractAnchorsFromContentJson } from "@/lib/anchor-utils"
+import { extractAnchorsFromContentJson, extractAnchorsFromWikiBlocks } from "@/lib/anchor-utils"
 import { navigateToWikiArticle } from "@/lib/wiki-article-nav"
 import { resolveBookItems } from "@/lib/books/resolver"
 import { Books as BooksIcon } from "@phosphor-icons/react/dist/ssr/Books"
-import type { GlobalBookmark, Book } from "@/lib/types"
+import type { GlobalBookmark, Book, WikiArticle } from "@/lib/types"
 import { cn } from "@/lib/utils"
 import { SPACE_COLORS } from "@/lib/colors"
 
@@ -242,7 +242,22 @@ export function SidePanelBookmarks() {
           onUnpin={unpinBookmark}
         />
       )}
-      {/* Wiki SECTIONS removed — Outline is shown in Detail tab */}
+      {/* Wiki: anchor pinning enabled (PR 4b).
+          Wiki blocks (section / text contentJson) → AnchorItem[] via
+          extractAnchorsFromWikiBlocks. WikiLocalAnchors is structurally
+          parallel to NoteLocalAnchors but queries wiki-block DOM marker.
+          GlobalBookmark.targetKind="wiki" was already supported by the
+          data model — this enables the surface end-to-end. */}
+      {entity.type === "wiki" && entity.wikiArticle && (
+        <WikiLocalAnchors
+          article={entity.wikiArticle}
+          pinnedList={pinnedList}
+          onPin={(anchorId, label, anchorType) =>
+            pinBookmark(entity.wikiArticle!.id, anchorId, label, anchorType, "wiki")
+          }
+          onUnpin={unpinBookmark}
+        />
+      )}
       {/* Templates: anchor pinning enabled (PR 4a).
           GlobalBookmark.targetKind extended to include "template" — the data
           model + slice signature accept it; this surface reuses NoteLocalAnchors
@@ -390,6 +405,101 @@ function NoteLocalAnchors({
                   ev.stopPropagation()
                   if (isPinned) {
                     const existing = pinnedList.find((b) => b.noteId === note.id && b.anchorId === anchor.id)
+                    if (existing) onUnpin(existing.id)
+                  } else {
+                    onPin(anchor.id, anchor.label, anchor.type)
+                  }
+                }}
+                title={isPinned ? "Remove bookmark" : "Add bookmark"}
+              >
+                <BookmarkSimple
+                  size={12}
+                  weight={isPinned ? "fill" : "regular"}
+                  className={isPinned ? "text-accent" : "text-muted-foreground/60"}
+                />
+              </button>
+            </li>
+          )
+        })}
+      </ul>
+    </div>
+  )
+}
+
+/* ── Wiki local anchors ───────────────────────────────
+   PR 4b: structurally parallel to NoteLocalAnchors. Differences:
+     - Anchor source: extractAnchorsFromWikiBlocks (section + text contentJson)
+     - DOM query: tries `wiki-block-${id}` prefix first (wiki blocks render
+       their id on the outer container with that prefix — see
+       navigateToBookmark's same probe sequence).
+     - pinnedSet matches against article.id (which lives in bm.noteId for
+       wiki bookmarks — same column reused per data model).
+   Future polish: NoteLocalAnchors + WikiLocalAnchors could collapse into
+   a single LocalAnchors component accepting `{ id, anchors }` directly. */
+
+function WikiLocalAnchors({
+  article,
+  pinnedList,
+  onPin,
+  onUnpin,
+}: {
+  article: WikiArticle
+  pinnedList: GlobalBookmark[]
+  onPin: (anchorId: string, label: string, anchorType: GlobalBookmark["anchorType"]) => void
+  onUnpin: (bookmarkId: string) => void
+}) {
+  const localAnchors = useMemo(
+    () => extractAnchorsFromWikiBlocks(article.blocks),
+    [article.blocks],
+  )
+
+  const pinnedSet = useMemo(() => {
+    const set = new Set<string>()
+    for (const bm of pinnedList) {
+      set.add(`${bm.noteId}:${bm.anchorId}`)
+    }
+    return set
+  }, [pinnedList])
+
+  const scrollToAnchor = (anchorId: string) => {
+    const safe = (window as any).CSS?.escape ? CSS.escape(anchorId) : anchorId
+    const el =
+      document.querySelector(`[id="wiki-block-${safe}"]`) ||
+      document.querySelector(`[data-anchor-id="${safe}"]`) ||
+      document.querySelector(`[id="${safe}"]`) ||
+      document.querySelector(`[data-id="${safe}"]`)
+    if (el) el.scrollIntoView({ behavior: "smooth", block: "center" })
+  }
+
+  if (localAnchors.length === 0) {
+    return null
+  }
+
+  return (
+    <div className="p-3">
+      <SectionHeader icon={BookmarkSimple} label="ANCHORS IN WIKI" count={localAnchors.length} />
+      <ul className="space-y-0.5">
+        {localAnchors.map((anchor) => {
+          const key = `${article.id}:${anchor.id}`
+          const isPinned = pinnedSet.has(key)
+          return (
+            <li
+              key={anchor.id}
+              className="group flex items-center gap-2 px-2 py-1.5 rounded-md hover:bg-hover-bg transition-colors cursor-pointer"
+              onClick={() => scrollToAnchor(anchor.id)}
+            >
+              {anchor.type === "heading" ? (
+                <TextAlignLeft size={12} weight="bold" className="text-muted-foreground shrink-0" />
+              ) : (
+                <MapPin size={12} weight="bold" className="text-muted-foreground shrink-0" />
+              )}
+              <span className="flex-1 truncate text-note text-foreground">{anchor.label}</span>
+              <button
+                className="opacity-0 group-hover:opacity-100 p-0.5 rounded hover:bg-hover-bg transition-all"
+                onClick={(ev) => {
+                  ev.stopPropagation()
+                  if (isPinned) {
+                    const existing = pinnedList.find((b) => b.noteId === article.id && b.anchorId === anchor.id)
                     if (existing) onUnpin(existing.id)
                   } else {
                     onPin(anchor.id, anchor.label, anchor.type)
