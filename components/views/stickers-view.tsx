@@ -642,9 +642,20 @@ export function StickersView() {
                           style={{ backgroundColor: sticker.color }}
                         />
 
-                        {/* Sticker name — click to view items */}
+                        {/* Sticker name — click to view items + open side panel */}
                         <button
-                          onClick={() => setSelectedStickerId(sticker.id)}
+                          onClick={() => {
+                            // 2026-05-14 follow-up (Library Stickers Detail panel):
+                            // 사이드바 자동 노출 + Detail 표시 (PR #331 Files +
+                            // PR #334 Tags 패턴 정합). drill-down (selectedStickerId)도
+                            // 유지 — 사용자가 row 한 번 클릭하면 items 페이지 +
+                            // side panel detail 둘 다 보이는 풍부한 패턴.
+                            setSelectedStickerId(sticker.id)
+                            usePlotStore.setState({
+                              sidePanelContext: { type: "sticker", id: sticker.id },
+                              sidePanelOpen: true,
+                            })
+                          }}
                           className="text-left text-ui text-foreground transition-colors hover:text-accent leading-tight"
                           title="Click to view items"
                         >
