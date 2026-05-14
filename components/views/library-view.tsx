@@ -220,7 +220,9 @@ function ReferenceRow({
         <button
           onClick={handleClick}
           className={cn(
-            "group/ref w-full text-left px-5 py-3 border-b border-border/50 transition-colors duration-100",
+            // 2026-05-14: row divider removed for Notes/Wiki list parity —
+            // header/list 사이 구분선만 유지, content row 사이는 hover bg로 separation.
+            "group/ref w-full text-left px-5 py-3 transition-colors duration-100",
             "hover:bg-hover-bg focus-visible:outline-none",
             isSelected && !isMultiMode && "bg-hover-bg",
             isMultiSelected && "bg-accent/8",
@@ -1279,7 +1281,8 @@ function FilesView() {
                     <div
                       style={{ display: "grid", gridTemplateColumns: gridTemplate }}
                       className={cn(
-                        "group items-center border-b border-border/50 px-5 py-2.5 transition-colors duration-100",
+                        // 2026-05-14: row divider removed for Notes/Wiki list parity.
+                        "group items-center px-5 py-2.5 transition-colors duration-100",
                         isSelected ? "bg-accent/8" : "hover:bg-hover-bg"
                       )}
                       onClick={(e) => {
