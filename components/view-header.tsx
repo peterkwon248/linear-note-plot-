@@ -56,6 +56,12 @@ export { HBtn }
 interface ViewHeaderProps {
   icon: ReactNode
   title: string
+  /** Optional rich title node that REPLACES the default `{icon} {title} {count}`
+   *  rendering. Use for breadcrumb-style headers (e.g. `Library > Tags`,
+   *  `Books > [book]`) where the title carries navigation semantics.
+   *  When set, the leading icon/title/subtitle/count chain is hidden in
+   *  favor of this slot. */
+  titleNode?: ReactNode
   /** Optional sub-page label rendered after title with chevron prefix
    *  (e.g. Ontology / Graph). Used when a view has internal sub-modes
    *  (Graph / Insights / Dashboard) that aren't separate routes. */
@@ -114,6 +120,7 @@ interface ViewHeaderProps {
 export function ViewHeader({
   icon,
   title,
+  titleNode,
   subtitle,
   count,
   searchPlaceholder,
@@ -136,6 +143,16 @@ export function ViewHeader({
   onSaveView,
 }: ViewHeaderProps) {
   const pane = usePane()
+
+  // Side panel toggle — auto-wired to the store unless explicitly overridden.
+  // Default is ON (showDetailPanel === undefined ↦ true) so every entity
+  // header surfaces the toggle consistently; callers that need to hide it
+  // pass `showDetailPanel={false}`. Secondary pane uses controlled props.
+  const storeSidePanelOpen = usePlotStore((s) => s.sidePanelOpen)
+  const storeToggleSidePanel = usePlotStore((s) => s.toggleSidePanel)
+  const resolvedShowDetailPanel = showDetailPanel ?? true
+  const resolvedDetailPanelOpen = detailPanelOpen ?? storeSidePanelOpen
+  const resolvedOnDetailPanelToggle = onDetailPanelToggle ?? storeToggleSidePanel
   // Internal search state if not controlled
   const [internalSearch, setInternalSearch] = useState("")
   const search = searchValue ?? internalSearch
@@ -166,7 +183,7 @@ export function ViewHeader({
   }, [displayOpen])
 
   const showSaveButton = saveViewMode === "save-as" || saveViewMode === "update"
-  const hasToolbar = showFilter || showDisplay || showDetailPanel || onCreateNew || showSaveButton
+  const hasToolbar = showFilter || showDisplay || resolvedShowDetailPanel || onCreateNew || showSaveButton
 
   // Save-as popover state (collect view name)
   const [saveAsOpen, setSaveAsOpen] = useState(false)
@@ -188,6 +205,10 @@ export function ViewHeader({
         {/* Title area — in secondary pane, show space dropdown instead */}
         {pane === 'secondary' ? (
           <SecondaryTitleDropdown currentTitle={title} icon={icon} count={count} />
+        ) : titleNode ? (
+          // Custom title slot (e.g. breadcrumb). Replaces the default
+          // icon/title/count chain entirely — caller owns the layout.
+          <div className="flex items-center min-w-0">{titleNode}</div>
         ) : (
           <div className="flex items-center gap-2">
             <span className="text-muted-foreground">{icon}</span>
@@ -339,8 +360,8 @@ export function ViewHeader({
               )
             )}
 
-            {showDetailPanel && (
-              <HBtn active={detailPanelOpen} onClick={onDetailPanelToggle}>
+            {resolvedShowDetailPanel && (
+              <HBtn active={resolvedDetailPanelOpen} onClick={resolvedOnDetailPanelToggle}>
                 <SidebarSimple size={16} weight="regular" />
               </HBtn>
             )}

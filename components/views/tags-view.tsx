@@ -41,6 +41,7 @@ import {
 import { cn } from "@/lib/utils"
 import { IconTag } from "@/components/plot-icons"
 import { ViewHeader } from "@/components/view-header"
+import { LibraryBreadcrumb } from "@/components/library/library-breadcrumb"
 import { useNotesView } from "@/lib/view-engine/use-notes-view"
 import { useTagsView } from "@/lib/view-engine/use-tags-view"
 import { FilterButton, FilterChipBar } from "@/components/filter-bar"
@@ -566,6 +567,7 @@ export function TagsView() {
       <ViewHeader
         icon={<IconTag size={20} />}
         title="Tags"
+        titleNode={<LibraryBreadcrumb current="tags" count={flatCount} />}
         count={flatCount}
         onCreateNew={() => {
           setCreatingTag(true)
