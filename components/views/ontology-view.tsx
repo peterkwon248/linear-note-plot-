@@ -21,6 +21,16 @@ import { buildViewStateForContext } from "@/lib/view-engine/defaults"
 import { rulesToOntologyFilters } from "@/lib/view-engine/graph-filter-adapter"
 import type { OntologyFilters } from "@/components/ontology/ontology-graph-canvas"
 import { Graph } from "@phosphor-icons/react/dist/ssr/Graph"
+import { CaretRight } from "@phosphor-icons/react/dist/ssr/CaretRight"
+import { ChartBar } from "@phosphor-icons/react/dist/ssr/ChartBar"
+import { IconInsight } from "@/components/plot-icons"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import { cn } from "@/lib/utils"
 import { useActiveViewId } from "@/lib/table-route"
 import { useSaveViewProps } from "@/lib/view-engine/use-save-view-props"
 import { getEntityColor } from "@/lib/colors" // v109: opt-in color fallback
@@ -335,6 +345,45 @@ export function OntologyView() {
       <ViewHeader
         icon={<Graph size={20} weight="regular" />}
         title="Ontology"
+        subtitle={
+          <>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button
+                  type="button"
+                  className="shrink-0 rounded p-0.5 text-muted-foreground/70 hover:text-muted-foreground hover:bg-hover-bg transition-colors"
+                  aria-label="Switch ontology view mode"
+                >
+                  <CaretRight size={14} weight="regular" />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start" className="min-w-[140px]">
+                <DropdownMenuItem
+                  onClick={() => updateGraphViewState({ viewMode: "graph" })}
+                  className={cn(tab === "graph" && "bg-accent/10 text-accent")}
+                >
+                  <Graph size={16} weight="regular" />
+                  Graph
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={() => updateGraphViewState({ viewMode: "insights" })}
+                  className={cn(tab === "insights" && "bg-accent/10 text-accent")}
+                >
+                  <IconInsight size={16} />
+                  Insights
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={() => updateGraphViewState({ viewMode: "dashboard" })}
+                  className={cn(tab === "dashboard" && "bg-accent/10 text-accent")}
+                >
+                  <ChartBar size={16} weight="regular" />
+                  Dashboard
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+            <span>{tab === "graph" ? "Graph" : tab === "insights" ? "Insights" : "Dashboard"}</span>
+          </>
+        }
         searchPlaceholder="Search nodes..."
         searchValue={searchQuery}
         onSearchChange={setSearchQuery}
