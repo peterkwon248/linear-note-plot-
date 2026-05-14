@@ -1,4 +1,4 @@
-import { isToday, isThisWeek, isThisMonth } from "date-fns"
+import { isToday, isYesterday, isThisWeek, isThisMonth } from "date-fns"
 import type { Note, NoteStatus, NotePriority, TriageStatus } from "../types"
 import type { GroupBy, GroupSortBy, NoteGroup } from "./types"
 import { STATUS_ORDER, PRIORITY_ORDER } from "./types"
@@ -149,13 +149,18 @@ function groupByPriority(notes: Note[]): NoteGroup[] {
 
 /* ── Date grouping ────────────────────────────────────── */
 
-type DateBucket = "Today" | "This Week" | "This Month" | "Older"
+// 2026-05-14: extended with "Yesterday" bucket (5 tiers total: Today /
+// Yesterday / This Week / This Month / Older). Yesterday must be checked
+// before This Week, since isThisWeek would otherwise swallow yesterday's
+// date when the week boundary falls between them.
+type DateBucket = "Today" | "Yesterday" | "This Week" | "This Month" | "Older"
 
-const DATE_KEYS: DateBucket[] = ["Today", "This Week", "This Month", "Older"]
+const DATE_KEYS: DateBucket[] = ["Today", "Yesterday", "This Week", "This Month", "Older"]
 
 function getDateBucket(dateStr: string): DateBucket {
   const d = new Date(dateStr)
   if (isToday(d)) return "Today"
+  if (isYesterday(d)) return "Yesterday"
   if (isThisWeek(d, { weekStartsOn: 1 })) return "This Week"
   if (isThisMonth(d)) return "This Month"
   return "Older"
@@ -164,6 +169,7 @@ function getDateBucket(dateStr: string): DateBucket {
 function groupByDate(notes: Note[]): NoteGroup[] {
   const buckets: Record<DateBucket, Note[]> = {
     Today: [],
+    Yesterday: [],
     "This Week": [],
     "This Month": [],
     Older: [],
@@ -174,6 +180,9 @@ function groupByDate(notes: Note[]): NoteGroup[] {
   }
 
   return DATE_KEYS
+    // Hide empty buckets to reduce UI noise — only render groups with
+    // at least one note. Order preserved by DATE_KEYS ordering.
+    .filter((key) => buckets[key].length > 0)
     .map((key) => ({
       key,
       label: key,

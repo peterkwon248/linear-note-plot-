@@ -1,6 +1,7 @@
 "use client"
 
 import { useMemo, useCallback } from "react"
+import { isToday, isYesterday, isThisWeek, isThisMonth } from "date-fns"
 import { usePlotStore } from "../store"
 import type { ViewState, ViewContextKey, FilterRule, SortRule, GroupBy } from "./types"
 import { buildViewStateForContext } from "./defaults"
@@ -187,6 +188,33 @@ function applyBookGrouping(books: Book[], groupBy: GroupBy): BookGroup[] {
     const out: BookGroup[] = []
     if (pinned.length > 0) out.push({ key: "pinned", label: "Pinned", books: pinned })
     if (others.length > 0) out.push({ key: "others", label: "Others", books: others })
+    return out
+  }
+
+  // 2026-05-14 time grouping: 5-tier Updated bucket (Today / Yesterday /
+  // This Week / This Month / Older). Empty buckets are hidden to reduce
+  // UI noise. Mirrors the Notes/Wiki/Template date grouping pattern via
+  // shared bucket logic (mirrors group.ts getDateBucket order).
+  if (groupBy === "date") {
+    const today: Book[] = []
+    const yesterday: Book[] = []
+    const thisWeek: Book[] = []
+    const thisMonth: Book[] = []
+    const older: Book[] = []
+    for (const b of books) {
+      const d = new Date(b.updatedAt)
+      if (isToday(d)) today.push(b)
+      else if (isYesterday(d)) yesterday.push(b)
+      else if (isThisWeek(d, { weekStartsOn: 1 })) thisWeek.push(b)
+      else if (isThisMonth(d)) thisMonth.push(b)
+      else older.push(b)
+    }
+    const out: BookGroup[] = []
+    if (today.length > 0)     out.push({ key: "date-today",     label: "Today",      books: today })
+    if (yesterday.length > 0) out.push({ key: "date-yesterday", label: "Yesterday",  books: yesterday })
+    if (thisWeek.length > 0)  out.push({ key: "date-week",      label: "This Week",  books: thisWeek })
+    if (thisMonth.length > 0) out.push({ key: "date-month",     label: "This Month", books: thisMonth })
+    if (older.length > 0)     out.push({ key: "date-older",     label: "Older",      books: older })
     return out
   }
 
