@@ -23,18 +23,20 @@ import { Tag as PhTag } from "@phosphor-icons/react/dist/ssr/Tag"
 import { Folder } from "@phosphor-icons/react/dist/ssr/Folder"
 import { Quotes } from "@phosphor-icons/react/dist/ssr/Quotes"
 import { Sticker as StickerIcon } from "@phosphor-icons/react/dist/ssr/Sticker"
+import { Bookmark as PhBookmark } from "@phosphor-icons/react/dist/ssr/Bookmark"
 import { cn } from "@/lib/utils"
 
-type LibraryEntity = "tags" | "files" | "references" | "stickers"
+type LibraryEntity = "tags" | "files" | "references" | "stickers" | "labels"
 
 const ENTITY_META: Record<LibraryEntity, { label: string; route: string; icon: React.ElementType }> = {
   tags: { label: "Tags", route: "/library/tags", icon: PhTag },
   files: { label: "Files", route: "/library/files", icon: Folder },
   references: { label: "References", route: "/library/references", icon: Quotes },
   stickers: { label: "Stickers", route: "/stickers", icon: StickerIcon },
+  labels: { label: "Labels", route: "/labels", icon: PhBookmark },
 }
 
-const ALL_ENTITIES: LibraryEntity[] = ["tags", "files", "references", "stickers"]
+const ALL_ENTITIES: LibraryEntity[] = ["tags", "files", "references", "stickers", "labels"]
 
 export function LibraryBreadcrumb({
   current,

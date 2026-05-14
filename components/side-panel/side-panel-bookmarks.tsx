@@ -300,6 +300,7 @@ export function SidePanelBookmarks() {
       {entity.type === "sticker" && <EntityAnchorPlaceholder label="Stickers" />}
       {entity.type === "file" && <EntityAnchorPlaceholder label="Files" />}
       {entity.type === "reference" && <EntityAnchorPlaceholder label="References" />}
+      {entity.type === "label" && <EntityAnchorPlaceholder label="Labels" />}
     </div>
   )
 }

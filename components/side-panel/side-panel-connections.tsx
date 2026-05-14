@@ -514,8 +514,87 @@ export function SidePanelConnections() {
   if (sidePanelContext?.type === "reference") {
     return <ReferenceConnections />
   }
+  if (sidePanelContext?.type === "label") {
+    return <LabelConnections />
+  }
 
   return <NoteConnections />
+}
+
+// ── Label Connections ─────────────────────────────────────
+// "Labeled notes by status" — TagConnections 패턴 정합. Label은 1:N
+// (Note.labelId는 단일 id) — Tag와 다른 점은 한 노트에 하나 라벨만.
+
+function LabelConnections() {
+  const entity = useSidePanelEntity()
+  const label = entity.type === "label" ? entity.label : null
+  const notes = usePlotStore((s) => s.notes)
+  const openInSecondary = usePlotStore((s) => s.openInSecondary)
+
+  const labeled = useMemo(() => {
+    if (!label) return { byStatus: { stone: 0, brick: 0, keystone: 0 } as Record<string, number>, all: [] as typeof notes }
+    const matching = notes.filter((n) => !n.trashed && n.labelId === label.id)
+    const byStatus = { stone: 0, brick: 0, keystone: 0 } as Record<string, number>
+    for (const n of matching) {
+      const s = (n.status ?? "stone") as string
+      byStatus[s] = (byStatus[s] ?? 0) + 1
+    }
+    return { byStatus, all: matching }
+  }, [label, notes])
+
+  if (!label) {
+    return (
+      <div className="flex flex-1 items-center justify-center p-8 text-center">
+        <p className="text-note text-muted-foreground">Select a label to see connections</p>
+      </div>
+    )
+  }
+
+  const total = labeled.all.length
+
+  return (
+    <div className="flex-1 overflow-y-auto">
+      <ConnectionSection
+        title="Labeled notes"
+        icon={<LinkSimple size={14} weight="regular" />}
+        count={total}
+        defaultOpen
+      >
+        {total === 0 ? (
+          <p className="text-note text-muted-foreground px-2">
+            No notes carry this label yet
+          </p>
+        ) : (
+          <div className="space-y-3">
+            <div className="space-y-0.5">
+              <KindHeader label="By status" count={total} />
+              <StatusRow label="Stone" count={labeled.byStatus.stone} colorVar="var(--status-stone)" />
+              <StatusRow label="Brick" count={labeled.byStatus.brick} colorVar="var(--status-brick)" />
+              <StatusRow label="Block" count={labeled.byStatus.keystone} colorVar="var(--status-keystone)" />
+            </div>
+            <div className="space-y-0.5">
+              <SubLabel>Recent</SubLabel>
+              {labeled.all.slice(0, 8).map((n) => (
+                <button
+                  key={n.id}
+                  onClick={() => openInSecondary(n.id)}
+                  className="flex w-full items-center gap-2 rounded-md px-2 py-0.5 text-left text-note text-foreground hover:bg-hover-bg transition-colors"
+                >
+                  <FileText size={12} className="shrink-0 text-muted-foreground" weight="regular" />
+                  <span className="truncate flex-1">{n.title || "Untitled"}</span>
+                </button>
+              ))}
+              {labeled.all.length > 8 && (
+                <p className="px-2 py-1 text-2xs text-muted-foreground/70 italic">
+                  +{labeled.all.length - 8} more (see Detail tab for full list)
+                </p>
+              )}
+            </div>
+          </div>
+        )}
+      </ConnectionSection>
+    </div>
+  )
 }
 
 // ── Tag Connections ─────────────────────────────────────
