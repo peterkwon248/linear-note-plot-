@@ -21,6 +21,14 @@ import { buildViewStateForContext } from "@/lib/view-engine/defaults"
 import { rulesToOntologyFilters } from "@/lib/view-engine/graph-filter-adapter"
 import type { OntologyFilters } from "@/components/ontology/ontology-graph-canvas"
 import { Graph } from "@phosphor-icons/react/dist/ssr/Graph"
+import { CaretDown } from "@phosphor-icons/react/dist/ssr/CaretDown"
+import { Check } from "@phosphor-icons/react/dist/ssr/Check"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import { useActiveViewId } from "@/lib/table-route"
 import { useSaveViewProps } from "@/lib/view-engine/use-save-view-props"
 import { getEntityColor } from "@/lib/colors" // v109: opt-in color fallback
@@ -335,7 +343,39 @@ export function OntologyView() {
       <ViewHeader
         icon={<Graph size={20} weight="regular" />}
         title="Ontology"
-        subtitle={tab === "graph" ? "Graph" : tab === "insights" ? "Insights" : "Dashboard"}
+        subtitle={
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button
+                type="button"
+                className="inline-flex items-center gap-1 rounded px-1.5 -mx-1.5 py-0.5 hover:bg-hover-bg transition-colors duration-100"
+              >
+                <span>{tab === "graph" ? "Graph" : tab === "insights" ? "Insights" : "Dashboard"}</span>
+                <CaretDown size={10} weight="bold" className="text-muted-foreground/60" />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start" className="min-w-[140px]">
+              <DropdownMenuItem onClick={() => updateGraphViewState({ viewMode: "graph" })}>
+                <span className="flex w-4 items-center justify-center">
+                  {tab === "graph" && <Check size={12} weight="bold" />}
+                </span>
+                Graph
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => updateGraphViewState({ viewMode: "insights" })}>
+                <span className="flex w-4 items-center justify-center">
+                  {tab === "insights" && <Check size={12} weight="bold" />}
+                </span>
+                Insights
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => updateGraphViewState({ viewMode: "dashboard" })}>
+                <span className="flex w-4 items-center justify-center">
+                  {tab === "dashboard" && <Check size={12} weight="bold" />}
+                </span>
+                Dashboard
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        }
         searchPlaceholder="Search nodes..."
         searchValue={searchQuery}
         onSearchChange={setSearchQuery}
