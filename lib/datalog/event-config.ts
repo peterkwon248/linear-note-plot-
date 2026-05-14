@@ -13,8 +13,18 @@ import { FileText as PhFileText } from "@phosphor-icons/react/dist/ssr/FileText"
 import { Paperclip } from "@phosphor-icons/react/dist/ssr/Paperclip"
 import { BookOpen as PhBookOpen } from "@phosphor-icons/react/dist/ssr/BookOpen"
 import { Scissors as PhScissors } from "@phosphor-icons/react/dist/ssr/Scissors"
+import { Cube as PhCube } from "@phosphor-icons/react/dist/ssr/Cube"
+import { ArrowsDownUp } from "@phosphor-icons/react/dist/ssr/ArrowsDownUp"
+import { ListPlus } from "@phosphor-icons/react/dist/ssr/ListPlus"
+import { CaretRight as PhCaretRight } from "@phosphor-icons/react/dist/ssr/CaretRight"
+import { ArrowsMerge } from "@phosphor-icons/react/dist/ssr/ArrowsMerge"
+import { ArrowsSplit } from "@phosphor-icons/react/dist/ssr/ArrowsSplit"
+import { UserPlus } from "@phosphor-icons/react/dist/ssr/UserPlus"
+import { UserMinus } from "@phosphor-icons/react/dist/ssr/UserMinus"
+import { Palette } from "@phosphor-icons/react/dist/ssr/Palette"
+import { TextT } from "@phosphor-icons/react/dist/ssr/TextT"
 import type { Icon as PhIcon } from "@phosphor-icons/react"
-import type { NoteEventType } from "@/lib/types"
+import type { EntityEventType } from "@/lib/types"
 import { EVENT_HEX } from "@/lib/colors"
 
 interface EventTypeConfig {
@@ -23,7 +33,16 @@ interface EventTypeConfig {
   color: string
 }
 
-export const EVENT_CONFIG: Record<NoteEventType, EventTypeConfig> = {
+/**
+ * EntityEventType → display config (icon / verb / color).
+ *
+ * PR 5d (activity-unification, 2026-05-14): extended from NoteEventType to
+ * EntityEventType. Wiki / Book / cross-entity action types added with
+ * neutral fallback colors (no new EVENT_HEX entries — kept scope tight;
+ * future polish PR can promote to LOCKED palette). ActivityTimeline
+ * gracefully skips unknown types via `if (!config) return null`.
+ */
+export const EVENT_CONFIG: Record<EntityEventType, EventTypeConfig> = {
   created: { icon: FilePlus, verb: "Created", color: EVENT_HEX.created },
   updated: { icon: PencilSimple, verb: "Edited", color: EVENT_HEX.updated },
   opened: { icon: PhEye, verb: "Opened", color: EVENT_HEX.opened },
@@ -51,10 +70,30 @@ export const EVENT_CONFIG: Record<NoteEventType, EventTypeConfig> = {
   attachment_removed: { icon: Paperclip, verb: "removed attachment", color: EVENT_HEX.attachment_removed },
   reflection_added: { icon: PhBookOpen, verb: "Added reflection", color: EVENT_HEX.reflection_added },
   split: { icon: PhScissors, verb: "Split into new note", color: EVENT_HEX.split },
+  // ── Wiki-specific (PR 5d) ──────────────────────────────
+  block_added: { icon: PhCube, verb: "Added block", color: "#5e6ad2" },
+  block_removed: { icon: Trash, verb: "Removed block", color: "#6b7280" },
+  block_reordered: { icon: ArrowsDownUp, verb: "Reordered blocks", color: "#6b7280" },
+  section_collapsed: { icon: PhCaretRight, verb: "Toggled section", color: "#6b7280" },
+  merged: { icon: ArrowsMerge, verb: "Merged article", color: "#10b981" },
+  unmerged: { icon: ArrowsSplit, verb: "Unmerged article", color: "#f59e0b" },
+  // ── Book-specific (PR 5d) ──────────────────────────────
+  item_added: { icon: ListPlus, verb: "Added item", color: "#5e6ad2" },
+  item_removed: { icon: Trash, verb: "Removed item", color: "#6b7280" },
+  item_reordered: { icon: ArrowsDownUp, verb: "Reordered items", color: "#6b7280" },
+  smart_source_added: { icon: Sparkle, verb: "Added smart source", color: "#8b5cf6" },
+  smart_source_removed: { icon: Trash, verb: "Removed smart source", color: "#6b7280" },
+  converted_to_manual: { icon: PencilSimple, verb: "Converted to manual", color: "#f59e0b" },
+  chapter_added: { icon: PhBookOpen, verb: "Added chapter", color: "#5e6ad2" },
+  // ── Cross-entity (PR 5d) — Tag / Sticker / File / Reference ──
+  member_added: { icon: UserPlus, verb: "Added member", color: "#10b981" },
+  member_removed: { icon: UserMinus, verb: "Removed member", color: "#6b7280" },
+  color_changed: { icon: Palette, verb: "Color changed", color: "#a855f7" },
+  renamed: { icon: TextT, verb: "Renamed", color: "#5e6ad2" },
 }
 
 // Human-readable event type labels for filter chips
-export const EVENT_TYPE_GROUPS: { label: string; types: NoteEventType[] }[] = [
+export const EVENT_TYPE_GROUPS: { label: string; types: EntityEventType[] }[] = [
   { label: "Created", types: ["created"] },
   { label: "Edited", types: ["updated"] },
   { label: "Opened", types: ["opened"] },
