@@ -241,6 +241,18 @@ export function SidePanelBookmarks() {
         />
       )}
       {/* Wiki SECTIONS removed — Outline is shown in Detail tab */}
+      {/* Templates: global bookmark list still works cross-entity, but adding
+          anchor bookmarks from a template requires extending
+          GlobalBookmark.targetKind ("note" | "wiki" → + "template"), which is
+          a separate data-model PR (작업 원칙 #6). Surface a small notice so
+          the empty bottom doesn't read as broken. */}
+      {entity.type === "template" && (
+        <div className="px-3 py-3 border-t border-border-subtle">
+          <p className="text-2xs text-muted-foreground/70 italic">
+            Anchor bookmarks in templates are not yet available.
+          </p>
+        </div>
+      )}
     </div>
   )
 }
