@@ -675,13 +675,16 @@ export function WikiView() {
     }
   }, [wikiNotes, wikiArticles, notes])
 
-  // Stub count: wiki articles with minimal content
+  // Stub count: wiki articles with minimal content.
+  // Use wikiNotes (trashed-filtered) — not raw wikiArticles — so trashed
+  // stubs don't inflate the count and push articleCount negative.
   const stubCount = useMemo(
-    () => wikiArticles.filter(isWikiStub).length,
-    [wikiArticles]
+    () => wikiNotes.filter(isWikiStub).length,
+    [wikiNotes]
   )
 
-  // Article count: total wiki articles minus stubs
+  // Article count: total active wiki articles minus stubs. Always ≥ 0
+  // because both terms are derived from the same wikiNotes slice.
   const articleCount = useMemo(
     () => wikiNotes.length - stubCount,
     [wikiNotes, stubCount]
@@ -1373,8 +1376,27 @@ export function WikiView() {
               selectedIds={selectedArticleIds}
               activeArticleId={selectedWikiArticleId}
               onOpenArticle={openArticle}
-              onSelect={(id, opts) => handleArticleSelect(id, opts)}
+              onSelect={(id, opts) => handleArticleSelect(id, {
+                // Board mode parity with Notes (영구 룰 21): single click on a
+                // board card always accumulates toggle (modifier-free), so
+                // multi-select doesn't require Cmd/Ctrl. List mode still
+                // honors modifier semantics (single click = replace).
+                ...opts,
+                multi: true,
+              })}
               onUpdateViewState={updateWikiViewState}
+              onClearSelection={() => setSelectedArticleIds(new Set())}
+              onSelectAll={() => setSelectedArticleIds(new Set(sortedFilteredWikiNotes.map(n => n.id)))}
+              onMerge={(sourceId) => setWikiMergeSourceId(sourceId)}
+              onMultiMerge={(mergeIds) => {
+                setPendingMergeIds(mergeIds)
+                setWikiViewMode("merge")
+                clearArticleSelection()
+              }}
+              onSplit={(id) => {
+                setSelectedWikiArticleId(id)
+                setIsEditingWikiArticle(true)
+              }}
             />
           ) : (
             <WikiList
@@ -1429,7 +1451,10 @@ export function WikiView() {
               groupBy={wikiViewState.groupBy}
             />
           )}
-          {selectedArticleIds.size > 0 && (
+          {/* Notes parity (영구 룰 21): board view 는 우측 WikiBoardWorkbench가
+              하단 floating bar를 대체. list view 에서만 floating bar 표시 — 둘
+              동시 표시 시 같은 batch action UI가 중복 노출됨. */}
+          {selectedArticleIds.size > 0 && wikiViewState.viewMode !== "board" && (
             <WikiFloatingActionBar
               selectedIds={selectedArticleIds}
               articles={wikiArticles}

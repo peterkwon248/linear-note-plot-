@@ -48,6 +48,11 @@ export interface DisplayProperty {
   key: string
   label: string
   icon?: ReactNode
+  /** Property is only meaningful for the Board card surface (not list/gallery).
+   *  E.g. Notes tag pills — too long for a list column, perfect for a card
+   *  badge area. DisplayPanel hides board-only chips in non-board view modes
+   *  so users don't toggle a property that has no visible effect. */
+  boardOnly?: boolean
 }
 
 /** Single source of truth for display-panel configuration shape.
@@ -64,6 +69,15 @@ export interface DisplayConfig {
    *  so defaults to "label" (Category). DisplayPanel reads this on the
    *  list→board mode switch. */
   boardDefaultGroupBy?: GroupBy
+  /** Allow "family" grouping in Board mode. Default false (family tree
+   *  doesn't fit board columns for most entities). Wiki Categories
+   *  override to true (family-root-per-column is meaningful). */
+  allowFamilyOnBoard?: boolean
+  /** Whether sub-grouping (2nd-level group) is supported. Currently only
+   *  Notes implements it (see notes-table / notes-board / use-notes-view).
+   *  Default false — entities without subGroupBy handling hide the option
+   *  from the DisplayPanel to avoid the "selection has no effect" bug. */
+  supportsSubGrouping?: boolean
 }
 
 export interface ViewConfig {
@@ -172,6 +186,7 @@ export const NOTES_VIEW_CONFIG: ViewConfig = {
   ],
   displayConfig: {
     supportedModes: ["list", "board", "gallery"],
+    supportsSubGrouping: true,
     orderingOptions: [
       { value: "updatedAt", label: "Updated" },
       { value: "createdAt", label: "Created" },
@@ -188,26 +203,23 @@ export const NOTES_VIEW_CONFIG: ViewConfig = {
       { value: "role", label: "Role" },
       { value: "family", label: "Family" },
       { value: "date", label: "Updated" },
+      // Plot-consistent UX: alphabetical "Index" grouping moved from a
+      // properties-chip toggle (legacy showAlphaIndex) into the grouping
+      // dropdown alongside other grouping axes. Wired in lib/view-engine/group.ts.
+      { value: "firstLetter", label: "Index" },
     ],
     toggles: [
       { key: "showTrashed", label: "Show trashed", icon: TrashIcon },
       { key: "filterAwareRole", label: "Filter-aware role" },
     ],
     properties: [
-      // Index lives alongside other display properties — toggling it switches
-      // the table to alphabetical group view. DisplayPanel routes it to
-      // viewState.toggles.showAlphaIndex (not visibleColumns) since it's a
-      // display-mode flag, not a column.
-      { key: "showAlphaIndex", label: "Index", icon: IndexIcon },
       { key: "status", label: "Status", icon: StatusIcon },
-      // PR e: priority/label/tags now toggleable on the board card. They
-      // were always-rendered before — moving them under Display Properties
-      // gives users the same visibility control as the list view.
-      // pinned is intentionally NOT here: pinned notes always show the pin
-      // icon (Linear pattern — pinned-state is identity, not a meta toggle).
-      { key: "priority", label: "Priority", icon: PriorityIcon },
-      { key: "label", label: "Label", icon: LabelIcon },
-      { key: "tags", label: "Tags", icon: TagIcon },
+      // priority/label/tags surface only on the Board card (no equivalent
+      // list column). Marked boardOnly so DisplayPanel hides them in non-board
+      // view modes — prevents "chip toggles nothing" bug in list/gallery.
+      { key: "priority", label: "Priority", icon: PriorityIcon, boardOnly: true },
+      { key: "label", label: "Label", icon: LabelIcon, boardOnly: true },
+      { key: "tags", label: "Tags", icon: TagIcon, boardOnly: true },
       { key: "folder", label: "Folder", icon: FolderIcon },
       { key: "parent", label: "Parent", icon: ParentIcon },
       { key: "children", label: "Children", icon: ChildrenIcon },
@@ -278,10 +290,13 @@ export const WIKI_VIEW_CONFIG: ViewConfig = {
   ],
   displayConfig: {
     supportedModes: ["list", "board", "gallery"],
-    // Wiki has no `status` field (article/stub is heuristic, not enum), so
-    // when switching to board mode from groupBy="none" fall back to
-    // "label" (Category) — the canonical Wiki grouping axis.
-    boardDefaultGroupBy: "label",
+    // Wiki board default = "wikiStatus" (Stub / Article) — **2 column 고정
+    // 보장**. Notes의 Stone/Brick/Block 패턴 정확 mirror (영구 룰 21 정합).
+    // Status는 isWikiStub 기반 derived (block count >= 3 = article) →
+    // drag-to-change는 무의미하지만 시각 분류로는 entity-uniformity 본질을
+    // 가장 잘 표현. tier는 부차 axis로 dropdown에서 선택 가능 (parentArticleId
+    // chain 풍부할 때 유용).
+    boardDefaultGroupBy: "wikiStatus",
     // priority 제외 (wiki에 의미 없음)
     orderingOptions: [
       { value: "updatedAt", label: "Updated" },
@@ -291,10 +306,12 @@ export const WIKI_VIEW_CONFIG: ViewConfig = {
       { value: "reads", label: "Most read" },
       { value: "status", label: "Status" },
     ],
-    // tier(depth) / linkCount(bucket) / parent — wiki 고유 위계
+    // tier(depth) / linkCount(bucket) / parent — wiki 고유 위계 +
+    // wikiStatus (Stub / Article) — Notes Stone/Brick/Block 정합 axis.
     groupingOptions: [
       { value: "none", label: "No grouping" },
-      { value: "tier", label: "Tier (depth)" },
+      { value: "wikiStatus", label: "Status" },
+      { value: "tier", label: "Tier" },
       { value: "linkCount", label: "Link count" },
       { value: "parent", label: "Parent article" },
       { value: "role", label: "Role" },
@@ -335,34 +352,51 @@ export const WIKI_CATEGORY_VIEW_CONFIG: ViewConfig = {
       { key: "2nd", label: "Tier 2" },
       { key: "3rd+", label: "Tier 3+" },
     ]},
-    // Path-A-Step-3: Wiki Category status filter — populated vs empty.
-    // Mirrors the existing statusFilter logic in wiki-category-page (count===0).
     { key: "status", label: "Wikis", icon: TagIcon, values: [
       { key: "has-articles", label: "Has wikis" },
       { key: "empty", label: "Empty" },
     ]},
+    { key: "hasSubs", label: "Subcategories", icon: FolderIcon, values: [
+      { key: "yes", label: "Has subcategories" },
+      { key: "no", label: "Leaf only" },
+    ]},
+    // Parent filter — dynamically populated from existing categories in wiki-category-page.
+    { key: "parent", label: "Parent", icon: FolderIcon, values: [] },
+    // Color filter — dynamically populated from category palette.
+    { key: "color", label: "Color", icon: StatusIcon, values: [] },
   ],
   quickFilters: [],
   displayConfig: {
     supportedModes: ["list", "board"],
+    allowFamilyOnBoard: true,
     orderingOptions: [
       { value: "title", label: "Name" },
       { value: "parent", label: "Parent" },
       { value: "tier", label: "Tier" },
+      { value: "articles", label: "Articles" },
       { value: "sub", label: "Sub" },
+      { value: "createdAt", label: "Created" },
       { value: "updatedAt", label: "Updated" },
     ],
     groupingOptions: [
       { value: "none", label: "No grouping" },
+      { value: "tier", label: "Tier" },
+      { value: "parent", label: "Parent" },
+      { value: "family", label: "Family" },
+      { value: "firstLetter", label: "Index" },
+      { value: "createdAt", label: "Created" },
     ],
     toggles: [
       { key: "showDescription", label: "Show description", icon: ContentIcon },
+      { key: "showStubsOnly", label: "Stubs only", icon: ContentIcon },
       { key: "showEmptyGroups", label: "Show empty", icon: EyeIcon },
     ],
     properties: [
       { key: "parent", label: "Parent" },
       { key: "tier", label: "Tier" },
+      { key: "articles", label: "Articles" },
       { key: "sub", label: "Sub" },
+      { key: "createdAt", label: "Created" },
       { key: "updatedAt", label: "Updated" },
     ],
   },
@@ -827,6 +861,10 @@ export const BOOKS_VIEW_CONFIG: ViewConfig = {
   displayConfig: {
     // books-view-engine-3/4: board mode + gallery mode (entity-agnostic).
     supportedModes: ["grid", "list", "board", "gallery"],
+    // Books board default = "kind" (Smart / Hybrid / Manual) — **3 column 고정
+    // 보장**. Notes status / Wiki wikiStatus 패턴 정합 (영구 룰 21 — entity-
+    // uniformity). 모든 board 진입 시 entity-native enum axis로 자동 분류.
+    boardDefaultGroupBy: "kind",
     orderingOptions: [
       { value: "updatedAt", label: "Updated" },
       { value: "createdAt", label: "Created" },

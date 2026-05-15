@@ -1,5 +1,6 @@
 "use client"
 
+import { usePlotStore } from "@/lib/store"
 import { useSidePanelEntity } from "./use-side-panel-entity"
 import { ActivityTimeline } from "@/components/activity/activity-timeline"
 import { CommentsByEntity } from "@/components/comments/comments-by-entity"
@@ -16,6 +17,12 @@ import type { EntityRef } from "@/lib/types"
  */
 export function SidePanelActivity() {
   const entity = useSidePanelEntity()
+  const sidePanelContext = usePlotStore((s) => s.sidePanelContext)
+
+  // Wiki category — direct check (not in useSidePanelEntity union)
+  if (sidePanelContext?.type === "wiki-category") {
+    return <SoloHistory entity={{ kind: "category", id: sidePanelContext.id }} />
+  }
 
   if (entity.type === "wiki") {
     return (

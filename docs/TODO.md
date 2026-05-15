@@ -3,7 +3,41 @@
 > 우선순위 기반 작업 목록. **P0 = 다음 세션 즉시 시작점** (NEXT-ACTION.md 폐지, 2026-05-12).
 > 완료 항목은 즉시 삭제 또는 "완료" 섹션으로 이동.
 
-**마지막 갱신**: 2026-05-15 (12 PR 머지 — Library entity-uniformity 100% + Activity Unification PRD 완료 + Library Connections 차트화 + Labels Detail + Legend 위치)
+**마지막 갱신**: 2026-05-15 (저녁) (Wiki entity-uniformity + Category sidebar 흡수 + 다양한 polish 큰 단일 PR 머지)
+
+---
+
+## 🔴 P0 (이번 세션) — Wiki entity-uniformity 완성 + Category sidebar 흡수
+
+### 다음 머신에서 manual verify (cross-machine)
+
+```bash
+git pull origin main
+# 새 worktree 또는 기존 fresh main
+npm install && npm run dev
+# Plot 포커스 + Hard refresh (Ctrl+Shift+R)
+# 사용자 IDB reset 필요 시 console:
+# indexedDB.databases().then(dbs => dbs.forEach(db => db.name && indexedDB.deleteDatabase(db.name))); localStorage.clear(); location.reload();
+```
+
+**verify 체크리스트** (누적 변경 → 회귀 점검):
+- [ ] **Wiki Categories**: row single click → 우측 4탭 사이드바 (Detail/Connections/Activity/Bookmarks) 표시. Color row click → Popover ColorPickerGrid. Parent dropdown = Plot DropdownMenu (chevron + folder + color).
+- [ ] **Wiki Categories layout**: list `flex-1` (시원시원) + editor `w-[420px]` (이전 280 압축 회귀)
+- [ ] **Wiki Categories grouping**: dropdown 6 옵션 (None / Tier / Parent / Family / Index / Created). 기본 family.
+- [ ] **Wiki Articles board**: default Stub/Article 2 column 자동 (groupBy "wikiStatus"). 카드 single click select. hover 시 우측 상단 체크박스. multi-select 누적.
+- [ ] **WikiBoardWorkbench**: selection 시 Pin / Move folder / Add to category / Add tags / Split / Merge / Trash 7 actions. floating bar 안 보임 (board mode).
+- [ ] **Wiki 시드 17 articles** (fresh user/IDB reset 시)
+- [ ] **Books board**: default Smart/Hybrid/Manual 3 column 자동 (groupBy "kind")
+- [ ] **Notes**: Tags/Priority/Label chip은 list mode에서 숨김 + board mode에서 표시. groupingOptions에 "Index" 추가.
+
+### 🟡 P0-2 — Wiki articleCount 음수 회귀 (트랙시 stub 발생 시)
+
+- 이전 사용자 환경 음수 보고 → Fix: `wikiNotes` (trashed-filtered) 기준 통일. invariant: articleCount + stubCount = wikiNotes.length ≥ 0.
+- 사용자 본인 브라우저에서 reload 후 확인.
+
+### 🟡 이전 P0 잔여 — Tags / Labels 사이드바 회귀 (이전 세션 미진단)
+
+- 기존 P0 — fresh main 받은 후 다시 재현 확인 권장.
 
 ---
 

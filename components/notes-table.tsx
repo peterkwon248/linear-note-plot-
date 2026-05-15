@@ -528,27 +528,27 @@ export function NotesTable({
     [rawFlatNotes, trashFilterFn]
   )
 
-  // Alphabetical Index toggle (Wiki-pattern parity).
-  // Stored in viewState.toggles so it persists across saved views — sidebar +
-  // button captures it, ViewHeader Save button restores it.
-  const showAlphaIndex = viewState.toggles?.showAlphaIndex ?? false
-  const setShowAlphaIndex = useCallback(
-    (value: boolean | ((prev: boolean) => boolean)) => {
-      const next = typeof value === "function" ? value(showAlphaIndex) : value
-      updateViewState({ toggles: { ...(viewState.toggles ?? {}), showAlphaIndex: next } })
-    },
-    [showAlphaIndex, viewState.toggles, updateViewState],
-  )
+  // Alphabetical Index — Plot-consistent migration (2026-05-15).
+  //
+  // Was: viewState.toggles.showAlphaIndex (a side-band flag that, when on,
+  // overrode whatever groupBy was selected and forced A-Z buckets).
+  // Now: viewState.groupBy === "firstLetter" — Index lives in the grouping
+  // dropdown alongside every other axis. Legacy toggle reads forward for one
+  // store version (auto-promoted to groupBy on hydrate), then dropped.
+  const showAlphaIndex = viewState.groupBy === "firstLetter" || (viewState.toggles?.showAlphaIndex ?? false)
 
   const groups = useMemo<NoteGroup[]>(() => {
     const baseGroups = isTrashView && trashFilter !== "all"
       ? rawGroups.map((g) => ({ ...g, notes: g.notes.filter(trashFilterFn) }))
       : rawGroups
     if (!showAlphaIndex) return baseGroups
+    // Pipeline (group.ts) already produces letter buckets when groupBy ===
+    // "firstLetter". Only synthesise here for the legacy toggle path.
+    if (viewState.groupBy === "firstLetter") return baseGroups
     const allFlat = baseGroups.flatMap((g) => g.notes)
     const map = groupByInitial(allFlat, (n: Note) => n.title || "Untitled")
     return Array.from(map.entries()).map(([key, notes]) => ({ key, label: key, notes } as NoteGroup))
-  }, [rawGroups, isTrashView, trashFilter, trashFilterFn, showAlphaIndex])
+  }, [rawGroups, isTrashView, trashFilter, trashFilterFn, showAlphaIndex, viewState.groupBy])
 
   // ── Multi-select state ──
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
@@ -1373,35 +1373,15 @@ export function NotesTable({
                       style={col.id === "title" ? { marginLeft: -8 } : undefined}
                     >
                       {col.id === "title" ? (
-                        <div className="flex items-center gap-2 pr-0">
-                          <TH
-                            label={col.label}
-                            col={col.sortField}
-                            sortCol={viewState.sortField}
-                            sortDir={viewState.sortDirection}
-                            onSort={handleSort}
-                            className=""
-                            hideInactiveHint
-                          />
-                          {/* Alphabetical Index toggle — sits right next to Name
-                              (the column it groups by initial letter). */}
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation()
-                              e.preventDefault()
-                              setShowAlphaIndex((prev) => !prev)
-                            }}
-                            className={`flex h-6 items-center gap-1 rounded-md px-1.5 text-note font-medium transition-all duration-100 ${
-                              showAlphaIndex
-                                ? "bg-foreground/10 text-foreground"
-                                : "text-foreground/70 hover:bg-hover-bg hover:text-foreground"
-                            }`}
-                            title={showAlphaIndex ? "Exit alphabetical index" : "Show alphabetical index"}
-                          >
-                            <ListBullets size={12} weight="bold" />
-                            <span>Index</span>
-                          </button>
-                        </div>
+                        <TH
+                          label={col.label}
+                          col={col.sortField}
+                          sortCol={viewState.sortField}
+                          sortDir={viewState.sortDirection}
+                          onSort={handleSort}
+                          className=""
+                          hideInactiveHint
+                        />
                       ) : (
                         <TH
                           label={col.label}

@@ -1,5 +1,6 @@
 "use client"
 
+import { usePlotStore } from "@/lib/store"
 import { useActiveSpace } from "@/lib/table-route"
 import { useSidePanelEntity } from "./use-side-panel-entity"
 import { SidePanelContext } from "./side-panel-context"
@@ -11,6 +12,7 @@ import { BookDetailPanel } from "./book-detail-panel"
 import { TagDetailPanel } from "./tag-detail-panel"
 import { StickerDetailPanel } from "./sticker-detail-panel"
 import { LabelDetailPanel } from "./label-detail-panel"
+import { CategoryDetailPanel } from "./category-detail-panel"
 
 /**
  * Entity-aware detail panel that renders appropriate detail content
@@ -21,9 +23,24 @@ import { LabelDetailPanel } from "./label-detail-panel"
 export function SidePanelDetail() {
   const activeSpace = useActiveSpace()
   const entity = useSidePanelEntity()
+  const sidePanelContext = usePlotStore((s) => s.sidePanelContext)
+  const wikiCategories = usePlotStore((s) => s.wikiCategories)
 
   if (activeSpace === "ontology") {
     return <GraphDetailPlaceholder />
+  }
+
+  // Wiki category — direct lookup (not in useSidePanelEntity union)
+  if (sidePanelContext?.type === "wiki-category") {
+    const category = wikiCategories.find((c) => c.id === sidePanelContext.id)
+    if (category) {
+      return <CategoryDetailPanel category={category} />
+    }
+    return (
+      <div className="flex flex-1 items-center justify-center p-4 text-muted-foreground text-note">
+        Category not found
+      </div>
+    )
   }
 
   if (entity.type === "wiki") {

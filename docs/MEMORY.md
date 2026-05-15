@@ -8,6 +8,57 @@
 
 ---
 
+## 🚀 2026-05-15 (저녁) — **Wiki entity-uniformity 완성 + Category sidebar 흡수 + 다양한 polish** ⭐⭐⭐⭐⭐
+
+**범위**: 단일 worktree (`xenodochial-wing-654662`). 큰 단일 PR — 영구 룰 21 entity-uniformity 본질 진전 (Wiki Articles board = Notes parity + Wiki Categories sidebar 흡수 + Books board default kind + 다양한 polish).
+
+**변경 파일 (~20+)**:
+- `lib/store/types.ts` (SidePanelContext + wiki-category)
+- `lib/store/slices/wiki-categories.ts` (CATEGORY_COLOR_NAMES + getCategoryColorName)
+- `lib/store/seeds.ts` (Wiki articles 7 → 17 + tier 분포 10/4/3 + category spread 10)
+- `lib/view-engine/types.ts` (GroupBy: firstLetter / createdAt / wikiStatus 추가)
+- `lib/view-engine/group.ts` (groupByFirstLetter / groupByCreatedAt helper)
+- `lib/view-engine/defaults.ts` (wiki-category default groupBy "family")
+- `lib/view-engine/view-configs.tsx` (DisplayProperty boardOnly flag, DisplayConfig supportsSubGrouping/allowFamilyOnBoard, WIKI_CATEGORY_VIEW_CONFIG/WIKI_VIEW_CONFIG/BOOKS_VIEW_CONFIG/NOTES_VIEW_CONFIG 확장, boardDefaultGroupBy "wikiStatus"/"kind" 추가)
+- `lib/view-engine/wiki-list-pipeline.ts` (case "wikiStatus")
+- `components/display-panel.tsx` (boardOnly chip 자동 숨김, supportsSubGrouping UI hide, allowFamilyOnBoard board 허용)
+- `components/notes-table.tsx` (showAlphaIndex 로직 → groupBy firstLetter + 인라인 toggle 제거)
+- `components/views/wiki-view.tsx` (articleCount 음수 fix + WikiBoard onMerge/onMultiMerge/onSplit + onClearSelection/onSelectAll + onSelect multi:true board 누적 + floating bar board mode 숨김)
+- `components/views/wiki-board.tsx` (WikiBoardWorkbench wire-up + Card hover checkbox + onClick single-click select + onDoubleClick navigate)
+- `components/views/wiki-category-page.tsx` (layout fix list flex-1 + editor w-420 / handleBackgroundClick e.target check / Plot DropdownMenu + Color picker / 새 grouping/sort/filter + boardColumns valid whitelist)
+- `components/side-panel/category-detail-panel.tsx` (신규 — Color picker + Properties + Parent + Subcategories preview + Articles preview)
+- `components/side-panel/side-panel-detail.tsx` (wiki-category dispatch)
+- `components/side-panel/side-panel-connections.tsx` (CategoryConnections + 분기)
+- `components/side-panel/side-panel-activity.tsx` (wiki-category SoloHistory kind:"category")
+- `components/side-panel/side-panel-bookmarks.tsx` (wiki-category EntityAnchorPlaceholder)
+- `components/wiki-board-workbench.tsx` (신규 — Phase 1+2 Overview/Selection/Pin/Move folder/Add to category/Add tags/Split/Merge/Trash + CategoryAddPopover + TagsAddPopover)
+
+### 핵심 결정 (영구 LOCKED, 2026-05-15 저녁)
+
+**31. Wiki Categories sidebar 흡수** — mini panel content를 4탭 사이드바로 흡수 (Detail/Connections/Activity/Bookmarks). Tag/Label 패턴 mirror. 영구 룰 21 정합.
+
+**32. Wiki Articles board = Notes board parity** — single click select / hover checkbox / multi-select 누적 (modifier 무관) / WikiBoardWorkbench (Pin/Move folder/Add to category/Add tags/Split/Merge/Trash) / floating bar board mode 숨김. 영구 룰 21 정합.
+
+**33. Wiki status grouping = wikiStatus (Stub / Article 2 column)** — Notes Stone/Brick/Block 패턴 mirror. isWikiStub heuristic 기반 (drag 변경 무의미, read-only column). board default.
+
+**34. Index = grouping option (showAlphaIndex toggle 폐기)** — Notes/Wiki/Templates/Labels 모두 groupingOptions에 firstLetter 추가. Plot 일관 UX. legacy toggle 자동 호환.
+
+**35. boardOnly chip pattern** — list view에 column 없는 properties (Notes Tags/Priority/Label) 는 list mode에서 chip 자동 숨김. board mode에서만 표시.
+
+**36. boardDefaultGroupBy entity-native enum** — Notes: status, Wiki: wikiStatus, Books: kind. 모든 entity board 첫 진입 시 3 column 균형 보장 (Wiki는 2 column).
+
+**37. Wiki 시드 17 articles + tier 분포 10/4/3** — board column 다양성 보장 (fresh user). category spread 10 카테고리 (Computer Science / Algorithms / Data Structures / Productivity / Epistemology 포함).
+
+**38. Wiki Category dropdown = Plot DropdownMenu** — native `<select>` 폐기. chevron + FolderSimple + category color + 활성 bg-accent/10. 영구 룰 17 정합.
+
+**39. Wiki Category color picker in sidebar** — Detail panel Color row click → Popover ColorPickerGrid (Tag/Label과 차별화된 sidebar inline edit). getCategoryColorName(hex) helper (10 palette → 친근 이름).
+
+**40. Color grouping 폐기** (의미 부재 — 자동 cyclic 할당) — Categories grouping에서 제거. filter/properties color는 유지 (사용자 manual).
+
+**41. articleCount invariant** — `wikiNotes` (trashed-filtered)에서 stub/article 계산. 음수 차단.
+
+---
+
 ## 🚀 2026-05-15 — **12 PR 머지** + Activity Unification PRD 완료 + Library entity-uniformity 100% ⭐⭐⭐⭐⭐
 
 **범위**: 1 worktree (`keen-bassi-afd1b6`). 단일 day 12 PR 누적 — Library entity-uniformity 5 entity 완성 + Activity Unification PRD 4 단계 + Library Connections 차트화 + Ontology Legend 위치 변경.
