@@ -37,6 +37,7 @@ export type SidePanelContext =
   | { type: "tag"; id: string }
   | { type: "sticker"; id: string }
   | { type: "label"; id: string }
+  | { type: "wiki-category"; id: string }
   | null
 
 /**

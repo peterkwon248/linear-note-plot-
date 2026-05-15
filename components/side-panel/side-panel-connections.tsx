@@ -17,7 +17,10 @@ import { discoverRelated, type DiscoverResult } from "@/lib/search/discover-engi
 import { LinkSimple } from "@phosphor-icons/react/dist/ssr/LinkSimple"
 import { Compass } from "@phosphor-icons/react/dist/ssr/Compass"
 import { FileText } from "@phosphor-icons/react/dist/ssr/FileText"
+import { FolderSimple } from "@phosphor-icons/react/dist/ssr/FolderSimple"
+import { FolderOpen } from "@phosphor-icons/react/dist/ssr/FolderOpen"
 import { IconWiki } from "@/components/plot-icons"
+import { setActiveCategoryView } from "@/lib/wiki-view-mode"
 import { Warning } from "@phosphor-icons/react/dist/ssr/Warning"
 import { Tag as PhTag } from "@phosphor-icons/react/dist/ssr/Tag"
 import { Plus as PhPlus } from "@phosphor-icons/react/dist/ssr/Plus"
@@ -517,8 +520,156 @@ export function SidePanelConnections() {
   if (sidePanelContext?.type === "label") {
     return <LabelConnections />
   }
+  if (sidePanelContext?.type === "wiki-category") {
+    return <CategoryConnections />
+  }
 
   return <NoteConnections />
+}
+
+// ── Category Connections ──────────────────────────────────
+// "Subcategories + Articles in this category" — cross-entity hierarchy.
+// Detail panel은 preview (slice). Connections는 full list.
+
+function CategoryConnections() {
+  const sidePanelContext = usePlotStore((s) => s.sidePanelContext)
+  const wikiCategories = usePlotStore((s) => s.wikiCategories)
+  const wikiArticles = usePlotStore((s) => s.wikiArticles)
+  const categoryId =
+    sidePanelContext?.type === "wiki-category" ? sidePanelContext.id : null
+
+  const category = useMemo(
+    () => (categoryId ? wikiCategories.find((c) => c.id === categoryId) ?? null : null),
+    [wikiCategories, categoryId]
+  )
+
+  const subcategories = useMemo(
+    () => (categoryId ? wikiCategories.filter((c) => c.parentIds.includes(categoryId)) : []),
+    [wikiCategories, categoryId]
+  )
+
+  const catArticles = useMemo(
+    () => (categoryId ? wikiArticles.filter((a) => a.categoryIds?.includes(categoryId)) : []),
+    [wikiArticles, categoryId]
+  )
+
+  const parentCat = useMemo(() => {
+    if (!category || !category.parentIds?.[0]) return null
+    return wikiCategories.find((c) => c.id === category.parentIds[0]) ?? null
+  }, [category, wikiCategories])
+
+  if (!category) {
+    return (
+      <div className="flex flex-1 items-center justify-center p-4 text-muted-foreground text-note">
+        Category not found
+      </div>
+    )
+  }
+
+  return (
+    <div className="flex flex-col h-full overflow-y-auto">
+      {parentCat && (
+        <ConnectionSection
+          title="Parent"
+          icon={<ArrowUp size={16} weight="regular" />}
+          count={1}
+        >
+          <button
+            onClick={() => setActiveCategoryView(parentCat.id)}
+            className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left hover:bg-hover-bg transition-colors group"
+          >
+            <FolderSimple
+              size={14}
+              weight="regular"
+              className="shrink-0"
+              style={{ color: parentCat.color ?? undefined }}
+            />
+            <span className="truncate flex-1 text-note text-foreground">
+              {parentCat.name}
+            </span>
+            <CaretRight
+              size={11}
+              weight="regular"
+              className="text-muted-foreground/40 group-hover:text-muted-foreground transition-colors"
+            />
+          </button>
+        </ConnectionSection>
+      )}
+
+      <ConnectionSection
+        title="Subcategories"
+        icon={<FolderOpen size={16} weight="regular" />}
+        count={subcategories.length}
+      >
+        {subcategories.length === 0 ? (
+          <p className="text-note text-muted-foreground/70 italic px-2">
+            No subcategories
+          </p>
+        ) : (
+          <div className="flex flex-col gap-0.5">
+            {subcategories.map((sub) => (
+              <button
+                key={sub.id}
+                onClick={() => setActiveCategoryView(sub.id)}
+                className="flex w-full items-center gap-2 rounded-md px-2 py-1 text-left hover:bg-hover-bg transition-colors group"
+              >
+                <FolderSimple
+                  size={13}
+                  weight="regular"
+                  className="shrink-0"
+                  style={{ color: sub.color ?? undefined }}
+                />
+                <span className="truncate flex-1 text-note text-foreground">
+                  {sub.name}
+                </span>
+                <CaretRight
+                  size={11}
+                  weight="regular"
+                  className="text-muted-foreground/40 group-hover:text-muted-foreground transition-colors"
+                />
+              </button>
+            ))}
+          </div>
+        )}
+      </ConnectionSection>
+
+      <ConnectionSection
+        title="Articles"
+        icon={<FileText size={16} weight="regular" />}
+        count={catArticles.length}
+      >
+        {catArticles.length === 0 ? (
+          <p className="text-note text-muted-foreground/70 italic px-2">
+            No articles in this category
+          </p>
+        ) : (
+          <div className="flex flex-col gap-0.5">
+            {catArticles.map((a) => (
+              <button
+                key={a.id}
+                onClick={() =>
+                  usePlotStore.setState({
+                    sidePanelContext: { type: "wiki", id: a.id },
+                    sidePanelOpen: true,
+                  })
+                }
+                className="flex w-full items-center gap-2 rounded-md px-2 py-1 text-left text-note text-foreground hover:bg-hover-bg transition-colors"
+              >
+                <FileText
+                  size={13}
+                  weight="regular"
+                  className="shrink-0 text-muted-foreground"
+                />
+                <span className="truncate flex-1">
+                  {a.title || "Untitled"}
+                </span>
+              </button>
+            ))}
+          </div>
+        )}
+      </ConnectionSection>
+    </div>
+  )
 }
 
 // ── Label Connections ─────────────────────────────────────

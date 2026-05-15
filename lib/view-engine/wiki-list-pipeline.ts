@@ -658,6 +658,24 @@ export function applyWikiGrouping(
       return groups
     }
 
+    // 2026-05-15 wikiStatus grouping: 2-column fixed (Stub / Article) — mirrors
+    // Notes Stone/Brick/Block kanban pattern. Both columns always emitted so
+    // the board renders as a stable 2-axis even when one bucket is empty
+    // (Notes-style "always N columns"). Status is derived (isWikiStub) so
+    // drag-to-change isn't meaningful — see wiki-board.tsx for drag guards.
+    case "wikiStatus": {
+      const stubs: WikiArticle[] = []
+      const articles_: WikiArticle[] = []
+      for (const a of articles) {
+        if (isWikiStub(a)) stubs.push(a)
+        else articles_.push(a)
+      }
+      return [
+        { key: "wiki-status-stub",    label: "Stub",    articles: stubs },
+        { key: "wiki-status-article", label: "Article", articles: articles_ },
+      ]
+    }
+
     default:
       return [{ key: "_all", label: "", articles }]
   }

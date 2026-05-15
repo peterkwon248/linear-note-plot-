@@ -39,6 +39,10 @@ export function applyGrouping(notes: Note[], groupBy: GroupBy, extras?: { backli
       const lookupSource = extras?.filterAwareRole ? notes : (extras?.allNotes ?? notes)
       groups = groupByRole(notes, lookupSource); break
     }
+    case "firstLetter":
+      groups = groupByFirstLetter(notes); break
+    case "createdAt":
+      groups = groupByCreatedAt(notes); break
     default:
       return [{ key: "_all", label: "", notes }]
   }
@@ -513,4 +517,61 @@ function groupByFamily(notes: Note[]): NoteGroup[] {
   groups.sort((a, b) => a.label.localeCompare(b.label))
 
   return groups
+}
+
+/**
+ * Group by first letter of the title (Index grouping). Replaces the legacy
+ * showAlphaIndex toggle scattered across notes-table / wiki-list / templates.
+ * Non-letter starts (digits, symbols, hangul, etc.) bucket under "#".
+ */
+function groupByFirstLetter(notes: Note[]): NoteGroup[] {
+  const buckets: Record<string, Note[]> = {}
+  for (const n of notes) {
+    const title = (n.title ?? "").trim()
+    const first = (title[0] ?? "#").toUpperCase()
+    const key = /[A-Z]/.test(first) ? first : "#"
+    if (!buckets[key]) buckets[key] = []
+    buckets[key].push(n)
+  }
+  return Object.entries(buckets)
+    .sort(([a], [b]) => {
+      // "#" bucket always last so the alphabet ordering reads naturally
+      if (a === "#" && b !== "#") return 1
+      if (b === "#" && a !== "#") return -1
+      return a.localeCompare(b)
+    })
+    .map(([letter, items]) => ({ key: `letter-${letter}`, label: letter, notes: items }))
+}
+
+/**
+ * Group by createdAt into 5 time buckets (Today / Yesterday / This week /
+ * This month / Older). Mirrors the Time-grouping pattern used by Notes
+ * groupByDate but keyed off createdAt (not updatedAt) — for entities where
+ * "when was this added" matters more than "when was this touched."
+ */
+function groupByCreatedAt(notes: Note[]): NoteGroup[] {
+  const now = Date.now()
+  const day = 24 * 60 * 60 * 1000
+  const buckets: Record<string, { notes: Note[]; order: number }> = {
+    Today: { notes: [], order: 0 },
+    Yesterday: { notes: [], order: 1 },
+    "This week": { notes: [], order: 2 },
+    "This month": { notes: [], order: 3 },
+    Older: { notes: [], order: 4 },
+  }
+  for (const n of notes) {
+    const t = n.createdAt ? new Date(n.createdAt).getTime() : now
+    const age = now - t
+    const k =
+      age < day ? "Today" :
+      age < 2 * day ? "Yesterday" :
+      age < 7 * day ? "This week" :
+      age < 30 * day ? "This month" :
+      "Older"
+    buckets[k].notes.push(n)
+  }
+  return Object.entries(buckets)
+    .filter(([, v]) => v.notes.length > 0)
+    .sort(([, a], [, b]) => a.order - b.order)
+    .map(([label, v]) => ({ key: `created-${label}`, label, notes: v.notes }))
 }

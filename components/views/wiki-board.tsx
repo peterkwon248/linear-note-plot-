@@ -15,6 +15,7 @@ import type { DragEndEvent, DragStartEvent } from "@dnd-kit/core"
 import { SortableContext, horizontalListSortingStrategy, arrayMove, useSortable } from "@dnd-kit/sortable"
 import { CSS } from "@dnd-kit/utilities"
 import { FileText } from "@phosphor-icons/react/dist/ssr/FileText"
+import { Check as PhCheck } from "@phosphor-icons/react/dist/ssr/Check"
 import { cn } from "@/lib/utils"
 import { isWikiStub } from "@/lib/wiki-utils"
 import { usePlotStore } from "@/lib/store"
@@ -33,6 +34,7 @@ import {
   PinnedChip,
   PropertyChipRow,
 } from "@/components/property-chips"
+import { WikiBoardWorkbench } from "@/components/wiki-board-workbench"
 import type { WikiArticle, WikiCategory } from "@/lib/types"
 import type { GroupBy, ViewState } from "@/lib/view-engine/types"
 import type { WikiGroup } from "@/lib/view-engine/wiki-list-pipeline"
@@ -67,6 +69,13 @@ interface WikiBoardProps {
   onOpenArticle: (id: string) => void
   onSelect?: (id: string, opts: { multi?: boolean; shift?: boolean; index?: number }) => void
   onUpdateViewState: (patch: Partial<ViewState>) => void
+  // Workbench wire-up (entity-uniformity 영구 룰 21 — Notes BoardWorkbench
+  // pattern mirror). Optional for callers that haven't migrated yet.
+  onClearSelection?: () => void
+  onSelectAll?: () => void
+  onMerge?: (sourceId: string) => void
+  onMultiMerge?: (ids: string[]) => void
+  onSplit?: (id: string) => void
 }
 
 /* ── Column ──────────────────────────────────────────── */
@@ -159,6 +168,7 @@ interface CardProps {
   childrenCount?: number
   onClick: () => void
   onSelect?: (id: string, e: React.MouseEvent) => void
+  onDoubleClick?: () => void
 }
 
 function CardInner({
@@ -177,6 +187,7 @@ function CardInner({
   childrenCount,
   onClick,
   onSelect,
+  onDoubleClick,
 }: CardProps) {
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
     id: cardKey,
@@ -255,12 +266,22 @@ function CardInner({
       data-article-id={article.id}
       onClick={(e) => {
         if (isDragOverlay) return
-        if (onSelect && (e.metaKey || e.ctrlKey || e.shiftKey)) {
+        // Notes board parity (entity-uniformity 영구 룰 21):
+        // single click → select (multi/shift via modifiers in onSelect handler);
+        // double click → navigate to article. Previously modifier was required
+        // for selection, which broke the right-side workbench batch-action flow.
+        if (onSelect) {
           e.stopPropagation()
           onSelect(article.id, e)
-          return
+        } else {
+          onClick()
         }
-        onClick()
+      }}
+      onDoubleClick={(e) => {
+        if (isDragOverlay) return
+        e.stopPropagation()
+        if (onDoubleClick) onDoubleClick()
+        else onClick()
       }}
       className={cn(
         "group relative cursor-pointer rounded-md border bg-card shadow-sm p-2.5 transition-all hover:border-muted-foreground/30",
@@ -273,6 +294,25 @@ function CardInner({
         isDragging && "opacity-50",
       )}
     >
+      {/* Selection checkbox — hover or selected. Notes BoardCard pattern
+          mirror (영구 룰 21 entity-uniformity): absolute top-right, opacity-0
+          unless hovered or selected. Click select 자체는 card onClick에서
+          처리하므로 이건 시각 affordance 전용 (click도 동일 effect). */}
+      <div
+        className={cn(
+          "absolute top-1.5 right-1.5 flex h-4 w-4 items-center justify-center rounded border transition-all cursor-pointer z-10",
+          isSelected
+            ? "bg-accent border-accent"
+            : "border-border opacity-0 group-hover:opacity-100 hover:border-foreground/50 bg-card",
+        )}
+        onClick={(e) => {
+          e.stopPropagation()
+          onSelect?.(article.id, e)
+        }}
+      >
+        {isSelected && <PhCheck className="text-accent-foreground" size={10} weight="bold" />}
+      </div>
+
       {/* Title row — uses IconWikiStub / IconWikiArticle (status-specific
           icons defined in components/plot-icons.tsx). Pinned shows on the
           right (Linear identity pattern). The status chip lives below in
@@ -370,6 +410,11 @@ export function WikiBoard({
   onOpenArticle,
   onSelect,
   onUpdateViewState,
+  onClearSelection,
+  onSelectAll,
+  onMerge,
+  onMultiMerge,
+  onSplit,
 }: WikiBoardProps) {
   const updateWikiArticle = usePlotStore((s) => s.updateWikiArticle)
   const setWikiArticleParent = usePlotStore((s) => s.setWikiArticleParent)
@@ -585,6 +630,7 @@ export function WikiBoard({
                         }
                         childrenCount={childrenCountByParent?.get(article.id) ?? 0}
                         onClick={() => onOpenArticle(article.id)}
+                        onDoubleClick={() => onOpenArticle(article.id)}
                         onSelect={(id, e) => onSelect?.(id, { multi: e.metaKey || e.ctrlKey, shift: e.shiftKey })}
                       />
                     )
@@ -598,6 +644,22 @@ export function WikiBoard({
               )
             })}
           </SortableContext>
+
+          {/* Entity-uniformity (영구 룰 21) — Wiki gets the same right-side
+              workbench as Notes board so multi-select shows batch actions
+              instead of a missing UX. Phase 1: minimal scope (overview +
+              trash). */}
+          {onClearSelection && onSelectAll && (
+            <WikiBoardWorkbench
+              selectedIds={selectedIds}
+              articles={groups.flatMap((g) => g.articles)}
+              onClearSelection={onClearSelection}
+              onSelectAll={onSelectAll}
+              onMerge={onMerge}
+              onMultiMerge={onMultiMerge}
+              onSplit={onSplit}
+            />
+          )}
 
           <DragOverlay dropAnimation={null}>
             {activeArticleFromDrag && (

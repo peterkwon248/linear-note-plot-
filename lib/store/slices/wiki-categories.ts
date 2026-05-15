@@ -5,11 +5,33 @@ type Set = (fn: ((state: any) => any) | any) => void
 type Get = () => any
 
 /** Default color palette for new categories — cycles through to keep
- *  graph hulls visually distinguishable when grouping by category. */
-const CATEGORY_DEFAULT_PALETTE = [
+ *  graph hulls visually distinguishable when grouping by category.
+ *  Names below match the hex values 1:1 for friendly UI labels (board
+ *  group headers / sidebar color row). */
+export const CATEGORY_DEFAULT_PALETTE = [
   "#a78bfa", "#60a5fa", "#34d399", "#fbbf24", "#fb7185",
   "#f472b6", "#22d3ee", "#fb923c", "#84cc16", "#c084fc",
-]
+] as const
+
+export const CATEGORY_COLOR_NAMES: Record<string, string> = {
+  "#a78bfa": "Purple",
+  "#60a5fa": "Blue",
+  "#34d399": "Green",
+  "#fbbf24": "Amber",
+  "#fb7185": "Rose",
+  "#f472b6": "Pink",
+  "#22d3ee": "Cyan",
+  "#fb923c": "Orange",
+  "#84cc16": "Lime",
+  "#c084fc": "Violet",
+}
+
+/** Returns a friendly color name for a hex value. Falls back to the hex
+ *  itself if no mapping exists (custom user-picked colors). */
+export function getCategoryColorName(hex: string | null | undefined): string {
+  if (!hex) return "No color"
+  return CATEGORY_COLOR_NAMES[hex.toLowerCase()] ?? hex
+}
 
 export function createWikiCategoriesSlice(set: Set, get: Get) {
   return {

@@ -87,9 +87,17 @@ export function DisplayPanel({
   const isBoard = currentMode === "board"
 
   /* ── Grouping options ── */
-  // "family" is List-only — exclude from Board column selector
+  // "family" is List-only by default — exclude from Board column selector
+  // unless the entity opts in via `allowFamilyOnBoard` (e.g. Wiki Categories
+  // where family-root-per-column is a meaningful axis).
+  const allowFamilyOnBoard = config.allowFamilyOnBoard ?? false
+  // Sub-grouping (2nd-level group) is currently Notes-only — wired in
+  // notes-table / notes-board / use-notes-view. Other entities don't process
+  // viewState.subGroupBy, so showing the option creates a "selection has no
+  // effect" bug. Hide the entire sub-grouping UI for those.
+  const supportsSubGrouping = config.supportsSubGrouping ?? false
   const groupingOptions = (config.groupingOptions ?? []).filter(
-    (o) => !(isBoard && o.value === "family")
+    (o) => !(isBoard && o.value === "family" && !allowFamilyOnBoard)
   )
   const subGroupOptions = groupingOptions.filter(
     (o) => o.value !== viewState.groupBy && o.value !== "family"
@@ -164,7 +172,7 @@ export function DisplayPanel({
       {groupingOptions.length > 0 && (
         <>
           {isBoard ? (
-            /* Board: Columns (required) + Rows (sub-group) + Group order */
+            /* Board: Columns (required) + optional Rows (sub-group) + Group order */
             <>
               <div className="flex items-center justify-between">
                 <span className="text-note text-muted-foreground">Columns</span>
@@ -179,23 +187,27 @@ export function DisplayPanel({
                   disabledValues={["none" as GroupBy, ...(disabledGroupByValues as GroupBy[])]}
                 />
               </div>
-              <div className="flex items-center justify-between">
-                <span className="text-note text-muted-foreground">Rows</span>
-                <ChipDropdown<GroupBy>
-                  value={viewState.subGroupBy ?? "none"}
-                  options={subGroupOptions}
-                  onChange={(v) => onViewStateChange({ subGroupBy: v })}
-                />
-              </div>
-              {viewState.subGroupBy && viewState.subGroupBy !== "none" && (
-                <div className="flex items-center justify-between pl-3">
-                  <span className="text-2xs text-muted-foreground/60">Group order</span>
-                  <ChipDropdown<GroupSortBy>
-                    value={viewState.subGroupSortBy ?? "default"}
-                    options={groupOrderOptions}
-                    onChange={(v) => onViewStateChange({ subGroupSortBy: v })}
-                  />
-                </div>
+              {supportsSubGrouping && (
+                <>
+                  <div className="flex items-center justify-between">
+                    <span className="text-note text-muted-foreground">Rows</span>
+                    <ChipDropdown<GroupBy>
+                      value={viewState.subGroupBy ?? "none"}
+                      options={subGroupOptions}
+                      onChange={(v) => onViewStateChange({ subGroupBy: v })}
+                    />
+                  </div>
+                  {viewState.subGroupBy && viewState.subGroupBy !== "none" && (
+                    <div className="flex items-center justify-between pl-3">
+                      <span className="text-2xs text-muted-foreground/60">Group order</span>
+                      <ChipDropdown<GroupSortBy>
+                        value={viewState.subGroupSortBy ?? "default"}
+                        options={groupOrderOptions}
+                        onChange={(v) => onViewStateChange({ subGroupSortBy: v })}
+                      />
+                    </div>
+                  )}
+                </>
               )}
             </>
           ) : (
@@ -214,7 +226,7 @@ export function DisplayPanel({
                   disabledValues={disabledGroupByValues as GroupBy[]}
                 />
               </div>
-              {viewState.groupBy !== "none" && (
+              {supportsSubGrouping && viewState.groupBy !== "none" && (
                 <>
                   <div className="flex items-center justify-between">
                     <span className="text-note text-muted-foreground">Sub-grouping</span>
@@ -363,7 +375,15 @@ export function DisplayPanel({
       )}
 
       {/* ── Section 5: Display properties ── */}
-      {config.properties.length > 0 && (
+      {(() => {
+        // Filter out board-only chips when not in board mode. These chips
+        // (e.g. Notes priority/label/tags) only affect the Board card surface;
+        // showing them in list/gallery would toggle nothing.
+        const visibleProperties = config.properties.filter(
+          (p) => !p.boardOnly || isBoard
+        )
+        if (visibleProperties.length === 0) return null
+        return (
         <>
           <hr className="border-border-subtle" />
           <div>
@@ -371,7 +391,7 @@ export function DisplayPanel({
               Display properties
             </p>
             <div className="flex flex-wrap gap-1.5">
-              {config.properties.map((prop) => {
+              {visibleProperties.map((prop) => {
                 // Special: showAlphaIndex is a display-mode flag stored in
                 // viewState.toggles, not a column in visibleColumns. Route the
                 // chip click through the same toggle channel as LIST OPTIONS.
@@ -413,7 +433,8 @@ export function DisplayPanel({
             </div>
           </div>
         </>
-      )}
+        )
+      })()}
     </div>
   )
 }

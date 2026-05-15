@@ -6,6 +6,83 @@
 
 ---
 
+## 2026-05-15 (저녁) — 집/Windows, **Wiki entity-uniformity 완성 + 카테고리 사이드바 흡수**
+
+> 🎯 **다음 즉시 액션** (cross-machine 진입점):
+> 1. `git pull origin main` (대형 PR 머지된 main 받음)
+> 2. **사용자 hard refresh + 누적 변경 manual verify** (큰 작업 묶음 — 회귀 점검 필요):
+>    - **Wiki Categories sub-section**:
+>      - row single click → 우측 사이드바 4탭 (Detail/Connections/Activity/Bookmarks) 표시 (영구 룰 21 정합)
+>      - Detail 탭에 Color row click → Popover ColorPickerGrid 열림 (sidebar inline edit)
+>      - Detail 탭 Parent dropdown = Plot DropdownMenu (chevron + FolderSimple + category color + 활성 bg-accent/10) — native `<select>` 폐기
+>      - Layout: list `flex-1` (568+px) + editor `w-[420px]` (이전 280/flex-1 반대)
+>      - handleBackgroundClick `e.target !== e.currentTarget` early return (row dblclick bubble로 editor 닫히는 회귀 차단)
+>      - groupingOptions 6개 (None/Tier/Parent/Family/Index/Created) — Color grouping은 폐기 (의미 X — 자동 cyclic 할당)
+>      - default groupBy "family" (fresh user — hierarchy 즉시 노출)
+>      - properties chip = parent/tier/articles/sub/createdAt/updatedAt (color/description chip 제거 — row dot + Show description toggle 중복)
+>    - **Wiki Articles board**:
+>      - default groupBy = `wikiStatus` (Stub / Article 2 column 고정 — Notes Stone/Brick/Block 패턴 정합)
+>      - 카드 single click = select (Notes 패턴 mirror, modifier 무관 누적 toggle)
+>      - 카드 hover → 우측 상단 체크박스 fade-in + selected 시 bg-accent + ✓
+>      - 우측 WikiBoardWorkbench (Phase 2): Pin / Move folder / Add to category / **Add tags** (new) / Split / Merge / Trash
+>      - Board mode에서 하단 floating bar 숨김 (workbench가 대체)
+>    - **Wiki 시드**: 17 articles (이전 7) + tier 분포 10/4/3 + category spread 10 카테고리 (사용자가 IDB reset 시 자동 적용)
+>    - **Wiki articleCount 음수 bug fix**: `wikiNotes.filter(isWikiStub).length` (trashed 제외) → invariant 보장
+>    - **Books**: boardDefaultGroupBy "kind" → Smart/Hybrid/Manual 3 column 자동 (영구 룰 21)
+>    - **Notes**: showAlphaIndex chip → groupingOptions "Index" 마이그레이션 (Plot 일관성), Tags/Priority/Label chip board-only flag (list view에서 자동 숨김)
+> 3. **Phase 후속 작업 (사용자 결정)**:
+>    - Tags batch를 wiki-floating-action-bar.tsx에도 추가 (list mode 일관성, 50 line)
+>    - Wiki workbench 추가 actions (Duplicate / Set parent / Aliases / Export markdown — P2)
+>    - Notes에 카테고리/태그 batch (Notes에 category 개념 없음 — tag만 가능)
+>    - Calendar 사이드바 / Ontology graph node 사이드바 — 의도 명확화 후 진행 (이전 세션 미결)
+
+### 완료 (이번 세션, 약 20+ 파일 변경 한 큰 PR)
+- **Wiki Categories sidebar 흡수** (mini panel → 4탭 entity-aware, 영구 룰 21 정합):
+  - SidePanelContext 확장 (`wiki-category` type)
+  - CategoryDetailPanel 신규 (Color picker / Properties / Parent / Subcategories preview / Articles preview)
+  - side-panel-detail/connections/activity/bookmarks 4 file dispatch + CategoryConnections (Parent/Subcategories/Articles full)
+  - handleSelect (single click) → setSidePanelContext (Tag/Label 패턴 mirror)
+- **Wiki Categories polish**:
+  - native `<select>` → Plot DropdownMenu (chevron + FolderSimple + category color + 활성 bg-accent/10)
+  - Layout fix (list flex-1 / editor w-420)
+  - handleBackgroundClick e.target check (회귀 차단)
+  - groupingOptions 6개 + properties chip 6개 (color/description chip 제거)
+  - default groupBy "family"
+  - Board view invalid groupBy fallback (legacy "status" → tier)
+  - Subgrouping UI 숨김 (DisplayConfig supportsSubGrouping flag — Notes만 true)
+  - "Family"/"First letter"/"Tier" 괄호 제거 (일관성)
+- **Notes 마이그레이션**:
+  - GroupBy type에 firstLetter / createdAt 추가
+  - group.ts에 helper 함수 (groupByFirstLetter / groupByCreatedAt)
+  - notes-table showAlphaIndex 로직 → groupBy === "firstLetter" 변환 + 인라인 Name column toggle 제거
+  - DisplayConfig boardOnly flag (Tags/Priority/Label chip은 list view 숨김)
+  - articleCount 음수 bug fix (wikiNotes 기준 통일)
+- **Wiki Board UX entity-uniformity**:
+  - WikiBoardWorkbench 신규 (Phase 1 → Phase 2): Pin/Move folder/Add to category/Add tags/Split/Merge/Trash + Overview (no selection)
+  - Card single click = select (Notes 패턴, modifier 무관 누적)
+  - Card hover checkbox + selected 시 bg-accent ✓
+  - Floating bar board mode에서 hide
+  - wikiStatus grouping (Stub/Article 2 column 고정)
+  - boardDefaultGroupBy "wikiStatus"
+  - Wiki 시드 17 articles + tier 10/4/3 + category spread 10
+- **Books**: boardDefaultGroupBy "kind" (3 column Smart/Hybrid/Manual 자동)
+
+### 영구 LOCKED 결정 (이번 세션)
+- **영구 룰 21 entity-uniformity 본질 진전**: Wiki Categories (sidebar 흡수) + Wiki Articles (board parity with Notes) + Books (board default kind) — 모든 entity board에 entity-native enum axis 보장
+- **Index = grouping option** (Plot 일관 — showAlphaIndex toggle 폐기, Notes/Wiki/Templates 모두 groupingOptions에 추가)
+- **Card hover checkbox = entity 공통 UX** (Notes/Wiki board card 동일 패턴)
+- **boardOnly chip pattern**: list column 없는 chip은 list mode에서 자동 숨김 (Notes Tags/Priority/Label, 다른 entity 확장 가능)
+
+### Watch Out
+- **IDB reset 필요한 사용자**: 시드 17 articles + default groupBy "family"/"wikiStatus"/"kind" 적용은 fresh user/IDB reset 시. 기존 사용자는 Display Properties에서 수동 선택 가능
+- **Webpack cache stale (한글 path)**: ENOENT rename 문제 발생 시 dev server restart (preview_stop/start). 사용자 본인 환경에서도 dev server 재시작 필요할 수 있음
+- **Tags batch는 wiki-board-workbench.tsx에만 추가됨** — wiki-floating-action-bar.tsx (list mode)에는 아직 안 추가 (별도 후속)
+
+### 머신
+집/Windows
+
+---
+
 ## 2026-05-15 — 집/Windows, **12 PR 머지** + Activity Unification PRD 완료 + Library 100% 완성
 
 > 🎯 **다음 즉시 액션** (다른 머신/세션 cross-machine 진입점):

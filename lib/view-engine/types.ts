@@ -84,6 +84,20 @@ export type GroupBy =
   // books-view-engine-3: book-specific grouping
   | "kind"    // Smart / Manual / Hybrid (Books)
   | "pinned"  // Pinned / Others (Books; reusable by other entities)
+  // Alphabetical index grouping (replaces legacy showAlphaIndex toggle) —
+  // groups by name first letter. Plot-consistent UX: every entity exposes
+  // grouping in the same place rather than scattering it between a toggle
+  // (Notes/Wiki/Templates/Labels) and a grouping option (Wiki Categories).
+  | "firstLetter"
+  // Time-bucket grouping (Today / Yesterday / This week / This month / Older).
+  // Currently used by Wiki Categories; can be wired into the Notes pipeline
+  // by adding a `groupByCreatedAt` helper to group.ts.
+  | "createdAt"
+  // Wiki article maturity (Stub / Article) — derived from block count via
+  // isWikiStub(). Mirrors the Notes Stone/Brick/Block fixed-column pattern
+  // so Wiki board gets the same "always N columns" visual without depending
+  // on parent-chain depth (which collapses to 1 column for flat content).
+  | "wikiStatus"
 
 export type GroupSortBy = "default" | "manual" | "name" | "count"
 

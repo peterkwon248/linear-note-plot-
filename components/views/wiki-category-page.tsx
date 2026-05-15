@@ -46,6 +46,12 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 
 /* ── Props ── */
 
@@ -350,14 +356,22 @@ function CategoryBoardView({
     const dir = sortDirection === "desc" ? -1 : 1
     return [...items].sort((a, b) => {
       if (ordering === "articles") return dir * (b.count - a.count)
+      if (ordering === "sub") return dir * (b.childCount - a.childCount)
+      if (ordering === "tier") return dir * (a.depth - b.depth)
+      if (ordering === "createdAt") return dir * (new Date(b.cat.createdAt).getTime() - new Date(a.cat.createdAt).getTime())
       if (ordering === "updatedAt") return dir * (new Date(b.cat.updatedAt ?? b.cat.createdAt).getTime() - new Date(a.cat.updatedAt ?? a.cat.createdAt).getTime())
       return dir * a.cat.name.localeCompare(b.cat.name)
     })
   }, [ordering, sortDirection])
 
-  // Group into board columns
+  // Group into board columns. Invalid grouping (e.g. legacy "status" leaked
+  // from other entities) must fall back to "tier" — else boardColumns returns
+  // [] and the board appears empty.
   const boardColumns = useMemo((): { key: string; label: string; items: CategoryDataItem[]; isRoot?: boolean }[] => {
-    const effectiveGrouping = (!grouping || grouping === "none") ? "tier" : grouping
+    const validGroupings = ["tier", "parent", "family", "firstLetter", "createdAt"] as const
+    const effectiveGrouping = validGroupings.includes(grouping as typeof validGroupings[number])
+      ? grouping
+      : "tier"
 
     if (effectiveGrouping === "tier") {
       const tiers: Record<string, CategoryDataItem[]> = { "0": [], "1": [], "2+": [] }
@@ -420,6 +434,53 @@ function CategoryBoardView({
           label: root.name,
           items: sortItems(items).sort((a, b) => a.depth - b.depth || a.cat.name.localeCompare(b.cat.name)),
           isRoot: !root.parentIds?.[0],
+        }))
+    }
+
+    if (effectiveGrouping === "firstLetter") {
+      const letterGroups: Record<string, CategoryDataItem[]> = {}
+      for (const item of categoryData) {
+        const first = (item.cat.name?.[0] ?? "#").toUpperCase()
+        const key = /[A-Z]/.test(first) ? first : "#"
+        if (!letterGroups[key]) letterGroups[key] = []
+        letterGroups[key].push(item)
+      }
+      return Object.entries(letterGroups)
+        .sort(([a], [b]) => a.localeCompare(b))
+        .map(([letter, items]) => ({
+          key: `letter-${letter}`,
+          label: letter,
+          items: sortItems(items),
+        }))
+    }
+
+    if (effectiveGrouping === "createdAt") {
+      const now = Date.now()
+      const day = 24 * 60 * 60 * 1000
+      const buckets: Record<string, { items: CategoryDataItem[]; order: number }> = {
+        Today: { items: [], order: 0 },
+        Yesterday: { items: [], order: 1 },
+        "This week": { items: [], order: 2 },
+        "This month": { items: [], order: 3 },
+        Older: { items: [], order: 4 },
+      }
+      for (const item of categoryData) {
+        const age = now - new Date(item.cat.createdAt).getTime()
+        const key =
+          age < day ? "Today" :
+          age < 2 * day ? "Yesterday" :
+          age < 7 * day ? "This week" :
+          age < 30 * day ? "This month" :
+          "Older"
+        buckets[key].items.push(item)
+      }
+      return Object.entries(buckets)
+        .filter(([, v]) => showEmpty || v.items.length > 0)
+        .sort(([, a], [, b]) => a.order - b.order)
+        .map(([label, v]) => ({
+          key: `created-${label}`,
+          label,
+          items: sortItems(v.items),
         }))
     }
 
@@ -615,6 +676,14 @@ function CategoryFullListView({
       filtered.sort((a, b) => dir * (a.depth - b.depth) || a.cat.name.localeCompare(b.cat.name))
     } else if (ord === "sub") {
       filtered.sort((a, b) => dir * (b.childCount - a.childCount) || a.cat.name.localeCompare(b.cat.name))
+    } else if (ord === "articles") {
+      filtered.sort((a, b) => dir * (b.count - a.count) || a.cat.name.localeCompare(b.cat.name))
+    } else if (ord === "createdAt") {
+      filtered.sort((a, b) => {
+        const aT = new Date(a.cat.createdAt).getTime()
+        const bT = new Date(b.cat.createdAt).getTime()
+        return dir * (bT - aT) || a.cat.name.localeCompare(b.cat.name)
+      })
     }
 
     return filtered
@@ -691,8 +760,51 @@ function CategoryFullListView({
         })
     }
 
+    if (grouping === "firstLetter") {
+      const groups: Record<string, typeof categoryData> = {}
+      for (const item of categoryData) {
+        const first = (item.cat.name?.[0] ?? "#").toUpperCase()
+        const key = /[A-Z]/.test(first) ? first : "#"
+        if (!groups[key]) groups[key] = []
+        groups[key].push(item)
+      }
+      return Object.entries(groups)
+        .sort(([a], [b]) => a.localeCompare(b))
+        .map(([letter, items]) => ({
+          key: `letter-${letter}`,
+          label: letter,
+          items,
+        }))
+    }
+
+    if (grouping === "createdAt") {
+      const now = Date.now()
+      const day = 24 * 60 * 60 * 1000
+      const buckets: Record<string, { items: typeof categoryData; order: number }> = {
+        Today: { items: [], order: 0 },
+        Yesterday: { items: [], order: 1 },
+        "This week": { items: [], order: 2 },
+        "This month": { items: [], order: 3 },
+        Older: { items: [], order: 4 },
+      }
+      for (const item of categoryData) {
+        const age = now - new Date(item.cat.createdAt).getTime()
+        const k =
+          age < day ? "Today" :
+          age < 2 * day ? "Yesterday" :
+          age < 7 * day ? "This week" :
+          age < 30 * day ? "This month" :
+          "Older"
+        buckets[k].items.push(item)
+      }
+      return Object.entries(buckets)
+        .filter(([, v]) => showEmpty || v.items.length > 0)
+        .sort(([, a], [, b]) => a.order - b.order)
+        .map(([label, v]) => ({ key: `created-${label}`, label, items: v.items }))
+    }
+
     return [{ key: "_all", label: "", items: categoryData }]
-  }, [categoryData, grouping, categories, getDepthLocal])
+  }, [categoryData, grouping, categories, getDepthLocal, showEmpty])
 
   const [expandedCatId, setExpandedCatId] = useState<string | null>(null)
 
@@ -836,6 +948,17 @@ function CategoryFullListView({
             </button>
           </div>
         )}
+        {showCol("createdAt") && (
+          <div className="w-[80px] flex justify-end">
+            <button
+              onClick={() => handleSortClick("createdAt")}
+              className="group/th inline-flex items-center gap-1 text-note font-medium text-muted-foreground transition-colors hover:text-foreground"
+            >
+              Created
+              <SortIcon col="createdAt" />
+            </button>
+          </div>
+        )}
         {showCol("updatedAt") && (
           <div className="w-[80px] flex justify-end">
             <button
@@ -923,6 +1046,11 @@ function CategoryFullListView({
                   {showCol("sub") && (
                     <span className="w-[56px] text-right text-note tabular-nums text-muted-foreground/70">
                       {childCount > 0 ? childCount : "\u2014"}
+                    </span>
+                  )}
+                  {showCol("createdAt") && (
+                    <span className="w-[80px] text-right text-note tabular-nums text-muted-foreground/70">
+                      {shortRelative(cat.createdAt)}
                     </span>
                   )}
                   {showCol("updatedAt") && (
@@ -1229,25 +1357,52 @@ function CategoryEditor({
         </div>
         <div className="flex items-center justify-between text-note">
           <span className="text-muted-foreground/70">Parent</span>
-          <select
-            value={category.parentIds[0] ?? ""}
-            onChange={(e) => {
-              const newParentId = e.target.value
-              updateWikiCategory(categoryId, {
-                parentIds: newParentId ? [newParentId] : [],
-              })
-            }}
-            className="bg-transparent text-foreground font-medium text-right border-none outline-none cursor-pointer rounded-md px-1 hover:bg-hover-bg focus:bg-secondary/30 focus:ring-1 focus:ring-accent/30 transition-colors text-note"
-          >
-            <option value="">None (root)</option>
-            {categories
-              .filter((c) => c.id !== categoryId)
-              .map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.name}
-                </option>
-              ))}
-          </select>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button
+                className="flex items-center gap-1 rounded-md px-1.5 py-0.5 text-note text-foreground font-medium hover:bg-hover-bg transition-colors"
+                title="Change parent category"
+              >
+                <span>{parentCat?.name ?? "None (root)"}</span>
+                <CaretRight size={12} weight="regular" className="text-muted-foreground/70 rotate-90" />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" sideOffset={4} className="w-56 max-h-[400px] overflow-y-auto">
+              <DropdownMenuItem
+                onClick={() => updateWikiCategory(categoryId, { parentIds: [] })}
+                className={cn(
+                  "text-note gap-2",
+                  !category.parentIds[0] && "bg-accent/10 text-accent focus:bg-accent/15 focus:text-accent"
+                )}
+              >
+                <FolderOpen size={14} weight="regular" className="shrink-0 text-muted-foreground/70" />
+                <span>None (root)</span>
+              </DropdownMenuItem>
+              {categories
+                .filter((c) => c.id !== categoryId)
+                .map((c) => (
+                  <DropdownMenuItem
+                    key={c.id}
+                    onClick={() =>
+                      updateWikiCategory(categoryId, { parentIds: [c.id] })
+                    }
+                    className={cn(
+                      "text-note gap-2",
+                      category.parentIds[0] === c.id &&
+                        "bg-accent/10 text-accent focus:bg-accent/15 focus:text-accent"
+                    )}
+                  >
+                    <FolderSimple
+                      size={14}
+                      weight="regular"
+                      className="shrink-0"
+                      style={{ color: c.color }}
+                    />
+                    <span className="truncate">{c.name}</span>
+                  </DropdownMenuItem>
+                ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
         <div className="flex items-center justify-between text-note">
           <span className="text-muted-foreground/70">Created</span>
@@ -1745,10 +1900,16 @@ export function WikiCategoryPage({
         })
         return
       }
-      // Single select — clear multi, update side panel but don't open editor
+      // Single select — clear multi, open side panel detail (Plot entity-uniformity
+      // 영구 룰 21 정합 — Tag/Label과 동일 패턴), drill-down 유지.
+      // 풍부한 편집은 double-click → mini panel (CategoryEditor).
       setSelectedCatIds(new Set())
       setSelectedCatId(id)
       setActiveCategoryView(id)
+      usePlotStore.setState({
+        sidePanelContext: { type: "wiki-category", id },
+        sidePanelOpen: true,
+      })
     },
     []
   )
@@ -1842,8 +2003,11 @@ export function WikiCategoryPage({
     setSelectedCatIds(new Set(wikiCategories.map((c) => c.id)))
   }, [wikiCategories])
 
-  // Clear selection when clicking background
-  const handleBackgroundClick = useCallback(() => {
+  // Clear selection when clicking background — ONLY when click target is truly
+  // the wrapper itself (not a row bubbling up). Prevents row click/dblclick from
+  // accidentally closing editor when event bubbles past stopPropagation.
+  const handleBackgroundClick = useCallback((e: React.MouseEvent) => {
+    if (e.target !== e.currentTarget) return
     setSelectedCatId(null)
     setSelectedCatIds(new Set())
     setOpenEditorId(null)
@@ -1853,12 +2017,7 @@ export function WikiCategoryPage({
   return (
     <div className="flex h-full flex-1 overflow-hidden">
       <div
-        className={cn(
-          "overflow-auto",
-          openEditorId
-            ? "w-[280px] shrink-0 border-r border-border-subtle"
-            : "flex-1"
-        )}
+        className="flex-1 overflow-auto min-w-0"
         onClick={handleBackgroundClick}
       >
         {categoryViewMode === "board" ? (
@@ -1896,7 +2055,7 @@ export function WikiCategoryPage({
         )}
       </div>
       {openEditorId && (
-        <div className="flex-1 overflow-auto">
+        <div className="w-[420px] shrink-0 overflow-auto border-l border-border-subtle">
           <CategoryEditor
             categoryId={openEditorId}
             categories={wikiCategories}

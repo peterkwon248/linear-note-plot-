@@ -32,6 +32,7 @@ export function SidePanelBookmarks() {
   const globalBookmarks = usePlotStore((s) => s.globalBookmarks)
   const pinBookmark = usePlotStore((s) => s.pinBookmark)
   const unpinBookmark = usePlotStore((s) => s.unpinBookmark)
+  const sidePanelContext = usePlotStore((s) => s.sidePanelContext)
 
   const [filter, setFilter] = useState<BookmarkFilter>("all")
   const [query, setQuery] = useState("")
@@ -301,6 +302,7 @@ export function SidePanelBookmarks() {
       {entity.type === "file" && <EntityAnchorPlaceholder label="Files" />}
       {entity.type === "reference" && <EntityAnchorPlaceholder label="References" />}
       {entity.type === "label" && <EntityAnchorPlaceholder label="Labels" />}
+      {sidePanelContext?.type === "wiki-category" && <EntityAnchorPlaceholder label="Categories" />}
     </div>
   )
 }
