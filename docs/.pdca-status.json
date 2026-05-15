@@ -1,6 +1,6 @@
 {
   "version": "2.0",
-  "lastUpdated": "2026-05-12T08:49:24.571Z",
+  "lastUpdated": "2026-05-15T08:47:26.748Z",
   "activeFeatures": [
     "editor",
     "wizardly-kare",
@@ -34,7 +34,8 @@
     "wizardly-shamir-32ff22",
     "books",
     "crazy-raman-838a0c",
-    "quirky-colden-bcf3de"
+    "quirky-colden-bcf3de",
+    "xenodochial-wing-654662"
   ],
   "primaryFeature": "editor",
   "features": {
@@ -190,9 +191,9 @@
       "documents": {},
       "timestamps": {
         "started": "2026-03-11T04:44:20.714Z",
-        "lastUpdated": "2026-05-12T00:45:45.556Z"
+        "lastUpdated": "2026-05-15T08:47:26.748Z"
       },
-      "lastFile": "C:\\Users\\kwonkyunghun\\Desktop\\리니어 노트앱\\.claude\\worktrees\\crazy-raman-838a0c\\lib\\view-engine\\view-configs.tsx"
+      "lastFile": "C:\\Users\\kwonkyunghun\\Desktop\\리니어 노트앱\\.claude\\worktrees\\xenodochial-wing-654662\\lib\\view-engine\\view-configs.tsx"
     },
     "slices": {
       "phase": "do",
@@ -203,9 +204,9 @@
       "documents": {},
       "timestamps": {
         "started": "2026-03-11T04:44:25.454Z",
-        "lastUpdated": "2026-04-30T08:02:23.353Z"
+        "lastUpdated": "2026-05-15T03:18:08.641Z"
       },
-      "lastFile": "C:\\Users\\kwonkyunghun\\Desktop\\리니어 노트앱\\.claude\\worktrees\\wizardly-shamir-32ff22\\lib\\store\\slices\\wiki-articles.ts"
+      "lastFile": "C:\\Users\\kwonkyunghun\\Desktop\\리니어 노트앱\\.claude\\worktrees\\xenodochial-wing-654662\\lib\\store\\slices\\wiki-categories.ts"
     },
     "store": {
       "phase": "do",
@@ -216,9 +217,9 @@
       "documents": {},
       "timestamps": {
         "started": "2026-03-11T04:44:34.388Z",
-        "lastUpdated": "2026-05-12T07:59:04.323Z"
+        "lastUpdated": "2026-05-15T07:28:28.078Z"
       },
-      "lastFile": "C:\\Users\\kwonkyunghun\\Desktop\\리니어 노트앱\\.claude\\worktrees\\quirky-colden-bcf3de\\lib\\store\\index.ts"
+      "lastFile": "C:\\Users\\kwonkyunghun\\Desktop\\리니어 노트앱\\.claude\\worktrees\\xenodochial-wing-654662\\lib\\store\\seeds.ts"
     },
     "__tests__": {
       "phase": "do",
@@ -307,9 +308,9 @@
       "documents": {},
       "timestamps": {
         "started": "2026-04-03T02:40:12.004Z",
-        "lastUpdated": "2026-04-30T07:00:34.591Z"
+        "lastUpdated": "2026-05-15T03:20:43.374Z"
       },
-      "lastFile": "C:\\Users\\kwonkyunghun\\Desktop\\리니어 노트앱\\.claude\\worktrees\\wizardly-shamir-32ff22\\components\\side-panel\\side-panel-connections.tsx"
+      "lastFile": "C:\\Users\\kwonkyunghun\\Desktop\\리니어 노트앱\\.claude\\worktrees\\xenodochial-wing-654662\\components\\side-panel\\category-detail-panel.tsx"
     },
     "workspace": {
       "phase": "do",
@@ -466,6 +467,19 @@
         "lastUpdated": "2026-05-12T08:49:24.571Z"
       },
       "lastFile": "C:\\Users\\kwonkyunghun\\Desktop\\리니어 노트앱\\.claude\\worktrees\\quirky-colden-bcf3de\\components\\views\\wiki-list.tsx"
+    },
+    "xenodochial-wing-654662": {
+      "phase": "do",
+      "phaseNumber": 3,
+      "matchRate": null,
+      "iterationCount": 0,
+      "requirements": [],
+      "documents": {},
+      "timestamps": {
+        "started": "2026-05-15T01:22:07.060Z",
+        "lastUpdated": "2026-05-15T08:44:58.455Z"
+      },
+      "lastFile": "C:\\Users\\kwonkyunghun\\Desktop\\리니어 노트앱\\.claude\\worktrees\\xenodochial-wing-654662\\components\\wiki-board-workbench.tsx"
     }
   },
   "pipeline": {
@@ -476,7 +490,7 @@
   "session": {
     "startedAt": "2026-03-05T00:16:19.956Z",
     "onboardingCompleted": false,
-    "lastActivity": "2026-05-12T08:49:24.571Z"
+    "lastActivity": "2026-05-15T08:47:26.748Z"
   },
   "history": [
     {
@@ -6866,6 +6880,570 @@
     {
       "timestamp": "2026-05-12T08:49:24.571Z",
       "feature": "quirky-colden-bcf3de",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-15T01:22:07.060Z",
+      "feature": "xenodochial-wing-654662",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-15T01:22:13.070Z",
+      "feature": "xenodochial-wing-654662",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-15T01:45:15.355Z",
+      "feature": "xenodochial-wing-654662",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-15T01:56:05.693Z",
+      "feature": "xenodochial-wing-654662",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-15T01:56:21.581Z",
+      "feature": "xenodochial-wing-654662",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-15T02:19:14.616Z",
+      "feature": "store",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-15T02:21:25.686Z",
+      "feature": "side-panel",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-15T02:21:41.829Z",
+      "feature": "side-panel",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-15T02:21:51.271Z",
+      "feature": "side-panel",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-15T02:22:10.234Z",
+      "feature": "xenodochial-wing-654662",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-15T02:27:48.839Z",
+      "feature": "side-panel",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-15T02:28:10.856Z",
+      "feature": "side-panel",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-15T02:28:59.788Z",
+      "feature": "side-panel",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-15T02:29:06.871Z",
+      "feature": "side-panel",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-15T02:29:38.810Z",
+      "feature": "side-panel",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-15T02:29:56.830Z",
+      "feature": "side-panel",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-15T02:53:18.913Z",
+      "feature": "view-engine",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-15T02:53:40.420Z",
+      "feature": "view-engine",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-15T02:57:28.287Z",
+      "feature": "view-engine",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-15T02:57:51.716Z",
+      "feature": "xenodochial-wing-654662",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-15T03:03:42.707Z",
+      "feature": "view-engine",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-15T03:04:07.725Z",
+      "feature": "xenodochial-wing-654662",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-15T03:04:33.239Z",
+      "feature": "xenodochial-wing-654662",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-15T03:05:22.521Z",
+      "feature": "xenodochial-wing-654662",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-15T03:05:35.106Z",
+      "feature": "xenodochial-wing-654662",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-15T03:18:08.641Z",
+      "feature": "slices",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-15T03:18:26.891Z",
+      "feature": "xenodochial-wing-654662",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-15T03:18:35.803Z",
+      "feature": "xenodochial-wing-654662",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-15T03:18:47.048Z",
+      "feature": "xenodochial-wing-654662",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-15T03:19:08.433Z",
+      "feature": "side-panel",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-15T03:19:16.057Z",
+      "feature": "side-panel",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-15T03:19:27.116Z",
+      "feature": "side-panel",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-15T03:19:43.822Z",
+      "feature": "side-panel",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-15T03:20:43.374Z",
+      "feature": "side-panel",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-15T04:54:21.189Z",
+      "feature": "view-engine",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-15T04:54:28.698Z",
+      "feature": "xenodochial-wing-654662",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-15T04:54:38.179Z",
+      "feature": "xenodochial-wing-654662",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-15T04:54:45.387Z",
+      "feature": "xenodochial-wing-654662",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-15T04:55:01.830Z",
+      "feature": "xenodochial-wing-654662",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-15T04:59:45.688Z",
+      "feature": "view-engine",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-15T04:59:55.679Z",
+      "feature": "view-engine",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-15T05:00:04.162Z",
+      "feature": "xenodochial-wing-654662",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-15T05:03:19.468Z",
+      "feature": "view-engine",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-15T05:04:00.371Z",
+      "feature": "view-engine",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-15T05:04:21.892Z",
+      "feature": "xenodochial-wing-654662",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-15T05:04:40.478Z",
+      "feature": "xenodochial-wing-654662",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-15T05:04:53.076Z",
+      "feature": "xenodochial-wing-654662",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-15T05:06:16.242Z",
+      "feature": "view-engine",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-15T05:13:49.087Z",
+      "feature": "view-engine",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-15T05:14:21.810Z",
+      "feature": "xenodochial-wing-654662",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-15T05:14:30.257Z",
+      "feature": "xenodochial-wing-654662",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-15T05:25:59.782Z",
+      "feature": "view-engine",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-15T05:26:17.225Z",
+      "feature": "view-engine",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-15T05:26:47.289Z",
+      "feature": "view-engine",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-15T05:28:41.676Z",
+      "feature": "view-engine",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-15T05:29:07.462Z",
+      "feature": "xenodochial-wing-654662",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-15T05:29:34.672Z",
+      "feature": "xenodochial-wing-654662",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-15T05:44:44.434Z",
+      "feature": "xenodochial-wing-654662",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-15T06:32:05.602Z",
+      "feature": "view-engine",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-15T06:32:32.954Z",
+      "feature": "view-engine",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-15T06:32:58.323Z",
+      "feature": "xenodochial-wing-654662",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-15T06:33:37.201Z",
+      "feature": "xenodochial-wing-654662",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-15T07:13:15.308Z",
+      "feature": "xenodochial-wing-654662",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-15T07:13:32.251Z",
+      "feature": "xenodochial-wing-654662",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-15T07:13:45.287Z",
+      "feature": "xenodochial-wing-654662",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-15T07:14:10.867Z",
+      "feature": "xenodochial-wing-654662",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-15T07:14:21.286Z",
+      "feature": "xenodochial-wing-654662",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-15T07:14:54.395Z",
+      "feature": "xenodochial-wing-654662",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-15T07:21:55.271Z",
+      "feature": "xenodochial-wing-654662",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-15T07:26:09.079Z",
+      "feature": "view-engine",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-15T07:28:28.078Z",
+      "feature": "store",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-15T07:40:45.450Z",
+      "feature": "xenodochial-wing-654662",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-15T07:45:20.475Z",
+      "feature": "view-engine",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-15T07:45:55.571Z",
+      "feature": "view-engine",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-15T07:46:14.264Z",
+      "feature": "view-engine",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-15T07:46:29.282Z",
+      "feature": "view-engine",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-15T08:06:18.372Z",
+      "feature": "xenodochial-wing-654662",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-15T08:06:28.297Z",
+      "feature": "xenodochial-wing-654662",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-15T08:06:46.144Z",
+      "feature": "xenodochial-wing-654662",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-15T08:06:57.871Z",
+      "feature": "xenodochial-wing-654662",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-15T08:07:38.479Z",
+      "feature": "xenodochial-wing-654662",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-15T08:18:37.800Z",
+      "feature": "xenodochial-wing-654662",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-15T08:18:50.365Z",
+      "feature": "xenodochial-wing-654662",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-15T08:18:58.948Z",
+      "feature": "xenodochial-wing-654662",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-15T08:19:10.241Z",
+      "feature": "xenodochial-wing-654662",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-15T08:20:10.206Z",
+      "feature": "xenodochial-wing-654662",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-15T08:23:51.813Z",
+      "feature": "xenodochial-wing-654662",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-15T08:35:50.917Z",
+      "feature": "xenodochial-wing-654662",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-15T08:36:15.903Z",
+      "feature": "xenodochial-wing-654662",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-15T08:43:37.577Z",
+      "feature": "xenodochial-wing-654662",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-15T08:43:49.062Z",
+      "feature": "xenodochial-wing-654662",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-15T08:44:07.936Z",
+      "feature": "xenodochial-wing-654662",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-15T08:44:58.455Z",
+      "feature": "xenodochial-wing-654662",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-15T08:47:26.748Z",
+      "feature": "view-engine",
       "phase": "do",
       "action": "updated"
     }
