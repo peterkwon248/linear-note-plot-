@@ -15,6 +15,7 @@ export function createTagsSlice(set: Set, appendEvent: AppendEventFn) {
       }))
       // PR 5c: entity event log
       appendEvent({ kind: "tag", id }, "created", { name })
+      return id
     },
 
     updateTag: (id: string, updates: Partial<Tag>) => {

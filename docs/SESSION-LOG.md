@@ -6,6 +6,104 @@
 
 ---
 
+## 2026-05-16 — 집/Windows, **Wiki/Books board 우클릭 ContextMenu + Workbench inline Create + v134 wiki seed backfill**
+
+> 🎯 **다음 즉시 액션**: P0-2 12+4 PR 통합 manual verify (사용자 본인 환경에서) + P0-1 Tags/Labels 회귀 cross-machine 재확인
+>
+> **사용자 의도** (이번 세션, 명시 보고):
+> 1. "위키 보드 디스플레이 모드에서 Add to category할 때 기존에 없었던 카테고리를 생성할 수 있는 기능이 있어야 해. (내 생각에, 기존에 있는 코드들을 재활용하면 될 거 같아.) Add to Tags도 마찬가지."
+> 2. "보드 디스플레이 모드일 때 마우스 우클릭이 안 되네? 노트는 돼. 위키랑 북도 되어야 해."
+> 3. "야 시드데이터를 다시 만들어줘. 위키 시드데이터가 지금 0이라서 테스트가 안 돼"
+>
+> **첫 스텝** (다음 머신에서 바로 시작):
+> 1. `git pull origin main` (이번 PR 머지된 main 받음)
+> 2. `npm install && npm run dev` (port 3002)
+> 3. Plot 포커스 + Hard refresh (Ctrl+Shift+R) → console `[migrate] v133→v134: re-seeded wiki (N articles, N categories)` 확인
+> 4. **검증 surface (4 신규 + 12 기존)**:
+>    - **신규 a**: `/wiki` → Wiki Articles board → 카드 우클릭 → `Merge into / Split / Show connected / Move to folder / Add to folders / Delete` 메뉴
+>    - **신규 b**: `/books` → board mode (Display panel viewMode "board") → 카드 우클릭 → `Rename / Pin to sidebar / Move to trash` 메뉴
+>    - **신규 c**: Wiki board 카드 선택 → 우측 Workbench `Add to category` → 검색 input + 매치 없을 때 "Create '…'" 옵션 노출 → 클릭 시 새 카테고리 생성 + 자동 picked + "Add to N category" 적용
+>    - **신규 d**: 같은 패턴 `Add tags` (검색 → "Create #…" → 새 태그 생성)
+>    - **신규 e**: `/wiki` Wiki seed 19 articles 표시 (v134 backfill — 사용자 환경 0개 → 17 시드 자동 인젝션, 기존 사용자 추가 보존)
+>    - **기존 12 PR**: Library 5 entity 사이드바 / Activity timeline / Connections charts / Ontology Legend 좌하단 (PR #334-#345)
+>
+> **컴포넌트 구조** (이번 변경):
+> - `components/books/book-context-menu-items.tsx` (신규) — `BookContextMenuItems` helper. Notes의 `note-context-menu-items.tsx` 패턴 정합 (영구 룰 21 entity-uniformity). props: `book / onRename / onTogglePin / onDelete / onRestore / onPermanentDelete`. trashed 분기 (Restore / Delete forever) vs active (Rename / Pin / Move to trash).
+> - `book-grid-card.tsx` — ContextMenuContent 내부를 helper로 단순화 (51 line → 8 line).
+> - `books-board.tsx` — `BookBoardCard`를 `<ContextMenu><ContextMenuTrigger asChild>` wrap. BoardCard / BoardColumn / BoardProps callback chain 추가.
+> - `books-view.tsx:272` — BooksBoard에 `onRename={startRename} / onDelete={handleDelete} / onRestore={handleRestore} / onPermanentDelete={handlePermanentDelete}` 전달.
+> - `wiki-board.tsx` — `Card` visual을 `ContextMenu` wrap (`WikiArticleMenuItems` 재활용 — `wiki-list.tsx`에서 export). CardProps에 `onMergeArticle / onSplitArticle / onDeleteArticle / onShowConnectedArticle` 추가. WikiBoard 본체에 prop chain.
+> - `wiki-view.tsx:1400` — WikiBoard에 `onDeleteArticle={(id) => { deleteWikiArticle(id); toast.success('Article deleted') }} / onShowConnectedArticle={...connectedTo filter}` 전달 (WikiList 패턴 정합).
+> - `wiki-board-workbench.tsx` — CategoryAddPopover / TagsAddPopover 재작성. `query` state + filtered list (case-insensitive includes) + `exactMatch` 체크 + `showCreate` 조건부 inline button. createWikiCategory / createTag 호출 → 새 id 자동 picked → "Add to N" 버튼 활성. tags `query.trim().replace(/^#/, "")` (`#` prefix strip).
+>
+> **Store action 매핑**:
+> - `createWikiCategory(name, parentIds?)` → `string | null` (이미 존재, 재활용)
+> - `createTag(name, color?)` → `string` ⭐ **시그니처 변경** (이전 `void`). `tags.ts:11` 구현 + `types.ts:287`. backward compat (void 반환 무시하던 곳은 영향 X).
+> - `deleteWikiArticle(id)` → store inline 호출 from wiki-view
+>
+> **데이터 모델 변경**:
+> - Store version **v133 → v134** (`lib/store/index.ts:257`). `migrate.ts` 마지막에 v134 block 추가 — `SEED_WIKI_ARTICLES` + `SEED_WIKI_CATEGORIES` backfill. **v130 backfill 패턴 정합** (id-dedup append, idempotent). 이유: PR #347이 wiki seed 7 → 17로 늘렸지만 v130 backfill은 v129 이전 사용자만 trigger → v130~v133 사용자가 옛 시드 그대로. v134가 누락 시드만 push.
+>
+> **위험 + 회피** (이번 세션 교훈):
+> - ContextMenuTrigger asChild + dnd-kit `attributes/listeners` 조합: 두 set이 다른 element면 충돌 X (left-click = drag, right-click = contextmenu).
+> - DragOverlay 사용 시 `if (isDragOverlay) return visual` 분기 유지 — overlay에 ContextMenu wrap X.
+> - WikiArticleMenuItems prop signature는 `(...) => void` (id 안 받음) — wiki-board에서 article.id wrap 필요: `onMerge={onMergeArticle ? () => onMergeArticle(article.id) : undefined}`.
+> - createTag void → string 변경 시 기존 호출자 영향 없음 (TS는 void → string 호환). 단 types.ts와 slice 양쪽 다 변경 의무.
+> - 사전 존재 타입 에러 (insights-view noteEvents / wiki-articles trashed property 누락 / sticker-detail-panel 등) — 내 변경과 무관, 별도 cleanup PR 후보 (P2).
+>
+> **참고 파일** (다음 작업 시 read):
+> - `components/views/wiki-list.tsx:83-171` — WikiArticleMenuItems export 위치
+> - `components/note-context-menu-items.tsx` — NoteContextMenuItems 패턴 (entity helper 분리 reference)
+> - `lib/store/slices/wiki-categories.ts:38` — createWikiCategory(name, parentIds?) → string | null
+> - `lib/store/slices/tags.ts:11` — createTag(name, color) → string (변경됨)
+> - `lib/store/migrate.ts:2072` — v134 backfill block
+>
+> **머신**: 집 (Windows)
+> **현재 main HEAD**: 곧 PR (이 entry 작성 + commit + merge 후 갱신)
+> **branch worktree**: `awesome-mcnulty-cac926`
+
+### 완료
+
+- **Wiki board 카드 우클릭 ContextMenu 추가** — wiki-board.tsx Card에 `<ContextMenu>` wrap. WikiArticleMenuItems 재활용. wiki-view에서 onDeleteArticle / onShowConnectedArticle 전달 (WikiList 패턴 정합).
+- **Books board 카드 우클릭 ContextMenu 추가** — book-context-menu-items.tsx 신규 helper. book-grid-card / books-board 양쪽에서 재활용. books-view에서 4 callbacks (onRename / onDelete / onRestore / onPermanentDelete) 전달.
+- **Wiki Workbench CategoryAddPopover inline Create** — 검색 input + 매치 없을 때 "Create '…'" inline button. createWikiCategory 호출 → 새 id 자동 picked.
+- **Wiki Workbench TagsAddPopover inline Create** — 같은 패턴 (`#` prefix strip). createTag signature `void → string` 변경.
+- **v134 wiki seed backfill migration** — PR #347 (7 → 17 articles + 10 categories) 적용 안 된 v130~v133 사용자에게 누락 시드 자동 인젝션 (preview 9 → 19 verified).
+- **CLAUDE.md store version v133 → v134** 갱신.
+- **P0-1 Tags/Labels 회귀 진단** — fresh preview에서 두 surface 모두 정상 작동 verify. `sidePanelContext` 정확히 set, TagDetailPanel / LabelDetailPanel 정확히 render. **회귀 재현 안 됨**. root cause: (a) HMR stale 또는 (d) Multi-worktree port 충돌 추정. **코드 fix 불필요**. 사용자 본인 환경에서 hard refresh + 다른 worktree dev server 정리 후 재확인.
+
+### 영구 LOCKED 결정 (이번 세션)
+
+- **42. ContextMenu helper 추출 패턴 영구** — entity별 helper 파일 (Notes/Books/Wiki 각각). `<entity>-context-menu-items.tsx` 신설 후 list/board/gallery 3 surface에서 재활용. props는 dumb (모든 store mutation/toast는 callback). 영구 룰 21 entity-uniformity 확장.
+- **43. createTag id 반환 시그니처** (영구) — `createTag(name, color?) => string`. 모든 entity create action은 id 반환이 호출자 편의 우선 (createWikiCategory 패턴 정합). slice + types.ts 동시 변경 의무.
+- **44. inline Create option 검색 input + cmdk 패턴** — Plot Popover (Tag/Category picker)에 `query` state + filtered list + exactMatch 체크 + `showCreate` 조건부 inline button. cmdk 패턴 정합. native prompt() 회피 (영구 룰 i18n + Linear polish).
+- **45. Seed backfill migration 패턴 영구** — 시드 증가 (예: 7 → 17 articles) 시 자동 backfill migration 동반 의무. id-dedup append (사용자 추가 데이터 보존 + 누락 시드만 push). v130 / v134가 같은 패턴 — 다음 세대도 동일.
+
+### 기술 학습 (영구)
+
+- **Radix ContextMenuTrigger asChild + dnd-kit attributes/listeners 조합 안전** — outer div (drag) + inner visual (ContextMenuTrigger). left-click = drag, right-click = contextmenu. 별 set이라 충돌 X.
+- **DragOverlay는 ContextMenu wrap 제외** — `if (isDragOverlay) return visual` 분기 유지.
+- **WikiArticleMenuItems prop signature mismatch (id 안 받음)** — wiki-board.tsx Card에서 `(article.id)` wrap. board callback (`onMerge(sourceId)`)와 menu callback (`onMerge()`) 시그니처 다름.
+- **시드 보강 + migration backfill 동시 의무** — 시드 코드만 늘리면 fresh user만 받음. 기존 사용자는 새 migration block 필요 (idempotent id-dedup).
+- **회귀 보고 verify 패턴** — 코드 verified 정상 + 같은 IDB로 fresh preview에서 작동 재현 = HMR/multi-port stale. 코드 fix 안 함, 사용자에게 환경 정리 안내. "재현 안 되는 회귀"는 root cause 진단 후 close 가능.
+
+### Watch Out (다음 세션)
+
+- **사전 존재 타입 에러 (cleanup 후보 P2)**: insights-view noteEvents / wiki-articles trashed property / sticker-detail-panel / wiki-category-page createdAt 비교 / view-configs SortField 불일치 등. 본 PR과 무관. 별도 정리 PR.
+- **P0-1 Tags/Labels 회귀 verify**: 사용자 본인 환경 hard refresh + 다른 worktree dev 정리 후 재확인. 그래도 안 되면 진짜 회귀 — 그때 fresh diagnose.
+- **P0-2 통합 manual verify (4 신규 + 12 기존)**: 다음 세션 우선. 회귀 발견 시 fix.
+- **Workbench CategoryAddPopover 패턴을 wiki-floating-action-bar.tsx에도 적용 필요**: list mode에서도 같은 검색 + create UX. 영구 룰 21 entity-uniformity. 별도 후속 PR (사용자 요청 board만이라 이번엔 미포함).
+
+### 환경 변경
+
+- Store version: **v133 → v134** (wiki seed backfill migration)
+- Persist version: `lib/store/index.ts:257` 134
+- 신규 파일: `components/books/book-context-menu-items.tsx`
+- 데이터 모델 변경: `createTag` signature `void → string` (`types.ts:287`, `tags.ts:11-18`)
+- Preview verify: wiki articles 9 → 19, categories 11 (변동 없음 — 기존 사용자가 이미 다 가짐)
+
+---
+
 ## 2026-05-15 (저녁) — 집/Windows, **Wiki entity-uniformity 완성 + 카테고리 사이드바 흡수**
 
 > 🎯 **다음 즉시 액션** (cross-machine 진입점):

@@ -3,11 +3,51 @@
 > 우선순위 기반 작업 목록. **P0 = 다음 세션 즉시 시작점** (NEXT-ACTION.md 폐지, 2026-05-12).
 > 완료 항목은 즉시 삭제 또는 "완료" 섹션으로 이동.
 
-**마지막 갱신**: 2026-05-15 (저녁) (Wiki entity-uniformity + Category sidebar 흡수 + 다양한 polish 큰 단일 PR 머지)
+**마지막 갱신**: 2026-05-16 (Wiki/Books board 우클릭 ContextMenu + Workbench inline Create + v134 wiki seed backfill PR 머지 직후)
 
 ---
 
-## 🔴 P0 (이번 세션) — Wiki entity-uniformity 완성 + Category sidebar 흡수
+## ✅ 최근 완료 (2026-05-16)
+- **Wiki board 카드 우클릭 ContextMenu** — `WikiArticleMenuItems` 재활용 (Merge / Split / Show connected / Move to folder / Add to folders / Delete)
+- **Books board 카드 우클릭 ContextMenu** — `BookContextMenuItems` helper 추출 (Rename / Pin / Trash, trashed 시 Restore / Delete forever)
+- **Wiki Workbench CategoryAddPopover inline Create** — 검색 input + 매치 없을 때 "Create '…'" 옵션 + 자동 picked
+- **Wiki Workbench TagsAddPopover inline Create** — 같은 패턴 (`#` prefix strip + `createTag` signature `void → string` 변경)
+- **v134 wiki seed backfill migration** — PR #347 시드 증가 (7 → 17) 적용 못 받은 v130~v133 사용자 자동 보충
+- **P0-1 Tags/Labels 회귀 진단** — fresh preview 정상 작동 verify. 코드 fix 불필요. root cause: HMR/multi-port stale 추정. 사용자 본인 환경 재확인 대기.
+
+---
+
+## 🔴 P0 — 즉시 (cross-machine 진입점)
+
+### 1. 다른 머신에서 시작 절차
+```bash
+git pull origin main   # 이번 PR 머지된 main
+npm install && npm run dev   # port 3002
+# Plot 포커스 + Hard refresh (Ctrl+Shift+R)
+# Console에서 [migrate] v133→v134 로그 자동 확인
+```
+
+### 2. 4 신규 surface + 12 기존 PR 통합 manual verify
+- [ ] **신규 a**: `/wiki` → Wiki Articles board → 카드 우클릭 → 메뉴 정상
+- [ ] **신규 b**: `/books` → board mode → 카드 우클릭 → 메뉴 정상
+- [ ] **신규 c**: Wiki board 카드 선택 → 우측 Workbench `Add to category` → 검색 + Create 옵션 + 새 카테고리 생성 확인
+- [ ] **신규 d**: 같은 패턴 `Add tags` (검색 + Create)
+- [ ] **신규 e**: `/wiki` Wiki seed 19 articles 표시 (v134)
+- [ ] **기존 12 PR**: Library 5 entity 사이드바 / Activity timeline / Connections charts / Ontology Legend 좌하단
+
+### 3. P0-1 Tags/Labels 회귀 재확인
+사용자 본인 환경에서:
+1. 모든 dev server 종료 (다른 worktree 정리)
+2. 이 worktree만 dev (port 3002 단독)
+3. Hard refresh + console v134 마이그레이션 로그 확인
+4. `/library/tags` / `/labels` row name 클릭 → 사이드바 detail 표시 verify
+
+→ 정상이면 P0-1 close (코드 fix 없음).
+→ 여전히 안 되면 그때 fresh diagnose (sidePanelContext reset useEffect grep).
+
+---
+
+## 🟡 P0 (이전 세션 잔여) — Wiki entity-uniformity 완성 + Category sidebar 흡수
 
 ### 다음 머신에서 manual verify (cross-machine)
 

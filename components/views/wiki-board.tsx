@@ -35,6 +35,12 @@ import {
   PropertyChipRow,
 } from "@/components/property-chips"
 import { WikiBoardWorkbench } from "@/components/wiki-board-workbench"
+import { WikiArticleMenuItems } from "@/components/views/wiki-list"
+import {
+  ContextMenu,
+  ContextMenuContent,
+  ContextMenuTrigger,
+} from "@/components/ui/context-menu"
 import type { WikiArticle, WikiCategory } from "@/lib/types"
 import type { GroupBy, ViewState } from "@/lib/view-engine/types"
 import type { WikiGroup } from "@/lib/view-engine/wiki-list-pipeline"
@@ -76,6 +82,9 @@ interface WikiBoardProps {
   onMerge?: (sourceId: string) => void
   onMultiMerge?: (ids: string[]) => void
   onSplit?: (id: string) => void
+  /* Card right-click menu — same actions as the list row. */
+  onDeleteArticle?: (id: string) => void
+  onShowConnectedArticle?: (id: string, direction: "both" | "in" | "out") => void
 }
 
 /* ── Column ──────────────────────────────────────────── */
@@ -169,6 +178,12 @@ interface CardProps {
   onClick: () => void
   onSelect?: (id: string, e: React.MouseEvent) => void
   onDoubleClick?: () => void
+  /* Context-menu callbacks (entity-uniformity 영구 룰 21 — board cards
+     get the same right-click action set as list rows / gallery cards). */
+  onMergeArticle?: (id: string) => void
+  onSplitArticle?: (id: string) => void
+  onDeleteArticle?: (id: string) => void
+  onShowConnectedArticle?: (id: string, direction: "both" | "in" | "out") => void
 }
 
 function CardInner({
@@ -188,6 +203,10 @@ function CardInner({
   onClick,
   onSelect,
   onDoubleClick,
+  onMergeArticle,
+  onSplitArticle,
+  onDeleteArticle,
+  onShowConnectedArticle,
 }: CardProps) {
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
     id: cardKey,
@@ -356,9 +375,32 @@ function CardInner({
 
   if (isDragOverlay) return visual
 
+  const hasContextActions =
+    !!onMergeArticle || !!onSplitArticle || !!onDeleteArticle || !!onShowConnectedArticle
+
   return (
     <div ref={setNodeRef} style={dragStyle} {...attributes} {...listeners} data-drag-id={cardKey}>
-      {visual}
+      {hasContextActions ? (
+        <ContextMenu>
+          <ContextMenuTrigger asChild>{visual}</ContextMenuTrigger>
+          <ContextMenuContent className="w-48 p-1">
+            <WikiArticleMenuItems
+              note={article}
+              close={() => {}}
+              onMerge={onMergeArticle ? () => onMergeArticle(article.id) : undefined}
+              onSplit={onSplitArticle ? () => onSplitArticle(article.id) : undefined}
+              onDelete={onDeleteArticle ? () => onDeleteArticle(article.id) : undefined}
+              onShowConnected={
+                onShowConnectedArticle
+                  ? (direction) => onShowConnectedArticle(article.id, direction)
+                  : undefined
+              }
+            />
+          </ContextMenuContent>
+        </ContextMenu>
+      ) : (
+        visual
+      )}
     </div>
   )
 }
@@ -415,6 +457,8 @@ export function WikiBoard({
   onMerge,
   onMultiMerge,
   onSplit,
+  onDeleteArticle,
+  onShowConnectedArticle,
 }: WikiBoardProps) {
   const updateWikiArticle = usePlotStore((s) => s.updateWikiArticle)
   const setWikiArticleParent = usePlotStore((s) => s.setWikiArticleParent)
@@ -632,6 +676,10 @@ export function WikiBoard({
                         onClick={() => onOpenArticle(article.id)}
                         onDoubleClick={() => onOpenArticle(article.id)}
                         onSelect={(id, e) => onSelect?.(id, { multi: e.metaKey || e.ctrlKey, shift: e.shiftKey })}
+                        onMergeArticle={onMerge}
+                        onSplitArticle={onSplit}
+                        onDeleteArticle={onDeleteArticle}
+                        onShowConnectedArticle={onShowConnectedArticle}
                       />
                     )
                   })}

@@ -54,12 +54,17 @@ import {
 import { shortRelative } from "@/lib/format-utils"
 import { cn } from "@/lib/utils"
 import { toast } from "sonner"
-import { Books as PhBooks } from "@phosphor-icons/react/dist/ssr/Books"
 import { PushPin } from "@phosphor-icons/react/dist/ssr/PushPin"
 import { Lightning } from "@phosphor-icons/react/dist/ssr/Lightning"
 import { PencilSimple } from "@phosphor-icons/react/dist/ssr/PencilSimple"
 import { Sparkle } from "@phosphor-icons/react/dist/ssr/Sparkle"
 import { PushPinSimple } from "@phosphor-icons/react/dist/ssr/PushPinSimple"
+import {
+  ContextMenu,
+  ContextMenuContent,
+  ContextMenuTrigger,
+} from "@/components/ui/context-menu"
+import { BookContextMenuItems } from "@/components/books/book-context-menu-items"
 
 interface BooksBoardProps {
   groups: BookGroup[]
@@ -69,6 +74,11 @@ interface BooksBoardProps {
   onOpen: (id: string) => void
   onTogglePin: (id: string, pinned: boolean | undefined) => void
   onConvertToManual: (id: string, title: string) => void
+  // Right-click context menu — same actions as the grid card / list row.
+  onRename: (id: string, currentTitle: string) => void
+  onDelete: (id: string, title: string) => void
+  onRestore: (id: string, title: string) => void
+  onPermanentDelete: (id: string, title: string) => void
 }
 
 export function BooksBoard({
@@ -79,6 +89,10 @@ export function BooksBoard({
   onOpen,
   onTogglePin,
   onConvertToManual,
+  onRename,
+  onDelete,
+  onRestore,
+  onPermanentDelete,
 }: BooksBoardProps) {
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 4 } }),
@@ -216,6 +230,11 @@ export function BooksBoard({
               groupBy={groupBy}
               isDragDisabled={isDragDisabled}
               onOpen={onOpen}
+              onRename={onRename}
+              onTogglePin={onTogglePin}
+              onDelete={onDelete}
+              onRestore={onRestore}
+              onPermanentDelete={onPermanentDelete}
               activeDragId={activeDragId}
             />
           ))}
@@ -239,10 +258,26 @@ interface BookBoardColumnProps {
   groupBy: GroupBy
   isDragDisabled: boolean
   onOpen: (id: string) => void
+  onRename: (id: string, currentTitle: string) => void
+  onTogglePin: (id: string, pinned: boolean | undefined) => void
+  onDelete: (id: string, title: string) => void
+  onRestore: (id: string, title: string) => void
+  onPermanentDelete: (id: string, title: string) => void
   activeDragId: string | null
 }
 
-function BookBoardColumn({ group, groupBy, isDragDisabled, onOpen, activeDragId }: BookBoardColumnProps) {
+function BookBoardColumn({
+  group,
+  groupBy,
+  isDragDisabled,
+  onOpen,
+  onRename,
+  onTogglePin,
+  onDelete,
+  onRestore,
+  onPermanentDelete,
+  activeDragId,
+}: BookBoardColumnProps) {
   const { setNodeRef: setSortableRef, attributes, listeners, transform, transition, isDragging } = useSortable({
     id: `col-${group.key}`,
     disabled: isDragDisabled,
@@ -296,7 +331,16 @@ function BookBoardColumn({ group, groupBy, isDragDisabled, onOpen, activeDragId 
       </div>
       <div className="flex flex-col gap-1.5 px-1.5 pb-2">
         {group.books.map((book) => (
-          <BookBoardCard key={book.id} book={book} onOpen={onOpen} />
+          <BookBoardCard
+            key={book.id}
+            book={book}
+            onOpen={onOpen}
+            onRename={onRename}
+            onTogglePin={onTogglePin}
+            onDelete={onDelete}
+            onRestore={onRestore}
+            onPermanentDelete={onPermanentDelete}
+          />
         ))}
       </div>
     </div>
@@ -305,7 +349,23 @@ function BookBoardColumn({ group, groupBy, isDragDisabled, onOpen, activeDragId 
 
 /* ── BookBoardCard ─────────────────────────────────────── */
 
-function BookBoardCard({ book, onOpen }: { book: Book; onOpen: (id: string) => void }) {
+function BookBoardCard({
+  book,
+  onOpen,
+  onRename,
+  onTogglePin,
+  onDelete,
+  onRestore,
+  onPermanentDelete,
+}: {
+  book: Book
+  onOpen: (id: string) => void
+  onRename: (id: string, currentTitle: string) => void
+  onTogglePin: (id: string, pinned: boolean | undefined) => void
+  onDelete: (id: string, title: string) => void
+  onRestore: (id: string, title: string) => void
+  onPermanentDelete: (id: string, title: string) => void
+}) {
   const { setNodeRef, attributes, listeners, transform, transition, isDragging } = useSortable({
     id: book.id,
   })
@@ -318,7 +378,23 @@ function BookBoardCard({ book, onOpen }: { book: Book; onOpen: (id: string) => v
 
   return (
     <div ref={setNodeRef} style={style} {...attributes} {...listeners}>
-      <BookBoardCardInner book={book} onOpen={onOpen} isDragging={false} />
+      <ContextMenu>
+        <ContextMenuTrigger asChild>
+          <div>
+            <BookBoardCardInner book={book} onOpen={onOpen} isDragging={false} />
+          </div>
+        </ContextMenuTrigger>
+        <ContextMenuContent className="w-44">
+          <BookContextMenuItems
+            book={book}
+            onRename={onRename}
+            onTogglePin={onTogglePin}
+            onDelete={onDelete}
+            onRestore={onRestore}
+            onPermanentDelete={onPermanentDelete}
+          />
+        </ContextMenuContent>
+      </ContextMenu>
     </div>
   )
 }

@@ -14,19 +14,13 @@ import { getBookKind } from "@/lib/view-engine/use-books-view"
 import { BookKindIcon } from "@/components/property-chips"
 import { shortRelative } from "@/lib/format-utils"
 import { cn } from "@/lib/utils"
-import { Books as PhBooks } from "@phosphor-icons/react/dist/ssr/Books"
 import { PushPin } from "@phosphor-icons/react/dist/ssr/PushPin"
-import { PushPinSlash } from "@phosphor-icons/react/dist/ssr/PushPinSlash"
-import { Trash } from "@phosphor-icons/react/dist/ssr/Trash"
-import { ArrowCounterClockwise } from "@phosphor-icons/react/dist/ssr/ArrowCounterClockwise"
-import { PencilSimple } from "@phosphor-icons/react/dist/ssr/PencilSimple"
 import {
   ContextMenu,
   ContextMenuContent,
-  ContextMenuItem,
-  ContextMenuSeparator,
   ContextMenuTrigger,
 } from "@/components/ui/context-menu"
+import { BookContextMenuItems } from "@/components/books/book-context-menu-items"
 
 interface BookGridCardProps {
   book: Book
@@ -100,56 +94,14 @@ export function BookGridCard({
         </button>
       </ContextMenuTrigger>
       <ContextMenuContent className="w-44">
-        {book.trashed ? (
-          <>
-            <ContextMenuItem
-              onClick={() => onRestore(book.id, book.title)}
-              className="text-note"
-            >
-              <ArrowCounterClockwise size={14} weight="regular" className="mr-2 text-muted-foreground" />
-              Restore
-            </ContextMenuItem>
-            <ContextMenuSeparator />
-            <ContextMenuItem
-              onClick={() => onPermanentDelete(book.id, book.title)}
-              className="text-note text-destructive focus:text-destructive"
-            >
-              <Trash size={14} weight="regular" className="mr-2" />
-              Delete forever
-            </ContextMenuItem>
-          </>
-        ) : (
-          <>
-            <ContextMenuItem onClick={() => onRename(book.id, book.title)} className="text-note">
-              <PencilSimple size={14} weight="regular" className="mr-2 text-muted-foreground" />
-              Rename
-            </ContextMenuItem>
-            <ContextMenuItem
-              onClick={() => onTogglePin(book.id, book.pinned)}
-              className="text-note"
-            >
-              {book.pinned ? (
-                <>
-                  <PushPinSlash size={14} weight="regular" className="mr-2 text-muted-foreground" />
-                  Unpin
-                </>
-              ) : (
-                <>
-                  <PushPin size={14} weight="regular" className="mr-2 text-muted-foreground" />
-                  Pin to sidebar
-                </>
-              )}
-            </ContextMenuItem>
-            <ContextMenuSeparator />
-            <ContextMenuItem
-              onClick={() => onDelete(book.id, book.title)}
-              className="text-note text-destructive focus:text-destructive"
-            >
-              <Trash size={14} weight="regular" className="mr-2" />
-              Move to trash
-            </ContextMenuItem>
-          </>
-        )}
+        <BookContextMenuItems
+          book={book}
+          onRename={onRename}
+          onTogglePin={onTogglePin}
+          onDelete={onDelete}
+          onRestore={onRestore}
+          onPermanentDelete={onPermanentDelete}
+        />
       </ContextMenuContent>
     </ContextMenu>
   )

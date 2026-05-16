@@ -29,6 +29,7 @@ import { Tag as PhTag } from "@phosphor-icons/react/dist/ssr/Tag"
 import { GitMerge } from "@phosphor-icons/react/dist/ssr/GitMerge"
 import { Scissors } from "@phosphor-icons/react/dist/ssr/Scissors"
 import { Check as PhCheck } from "@phosphor-icons/react/dist/ssr/Check"
+import { Plus as PhPlus } from "@phosphor-icons/react/dist/ssr/Plus"
 import { cn } from "@/lib/utils"
 import type { WikiArticle, WikiCategory, Tag } from "@/lib/types"
 
@@ -58,6 +59,8 @@ export function WikiBoardWorkbench({
   const folders = usePlotStore((s) => s.folders)
   const wikiCategories = usePlotStore((s) => s.wikiCategories)
   const tags = usePlotStore((s) => s.tags ?? [])
+  const createWikiCategory = usePlotStore((s) => s.createWikiCategory)
+  const createTag = usePlotStore((s) => s.createTag)
 
   const ids = useMemo(() => Array.from(selectedIds), [selectedIds])
   const count = ids.length
@@ -237,6 +240,11 @@ export function WikiBoardWorkbench({
 
             <CategoryAddPopover
               wikiCategories={wikiCategories}
+              onCreate={(name) => {
+                const id = createWikiCategory(name)
+                if (id) toast.success(`Created category "${name}"`)
+                return id
+              }}
               onApply={(categoryIds) => {
                 if (categoryIds.length === 0) return
                 for (const id of ids) {
@@ -258,6 +266,11 @@ export function WikiBoardWorkbench({
 
             <TagsAddPopover
               tags={tags}
+              onCreate={(name) => {
+                const id = createTag(name)
+                toast.success(`Created tag #${name}`)
+                return id
+              }}
               onApply={(tagIds) => {
                 if (tagIds.length === 0) return
                 for (const id of ids) {
@@ -323,15 +336,49 @@ export function WikiBoardWorkbench({
 function CategoryAddPopover({
   wikiCategories,
   onApply,
+  onCreate,
 }: {
   wikiCategories: WikiCategory[]
   onApply: (ids: string[]) => void
+  /** Returns the new category id (or null if creation failed — e.g., empty name). */
+  onCreate: (name: string) => string | null
 }) {
   const [picked, setPicked] = useState<Set<string>>(new Set())
   const [open, setOpen] = useState(false)
+  const [query, setQuery] = useState("")
+
+  const trimmed = query.trim()
+  const filtered = useMemo(() => {
+    if (!trimmed) return wikiCategories
+    const q = trimmed.toLowerCase()
+    return wikiCategories.filter((c) => c.name.toLowerCase().includes(q))
+  }, [wikiCategories, trimmed])
+
+  const exactMatch = useMemo(
+    () => filtered.some((c) => c.name.toLowerCase() === trimmed.toLowerCase()),
+    [filtered, trimmed],
+  )
+  const showCreate = !!trimmed && !exactMatch
+
+  const handleCreate = () => {
+    const id = onCreate(trimmed)
+    if (id) {
+      setPicked((prev) => new Set(prev).add(id))
+    }
+    setQuery("")
+  }
 
   return (
-    <Popover open={open} onOpenChange={(v) => { setOpen(v); if (!v) setPicked(new Set()) }}>
+    <Popover
+      open={open}
+      onOpenChange={(v) => {
+        setOpen(v)
+        if (!v) {
+          setPicked(new Set())
+          setQuery("")
+        }
+      }}
+    >
       <PopoverTrigger asChild>
         <button
           className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-note text-foreground hover:bg-hover-bg transition-colors"
@@ -342,13 +389,29 @@ function CategoryAddPopover({
         </button>
       </PopoverTrigger>
       <PopoverContent align="end" className="w-64 p-1">
-        <div className="max-h-[320px] overflow-y-auto py-1">
-          {wikiCategories.length === 0 ? (
+        <div className="px-1.5 pt-1 pb-1.5">
+          <input
+            autoFocus
+            type="text"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && showCreate) {
+                e.preventDefault()
+                handleCreate()
+              }
+            }}
+            placeholder="Find or create category…"
+            className="w-full rounded-md border border-border bg-background px-2 py-1 text-2xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-accent"
+          />
+        </div>
+        <div className="max-h-[280px] overflow-y-auto py-1">
+          {filtered.length === 0 && !showCreate ? (
             <p className="px-2 py-3 text-2xs text-muted-foreground/70 italic">
-              No categories yet
+              {wikiCategories.length === 0 ? "No categories yet" : "No matches"}
             </p>
           ) : (
-            wikiCategories.map((c) => {
+            filtered.map((c) => {
               const isPicked = picked.has(c.id)
               return (
                 <button
@@ -377,12 +440,26 @@ function CategoryAddPopover({
             })
           )}
         </div>
+        {showCreate && (
+          <div className="border-t border-border-subtle p-1">
+            <button
+              onClick={handleCreate}
+              className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-2xs text-foreground hover:bg-hover-bg transition-colors"
+            >
+              <PhPlus size={12} weight="bold" className="text-muted-foreground" />
+              <span className="truncate">
+                Create <span className="font-medium">&ldquo;{trimmed}&rdquo;</span>
+              </span>
+            </button>
+          </div>
+        )}
         {picked.size > 0 && (
           <div className="border-t border-border-subtle p-1">
             <button
               onClick={() => {
                 onApply(Array.from(picked))
                 setPicked(new Set())
+                setQuery("")
                 setOpen(false)
               }}
               className="flex w-full items-center justify-center rounded-md bg-accent px-3 py-1.5 text-2xs font-medium text-accent-foreground hover:bg-accent/90 transition-colors"
@@ -401,15 +478,56 @@ function CategoryAddPopover({
 function TagsAddPopover({
   tags,
   onApply,
+  onCreate,
 }: {
   tags: Tag[]
   onApply: (ids: string[]) => void
+  /** Returns the new tag id (or null if creation failed). */
+  onCreate: (name: string) => string | null
 }) {
   const [picked, setPicked] = useState<Set<string>>(new Set())
   const [open, setOpen] = useState(false)
+  const [query, setQuery] = useState("")
+
+  // tags slice keeps trashed tags in the array (soft-delete). Hide them so
+  // the picker only shows usable tags.
+  const activeTags = useMemo(
+    () => tags.filter((t) => !(t as { trashed?: boolean }).trashed),
+    [tags],
+  )
+
+  const trimmed = query.trim().replace(/^#/, "") // strip optional leading #
+  const filtered = useMemo(() => {
+    if (!trimmed) return activeTags
+    const q = trimmed.toLowerCase()
+    return activeTags.filter((t) => t.name.toLowerCase().includes(q))
+  }, [activeTags, trimmed])
+
+  const exactMatch = useMemo(
+    () => filtered.some((t) => t.name.toLowerCase() === trimmed.toLowerCase()),
+    [filtered, trimmed],
+  )
+  const showCreate = !!trimmed && !exactMatch
+
+  const handleCreate = () => {
+    const id = onCreate(trimmed)
+    if (id) {
+      setPicked((prev) => new Set(prev).add(id))
+    }
+    setQuery("")
+  }
 
   return (
-    <Popover open={open} onOpenChange={(v) => { setOpen(v); if (!v) setPicked(new Set()) }}>
+    <Popover
+      open={open}
+      onOpenChange={(v) => {
+        setOpen(v)
+        if (!v) {
+          setPicked(new Set())
+          setQuery("")
+        }
+      }}
+    >
       <PopoverTrigger asChild>
         <button
           className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-note text-foreground hover:bg-hover-bg transition-colors"
@@ -420,13 +538,29 @@ function TagsAddPopover({
         </button>
       </PopoverTrigger>
       <PopoverContent align="end" className="w-64 p-1">
-        <div className="max-h-[320px] overflow-y-auto py-1">
-          {tags.length === 0 ? (
+        <div className="px-1.5 pt-1 pb-1.5">
+          <input
+            autoFocus
+            type="text"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && showCreate) {
+                e.preventDefault()
+                handleCreate()
+              }
+            }}
+            placeholder="Find or create tag…"
+            className="w-full rounded-md border border-border bg-background px-2 py-1 text-2xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-accent"
+          />
+        </div>
+        <div className="max-h-[280px] overflow-y-auto py-1">
+          {filtered.length === 0 && !showCreate ? (
             <p className="px-2 py-3 text-2xs text-muted-foreground/70 italic">
-              No tags yet
+              {activeTags.length === 0 ? "No tags yet" : "No matches"}
             </p>
           ) : (
-            tags.map((t) => {
+            filtered.map((t) => {
               const isPicked = picked.has(t.id)
               return (
                 <button
@@ -455,12 +589,26 @@ function TagsAddPopover({
             })
           )}
         </div>
+        {showCreate && (
+          <div className="border-t border-border-subtle p-1">
+            <button
+              onClick={handleCreate}
+              className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-2xs text-foreground hover:bg-hover-bg transition-colors"
+            >
+              <PhPlus size={12} weight="bold" className="text-muted-foreground" />
+              <span className="truncate">
+                Create <span className="font-medium">#{trimmed}</span>
+              </span>
+            </button>
+          </div>
+        )}
         {picked.size > 0 && (
           <div className="border-t border-border-subtle p-1">
             <button
               onClick={() => {
                 onApply(Array.from(picked))
                 setPicked(new Set())
+                setQuery("")
                 setOpen(false)
               }}
               className="flex w-full items-center justify-center rounded-md bg-accent px-3 py-1.5 text-2xs font-medium text-accent-foreground hover:bg-accent/90 transition-colors"
