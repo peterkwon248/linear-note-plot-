@@ -8,6 +8,72 @@
 
 ---
 
+## 🚀 2026-05-16 — **Wiki/Books board 우클릭 ContextMenu + Workbench inline Create + v134 seed backfill** ⭐⭐⭐⭐
+
+**범위**: 1 worktree (`awesome-mcnulty-cac926`). 단일 PR. 사용자 보고 2건 + seed 보강 1건 응답 — Wiki/Books board UX entity-uniformity 마무리 + 시드 자동 보충.
+
+**사용자 시그널 (그대로)**:
+1. "위키 보드 디스플레이 모드에서 Add to category할 때 기존에 없었던 카테고리를 생성할 수 있는 기능이 있어야 해. (기존 코드 재활용.) Add to Tags도 마찬가지."
+2. "보드 디스플레이 모드일 때 마우스 우클릭이 안 되네? 노트는 돼. 위키랑 북도 되어야 해."
+3. "야 시드데이터를 다시 만들어줘. 위키 시드데이터가 지금 0이라서 테스트가 안 돼"
+
+**변경 파일 (12)**:
+- `components/books/book-context-menu-items.tsx` (신규) — `BookContextMenuItems` helper. Notes 패턴 정합.
+- `components/books/book-grid-card.tsx` — helper 사용으로 단순화 (~51 line 제거)
+- `components/books/books-board.tsx` — `BookBoardCard` ContextMenu wrap + callbacks chain (BoardCard / BoardColumn / BoardProps)
+- `components/views/books-view.tsx:272` — BooksBoard에 4 callbacks 전달 (`onRename / onDelete / onRestore / onPermanentDelete`)
+- `components/views/wiki-board.tsx` — Card visual을 `<ContextMenu>` wrap. `WikiArticleMenuItems` import (이미 wiki-list export). CardProps + WikiBoardProps에 `onMergeArticle / onSplitArticle / onDeleteArticle / onShowConnectedArticle` 추가. board callback (`onMerge(sourceId)`)는 menu callback (`() => onMerge(article.id)`)으로 wrap.
+- `components/views/wiki-view.tsx:1400` — WikiBoard에 `onDeleteArticle / onShowConnectedArticle` 전달 (WikiList 패턴 정합)
+- `components/wiki-board-workbench.tsx` — CategoryAddPopover / TagsAddPopover 재작성. `query` state + filtered list (case-insensitive includes) + `exactMatch` 체크 + `showCreate` 조건부 inline button. `createWikiCategory` / `createTag` 호출 → 새 id 자동 picked.
+- `lib/store/slices/tags.ts:11-18` — `createTag` `void → string` 시그니처 변경 (id 반환)
+- `lib/store/types.ts:287` — `createTag` 타입 변경
+- `lib/store/migrate.ts:2072-2104` — v134 backfill block. `SEED_WIKI_ARTICLES + SEED_WIKI_CATEGORIES` 누락 시드만 push (id-dedup append, idempotent). v130 backfill 패턴 정합.
+- `lib/store/index.ts:257` — persist version `133 → 134`
+- `CLAUDE.md` — Stack 표기 `22-slice, v134`
+
+### 핵심 결정 (영구 LOCKED, 2026-05-16)
+
+**42. ContextMenu helper 추출 패턴 영구** — entity별 `<entity>-context-menu-items.tsx` helper 파일 (Notes / Books 양쪽). list/board/gallery 3 surface에서 재활용. props는 dumb (모든 store mutation/toast는 callback). 영구 룰 21 entity-uniformity 확장.
+
+**43. createTag id 반환 시그니처** — `createTag(name, color?) => string`. 모든 entity create action은 id 반환이 호출자 편의 우선 (createWikiCategory 패턴 정합). slice + types.ts 동시 변경 의무.
+
+**44. Popover inline Create option = 검색 input + cmdk 패턴** — Plot의 Tag/Category picker에 `query` state + filtered list + exactMatch 체크 + `showCreate` 조건부 inline button. native `prompt()` 회피 (영구 룰 i18n + Linear polish). placeholder "Find or create category…/tag…".
+
+**45. Seed backfill migration 패턴 영구** — 시드 증가 (예: 7 → 17 articles) 시 자동 backfill migration 동반 의무. id-dedup append (사용자 추가 데이터 보존 + 누락 시드만 push). v130 / v134가 같은 패턴.
+
+### 기술 학습 (영구)
+
+- **Radix ContextMenuTrigger asChild + dnd-kit attributes/listeners 조합 안전**: outer div (drag) + inner visual (ContextMenuTrigger). left-click = drag, right-click = contextmenu. 별 set이라 충돌 X.
+- **DragOverlay는 ContextMenu wrap 제외**: `if (isDragOverlay) return visual` 분기 유지.
+- **WikiArticleMenuItems prop signature mismatch (id 안 받음)**: board에서 `(article.id)` wrap 필요. board callback (`onMerge(sourceId)`)와 menu callback (`onMerge()`) 시그니처 다름.
+- **회귀 보고 verify 패턴**: 코드 verified + 같은 IDB로 fresh preview에서 작동 재현 시 = HMR/multi-port stale 추정. 코드 fix 안 함, 사용자에게 환경 정리 안내. "재현 안 되는 회귀"는 진단 후 close 가능.
+- **시드 증가 동반 마이그레이션 의무**: 시드 코드만 늘리면 fresh user만 받음. 기존 사용자는 새 migration block 필요 (idempotent id-dedup).
+
+### 알려진 회귀
+
+**P0-1 Tags / Labels 사이드바 진단 결과**: fresh preview (port 3002, 본 worktree)에서 두 surface 모두 정상 작동 verified.
+- `/library/tags #brandnewtag` 클릭 → sidePanelContext `{type:"tag", id}` set ✅ → TagDetailPanel render ✅
+- `/labels Diary` 클릭 → sidePanelContext `{type:"label", id:"label-4"}` set ✅ → LabelDetailPanel render ✅
+- root cause 추정: (a) HMR stale 또는 (d) Multi-worktree port 충돌
+- **코드 fix 불필요**. 사용자 본인 환경 hard refresh + 다른 worktree dev 정리 후 재확인 대기.
+
+### 환경
+
+- Branch: `claude/awesome-mcnulty-cac926`
+- Store version: **v133 → v134** (wiki seed backfill)
+- Persist version: 134
+- 신규 파일: `components/books/book-context-menu-items.tsx`
+- 데이터 모델 변경: `createTag` `void → string`
+
+### 다음 (TODO.md P0)
+🔴 **P0-2**: 4 신규 + 12 기존 PR 통합 manual verify
+🔴 **P0-1 재확인**: Tags/Labels 사이드바 사용자 본인 환경에서
+🟡 **P1**: wiki-floating-action-bar.tsx에도 Workbench와 같은 검색+Create UX 적용 (list mode 일관성)
+🟡 **P1**: Calendar / Ontology graph 사이드바 의도 명확화
+🟡 **P1**: Granular events / Label events / EVENT_HEX palette / EDGES section
+
+---
+
 ## 🚀 2026-05-15 (저녁) — **Wiki entity-uniformity 완성 + Category sidebar 흡수 + 다양한 polish** ⭐⭐⭐⭐⭐
 
 **범위**: 단일 worktree (`xenodochial-wing-654662`). 큰 단일 PR — 영구 룰 21 entity-uniformity 본질 진전 (Wiki Articles board = Notes parity + Wiki Categories sidebar 흡수 + Books board default kind + 다양한 polish).

@@ -51,6 +51,33 @@
 
 ---
 
+## 🚀 2026-05-16 — Wiki/Books board 우클릭 ContextMenu + Workbench inline Create + v134 seed backfill ⭐⭐⭐⭐
+
+**범위**: 단일 PR. 사용자 보고 2건 + seed 보강 1건 응답.
+
+### 핵심 결정 (영구 LOCKED)
+
+**42. ContextMenu helper 추출 패턴 영구** — entity별 `<entity>-context-menu-items.tsx` helper. list/board/gallery 3 surface에서 재활용. 영구 룰 21 entity-uniformity 확장.
+
+**43. createTag id 반환 시그니처** — `createTag(name, color?) => string`. 모든 entity create action은 id 반환 우선.
+
+**44. Popover inline Create = 검색 input + cmdk 패턴** — `query` state + filtered list + exactMatch + `showCreate` 조건부 button. native prompt() 회피.
+
+**45. Seed backfill migration 패턴 영구** — 시드 증가 시 동반 의무. id-dedup append (사용자 추가 데이터 보존 + 누락만 push).
+
+### 알려진 회귀
+
+**P0-1 Tags / Labels 사이드바**: fresh preview verify 정상. 사용자 보고 (2026-05-15) 환경의 HMR/multi-port stale 추정. 코드 fix 불필요, 사용자 본인 환경 재확인 대기.
+
+### 다음 (TODO.md P0)
+
+🔴 **P0-2**: 4 신규 + 12 기존 PR 통합 manual verify (cross-machine)
+🔴 **P0-1 재확인**: Tags/Labels 사용자 본인 환경
+🟡 **P1**: wiki-floating-action-bar에도 검색+Create 적용 (list mode 일관성)
+🟡 **P1**: Calendar / Ontology graph 사이드바 의도 명확화
+
+---
+
 ## 🚀 2026-05-15 — 12 PR 머지 (Library 100% + Activity Unification + Connections charts) ⭐⭐⭐⭐⭐
 
 **범위**: 단일 day 12 PR. Library entity-uniformity 5 entity 완성 + Activity entity-agnostic PRD 4단계 + Library Connections 차트화 + Ontology Legend 위치.

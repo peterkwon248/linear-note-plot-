@@ -1397,6 +1397,20 @@ export function WikiView() {
                 setSelectedWikiArticleId(id)
                 setIsEditingWikiArticle(true)
               }}
+              onDeleteArticle={(id) => {
+                deleteWikiArticle(id)
+                toast.success("Article deleted")
+              }}
+              onShowConnectedArticle={(id, direction) => {
+                const existingFilters = wikiViewState.filters ?? []
+                const otherRules = existingFilters.filter((r) => r.field !== "connectedTo")
+                updateWikiViewState({
+                  filters: [
+                    ...otherRules,
+                    { field: "connectedTo", operator: "eq", value: `${id}:${direction}` },
+                  ],
+                })
+              }}
             />
           ) : (
             <WikiList

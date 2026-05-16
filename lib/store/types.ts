@@ -284,7 +284,7 @@ export interface PlotState {
 
   // ── Tags ──
   // v109: `color` is optional (opt-in). Slice defaults to null when omitted.
-  createTag: (name: string, color?: string | null) => void
+  createTag: (name: string, color?: string | null) => string
   updateTag: (id: string, updates: Partial<Tag>) => void
   deleteTag: (id: string) => void
   restoreTag: (id: string) => void

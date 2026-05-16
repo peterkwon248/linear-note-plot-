@@ -2070,5 +2070,38 @@ export function migrate(persistedState: unknown): PlotState {
     }
   }
 
+  // v134: SEED_WIKI_ARTICLES + SEED_WIKI_CATEGORIES backfill — 2026-05-16.
+  // PR #347 bumped the wiki seed from ~7 to 17 articles + 10 categories
+  // (Wiki entity-uniformity testing). The v130 backfill only fires for
+  // users still on v129 or earlier, so users already on v130-v133 stayed
+  // on the older, sparser seed. v134 re-applies the same id-dedup append
+  // pattern: existing user content is preserved, only missing seed ids
+  // are pushed. Idempotent.
+  if (Array.isArray(state.wikiArticles)) {
+    const { SEED_WIKI_ARTICLES, SEED_WIKI_CATEGORIES } = require("./seeds")
+    const existingArticleIds = new Set((state.wikiArticles as any[]).map((a: any) => a.id))
+    let addedArticles = 0
+    for (const seed of SEED_WIKI_ARTICLES) {
+      if (!existingArticleIds.has(seed.id)) {
+        ;(state.wikiArticles as any[]).push(seed)
+        addedArticles += 1
+      }
+    }
+    if (Array.isArray((state as Record<string, unknown>).wikiCategories)) {
+      const cats = (state as Record<string, unknown>).wikiCategories as any[]
+      const existingCatIds = new Set(cats.map((c: any) => c.id))
+      let addedCats = 0
+      for (const seed of SEED_WIKI_CATEGORIES) {
+        if (!existingCatIds.has(seed.id)) {
+          cats.push(seed)
+          addedCats += 1
+        }
+      }
+      if (addedArticles > 0 || addedCats > 0) {
+        console.log(`[migrate] v133→v134: re-seeded wiki (${addedArticles} articles, ${addedCats} categories)`)
+      }
+    }
+  }
+
   return state as unknown as PlotState
 }

@@ -277,6 +277,10 @@ function BooksGrid() {
             onOpen={openBook}
             onTogglePin={handleTogglePin}
             onConvertToManual={handleConvertToManual}
+            onRename={startRename}
+            onDelete={handleDelete}
+            onRestore={handleRestore}
+            onPermanentDelete={handlePermanentDelete}
           />
         ) : isGalleryMode ? (
           // books-view-engine-4: gallery mode via the entity-agnostic
