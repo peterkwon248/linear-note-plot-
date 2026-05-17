@@ -51,6 +51,31 @@
 
 ---
 
+## 🚀 2026-05-18 (오전) — Wiki Delete soft delete + Wiki Template 신설 + Infobox preset 6 + dropdown fix ⭐⭐⭐⭐
+
+**범위**: 3 PR (#357/#358/#359). 사용자 시그널 4건 응답.
+
+### 핵심 결정 (영구 LOCKED)
+
+**#62. Wiki Delete = Note 정합 2단**: Trash 거쳐 soft delete → "Delete forever" hard delete.
+
+**#63. Floating menu = portal + fixed + viewport flip**: ancestor overflow 영향 회피. PresetDropdown reference.
+
+### 변경 핵심
+
+- **Wiki Delete soft delete**: trashWikiArticle action + v138 migration + 7곳 호출처 swap
+- **Wiki Template 신설** (큰 작업, 5 신규 파일): WikiTemplate type + 8 seed (Empty/Concept/Person/Place/Reference/Tutorial/Project Log/Book Note) + v139 migration + WikiTemplateDetailPanel + WikiTemplatePicker dialog
+- **Infobox preset 11 → 17** (나무위키 정합 6 신규): School/Animal/Software/Food/Vehicle/Sport Team
+- **Preset dropdown 잘림 fix**: createPortal + fixed + viewport bound check
+
+### 다음 (TODO.md P0)
+
+🔴 **P0 #1**: Wiki Template slash insert (PR #358 후속)
+🟡 **P0 #2**: 나무위키 Infobox Tier 2-4 본격 (PRD 분리 권장)
+🟡 **P0 #3**: Library Tags Detail panel
+
+---
+
 ## 🚀 2026-05-17 (밤) — Books sidebar transition + Trash hardcoded grouping + Trash entity-native icon ⭐⭐⭐
 
 **범위**: 3 PR (#353/#354/#355). 사용자 시그널 5건 응답.

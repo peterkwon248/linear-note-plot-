@@ -6,6 +6,103 @@
 
 ---
 
+## 2026-05-18 (오전) — 집/Windows, **Wiki Delete soft delete + Wiki Template 신설 + Infobox preset 6 신규 + dropdown 잘림 fix (3 PR)**
+
+> 🎯 **다음 즉시 액션 (3 후보 중 택일)**:
+> 1. **Wiki Template slash insert** (PR #358 후속 polish, ~3 파일) — Wiki article view "+ Block" 메뉴 또는 toolbar에 "From wiki template…" entry. blocks splice (article level 메타 X) + cursor 위치 insert.
+> 2. **나무위키 Infobox Tier 2-4 본격 고도화** (memory line 3362, 큰 작업, PRD 분리 권장) — 대표 이미지+캡션 / 사용자 커스텀 preset / 본격 UI 고도화.
+> 3. **P1 잔여 1순위: Library Tags Detail panel** (~5 파일, PR #331 Files Detail 패턴 정합).
+>
+> **사용자 의도** (이번 세션, 그대로 인용):
+> 1. "stub는 삭제하면 자동으로 완전 삭제가 되어버리는 건가??" → PR #357 Wiki Delete soft delete (Note 2단 정합)
+> 2. "위키 템플릿도, 노트 템플릿 구조로 만들고 싶거든??" + "애드블록 등을 이미 갖추고 있다던지" → PR #358 Wiki Template 신설 (NoteTemplate 정합 + Wiki 본질 확장)
+> 3. "인포박스도 템플릿들이... 더 갖추고 고도화해야 하지 않음?? 나무위키스타일로" → PR #359 6 신규 preset
+> 4. "특정 인포박스 템플릿을 선택해버리면 내부의 템플릿들 전체가 안 보여... 어떤 상황에서도 모든 인포박스 템플릿이 드롭다운식으로 보여야 됨. 공간 부족 시 내부 스크롤" → PR #359 dropdown portal fix
+>
+> **첫 스텝 — 후보 1 (Wiki Template slash insert)**:
+> 1. `components/wiki-editor/wiki-article-view.tsx` 안에 "+ Add block" 또는 floating "/" toolbar 위치 찾기 (현재 block list 위 어딘가)
+> 2. menu entry "From wiki template…" 신규 → click 시 `WikiTemplatePicker` dialog 띄움 (기존 컴포넌트 재활용)
+> 3. picker `onApplied` callback variant 필요 — 현재는 `(articleId) => void` (article 생성). slash insert 시엔 `(templateId) => void` 호출자가 blocks splice
+> 4. WikiTemplatePicker에 prop 추가: `mode: "create" | "insert"` — insert mode 시엔 createWikiArticleFromTemplate 호출 X, 대신 `getWikiTemplateBlocksExpanded(id)` + 호출자 callback에 blocks 전달
+> 5. wiki-article-view에서 blocks 받으면 `useStore.addWikiBlock` 또는 `updateWikiArticle({ blocks: [...existing, ...templateBlocks] })`로 splice. position은 cursor 또는 last block 다음
+>
+> **첫 스텝 — 후보 2 (나무위키 Tier 2-4)**:
+> 1. memory `docs/MEMORY.md:3362` "나무위키 Tier 2-4 사용자 결정 진행" 섹션 재read
+> 2. PRD 분리 시도 — `.omc/plans/wiki-infobox-tier-2-4-prd.md` (대표 이미지+캡션 / 사용자 커스텀 preset / 본격 고도화)
+> 3. 사용자 의도 명확화 후 작업 시작
+>
+> **컴포넌트 구조** (Wiki Template slash insert 시):
+> - WikiTemplatePicker 확장 — `mode: "create" | "insert"` prop + onApplied signature 분기
+> - `lib/store/slices/wiki-templates.ts:getWikiTemplateBlocksExpanded(id)` 이미 구현 — slash insert에서 호출
+> - wiki-article-view 안 cursor position 추적 — block index 또는 last block (단순화)
+>
+> **위험 + 회피**:
+> - WikiTemplatePicker는 article 생성용으로 wiki-view에 mount. slash insert는 wiki-article-view (편집 모드) 안. 위치 다름. 두 곳에 picker mount 가능 — store/local state 분리.
+> - blocks splice 시 sectionIndex / linksOut 재계산 의무 (updateWikiArticle 자동 처리)
+> - block ids 충돌 — getWikiTemplateBlocksExpanded가 이미 genId 부여
+>
+> **참고 파일**:
+> - `components/wiki-template-picker.tsx` — picker dialog
+> - `lib/store/slices/wiki-templates.ts:148` `getWikiTemplateBlocksExpanded`
+> - `components/wiki-editor/wiki-article-view.tsx` — 편집 위치
+> - `lib/store/slices/wiki-articles.ts:addWikiBlock` / `updateWikiArticle`
+> - `docs/MEMORY.md:1528, 3362` — 나무위키 Tier 1-4 todo
+> - `lib/wiki-infobox-presets.ts` — 17 preset 정의 (참고)
+>
+> **머신**: 집 (Windows)
+> **현재 main HEAD**: PR #359 머지 후 + docs sync (이 entry commit 후 갱신)
+> **branch worktree**: `kind-zhukovsky-1a4485` 그대로 (또는 다음 머신에서 새 worktree)
+
+### 완료 (이번 세션 3 PR + docs sync)
+
+- **PR #357** — Wiki Delete = hard → soft delete 패턴 변경 (Note 2단 정합). WikiArticle.trashed/trashedAt 정식 type + trashWikiArticle action + v138 migration + 7곳 호출처 swap + bulk handleTrash undo simplified (toggle 패턴).
+- **PR #358** — Wiki Template 신설 (NoteTemplate 정합 + Wiki 본질 확장). WikiTemplate type + 8 seed (Empty/Concept/Person/Place/Reference/Tutorial/Project Log/Book Note) + WikiArticle.templateId + v139 migration + onRehydrateStorage defense + Wiki 사이드바 Templates entry + /wiki/templates page + WikiTemplatesView grid + WikiTemplateDetailPanel 4탭 + WikiTemplatePicker dialog ("+ Article" → picker → 새 article)
+- **PR #359** — Infobox preset 6 신규 (School/Animal/Software/Food/Vehicle/Sport Team, 나무위키 정합) + 신규 color tokens (cyan/lime/pink/brown) + Preset dropdown 잘림 fix (createPortal + fixed positioning + viewport flip + max-height scroll).
+
+### 영구 LOCKED 결정 (이번 세션)
+
+- **#62. Wiki Delete = Note 정합 2단 패턴**: Trash 거쳐 soft delete → Trash 안에서 "Delete forever" hard delete. 모든 entity Delete 패턴 통일 영구 룰.
+- **#63. Floating menu (dropdown/popover) = portal + fixed + viewport bound check + 자동 flip**: ancestor `overflow-hidden` 영향 회피. PresetDropdown reference. 모든 entity dropdown에 동일 패턴 적용.
+- **WikiTemplate = NoteTemplate 1:1 mirror + Wiki 본질 확장**: `blocks[]` + `infobox` + `infoboxPreset` + `defaultCategoryIds` + `defaultLabelId` + `defaultLayout` 등 추가 필드. NoteTemplate (contentJson) 아닌 Wiki blocks 구조 그대로 사용. `WikiArticle.templateId` reverse-lookup으로 "Used by N wiki articles" stats.
+- **Wiki Template apply 두 path 의도 분리**: 생성 picker (Wiki "+ Article") = article level 전체 (blocks+infobox+categoryIds+labelId+layout) / slash insert (P1 후속) = blocks만 inline (article 메타 안 건드림).
+
+### 기술 학습 (영구)
+
+- **store hydration safety**: 신규 array state 추가 시 IDB serialize round-trip이 array를 object로 변형하는 case 보호 — `onRehydrateStorage`에서 `Array.isArray` check + SEED 강제 초기화 필수. v139 migration만으로는 hot-reload IDB stale state 못 잡음. selector level fallback도 `Array.isArray ? : []` 패턴 권장.
+- **사용자 IDB 데이터 wikiTemplates `{}` empty object 실제 사례**: dev hot-reload 또는 sequence migration 중 partial save로 wikiTemplates가 empty object 가능. onRehydrateStorage가 array 강제 → 사용자 새 IDB 영향 없이 safe (사용자 데이터 우선, array이면 그대로).
+- **createPortal + fixed positioning은 ancestor overflow 영향 0**: dropdown의 `absolute` + `max-height` 처리해도 parent의 `overflow-hidden`이 우선이라 잘림. portal로 document.body에 mount하면 ancestor 무관. `useLayoutEffect`로 triggerRef.getBoundingClientRect() 위치 계산 + viewport bound check + flip (top/bottom).
+- **build TypeScript 부채는 main 사전 존재 확인 후 진행**: `git stash` 후 main 상태에서 tsc 실행으로 사전 부채 분리. 내 변경 관련 에러만 fix하고 사전 부채는 별도 PR (`insights-view.tsx:268 noteEvents` 잔재).
+- **Wiki 본질 vs Note 본질 차이가 slash insert path 디자인 결정 좌우**: Wiki article = blocks[] 구조 (sections + text + infobox), Note = contentJson (TipTap). Wiki slash insert는 article level apply가 자연 (section + infobox 의도). Note slash insert는 contentJson splice가 자연. WikiTemplate slash insert를 ProseMirror Decoration 패턴 적용 어려운 이유.
+- **나무위키 정합 preset 확장 패턴**: typed field + group-header collapse + color token. 11 → 17. color 충돌 회피 위해 신규 tokens (cyan/lime/pink/brown). 향후 추가도 동일 패턴 — Tier 2-4 본격 고도화 시 base.
+
+### Watch Out (다음 세션)
+
+- **🔴 다음 P0 후보 1**: Wiki Template slash insert (PR #358 후속, ~3 파일).
+- **🟡 다음 P0 후보 2**: 나무위키 Tier 2-4 본격 (PRD 분리 권장, 큰 작업).
+- **🟡 다음 P0 후보 3**: Library Tags Detail panel (~5 파일).
+- **🟡 사전 main 부채**: `components/insights-view.tsx:268` `noteEvents` → `entityEvents` migration 누락 (v133 잔재). 별도 cleanup PR 후보 — 본 세션 PR 무관이지만 build TypeScript 부채 10개 중 가장 명료.
+- **🟣 dead code 정리**: `components/note-detail-panel.tsx` (어디서도 import 안 됨, P2).
+- **사용자 manual verify 필요** (다른 머신 fresh dev에서):
+  - Wiki Stub Delete → Trash 표시 → "Delete forever" → hard delete (PR #357)
+  - Wiki 사이드바 "Templates" entry (count 8) → /wiki/templates → 8 cards → card 클릭 → Detail panel + Apply (PR #358)
+  - Wiki article infobox preset dropdown → 17개 모두 보임 + viewport 작아도 scroll/flip (PR #359)
+
+### 환경 변경
+
+- Branch: `kind-zhukovsky-1a4485` 그대로 (다음 머신에서 새 worktree 가능)
+- Store version: v137 → v138 → v139 (Wiki Delete trashedAt + WikiTemplate slice)
+- 신규 파일 (PR #358):
+  - `lib/store/slices/wiki-templates.ts`
+  - `app/(app)/wiki/templates/page.tsx`
+  - `components/views/wiki-templates-view.tsx`
+  - `components/wiki-template-picker.tsx`
+  - `components/side-panel/wiki-template-detail-panel.tsx`
+- Preset 17개 확장 (PR #359): School/Animal/Software/Food/Vehicle/Sport Team
+- 영구 룰 #62, #63 추가
+- 사용자 IDB stale wiki templates `{}` empty object case 보고 — onRehydrateStorage defense로 해결
+
+---
+
 ## 2026-05-17 (밤) — 집/Windows, **Books sidebar transition + Trash hardcoded grouping + Trash entity-native icon fix 3건**
 
 > 🎯 **다음 즉시 액션**: **Wiki Delete를 Trash 거쳐 soft delete 패턴 변경** (사용자 결정 받음, 별도 PR ~5 파일).

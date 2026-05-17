@@ -8,6 +8,58 @@
 
 ---
 
+## 🚀 2026-05-18 (오전) — **Wiki Delete soft delete + Wiki Template 신설 + Infobox preset 6 + dropdown fix** ⭐⭐⭐⭐
+
+**범위**: 1 worktree (`kind-zhukovsky-1a4485`). 3 sequential PR + docs sync. 사용자 시그널 4건 응답.
+
+### PR 요약
+- **PR #357** — Wiki Delete = hard → soft delete (Note 2단 정합)
+- **PR #358** — Wiki Template 신설 (NoteTemplate 정합 + Wiki 본질 확장, 5 신규 파일)
+- **PR #359** — Infobox preset 6 신규 (나무위키 정합) + Preset dropdown 잘림 portal fix
+
+### 핵심 결정 (영구 LOCKED, 2026-05-18 오전)
+
+**#62. Wiki Delete = Note 정합 2단 패턴**: Trash 거쳐 soft delete (trashWikiArticle) → Trash 안에서 "Delete forever" hard delete. 모든 entity Delete 패턴 통일 영구 룰.
+
+**#63. Floating menu (dropdown/popover) = portal + fixed + viewport bound check + 자동 flip**: ancestor `overflow-hidden` 영향 회피. PresetDropdown reference (createPortal + useLayoutEffect + triggerRef + viewport bound). 모든 entity dropdown에 동일 패턴 적용.
+
+**WikiTemplate = NoteTemplate 1:1 mirror + Wiki 본질 확장**: `blocks[]` (TipTap contentJson 아닌 Wiki blocks 구조) + `infobox` + `infoboxPreset` + `defaultCategoryIds` + `defaultLabelId` + `defaultLayout` 등 추가 필드. `WikiArticle.templateId` reverse-lookup으로 "Used by N wiki articles" stats.
+
+**Wiki Template apply 두 path 의도 분리**: 생성 picker (Wiki "+ Article") = article level 전체 (blocks+infobox+categoryIds+labelId+layout) / slash insert (P1 후속) = blocks만 inline (article 메타 안 건드림).
+
+### 기술 학습 (영구, 2026-05-18 오전)
+
+- **store hydration safety**: 신규 array state 추가 시 IDB serialize round-trip이 array를 object로 변형하는 case 보호 — `onRehydrateStorage`에서 `Array.isArray` check + SEED 강제 초기화 필수. migration만으로는 hot-reload IDB stale state 못 잡음. selector level fallback도 `Array.isArray ? : []` 패턴 권장.
+- **사용자 IDB stale state**: dev hot-reload 또는 partial save로 array state가 empty object 가능. onRehydrateStorage가 array 강제 → 사용자 새 IDB 영향 없이 safe.
+- **createPortal + fixed positioning은 ancestor overflow 영향 0**: dropdown의 `absolute` + `max-height` 처리해도 parent의 `overflow-hidden`이 우선이라 잘림. portal로 document.body에 mount하면 ancestor 무관.
+- **build TypeScript 부채 분리 패턴**: `git stash` 후 main 상태에서 tsc 실행으로 사전 부채 분리. 내 변경 관련 에러만 fix하고 사전 부채는 별도 cleanup PR (현재 `insights-view.tsx:268 noteEvents` 잔재).
+- **Wiki 본질 vs Note 본질 차이가 slash insert path 디자인 좌우**: Wiki article = blocks[] 구조 (sections + text + infobox), Note = contentJson (TipTap). Wiki slash insert는 article level apply가 자연. Note slash insert는 contentJson splice가 자연.
+- **나무위키 정합 preset 확장 패턴**: typed field + group-header collapse + color token. 11 → 17. color 충돌 회피 위해 신규 tokens (cyan/lime/pink/brown). Tier 2-4 본격 고도화 시 base.
+
+### Wiki Templates 신규 8 seed
+
+Empty (default) + Wikipedia 정합 5 (Concept / Person / Place / Reference / Book Note) + Plot 본질 3 (Tutorial / Project Log).
+
+### Infobox preset 11 → 17 (나무위키 신규)
+
+기존 11: custom / person / character / place / organization / work-film / work-book / work-music / work-game / event / concept
+
+신규 6: school (brown) / animal (lime) / software (cyan) / food (pink) / vehicle (slate) / sport-team (blue)
+
+### 환경
+
+- Store version: v137 → v138 (Wiki trashedAt) → v139 (wikiTemplates init + id-dedup append)
+- 신규 파일 5개 (모두 PR #358 — Wiki Templates)
+- 사용자 IDB stale wiki templates `{}` empty object case 보고 → onRehydrateStorage defense로 해결
+
+### 다음 (TODO.md P0)
+
+🔴 **P0 #1**: Wiki Template slash insert (PR #358 후속, ~3 파일)
+🟡 **P0 #2**: 나무위키 Infobox Tier 2-4 본격 (PRD 분리 권장, 큰 작업)
+🟡 **P0 #3**: Library Tags Detail panel (~5 파일, PR #331 Files Detail 패턴 정합)
+
+---
+
 ## 🚀 2026-05-17 (밤) — **Books sidebar transition + Trash hardcoded grouping + Trash entity-native icon 3 fix** ⭐⭐⭐
 
 **범위**: 1 worktree (`awesome-mcnulty-cac926`). 단일 sequential 3 PR. 사용자 시그널 4건 응답 (3건 fix + 1건 진단 결과 사용자 결정 대기).
