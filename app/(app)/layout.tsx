@@ -264,8 +264,10 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                   </div>
                 )}
 
-                {(mountedViews.has("/labels") || activeRoute === "/labels") && (
-                  <div className={activeRoute === "/labels" ? "flex flex-1 overflow-hidden" : "hidden"}>
+                {/* 2026-05-17 — Labels route /labels → /library/labels.
+                    legacy /labels도 back-compat 유지 (둘 다 LabelsView mount). */}
+                {(mountedViews.has("/labels") || mountedViews.has("/library/labels") || activeRoute === "/labels" || activeRoute === "/library/labels") && (
+                  <div className={(activeRoute === "/labels" || activeRoute === "/library/labels") ? "flex flex-1 overflow-hidden" : "hidden"}>
                     <LabelsView />
                   </div>
                 )}

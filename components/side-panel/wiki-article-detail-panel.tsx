@@ -21,7 +21,9 @@ import { IconWikiStub, IconWikiArticle } from "@/components/plot-icons"
 import { setActiveRoute } from "@/lib/table-route"
 import { InBooksSection } from "@/components/books/in-books-section"
 import { isWikiStub } from "@/lib/wiki-utils"
-import { TagPicker } from "@/components/note-fields"
+import { TagPicker, LabelPicker } from "@/components/note-fields"
+import { CategoryPicker } from "@/components/category-picker"
+import { pickColor } from "@/components/note-fields"
 import type { WikiArticle } from "@/lib/types"
 import { getEntityColor } from "@/lib/colors" // v109: opt-in color fallback
 
@@ -56,6 +58,9 @@ export function WikiArticleDetailPanel({ article }: { article: WikiArticle | nul
   const folders = usePlotStore((s) => s.folders)
   const updateWikiArticle = usePlotStore((s) => s.updateWikiArticle)
   const createTag = usePlotStore((s) => s.createTag)
+  const labels = usePlotStore((s) => s.labels)
+  const createLabel = usePlotStore((s) => s.createLabel)
+  const createWikiCategory = usePlotStore((s) => s.createWikiCategory)
   // PR (c): N:M membership actions for the wiki Folders chip strip.
   // Mirrors the note side panel — chips with X to remove, "+ Add" to open
   // the multi-select picker.
@@ -192,24 +197,60 @@ export function WikiArticleDetailPanel({ article }: { article: WikiArticle | nul
         </>
       )}
 
-      {/* Categories */}
-      {articleCategories.length > 0 && (
-        <>
-          <InspectorSection title="Categories" icon={<PhTag size={16} weight="regular" />}>
-            <div className="flex flex-wrap gap-1.5">
-              {articleCategories.map((cat) => (
-                <span
-                  key={cat.id}
-                  className="rounded-full bg-accent/10 px-2.5 py-0.5 text-2xs font-medium text-accent"
-                >
-                  {cat.name}
-                </span>
-              ))}
-            </div>
-          </InspectorSection>
-          <div className="mx-4 border-b border-border" />
-        </>
-      )}
+      {/* Label — 2026-05-17 cross-entity 확장. labelId 없으면 "Add label"
+          placeholder만 표시 (chip hide 패턴, 영구 룰). */}
+      <InspectorSection title="Label" icon={<PhTag size={16} weight="regular" />}>
+        <LabelPicker
+          noteId={article.id}
+          currentLabelId={article.labelId ?? null}
+          allLabels={labels.filter((l) => !(l as { trashed?: boolean }).trashed)}
+          onSetLabel={(_id, labelId) => {
+            updateWikiArticle(article.id, { labelId } as Partial<WikiArticle>)
+          }}
+          onCreateLabel={(name, color) => {
+            createLabel(name, color)
+            const newLabel = usePlotStore.getState().labels.find((l) => l.name === name)
+            if (newLabel) {
+              updateWikiArticle(article.id, { labelId: newLabel.id } as Partial<WikiArticle>)
+            }
+          }}
+        />
+      </InspectorSection>
+      <div className="mx-4 border-b border-border" />
+
+      {/* Categories — 2026-05-17 read-only chip strip → CategoryPicker (편집
+          가능). WikiCategory 풀 공유. inline Create 자동 포함. */}
+      <InspectorSection title="Categories" icon={<PhTag size={16} weight="regular" />}>
+        <CategoryPicker
+          entityId={article.id}
+          selectedCategoryIds={article.categoryIds ?? []}
+          allCategories={wikiCategories}
+          onAddCategory={(_id, catId) => {
+            const current = article.categoryIds ?? []
+            if (current.includes(catId)) return
+            updateWikiArticle(article.id, { categoryIds: [...current, catId] } as Partial<WikiArticle>)
+          }}
+          onRemoveCategory={(_id, catId) => {
+            const current = article.categoryIds ?? []
+            updateWikiArticle(article.id, {
+              categoryIds: current.filter((x) => x !== catId),
+            } as Partial<WikiArticle>)
+          }}
+          onCreateCategory={(name) => {
+            const newId = createWikiCategory(name)
+            if (newId) {
+              const current = article.categoryIds ?? []
+              if (!current.includes(newId)) {
+                updateWikiArticle(article.id, {
+                  categoryIds: [...current, newId],
+                } as Partial<WikiArticle>)
+              }
+            }
+            return newId
+          }}
+        />
+      </InspectorSection>
+      <div className="mx-4 border-b border-border" />
 
       {/* Folders — PR (c) N:M chip strip
           Mirrors the note side panel. Always rendered (even empty) since

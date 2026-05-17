@@ -111,6 +111,17 @@ export const KNOWLEDGE_INDEX_COLORS = {
     bg:   "bg-fuchsia-500/10",
     hex:  "#d946ef",
   },
+  // 2026-05-17 — Labels/Categories cross-entity hub (Library) 진출.
+  labels: {
+    text: "text-rose-600 dark:text-rose-400",
+    bg:   "bg-rose-500/10",
+    hex:  "#f43f5e",
+  },
+  categories: {
+    text: "text-emerald-600 dark:text-emerald-400",
+    bg:   "bg-emerald-500/10",
+    hex:  "#10b981",
+  },
 } as const
 
 export type KnowledgeIndexEntity = keyof typeof KNOWLEDGE_INDEX_COLORS
