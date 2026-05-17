@@ -5,6 +5,11 @@ import { toast } from "sonner"
 import { cn } from "@/lib/utils"
 import { usePlotStore } from "@/lib/store"
 import { StatusShapeIcon } from "@/components/status-icon"
+import { IconWikiStub, IconWikiArticle } from "@/components/plot-icons"
+import { BookKindIcon } from "@/components/property-chips"
+import { WIKI_STATUS_HEX } from "@/lib/colors"
+import { isWikiStub } from "@/lib/wiki-utils"
+import { getBookKind } from "@/lib/view-engine/use-books-view"
 import { shortRelative } from "@/lib/format-utils"
 import type {
   Note,
@@ -53,16 +58,45 @@ const SECTION_TITLES: Record<EntityKind, string> = {
   attachment: "Files",
 }
 
-function EntityKindIcon({ kind, noteStatus }: { kind: EntityKind; noteStatus?: NoteStatus }) {
+function EntityKindIcon({
+  kind,
+  noteStatus,
+  wikiIsStub,
+  bookKind,
+  color,
+}: {
+  kind: EntityKind
+  noteStatus?: NoteStatus
+  wikiIsStub?: boolean
+  bookKind?: "manual" | "smart" | "hybrid"
+  color?: string | null
+}) {
+  // 2026-05-17 — entity-native icon (사용자 시그널 "엔티티와 그 내부 아이콘
+  // 까지 고려해서 표시"). 영구 룰: Plot 어디서나 entity 본질 icon 일관.
   if (kind === "note" && noteStatus) {
     return <StatusShapeIcon status={noteStatus} size={14} />
   }
+  if (kind === "wiki") {
+    return wikiIsStub ? (
+      <IconWikiStub size={14} style={{ color: WIKI_STATUS_HEX.stub }} className="shrink-0" />
+    ) : (
+      <IconWikiArticle size={14} style={{ color: WIKI_STATUS_HEX.article }} className="shrink-0" />
+    )
+  }
+  if (kind === "book") {
+    return <BookKindIcon kind={bookKind ?? "manual"} size={14} />
+  }
+  if (kind === "tag" || kind === "label") {
+    // Color dot (tag/label native pattern). color 없으면 muted dot.
+    return (
+      <span
+        className="h-2.5 w-2.5 shrink-0 rounded-full border border-border-subtle"
+        style={{ backgroundColor: color ?? "#6b7280" }}
+      />
+    )
+  }
   const cls = "shrink-0 text-muted-foreground"
   switch (kind) {
-    case "wiki": return <BookOpen size={14} weight="regular" className={cls} />
-    case "book": return <BookOpen size={14} weight="regular" className={cls} />
-    case "tag": return <Hash size={14} weight="regular" className={cls} />
-    case "label": return <TagIcon size={14} weight="regular" className={cls} />
     case "template": return <FileText size={14} weight="regular" className={cls} />
     case "reference": return <BookmarkSimple size={14} weight="regular" className={cls} />
     case "attachment": return <Paperclip size={14} weight="regular" className={cls} />
@@ -76,6 +110,11 @@ interface TrashRowItem {
   color?: string | null
   trashedAt?: string | null
   noteStatus?: NoteStatus
+  /** 2026-05-17 — entity-native icon 분기용. wiki는 stub/article 구분,
+   *  book은 manual/smart/hybrid kind 표시 (영구 룰 Wiki Stub vs Article badge
+   *  / Book Kind Icon). */
+  wikiIsStub?: boolean
+  bookKind?: "manual" | "smart" | "hybrid"
 }
 
 function TrashRow({
@@ -121,7 +160,13 @@ function TrashRow({
         </div>
       </div>
       <div className="w-6 shrink-0 flex items-center justify-center">
-        <EntityKindIcon kind={kind} noteStatus={item.noteStatus} />
+        <EntityKindIcon
+          kind={kind}
+          noteStatus={item.noteStatus}
+          wikiIsStub={item.wikiIsStub}
+          bookKind={item.bookKind}
+          color={item.color}
+        />
       </div>
       <div className="w-24 shrink-0 text-2xs uppercase tracking-wide text-muted-foreground">
         {ENTITY_SINGULAR[kind]}
@@ -244,6 +289,7 @@ export function TrashAllView() {
           id: w.id,
           label: w.title || "Untitled",
           trashedAt: (w as any).trashedAt ?? null,
+          wikiIsStub: isWikiStub(w),
         })),
       },
       {
@@ -252,6 +298,7 @@ export function TrashAllView() {
           id: b.id,
           label: b.title || "Untitled",
           trashedAt: b.trashedAt ?? null,
+          bookKind: getBookKind(b),
         })),
       },
       {
