@@ -23,7 +23,8 @@
  * Context menu (Rename / Pin / Trash) preserved.
  */
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
+import { usePlotStore } from "@/lib/store"
 import type { Book } from "@/lib/types"
 import type { SortField, SortDirection, GroupBy } from "@/lib/view-engine/types"
 import { getBookKind, type BookGroup } from "@/lib/view-engine/use-books-view"
@@ -177,6 +178,17 @@ export function BookTable({
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
   const allChecked = selectedIds.size === books.length && books.length > 0
   const someChecked = selectedIds.size > 0 && !allChecked
+
+  // 2026-05-17 — List-mode multi-select → side panel mirror (notes-table:561
+  // 패턴 정합). 정확히 1개 체크 시 그 책으로 sidePanelContext + open. 0개 =
+  // last context 유지 (flicker 회피), 2+개 = ambiguous (그대로). 사용자 명시
+  // 보고 "체크 시 사이드바 화면 전환 안 됨" → 같은 패턴으로 해결.
+  useEffect(() => {
+    if (selectedIds.size !== 1) return
+    const onlyId = [...selectedIds][0]
+    usePlotStore.getState().setSidePanelContext({ type: "book", id: onlyId })
+    usePlotStore.getState().setSidePanelOpen(true)
+  }, [selectedIds])
 
   const toggleAll = () => {
     if (allChecked) setSelectedIds(new Set())
