@@ -38,6 +38,9 @@ import type { SortField, FilterRule, GroupBy } from "@/lib/view-engine/types"
 import type { Label } from "@/lib/types"
 import { ViewHeader } from "@/components/view-header"
 import { LibraryBreadcrumb } from "@/components/library/library-breadcrumb"
+import { EntityNoteListRow } from "@/components/views/entity-note-list-row"
+import { setActiveRoute } from "@/lib/table-route"
+import { useRouter } from "next/navigation"
 
 /* ── Sort/Group options for detail view ─────────────────── */
 
@@ -121,6 +124,7 @@ const ROW_HEIGHT = 40
 const HEADER_HEIGHT = 37
 
 export function LabelsView() {
+  const router = useRouter()
   const labels = usePlotStore((s) => s.labels)
   const folders = usePlotStore((s) => s.folders)
   const tags = usePlotStore((s) => s.tags)
@@ -129,8 +133,21 @@ export function LabelsView() {
   const updateLabel = usePlotStore((s) => s.updateLabel)
   const openNote = usePlotStore((s) => s.openNote)
 
+  // Navigate from sub-page to a note editor — sub-page exit + activeRoute
+  // switch to /notes so the table view mounts WorkspaceEditorArea + selected
+  // note editor (Notes table 패턴 정합).
+  const navigateToNote = useCallback((noteId: string) => {
+    setSelectedLabelId(null)
+    setActiveRoute("/notes")
+    openNote(noteId)
+    router.push("/notes")
+  }, [openNote, router])
+
   // View state
   const [selectedLabelId, setSelectedLabelId] = useState<string | null>(null)
+  // Multi-select in label sub-page (2026-05-16 — entity-uniformity 룰 21:
+  // Notes/Wiki table 패턴 정합. row click toggles, dblclick navigates).
+  const [selectedNoteIds, setSelectedNoteIds] = useState<Set<string>>(new Set())
   const [creating, setCreating] = useState(false)
   const [newName, setNewName] = useState("")
   const [newColor, setNewColor] = useState<string>(PRESET_COLORS[5]) // default blue
@@ -204,6 +221,20 @@ export function LabelsView() {
   useEffect(() => {
     if (editingId) setTimeout(() => editInputRef.current?.focus(), 0)
   }, [editingId])
+
+  // 2026-05-16 — sub-page 진입 시 우측 4탭 사이드바 자동 노출 (영구 룰 21
+  // entity-uniformity). list view 진입 시 row name 클릭이 이미 sidePanelContext를
+  // set하지만, sub-page 직접 진입 또는 사용자가 사전에 사이드바를 닫은 경우
+  // sync해주는 보강. selectedLabelId 변경 시 selection도 초기화.
+  useEffect(() => {
+    if (selectedLabelId) {
+      usePlotStore.setState({
+        sidePanelContext: { type: "label", id: selectedLabelId },
+        sidePanelOpen: true,
+      })
+      setSelectedNoteIds(new Set())
+    }
+  }, [selectedLabelId])
 
   // Create handler
   const handleCreate = () => {
@@ -559,6 +590,20 @@ export function LabelsView() {
           onSetFilters={(f) => updateLabelView({ filters: f })}
         />
 
+        {/* Selection bar — N selected + Clear (정합: Notes/Wiki floating bar
+            이번 PR scope는 단순 표시. Trash 등 batch action은 별도 후속). */}
+        {selectedNoteIds.size > 0 && (
+          <div className="flex items-center gap-3 border-b border-border bg-accent/5 px-6 py-2 text-note text-foreground">
+            <span>{selectedNoteIds.size} note{selectedNoteIds.size === 1 ? "" : "s"} selected</span>
+            <button
+              onClick={() => setSelectedNoteIds(new Set())}
+              className="ml-auto text-2xs text-muted-foreground transition-colors hover:text-foreground"
+            >
+              Clear
+            </button>
+          </div>
+        )}
+
         {/* Notes list */}
         <div className="flex-1 overflow-y-auto">
           {labelNotes.length === 0 ? (
@@ -568,21 +613,20 @@ export function LabelsView() {
           ) : (
             <div>
               {labelNotes.map((note) => (
-                <button
+                <EntityNoteListRow
                   key={note.id}
-                  onClick={() => openNote(note.id)}
-                  className="flex w-full items-center gap-4 px-6 py-3 text-left hover:bg-hover-bg transition-colors"
-                >
-                  <span className="flex-1 truncate text-ui text-foreground">
-                    {note.title || "Untitled"}
-                  </span>
-                  <span className="text-note text-muted-foreground capitalize">
-                    {note.status}
-                  </span>
-                  <span className="text-note text-muted-foreground tabular-nums">
-                    {formatRelativeTime(note.updatedAt)}
-                  </span>
-                </button>
+                  note={note}
+                  isSelected={selectedNoteIds.has(note.id)}
+                  onToggleSelect={() => {
+                    setSelectedNoteIds((prev) => {
+                      const next = new Set(prev)
+                      if (next.has(note.id)) next.delete(note.id)
+                      else next.add(note.id)
+                      return next
+                    })
+                  }}
+                  onNavigate={() => navigateToNote(note.id)}
+                />
               ))}
             </div>
           )}

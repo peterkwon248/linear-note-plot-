@@ -2103,5 +2103,49 @@ export function migrate(persistedState: unknown): PlotState {
     }
   }
 
+  // v135: wiki seed tag backfill — v134 backfill로 push된 wiki-8~17이 빈
+  // tags로 들어가서 Tag sub-page에서 보이지 않던 문제 fix (2026-05-16).
+  // 명시적으로 사용자가 비운 tags가 아닌 시드 부족 케이스만 보강:
+  //   - 조건: 해당 wiki id에 SEED_WIKI_ARTICLES 일치 항목이 있고
+  //   - 현재 article.tags가 빈 배열이고
+  //   - seed.tags가 비어있지 않음
+  // 사용자가 명시적으로 tag를 모두 지운 wiki도 영향받지만, 시드는 비어있던
+  // tag만 보강하므로 그 경우는 보강 안 됨 (idempotent + 데이터 보존).
+  if (Array.isArray(state.wikiArticles)) {
+    const { SEED_WIKI_ARTICLES } = require("./seeds")
+    let filledCount = 0
+    for (const article of state.wikiArticles as any[]) {
+      if (!Array.isArray(article.tags) || article.tags.length > 0) continue
+      const seed = SEED_WIKI_ARTICLES.find((s: any) => s.id === article.id)
+      if (seed && Array.isArray(seed.tags) && seed.tags.length > 0) {
+        article.tags = [...seed.tags]
+        filledCount += 1
+      }
+    }
+    if (filledCount > 0) {
+      console.log(`[migrate] v134→v135: filled tags on ${filledCount} wiki articles from seed`)
+    }
+  }
+
+  // v136: SEED_NOTES backfill — Tag sub-page cross-entity 검증 시 사용자 IDB에
+  // demo 노트가 없어서 Notes 섹션이 비어 보이던 문제 (2026-05-16). wiki와 동일한
+  // id-dedup append 패턴 (v130/v134 정합). 기존 사용자 노트는 그대로 보존, 누락
+  // 시드 id만 push. 사용자가 명시적으로 삭제한 노트가 있어도 trashed:false로
+  // 다시 들어오지 않음 (id가 이미 store에 있으면 skip).
+  if (Array.isArray(state.notes)) {
+    const { SEED_NOTES } = require("./seeds")
+    const existingIds = new Set((state.notes as any[]).map((n: any) => n.id))
+    let addedNotes = 0
+    for (const seed of SEED_NOTES) {
+      if (!existingIds.has(seed.id)) {
+        ;(state.notes as any[]).push(seed)
+        addedNotes += 1
+      }
+    }
+    if (addedNotes > 0) {
+      console.log(`[migrate] v135→v136: re-seeded notes (${addedNotes} added)`)
+    }
+  }
+
   return state as unknown as PlotState
 }

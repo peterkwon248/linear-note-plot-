@@ -3,28 +3,51 @@
 > 우선순위 기반 작업 목록. **P0 = 다음 세션 즉시 시작점** (NEXT-ACTION.md 폐지, 2026-05-12).
 > 완료 항목은 즉시 삭제 또는 "완료" 섹션으로 이동.
 
-**마지막 갱신**: 2026-05-16 (Wiki/Books board 우클릭 ContextMenu + Workbench inline Create + v134 wiki seed backfill PR 머지 직후)
+**마지막 갱신**: 2026-05-17 (Tags/Labels sub-page entity-uniformity 1차 + cross-entity derive + seeds v135/v136 + FunnelSimple fix PR 머지 직후)
 
 ---
 
-## ✅ 최근 완료 (2026-05-16)
-- **Wiki board 카드 우클릭 ContextMenu** — `WikiArticleMenuItems` 재활용 (Merge / Split / Show connected / Move to folder / Add to folders / Delete)
-- **Books board 카드 우클릭 ContextMenu** — `BookContextMenuItems` helper 추출 (Rename / Pin / Trash, trashed 시 Restore / Delete forever)
-- **Wiki Workbench CategoryAddPopover inline Create** — 검색 input + 매치 없을 때 "Create '…'" 옵션 + 자동 picked
-- **Wiki Workbench TagsAddPopover inline Create** — 같은 패턴 (`#` prefix strip + `createTag` signature `void → string` 변경)
-- **v134 wiki seed backfill migration** — PR #347 시드 증가 (7 → 17) 적용 못 받은 v130~v133 사용자 자동 보충
-- **P0-1 Tags/Labels 회귀 진단** — fresh preview 정상 작동 verify. 코드 fix 불필요. root cause: HMR/multi-port stale 추정. 사용자 본인 환경 재확인 대기.
+## ✅ 최근 완료 (2026-05-17)
+- **Labels/Tags sub-page 사이드바 자동 노출** — useEffect로 selectedXxxId 변경 시 sidePanelContext sync (영구 룰 21)
+- **Labels/Tags sub-page row entity-uniformity** — `EntityNoteListRow` helper (hover checkbox + single click toggle + dblclick navigate)
+- **노트 더블클릭 시 실제 editor 진입** — sub-page exit + setActiveRoute + openNote + router.push 4단 세트
+- **Tag sub-page cross-entity 3 섹션** — Notes + Wiki articles (filter) + Books (derive: items + smartSources)
+- **Wiki Detail TagPicker upgrade** — read-only chip strip → 표준 TagPicker (inline Create 자동 포함)
+- **Seeds 보강** — wiki-8~17 (10개)에 tag 분산 적용
+- **v135 wiki seed tag backfill** — 빈 tags + seed tags 있을 때만 fill (idempotent)
+- **v136 SEED_NOTES backfill** — note-1~9 push (id-dedup append)
+- **FunnelSimple 텍스트 잔재 fix** — filter-bar.tsx placeholder 6곳 + button label 1곳 + 주석 1곳 (글로벌 find-replace 사고 재발)
+
+## ✅ 완료 (2026-05-16)
+- Wiki board 카드 우클릭 ContextMenu (WikiArticleMenuItems 재활용)
+- Books board 카드 우클릭 ContextMenu (BookContextMenuItems helper 추출)
+- Wiki Workbench Add to category/tags inline Create + createTag signature `void → string`
+- v134 wiki seed backfill migration
+- P0-1 Tags/Labels 회귀 진단 (fresh preview 정상, HMR/multi-port stale 추정)
 
 ---
 
-## 🔴 P0 — 즉시 (cross-machine 진입점)
+## 🔴 P0 — 즉시 (cross-machine 진입점, 2026-05-17)
 
-### 1. 다른 머신에서 시작 절차
+### 1. **Tags/Labels sub-page view-engine 통합** (사용자 명시 시그널)
+사용자 보고: "왜 태그스의 디스플레이는 이상하냐? 기존의 플롯식 정합과 다른데? 왜 필터는 없냐? 디스플레이 프로퍼티스 부실 + 그룹핑 옵션 없음"
+
+**범위**:
+- `lib/view-engine/view-configs.tsx`에 `TAG_DETAIL_VIEW_CONFIG` / `LABEL_DETAIL_VIEW_CONFIG` 신규 정의
+  - `displayConfig.properties` — 노트 row visible columns (title / status / labels / tags / updatedAt / createdAt)
+  - `displayConfig.groupingOptions` — None / Status / Priority / Folder / Label / Created / Updated / First letter (Notes 정합)
+  - `displayConfig.supportsViewMode` — list (grid도?)
+  - `filterCategories` — Notes 정합
+- `tags-view.tsx` / `labels-view.tsx` sub-page render — inline custom Popover 폐기, ViewHeader + 표준 DisplayPanel + FilterPanel 사용
+- `EntityNoteListRow`에 `visibleColumns?: string[]` prop 추가 + 조건부 chip 렌더
+- 작업량 ~10 파일
+
+### 2. 시작 절차
 ```bash
 git pull origin main   # 이번 PR 머지된 main
 npm install && npm run dev   # port 3002
-# Plot 포커스 + Hard refresh (Ctrl+Shift+R)
-# Console에서 [migrate] v133→v134 로그 자동 확인
+# Hard refresh + console [migrate] v135→v136 확인
+# /library/tags → tag 클릭 → sub-page에서 Filter/Display 부족 시각 확인 후 작업 시작
 ```
 
 ### 2. 4 신규 surface + 12 기존 PR 통합 manual verify

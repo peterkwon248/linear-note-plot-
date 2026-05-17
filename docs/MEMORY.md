@@ -8,6 +8,87 @@
 
 ---
 
+## 🚀 2026-05-17 — **Tags/Labels sub-page entity-uniformity 1차 + cross-entity derive + seeds v135/v136 + FunnelSimple fix** ⭐⭐⭐⭐
+
+**범위**: 1 worktree (`awesome-mcnulty-cac926`). 단일 PR. 사용자 보고 5건 응답 — 사이드바 mount + checkbox + dblclick navigate + Tag cross-entity + inline Create + 글로벌 find-replace 사고 fix.
+
+**사용자 시그널** (그대로 인용):
+1. 라벨 sub-page 사이드바 미구현 + 체크박스 + 더블클릭 navigate
+2. 더블클릭 → 노트 editor 실제 진입 안 됨
+3. Tag sub-page는 cross-entity (노트/위키/북) 분리 표시
+4. "북에 소속된 노트의 태그가 자동으로 흡수" — derive 직관
+5. 사이드바 "Add tag"가 기존 tag만 추가 가능, inline Create 없음
+6. Tags/Labels sub-page Display/Filter UI 기존 Plot 정합과 다름 (toolbar에 "FunnelSimple" 텍스트 잔재)
+
+**변경 파일 (10)**:
+- `components/views/entity-note-list-row.tsx` (신규) — DRY row helper. `<div role="button">` + hover checkbox + single click toggle + dblclick navigate
+- `components/views/labels-view.tsx` — sub-page useEffect (sidePanelContext sync) + selectedNoteIds state + `navigateToNote` (4단 세트) + Selection bar + button row → EntityNoteListRow
+- `components/views/tags-view.tsx` — Labels와 동일 패턴 + 3 cross-entity 섹션 (Notes/Wiki/Books) + 빈 섹션 hide
+- `components/side-panel/wiki-article-detail-panel.tsx` — Tags read-only chip → `<TagPicker>` (inline Create 자동)
+- `lib/store/seeds.ts` — wiki-8~17 tags 분산 적용 (10개)
+- `lib/store/migrate.ts` — v135 (wiki tag fill) + v136 (notes backfill) block
+- `lib/store/index.ts` — persist version 136
+- `components/filter-bar.tsx` — FunnelSimple 텍스트 잔재 8곳 fix
+
+### 핵심 결정 (영구 LOCKED, 2026-05-17)
+
+**46. Entity sub-page row UX 영구 룰** — `EntityNoteListRow` helper. hover checkbox + single click toggle + double click navigate. Notes/Wiki table row 패턴 정합 (영구 룰 21 entity-uniformity 확장). Tags/Labels/Stickers/Categories sub-page 모두 동일.
+
+**47. Sub-page → 노트 editor 진입 패턴** — 4단 세트:
+1. `setSelectedXxxId(null)` (sub-page exit)
+2. `setActiveRoute("/notes")` (store-level view switch)
+3. `openNote(id)` (selectedNoteId + sidePanelContext + tab sync)
+4. `router.push("/notes")` (URL 변경)
+
+`openNote(id)` 단독으로는 sub-page 분기에 가려 editor 안 보임 (Plot `isEditingInTableView = isTableView && !!selectedNoteId` 조건 정합).
+
+**48. Tag sub-page cross-entity = derive (B2)** — Book entity에 tags 필드 X. 대신 runtime 합집합:
+- `Book.items` 안 노트/위키 중 selectedTagId 가진 게 있거나
+- `Book.smartSources`에 `{kind:"tag", refId:selectedTagId}` 있으면 표시
+
+데이터 모델 변경 0, sync 버그 0, 사용자 의도 충족 ("북에 소속 노트의 태그가 자동 흡수").
+
+**49. Wiki tag 부여 = 명시적만** — Note는 본문 #해시태그 자동 sync (`syncHashtagsToTags`). Wiki는 자동 sync 미적용 (P1 후속 — wiki text block editor에 wire-up 가능). 시드 + UI picker로만 부여.
+
+**50. Seed 증가 동반 migration 영구 룰** — 시드 코드 변경 시 자동 backfill migration 동반. id-dedup append (v130/v134/v136) 또는 빈 필드만 fill (v135) — 명시적 비움 데이터 보존. 다음 세대도 동일 패턴.
+
+**51. 글로벌 find-replace 사고 grep 의무** — PR 머지 전 placeholder/string literal에 icon 이름이 박혀있는지 검수. MagnifyingGlass (2026-05-14) + FunnelSimple (2026-05-17) 두 번째 사고. **영구 PR review checkpoint** — grep `"<IconName>\s+\w+"` 또는 `placeholder="<IconName>"`.
+
+**52. TagPicker entity-agnostic 재활용** — `components/note-fields.tsx:365` TagPicker 컴포넌트. prop `noteId`는 string entityId 의미. Note/Wiki/Book 모두 같은 컴포넌트 + 다른 callback wire-up.
+
+### 기술 학습 (영구)
+
+- **derive 패턴 = data sync 버그 0**: Book.tags 신규 필드 (B1 mutate) 대신 runtime 합집합. 노트 tag 바뀔 때마다 모든 책 tags 재계산 X — Tag sub-page query 시점만.
+- **v134→v135 backfill 패턴**: wiki tags가 v134 backfill로 빈 채 들어왔던 경우, v135에서 seed.tags가 비어있지 않을 때만 update. 사용자 명시 비움 보호. idempotent.
+- **글로벌 find-replace 영향 범위**: VS Code Replace All은 import / JSX 사용처 / string literal 모두 변환 — 의도 안 한 placeholder 깨짐.
+- **setActiveRoute + router.push 둘 다 필요**: 전자는 store-level state (view switch), 후자는 URL 변경. Plot client-side routing은 둘 다 sync.
+- **wiki-article-detail-panel onCreateTag closure stale risk**: article prop closure capture. createTag 후 즉시 updateWikiArticle 호출 — preview verify 시 한 번 article.tags가 빈 배열로 보임. P2 후속 — 콜백 안 `usePlotStore.getState()` 직접 read로 변경.
+
+### 환경
+
+- Branch: `awesome-mcnulty-cac926` (계속 사용 — squash merge 후 같은 worktree에서 다음 PR)
+- Store version: **v134 → v135 → v136** (wiki tag fill + notes backfill)
+- Persist version: 136
+- 신규 파일: `components/views/entity-note-list-row.tsx`
+- 데이터 모델 변경 없음 (derive only)
+- Preview verify: Tag #Knowledge Management → NOTES 5 / WIKI ARTICLES 4 / BOOKS 4 ✅
+
+### 알려진 회귀 / Watch Out
+
+- **wiki-1~13 trashed:true 잔존**: 사용자 본인 환경 사전 데이터. v134/v135/v136 모두 trashed flag 안 건드림. fresh user는 정상.
+- **Tags/Labels sub-page Display 부실** (사용자 명시 시그널): view-engine 통합 본격 PR 필수 (다음 세션 P0).
+- **wiki-article-detail-panel onCreateTag closure stale**: preview에서 한 번 발생, 사용자 환경에서는 안 발생 가능성. P2 follow-up.
+
+### 다음 (TODO.md P0)
+🔴 **P0**: Tags/Labels sub-page를 view-engine 통합 (ViewHeader + 표준 DisplayPanel + List/Grid + 풍부한 Grouping/Display Properties + FilterPanel). 작업량 ~10 파일.
+🟡 **P1**: Wiki 본문 #해시태그 자동 sync (Note editor 패턴)
+🟡 **P1**: Wiki blocks 임베드 노트의 tag derive (reference-aware sub-page)
+🟡 **P1**: Note의 wikilink가 가리키는 entity tag derive
+🟡 **P1**: Book Detail manual TagPicker (사용자 결정 필요)
+🟣 **P2**: wiki-article-detail-panel onCreateTag closure stale fix (usePlotStore.getState() 직접 read)
+
+---
+
 ## 🚀 2026-05-16 — **Wiki/Books board 우클릭 ContextMenu + Workbench inline Create + v134 seed backfill** ⭐⭐⭐⭐
 
 **범위**: 1 worktree (`awesome-mcnulty-cac926`). 단일 PR. 사용자 보고 2건 + seed 보강 1건 응답 — Wiki/Books board UX entity-uniformity 마무리 + 시드 자동 보충.
