@@ -3,11 +3,17 @@
 > 우선순위 기반 작업 목록. **P0 = 다음 세션 즉시 시작점** (NEXT-ACTION.md 폐지, 2026-05-12).
 > 완료 항목은 즉시 삭제 또는 "완료" 섹션으로 이동.
 
-**마지막 갱신**: 2026-05-17 (저녁) — Label/Category cross-entity 전면 확장 + Library hub 재배치 + v137 migration PR 머지 직후
+**마지막 갱신**: 2026-05-17 (밤) — Books sidebar transition + Trash hardcoded grouping + Trash entity-native icon 3 PR 머지 직후
 
 ---
 
-## ✅ 최근 완료 (2026-05-17 저녁)
+## ✅ 최근 완료 (2026-05-17 밤)
+- **PR #352** — `/books` row click 시 사이드바 즉시 전환 (BookDetailPage useEffect 대기 X)
+- **PR #353** — `book-table` checkbox 체크 시 sidebar transition (notes-table:561 패턴 정합)
+- **PR #354** — Trash All view에 Display panel groupBy 정합 (하드코딩 해제)
+- **PR #355** — Trash row icon entity-native (Wiki Stub/Article + Book kind + Tag/Label color dot)
+
+## ✅ 완료 (2026-05-17 저녁)
 - **Label/Category/Tag = orthogonal 독립** — 사용자 mental model 정착, 계층 의존 폐기
 - **Memo 자동 부여 폐기** — `createNote` 시 labelId null 유지
 - **Wiki/Book에 labelId + Note/Book에 categoryIds + Book.tags 신규 필드**
@@ -39,9 +45,32 @@
 
 ---
 
-## 🔴 P0 — 즉시 (cross-machine 진입점, 2026-05-17 저녁)
+## 🔴 P0 — 즉시 (cross-machine 진입점, 2026-05-17 밤)
 
-### 1. **Wiki Template 신설** (사용자 명시 시그널 — 큰 작업, ~20 파일)
+### 1. **Wiki Delete = hard delete → soft delete 패턴 변경** (사용자 결정 받음 — 다음 PR 핵심 작업, ~5 파일)
+사용자 보고 2026-05-17 밤: "stub는 삭제하면 자동으로 완전 삭제가 되어버리는 건가??"
+
+**현황**:
+- `lib/store/slices/wiki-articles.ts:156` `deleteWikiArticle()` = **hard delete** (filter + entityEvents cascade + sticker membership cascade)
+- 현재 Wiki Board ContextMenu / Wiki Detail "Delete article" 버튼 → `deleteWikiArticle` 호출 (hard delete 직행, trash 거치지 않음)
+
+**Note 패턴 (정합 reference, `lib/store/slices/notes.ts`)**:
+- `toggleTrash(id)` = soft trash (trashed:true + trashedAt:now())
+- `deleteNote(id)` = hard delete (Trash 안에서만 호출)
+
+**변경 범위**:
+- `components/views/wiki-list.tsx` `WikiArticleMenuItems.onDelete` 호출 → `updateWikiArticle(id, {trashed:true, trashedAt:now()})`
+- `components/side-panel/wiki-article-detail-panel.tsx` "Delete article" 버튼 → 동일
+- `components/views/wiki-view.tsx:1400` `onDeleteArticle` callback 검토 (board context menu가 통과하는 path)
+- 선택: wiki-articles slice에 `trashWikiArticle(id)` helper (의도 명확화)
+- 선택: `WikiArticle.trashedAt?: string | null` 필드 추가 (Note 정합, 현재 wiki는 trashed만)
+- Trash 안에서 "Delete forever" → `deleteWikiArticle()` hard delete 그대로
+
+**Verify**:
+- Wiki Stub Delete → trash 안에 표시 → "Delete forever" 클릭 → hard delete (entityEvents + sticker cascade)
+- 기존 hard-deleted wiki는 복구 불가 (이미 사라짐, 데이터 손실 이미 발생)
+
+### 2. **Wiki Template 신설** (이전 P0 — 큰 작업, ~20 파일)
 사용자 보고: "위키에도 템플릿이 신설되어야 해. 맞지?"
 
 **현황**: `lib/types.ts:695` `NoteTemplate`만 있음. `WikiTemplate` 타입 자체 X. memory의 "WikiTemplate 통합 모델" 영구 결정은 코드 미구현.

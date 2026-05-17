@@ -51,6 +51,27 @@
 
 ---
 
+## 🚀 2026-05-17 (밤) — Books sidebar transition + Trash hardcoded grouping + Trash entity-native icon ⭐⭐⭐
+
+**범위**: 3 PR (#353/#354/#355). 사용자 시그널 5건 응답.
+
+### 핵심 결정 (영구 LOCKED)
+
+**59. Display panel 설정 = 모든 view 일관**: Trash 같은 특수 view도 viewStateByContext groupBy 받기. 하드코딩 금지.
+
+**60. selection state → sidebar mirror useEffect**: 1개 selected = setSidePanelContext + open. 모든 entity table 표준.
+
+**61. Trash row icon = entity-native**: Wiki Stub/Article + Book kind + Tag/Label color dot. 영구 룰 25 확장.
+
+### 진단 (사용자 결정 대기)
+Wiki `deleteWikiArticle()` = hard delete. 사용자 결정: Note 패턴 (soft → hard 2단)으로 변경. 다음 PR.
+
+### 다음 (TODO.md P0)
+🔴 **P0**: Wiki Delete = hard → soft pattern (~5 파일)
+🔴 **P0**: Wiki Template 신설 (~20 파일)
+
+---
+
 ## 🚀 2026-05-17 (저녁) — Label/Category cross-entity 전면 확장 + Library hub 재배치 + v137 migration ⭐⭐⭐⭐⭐
 
 **범위**: 단일 PR. 사용자 5건 시그널 + brainstorming 합의.

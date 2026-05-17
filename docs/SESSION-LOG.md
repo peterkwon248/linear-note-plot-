@@ -6,6 +6,97 @@
 
 ---
 
+## 2026-05-17 (밤) — 집/Windows, **Books sidebar transition + Trash hardcoded grouping + Trash entity-native icon fix 3건**
+
+> 🎯 **다음 즉시 액션**: **Wiki Delete를 Trash 거쳐 soft delete 패턴 변경** (사용자 결정 받음, 별도 PR ~5 파일).
+>
+> **사용자 의도** (이번 세션, 그대로 인용):
+> 1. "북스 체크 시 우측 사이드바가 변경되는 화면전환이 제대로 안 이뤄지네. 하드코딩된 거 같다니까??"
+> 2. "체크박스에 처음으로 체크를 하게 되면 자동으로 우측 사이드바가 열려야 되는 거 아니야? 노트의 경우엔 그러는데?"
+> 3. "노 그룹핑 상태인데 왜 트래쉬에서 카인드별로 리스트업이 되고 있는 거야??"
+> 4. "stub는 삭제하면 자동으로 완전 삭제가 되어버리는 건가??" — Wiki Delete = hard delete 진단 보고.
+> 5. "노트는 이 아이콘이 아닌데? 엔티티와 그 내부 아이콘들까지 고려해서 뭔가 표시가 나와줘야 될 거 같은데, 트래쉬에"
+>
+> **다음 작업 디테일 (Wiki Stub hard delete → soft delete)**:
+>
+> 현황:
+> - `lib/store/slices/wiki-articles.ts:156` `deleteWikiArticle()` = **hard delete** (filter + entityEvents cascade + sticker membership cascade)
+> - `lib/store/slices/wiki-articles.ts:80` `updateWikiArticle(id, {trashed:true})` = **soft trash**
+> - 현재 Wiki Board ContextMenu / Wiki Detail "Delete article" 버튼 → `deleteWikiArticle` 호출 (hard delete 직행)
+>
+> Note 정합 패턴 (`lib/store/slices/notes.ts`):
+> - `toggleTrash(id)` = soft trash
+> - `deleteNote(id)` = hard delete (Trash 안에서만 호출)
+> - UI: row Delete = soft trash → Trash에서 "Delete forever" = hard delete
+>
+> **첫 스텝** (다른 머신에서 즉시 시작):
+> 1. `git pull origin main` (이번 PR #353/#354/#355 + docs sync 머지됨)
+> 2. `npm install && npm run dev` + hard refresh
+> 3. **Wiki Delete 호출 site 변경**:
+>    - `components/views/wiki-list.tsx` `WikiArticleMenuItems`의 onDelete → `updateWikiArticle(id, {trashed:true})` (현재 `deleteWikiArticle`)
+>    - `components/side-panel/wiki-article-detail-panel.tsx` "Delete article" 버튼 → 동일 변경
+>    - `components/views/wiki-view.tsx:1400` `onDeleteArticle` callback도 검토 (board context menu가 통과하는 path)
+> 4. **wiki-articles slice 신규 action 추가 (선택)**: `trashWikiArticle(id)` helper — 의도 명확화 ("Note의 toggleTrash 패턴 정합"). 또는 그냥 `updateWikiArticle` 직접 호출.
+> 5. **trashedAt 필드** 추가 검토 — Note는 trashed + trashedAt 둘 다. Wiki는 trashed만? `lib/types.ts` 확인.
+> 6. **Trash UI verify**: Wiki Stub Delete → trash 안에 표시 → "Delete forever" 클릭 → hard delete (entityEvents + sticker cascade).
+>
+> **참고 파일** (다음 세션 read):
+> - `lib/store/slices/wiki-articles.ts:80, 156` — 두 액션 정합
+> - `lib/store/slices/notes.ts` — `toggleTrash` + `deleteNote` 2단 패턴 reference
+> - `components/views/wiki-list.tsx:158-168` — `WikiArticleMenuItems.onDelete` 호출
+> - `components/side-panel/wiki-article-detail-panel.tsx` "Delete article" 버튼 위치
+> - `components/views/trash-all-view.tsx:303` — `case "wiki": updateWikiArticle(...)` (restore 부분 — 이미 soft pattern 사용. delete는 line 316 `deleteWikiArticle` hard)
+>
+> **위험 + 회피**:
+> - **사용자 사전 hard-deleted wiki는 복구 불가** — 데이터 손실. 이미 발생한 건 어쩔 수 없음. 향후 hard delete 방지.
+> - **Wiki Stub vs Article 구분 의도된 패턴?** 사용자가 "stub는 삭제하면 자동 hard delete" 보고 — 즉 stub는 별도 의도? 또는 단순 버그? 확인 후 진행. 가장 자연: stub도 article도 동일 패턴 (soft trash → hard delete).
+> - **Note 패턴 정확 mirror**: `toggleTrash` 시 trashed:true + trashedAt:now() set. Wiki도 동일.
+> - **entityEvents trashed/untrashed 발화 이미 wiki-articles slice에 있음** (line 81-84) — 추가 작업 없음.
+>
+> **머신**: 집 (Windows)
+> **현재 main HEAD**: PR #355 머지 후 + docs sync (이 entry commit 후 갱신)
+> **branch worktree**: `awesome-mcnulty-cac926` 그대로
+
+### 완료 (이번 세션 3 PR + docs sync)
+
+- **PR #352** — `/books` row click 시 사이드바 즉시 전환 (BookDetailPage useEffect 대기 X)
+- **PR #353** — `book-table` checkbox 체크 시 sidebar transition (notes-table:561 useEffect 패턴 정합)
+- **PR #354** — Trash All view에 Display panel groupBy 설정 정합 (하드코딩 해제 — `'none'` → flat list / 'kind' → KIND 섹션)
+- **PR #355** — Trash row icon entity-native (Wiki Stub/Article + Book kind + Tag/Label color dot)
+
+### 영구 LOCKED 결정 (이번 세션)
+
+- **59. Display panel 설정은 모든 view에 일관 적용**: Trash 같은 특수 view도 viewStateByContext context 통해 groupBy 받기. 하드코딩 금지.
+- **60. selection state → sidebar mirror useEffect 패턴 영구**: `selectedIds.size === 1` 시 그 entity로 setSidePanelContext + setSidePanelOpen. notes-table:561 reference. 모든 entity table (books / wiki / tags / labels)에 동일 적용.
+- **61. Trash row icon = entity-native 일관**: Wiki=Stub/Article, Book=kind, Tag/Label=color dot, Note=status. Plot 어디서나 entity 본질 icon 일관 (영구 룰 25 확장).
+
+### 기술 학습 (영구)
+
+- **하드코딩 진단은 사용자 시각 확인이 가장 빠름**: 사용자가 "왜 안 됨"이라고 보고 시 — 코드 logic 추측 X, 직접 코드의 hardcoded branch (sections.map / `case "book"` 명시) 찾기.
+- **selection state ↔ sidebar context mirror useEffect는 표준 패턴**: 모든 multi-select 가능 table view에 동일 적용. 누락 시 사용자 "하드코딩 같다" 보고 트리거.
+- **EntityKindIcon helper는 entity-specific 정보 받아야**: Wiki는 isStub, Book은 kind, Tag/Label은 color. helper props에 entity-specific 필드 추가 + 호출 site에서 build-time derive.
+- **derive vs 데이터 모델 신규 필드**: TrashRowItem의 wikiIsStub / bookKind는 build-time derive (sections 계산 시 isWikiStub(w) / getBookKind(b)). 데이터 모델 변경 없음. 사용자 데이터 보호 + migration 없음.
+
+### Watch Out (다음 세션)
+
+- **🔴 Wiki Delete = hard delete 직행 fix (사용자 결정 받음)** — 별도 PR
+- **🟡 Book Template 도입 가능성 brainstorming** (사용자 보류)
+- **🟡 Categories 본격 분리 (길 B)** — `/library/categories` 새 route + CategoriesView 컴포넌트
+- **🔴 Wiki Template 신설** (큰 작업 ~20 파일, 이전 P0)
+- **🟣 dead code 정리**: `components/note-detail-panel.tsx` (어디서도 import 안 됨)
+
+### 환경 변경
+
+- Branch: `awesome-mcnulty-cac926` (계속 사용)
+- Store version: v137 그대로 (이번 세션은 UI/UX fix만, 데이터 모델 변경 없음)
+- 신규 파일 없음
+- Preview verify:
+  - books table checkbox: book-3 → book-4 transition ✅
+  - Trash groupBy='none' → flat list / 'kind' → 섹션 ✅
+  - Wiki SVG path vs Note SVG path 다름 (entity-native icon 분기 작동) ✅
+
+---
+
 ## 2026-05-17 (저녁) — 집/Windows, **Label/Category cross-entity 전면 확장 + Library hub 재배치 + v137 migration**
 
 > 🎯 **다음 즉시 액션**:
