@@ -422,6 +422,11 @@ export interface WikiArticle {
   parentArticleId?: string | null
   /** Whole-article pin (mirrors Note.pinned). Surfaces in Home > Quicklinks. */
   pinned?: boolean
+  /** Soft-delete flag (mirrors Note.trashed). 2026-05-18 — Wiki Delete를 Note
+   * 패턴 (Trash 거쳐 hard delete 2단)으로 정합. 미정의 = 활성. */
+  trashed?: boolean
+  /** Soft-delete timestamp (mirrors Note.trashedAt). null = 활성. */
+  trashedAt?: string | null
   /** View count — incremented each time the article is opened. 0 by default. */
   reads?: number
   createdAt: string

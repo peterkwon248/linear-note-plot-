@@ -469,9 +469,9 @@ export function WikiArticleDetailPanel({ article }: { article: WikiArticle | nul
       <div className="px-4 py-3 border-t border-border">
         <button
           onClick={() => {
-            if (confirm("Delete this wiki article?")) {
-              usePlotStore.getState().deleteWikiArticle(article.id)
-            }
+            // 2026-05-18: Note 패턴 정합 — Trash로 이동 (soft delete). 영구 삭제는
+            // Trash 안에서 "Delete forever" 클릭.
+            usePlotStore.getState().trashWikiArticle(article.id)
           }}
           className="flex items-center gap-2 text-2xs text-red-400 hover:text-red-300 transition-colors"
         >

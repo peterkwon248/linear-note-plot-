@@ -82,7 +82,7 @@ export function WikiView() {
   const wikiCategories = usePlotStore((s) => s.wikiCategories)
   const toggleTrash = usePlotStore((s) => s.toggleTrash)
   const mergeWikiArticles = usePlotStore((s) => s.mergeWikiArticles)
-  const deleteWikiArticle = usePlotStore((s) => s.deleteWikiArticle)
+  const trashWikiArticle = usePlotStore((s) => s.trashWikiArticle)
   const updateWikiArticle = usePlotStore((s) => s.updateWikiArticle)
   const incrementWikiArticleReads = usePlotStore((s) => s.incrementWikiArticleReads)
   const addWikiBlock = usePlotStore((s) => s.addWikiBlock)
@@ -961,10 +961,10 @@ export function WikiView() {
             onAllCollapsedChange={setAllSectionsCollapsed}
             fontSize={selectedWikiArticle.fontSize}
             onDelete={() => {
-              deleteWikiArticle(selectedWikiArticleId)
+              trashWikiArticle(selectedWikiArticleId)
               setSelectedWikiArticleId(null)
               setIsEditingWikiArticle(false)
-              toast.success("Article deleted")
+              toast.success("Moved to trash")
             }}
           />
         )}
@@ -1341,8 +1341,8 @@ export function WikiView() {
                           setIsEditingWikiArticle(true)
                         }}
                         onDelete={() => {
-                          deleteWikiArticle(article.id)
-                          toast.success("Article deleted")
+                          trashWikiArticle(article.id)
+                          toast.success("Moved to trash")
                         }}
                         onShowConnected={(direction) => {
                           const existingFilters = wikiViewState.filters ?? []
@@ -1398,8 +1398,8 @@ export function WikiView() {
                 setIsEditingWikiArticle(true)
               }}
               onDeleteArticle={(id) => {
-                deleteWikiArticle(id)
-                toast.success("Article deleted")
+                trashWikiArticle(id)
+                toast.success("Moved to trash")
               }}
               onShowConnectedArticle={(id, direction) => {
                 const existingFilters = wikiViewState.filters ?? []
@@ -1430,8 +1430,8 @@ export function WikiView() {
                 setIsEditingWikiArticle(true)
               }}
               onDeleteArticle={(id) => {
-                deleteWikiArticle(id)
-                toast.success("Article deleted")
+                trashWikiArticle(id)
+                toast.success("Moved to trash")
               }}
               onShowConnectedArticle={(id, direction) => {
                 // Same in-place backlink-filter pattern as Notes view.
