@@ -50,6 +50,15 @@ import { DisplayPanel } from "@/components/display-panel"
 import { TAGS_LIST_VIEW_CONFIG } from "@/lib/view-engine/view-configs"
 import { TagNoteCountChip } from "@/components/property-chips"
 import type { SortField, FilterRule, GroupBy } from "@/lib/view-engine/types"
+import { EntityNoteListRow } from "@/components/views/entity-note-list-row"
+import { setActiveRoute } from "@/lib/table-route"
+import { useRouter } from "next/navigation"
+import { shortRelative } from "@/lib/format-utils"
+import { isWikiStub } from "@/lib/wiki-utils"
+import { IconWikiStub, IconWikiArticle } from "@/components/plot-icons"
+import { WIKI_STATUS_HEX } from "@/lib/colors"
+import { BookKindIcon } from "@/components/property-chips"
+import { getBookKind } from "@/lib/view-engine/use-books-view"
 
 /* ── Sort/Group options for detail view ─────────────────── */
 
@@ -134,6 +143,7 @@ const HEADER_HEIGHT = 37 // the header row height
 const DRAG_THRESHOLD = 5
 
 export function TagsView() {
+  const router = useRouter()
   const tags = usePlotStore((s) => s.tags)
   const labels = usePlotStore((s) => s.labels)
   const folders = usePlotStore((s) => s.folders)
@@ -141,9 +151,40 @@ export function TagsView() {
   const deleteTag = usePlotStore((s) => s.deleteTag)
   const updateTag = usePlotStore((s) => s.updateTag)
   const openNote = usePlotStore((s) => s.openNote)
+  // 2026-05-16 — Tag is cross-entity: notes / wiki articles / books all
+  // reference tag ids via their `tags: string[]` field. Sub-page splits
+  // these into separate sections.
+  const wikiArticles = usePlotStore((s) => s.wikiArticles)
+  const books = usePlotStore((s) => s.books)
+  const allNotes = usePlotStore((s) => s.notes)
+
+  // Navigate from sub-page to a note editor (Labels 패턴 정합).
+  const navigateToNote = useCallback((noteId: string) => {
+    setSelectedTagId(null)
+    setActiveRoute("/notes")
+    openNote(noteId)
+    router.push("/notes")
+  }, [openNote, router])
+
+  const navigateToWiki = useCallback(() => {
+    // Wiki article id를 URL로 전달하는 패턴이 아직 없음 — 사용자가 /wiki
+    // 진입 후 article을 직접 선택. (P1 후속: query param 지원.)
+    setSelectedTagId(null)
+    setActiveRoute("/wiki")
+    router.push("/wiki")
+  }, [router])
+
+  const navigateToBook = useCallback((bookId: string) => {
+    setSelectedTagId(null)
+    setActiveRoute(`/books/${bookId}`)
+    router.push(`/books/${bookId}`)
+  }, [router])
 
   // View state
   const [selectedTagId, setSelectedTagId] = useState<string | null>(null)
+  // Multi-select in tag sub-page (2026-05-16 — entity-uniformity 룰 21:
+  // Notes/Wiki table 패턴 정합. row click toggles, dblclick navigates).
+  const [selectedNoteIds, setSelectedNoteIds] = useState<Set<string>>(new Set())
   const [tagInput, setTagInput] = useState("")
   const [creatingTag, setCreatingTag] = useState(false)
   const [checkedTags, setCheckedTags] = useState<Set<string>>(new Set())
@@ -182,6 +223,46 @@ export function TagsView() {
   // View engine for tag detail mode (must be called unconditionally)
   const tagExtras = useMemo(() => ({ tagId: selectedTagId ?? undefined }), [selectedTagId])
   const { flatNotes: tagNotes, flatCount: tagNoteCount, viewState: tagViewState, updateViewState: updateTagView } = useNotesView("tag", tagExtras)
+
+  // 2026-05-16 — cross-entity tag references. Filter out trashed (Plot 표준).
+  const tagWikis = useMemo(() => {
+    if (!selectedTagId) return []
+    return (wikiArticles ?? []).filter((w) =>
+      !(w as { trashed?: boolean }).trashed &&
+      Array.isArray(w.tags) && w.tags.includes(selectedTagId)
+    )
+  }, [wikiArticles, selectedTagId])
+  // 2026-05-16 — Books derive (reference-aware): Book에 tags 필드 없음. 대신
+  // Book.items 안 노트/위키 중 이 tag를 가진 게 하나라도 있거나, smartSources에
+  // kind="tag" + 이 tag refId가 있으면 Book에 표시. 사용자 의도: "북에 소속된
+  // 노트에 태그가 들어있으면 자동으로 태그스에 속하게". 데이터 모델 변경 없음,
+  // 매번 derive (memoize). resolveBookItems의 smart resolution은 무거우니 manual
+  // items + smartSources tag-match만 검사하는 단순 길.
+  const tagBooks = useMemo(() => {
+    if (!selectedTagId) return []
+    return (books ?? []).filter((b) => {
+      if (b.trashed) return false
+      // Manual items의 note/wiki ref 검사
+      const manualMatch = (b.items ?? []).some((item) => {
+        if (item.kind === "note") {
+          const n = allNotes.find((x) => x.id === item.refId)
+          return n && !n.trashed && Array.isArray(n.tags) && n.tags.includes(selectedTagId)
+        }
+        if (item.kind === "wiki") {
+          const w = wikiArticles.find((x) => x.id === item.refId)
+          return w && !(w as { trashed?: boolean }).trashed &&
+            Array.isArray(w.tags) && w.tags.includes(selectedTagId)
+        }
+        return false
+      })
+      if (manualMatch) return true
+      // Smart source가 이 tag를 직접 참조 → 책의 의도가 이 tag 컬렉션
+      const smartMatch = (b.smartSources ?? []).some(
+        (s) => s.kind === "tag" && s.refId === selectedTagId,
+      )
+      return smartMatch
+    })
+  }, [books, allNotes, wikiArticles, selectedTagId])
 
   // Toggle filter for tag detail
   const toggleFilter = useCallback((field: FilterRule["field"], value: string, operator?: FilterRule["operator"]) => {
@@ -306,6 +387,18 @@ export function TagsView() {
     }
     isDraggingRef.current = false
   }, [])
+
+  // 2026-05-16 — sub-page 진입 시 우측 4탭 사이드바 자동 노출 (영구 룰 21
+  // entity-uniformity). Labels sub-page 정합 패턴.
+  useEffect(() => {
+    if (selectedTagId) {
+      usePlotStore.setState({
+        sidePanelContext: { type: "tag", id: selectedTagId },
+        sidePanelOpen: true,
+      })
+      setSelectedNoteIds(new Set())
+    }
+  }, [selectedTagId])
 
   // Drag-to-select: document-level mousemove/mouseup
   useEffect(() => {
@@ -529,31 +622,121 @@ export function TagsView() {
           onSetFilters={(f) => updateTagView({ filters: f })}
         />
 
-        {/* Notes list */}
+        {/* Selection bar — Labels sub-page 정합 (Notes/Wiki floating bar
+            축소판; batch action은 별도 후속). */}
+        {selectedNoteIds.size > 0 && (
+          <div className="flex items-center gap-3 border-b border-border bg-accent/5 px-6 py-2 text-note text-foreground">
+            <span>{selectedNoteIds.size} note{selectedNoteIds.size === 1 ? "" : "s"} selected</span>
+            <button
+              onClick={() => setSelectedNoteIds(new Set())}
+              className="ml-auto text-2xs text-muted-foreground transition-colors hover:text-foreground"
+            >
+              Clear
+            </button>
+          </div>
+        )}
+
+        {/* Cross-entity list — Tag is referenced by notes / wiki articles /
+            books. 빈 섹션은 hide (Time grouping 5단 패턴 정합). 모든 섹션이
+            비어있으면 전체 "No items" empty state. */}
         <div className="flex-1 overflow-y-auto">
-          {tagNotes.length === 0 ? (
+          {tagNotes.length === 0 && tagWikis.length === 0 && tagBooks.length === 0 ? (
             <div className="flex h-32 items-center justify-center text-note text-muted-foreground">
-              No notes with this tag
+              No items with this tag
             </div>
           ) : (
             <div>
-              {tagNotes.map((note) => (
-                <button
-                  key={note.id}
-                  onClick={() => openNote(note.id)}
-                  className="flex w-full items-center gap-4 px-6 py-3 text-left transition-colors hover:bg-hover-bg"
-                >
-                  <span className="flex-1 truncate text-ui text-foreground">
-                    {note.title || "Untitled"}
-                  </span>
-                  <span className="text-note capitalize text-muted-foreground">
-                    {note.status}
-                  </span>
-                  <span className="text-note tabular-nums text-muted-foreground">
-                    {formatRelativeTime(note.updatedAt)}
-                  </span>
-                </button>
-              ))}
+              {tagNotes.length > 0 && (
+                <div>
+                  <div className="flex items-center gap-2 border-b border-border-subtle bg-secondary/30 px-6 py-1.5 text-2xs font-medium uppercase tracking-wide text-muted-foreground">
+                    <span>Notes</span>
+                    <span className="tabular-nums">{tagNotes.length}</span>
+                  </div>
+                  {tagNotes.map((note) => (
+                    <EntityNoteListRow
+                      key={note.id}
+                      note={note}
+                      isSelected={selectedNoteIds.has(note.id)}
+                      onToggleSelect={() => {
+                        setSelectedNoteIds((prev) => {
+                          const next = new Set(prev)
+                          if (next.has(note.id)) next.delete(note.id)
+                          else next.add(note.id)
+                          return next
+                        })
+                      }}
+                      onNavigate={() => navigateToNote(note.id)}
+                    />
+                  ))}
+                </div>
+              )}
+
+              {tagWikis.length > 0 && (
+                <div>
+                  <div className="flex items-center gap-2 border-b border-t border-border-subtle bg-secondary/30 px-6 py-1.5 text-2xs font-medium uppercase tracking-wide text-muted-foreground">
+                    <span>Wiki articles</span>
+                    <span className="tabular-nums">{tagWikis.length}</span>
+                  </div>
+                  {tagWikis.map((wiki) => {
+                    const stub = isWikiStub(wiki)
+                    return (
+                      <div
+                        key={wiki.id}
+                        role="button"
+                        tabIndex={0}
+                        onDoubleClick={(e) => { e.stopPropagation(); navigateToWiki() }}
+                        onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); navigateToWiki() } }}
+                        className="group flex w-full cursor-pointer items-center gap-3 px-6 py-3 text-left transition-colors hover:bg-hover-bg"
+                      >
+                        {stub ? (
+                          <IconWikiStub size={12} style={{ color: WIKI_STATUS_HEX.stub }} className="shrink-0" />
+                        ) : (
+                          <IconWikiArticle size={12} style={{ color: WIKI_STATUS_HEX.article }} className="shrink-0" />
+                        )}
+                        <span className="flex-1 truncate text-ui text-foreground">
+                          {wiki.title || "Untitled"}
+                        </span>
+                        <span className="text-note text-muted-foreground">
+                          {stub ? "Stub" : "Article"}
+                        </span>
+                        <span className="text-note tabular-nums text-muted-foreground">
+                          {shortRelative(wiki.updatedAt)}
+                        </span>
+                      </div>
+                    )
+                  })}
+                </div>
+              )}
+
+              {tagBooks.length > 0 && (
+                <div>
+                  <div className="flex items-center gap-2 border-b border-t border-border-subtle bg-secondary/30 px-6 py-1.5 text-2xs font-medium uppercase tracking-wide text-muted-foreground">
+                    <span>Books</span>
+                    <span className="tabular-nums">{tagBooks.length}</span>
+                  </div>
+                  {tagBooks.map((book) => (
+                    <div
+                      key={book.id}
+                      role="button"
+                      tabIndex={0}
+                      onDoubleClick={(e) => { e.stopPropagation(); navigateToBook(book.id) }}
+                      onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); navigateToBook(book.id) } }}
+                      className="group flex w-full cursor-pointer items-center gap-3 px-6 py-3 text-left transition-colors hover:bg-hover-bg"
+                    >
+                      <BookKindIcon kind={getBookKind(book)} size={14} />
+                      <span className="flex-1 truncate text-ui text-foreground">
+                        {book.title || "Untitled book"}
+                      </span>
+                      <span className="text-note text-muted-foreground">
+                        {book.items?.length ?? 0} item{(book.items?.length ?? 0) === 1 ? "" : "s"}
+                      </span>
+                      <span className="text-note tabular-nums text-muted-foreground">
+                        {shortRelative(book.updatedAt)}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           )}
         </div>

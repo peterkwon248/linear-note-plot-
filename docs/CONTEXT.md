@@ -51,6 +51,33 @@
 
 ---
 
+## 🚀 2026-05-17 — Tags/Labels sub-page entity-uniformity 1차 + cross-entity derive + seeds v135/v136 + FunnelSimple fix ⭐⭐⭐⭐
+
+**범위**: 단일 PR. 사용자 보고 5건 응답.
+
+### 핵심 결정 (영구 LOCKED)
+
+**46. Entity sub-page row UX**: hover checkbox + single click toggle + dblclick navigate. `EntityNoteListRow` helper. Notes table row 패턴 정합.
+
+**47. Sub-page → 노트 editor 진입 패턴**: 4단 세트 (setSelectedXxxId(null) + setActiveRoute + openNote + router.push).
+
+**48. Tag sub-page cross-entity = derive (B2)**: Book에 tags 필드 X. runtime 합집합 (items + smartSources tag 매칭).
+
+**49. Wiki tag 부여 = 명시적만** (자동 hashtag sync 미적용).
+
+**50. Seed 증가 동반 migration 영구**: 시드 변경 시 자동 backfill (idempotent).
+
+**51. 글로벌 find-replace 사고 grep 의무**: PR review checkpoint (영구).
+
+**52. TagPicker entity-agnostic 재활용**: noteId prop은 string entityId 의미.
+
+### 다음 (TODO.md P0)
+
+🔴 **P0**: Tags/Labels sub-page view-engine 통합 (ViewHeader + DisplayPanel + 풍부한 Grouping/Display Properties + FilterPanel)
+🟡 **P1**: Wiki 본문 #해시태그 자동 sync / Wiki blocks 임베드 노트 tag derive / Note wikilink tag derive / Book Detail manual TagPicker
+
+---
+
 ## 🚀 2026-05-16 — Wiki/Books board 우클릭 ContextMenu + Workbench inline Create + v134 seed backfill ⭐⭐⭐⭐
 
 **범위**: 단일 PR. 사용자 보고 2건 + seed 보강 1건 응답.

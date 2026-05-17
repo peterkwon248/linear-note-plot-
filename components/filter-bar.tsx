@@ -360,7 +360,7 @@ export function FilterMenuItems({
             <div className="px-2 py-1.5">
               <input
                 type="text"
-                placeholder="FunnelSimple..."
+                placeholder="Search..."
                 className="w-full bg-transparent border-b border-border px-2 py-1.5 text-2xs outline-none placeholder:text-muted-foreground"
                 value={statusSearch}
                 onChange={(e) => setStatusSearch(e.target.value)}
@@ -440,7 +440,7 @@ export function FilterMenuItems({
             <div className="px-2 py-1.5">
               <input
                 type="text"
-                placeholder="FunnelSimple..."
+                placeholder="Search..."
                 className="w-full bg-transparent border-b border-border px-2 py-1.5 text-2xs outline-none placeholder:text-muted-foreground"
                 value={labelSearch}
                 onChange={(e) => setLabelSearch(e.target.value)}
@@ -483,7 +483,7 @@ export function FilterMenuItems({
           <div className="px-2 py-1.5">
             <input
               type="text"
-              placeholder="FunnelSimple..."
+              placeholder="Search..."
               className="w-full bg-transparent border-b border-border px-2 py-1.5 text-2xs outline-none placeholder:text-muted-foreground"
               value={tagSearch}
               onChange={(e) => setTagSearch(e.target.value)}
@@ -761,7 +761,7 @@ export function FilterMenuItems({
   )
 }
 
-/* ── FunnelSimple Grouping (for grouped chips) ──────────────── */
+/* ── Filter Grouping (for grouped chips) ──────────────── */
 
 export type FilterGroupKey = "status" | "folder" | "label" | "tags" | "source" | "dates" | "links" | "content" | "pinned"
 
@@ -847,7 +847,7 @@ export function FilterFieldContent({ groupKey, filters, folders, tags, labels = 
     <div className="px-2 py-1.5">
       <input
         type="text"
-        placeholder="FunnelSimple..."
+        placeholder="Search..."
         className="w-full bg-transparent border-b border-border px-2 py-1.5 text-2xs outline-none placeholder:text-muted-foreground"
         value={value}
         onChange={(e) => onChange(e.target.value)}
@@ -906,7 +906,7 @@ export function FilterFieldContent({ groupKey, filters, folders, tags, labels = 
           <div className="px-2 py-1.5">
             <input
               type="text"
-              placeholder="FunnelSimple..."
+              placeholder="Search..."
               className="w-full bg-transparent border-b border-border px-2 py-1.5 text-2xs outline-none placeholder:text-muted-foreground"
               value={labelSearch}
               onChange={(e) => setLabelSearch(e.target.value)}
@@ -942,7 +942,7 @@ export function FilterFieldContent({ groupKey, filters, folders, tags, labels = 
           <div className="px-2 py-1.5">
             <input
               type="text"
-              placeholder="FunnelSimple..."
+              placeholder="Search..."
               className="w-full bg-transparent border-b border-border px-2 py-1.5 text-2xs outline-none placeholder:text-muted-foreground"
               value={tagSearch}
               onChange={(e) => setTagSearch(e.target.value)}
@@ -1119,7 +1119,7 @@ export function FilterButton({ hideLabel, ...props }: FilterButtonProps) {
       <DropdownMenuTrigger asChild>
         <button className="flex items-center gap-1.5 rounded-md px-2 py-1 text-note text-muted-foreground transition-colors hover:bg-hover-bg hover:text-foreground">
           <FunnelSimple size={16} weight="regular" />
-          {!hideLabel && "FunnelSimple"}
+          {!hideLabel && "Filter"}
           {props.filters.length > 0 && (
             <span className="flex h-4 min-w-4 items-center justify-center rounded-full bg-accent/15 px-1 text-2xs font-medium text-accent">
               {props.filters.length}

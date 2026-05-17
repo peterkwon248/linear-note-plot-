@@ -21,6 +21,7 @@ import { IconWikiStub, IconWikiArticle } from "@/components/plot-icons"
 import { setActiveRoute } from "@/lib/table-route"
 import { InBooksSection } from "@/components/books/in-books-section"
 import { isWikiStub } from "@/lib/wiki-utils"
+import { TagPicker } from "@/components/note-fields"
 import type { WikiArticle } from "@/lib/types"
 import { getEntityColor } from "@/lib/colors" // v109: opt-in color fallback
 
@@ -53,6 +54,8 @@ export function WikiArticleDetailPanel({ article }: { article: WikiArticle | nul
   const notes = usePlotStore((s) => s.notes)
   const attachments = usePlotStore((s) => s.attachments)
   const folders = usePlotStore((s) => s.folders)
+  const updateWikiArticle = usePlotStore((s) => s.updateWikiArticle)
+  const createTag = usePlotStore((s) => s.createTag)
   // PR (c): N:M membership actions for the wiki Folders chip strip.
   // Mirrors the note side panel — chips with X to remove, "+ Add" to open
   // the multi-select picker.
@@ -260,28 +263,35 @@ export function WikiArticleDetailPanel({ article }: { article: WikiArticle | nul
       </InspectorSection>
       <div className="mx-4 border-b border-border" />
 
-      {/* Tags */}
-      {articleTags.length > 0 && (
-        <>
-          <InspectorSection title="Tags" icon={<PhTag size={16} weight="regular" />}>
-            <div className="flex flex-wrap gap-1.5">
-              {articleTags.map((tag) => (
-                <span
-                  key={tag.id}
-                  className="flex items-center gap-1 rounded-full px-2 py-0.5 text-2xs font-medium"
-                  style={{
-                    backgroundColor: `${getEntityColor(tag.color)}18`,
-                    color: getEntityColor(tag.color),
-                  }}
-                >
-                  {tag.name}
-                </span>
-              ))}
-            </div>
-          </InspectorSection>
-          <div className="mx-4 border-b border-border" />
-        </>
-      )}
+      {/* Tags — 2026-05-16 read-only chip 표시에서 TagPicker로 업그레이드.
+          Note Detail panel과 동일 패턴 (영구 룰 21 entity-uniformity).
+          inline Create 기능 자동 포함 (검색 input → "Create '...'" 옵션). */}
+      <InspectorSection title="Tags" icon={<PhTag size={16} weight="regular" />}>
+        <TagPicker
+          noteId={article.id}
+          selectedTagIds={article.tags ?? []}
+          allTags={tags}
+          onAddTag={(_id, tagId) => {
+            const current = article.tags ?? []
+            if (current.includes(tagId)) return
+            updateWikiArticle(article.id, { tags: [...current, tagId] })
+          }}
+          onRemoveTag={(_id, tagId) => {
+            const current = article.tags ?? []
+            updateWikiArticle(article.id, { tags: current.filter((t) => t !== tagId) })
+          }}
+          onCreateTag={(name) => {
+            const tagId = createTag(name)
+            if (tagId) {
+              const current = article.tags ?? []
+              if (!current.includes(tagId)) {
+                updateWikiArticle(article.id, { tags: [...current, tagId] })
+              }
+            }
+          }}
+        />
+      </InspectorSection>
+      <div className="mx-4 border-b border-border" />
 
       {/* Infobox 사이드바 섹션 제거됨 (2026-04-14 밤)
           - Default/Encyclopedia 둘 다 이제 본문에 inline WikiInfobox 렌더링됨
