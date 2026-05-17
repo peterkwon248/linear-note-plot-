@@ -8,6 +8,62 @@
 
 ---
 
+## 🚀 2026-05-17 (밤) — **Books sidebar transition + Trash hardcoded grouping + Trash entity-native icon 3 fix** ⭐⭐⭐
+
+**범위**: 1 worktree (`awesome-mcnulty-cac926`). 단일 sequential 3 PR. 사용자 시그널 4건 응답 (3건 fix + 1건 진단 결과 사용자 결정 대기).
+
+**사용자 시그널 (그대로)**:
+1. "북스 체크 시 우측 사이드바가 변경되는 화면전환이 제대로 안 이뤄지네. 하드코딩된 거 같다니까??"
+2. "체크박스에 처음으로 체크를 하게 되면 자동으로 우측 사이드바가 열려야 되는 거 아니야? 노트의 경우엔 그러는데?"
+3. "노 그룹핑 상태인데 왜 트래쉬에서 카인드별로 리스트업이 되고 있는 거야??"
+4. "stub는 삭제하면 자동으로 완전 삭제가 되어버리는 건가??" — Wiki hard delete 진단 보고
+5. "노트는 이 아이콘이 아닌데? 엔티티와 그 내부 아이콘들까지 고려해서 표시"
+
+**변경 (3 PR)**:
+- **PR #353**: `book-table` checkbox 체크 시 sidebar transition (notes-table:561 useEffect 패턴 정합)
+- **PR #354**: Trash All view groupBy 설정 정합 — `'none'` → flat list / `'kind'` → 섹션 헤더 (하드코딩 해제)
+- **PR #355**: Trash row EntityKindIcon → entity-native (Wiki=Stub/Article + Book=kind + Tag/Label=color dot)
+
+### 핵심 결정 (영구 LOCKED, 2026-05-17 밤)
+
+**59. Display panel 설정 = 모든 view 일관 적용**: Trash 같은 특수 view도 viewStateByContext context 통해 groupBy 받기. 하드코딩 금지.
+
+**60. selection state → sidebar mirror useEffect 패턴 영구**: `selectedIds.size === 1` 시 setSidePanelContext + setSidePanelOpen. notes-table:561 reference. 모든 entity table (books / wiki / tags / labels)에 동일 적용.
+
+**61. Trash row icon = entity-native 일관**: Wiki=Stub/Article (`isWikiStub()` 분기), Book=kind (`getBookKind()` 분기), Tag/Label=color dot, Note=status (`StatusShapeIcon`). 영구 룰 25 확장.
+
+### 기술 학습 (영구)
+
+- **하드코딩 진단 패턴**: 사용자 "왜 안 됨" 보고 시 코드의 hardcoded branch (sections.map / case 명시) 직접 찾기. 추측 X.
+- **EntityKindIcon helper에 entity-specific 정보**: Wiki는 isStub, Book은 kind, Tag/Label은 color. helper props에 추가 + 호출 site에서 build-time derive (데이터 모델 변경 없음).
+- **selection ↔ sidebar mirror = 모든 entity table 표준 패턴**: 누락 시 "하드코딩 같다" 사용자 시그널 트리거. 영구 룰.
+
+### Wiki hard delete 진단 결과 (사용자 결정 대기)
+
+`deleteWikiArticle()` (wiki-articles.ts:156) = **hard delete** 직행. Wiki Board ContextMenu / Wiki Detail "Delete" 버튼이 모두 이걸 호출 → Trash 거치지 않음.
+
+**사용자 결정**: Wiki Delete를 Note 패턴 (Trash 거쳐 soft delete → Trash 안에서 hard) 변경. 별도 PR 진행 (다음 세션 P0).
+
+### 환경
+
+- Branch: `awesome-mcnulty-cac926` (계속 사용)
+- Store version: v137 그대로 (UI/UX fix만)
+- 신규 파일 없음
+- Preview verify:
+  - books table checkbox: book-3 → book-4 transition ✅
+  - Trash groupBy='none' → flat / 'kind' → 섹션 ✅
+  - Wiki SVG path ≠ Note SVG path (entity-native icon 분기 작동) ✅
+
+### 다음 (TODO.md P0)
+
+🔴 **P0**: Wiki Delete = hard → soft delete 패턴 변경 (~5 파일, 사용자 결정 받음)
+🔴 **P0 (이전)**: Wiki Template 신설 (~20 파일)
+🟡 **P1**: Book Template 도입 brainstorming
+🟡 **P1**: Categories 본격 분리 (길 B)
+🟣 **P2**: `components/note-detail-panel.tsx` dead code 정리
+
+---
+
 ## 🚀 2026-05-17 (저녁) — **Label/Category cross-entity 전면 확장 + Library hub 재배치 + v137 migration** ⭐⭐⭐⭐⭐
 
 **범위**: 1 worktree (`awesome-mcnulty-cac926`). 단일 PR. 사용자 5건 시그널 + brainstorming 합의 응답 — Label/Category를 모든 entity에 cross-entity 확장 + Library hub로 사이드바 재배치 + Memo 자동 부여 폐기 + Library Overview UI 6 stat card.
