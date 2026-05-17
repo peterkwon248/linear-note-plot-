@@ -163,6 +163,15 @@ function BooksGrid() {
   }
 
   const openBook = (id: string) => {
+    // 2026-05-17 — 사용자 보고 "북 체크 시 우측 사이드바 화면 전환 안 됨".
+    // BookDetailPage의 useEffect가 진입 후 sidePanelContext를 set하지만
+    // /books 목록에서 row click 직후 transition이 안 보임. 클릭 시점에
+    // 즉시 set + open해서 사이드바가 즉시 책 detail로 전환되도록 보강
+    // (영구 룰 25 — row click → drill-down + sidebar 자동 open 정합).
+    usePlotStore.setState({
+      sidePanelContext: { type: "book", id },
+      sidePanelOpen: true,
+    })
     setActiveRoute(`/books/${id}`)
     router.push(`/books/${id}`)
   }
