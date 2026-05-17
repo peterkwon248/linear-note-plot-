@@ -388,6 +388,8 @@ export interface PlotState {
   updateWikiArticle: (articleId: string, patch: Partial<Omit<WikiArticle, "id" | "createdAt">>) => void
   addArticleReference: (articleId: string, referenceId: string) => void
   removeArticleReference: (articleId: string, referenceId: string) => void
+  /** Soft-delete (Trash 이동). Note `toggleTrash` 정합 — trashed:true + trashedAt:now() set, restore 시 toggle. Trash 안에서 hard delete은 `deleteWikiArticle`. */
+  trashWikiArticle: (articleId: string) => void
   deleteWikiArticle: (articleId: string) => void
   setWikiArticleInfobox: (articleId: string, infobox: WikiArticle["infobox"]) => void
   addWikiBlock: (articleId: string, block: Omit<WikiBlock, "id">, afterBlockId?: string) => string

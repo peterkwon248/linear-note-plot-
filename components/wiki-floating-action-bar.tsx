@@ -40,8 +40,7 @@ export function WikiFloatingActionBar({
   onMultiMerge,
   onSplit,
 }: WikiFloatingActionBarProps) {
-  const deleteWikiArticle = usePlotStore((s) => s.deleteWikiArticle)
-  const createWikiArticle = usePlotStore((s) => s.createWikiArticle)
+  const trashWikiArticle = usePlotStore((s) => s.trashWikiArticle)
   const updateWikiArticle = usePlotStore((s) => s.updateWikiArticle)
   const setWikiFolders = usePlotStore((s) => s.setWikiFolders)
   const folders = usePlotStore((s) => s.folders)
@@ -70,25 +69,18 @@ export function WikiFloatingActionBar({
   }
 
   const handleDelete = () => {
-    // Save articles for undo
-    const deletedArticles = selectedArticles.map(a => ({ ...a }))
-    ids.forEach((id) => deleteWikiArticle(id))
+    // 2026-05-18: soft trash (Note 패턴 정합). trashWikiArticle은 toggle —
+    // undo callback도 같은 id에 다시 호출 = untrash 복원.
+    const trashedIds = [...ids]
+    trashedIds.forEach((id) => trashWikiArticle(id))
     onClearSelection()
-    toast.success(`Deleted ${count} article${count > 1 ? "s" : ""}`)
+    toast.success(`Moved ${count} article${count > 1 ? "s" : ""} to trash`)
 
     pushUndo(
-      `Delete ${count} article${count > 1 ? "s" : ""}`,
+      `Trash ${count} article${count > 1 ? "s" : ""}`,
       () => {
-        // Undo: recreate deleted articles
-        for (const a of deletedArticles) {
-          createWikiArticle({
-            title: a.title,
-            aliases: a.aliases,
-            blocks: a.blocks,
-            tags: a.tags,
-          })
-        }
-        toast.success(`Restored ${deletedArticles.length} article${deletedArticles.length > 1 ? "s" : ""}`)
+        trashedIds.forEach((id) => trashWikiArticle(id))
+        toast.success(`Restored ${trashedIds.length} article${trashedIds.length > 1 ? "s" : ""}`)
       }
     )
   }

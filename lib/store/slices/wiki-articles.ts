@@ -153,6 +153,30 @@ export function createWikiArticlesSlice(set: Set, get: Get, appendEvent: AppendE
       }))
     },
 
+    /**
+     * Soft-delete (Trash 이동). Note `toggleTrash` 정합 패턴 — trashed:true +
+     * trashedAt:now() set, restore 시 양쪽 toggle. Trash 안에서 hard delete은
+     * 별개 `deleteWikiArticle` 호출 (Note `deleteNote` 정합).
+     * 2026-05-18 도입 — 이전엔 모든 Delete가 hard delete 직행 (사용자 신호).
+     */
+    trashWikiArticle: (articleId: string) => {
+      const article = get().wikiArticles.find((a: WikiArticle) => a.id === articleId)
+      const wasTrashed = article?.trashed ?? false
+      set((state: any) => ({
+        wikiArticles: state.wikiArticles.map((a: WikiArticle) =>
+          a.id === articleId
+            ? {
+                ...a,
+                trashed: !wasTrashed,
+                trashedAt: wasTrashed ? null : now(),
+                updatedAt: now(),
+              }
+            : a
+        ),
+      }))
+      appendEvent({ kind: "wiki", id: articleId }, wasTrashed ? "untrashed" : "trashed")
+    },
+
     deleteWikiArticle: (articleId: string) => {
       // Clean up block bodies from IDB before removing
       const article = get().wikiArticles.find((a: WikiArticle) => a.id === articleId)

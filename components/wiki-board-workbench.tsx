@@ -52,8 +52,7 @@ export function WikiBoardWorkbench({
   onMultiMerge,
   onSplit,
 }: WikiBoardWorkbenchProps) {
-  const deleteWikiArticle = usePlotStore((s) => s.deleteWikiArticle)
-  const createWikiArticle = usePlotStore((s) => s.createWikiArticle)
+  const trashWikiArticle = usePlotStore((s) => s.trashWikiArticle)
   const updateWikiArticle = usePlotStore((s) => s.updateWikiArticle)
   const setWikiFolders = usePlotStore((s) => s.setWikiFolders)
   const folders = usePlotStore((s) => s.folders)
@@ -91,22 +90,17 @@ export function WikiBoardWorkbench({
   }
 
   const handleTrash = () => {
-    const deletedArticles = selectedArticles.map((a) => ({ ...a }))
-    ids.forEach((id) => deleteWikiArticle(id))
+    // 2026-05-18: soft trash (Note 패턴 정합). trashWikiArticle은 toggle —
+    // undo callback도 같은 id에 다시 호출 = untrash 복원. recreate 불필요.
+    const trashedIds = [...ids]
+    trashedIds.forEach((id) => trashWikiArticle(id))
     onClearSelection()
-    toast.success(`Trashed ${count} article${count > 1 ? "s" : ""}`)
+    toast.success(`Moved ${count} article${count > 1 ? "s" : ""} to trash`)
     pushUndo(
       `Trash ${count} article${count > 1 ? "s" : ""}`,
       () => {
-        for (const a of deletedArticles) {
-          createWikiArticle({
-            title: a.title,
-            aliases: a.aliases,
-            blocks: a.blocks,
-            tags: a.tags,
-          })
-        }
-        toast.success(`Restored ${deletedArticles.length}`)
+        trashedIds.forEach((id) => trashWikiArticle(id))
+        toast.success(`Restored ${trashedIds.length}`)
       },
     )
   }

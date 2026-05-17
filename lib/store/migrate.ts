@@ -2184,5 +2184,25 @@ export function migrate(persistedState: unknown): PlotState {
     }
   }
 
+  // v138: WikiArticle.trashedAt default null — 2026-05-18.
+  // Wiki Delete를 Note 패턴 (Trash 거쳐 hard delete 2단)으로 정합한 따라
+  // 기존 wikiArticles에 trashedAt 필드가 없으면 null로 채움. trashed=true는
+  // 사용자 데이터 그대로 보존. optional 필드라 strict 필수는 아니지만
+  // 명시적 default가 display/sort 안정성 보장.
+  if (Array.isArray(state.wikiArticles)) {
+    let touched = 0
+    for (const w of state.wikiArticles as any[]) {
+      if (!("trashedAt" in w)) {
+        // 사용자가 이미 trashed:true인 경우 (사전 IDB) trashedAt 추정 안 함 — null 유지.
+        // 새로운 trashWikiArticle() 호출만 정확한 timestamp 기록.
+        w.trashedAt = null
+        touched += 1
+      }
+    }
+    if (touched > 0) {
+      console.log(`[migrate] v137→v138: initialized trashedAt on ${touched} wiki articles (soft delete 정합)`)
+    }
+  }
+
   return state as unknown as PlotState
 }
