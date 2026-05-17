@@ -43,6 +43,7 @@ import { useActiveRoute } from "@/lib/table-route"
 import { useWikiViewMode, useActiveCategoryId, setActiveCategoryView } from "@/lib/wiki-view-mode"
 import { CategorySidePanel } from "@/components/views/wiki-category-page"
 import { FolderPicker } from "@/components/folder-picker"
+import { CategoryPicker } from "@/components/category-picker"
 import { getEntityColor } from "@/lib/colors" // v109: opt-in color fallback
 
 function InspectorSection({
@@ -82,6 +83,7 @@ export function SidePanelContext({ noteId: propNoteId }: { noteId?: string | nul
   const labels = usePlotStore((s) => s.labels)
   const setNoteLabel = usePlotStore((s) => s.setNoteLabel)
   const updateNote = usePlotStore((s) => s.updateNote)
+  const createWikiCategory = usePlotStore((s) => s.createWikiCategory)
   const addTagToNote = usePlotStore((s) => s.addTagToNote)
   const removeTagFromNote = usePlotStore((s) => s.removeTagFromNote)
   const setSelectedNoteId = usePlotStore((s) => s.setSelectedNoteId)
@@ -463,6 +465,37 @@ export function SidePanelContext({ noteId: propNoteId }: { noteId?: string | nul
             <span className="text-note text-muted-foreground">No tags available</span>
           )}
         </div>
+      </InspectorSection>
+
+      <div className="mx-4 border-b border-border" />
+
+      {/* Categories — 2026-05-17 cross-entity 확장. WikiCategory 풀 공유.
+          inline Create 자동 포함. labelId null + categoryIds 빈 array도 자유. */}
+      <InspectorSection title="Categories" icon={<PhTag size={16} weight="regular" />}>
+        <CategoryPicker
+          entityId={note.id}
+          selectedCategoryIds={note.categoryIds ?? []}
+          allCategories={wikiCategories}
+          onAddCategory={(_id, catId) => {
+            const current = note.categoryIds ?? []
+            if (current.includes(catId)) return
+            updateNote(note.id, { categoryIds: [...current, catId] })
+          }}
+          onRemoveCategory={(_id, catId) => {
+            const current = note.categoryIds ?? []
+            updateNote(note.id, { categoryIds: current.filter((x) => x !== catId) })
+          }}
+          onCreateCategory={(name) => {
+            const newId = createWikiCategory(name)
+            if (newId) {
+              const current = note.categoryIds ?? []
+              if (!current.includes(newId)) {
+                updateNote(note.id, { categoryIds: [...current, newId] })
+              }
+            }
+            return newId
+          }}
+        />
       </InspectorSection>
 
       <div className="mx-4 border-b border-border" />

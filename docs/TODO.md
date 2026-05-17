@@ -3,11 +3,23 @@
 > 우선순위 기반 작업 목록. **P0 = 다음 세션 즉시 시작점** (NEXT-ACTION.md 폐지, 2026-05-12).
 > 완료 항목은 즉시 삭제 또는 "완료" 섹션으로 이동.
 
-**마지막 갱신**: 2026-05-17 (Tags/Labels sub-page entity-uniformity 1차 + cross-entity derive + seeds v135/v136 + FunnelSimple fix PR 머지 직후)
+**마지막 갱신**: 2026-05-17 (저녁) — Label/Category cross-entity 전면 확장 + Library hub 재배치 + v137 migration PR 머지 직후
 
 ---
 
-## ✅ 최근 완료 (2026-05-17)
+## ✅ 최근 완료 (2026-05-17 저녁)
+- **Label/Category/Tag = orthogonal 독립** — 사용자 mental model 정착, 계층 의존 폐기
+- **Memo 자동 부여 폐기** — `createNote` 시 labelId null 유지
+- **Wiki/Book에 labelId + Note/Book에 categoryIds + Book.tags 신규 필드**
+- **v137 migration** — default 값 추가 (사용자 데이터 보존)
+- **CategoryPicker 신규 entity-agnostic 컴포넌트**
+- **Note/Wiki/Book Detail 모두 Label + Category + Tag picker** (inline Create 자동)
+- **Sidebar 재배치** — Labels (Notes→Library) + Categories (Wiki→Library, 길 A)
+- **`/library/labels` 신규 route** + legacy `/labels` 호환
+- **Library Overview 6 stat card** (Labels + Categories 추가, 3-col grid)
+- **KNOWLEDGE_INDEX_COLORS** — labels (rose) + categories (emerald)
+
+## ✅ 완료 (2026-05-17 낮)
 - **Labels/Tags sub-page 사이드바 자동 노출** — useEffect로 selectedXxxId 변경 시 sidePanelContext sync (영구 룰 21)
 - **Labels/Tags sub-page row entity-uniformity** — `EntityNoteListRow` helper (hover checkbox + single click toggle + dblclick navigate)
 - **노트 더블클릭 시 실제 editor 진입** — sub-page exit + setActiveRoute + openNote + router.push 4단 세트
@@ -27,9 +39,37 @@
 
 ---
 
-## 🔴 P0 — 즉시 (cross-machine 진입점, 2026-05-17)
+## 🔴 P0 — 즉시 (cross-machine 진입점, 2026-05-17 저녁)
 
-### 1. **Tags/Labels sub-page view-engine 통합** (사용자 명시 시그널)
+### 1. **Wiki Template 신설** (사용자 명시 시그널 — 큰 작업, ~20 파일)
+사용자 보고: "위키에도 템플릿이 신설되어야 해. 맞지?"
+
+**현황**: `lib/types.ts:695` `NoteTemplate`만 있음. `WikiTemplate` 타입 자체 X. memory의 "WikiTemplate 통합 모델" 영구 결정은 코드 미구현.
+
+**범위**:
+- `lib/types.ts`: `WikiTemplate` 타입 (Title / blocks / categoryIds / labelId / aliases / infobox 등)
+- `lib/store/slices/wiki-templates.ts` 신규 (CRUD + events)
+- `lib/store/seeds.ts`: SEED_WIKI_TEMPLATES (Reference / Concept / Tutorial 등)
+- migration (`state.wikiTemplates` 초기화)
+- Wiki 사이드바: Templates entry 신규 (Notes Templates 패턴 정합)
+- WikiTemplatePicker (Wiki article 생성 시 template 선택 flow)
+- WikiTemplate Detail panel (4탭 사이드바)
+- Wiki 생성 시 template 적용 로직 (Note 패턴: blocks + infobox + categoryIds 복사)
+
+**참고 파일**:
+- `lib/types.ts:695` NoteTemplate 타입
+- `lib/store/slices/templates.ts` NoteTemplate slice
+- `lib/store/seeds.ts` SEED_TEMPLATES
+- `components/views/templates-view.tsx` (Notes Templates UI 패턴)
+
+### 2. (선택) **Book Template 도입 가능성 논의**
+사용자 명시 "북에는 템플릿이 도입될 수 있을지 없을지 확신이 안 들어" — brainstorming 시작.
+
+**검토 사항**: Book의 본질은 큐레이션 묶음 (items[] + smartSources). Template = recipe 메타포 → Book에 적용 시 의미?
+- 옵션 A: Book template = items 자동 구조 (chapter heading + smart source 미리 세팅된 책 type)
+- 옵션 B: Book에 Template 안 도입 (Book은 user-curated, template 어색)
+
+### 3. (선택) **Tags/Labels sub-page view-engine 통합** (이전 세션 P0 잔여)
 사용자 보고: "왜 태그스의 디스플레이는 이상하냐? 기존의 플롯식 정합과 다른데? 왜 필터는 없냐? 디스플레이 프로퍼티스 부실 + 그룹핑 옵션 없음"
 
 **범위**:

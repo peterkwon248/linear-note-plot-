@@ -51,6 +51,33 @@
 
 ---
 
+## 🚀 2026-05-17 (저녁) — Label/Category cross-entity 전면 확장 + Library hub 재배치 + v137 migration ⭐⭐⭐⭐⭐
+
+**범위**: 단일 PR. 사용자 5건 시그널 + brainstorming 합의.
+
+### 핵심 결정 (영구 LOCKED)
+
+**53. Label/Category/Tag = orthogonal 독립 + 자유 선택**: 계층 의존 X, 각 entity 자유 부여.
+
+**54. WikiCategory 풀 공유**: Note/Wiki/Book 같은 카테고리 시스템.
+
+**55. Wiki Category DAG hierarchy 유지**: N-level. Note/Book 사용자는 1-level만 써도 자유.
+
+**56. Memo 자동 부여 폐기**: `createNote` 시 labelId null, chip은 있을 때만 표시.
+
+**57. cross-entity 분류 = Library hub**: Label/Category/Tag는 Library 사이드바에. Templates/Folders는 entity-specific 유지.
+
+**58. CategoryPicker entity-agnostic**: TagPicker 패턴 정합, 모든 entity 재활용.
+
+### 다음 (TODO.md P0)
+
+🔴 **P0**: Wiki Template 신설 (사용자 명시, ~20 파일)
+🟡 **P1**: Book Template 도입 가능성 brainstorming
+🟡 **P1**: Categories 본격 분리 (길 B)
+🟣 **P2**: note-detail-panel.tsx dead code 제거
+
+---
+
 ## 🚀 2026-05-17 — Tags/Labels sub-page entity-uniformity 1차 + cross-entity derive + seeds v135/v136 + FunnelSimple fix ⭐⭐⭐⭐
 
 **범위**: 단일 PR. 사용자 보고 5건 응답.

@@ -45,6 +45,8 @@ import { CaretUp } from "@phosphor-icons/react/dist/ssr/CaretUp"
 import { CaretDown } from "@phosphor-icons/react/dist/ssr/CaretDown"
 import { Warning } from "@phosphor-icons/react/dist/ssr/Warning"
 import { Paperclip } from "@phosphor-icons/react/dist/ssr/Paperclip"
+import { Folders } from "@phosphor-icons/react/dist/ssr/Folders"
+import { setCategoryOverview } from "@/lib/wiki-view-mode"
 import { BookOpenText } from "@phosphor-icons/react/dist/ssr/BookOpenText"
 import { Quotes } from "@phosphor-icons/react/dist/ssr/Quotes"
 import { Sticker as StickerIcon } from "@phosphor-icons/react/dist/ssr/Sticker"
@@ -578,6 +580,11 @@ function LibraryOverview() {
   const attachments = usePlotStore((s) => s.attachments)
   const notes = usePlotStore((s) => s.notes)
   const stickers = usePlotStore((s) => s.stickers ?? [])
+  // 2026-05-17 — Labels/Categories cross-entity hub (Library) 진출.
+  const labels = usePlotStore((s) => s.labels)
+  const wikiCategories = usePlotStore((s) => s.wikiCategories)
+  const wikiArticles = usePlotStore((s) => s.wikiArticles)
+  const books = usePlotStore((s) => s.books)
 
   // Stats
   const refList = useMemo(() => Object.values(references).filter((r) => !r.trashed), [references])
@@ -585,11 +592,42 @@ function LibraryOverview() {
   const activeAttachments = useMemo(() => attachments.filter((a) => !a.trashed), [attachments])
   const activeNotes = useMemo(() => notes.filter((n) => !n.trashed), [notes])
   const activeStickers = useMemo(() => stickers.filter((s) => !s.trashed), [stickers])
+  const activeLabels = useMemo(
+    () => labels.filter((l) => !(l as { trashed?: boolean }).trashed),
+    [labels],
+  )
+  // wikiCategories는 trashed 필드 없음 (DAG 그대로 모두 active)
+  const activeWikis = useMemo(
+    () => (wikiArticles ?? []).filter((w) => !(w as { trashed?: boolean }).trashed),
+    [wikiArticles],
+  )
+  const activeBooks = useMemo(() => (books ?? []).filter((b) => !b.trashed), [books])
 
   const refTotal = refList.length
   const tagTotal = activeTags.length
   const fileTotal = activeAttachments.length
   const stickerTotal = activeStickers.length
+  const labelTotal = activeLabels.length
+  const categoryTotal = wikiCategories.length
+
+  // Label 사용량 — cross-entity (Note + Wiki + Book labelId).
+  const labelUsedCount = useMemo(
+    () => activeLabels.filter((l) =>
+      activeNotes.some((n) => n.labelId === l.id) ||
+      activeWikis.some((w) => (w as { labelId?: string | null }).labelId === l.id) ||
+      activeBooks.some((b) => (b as { labelId?: string | null }).labelId === l.id)
+    ).length,
+    [activeLabels, activeNotes, activeWikis, activeBooks],
+  )
+  // Category 사용량 — cross-entity (Note + Wiki + Book categoryIds).
+  const categoryUsedCount = useMemo(
+    () => wikiCategories.filter((c) =>
+      activeNotes.some((n) => (n as { categoryIds?: string[] }).categoryIds?.includes(c.id)) ||
+      activeWikis.some((w) => w.categoryIds?.includes(c.id)) ||
+      activeBooks.some((b) => (b as { categoryIds?: string[] }).categoryIds?.includes(c.id))
+    ).length,
+    [wikiCategories, activeNotes, activeWikis, activeBooks],
+  )
 
   // Sub-stats
   const linkedRefCount = refList.filter((r) => r.content.trim()).length
@@ -752,7 +790,10 @@ function LibraryOverview() {
                   References accent-vs-amber, Files teal-vs-rose) lived in this
                   exact mismatch: Home used 600/400 dark-aware classes while
                   Library used 500-tier single-class. Now identical. */}
-              <div className="mb-6 grid grid-cols-2 gap-3 min-[800px]:grid-cols-4">
+              {/* 2026-05-17 — 6 cross-entity 분류 메커니즘 (References / Tags /
+                  Labels / Categories / Files / Stickers) hub. 800px 이상에서
+                  3-col layout (2 row), 그 이하는 2-col. */}
+              <div className="mb-6 grid grid-cols-2 gap-3 min-[800px]:grid-cols-3">
                 <LibMiniStat
                   label="References"
                   value={refTotal}
@@ -768,6 +809,26 @@ function LibraryOverview() {
                   color={KNOWLEDGE_INDEX_COLORS.tags.text}
                   icon={<Tag size={24} weight="regular" />}
                   onClick={() => setActiveRoute("/library/tags")}
+                />
+                <LibMiniStat
+                  label="Labels"
+                  value={labelTotal}
+                  sub={`${labelUsedCount} in use`}
+                  color={KNOWLEDGE_INDEX_COLORS.labels.text}
+                  icon={<Tag size={24} weight="regular" />}
+                  onClick={() => setActiveRoute("/library/labels")}
+                />
+                <LibMiniStat
+                  label="Categories"
+                  value={categoryTotal}
+                  sub={`${categoryUsedCount} in use`}
+                  color={KNOWLEDGE_INDEX_COLORS.categories.text}
+                  icon={<Folders size={24} weight="regular" />}
+                  onClick={() => {
+                    // 길 A — Categories는 wiki page + categoryView mode
+                    setCategoryOverview()
+                    setActiveRoute("/wiki")
+                  }}
                 />
                 <LibMiniStat
                   label="Files"

@@ -13,19 +13,10 @@ export function createNotesSlice(set: Set, get: Get, appendEvent: AppendEventFn)
       const { activeView } = get()
       const content = partial?.content ?? ""
 
-      // Auto-assign "Memo" label if no label specified
-      let labelId = partial?.labelId ?? null
-      if (!labelId) {
-        const state = get()
-        let memoLabel = state.labels.find((l: any) => l.name === "Memo" && !l.trashed)
-        if (!memoLabel) {
-          // Create "Memo" label if it doesn't exist
-          const memoId = genId()
-          memoLabel = { id: memoId, name: "Memo", color: "#f5a623" }
-          set((s: any) => ({ labels: [...s.labels, memoLabel] }))
-        }
-        labelId = memoLabel.id
-      }
+      // 2026-05-17 — Memo 자동 부여 폐기. 영구 LOCKED 결정 (사용자 명시):
+      // labelId 미지정 시 null 유지. label chip은 labelId가 있을 때만 표시
+      // (모든 entity 공통 — Note/Wiki/Book 동일 패턴).
+      const labelId = partial?.labelId ?? null
 
       // Folder membership (v107 N:M). Priority order:
       //   1. Explicit `partial.folderIds` from caller (any source)

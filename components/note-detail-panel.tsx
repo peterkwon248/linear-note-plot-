@@ -5,6 +5,7 @@ import { format, formatDistanceToNow } from "date-fns"
 import { toast } from "sonner"
 import { usePlotStore } from "@/lib/store"
 import { StatusBadge, LabelBadge, TagPicker, LabelPicker } from "@/components/note-fields"
+import { CategoryPicker } from "@/components/category-picker"
 import { RemindPicker } from "@/components/remind-picker"
 import { isReadyToPromote, needsReview, isStaleSuggest, getInboxNotes, getSnoozeTime } from "@/lib/queries/notes"
 import { suggestBacklinks } from "@/lib/backlinks"
@@ -136,6 +137,8 @@ export function NoteDetailPanel({
 }) {
   const notes = usePlotStore((s) => s.notes)
   const updateNote = usePlotStore((s) => s.updateNote)
+  const wikiCategories = usePlotStore((s) => s.wikiCategories)
+  const createWikiCategory = usePlotStore((s) => s.createWikiCategory)
   const triageKeep = usePlotStore((s) => s.triageKeep)
   const triageSnooze = usePlotStore((s) => s.triageSnooze)
   const triageTrash = usePlotStore((s) => s.triageTrash)
@@ -497,6 +500,33 @@ export function NoteDetailPanel({
                 onAddTag={addTagToNote}
                 onRemoveTag={removeTagFromNote}
                 onCreateTag={createTag}
+              />
+            </MetaRow>
+            {/* 2026-05-17 — Category cross-entity 확장. WikiCategory 풀 공유. */}
+            <MetaRow label="Categories" icon={<PhTag size={14} weight="regular" />}>
+              <CategoryPicker
+                entityId={noteId}
+                selectedCategoryIds={note.categoryIds ?? []}
+                allCategories={wikiCategories}
+                onAddCategory={(_id, catId) => {
+                  const current = note.categoryIds ?? []
+                  if (current.includes(catId)) return
+                  updateNote(noteId, { categoryIds: [...current, catId] })
+                }}
+                onRemoveCategory={(_id, catId) => {
+                  const current = note.categoryIds ?? []
+                  updateNote(noteId, { categoryIds: current.filter((x) => x !== catId) })
+                }}
+                onCreateCategory={(name) => {
+                  const newId = createWikiCategory(name)
+                  if (newId) {
+                    const current = note.categoryIds ?? []
+                    if (!current.includes(newId)) {
+                      updateNote(noteId, { categoryIds: [...current, newId] })
+                    }
+                  }
+                  return newId
+                }}
               />
             </MetaRow>
             <MetaRow label="Created" icon={<CalendarBlank size={14} weight="regular" />}>

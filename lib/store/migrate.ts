@@ -2147,5 +2147,42 @@ export function migrate(persistedState: unknown): PlotState {
     }
   }
 
+  // v137: Label/Category cross-entity 확장 — 2026-05-17.
+  // 사용자 결정 (영구 LOCKED): Label/Category/Tag는 모두 orthogonal 독립
+  // 메커니즘. 각 entity에 자유 부여 가능 (없어도 OK). Note/Wiki/Book
+  // 공통 패턴.
+  // 새 필드:
+  //   - WikiArticle.labelId   (단일, color marker)
+  //   - Book.labelId          (단일)
+  //   - Book.categoryIds      (다중, WikiCategory 풀 공유)
+  //   - Book.tags             (다중 — manual tag 부여)
+  //   - Note.categoryIds      (다중, WikiCategory 풀 공유)
+  // 모두 optional → 기본 default 안 채워도 작동, 단 안전 위해 명시 채움.
+  // 사용자 데이터 보존: 기존 field가 있으면 보존, 없을 때만 default.
+  if (Array.isArray(state.wikiArticles)) {
+    for (const w of state.wikiArticles as any[]) {
+      if (!("labelId" in w)) w.labelId = null
+    }
+  }
+  if (Array.isArray(state.books)) {
+    for (const b of state.books as any[]) {
+      if (!("labelId" in b)) b.labelId = null
+      if (!Array.isArray(b.categoryIds)) b.categoryIds = []
+      if (!Array.isArray(b.tags)) b.tags = []
+    }
+  }
+  if (Array.isArray(state.notes)) {
+    let touched = 0
+    for (const n of state.notes as any[]) {
+      if (!Array.isArray(n.categoryIds)) {
+        n.categoryIds = []
+        touched += 1
+      }
+    }
+    if (touched > 0) {
+      console.log(`[migrate] v136→v137: initialized categoryIds on ${touched} notes (cross-entity Category 확장)`)
+    }
+  }
+
   return state as unknown as PlotState
 }

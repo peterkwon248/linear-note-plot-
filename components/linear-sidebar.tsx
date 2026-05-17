@@ -994,16 +994,11 @@ export function LinearSidebar() {
               )}
             </Section>
 
-            {/* More section: Labels, Templates, Insights */}
+            {/* More section: Templates, Insights.
+                2026-05-17 — Labels는 Library hub로 이동 (cross-entity 분류
+                메커니즘은 Library에 모이는 영구 룰). Templates는 Note-recipe
+                이므로 Notes 사이드바에 유지. */}
             <Section title="More">
-              <NavLink
-                href="/labels"
-                icon={<IconLabel size={20} />}
-                label="Labels"
-                count={labels.length}
-                active={isActive("/labels")}
-                dragContent={{ type: "labels" }}
-              />
               {/* Stickers entry intentionally lives only in Library
                   (33 design decisions #8 — Sticker = cross-everything,
                   belongs with cross-cutting library indices). */}
@@ -1107,21 +1102,10 @@ export function LinearSidebar() {
                 </span>
                 <span className="truncate text-left flex-1">Split</span>
               </button>
-              <button
-                onClick={() => {
-                  setSelectedNoteId(null)
-                  setActiveRoute("/wiki")
-                  setCategoryOverview()
-                  router.push("/wiki")
-                }}
-                className="a-sb-link"
-                data-active={wikiViewMode === "category" ? "true" : undefined}
-              >
-                <span className="flex shrink-0 items-center justify-center w-5 h-5">
-                  <Folders size={16} weight="regular" />
-                </span>
-                <span className="truncate text-left flex-1">Categories</span>
-              </button>
+              {/* 2026-05-17 — Categories는 Library hub로 이동 (cross-entity
+                  분류 메커니즘 정합). 단 Categories 화면 자체는 여전히
+                  Wiki page + categoryView mode (길 A — 본격 분리는 별도 PR).
+                  Library 사이드바의 Categories entry가 이 페이지로 navigate. */}
               {/* Stickers entry lives only in Library (33 design
                   decisions #8 — cross-cutting index). */}
             </div>
@@ -1597,6 +1581,40 @@ export function LinearSidebar() {
                 count={tags.filter(t => !t.trashed).length > 0 ? tags.filter(t => !t.trashed).length : undefined}
                 active={isActive("/library/tags")}
               />
+              {/* 2026-05-17 — Labels는 cross-entity 분류 (Note/Wiki/Book 모두
+                  적용). Library hub에서 관리. Notes 사이드바의 Labels entry
+                  제거됨. */}
+              <NavLink
+                href="/library/labels"
+                icon={<IconLabel size={20} />}
+                label="Labels"
+                count={labels.filter((l) => !(l as { trashed?: boolean }).trashed).length || undefined}
+                active={isActive("/library/labels")}
+                dragContent={{ type: "labels" }}
+              />
+              {/* 2026-05-17 — Categories도 cross-entity. 단 길 A — entry만
+                  Library에 + click 시 Wiki page + categoryView mode (본격
+                  분리는 별도 PR). */}
+              <button
+                onClick={() => {
+                  setSelectedNoteId(null)
+                  setActiveRoute("/wiki")
+                  setCategoryOverview()
+                  router.push("/wiki")
+                }}
+                className="a-sb-link"
+                data-active={wikiViewMode === "category" ? "true" : undefined}
+              >
+                <span className="flex shrink-0 items-center justify-center w-5 h-5">
+                  <Folders size={20} weight="regular" />
+                </span>
+                <span className="truncate text-left flex-1">Categories</span>
+                {wikiCategories.length > 0 && (
+                  <span className="text-2xs text-muted-foreground tabular-nums">
+                    {wikiCategories.length}
+                  </span>
+                )}
+              </button>
               <NavLink
                 href="/library/files"
                 icon={<Paperclip size={20} weight="light" />}

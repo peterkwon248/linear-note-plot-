@@ -8,6 +8,85 @@
 
 ---
 
+## 🚀 2026-05-17 (저녁) — **Label/Category cross-entity 전면 확장 + Library hub 재배치 + v137 migration** ⭐⭐⭐⭐⭐
+
+**범위**: 1 worktree (`awesome-mcnulty-cac926`). 단일 PR. 사용자 5건 시그널 + brainstorming 합의 응답 — Label/Category를 모든 entity에 cross-entity 확장 + Library hub로 사이드바 재배치 + Memo 자동 부여 폐기 + Library Overview UI 6 stat card.
+
+**사용자 시그널 (그대로)**:
+1. 사용자 처음 mental model: "라벨 = 가장 큰 분류, 카테고리 = 라벨 내 세부, 태그 = 자유 키워드" (계층)
+2. **계층 의존 폐기** 결정: "라벨도, 카테고리도, 태그도 붙이든 말든 전부 유저 마음대로. Category 자유 (Label과 독립)" — orthogonal 독립
+3. "사이드바에서 태그 추가의 경우 기존에 있는 태그만 추가 가능 — inline Create 가능하게"
+4. "노트의 경우 따로 라벨 채택 안 하면 자동으로 memo 분류 — 이 방식 없애야"
+5. "라이브러리로 배치해야 형평성이 맞을 거 같은데" — cross-entity = Library hub
+6. "왜 카테고리스랑 라벨스는 화면에 안 나옴??" — Library Overview UI stat card 누락 발견
+
+**변경 파일 (12 + 1 신규 + 1 신규 page)**:
+- `lib/types.ts` — WikiArticle.labelId / Note.categoryIds / Book.labelId+categoryIds+tags 신규
+- `lib/store/slices/notes.ts` — `createNote` Memo 자동 부여 폐기 (line 11-17)
+- `lib/store/migrate.ts` — v137 block (default 추가, 사용자 데이터 보존)
+- `lib/store/index.ts` — persist version 137
+- `lib/colors.ts` — KNOWLEDGE_INDEX_COLORS에 labels (rose) + categories (emerald) 추가
+- `lib/table-route.ts` — VIEW_ROUTES에 `/library/labels` 추가
+- `components/category-picker.tsx` (신규) — entity-agnostic CategoryPicker (TagPicker 패턴)
+- `components/side-panel/side-panel-context.tsx` — Note Detail에 CategoryPicker
+- `components/side-panel/wiki-article-detail-panel.tsx` — Label section 신규 + Categories read-only → CategoryPicker
+- `components/side-panel/book-detail-panel.tsx` — Label + Categories + Tags 3 row 신규
+- `components/linear-sidebar.tsx` — Labels/Categories를 Library로 재배치 (Notes/Wiki 사이드바에서 제거)
+- `components/views/library-view.tsx` — LibraryOverview 6 stat card grid (Labels + Categories 추가)
+- `app/(app)/layout.tsx` — `/library/labels` 분기 추가 (LabelsView mount)
+- `app/(app)/library/labels/page.tsx` (신규) — 새 route page
+- `components/note-detail-panel.tsx` — CategoryPicker 추가 (단 dead code, 별도 cleanup 후보)
+
+### 핵심 결정 (영구 LOCKED, 2026-05-17 저녁)
+
+**53. Label/Category/Tag = orthogonal 독립 + 자유 선택** — 계층 의존 X. 각 entity에 자유 부여 가능 (없어도 OK). 사용자 명시: "라벨도, 카테고리도, 태그도 붙이든 말든 전부 유저 마음대로".
+
+**54. WikiCategory 풀 공유 (cross-entity)** — Note/Wiki/Book 모두 같은 카테고리 시스템. 별도 entity별 풀 X. Smart Book의 `kind: "category"` source도 cross-entity 자연 확장.
+
+**55. Wiki Category DAG hierarchy 유지** — N-level 깊이 그대로. Note/Book 사용자는 1-level만 써도 자유. wiki 본질 (학문 분류) 보존.
+
+**56. Memo 자동 부여 폐기 영구** — `createNote` 시 labelId 미지정 → null. Label chip은 labelId 있을 때만 표시. 모든 entity 동일 패턴.
+
+**57. cross-entity 분류 메커니즘 = Library hub** — Label/Category/Tag (모두 cross-entity)는 Library 사이드바에 모임. Notes/Wiki entity 사이드바에서 제거. Templates/Folders 같은 entity-specific만 유지.
+
+**58. CategoryPicker entity-agnostic** — `components/category-picker.tsx`. Note/Wiki/Book 모두 같은 컴포넌트 + 다른 callback wire-up. TagPicker / LabelPicker / FolderPicker 패턴 정합.
+
+### 기술 학습 (영구)
+
+- **사용자 mental model이 코드 디자인보다 우선**: 사용자가 처음 떠올린 "Label > Category > Tag 계층"을 reframe해 "orthogonal 독립"으로 정착. mental model 명확화 → 코드 단순화.
+- **CategoryPicker는 TagPicker 패턴 그대로 재활용**: `flat list + search input + inline Create + exactMatch 체크`. wikiCategories DAG는 데이터 모델 그대로지만 picker는 flat 검색으로 충분.
+- **dead code 잠재 (note-detail-panel.tsx)**: 큰 변경 후 실제 mount 컴포넌트 확인 의무. Grep `<ComponentName` 또는 selector verify로 dead code 발견.
+- **stat card 누락 → 시각 확인이 가장 빠름**: 사용자가 스크린샷 보고 "왜 안 나옴" 보고. 사이드바 + Overview UI는 같이 보강하는 패턴.
+- **derive vs mutate 결정의 본질**: Book.tags 신규 필드 (mutate) — 단순 + manual 부여 가능. derive만 했으면 manual UI 불가. 이번엔 둘 다 (Book.tags 신규 + Book.items derive 합집합).
+
+### 환경
+
+- Branch: `awesome-mcnulty-cac926` (계속 사용)
+- Store version: **v136 → v137** (cross-entity Label/Category default 추가)
+- Persist version: 137
+- 신규 파일: `components/category-picker.tsx` + `app/(app)/library/labels/page.tsx`
+- 데이터 모델 변경: 4 신규 optional 필드 (Wiki.labelId / Note.categoryIds / Book.labelId+categoryIds+tags)
+- 색 토큰 추가: KNOWLEDGE_INDEX_COLORS.labels (rose) + .categories (emerald)
+
+### 알려진 / Watch Out
+
+- **note-detail-panel.tsx dead code**: 어디서도 import 안 됨. 별도 cleanup PR.
+- **사용자 사전 노트의 Memo label 잔존**: 기존 노트는 그대로 Memo label 부여 상태. 일괄 제거 원하면 별도 migration PR.
+- **WikiCategory cross-entity 의미 변화**: "Computer Science" 카테고리가 wiki 학문분류 → 노트/책에도 부여 가능. 사용자 의미 충돌 시 보고 받기.
+- **Categories 길 A (단순)**: 사이드바 entry만 Library, click 시 wiki page로 navigate. 본격 분리 (`/library/categories` + CategoriesView)는 별도 PR.
+
+### 다음 (TODO.md P0)
+
+🔴 **P0**: Wiki Template 신설 (사용자 명시, 큰 작업 ~20 파일)
+- 새 type / slice / seed / UI (Templates entry + Picker + Detail panel)
+- 다음 세션 핵심 작업
+🟡 **P1**: Book Template 도입 가능성 논의 (사용자 "확신 안 듦" — brainstorming 필요)
+🟡 **P1**: Categories 본격 분리 (길 B — `/library/categories` 신규 route)
+🟣 **P2**: note-detail-panel.tsx dead code 제거 cleanup
+🟣 **P2**: 사용자 사전 노트 Memo label 일괄 제거 (사용자 결정 시)
+
+---
+
 ## 🚀 2026-05-17 — **Tags/Labels sub-page entity-uniformity 1차 + cross-entity derive + seeds v135/v136 + FunnelSimple fix** ⭐⭐⭐⭐
 
 **범위**: 1 worktree (`awesome-mcnulty-cac926`). 단일 PR. 사용자 보고 5건 응답 — 사이드바 mount + checkbox + dblclick navigate + Tag cross-entity + inline Create + 글로벌 find-replace 사고 fix.

@@ -45,6 +45,8 @@ import { BookOpen } from "@phosphor-icons/react/dist/ssr/BookOpen"
 import { cn } from "@/lib/utils"
 import { SPACE_COLORS } from "@/lib/colors"
 import type { Book, AutoSourceKind } from "@/lib/types"
+import { TagPicker, LabelPicker } from "@/components/note-fields"
+import { CategoryPicker } from "@/components/category-picker"
 
 function InspectorSection({
   title,
@@ -103,6 +105,9 @@ export function BookDetailPanel({ book }: { book: Book }) {
   const tags = usePlotStore((s) => s.tags)
   const labels = usePlotStore((s) => s.labels)
   const stickers = usePlotStore((s) => s.stickers)
+  const createLabel = usePlotStore((s) => s.createLabel)
+  const createTag = usePlotStore((s) => s.createTag)
+  const createWikiCategory = usePlotStore((s) => s.createWikiCategory)
 
   const kind = useMemo(() => getBookKind(book), [book])
 
@@ -282,6 +287,85 @@ export function BookDetailPanel({ book }: { book: Book }) {
           <div className="mx-4 border-b border-border" />
         </>
       )}
+
+      {/* ── 2026-05-17 cross-entity Label / Category / Tag ── */}
+      <InspectorSection title="Label" icon={<PhTag size={16} weight="regular" />}>
+        <LabelPicker
+          noteId={book.id}
+          currentLabelId={book.labelId ?? null}
+          allLabels={labels.filter((l) => !(l as { trashed?: boolean }).trashed)}
+          onSetLabel={(_id, labelId) => {
+            updateBook(book.id, { labelId } as Partial<Book>)
+          }}
+          onCreateLabel={(name, color) => {
+            createLabel(name, color)
+            const newLabel = usePlotStore.getState().labels.find((l) => l.name === name)
+            if (newLabel) {
+              updateBook(book.id, { labelId: newLabel.id } as Partial<Book>)
+            }
+          }}
+        />
+      </InspectorSection>
+      <div className="mx-4 border-b border-border" />
+
+      <InspectorSection title="Categories" icon={<PhTag size={16} weight="regular" />}>
+        <CategoryPicker
+          entityId={book.id}
+          selectedCategoryIds={book.categoryIds ?? []}
+          allCategories={wikiCategories}
+          onAddCategory={(_id, catId) => {
+            const current = book.categoryIds ?? []
+            if (current.includes(catId)) return
+            updateBook(book.id, { categoryIds: [...current, catId] } as Partial<Book>)
+          }}
+          onRemoveCategory={(_id, catId) => {
+            const current = book.categoryIds ?? []
+            updateBook(book.id, {
+              categoryIds: current.filter((x) => x !== catId),
+            } as Partial<Book>)
+          }}
+          onCreateCategory={(name) => {
+            const newId = createWikiCategory(name)
+            if (newId) {
+              const current = book.categoryIds ?? []
+              if (!current.includes(newId)) {
+                updateBook(book.id, {
+                  categoryIds: [...current, newId],
+                } as Partial<Book>)
+              }
+            }
+            return newId
+          }}
+        />
+      </InspectorSection>
+      <div className="mx-4 border-b border-border" />
+
+      <InspectorSection title="Tags" icon={<PhTag size={16} weight="regular" />}>
+        <TagPicker
+          noteId={book.id}
+          selectedTagIds={book.tags ?? []}
+          allTags={tags}
+          onAddTag={(_id, tagId) => {
+            const current = book.tags ?? []
+            if (current.includes(tagId)) return
+            updateBook(book.id, { tags: [...current, tagId] } as Partial<Book>)
+          }}
+          onRemoveTag={(_id, tagId) => {
+            const current = book.tags ?? []
+            updateBook(book.id, { tags: current.filter((x) => x !== tagId) } as Partial<Book>)
+          }}
+          onCreateTag={(name) => {
+            const tagId = createTag(name)
+            if (tagId) {
+              const current = book.tags ?? []
+              if (!current.includes(tagId)) {
+                updateBook(book.id, { tags: [...current, tagId] } as Partial<Book>)
+              }
+            }
+          }}
+        />
+      </InspectorSection>
+      <div className="mx-4 border-b border-border" />
 
       {/* ── Properties (stats only) ──────────────────────── */}
       <InspectorSection title="Properties" icon={<FileText size={16} weight="regular" />}>

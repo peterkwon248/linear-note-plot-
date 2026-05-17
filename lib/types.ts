@@ -125,6 +125,12 @@ export interface Book {
   id: string
   title: string                    // required
   description?: string             // optional plain text (rich text v2)
+  /** 2026-05-17 — Label 시스템 cross-entity 확장. */
+  labelId?: string | null
+  /** 2026-05-17 — Category 시스템 cross-entity 확장. WikiCategory 풀 공유. */
+  categoryIds?: string[]
+  /** 2026-05-17 — Tag 시스템 cross-entity 확장. */
+  tags?: string[]
   /** @deprecated 2026-05-12 — emoji 영구 폐기. BookKindIcon이 cover 책임.
    *  필드는 IDB persistence round-trip 위해 type에 보존 (V129 migration이
    *  데이터를 null로 wipe). UI 코드 어디서도 읽지 않음. 미래 Phosphor
@@ -394,6 +400,9 @@ export interface WikiArticle {
   sectionIndex: WikiSectionIndex[]
   tags: string[]
   categoryIds?: string[]           // references to WikiCategory.id (DAG)
+  /** 2026-05-17 — Label 시스템 cross-entity 확장. labelId 미지정 시 null
+   *  (chip 미표시). Note/Wiki/Book 공통. */
+  labelId?: string | null
   /**
    * Folder membership — N:M (a wiki article can live in any number of
    * `kind="wiki"` folders). v107 migration converts the legacy single
@@ -455,6 +464,9 @@ export interface Note {
    */
   folderIds: string[]
   tags: string[]
+  /** 2026-05-17 — Category 시스템 cross-entity 확장. WikiCategory 풀 공유.
+   *  Note/Wiki/Book 공통. 자유 (없어도 OK). */
+  categoryIds?: string[]
   // Sticker membership lives on Sticker.members[] (옵션 D2). Reverse
   // lookup via `useStickerMembers({ kind: "note", id })` hook.
   labelId: string | null
