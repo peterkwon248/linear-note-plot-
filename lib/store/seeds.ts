@@ -1,4 +1,4 @@
-import type { Note, Folder, Tag, Label, NoteTemplate, WikiArticle, WikiBlock, WikiCategory, Book } from "../types"
+import type { Note, Folder, Tag, Label, NoteTemplate, WikiArticle, WikiBlock, WikiCategory, WikiTemplate, Book } from "../types"
 import { workflowDefaults } from "./helpers"
 import { buildSectionIndex } from "../wiki-section-index"
 
@@ -1137,5 +1137,214 @@ export const SEED_BOOKS: Book[] = [
     trashedAt: daysAgo(1),
     createdAt: daysAgo(20),
     updatedAt: daysAgo(1),
+  },
+]
+
+/* ── Wiki Templates (NoteTemplate 정합 + Wiki 본질 확장) ──────────
+ * 8개 seed: Empty (default) + Wikipedia 정합 5개 (Concept / Person /
+ * Place / Reference / Book Note) + Plot 본질 3개 (Tutorial / Project
+ * Log). 사용자가 자유 추가/삭제 가능 (seed는 idempotent push만).
+ *
+ * blocks의 id는 hard-coded지만 createWikiArticleFromTemplate /
+ * getWikiTemplateBlocksExpanded가 cloneAndExpandBlocks로 새 genId()
+ * 부여 → article level 충돌 회피.
+ *
+ * infobox value는 placeholder 없이 빈 string으로 시작 (사용자가
+ * 직접 채움 — Wikipedia 정합).
+ */
+const wikiTplNow = new Date().toISOString()
+export const SEED_WIKI_TEMPLATES: WikiTemplate[] = [
+  {
+    id: "wtmpl-empty",
+    name: "Empty",
+    description: "백지에서 시작. 어떤 구조도 미리 잡지 않음.",
+    title: "Untitled",
+    aliases: [],
+    blocks: [],
+    infobox: [],
+    infoboxPreset: "custom",
+    pinned: true,
+    createdAt: wikiTplNow,
+    updatedAt: wikiTplNow,
+  },
+  {
+    id: "wtmpl-concept",
+    name: "Concept",
+    description: "추상 개념/이론/원리 정리 (예: Zettelkasten, Single Responsibility).",
+    title: "Concept",
+    aliases: [],
+    blocks: [
+      { id: "wt-concept-1", type: "section", title: "Definition", level: 2 },
+      { id: "wt-concept-2", type: "text", content: "" },
+      { id: "wt-concept-3", type: "section", title: "Origin", level: 2 },
+      { id: "wt-concept-4", type: "text", content: "" },
+      { id: "wt-concept-5", type: "section", title: "Examples", level: 2 },
+      { id: "wt-concept-6", type: "text", content: "" },
+      { id: "wt-concept-7", type: "section", title: "Misconceptions", level: 2 },
+      { id: "wt-concept-8", type: "text", content: "" },
+      { id: "wt-concept-9", type: "section", title: "See Also", level: 2 },
+    ],
+    infobox: [
+      { key: "Field", value: "" },
+      { key: "First Coined", value: "" },
+      { key: "Related Terms", value: "" },
+    ],
+    infoboxPreset: "concept",
+    pinned: false,
+    createdAt: wikiTplNow,
+    updatedAt: wikiTplNow,
+  },
+  {
+    id: "wtmpl-person",
+    name: "Person",
+    description: "인물 wiki (예: Albert Einstein, Steve Jobs).",
+    title: "Person Name",
+    aliases: [],
+    blocks: [
+      { id: "wt-person-1", type: "section", title: "Early Life", level: 2 },
+      { id: "wt-person-2", type: "text", content: "" },
+      { id: "wt-person-3", type: "section", title: "Career", level: 2 },
+      { id: "wt-person-4", type: "text", content: "" },
+      { id: "wt-person-5", type: "section", title: "Major Works", level: 2 },
+      { id: "wt-person-6", type: "text", content: "" },
+      { id: "wt-person-7", type: "section", title: "Legacy", level: 2 },
+      { id: "wt-person-8", type: "text", content: "" },
+      { id: "wt-person-9", type: "section", title: "Quotes", level: 2 },
+    ],
+    infobox: [
+      { key: "Born", value: "" },
+      { key: "Died", value: "" },
+      { key: "Occupation", value: "" },
+      { key: "Nationality", value: "" },
+    ],
+    infoboxPreset: "person",
+    pinned: false,
+    createdAt: wikiTplNow,
+    updatedAt: wikiTplNow,
+  },
+  {
+    id: "wtmpl-place",
+    name: "Place",
+    description: "장소 wiki (예: Seoul, Mount Fuji).",
+    title: "Place Name",
+    aliases: [],
+    blocks: [
+      { id: "wt-place-1", type: "section", title: "Geography", level: 2 },
+      { id: "wt-place-2", type: "text", content: "" },
+      { id: "wt-place-3", type: "section", title: "History", level: 2 },
+      { id: "wt-place-4", type: "text", content: "" },
+      { id: "wt-place-5", type: "section", title: "Demographics", level: 2 },
+      { id: "wt-place-6", type: "text", content: "" },
+      { id: "wt-place-7", type: "section", title: "Culture", level: 2 },
+    ],
+    infobox: [
+      { key: "Location", value: "" },
+      { key: "Country", value: "" },
+      { key: "Population", value: "" },
+      { key: "Coordinates", value: "" },
+    ],
+    infoboxPreset: "place",
+    pinned: false,
+    createdAt: wikiTplNow,
+    updatedAt: wikiTplNow,
+  },
+  {
+    id: "wtmpl-reference",
+    name: "Reference",
+    description: "학술 논문/책 정리 (예: Attention Is All You Need).",
+    title: "Reference Title",
+    aliases: [],
+    blocks: [
+      { id: "wt-ref-1", type: "section", title: "Abstract", level: 2 },
+      { id: "wt-ref-2", type: "text", content: "" },
+      { id: "wt-ref-3", type: "section", title: "Key Points", level: 2 },
+      { id: "wt-ref-4", type: "text", content: "" },
+      { id: "wt-ref-5", type: "section", title: "Related Works", level: 2 },
+      { id: "wt-ref-6", type: "text", content: "" },
+      { id: "wt-ref-7", type: "section", title: "Citation", level: 2 },
+    ],
+    infobox: [
+      { key: "Author", value: "" },
+      { key: "Year", value: "" },
+      { key: "Source", value: "" },
+      { key: "DOI", value: "" },
+    ],
+    infoboxPreset: "work-book",
+    pinned: false,
+    createdAt: wikiTplNow,
+    updatedAt: wikiTplNow,
+  },
+  {
+    id: "wtmpl-tutorial",
+    name: "Tutorial",
+    description: "절차/How-to (예: Setting up Next.js).",
+    title: "Tutorial",
+    aliases: [],
+    blocks: [
+      { id: "wt-tut-1", type: "section", title: "Prerequisites", level: 2 },
+      { id: "wt-tut-2", type: "text", content: "" },
+      { id: "wt-tut-3", type: "section", title: "Steps", level: 2 },
+      { id: "wt-tut-4", type: "text", content: "" },
+      { id: "wt-tut-5", type: "section", title: "Common Pitfalls", level: 2 },
+      { id: "wt-tut-6", type: "text", content: "" },
+      { id: "wt-tut-7", type: "section", title: "Further Reading", level: 2 },
+    ],
+    infobox: [],
+    infoboxPreset: "custom",
+    pinned: false,
+    createdAt: wikiTplNow,
+    updatedAt: wikiTplNow,
+  },
+  {
+    id: "wtmpl-project-log",
+    name: "Project Log",
+    description: "진행 중 프로젝트 추적 (예: Plot v3 Refresh).",
+    title: "Project Name",
+    aliases: [],
+    blocks: [
+      { id: "wt-proj-1", type: "section", title: "Background", level: 2 },
+      { id: "wt-proj-2", type: "text", content: "" },
+      { id: "wt-proj-3", type: "section", title: "Current State", level: 2 },
+      { id: "wt-proj-4", type: "text", content: "" },
+      { id: "wt-proj-5", type: "section", title: "Next Steps", level: 2 },
+      { id: "wt-proj-6", type: "text", content: "" },
+      { id: "wt-proj-7", type: "section", title: "Decisions Log", level: 2 },
+    ],
+    infobox: [
+      { key: "Status", value: "" },
+      { key: "Started", value: "" },
+      { key: "Team", value: "" },
+      { key: "Goals", value: "" },
+    ],
+    infoboxPreset: "custom",
+    pinned: false,
+    createdAt: wikiTplNow,
+    updatedAt: wikiTplNow,
+  },
+  {
+    id: "wtmpl-book-note",
+    name: "Book Note",
+    description: "읽은 책 정리 (예: Atomic Habits, 이기적 유전자).",
+    title: "Book Title",
+    aliases: [],
+    blocks: [
+      { id: "wt-book-1", type: "section", title: "Summary", level: 2 },
+      { id: "wt-book-2", type: "text", content: "" },
+      { id: "wt-book-3", type: "section", title: "Key Themes", level: 2 },
+      { id: "wt-book-4", type: "text", content: "" },
+      { id: "wt-book-5", type: "section", title: "Personal Notes", level: 2 },
+      { id: "wt-book-6", type: "text", content: "" },
+      { id: "wt-book-7", type: "section", title: "Quotes", level: 2 },
+    ],
+    infobox: [
+      { key: "Author", value: "" },
+      { key: "Year", value: "" },
+      { key: "Genre", value: "" },
+      { key: "Rating", value: "" },
+    ],
+    infoboxPreset: "work-book",
+    pinned: false,
+    createdAt: wikiTplNow,
+    updatedAt: wikiTplNow,
   },
 ]

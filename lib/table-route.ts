@@ -94,7 +94,7 @@ export function routeGoForward(): boolean {
 /** Infer which activity space a route belongs to */
 export function inferSpace(route: string): ActivitySpace {
   if (route === "/home" || route === "/inbox") return "home"
-  if (route === "/wiki") return "wiki"
+  if (route === "/wiki" || route === "/wiki/templates") return "wiki"
   if (route.startsWith("/calendar") || route === "/todos") return "calendar"
   if (route === "/ontology" || route === "/graph-insights") return "ontology"
   if (route.startsWith("/library")) return "library"
