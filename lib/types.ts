@@ -429,6 +429,10 @@ export interface WikiArticle {
   trashedAt?: string | null
   /** View count — incremented each time the article is opened. 0 by default. */
   reads?: number
+  /** 2026-05-18 — Wiki Template로부터 생성된 article의 origin template id.
+   * "Used by N wiki articles" reverse-lookup용 (NoteTemplate 정합, PR #322).
+   * slash insert는 article level이 아니라 inline block insert라 templateId 안 set. */
+  templateId?: string
   createdAt: string
   updatedAt: string
 }
@@ -693,6 +697,54 @@ export interface AutopilotLogEntry {
   actions: AutopilotAction[]
   at: string
   undone: boolean
+}
+
+/* ── Wiki Templates ──────────────────────────────── */
+
+/**
+ * WikiTemplate — recipe for creating new wiki articles with pre-seeded
+ * blocks/infobox/categories. NoteTemplate 정합 + Wiki 본질 필드 (blocks,
+ * infobox, infoboxPreset, layout 등) 확장.
+ *
+ * Two apply paths (둘 다 지원):
+ *   1) **생성 picker** — 빈 Wiki article 생성 시 picker로 선택 →
+ *      `createWikiArticleFromTemplate(templateId, partial)`. blocks +
+ *      infobox + defaultCategoryIds + defaultLabelId + defaultLayout
+ *      등 모두 적용. WikiArticle.templateId에 origin 기록.
+ *   2) **slash insert** — 기존 article 안에서 `/` → "Insert wiki
+ *      template…" → template blocks만 cursor 위치에 inline insert.
+ *      article level 메타 (categoryIds/labelId/layout)는 건드리지 않음.
+ *      templateId도 set 안 함 (전체 article origin이 아니므로).
+ *
+ * Placeholder system은 NoteTemplate 정합 — `expandPlaceholders` +
+ * `expandPlaceholdersInJson` 헬퍼 (lib/store/slices/templates.ts) 재활용.
+ * blocks 안 text node + infobox value 모두 expand.
+ */
+export interface WikiTemplate {
+  id: string                              // "wtmpl-{shortid}"
+  name: string                            // 사용자 보이는 이름 (e.g., "Person", "Concept")
+  description?: string                    // optional, sidebar tooltip / picker description
+  // ── Pre-filled content (Wiki 본질) ──
+  title: string                           // article.title 시작값 (placeholder 가능)
+  aliases?: string[]                      // article.aliases 시작값
+  blocks: WikiBlock[]                     // 미리 정의된 sections/text/list/etc.
+  infobox: WikiInfoboxEntry[]             // 미리 채워진 infobox entries
+  infoboxPreset?: WikiInfoboxPreset       // person/place/concept 등 — 자동 적용
+  infoboxHeaderColor?: string | null      // infobox header bg color override
+  // ── 분류 메타 defaults (선택, 적용 시 article.* 시작값) ──
+  defaultCategoryIds?: string[]
+  defaultLabelId?: string | null
+  defaultTags?: string[]
+  defaultFolderIds?: string[]
+  // ── Display 메타 defaults (선택) ──
+  defaultLayout?: WikiLayout              // "default" | "encyclopedia"
+  defaultFontSize?: number                // 0.85 | 1 | 1.15 | 1.3
+  // ── 메타 (NoteTemplate 정합) ──
+  pinned: boolean
+  trashed?: boolean
+  trashedAt?: string | null
+  createdAt: string
+  updatedAt: string
 }
 
 /* ── Note Templates ──────────────────────────────── */

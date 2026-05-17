@@ -6,7 +6,7 @@ import type { SRSState } from "@/lib/srs"
 import { buildDefaultViewStates } from "../view-engine/defaults"
 import { createIDBStorage } from "../idb-storage"
 import { createAppendEvent } from "./helpers"
-import { SEED_NOTES, SEED_FOLDERS, SEED_TAGS, SEED_LABELS, SEED_TEMPLATES, SEED_WIKI_ARTICLES, SEED_WIKI_CATEGORIES, SEED_BOOKS } from "./seeds"
+import { SEED_NOTES, SEED_FOLDERS, SEED_TAGS, SEED_LABELS, SEED_TEMPLATES, SEED_WIKI_ARTICLES, SEED_WIKI_CATEGORIES, SEED_WIKI_TEMPLATES, SEED_BOOKS } from "./seeds"
 import { persistBody, persistBlockBody } from "./helpers"
 import { createNotesSlice } from "./slices/notes"
 import { createWorkflowSlice } from "./slices/workflow"
@@ -28,6 +28,7 @@ import { createWikiCollectionsSlice } from "./slices/wiki-collections"
 import { createSavedViewsSlice } from "./slices/saved-views"
 import { createWikiArticlesSlice } from "./slices/wiki-articles"
 import { createWikiCategoriesSlice } from "./slices/wiki-categories"
+import { createWikiTemplatesSlice } from "./slices/wiki-templates"
 import { createReferencesSlice } from "./slices/references"
 import { createGlobalBookmarksSlice } from "./slices/global-bookmarks"
 import { createCommentsSlice } from "./slices/comments"
@@ -101,6 +102,7 @@ export const usePlotStore = create<PlotState>()(
         autopilotRules: DEFAULT_AUTOPILOT_RULES,
         autopilotLog: [] as AutopilotLogEntry[],
         templates: SEED_TEMPLATES,
+        wikiTemplates: SEED_WIKI_TEMPLATES,
 
         viewStateByContext: buildDefaultViewStates(),
         _viewStateHydrated: false,
@@ -131,6 +133,7 @@ export const usePlotStore = create<PlotState>()(
         ...createSavedViewsSlice(set),
         ...createWikiCategoriesSlice(set, get),
         ...createWikiArticlesSlice(set, get, appendEvent),
+        ...createWikiTemplatesSlice(set, get, appendEvent),
         ...createReferencesSlice(set, appendEvent),
         ...createGlobalBookmarksSlice(set),
         ...createCommentsSlice(set),
@@ -254,7 +257,7 @@ export const usePlotStore = create<PlotState>()(
     },
     {
       name: "plot-store",
-      version: 138,
+      version: 139,
       storage: createIDBStorage<PlotState>(),
       partialize: (state) => {
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -313,6 +316,14 @@ export const usePlotStore = create<PlotState>()(
           // hand-creating books. Idempotent: only seeds when array is empty.
           if (!Array.isArray(state.books) || state.books.length === 0) {
             state.books = SEED_BOOKS
+          }
+
+          // 2026-05-18: wikiTemplates onRehydrate defense. v139 migration이
+          // 호출 안 되는 case (hot-reload IDB stale, version 같음) 또는
+          // serialize round-trip이 array를 object로 변형한 case 보호.
+          // 사용자 IDB 데이터 우선 보존 — array만 아니면 seed로 초기화.
+          if (!Array.isArray(state.wikiTemplates)) {
+            state.wikiTemplates = SEED_WIKI_TEMPLATES
           }
           state.previewNoteId = null
 

@@ -2204,5 +2204,31 @@ export function migrate(persistedState: unknown): PlotState {
     }
   }
 
+  // v139: WikiTemplate 시스템 신설 — 2026-05-18.
+  // state.wikiTemplates 신규 슬라이스 + SEED_WIKI_TEMPLATES 8개 inject.
+  // 기존 사용자 데이터 보존 — id-dedup append (Note seed migration v130 정합).
+  // 사용자가 시드를 삭제했더라도 v139 첫 진입 시 다시 들어옴 (idempotent 후속
+  // 동작이 사용자 데이터를 보존하면서 fresh start 보장).
+  {
+    const { SEED_WIKI_TEMPLATES } = require("./seeds")
+    if (!Array.isArray((state as Record<string, unknown>).wikiTemplates)) {
+      ;(state as Record<string, unknown>).wikiTemplates = [...SEED_WIKI_TEMPLATES]
+      console.log(`[migrate] v138→v139: initialized wikiTemplates (${SEED_WIKI_TEMPLATES.length} seeds)`)
+    } else {
+      const wts = (state as Record<string, unknown>).wikiTemplates as any[]
+      const existingIds = new Set(wts.map((t: any) => t.id))
+      let added = 0
+      for (const seed of SEED_WIKI_TEMPLATES) {
+        if (!existingIds.has(seed.id)) {
+          wts.push(seed)
+          added += 1
+        }
+      }
+      if (added > 0) {
+        console.log(`[migrate] v138→v139: re-seeded wikiTemplates (${added} added)`)
+      }
+    }
+  }
+
   return state as unknown as PlotState
 }

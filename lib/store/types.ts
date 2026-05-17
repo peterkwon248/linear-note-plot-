@@ -1,4 +1,4 @@
-import type { Note, NoteBody, Folder, Tag, Label, Sticker, EntityRef, NoteTemplate, ActiveView, EntityEvent, Thread, AutopilotRule, AutopilotLogEntry, Relation, RelationType, Attachment, CoOccurrence, RelationSuggestion, WikiClusterSuggestion, WikiInfoboxEntry, WikiCollectionItem, SavedView, WikiArticle, WikiBlock, WikiCategory, Reference, GlobalBookmark, Comment, CommentAnchor, Book, AutoSource, AutoSourceKind } from "../types"
+import type { Note, NoteBody, Folder, Tag, Label, Sticker, EntityRef, NoteTemplate, WikiTemplate, ActiveView, EntityEvent, Thread, AutopilotRule, AutopilotLogEntry, Relation, RelationType, Attachment, CoOccurrence, RelationSuggestion, WikiClusterSuggestion, WikiInfoboxEntry, WikiCollectionItem, SavedView, WikiArticle, WikiBlock, WikiCategory, Reference, GlobalBookmark, Comment, CommentAnchor, Book, AutoSource, AutoSourceKind } from "../types"
 import type { InboxDismissed, InboxSnoozed, InboxItemKind } from "./slices/inbox"
 import type { SRSState, SRSRating } from "@/lib/srs"
 import type { ViewState, ViewContextKey } from "../view-engine/types"
@@ -32,6 +32,7 @@ export type SidePanelContext =
   | { type: "wiki"; id: string }
   | { type: "reference"; id: string }
   | { type: "template"; id: string }
+  | { type: "wikiTemplate"; id: string }
   | { type: "file"; id: string }
   | { type: "book"; id: string }
   | { type: "tag"; id: string }
@@ -167,6 +168,8 @@ export interface PlotState {
 
   // ── Templates ──
   templates: NoteTemplate[]
+  /** 2026-05-18 — Wiki article template pool (Notes templates 정합). */
+  wikiTemplates: WikiTemplate[]
 
   // ── Wiki Collections ──
   wikiCollections: Record<string, WikiCollectionItem[]>  // key = wikiNoteId
@@ -253,6 +256,20 @@ export interface PlotState {
   permanentlyDeleteTemplate: (id: string) => void
   toggleTemplatePin: (id: string) => void
   createNoteFromTemplate: (templateId: string) => string
+
+  // ── Wiki Templates (NoteTemplate 정합) ──
+  createWikiTemplate: (template: Omit<WikiTemplate, "id" | "createdAt" | "updatedAt">) => string
+  updateWikiTemplate: (id: string, updates: Partial<WikiTemplate>) => void
+  /** Soft trash — Trash 거쳐 deleteForever (Note 정합). */
+  deleteWikiTemplate: (id: string) => void
+  restoreWikiTemplate: (id: string) => void
+  /** Hard delete (Trash 안에서만). */
+  permanentlyDeleteWikiTemplate: (id: string) => void
+  toggleWikiTemplatePin: (id: string) => void
+  /** 생성 picker apply — 빈 Wiki article 생성 + template 전체 적용. */
+  createWikiArticleFromTemplate: (templateId: string) => string
+  /** slash insert apply — 기존 article에 template blocks 추가 반환 (caller가 cursor 위치에 insert). */
+  getWikiTemplateBlocksExpanded: (templateId: string) => WikiBlock[] | null
 
   // ── Folders ──
   /**

@@ -13,6 +13,7 @@ import { TagDetailPanel } from "./tag-detail-panel"
 import { StickerDetailPanel } from "./sticker-detail-panel"
 import { LabelDetailPanel } from "./label-detail-panel"
 import { CategoryDetailPanel } from "./category-detail-panel"
+import { WikiTemplateDetailPanel } from "./wiki-template-detail-panel"
 
 /**
  * Entity-aware detail panel that renders appropriate detail content
@@ -25,6 +26,7 @@ export function SidePanelDetail() {
   const entity = useSidePanelEntity()
   const sidePanelContext = usePlotStore((s) => s.sidePanelContext)
   const wikiCategories = usePlotStore((s) => s.wikiCategories)
+  const wikiTemplates = usePlotStore((s) => Array.isArray(s.wikiTemplates) ? s.wikiTemplates : [])
 
   if (activeSpace === "ontology") {
     return <GraphDetailPlaceholder />
@@ -39,6 +41,20 @@ export function SidePanelDetail() {
     return (
       <div className="flex flex-1 items-center justify-center p-4 text-muted-foreground text-note">
         Category not found
+      </div>
+    )
+  }
+
+  // Wiki template — direct lookup (CategoryDetailPanel 패턴 정합).
+  // useSidePanelEntity 안 거치는 이유: 분기 7개 추가하는 boilerplate 회피.
+  if (sidePanelContext?.type === "wikiTemplate") {
+    const template = wikiTemplates.find((t) => t.id === sidePanelContext.id)
+    if (template) {
+      return <WikiTemplateDetailPanel template={template} />
+    }
+    return (
+      <div className="flex flex-1 items-center justify-center p-4 text-muted-foreground text-note">
+        Template not found
       </div>
     )
   }

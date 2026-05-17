@@ -286,6 +286,7 @@ export function LinearSidebar() {
   const labels = usePlotStore((s) => s.labels)
   const stickers = usePlotStore((s) => s.stickers)
   const templates = usePlotStore((s) => s.templates)
+  const wikiTemplates = usePlotStore((s) => Array.isArray(s.wikiTemplates) ? s.wikiTemplates : [])
   const books = usePlotStore((s) => s.books)
 
   const wikiCategories = usePlotStore((s) => s.wikiCategories)
@@ -1102,6 +1103,17 @@ export function LinearSidebar() {
                 </span>
                 <span className="truncate text-left flex-1">Split</span>
               </button>
+              {/* 2026-05-18 — Wiki Templates entry (Notes Templates 정합).
+                  Wiki article recipe — Concept/Person/Place 등 pre-seeded
+                  blocks+infobox. 생성 picker + slash insert 둘 다 지원. */}
+              <NavLink
+                href="/wiki/templates"
+                icon={<IconTemplate size={20} />}
+                label="Templates"
+                count={wikiTemplates.filter((t) => !t.trashed).length}
+                active={isActive("/wiki/templates")}
+                dragContent={{ type: "wiki-templates" } as any}
+              />
               {/* 2026-05-17 — Categories는 Library hub로 이동 (cross-entity
                   분류 메커니즘 정합). 단 Categories 화면 자체는 여전히
                   Wiki page + categoryView mode (길 A — 본격 분리는 별도 PR).

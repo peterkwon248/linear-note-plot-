@@ -24,6 +24,7 @@ import { LabelsView } from "@/components/views/labels-view"
 import { StickersView } from "@/components/views/stickers-view"
 import { OntologyView } from "@/components/views/ontology-view"
 import { TemplatesView } from "@/components/views/templates-view"
+import { WikiTemplatesView } from "@/components/views/wiki-templates-view"
 import { InsightsView } from "@/components/insights-view"
 import { WikiView } from "@/components/views/wiki-view"
 import { CalendarView } from "@/components/calendar-view"
@@ -281,6 +282,12 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                 {(mountedViews.has("/templates") || activeRoute === "/templates") && (
                   <div className={activeRoute === "/templates" ? "flex flex-1 overflow-hidden" : "hidden"}>
                     <TemplatesView />
+                  </div>
+                )}
+
+                {(mountedViews.has("/wiki/templates") || activeRoute === "/wiki/templates") && (
+                  <div className={activeRoute === "/wiki/templates" ? "flex flex-1 overflow-hidden" : "hidden"}>
+                    <WikiTemplatesView />
                   </div>
                 )}
 

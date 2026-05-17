@@ -59,6 +59,7 @@ import {
 } from "@/components/ui/context-menu"
 import { WikiBoard } from "./wiki-board"
 import { WikiFloatingActionBar } from "@/components/wiki-floating-action-bar"
+import { WikiTemplatePicker } from "@/components/wiki-template-picker"
 import { WikiArticleView } from "@/components/wiki-editor/wiki-article-view"
 import { WikiArticleEncyclopedia } from "@/components/wiki-editor/wiki-article-encyclopedia"
 import { useWikiCategoryFilter, setWikiCategoryFilter } from "@/lib/wiki-category-filter"
@@ -340,11 +341,19 @@ export function WikiView() {
     [notes, wikiArticles, navigateToNote]
   )
 
+  // 2026-05-18: Wiki article 생성 시 WikiTemplatePicker 다이얼로그를 띄움.
+  // 사용자 "Empty" 선택 시 빈 article — 기존 behavior 정합. Picker는
+  // createWikiArticleFromTemplate 호출 → article 생성 후 onApplied callback에서
+  // edit mode 진입.
+  const [templatePickerOpen, setTemplatePickerOpen] = useState(false)
   const handleCreateWiki = useCallback(() => {
-    const id = createWikiArticle({ title: "Untitled Wiki" })
-    setSelectedWikiArticleId(id)
+    setTemplatePickerOpen(true)
+  }, [])
+
+  const handleTemplateApplied = useCallback((articleId: string) => {
+    setSelectedWikiArticleId(articleId)
     setIsEditingWikiArticle(true)
-  }, [createWikiArticle])
+  }, [])
 
   const handleCreateFromRedLink = useCallback(
     (title: string) => {
@@ -1500,6 +1509,13 @@ export function WikiView() {
           }}
         />
       )}
+
+      {/* Wiki Template Picker (생성 진입점) */}
+      <WikiTemplatePicker
+        open={templatePickerOpen}
+        onOpenChange={setTemplatePickerOpen}
+        onApplied={handleTemplateApplied}
+      />
     </div>
   )
 }
