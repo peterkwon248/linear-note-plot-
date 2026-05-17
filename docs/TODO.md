@@ -3,11 +3,16 @@
 > 우선순위 기반 작업 목록. **P0 = 다음 세션 즉시 시작점** (NEXT-ACTION.md 폐지, 2026-05-12).
 > 완료 항목은 즉시 삭제 또는 "완료" 섹션으로 이동.
 
-**마지막 갱신**: 2026-05-17 (밤) — Books sidebar transition + Trash hardcoded grouping + Trash entity-native icon 3 PR 머지 직후
+**마지막 갱신**: 2026-05-18 (오전) — Wiki Delete soft delete + Wiki Template 신설 + Infobox preset 6 + dropdown fix 3 PR 머지 직후
 
 ---
 
-## ✅ 최근 완료 (2026-05-17 밤)
+## ✅ 최근 완료 (2026-05-18 오전)
+- **PR #357** — Wiki Delete = hard → soft delete 패턴 (Note 2단 정합). WikiArticle.trashed/trashedAt 정식 type + trashWikiArticle action + v138 migration + 7곳 호출처 swap + bulk undo simplified (toggle)
+- **PR #358** — Wiki Template 신설 (NoteTemplate 정합 + Wiki 본질 확장). 8 seed (Empty/Concept/Person/Place/Reference/Tutorial/Project Log/Book Note) + WikiArticle.templateId + v139 migration + onRehydrateStorage defense + Wiki 사이드바 Templates entry + /wiki/templates page + WikiTemplatesView grid + WikiTemplateDetailPanel 4탭 + WikiTemplatePicker dialog
+- **PR #359** — Infobox preset 6 신규 (School/Animal/Software/Food/Vehicle/Sport Team, 나무위키 정합) + 신규 color tokens (cyan/lime/pink/brown) + Preset dropdown 잘림 fix (createPortal + fixed positioning + viewport flip)
+
+## ✅ 완료 (2026-05-17 밤)
 - **PR #352** — `/books` row click 시 사이드바 즉시 전환 (BookDetailPage useEffect 대기 X)
 - **PR #353** — `book-table` checkbox 체크 시 sidebar transition (notes-table:561 패턴 정합)
 - **PR #354** — Trash All view에 Display panel groupBy 정합 (하드코딩 해제)
@@ -45,53 +50,51 @@
 
 ---
 
-## 🔴 P0 — 즉시 (cross-machine 진입점, 2026-05-17 밤)
+## 🔴 P0 — 즉시 (cross-machine 진입점, 2026-05-18 오전)
 
-### 1. **Wiki Delete = hard delete → soft delete 패턴 변경** (사용자 결정 받음 — 다음 PR 핵심 작업, ~5 파일)
-사용자 보고 2026-05-17 밤: "stub는 삭제하면 자동으로 완전 삭제가 되어버리는 건가??"
+### 1. **Wiki Template slash insert** (PR #358 후속 polish, ~3 파일)
+사용자 결정 받음: "slash insert + 생성 picker 둘 다". 이번 PR에 생성 picker만 구현됨. slash insert는 분리.
 
 **현황**:
-- `lib/store/slices/wiki-articles.ts:156` `deleteWikiArticle()` = **hard delete** (filter + entityEvents cascade + sticker membership cascade)
-- 현재 Wiki Board ContextMenu / Wiki Detail "Delete article" 버튼 → `deleteWikiArticle` 호출 (hard delete 직행, trash 거치지 않음)
+- PR #358 — WikiTemplatePicker dialog ("+ Article" → picker → 새 article 생성). article level 전체 apply.
+- slash insert path 미구현 — Wiki article 본문 안에서 template blocks만 inline insert.
 
-**Note 패턴 (정합 reference, `lib/store/slices/notes.ts`)**:
-- `toggleTrash(id)` = soft trash (trashed:true + trashedAt:now())
-- `deleteNote(id)` = hard delete (Trash 안에서만 호출)
-
-**변경 범위**:
-- `components/views/wiki-list.tsx` `WikiArticleMenuItems.onDelete` 호출 → `updateWikiArticle(id, {trashed:true, trashedAt:now()})`
-- `components/side-panel/wiki-article-detail-panel.tsx` "Delete article" 버튼 → 동일
-- `components/views/wiki-view.tsx:1400` `onDeleteArticle` callback 검토 (board context menu가 통과하는 path)
-- 선택: wiki-articles slice에 `trashWikiArticle(id)` helper (의도 명확화)
-- 선택: `WikiArticle.trashedAt?: string | null` 필드 추가 (Note 정합, 현재 wiki는 trashed만)
-- Trash 안에서 "Delete forever" → `deleteWikiArticle()` hard delete 그대로
-
-**Verify**:
-- Wiki Stub Delete → trash 안에 표시 → "Delete forever" 클릭 → hard delete (entityEvents + sticker cascade)
-- 기존 hard-deleted wiki는 복구 불가 (이미 사라짐, 데이터 손실 이미 발생)
-
-### 2. **Wiki Template 신설** (이전 P0 — 큰 작업, ~20 파일)
-사용자 보고: "위키에도 템플릿이 신설되어야 해. 맞지?"
-
-**현황**: `lib/types.ts:695` `NoteTemplate`만 있음. `WikiTemplate` 타입 자체 X. memory의 "WikiTemplate 통합 모델" 영구 결정은 코드 미구현.
-
-**범위**:
-- `lib/types.ts`: `WikiTemplate` 타입 (Title / blocks / categoryIds / labelId / aliases / infobox 등)
-- `lib/store/slices/wiki-templates.ts` 신규 (CRUD + events)
-- `lib/store/seeds.ts`: SEED_WIKI_TEMPLATES (Reference / Concept / Tutorial 등)
-- migration (`state.wikiTemplates` 초기화)
-- Wiki 사이드바: Templates entry 신규 (Notes Templates 패턴 정합)
-- WikiTemplatePicker (Wiki article 생성 시 template 선택 flow)
-- WikiTemplate Detail panel (4탭 사이드바)
-- Wiki 생성 시 template 적용 로직 (Note 패턴: blocks + infobox + categoryIds 복사)
+**범위 (~3 파일)**:
+- `components/wiki-editor/wiki-article-view.tsx` 또는 toolbar에 "+ Add block" / "From wiki template…" menu entry 추가
+- WikiTemplatePicker에 `mode: "create" | "insert"` prop 추가 — insert mode 시 `getWikiTemplateBlocksExpanded(id)` 호출 후 callback에 blocks 전달
+- wiki-article-view에서 blocks 받으면 `updateWikiArticle({ blocks: [...existing, ...templateBlocks] })` 또는 `addWikiBlock` 반복 호출. position은 cursor 또는 last block 다음 (단순화 가능)
 
 **참고 파일**:
-- `lib/types.ts:695` NoteTemplate 타입
-- `lib/store/slices/templates.ts` NoteTemplate slice
-- `lib/store/seeds.ts` SEED_TEMPLATES
-- `components/views/templates-view.tsx` (Notes Templates UI 패턴)
+- `components/wiki-template-picker.tsx` — picker dialog 컴포넌트
+- `lib/store/slices/wiki-templates.ts:148` `getWikiTemplateBlocksExpanded`
+- `lib/store/slices/wiki-articles.ts:addWikiBlock` / `updateWikiArticle`
+- `components/wiki-editor/wiki-article-view.tsx` — 편집 위치 + toolbar mount
 
-### 2. (선택) **Book Template 도입 가능성 논의**
+**위험 + 회피**:
+- WikiTemplatePicker가 wiki-view에 이미 mount됨. wiki-article-view에도 별도 instance — store/local state 분리 필요
+- blocks splice 시 sectionIndex / linksOut 재계산 의무 (updateWikiArticle 자동 처리)
+- block ids 충돌 — getWikiTemplateBlocksExpanded가 이미 genId 부여
+
+### 2. **나무위키 Infobox Tier 2-4 본격 고도화** (큰 작업, PRD 분리 권장)
+memory `docs/MEMORY.md:3362` "나무위키 Tier 2-4 — 사용자 결정으로 진행".
+
+**범위**:
+- 대표 이미지 + 캡션 (Person/Place/Software 등에 hero image)
+- 사용자 커스텀 preset 신규 ("Save as preset" 패턴)
+- preset별 더 풍부한 fields + 그룹핑 hierarchy
+- preset switching 시 partial preserve (어느 field 유지/덮어쓸지)
+
+**선행 작업**: `.omc/plans/wiki-infobox-tier-2-4-prd.md` 작성. 사용자 의도 명확화 후 PR 시리즈 분리.
+
+### 3. **Library Tags Detail panel** (~5 파일, PR #331 Files Detail 패턴 정합)
+영구 룰 "Library entity 4탭 사이드바" 적용. Wiki Templates Detail 패턴 그대로 mirror.
+
+**범위**:
+- `SidePanelContext`에 `"tag"`는 이미 있음 (PR #345 Labels panel과 동일 패턴)
+- TagDetailPanel 강화: Header (color dot + name) + Dates + Properties (Used by N notes / N wikis / N books) + Connections (cross-entity stat charts) + Actions (Rename / Merge / Delete)
+- 현재 TagDetailPanel 있지만 minimal — Library entity-uniformity 영구 룰 확장
+
+### 4. (선택) **Book Template 도입 가능성 논의**
 사용자 명시 "북에는 템플릿이 도입될 수 있을지 없을지 확신이 안 들어" — brainstorming 시작.
 
 **검토 사항**: Book의 본질은 큐레이션 묶음 (items[] + smartSources). Template = recipe 메타포 → Book에 적용 시 의미?
