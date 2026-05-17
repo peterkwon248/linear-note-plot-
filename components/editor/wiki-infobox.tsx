@@ -1,6 +1,7 @@
 "use client"
 
-import { useCallback, useMemo, useState } from "react"
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react"
+import { createPortal } from "react-dom"
 import { usePlotStore } from "@/lib/store"
 import type { WikiInfoboxEntry, WikiInfoboxPreset } from "@/lib/types"
 import { cn } from "@/lib/utils"
@@ -842,9 +843,71 @@ function PresetDropdown({
   inverted?: boolean
 }) {
   const def = getPresetDefinition(current)
+  const triggerRef = useRef<HTMLButtonElement>(null)
+  // 2026-05-18: dropdown menu를 createPortal로 document.body에 mount하고
+  // fixed positioning으로 그림 — parent의 `overflow-hidden`(line ~298)
+  // 영향을 받지 않고 전체 preset list (현재 17개) 표시 가능. viewport
+  // bottom 공간 부족 시 위로 flip + max-height + scroll. 사용자 시각
+  // 신호 (2026-05-18 dropdown clip 보고).
+  const [menuPos, setMenuPos] = useState<{ top: number; right: number; placement: "bottom" | "top" } | null>(null)
+  const MENU_WIDTH = 220
+  const MENU_MAX_HEIGHT = 440
+
+  useLayoutEffect(() => {
+    if (!open || !triggerRef.current) {
+      setMenuPos(null)
+      return
+    }
+    const rect = triggerRef.current.getBoundingClientRect()
+    const vh = window.innerHeight
+    const spaceBelow = vh - rect.bottom
+    const spaceAbove = rect.top
+    // Below 공간이 menu 전체 + 16px gap 못 담고 위가 더 크면 flip
+    const wantsHeight = Math.min(MENU_MAX_HEIGHT, vh - 32)
+    const placement: "bottom" | "top" =
+      spaceBelow < wantsHeight + 16 && spaceAbove > spaceBelow ? "top" : "bottom"
+    setMenuPos({
+      top: placement === "bottom" ? rect.bottom + 4 : Math.max(8, rect.top - wantsHeight - 4),
+      right: window.innerWidth - rect.right,
+      placement,
+    })
+  }, [open])
+
+  // ESC + viewport resize 시 재계산/close
+  useEffect(() => {
+    if (!open) return
+    const onResize = () => {
+      if (!triggerRef.current) return
+      const rect = triggerRef.current.getBoundingClientRect()
+      const vh = window.innerHeight
+      const spaceBelow = vh - rect.bottom
+      const spaceAbove = rect.top
+      const wantsHeight = Math.min(MENU_MAX_HEIGHT, vh - 32)
+      const placement: "bottom" | "top" =
+        spaceBelow < wantsHeight + 16 && spaceAbove > spaceBelow ? "top" : "bottom"
+      setMenuPos({
+        top: placement === "bottom" ? rect.bottom + 4 : Math.max(8, rect.top - wantsHeight - 4),
+        right: window.innerWidth - rect.right,
+        placement,
+      })
+    }
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onToggle()
+    }
+    window.addEventListener("resize", onResize)
+    window.addEventListener("scroll", onResize, true)
+    window.addEventListener("keydown", onKey)
+    return () => {
+      window.removeEventListener("resize", onResize)
+      window.removeEventListener("scroll", onResize, true)
+      window.removeEventListener("keydown", onKey)
+    }
+  }, [open, onToggle])
+
   return (
     <div className="relative">
       <button
+        ref={triggerRef}
         type="button"
         onClick={(e) => {
           e.stopPropagation()
@@ -864,18 +927,24 @@ function PresetDropdown({
         <span className={compact ? "max-w-[80px] truncate" : ""}>{def.label}</span>
         <CaretDown size={10} />
       </button>
-      {open && (
+      {open && menuPos && typeof document !== "undefined" && createPortal(
         <>
           {/* click-outside guard */}
           <div
-            className="fixed inset-0 z-30"
+            className="fixed inset-0 z-[60]"
             onClick={(e) => {
               e.stopPropagation()
               onToggle()
             }}
           />
           <div
-            className="absolute right-0 top-[calc(100%+4px)] z-40 min-w-[220px] max-h-[min(60vh,440px)] overflow-y-auto rounded-md border border-border bg-popover p-1.5 shadow-lg"
+            className="fixed z-[61] overflow-y-auto rounded-md border border-border bg-popover p-1.5 shadow-lg"
+            style={{
+              top: menuPos.top,
+              right: menuPos.right,
+              minWidth: `${MENU_WIDTH}px`,
+              maxHeight: `${MENU_MAX_HEIGHT}px`,
+            }}
             onMouseDown={(e) => e.stopPropagation()}
           >
             {INFOBOX_PRESETS.map((p) => {
@@ -906,7 +975,8 @@ function PresetDropdown({
               )
             })}
           </div>
-        </>
+        </>,
+        document.body,
       )}
     </div>
   )

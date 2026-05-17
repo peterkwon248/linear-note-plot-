@@ -47,6 +47,13 @@ export type WikiInfoboxPreset =
   | "work-game"
   | "event"
   | "concept"
+  // 2026-05-18 — 나무위키 정합 6 신규 preset
+  | "school"
+  | "animal"
+  | "software"
+  | "food"
+  | "vehicle"
+  | "sport-team"
 
 /** Item in a wiki article's collection (staging area for related material) */
 export interface WikiCollectionItem {
