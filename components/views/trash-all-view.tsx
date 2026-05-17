@@ -190,6 +190,12 @@ export function TrashAllView() {
   const storeTemplates = usePlotStore((s) => s.templates)
   const storeReferences = usePlotStore((s) => s.references)
   const storeAttachments = usePlotStore((s) => s.attachments)
+  // 2026-05-17 — Display panel grouping 설정 읽기. notes-table-view.tsx에서
+  // trash context로 mount되므로 viewStateByContext["trash"].groupBy 사용.
+  // "none" 이외 모든 값은 기본 KIND 섹션 (현재 패턴 유지).
+  const trashGroupBy = usePlotStore(
+    (s) => (s.viewStateByContext as Record<string, { groupBy?: string }>)?.trash?.groupBy ?? "kind",
+  )
 
   // entity-specific store actions (stable refs via Zustand)
   const toggleTrash = usePlotStore((s) => s.toggleTrash)
@@ -425,34 +431,61 @@ export function TrashAllView() {
         <div className="w-32 shrink-0 text-right text-note font-medium text-foreground/80">Trashed</div>
         <div className="w-32 shrink-0 text-right text-note font-medium text-foreground/80">Actions</div>
       </div>
-      {sections.map(({ kind, items }) => {
-        if (items.length === 0) return null
-        return (
-          <React.Fragment key={kind}>
-            <div className="sticky top-[33px] z-[9] flex items-center border-b border-border bg-secondary/30 px-5 py-1.5">
-              <span className="text-2xs uppercase tracking-wide font-medium text-muted-foreground">
-                {SECTION_TITLES[kind]}
-              </span>
-              <span className="ml-2 tabular-nums text-2xs text-foreground/50">{items.length}</span>
-            </div>
-            {items.map((item) => {
-              const key = `${kind}-${item.id}`
-              return (
-                <TrashRow
-                  key={key}
-                  kind={kind}
-                  item={item}
-                  isSelected={selectedKeys.has(key)}
-                  selectionActive={selectionActive}
-                  onToggleSelect={() => toggleSelect(key)}
-                  onRestore={() => handleRestore(kind, item.id, item.label)}
-                  onDelete={() => handleDelete(kind, item.id, item.label)}
-                />
-              )
-            })}
-          </React.Fragment>
+      {/* 2026-05-17 — Display panel grouping 설정 정합 (사용자 시그널 "노
+          그룹핑 상태인데 왜 트래쉬에서 카인드별로 리스트업"). trash context
+          viewState의 groupBy 읽어 분기:
+            - "kind" (default) → KIND 섹션 헤더 + 그룹
+            - "none" 또는 기타 → flat 리스트
+          영구 룰: Display panel 설정은 모든 view에 일관 적용. */}
+      {trashGroupBy === "none" ? (
+        // Flat list — sections를 평탄화, KIND 헤더 없음.
+        sections.flatMap(({ kind, items }) =>
+          items.map((item) => {
+            const key = `${kind}-${item.id}`
+            return (
+              <TrashRow
+                key={key}
+                kind={kind}
+                item={item}
+                isSelected={selectedKeys.has(key)}
+                selectionActive={selectionActive}
+                onToggleSelect={() => toggleSelect(key)}
+                onRestore={() => handleRestore(kind, item.id, item.label)}
+                onDelete={() => handleDelete(kind, item.id, item.label)}
+              />
+            )
+          })
         )
-      })}
+      ) : (
+        sections.map(({ kind, items }) => {
+          if (items.length === 0) return null
+          return (
+            <React.Fragment key={kind}>
+              <div className="sticky top-[33px] z-[9] flex items-center border-b border-border bg-secondary/30 px-5 py-1.5">
+                <span className="text-2xs uppercase tracking-wide font-medium text-muted-foreground">
+                  {SECTION_TITLES[kind]}
+                </span>
+                <span className="ml-2 tabular-nums text-2xs text-foreground/50">{items.length}</span>
+              </div>
+              {items.map((item) => {
+                const key = `${kind}-${item.id}`
+                return (
+                  <TrashRow
+                    key={key}
+                    kind={kind}
+                    item={item}
+                    isSelected={selectedKeys.has(key)}
+                    selectionActive={selectionActive}
+                    onToggleSelect={() => toggleSelect(key)}
+                    onRestore={() => handleRestore(kind, item.id, item.label)}
+                    onDelete={() => handleDelete(kind, item.id, item.label)}
+                  />
+                )
+              })}
+            </React.Fragment>
+          )
+        })
+      )}
       {/* Floating bulk action bar — mirrors Notes/Wiki list selection UX. */}
       {selectionActive && (
         <div className="sticky bottom-4 z-20 mx-auto mt-4 flex w-fit items-center gap-2 rounded-lg border border-border bg-popover/95 px-3 py-2 shadow-lg backdrop-blur">
