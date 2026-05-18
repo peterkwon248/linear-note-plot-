@@ -121,14 +121,14 @@ export function HatnoteEditDialog({
                 <SelectContent>
                   {TYPE_OPTIONS.map((opt) => (
                     <SelectItem key={opt.value} value={opt.value}>
-                      <div className="flex flex-col gap-0.5">
-                        <span className="text-sm">{opt.label}</span>
-                        <span className="text-2xs text-muted-foreground">{opt.description}</span>
-                      </div>
+                      <span className="text-sm">{opt.label}</span>
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
+              <p className="mt-1.5 text-xs text-muted-foreground">
+                {TYPE_OPTIONS.find((o) => o.value === type)?.description}
+              </p>
             </div>
 
             <div>
