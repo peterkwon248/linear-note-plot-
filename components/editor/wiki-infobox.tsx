@@ -1,6 +1,6 @@
 "use client"
 
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react"
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from "react"
 import { createPortal } from "react-dom"
 import { usePlotStore } from "@/lib/store"
 import type { WikiInfoboxEntry, WikiInfoboxPreset } from "@/lib/types"
@@ -190,8 +190,14 @@ export function WikiInfobox({
     setIsEditing(false)
   }, [entries])
 
-  const handleAdd = useCallback(() => {
-    setLocalEntries((prev) => [...prev, { key: "", value: "", type: "field" }])
+  // PR-A — position param lets inline group-aware "+ Add field" buttons
+  // insert at a specific spot. Footer Add field (no arg) still pushes to the end.
+  const handleAdd = useCallback((position?: number) => {
+    setLocalEntries((prev) => {
+      const newField: WikiInfoboxEntry = { key: "", value: "", type: "field" }
+      if (position === undefined || position >= prev.length) return [...prev, newField]
+      return [...prev.slice(0, position), newField, ...prev.slice(position)]
+    })
   }, [])
 
   const handleAddSection = useCallback(() => {
@@ -503,71 +509,109 @@ export function WikiInfobox({
           </div>
         </div>
         <div className="space-y-2 p-3">
-          {localEntries.map((entry, i) => {
-            if (entry.type === "section") {
-              return (
-                <div key={i} className="flex items-start gap-2">
-                  <input
-                    value={entry.key}
-                    onChange={(e) => handleChange(i, "key", e.target.value)}
-                    placeholder="Section name"
-                    className="flex-1 rounded border border-border bg-secondary/30 px-2 py-1 text-[calc(0.75em*var(--scale-infobox,1))] font-semibold uppercase tracking-wider text-foreground/80 outline-none focus:ring-1 focus:ring-ring"
-                  />
+          {(() => {
+            // PR-A — group-aware row sequence. Walk localEntries once, track
+            // which group each entry belongs to, and emit an inline "+ Add
+            // field" affordance at every group break (last field before a
+            // group-header, or after the final field). The button's insert
+            // position lands inside the *current* group at the break, so
+            // "Genre 아래 (top-level)" stays top-level instead of leaking into
+            // ADDITIONAL INFO.
+            let currentGroup = ""
+            const out: ReactNode[] = []
+            for (let i = 0; i < localEntries.length; i++) {
+              const entry = localEntries[i]
+              if (entry.type === "group-header") {
+                currentGroup = entry.key
+                out.push(
+                  <GroupHeaderEditRow
+                    key={`row-${i}`}
+                    entry={entry}
+                    onKeyChange={(v) => handleChange(i, "key", v)}
+                    onColorChange={(c) => handleGroupColorChange(i, c)}
+                    onToggleDefault={() => handleGroupDefaultCollapsedToggle(i)}
+                    onRemove={() => handleRemove(i)}
+                  />,
+                )
+              } else if (entry.type === "section") {
+                out.push(
+                  <div key={`row-${i}`} className="flex items-start gap-2">
+                    <input
+                      value={entry.key}
+                      onChange={(e) => handleChange(i, "key", e.target.value)}
+                      placeholder="Section name"
+                      className="flex-1 rounded border border-border bg-secondary/30 px-2 py-1 text-[calc(0.75em*var(--scale-infobox,1))] font-semibold uppercase tracking-wider text-foreground/80 outline-none focus:ring-1 focus:ring-ring"
+                    />
+                    <button
+                      onClick={() => handleRemove(i)}
+                      className="shrink-0 rounded p-1 text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors"
+                      title="Remove section"
+                    >
+                      <PhX size={14} />
+                    </button>
+                  </div>,
+                )
+              } else {
+                out.push(
+                  <div key={`row-${i}`} className="flex items-start gap-2">
+                    <input
+                      value={entry.key}
+                      onChange={(e) => handleChange(i, "key", e.target.value)}
+                      placeholder="Key"
+                      className="w-[100px] shrink-0 rounded border border-border bg-background px-2 py-1 text-[calc(0.875em*var(--scale-infobox,1))] outline-none focus:ring-1 focus:ring-ring"
+                    />
+                    <input
+                      value={entry.value}
+                      onChange={(e) => handleChange(i, "value", e.target.value)}
+                      placeholder="Value"
+                      className="flex-1 rounded border border-border bg-background px-2 py-1 text-[calc(0.875em*var(--scale-infobox,1))] outline-none focus:ring-1 focus:ring-ring"
+                    />
+                    <button
+                      onClick={() => handleRemove(i)}
+                      className="shrink-0 rounded p-1 text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors"
+                    >
+                      <PhX size={14} />
+                    </button>
+                  </div>,
+                )
+              }
+
+              const next = localEntries[i + 1]
+              const isGroupEnd = !next || next.type === "group-header"
+              if (isGroupEnd) {
+                const insertPos = i + 1
+                const label = currentGroup
+                  ? `Add field to ${currentGroup}`
+                  : "Add field"
+                out.push(
                   <button
-                    onClick={() => handleRemove(i)}
-                    className="shrink-0 rounded p-1 text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors"
-                    title="Remove section"
+                    key={`add-${i}`}
+                    onClick={() => handleAdd(insertPos)}
+                    className="flex items-center gap-1.5 pl-1 text-[calc(0.75em*var(--scale-infobox,1))] text-muted-foreground/70 hover:text-foreground transition-colors"
                   >
-                    <PhX size={14} />
-                  </button>
-                </div>
-              )
+                    <PhPlus size={12} />
+                    {label}
+                  </button>,
+                )
+              }
             }
+            return out
+          })()}
 
-            if (entry.type === "group-header") {
-              return (
-                <GroupHeaderEditRow
-                  key={i}
-                  entry={entry}
-                  onKeyChange={(v) => handleChange(i, "key", v)}
-                  onColorChange={(c) => handleGroupColorChange(i, c)}
-                  onToggleDefault={() => handleGroupDefaultCollapsedToggle(i)}
-                  onRemove={() => handleRemove(i)}
-                />
-              )
-            }
-
-            return (
-              <div key={i} className="flex items-start gap-2">
-                <input
-                  value={entry.key}
-                  onChange={(e) => handleChange(i, "key", e.target.value)}
-                  placeholder="Key"
-                  className="w-[100px] shrink-0 rounded border border-border bg-background px-2 py-1 text-[calc(0.875em*var(--scale-infobox,1))] outline-none focus:ring-1 focus:ring-ring"
-                />
-                <input
-                  value={entry.value}
-                  onChange={(e) => handleChange(i, "value", e.target.value)}
-                  placeholder="Value"
-                  className="flex-1 rounded border border-border bg-background px-2 py-1 text-[calc(0.875em*var(--scale-infobox,1))] outline-none focus:ring-1 focus:ring-ring"
-                />
-                <button
-                  onClick={() => handleRemove(i)}
-                  className="shrink-0 rounded p-1 text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors"
-                >
-                  <PhX size={14} />
-                </button>
-              </div>
-            )
-          })}
-          <div className="flex items-center gap-4">
+          {/* Empty-state fallback: no entries → still need a way to add the first field */}
+          {localEntries.length === 0 && (
             <button
-              onClick={handleAdd}
+              onClick={() => handleAdd()}
               className="flex items-center gap-1.5 text-[calc(0.875em*var(--scale-infobox,1))] text-muted-foreground hover:text-foreground transition-colors"
             >
               <PhPlus size={14} />
               Add field
             </button>
+          )}
+
+          {/* Structural additions stay at the bottom — they reshape the layout
+              rather than fill an existing region. */}
+          <div className="flex items-center gap-4 pt-1 border-t border-border-subtle/40 mt-2">
             <button
               onClick={handleAddSection}
               className="flex items-center gap-1.5 text-[calc(0.875em*var(--scale-infobox,1))] text-muted-foreground hover:text-foreground transition-colors"
