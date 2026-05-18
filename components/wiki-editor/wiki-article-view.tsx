@@ -24,6 +24,7 @@ import { setActiveCategoryView } from "@/lib/wiki-view-mode"
 import { setActiveRoute } from "@/lib/table-route"
 import { useWikiBlockActions } from "@/hooks/use-wiki-block-actions"
 import { WikiBreadcrumb } from "./wiki-breadcrumb"
+import { WikiHatnotes } from "./wiki-hatnotes"
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "@/components/ui/resizable"
 import type { ImperativePanelGroupHandle } from "react-resizable-panels"
 import { fontScalesToStyle, emScale } from "@/lib/wiki-font-scales"
@@ -660,6 +661,15 @@ export function WikiArticleView({ articleId, editable = false, preview = false, 
             </p>
           ) : null}
 
+
+          {/* PR-E1 — Hatnotes (Wikipedia-style small italic notices). Mounted
+              above categories so they sit just under aliases. View mode hides
+              entirely when empty (handled inside the component). */}
+          <WikiHatnotes
+            articleId={article.id}
+            hatnotes={article.hatnotes ?? []}
+            editable={editable}
+          />
 
           {/* Category tag row */}
           <InlineCategoryTags articleId={articleId} categoryIds={article.categoryIds ?? []} editable={editable} />

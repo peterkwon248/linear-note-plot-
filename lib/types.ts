@@ -29,6 +29,21 @@ export interface InfoboxHero {
   alt?: string
 }
 
+/**
+ * Tier 2 (PR-E1): Wiki article hatnote. Wikipedia/나무위키 표준 — italic 회색
+ * indent 1.6em. 5종: "above"(상위 문서), "below"(하위 문서), "distinguish"(다른
+ * 뜻), "main"(주 문서), "see-also"(같이 보기). text는 free-form,
+ * targetArticleId는 optional (자동 link, 없으면 plain text).
+ */
+export type HatnoteType = "above" | "below" | "distinguish" | "main" | "see-also"
+
+export interface Hatnote {
+  id: string
+  type: HatnoteType
+  text: string
+  targetArticleId?: string | null
+}
+
 export interface WikiInfoboxEntry {
   key: string
   value: string
@@ -488,6 +503,8 @@ export interface WikiArticle {
    * "Used by N wiki articles" reverse-lookup용 (NoteTemplate 정합, PR #322).
    * slash insert는 article level이 아니라 inline block insert라 templateId 안 set. */
   templateId?: string
+  /** Tier 2 (PR-E1): Article hatnotes — top-level small notices (Wikipedia style). */
+  hatnotes?: Hatnote[]
   createdAt: string
   updatedAt: string
 }

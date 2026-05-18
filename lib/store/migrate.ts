@@ -2244,5 +2244,10 @@ export function migrate(persistedState: unknown): PlotState {
   // needed. Version bump alone is the migration (sentinel for cache safety).
   console.log(`[migrate] v140→v141: infoboxHero field opt-in (no data change)`)
 
+  // v141 → v142: PR-E1. Hatnotes field opt-in (no data change).
+  // WikiArticle.hatnotes is optional and defaults to undefined; no existing-data
+  // migration needed. Version bump alone is the migration (sentinel for cache safety).
+  console.log(`[migrate] v141→v142: hatnotes field opt-in (no data change)`)
+
   return state as unknown as PlotState
 }
