@@ -6,6 +6,83 @@
 
 ---
 
+## 2026-05-18 (저녁) — 집/Windows, **i18n + EmptyHint + drag-column fix bundle + PR-C Hero Image + PR-D 머지 (3 PR squash 머지)**
+
+> 🎯 **다음 즉시 액션 (3 후보 중 택일)**:
+> 1. **PR-E (Phase 5+ 후보)** — Hatnote / Ambox 자동 배너 / themeColor cascade / SectionTemplate / preset import-export JSON 중 사용자 우선순위 결정. PRD `.omc/plans/wiki-infobox-tier-2-4-prd.md` section 5 "Out of Scope" 참고.
+> 2. **dead code 정리** — `components/note-detail-panel.tsx` (어디서도 import 안 됨) + build TypeScript 부채 10개 (`insights-view.tsx:268` `noteEvents` 등). 작은 cleanup PR.
+> 3. **WikiTemplate detail panel hero edit UI** — PR-C에서 WikiTemplate.infoboxHero 필드만 추가, edit UI 미완. template detail panel에 InfoboxHeroPicker 통합 (~3 파일).
+>
+> **이번 세션 사용자 의도** (그대로 인용):
+> 1. "야 우선 밑줄부터가 업노트가 훨씬 더 부드러운 느낌(우리는 ...인 느낌)" → EmptyHint dotted → solid + font inherit + position absolute (cursor 분리)
+> 2. "야 이거 그리고 영어버전인데 왜 한글로 설명이 나오는 거야??" → WikiTemplate seed 8 description 영어 통일 (PR #358 잔재)
+> 3. "엔터를 치자마자 나와서 깜짝 놀랐어" → EmptyHint trigger 조건 강화 (paraCount === 1 + paraHasText === false만 hint 표시)
+> 4. "drag로 위치 바꾸려고 하면 컬럼이 만들어져서" → block-drag-overlay regular block side-drop column 생성 폐기 (영구 룰 #8 정합)
+> 5. PR-C Hero Image — "위키의 infobox에서는 에디트를 눌러도 이미지 파일 삽입 기능이 없네?" → PRD Phase 3 본격 구현
+>
+> **다음 머신에서 처음 시작 시**:
+> 1. `git pull origin main` (latest HEAD = PR #367 squash 머지)
+> 2. `npm install && npm run dev` (port 3002, hard refresh)
+> 3. Console v141 migration 확인 (`[migrate] v140→v141: infoboxHero field opt-in (no data change)`)
+> 4. 위 P0 후보 중 선택 또는 사용자 새 시그널
+>
+> **머신**: 집 (Windows)
+> **현재 main HEAD**: PR #365 + PR #363 + PR #367 squash 누적
+> **Store version**: 141 (PR-C v140→v141 sentinel)
+> **PR #366**: closed (PR #363 머지 시 base 사라져 자동 close → 같은 head로 PR #367 신규 생성 후 base=main + conflict resolve로 머지)
+
+### 완료 (이번 세션 3 PR squash 머지)
+
+#### PR #365 — fix bundle (4 commits)
+1. `19275ef` — SEED_WIKI_TEMPLATES 8 description 영어 통일 (PR #358 잔재) + EmptyHint trigger 1차 fix
+2. `96a973d` — EmptyHint trigger 재수정 (paraCount === 1 && !paraHasText) — heading 무시
+3. `cafd7a0` — EmptyHint UpNote 스타일 (position absolute / font inherit / solid underline / placeholder opacity)
+4. `2f074fc` — block-drag-overlay regular block 좌/우 edge column 자동 생성 폐기 (영구 룰 #8)
+
+#### PR #363 (PR-D) — UserInfoboxPreset (Save as preset, Phase 4)
+사용자 verify 9단계 manual 미실행 — 코드 logic은 PRD 명세대로 정확. main 머지 후 reload 검증 가능.
+
+#### PR #367 (PR-C 재타겟) — Hero Image (Phase 3)
+원래 PR #366 (base PR-D) 였으나 PR #363 머지 시 자동 closed. 새 PR #367 (base=main) 재생성 + conflict resolve.
+- `InfoboxHero` type + 3 entity optional 필드
+- v140→v141 sentinel migration
+- WikiInfobox hero slot (figure + caption + alt + hover edit/remove)
+- 신규 `infobox-hero-picker.tsx` (URL+caption+alt dialog)
+- 5 caller wire (wiki-article-view + note-editor + encyclopedia ×2 + reader)
+
+### 영구 LOCKED 결정 (이번 세션, #74-#78)
+
+- **#74. EmptyHintPlaceholder trigger = top-level paragraph 1개 + 비어있을 때만**: heading 무시 (자체 placeholder). 본문 paragraph 2개 이상 또는 text 있으면 hint 즉시 사라짐. ProseMirror Decoration plugin 진입 short-circuit.
+- **#75. ProseMirror Decoration.widget placeholder UX 패턴**: inline 위치는 cursor가 widget 뒤로 가는 충돌 발생. `position: absolute; left: 0` + 부모 paragraph에 `position: relative` (Decoration.node) 로 widget을 layout에서 빼면 cursor 자연 위치. UpNote/Notion 패턴.
+- **#76. Block drag side-drop column 자동 생성 폐기 (영구 룰 #8 재확인)**: regular block 좌/우 edge → column 생성은 사용자 직관 위반. column 만들기는 slash `/2 Columns` 또는 Insert (+) 메뉴 명시 action만. columnsBlock target drop (이미 만든 column에 insert)은 유지.
+- **#77. Hero image = 별도 필드 (entries 외)**: 의미 명확 + 1개 제한 자연. 3 entity cross-entity. 향후 banner image 등 다른 visual asset도 동일 패턴.
+- **#78. Cross-entity hero shape 통일**: WikiArticle/Note/WikiTemplate 모두 동일 `InfoboxHero { url, caption?, alt? }`. Template → Article 변환 시 자동 복사. 영구 룰 #68 확장.
+
+### 기술 학습 (영구)
+
+- **TipTap editor plugin closure는 HMR로 갱신 안 됨**: ProseMirror Plugin instance가 editor에 한 번 등록되면 props.decorations 함수 closure가 박힘. HMR rebuild는 되지만 editor instance 유지로 옛 closure 그대로. **Full reload (Ctrl+Shift+R) 필수**. 사용자가 fix 안 보인다고 보고 시 reload 부탁이 첫 step.
+- **Stacked PR + base branch squash 머지 패턴 사고**: PR-C가 PR-D base였는데 PR-D squash 머지 시 PR-C의 base branch (`claude/save-as-preset-D`) 사라짐 → PR-C 자동 closed. closed PR은 base 변경 불가, reopen도 불가 (deleted base branch). **새 PR을 head 그대로 + base=main으로 생성 + conflict resolve (`git merge origin/main` + manual resolve)** 가 답. PR-D squash 머지로 인해 동일 변경이 main에 들어가 PR-C branch의 PR-D commits와 line-level conflict.
+- **EmptyHintPlaceholder trigger 정확 조건**: `doc.forEach`로 top-level paragraph만 카운트, `paraCount === 1 && !paraHasText`만 hint. `childCount > 1` 조건은 heading + paragraph로 빈 신규 노트도 차단 — 의도와 정반대 사고.
+- **WikiTemplate seed description i18n 일관성**: 다이얼로그 본문/버튼/footer 영어인데 description만 한글이면 한/영 혼합. 영구 룰 "i18n 영어 통일" — 다음 entity seed 추가 시 description부터 영어.
+
+### Watch Out (다음 세션 주의사항)
+
+- 🔴 **PR-D verify 미완**: 사용자 직접 9단계 (Save as preset / dropdown My Presets 섹션 / cross-entity Note / hover delete / reload persist) 안 함. main 머지 후 reload 시 manual smoke test 권장. 코드 logic은 PRD 명세대로 정확 — UX 미세 조정 시 follow-up.
+- 🟡 **WikiTemplate detail panel hero edit UI 미완**: PR-C에서 WikiTemplate.infoboxHero 필드만 추가, edit UI 별도. template detail panel에 InfoboxHeroPicker mount 필요 (~3 파일 후속).
+- 🟢 **사용자 IDB stale**: 기존 사용자 IDB에 한글 WikiTemplate description 그대로 (PR #365 seeds 영어 변환은 fresh init만 적용). IDB clear 또는 backfill migration (v141 → v142) 후속.
+- 🟢 **build TypeScript 부채 10개** 그대로. 별도 cleanup PR 후보.
+
+### 환경 변경
+
+- Main HEAD: PR #365 + PR #363 + PR #367 squash 누적
+- Store version: 140 → **141** (PR-C v140→v141 sentinel)
+- 신규 type: `InfoboxHero { url, caption?, alt? }`
+- 신규 entity 필드: `WikiArticle.infoboxHero?` + `Note.wikiInfoboxHero?` + `WikiTemplate.infoboxHero?`
+- 신규 컴포넌트: `components/editor/infobox-hero-picker.tsx`
+- 영구 룰 추가: #74-#78
+
+---
+
 ## 2026-05-18 (오후) — 집/Windows, **Infobox UX 종합 대규모 — PR #361/#362/#363 (3 PR, 22 commit, ~700+ 줄)**
 
 > 🎯 **다음 즉시 액션**: **PR #363 (PR-D, Save as preset / UserInfoboxPreset) manual verify 후 squash merge** → 그 후 PR-C (Hero Image, Phase 3) 또는 다른 사용자 시그널.

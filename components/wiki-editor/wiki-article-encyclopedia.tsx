@@ -257,7 +257,7 @@ export function WikiArticleEncyclopedia({ article, isEditing, onBack, collapseAl
         {article.contentAlign === "center" ? (
           <>
             {/* Center mode: stack vertically — Infobox → TOC → blocks */}
-            {((article.infobox?.length ?? 0) > 0 || isEditing) && (
+            {((article.infobox?.length ?? 0) > 0 || isEditing || article.infoboxHero) && (
               <div className="mb-6 max-w-sm">
                 <WikiInfobox
                   noteId={article.id}
@@ -288,6 +288,15 @@ export function WikiArticleEncyclopedia({ article, isEditing, onBack, collapseAl
                         }
                       : undefined
                   }
+                  hero={article.infoboxHero ?? null}
+                  onHeroChange={
+                    isEditing
+                      ? (hero) =>
+                          usePlotStore
+                            .getState()
+                            .updateWikiArticle(article.id, { infoboxHero: hero ?? undefined })
+                      : undefined
+                  }
                 />
               </div>
             )}
@@ -300,7 +309,7 @@ export function WikiArticleEncyclopedia({ article, isEditing, onBack, collapseAl
         ) : (
           <>
             {/* Left mode: float infobox right, TOC inline */}
-            {((article.infobox?.length ?? 0) > 0 || isEditing) && (
+            {((article.infobox?.length ?? 0) > 0 || isEditing || article.infoboxHero) && (
               <div className="float-right ml-6 mb-4 w-[320px]">
                 <WikiInfobox
                   noteId={article.id}
@@ -329,6 +338,15 @@ export function WikiArticleEncyclopedia({ article, isEditing, onBack, collapseAl
                               : {}),
                           })
                         }
+                      : undefined
+                  }
+                  hero={article.infoboxHero ?? null}
+                  onHeroChange={
+                    isEditing
+                      ? (hero) =>
+                          usePlotStore
+                            .getState()
+                            .updateWikiArticle(article.id, { infoboxHero: hero ?? undefined })
                       : undefined
                   }
                 />

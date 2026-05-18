@@ -15,6 +15,20 @@ export type WikiLayout = "default" | "encyclopedia"
 /** Activity Bar spaces — top-level navigation */
 export type ActivitySpace = "home" | "notes" | "wiki" | "calendar" | "ontology" | "library" | "books"
 
+/**
+ * Tier 1-3 (PR-C) — Infobox hero image. Rendered as a top-level `<figure>` at
+ * the very top of the infobox (above preset header / entries). One per entity
+ * (no gallery); `infobox-hero-picker.tsx` provides the URL+caption+alt input.
+ *
+ * Phase 1 = URL only (external image). Phase 2 (future) = file upload via the
+ * attachment API.
+ */
+export interface InfoboxHero {
+  url: string
+  caption?: string
+  alt?: string
+}
+
 export interface WikiInfoboxEntry {
   key: string
   value: string
@@ -435,6 +449,8 @@ export interface WikiArticle {
   infoboxHeaderColor?: string | null
   /** PR1: domain preset (drives default header color and seed entries). Default "custom". */
   infoboxPreset?: WikiInfoboxPreset
+  /** Tier 1-3 (PR-C): Hero image at the top of the infobox. One per article (no gallery). */
+  infoboxHero?: InfoboxHero
   blocks: WikiBlock[]
   sectionIndex: WikiSectionIndex[]
   tags: string[]
@@ -549,6 +565,8 @@ export interface Note {
   // undefined = "custom" (free-form, 사용자가 자유롭게 fields 추가)
   infoboxPreset?: WikiInfoboxPreset
   infoboxHeaderColor?: string | null
+  /** Tier 1-3 (PR-C, cross-entity): Hero image for the note's wiki-style infobox. */
+  wikiInfoboxHero?: InfoboxHero
 
   /* ── References ─────────────────────────────── */
   referenceIds: string[]    // linked Reference IDs (bibliography)
@@ -775,6 +793,8 @@ export interface WikiTemplate {
   infobox: WikiInfoboxEntry[]             // 미리 채워진 infobox entries
   infoboxPreset?: WikiInfoboxPreset       // person/place/concept 등 — 자동 적용
   infoboxHeaderColor?: string | null      // infobox header bg color override
+  /** Tier 1-3 (PR-C): Template seed hero image — applied to new articles spawned from this template. */
+  infoboxHero?: InfoboxHero
   // ── 분류 메타 defaults (선택, 적용 시 article.* 시작값) ──
   defaultCategoryIds?: string[]
   defaultLabelId?: string | null

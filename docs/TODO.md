@@ -3,31 +3,43 @@
 > 우선순위 기반 작업 목록. **P0 = 다음 세션 즉시 시작점** (NEXT-ACTION.md 폐지, 2026-05-12).
 > 완료 항목은 즉시 삭제 또는 "완료" 섹션으로 이동.
 
-**마지막 갱신**: 2026-05-18 (오후) — Infobox UX 종합 (PR #361/#362/#363) — PRD Phase 1+2+4 완료, PR #363 verify 대기
+**마지막 갱신**: 2026-05-18 (저녁) — fix bundle (PR #365) + PR-D 머지 (PR #363) + PR-C Hero Image (PR #367) 3 PR squash. PRD Phase 1+2+3+4 모두 완료.
 
 ---
 
-## 🔴 P0 — 즉시 (cross-machine 진입점, 2026-05-18 오후)
+## 🔴 P0 — 즉시 (cross-machine 진입점, 2026-05-18 저녁)
 
-### 1. **PR #363 manual verify + squash merge** (Save as preset / UserInfoboxPreset)
+### 1. **PR-E (Phase 5+ 후보 중 우선순위 결정)** — Hatnote / Ambox / themeColor / SectionTemplate / preset import-export
 
-PR #363 — UserInfoboxPreset 신규 (PRD Phase 4, ~10 파일, persist v140). 다음 머신에서 fresh dev로 10단계 verify 후 squash merge.
+PRD `.omc/plans/wiki-infobox-tier-2-4-prd.md` section 5 "Out of Scope" 후보:
+- **Hatnote** (상위/하위/다른뜻/Main/See-also 배너) — BRAINSTORM Top 7 #1
+- **Ambox 자동 배너** (Stub/Orphan/Unsourced 5색 severity) — BRAINSTORM Top 7 #2
+- **themeColor 시스템** (light/dark CSS variable cascade) — BRAINSTORM Top 7 #4
+- **편집 히스토리 v1** (WikiArticle.history[] + 편집 요약) — BRAINSTORM Top 7 #6
+- **SectionTemplate** (그룹만 재사용, 3-tier 시스템 Tier 3)
+- **Preset import/export JSON** (Phase 4 후속)
 
-**Verify path** (다른 머신):
-```bash
-git pull origin main                            # PR #361 + #362 main 반영
-git fetch origin claude/save-as-preset-D        # PR-D branch 받기
-git checkout claude/save-as-preset-D
-npm install                                     # 신규 worktree시
-npm run dev                                     # port 3002
-```
+사용자 시그널 또는 우선순위 결정 후 진행. 별도 PRD 분리 권장 (BRAINSTORM-2026-04-14-wiki-ultra.md).
 
-**Verify 체크리스트**:
-1. `/wiki` article → preset Person 선택 → fields/색 customize
-2. Edit footer **"Save as preset…"** click → dialog → name "내 인물 v2" 저장
-3. Preset dropdown → "Built-in" 섹션 위 또는 아래에 **"My Presets" 섹션**에 "내 인물 v2" 등장
-4. 다른 article에서 "My Presets > 내 인물 v2" 선택 → 같은 layout + 색 자동 적용
-5. `/notes` Note에서도 동일 dropdown + "Save as preset…" 가능 (cross-entity)
+### 2. **WikiTemplate detail panel hero edit UI** (~3 파일, PR-C 후속 polish)
+
+PR-C에서 `WikiTemplate.infoboxHero?` 필드만 추가, edit UI 미완. template detail panel에 `InfoboxHeroPicker` mount + figure render 추가.
+
+**범위**:
+- `components/side-panel/wiki-template-detail-panel.tsx` — hero 표시 + edit picker mount
+- 또는 `/wiki/templates/{id}` 페이지에 InfoboxHeroPicker integration
+- WikiTemplate seed 8개 중 일부 (Person/Place) 에 default hero 추가 가능
+
+### 3. **dead code 정리 + build TypeScript 부채** (작은 cleanup PR)
+
+- `components/note-detail-panel.tsx` — 어디서도 import 안 됨 (사전 부채)
+- build TS 부채 10개: `insights-view.tsx:268` `noteEvents` 등 (memory에 목록)
+
+### 4. **사용자 IDB stale WikiTemplate description** (선택, backfill migration)
+
+PR #365 seeds.ts 영어 통일은 fresh init만 적용. 기존 사용자 IDB의 한글 description 그대로. v141 → v142 backfill migration 가능:
+- seed id 매칭되는 wikiTemplate description을 SEED_WIKI_TEMPLATES에서 re-pull
+- 사용자 customize한 description은 보존 옵션 (id로 매칭 시 영어 default가 덮어쓰면 위반)
 6. user preset hover → 🗑 delete → confirm → preset 삭제. 그 preset 사용 article은 "Custom" fallback (entries 보존)
 7. Console v139→v140 migration log 확인 (`[migrate] v139→v140: initialized userInfoboxPresets ([])`)
 8. Page reload → My Presets persist 확인 (Array defense 작동)
@@ -38,30 +50,30 @@ npm run dev                                     # port 3002
 
 PRD `.omc/plans/wiki-infobox-tier-2-4-prd.md` §1 Phase 3.
 
-**범위**:
-- `lib/types.ts`: `InfoboxHero { url, caption?, alt? }` type 신규 + Wiki/Note/WikiTemplate에 `infoboxHero?` optional 필드 (3 entity 모두 cross-entity 자동)
-- `lib/store/migrate.ts`: v140→v141 (default undefined, backward compat)
-- `lib/store/index.ts`: persist version 141
-- `components/editor/wiki-infobox.tsx`: 인포박스 최상단 `<figure>` slot — img + italic caption + edit/remove 호버 액션
-- 신규 `components/editor/infobox-hero-picker.tsx`: URL input + caption + alt dialog
-- 기존 `updateNote`/`updateWikiArticle` generic patch로 처리 (별도 setter 없이)
+---
 
-**위험 + 회피**:
-- 이미지 URL 자유 입력 → XSS 위험 X (img src 단독, sanitize 불필요 단 사용자 본인 URL만)
-- 후속 image upload는 PR-C 외 (별도 Phase) — URL 입력만 우선
+## ✅ 최근 완료 (2026-05-18 저녁) — fix bundle + PR-D + PR-C
 
-### 3. (선택) **PR-E 후보** (Phase 5+)
+### PR #365 — fix bundle (squash merged, 4 commits)
+- **WikiTemplate seed description i18n 영어 통일** (PR #358 잔재, 8 description)
+- **EmptyHintPlaceholder trigger 강화** — heading 무시, paraCount===1 + !paraHasText만 hint
+- **EmptyHint UpNote 스타일** — position absolute / font inherit / solid underline / placeholder opacity / cursor 자연 위치
+- **block-drag-overlay regular block side-drop column 자동 생성 폐기** — 영구 룰 #8 정합
 
-PRD §5 "Out of Scope" 후보:
-- Hatnote / Ambox 자동 배너 / themeColor cascade / 편집 히스토리 (BRAINSTORM Top 7 잔여)
-- SectionTemplate (그룹만 재사용, 3-tier 시스템 Tier 3)
-- preset import/export JSON
+### PR #363 — UserInfoboxPreset (PR-D, Phase 4, squash merged)
+- Save as preset / dropdown My Presets 섹션 / cross-entity Note / hover delete / persist v139→v140
+- 영구 룰 #70-#73
 
-사용자 시그널 또는 우선순위 결정 후 진행.
+### PR #367 — Hero Image (PR-C, Phase 3, squash merged, 원래 PR #366)
+- InfoboxHero type + 3 entity optional 필드 cross-entity
+- WikiInfobox hero slot (figure + caption + alt + hover edit/remove)
+- 신규 `infobox-hero-picker.tsx`
+- 5 caller wire + v140→v141 sentinel migration
+- 영구 룰 #74-#78
 
 ---
 
-## ✅ 최근 완료 (2026-05-18 오후) — 대규모
+## ✅ 이전 완료 (2026-05-18 오후) — 대규모
 
 ### PR #361 — Infobox UX 종합 강화 (7 commit, squash merged d95b61b)
 - **Preset switching 3-way dialog** (Cancel / Preserve matching / Replace all)

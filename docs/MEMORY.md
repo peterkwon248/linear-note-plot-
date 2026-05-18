@@ -8,6 +8,49 @@
 
 ---
 
+## 🚀 2026-05-18 (저녁) — **fix bundle + PR-D + PR-C Hero Image (3 PR squash, 6 commits + 1 stacked re-target)** ⭐⭐⭐⭐
+
+**범위**: 1 worktree (`musing-gagarin-62e958`). 3 PR — PR #365 (fix bundle, 4 commits squash), PR #363 (PR-D UserInfoboxPreset, 1 commit squash), PR #367 (PR-C Hero Image 재타겟, 1 commit squash, 원래 PR #366는 base 자동 close).
+
+PRD `.omc/plans/wiki-infobox-tier-2-4-prd.md` **Phase 1+2+3+4 모두 완료**. Phase 5+ (Hatnote / Ambox / themeColor / SectionTemplate / import-export) Out of Scope, P0 후보.
+
+**사용자 시그널 (그대로 인용)**:
+1. "야 우선 밑줄부터가 업노트가 훨씬 더 부드러운 느낌(우리는 ...인 느낌)" → EmptyHint UpNote 스타일 (commits 3)
+2. "야 이거 그리고 영어버전인데 왜 한글로 설명이 나오는 거야??" → WikiTemplate seed 8 description 영어 통일
+3. "엔터를 치자마자 나와서 깜짝 놀랐어" → EmptyHint trigger 강화 (paraCount===1+!paraHasText)
+4. "drag로 위치 바꾸려고 하면 컬럼이 만들어져서" → block-drag-overlay regular block side-drop 폐기 (영구 룰 #8)
+5. "위키의 infobox에서는 에디트를 눌러도 이미지 파일 삽입 기능이 없네?" → PR-C Hero Image
+
+### PR 요약
+
+- **PR #365** — fix bundle (i18n + EmptyHint trigger + UpNote 스타일 + drag column 폐기)
+- **PR #363 (PR-D)** — UserInfoboxPreset Save as preset (PRD Phase 4, persist v140)
+- **PR #367 (PR-C 재타겟)** — Hero Image (PRD Phase 3, InfoboxHero type + 3 entity field + figure slot + 신규 picker dialog, persist v141)
+
+### 영구 LOCKED 결정 (이번 세션, #74-#78)
+
+- **#74. EmptyHintPlaceholder trigger = top-level paragraph 1개 + 비어있을 때만**: heading 무시. childCount > 1 조건은 빈 신규 노트도 차단 사고 → forEach로 paragraph만 카운트.
+- **#75. ProseMirror Decoration.widget placeholder UX**: inline 위치 → cursor 충돌. `position: absolute; left: 0` + 부모 paragraph `position: relative` (Decoration.node)로 layout 분리. cursor가 paragraph 시작에 자연 위치 (UpNote/Notion 패턴).
+- **#76. Block drag side-drop column 자동 생성 폐기 (영구 룰 #8 재확인)**: regular block 좌/우 edge → column 생성은 사용자 직관 위반. column 만들기는 slash `/2 Columns` 또는 Insert (+) 메뉴 명시 action만. columnsBlock target drop은 유지.
+- **#77. Hero image = 별도 필드 (entries 외)**: 의미 명확 + 1개 제한 자연. 향후 banner image 등 다른 visual asset도 동일 패턴.
+- **#78. Cross-entity hero shape 통일**: 3 entity 동일 `InfoboxHero { url, caption?, alt? }`. Template → Article 변환 시 자동 복사.
+
+### 기술 학습 (영구)
+
+- **TipTap editor plugin closure는 HMR로 갱신 안 됨**: Plugin 등록 후 closure가 editor instance에 박힘. 코드 변경해도 옛 closure 유지. **Full reload 필수**. 사용자 fix 안 보인다 보고 시 reload 부탁이 첫 step.
+- **Stacked PR + squash 머지 패턴 사고**: PR-C가 PR-D base였는데 PR-D squash 머지 → PR-C base branch 사라짐 → PR-C 자동 closed. closed PR은 base 변경/reopen 불가. **새 PR을 head 그대로 + base=main 생성 + `git merge origin/main` + conflict resolve**가 답.
+
+### 환경 변경
+
+- Main HEAD: PR #365 + PR #363 + PR #367 누적
+- Store version: 140 → **141** (PR-C v140→v141 sentinel)
+- 신규 type: `InfoboxHero { url, caption?, alt? }`
+- 신규 필드: `WikiArticle.infoboxHero?` + `Note.wikiInfoboxHero?` + `WikiTemplate.infoboxHero?`
+- 신규 컴포넌트: `components/editor/infobox-hero-picker.tsx`
+- 영구 룰 추가: #74-#78
+
+---
+
 ## 🚀 2026-05-18 (오후) — **Infobox UX 종합 대규모 — PR #361/#362/#363 (3 PR, 22 commit, ~700+ 줄)** ⭐⭐⭐⭐⭐
 
 **범위**: 1 worktree (`brave-rubin-3e45fa`). 3 PR — PR #361 (7 commit, merged d95b61b), PR #362 (3 commit, merged 43fcd44), PR #363 (1 commit, open). PRD `.omc/plans/wiki-infobox-tier-2-4-prd.md` Phase 1/2/4 완료. Phase 3 (Hero Image) 남음.

@@ -826,6 +826,10 @@ function WikiReadLayout({
           onHeaderColorChange={(color) =>
             usePlotStore.getState().updateNote(note.id, { infoboxHeaderColor: color })
           }
+          hero={note.wikiInfoboxHero ?? null}
+          onHeroChange={(hero) =>
+            usePlotStore.getState().updateNote(note.id, { wikiInfoboxHero: hero ?? undefined })
+          }
           className="w-full"
         />
 

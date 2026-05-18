@@ -123,6 +123,7 @@ export function createWikiTemplatesSlice(set: Set, get: Get, appendEvent: Append
         infobox: cloneAndExpandInfobox(template.infobox),
         infoboxPreset: template.infoboxPreset,
         infoboxHeaderColor: template.infoboxHeaderColor,
+        infoboxHero: template.infoboxHero ? { ...template.infoboxHero } : undefined,
         blocks,
         sectionIndex: buildSectionIndex(blocks),
         tags: [...(template.defaultTags ?? [])],
