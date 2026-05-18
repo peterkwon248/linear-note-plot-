@@ -902,39 +902,19 @@ export function WikiView() {
                 </button>
               )}
 
-              <span className="mx-0.5 h-4 w-px bg-border" />
-
-              {/* Split View button */}
-              <button
-                onClick={() => {
-                  const s = usePlotStore.getState()
-                  if (s.secondaryNoteId || getSecondarySpace()) {
-                    s.closeSecondary()
-                  } else {
-                    setSecondarySpace(getActiveSpace())
-                  }
-                }}
-                className="flex h-8 w-8 items-center justify-center rounded-md text-foreground/75 dark:text-muted-foreground/60 hover:bg-hover-bg hover:text-foreground dark:hover:text-muted-foreground transition-all duration-100"
-                title="Split View"
-              >
-                <SplitHorizontal size={16} weight="regular" />
-              </button>
-
-              {/* Sidebar toggle button */}
-              <button
-                onClick={() => usePlotStore.getState().toggleSidePanel()}
-                className={cn(
-                  "flex h-8 w-8 items-center justify-center rounded-md transition-all duration-100",
-                  sidePanelOpen
-                    ? "text-accent bg-accent/10 hover:bg-accent/20"
-                    : "text-foreground/75 dark:text-muted-foreground/60 hover:bg-hover-bg hover:text-foreground dark:hover:text-muted-foreground"
-                )}
-                title="Toggle sidebar"
-              >
-                <SidebarSimple size={16} weight="regular" />
-              </button>
+              {/*
+                Split / Sidebar toggle 직접 mount 제거 — ViewHeader default
+                toolbar (line 363-369: SidebarSimple + SplitViewButton)와 정확히
+                중복되어 wiki article 내부에서 4 토글 cluster가 두 번 표시되는
+                버그 fix. List view엔 actions에 추가 안 해서 정상 1세트였음.
+                필요한 경우 ViewHeader에 showDetailPanel / detailPanelOpen
+                같은 props로 default toolbar에 동작 위임.
+              */}
             </div>
           }
+          showDetailPanel
+          detailPanelOpen={sidePanelOpen}
+          onDetailPanelToggle={() => usePlotStore.getState().toggleSidePanel()}
         >
           <div className="flex items-center gap-2 border-b border-border px-5 py-1.5">
             <button
