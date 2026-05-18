@@ -2249,5 +2249,10 @@ export function migrate(persistedState: unknown): PlotState {
   // migration needed. Version bump alone is the migration (sentinel for cache safety).
   console.log(`[migrate] v141→v142: hatnotes field opt-in (no data change)`)
 
+  // v142 → v143: PR-E2. Theme color field opt-in (no data change).
+  // WikiArticle.themeColor is optional and defaults to undefined; no existing-data
+  // migration needed. Version bump alone is the migration (sentinel for cache safety).
+  console.log(`[migrate] v142→v143: themeColor field opt-in (no data change)`)
+
   return state as unknown as PlotState
 }

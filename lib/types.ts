@@ -466,6 +466,13 @@ export interface WikiArticle {
   infoboxPreset?: WikiInfoboxPreset
   /** Tier 1-3 (PR-C): Hero image at the top of the infobox. One per article (no gallery). */
   infoboxHero?: InfoboxHero
+  /** Tier 2 (PR-E2): Theme color cascade. Solid hex (#rrggbb) cascades to
+   *  infobox header (fallback), hatnote accent border, and h2 section borders
+   *  via the `--wiki-theme-color` CSS variable injected at the wiki article
+   *  scroll container. Group headers are intentionally NOT cascaded (use
+   *  per-group `entry.color` instead). null/undefined = plain (opt-in,
+   *  영구 룰 #67 "gentle by default"). */
+  themeColor?: string | null
   blocks: WikiBlock[]
   sectionIndex: WikiSectionIndex[]
   tags: string[]
