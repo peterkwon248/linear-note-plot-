@@ -2230,5 +2230,13 @@ export function migrate(persistedState: unknown): PlotState {
     }
   }
 
+  // v139 → v140: PR-D. Initialize `userInfoboxPresets` empty array.
+  // No seed (builtin presets remain hardcoded in lib/wiki-infobox-presets.ts);
+  // this slice only holds *user-saved* presets, which start empty.
+  if (!Array.isArray((state as Record<string, unknown>).userInfoboxPresets)) {
+    ;(state as Record<string, unknown>).userInfoboxPresets = []
+    console.log(`[migrate] v139→v140: initialized userInfoboxPresets ([])`)
+  }
+
   return state as unknown as PlotState
 }

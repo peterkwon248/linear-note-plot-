@@ -20,7 +20,7 @@ import {
 } from "@dnd-kit/sortable"
 import { CSS } from "@dnd-kit/utilities"
 import { usePlotStore } from "@/lib/store"
-import type { WikiInfoboxEntry, WikiInfoboxPreset } from "@/lib/types"
+import type { UserInfoboxPreset, WikiInfoboxEntry, WikiInfoboxPreset } from "@/lib/types"
 import { cn } from "@/lib/utils"
 import { InfoboxValueRenderer } from "./infobox-value-renderer"
 import {
@@ -36,10 +36,14 @@ import {
 import {
   INFOBOX_PRESETS,
   clonePresetEntries,
-  countPreservableValues,
+  countPreservableForSeed,
   getPresetDefinition,
-  mergePresetWithExisting,
+  getPresetDefinitionUnified,
+  mergeSeedWithExisting,
 } from "@/lib/wiki-infobox-presets"
+import { SavePresetDialog } from "./save-preset-dialog"
+import { Trash as PhTrash } from "@/lib/editor/editor-icons"
+import { FloppyDisk } from "@phosphor-icons/react/dist/ssr/FloppyDisk"
 import { useInfoboxGroupCollapsed } from "@/lib/wiki-infobox-collapse"
 import {
   AlertDialog,
@@ -81,10 +85,19 @@ interface WikiInfoboxProps {
   /** PR1: domain preset (wiki-only). When omitted, the dropdown is hidden. */
   preset?: WikiInfoboxPreset
   /**
-   * PR1: callback when the user picks a preset. Receives the new preset and
+   * PR1: callback when the user picks a preset. Receives the new preset id and
    * the cloned seed entries — caller persists both atomically.
+   *
+   * PR-D — third arg `defaultHeaderColor` is the preset's bundled header
+   * color (builtin from INFOBOX_PRESETS, or user-saved from UserInfoboxPreset).
+   * Caller should apply it when transitioning away from "custom" so user
+   * presets actually carry their saved color across articles.
    */
-  onPresetChange?: (preset: WikiInfoboxPreset, seedEntries: WikiInfoboxEntry[]) => void
+  onPresetChange?: (
+    preset: WikiInfoboxPreset,
+    seedEntries: WikiInfoboxEntry[],
+    defaultHeaderColor?: string | null,
+  ) => void
   /**
    * PR-A B1 — fires when the infobox toggles between read and edit mode. Lets
    * the parent layout widen the infobox panel during edits ("gentle by default,
@@ -226,7 +239,12 @@ export function WikiInfobox({
 }: WikiInfoboxProps) {
   const setWikiInfoboxNote = usePlotStore((s) => s.setWikiInfobox)
   const setWikiArticleInfobox = usePlotStore((s) => s.setWikiArticleInfobox)
+  // PR-D — user preset store wires.
+  const userPresets = usePlotStore((s) => s.userInfoboxPresets)
+  const saveUserInfoboxPreset = usePlotStore((s) => s.saveUserInfoboxPreset)
+  const deleteUserInfoboxPreset = usePlotStore((s) => s.deleteUserInfoboxPreset)
   const [isEditing, setIsEditing] = useState(false)
+  const [showSavePresetDialog, setShowSavePresetDialog] = useState(false)
   // PR-A — ephemeral _id keeps dnd-kit's stable identity across reorders while
   // we mutate field values (handleChange creates new entry objects, so we can't
   // rely on object reference identity). _id is stripped before persisting.
@@ -242,7 +260,12 @@ export function WikiInfobox({
   const canChangeColor = editable && typeof onHeaderColorChange === "function"
   const canChangePreset = editable && typeof onPresetChange === "function"
   const currentPreset: WikiInfoboxPreset = preset ?? "custom"
-  const presetDef = useMemo(() => getPresetDefinition(currentPreset), [currentPreset])
+  // PR-D — unified lookup handles both builtin ids ("person") and user preset
+  // ids ("user-{nanoid}"). Falls back to "custom" on orphan references.
+  const presetDef = useMemo(
+    () => getPresetDefinitionUnified(currentPreset, userPresets),
+    [currentPreset, userPresets],
+  )
 
   // Save routes by `kind` — wiki articles can't use the note setter, and vice versa.
   const persistEntries = useCallback(
@@ -355,32 +378,36 @@ export function WikiInfobox({
 
       const userEdited = hasUserData(entries) || !entriesMatchPresetSeed(entries, currentPreset)
       if (entries.length === 0 || !userEdited) {
-        // Safe to swap immediately
-        const seed = clonePresetEntries(next)
-        onPresetChange?.(next, seed)
+        // Safe to swap immediately. PR-D — unified lookup handles user preset ids.
+        const def = getPresetDefinitionUnified(next, userPresets)
+        const seed = def.defaultEntries.map((e) => ({ ...e }))
+        onPresetChange?.(next, seed, def.defaultHeaderColor)
       } else {
         setPendingPreset(next)
       }
     },
-    [canChangePreset, currentPreset, entries, onPresetChange],
+    [canChangePreset, currentPreset, entries, onPresetChange, userPresets],
   )
 
   const confirmPresetSwap = useCallback(() => {
     if (!pendingPreset) return
-    const seed = clonePresetEntries(pendingPreset)
-    onPresetChange?.(pendingPreset, seed)
+    const def = getPresetDefinitionUnified(pendingPreset, userPresets)
+    const seed = def.defaultEntries.map((e) => ({ ...e }))
+    onPresetChange?.(pendingPreset, seed, def.defaultHeaderColor)
     setPendingPreset(null)
-  }, [pendingPreset, onPresetChange])
+  }, [pendingPreset, onPresetChange, userPresets])
 
   // PR-A — Preserve matching field values when switching presets. Keys present
   // in both old + new preset keep their value; unmatched keys are dropped;
-  // brand-new keys come in empty.
+  // brand-new keys come in empty. PR-D — unified seed handles user presets.
   const preservePresetSwap = useCallback(() => {
     if (!pendingPreset) return
-    const merged = mergePresetWithExisting(pendingPreset, entries)
-    onPresetChange?.(pendingPreset, merged)
+    const def = getPresetDefinitionUnified(pendingPreset, userPresets)
+    const seedClone = def.defaultEntries.map((e) => ({ ...e }))
+    const merged = mergeSeedWithExisting(seedClone, entries)
+    onPresetChange?.(pendingPreset, merged, def.defaultHeaderColor)
     setPendingPreset(null)
-  }, [pendingPreset, entries, onPresetChange])
+  }, [pendingPreset, entries, onPresetChange, userPresets])
 
   const cancelPresetSwap = useCallback(() => setPendingPreset(null), [])
 
@@ -393,10 +420,37 @@ export function WikiInfobox({
   }, [isEditing, onEditingChange])
 
   // PR-A — Drives the "N of M preserved" copy in both confirm dialogs.
-  const pendingPreserveStats = useMemo(
-    () =>
-      pendingPreset ? countPreservableValues(pendingPreset, entries) : null,
-    [pendingPreset, entries],
+  // PR-D — uses unified seed so user presets work too.
+  const pendingPreserveStats = useMemo(() => {
+    if (!pendingPreset) return null
+    const def = getPresetDefinitionUnified(pendingPreset, userPresets)
+    return countPreservableForSeed(def.defaultEntries, entries)
+  }, [pendingPreset, entries, userPresets])
+
+  // PR-D — "Save as preset" handler. Snapshot current entries + header color
+  // and persist as a UserInfoboxPreset; switch the article to the new id so
+  // it shows up as "selected" in the dropdown's My Presets section.
+  const handleSaveAsPreset = useCallback(
+    (input: { label: string; hint?: string }) => {
+      const snapshot = entries.map((e) => ({ ...e }))
+      const newId = saveUserInfoboxPreset({
+        label: input.label,
+        hint: input.hint,
+        defaultHeaderColor: headerColor ?? null,
+        defaultEntries: snapshot,
+      })
+      onPresetChange?.(newId, snapshot, headerColor ?? null)
+    },
+    [entries, headerColor, saveUserInfoboxPreset, onPresetChange],
+  )
+
+  // PR-D — Delete user preset (called from dropdown). Article references the
+  // deleted id stay as-is; getPresetDefinitionUnified falls back to "custom".
+  const handleDeleteUserPreset = useCallback(
+    (id: string) => {
+      deleteUserInfoboxPreset(id)
+    },
+    [deleteUserInfoboxPreset],
   )
 
   // Nothing to show and not editable
@@ -422,6 +476,8 @@ export function WikiInfobox({
                 open={showPresetDropdown}
                 onToggle={() => setShowPresetDropdown((v) => !v)}
                 onPick={requestPresetSwap}
+                userPresets={userPresets}
+                onDeleteUserPreset={handleDeleteUserPreset}
               />
             </div>
           )}
@@ -461,6 +517,8 @@ export function WikiInfobox({
                     open={showPresetDropdown}
                     onToggle={() => setShowPresetDropdown((v) => !v)}
                     onPick={requestPresetSwap}
+                    userPresets={userPresets}
+                    onDeleteUserPreset={handleDeleteUserPreset}
                     compact
                     inverted={!!headerColor}
                   />
@@ -602,6 +660,8 @@ export function WikiInfobox({
                 open={showPresetDropdown}
                 onToggle={() => setShowPresetDropdown((v) => !v)}
                 onPick={requestPresetSwap}
+                userPresets={userPresets}
+                onDeleteUserPreset={handleDeleteUserPreset}
                 compact
                 inverted={!!headerColor}
               />
@@ -764,6 +824,19 @@ export function WikiInfobox({
               <PhPlus size={14} />
               Add group
             </button>
+            {/* PR-D — Save the current layout as a reusable user preset. Only
+                meaningful when there's something to save (entries.length > 0)
+                and preset selection is enabled (wiki context). */}
+            {canChangePreset && localEntries.length > 0 && (
+              <button
+                onClick={() => setShowSavePresetDialog(true)}
+                className="ml-auto flex items-center gap-1.5 text-[calc(0.875em*var(--scale-infobox,1))] text-muted-foreground hover:text-foreground transition-colors"
+                title="Save current layout as a reusable preset"
+              >
+                <FloppyDisk size={14} />
+                Save as preset…
+              </button>
+            )}
           </div>
         </div>
         </div>
@@ -821,6 +894,16 @@ export function WikiInfobox({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* PR-D — Save as preset dialog. Snapshot of current localEntries +
+          headerColor at moment of open. Only mounted when triggered. */}
+      <SavePresetDialog
+        open={showSavePresetDialog}
+        onOpenChange={setShowSavePresetDialog}
+        entries={localEntries}
+        headerColor={headerColor ?? null}
+        onSave={handleSaveAsPreset}
+      />
     </>
   )
 }
@@ -1073,6 +1156,8 @@ function PresetDropdown({
   open,
   onToggle,
   onPick,
+  userPresets,
+  onDeleteUserPreset,
   compact = false,
   inverted = false,
 }: {
@@ -1080,10 +1165,14 @@ function PresetDropdown({
   open: boolean
   onToggle: () => void
   onPick: (preset: WikiInfoboxPreset) => void
+  userPresets: UserInfoboxPreset[]
+  onDeleteUserPreset: (id: string) => void
   compact?: boolean
   inverted?: boolean
 }) {
-  const def = getPresetDefinition(current)
+  // PR-D — unified lookup so the trigger label shows the user preset's name
+  // (not "Custom") when the article points at a user-saved id.
+  const def = getPresetDefinitionUnified(current, userPresets)
   const triggerRef = useRef<HTMLButtonElement>(null)
   // 2026-05-18: dropdown menu를 createPortal로 document.body에 mount하고
   // fixed positioning으로 그림 — parent의 `overflow-hidden`(line ~298)
@@ -1188,6 +1277,9 @@ function PresetDropdown({
             }}
             onMouseDown={(e) => e.stopPropagation()}
           >
+            <div className="px-2 pt-1 pb-0.5 text-2xs font-medium uppercase tracking-wider text-muted-foreground/70">
+              Built-in
+            </div>
             {INFOBOX_PRESETS.map((p) => {
               const isActive = p.preset === current
               return (
@@ -1215,6 +1307,60 @@ function PresetDropdown({
                 </button>
               )
             })}
+            {/* PR-D — user-saved presets. Only shown when at least one exists. */}
+            {userPresets.length > 0 && (
+              <>
+                <div className="mx-2 my-1 border-t border-border-subtle" />
+                <div className="px-2 pt-1 pb-0.5 text-2xs font-medium uppercase tracking-wider text-muted-foreground/70">
+                  My Presets
+                </div>
+                {userPresets.map((p) => {
+                  const isActive = p.id === current
+                  return (
+                    <div
+                      key={p.id}
+                      className={cn(
+                        "group/userpreset flex w-full items-center gap-2 rounded-md text-left text-sm transition-colors",
+                        isActive
+                          ? "bg-secondary/60 text-foreground font-medium"
+                          : "text-foreground/85 hover:bg-hover-bg hover:text-foreground",
+                      )}
+                    >
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          onPick(p.id)
+                        }}
+                        className="flex flex-1 min-w-0 items-center justify-between gap-2 px-2.5 py-2"
+                      >
+                        <span className="truncate">{p.label}</span>
+                        {p.defaultHeaderColor && (
+                          <span
+                            className="h-4 w-4 shrink-0 rounded-full ring-1 ring-black/5 dark:ring-white/10"
+                            style={{ backgroundColor: p.defaultHeaderColor }}
+                          />
+                        )}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          if (window.confirm(`Delete preset "${p.label}"? Articles using it will keep their entries.`)) {
+                            onDeleteUserPreset(p.id)
+                          }
+                        }}
+                        className="mr-1 shrink-0 rounded p-1 text-muted-foreground/60 opacity-0 group-hover/userpreset:opacity-100 hover:bg-destructive/10 hover:text-destructive transition-all"
+                        title="Delete preset"
+                        aria-label={`Delete preset ${p.label}`}
+                      >
+                        <PhTrash size={12} />
+                      </button>
+                    </div>
+                  )
+                })}
+              </>
+            )}
           </div>
         </>,
         document.body,

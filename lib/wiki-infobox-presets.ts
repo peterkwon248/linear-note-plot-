@@ -11,7 +11,7 @@
  * Colors use rgba alpha=0.65 — deep enough for white text to read clearly.
  */
 
-import type { WikiInfoboxEntry, WikiInfoboxPreset } from "./types"
+import type { UserInfoboxPreset, WikiInfoboxEntry, WikiInfoboxPreset } from "./types"
 
 export interface PresetDefinition {
   preset: WikiInfoboxPreset
@@ -436,11 +436,57 @@ export function getPresetDefinition(preset: WikiInfoboxPreset | undefined | null
 }
 
 /**
+ * PR-D — unified lookup across builtin presets + user-saved presets.
+ *
+ * The caller passes the article's `infoboxPreset` id (could be either a
+ * builtin literal like `"person"` or a user-saved id like `"user-abc123"`)
+ * along with the live `userInfoboxPresets` array from the store. Returns a
+ * `PresetDefinition`-shaped object the rest of the UI can treat uniformly.
+ *
+ * Lookup order:
+ *   1. Builtin preset map (BY_KEY) — handles "person", "place", etc.
+ *   2. User preset list — handles "user-{nanoid}".
+ *   3. Fallback to "custom" — handles orphan references (e.g. user deleted
+ *      a preset that some article was still pointing at).
+ */
+export function getPresetDefinitionUnified(
+  presetId: string | undefined | null,
+  userPresets: UserInfoboxPreset[],
+): PresetDefinition {
+  if (!presetId) return BY_KEY.get("custom")!
+  const builtin = BY_KEY.get(presetId as WikiInfoboxPreset)
+  if (builtin) return builtin
+  const user = userPresets.find((p) => p.id === presetId)
+  if (user) {
+    return {
+      preset: user.id as WikiInfoboxPreset,
+      label: user.label,
+      hint: user.hint,
+      defaultHeaderColor: user.defaultHeaderColor,
+      defaultEntries: user.defaultEntries,
+    }
+  }
+  return BY_KEY.get("custom")!
+}
+
+/**
  * Returns a fresh deep-clone of a preset's seed entries.
  * Always returns a new array so callers can safely mutate.
  */
 export function clonePresetEntries(preset: WikiInfoboxPreset): WikiInfoboxEntry[] {
   const def = getPresetDefinition(preset)
+  return def.defaultEntries.map((e) => ({ ...e }))
+}
+
+/**
+ * PR-D — same as clonePresetEntries but resolves through the unified lookup
+ * so user-saved preset ids work too. Caller passes the userPresets array.
+ */
+export function clonePresetEntriesUnified(
+  presetId: string,
+  userPresets: UserInfoboxPreset[],
+): WikiInfoboxEntry[] {
+  const def = getPresetDefinitionUnified(presetId, userPresets)
   return def.defaultEntries.map((e) => ({ ...e }))
 }
 
@@ -459,6 +505,18 @@ export function mergePresetWithExisting(
   existingEntries: WikiInfoboxEntry[],
 ): WikiInfoboxEntry[] {
   const seed = clonePresetEntries(newPreset)
+  return mergeSeedWithExisting(seed, existingEntries)
+}
+
+/**
+ * PR-D — generic version that works with any seed (builtin OR user preset).
+ * Callers that already have a resolved `PresetDefinition` (via the unified
+ * lookup) can skip the preset-id roundtrip and pass entries directly.
+ */
+export function mergeSeedWithExisting(
+  seed: WikiInfoboxEntry[],
+  existingEntries: WikiInfoboxEntry[],
+): WikiInfoboxEntry[] {
   const valueByKey = new Map<string, string>()
   for (const e of existingEntries) {
     if (e.type === "group-header") continue
@@ -467,7 +525,7 @@ export function mergePresetWithExisting(
   }
   return seed.map((s) =>
     s.type === "group-header" || !valueByKey.has(s.key)
-      ? s
+      ? { ...s }
       : { ...s, value: valueByKey.get(s.key)! },
   )
 }
@@ -482,6 +540,18 @@ export function countPreservableValues(
   existingEntries: WikiInfoboxEntry[],
 ): { preserved: number; dropped: number; total: number } {
   const seed = clonePresetEntries(newPreset)
+  return countPreservableForSeed(seed, existingEntries)
+}
+
+/**
+ * PR-D — generic seed-based variant. Use when the caller already resolved a
+ * `PresetDefinition` (builtin or user) and just wants the preserved/dropped
+ * counts for the dialog copy.
+ */
+export function countPreservableForSeed(
+  seed: WikiInfoboxEntry[],
+  existingEntries: WikiInfoboxEntry[],
+): { preserved: number; dropped: number; total: number } {
   const seedKeys = new Set(
     seed.filter((e) => e.type !== "group-header").map((e) => e.key),
   )

@@ -861,8 +861,13 @@ export function WikiArticleView({ articleId, editable = false, preview = false, 
                     preset={article.infoboxPreset ?? "custom"}
                     onPresetChange={
                       editable
-                        ? (preset, seed) => {
-                            const def = INFOBOX_PRESETS.find((p) => p.preset === preset)
+                        ? (preset, seed, headerColor) => {
+                            // PR-D — callback now provides defaultHeaderColor directly
+                            // (works for both builtin + user presets). Fallback retains
+                            // builtin INFOBOX_PRESETS lookup for back-compat callers.
+                            const def = headerColor !== undefined
+                              ? { defaultHeaderColor: headerColor }
+                              : INFOBOX_PRESETS.find((p) => p.preset === preset)
                             usePlotStore.getState().updateWikiArticle(article.id, {
                               infobox: seed,
                               infoboxPreset: preset,

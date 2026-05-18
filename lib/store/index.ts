@@ -29,6 +29,7 @@ import { createSavedViewsSlice } from "./slices/saved-views"
 import { createWikiArticlesSlice } from "./slices/wiki-articles"
 import { createWikiCategoriesSlice } from "./slices/wiki-categories"
 import { createWikiTemplatesSlice } from "./slices/wiki-templates"
+import { createWikiInfoboxPresetsSlice } from "./slices/wiki-infobox-presets"
 import { createReferencesSlice } from "./slices/references"
 import { createGlobalBookmarksSlice } from "./slices/global-bookmarks"
 import { createCommentsSlice } from "./slices/comments"
@@ -103,6 +104,8 @@ export const usePlotStore = create<PlotState>()(
         autopilotLog: [] as AutopilotLogEntry[],
         templates: SEED_TEMPLATES,
         wikiTemplates: SEED_WIKI_TEMPLATES,
+        // PR-D — user infobox presets pool (empty until user saves first preset).
+        userInfoboxPresets: [] as import("../types").UserInfoboxPreset[],
 
         viewStateByContext: buildDefaultViewStates(),
         _viewStateHydrated: false,
@@ -134,6 +137,7 @@ export const usePlotStore = create<PlotState>()(
         ...createWikiCategoriesSlice(set, get),
         ...createWikiArticlesSlice(set, get, appendEvent),
         ...createWikiTemplatesSlice(set, get, appendEvent),
+        ...createWikiInfoboxPresetsSlice(set, get),
         ...createReferencesSlice(set, appendEvent),
         ...createGlobalBookmarksSlice(set),
         ...createCommentsSlice(set),
@@ -257,7 +261,7 @@ export const usePlotStore = create<PlotState>()(
     },
     {
       name: "plot-store",
-      version: 139,
+      version: 140,
       storage: createIDBStorage<PlotState>(),
       partialize: (state) => {
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -324,6 +328,11 @@ export const usePlotStore = create<PlotState>()(
           // 사용자 IDB 데이터 우선 보존 — array만 아니면 seed로 초기화.
           if (!Array.isArray(state.wikiTemplates)) {
             state.wikiTemplates = SEED_WIKI_TEMPLATES
+          }
+          // PR-D — same defense for userInfoboxPresets. Empty array is the
+          // safe default; user-saved presets are restored as-is when present.
+          if (!Array.isArray(state.userInfoboxPresets)) {
+            state.userInfoboxPresets = []
           }
           state.previewNoteId = null
 

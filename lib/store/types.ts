@@ -1,4 +1,4 @@
-import type { Note, NoteBody, Folder, Tag, Label, Sticker, EntityRef, NoteTemplate, WikiTemplate, ActiveView, EntityEvent, Thread, AutopilotRule, AutopilotLogEntry, Relation, RelationType, Attachment, CoOccurrence, RelationSuggestion, WikiClusterSuggestion, WikiInfoboxEntry, WikiCollectionItem, SavedView, WikiArticle, WikiBlock, WikiCategory, Reference, GlobalBookmark, Comment, CommentAnchor, Book, AutoSource, AutoSourceKind } from "../types"
+import type { Note, NoteBody, Folder, Tag, Label, Sticker, EntityRef, NoteTemplate, WikiTemplate, ActiveView, EntityEvent, Thread, AutopilotRule, AutopilotLogEntry, Relation, RelationType, Attachment, CoOccurrence, RelationSuggestion, WikiClusterSuggestion, WikiInfoboxEntry, WikiCollectionItem, SavedView, WikiArticle, WikiBlock, WikiCategory, Reference, GlobalBookmark, Comment, CommentAnchor, Book, AutoSource, AutoSourceKind, UserInfoboxPreset } from "../types"
 import type { InboxDismissed, InboxSnoozed, InboxItemKind } from "./slices/inbox"
 import type { SRSState, SRSRating } from "@/lib/srs"
 import type { ViewState, ViewContextKey } from "../view-engine/types"
@@ -170,6 +170,12 @@ export interface PlotState {
   templates: NoteTemplate[]
   /** 2026-05-18 — Wiki article template pool (Notes templates 정합). */
   wikiTemplates: WikiTemplate[]
+  /**
+   * PR-D — user-defined infobox presets (Phase 4). Builtin presets are
+   * hardcoded in `lib/wiki-infobox-presets.ts`; this is the user's "My Presets"
+   * pool, persisted cross-session. Cross-entity (Wiki Articles + Notes).
+   */
+  userInfoboxPresets: UserInfoboxPreset[]
 
   // ── Wiki Collections ──
   wikiCollections: Record<string, WikiCollectionItem[]>  // key = wikiNoteId
@@ -270,6 +276,23 @@ export interface PlotState {
   createWikiArticleFromTemplate: (templateId: string) => string
   /** slash insert apply — 기존 article에 template blocks 추가 반환 (caller가 cursor 위치에 insert). */
   getWikiTemplateBlocksExpanded: (templateId: string) => WikiBlock[] | null
+
+  // ── User Infobox Presets (PR-D, Phase 4) ──
+  /** Save current article's infobox layout as a reusable user preset. Returns new id. */
+  saveUserInfoboxPreset: (input: {
+    label: string
+    hint?: string
+    defaultHeaderColor: string | null
+    defaultEntries: WikiInfoboxEntry[]
+  }) => string
+  updateUserInfoboxPreset: (
+    id: string,
+    patch: Partial<Omit<UserInfoboxPreset, "id" | "createdAt">>,
+  ) => void
+  /** Hard delete — caller articles' `infoboxPreset` reference becomes orphan,
+   *  but getPresetDefinitionUnified falls back to "custom" silently. Entries
+   *  on those articles are preserved (stored on the article itself). */
+  deleteUserInfoboxPreset: (id: string) => void
 
   // ── Folders ──
   /**
