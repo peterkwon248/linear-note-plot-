@@ -18,7 +18,9 @@ import {
 import {
   INFOBOX_PRESETS,
   clonePresetEntries,
+  countPreservableValues,
   getPresetDefinition,
+  mergePresetWithExisting,
 } from "@/lib/wiki-infobox-presets"
 import { useInfoboxGroupCollapsed } from "@/lib/wiki-infobox-collapse"
 import {
@@ -260,7 +262,24 @@ export function WikiInfobox({
     setPendingPreset(null)
   }, [pendingPreset, onPresetChange])
 
+  // PR-A — Preserve matching field values when switching presets. Keys present
+  // in both old + new preset keep their value; unmatched keys are dropped;
+  // brand-new keys come in empty.
+  const preservePresetSwap = useCallback(() => {
+    if (!pendingPreset) return
+    const merged = mergePresetWithExisting(pendingPreset, entries)
+    onPresetChange?.(pendingPreset, merged)
+    setPendingPreset(null)
+  }, [pendingPreset, entries, onPresetChange])
+
   const cancelPresetSwap = useCallback(() => setPendingPreset(null), [])
+
+  // PR-A — Drives the "N of M preserved" copy in both confirm dialogs.
+  const pendingPreserveStats = useMemo(
+    () =>
+      pendingPreset ? countPreservableValues(pendingPreset, entries) : null,
+    [pendingPreset, entries],
+  )
 
   // Nothing to show and not editable
   if (entries.length === 0 && !editable) return null
@@ -390,16 +409,36 @@ export function WikiInfobox({
             <AlertDialogHeader>
               <AlertDialogTitle>Change Infobox Preset</AlertDialogTitle>
               <AlertDialogDescription>
-                All current fields will be replaced with the{" "}
+                Switch to{" "}
                 <span className="font-semibold text-foreground">
                   {pendingPreset ? getPresetDefinition(pendingPreset).label : ""}
                 </span>{" "}
-                preset. This action cannot be undone.
+                preset.{" "}
+                {pendingPreserveStats && pendingPreserveStats.total > 0 ? (
+                  <>
+                    <span className="font-semibold text-foreground">
+                      {pendingPreserveStats.preserved} of {pendingPreserveStats.total}
+                    </span>{" "}
+                    existing values match this preset&apos;s fields.
+                  </>
+                ) : (
+                  "No existing values to preserve."
+                )}
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
               <AlertDialogCancel onClick={cancelPresetSwap}>Cancel</AlertDialogCancel>
-              <AlertDialogAction onClick={confirmPresetSwap}>Replace</AlertDialogAction>
+              {pendingPreserveStats && pendingPreserveStats.preserved > 0 && (
+                <AlertDialogAction onClick={preservePresetSwap}>
+                  Preserve matching ({pendingPreserveStats.preserved})
+                </AlertDialogAction>
+              )}
+              <AlertDialogAction
+                onClick={confirmPresetSwap}
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              >
+                Replace all
+              </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
@@ -560,22 +599,43 @@ export function WikiInfobox({
           <AlertDialogHeader>
             <AlertDialogTitle>Change Infobox Preset</AlertDialogTitle>
             <AlertDialogDescription>
-              All current fields will be replaced with the{" "}
+              Switch to{" "}
               <span className="font-semibold text-foreground">
                 {pendingPreset ? getPresetDefinition(pendingPreset).label : ""}
               </span>{" "}
-              preset. Unsaved edits will also be lost.
+              preset.{" "}
+              {pendingPreserveStats && pendingPreserveStats.total > 0 ? (
+                <>
+                  <span className="font-semibold text-foreground">
+                    {pendingPreserveStats.preserved} of {pendingPreserveStats.total}
+                  </span>{" "}
+                  existing values match this preset&apos;s fields. Unsaved edits will also be lost.
+                </>
+              ) : (
+                "Unsaved edits will also be lost."
+              )}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel onClick={cancelPresetSwap}>Cancel</AlertDialogCancel>
+            {pendingPreserveStats && pendingPreserveStats.preserved > 0 && (
+              <AlertDialogAction
+                onClick={() => {
+                  preservePresetSwap()
+                  setIsEditing(false)
+                }}
+              >
+                Preserve matching ({pendingPreserveStats.preserved})
+              </AlertDialogAction>
+            )}
             <AlertDialogAction
               onClick={() => {
                 confirmPresetSwap()
                 setIsEditing(false)
               }}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
-              Replace
+              Replace all
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
