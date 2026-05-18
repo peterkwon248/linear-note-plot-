@@ -343,3 +343,55 @@ export function clonePresetEntries(preset: WikiInfoboxPreset): WikiInfoboxEntry[
   const def = getPresetDefinition(preset)
   return def.defaultEntries.map((e) => ({ ...e }))
 }
+
+/**
+ * PR-A — Preset switching partial preserve.
+ *
+ * Returns the new preset's seed entries, but for each field key that matches
+ * an existing entry with a non-empty value, the existing value is carried over.
+ * Group headers are always taken from the new preset (they define the structure,
+ * not user data). Existing keys not present in the new seed are dropped.
+ *
+ * Used by the "Preserve matching" choice in the preset-switch confirm dialog.
+ */
+export function mergePresetWithExisting(
+  newPreset: WikiInfoboxPreset,
+  existingEntries: WikiInfoboxEntry[],
+): WikiInfoboxEntry[] {
+  const seed = clonePresetEntries(newPreset)
+  const valueByKey = new Map<string, string>()
+  for (const e of existingEntries) {
+    if (e.type === "group-header") continue
+    if ((e.value ?? "").trim() === "") continue
+    valueByKey.set(e.key, e.value)
+  }
+  return seed.map((s) =>
+    s.type === "group-header" || !valueByKey.has(s.key)
+      ? s
+      : { ...s, value: valueByKey.get(s.key)! },
+  )
+}
+
+/**
+ * PR-A — Counts how many existing field values would be preserved vs dropped
+ * when switching to `newPreset`. Drives the "N of M preserved" copy in the
+ * confirm dialog so the user understands the impact before choosing.
+ */
+export function countPreservableValues(
+  newPreset: WikiInfoboxPreset,
+  existingEntries: WikiInfoboxEntry[],
+): { preserved: number; dropped: number; total: number } {
+  const seed = clonePresetEntries(newPreset)
+  const seedKeys = new Set(
+    seed.filter((e) => e.type !== "group-header").map((e) => e.key),
+  )
+  let preserved = 0
+  let dropped = 0
+  for (const e of existingEntries) {
+    if (e.type === "group-header") continue
+    if ((e.value ?? "").trim() === "") continue
+    if (seedKeys.has(e.key)) preserved++
+    else dropped++
+  }
+  return { preserved, dropped, total: preserved + dropped }
+}

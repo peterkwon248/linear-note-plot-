@@ -1,7 +1,24 @@
 "use client"
 
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react"
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from "react"
 import { createPortal } from "react-dom"
+import {
+  DndContext,
+  KeyboardSensor,
+  PointerSensor,
+  closestCenter,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from "@dnd-kit/core"
+import {
+  SortableContext,
+  arrayMove,
+  sortableKeyboardCoordinates,
+  useSortable,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable"
+import { CSS } from "@dnd-kit/utilities"
 import { usePlotStore } from "@/lib/store"
 import type { WikiInfoboxEntry, WikiInfoboxPreset } from "@/lib/types"
 import { cn } from "@/lib/utils"
@@ -14,11 +31,14 @@ import {
   PaintBucket,
   CaretDown,
   CaretRight,
+  DotsSixVertical,
 } from "@/lib/editor/editor-icons"
 import {
   INFOBOX_PRESETS,
   clonePresetEntries,
+  countPreservableValues,
   getPresetDefinition,
+  mergePresetWithExisting,
 } from "@/lib/wiki-infobox-presets"
 import { useInfoboxGroupCollapsed } from "@/lib/wiki-infobox-collapse"
 import {
@@ -65,6 +85,65 @@ interface WikiInfoboxProps {
    * the cloned seed entries — caller persists both atomically.
    */
   onPresetChange?: (preset: WikiInfoboxPreset, seedEntries: WikiInfoboxEntry[]) => void
+  /**
+   * PR-A B1 — fires when the infobox toggles between read and edit mode. Lets
+   * the parent layout widen the infobox panel during edits ("gentle by default,
+   * powerful when needed") so the header's ✓/X buttons don't get clipped by
+   * the narrow default rail width.
+   */
+  onEditingChange?: (editing: boolean) => void
+}
+
+// ── SortableWrapper: drag-handle + transform style ──────────────────────────
+//
+// One generic wrapper for all three row types (field / section / group-header)
+// so we don't have to duplicate the useSortable wiring three times. Grip lives
+// on the left, children take the rest of the row.
+
+function SortableWrapper({ id, children }: { id: string; children: ReactNode }) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
+    useSortable({ id })
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition: transition ?? undefined,
+    opacity: isDragging ? 0.5 : 1,
+  }
+  return (
+    <div ref={setNodeRef} style={style} className="flex items-start gap-1">
+      <button
+        type="button"
+        {...attributes}
+        {...listeners}
+        className="shrink-0 cursor-grab active:cursor-grabbing p-1 mt-0.5 text-muted-foreground/40 hover:text-foreground transition-colors"
+        title="Drag to reorder"
+        aria-label="Drag to reorder"
+      >
+        <DotsSixVertical size={14} />
+      </button>
+      <div className="flex-1 min-w-0">{children}</div>
+    </div>
+  )
+}
+
+// ── Editable entry: WikiInfoboxEntry + ephemeral _id ────────────────────────
+//
+// Drag-and-drop needs a stable identity per row that survives reorders +
+// value edits. We attach an _id when entering edit mode and strip it on save.
+// _id never crosses the persistence boundary.
+
+type EditableEntry = WikiInfoboxEntry & { _id: string }
+
+function makeId(): string {
+  return `e-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 7)}`
+}
+
+function withId(entry: WikiInfoboxEntry): EditableEntry {
+  return { ...entry, _id: makeId() }
+}
+
+function stripId(entry: EditableEntry): WikiInfoboxEntry {
+  const { _id, ...rest } = entry
+  return rest
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -143,11 +222,17 @@ export function WikiInfobox({
   kind = "note",
   preset,
   onPresetChange,
+  onEditingChange,
 }: WikiInfoboxProps) {
   const setWikiInfoboxNote = usePlotStore((s) => s.setWikiInfobox)
   const setWikiArticleInfobox = usePlotStore((s) => s.setWikiArticleInfobox)
   const [isEditing, setIsEditing] = useState(false)
-  const [localEntries, setLocalEntries] = useState<WikiInfoboxEntry[]>(entries)
+  // PR-A — ephemeral _id keeps dnd-kit's stable identity across reorders while
+  // we mutate field values (handleChange creates new entry objects, so we can't
+  // rely on object reference identity). _id is stripped before persisting.
+  const [localEntries, setLocalEntries] = useState<EditableEntry[]>(() =>
+    entries.map((e) => withId(e)),
+  )
   const [showColorPicker, setShowColorPicker] = useState(false)
   const renderedHeaderColor = useTintedBg(headerColor)
   const headerTextColor = useTintedText(headerColor)
@@ -169,38 +254,65 @@ export function WikiInfobox({
   )
 
   const handleStartEdit = useCallback(() => {
-    setLocalEntries([...entries])
+    setLocalEntries(entries.map((e) => withId(e)))
     setIsEditing(true)
   }, [entries])
 
   const handleSave = useCallback(() => {
     // group-header rows keep value="" and don't need key trim filter
-    const cleaned = localEntries.filter((e) => {
-      if (e.type === "group-header") return (e.key ?? "").trim() !== ""
-      return e.key.trim() !== ""
-    })
+    const cleaned = localEntries
+      .filter((e) => {
+        if (e.type === "group-header") return (e.key ?? "").trim() !== ""
+        return e.key.trim() !== ""
+      })
+      .map(stripId)
     persistEntries(cleaned)
     setIsEditing(false)
   }, [persistEntries, localEntries])
 
   const handleCancel = useCallback(() => {
-    setLocalEntries([...entries])
+    setLocalEntries(entries.map((e) => withId(e)))
     setIsEditing(false)
   }, [entries])
 
-  const handleAdd = useCallback(() => {
-    setLocalEntries((prev) => [...prev, { key: "", value: "", type: "field" }])
+  // PR-A — position param lets inline group-aware "+ Add field" buttons
+  // insert at a specific spot. Footer Add field (no arg) still pushes to the end.
+  const handleAdd = useCallback((position?: number) => {
+    setLocalEntries((prev) => {
+      const newField: EditableEntry = { key: "", value: "", type: "field", _id: makeId() }
+      if (position === undefined || position >= prev.length) return [...prev, newField]
+      return [...prev.slice(0, position), newField, ...prev.slice(position)]
+    })
   }, [])
 
   const handleAddSection = useCallback(() => {
-    setLocalEntries((prev) => [...prev, { key: "", value: "", type: "section" }])
+    setLocalEntries((prev) => [...prev, { key: "", value: "", type: "section", _id: makeId() }])
   }, [])
 
   const handleAddGroupHeader = useCallback(() => {
     setLocalEntries((prev) => [
       ...prev,
-      { key: "", value: "", type: "group-header", color: null, defaultCollapsed: false },
+      { key: "", value: "", type: "group-header", color: null, defaultCollapsed: false, _id: makeId() },
     ])
+  }, [])
+
+  // PR-A — dnd-kit drag-to-reorder. PointerSensor with a small activation
+  // distance lets click-to-edit on row inputs still work without triggering a
+  // drag accidentally.
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 4 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
+  )
+
+  const handleDragEnd = useCallback((event: DragEndEvent) => {
+    const { active, over } = event
+    if (!over || active.id === over.id) return
+    setLocalEntries((prev) => {
+      const oldIndex = prev.findIndex((e) => e._id === active.id)
+      const newIndex = prev.findIndex((e) => e._id === over.id)
+      if (oldIndex === -1 || newIndex === -1) return prev
+      return arrayMove(prev, oldIndex, newIndex)
+    })
   }, [])
 
   const handleRemove = useCallback((index: number) => {
@@ -260,7 +372,32 @@ export function WikiInfobox({
     setPendingPreset(null)
   }, [pendingPreset, onPresetChange])
 
+  // PR-A — Preserve matching field values when switching presets. Keys present
+  // in both old + new preset keep their value; unmatched keys are dropped;
+  // brand-new keys come in empty.
+  const preservePresetSwap = useCallback(() => {
+    if (!pendingPreset) return
+    const merged = mergePresetWithExisting(pendingPreset, entries)
+    onPresetChange?.(pendingPreset, merged)
+    setPendingPreset(null)
+  }, [pendingPreset, entries, onPresetChange])
+
   const cancelPresetSwap = useCallback(() => setPendingPreset(null), [])
+
+  // PR-A B1 — Notify parent layout when edit mode toggles so it can widen the
+  // infobox panel. The "Gentle by default" rail is too narrow for the edit
+  // toolbar (✓/X get clipped); the parent expands the panel only while editing
+  // and restores it on Save/Cancel.
+  useEffect(() => {
+    onEditingChange?.(isEditing)
+  }, [isEditing, onEditingChange])
+
+  // PR-A — Drives the "N of M preserved" copy in both confirm dialogs.
+  const pendingPreserveStats = useMemo(
+    () =>
+      pendingPreset ? countPreservableValues(pendingPreset, entries) : null,
+    [pendingPreset, entries],
+  )
 
   // Nothing to show and not editable
   if (entries.length === 0 && !editable) return null
@@ -390,16 +527,36 @@ export function WikiInfobox({
             <AlertDialogHeader>
               <AlertDialogTitle>Change Infobox Preset</AlertDialogTitle>
               <AlertDialogDescription>
-                All current fields will be replaced with the{" "}
+                Switch to{" "}
                 <span className="font-semibold text-foreground">
                   {pendingPreset ? getPresetDefinition(pendingPreset).label : ""}
                 </span>{" "}
-                preset. This action cannot be undone.
+                preset.{" "}
+                {pendingPreserveStats && pendingPreserveStats.total > 0 ? (
+                  <>
+                    <span className="font-semibold text-foreground">
+                      {pendingPreserveStats.preserved} of {pendingPreserveStats.total}
+                    </span>{" "}
+                    existing values match this preset&apos;s fields.
+                  </>
+                ) : (
+                  "No existing values to preserve."
+                )}
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
               <AlertDialogCancel onClick={cancelPresetSwap}>Cancel</AlertDialogCancel>
-              <AlertDialogAction onClick={confirmPresetSwap}>Replace</AlertDialogAction>
+              {pendingPreserveStats && pendingPreserveStats.preserved > 0 && (
+                <AlertDialogAction onClick={preservePresetSwap}>
+                  Preserve matching ({pendingPreserveStats.preserved})
+                </AlertDialogAction>
+              )}
+              <AlertDialogAction
+                onClick={confirmPresetSwap}
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              >
+                Replace all
+              </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
@@ -408,14 +565,20 @@ export function WikiInfobox({
   }
 
   // ── Edit mode ──────────────────────────────────────────────────────────────
+  // PR-A — outer wrapper turns into a horizontal scroll container; inner has
+  // a min-width so the header (preset / ✓ / X cluster) and entry rows stay
+  // legible even when the panel rail is narrower than the natural content
+  // (e.g. SmartSidePanel open + Edit mode → infobox rail squeezed). User can
+  // scroll right to reach X without re-opening side panels.
   return (
     <>
       <div
         className={cn(
-          "rounded-lg border border-primary/30 bg-card/50 overflow-hidden",
+          "rounded-lg border border-primary/30 bg-card/50 overflow-x-auto overflow-y-hidden",
           className,
         )}
       >
+        <div className="min-w-[360px]">
         <div
           className={cn(
             "flex items-center justify-between border-b border-border px-3 py-2",
@@ -464,71 +627,127 @@ export function WikiInfobox({
           </div>
         </div>
         <div className="space-y-2 p-3">
-          {localEntries.map((entry, i) => {
-            if (entry.type === "section") {
-              return (
-                <div key={i} className="flex items-start gap-2">
-                  <input
-                    value={entry.key}
-                    onChange={(e) => handleChange(i, "key", e.target.value)}
-                    placeholder="Section name"
-                    className="flex-1 rounded border border-border bg-secondary/30 px-2 py-1 text-[calc(0.75em*var(--scale-infobox,1))] font-semibold uppercase tracking-wider text-foreground/80 outline-none focus:ring-1 focus:ring-ring"
-                  />
-                  <button
-                    onClick={() => handleRemove(i)}
-                    className="shrink-0 rounded p-1 text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors"
-                    title="Remove section"
-                  >
-                    <PhX size={14} />
-                  </button>
-                </div>
-              )
-            }
+          <DndContext
+            sensors={sensors}
+            collisionDetection={closestCenter}
+            onDragEnd={handleDragEnd}
+          >
+            <SortableContext
+              items={localEntries.map((e) => e._id)}
+              strategy={verticalListSortingStrategy}
+            >
+              {(() => {
+                // PR-A — group-aware row sequence. Walk localEntries once, track
+                // which group each entry belongs to, and emit an inline "+ Add
+                // field" affordance at every group break (last field before a
+                // group-header, or after the final field). The button's insert
+                // position lands inside the *current* group at the break, so
+                // "Genre 아래 (top-level)" stays top-level instead of leaking
+                // into ADDITIONAL INFO. Inline buttons are intentionally
+                // outside SortableContext items[] — only entry rows are
+                // sortable.
+                let currentGroup = ""
+                const out: ReactNode[] = []
+                for (let i = 0; i < localEntries.length; i++) {
+                  const entry = localEntries[i]
+                  if (entry.type === "group-header") {
+                    currentGroup = entry.key
+                    out.push(
+                      <SortableWrapper key={entry._id} id={entry._id}>
+                        <GroupHeaderEditRow
+                          entry={entry}
+                          onKeyChange={(v) => handleChange(i, "key", v)}
+                          onColorChange={(c) => handleGroupColorChange(i, c)}
+                          onToggleDefault={() => handleGroupDefaultCollapsedToggle(i)}
+                          onRemove={() => handleRemove(i)}
+                        />
+                      </SortableWrapper>,
+                    )
+                  } else if (entry.type === "section") {
+                    out.push(
+                      <SortableWrapper key={entry._id} id={entry._id}>
+                        <div className="flex items-start gap-2">
+                          <input
+                            value={entry.key}
+                            onChange={(e) => handleChange(i, "key", e.target.value)}
+                            placeholder="Section name"
+                            className="flex-1 rounded border border-border bg-secondary/30 px-2 py-1 text-[calc(0.75em*var(--scale-infobox,1))] font-semibold uppercase tracking-wider text-foreground/80 outline-none focus:ring-1 focus:ring-ring"
+                          />
+                          <button
+                            onClick={() => handleRemove(i)}
+                            className="shrink-0 rounded p-1 text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors"
+                            title="Remove section"
+                          >
+                            <PhX size={14} />
+                          </button>
+                        </div>
+                      </SortableWrapper>,
+                    )
+                  } else {
+                    out.push(
+                      <SortableWrapper key={entry._id} id={entry._id}>
+                        <div className="flex items-start gap-2">
+                          <input
+                            value={entry.key}
+                            onChange={(e) => handleChange(i, "key", e.target.value)}
+                            placeholder="Key"
+                            className="w-[100px] shrink-0 rounded border border-border bg-background px-2 py-1 text-[calc(0.875em*var(--scale-infobox,1))] outline-none focus:ring-1 focus:ring-ring"
+                          />
+                          <input
+                            value={entry.value}
+                            onChange={(e) => handleChange(i, "value", e.target.value)}
+                            placeholder="Value"
+                            className="flex-1 rounded border border-border bg-background px-2 py-1 text-[calc(0.875em*var(--scale-infobox,1))] outline-none focus:ring-1 focus:ring-ring"
+                          />
+                          <button
+                            onClick={() => handleRemove(i)}
+                            className="shrink-0 rounded p-1 text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors"
+                          >
+                            <PhX size={14} />
+                          </button>
+                        </div>
+                      </SortableWrapper>,
+                    )
+                  }
 
-            if (entry.type === "group-header") {
-              return (
-                <GroupHeaderEditRow
-                  key={i}
-                  entry={entry}
-                  onKeyChange={(v) => handleChange(i, "key", v)}
-                  onColorChange={(c) => handleGroupColorChange(i, c)}
-                  onToggleDefault={() => handleGroupDefaultCollapsedToggle(i)}
-                  onRemove={() => handleRemove(i)}
-                />
-              )
-            }
+                  const next = localEntries[i + 1]
+                  const isGroupEnd = !next || next.type === "group-header"
+                  if (isGroupEnd) {
+                    const insertPos = i + 1
+                    const label = currentGroup
+                      ? `Add field to ${currentGroup}`
+                      : "Add field"
+                    out.push(
+                      <button
+                        key={`add-${i}`}
+                        onClick={() => handleAdd(insertPos)}
+                        className="flex items-center gap-1.5 pl-7 text-[calc(0.75em*var(--scale-infobox,1))] text-muted-foreground/70 hover:text-foreground transition-colors"
+                      >
+                        <PhPlus size={12} />
+                        {label}
+                      </button>,
+                    )
+                  }
+                }
+                return out
+              })()}
+            </SortableContext>
+          </DndContext>
 
-            return (
-              <div key={i} className="flex items-start gap-2">
-                <input
-                  value={entry.key}
-                  onChange={(e) => handleChange(i, "key", e.target.value)}
-                  placeholder="Key"
-                  className="w-[100px] shrink-0 rounded border border-border bg-background px-2 py-1 text-[calc(0.875em*var(--scale-infobox,1))] outline-none focus:ring-1 focus:ring-ring"
-                />
-                <input
-                  value={entry.value}
-                  onChange={(e) => handleChange(i, "value", e.target.value)}
-                  placeholder="Value"
-                  className="flex-1 rounded border border-border bg-background px-2 py-1 text-[calc(0.875em*var(--scale-infobox,1))] outline-none focus:ring-1 focus:ring-ring"
-                />
-                <button
-                  onClick={() => handleRemove(i)}
-                  className="shrink-0 rounded p-1 text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors"
-                >
-                  <PhX size={14} />
-                </button>
-              </div>
-            )
-          })}
-          <div className="flex items-center gap-4">
+          {/* Empty-state fallback: no entries → still need a way to add the first field */}
+          {localEntries.length === 0 && (
             <button
-              onClick={handleAdd}
+              onClick={() => handleAdd()}
               className="flex items-center gap-1.5 text-[calc(0.875em*var(--scale-infobox,1))] text-muted-foreground hover:text-foreground transition-colors"
             >
               <PhPlus size={14} />
               Add field
             </button>
+          )}
+
+          {/* Structural additions stay at the bottom — they reshape the layout
+              rather than fill an existing region. */}
+          <div className="flex items-center gap-4 pt-1 border-t border-border-subtle/40 mt-2">
             <button
               onClick={handleAddSection}
               className="flex items-center gap-1.5 text-[calc(0.875em*var(--scale-infobox,1))] text-muted-foreground hover:text-foreground transition-colors"
@@ -547,6 +766,7 @@ export function WikiInfobox({
             </button>
           </div>
         </div>
+        </div>
       </div>
 
       {/* Confirm modal also reachable from edit mode */}
@@ -560,22 +780,43 @@ export function WikiInfobox({
           <AlertDialogHeader>
             <AlertDialogTitle>Change Infobox Preset</AlertDialogTitle>
             <AlertDialogDescription>
-              All current fields will be replaced with the{" "}
+              Switch to{" "}
               <span className="font-semibold text-foreground">
                 {pendingPreset ? getPresetDefinition(pendingPreset).label : ""}
               </span>{" "}
-              preset. Unsaved edits will also be lost.
+              preset.{" "}
+              {pendingPreserveStats && pendingPreserveStats.total > 0 ? (
+                <>
+                  <span className="font-semibold text-foreground">
+                    {pendingPreserveStats.preserved} of {pendingPreserveStats.total}
+                  </span>{" "}
+                  existing values match this preset&apos;s fields. Unsaved edits will also be lost.
+                </>
+              ) : (
+                "Unsaved edits will also be lost."
+              )}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel onClick={cancelPresetSwap}>Cancel</AlertDialogCancel>
+            {pendingPreserveStats && pendingPreserveStats.preserved > 0 && (
+              <AlertDialogAction
+                onClick={() => {
+                  preservePresetSwap()
+                  setIsEditing(false)
+                }}
+              >
+                Preserve matching ({pendingPreserveStats.preserved})
+              </AlertDialogAction>
+            )}
             <AlertDialogAction
               onClick={() => {
                 confirmPresetSwap()
                 setIsEditing(false)
               }}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
-              Replace
+              Replace all
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
