@@ -26,10 +26,19 @@ export const EmptyHintPlaceholder = Extension.create({
         props: {
           decorations: (state) => {
             const { doc } = state
-            // Only show hint on a truly empty note. A non-empty text anywhere,
-            // or more than one block, means the user is mid-edit — don't ambush
-            // them by re-appearing inside a fresh paragraph after Enter.
-            if (doc.textContent !== "" || doc.childCount > 1) {
+            // Only show hint when the body has exactly ONE paragraph and it's empty.
+            // Heading (Untitled placeholder) is excluded from this count. Any body
+            // content (text typed, or a second paragraph from Enter) hides the hint
+            // so it doesn't ambush the user mid-edit.
+            let paraCount = 0
+            let paraHasText = false
+            doc.forEach((node) => {
+              if (node.type.name === "paragraph") {
+                paraCount += 1
+                if (node.content.size > 0) paraHasText = true
+              }
+            })
+            if (paraHasText || paraCount !== 1) {
               return DecorationSet.empty
             }
             const decorations: Decoration[] = []
@@ -37,9 +46,8 @@ export const EmptyHintPlaceholder = Extension.create({
 
             doc.descendants((node, pos) => {
               if (attached) return false
-              // Only attach to the FIRST empty paragraph encountered. Headings
-              // (e.g. the leading "Untitled" title) get their own placeholder
-              // from @tiptap/extension-placeholder.
+              // Attach to the (only) empty paragraph. Heading placeholder is
+              // handled separately by @tiptap/extension-placeholder.
               if (node.type.name === "paragraph" && node.content.size === 0) {
                 const widget = document.createElement("span")
                 widget.className = "plot-empty-hint"
