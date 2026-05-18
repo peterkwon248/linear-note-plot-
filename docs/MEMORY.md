@@ -8,6 +8,56 @@
 
 ---
 
+## 🚀 2026-05-19 (저녁) — **PR #370 polish + PR #371 themeColor cascade (2 PR squash 머지)** ⭐⭐⭐⭐⭐
+
+**범위**: 1 worktree (`angry-shtern-b2ac28`). 2 PR — PR #370 (Hatnote dialog polish, conflict resolve 머지), PR #371 (themeColor cascade system, +356/-27, 11 files, 1 new).
+
+PRD `.omc/plans/wiki-infobox-tier-2-4-prd.md` **Phase 5+ second wave 완료**. BRAINSTORM Top 7 #4 (themeColor 시스템) 정합. Plot 시각적 정체성 강화 — 사용자가 article마다 자기 "주제 색" 지정 → infobox header / hatnote accent / h2 section borders cascade.
+
+**사용자 시그널 (그대로 인용)**:
+1. "야 Type 안에 글자들이 너무 박스 안에서 빼곡한 느낌인데... 브레인스토밍 좀 해볼래" → PR #370 polish (옵션 2)
+2. "1인데, 이건 위키의 테마 컬러를 말하는 건가??" → themeColor 작동 방식 설명 + 6 옵션 정리
+3. "오케이 너의 제안으로" → A1 + B2 + C3 따라 진행
+4. "다른 컴퓨터로 올거니까 after-work 완벽하게" → architect NEEDS FIXES 모두 적용 후 PR #371 squash 머지
+
+### PR 요약
+
+- **PR #370** — Hatnote dialog Type Select polish: SelectItem 2-line → 제목 한 줄 + Select 아래 hint
+- **PR #371** — themeColor cascade: 단일 hex string + `--wiki-theme-color` CSS variable inject (root container) + infobox header fallback + hatnote accent border + h2 section borders opt-in (Tailwind arbitrary selector) + PRESET_COLORS 18색 picker dialog + Persist v143
+
+### 영구 LOCKED 결정 (이번 세션, #81-#83)
+
+- **#81. themeColor = 단일 hex string + CSS variable cascade 패턴**: `{light, dark}` 이중 객체 X (over-engineering). `--wiki-theme-color` CSS variable inject + light/dark 분기는 `useTintedBg` hook (next-themes)에 위임. 향후 다른 cascade color (NavBox accent, Ambox 등) 동일 패턴.
+- **#82. 디자인 cascade는 opt-in 의무** (영구 룰 #67 정합 강화): themeColor null 시 모든 cascade chrome 0. Tailwind arbitrary selector (`[&_[data-h2]]:`) 패턴으로 root container className 토글. 영구 적용 + transparent fallback은 매력적이지만 default chrome noise를 invite하므로 폐기.
+- **#83. Component prop signature 확장은 optional + back-compat 의무**: 모든 신규 prop은 default `undefined` + caller 영향 0 가능해야 함. WikiInfobox `themeColor?` / `onThemeColorChange?` 미사용 caller (note-editor.tsx, wiki-article-reader.tsx) 영향 0.
+
+### 기술 학습 (영구, 2026-05-19 저녁)
+
+- **CSS variable cascade vs prop drilling**: 동일 색을 5+ 컴포넌트에 전달 시 CSS variable inject이 prop drilling보다 정직. SSR-safe, 분기 코드 0, 자손 자동 수신.
+- **Tailwind arbitrary selector + CSS variable**: `[&_[data-h2]]:border-l-[3px] [&_[data-h2]]:pl-3 [&_[data-h2]]:border-l-[color:var(--wiki-theme-color)]` 한 줄로 자손 cascade. v3.2+ 작동.
+- **useTintedBg hex desaturate 안 함 부채**: `lib/tinted-bg.ts:60-61` regex가 `rgba` 전용. hex 입력은 light/dark 둘 다 unchanged passthrough → light mode contrast 부족 (vivid yellow/lime/amber). `lib/wiki-color-contrast.ts::shouldUseLightText` 통합 follow-up 의무.
+- **Encyclopedia layout = 4 mount 위치**: wiki-view 메인 / split secondary / note-hover-preview / wiki-embed-node. cascade 추가 시 두 root 경로 모두 수정 필수 (architect 검증으로 발견).
+- **Stacked PR + 같은 파일 polish conflict**: 머지된 PR 직후 같은 파일 polish 시 line-level conflict. HEAD 우선 + Edit으로 manual marker 제거 안정 패턴.
+
+### 환경 변경
+
+- Main HEAD: `91c8eca` → `a5e6ef8` (PR #371)
+- Store version: 142 → **143** (PR-E2 v142→v143 sentinel)
+- 신규 type field: `WikiArticle.themeColor?: string | null`
+- 신규 setter: `setWikiArticleThemeColor`
+- 신규 file: `components/wiki-editor/wiki-theme-color-picker.tsx`
+- WikiInfobox prop 확장: `themeColor?` + `onThemeColorChange?` (optional, back-compat)
+- 영구 룰 추가: #81-#83
+
+### 다음 (TODO.md P0)
+
+🔴 **P0 #1**: light mode hex contrast follow-up — `useTintedText`에 `shouldUseLightText` 통합 (단일 파일 ~10줄). 사용자가 vivid PRESET_COLORS 클릭 시 흰 글씨 가독성 망함. **우선순위 가장 높음**.
+🟣 **P0 #2 (PR-E3 후보)**: `편집 히스토리 v1` (multi-machine PRD 시점 권장 — 지금 만들면 재설계) / `Ambox` (Skip 권장, noise risk) / `Group header tint` (themeColor follow-up) / `SectionTemplate` (MVP 후) 중 결정.
+🟡 **P0 #3**: WikiTemplate detail panel hero edit UI (~3 파일, PR-C 후속).
+🟢 **P0 #4**: dead code + TS 부채 cleanup PR + doc comment 부정확 3건 (PR-E1 architect non-blocking).
+
+---
+
 ## 🚀 2026-05-19 — **PR-E1: Hatnotes + Preset import/export (Phase 5+ first wave, PR #368 squash 머지)** ⭐⭐⭐⭐
 
 **범위**: 1 worktree (`angry-shtern-b2ac28`). 1 PR — PR #368 (Hatnotes + Preset I/O, 1 commit squash, +828/-4, 11 files).
