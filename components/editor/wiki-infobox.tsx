@@ -2,6 +2,23 @@
 
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from "react"
 import { createPortal } from "react-dom"
+import {
+  DndContext,
+  KeyboardSensor,
+  PointerSensor,
+  closestCenter,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from "@dnd-kit/core"
+import {
+  SortableContext,
+  arrayMove,
+  sortableKeyboardCoordinates,
+  useSortable,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable"
+import { CSS } from "@dnd-kit/utilities"
 import { usePlotStore } from "@/lib/store"
 import type { WikiInfoboxEntry, WikiInfoboxPreset } from "@/lib/types"
 import { cn } from "@/lib/utils"
@@ -14,6 +31,7 @@ import {
   PaintBucket,
   CaretDown,
   CaretRight,
+  DotsSixVertical,
 } from "@/lib/editor/editor-icons"
 import {
   INFOBOX_PRESETS,
@@ -67,6 +85,58 @@ interface WikiInfoboxProps {
    * the cloned seed entries — caller persists both atomically.
    */
   onPresetChange?: (preset: WikiInfoboxPreset, seedEntries: WikiInfoboxEntry[]) => void
+}
+
+// ── SortableWrapper: drag-handle + transform style ──────────────────────────
+//
+// One generic wrapper for all three row types (field / section / group-header)
+// so we don't have to duplicate the useSortable wiring three times. Grip lives
+// on the left, children take the rest of the row.
+
+function SortableWrapper({ id, children }: { id: string; children: ReactNode }) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
+    useSortable({ id })
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition: transition ?? undefined,
+    opacity: isDragging ? 0.5 : 1,
+  }
+  return (
+    <div ref={setNodeRef} style={style} className="flex items-start gap-1">
+      <button
+        type="button"
+        {...attributes}
+        {...listeners}
+        className="shrink-0 cursor-grab active:cursor-grabbing p-1 mt-0.5 text-muted-foreground/40 hover:text-foreground transition-colors"
+        title="Drag to reorder"
+        aria-label="Drag to reorder"
+      >
+        <DotsSixVertical size={14} />
+      </button>
+      <div className="flex-1 min-w-0">{children}</div>
+    </div>
+  )
+}
+
+// ── Editable entry: WikiInfoboxEntry + ephemeral _id ────────────────────────
+//
+// Drag-and-drop needs a stable identity per row that survives reorders +
+// value edits. We attach an _id when entering edit mode and strip it on save.
+// _id never crosses the persistence boundary.
+
+type EditableEntry = WikiInfoboxEntry & { _id: string }
+
+function makeId(): string {
+  return `e-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 7)}`
+}
+
+function withId(entry: WikiInfoboxEntry): EditableEntry {
+  return { ...entry, _id: makeId() }
+}
+
+function stripId(entry: EditableEntry): WikiInfoboxEntry {
+  const { _id, ...rest } = entry
+  return rest
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -149,7 +219,12 @@ export function WikiInfobox({
   const setWikiInfoboxNote = usePlotStore((s) => s.setWikiInfobox)
   const setWikiArticleInfobox = usePlotStore((s) => s.setWikiArticleInfobox)
   const [isEditing, setIsEditing] = useState(false)
-  const [localEntries, setLocalEntries] = useState<WikiInfoboxEntry[]>(entries)
+  // PR-A — ephemeral _id keeps dnd-kit's stable identity across reorders while
+  // we mutate field values (handleChange creates new entry objects, so we can't
+  // rely on object reference identity). _id is stripped before persisting.
+  const [localEntries, setLocalEntries] = useState<EditableEntry[]>(() =>
+    entries.map((e) => withId(e)),
+  )
   const [showColorPicker, setShowColorPicker] = useState(false)
   const renderedHeaderColor = useTintedBg(headerColor)
   const headerTextColor = useTintedText(headerColor)
@@ -171,22 +246,24 @@ export function WikiInfobox({
   )
 
   const handleStartEdit = useCallback(() => {
-    setLocalEntries([...entries])
+    setLocalEntries(entries.map((e) => withId(e)))
     setIsEditing(true)
   }, [entries])
 
   const handleSave = useCallback(() => {
     // group-header rows keep value="" and don't need key trim filter
-    const cleaned = localEntries.filter((e) => {
-      if (e.type === "group-header") return (e.key ?? "").trim() !== ""
-      return e.key.trim() !== ""
-    })
+    const cleaned = localEntries
+      .filter((e) => {
+        if (e.type === "group-header") return (e.key ?? "").trim() !== ""
+        return e.key.trim() !== ""
+      })
+      .map(stripId)
     persistEntries(cleaned)
     setIsEditing(false)
   }, [persistEntries, localEntries])
 
   const handleCancel = useCallback(() => {
-    setLocalEntries([...entries])
+    setLocalEntries(entries.map((e) => withId(e)))
     setIsEditing(false)
   }, [entries])
 
@@ -194,21 +271,40 @@ export function WikiInfobox({
   // insert at a specific spot. Footer Add field (no arg) still pushes to the end.
   const handleAdd = useCallback((position?: number) => {
     setLocalEntries((prev) => {
-      const newField: WikiInfoboxEntry = { key: "", value: "", type: "field" }
+      const newField: EditableEntry = { key: "", value: "", type: "field", _id: makeId() }
       if (position === undefined || position >= prev.length) return [...prev, newField]
       return [...prev.slice(0, position), newField, ...prev.slice(position)]
     })
   }, [])
 
   const handleAddSection = useCallback(() => {
-    setLocalEntries((prev) => [...prev, { key: "", value: "", type: "section" }])
+    setLocalEntries((prev) => [...prev, { key: "", value: "", type: "section", _id: makeId() }])
   }, [])
 
   const handleAddGroupHeader = useCallback(() => {
     setLocalEntries((prev) => [
       ...prev,
-      { key: "", value: "", type: "group-header", color: null, defaultCollapsed: false },
+      { key: "", value: "", type: "group-header", color: null, defaultCollapsed: false, _id: makeId() },
     ])
+  }, [])
+
+  // PR-A — dnd-kit drag-to-reorder. PointerSensor with a small activation
+  // distance lets click-to-edit on row inputs still work without triggering a
+  // drag accidentally.
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 4 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
+  )
+
+  const handleDragEnd = useCallback((event: DragEndEvent) => {
+    const { active, over } = event
+    if (!over || active.id === over.id) return
+    setLocalEntries((prev) => {
+      const oldIndex = prev.findIndex((e) => e._id === active.id)
+      const newIndex = prev.findIndex((e) => e._id === over.id)
+      if (oldIndex === -1 || newIndex === -1) return prev
+      return arrayMove(prev, oldIndex, newIndex)
+    })
   }, [])
 
   const handleRemove = useCallback((index: number) => {
@@ -509,94 +605,112 @@ export function WikiInfobox({
           </div>
         </div>
         <div className="space-y-2 p-3">
-          {(() => {
-            // PR-A — group-aware row sequence. Walk localEntries once, track
-            // which group each entry belongs to, and emit an inline "+ Add
-            // field" affordance at every group break (last field before a
-            // group-header, or after the final field). The button's insert
-            // position lands inside the *current* group at the break, so
-            // "Genre 아래 (top-level)" stays top-level instead of leaking into
-            // ADDITIONAL INFO.
-            let currentGroup = ""
-            const out: ReactNode[] = []
-            for (let i = 0; i < localEntries.length; i++) {
-              const entry = localEntries[i]
-              if (entry.type === "group-header") {
-                currentGroup = entry.key
-                out.push(
-                  <GroupHeaderEditRow
-                    key={`row-${i}`}
-                    entry={entry}
-                    onKeyChange={(v) => handleChange(i, "key", v)}
-                    onColorChange={(c) => handleGroupColorChange(i, c)}
-                    onToggleDefault={() => handleGroupDefaultCollapsedToggle(i)}
-                    onRemove={() => handleRemove(i)}
-                  />,
-                )
-              } else if (entry.type === "section") {
-                out.push(
-                  <div key={`row-${i}`} className="flex items-start gap-2">
-                    <input
-                      value={entry.key}
-                      onChange={(e) => handleChange(i, "key", e.target.value)}
-                      placeholder="Section name"
-                      className="flex-1 rounded border border-border bg-secondary/30 px-2 py-1 text-[calc(0.75em*var(--scale-infobox,1))] font-semibold uppercase tracking-wider text-foreground/80 outline-none focus:ring-1 focus:ring-ring"
-                    />
-                    <button
-                      onClick={() => handleRemove(i)}
-                      className="shrink-0 rounded p-1 text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors"
-                      title="Remove section"
-                    >
-                      <PhX size={14} />
-                    </button>
-                  </div>,
-                )
-              } else {
-                out.push(
-                  <div key={`row-${i}`} className="flex items-start gap-2">
-                    <input
-                      value={entry.key}
-                      onChange={(e) => handleChange(i, "key", e.target.value)}
-                      placeholder="Key"
-                      className="w-[100px] shrink-0 rounded border border-border bg-background px-2 py-1 text-[calc(0.875em*var(--scale-infobox,1))] outline-none focus:ring-1 focus:ring-ring"
-                    />
-                    <input
-                      value={entry.value}
-                      onChange={(e) => handleChange(i, "value", e.target.value)}
-                      placeholder="Value"
-                      className="flex-1 rounded border border-border bg-background px-2 py-1 text-[calc(0.875em*var(--scale-infobox,1))] outline-none focus:ring-1 focus:ring-ring"
-                    />
-                    <button
-                      onClick={() => handleRemove(i)}
-                      className="shrink-0 rounded p-1 text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors"
-                    >
-                      <PhX size={14} />
-                    </button>
-                  </div>,
-                )
-              }
+          <DndContext
+            sensors={sensors}
+            collisionDetection={closestCenter}
+            onDragEnd={handleDragEnd}
+          >
+            <SortableContext
+              items={localEntries.map((e) => e._id)}
+              strategy={verticalListSortingStrategy}
+            >
+              {(() => {
+                // PR-A — group-aware row sequence. Walk localEntries once, track
+                // which group each entry belongs to, and emit an inline "+ Add
+                // field" affordance at every group break (last field before a
+                // group-header, or after the final field). The button's insert
+                // position lands inside the *current* group at the break, so
+                // "Genre 아래 (top-level)" stays top-level instead of leaking
+                // into ADDITIONAL INFO. Inline buttons are intentionally
+                // outside SortableContext items[] — only entry rows are
+                // sortable.
+                let currentGroup = ""
+                const out: ReactNode[] = []
+                for (let i = 0; i < localEntries.length; i++) {
+                  const entry = localEntries[i]
+                  if (entry.type === "group-header") {
+                    currentGroup = entry.key
+                    out.push(
+                      <SortableWrapper key={entry._id} id={entry._id}>
+                        <GroupHeaderEditRow
+                          entry={entry}
+                          onKeyChange={(v) => handleChange(i, "key", v)}
+                          onColorChange={(c) => handleGroupColorChange(i, c)}
+                          onToggleDefault={() => handleGroupDefaultCollapsedToggle(i)}
+                          onRemove={() => handleRemove(i)}
+                        />
+                      </SortableWrapper>,
+                    )
+                  } else if (entry.type === "section") {
+                    out.push(
+                      <SortableWrapper key={entry._id} id={entry._id}>
+                        <div className="flex items-start gap-2">
+                          <input
+                            value={entry.key}
+                            onChange={(e) => handleChange(i, "key", e.target.value)}
+                            placeholder="Section name"
+                            className="flex-1 rounded border border-border bg-secondary/30 px-2 py-1 text-[calc(0.75em*var(--scale-infobox,1))] font-semibold uppercase tracking-wider text-foreground/80 outline-none focus:ring-1 focus:ring-ring"
+                          />
+                          <button
+                            onClick={() => handleRemove(i)}
+                            className="shrink-0 rounded p-1 text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors"
+                            title="Remove section"
+                          >
+                            <PhX size={14} />
+                          </button>
+                        </div>
+                      </SortableWrapper>,
+                    )
+                  } else {
+                    out.push(
+                      <SortableWrapper key={entry._id} id={entry._id}>
+                        <div className="flex items-start gap-2">
+                          <input
+                            value={entry.key}
+                            onChange={(e) => handleChange(i, "key", e.target.value)}
+                            placeholder="Key"
+                            className="w-[100px] shrink-0 rounded border border-border bg-background px-2 py-1 text-[calc(0.875em*var(--scale-infobox,1))] outline-none focus:ring-1 focus:ring-ring"
+                          />
+                          <input
+                            value={entry.value}
+                            onChange={(e) => handleChange(i, "value", e.target.value)}
+                            placeholder="Value"
+                            className="flex-1 rounded border border-border bg-background px-2 py-1 text-[calc(0.875em*var(--scale-infobox,1))] outline-none focus:ring-1 focus:ring-ring"
+                          />
+                          <button
+                            onClick={() => handleRemove(i)}
+                            className="shrink-0 rounded p-1 text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors"
+                          >
+                            <PhX size={14} />
+                          </button>
+                        </div>
+                      </SortableWrapper>,
+                    )
+                  }
 
-              const next = localEntries[i + 1]
-              const isGroupEnd = !next || next.type === "group-header"
-              if (isGroupEnd) {
-                const insertPos = i + 1
-                const label = currentGroup
-                  ? `Add field to ${currentGroup}`
-                  : "Add field"
-                out.push(
-                  <button
-                    key={`add-${i}`}
-                    onClick={() => handleAdd(insertPos)}
-                    className="flex items-center gap-1.5 pl-1 text-[calc(0.75em*var(--scale-infobox,1))] text-muted-foreground/70 hover:text-foreground transition-colors"
-                  >
-                    <PhPlus size={12} />
-                    {label}
-                  </button>,
-                )
-              }
-            }
-            return out
-          })()}
+                  const next = localEntries[i + 1]
+                  const isGroupEnd = !next || next.type === "group-header"
+                  if (isGroupEnd) {
+                    const insertPos = i + 1
+                    const label = currentGroup
+                      ? `Add field to ${currentGroup}`
+                      : "Add field"
+                    out.push(
+                      <button
+                        key={`add-${i}`}
+                        onClick={() => handleAdd(insertPos)}
+                        className="flex items-center gap-1.5 pl-7 text-[calc(0.75em*var(--scale-infobox,1))] text-muted-foreground/70 hover:text-foreground transition-colors"
+                      >
+                        <PhPlus size={12} />
+                        {label}
+                      </button>,
+                    )
+                  }
+                }
+                return out
+              })()}
+            </SortableContext>
+          </DndContext>
 
           {/* Empty-state fallback: no entries → still need a way to add the first field */}
           {localEntries.length === 0 && (
