@@ -159,10 +159,17 @@ function SectionBlock({ block, editable, sectionNumber, onUpdate, onDelete, drag
 
   return (
     <div className="group/section relative" style={fontScale !== 1 ? { fontSize: `${fontScale}em` } : undefined}>
-      <div className={cn(
-        "flex items-center gap-1",
-        isEnc ? "mt-10 mb-4 border-b border-white/[0.08] pb-1.5 gap-2" : "mt-8 mb-2",
-      )}>
+      <div
+        // PR-E2 — `data-h2` marks h2 wrappers; the parent wiki article
+        // scroll container toggles `themed-wiki-article` when themeColor is
+        // set, and Tailwind arbitrary selectors at that ancestor apply the
+        // Linear-style accent border only when themed (opt-in, 영구 룰 #67).
+        data-h2={level === 2 ? "" : undefined}
+        className={cn(
+          "flex items-center gap-1",
+          isEnc ? "mt-10 mb-4 border-b border-white/[0.08] pb-1.5 gap-2" : "mt-8 mb-2",
+        )}
+      >
         {editable && (
           <button
             className="opacity-0 group-hover/section:opacity-30 hover:!opacity-100 p-0.5 text-muted-foreground cursor-grab transition-opacity duration-100"

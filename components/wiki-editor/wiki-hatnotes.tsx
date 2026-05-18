@@ -77,7 +77,14 @@ export function WikiHatnotes({
 
   return (
     <>
-      <div className={cn("space-y-0.5 ml-[1.6em]", className)}>
+      {/* PR-E2 — Hatnote left accent border. transparent fallback when no
+          --wiki-theme-color → invisible but layout-stable (Linear "gentle by
+          default" principle, 영구 룰 #67). pl 1.4em + border 2px ≈ visual 1.6em
+          indent (back-compat with prior ml-[1.6em] visual). */}
+      <div
+        className={cn("space-y-0.5 ml-0 border-l-2 pl-[1.4em]", className)}
+        style={{ borderLeftColor: "var(--wiki-theme-color, transparent)" }}
+      >
         {list.map((h) => {
           const targetTitle = h.targetArticleId ? titleById.get(h.targetArticleId) : undefined
           const hasLink = !!(h.targetArticleId && targetTitle)

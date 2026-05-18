@@ -226,6 +226,17 @@ export function createWikiArticlesSlice(set: Set, get: Get, appendEvent: AppendE
       }))
     },
 
+    /** PR-E2 — Theme color setter. Cascades to infobox header / group headers /
+     *  hatnote accent border / h2 section borders via CSS variable
+     *  `--wiki-theme-color` (injected at the wiki article scroll container). */
+    setWikiArticleThemeColor: (articleId: string, themeColor: string | null) => {
+      set((state: any) => ({
+        wikiArticles: state.wikiArticles.map((a: WikiArticle) =>
+          a.id === articleId ? { ...a, themeColor, updatedAt: now() } : a
+        ),
+      }))
+    },
+
     /* ── Block Operations ── */
 
     addWikiBlock: (articleId: string, block: Omit<WikiBlock, "id">, afterBlockId?: string) => {

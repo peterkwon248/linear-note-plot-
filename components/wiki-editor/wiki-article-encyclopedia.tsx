@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useMemo, useCallback, useRef, useEffect } from "react"
+import { useState, useMemo, useCallback, useRef, useEffect, type CSSProperties } from "react"
 import { usePlotStore } from "@/lib/store"
 import type { WikiArticle, WikiBlock, WikiSectionIndex } from "@/lib/types"
 import { WikiBlockRenderer, AddBlockButton } from "./wiki-block-renderer"
@@ -203,7 +203,18 @@ export function WikiArticleEncyclopedia({ article, isEditing, onBack, collapseAl
   )
 
   return (
-    <div className="flex-1 overflow-y-auto" style={fontSize ? { fontSize: `${fontSize}em` } : undefined}>
+    <div
+      className={cn(
+        "flex-1 overflow-y-auto",
+        // PR-E2 — Same opt-in h2 accent pattern as wiki-article-view.
+        article.themeColor &&
+          "[&_[data-h2]]:border-l-[3px] [&_[data-h2]]:pl-3 [&_[data-h2]]:border-l-[color:var(--wiki-theme-color)]",
+      )}
+      style={{
+        ...(fontSize ? { fontSize: `${fontSize}em` } : null),
+        ...(article.themeColor ? ({ "--wiki-theme-color": article.themeColor } as CSSProperties) : null),
+      }}
+    >
       {/* Title (editable) */}
       <div className={cn("px-10 pt-6 pb-2", article.contentAlign === "center" && "max-w-4xl mx-auto")}>
         {isEditing ? (
@@ -297,6 +308,15 @@ export function WikiArticleEncyclopedia({ article, isEditing, onBack, collapseAl
                             .updateWikiArticle(article.id, { infoboxHero: hero ?? undefined })
                       : undefined
                   }
+                  themeColor={article.themeColor ?? null}
+                  onThemeColorChange={
+                    isEditing
+                      ? (color) =>
+                          usePlotStore
+                            .getState()
+                            .setWikiArticleThemeColor(article.id, color)
+                      : undefined
+                  }
                 />
               </div>
             )}
@@ -347,6 +367,15 @@ export function WikiArticleEncyclopedia({ article, isEditing, onBack, collapseAl
                           usePlotStore
                             .getState()
                             .updateWikiArticle(article.id, { infoboxHero: hero ?? undefined })
+                      : undefined
+                  }
+                  themeColor={article.themeColor ?? null}
+                  onThemeColorChange={
+                    isEditing
+                      ? (color) =>
+                          usePlotStore
+                            .getState()
+                            .setWikiArticleThemeColor(article.id, color)
                       : undefined
                   }
                 />

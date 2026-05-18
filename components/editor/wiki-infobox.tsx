@@ -46,10 +46,12 @@ import {
 import { SavePresetDialog } from "./save-preset-dialog"
 import { ImportPresetDialog } from "./import-preset-dialog"
 import { downloadPresetJSON } from "@/lib/wiki-infobox-presets-io"
+import { WikiThemeColorPicker } from "@/components/wiki-editor/wiki-theme-color-picker"
 import { Trash as PhTrash } from "@/lib/editor/editor-icons"
 import { FloppyDisk } from "@phosphor-icons/react/dist/ssr/FloppyDisk"
 import { DownloadSimple } from "@phosphor-icons/react/dist/ssr/DownloadSimple"
 import { UploadSimple } from "@phosphor-icons/react/dist/ssr/UploadSimple"
+import { CircleHalf } from "@phosphor-icons/react/dist/ssr/CircleHalf"
 import { useInfoboxGroupCollapsed } from "@/lib/wiki-infobox-collapse"
 import {
   AlertDialog,
@@ -124,6 +126,19 @@ interface WikiInfoboxProps {
    * read-only embeds where layout edits aren't allowed).
    */
   onHeroChange?: (hero: InfoboxHero | null) => void
+  /**
+   * PR-E2 (Tier 2) — Article-level theme color (hex string or null). Used as
+   * a fallback for the infobox header when no explicit `headerColor` is set.
+   * Drives the cascade visible elsewhere via the `--wiki-theme-color` CSS var
+   * (h2 borders, hatnote accent). Omit to disable the fallback entirely.
+   */
+  themeColor?: string | null
+  /**
+   * PR-E2 — Callback when the user picks/clears the theme color via the
+   * "Theme color…" footer action. Omit to hide the action (e.g. notes which
+   * don't support theme color cascade — wiki-only feature).
+   */
+  onThemeColorChange?: (color: string | null) => void
 }
 
 // ── SortableWrapper: drag-handle + transform style ──────────────────────────
@@ -257,6 +272,8 @@ export function WikiInfobox({
   onEditingChange,
   hero = null,
   onHeroChange,
+  themeColor = null,
+  onThemeColorChange,
 }: WikiInfoboxProps) {
   const setWikiInfoboxNote = usePlotStore((s) => s.setWikiInfobox)
   const setWikiArticleInfobox = usePlotStore((s) => s.setWikiArticleInfobox)
@@ -279,8 +296,16 @@ export function WikiInfobox({
     entries.map((e) => withId(e)),
   )
   const [showColorPicker, setShowColorPicker] = useState(false)
-  const renderedHeaderColor = useTintedBg(headerColor)
-  const headerTextColor = useTintedText(headerColor)
+  // PR-E2 — Theme color picker dialog state. Single piece of state for both
+  // open and edit (picker seeds itself from `themeColor` when open).
+  const [showThemeColorPicker, setShowThemeColorPicker] = useState(false)
+  const canChangeThemeColor = editable && typeof onThemeColorChange === "function"
+  // PR-E2 — Header color fallback to themeColor when no explicit color is set.
+  // Individual override (headerColor) takes precedence. useTintedBg handles
+  // light/dark alpha boost for rgba inputs; hex passes through unchanged.
+  const effectiveHeaderColor = headerColor ?? themeColor ?? null
+  const renderedHeaderColor = useTintedBg(effectiveHeaderColor)
+  const headerTextColor = useTintedText(effectiveHeaderColor)
   const [showPresetDropdown, setShowPresetDropdown] = useState(false)
   const [pendingPreset, setPendingPreset] = useState<WikiInfoboxPreset | null>(null)
 
@@ -589,16 +614,18 @@ export function WikiInfobox({
           <div
             className={cn(
               "relative flex items-center justify-between border-b border-border px-3 py-2",
-              !headerColor && "bg-secondary/30",
+              // PR-E2 — Drop bg-secondary fallback when either explicit headerColor
+              // or themeColor cascade is providing a fill.
+              !effectiveHeaderColor && "bg-secondary/30",
             )}
             style={renderedHeaderColor ? { backgroundColor: renderedHeaderColor } : undefined}
           >
             <span
               className={cn(
                 "text-[calc(0.75em*var(--scale-infobox,1))] font-semibold uppercase tracking-wider",
-                !headerColor && "text-muted-foreground",
+                !effectiveHeaderColor && "text-muted-foreground",
               )}
-              style={headerColor ? { color: headerTextColor } : undefined}
+              style={effectiveHeaderColor ? { color: headerTextColor } : undefined}
             >
               {presetDef.preset === "custom" ? "Info" : presetDef.label}
             </span>
@@ -613,7 +640,7 @@ export function WikiInfobox({
                     userPresets={userPresets}
                     onDeleteUserPreset={handleDeleteUserPreset}
                     compact
-                    inverted={!!headerColor}
+                    inverted={!!effectiveHeaderColor}
                   />
                 )}
                 {canChangeColor && (
@@ -622,13 +649,13 @@ export function WikiInfobox({
                     title="Header color"
                     className={cn(
                       "rounded p-0.5 transition-colors shrink-0",
-                      showColorPicker || headerColor
-                        ? headerColor
+                      showColorPicker || effectiveHeaderColor
+                        ? effectiveHeaderColor
                           ? "hover:bg-black/10 dark:hover:bg-white/10"
                           : "text-foreground"
                         : "text-muted-foreground/60 hover:text-foreground hover:bg-hover-bg opacity-0 group-hover/infobox:opacity-100",
                     )}
-                    style={headerColor ? { color: headerTextColor } : undefined}
+                    style={effectiveHeaderColor ? { color: headerTextColor } : undefined}
                   >
                     <PaintBucket size={12} />
                   </button>
@@ -637,11 +664,11 @@ export function WikiInfobox({
                   onClick={handleStartEdit}
                   className={cn(
                     "rounded p-0.5 transition-colors",
-                    headerColor
+                    effectiveHeaderColor
                       ? "hover:bg-black/10 dark:hover:bg-white/10"
                       : "text-muted-foreground hover:bg-hover-bg hover:text-foreground",
                   )}
-                  style={headerColor ? { color: headerTextColor } : undefined}
+                  style={effectiveHeaderColor ? { color: headerTextColor } : undefined}
                   title="Edit infobox"
                 >
                   <PencilSimple size={12} />
@@ -736,16 +763,17 @@ export function WikiInfobox({
         <div
           className={cn(
             "flex items-center justify-between border-b border-border px-3 py-2",
-            !headerColor && "bg-secondary/30",
+            // PR-E2 — Cascade-aware fallback.
+            !effectiveHeaderColor && "bg-secondary/30",
           )}
           style={renderedHeaderColor ? { backgroundColor: renderedHeaderColor } : undefined}
         >
           <span
             className={cn(
               "text-[calc(0.75em*var(--scale-infobox,1))] font-semibold uppercase tracking-wider",
-              !headerColor && "text-muted-foreground",
+              !effectiveHeaderColor && "text-muted-foreground",
             )}
-            style={headerColor ? { color: headerTextColor } : undefined}
+            style={effectiveHeaderColor ? { color: headerTextColor } : undefined}
           >
             Edit Infobox
           </span>
@@ -759,7 +787,7 @@ export function WikiInfobox({
                 userPresets={userPresets}
                 onDeleteUserPreset={handleDeleteUserPreset}
                 compact
-                inverted={!!headerColor}
+                inverted={!!effectiveHeaderColor}
               />
             )}
             <button
@@ -772,11 +800,11 @@ export function WikiInfobox({
               onClick={handleCancel}
               className={cn(
                 "rounded p-1 transition-colors",
-                headerColor
+                effectiveHeaderColor
                   ? "hover:bg-black/10 dark:hover:bg-white/10"
                   : "text-muted-foreground hover:bg-hover-bg",
               )}
-              style={headerColor ? { color: headerTextColor } : undefined}
+              style={effectiveHeaderColor ? { color: headerTextColor } : undefined}
             >
               <PhX size={14} />
             </button>
@@ -961,6 +989,31 @@ export function WikiInfobox({
                 Import presets…
               </button>
             )}
+            {/* PR-E2 — Theme color action. Wiki-only (canChangeThemeColor gates
+                this; notes don't pass onThemeColorChange). Shows a small swatch
+                preview when themeColor is set. */}
+            {canChangeThemeColor && (
+              <button
+                onClick={() => setShowThemeColorPicker(true)}
+                className={cn(
+                  "flex items-center gap-1.5 text-[calc(0.875em*var(--scale-infobox,1))] text-muted-foreground hover:text-foreground transition-colors",
+                  // First in the right cluster when nothing else is to its left.
+                  localEntries.length === 0 && userPresets.length === 0 && !canChangePreset && "ml-auto",
+                )}
+                title={themeColor ? `Theme color: ${themeColor}` : "Set article theme color"}
+              >
+                {themeColor ? (
+                  <span
+                    className="h-3.5 w-3.5 rounded-full ring-1 ring-black/10 dark:ring-white/15"
+                    style={{ backgroundColor: themeColor }}
+                    aria-hidden
+                  />
+                ) : (
+                  <CircleHalf size={14} />
+                )}
+                Theme color…
+              </button>
+            )}
           </div>
         </div>
         </div>
@@ -1034,6 +1087,18 @@ export function WikiInfobox({
         open={showImportPresetDialog}
         onOpenChange={setShowImportPresetDialog}
       />
+
+      {/* PR-E2 — Theme color picker. Wiki-only (gated on canChangeThemeColor).
+          Receives current themeColor + onApply callback that delegates to the
+          caller-provided onThemeColorChange. Null = clear. */}
+      {canChangeThemeColor && (
+        <WikiThemeColorPicker
+          open={showThemeColorPicker}
+          onOpenChange={setShowThemeColorPicker}
+          currentValue={themeColor ?? null}
+          onApply={(c) => onThemeColorChange?.(c)}
+        />
+      )}
 
       {heroPickerDialog}
     </>

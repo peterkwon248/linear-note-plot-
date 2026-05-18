@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useMemo, useCallback, useRef, useEffect, Fragment } from "react"
+import { useState, useMemo, useCallback, useRef, useEffect, Fragment, type CSSProperties } from "react"
 import { useRouter } from "next/navigation"
 import { usePlotStore } from "@/lib/store"
 import type { WikiArticle, WikiBlock } from "@/lib/types"
@@ -615,7 +615,22 @@ export function WikiArticleView({ articleId, editable = false, preview = false, 
 
       {/* Blocks Content */}
       <ResizablePanel defaultSize={contentDefault} minSize={30} className="flex flex-col">
-      <div className="flex-1 overflow-y-auto flex flex-col" id="wiki-article-scroll-container">
+      <div
+        className={cn(
+          "flex-1 overflow-y-auto flex flex-col",
+          // PR-E2 — When themeColor is set, add Linear-style accent border to
+          // h2 wrappers (marked with `data-h2`). Opt-in via Tailwind arbitrary
+          // selectors so non-themed articles keep their plain h2 layout
+          // (영구 룰 #67 "gentle by default").
+          article.themeColor &&
+            "[&_[data-h2]]:border-l-[3px] [&_[data-h2]]:pl-3 [&_[data-h2]]:border-l-[color:var(--wiki-theme-color)]",
+        )}
+        id="wiki-article-scroll-container"
+        // PR-E2 — Inject themeColor as CSS variable. Cascades to infobox header
+        // fallback, hatnote accent border, and h2 section borders without
+        // per-component prop drilling. null/undefined = no var (gentle default).
+        style={article.themeColor ? ({ "--wiki-theme-color": article.themeColor } as CSSProperties) : undefined}
+      >
         <div className={cn("px-8 py-6 pb-40 space-y-1 flex-1", !preview && (article.contentAlign === "center" ? "max-w-4xl mx-auto" : "max-w-[780px]"))}>
           {/* Breadcrumb (parent hierarchy) */}
           <WikiBreadcrumb articleId={articleId} />
@@ -897,6 +912,15 @@ export function WikiArticleView({ articleId, editable = false, preview = false, 
                             usePlotStore
                               .getState()
                               .updateWikiArticle(article.id, { infoboxHero: hero ?? undefined })
+                        : undefined
+                    }
+                    themeColor={article.themeColor ?? null}
+                    onThemeColorChange={
+                      editable
+                        ? (color) =>
+                            usePlotStore
+                              .getState()
+                              .setWikiArticleThemeColor(article.id, color)
                         : undefined
                     }
                   />
