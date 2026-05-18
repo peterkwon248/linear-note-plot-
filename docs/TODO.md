@@ -3,11 +3,87 @@
 > 우선순위 기반 작업 목록. **P0 = 다음 세션 즉시 시작점** (NEXT-ACTION.md 폐지, 2026-05-12).
 > 완료 항목은 즉시 삭제 또는 "완료" 섹션으로 이동.
 
-**마지막 갱신**: 2026-05-18 (오전) — Wiki Delete soft delete + Wiki Template 신설 + Infobox preset 6 + dropdown fix 3 PR 머지 직후
+**마지막 갱신**: 2026-05-18 (오후) — Infobox UX 종합 (PR #361/#362/#363) — PRD Phase 1+2+4 완료, PR #363 verify 대기
 
 ---
 
-## ✅ 최근 완료 (2026-05-18 오전)
+## 🔴 P0 — 즉시 (cross-machine 진입점, 2026-05-18 오후)
+
+### 1. **PR #363 manual verify + squash merge** (Save as preset / UserInfoboxPreset)
+
+PR #363 — UserInfoboxPreset 신규 (PRD Phase 4, ~10 파일, persist v140). 다음 머신에서 fresh dev로 10단계 verify 후 squash merge.
+
+**Verify path** (다른 머신):
+```bash
+git pull origin main                            # PR #361 + #362 main 반영
+git fetch origin claude/save-as-preset-D        # PR-D branch 받기
+git checkout claude/save-as-preset-D
+npm install                                     # 신규 worktree시
+npm run dev                                     # port 3002
+```
+
+**Verify 체크리스트**:
+1. `/wiki` article → preset Person 선택 → fields/색 customize
+2. Edit footer **"Save as preset…"** click → dialog → name "내 인물 v2" 저장
+3. Preset dropdown → "Built-in" 섹션 위 또는 아래에 **"My Presets" 섹션**에 "내 인물 v2" 등장
+4. 다른 article에서 "My Presets > 내 인물 v2" 선택 → 같은 layout + 색 자동 적용
+5. `/notes` Note에서도 동일 dropdown + "Save as preset…" 가능 (cross-entity)
+6. user preset hover → 🗑 delete → confirm → preset 삭제. 그 preset 사용 article은 "Custom" fallback (entries 보존)
+7. Console v139→v140 migration log 확인 (`[migrate] v139→v140: initialized userInfoboxPresets ([])`)
+8. Page reload → My Presets persist 확인 (Array defense 작동)
+9. preset switch 시 PR #361 "Preserve matching" dialog 정합 동작
+10. OK → `gh pr merge 363 --squash`
+
+### 2. **PR-C 시작** (Hero Image + caption, PRD Phase 3, ~7 파일, persist v141)
+
+PRD `.omc/plans/wiki-infobox-tier-2-4-prd.md` §1 Phase 3.
+
+**범위**:
+- `lib/types.ts`: `InfoboxHero { url, caption?, alt? }` type 신규 + Wiki/Note/WikiTemplate에 `infoboxHero?` optional 필드 (3 entity 모두 cross-entity 자동)
+- `lib/store/migrate.ts`: v140→v141 (default undefined, backward compat)
+- `lib/store/index.ts`: persist version 141
+- `components/editor/wiki-infobox.tsx`: 인포박스 최상단 `<figure>` slot — img + italic caption + edit/remove 호버 액션
+- 신규 `components/editor/infobox-hero-picker.tsx`: URL input + caption + alt dialog
+- 기존 `updateNote`/`updateWikiArticle` generic patch로 처리 (별도 setter 없이)
+
+**위험 + 회피**:
+- 이미지 URL 자유 입력 → XSS 위험 X (img src 단독, sanitize 불필요 단 사용자 본인 URL만)
+- 후속 image upload는 PR-C 외 (별도 Phase) — URL 입력만 우선
+
+### 3. (선택) **PR-E 후보** (Phase 5+)
+
+PRD §5 "Out of Scope" 후보:
+- Hatnote / Ambox 자동 배너 / themeColor cascade / 편집 히스토리 (BRAINSTORM Top 7 잔여)
+- SectionTemplate (그룹만 재사용, 3-tier 시스템 Tier 3)
+- preset import/export JSON
+
+사용자 시그널 또는 우선순위 결정 후 진행.
+
+---
+
+## ✅ 최근 완료 (2026-05-18 오후) — 대규모
+
+### PR #361 — Infobox UX 종합 강화 (7 commit, squash merged d95b61b)
+- **Preset switching 3-way dialog** (Cancel / Preserve matching / Replace all)
+- **Group-header collapse pubsub fix** (사용자 보고 "토글 작동 X")
+- **"+ Add field" inline group-aware** (사용자 보고 "Genre 아래 추가")
+- **Drag-to-reorder** (dnd-kit + ephemeral `_id`)
+- **Panel toggle 중복 fix** (사용자 보고 "스플릿뷰랑 사이드바 더 나옴")
+- **Infobox edit mode auto-expand** (22→30%, Done 시 user layout 복원)
+- **가로 스크롤 + SidePanel auto-expand 38%** (extreme narrow viewport fallback)
+
+### PR #362 — Infobox preset 풍부화 + Note cross-entity (3 commit, squash merged 43fcd44)
+- **5 preset 풍부화** (Person 16/Place 14/Org 12/Software 12/Animal 16)
+- **11 preset 풍부화** (Character/Concept/Work×4/Event/School/Food/Vehicle/Sport Team — 총 16개)
+- **Note cross-entity** (Note.infoboxPreset + infoboxHeaderColor 신규 필드, note-editor wire)
+
+### PR #363 — UserInfoboxPreset (open, 1 commit, ~562 줄)
+- **"Save as preset…" 시스템** (slice + dialog + dropdown "My Presets" 섹션)
+- **WikiInfoboxPreset = builtin | (string & {}) widen**
+- **getPresetDefinitionUnified** (builtin + user 통합 lookup)
+- **Persist v139 → v140** (userInfoboxPresets `[]` + Array defense)
+
+## ✅ 이전 완료 (2026-05-18 오전)
 - **PR #357** — Wiki Delete = hard → soft delete 패턴 (Note 2단 정합). WikiArticle.trashed/trashedAt 정식 type + trashWikiArticle action + v138 migration + 7곳 호출처 swap + bulk undo simplified (toggle)
 - **PR #358** — Wiki Template 신설 (NoteTemplate 정합 + Wiki 본질 확장). 8 seed (Empty/Concept/Person/Place/Reference/Tutorial/Project Log/Book Note) + WikiArticle.templateId + v139 migration + onRehydrateStorage defense + Wiki 사이드바 Templates entry + /wiki/templates page + WikiTemplatesView grid + WikiTemplateDetailPanel 4탭 + WikiTemplatePicker dialog
 - **PR #359** — Infobox preset 6 신규 (School/Animal/Software/Food/Vehicle/Sport Team, 나무위키 정합) + 신규 color tokens (cyan/lime/pink/brown) + Preset dropdown 잘림 fix (createPortal + fixed positioning + viewport flip)
@@ -50,56 +126,34 @@
 
 ---
 
-## 🔴 P0 — 즉시 (cross-machine 진입점, 2026-05-18 오전)
+## 🟡 P1 — 이전 세션 잔여 (오전 P0이었으나 PR-D 우선으로 demote, 2026-05-18 오후)
 
-### 1. **Wiki Template slash insert** (PR #358 후속 polish, ~3 파일)
-사용자 결정 받음: "slash insert + 생성 picker 둘 다". 이번 PR에 생성 picker만 구현됨. slash insert는 분리.
-
-**현황**:
-- PR #358 — WikiTemplatePicker dialog ("+ Article" → picker → 새 article 생성). article level 전체 apply.
-- slash insert path 미구현 — Wiki article 본문 안에서 template blocks만 inline insert.
+### Wiki Template slash insert (PR #358 후속 polish, ~3 파일)
+사용자 결정 받음: "slash insert + 생성 picker 둘 다". PR #358에 생성 picker만 구현됨. slash insert는 분리.
 
 **범위 (~3 파일)**:
 - `components/wiki-editor/wiki-article-view.tsx` 또는 toolbar에 "+ Add block" / "From wiki template…" menu entry 추가
 - WikiTemplatePicker에 `mode: "create" | "insert"` prop 추가 — insert mode 시 `getWikiTemplateBlocksExpanded(id)` 호출 후 callback에 blocks 전달
-- wiki-article-view에서 blocks 받으면 `updateWikiArticle({ blocks: [...existing, ...templateBlocks] })` 또는 `addWikiBlock` 반복 호출. position은 cursor 또는 last block 다음 (단순화 가능)
-
-**참고 파일**:
-- `components/wiki-template-picker.tsx` — picker dialog 컴포넌트
-- `lib/store/slices/wiki-templates.ts:148` `getWikiTemplateBlocksExpanded`
-- `lib/store/slices/wiki-articles.ts:addWikiBlock` / `updateWikiArticle`
-- `components/wiki-editor/wiki-article-view.tsx` — 편집 위치 + toolbar mount
+- wiki-article-view에서 blocks 받으면 `updateWikiArticle({ blocks: [...existing, ...templateBlocks] })` 또는 `addWikiBlock` 반복 호출
 
 **위험 + 회피**:
-- WikiTemplatePicker가 wiki-view에 이미 mount됨. wiki-article-view에도 별도 instance — store/local state 분리 필요
+- WikiTemplatePicker가 wiki-view에 이미 mount. wiki-article-view에도 별도 instance — store/local state 분리 필요
 - blocks splice 시 sectionIndex / linksOut 재계산 의무 (updateWikiArticle 자동 처리)
 - block ids 충돌 — getWikiTemplateBlocksExpanded가 이미 genId 부여
 
-### 2. **나무위키 Infobox Tier 2-4 본격 고도화** (큰 작업, PRD 분리 권장)
-memory `docs/MEMORY.md:3362` "나무위키 Tier 2-4 — 사용자 결정으로 진행".
+### Library Tags Detail panel (~5 파일, PR #331 Files Detail 패턴 정합)
+영구 룰 "Library entity 4탭 사이드바" 적용.
 
 **범위**:
-- 대표 이미지 + 캡션 (Person/Place/Software 등에 hero image)
-- 사용자 커스텀 preset 신규 ("Save as preset" 패턴)
-- preset별 더 풍부한 fields + 그룹핑 hierarchy
-- preset switching 시 partial preserve (어느 field 유지/덮어쓸지)
-
-**선행 작업**: `.omc/plans/wiki-infobox-tier-2-4-prd.md` 작성. 사용자 의도 명확화 후 PR 시리즈 분리.
-
-### 3. **Library Tags Detail panel** (~5 파일, PR #331 Files Detail 패턴 정합)
-영구 룰 "Library entity 4탭 사이드바" 적용. Wiki Templates Detail 패턴 그대로 mirror.
-
-**범위**:
-- `SidePanelContext`에 `"tag"`는 이미 있음 (PR #345 Labels panel과 동일 패턴)
 - TagDetailPanel 강화: Header (color dot + name) + Dates + Properties (Used by N notes / N wikis / N books) + Connections (cross-entity stat charts) + Actions (Rename / Merge / Delete)
 - 현재 TagDetailPanel 있지만 minimal — Library entity-uniformity 영구 룰 확장
 
-### 4. (선택) **Book Template 도입 가능성 논의**
+### Book Template 도입 가능성 논의 (선택)
 사용자 명시 "북에는 템플릿이 도입될 수 있을지 없을지 확신이 안 들어" — brainstorming 시작.
 
 **검토 사항**: Book의 본질은 큐레이션 묶음 (items[] + smartSources). Template = recipe 메타포 → Book에 적용 시 의미?
-- 옵션 A: Book template = items 자동 구조 (chapter heading + smart source 미리 세팅된 책 type)
-- 옵션 B: Book에 Template 안 도입 (Book은 user-curated, template 어색)
+
+> 옛 P0 #2 "나무위키 Infobox Tier 2-4 본격 고도화"는 **PRD `.omc/plans/wiki-infobox-tier-2-4-prd.md`로 분리 + Phase 1/2/4 완료** (PR #361/#362/#363). Phase 3 (Hero Image)는 P0 #2에 명시.
 
 ### 3. (선택) **Tags/Labels sub-page view-engine 통합** (이전 세션 P0 잔여)
 사용자 보고: "왜 태그스의 디스플레이는 이상하냐? 기존의 플롯식 정합과 다른데? 왜 필터는 없냐? 디스플레이 프로퍼티스 부실 + 그룹핑 옵션 없음"

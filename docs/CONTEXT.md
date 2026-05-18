@@ -51,6 +51,45 @@
 
 ---
 
+## 🚀 2026-05-18 (오후) — Infobox UX 종합 대규모 (PR #361/#362/#363) ⭐⭐⭐⭐⭐
+
+**범위**: 3 PR 22 commit. PRD `.omc/plans/wiki-infobox-tier-2-4-prd.md` Phase 1/2/4 완료. Phase 3 (Hero Image) 남음.
+
+### 핵심 결정 (영구 LOCKED, #64-#73)
+
+- **#64. Preset switching 3-way** (Cancel / Preserve matching / Replace all)
+- **#65. localStorage UI state + in-memory pubsub** 병행 sync
+- **#66. ephemeral `_id` 패턴** = list-style edit UI 표준
+- **#67. Edit mode auto-expand** = "Gentle by default, powerful when needed" 적용
+- **#68. Infobox preset = cross-entity 자원** (Wiki + Note + 향후 Book/Reference)
+- **#69. updateXxx generic patch가 정직** — 별도 setter 시리즈 X
+- **#70. UserInfoboxPreset = WikiTemplate와 별도 시스템** (infobox-only 가벼움)
+- **#71. `(string & {})` widen 패턴** — builtin autocomplete + user id 호환
+- **#72. onPresetChange callback 3번째 인자** — user preset 색 cross-entity
+- **#73. Orphan reference graceful fallback** — entries 자체 저장
+
+### 변경 핵심
+
+- **PR #361** (merged): Preset 3-way / collapse pubsub / Add field inline / drag / panel cleanup / auto-expand 24%→30%→38% / 가로 스크롤 fallback
+- **PR #362** (merged): 16 preset 풍부화 + Note cross-entity (`Note.infoboxPreset/HeaderColor` 신규 필드)
+- **PR #363** (open): UserInfoboxPreset 신규 — slice + Save dialog + dropdown "Built-in" / "My Presets" 섹션 + hover delete + Persist v140
+
+### 환경
+
+- Main HEAD: `43fcd44` (PR #362 squash merged)
+- PR #363 open, `claude/save-as-preset-D` branch HEAD `21661ea`
+- Persist v140 (PR #363 머지 후)
+- 신규 file: `lib/store/slices/wiki-infobox-presets.ts` + `components/editor/save-preset-dialog.tsx`
+- 신규 type: `UserInfoboxPreset` / `WikiInfoboxBuiltinPreset`
+
+### 다음 (TODO.md P0)
+
+🔴 **P0 #1**: PR #363 manual verify + squash merge (10단계)
+🟡 **P0 #2**: PR-C 시작 (Hero Image, Phase 3, v141)
+🟣 **P0 #3** (선택): PR-E 후보 (Phase 5+)
+
+---
+
 ## 🚀 2026-05-18 (오전) — Wiki Delete soft delete + Wiki Template 신설 + Infobox preset 6 + dropdown fix ⭐⭐⭐⭐
 
 **범위**: 3 PR (#357/#358/#359). 사용자 시그널 4건 응답.
