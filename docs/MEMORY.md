@@ -8,6 +8,51 @@
 
 ---
 
+## 🚀 2026-05-19 — **PR-E1: Hatnotes + Preset import/export (Phase 5+ first wave, PR #368 squash 머지)** ⭐⭐⭐⭐
+
+**범위**: 1 worktree (`angry-shtern-b2ac28`). 1 PR — PR #368 (Hatnotes + Preset I/O, 1 commit squash, +828/-4, 11 files).
+
+PRD `.omc/plans/wiki-infobox-tier-2-4-prd.md` **Phase 5+ Out of Scope** 후보 6개 (Hatnote / Ambox / themeColor / 편집 히스토리 / SectionTemplate / Preset I/O) 중 첫 2개 도입. Plot 제텔카스텐 본질 강화 (문서 관계 명시) + PR-D ecosystem 완성.
+
+**사용자 시그널 (그대로 인용)**:
+1. "1을 자세히 말해봐" → PR-E (Phase 5+) 후보 6개 정리 보고
+2. "너의 제안을 듣고 싶어, 어떤 것부터 작업하는 게 좋을지" → Hatnote + Preset I/O 추천 (Plot 정체성 + Linear 미니멀 + 위험 낮음)
+3. "ㅇㅇ 진행해" → 전체 워크플로우 자동 진행
+
+### PR 요약
+
+- **PR #368** — Hatnotes (Wikipedia/나무위키 표준 5 type) + Preset import/export JSON (PR-D 자연 후속). Persist v141→v142 sentinel.
+
+### 영구 LOCKED 결정 (이번 세션, #79-#80)
+
+- **#79. Hatnote = Wikipedia/나무위키 표준 5 type 정합**: above (Part of) / below (Subtopics) / distinguish (Not to be confused with) / main (Main article) / see-also (See also). 5 라벨 영어 통일. 향후 다른 wiki feature도 동일 i18n 패턴.
+- **#80. JSON export envelope = `{ version, exportedAt, presets }` 패턴**: 향후 다른 entity export (WikiTemplate / Reference 등) 동일 envelope shape로 미래 호환성 확보. raw array fallback 지원.
+
+### 기술 학습 (영구, 2026-05-19)
+
+- **JSON paste textarea + file upload 양쪽 입력 패턴**: 짧은 JSON은 paste, 긴 JSON은 file upload. 두 path 다 동일 parser 통과 → preview → import 일관.
+- **SSR-safe browser download**: `typeof window === "undefined" || typeof document === "undefined"` guard 필수. Blob + URL.createObjectURL + anchor click + URL.revokeObjectURL 패턴.
+- **WikiPicker `excludeIds` cycle safety**: cross-link feature target picker에 자기 자신 제외해서 self-reference 사고 방지. 향후 See also auto-suggest 등 동일 패턴.
+- **executor-high (opus) 멀티파일 작업 패턴 정합**: explore (sonnet) → executor (opus) → architect (opus) 3-stage. explore가 정확한 line + 패턴 파악, executor가 최소 diff 구현, architect가 영구 룰 정합 검증. 한 세션에 11 파일 +828/-4 안정 처리.
+
+### 환경 변경
+
+- Main HEAD: `0531f38` → `56ecb24` (PR #368)
+- Store version: 141 → **142** (PR-E1 v141→v142 sentinel)
+- 신규 type: `HatnoteType` + `Hatnote`
+- 신규 필드: `WikiArticle.hatnotes?: Hatnote[]`
+- 신규 setter: `setWikiArticleHatnotes`
+- 신규 file (4): `wiki-hatnotes.tsx` + `hatnote-edit-dialog.tsx` + `import-preset-dialog.tsx` + `lib/wiki-infobox-presets-io.ts`
+- 영구 룰 추가: #79-#80
+
+### 다음 (TODO.md P0)
+
+🟣 **P0 #1 (PR-E2 후보)**: `themeColor 시스템` (BRAINSTORM #4, 디자인 정체성, light/dark cascade) 또는 `편집 히스토리 v1` (multi-machine PRD 시점에 자연 통합 권장) 중 사용자 우선순위 결정. 메인 추천: themeColor.
+🟡 **P0 #2**: WikiTemplate detail panel hero edit UI (~3 파일, PR-C 후속).
+🟢 **P0 #3**: dead code + build TS 부채 cleanup PR.
+
+---
+
 ## 🚀 2026-05-18 (저녁) — **fix bundle + PR-D + PR-C Hero Image (3 PR squash, 6 commits + 1 stacked re-target)** ⭐⭐⭐⭐
 
 **범위**: 1 worktree (`musing-gagarin-62e958`). 3 PR — PR #365 (fix bundle, 4 commits squash), PR #363 (PR-D UserInfoboxPreset, 1 commit squash), PR #367 (PR-C Hero Image 재타겟, 1 commit squash, 원래 PR #366는 base 자동 close).

@@ -51,6 +51,37 @@
 
 ---
 
+## 🚀 2026-05-19 — PR-E1: Hatnotes + Preset import/export (Phase 5+ first wave, PR #368) ⭐⭐⭐⭐
+
+**범위**: PRD `.omc/plans/wiki-infobox-tier-2-4-prd.md` **Phase 5+ Out of Scope** 후보 6개 중 첫 2개 도입 (Hatnote + Preset I/O). Plot 제텔카스텐 본질 강화 (문서 관계 명시) + PR-D ecosystem 완성.
+
+### 핵심 결정 (영구 LOCKED, #79-#80)
+
+- **#79. Hatnote = Wikipedia/나무위키 표준 5 type 정합** (above/below/distinguish/main/see-also 영어 라벨)
+- **#80. JSON export envelope = `{ version, exportedAt, presets }` 패턴** (향후 다른 entity export 동일 shape)
+
+### 변경 핵심
+
+- **PR #368 (PR-E1)**:
+  - **Hatnote** — italic 회색 indent 1.6em (Wikipedia 정합), `WikiArticle.hatnotes?: Hatnote[]` optional + 신규 `wiki-hatnotes.tsx` / `hatnote-edit-dialog.tsx` + title 아래 mount + WikiPicker `excludeIds` cycle safety
+  - **Preset I/O** — 신규 `lib/wiki-infobox-presets-io.ts` (envelope + raw array 양쪽 호환 + SSR-safe download) + 신규 `import-preset-dialog.tsx` (textarea + file upload + live preview) + Infobox footer "Export/Import presets…" 액션 추가
+
+### 환경
+
+- Main HEAD: `56ecb24` (PR #368)
+- Persist v142 (PR-E1 v141→v142 sentinel)
+- 신규 file: `wiki-hatnotes.tsx` + `hatnote-edit-dialog.tsx` + `import-preset-dialog.tsx` + `wiki-infobox-presets-io.ts`
+- 신규 type: `HatnoteType` + `Hatnote`
+- 신규 필드: `WikiArticle.hatnotes?`
+
+### 다음 (TODO.md P0)
+
+🟣 **P0 #1 (PR-E2 후보)**: themeColor 시스템 (디자인 정체성) 또는 편집 히스토리 v1 (multi-machine PRD 시점 권장)
+🟡 **P0 #2**: WikiTemplate detail panel hero edit UI
+🟢 **P0 #3**: dead code + TS 부채 cleanup PR
+
+---
+
 ## 🚀 2026-05-18 (저녁) — fix bundle + PR-D + PR-C Hero Image (3 PR squash 머지) ⭐⭐⭐⭐
 
 **범위**: PRD `.omc/plans/wiki-infobox-tier-2-4-prd.md` **Phase 1+2+3+4 모두 완료**. Phase 5+ Out of Scope, 사용자 우선순위 결정 후 진행.

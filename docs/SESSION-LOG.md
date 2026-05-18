@@ -6,6 +6,80 @@
 
 ---
 
+## 2026-05-19 — 집/Windows, **PR-E1: Hatnotes + Preset import/export (Phase 5+ 첫 도입, PR #368 squash 머지)**
+
+> 🎯 **다음 즉시 액션 (3 후보 중 택일)**:
+> 1. **PR-E2 후보**: `themeColor 시스템` (BRAINSTORM #4, 디자인 정체성, light/dark cascade, ~5 파일 v143) 또는 `편집 히스토리 v1` (BRAINSTORM #6, multi-machine PRD 시점에 자연 통합 권장 — 지금 만들면 재설계 위험) 중 사용자 우선순위 결정. 메인 추천은 themeColor (디자인 임팩트 크고 PR-E1 자연 후속).
+> 2. **WikiTemplate detail panel hero edit UI** — PR-C에서 `WikiTemplate.infoboxHero` 필드만 추가, edit UI 미완. template detail panel에 InfoboxHeroPicker mount (~3 파일).
+> 3. **dead code + build TS 부채 cleanup** — `components/note-detail-panel.tsx` (import 0) + 10 TS 부채 (insights-view.tsx:268 noteEvents 등). 작은 cleanup PR.
+>
+> **이번 세션 사용자 의도** (그대로 인용):
+> 1. "1을 자세히 말해봐" → PR-E (Phase 5+) 후보 6개 정리 보고 (Hatnote / Ambox / themeColor / 편집 히스토리 / Preset I/O / SectionTemplate)
+> 2. "너의 제안을 듣고 싶어, 어떤 것부터 작업하는 게 좋을지" → Plot 정체성 + Linear 미니멀 + 작업 원칙 기반 신중 추천 → **Hatnote + Preset import/export** (둘 다 작고 위험 낮음, "Gentle by default" 부합, 제텔카스텐 본질 강화)
+> 3. "ㅇㅇ 진행해" → 전체 워크플로우 (explore → executor-high → architect → commit → push → PR → squash merge) 자동 진행
+>
+> **다음 머신에서 처음 시작 시**:
+> 1. `git pull origin main` (latest HEAD = PR #368 squash 머지, `56ecb24`)
+> 2. `npm install && npm run dev` (port 3002, hard refresh)
+> 3. Console v141→v142 migration 확인 (`[migrate] v141→v142: hatnotes field opt-in (no data change)`)
+> 4. 위 P0 후보 중 선택 또는 사용자 새 시그널
+>
+> **머신**: 집 (Windows)
+> **현재 main HEAD**: `56ecb24` (PR #368 squash 머지)
+> **Store version**: 142 (PR-E1 v141→v142 sentinel)
+
+### 완료 (이번 세션 1 PR squash 머지)
+
+#### PR #368 — Hatnotes + Preset import/export (PR-E1, Phase 5+ first wave)
+
+**A. Hatnote** (Wikipedia/나무위키 표준 — italic 회색 indent 1.6em)
+- 5 type: `above` (Part of) / `below` (Subtopics) / `distinguish` (Not to be confused with) / `main` (Main article) / `see-also` (See also)
+- `WikiArticle.hatnotes?: Hatnote[]` optional (id/type/text/targetArticleId?)
+- 신규 컴포넌트:
+  - `components/wiki-editor/wiki-hatnotes.tsx` (~150 LOC) — render + hover-only edit affordances
+  - `components/wiki-editor/hatnote-edit-dialog.tsx` (~180 LOC) — type Select + text + WikiPicker target
+- `wiki-article-view.tsx` — title 아래 / `<InlineCategoryTags>` 위 mount
+- self-reference cycle 차단: `WikiPickerDialog excludeIds={[articleId]}`
+
+**B. Preset import/export JSON** (PR-D UserInfoboxPreset 자연 후속)
+- 신규 `lib/wiki-infobox-presets-io.ts` (~130 LOC) — envelope `{ version, exportedAt, presets }` + raw array 양쪽 호환 + type-guard validation + SSR-safe `downloadPresetJSON` (`typeof window/document` guard)
+- 신규 `components/editor/import-preset-dialog.tsx` (~190 LOC) — textarea + file upload + live parse preview + collision count surface
+- `components/editor/wiki-infobox.tsx` Footer: "Export presets…" / "Import presets…" 액션 (Save as preset… 옆)
+- Import 정책: **항상 fresh id (no replace)** — collision은 preview 표시만, post-import 수동 삭제
+
+**검증**
+- `npx tsc --noEmit`: **0 new errors** (기존 10 부채 그대로 — insights-view.tsx:268 noteEvents 등)
+- Architect 검증: **APPROVED** (3 minor non-blocking suggestions — doc comment 부정확 1건 / Import conflict UX YAGNI / multiple hatnotes 시각 밀도 manual verify)
+
+### 영구 LOCKED 결정 (이번 세션, #79-#80)
+
+- **#79. Hatnote = Wikipedia/나무위키 표준 5 type 정합 (above/below/distinguish/main/see-also)**: 5종 라벨 영어 통일 (Part of / Subtopics / Not to be confused with / Main article / See also). 향후 다른 wiki feature도 동일 i18n 패턴.
+- **#80. JSON export envelope = `{ version, exportedAt, presets }` 패턴**: 향후 다른 entity export (UserInfoboxPreset → WikiTemplate → Reference 등) 동일 envelope shape. 미래 호환성 확보. raw array fallback도 지원.
+
+### 기술 학습 (영구)
+
+- **JSON paste textarea + file upload 양쪽 입력 패턴**: 사용자가 짧은 JSON은 paste, 긴 JSON 또는 다운로드 파일은 file upload. 두 path 다 동일 `parsePresetImport` 통과 → preview → import 흐름 일관.
+- **SSR-safe browser download**: `typeof window === "undefined" || typeof document === "undefined"` guard 필수. Blob + URL.createObjectURL + anchor click + URL.revokeObjectURL 패턴.
+- **WikiPicker `excludeIds` cycle safety**: target picker에 자기 article id 제외해서 self-reference 사고 방지. 향후 다른 cross-link feature (See also auto-suggest 등)도 동일 패턴.
+
+### Watch Out (다음 세션)
+
+- 🟡 **doc comment 부정확** (architect non-blocking suggestion #1): `setWikiArticleInfoboxHero`가 PR-C에서 실제로 만들어진 게 아님 (generic `updateWikiArticle` 사용). 3곳 doc comment 정정 가능 (`lib/store/types.ts:435` / `lib/store/slices/wiki-articles.ts:218` / `components/wiki-editor/wiki-hatnotes.tsx:13`). 사소한 부채.
+- 🟢 **multiple hatnotes 시각 밀도 manual verify**: 5종 동시 (above + below + distinguish + main + see-also) 시 5-line italic 블록 자연한지 사용자 확인 (실제 1-2개 common case 우세).
+- 🟢 **Import "Skip duplicates" 옵션** (architect suggestion #2): 현재 collision도 무조건 fresh id 등록. 사용자 confusion 시 "Skip duplicates" checkbox follow-up 가능.
+
+### 환경 변경
+
+- Main HEAD: `0531f38` → `56ecb24` (PR #368)
+- Store version: 141 → **142** (PR-E1 v141→v142 sentinel migration)
+- 신규 type: `HatnoteType` + `Hatnote`
+- 신규 entity 필드: `WikiArticle.hatnotes?: Hatnote[]`
+- 신규 setter: `setWikiArticleHatnotes`
+- 신규 file (4): `components/wiki-editor/wiki-hatnotes.tsx` + `components/wiki-editor/hatnote-edit-dialog.tsx` + `components/editor/import-preset-dialog.tsx` + `lib/wiki-infobox-presets-io.ts`
+- 영구 룰 추가: #79-#80
+
+---
+
 ## 2026-05-18 (저녁) — 집/Windows, **i18n + EmptyHint + drag-column fix bundle + PR-C Hero Image + PR-D 머지 (3 PR squash 머지)**
 
 > 🎯 **다음 즉시 액션 (3 후보 중 택일)**:
