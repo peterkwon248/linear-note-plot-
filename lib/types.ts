@@ -32,10 +32,10 @@ export interface WikiInfoboxEntry {
 }
 
 /**
- * Infobox preset — selects a domain-specific seed of fields/groups for a wiki article.
- * Persisted on WikiArticle.infoboxPreset. "custom" = user-curated, no seed applied.
+ * Builtin infobox preset literal union — hardcoded in `lib/wiki-infobox-presets.ts`.
+ * Used internally where strict type-safety is needed (e.g. INFOBOX_PRESETS map).
  */
-export type WikiInfoboxPreset =
+export type WikiInfoboxBuiltinPreset =
   | "custom"
   | "person"
   | "character"
@@ -54,6 +54,38 @@ export type WikiInfoboxPreset =
   | "food"
   | "vehicle"
   | "sport-team"
+
+/**
+ * Infobox preset id — selects a domain-specific seed of fields/groups for a wiki
+ * article or note. Persisted on WikiArticle.infoboxPreset / Note.infoboxPreset.
+ *
+ * Accepts both builtin ids (literal union above) AND user-defined preset ids
+ * (`"user-{nanoid}"` from `UserInfoboxPreset.id`). The `(string & {})` hack
+ * preserves autocomplete for builtin literals while permitting arbitrary
+ * string ids for user presets.
+ *
+ * "custom" = no seed applied (free-form, user-curated).
+ */
+export type WikiInfoboxPreset = WikiInfoboxBuiltinPreset | (string & {})
+
+/**
+ * User-defined infobox preset — sit alongside builtin presets in the dropdown's
+ * "My Presets" section. Created via "Save as preset…" from an article's
+ * infobox edit footer.
+ *
+ * Cross-entity: usable from Wiki Articles + Notes (anywhere WikiInfobox mounts).
+ * Independent of WikiTemplate (which captures the full article: blocks +
+ * infobox + meta). UserInfoboxPreset is the lightweight infobox-only unit.
+ */
+export interface UserInfoboxPreset {
+  id: string                                // "user-{nanoid}"
+  label: string                             // shown in dropdown
+  hint?: string                             // optional sub-label
+  defaultHeaderColor: string | null         // rgba or null (default bg)
+  defaultEntries: WikiInfoboxEntry[]        // seed entries (snapshot)
+  createdAt: string                         // ISO timestamp (helpers.now())
+  updatedAt: string                         // ISO timestamp
+}
 
 /** Item in a wiki article's collection (staging area for related material) */
 export interface WikiCollectionItem {

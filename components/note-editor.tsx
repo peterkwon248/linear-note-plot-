@@ -809,8 +809,11 @@ function WikiReadLayout({
           editable
           kind="note"
           preset={note.infoboxPreset ?? "custom"}
-          onPresetChange={(preset, seed) => {
-            const def = INFOBOX_PRESETS.find((p) => p.preset === preset)
+          onPresetChange={(preset, seed, headerColor) => {
+            // PR-D — third arg covers both builtin + user presets.
+            const def = headerColor !== undefined
+              ? { defaultHeaderColor: headerColor }
+              : INFOBOX_PRESETS.find((p) => p.preset === preset)
             usePlotStore.getState().updateNote(note.id, {
               wikiInfobox: seed,
               infoboxPreset: preset,
