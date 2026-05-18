@@ -20,9 +20,10 @@ import {
 } from "@dnd-kit/sortable"
 import { CSS } from "@dnd-kit/utilities"
 import { usePlotStore } from "@/lib/store"
-import type { UserInfoboxPreset, WikiInfoboxEntry, WikiInfoboxPreset } from "@/lib/types"
+import type { InfoboxHero, UserInfoboxPreset, WikiInfoboxEntry, WikiInfoboxPreset } from "@/lib/types"
 import { cn } from "@/lib/utils"
 import { InfoboxValueRenderer } from "./infobox-value-renderer"
+import { InfoboxHeroPicker } from "./infobox-hero-picker"
 import {
   Plus as PhPlus,
   X as PhX,
@@ -32,6 +33,7 @@ import {
   CaretDown,
   CaretRight,
   DotsSixVertical,
+  Image as PhImage,
 } from "@/lib/editor/editor-icons"
 import {
   INFOBOX_PRESETS,
@@ -105,6 +107,19 @@ interface WikiInfoboxProps {
    * the narrow default rail width.
    */
   onEditingChange?: (editing: boolean) => void
+  /**
+   * PR-C (Tier 1-3) — Hero image at the top of the infobox. null/undefined
+   * means no hero. Reading view shows the figure; editable view also shows the
+   * edit/remove hover actions and (when absent) the "+ Add hero image"
+   * placeholder.
+   */
+  hero?: InfoboxHero | null
+  /**
+   * PR-C — Callback fired when the user adds, edits, or removes the hero.
+   * `null` means remove. Omit this prop to hide the hero slot entirely (e.g.
+   * read-only embeds where layout edits aren't allowed).
+   */
+  onHeroChange?: (hero: InfoboxHero | null) => void
 }
 
 // ── SortableWrapper: drag-handle + transform style ──────────────────────────
@@ -236,6 +251,8 @@ export function WikiInfobox({
   preset,
   onPresetChange,
   onEditingChange,
+  hero = null,
+  onHeroChange,
 }: WikiInfoboxProps) {
   const setWikiInfoboxNote = usePlotStore((s) => s.setWikiInfobox)
   const setWikiArticleInfobox = usePlotStore((s) => s.setWikiArticleInfobox)
@@ -245,6 +262,10 @@ export function WikiInfobox({
   const deleteUserInfoboxPreset = usePlotStore((s) => s.deleteUserInfoboxPreset)
   const [isEditing, setIsEditing] = useState(false)
   const [showSavePresetDialog, setShowSavePresetDialog] = useState(false)
+  // PR-C — hero picker dialog state. Single piece of state for both add and
+  // edit (the picker seeds itself from `hero` when open).
+  const [showHeroPicker, setShowHeroPicker] = useState(false)
+  const canChangeHero = editable && typeof onHeroChange === "function"
   // PR-A — ephemeral _id keeps dnd-kit's stable identity across reorders while
   // we mutate field values (handleChange creates new entry objects, so we can't
   // rely on object reference identity). _id is stripped before persisting.
@@ -453,12 +474,77 @@ export function WikiInfobox({
     [deleteUserInfoboxPreset],
   )
 
-  // Nothing to show and not editable
-  if (entries.length === 0 && !editable) return null
+  // Nothing to show and not editable (hero alone is enough to render)
+  if (entries.length === 0 && !hero && !editable) return null
+
+  // ── PR-C hero slot — shared across both display and edit branches ─────────
+  // Three states: (1) hero present → figure with caption + hover edit/remove;
+  // (2) editable + no hero → "+ Add hero image" placeholder button;
+  // (3) read-only + no hero → renders nothing.
+  const heroSection: ReactNode = !hero
+    ? canChangeHero
+      ? (
+          <button
+            type="button"
+            onClick={() => setShowHeroPicker(true)}
+            className="flex w-full items-center justify-center gap-1.5 border-b border-dashed border-border-subtle bg-secondary/20 px-3 py-2 text-[calc(0.75em*var(--scale-infobox,1))] text-muted-foreground hover:bg-secondary/40 hover:text-foreground transition-colors"
+          >
+            <PhImage size={14} />
+            Add hero image
+          </button>
+        )
+      : null
+    : (
+        <figure className="group/hero relative border-b border-border bg-secondary/20">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={hero.url}
+            alt={hero.alt ?? hero.caption ?? ""}
+            className="block w-full max-h-[280px] object-cover"
+            onError={(e) => {
+              ;(e.currentTarget as HTMLImageElement).style.opacity = "0.3"
+            }}
+          />
+          {hero.caption && (
+            <figcaption className="px-3 py-1.5 text-[calc(0.7em*var(--scale-infobox,1))] italic text-muted-foreground border-t border-border-subtle">
+              {hero.caption}
+            </figcaption>
+          )}
+          {canChangeHero && (
+            <div className="absolute top-1.5 right-1.5 flex gap-1 opacity-0 group-hover/hero:opacity-100 transition-opacity">
+              <button
+                type="button"
+                onClick={() => setShowHeroPicker(true)}
+                className="rounded bg-background/90 px-2 py-0.5 text-[11px] font-medium shadow-sm hover:bg-background border border-border-subtle"
+                title="Edit hero image"
+              >
+                Edit
+              </button>
+              <button
+                type="button"
+                onClick={() => onHeroChange?.(null)}
+                className="rounded bg-background/90 px-2 py-0.5 text-[11px] font-medium shadow-sm hover:bg-background border border-border-subtle text-destructive"
+                title="Remove hero image"
+              >
+                Remove
+              </button>
+            </div>
+          )}
+        </figure>
+      )
+
+  const heroPickerDialog = canChangeHero ? (
+    <InfoboxHeroPicker
+      open={showHeroPicker}
+      onOpenChange={setShowHeroPicker}
+      initial={hero ?? null}
+      onSave={(next) => onHeroChange?.(next)}
+    />
+  ) : null
 
   // Display mode
   if (!isEditing) {
-    if (entries.length === 0 && editable) {
+    if (entries.length === 0 && !hero && editable) {
       return (
         <div className={cn("rounded-lg border border-dashed border-border p-3", className)}>
           <button
@@ -493,6 +579,7 @@ export function WikiInfobox({
             className,
           )}
         >
+          {heroSection}
           <div
             className={cn(
               "relative flex items-center justify-between border-b border-border px-3 py-2",
@@ -618,6 +705,8 @@ export function WikiInfobox({
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
+
+        {heroPickerDialog}
       </>
     )
   }
@@ -637,6 +726,7 @@ export function WikiInfobox({
         )}
       >
         <div className="min-w-[360px]">
+        {heroSection}
         <div
           className={cn(
             "flex items-center justify-between border-b border-border px-3 py-2",
@@ -904,6 +994,8 @@ export function WikiInfobox({
         headerColor={headerColor ?? null}
         onSave={handleSaveAsPreset}
       />
+
+      {heroPickerDialog}
     </>
   )
 }

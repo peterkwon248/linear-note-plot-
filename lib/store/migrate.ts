@@ -2238,5 +2238,11 @@ export function migrate(persistedState: unknown): PlotState {
     console.log(`[migrate] v139→v140: initialized userInfoboxPresets ([])`)
   }
 
+  // v140 → v141: PR-C. Infobox hero image (Tier 1-3) — optional field on
+  // WikiArticle (`infoboxHero`), Note (`wikiInfoboxHero`), and WikiTemplate
+  // (`infoboxHero`). Field defaults to undefined; no existing-data migration
+  // needed. Version bump alone is the migration (sentinel for cache safety).
+  console.log(`[migrate] v140→v141: infoboxHero field opt-in (no data change)`)
+
   return state as unknown as PlotState
 }

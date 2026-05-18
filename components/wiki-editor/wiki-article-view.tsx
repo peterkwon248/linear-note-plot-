@@ -880,6 +880,15 @@ export function WikiArticleView({ articleId, editable = false, preview = false, 
                           }
                         : undefined
                     }
+                    hero={article.infoboxHero ?? null}
+                    onHeroChange={
+                      editable
+                        ? (hero) =>
+                            usePlotStore
+                              .getState()
+                              .updateWikiArticle(article.id, { infoboxHero: hero ?? undefined })
+                        : undefined
+                    }
                   />
                 ) : (
                   <div className="rounded-lg border border-dashed border-border bg-secondary/30 px-3 py-6 text-center">

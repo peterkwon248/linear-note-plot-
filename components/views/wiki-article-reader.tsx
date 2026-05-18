@@ -119,6 +119,10 @@ export function WikiArticleReader({
           noteId={note.id}
           entries={note.wikiInfobox ?? []}
           editable={true}
+          hero={note.wikiInfoboxHero ?? null}
+          onHeroChange={(hero) =>
+            usePlotStore.getState().updateNote(note.id, { wikiInfoboxHero: hero ?? undefined })
+          }
           className="w-full"
         />
 
