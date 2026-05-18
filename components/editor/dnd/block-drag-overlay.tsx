@@ -565,7 +565,9 @@ export function BlockDragOverlay({
 
       const targetNode = editor.state.doc.nodeAt(targetBlock.docPos)
 
-      // For columnsBlock: left/right half picks which column cell to insert into
+      // For columnsBlock: left/right half picks which column cell to insert into.
+      // (Drag from outside INTO an existing column is preserved — this is the
+      // primary way to populate a column after it's been created via slash menu.)
       if (targetNode?.type.name === "columnsBlock") {
         const relXCol = pointerX - rect.left
         const side = relXCol < rect.width / 2 ? "left" : "right"
@@ -573,17 +575,11 @@ export function BlockDragOverlay({
         return
       }
 
-      // For regular blocks: 15% edge zones trigger column creation
-      const threshold = rect.width * 0.15
-      const relX = pointerX - rect.left
-
-      if (relX < threshold) {
-        setSideDropState({ blockId: targetBlock.id, side: "left" })
-      } else if (relX > rect.width - threshold) {
-        setSideDropState({ blockId: targetBlock.id, side: "right" })
-      } else {
-        setSideDropState(null)
-      }
+      // Regular block — vertical reorder only. Side-drop column creation removed
+      // per user-intuition rule (영구 룰 #8): drag default is "move up/down",
+      // not "rearrange layout." Column creation is an explicit action via the
+      // slash menu (`/2 Columns`) or the Insert (+) menu.
+      setSideDropState(null)
     },
     [blocks, editor, activeId]
   )
