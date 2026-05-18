@@ -79,6 +79,7 @@ function escapeFromInlineLink(editor: Editor): void {
 import type { Note, Relation, Tag } from "@/lib/types"
 import { WikiTOC } from "@/components/editor/wiki-toc"
 import { WikiInfobox } from "@/components/editor/wiki-infobox"
+import { INFOBOX_PRESETS } from "@/lib/wiki-infobox-presets"
 import { WikiCategories } from "@/components/editor/wiki-categories"
 import { WikiDisambig } from "@/components/editor/wiki-disambig"
 import { WikiRelatedDocs } from "@/components/editor/wiki-related-docs"
@@ -798,15 +799,32 @@ function WikiReadLayout({
 
       {/* Right: Infobox sidebar */}
       <aside className="w-[260px] shrink-0 overflow-y-auto border-l border-border p-4 space-y-4">
-        {/* Infobox */}
-        {(note.wikiInfobox ?? []).length > 0 && (
-          <WikiInfobox
-            noteId={note.id}
-            entries={note.wikiInfobox ?? []}
-            editable={false}
-            className="w-full"
-          />
-        )}
+        {/* Infobox — cross-entity preset enabled (PR-B 후속).
+            Note도 Wiki Article과 동일한 builtin 16 preset (Person/Place/Album 등)
+            + 향후 user preset 사용 가능. 빈 상태에서도 empty-state placeholder를
+            노출하기 위해 length>0 조건 제거. */}
+        <WikiInfobox
+          noteId={note.id}
+          entries={note.wikiInfobox ?? []}
+          editable
+          kind="note"
+          preset={note.infoboxPreset ?? "custom"}
+          onPresetChange={(preset, seed) => {
+            const def = INFOBOX_PRESETS.find((p) => p.preset === preset)
+            usePlotStore.getState().updateNote(note.id, {
+              wikiInfobox: seed,
+              infoboxPreset: preset,
+              ...(preset !== "custom" && def?.defaultHeaderColor !== undefined
+                ? { infoboxHeaderColor: def.defaultHeaderColor }
+                : {}),
+            })
+          }}
+          headerColor={note.infoboxHeaderColor ?? null}
+          onHeaderColorChange={(color) =>
+            usePlotStore.getState().updateNote(note.id, { infoboxHeaderColor: color })
+          }
+          className="w-full"
+        />
 
         {/* Categories as badges */}
         {note.tags.length > 0 && (

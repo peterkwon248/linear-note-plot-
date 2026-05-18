@@ -512,6 +512,11 @@ export interface Note {
   noteType: NoteType
   aliases: string[]
   wikiInfobox: WikiInfoboxEntry[]
+  // Cross-entity infobox preset support (PR-B 후속) — Note도 Wiki Article과
+  // 동일한 builtin preset (Person/Place/Album/...) + user preset 사용 가능.
+  // undefined = "custom" (free-form, 사용자가 자유롭게 fields 추가)
+  infoboxPreset?: WikiInfoboxPreset
+  infoboxHeaderColor?: string | null
 
   /* ── References ─────────────────────────────── */
   referenceIds: string[]    // linked Reference IDs (bibliography)
