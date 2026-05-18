@@ -511,7 +511,14 @@ export function WikiArticleView({ articleId, editable = false, preview = false, 
   // default ~24% rail can clip the edit toolbar's ✓/X on narrow viewports.
   // We use getLayout() to remember the pre-edit sizes so user-dragged widths
   // survive a Save/Cancel round trip.
+  //
+  // Additional layer (sidePanelOpen): when SmartSidePanel is open, the main
+  // content area is even narrower (≈ viewport − sidebar − SmartSidePanel),
+  // so the same 30% rail still leaves the header cluster cramped. Bump to
+  // 38% in that case. Horizontal scroll on the EDIT INFOBOX itself is the
+  // last-resort fallback for very narrow viewports.
   const [infoboxEditing, setInfoboxEditing] = useState(false)
+  const sidePanelOpen = usePlotStore((s) => s.sidePanelOpen)
   const hasMountedLayoutRef = useRef(false)
   const restoreLayoutRef = useRef<number[] | null>(null)
   useEffect(() => {
@@ -523,9 +530,13 @@ export function WikiArticleView({ articleId, editable = false, preview = false, 
     const ref = panelGroupRef.current
     if (!ref) return
     if (infoboxEditing) {
-      // Remember current sizes so a user-resized rail comes back intact.
-      restoreLayoutRef.current = ref.getLayout()
-      const targetInfobox = 30
+      // Remember pre-edit sizes only on the *entry* into edit mode so a
+      // sidePanelOpen toggle mid-edit doesn't clobber the user's original
+      // layout with the temporarily-expanded one.
+      if (restoreLayoutRef.current === null) {
+        restoreLayoutRef.current = ref.getLayout()
+      }
+      const targetInfobox = sidePanelOpen ? 38 : 30
       const targetContent = 100 - tocDefault - targetInfobox
       const sizes: number[] = []
       if (showTOCRail) sizes.push(tocDefault)
@@ -536,7 +547,7 @@ export function WikiArticleView({ articleId, editable = false, preview = false, 
       ref.setLayout(restoreLayoutRef.current)
       restoreLayoutRef.current = null
     }
-  }, [infoboxEditing, showTOCRail, showInfoboxRail, tocDefault])
+  }, [infoboxEditing, sidePanelOpen, showTOCRail, showInfoboxRail, tocDefault])
 
   const outerContent = (
     <ResizablePanelGroup

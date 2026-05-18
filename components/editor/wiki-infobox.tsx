@@ -565,14 +565,20 @@ export function WikiInfobox({
   }
 
   // ── Edit mode ──────────────────────────────────────────────────────────────
+  // PR-A — outer wrapper turns into a horizontal scroll container; inner has
+  // a min-width so the header (preset / ✓ / X cluster) and entry rows stay
+  // legible even when the panel rail is narrower than the natural content
+  // (e.g. SmartSidePanel open + Edit mode → infobox rail squeezed). User can
+  // scroll right to reach X without re-opening side panels.
   return (
     <>
       <div
         className={cn(
-          "rounded-lg border border-primary/30 bg-card/50 overflow-hidden",
+          "rounded-lg border border-primary/30 bg-card/50 overflow-x-auto overflow-y-hidden",
           className,
         )}
       >
+        <div className="min-w-[360px]">
         <div
           className={cn(
             "flex items-center justify-between border-b border-border px-3 py-2",
@@ -759,6 +765,7 @@ export function WikiInfobox({
               Add group
             </button>
           </div>
+        </div>
         </div>
       </div>
 
