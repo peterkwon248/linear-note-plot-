@@ -44,8 +44,12 @@ import {
   mergeSeedWithExisting,
 } from "@/lib/wiki-infobox-presets"
 import { SavePresetDialog } from "./save-preset-dialog"
+import { ImportPresetDialog } from "./import-preset-dialog"
+import { downloadPresetJSON } from "@/lib/wiki-infobox-presets-io"
 import { Trash as PhTrash } from "@/lib/editor/editor-icons"
 import { FloppyDisk } from "@phosphor-icons/react/dist/ssr/FloppyDisk"
+import { DownloadSimple } from "@phosphor-icons/react/dist/ssr/DownloadSimple"
+import { UploadSimple } from "@phosphor-icons/react/dist/ssr/UploadSimple"
 import { useInfoboxGroupCollapsed } from "@/lib/wiki-infobox-collapse"
 import {
   AlertDialog,
@@ -262,6 +266,8 @@ export function WikiInfobox({
   const deleteUserInfoboxPreset = usePlotStore((s) => s.deleteUserInfoboxPreset)
   const [isEditing, setIsEditing] = useState(false)
   const [showSavePresetDialog, setShowSavePresetDialog] = useState(false)
+  // PR-E1 — Import dialog state. Export is a one-shot (no dialog needed).
+  const [showImportPresetDialog, setShowImportPresetDialog] = useState(false)
   // PR-C — hero picker dialog state. Single piece of state for both add and
   // edit (the picker seeds itself from `hero` when open).
   const [showHeroPicker, setShowHeroPicker] = useState(false)
@@ -914,9 +920,9 @@ export function WikiInfobox({
               <PhPlus size={14} />
               Add group
             </button>
-            {/* PR-D — Save the current layout as a reusable user preset. Only
-                meaningful when there's something to save (entries.length > 0)
-                and preset selection is enabled (wiki context). */}
+            {/* PR-D / PR-E1 — User preset management cluster. Right-aligned via
+                `ml-auto` on the first button so Add section / Add group stay
+                left and preset actions stay right. */}
             {canChangePreset && localEntries.length > 0 && (
               <button
                 onClick={() => setShowSavePresetDialog(true)}
@@ -925,6 +931,34 @@ export function WikiInfobox({
               >
                 <FloppyDisk size={14} />
                 Save as preset…
+              </button>
+            )}
+            {canChangePreset && userPresets.length > 0 && (
+              <button
+                onClick={() => downloadPresetJSON(userPresets)}
+                className={cn(
+                  "flex items-center gap-1.5 text-[calc(0.875em*var(--scale-infobox,1))] text-muted-foreground hover:text-foreground transition-colors",
+                  // First in the right cluster when "Save as preset…" is hidden.
+                  localEntries.length === 0 && "ml-auto",
+                )}
+                title="Download all user presets as JSON"
+              >
+                <DownloadSimple size={14} />
+                Export presets…
+              </button>
+            )}
+            {canChangePreset && (
+              <button
+                onClick={() => setShowImportPresetDialog(true)}
+                className={cn(
+                  "flex items-center gap-1.5 text-[calc(0.875em*var(--scale-infobox,1))] text-muted-foreground hover:text-foreground transition-colors",
+                  // First in the right cluster when nothing else is to its left.
+                  localEntries.length === 0 && userPresets.length === 0 && "ml-auto",
+                )}
+                title="Import user presets from JSON"
+              >
+                <UploadSimple size={14} />
+                Import presets…
               </button>
             )}
           </div>
@@ -993,6 +1027,12 @@ export function WikiInfobox({
         entries={localEntries}
         headerColor={headerColor ?? null}
         onSave={handleSaveAsPreset}
+      />
+
+      {/* PR-E1 — Import presets dialog. Accepts JSON envelope or raw array. */}
+      <ImportPresetDialog
+        open={showImportPresetDialog}
+        onOpenChange={setShowImportPresetDialog}
       />
 
       {heroPickerDialog}

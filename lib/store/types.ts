@@ -432,6 +432,8 @@ export interface PlotState {
   trashWikiArticle: (articleId: string) => void
   deleteWikiArticle: (articleId: string) => void
   setWikiArticleInfobox: (articleId: string, infobox: WikiArticle["infobox"]) => void
+  /** PR-E1 — Dedicated hatnotes setter (PR-C `setWikiArticleInfoboxHero` 패턴 정합). */
+  setWikiArticleHatnotes: (articleId: string, hatnotes: WikiArticle["hatnotes"]) => void
   addWikiBlock: (articleId: string, block: Omit<WikiBlock, "id">, afterBlockId?: string) => string
   removeWikiBlock: (articleId: string, blockId: string) => void
   updateWikiBlock: (articleId: string, blockId: string, patch: Partial<Omit<WikiBlock, "id">>) => void
