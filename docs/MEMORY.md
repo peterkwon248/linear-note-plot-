@@ -8,6 +8,120 @@
 
 ---
 
+## 🚀 2026-05-18 (저녁) — **fix bundle + PR-D + PR-C Hero Image (3 PR squash, 6 commits + 1 stacked re-target)** ⭐⭐⭐⭐
+
+**범위**: 1 worktree (`musing-gagarin-62e958`). 3 PR — PR #365 (fix bundle, 4 commits squash), PR #363 (PR-D UserInfoboxPreset, 1 commit squash), PR #367 (PR-C Hero Image 재타겟, 1 commit squash, 원래 PR #366는 base 자동 close).
+
+PRD `.omc/plans/wiki-infobox-tier-2-4-prd.md` **Phase 1+2+3+4 모두 완료**. Phase 5+ (Hatnote / Ambox / themeColor / SectionTemplate / import-export) Out of Scope, P0 후보.
+
+**사용자 시그널 (그대로 인용)**:
+1. "야 우선 밑줄부터가 업노트가 훨씬 더 부드러운 느낌(우리는 ...인 느낌)" → EmptyHint UpNote 스타일 (commits 3)
+2. "야 이거 그리고 영어버전인데 왜 한글로 설명이 나오는 거야??" → WikiTemplate seed 8 description 영어 통일
+3. "엔터를 치자마자 나와서 깜짝 놀랐어" → EmptyHint trigger 강화 (paraCount===1+!paraHasText)
+4. "drag로 위치 바꾸려고 하면 컬럼이 만들어져서" → block-drag-overlay regular block side-drop 폐기 (영구 룰 #8)
+5. "위키의 infobox에서는 에디트를 눌러도 이미지 파일 삽입 기능이 없네?" → PR-C Hero Image
+
+### PR 요약
+
+- **PR #365** — fix bundle (i18n + EmptyHint trigger + UpNote 스타일 + drag column 폐기)
+- **PR #363 (PR-D)** — UserInfoboxPreset Save as preset (PRD Phase 4, persist v140)
+- **PR #367 (PR-C 재타겟)** — Hero Image (PRD Phase 3, InfoboxHero type + 3 entity field + figure slot + 신규 picker dialog, persist v141)
+
+### 영구 LOCKED 결정 (이번 세션, #74-#78)
+
+- **#74. EmptyHintPlaceholder trigger = top-level paragraph 1개 + 비어있을 때만**: heading 무시. childCount > 1 조건은 빈 신규 노트도 차단 사고 → forEach로 paragraph만 카운트.
+- **#75. ProseMirror Decoration.widget placeholder UX**: inline 위치 → cursor 충돌. `position: absolute; left: 0` + 부모 paragraph `position: relative` (Decoration.node)로 layout 분리. cursor가 paragraph 시작에 자연 위치 (UpNote/Notion 패턴).
+- **#76. Block drag side-drop column 자동 생성 폐기 (영구 룰 #8 재확인)**: regular block 좌/우 edge → column 생성은 사용자 직관 위반. column 만들기는 slash `/2 Columns` 또는 Insert (+) 메뉴 명시 action만. columnsBlock target drop은 유지.
+- **#77. Hero image = 별도 필드 (entries 외)**: 의미 명확 + 1개 제한 자연. 향후 banner image 등 다른 visual asset도 동일 패턴.
+- **#78. Cross-entity hero shape 통일**: 3 entity 동일 `InfoboxHero { url, caption?, alt? }`. Template → Article 변환 시 자동 복사.
+
+### 기술 학습 (영구)
+
+- **TipTap editor plugin closure는 HMR로 갱신 안 됨**: Plugin 등록 후 closure가 editor instance에 박힘. 코드 변경해도 옛 closure 유지. **Full reload 필수**. 사용자 fix 안 보인다 보고 시 reload 부탁이 첫 step.
+- **Stacked PR + squash 머지 패턴 사고**: PR-C가 PR-D base였는데 PR-D squash 머지 → PR-C base branch 사라짐 → PR-C 자동 closed. closed PR은 base 변경/reopen 불가. **새 PR을 head 그대로 + base=main 생성 + `git merge origin/main` + conflict resolve**가 답.
+
+### 환경 변경
+
+- Main HEAD: PR #365 + PR #363 + PR #367 누적
+- Store version: 140 → **141** (PR-C v140→v141 sentinel)
+- 신규 type: `InfoboxHero { url, caption?, alt? }`
+- 신규 필드: `WikiArticle.infoboxHero?` + `Note.wikiInfoboxHero?` + `WikiTemplate.infoboxHero?`
+- 신규 컴포넌트: `components/editor/infobox-hero-picker.tsx`
+- 영구 룰 추가: #74-#78
+
+---
+
+## 🚀 2026-05-18 (오후) — **Infobox UX 종합 대규모 — PR #361/#362/#363 (3 PR, 22 commit, ~700+ 줄)** ⭐⭐⭐⭐⭐
+
+**범위**: 1 worktree (`brave-rubin-3e45fa`). 3 PR — PR #361 (7 commit, merged d95b61b), PR #362 (3 commit, merged 43fcd44), PR #363 (1 commit, open). PRD `.omc/plans/wiki-infobox-tier-2-4-prd.md` Phase 1/2/4 완료. Phase 3 (Hero Image) 남음.
+
+**사용자 시그널 (그대로 인용)**:
+1. "infobox 16 preset이 좁아서 X 버튼 가려져" → PR #361 commit 6/7 (auto-expand)
+2. "스플릿뷰랑 사이드바가 추가로 더 나오는 버그" → PR #361 commit 5 (panel toggle dedup)
+3. "ADDITIONAL INFO 토글이 작동을 안 함" → PR #361 commit 2 (pubsub fix)
+4. "Genre 아래 새 field 추가하고 싶으면" + "핸드드래그 도입" → PR #361 commit 3+4
+5. "preset fields 풍부화 + Note에서도 preset 사용 가능?" → PR #362
+6. "유저가 만든 걸 재사용할 수 있게" → PR #363
+
+### PR 요약
+
+- **PR #361** — Infobox UX 종합 강화 (Preset 3-way / collapse pubsub / Add field inline / drag / panel cleanup / auto-expand / 가로 스크롤 + 38%)
+- **PR #362** — Infobox preset 16종 풍부화 + Note cross-entity 활성화 (Note.infoboxPreset/HeaderColor 신규 필드)
+- **PR #363** — UserInfoboxPreset 신규 (Save as preset, Phase 4, ~10 파일, persist v140)
+
+### 영구 LOCKED 결정 (이번 세션, #64-#73)
+
+#### Phase 1 + UX polish (PR #361)
+- **#64. Preset switching = 3-way dialog** (Cancel / Preserve matching (N) / Replace all) — 사용자 데이터 보호 우선. 모든 entity preset 패턴 영구.
+- **#65. localStorage-backed UI state + in-memory pubsub 병행** — 다중 hook instance가 같은 key 공유 시 sync 필수. `useInfoboxGroupCollapsed` reference.
+- **#66. ephemeral `_id` 패턴 = list-style edit UI 표준** — TipTap NodeView 외 일반 list edit UI (drag/reorder)에 stable identity 필요시.
+- **#67. Edit mode auto-expand 패턴** = "Gentle by default, powerful when needed" 적용 — 평소 narrow / 편집 시 자동 expand / Done 시 user layout 복원. SmartSidePanel state 인지 추가 expand (24/30/38%).
+
+#### Cross-entity (PR #362)
+- **#68. Infobox preset = cross-entity 자원** — Wiki Article + Note 둘 다 동일 preset 인프라. 향후 Book / Reference 자연 확장.
+- **#69. updateNote / updateWikiArticle generic patch 정직** — entity별 별도 setter 시리즈 추가 X. Partial<Entity> 한 곳으로 통합. DRY.
+
+#### Phase 4 (PR #363, UserInfoboxPreset)
+- **#70. UserInfoboxPreset = WikiTemplate와 별도 시스템** (infobox-only 가벼움) — Wikipedia 패턴 정합 (`Template:Infobox person`이 별도 namespace).
+- **#71. `(string & {})` widen 패턴** — TypeScript literal union을 string으로 widen 방지. builtin autocomplete 보존 + user id 확장.
+- **#72. onPresetChange callback 3번째 인자 (`defaultHeaderColor?`)** — caller가 builtin + user preset 둘 다 색 자동 적용. Note와 Wiki 일관.
+- **#73. Orphan reference graceful fallback** — user preset 삭제 후 사용 article의 `infoboxPreset` 그대로 유지. `getPresetDefinitionUnified`가 "custom" 반환. entries는 article 자체 저장이라 영향 0.
+
+### 기술 학습 (영구, 2026-05-18 오후)
+
+- **drag-and-drop stable id 패턴** (dnd-kit): handleChange 등이 새 object 생성 시 reference id 잃는 한계. `_id` ephemeral 필드를 useState 진입 시 부여 + persist 시 strip이 정직. WeakMap based id는 entry mutation 시 깨짐.
+- **react-resizable-panels imperativeAPI** (`ImperativePanelGroupHandle`): `getLayout()` / `setLayout(sizes)` 둘 다 검증된 API. `setLayout` 호출 시 첫 mount skip 패턴 (`hasMountedRef`)으로 autoSave layout 우선 보존.
+- **CSS `overflow-x: auto` + inner `min-width` 패턴**: 가로 스크롤 fallback. `overflow-x-auto overflow-y-hidden` 분리 가능.
+- **TypeScript `(string & {})` widen hack**: builtin literal union을 string으로 widen 방지. autocomplete 보존 + 확장 자유.
+- **Generic seed-based helper pattern**: `mergePresetWithExisting(presetId)` → `mergeSeedWithExisting(seed, existing)` 통합 generic 함수로 user preset도 처리. wrapper로 back-compat.
+- **Panel toggle cluster 중복 회피**: view-header default toolbar가 `SidebarSimple` + `SplitViewButton` 자체 render. wiki-view actions에 수동 mount는 중복 — default toolbar 위임이 정직.
+- **WikiInfobox callback signature 확장 시 caller back-compat**: TypeScript 함수 인자는 less args도 OK이라 기존 caller 자연 호환. 3-arg 인자는 optional 처리.
+- **Cross-entity preset 확장 = 단일 component reuse**: WikiInfobox component (kind prop routing) + 동일 preset infra = 모든 entity 동일 UX. caller만 entity-specific.
+- **`(string & {})` widen + `INFOBOX_PRESETS.find` 호환**: builtin enum lookup이 user id 들어와도 undefined 자연. `getPresetDefinitionUnified`가 fallback "custom" 반환으로 graceful.
+
+### 환경 변경 (다음 머신 sync 필수)
+
+- Main HEAD: `43fcd44` (PR #362 squash merged)
+- 신규 file (PR #363 — open):
+  - `lib/store/slices/wiki-infobox-presets.ts`
+  - `components/editor/save-preset-dialog.tsx`
+- 신규 type:
+  - `UserInfoboxPreset` (id/label/hint?/defaultHeaderColor/defaultEntries/createdAt/updatedAt ISO)
+  - `WikiInfoboxBuiltinPreset` (기존 literal union 재명명)
+- Persist version: 139 → **140** (PR #363 머지 시 main 반영)
+- `Note.infoboxPreset?` + `Note.infoboxHeaderColor?` 신규 optional 필드 (PR #362 merged)
+- 영구 widen: `WikiInfoboxPreset = WikiInfoboxBuiltinPreset | (string & {})`
+- 영구 callback signature 확장: `onPresetChange(preset, seed, defaultHeaderColor?)`
+- 영구 결정 #64-#73 (총 10개 추가)
+
+### 다음 (TODO.md P0)
+
+🔴 **P0 #1**: PR #363 manual verify + squash merge (10단계 체크리스트)
+🟡 **P0 #2**: PR-C 시작 — Hero Image + caption (PRD Phase 3, ~7 파일, v141)
+🟣 **P0 #3** (선택): PR-E 후보 (Phase 5+, SectionTemplate / Hatnote / Ambox / 편집 히스토리)
+
+---
+
 ## 🚀 2026-05-18 (오전) — **Wiki Delete soft delete + Wiki Template 신설 + Infobox preset 6 + dropdown fix** ⭐⭐⭐⭐
 
 **범위**: 1 worktree (`kind-zhukovsky-1a4485`). 3 sequential PR + docs sync. 사용자 시그널 4건 응답.
