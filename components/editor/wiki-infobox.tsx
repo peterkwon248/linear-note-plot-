@@ -85,6 +85,13 @@ interface WikiInfoboxProps {
    * the cloned seed entries — caller persists both atomically.
    */
   onPresetChange?: (preset: WikiInfoboxPreset, seedEntries: WikiInfoboxEntry[]) => void
+  /**
+   * PR-A B1 — fires when the infobox toggles between read and edit mode. Lets
+   * the parent layout widen the infobox panel during edits ("gentle by default,
+   * powerful when needed") so the header's ✓/X buttons don't get clipped by
+   * the narrow default rail width.
+   */
+  onEditingChange?: (editing: boolean) => void
 }
 
 // ── SortableWrapper: drag-handle + transform style ──────────────────────────
@@ -215,6 +222,7 @@ export function WikiInfobox({
   kind = "note",
   preset,
   onPresetChange,
+  onEditingChange,
 }: WikiInfoboxProps) {
   const setWikiInfoboxNote = usePlotStore((s) => s.setWikiInfobox)
   const setWikiArticleInfobox = usePlotStore((s) => s.setWikiArticleInfobox)
@@ -375,6 +383,14 @@ export function WikiInfobox({
   }, [pendingPreset, entries, onPresetChange])
 
   const cancelPresetSwap = useCallback(() => setPendingPreset(null), [])
+
+  // PR-A B1 — Notify parent layout when edit mode toggles so it can widen the
+  // infobox panel. The "Gentle by default" rail is too narrow for the edit
+  // toolbar (✓/X get clipped); the parent expands the panel only while editing
+  // and restores it on Save/Cancel.
+  useEffect(() => {
+    onEditingChange?.(isEditing)
+  }, [isEditing, onEditingChange])
 
   // PR-A — Drives the "N of M preserved" copy in both confirm dialogs.
   const pendingPreserveStats = useMemo(

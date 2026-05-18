@@ -484,7 +484,9 @@ export function WikiArticleView({ articleId, editable = false, preview = false, 
   // Default sizes — sum to 100. When a side panel is hidden the content
   // takes its share so the layout stays balanced.
   const tocDefault     = showTOCRail     ? 16 : 0
-  const infoboxDefault = showInfoboxRail ? 22 : 0
+  // PR-A A1 — bumped 22→24 so the default rail can comfortably fit the
+  // infobox header ✓/X cluster on common viewport widths.
+  const infoboxDefault = showInfoboxRail ? 24 : 0
   const contentDefault = 100 - tocDefault - infoboxDefault
 
   const panelGroupRef = useRef<ImperativePanelGroupHandle>(null)
@@ -503,6 +505,38 @@ export function WikiArticleView({ articleId, editable = false, preview = false, 
     window.addEventListener("plot:reset-wiki-layout", handler as EventListener)
     return () => window.removeEventListener("plot:reset-wiki-layout", handler as EventListener)
   }, [articleId, showTOCRail, showInfoboxRail, tocDefault, contentDefault, infoboxDefault])
+
+  // PR-A B1 — Auto-expand the infobox rail while it's in edit mode and
+  // restore the user's previous layout when they exit. Without this the
+  // default ~24% rail can clip the edit toolbar's ✓/X on narrow viewports.
+  // We use getLayout() to remember the pre-edit sizes so user-dragged widths
+  // survive a Save/Cancel round trip.
+  const [infoboxEditing, setInfoboxEditing] = useState(false)
+  const hasMountedLayoutRef = useRef(false)
+  const restoreLayoutRef = useRef<number[] | null>(null)
+  useEffect(() => {
+    // Skip the very first render so we don't overwrite the autoSave'd layout.
+    if (!hasMountedLayoutRef.current) {
+      hasMountedLayoutRef.current = true
+      return
+    }
+    const ref = panelGroupRef.current
+    if (!ref) return
+    if (infoboxEditing) {
+      // Remember current sizes so a user-resized rail comes back intact.
+      restoreLayoutRef.current = ref.getLayout()
+      const targetInfobox = 30
+      const targetContent = 100 - tocDefault - targetInfobox
+      const sizes: number[] = []
+      if (showTOCRail) sizes.push(tocDefault)
+      sizes.push(targetContent)
+      if (showInfoboxRail) sizes.push(targetInfobox)
+      ref.setLayout(sizes)
+    } else if (restoreLayoutRef.current) {
+      ref.setLayout(restoreLayoutRef.current)
+      restoreLayoutRef.current = null
+    }
+  }, [infoboxEditing, showTOCRail, showInfoboxRail, tocDefault])
 
   const outerContent = (
     <ResizablePanelGroup
@@ -803,6 +837,7 @@ export function WikiArticleView({ articleId, editable = false, preview = false, 
                     kind="wiki"
                     entries={article.infobox}
                     editable={editable}
+                    onEditingChange={setInfoboxEditing}
                     headerColor={article.infoboxHeaderColor ?? null}
                     onHeaderColorChange={
                       editable
