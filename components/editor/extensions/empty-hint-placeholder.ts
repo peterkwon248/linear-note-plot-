@@ -49,15 +49,23 @@ export const EmptyHintPlaceholder = Extension.create({
               // Attach to the (only) empty paragraph. Heading placeholder is
               // handled separately by @tiptap/extension-placeholder.
               if (node.type.name === "paragraph" && node.content.size === 0) {
+                // Widget is absolutely positioned inside the paragraph so the
+                // caret rests at the paragraph start (like UpNote / Notion) and
+                // the hint reads as a true placeholder, not inline text.
+                // Font size + line-height inherit from the paragraph so the hint
+                // visually replaces the empty body line.
                 const widget = document.createElement("span")
                 widget.className = "plot-empty-hint"
                 widget.contentEditable = "false"
                 widget.style.cssText = [
+                  "position: absolute",
+                  "left: 0",
+                  "top: 0",
                   "color: var(--muted-foreground)",
-                  "opacity: 0.9",
+                  "opacity: 0.55",
                   "user-select: none",
                   "pointer-events: none",
-                  "font-size: 0.85em",
+                  "white-space: nowrap",
                 ].join("; ")
 
                 const btn = document.createElement("button")
@@ -71,8 +79,7 @@ export const EmptyHintPlaceholder = Extension.create({
                   "margin: 0",
                   "font: inherit",
                   "text-decoration: underline",
-                  "text-decoration-style: dotted",
-                  "text-underline-offset: 2px",
+                  "text-underline-offset: 3px",
                   "cursor: pointer",
                   "pointer-events: auto",
                 ].join("; ")
@@ -82,10 +89,10 @@ export const EmptyHintPlaceholder = Extension.create({
                   window.dispatchEvent(new CustomEvent("plot:open-templates-picker"))
                 })
                 btn.addEventListener("mouseenter", () => {
-                  btn.style.textDecorationStyle = "solid"
+                  btn.style.opacity = "1"
                 })
                 btn.addEventListener("mouseleave", () => {
-                  btn.style.textDecorationStyle = "dotted"
+                  btn.style.opacity = ""
                 })
 
                 widget.appendChild(btn)
@@ -96,6 +103,14 @@ export const EmptyHintPlaceholder = Extension.create({
                     side: -1,
                     ignoreSelection: true,
                     key: "empty-hint",
+                  }),
+                )
+                // Make the paragraph the positioning context for the absolute
+                // widget — without this the widget would escape to a distant
+                // ancestor (e.g. viewport).
+                decorations.push(
+                  Decoration.node(pos, pos + node.nodeSize, {
+                    style: "position: relative",
                   }),
                 )
                 attached = true
