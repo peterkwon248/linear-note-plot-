@@ -3,23 +3,37 @@
 > 우선순위 기반 작업 목록. **P0 = 다음 세션 즉시 시작점** (NEXT-ACTION.md 폐지, 2026-05-12).
 > 완료 항목은 즉시 삭제 또는 "완료" 섹션으로 이동.
 
-**마지막 갱신**: 2026-05-18 (저녁) — fix bundle (PR #365) + PR-D 머지 (PR #363) + PR-C Hero Image (PR #367) 3 PR squash. PRD Phase 1+2+3+4 모두 완료.
+**마지막 갱신**: 2026-05-19 — PR-E1 (Hatnotes + Preset import/export, PR #368 squash 머지). PRD Phase 5+ first wave 완료.
 
 ---
 
-## 🔴 P0 — 즉시 (cross-machine 진입점, 2026-05-18 저녁)
+## 🔴 P0 — 즉시 (cross-machine 진입점, 2026-05-19)
 
-### 1. **PR-E (Phase 5+ 후보 중 우선순위 결정)** — Hatnote / Ambox / themeColor / SectionTemplate / preset import-export
+### 1. **PR-E2 후보 우선순위 결정** (Phase 5+ second wave)
 
-PRD `.omc/plans/wiki-infobox-tier-2-4-prd.md` section 5 "Out of Scope" 후보:
-- **Hatnote** (상위/하위/다른뜻/Main/See-also 배너) — BRAINSTORM Top 7 #1
-- **Ambox 자동 배너** (Stub/Orphan/Unsourced 5색 severity) — BRAINSTORM Top 7 #2
-- **themeColor 시스템** (light/dark CSS variable cascade) — BRAINSTORM Top 7 #4
-- **편집 히스토리 v1** (WikiArticle.history[] + 편집 요약) — BRAINSTORM Top 7 #6
-- **SectionTemplate** (그룹만 재사용, 3-tier 시스템 Tier 3)
-- **Preset import/export JSON** (Phase 4 후속)
+PR-E1 (Hatnote + Preset I/O) 완료. PRD `.omc/plans/wiki-infobox-tier-2-4-prd.md` section 5 "Out of Scope" 남은 후보:
 
-사용자 시그널 또는 우선순위 결정 후 진행. 별도 PRD 분리 권장 (BRAINSTORM-2026-04-14-wiki-ultra.md).
+- **🎨 themeColor 시스템** (BRAINSTORM #4, **메인 추천** — 디자인 정체성, light/dark CSS variable cascade, ~5 파일 v143)
+  - `WikiArticle.themeColor?: {light: HEX, dark: HEX}` 이중 색상
+  - 인포박스 헤더 / 섹션 구분 / Navbox에 cascade
+  - Linear 톤 유지: 채도 -20% 자동 (`color-mix()`)
+  - 가장 시각적 임팩트 + PR-E1 자연 후속
+
+- **📚 편집 히스토리 v1** (BRAINSTORM #6, **보류 권장**)
+  - `WikiArticle.history[]` + 편집 요약 필드 + History 탭
+  - 매 저장마다 snapshot은 IDB storage 폭발 + cross-machine sync 충돌 위험
+  - multi-machine PRD (Supabase B + Yjs) 시점에 자연 통합 권장 — 지금 만들면 재설계 비용 발생
+
+- **🟡 Ambox 자동 배너** (BRAINSTORM #2, **Skip 권장**)
+  - Stub/Orphan/Unsourced 5색 severity 자동 표시
+  - Plot 사용자 = 개인 위키라 "stub 경고" noise risk
+  - 영구 룰 #67 "Gentle by default" 위반 가능성
+
+- **🟣 SectionTemplate (3-layer 시스템 Tier 3)** (**MVP 후 결정**)
+  - 그룹만 재사용, WikiTemplate + UserInfoboxPreset + SectionTemplate 3-layer
+  - PRD에서 "subgroup hierarchy는 over-engineering 회피" 폐기 결정
+
+**사용자 시그널 또는 우선순위 결정 후 진행.**
 
 ### 2. **WikiTemplate detail panel hero edit UI** (~3 파일, PR-C 후속 polish)
 
@@ -33,26 +47,42 @@ PR-C에서 `WikiTemplate.infoboxHero?` 필드만 추가, edit UI 미완. templat
 ### 3. **dead code 정리 + build TypeScript 부채** (작은 cleanup PR)
 
 - `components/note-detail-panel.tsx` — 어디서도 import 안 됨 (사전 부채)
-- build TS 부채 10개: `insights-view.tsx:268` `noteEvents` 등 (memory에 목록)
+- build TS 부채 10개: `insights-view.tsx:268` `noteEvents` + sticker-detail-panel orphan fields + wiki-category-page CategoryOrdering + books-slice test + view-configs SortField (memory에 목록)
+- doc comment 부정확 3건 (PR-E1 architect non-blocking) — `setWikiArticleInfoboxHero` 실제 없음, generic `updateWikiArticle` 패턴
 
 ### 4. **사용자 IDB stale WikiTemplate description** (선택, backfill migration)
 
-PR #365 seeds.ts 영어 통일은 fresh init만 적용. 기존 사용자 IDB의 한글 description 그대로. v141 → v142 backfill migration 가능:
+PR #365 seeds.ts 영어 통일은 fresh init만 적용. 기존 사용자 IDB의 한글 description 그대로. v142 → v143 backfill migration 가능:
 - seed id 매칭되는 wikiTemplate description을 SEED_WIKI_TEMPLATES에서 re-pull
 - 사용자 customize한 description은 보존 옵션 (id로 매칭 시 영어 default가 덮어쓰면 위반)
-6. user preset hover → 🗑 delete → confirm → preset 삭제. 그 preset 사용 article은 "Custom" fallback (entries 보존)
-7. Console v139→v140 migration log 확인 (`[migrate] v139→v140: initialized userInfoboxPresets ([])`)
-8. Page reload → My Presets persist 확인 (Array defense 작동)
-9. preset switch 시 PR #361 "Preserve matching" dialog 정합 동작
-10. OK → `gh pr merge 363 --squash`
-
-### 2. **PR-C 시작** (Hero Image + caption, PRD Phase 3, ~7 파일, persist v141)
-
-PRD `.omc/plans/wiki-infobox-tier-2-4-prd.md` §1 Phase 3.
 
 ---
 
-## ✅ 최근 완료 (2026-05-18 저녁) — fix bundle + PR-D + PR-C
+## ✅ 최근 완료 (2026-05-19) — PR-E1 Hatnotes + Preset I/O
+
+### PR #368 — Hatnotes + Preset import/export (PR-E1, Phase 5+ first wave, squash merged 56ecb24)
+
+**A. Hatnote** (Wikipedia/나무위키 표준 5 type)
+- 5 라벨 영어: Part of / Subtopics / Not to be confused with / Main article / See also
+- `WikiArticle.hatnotes?: Hatnote[]` optional + 신규 컴포넌트 `wiki-hatnotes.tsx` (render) + `hatnote-edit-dialog.tsx` (type Select + text + WikiPicker target)
+- title 아래 / `<InlineCategoryTags>` 위 mount (Wikipedia 정합)
+- `WikiPickerDialog excludeIds={[articleId]}` self-reference cycle 차단
+
+**B. Preset import/export JSON** (PR-D 자연 후속)
+- 신규 `lib/wiki-infobox-presets-io.ts` (envelope `{ version, exportedAt, presets }` + raw array 양쪽 호환 + SSR-safe download)
+- 신규 `import-preset-dialog.tsx` (textarea + file upload + live parse preview + collision count surface)
+- Infobox footer "Export presets…" / "Import presets…" 액션
+- Import 정책: 항상 fresh id (no replace) — collision은 preview 표시만
+
+**검증**
+- `npx tsc --noEmit`: 0 new errors (10 pre-existing 부채만)
+- Architect: APPROVED (3 minor non-blocking)
+
+**영구 룰 추가**: #79 (Hatnote 5 type 정합) + #80 (JSON export envelope 패턴)
+
+---
+
+## ✅ 이전 완료 (2026-05-18 저녁) — fix bundle + PR-D + PR-C
 
 ### PR #365 — fix bundle (squash merged, 4 commits)
 - **WikiTemplate seed description i18n 영어 통일** (PR #358 잔재, 8 description)
