@@ -26,6 +26,12 @@ export const EmptyHintPlaceholder = Extension.create({
         props: {
           decorations: (state) => {
             const { doc } = state
+            // Only show hint on a truly empty note. A non-empty text anywhere,
+            // or more than one block, means the user is mid-edit — don't ambush
+            // them by re-appearing inside a fresh paragraph after Enter.
+            if (doc.textContent !== "" || doc.childCount > 1) {
+              return DecorationSet.empty
+            }
             const decorations: Decoration[] = []
             let attached = false
 

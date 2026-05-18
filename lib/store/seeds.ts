@@ -1157,7 +1157,7 @@ export const SEED_WIKI_TEMPLATES: WikiTemplate[] = [
   {
     id: "wtmpl-empty",
     name: "Empty",
-    description: "백지에서 시작. 어떤 구조도 미리 잡지 않음.",
+    description: "Start from scratch. No predefined structure.",
     title: "Untitled",
     aliases: [],
     blocks: [],
@@ -1170,7 +1170,7 @@ export const SEED_WIKI_TEMPLATES: WikiTemplate[] = [
   {
     id: "wtmpl-concept",
     name: "Concept",
-    description: "추상 개념/이론/원리 정리 (예: Zettelkasten, Single Responsibility).",
+    description: "For abstract concepts, theories, or principles (e.g., Zettelkasten, Single Responsibility).",
     title: "Concept",
     aliases: [],
     blocks: [
@@ -1197,7 +1197,7 @@ export const SEED_WIKI_TEMPLATES: WikiTemplate[] = [
   {
     id: "wtmpl-person",
     name: "Person",
-    description: "인물 wiki (예: Albert Einstein, Steve Jobs).",
+    description: "Biographical wiki for people (e.g., Albert Einstein, Steve Jobs).",
     title: "Person Name",
     aliases: [],
     blocks: [
@@ -1225,7 +1225,7 @@ export const SEED_WIKI_TEMPLATES: WikiTemplate[] = [
   {
     id: "wtmpl-place",
     name: "Place",
-    description: "장소 wiki (예: Seoul, Mount Fuji).",
+    description: "Wiki for places (e.g., Seoul, Mount Fuji).",
     title: "Place Name",
     aliases: [],
     blocks: [
@@ -1251,7 +1251,7 @@ export const SEED_WIKI_TEMPLATES: WikiTemplate[] = [
   {
     id: "wtmpl-reference",
     name: "Reference",
-    description: "학술 논문/책 정리 (예: Attention Is All You Need).",
+    description: "For academic papers and reference works (e.g., Attention Is All You Need).",
     title: "Reference Title",
     aliases: [],
     blocks: [
@@ -1277,7 +1277,7 @@ export const SEED_WIKI_TEMPLATES: WikiTemplate[] = [
   {
     id: "wtmpl-tutorial",
     name: "Tutorial",
-    description: "절차/How-to (예: Setting up Next.js).",
+    description: "Step-by-step procedure or how-to guide (e.g., Setting up Next.js).",
     title: "Tutorial",
     aliases: [],
     blocks: [
@@ -1298,7 +1298,7 @@ export const SEED_WIKI_TEMPLATES: WikiTemplate[] = [
   {
     id: "wtmpl-project-log",
     name: "Project Log",
-    description: "진행 중 프로젝트 추적 (예: Plot v3 Refresh).",
+    description: "Track an in-progress project (e.g., Plot v3 Refresh).",
     title: "Project Name",
     aliases: [],
     blocks: [
@@ -1324,7 +1324,7 @@ export const SEED_WIKI_TEMPLATES: WikiTemplate[] = [
   {
     id: "wtmpl-book-note",
     name: "Book Note",
-    description: "읽은 책 정리 (예: Atomic Habits, 이기적 유전자).",
+    description: "Notes from a book you've read (e.g., Atomic Habits, The Selfish Gene).",
     title: "Book Title",
     aliases: [],
     blocks: [
