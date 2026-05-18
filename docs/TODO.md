@@ -3,39 +3,33 @@
 > 우선순위 기반 작업 목록. **P0 = 다음 세션 즉시 시작점** (NEXT-ACTION.md 폐지, 2026-05-12).
 > 완료 항목은 즉시 삭제 또는 "완료" 섹션으로 이동.
 
-**마지막 갱신**: 2026-05-19 — PR-E1 (Hatnotes + Preset import/export, PR #368 squash 머지). PRD Phase 5+ first wave 완료.
+**마지막 갱신**: 2026-05-19 (저녁) — PR #370 polish (Hatnote dialog) + PR #371 themeColor cascade (Phase 5+ second wave) 2 PR squash. PRD Phase 5+ first+second wave 완료.
 
 ---
 
-## 🔴 P0 — 즉시 (cross-machine 진입점, 2026-05-19)
+## 🔴 P0 — 즉시 (cross-machine 진입점, 2026-05-19 저녁)
 
-### 1. **PR-E2 후보 우선순위 결정** (Phase 5+ second wave)
+### 1. **🔴 light mode hex contrast follow-up** (가장 높은 우선순위, 단일 파일 ~10줄)
 
-PR-E1 (Hatnote + Preset I/O) 완료. PRD `.omc/plans/wiki-infobox-tier-2-4-prd.md` section 5 "Out of Scope" 남은 후보:
+PR-E2 themeColor cascade가 pre-existing `useTintedText` 부채를 노출 증폭. 사용자가 PRESET_COLORS 중 vivid color (yellow/lime/amber/sky 등) preset 클릭 시 흰 글씨 + 옅은 배경 → 가독성 망함. **사용자 발견 즉시 신뢰 깨질 수 있어 우선순위 가장 높음**.
 
-- **🎨 themeColor 시스템** (BRAINSTORM #4, **메인 추천** — 디자인 정체성, light/dark CSS variable cascade, ~5 파일 v143)
-  - `WikiArticle.themeColor?: {light: HEX, dark: HEX}` 이중 색상
-  - 인포박스 헤더 / 섹션 구분 / Navbox에 cascade
-  - Linear 톤 유지: 채도 -20% 자동 (`color-mix()`)
-  - 가장 시각적 임팩트 + PR-E1 자연 후속
+**범위 (단일 파일)**:
+- `lib/tinted-bg.ts:60-61` — `useTintedText` regex가 현재 `/^rgba?\(.../` 전용. hex 입력 시 light/dark 둘 다 default 흰 글씨 반환.
+- 통합 path: 이미 존재하는 `lib/wiki-color-contrast.ts::shouldUseLightText` (`parseColor` + `perceivedLuminance` 헬퍼)를 `useTintedText`에 분기 추가. hex 입력 시 perceived luminance로 흰/검은 글씨 자동 결정.
+- 검증: PRESET_COLORS 18색 각각 themeColor로 set 후 인포박스 헤더 글씨 가독성 확인.
 
-- **📚 편집 히스토리 v1** (BRAINSTORM #6, **보류 권장**)
-  - `WikiArticle.history[]` + 편집 요약 필드 + History 탭
-  - 매 저장마다 snapshot은 IDB storage 폭발 + cross-machine sync 충돌 위험
-  - multi-machine PRD (Supabase B + Yjs) 시점에 자연 통합 권장 — 지금 만들면 재설계 비용 발생
+### 2. **🟣 PR-E3 후보 우선순위 결정** (Phase 5+ third wave)
 
-- **🟡 Ambox 자동 배너** (BRAINSTORM #2, **Skip 권장**)
-  - Stub/Orphan/Unsourced 5색 severity 자동 표시
-  - Plot 사용자 = 개인 위키라 "stub 경고" noise risk
-  - 영구 룰 #67 "Gentle by default" 위반 가능성
+PRD `.omc/plans/wiki-infobox-tier-2-4-prd.md` Phase 5+ 남은 후보:
 
-- **🟣 SectionTemplate (3-layer 시스템 Tier 3)** (**MVP 후 결정**)
-  - 그룹만 재사용, WikiTemplate + UserInfoboxPreset + SectionTemplate 3-layer
-  - PRD에서 "subgroup hierarchy는 over-engineering 회피" 폐기 결정
+- **편집 히스토리 v1** (BRAINSTORM #6, **보류 권장** — multi-machine PRD 시점에 자연 통합, 지금 만들면 재설계 비용)
+- **Group header tint** (PR-E2 themeColor cascade follow-up, **사용자 시그널 받고**) — themeColor cascade에 group header 포함 (별도 `useGroupHeaderTint(themeColor, 0.15)` 헬퍼)
+- **Ambox 자동 배너** (BRAINSTORM #2, **Skip 권장** — Plot 사용자 = 개인 위키, noise risk)
+- **SectionTemplate (3-layer Tier 3)** (**MVP 후 결정** — 3-layer 복잡도, PRD에서 over-engineering 회피)
 
 **사용자 시그널 또는 우선순위 결정 후 진행.**
 
-### 2. **WikiTemplate detail panel hero edit UI** (~3 파일, PR-C 후속 polish)
+### 3. **🟡 WikiTemplate detail panel hero edit UI** (~3 파일, PR-C 후속 polish)
 
 PR-C에서 `WikiTemplate.infoboxHero?` 필드만 추가, edit UI 미완. template detail panel에 `InfoboxHeroPicker` mount + figure render 추가.
 
@@ -44,21 +38,53 @@ PR-C에서 `WikiTemplate.infoboxHero?` 필드만 추가, edit UI 미완. templat
 - 또는 `/wiki/templates/{id}` 페이지에 InfoboxHeroPicker integration
 - WikiTemplate seed 8개 중 일부 (Person/Place) 에 default hero 추가 가능
 
-### 3. **dead code 정리 + build TypeScript 부채** (작은 cleanup PR)
+### 4. **🟢 dead code + TS 부채 + doc comment cleanup PR** (작은 cleanup)
 
 - `components/note-detail-panel.tsx` — 어디서도 import 안 됨 (사전 부채)
 - build TS 부채 10개: `insights-view.tsx:268` `noteEvents` + sticker-detail-panel orphan fields + wiki-category-page CategoryOrdering + books-slice test + view-configs SortField (memory에 목록)
 - doc comment 부정확 3건 (PR-E1 architect non-blocking) — `setWikiArticleInfoboxHero` 실제 없음, generic `updateWikiArticle` 패턴
+- WikiArticleEncyclopedia hatnotes 마운트 누락 (PR-E1 잔재)
 
-### 4. **사용자 IDB stale WikiTemplate description** (선택, backfill migration)
+### 5. **사용자 IDB stale WikiTemplate description** (선택, backfill migration)
 
-PR #365 seeds.ts 영어 통일은 fresh init만 적용. 기존 사용자 IDB의 한글 description 그대로. v142 → v143 backfill migration 가능:
+PR #365 seeds.ts 영어 통일은 fresh init만 적용. 기존 사용자 IDB의 한글 description 그대로. v143 → v144 backfill migration 가능:
 - seed id 매칭되는 wikiTemplate description을 SEED_WIKI_TEMPLATES에서 re-pull
 - 사용자 customize한 description은 보존 옵션 (id로 매칭 시 영어 default가 덮어쓰면 위반)
 
 ---
 
-## ✅ 최근 완료 (2026-05-19) — PR-E1 Hatnotes + Preset I/O
+## ✅ 최근 완료 (2026-05-19 저녁) — PR #370 polish + PR #371 themeColor
+
+### PR #370 — Hatnote dialog Type Select polish (squash merged 91c8eca, +4/-4)
+
+사용자 보고 "Type 안에 글자들이 너무 박스 안에서 빼곡한 느낌" 응답. PR #368 (PR-E1) follow-up.
+- `hatnote-edit-dialog.tsx` SelectItem: 제목 + description 2-line → 제목 한 줄만 (Linear dropdown 정합)
+- Select 바로 아래 `<p>` muted text로 선택된 type description 한 줄 표시
+- Conflict resolve: PR #368 main 머지 후 같은 파일 변경이 line-level conflict → HEAD 우선 (`git merge origin/main` + manual marker 제거) 패턴
+
+### PR #371 — themeColor cascade system (squash merged a5e6ef8, +356/-27, 11 files, 1 new)
+
+**A. 데이터 모델**:
+- `WikiArticle.themeColor?: string | null` (단일 hex, `{light,dark}` 객체 X — `useTintedBg` hook이 분기 자동 처리)
+- 신규 setter `setWikiArticleThemeColor` + Persist v142→v143 sentinel
+
+**B. Cascade 메커니즘**:
+- Root container (`wiki-article-view` + `wiki-article-encyclopedia` 두 경로) 에 `--wiki-theme-color` CSS variable inject
+- **Infobox header**: `effectiveHeaderColor = headerColor ?? themeColor ?? null` fallback
+- **Hatnote**: `border-l-2` + `borderLeftColor: var(--wiki-theme-color, transparent)`
+- **Section h2**: SectionBlock에 `data-h2` attribute + root container의 Tailwind arbitrary selector로 **opt-in** (themeColor 없으면 영향 0, 영구 룰 #67 정합)
+
+**C. Picker**:
+- 신규 `components/wiki-editor/wiki-theme-color-picker.tsx` Dialog
+- PRESET_COLORS 18색 hex grid + custom `<input type="color">` + Clear 옵션
+- Infobox footer "Theme color…" 액션 (Save as preset… 옆)
+- `canChangeThemeColor` gate — Wiki only
+
+**영구 룰 추가**: #81 (themeColor 단일 hex + CSS variable cascade 패턴) + #82 (디자인 cascade opt-in 의무, 영구 룰 #67 강화) + #83 (Component prop 확장 optional + back-compat 의무)
+
+---
+
+## ✅ 이전 완료 (2026-05-19) — PR-E1 Hatnotes + Preset I/O
 
 ### PR #368 — Hatnotes + Preset import/export (PR-E1, Phase 5+ first wave, squash merged 56ecb24)
 

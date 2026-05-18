@@ -51,6 +51,38 @@
 
 ---
 
+## 🚀 2026-05-19 (저녁) — PR #370 polish + PR #371 themeColor cascade (2 PR squash 머지) ⭐⭐⭐⭐⭐
+
+**범위**: PRD `.omc/plans/wiki-infobox-tier-2-4-prd.md` **Phase 5+ second wave 완료**. BRAINSTORM Top 7 #4 (themeColor) 정합. Plot 시각적 정체성 강화 — 사용자가 article마다 자기 "주제 색" 지정 → cascade.
+
+### 핵심 결정 (영구 LOCKED, #81-#83)
+
+- **#81. themeColor = 단일 hex string + CSS variable cascade** (`--wiki-theme-color`, `{light,dark}` 객체 X, useTintedBg 위임)
+- **#82. 디자인 cascade는 opt-in 의무** (영구 룰 #67 정합 강화 — Tailwind arbitrary selector 패턴)
+- **#83. Component prop signature 확장은 optional + back-compat 의무**
+
+### 변경 핵심
+
+- **PR #370 (Hatnote dialog polish)**: SelectItem 2-line → 제목 한 줄 + Select 아래 muted hint (Linear dropdown 정합)
+- **PR #371 (themeColor)**: 단일 hex `WikiArticle.themeColor` + `--wiki-theme-color` CSS var inject (wiki-article-view + encyclopedia 두 경로) + Infobox header fallback (`headerColor ?? themeColor`) + Hatnote border-l-2 + Section h2 opt-in Tailwind arbitrary selector + PRESET_COLORS 18색 picker dialog + Persist v143
+
+### 환경
+
+- Main HEAD: `a5e6ef8` (PR #371)
+- Persist v143 (PR-E2 v142→v143 sentinel)
+- 신규 file: `components/wiki-editor/wiki-theme-color-picker.tsx`
+- 신규 type field: `WikiArticle.themeColor?: string | null`
+- 신규 setter: `setWikiArticleThemeColor`
+
+### 다음 (TODO.md P0)
+
+🔴 **P0 #1**: light mode hex contrast follow-up (vivid preset 흰 글씨 가독성 fix, `useTintedText`에 `shouldUseLightText` 통합)
+🟣 **P0 #2 (PR-E3 후보)**: 편집 히스토리 v1 / Group header tint / Ambox / SectionTemplate 중 결정
+🟡 **P0 #3**: WikiTemplate detail panel hero edit UI
+🟢 **P0 #4**: dead code + TS 부채 + doc comment cleanup PR
+
+---
+
 ## 🚀 2026-05-19 — PR-E1: Hatnotes + Preset import/export (Phase 5+ first wave, PR #368) ⭐⭐⭐⭐
 
 **범위**: PRD `.omc/plans/wiki-infobox-tier-2-4-prd.md` **Phase 5+ Out of Scope** 후보 6개 중 첫 2개 도입 (Hatnote + Preset I/O). Plot 제텔카스텐 본질 강화 (문서 관계 명시) + PR-D ecosystem 완성.
