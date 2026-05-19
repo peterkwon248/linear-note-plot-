@@ -34,11 +34,27 @@ function summarize(t: WikiTemplate): string {
 interface WikiTemplatePickerProps {
   open: boolean
   onOpenChange: (open: boolean) => void
-  /** Called with new article id after template is applied. */
-  onApplied: (articleId: string) => void
+  /**
+   * "create" (default) — creates a new article via createWikiArticleFromTemplate,
+   * then calls onApplied with the new article id.
+   * "insert" — calls onTemplateChosen with the picked templateId so the caller
+   * can splice blocks into an existing article (e.g. wiki-article-view's
+   * "From template…" AddBlockButton entry).
+   */
+  mode?: "create" | "insert"
+  /** Called with new article id after template is applied (create mode). */
+  onApplied?: (articleId: string) => void
+  /** Called with picked templateId (insert mode). */
+  onTemplateChosen?: (templateId: string) => void
 }
 
-export function WikiTemplatePicker({ open, onOpenChange, onApplied }: WikiTemplatePickerProps) {
+export function WikiTemplatePicker({
+  open,
+  onOpenChange,
+  mode = "create",
+  onApplied,
+  onTemplateChosen,
+}: WikiTemplatePickerProps) {
   const wikiTemplates = usePlotStore((s) => Array.isArray(s.wikiTemplates) ? s.wikiTemplates : [])
   const createWikiArticleFromTemplate = usePlotStore((s) => s.createWikiArticleFromTemplate)
   const [search, setSearch] = useState("")
@@ -76,14 +92,20 @@ export function WikiTemplatePicker({ open, onOpenChange, onApplied }: WikiTempla
 
   const handleApply = useCallback(
     (id: string) => {
+      if (mode === "insert") {
+        onTemplateChosen?.(id)
+        onOpenChange(false)
+        setSearch("")
+        return
+      }
       const articleId = createWikiArticleFromTemplate(id)
       if (articleId) {
-        onApplied(articleId)
+        onApplied?.(articleId)
         onOpenChange(false)
         setSearch("")
       }
     },
-    [createWikiArticleFromTemplate, onApplied, onOpenChange]
+    [mode, createWikiArticleFromTemplate, onApplied, onTemplateChosen, onOpenChange]
   )
 
   if (!open) return null
@@ -95,7 +117,9 @@ export function WikiTemplatePicker({ open, onOpenChange, onApplied }: WikiTempla
         <div className="flex items-center justify-between border-b border-border px-6 py-4">
           <div className="flex items-center gap-2">
             <IconTemplate size={18} />
-            <h2 className="text-ui font-semibold text-foreground">Choose a Wiki template</h2>
+            <h2 className="text-ui font-semibold text-foreground">
+              {mode === "insert" ? "Insert from template" : "Choose a Wiki template"}
+            </h2>
           </div>
           <button
             onClick={() => onOpenChange(false)}

@@ -10,6 +10,7 @@ import { CategoryTreePicker } from "./category-tree-picker"
 import { UrlInputDialog } from "@/components/editor/url-input-dialog"
 import { NotePickerDialog } from "@/components/note-picker-dialog"
 import { WikiPickerDialog } from "@/components/wiki-picker-dialog"
+import { WikiTemplatePicker } from "@/components/wiki-template-picker"
 import { getEmbedDescendants } from "@/lib/embed-cycle"
 import { WikiFootnotesSection, WikiReferencesSection } from "./wiki-footnotes-section"
 import { WikiInfobox } from "@/components/editor/wiki-infobox"
@@ -141,8 +142,10 @@ export function WikiArticleView({ articleId, editable = false, preview = false, 
   const wikiArticles = usePlotStore((s) => s.wikiArticles)
   const notes = usePlotStore((s) => s.notes)
   const updateWikiBlock = usePlotStore((s) => s.updateWikiBlock)
+  const updateWikiArticle = usePlotStore((s) => s.updateWikiArticle)
   const reorderWikiBlocks = usePlotStore((s) => s.reorderWikiBlocks)
   const splitWikiArticle = usePlotStore((s) => s.splitWikiArticle)
+  const getWikiTemplateBlocksExpanded = usePlotStore((s) => s.getWikiTemplateBlocksExpanded)
 
   const { addWikiBlock, handleAddBlock, handleDeleteBlock, handleSplitSection, handleMoveToArticle, urlBlockDialog, setUrlBlockDialog } = useWikiBlockActions(articleId)
 
@@ -162,6 +165,8 @@ export function WikiArticleView({ articleId, editable = false, preview = false, 
   const embedNoteEditorRef = useRef<import("@tiptap/react").Editor | null>(null)
   const [embedWikiPickerOpen, setEmbedWikiPickerOpen] = useState(false)
   const embedWikiEditorRef = useRef<import("@tiptap/react").Editor | null>(null)
+  // P1 — WikiTemplate insert picker. null = closed. "start"/"end" = open + insert position.
+  const [templateInsertOpen, setTemplateInsertOpen] = useState<"start" | "end" | null>(null)
 
   // Cycle-safe exclude IDs: descendants of the current wiki article
   const embedNoteExcludeIds = useMemo(() => {
@@ -710,7 +715,10 @@ export function WikiArticleView({ articleId, editable = false, preview = false, 
 
           {/* Blocks */}
           {editable && (
-            <AddBlockButton onAdd={(type, level) => handleAddBlock(type, "__prepend__", level)} />
+            <AddBlockButton
+              onAdd={(type, level) => handleAddBlock(type, "__prepend__", level)}
+              onAddFromTemplate={() => setTemplateInsertOpen("start")}
+            />
           )}
 
           {editable ? (
@@ -801,7 +809,10 @@ export function WikiArticleView({ articleId, editable = false, preview = false, 
 
           {/* Add block at bottom */}
           {editable && (
-            <AddBlockButton onAdd={(type, level) => handleAddBlock(type, undefined, level)} />
+            <AddBlockButton
+              onAdd={(type, level) => handleAddBlock(type, undefined, level)}
+              onAddFromTemplate={() => setTemplateInsertOpen("end")}
+            />
           )}
 
           {article.blocks.length === 0 && !editable && (
@@ -974,6 +985,29 @@ export function WikiArticleView({ articleId, editable = false, preview = false, 
         title="Embed a wiki article"
         excludeIds={embedWikiExcludeIds}
         onSelect={handleEmbedWikiSelect}
+      />
+
+      {/* P1 — WikiTemplate insert picker (insert mode — caller splices blocks).
+          Triggered from AddBlockButton "From template…" entry; position
+          ("start" = prepend / "end" = append) recorded by templateInsertOpen. */}
+      <WikiTemplatePicker
+        open={templateInsertOpen !== null}
+        onOpenChange={(open) => { if (!open) setTemplateInsertOpen(null) }}
+        mode="insert"
+        onTemplateChosen={(templateId) => {
+          const blocks = getWikiTemplateBlocksExpanded(templateId)
+          if (!blocks || blocks.length === 0) {
+            toast.error("Template has no blocks")
+            return
+          }
+          if (!article) return
+          const newBlocks = templateInsertOpen === "start"
+            ? [...blocks, ...article.blocks]
+            : [...article.blocks, ...blocks]
+          updateWikiArticle(article.id, { blocks: newBlocks })
+          toast.success(`Inserted ${blocks.length} block${blocks.length === 1 ? "" : "s"} from template`)
+          setTemplateInsertOpen(null)
+        }}
       />
     </>
   )
