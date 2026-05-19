@@ -2,6 +2,7 @@
 
 import { useTheme } from "next-themes"
 import { useMemo } from "react"
+import { shouldUseLightText } from "@/lib/wiki-color-contrast"
 
 /**
  * Theme-aware tinted background resolver.
@@ -49,20 +50,17 @@ export function boostAlphaForLight(rawColor: string): string {
  * dark mode the alpha-tinted bg blends with the dark page so white reads
  * well universally.
  *
- * Uses simple ITU-R BT.601 luma (no gamma correction) — fine for picking
- * between two end-points. Threshold tuned so yellow/lime/cyan get dark text
- * while reds/blues/purples keep white text.
+ * Delegates to `shouldUseLightText` (lib/wiki-color-contrast) which parses
+ * hex (#rrggbb / #rgb) AND rgba/rgb uniformly via perceived luminance
+ * (Rec. 709 weighting). Yellow/lime/amber/cyan → dark text, reds/blues/
+ * purples → light text. Previously a local regex only matched rgba(...) so
+ * hex inputs (PRESET_COLORS themeColor picker) fell through to default
+ * white text on bright backgrounds in light mode — unreadable.
  */
 export function useTintedText(rawColor: string | null | undefined): string {
   const { resolvedTheme } = useTheme()
   return useMemo(() => {
     if (resolvedTheme !== "light" || !rawColor) return "rgba(255,255,255,0.85)"
-    const m = /^rgba?\(\s*([\d.]+)\s*,\s*([\d.]+)\s*,\s*([\d.]+)/.exec(rawColor)
-    if (!m) return "rgba(255,255,255,0.85)"
-    const r = parseFloat(m[1])
-    const g = parseFloat(m[2])
-    const b = parseFloat(m[3])
-    const luma = 0.299 * r + 0.587 * g + 0.114 * b
-    return luma > 150 ? "rgb(30,30,30)" : "rgba(255,255,255,0.92)"
+    return shouldUseLightText(rawColor) ? "rgba(255,255,255,0.92)" : "rgb(30,30,30)"
   }, [resolvedTheme, rawColor])
 }
