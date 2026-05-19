@@ -338,12 +338,20 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                 )}
 
                 {(mountedViews.has("/library") || activeRoute?.startsWith("/library")) && (
-                  // 2026-05-19 fix — LibraryView는 root /library에서만 visible.
-                  // 기존 startsWith("/library") 는 sub-route (/library/labels,
-                  // /library/tags 등)에서도 true → LibraryView가 sub-page view
-                  // (LabelsView 등) 옆에 동시 visible해서 main-content panel을
-                  // 양분 (사용자 보고 "라벨스에서 split view 자동").
-                  <div className={activeRoute === "/library" ? "flex flex-1 overflow-hidden" : "hidden"}>
+                  // 2026-05-19 fix v2 — LibraryView는 root /library + sub-page view
+                  // 없는 sub-route에서 fallback. /library/labels (LabelsView mount)
+                  // + /library/categories (WikiView mount)는 hidden. 다른 sub-route
+                  // (/library/tags, /library/references, /library/files,
+                  // /library/stickers)는 LibraryView fallback (사용자 보고 "Tags/
+                  // References 빈 화면" 회귀 fix).
+                  <div className={
+                    (activeRoute === "/library" ||
+                     (activeRoute?.startsWith("/library/") &&
+                      activeRoute !== "/library/labels" &&
+                      activeRoute !== "/library/categories"))
+                      ? "flex flex-1 overflow-hidden"
+                      : "hidden"
+                  }>
                     <LibraryView />
                   </div>
                 )}
