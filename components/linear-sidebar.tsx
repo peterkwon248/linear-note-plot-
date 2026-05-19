@@ -1604,18 +1604,20 @@ export function LinearSidebar() {
                 active={isActive("/library/labels")}
                 dragContent={{ type: "labels" }}
               />
-              {/* 2026-05-17 — Categories도 cross-entity. 단 길 A — entry만
-                  Library에 + click 시 Wiki page + categoryView mode (본격
-                  분리는 별도 PR). */}
+              {/* 2026-05-17 — Categories도 cross-entity. 길 A — entry만 Library에.
+                  2026-05-19 — Library sidebar 유지하면서 categories overview
+                  표시. activeRoute = "/library/categories" + wikiViewMode =
+                  "category"로 layout이 WikiView를 mount하되 sidebar는 Library
+                  그대로 (사용자 보고 "Categories 누르면 위키 사이드바로 옮겨감"). */}
               <button
                 onClick={() => {
                   setSelectedNoteId(null)
-                  setActiveRoute("/wiki")
+                  setActiveRoute("/library/categories")
                   setCategoryOverview()
-                  router.push("/wiki")
+                  router.push("/library/categories")
                 }}
                 className="a-sb-link"
-                data-active={wikiViewMode === "category" ? "true" : undefined}
+                data-active={activeRoute === "/library/categories" ? "true" : undefined}
               >
                 <span className="flex shrink-0 items-center justify-center w-5 h-5">
                   <Folders size={20} weight="regular" />
