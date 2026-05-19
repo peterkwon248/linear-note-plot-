@@ -31,8 +31,10 @@ import { PRESET_COLORS } from "@/lib/colors"
 import { useNotesView } from "@/lib/view-engine/use-notes-view"
 import { useLabelsView } from "@/lib/view-engine/use-labels-view"
 import { FilterButton, FilterChipBar } from "@/components/filter-bar"
+import { FilterPanel } from "@/components/filter-panel"
 import { DisplayPanel } from "@/components/display-panel"
-import { LABELS_LIST_VIEW_CONFIG } from "@/lib/view-engine/view-configs"
+import { LABELS_LIST_VIEW_CONFIG, NOTES_VIEW_CONFIG } from "@/lib/view-engine/view-configs"
+import { FunnelSimple } from "@phosphor-icons/react/dist/ssr/FunnelSimple"
 import { LabelNoteCountChip } from "@/components/property-chips"
 import type { SortField, FilterRule, GroupBy } from "@/lib/view-engine/types"
 import type { Label } from "@/lib/types"
@@ -133,6 +135,9 @@ export function LabelsView() {
   const updateLabel = usePlotStore((s) => s.updateLabel)
   const openNote = usePlotStore((s) => s.openNote)
   const closeSecondary = usePlotStore((s) => s.closeSecondary)
+  // P1 view-engine Phase 1 — sub-page filter popover state. Notes/Wiki 메인
+  // view ViewHeader 내 FilterPanel 패턴 정합 (tags-view 정합).
+  const [filterPopoverOpen, setFilterPopoverOpen] = useState(false)
 
   // 2026-05-19 (P1 quick fix) — Library sub-page (Labels)는 split view 와 함께
   // 표시될 때 secondary panel에 부모 Library overview가 자동 들어가 모순적
@@ -526,18 +531,31 @@ export function LabelsView() {
           </button>
         </div>
 
-        {/* Toolbar: Filter + Display */}
+        {/* Toolbar: Filter + Display — Notes/Wiki 표준 ViewHeader 내 FilterPanel
+            패턴 정합 (P1 view-engine Phase 1, tags-view 정합). */}
         <div className="flex items-center gap-2 border-b border-border px-5 py-1.5">
-          <FilterButton
-            filters={labelViewState.filters}
-            groupBy={labelViewState.groupBy}
-            isSingleStatusTab={false}
-            folders={folders}
-            tags={tags}
-            labels={labels}
-            onToggleFilter={toggleFilter}
-            onSetFilters={(f) => updateLabelView({ filters: f })}
-          />
+          <Popover open={filterPopoverOpen} onOpenChange={setFilterPopoverOpen}>
+            <PopoverTrigger asChild>
+              <button className="flex items-center gap-1.5 rounded-md px-2 py-1 text-note text-muted-foreground transition-colors hover:bg-hover-bg hover:text-foreground">
+                <FunnelSimple size={14} weight="regular" />
+                Filter
+                {labelViewState.filters.length > 0 && (
+                  <span className="flex h-4 min-w-4 items-center justify-center rounded-full bg-accent/15 px-1 text-2xs font-medium text-accent">
+                    {labelViewState.filters.length}
+                  </span>
+                )}
+              </button>
+            </PopoverTrigger>
+            <PopoverContent className="w-[280px] p-0" align="start">
+              <FilterPanel
+                categories={NOTES_VIEW_CONFIG.filterCategories}
+                activeFilters={labelViewState.filters}
+                onToggle={(rule) => toggleFilter(rule.field, String(rule.value), rule.operator)}
+                quickFilters={NOTES_VIEW_CONFIG.quickFilters as any}
+                onQuickFilter={(rules) => updateLabelView({ filters: rules })}
+              />
+            </PopoverContent>
+          </Popover>
           <div className="flex-1" />
           <Popover open={displayPopoverOpen} onOpenChange={setDisplayPopoverOpen}>
             <PopoverTrigger asChild>
