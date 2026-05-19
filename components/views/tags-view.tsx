@@ -151,6 +151,16 @@ export function TagsView() {
   const deleteTag = usePlotStore((s) => s.deleteTag)
   const updateTag = usePlotStore((s) => s.updateTag)
   const openNote = usePlotStore((s) => s.openNote)
+  const closeSecondary = usePlotStore((s) => s.closeSecondary)
+
+  // 2026-05-19 (P1 quick fix) — Library sub-page (Tags)는 split view와 함께
+  // 표시될 때 secondary panel에 부모 Library overview가 자동 들어가 모순적
+  // 레이아웃 발생. mount once 시 secondary 강제 close (사용자 의도적 split
+  // view는 mount 이후 다시 켜기 가능). labels-view 정합 패턴.
+  useEffect(() => {
+    closeSecondary()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
   // 2026-05-16 — Tag is cross-entity: notes / wiki articles / books all
   // reference tag ids via their `tags: string[]` field. Sub-page splits
   // these into separate sections.
