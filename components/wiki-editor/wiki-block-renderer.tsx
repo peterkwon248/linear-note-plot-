@@ -1705,10 +1705,13 @@ function TableBlock({ block, editable, onUpdate, onDelete, dragHandleProps, arti
 
 /* ── Add Block Button ── */
 
-export function AddBlockButton({ onAdd, nearestSectionLevel }: {
+export function AddBlockButton({ onAdd, nearestSectionLevel, onAddFromTemplate }: {
   onAdd: (type: string, level?: number) => void
   /** Level of the nearest section block above this insertion point (2, 3, or 4) */
   nearestSectionLevel?: number
+  /** P1 — When provided, surfaces "From template…" entry that triggers a
+   *  WikiTemplatePicker (insert mode). Caller handles the actual block splice. */
+  onAddFromTemplate?: () => void
 }) {
   const [open, setOpen] = useState(false)
 
@@ -1779,6 +1782,18 @@ export function AddBlockButton({ onAdd, nearestSectionLevel }: {
                 <span className="text-2xs text-muted-foreground/60">{desc}</span>
               </button>
             ))}
+            {onAddFromTemplate && (
+              <>
+                <div className="my-1 border-t border-white/[0.06]" />
+                <button
+                  onClick={() => { onAddFromTemplate(); setOpen(false) }}
+                  className="flex w-full items-center gap-3 px-3 py-2 text-left hover:bg-hover-bg transition-colors duration-100"
+                >
+                  <span className="text-note font-medium text-foreground/80">From template…</span>
+                  <span className="text-2xs text-muted-foreground/60">Insert blocks from a Wiki template</span>
+                </button>
+              </>
+            )}
             <div className="my-1 border-t border-white/[0.06]" />
             <div className="px-3 py-1 text-2xs text-muted-foreground/50 italic">Use / in text for more</div>
           </div>
