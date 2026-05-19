@@ -51,6 +51,53 @@
 
 ---
 
+## 🚀 2026-05-19 (밤 후속) — 13 PR squash + Library Views 본질 brainstorming ⭐⭐⭐⭐⭐
+
+**범위**: 이번 세션 누적 13 PR + Library Views 본질 brainstorming 4단. **다음 세션 P0 #1 = CategoriesView own view component 분리** (Plan A++).
+
+### 핵심 brainstorming 통찰 (다음 세션 시작점)
+
+**통찰 1**: Save view 의미 = entity 본질 따라 differentiate. Notes/Wiki/Books 큼, Categories 의미, Tags/Labels/Files/References/Stickers 약함 (이미 코드 호출 없음).
+
+**통찰 2**: Library cross-entity hub 본질 회복 (영구 LOCKED #54/#57 — 2026-05-17 결정).
+
+**통찰 3**: View = 메타-entity (id/name/icon/color로 자기 정체성). 단 first-class data 아님. Linear/Notion/Airtable 모두 entity-tied 패턴.
+
+**통찰 4 (최종)**: **Categories own view component 필요** — "카테고리스 뷰를 위키 뷰로 나오게 하면, 카테고리스가 범용 엔티티가 아니라 위키 종속 엔티티처럼 느껴지는데??". PR #383의 wiki-view 의존 = wiki 종속 부조화 → Plan A++ 진행 필요.
+
+### PR 요약 (이번 세션 누적 13)
+
+이전 8 PR (P0 1-4 + P1 3개 + docs sync — #380까지):
+- #373-#380 정리 (앞 entry 참고)
+
+신규 5 PR (view-engine + Library 회귀 fix):
+- **PR #381** (`430b6de`): view-engine Phase 1 filter popover
+- **PR #382** (`853e1d1`): LibraryView visibility (split view 자동 fix)
+- **PR #383** (`3226fb6`): Categories Library sub-page route — **단 wiki-view 의존 부조화 발견**
+- **PR #384** (`3636555`): LibraryView fallback 회귀 fix
+- **PR #385** (`1426ec8`): Library Views section + Labels filter (B+E)
+
+### 영구 LOCKED 결정 후보 (다음 세션 대기)
+
+- **#86**: Save view 의미 = entity 본질 differentiate
+- **#87**: Library 1차 space → own Views section
+- **#88**: Categories own view component (cross-entity 본질) — Plan A++ 진행 시 LOCKED
+
+### 환경
+
+- Main HEAD: PR #381-#385 + 이 docs sync
+- Store version: 143 (변동 없음)
+- 신규 file: `app/(app)/library/categories/page.tsx`
+- 신규 type 확장: SavedView.space `"library"`, FilterField `"usage"`
+
+### 다음 세션 P0
+
+🔴 **P0 #1**: CategoriesView own view component 분리 (Plan A++)
+🟣 **P0 #2**: Library Views section 본질 결정
+🟡 **P0 #3-6**: Calendar/Ontology sidebar / Activity events / 13 PR manual smoke / Books Views section gap
+
+---
+
 ## 🚀 2026-05-19 (저녁/밤) — P0 1-4 + P1 3개 (7 PR squash 머지) — view-engine 통합 진단 ⭐⭐⭐⭐⭐
 
 **범위**: 7 PR. P0 1-4 (light mode contrast, group header tint, WikiTemplate hero UI, TS debt cleanup) + P1 3개 (Wiki Template insert, TagDetailPanel cross-entity, split view quick fix). 신규 영구 룰 0 (기존 #69/#82/#83/#21 적용만).
