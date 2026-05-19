@@ -39,7 +39,8 @@ import { StatusDropdown, LabelDropdown } from "@/components/note-fields"
 import { isReadyToPromote, needsReview, isStaleSuggest, getSnoozeTime, getInboxNotes } from "@/lib/queries/notes"
 import { useBacklinksIndex } from "@/lib/search/use-backlinks-index"
 import { toast } from "sonner"
-import { useActiveRoute } from "@/lib/table-route"
+import { useRouter } from "next/navigation"
+import { useActiveRoute, setActiveRoute } from "@/lib/table-route"
 import { useWikiViewMode, useActiveCategoryId, setActiveCategoryView } from "@/lib/wiki-view-mode"
 import { CategorySidePanel } from "@/components/views/wiki-category-page"
 import { FolderPicker } from "@/components/folder-picker"
@@ -122,6 +123,7 @@ export function SidePanelContext({ noteId: propNoteId }: { noteId?: string | nul
   }, [note, notes, backlinks, setSelectedNoteId])
 
   // Category mode — show category panel instead of note details
+  const router = useRouter()
   const activeRoute = useActiveRoute()
   const wikiViewMode = useWikiViewMode()
   const activeCategoryId = useActiveCategoryId()
@@ -146,7 +148,11 @@ export function SidePanelContext({ noteId: propNoteId }: { noteId?: string | nul
         articles={wikiArticles}
         selectedId={activeCategoryId}
         selectedIds={new Set()}
-        onSelect={(id) => setActiveCategoryView(id)}
+        onSelect={(id) => {
+          setActiveCategoryView(id)
+          setActiveRoute("/library/categories")
+          router.push("/library/categories")
+        }}
         onDeleteSelected={() => {}}
         onSelectAll={() => {}}
       />

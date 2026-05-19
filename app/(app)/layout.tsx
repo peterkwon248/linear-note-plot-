@@ -34,6 +34,7 @@ import { HomeView } from "@/components/views/home-view"
 import { InboxView } from "@/components/views/inbox-view"
 import { TodoView } from "@/components/views/todo-view"
 import { LibraryView } from "@/components/views/library-view"
+import { LibraryCategoriesView } from "@/components/views/library-categories-view"
 import { BooksView } from "@/components/views/books-view"
 import { MergeDialogGlobal } from "@/components/merge-dialog-global"
 import { LinkDialogGlobal } from "@/components/link-dialog-global"
@@ -303,13 +304,19 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                   </div>
                 )}
 
-                {(mountedViews.has("/wiki") || activeRoute === "/wiki" || activeRoute === "/library/categories") && (
-                  // 2026-05-19 — Library Categories sub-page는 wiki-view를 재사용
-                  // (wikiViewMode = "category" overview). Library sidebar 유지 +
-                  // wiki entity의 categories overview UI 재사용. 사용자 보고
-                  // "Categories 누르면 위키 사이드바로 옮겨감" fix.
-                  <div className={(activeRoute === "/wiki" || activeRoute === "/library/categories") ? "flex flex-1 overflow-hidden" : "hidden"}>
+                {(mountedViews.has("/wiki") || activeRoute === "/wiki") && (
+                  <div className={activeRoute === "/wiki" ? "flex flex-1 overflow-hidden" : "hidden"}>
                     <WikiView />
+                  </div>
+                )}
+
+                {/* Plan A++ Phase 1 — Library Categories own view (split from
+                    wiki-view). Library hub은 own view 없음 (cross-entity sub-
+                    entity 컨테이너); Categories만 hierarchy + grouping 본질로
+                    own page 보유. */}
+                {(mountedViews.has("/library/categories") || activeRoute === "/library/categories") && (
+                  <div className={activeRoute === "/library/categories" ? "flex flex-1 overflow-hidden" : "hidden"}>
+                    <LibraryCategoriesView />
                   </div>
                 )}
 

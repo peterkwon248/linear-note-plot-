@@ -66,17 +66,12 @@ export function getActiveCategoryId(): string | null {
 
 export function setActiveCategoryView(categoryId: string | null): void {
   _activeCategoryId = categoryId
-  setWikiViewMode("category")
   notifyCategory()
 }
 
 /** Navigate to the category overview (all root categories, no specific category selected). */
 export function setCategoryOverview(): void {
   _activeCategoryId = null
-  if (_mode !== "category") {
-    _mode = "category"
-    notify()
-  }
   notifyCategory()
 }
 

@@ -41,6 +41,10 @@ export function getCurrentViewContextKey(
   space: ActivitySpace | string,
   route: string | null,
 ): ViewContextKey {
+  // Library sub-route with own view (Plan A++ Phase 1) — must come BEFORE the
+  // generic `space === "library"` paths since activeSpace for this route is
+  // "library" via inferSpace().
+  if (route === "/library/categories") return "library-categories"
   if (space === "wiki") return "wiki"
   if (space === "ontology") return "graph"
   if (space === "calendar") return "calendar"
@@ -59,24 +63,30 @@ export function getCurrentViewContextKey(
 }
 
 /**
- * Map ActivitySpace → SavedView["space"] for createSavedView calls.
+ * Map (ActivitySpace, route) → SavedView["space"] for createSavedView calls.
  *
- * SavedView.space includes "library" (2026-05-19) — Library entity별 saved
- * view를 Library sidebar Views section에 통합 표시. contextKey는 entity별
- * ("tags-list" / "labels-list" 등) 그대로 사용하지만 space는 통합 "library".
+ * Plan A++ Phase 2 (2026-05-19): Library hub은 cross-entity 분류 hub로 own
+ * view 없음 — own view를 갖는 유일한 sub-entity는 Categories (hierarchy +
+ * grouping 본질). 따라서 SavedView.space "library"는 폐기되고, /library/
+ * categories만 own space "library-categories"를 가짐. 다른 Library sub-route
+ * (Tags / Labels / Files / References / Stickers)는 own view 없음 — "all"로
+ * fallback (sidebar Views section 없음).
  *
  * SavedView.space is "stone" | "notes" | "wiki" | "calendar" | "ontology"
- * | "books" | "library" | "all". "home" 은 saved views 없어 "all" fallback.
+ * | "books" | "library-categories" | "all".
  */
 export function getSavedViewSpaceForActivity(
   space: ActivitySpace | string,
-): "stone" | "notes" | "wiki" | "calendar" | "ontology" | "books" | "library" | "all" {
+  route?: string | null,
+): "stone" | "notes" | "wiki" | "calendar" | "ontology" | "books" | "library-categories" | "all" {
+  // Library sub-route with own view — checked before generic "library" fall-
+  // through since activeSpace for /library/categories is "library".
+  if (route === "/library/categories") return "library-categories"
   if (space === "notes") return "notes"
   if (space === "wiki") return "wiki"
   if (space === "calendar") return "calendar"
   if (space === "ontology") return "ontology"
   if (space === "books") return "books"
-  if (space === "library") return "library"
   return "all"
 }
 

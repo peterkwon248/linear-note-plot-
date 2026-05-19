@@ -1,8 +1,10 @@
 "use client"
 
 import { useMemo, useState, useCallback, useEffect, useRef } from "react"
+import { useRouter } from "next/navigation"
 import { formatDistanceToNow } from "date-fns"
 import { usePlotStore } from "@/lib/store"
+import { setActiveRoute } from "@/lib/table-route"
 import { resolveBookItems } from "@/lib/books/resolver"
 import { isWikiStub } from "@/lib/wiki-utils"
 import { getBody, getAllBodies } from "@/lib/note-body-store"
@@ -532,11 +534,21 @@ export function SidePanelConnections() {
 // Detail panel은 preview (slice). Connections는 full list.
 
 function CategoryConnections() {
+  const router = useRouter()
   const sidePanelContext = usePlotStore((s) => s.sidePanelContext)
   const wikiCategories = usePlotStore((s) => s.wikiCategories)
   const wikiArticles = usePlotStore((s) => s.wikiArticles)
   const categoryId =
     sidePanelContext?.type === "wiki-category" ? sidePanelContext.id : null
+
+  const navigateToCategory = useCallback(
+    (catId: string) => {
+      setActiveCategoryView(catId)
+      setActiveRoute("/library/categories")
+      router.push("/library/categories")
+    },
+    [router],
+  )
 
   const category = useMemo(
     () => (categoryId ? wikiCategories.find((c) => c.id === categoryId) ?? null : null),
@@ -575,7 +587,7 @@ function CategoryConnections() {
           count={1}
         >
           <button
-            onClick={() => setActiveCategoryView(parentCat.id)}
+            onClick={() => navigateToCategory(parentCat.id)}
             className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left hover:bg-hover-bg transition-colors group"
           >
             <FolderSimple
@@ -610,7 +622,7 @@ function CategoryConnections() {
             {subcategories.map((sub) => (
               <button
                 key={sub.id}
-                onClick={() => setActiveCategoryView(sub.id)}
+                onClick={() => navigateToCategory(sub.id)}
                 className="flex w-full items-center gap-2 rounded-md px-2 py-1 text-left hover:bg-hover-bg transition-colors group"
               >
                 <FolderSimple

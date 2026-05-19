@@ -16,7 +16,8 @@ export type ViewContextKey =
   | "trash"          // /trash
   | "savedView"      // /views/[id] — dynamic context for saved view detail
   | "wiki"           // /wiki — wiki articles list
-  | "wiki-category"  // /wiki/categories — category management
+  | "wiki-category"  // /wiki/categories — category management (legacy, kept for migration safety)
+  | "library-categories" // /library/categories — Library Categories own view (Plan A++ Phase 1)
   | "graph"          // /ontology — graph view
   | "calendar"       // /calendar — calendar view
   | "templates"      // /templates — note template list (PR template-c)
@@ -231,7 +232,7 @@ export const PRIORITY_ORDER: Record<NotePriority, number> = {
 export const VALID_VIEW_CONTEXT_KEYS: ViewContextKey[] = [
   "all", "pinned", "stone", "brick", "keystone",
   "unlinked", "review", "folder", "tag", "label", "trash",
-  "savedView", "wiki", "wiki-category", "graph", "calendar",
+  "savedView", "wiki", "wiki-category", "library-categories", "graph", "calendar",
   // PR template-c: templates list now uses the unified view-engine pipeline.
   "templates",
   // Group C PR-D: entity index views

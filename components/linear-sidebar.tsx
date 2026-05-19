@@ -603,7 +603,7 @@ export function LinearSidebar() {
       // /stone saves "stone" filters, /wiki saves "wiki" state, etc.
       const contextKey = getCurrentViewContextKey(activeSpace, activeRoute)
       const currentViewState = usePlotStore.getState().viewStateByContext[contextKey]
-      const savedSpace = getSavedViewSpaceForActivity(activeSpace)
+      const savedSpace = getSavedViewSpaceForActivity(activeSpace, activeRoute)
       createSavedView(
         name,
         currentViewState as any, // ViewState shape is wider than SavedView.viewState; the slice merges defaults
@@ -653,6 +653,11 @@ export function LinearSidebar() {
 
   const renderViewsSection = (spaceFilter: string, routeOnClick: string) => {
     const spaceViews = savedViews.filter(v => v.space === spaceFilter || v.space === "all")
+    // Plan A++ Phase 2 — `library-categories` lives inside the Library activity
+    // space (activeSpace === "library") rather than its own space, so the
+    // inline name-input gate needs an extra branch.
+    const isInOwnContext = activeSpace === spaceFilter ||
+      (spaceFilter === "library-categories" && activeRoute === "/library/categories")
     return (
       <Section
         title="Views"
@@ -666,7 +671,7 @@ export function LinearSidebar() {
           </button>
         }
       >
-        {newViewOpen && activeSpace === spaceFilter && (
+        {newViewOpen && isInOwnContext && (
           <div className="px-2 py-1">
             <input
               ref={newViewInputRef}
@@ -1605,10 +1610,10 @@ export function LinearSidebar() {
                 dragContent={{ type: "labels" }}
               />
               {/* 2026-05-17 — Categories도 cross-entity. 길 A — entry만 Library에.
-                  2026-05-19 — Library sidebar 유지하면서 categories overview
-                  표시. activeRoute = "/library/categories" + wikiViewMode =
-                  "category"로 layout이 WikiView를 mount하되 sidebar는 Library
-                  그대로 (사용자 보고 "Categories 누르면 위키 사이드바로 옮겨감"). */}
+                  Plan A++ Phase 1 (2026-05-19) — own page `/library/categories`
+                  + own view component LibraryCategoriesView. Library hub
+                  자체는 own view 없음 (cross-entity 분류 hub 본질) — Categories만
+                  hierarchy + grouping 본질로 own Views section 보유. */}
               <button
                 onClick={() => {
                   setSelectedNoteId(null)
@@ -1648,11 +1653,12 @@ export function LinearSidebar() {
               />
             </div>
 
-            {/* 2026-05-19 — Library Views section (사용자 보고 "Library
-                사이드바에 view가 없잖아? 만들어야 되나?"). Library entity별
-                (tags-list / labels-list / files / references / stickers 등)
-                saved view는 모두 "library" space로 통합 표시. */}
-            {renderViewsSection("library", "/library")}
+            {/* Plan A++ Phase 2 (2026-05-19) — Library Views section 폐기.
+                Library hub은 cross-entity 분류 hub로 own view 없음. Categories
+                sub-page에 있을 때만 own Views section 노출 (Notes/Wiki 패턴).
+                다른 sub-route (Tags / Labels / Files / References / Stickers)는
+                own view 없음 — sub-entity 본질이 own view 무의미함. */}
+            {activeRoute === "/library/categories" && renderViewsSection("library-categories", "/library/categories")}
           </>
         )}
 

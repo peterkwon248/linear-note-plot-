@@ -2254,5 +2254,23 @@ export function migrate(persistedState: unknown): PlotState {
   // migration needed. Version bump alone is the migration (sentinel for cache safety).
   console.log(`[migrate] v142→v143: themeColor field opt-in (no data change)`)
 
+  // v143 → v144: Plan A++ Phase 2. Library Views section 제거 + Categories own
+  // view. PR #385에서 추가된 SavedView.space "library"는 실제로는 wiki-view 안
+  // categoryOverview UI 위에서 저장됐으므로 Categories own view space로 re-tag.
+  // Library hub 자체는 cross-entity 분류 hub로 own view 없음 (#386 brainstorming).
+  if (Array.isArray(state.savedViews)) {
+    let touched = 0
+    state.savedViews = (state.savedViews as Record<string, unknown>[]).map((v) => {
+      if (v.space === "library") {
+        touched += 1
+        return { ...v, space: "library-categories" }
+      }
+      return v
+    })
+    if (touched > 0) {
+      console.log(`[migrate] v143→v144: re-tagged ${touched} SavedView(s) "library" → "library-categories"`)
+    }
+  }
+
   return state as unknown as PlotState
 }

@@ -293,9 +293,9 @@ export function NavboxBlock({
   const handleCategoryHeaderClick = useCallback(() => {
     if (!category) return
     setSelectedNoteId(null)
-    setActiveRoute("/wiki")
+    setActiveRoute("/library/categories")
     setActiveCategoryView(category.id)
-    router.push("/wiki")
+    router.push("/library/categories")
   }, [category, setSelectedNoteId, router])
 
   const handleSetMode = useCallback(
