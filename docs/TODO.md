@@ -3,57 +3,114 @@
 > 우선순위 기반 작업 목록. **P0 = 다음 세션 즉시 시작점** (NEXT-ACTION.md 폐지, 2026-05-12).
 > 완료 항목은 즉시 삭제 또는 "완료" 섹션으로 이동.
 
-**마지막 갱신**: 2026-05-19 (저녁) — PR #370 polish (Hatnote dialog) + PR #371 themeColor cascade (Phase 5+ second wave) 2 PR squash. PRD Phase 5+ first+second wave 완료.
+**마지막 갱신**: 2026-05-19 (저녁/밤) — 7 PR squash 머지 (P0 1-4 + P1 3개) 완료. Tags filter 위치/Labels split view 진단까지. TS 부채 10건 → 0 (PR #376).
 
 ---
 
-## 🔴 P0 — 즉시 (cross-machine 진입점, 2026-05-19 저녁)
+## 🔴 P0 — 즉시 (cross-machine 진입점, 2026-05-19 저녁/밤)
 
-### 1. **🔴 light mode hex contrast follow-up** (가장 높은 우선순위, 단일 파일 ~10줄)
+### 1. **🔴 Tags/Labels sub-page view-engine 통합** (~10 파일, 사용자 결정 받음)
 
-PR-E2 themeColor cascade가 pre-existing `useTintedText` 부채를 노출 증폭. 사용자가 PRESET_COLORS 중 vivid color (yellow/lime/amber/sky 등) preset 클릭 시 흰 글씨 + 옅은 배경 → 가독성 망함. **사용자 발견 즉시 신뢰 깨질 수 있어 우선순위 가장 높음**.
+사용자 보고 (2026-05-19 밤): "태그스는 필터위치가 이상해. 라벨스나 위키 노트 등과 맞춰줘야 하고."
 
-**범위 (단일 파일)**:
-- `lib/tinted-bg.ts:60-61` — `useTintedText` regex가 현재 `/^rgba?\(.../` 전용. hex 입력 시 light/dark 둘 다 default 흰 글씨 반환.
-- 통합 path: 이미 존재하는 `lib/wiki-color-contrast.ts::shouldUseLightText` (`parseColor` + `perceivedLuminance` 헬퍼)를 `useTintedText`에 분기 추가. hex 입력 시 perceived luminance로 흰/검은 글씨 자동 결정.
-- 검증: PRESET_COLORS 18색 각각 themeColor로 set 후 인포박스 헤더 글씨 가독성 확인.
-
-### 2. **🟣 PR-E3 후보 우선순위 결정** (Phase 5+ third wave)
-
-PRD `.omc/plans/wiki-infobox-tier-2-4-prd.md` Phase 5+ 남은 후보:
-
-- **편집 히스토리 v1** (BRAINSTORM #6, **보류 권장** — multi-machine PRD 시점에 자연 통합, 지금 만들면 재설계 비용)
-- **Group header tint** (PR-E2 themeColor cascade follow-up, **사용자 시그널 받고**) — themeColor cascade에 group header 포함 (별도 `useGroupHeaderTint(themeColor, 0.15)` 헬퍼)
-- **Ambox 자동 배너** (BRAINSTORM #2, **Skip 권장** — Plot 사용자 = 개인 위키, noise risk)
-- **SectionTemplate (3-layer Tier 3)** (**MVP 후 결정** — 3-layer 복잡도, PRD에서 over-engineering 회피)
-
-**사용자 시그널 또는 우선순위 결정 후 진행.**
-
-### 3. **🟡 WikiTemplate detail panel hero edit UI** (~3 파일, PR-C 후속 polish)
-
-PR-C에서 `WikiTemplate.infoboxHero?` 필드만 추가, edit UI 미완. template detail panel에 `InfoboxHeroPicker` mount + figure render 추가.
+진단 결과:
+- Tags sub-page (`tags-view.tsx:551-623`) ↔ Labels sub-page (`labels-view.tsx:519-591`) **layout 100% 동일** (inline `<div>` + FilterButton + flex-1 + Display popover)
+- **둘 다 inline custom layout** — Notes/Wiki 표준 `ViewHeader` 패턴과 다름
+- Tags list 메인 view는 `ViewHeader` 사용 (`tags-view.tsx:760-784`) — sub-page만 inline
 
 **범위**:
-- `components/side-panel/wiki-template-detail-panel.tsx` — hero 표시 + edit picker mount
-- 또는 `/wiki/templates/{id}` 페이지에 InfoboxHeroPicker integration
-- WikiTemplate seed 8개 중 일부 (Person/Place) 에 default hero 추가 가능
+- 신규 `LABEL_DETAIL_VIEW_CONFIG` + `TAG_DETAIL_VIEW_CONFIG` (view-configs.tsx)
+- `tags-view.tsx` + `labels-view.tsx` sub-page 전면 재작성 — ViewHeader + DisplayPanel + FilterPanel
+- FilterChipBar / Selection bar / 기타 row 정합화
+- 회귀 verify 부담 (~10 파일 + 사용자 manual smoke 의무)
+- Notes/Wiki sub-page의 ViewHeader 사용 example 먼저 참고
 
-### 4. **🟢 dead code + TS 부채 + doc comment cleanup PR** (작은 cleanup)
+PR #379 (split view quick fix)로 가장 큰 불편은 해결. filter popover 정합화는 이 PR에서 자연 해결.
 
-- `components/note-detail-panel.tsx` — 어디서도 import 안 됨 (사전 부채)
-- build TS 부채 10개: `insights-view.tsx:268` `noteEvents` + sticker-detail-panel orphan fields + wiki-category-page CategoryOrdering + books-slice test + view-configs SortField (memory에 목록)
-- doc comment 부정확 3건 (PR-E1 architect non-blocking) — `setWikiArticleInfoboxHero` 실제 없음, generic `updateWikiArticle` 패턴
-- WikiArticleEncyclopedia hatnotes 마운트 누락 (PR-E1 잔재)
+### 2. **🟡 Calendar 사이드바 변화** (사용자 의도 미확정)
 
-### 5. **사용자 IDB stale WikiTemplate description** (선택, backfill migration)
+이전 세션 시그널 (2026-05-15): "Calendar의 우측 사이드바도 뭔가 변화가 필요해. 좋은 의미로."
 
-PR #365 seeds.ts 영어 통일은 fresh init만 적용. 기존 사용자 IDB의 한글 description 그대로. v143 → v144 backfill migration 가능:
-- seed id 매칭되는 wikiTemplate description을 SEED_WIKI_TEMPLATES에서 re-pull
-- 사용자 customize한 description은 보존 옵션 (id로 매칭 시 영어 default가 덮어쓰면 위반)
+옵션:
+- **(a) Day Summary panel** — 선택한 날짜의 notes 통계 (status breakdown + activity heatmap + recent events)
+- **(b) Calendar 자체 detail** — 월간 통계 (notes created/updated 합계)
+- **(c) 현재 노트 detail 강화** — 기존 fallback 위에 calendar context
+
+사용자 결정 후 진행.
+
+### 3. **🟡 Ontology graph node 사이드바 동기화** (사용자 의도 미확정)
+
+이전 세션 시그널: "온톨로지에도 사이드바가 없다"
+
+현재: Graph node 클릭 → `OntologyDetailPanel` 표시. 4탭 사이드바와 별개.
+
+옵션:
+- **(a) Graph node → 4탭 사이드바 동기화** (note→note detail, wiki→wiki detail). 추천
+- **(b) 둘 다** — OntologyDetailPanel + 4탭 사이드바
+- **(c) 사이드바에 Graph mode**
+
+### 4. **🟡 Activity events 후속** (Granular wire-up + Label entity events)
+
+- **Granular Wiki/Book events**: PR 5b/5c에 entity CRUD만 wire-up. internal action (block_added/removed/reordered, item_added/removed/reordered) wire-up 누락. PR 5d EVENT_CONFIG entries는 있지만 발화 X.
+- **Label entity events**: labels slice의 createLabel/updateLabel/deleteLabel/restoreLabel에서 entityEvents.push (tags.ts 패턴 정합)
+
+### 5. **🟡 Tags/Labels 사이드바 회귀 재진단** (2026-05-15 보고, 검증 미완)
+
+- 다른 머신/incognito fresh dev로 재현
+- HMR stale vs 코드 회귀 vs IDB v133 마이그레이션 실패 후보
+
+### 6. **🟢 사용자 IDB stale WikiTemplate description** (선택, backfill migration)
+
+PR #365 seeds.ts 영어 통일은 fresh init만 적용. v143 → v144 backfill 가능.
 
 ---
 
-## ✅ 최근 완료 (2026-05-19 저녁) — PR #370 polish + PR #371 themeColor
+## ✅ 최근 완료 (2026-05-19 저녁/밤) — 7 PR squash 머지 누적
+
+### PR #373 — P0 #1: light mode hex contrast fix (squash merged 2431bd6)
+- `lib/tinted-bg.ts` `useTintedText` inline regex 제거 + `lib/wiki-color-contrast::shouldUseLightText` delegate
+- 18 PRESET_COLORS algorithm unit test (preview_eval): BLACK 글씨 7개 (Amber/Yellow/Lime/Green/Emerald/Teal/Cyan) + WHITE 글씨 11개
+- 단일 파일 ~10줄, 보너스 효과: TipTap infobox-node.tsx도 같이 fix
+
+### PR #374 — P0 #2: group header tint cascade (squash merged 0bde0ad)
+- PR-E2 자연 follow-up. infobox group header (예: "ADDITIONAL INFO")도 themeColor cascade 포함
+- `data-group-header` + `data-custom-color` attribute + Tailwind arbitrary selector + `color-mix(15%)`
+- 영구 룰 #82 opt-in 정합 (custom color 우선)
+
+### PR #375 — P0 #3: WikiTemplate detail panel hero edit UI (squash merged 5086c60)
+- PR-C 후속 polish. wiki-template-detail-panel.tsx에 "Hero image" InspectorSection 신설
+- figure preview + Edit/Remove buttons / "+ Add hero image" dashed border button
+- InfoboxHeroPicker mount (PR-C와 정확 동일 시그니처)
+
+### PR #376 — P0 #4: TS debt + dead code + doc comment + encyclopedia hatnotes (squash merged dfd10cf)
+- TS 부채 10건 → **0 errors** (npx tsc --noEmit clean)
+- dead code 삭제: `components/note-detail-panel.tsx` (679줄)
+- doc comment 3건 정정 (PR-E1 architect non-blocking)
+- WikiArticleEncyclopedia에 WikiHatnotes mount 추가 (PR-E1 잔재)
+- 11 파일 +38/-704
+
+### PR #377 — P1: Wiki Template insert via AddBlockButton (squash merged 047875a)
+- PR #358 후속. "From template…" entry를 AddBlockButton menu에 추가
+- WikiTemplatePicker `mode: "create" | "insert"` prop + `onTemplateChosen` callback
+- prepend / append 위치 결정 (top "+" / bottom "+")
+- 기존 `getWikiTemplateBlocksExpanded` + `updateWikiArticle({blocks})` 재사용 (신규 store action 불필요)
+
+### PR #378 — P1: TagDetailPanel cross-entity 강화 (squash merged aaf4a13)
+- 기존 minimal (Notes only) → cross-entity 풀구조
+- Connections section: Notes by status breakdown (Stone/Brick/Block chips) + Wiki count + Books count
+- Properties: Notes / Wikis / Books / Color
+- Used by: 3 entity 통합 list with entity icons (Notes click navigable)
+- PR #331 Files Detail 패턴 정합
+
+### PR #379 — P1 quick fix: Labels/Tags split view auto-close (squash merged f7429d6)
+- 사용자 보고 "라벨스의 경우 자꾸 스플릿뷰로 나오거든? 이거 버그같은데"
+- 원인: split view UI state (secondaryNoteId / activePane) Zustand persist. 이전 split view 상태 잔존
+- 해결: labels-view + tags-view mount once 시 `closeSecondary()` 강제 호출
+- 2 파일 +20
+
+---
+
+## ✅ 이전 완료 (2026-05-19 저녁) — PR #370 polish + PR #371 themeColor
 
 ### PR #370 — Hatnote dialog Type Select polish (squash merged 91c8eca, +4/-4)
 

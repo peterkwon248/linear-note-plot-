@@ -51,6 +51,39 @@
 
 ---
 
+## 🚀 2026-05-19 (저녁/밤) — P0 1-4 + P1 3개 (7 PR squash 머지) — view-engine 통합 진단 ⭐⭐⭐⭐⭐
+
+**범위**: 7 PR. P0 1-4 (light mode contrast, group header tint, WikiTemplate hero UI, TS debt cleanup) + P1 3개 (Wiki Template insert, TagDetailPanel cross-entity, split view quick fix). 신규 영구 룰 0 (기존 #69/#82/#83/#21 적용만).
+
+### PR 요약 (7)
+
+- **PR #373** (`2431bd6`): light mode hex contrast — `useTintedText` hex 지원 (1 파일)
+- **PR #374** (`0bde0ad`): group header tint cascade — Tailwind arbitrary selector + `color-mix(15%)` (3 파일)
+- **PR #375** (`5086c60`): WikiTemplate detail panel hero edit UI (1 파일)
+- **PR #376** (`dfd10cf`): TS debt 10 → 0 + dead code + doc + hatnotes (11 파일)
+- **PR #377** (`047875a`): Wiki Template insert via AddBlockButton (3 파일)
+- **PR #378** (`aaf4a13`): TagDetailPanel cross-entity 강화 (1 파일)
+- **PR #379** (`f7429d6`): Labels/Tags split view auto-close (2 파일)
+
+### 핵심 결정
+
+- **TS 부채 청소 시작점**: PR #376으로 10 → 0. 향후 `tsc --noEmit` 항상 clean 의무.
+- **view-engine 통합 다음 세션 보류**: Tags/Labels sub-page는 inline custom layout (Notes/Wiki 표준 `ViewHeader` 미사용). 큰 변경 + 회귀 risk → fresh session에서 진행 결정.
+
+### 환경
+
+- Main HEAD: PR #379 + docs sync
+- Store version: 143 (변동 없음, schema 변경 0)
+- 신규 파일: 0. 삭제: `components/note-detail-panel.tsx` (PR #376)
+- TS 부채: 10 → **0** (`npx tsc --noEmit` clean)
+
+### 다음 (TODO.md P0)
+
+🔴 **P0 #1**: Tags/Labels sub-page view-engine 통합 (~10 파일). 사용자 결정 받음. ViewHeader + DisplayPanel + FilterPanel 표준 sub-page 재작성.
+🟡 **P0 #2-5**: Calendar/Ontology graph 사이드바 (의도 결정) + Activity events 후속 (Granular + Label) + Tags/Labels 사이드바 회귀 재진단.
+
+---
+
 ## 🚀 2026-05-19 (저녁) — PR #370 polish + PR #371 themeColor cascade (2 PR squash 머지) ⭐⭐⭐⭐⭐
 
 **범위**: PRD `.omc/plans/wiki-infobox-tier-2-4-prd.md` **Phase 5+ second wave 완료**. BRAINSTORM Top 7 #4 (themeColor) 정합. Plot 시각적 정체성 강화 — 사용자가 article마다 자기 "주제 색" 지정 → cascade.

@@ -6,6 +6,117 @@
 
 ---
 
+## 2026-05-19 (저녁/밤) — 집/Windows, **P0 1-4 + P1 3개 (7 PR squash 머지)**
+
+> 🎯 **다음 즉시 액션 (단일 후보, 사용자 결정 받음)**:
+> 1. **🔴 Tags/Labels sub-page view-engine 통합** (~10 파일, TODO P0 #1) — Tags filter 위치 정합화. 진단 결과: Tags+Labels sub-page는 layout 100% 동일이고 둘 다 inline `<div>` (Notes/Wiki 표준 `ViewHeader`와 다름). 통합 시 신규 `TAG_DETAIL_VIEW_CONFIG` + `LABEL_DETAIL_VIEW_CONFIG` + sub-page 재작성 + 회귀 verify.
+>
+> **이번 세션 사용자 의도** (그대로 인용):
+> 1. "before-work" → keen-torvalds-ba16f7 worktree 진입, npm install 후 dev server (port 3002)
+> 2. (빌드 에러) "미리보기가 빌드에러가 뜬다. Module not found: Can't resolve 'fractional-indexing'" → npm install 누락, dev 재시작
+> 3. "P0#1을 하자. 근데 해당 작업 내용이 뭐지? 자세히 말해봐 쉽고 직관적으로" → light mode hex contrast follow-up 직관 설명
+> 4. "ㅇㅋ" → PR #373 squash 머지
+> 5. "오케이 다음 todo를 해볼까" → P0 #2 PR-E3 후보 결정 (Group header tint Recommended)
+> 6. "ㅇㅋ" → PR #374 group header tint cascade squash 머지
+> 7. "지금 뭐가 바뀐 거지??" → PR #373 + #374 변화 직관 설명 (themeColor 설정 article에서만 보임)
+> 8. "ㄴㄴ 다음 작업 진행하자" → P0 #3 WikiTemplate hero UI 또는 P0 #4 cleanup 또는 후속
+> 9. (선택) P0 #3 → PR #375 squash 머지
+> 10. "다음 작업 진행 알려줘" / "다음 todo 작업 알려줘" → 남은 P0/P1 정리
+> 11. "P0 #4부터" → PR #376 cleanup PR (TS 부채 10 → 0)
+> 12. "P1 첫번째 들어가자" → PR #377 Wiki Template insert
+> 13. "다음 작업" → P1 #2 Library TagDetailPanel 강화 → PR #378
+> 14. (사용자 스크린샷) "태그스는 필터위치가 이상해... 라벨스나 위키 노트 등과 맞춰줘야 하고. 라벨스의 경우 자꾸 스플릿뷰로 나오거든? 이거 버그같은데" → 진단 후
+> 15. "우선 2를 하고 1을 해보자" → PR #379 split view quick fix 머지. view-engine 통합은 다음 세션 권장으로 결정.
+> 16. "after-work + 다음 세션 (Recommended)" → 이 entry
+>
+> **다음 머신에서 처음 시작 시**:
+> 1. `git pull origin main` (latest = PR #379 + docs sync)
+> 2. `npm install && npm run dev` (port 3002, hard refresh)
+> 3. Tags/Labels view-engine 통합 시작 — `LABEL_DETAIL_VIEW_CONFIG` / `TAG_DETAIL_VIEW_CONFIG` 신규 정의부터
+>
+> **머신**: 집 (Windows)
+> **현재 main HEAD**: PR #379 머지 후 docs sync
+> **Store version**: 143 (변동 없음 — 이번 세션 schema 변경 0)
+
+### 완료 (이번 세션 7 PR squash 머지)
+
+#### PR #373 — P0 #1: light mode hex contrast fix (squash merged 2431bd6)
+- `lib/tinted-bg.ts:56-68` `useTintedText` inline regex 제거 → `lib/wiki-color-contrast::shouldUseLightText` delegate
+- hex/rgb/rgba 모두 통일 처리 + Rec. 709 perceived luminance threshold 0.55
+- 18 PRESET_COLORS algorithm unit test (preview_eval): BLACK 글씨 7개 (Amber/Yellow/Lime/Green/Emerald/Teal/Cyan) + WHITE 11개
+- 보너스: TipTap infobox-node.tsx도 같이 fix
+
+#### PR #374 — P0 #2: group header tint cascade (squash merged 0bde0ad)
+- PR-E2 자연 follow-up. infobox group header (예: "ADDITIONAL INFO")도 themeColor cascade 포함
+- `data-group-header=""` + `data-custom-color` attribute 추가 (GroupHeaderRow)
+- root container에 Tailwind arbitrary selector + `color-mix(in srgb, var(--wiki-theme-color) 15%, transparent)` opt-in
+- 영구 룰 #82 정합 (custom color 우선)
+
+#### PR #375 — P0 #3: WikiTemplate detail panel hero edit UI (squash merged 5086c60)
+- PR-C 후속 polish. wiki-template-detail-panel.tsx에 "Hero image" InspectorSection 신설
+- figure preview + Edit/Remove / "+ Add hero image" empty state
+- InfoboxHeroPicker mount (PR-C wiki-article-view와 정확 동일 시그니처)
+
+#### PR #376 — P0 #4: TS debt + dead code + doc + hatnotes (squash merged dfd10cf)
+- **TS 부채 10건 → 0 errors** (`npx tsc --noEmit` clean)
+- dead code 삭제: `components/note-detail-panel.tsx` (679줄)
+- doc comment 3건 정정 (PR-E1 architect non-blocking)
+- WikiArticleEncyclopedia에 WikiHatnotes mount 추가 (PR-E1 잔재)
+- 11 파일 +38/-704
+
+#### PR #377 — P1: Wiki Template insert via AddBlockButton (squash merged 047875a)
+- PR #358 후속. "From template…" entry를 AddBlockButton menu에 추가
+- WikiTemplatePicker `mode: "create" | "insert"` prop + `onTemplateChosen` callback (영구 룰 #83 back-compat)
+- prepend / append 위치 결정 (top "+" / bottom "+")
+- 기존 `getWikiTemplateBlocksExpanded` + `updateWikiArticle({blocks})` 재사용 (영구 룰 #69 generic patch)
+
+#### PR #378 — P1: TagDetailPanel cross-entity 강화 (squash merged aaf4a13)
+- 기존 minimal (Notes only) → cross-entity 풀구조
+- Connections section: Notes by status breakdown (Stone/Brick/Block chips) + Wiki count + Books count
+- Properties: Notes / Wikis / Books / Color
+- Used by: 3 entity 통합 list with entity icons (Notes click navigable)
+- PR #331 Files Detail 패턴 정합
+
+#### PR #379 — P1 quick fix: Labels/Tags split view auto-close (squash merged f7429d6)
+- 사용자 보고 "라벨스의 경우 자꾸 스플릿뷰로 나오거든? 이거 버그같은데"
+- 원인: split view UI state (`secondaryNoteId` / `activePane`) Zustand persist. 이전 split view 상태 잔존
+- 해결: labels-view + tags-view mount once 시 `closeSecondary()` 강제 호출
+- 2 파일 +20
+
+### 영구 LOCKED 결정 (이번 세션, 신규 0 — 기존 영구 룰 적용만)
+
+이번 세션 7 PR 모두 기존 영구 룰 자연 follow-up:
+- **#69 (generic patch)**: PR #377 `updateWikiArticle({blocks})` 재사용 / PR #375 `updateWikiTemplate({infoboxHero})` 재사용
+- **#82 (cascade opt-in)**: PR #374 group header tint `themeColor && [&_[data-group-header]:not([data-custom-color])]:bg-...`
+- **#83 (component prop optional + back-compat)**: PR #377 WikiTemplatePicker `mode?` / `onTemplateChosen?` optional
+- **#21 (entity-uniformity)**: PR #378 TagDetailPanel 4탭 구조 / PR #379 labels-view + tags-view 동일 패턴 mount
+
+### 기술 학습 (영구, 2026-05-19 저녁/밤)
+
+- **`color-mix(in srgb, ...)` 브라우저 지원 확인 패턴**: `CSS.supports("color", "color-mix(in srgb, red 15%, transparent)")` true. Tailwind arbitrary value 안에서 `color-mix(in_srgb,var(--xxx)_15%,transparent)` (underscore = space). v3.2+ 모던 브라우저 작동.
+- **InfoboxHeroPicker self-contained Portal Dialog**: open + onOpenChange + initial + onSave 4 props만. mount 위치 자유 (dialog 자체가 Radix Portal 사용). caller가 add/edit 분기 안 가짐 — picker가 `initial` null/non-null로 자체 분기.
+- **WikiTemplate insert path 단순화**: 신규 store action 추가 X. 기존 `getWikiTemplateBlocksExpanded(templateId): WikiBlock[] | null` (cloneAndExpandBlocks 내부 호출 — genId + placeholder expand 자동) + `updateWikiArticle({blocks})` (sectionIndex / linksOut / persistArticleBlocks 자동 재계산) 조합으로 끝.
+- **split view state persist 버그 패턴**: Zustand persist 대상에 `secondaryNoteId` / `activePane` 포함. 사용자가 이전 세션 split view 켜면 다른 페이지 진입 시에도 secondary panel 자동 표시. Library sub-page에서 자동 close 패턴 (`closeSecondary()` on mount once)으로 해결.
+- **AddBlockButton menu 확장 패턴**: 기존 onAdd 시그니처 `(type, level) => void` 유지 + 신규 prop `onAddFromTemplate?: () => void` 추가. opt-in (영구 룰 #82) — `onAddFromTemplate` 없으면 menu entry hidden.
+- **사전 부채 cascading**: SortField 같은 type union 확장 시 `Record<SortField, X>` 매핑들도 확장 필요 (PR #376의 cascading fix 사례). tsc로 자동 검출.
+
+### Watch Out (다음 세션)
+
+- 🔴 **사용자 manual smoke 누적 7 PR**: light mode contrast (vivid color) / group header tint / WikiTemplate hero edit UI / Wiki Template insert from AddBlockButton / TagDetailPanel cross-entity / Labels/Tags secondary auto-close. fresh dev 재현 권장.
+- 🟡 **Tags/Labels view-engine 통합** (다음 세션 P0 #1): ViewHeader 표준 sub-page 재작성. Notes/Wiki sub-page의 ViewHeader 사용 example 먼저 참고. ~10 파일 + 회귀 verify 의무.
+- 🟢 **사용자 IDB stale WikiTemplate description**: PR #365 seeds.ts 영어 통일 fresh init만 적용. v143 → v144 backfill 가능 (선택).
+- 🟢 **Wiki/Book Detail panel cross-entity 미적용**: PR #378 TagDetailPanel만 cross-entity 풀구조. wiki/book detail은 PR #322-#324 시점 minimal. 별도 PR 후속 가능.
+
+### 환경 변경 (다음 머신 sync 필수)
+
+- Main HEAD: `a809011` → PR #379 squash + docs sync
+- Store version: 143 → **143** (변동 없음 — schema 변경 0)
+- 신규 파일 / 삭제: PR #376에서 `components/note-detail-panel.tsx` 삭제
+- 영구 룰 추가: 0건 (기존 룰 적용만)
+- TS 부채 청소: 10 errors → **0 errors** — 향후 tsc --noEmit 항상 clean 의무
+
+---
+
 ## 2026-05-19 (저녁) — 집/Windows, **PR-E1 polish (PR #370) + PR-E2 themeColor cascade (PR #371) 2 PR squash 머지**
 
 > 🎯 **다음 즉시 액션 (3 후보 중 택일)**:
