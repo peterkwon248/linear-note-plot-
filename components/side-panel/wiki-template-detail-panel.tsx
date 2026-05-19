@@ -17,7 +17,7 @@
  * 후속). SmartSidePanel fallback이 빈 state 표시.
  */
 
-import { useMemo } from "react"
+import { useMemo, useState } from "react"
 import { useRouter } from "next/navigation"
 import { format, formatDistanceToNow } from "date-fns"
 import { usePlotStore } from "@/lib/store"
@@ -30,9 +30,11 @@ import { Trash } from "@phosphor-icons/react/dist/ssr/Trash"
 import { FileText } from "@phosphor-icons/react/dist/ssr/FileText"
 import { Bookmark } from "@phosphor-icons/react/dist/ssr/Bookmark"
 import { BookOpen } from "@phosphor-icons/react/dist/ssr/BookOpen"
+import { Image as ImageIcon } from "@phosphor-icons/react/dist/ssr/Image"
 import { cn } from "@/lib/utils"
 import { toast } from "sonner"
 import type { WikiTemplate, WikiBlock } from "@/lib/types"
+import { InfoboxHeroPicker } from "@/components/editor/infobox-hero-picker"
 
 function InspectorSection({
   title,
@@ -120,9 +122,13 @@ export function WikiTemplateDetailPanel({ template }: { template: WikiTemplate }
   const deleteWikiTemplate = usePlotStore((s) => s.deleteWikiTemplate)
   const toggleWikiTemplatePin = usePlotStore((s) => s.toggleWikiTemplatePin)
   const createWikiArticleFromTemplate = usePlotStore((s) => s.createWikiArticleFromTemplate)
+  const updateWikiTemplate = usePlotStore((s) => s.updateWikiTemplate)
   const wikiArticles = usePlotStore((s) => s.wikiArticles)
   // (no wikiTemplates lookup needed here — caller passes the template directly)
   const router = useRouter()
+  // PR-C follow-up — hero picker dialog state. Single state for both add/edit
+  // (picker seeds from `template.infoboxHero` when opened).
+  const [showHeroPicker, setShowHeroPicker] = useState(false)
 
   const outline = useMemo(() => extractOutlineFromBlocks(template.blocks), [template.blocks])
 
@@ -196,6 +202,56 @@ export function WikiTemplateDetailPanel({ template }: { template: WikiTemplate }
           <div className="mx-4 border-b border-border" />
         </>
       )}
+
+      {/* ── Hero image (PR-C follow-up) ───────────────────── */}
+      <InspectorSection title="Hero image" icon={<ImageIcon size={16} weight="regular" />}>
+        {template.infoboxHero ? (
+          <div className="space-y-2">
+            <figure className="rounded-md overflow-hidden border border-border">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={template.infoboxHero.url}
+                alt={template.infoboxHero.alt || template.infoboxHero.caption || "Hero image"}
+                className="w-full max-h-40 object-cover bg-secondary/30"
+                onError={(e) => {
+                  ;(e.currentTarget as HTMLImageElement).style.display = "none"
+                }}
+              />
+              {template.infoboxHero.caption && (
+                <figcaption className="bg-secondary/30 px-2 py-1 text-2xs text-muted-foreground">
+                  {template.infoboxHero.caption}
+                </figcaption>
+              )}
+            </figure>
+            <div className="flex gap-1.5">
+              <button
+                onClick={() => setShowHeroPicker(true)}
+                className="flex-1 rounded-md border border-border px-2 py-1 text-2xs text-muted-foreground hover:bg-hover-bg hover:text-foreground transition-colors"
+              >
+                Edit
+              </button>
+              <button
+                onClick={() => {
+                  updateWikiTemplate(template.id, { infoboxHero: undefined })
+                  toast.success("Hero image removed")
+                }}
+                className="flex-1 rounded-md border border-border px-2 py-1 text-2xs text-muted-foreground hover:bg-red-500/10 hover:text-red-500 hover:border-red-500/30 transition-colors"
+              >
+                Remove
+              </button>
+            </div>
+          </div>
+        ) : (
+          <button
+            onClick={() => setShowHeroPicker(true)}
+            className="w-full rounded-md border border-dashed border-border px-3 py-2 text-note text-muted-foreground hover:bg-hover-bg hover:text-foreground hover:border-border-strong transition-colors"
+          >
+            + Add hero image
+          </button>
+        )}
+      </InspectorSection>
+
+      <div className="mx-4 border-b border-border" />
 
       {/* ── Dates ─────────────────────────────────────────── */}
       <InspectorSection title="Dates" icon={<CalendarBlank size={16} weight="regular" />}>
@@ -298,6 +354,17 @@ export function WikiTemplateDetailPanel({ template }: { template: WikiTemplate }
           </button>
         </div>
       </InspectorSection>
+
+      {/* PR-C follow-up — Hero image picker dialog (Portal) */}
+      <InfoboxHeroPicker
+        open={showHeroPicker}
+        onOpenChange={setShowHeroPicker}
+        initial={template.infoboxHero ?? null}
+        onSave={(hero) => {
+          updateWikiTemplate(template.id, { infoboxHero: hero })
+          toast.success(template.infoboxHero ? "Hero image updated" : "Hero image added")
+        }}
+      />
     </div>
   )
 }
