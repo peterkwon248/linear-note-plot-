@@ -523,7 +523,7 @@ export interface SavedView {
   description?: string
   icon?: string
   color: string
-  space: "stone" | "notes" | "wiki" | "calendar" | "ontology" | "books" | "all"
+  space: "stone" | "notes" | "wiki" | "calendar" | "ontology" | "books" | "library" | "all"
   viewState: {
     /** @migrated v112 — legacy "table" mapped to "list" */
     viewMode: "list" | "board" | "grid" | "insights" | "calendar" | "graph" | "dashboard"

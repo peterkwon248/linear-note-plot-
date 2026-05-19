@@ -61,18 +61,22 @@ export function getCurrentViewContextKey(
 /**
  * Map ActivitySpace → SavedView["space"] for createSavedView calls.
  *
- * SavedView.space is a narrower type ("stone" | "notes" | "wiki" | "calendar"
- * | "ontology" | "all"); ActivitySpace includes "home" and "library" which
- * don't have saved views. Defaults to "all" for unknown spaces.
+ * SavedView.space includes "library" (2026-05-19) — Library entity별 saved
+ * view를 Library sidebar Views section에 통합 표시. contextKey는 entity별
+ * ("tags-list" / "labels-list" 등) 그대로 사용하지만 space는 통합 "library".
+ *
+ * SavedView.space is "stone" | "notes" | "wiki" | "calendar" | "ontology"
+ * | "books" | "library" | "all". "home" 은 saved views 없어 "all" fallback.
  */
 export function getSavedViewSpaceForActivity(
   space: ActivitySpace | string,
-): "stone" | "notes" | "wiki" | "calendar" | "ontology" | "books" | "all" {
+): "stone" | "notes" | "wiki" | "calendar" | "ontology" | "books" | "library" | "all" {
   if (space === "notes") return "notes"
   if (space === "wiki") return "wiki"
   if (space === "calendar") return "calendar"
   if (space === "ontology") return "ontology"
   if (space === "books") return "books"
+  if (space === "library") return "library"
   return "all"
 }
 

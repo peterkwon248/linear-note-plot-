@@ -801,6 +801,8 @@ const FIELD_TO_GROUP: Record<FilterField, FilterGroupKey> = {
   type: "content",
   // Tags-entity filter (Path-A-Step-4)
   colorStatus: "content",
+  // Labels-entity filter (2026-05-19 — usage: in_use / unused)
+  usage: "content",
   // Stickers-entity filters (Plan §11.2 Path-A bonus)
   memberStatus: "content",
   memberKind: "content",

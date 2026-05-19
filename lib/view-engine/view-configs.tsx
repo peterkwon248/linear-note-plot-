@@ -635,14 +635,20 @@ export const TEMPLATES_VIEW_CONFIG: ViewConfig = {
 
 // Labels entity index view config (PR group-c-d-2).
 // Labels are categorical markers with a required color — no status/priority/board axis.
-// list+grid only. Sort by name (alpha) or noteCount. No filter categories (labels don't
-// have folder membership). Search is handled globally via searchQuery.
-// Key difference from Tags: Label.color is non-nullable — color column is always meaningful.
+// list+grid only. Sort by name (alpha) or noteCount.
+// 2026-05-19 — showFilter: true + usage filter (in_use / unused) for entity-uniformity.
+// Label.color is non-nullable so colorStatus filter (Tags 패턴) doesn't apply —
+// usage axis (noteCount === 0 vs > 0) is the meaningful filter for Labels.
 export const LABELS_LIST_VIEW_CONFIG: ViewConfig = {
-  showFilter: false,
+  showFilter: true,
   showDisplay: true,
   showDetailPanel: false,
-  filterCategories: [],
+  filterCategories: [
+    { key: "usage", label: "Usage", icon: SortIcon, values: [
+      { key: "in_use", label: "In use" },
+      { key: "unused", label: "Unused" },
+    ]},
+  ],
   quickFilters: [],
   displayConfig: {
     supportedModes: ["list", "grid"],

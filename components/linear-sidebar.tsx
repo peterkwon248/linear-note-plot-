@@ -1647,6 +1647,12 @@ export function LinearSidebar() {
                 dragContent={{ type: "stickers" }}
               />
             </div>
+
+            {/* 2026-05-19 — Library Views section (사용자 보고 "Library
+                사이드바에 view가 없잖아? 만들어야 되나?"). Library entity별
+                (tags-list / labels-list / files / references / stickers 등)
+                saved view는 모두 "library" space로 통합 표시. */}
+            {renderViewsSection("library", "/library")}
           </>
         )}
 
