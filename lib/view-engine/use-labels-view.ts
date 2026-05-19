@@ -137,10 +137,25 @@ export function useLabelsView(contextKey: ViewContextKey = "labels-list"): UseLa
     [labelsWithCount, searchQuery],
   )
 
+  // Stage 1b: filter (2026-05-19 — usage axis: in_use / unused)
+  const filtered = useMemo(() => {
+    const filters = viewState.filters ?? []
+    if (filters.length === 0) return searched
+    return searched.filter((l) => {
+      for (const f of filters) {
+        if (f.field === "usage") {
+          if (f.value === "in_use" && l.noteCount === 0) return false
+          if (f.value === "unused" && l.noteCount > 0) return false
+        }
+      }
+      return true
+    })
+  }, [searched, viewState.filters])
+
   // Stage 2: sort
   const sorted = useMemo(
-    () => applyLabelSort(searched, viewState),
-    [searched, viewState],
+    () => applyLabelSort(filtered, viewState),
+    [filtered, viewState],
   )
 
   // Stage 3: group (none-only in this PR)

@@ -701,6 +701,26 @@ export function LabelsView() {
             }
           />
         }
+        showFilter={LABELS_LIST_VIEW_CONFIG.showFilter}
+        hasActiveFilters={labelsListViewState.filters.length > 0}
+        filterContent={
+          <FilterPanel
+            categories={LABELS_LIST_VIEW_CONFIG.filterCategories}
+            activeFilters={labelsListViewState.filters}
+            onToggle={(rule) => {
+              const existing = labelsListViewState.filters.findIndex(
+                (f) => f.field === rule.field && f.operator === rule.operator && f.value === rule.value,
+              )
+              if (existing >= 0) {
+                updateLabelsListView({ filters: labelsListViewState.filters.filter((_, i) => i !== existing) })
+              } else {
+                updateLabelsListView({ filters: [...labelsListViewState.filters, rule] })
+              }
+            }}
+            quickFilters={LABELS_LIST_VIEW_CONFIG.quickFilters as any}
+            onQuickFilter={(rules) => updateLabelsListView({ filters: rules })}
+          />
+        }
       />
 
       {/* Label list / grid */}

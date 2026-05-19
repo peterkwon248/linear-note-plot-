@@ -121,6 +121,8 @@ export type FilterField =
   | "type"
   // Tags-entity filter fields (PR Path-A-Step-4)
   | "colorStatus"
+  // Labels-entity filter fields (2026-05-19 — entity-uniformity, noteCount === 0 분기)
+  | "usage"
   // Stickers-entity filter fields (Plan §11.2 Path-A bonus)
   | "memberStatus"
   | "memberKind"
