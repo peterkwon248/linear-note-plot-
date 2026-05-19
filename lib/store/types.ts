@@ -432,7 +432,8 @@ export interface PlotState {
   trashWikiArticle: (articleId: string) => void
   deleteWikiArticle: (articleId: string) => void
   setWikiArticleInfobox: (articleId: string, infobox: WikiArticle["infobox"]) => void
-  /** PR-E1 — Dedicated hatnotes setter (PR-C `setWikiArticleInfoboxHero` 패턴 정합). */
+  /** PR-E1 — Dedicated hatnotes setter (sibling to setWikiArticleInfobox). PR-C
+   *  uses generic `updateWikiArticle` for infoboxHero — no dedicated setter there. */
   setWikiArticleHatnotes: (articleId: string, hatnotes: WikiArticle["hatnotes"]) => void
   /** PR-E2 — Theme color setter (hex string or null). Cascades to infobox header,
    *  group headers, hatnote accent border, and h2 section borders via CSS variable. */

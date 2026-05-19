@@ -265,15 +265,15 @@ function InsightCard({ result }: { result: AnalysisResult }) {
 
 export function InsightsView() {
   const notes = usePlotStore((s) => s.notes)
-  const noteEvents = usePlotStore((s) => s.noteEvents)
+  const entityEvents = usePlotStore((s) => s.entityEvents)
   const srsMap = usePlotStore((s) => s.srsStateByNoteId)
   const backlinks = useBacklinksIndex()
   const [insightsToggles, setInsightsToggles] = useState<Record<string, boolean>>({})
 
   // PhActivity stats
   const activityStats = useMemo(
-    () => computeActivityStats(noteEvents ?? [], notes),
-    [noteEvents, notes],
+    () => computeActivityStats(entityEvents ?? [], notes),
+    [entityEvents, notes],
   )
 
   // Analysis results

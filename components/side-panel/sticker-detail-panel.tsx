@@ -43,6 +43,9 @@ const KIND_LABEL: Record<EntityKind, string> = {
   category: "Categories",
   file: "Files",
   reference: "References",
+  sticker: "Stickers",
+  template: "Templates",
+  book: "Books",
 }
 
 function InspectorSection({
@@ -108,7 +111,8 @@ export function StickerDetailPanel({ sticker }: { sticker: Sticker }) {
           }
           case "category": {
             const c = wikiCategories.find((x) => x.id === ref.id)
-            if (c) { title = c.name; trashed = !!c.trashed }
+            // WikiCategory has no trashed field (categories aren't soft-deleted).
+            if (c) { title = c.name; trashed = false }
             break
           }
           case "file": {
@@ -297,7 +301,7 @@ function MemberRow({
           : "text-muted-foreground cursor-default",
       )}
     >
-      <Icon size={13} weight="regular" className="shrink-0 text-muted-foreground" />
+      <Icon size={13} className="shrink-0 text-muted-foreground" />
       <span className="truncate flex-1">{title}</span>
     </button>
   )

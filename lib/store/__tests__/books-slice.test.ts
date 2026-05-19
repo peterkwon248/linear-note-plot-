@@ -30,7 +30,8 @@ function setupSlice(initial: State = { books: [] }) {
     }
   }
   const get = () => state
-  const slice = createBooksSlice(set, get)
+  // 3rd arg: appendEvent mock (noop — slice tests don't assert event emission)
+  const slice = createBooksSlice(set, get, (() => {}) as any)
   return {
     slice,
     get: () => state,

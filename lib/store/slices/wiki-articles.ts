@@ -215,9 +215,10 @@ export function createWikiArticlesSlice(set: Set, get: Get, appendEvent: AppendE
       }))
     },
 
-    /** PR-E1 — Hatnotes setter. Dedicated setter (PR-C `setWikiArticleInfoboxHero`
-     *  패턴 정합) so callers can persist hatnote arrays without round-tripping
-     *  through `updateWikiArticle` (which emits an "updated" entity event). */
+    /** PR-E1 — Hatnotes setter. Dedicated setter (sibling to setWikiArticleInfobox)
+     *  so callers can persist hatnote arrays without round-tripping through
+     *  `updateWikiArticle` (which emits an "updated" entity event). PR-C uses
+     *  generic `updateWikiArticle` for infoboxHero — no dedicated setter there. */
     setWikiArticleHatnotes: (articleId: string, hatnotes: WikiArticle["hatnotes"]) => {
       set((state: any) => ({
         wikiArticles: state.wikiArticles.map((a: WikiArticle) =>

@@ -55,6 +55,7 @@ export type SortField =
   | "size"        // files: attachment size in bytes (PR group-c-d-5)
   | "fileType"    // files: attachment type (image/url/file) (PR group-c-d-5)
   | "itemCount"   // books: Book.items.length (books-view-engine-2)
+  | "articles"    // wiki categories: descendant article count
 
 export type SortDirection = "asc" | "desc"
 

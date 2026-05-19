@@ -55,7 +55,7 @@ import {
 
 /* ── Props ── */
 
-type CategoryOrdering = "title" | "articles" | "updatedAt" | "parent" | "tier" | "sub"
+type CategoryOrdering = "title" | "articles" | "updatedAt" | "createdAt" | "parent" | "tier" | "sub"
 
 interface WikiCategoryPageProps {
   categoryId: string | null
@@ -67,7 +67,7 @@ interface WikiCategoryPageProps {
   categoryStatusFilter?: string | null
   categoryShowDescription?: boolean
   categoryShowEmpty?: boolean
-  categoryGrouping?: "none" | "tier" | "parent" | "family"
+  categoryGrouping?: "none" | "tier" | "parent" | "family" | "firstLetter" | "createdAt"
   categoryDisplayProps?: string[]
   categorySortDirection?: "asc" | "desc"
   onOrderingChange?: (ordering: CategoryOrdering) => void
@@ -329,7 +329,7 @@ function CategoryBoardView({
   onSelect: (id: string, e?: React.MouseEvent) => void
   showDescription?: boolean
   showEmpty?: boolean
-  grouping?: "none" | "tier" | "parent" | "family"
+  grouping?: "none" | "tier" | "parent" | "family" | "firstLetter" | "createdAt"
   selectedIds?: Set<string>
   onDoubleClick?: (id: string) => void
 }) {
@@ -608,7 +608,7 @@ function CategoryFullListView({
   statusFilter?: string | null
   showDescription?: boolean
   showEmpty?: boolean
-  grouping?: "none" | "tier" | "parent" | "family"
+  grouping?: "none" | "tier" | "parent" | "family" | "firstLetter" | "createdAt"
   displayProps?: string[]
   onOrderingChange?: (ordering: CategoryOrdering) => void
   onSortDirectionChange?: (dir: "asc" | "desc") => void
@@ -676,8 +676,6 @@ function CategoryFullListView({
       filtered.sort((a, b) => dir * (a.depth - b.depth) || a.cat.name.localeCompare(b.cat.name))
     } else if (ord === "sub") {
       filtered.sort((a, b) => dir * (b.childCount - a.childCount) || a.cat.name.localeCompare(b.cat.name))
-    } else if (ord === "articles") {
-      filtered.sort((a, b) => dir * (b.count - a.count) || a.cat.name.localeCompare(b.cat.name))
     } else if (ord === "createdAt") {
       filtered.sort((a, b) => {
         const aT = new Date(a.cat.createdAt).getTime()
