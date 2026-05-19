@@ -132,6 +132,16 @@ export function LabelsView() {
   const deleteLabel = usePlotStore((s) => s.deleteLabel)
   const updateLabel = usePlotStore((s) => s.updateLabel)
   const openNote = usePlotStore((s) => s.openNote)
+  const closeSecondary = usePlotStore((s) => s.closeSecondary)
+
+  // 2026-05-19 (P1 quick fix) — Library sub-page (Labels)는 split view 와 함께
+  // 표시될 때 secondary panel에 부모 Library overview가 자동 들어가 모순적
+  // 레이아웃 발생. mount once 시 secondary 강제 close (사용자 의도적 split
+  // view는 mount 이후 다시 켜기 가능).
+  useEffect(() => {
+    closeSecondary()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   // Navigate from sub-page to a note editor — sub-page exit + activeRoute
   // switch to /notes so the table view mounts WorkspaceEditorArea + selected
