@@ -624,6 +624,12 @@ export function WikiArticleView({ articleId, editable = false, preview = false, 
           // (영구 룰 #67 "gentle by default").
           article.themeColor &&
             "[&_[data-h2]]:border-l-[3px] [&_[data-h2]]:pl-3 [&_[data-h2]]:border-l-[color:var(--wiki-theme-color)]",
+          // PR-E3 — Group header tint cascade. Tints infobox group-headers
+          // (marked with `data-group-header`) at 15% themeColor opacity, but
+          // only when the user hasn't picked a custom color for that group
+          // (`:not([data-custom-color])`). Custom group colors keep precedence.
+          article.themeColor &&
+            "[&_[data-group-header]:not([data-custom-color])]:bg-[color:color-mix(in_srgb,var(--wiki-theme-color)_15%,transparent)]",
         )}
         id="wiki-article-scroll-container"
         // PR-E2 — Inject themeColor as CSS variable. Cascades to infobox header

@@ -1238,6 +1238,8 @@ function GroupHeaderRow({
     <button
       type="button"
       onClick={() => toggle()}
+      data-group-header=""
+      data-custom-color={customColor ? "" : undefined}
       className={cn(
         "flex w-full items-center gap-1.5 px-3 py-1.5 text-left text-[calc(0.75em*var(--scale-infobox,1))] font-semibold uppercase tracking-wider transition-colors",
         !customColor && "bg-secondary/40 text-foreground/80 hover:bg-secondary/55",

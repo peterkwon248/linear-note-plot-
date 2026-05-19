@@ -209,6 +209,10 @@ export function WikiArticleEncyclopedia({ article, isEditing, onBack, collapseAl
         // PR-E2 — Same opt-in h2 accent pattern as wiki-article-view.
         article.themeColor &&
           "[&_[data-h2]]:border-l-[3px] [&_[data-h2]]:pl-3 [&_[data-h2]]:border-l-[color:var(--wiki-theme-color)]",
+        // PR-E3 — Group header tint cascade. Same opt-in pattern as
+        // wiki-article-view. Tints non-custom group-headers at 15% themeColor.
+        article.themeColor &&
+          "[&_[data-group-header]:not([data-custom-color])]:bg-[color:color-mix(in_srgb,var(--wiki-theme-color)_15%,transparent)]",
       )}
       style={{
         ...(fontSize ? { fontSize: `${fontSize}em` } : null),
