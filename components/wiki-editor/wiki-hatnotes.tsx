@@ -9,8 +9,9 @@
  * Edit mode (`editable`): hover reveals edit + delete icons; an "+ Add hatnote"
  * button is always shown at the bottom of the list so users can append more.
  *
- * Persistence routes through `setWikiArticleHatnotes` (dedicated setter, PR-C
- * `setWikiArticleInfoboxHero` pattern).
+ * Persistence routes through `setWikiArticleHatnotes` (dedicated setter,
+ * sibling to setWikiArticleInfobox). PR-C uses generic `updateWikiArticle`
+ * for infoboxHero — no dedicated setter there.
  */
 
 import { useMemo, useState } from "react"

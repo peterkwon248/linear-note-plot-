@@ -6,6 +6,7 @@ import type { WikiArticle, WikiBlock, WikiSectionIndex } from "@/lib/types"
 import { WikiBlockRenderer, AddBlockButton } from "./wiki-block-renderer"
 import { SortableBlockItem } from "./sortable-block-item"
 import { InlineCategoryTags } from "./wiki-article-view"
+import { WikiHatnotes } from "./wiki-hatnotes"
 import { shortRelative } from "@/lib/format-utils"
 import { WikiInfobox } from "@/components/editor/wiki-infobox"
 import { INFOBOX_PRESETS } from "@/lib/wiki-infobox-presets"
@@ -256,6 +257,17 @@ export function WikiArticleEncyclopedia({ article, isEditing, onBack, collapseAl
             {article.aliases.join(", ")}
           </p>
         ) : null}
+      </div>
+
+      {/* PR-E1 follow-up — Hatnotes (Wikipedia-style small italic). Mounted
+          above categories so they sit just under aliases. wiki-article-view
+          mount 정합 (영구 룰 #79 5 type — above/below/distinguish/main/see-also). */}
+      <div className={cn("px-10", article.contentAlign === "center" && "max-w-4xl mx-auto")}>
+        <WikiHatnotes
+          articleId={article.id}
+          hatnotes={article.hatnotes ?? []}
+          editable={isEditing}
+        />
       </div>
 
       {/* Category tag row — below title */}
