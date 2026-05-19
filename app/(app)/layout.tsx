@@ -303,8 +303,12 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                   </div>
                 )}
 
-                {(mountedViews.has("/wiki") || activeRoute === "/wiki") && (
-                  <div className={activeRoute === "/wiki" ? "flex flex-1 overflow-hidden" : "hidden"}>
+                {(mountedViews.has("/wiki") || activeRoute === "/wiki" || activeRoute === "/library/categories") && (
+                  // 2026-05-19 — Library Categories sub-page는 wiki-view를 재사용
+                  // (wikiViewMode = "category" overview). Library sidebar 유지 +
+                  // wiki entity의 categories overview UI 재사용. 사용자 보고
+                  // "Categories 누르면 위키 사이드바로 옮겨감" fix.
+                  <div className={(activeRoute === "/wiki" || activeRoute === "/library/categories") ? "flex flex-1 overflow-hidden" : "hidden"}>
                     <WikiView />
                   </div>
                 )}
