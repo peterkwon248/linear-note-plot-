@@ -8,6 +8,78 @@
 
 ---
 
+## 🚀 2026-05-19 (밤 후속 #2) — **P0 #1 Plan A++ 완료 (PR #387)** ⭐⭐⭐⭐⭐
+
+**범위**: 1 worktree (`nervous-pare-362441`). 단일 PR #387 (20 파일 +315/-162, 신규 1) + 이번 docs sync. Plan A++ — Categories own view component 분리 + Library Views section 제거 + SavedView.space migrate v143→v144 + HIGH risk fix.
+
+### 핵심 결정 (영구 LOCKED #84-#88, 5개 신규)
+
+이번 PR이 직전 brainstorming 결과 + 부산물 5개 영구 룰 LOCKED:
+
+- **#84**: wiki-view-mode external store는 LibraryCategoriesView가 직접 구독 (own component own state subscribe)
+- **#85**: layout.tsx mount 조건 정확 매핑 의무 (`activeRoute === "/library/categories"` vs `startsWith("/library")` too broad)
+- **#86**: Save view 의미 = entity 본질 따라 differentiate
+- **#87**: Library = hub. own Views section 없음. 1차 시민이지만 view는 sub-entity가
+- **#88**: Categories own view component (cross-entity 본질 회복)
+
+### PR 요약
+
+**PR #387** (`fb4c2da`, +315/-162, 20 파일, 1 new): Plan A++ paired PR
+
+**Phase 1 — Categories own view (8 파일)**:
+- 신규 `components/views/library-categories-view.tsx` (147 lines, own contextKey `"library-categories"`)
+- `components/views/wiki-view.tsx` — `wikiViewMode === "category"` 분기 4곳 + state + import 완전 제거 (~160 lines)
+- `app/(app)/layout.tsx` — WikiView ↔ LibraryCategoriesView mount 분리
+- `components/views/library-view.tsx` — Categories card navigate `/wiki` → `/library/categories` + stale 코멘트 제거
+- `app/(app)/library/categories/page.tsx` — stale JSDoc 제거
+- `lib/table-route.ts` + `lib/view-engine/types.ts` + `lib/view-engine/defaults.ts` + `lib/view-engine/view-configs.tsx` — `"library-categories"` 등록
+
+**Phase 2 — Library Views section 제거 + migrate (4 파일)**:
+- `components/linear-sidebar.tsx` — Library section `renderViewsSection` 제거 + Categories sub-page conditional + `getSavedViewSpaceForActivity(activeSpace, activeRoute)` route 인자
+- `lib/types.ts` — SavedView.space union "library" 제거 + "library-categories" 추가
+- `lib/store/migrate.ts` — v143→v144 migration (실제 mutation, re-tag, idempotent)
+- `lib/store/index.ts` — persist version 144
+- `lib/view-engine/saved-view-context.ts` — 시그니처 확장 + "library-categories" 매핑
+
+**HIGH risk fix (옵션 A, 6 파일)** — Architect 1차 verification에서 발견:
+- `lib/wiki-view-mode.ts` — setter 부작용 제거 (setWikiViewMode("category") 호출 제거)
+- 6 cross-entity 호출처 `router.push("/library/categories")` 페어링:
+  - `wiki-article-view.tsx:1124-1129` / `navbox-block.tsx:293-299`
+  - `side-panel-context.tsx` (useRouter import 추가) / `side-panel-connections.tsx` (navigateToCategory useCallback)
+  - `category-detail-panel.tsx` (navigateToCategory useCallback)
+
+### 검증
+
+- npx tsc --noEmit: clean (0 errors)
+- npm run build: clean (40/40 static pages, 13s)
+- setWikiViewMode("category") 호출 grep: **0 hits**
+- Architect verification 2회: 1차 opus APPROVED_WITH_NOTES → fix → 2차 sonnet APPROVED_WITH_NOTES (LOW dead block follow-up)
+
+### 기술 학습 (영구, 2026-05-19 밤 후속 #2)
+
+- **wiki-view-mode external store 부작용 분리 패턴**: setter가 wikiViewMode 전환 + 다른 state 갱신할 때, wikiViewMode가 더 이상 처리 안 되면 setter에서 wikiViewMode 호출만 제거 + 다른 state 유지. enum value 잔존은 LOW risk (별도 cleanup PR로 분리 OK).
+- **Cross-entity click handler paired route navigate 패턴**: cross-entity 자원 click 시 own page navigate 의무. handler 시그니처 `setX(id) + setActiveRoute(path) + router.push(path)` 3-tuple.
+- **Architect verification 2회 패턴 효율**: 1차 opus + 2차 sonnet (짧게) — 정확도 + 효율 balance.
+- **getSavedViewSpaceForActivity 시그니처 확장 (space + route)**: activeSpace 단독으로는 sub-entity 분리 불충분.
+- **VIEW_CONFIGS defensive shallow clone**: `{ ...WIKI_CATEGORY_VIEW_CONFIG }` — future cross-contamination 회피.
+- **Library hub 본질 = sub-entity가 view 보유**: 1차 space ≠ own view 필수. multi-entity hub은 sub-entity가 view 보유 (Linear 패턴 정합).
+
+### 환경 변경
+
+- Main HEAD: `529cfcb` → `fb4c2da` (PR #387)
+- Store version: **143 → 144** (v143→v144 실제 mutation migration)
+- 신규 file: `components/views/library-categories-view.tsx` (147 lines)
+- ViewContextKey 확장: "library-categories"
+- SavedView.space 변경: "library" → "library-categories"
+
+### 다음 세션 즉시 액션 (TODO.md P0)
+
+🟣 **P0 follow-up**: dead block cleanup (side-panel-context.tsx:131-156 + WikiViewMode "category" 제거 + setter 정리) — LOW risk, ~3 파일
+🟡 **P0**: Calendar / Ontology graph node / Activity events / Books own Views section gap (영구 룰 #87)
+🟢 **manual smoke 누적 14 PR (#373-#387)** — fresh dev 재현 권장
+
+---
+
 ## 🚀 2026-05-19 (밤 후속) — **13 PR squash + Library Views 본질 brainstorming** ⭐⭐⭐⭐⭐
 
 **범위**: 1 worktree (`keen-torvalds-ba16f7`). 13 PR (#373-#385) + 이번 docs sync. 후반부 view-engine + Library 회귀 fix 6 PR (#381-#385) + 4단 본질 brainstorming.

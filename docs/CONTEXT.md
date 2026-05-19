@@ -51,6 +51,64 @@
 
 ---
 
+## 🚀 2026-05-19 (밤 후속 #2) — P0 #1 Plan A++ 완료 (PR #387) ⭐⭐⭐⭐⭐
+
+**범위**: 단일 PR (#387, 20 파일 +315/-162, 신규 1). Plan A++ — Categories own view component 분리 + Library Views section 제거 + SavedView.space migrate v143→v144 + HIGH risk fix.
+
+### 핵심 결정 (영구 LOCKED, #86-#88)
+
+이번 PR이 직전 brainstorming 결과를 LOCKED:
+
+- **#86. Save view 의미 = entity 본질 따라 differentiate** — Notes/Wiki/Books 큼, Categories 의미, Tags/Labels/Files/References/Stickers 약함 (이미 코드 호출 없음). `getSavedViewSpaceForActivity(space, route)` 시그니처가 entity differentiation 본질 정합.
+- **#87. Library = hub. own Views section 없음. 1차 시민이지만 view는 sub-entity가** — Library Activity Bar 6번째 = 진입 1차 시민. 단 own view는 sub-entity가 보유 (현재 Categories만). Linear 패턴 정합 — each space own views는 single-entity space에만 적용. multi-entity hub은 sub-entity가 view 보유.
+- **#88. Categories own view component (cross-entity 본질 회복, wiki 종속 부조화 해소)** — WikiCategory 풀 공유 (Note/Wiki/Book)이므로 categories click → /library/categories. wiki article 안 6 cross-entity 호출처 (wiki-article-view/navbox-block/side-panel-context/-connections/category-detail-panel) 모두 paired route navigate 의무.
+
+### 부산물 영구 룰 추가 (#84-#85)
+
+executor-high 자체 식별:
+
+- **#84. wiki-view-mode external store는 LibraryCategoriesView가 직접 구독** — `useActiveCategoryId()` / `setActiveCategoryView()` external store 그대로 유지. own component가 own state subscribe.
+- **#85. layout.tsx mount 조건 분리 패턴** — `activeRoute === "/library/categories"` 같은 정확 매핑 필요. `startsWith("/library")` too broad → main-content panel 양분 (PR #382 회귀 사례).
+
+### 변경 핵심
+
+- **Phase 1** (8 파일): 신규 `library-categories-view.tsx` (147 lines, own contextKey `"library-categories"`) + wiki-view category 분기 4곳 완전 제거 (~160 lines) + view-engine 4 파일 등록 + layout.tsx mount 분리
+- **Phase 2** (4 파일): linear-sidebar Library section `renderViewsSection` 제거 + Categories sub-page conditional own Views + SavedView.space union "library" → "library-categories" + persist v143→v144 migration (실제 mutation, 데이터 보존, idempotent)
+- **HIGH risk fix** (옵션 A, 6 파일): wiki-view-mode `setActiveCategoryView`/`setCategoryOverview`에서 `setWikiViewMode("category")` 부작용 제거 + 6 cross-entity 호출처 `router.push("/library/categories")` 페어링
+
+### 검증 (Architect verification 2회)
+
+- 1차 (opus): APPROVED_WITH_NOTES — HIGH risk 1건 발견 (wiki-view-mode setter 부작용 + 6 호출처 stale)
+- Fix 옵션 A 적용 후 2차 (sonnet medium): APPROVED_WITH_NOTES — LOW dead block follow-up 권장
+- npx tsc --noEmit clean (0 errors), npm run build clean (40/40 static pages, 13s)
+- setWikiViewMode("category") 호출 grep: **0 hits**
+- 모든 cross-entity 호출처 route navigate paired
+
+### 기술 학습 (영구)
+
+- **wiki-view-mode external store 부작용 분리 패턴**: setter가 wikiViewMode 전환 + 다른 state 갱신할 때, wikiViewMode가 더 이상 처리 안 되면 setter에서 wikiViewMode 호출만 제거 + 다른 state 유지. enum value 잔존은 LOW risk (별도 cleanup PR로 분리 OK).
+- **Cross-entity click handler paired route navigate 패턴**: cross-entity 자원 (categories 풀 공유)을 click 시 own page navigate 의무. handler 시그니처 `setX(id) + setActiveRoute(path) + router.push(path)` 3-tuple. side panel에서는 useCallback wrapping (router deps).
+- **Architect verification 2회 패턴 효율**: 1차 opus APPROVED_WITH_NOTES → fix → 2차 sonnet medium re-verify (짧게) → APPROVED. opus 1회 + sonnet 1회 비용으로 정확도 + 효율 balance.
+- **getSavedViewSpaceForActivity 시그니처 확장 (space + route)**: PR #385 (space 단독) → PR #387 (space + route). activeSpace 단독으로는 sub-entity 분리 불충분 (Linear/Notion도 sub-route별 view).
+- **VIEW_CONFIGS defensive shallow clone 패턴**: `{ ...WIKI_CATEGORY_VIEW_CONFIG }` — 같은 config 객체를 두 key에 매핑 시 future cross-contamination 회피.
+
+### 환경 변경
+
+- Main HEAD: `fb4c2da` (PR #387 squash merged) + docs sync PR
+- Persist v144 (v143→v144 실제 mutation, "library" → "library-categories" re-tag)
+- 신규 file: `components/views/library-categories-view.tsx`
+- SavedView.space union 변경: "library" 제거 + "library-categories" 추가
+- ViewContextKey 확장: "library-categories"
+- 영구 룰 추가: #84-#88 (5개 LOCKED)
+
+### 다음 (TODO.md P0)
+
+🟣 **P0 follow-up**: dead block cleanup (side-panel-context.tsx:131-156 + WikiViewMode "category" 제거 + setter 정리) — LOW risk, ~3 파일
+🟡 **P0**: Calendar 사이드바 / Ontology graph node 사이드바 / Activity events 후속 / Books own Views section gap (영구 룰 #87 정합)
+🟢 **사용자 manual smoke 누적 14 PR (#373-#387)** — fresh dev 재현 권장
+
+---
+
 ## 🚀 2026-05-19 (밤 후속) — 13 PR squash + Library Views 본질 brainstorming ⭐⭐⭐⭐⭐
 
 **범위**: 이번 세션 누적 13 PR + Library Views 본질 brainstorming 4단. **다음 세션 P0 #1 = CategoriesView own view component 분리** (Plan A++).
