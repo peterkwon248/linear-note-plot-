@@ -3,13 +3,128 @@
 > 우선순위 기반 작업 목록. **P0 = 다음 세션 즉시 시작점** (NEXT-ACTION.md 폐지, 2026-05-12).
 > 완료 항목은 즉시 삭제 또는 "완료" 섹션으로 이동.
 
-**마지막 갱신**: 2026-05-19 (저녁/밤) — 7 PR squash 머지 (P0 1-4 + P1 3개) 완료. Tags filter 위치/Labels split view 진단까지. TS 부채 10건 → 0 (PR #376).
+**마지막 갱신**: 2026-05-19 (밤 후속) — 13 PR squash 머지 + Library Views 본질 brainstorming 완료. **다음 세션 P0 #1 = CategoriesView own view component 분리** (cross-entity 본질 회복).
 
 ---
 
-## 🔴 P0 — 즉시 (cross-machine 진입점, 2026-05-19 저녁/밤)
+## 🔴 P0 — 즉시 (cross-machine 진입점, 2026-05-19 밤 후속)
 
-### 1. **🔴 Tags/Labels sub-page view-engine 통합** (~10 파일, 사용자 결정 받음)
+### 1. **🔴 CategoriesView own view component 분리** (~5-7 파일, **본질 fix**, 사용자 brainstorming 결정 대기)
+
+**사용자 본질 통찰 (이번 세션 brainstorming, 핵심)**:
+
+> "카테고리스 뷰를 위키 뷰로 나오게 하면, 카테고리스가 범용 엔티티가 아니라 위키 종속 엔티티처럼 느껴지는데?? 카테고리스가 범용 엔티티라면 그러면 안 되지."
+
+**문제**:
+- PR #383: `/library/categories` → wiki-view (wikiViewMode="category") mount
+- wiki-view UI 안에서 categories overview 표시
+- **사용자 시각**: Categories = wiki 종속 entity처럼 보임
+- **영구 룰 #54 위반**: WikiCategory 풀 공유 (Note/Wiki/Book cross-entity)
+- **영구 룰 #57 부조화**: Library hub = cross-entity 분류 본거지 (wiki 종속 X)
+
+**Fix path (Plan A++)**:
+1. **신규 `CategoriesView` component** 분리 — wiki-view 안 categoryOverview UI를 own component로 추출
+2. `app/(app)/library/categories/page.tsx` → CategoriesView mount (wiki-view 아님)
+3. layout.tsx에 LibraryCategoriesView 매핑 추가 (wiki-view 별개)
+4. own contextKey ("library-categories" 또는 "categories")
+5. own viewState + own saved view
+6. Library sidebar 그대로 유지 (Library 진입처럼)
+
+**영향 파일**:
+- `components/views/library-categories-view.tsx` (신규)
+- `app/(app)/layout.tsx` — CategoriesView mount 매핑 + wiki-view 매핑 revert (categoryOverview 분리)
+- `lib/view-engine/view-configs.tsx` — LIBRARY_CATEGORIES_VIEW_CONFIG 신규 (or 기존 WIKI_CATEGORY_VIEW_CONFIG 재사용)
+- `lib/view-engine/saved-view-context.ts` — contextKey 매핑
+- `components/linear-sidebar.tsx` — Categories click handler 그대로 (이미 /library/categories)
+
+**위험**:
+- wiki-view의 categoryOverview UI 분리 (회귀 risk)
+- WikiView 안 wikiViewMode="category" 잔존 시 처리 (단순 dashboard로 fallback?)
+- 사용자 manual smoke 필수
+
+### 2. **🟣 Library Views section 본질 결정 (사용자 결정 대기)**
+
+이번 세션 brainstorming 누적:
+- Library 1차 space → own Views section **있어야 함** (entity-uniformity)
+- 단 Library sub-entity별 view variation 다름:
+  - **Categories**: hierarchy + grouping → Save view 의미 ✓
+  - **Tags/Labels/References/Files/Stickers**: view variation 적음 → Save 약함
+- **Save view 의미 = entity 본질 따라 differentiate** (Plot 영구 원칙 정합)
+
+옵션:
+- **A. Library Views section 유지** (현재 PR #385) — Categories views만 실제 표시 (다른 entity Save 없음). 시각 noise 있을 수 있음.
+- **B. Library Views section 제거** + Categories는 own view 통한 자체 Views section (Plan A++ 후).
+- **C. Library Views section을 sub-route 기반 dynamic** (Linear 패턴 정합) — /library/categories에서만 보임.
+
+**Plan A++ 진행 시 B 또는 C가 자연** — CategoriesView own component이므로 Library Views section 부조화 해소.
+
+### 3. **🟡 Calendar 사이드바 변화** (사용자 의도 미확정)
+
+이전 시그널: "Calendar의 우측 사이드바도 뭔가 변화가 필요해. 좋은 의미로."
+
+옵션:
+- Day Summary panel / 월간 통계 / 현재 노트 detail 강화
+
+### 4. **🟡 Ontology graph node 사이드바 동기화** (사용자 의도 미확정)
+
+옵션:
+- Graph node → 4탭 사이드바 (추천)
+- OntologyDetailPanel + 4탭 둘 다
+- 사이드바에 graph mode
+
+### 5. **🟡 Activity events 후속**
+
+- Granular Wiki/Book events wire-up (block_added/item_added 등)
+- Label entity events 발화 (tags.ts 패턴 정합)
+
+### 6. **🟡 사용자 manual smoke 누적 13 PR**
+
+이번 세션 13 PR (PR #373-#385) 머지된 변경 fresh dev에서 cross-verify:
+- light mode contrast / group header tint / WikiTemplate hero / TS debt 0 / Wiki Template insert / TagDetailPanel / split view auto-close / filter popover / Library visibility / Categories sub-page route / LibraryView fallback / Library Views + Labels filter
+
+---
+
+## 🧠 이번 세션 Brainstorming 결과 (영구 결정 후보, **다음 세션 시작점 핵심**)
+
+### 결정 1: Save view 의미 = entity 본질 따라 differentiate
+
+| Entity | View variation | Save 의미 |
+|--------|---------------|----------|
+| Notes / Wiki / Books | 매우 다양 | 🔴 큼 |
+| **Categories** | 중간 (hierarchy + grouping) | 🟡 의미 있음 |
+| Files | 중간 | 🟡 약함 |
+| **Tags / Labels / References / Stickers** | 적음 | 🟢 거의 없음 |
+
+→ 현재 코드 상태: Tags/Labels/Files/References/Stickers Save view 호출 **없음** (이미 hidden). Categories만 wiki-view 통해 Save 가능 — 단 wiki contextKey 공유 (정밀화 미완).
+
+### 결정 2: Library 1차 space → own Views section 있어야 (entity-uniformity)
+
+| Space | own Views section |
+|-------|------------------|
+| Notes / Wiki / Calendar / Ontology | ✓ (이미) |
+| Books | ❌ (gap, follow-up) |
+| **Library** | ✓ (PR #385) — Linear 패턴 정합 |
+
+### 결정 3: Categories own view component 필요 (cross-entity 본질 회복)
+
+- 영구 룰 #54: WikiCategory 풀 공유 (Note/Wiki/Book)
+- 영구 룰 #57: Library cross-entity 분류 hub
+- 현재: wiki-view 안 categoryOverview → wiki 종속 부조화
+- → Plan A++ CategoriesView own component 분리 (다음 세션 P0 #1)
+
+### 결정 4 (Linear 패턴 매핑)
+
+| Linear | Plot 정합 |
+|--------|---------|
+| Each space own Views section | ✓ (Notes/Wiki/Calendar/Ontology/Library) |
+| Cross-team views (workspace) | Plot에 해당 X — Library가 cross-entity hub |
+| Entity-tied views | ✓ Plot 영구 원칙 |
+
+→ A (Library Views 제거) = 부분 Linear-like. 완벽 정합 = sub-entity별 dynamic 또는 own view component (Plan A++).
+
+---
+
+## ✅ 최근 완료 (2026-05-19 밤 후속) — 13 PR 누적
 
 사용자 보고 (2026-05-19 밤): "태그스는 필터위치가 이상해. 라벨스나 위키 노트 등과 맞춰줘야 하고."
 

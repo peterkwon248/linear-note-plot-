@@ -8,6 +8,76 @@
 
 ---
 
+## 🚀 2026-05-19 (밤 후속) — **13 PR squash + Library Views 본질 brainstorming** ⭐⭐⭐⭐⭐
+
+**범위**: 1 worktree (`keen-torvalds-ba16f7`). 13 PR (#373-#385) + 이번 docs sync. 후반부 view-engine + Library 회귀 fix 6 PR (#381-#385) + 4단 본질 brainstorming.
+
+### Brainstorming 4단 사용자 통찰 (다음 세션 핵심 진입점)
+
+#### 통찰 1: Save view 의미 = entity 본질 따라 differentiate
+- Notes/Wiki/Books: variation 많음 → Save 큼
+- Categories: hierarchy + grouping → Save 의미
+- Tags/Labels/References/Stickers/Files: variation 적음 → Save 약함 (이미 코드 호출 없음)
+
+#### 통찰 2: Library cross-entity hub 본질 회복 (영구 LOCKED #54/#57 회복)
+- Labels/Categories Library 이동 = 2026-05-17 영구 결정 (cross-entity 분류 hub)
+- ✓ OK
+
+#### 통찰 3: View = 메타-entity (자기 정체성)
+- SavedView id/name/icon/color → entity처럼 행동
+- 단 first-class data 아님 — 메타 (entity의 view 저장)
+- Notion/Linear/Airtable 모두 entity-tied 패턴
+
+#### 통찰 4 (최종): Categories own view component 필요
+- **"카테고리스 뷰를 위키 뷰로 나오게 하면, 카테고리스가 범용 엔티티가 아니라 위키 종속 엔티티처럼 느껴지는데??"**
+- PR #383: `/library/categories` → wiki-view mount → **wiki 종속 부조화**
+- 영구 룰 #54 (cross-entity) + #57 (Library hub) 위반
+- → **Plan A++ CategoriesView own component 분리** (다음 세션 P0 #1)
+
+### PR 요약 (이번 세션 누적 13 PR + docs sync)
+
+P0/P1 8 PR (#380에서 정리 완료):
+- #373/#374/#375/#376/#377/#378/#379/#380
+
+P1 view-engine + Library 회귀 5 PR (이번 entry 신규):
+- **PR #381** (`430b6de`): view-engine Phase 1 filter popover 표준 정합 (Tags/Labels sub-page)
+- **PR #382** (`853e1d1`): Library visibility fix — LibraryView sub-route hide (split view 자동 fix)
+- **PR #383** (`3226fb6`): Categories Library sub-page route (wiki page jump 해소)
+- **PR #384** (`3636555`): LibraryView fallback 회귀 fix (Tags/References 빈 화면 회복)
+- **PR #385** (`1426ec8`): Library Views section + Labels filter (B+E entity-uniformity)
+
+### 영구 LOCKED 결정 후보 (다음 세션 결정 대기)
+
+이번 세션 신규 영구 룰 추가 0건. 단 brainstorming 결과 #86-#88 후보:
+- **#86**: Save view 의미 = entity 본질 따라 differentiate
+- **#87**: Library 1차 space → own Views section (entity-uniformity)
+- **#88**: Categories own view component 분리 (cross-entity 본질 회복) — Plan A++ 진행 시 LOCKED
+
+### 기술 학습 (영구, 2026-05-19 밤 후속)
+
+- **layout.tsx visibility condition 핵심 — main-content panel 안 multi-view mount**: `activeRoute?.startsWith()` too broad → main-content 양분 (split-like 화면). 정확 매핑 필요 (`=== "/library"` vs sub-route).
+- **Save view 시스템 entity-tied 본질**: SavedView.space 별로 sidebar Views section. Linear 패턴 정합 — workspace/team own views.
+- **View = 메타-entity**: id/name/icon/color로 자기 정체성. 단 first-class data X. 사용자 mental model: 절단 패턴 저장.
+- **Categories own view 필요성 — cross-entity 본질**: wiki-view 통한 표시 = wiki 종속 부조화. 영구 룰 #54 (WikiCategory 풀 공유) + #57 (Library cross-entity hub) 정합 위해 own view component 분리.
+- **사용자 brainstorming 시 docs 회복 중요성**: "왜 라벨/카테고리를 라이브러리로 옮긴 거였어?" 의문에 영구 LOCKED 결정 #53-#58 (2026-05-17) 발견 → mental model 회복. 영구 결정 docs 검색 의무 패턴.
+- **다층 디자인 결정 분리 의무**: 분류 메커니즘 cross-entity ≠ Save view 의미 ≠ View entity 위치. 각자 본질 다름, 결정 분리 필요.
+
+### 환경 변경
+
+- Main HEAD: PR #380 → PR #381-#385 누적 → 이 docs sync PR
+- Store version: 143 (변동 없음, schema 변경 0)
+- 신규 file: `app/(app)/library/categories/page.tsx` (PR #383)
+- SavedView.space 확장: `"library"` 추가 (back-compat)
+- FilterField 확장: `"usage"` (Labels-entity)
+
+### 다음 세션 즉시 액션 (TODO.md P0)
+
+🔴 **P0 #1**: CategoriesView own view component 분리 (Plan A++, ~5-7 파일, 사용자 brainstorming 결정 대기)
+🟣 **P0 #2**: Library Views section 본질 결정 (Plan A++ 후 dynamic 또는 제거)
+🟡 **P0 #3-5**: Calendar 사이드바 / Ontology graph 사이드바 / Activity events / manual smoke
+
+---
+
 ## 🚀 2026-05-19 (저녁/밤) — **P0 1-4 + P1 3개 (7 PR squash 머지) — view-engine 통합 진단** ⭐⭐⭐⭐⭐
 
 **범위**: 1 worktree (`keen-torvalds-ba16f7`). 7 PR — PR #373 (light mode contrast), PR #374 (group header tint), PR #375 (WikiTemplate hero UI), PR #376 (TS debt cleanup), PR #377 (Wiki Template insert), PR #378 (TagDetailPanel cross-entity), PR #379 (split view quick fix).

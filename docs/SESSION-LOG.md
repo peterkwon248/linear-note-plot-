@@ -6,6 +6,202 @@
 
 ---
 
+## 2026-05-19 (밤 후속) — 집/Windows, **13 PR squash 머지 + Library Views 본질 brainstorming**
+
+> 🎯 **다음 즉시 액션 (다른 컴퓨터 로그인 후 시작점)**:
+>
+> **🔴 P0 #1 — CategoriesView own view component 분리 (Plan A++, ~5-7 파일, 사용자 brainstorming 결정 대기)**
+>
+> 사용자 본질 통찰 (2026-05-19 밤 후속 brainstorming 핵심):
+> > "카테고리스 뷰를 위키 뷰로 나오게 하면, 카테고리스가 범용 엔티티가 아니라 위키 종속 엔티티처럼 느껴지는데?? 카테고리스가 범용 엔티티라면 그러면 안 되지."
+>
+> 문제: PR #383으로 `/library/categories` → wiki-view (wikiViewMode="category") mount. **사용자 시각 = Categories가 wiki 종속**. 영구 룰 #54 (WikiCategory 풀 공유 cross-entity) + #57 (Library cross-entity hub) 부조화.
+>
+> Fix path (Plan A++): wiki-view 안 categoryOverview UI를 **own component (CategoriesView)** 로 분리. own contextKey + own viewState + own saved view. 단 사용자 명시 결정 대기 (이번 세션 brainstorming dismiss).
+>
+> **다음 머신에서 처음 시작 시**:
+> 1. `git pull origin main` (latest = PR #386 docs sync 머지 후)
+> 2. `npm install && npm run dev` (port 3002, hard refresh)
+> 3. **이 entry + `docs/TODO.md` P0 #1 + brainstorming 결과 read 의무** (사용자 mental model 회복용)
+> 4. 사용자에게 P0 #1 (CategoriesView 분리) 진행 의지 확인 + Plan A++ scope 재검토
+> 5. 또는 사용자 새 시그널 응답
+>
+> **이번 세션 사용자 의도 (chronological, 그대로 인용)**:
+> 1. "before-work" → keen-torvalds-ba16f7 worktree 진입
+> 2. "P0#1을 하자. 근데 해당 작업 내용이 뭐지?" → 직관 설명 후 PR #373
+> 3. "ㅇㅋ" → PR #374 group header tint
+> 4. "지금 뭐가 바뀐 거지??" → PR 변화 설명
+> 5. "ㄴㄴ 다음 작업 진행하자" → PR #375 WikiTemplate hero
+> 6. "P0 #4부터" → PR #376 TS debt cleanup
+> 7. "P1 첫번째 들어가자" → PR #377 Wiki Template insert
+> 8. "다음 작업" → PR #378 TagDetailPanel cross-entity
+> 9. (스크린샷) "태그스 필터위치 이상해 + 라벨스 split view 버그" → PR #379 split view auto-close
+> 10. "after-work + 다음 세션" → PR #380 docs sync
+> 11. "ㅇㅇ 다음작업" → view-engine 통합 진행
+> 12. "Phase 1만 (filter popover 정합화)" → PR #381
+> 13. "야 여전히 안 되는데??" → 진단 + PR #382 LibraryView visibility fix
+> 14. "카테고리스는 여전히 위키 사이드바에서 열림" → PR #383 Categories Library sub-page route
+> 15. (스크린샷) "레퍼런시스랑 태그스는 아예 클릭해도 화면이 안 뜨고" → PR #384 LibraryView fallback 회귀 fix
+> 16. "라벨스는 왜 필터가 없지?" → brainstorming → "b+e로 하자" → PR #385 Library Views + Labels filter
+> 17. **"근데 나 의문인게 태그, 라벨, 카테고리, 스티커 등등은 전부 다 다른 엔티티잖아? 라벨스에서 어떤 뷰로 저장을 하면 라벨스만 나오고 카테고리스에서 어떤 뷰로 저장을 하면 카테고리스만 나올 텐데... 어떻게 생각해??"** → 디자인 결함 발견 (PR #385 통합 부조화)
+> 18. **"노트랑 위키는 View가 어느 정도 의미가 있다고 보는데 태그, 라벨, 레퍼런시스, 카테고리 등은 view가 의미가 있나?"** → entity별 view variation 분석 (Save view = entity 본질 따라 differentiate)
+> 19. **"카테고리스에는 뷰가 있어야 된다고 너는 보는 거야?? 카테고리스에서만 뷰가 있게 하고 나머진 폐기로 갈까?"** → Plan A 변형 결정 (Categories만 Save 유지) — 코드 상태 이미 일치 (Tags/Labels/Files/References/Stickers Save 호출 X)
+> 20. **"애초에 라이브러리는 모든 것에 통용되는 곳인데 왜 우리가 라벨, 카테고리까지 라이브러리로 옮긴 거였어?? md한번 살펴볼래?"** → docs/CONTEXT.md 영구 결정 #53-#58 발견 (2026-05-17 cross-entity 분류 hub) → mental model 회복
+> 21. **"오케이 근데 이러면 views는 결국 독립적 엔티티로 가게 되는 거네...음.."** → View = 메타-entity 분석 (자기 정체성 가짐, 단 first-class data 아님)
+> 22. **"A가 리니어 방식인가??"** → Linear 패턴 매핑 (each space own Views section, A는 부분 Linear-like)
+> 23. **"근데 카테고리스 뷰를 위키 뷰로 나오게 하면, 카테고리스가 범용 엔티티가 아니라 위키 종속 엔티티처럼 느껴지는데?? 카테고리스가 범용 엔티티라면 그러면 안 되지. 캘린더랑 온톨로지에는 뷰가 있는 게 맞나? 그렇다면 라이브러리에도 뷰가 있어야 하는데 반드시."** → **이번 세션 최종 통찰** (Categories own view component 필요)
+> 24. "오케이 일단 지금 대화내용까지 전부 정리해서 after-work 해줘" → 이 entry
+>
+> **머신**: 집 (Windows)
+> **현재 main HEAD**: PR #385 머지 후 + 이 docs sync PR
+> **Store version**: 143 (변동 없음, schema 변경 0)
+
+### 완료 (이번 세션 13 PR squash 머지)
+
+#### P0 1-4 (앞 세션 #380에서 정리 완료, 누적 reference)
+- PR #373 (P0 #1): light mode hex contrast — useTintedText hex 지원
+- PR #374 (P0 #2): group header tint cascade
+- PR #375 (P0 #3): WikiTemplate detail panel hero edit UI
+- PR #376 (P0 #4): TS debt 10 → 0 + dead code + doc comment + encyclopedia hatnotes
+- PR #377 (P1): Wiki Template insert via AddBlockButton
+- PR #378 (P1): TagDetailPanel cross-entity 강화
+- PR #379 (P1 quick fix): Labels/Tags split view auto-close
+- PR #380 (docs sync): after-work 1차
+
+#### P1 view-engine + Library 회귀 fix 6 PR (이번 entry 핵심)
+
+##### PR #381 — P1 view-engine Phase 1: sub-page filter popover 표준 정합 (squash merged 430b6de)
+사용자 보고 "태그스 필터위치가 이상해. 라벨스나 위키 노트 등과 맞춰줘야". 진단: Tags/Labels sub-page는 FilterButton (DropdownMenu) 구식 패턴. Notes/Wiki는 ViewHeader 내 FilterPanel popover 표준. 정합 X.
+
+수정 (2 파일 +59/-24):
+- Tags/Labels sub-page Filter popover → 표준 Popover + FilterPanel
+- NOTES_VIEW_CONFIG.filterCategories reuse (sub-page = notes 표시)
+- toggleFilter signature adapter
+
+##### PR #382 — Library visibility fix (LibraryView sub-route hide) (squash merged 853e1d1)
+사용자 보고 (스크린샷) "라벨스의 경우 자꾸 스플릿뷰로 나오거든? 이거 버그같은데". preview MCP 진단:
+- secondaryNoteId / secondarySpace 모두 null (split view 아님)
+- main-content panel 안 visibility 검사: LabelsView + **LibraryView 둘 다 visible**
+- 원인: layout.tsx LibraryView visibility `activeRoute?.startsWith("/library")` → sub-route에서도 true → main-content panel 양분 (split-like 화면)
+
+수정 (1 파일 +6/-1):
+- `activeRoute?.startsWith("/library")` → `activeRoute === "/library"` (root만)
+
+##### PR #383 — Categories Library sub-page route (squash merged 3226fb6)
+사용자 보고 "카테고리스는 누르면 위키 사이드바로 위치가 옮겨가는 불량". 원인: linear-sidebar Categories click → `setActiveRoute("/wiki")` → wiki page jump → wiki sidebar.
+
+수정 (3 파일 +22/-8):
+- linear-sidebar Categories click → `/library/categories` (wiki 아님)
+- layout.tsx WikiView mount 조건 확장 (`/library/categories`도 mount)
+- 신규 `app/(app)/library/categories/page.tsx` (빈 컴포넌트, layout이 WikiView mount)
+
+→ Library sidebar 유지 + categories overview UI 표시. 단 **wiki-view 통한 표시는 사용자 통찰로 본질 부조화 발견 (다음 세션 P0 #1 Plan A++)**.
+
+##### PR #384 — LibraryView visibility 회귀 fix (squash merged 3636555)
+사용자 보고 "레퍼런시스랑 태그스는 아예 클릭해도 화면이 안 뜨고. 총체적 난국". PR #382 회귀:
+- layout.tsx에 /library/tags, /library/references, /library/files, /library/stickers mount component 없음
+- PR #382 후 LibraryView도 hidden → **빈 화면**
+
+수정 (1 파일 +14/-1):
+- LibraryView visibility 정교화: `activeRoute === "/library" || (startsWith("/library/") && NOT (/library/labels | /library/categories))`
+- /library/labels: LabelsView visible ✓
+- /library/categories: WikiView visible ✓
+- /library/tags, /references, /files, /stickers: **LibraryView fallback overview** ✓
+
+##### PR #385 — Library Views section + Labels filter (B+E entity-uniformity) (squash merged 1426ec8)
+사용자 보고:
+1. "카테고리스의 세이브를 누르게 되면, 해당 view는 어디서 볼 수 있는 거지? 라이브러리의 사이드바에는 view가 없잖아?"
+2. "라벨스는 왜 필터가 없지? 너의 기준대로라면 라벨스는 필터가 없고, 나머지는 전부 필터가 있는 거야??"
+
+진단:
+- Library/Books sidebar에 `renderViewsSection` 호출 없음 = saved view dead feature
+- LABELS_LIST_VIEW_CONFIG만 `showFilter: false` — 다른 모든 entity는 true (예외)
+
+수정 (8 파일 +67/-12):
+- **B (Library Views section)**: SavedView.space에 "library" 추가 + getSavedViewSpaceForActivity library 매핑 + linear-sidebar Library section에 renderViewsSection 호출
+- **E (Labels Filter)**: LABELS_LIST_VIEW_CONFIG.showFilter true + filterCategories에 "usage" axis + FilterField에 usage + FIELD_TO_GROUP 매핑 + use-labels-view Stage 1b filter logic + labels-view ViewHeader filterContent
+
+→ Library sidebar에 Views section + Labels에 Filter button (Usage: In use / Unused).
+
+### 🧠 핵심 Brainstorming (PR #385 후 사용자 통찰 4단)
+
+#### 통찰 1: Save view 의미 = entity 본질 따라 differentiate
+사용자 의문: "라벨스에서 저장한 view는 라벨스에만, 카테고리스에서 저장한 view는 카테고리스에만 의미. 어떻게?"
+
+분석:
+- Notes/Wiki/Books: 다양한 filter/group/sort 조합 → Save view 의미 큼
+- **Categories**: hierarchy + grouping 다양 → Save view 의미 중간
+- Tags/Labels/Stickers/Files/References: view variation 적음 → Save 의미 약함
+
+결론: PR #385의 통합 Library Views section은 part-over-engineering. 단 코드 상태 = Tags/Labels/Files/References/Stickers는 이미 `useSaveViewProps` 호출 안 함 → Save 버튼 없음. **Categories만 wiki-view 통해 Save 가능** (wiki contextKey 공유).
+
+#### 통찰 2: Library cross-entity hub 본질 회복 (영구 LOCKED 결정 회복)
+
+사용자 의문: "왜 라벨, 카테고리를 라이브러리로 옮긴 거였어?"
+
+[docs/CONTEXT.md:263-279](docs/CONTEXT.md:263) 영구 LOCKED 결정 발견 (2026-05-17):
+- **#53. Label/Category/Tag = orthogonal 독립 + 자유 선택**
+- **#54. WikiCategory 풀 공유** (Note/Wiki/Book 같은 카테고리 시스템)
+- **#57. cross-entity 분류 = Library hub** (Label/Category/Tag는 Library 사이드바)
+
+→ Labels/Categories Library 이동 = cross-entity 본질 영구 결정. **OK**.
+
+#### 통찰 3: View = 메타-entity (자기 정체성 가짐)
+
+사용자 의문: "이러면 views는 결국 독립적 엔티티로 가게 되는 거네."
+
+분석:
+- SavedView에 id / name / description / icon / color → entity처럼 행동
+- 단 first-class data entity 아님 — 메타-entity (entity의 view를 저장)
+- Notion/Linear/Airtable 모두 entity-tied 패턴 (view를 own space로 승격 안 함)
+
+→ Plot도 entity-tied (Notes views in notes sidebar, Wiki views in wiki sidebar, **Library views in library sidebar** — entity-uniformity).
+
+#### 통찰 4 (최종): Categories own view component 필요 — wiki 종속 부조화 해소
+
+사용자 의문 (이번 세션 최종 통찰):
+> "카테고리스 뷰를 위키 뷰로 나오게 하면, 카테고리스가 범용 엔티티가 아니라 위키 종속 엔티티처럼 느껴지는데?? 카테고리스가 범용 엔티티라면 그러면 안 되지. 캘린더랑 온톨로지에는 뷰가 있는 게 맞나? 그렇다면 라이브러리에도 뷰가 있어야 하는데 반드시."
+
+분석:
+- PR #383: `/library/categories` → wiki-view 안 categoryOverview UI 표시
+- 사용자 시각: Categories = wiki 종속처럼 보임
+- 영구 룰 #54 (cross-entity) + #57 (Library hub) 본질 부조화
+- 진짜 fix: **CategoriesView own component 분리** (wiki-view 의존 제거)
+
+Plot 영구 원칙 정합 결론:
+1. Library = 1차 space → own Views section 있어야 ✓ (PR #385)
+2. Categories own view component 필요 (다음 세션 P0 #1 Plan A++)
+3. Save view = entity 본질 따라 differentiate (Tags/Labels는 Save 약함 — 이미 코드 상태 일치)
+4. View = entity-tied (Linear 패턴 정합)
+
+### 영구 LOCKED 결정 후보 (이번 세션, 사용자 결정 대기)
+
+다음 세션에 사용자가 명시 결정 후 docs/CONTEXT.md에 영구 LOCKED:
+
+- **#86 (후보)**: Save view 의미 = entity 본질 따라 differentiate (entity 양 + view variation 함수)
+- **#87 (후보)**: Library 1차 space → own Views section (entity-uniformity, Linear 패턴)
+- **#88 (후보)**: Categories own view component 분리 (cross-entity 본질 회복, wiki 종속 부조화 해소) — Plan A++ 진행 시 LOCKED
+
+### 환경 변경
+
+- Main HEAD: PR #380 → PR #385 → docs sync PR (이 entry)
+- Store version: 143 (변동 없음, schema 변경 0)
+- 신규 file (PR #383): `app/(app)/library/categories/page.tsx`
+- SavedView.space type 확장: `"library"` 추가 (back-compat)
+- FilterField 확장: `"usage"` (Labels-entity 신규)
+- 영구 룰 추가: 0건 (brainstorming 결과는 결정 후보, 다음 세션에 LOCKED)
+
+### Watch Out (다음 세션)
+
+- 🔴 **P0 #1 (CategoriesView 분리) 진행 의지 재확인** 의무. 사용자 dismiss했지만 brainstorming 결과 명확. ~5-7 파일 회귀 risk 있음.
+- 🔴 **사용자 manual smoke 누적 13 PR**: fresh dev 재현 권장 (특히 Library sub-page 회귀 verify — Tags/Labels/Categories/References/Files/Stickers 모두 작동).
+- 🟡 **Categories own view 분리 시 wiki-view 안 categoryOverview UI 정리**: setCategoryOverview() 함수 / wikiViewMode "category" enum / wiki-view 안 분기 제거.
+- 🟡 **Library Views section 운명** (PR #385): Plan A++ 후 Library Views section은 sub-route 기반 dynamic으로 변경 권장 (Categories views만 표시) — Linear 패턴 정합.
+- 🟢 **Categories saved view contextKey 정밀화**: 현재 wiki-view 통해 wiki contextKey 공유. Plan A++ 후 own contextKey ("library-categories") 사용.
+- 🟢 **Books sidebar Views section 없음** (entity-uniformity gap, follow-up 후보).
+
+---
+
 ## 2026-05-19 (저녁/밤) — 집/Windows, **P0 1-4 + P1 3개 (7 PR squash 머지)**
 
 > 🎯 **다음 즉시 액션 (단일 후보, 사용자 결정 받음)**:
