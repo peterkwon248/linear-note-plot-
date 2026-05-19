@@ -1123,9 +1123,9 @@ export function InlineCategoryTags({
 
   const handleCategoryClick = useCallback((catId: string) => {
     setSelectedNoteId(null)
-    setActiveRoute("/wiki")
+    setActiveRoute("/library/categories")
     setActiveCategoryView(catId)
-    router.push("/wiki")
+    router.push("/library/categories")
   }, [router, setSelectedNoteId])
 
   const assignedSet = useMemo(() => new Set(categoryIds), [categoryIds])

@@ -16,7 +16,7 @@ export const TABLE_VIEW_ROUTES = ["/notes", "/stone", "/brick", "/keystone", "/p
 export const WORKFLOW_ROUTES = ["/stone", "/brick", "/keystone"]
 
 /** Routes handled by individual always-mounted view components */
-export const VIEW_ROUTES = ["/home", "/inbox", "/labels", "/library/labels", "/stickers", "/templates", "/ontology", "/insights", "/wiki", "/search", "/calendar", "/graph-insights", "/todos", "/library", "/library/references", "/library/tags", "/library/files", "/books"]
+export const VIEW_ROUTES = ["/home", "/inbox", "/labels", "/library/labels", "/library/categories", "/stickers", "/templates", "/ontology", "/insights", "/wiki", "/search", "/calendar", "/graph-insights", "/todos", "/library", "/library/references", "/library/tags", "/library/files", "/books"]
 
 /** All routes that use instant switching (always-mounted in layout) */
 export const ALL_SIDEBAR_ROUTES = [...TABLE_VIEW_ROUTES, ...VIEW_ROUTES]

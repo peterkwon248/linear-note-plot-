@@ -21,9 +21,11 @@
  *   - Activity 탭: entityEvents (renamed, parent_changed, articles_added)
  */
 
-import { useMemo } from "react"
+import { useCallback, useMemo } from "react"
+import { useRouter } from "next/navigation"
 import { usePlotStore } from "@/lib/store"
 import { setActiveCategoryView } from "@/lib/wiki-view-mode"
+import { setActiveRoute } from "@/lib/table-route"
 import { getCategoryColorName } from "@/lib/store/slices/wiki-categories"
 import { FolderSimple } from "@phosphor-icons/react/dist/ssr/FolderSimple"
 import { FolderOpen } from "@phosphor-icons/react/dist/ssr/FolderOpen"
@@ -82,9 +84,19 @@ export function CategoryDetailPanel({
 }: {
   category: WikiCategory
 }) {
+  const router = useRouter()
   const categories = usePlotStore((s) => s.wikiCategories)
   const articles = usePlotStore((s) => s.wikiArticles)
   const updateWikiCategory = usePlotStore((s) => s.updateWikiCategory)
+
+  const navigateToCategory = useCallback(
+    (catId: string) => {
+      setActiveCategoryView(catId)
+      setActiveRoute("/library/categories")
+      router.push("/library/categories")
+    },
+    [router],
+  )
 
   const depth = useMemo(() => getDepth(category.id, categories), [category.id, categories])
   const tierLabel =
@@ -232,7 +244,7 @@ export function CategoryDetailPanel({
             icon={<ArrowUp size={16} weight="regular" />}
           >
             <button
-              onClick={() => setActiveCategoryView(parentCat.id)}
+              onClick={() => navigateToCategory(parentCat.id)}
               className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left hover:bg-hover-bg transition-colors group"
             >
               <FolderSimple
@@ -269,7 +281,7 @@ export function CategoryDetailPanel({
             {subcategories.slice(0, 6).map((sub) => (
               <button
                 key={sub.id}
-                onClick={() => setActiveCategoryView(sub.id)}
+                onClick={() => navigateToCategory(sub.id)}
                 className="flex w-full items-center gap-2 rounded-md px-2 py-1 text-left hover:bg-hover-bg transition-colors group"
               >
                 <FolderSimple

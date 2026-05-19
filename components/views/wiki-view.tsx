@@ -7,7 +7,7 @@ import { applyWikiFilters, applyWikiSort, applyWikiGrouping } from "@/lib/view-e
 import type { WikiGroup } from "@/lib/view-engine/wiki-list-pipeline"
 import { FilterPanel } from "@/components/filter-panel"
 import { DisplayPanel } from "@/components/display-panel"
-import { WIKI_VIEW_CONFIG, WIKI_CATEGORY_VIEW_CONFIG } from "@/lib/view-engine/view-configs"
+import { WIKI_VIEW_CONFIG } from "@/lib/view-engine/view-configs"
 import { WIKI_STATUS_HEX, SPACE_COLORS } from "@/lib/colors"
 import { shortRelative } from "@/lib/format-utils"
 import { useRouter } from "next/navigation"
@@ -45,7 +45,7 @@ import { cn } from "@/lib/utils"
 import { usePlotStore } from "@/lib/store"
 import { setActiveRoute, getSecondarySpace, setSecondarySpace, getActiveSpace, useActiveViewId } from "@/lib/table-route"
 import { usePane } from "@/components/workspace/pane-context"
-import { useWikiViewMode, setWikiViewMode, setPendingMergeIds, useActiveCategoryId, setActiveCategoryView } from "@/lib/wiki-view-mode"
+import { useWikiViewMode, setWikiViewMode, setPendingMergeIds } from "@/lib/wiki-view-mode"
 import { ViewHeader } from "@/components/view-header"
 import { useBacklinksIndex } from "@/lib/search/use-backlinks-index"
 import { toast } from "sonner"
@@ -67,7 +67,6 @@ import { usePendingWikiArticle, consumePendingWikiArticle } from "@/lib/wiki-art
 import { WikiMergePreview } from "@/components/wiki-merge-preview"
 import { WikiMergePage } from "./wiki-merge-page"
 import { WikiSplitPage } from "./wiki-split-page"
-import { WikiCategoryPage } from "./wiki-category-page"
 import { isWikiStub } from "@/lib/wiki-utils"
 import { useSaveViewProps } from "@/lib/view-engine/use-save-view-props"
 import { useBookContextNav } from "@/hooks/use-book-context-nav"
@@ -93,29 +92,12 @@ export function WikiView() {
   const pane = usePane()
 
   const wikiViewMode = useWikiViewMode()
-  const activeCategoryId = useActiveCategoryId()
 
-  const createWikiCategory = usePlotStore((s) => s.createWikiCategory)
-
-  // Wiki-category display state from store (unified via viewStateByContext)
-  const catViewState = usePlotStore((s) => s.viewStateByContext["wiki-category"]) ?? buildViewStateForContext("wiki-category")
+  // Plan A++ Phase 1 — Categories own page (/library/categories) renders
+  // LibraryCategoriesView instead. wiki-view no longer hosts the category
+  // overview UI; sub-category navigation also redirects there.
   const setViewState = usePlotStore((s) => s.setViewState)
-  const updateCatViewState = useCallback(
-    (patch: Partial<ViewState>) => setViewState("wiki-category" as ViewContextKey, patch),
-    [setViewState]
-  )
 
-  // Derived convenience aliases for passing to children
-  const categoryViewMode = (catViewState.viewMode === "board" ? "board" : "list") as "list" | "board"
-  const categoryOrdering = catViewState.sortField as "title" | "articles" | "updatedAt" | "parent" | "tier" | "sub"
-  const categoryGrouping = catViewState.groupBy as "none" | "tier" | "parent" | "family"
-  const categorySortDirection = catViewState.sortDirection
-  const categoryShowDescription = catViewState.toggles?.showDescription !== false
-  const categoryShowEmpty = catViewState.showEmptyGroups
-  const categoryDisplayProps = catViewState.visibleColumns
-
-  // Category-specific filters (tier and status) from viewState.filters
-  const [categoryFilters, setCategoryFilters] = useState<FilterRule[]>([])
   const [searchQuery, setSearchQuery] = useState("")
   const [searchFocused, setSearchFocused] = useState(false)
   const searchInputRef = useRef<HTMLInputElement>(null)
@@ -790,12 +772,15 @@ export function WikiView() {
     ? wikiArticles.find((a) => a.id === selectedWikiArticleId)
     : null
 
-  // Bug fix (2026-04-14): 사이드바에서 Merge/Split/Categories 클릭 시 wikiViewMode 변경되어도
+  // Bug fix (2026-04-14): 사이드바에서 Merge/Split 클릭 시 wikiViewMode 변경되어도
   // selectedWikiArticleId가 남아있으면 article view가 계속 렌더됨. wikiViewMode가
-  // "merge"/"split"/"category"일 때는 해당 전용 페이지(WikiMergePage/WikiSplitPage/category view)가
+  // "merge"/"split"일 때는 해당 전용 페이지(WikiMergePage/WikiSplitPage)가
   // 렌더되도록 article view 조건에서 제외.
+  // Plan A++ Phase 1 (2026-05-19) — "category" 분기는 LibraryCategoriesView로
+  // 이전 (route = "/library/categories"). wiki-view는 더 이상 category UI를
+  // 호스팅하지 않음.
   const isDedicatedModePage =
-    wikiViewMode === "merge" || wikiViewMode === "split" || wikiViewMode === "category"
+    wikiViewMode === "merge" || wikiViewMode === "split"
 
   if (selectedWikiArticleId && selectedWikiArticle && !isDedicatedModePage) {
     return (
@@ -1040,55 +1025,29 @@ export function WikiView() {
         saveViewMode={wikiViewMode === "dashboard" ? "hidden" : wikiSaveViewMode}
         onSaveView={onSaveWikiView}
         showFilter={wikiViewMode !== "dashboard"}
-        hasActiveFilters={wikiViewMode === "category" ? categoryFilters.length > 0 : wikiFilters.length > 0}
-        filterContent={
-          wikiViewMode === "category" ? (
-            <FilterPanel
-              categories={WIKI_CATEGORY_VIEW_CONFIG.filterCategories}
-              activeFilters={categoryFilters}
-              onToggle={(rule) => {
-                setCategoryFilters(prev => {
-                  const exists = prev.some(f => f.field === rule.field && f.value === rule.value)
-                  return exists ? prev.filter(f => !(f.field === rule.field && f.value === rule.value)) : [...prev, rule]
-                })
-              }}
-            />
-          ) : (
-            <FilterPanel
-              categories={wikiFilterCategories}
-              activeFilters={wikiFilters}
-              onToggle={handleWikiFilterToggle}
-              quickFilters={WIKI_VIEW_CONFIG.quickFilters as any}
-              onQuickFilter={(rules) => updateWikiViewState({ filters: rules })}
-            />
-          )
-        }
+        hasActiveFilters={wikiFilters.length > 0}
+        filterContent={(
+          <FilterPanel
+            categories={wikiFilterCategories}
+            activeFilters={wikiFilters}
+            onToggle={handleWikiFilterToggle}
+            quickFilters={WIKI_VIEW_CONFIG.quickFilters as any}
+            onQuickFilter={(rules) => updateWikiViewState({ filters: rules })}
+          />
+        )}
         showDisplay={wikiViewMode !== "dashboard"}
-        displayContent={
-          wikiViewMode === "category" ? (
-            <DisplayPanel
-              config={WIKI_CATEGORY_VIEW_CONFIG.displayConfig}
-              viewState={catViewState}
-              onViewStateChange={updateCatViewState}
-              showViewMode
-              toggleStates={catViewState.toggles ?? {}}
-              onToggleChange={(key, value) =>
-                updateCatViewState({ toggles: { ...(catViewState.toggles ?? {}), [key]: value } })
-              }
-            />
-          ) : (
-            <DisplayPanel
-              config={WIKI_VIEW_CONFIG.displayConfig}
-              viewState={wikiViewState}
-              onViewStateChange={updateWikiViewState}
-              showViewMode
-              toggleStates={wikiViewState.toggles ?? {}}
-              onToggleChange={(key, value) =>
-                updateWikiViewState({ toggles: { ...(wikiViewState.toggles ?? {}), [key]: value } })
-              }
-            />
-          )
-        }
+        displayContent={(
+          <DisplayPanel
+            config={WIKI_VIEW_CONFIG.displayConfig}
+            viewState={wikiViewState}
+            onViewStateChange={updateWikiViewState}
+            showViewMode
+            toggleStates={wikiViewState.toggles ?? {}}
+            onToggleChange={(key, value) =>
+              updateWikiViewState({ toggles: { ...(wikiViewState.toggles ?? {}), [key]: value } })
+            }
+          />
+        )}
         showDetailPanel={wikiViewMode !== "dashboard"}
         detailPanelOpen={sidePanelOpen}
         onDetailPanelToggle={() => {
@@ -1102,21 +1061,20 @@ export function WikiView() {
             usePlotStore.setState({ sidePanelMode: 'detail' })
           }
         }}
-        actions={
-          wikiViewMode === "category" ? undefined : (
-            <div className="flex items-center gap-2">
-              <Popover open={importOpen} onOpenChange={(o) => {
-                if (o) {
-                  setImportOpen(true)
-                  setImportStep("select-note")
-                  setImportSelectedNoteId(null)
-                  setImportQuery("")
-                  setImportTargetQuery("")
-                  setTimeout(() => importInputRef.current?.focus(), 50)
-                } else {
-                  resetImport()
-                }
-              }}>
+        actions={(
+          <div className="flex items-center gap-2">
+            <Popover open={importOpen} onOpenChange={(o) => {
+              if (o) {
+                setImportOpen(true)
+                setImportStep("select-note")
+                setImportSelectedNoteId(null)
+                setImportQuery("")
+                setImportTargetQuery("")
+                setTimeout(() => importInputRef.current?.focus(), 50)
+              } else {
+                resetImport()
+              }
+            }}>
                 <PopoverTrigger asChild>
                   <button
                     className="flex items-center gap-1.5 rounded-md border border-border bg-secondary/60 px-2.5 py-1 text-note font-medium text-foreground transition-colors duration-150 hover:bg-hover-bg"
@@ -1241,29 +1199,11 @@ export function WikiView() {
                 </PopoverContent>
               </Popover>
             </div>
-          )
-        }
-        onCreateNew={wikiViewMode === "category" ? () => createWikiCategory("New Category") : handleCreateWiki}
+        )}
+        onCreateNew={handleCreateWiki}
       />
 
-      {wikiViewMode === "category" ? (
-        <WikiCategoryPage
-          categoryId={activeCategoryId}
-          onOpenArticle={setSelectedWikiArticleId}
-          onNavigateCategory={(catId) => setActiveCategoryView(catId)}
-          categoryViewMode={categoryViewMode}
-          categoryOrdering={categoryOrdering}
-          categoryTierFilter={categoryFilters.find(f => f.field === "wikiTier")?.value ?? null}
-          categoryStatusFilter={categoryFilters.find(f => f.field === "status")?.value ?? null}
-          categoryShowDescription={categoryShowDescription}
-          categoryShowEmpty={categoryShowEmpty}
-          categoryGrouping={categoryGrouping}
-          categoryDisplayProps={categoryDisplayProps}
-          categorySortDirection={categorySortDirection}
-          onOrderingChange={(ordering) => updateCatViewState({ sortField: ordering as any })}
-          onSortDirectionChange={(dir) => updateCatViewState({ sortDirection: dir })}
-        />
-      ) : wikiViewMode === "merge" ? (
+      {wikiViewMode === "merge" ? (
         <WikiMergePage />
       ) : wikiViewMode === "split" ? (
         <WikiSplitPage />

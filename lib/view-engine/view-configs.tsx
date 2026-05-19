@@ -898,6 +898,7 @@ export const VIEW_CONFIGS: Record<string, ViewConfig> = {
   notes: NOTES_VIEW_CONFIG,
   wiki: WIKI_VIEW_CONFIG,
   "wiki-category": WIKI_CATEGORY_VIEW_CONFIG,
+  "library-categories": { ...WIKI_CATEGORY_VIEW_CONFIG },
   graph: GRAPH_VIEW_CONFIG,
   inbox: INBOX_VIEW_CONFIG,
   insights: INSIGHTS_VIEW_CONFIG,

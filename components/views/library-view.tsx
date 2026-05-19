@@ -825,9 +825,8 @@ function LibraryOverview() {
                   color={KNOWLEDGE_INDEX_COLORS.categories.text}
                   icon={<Folders size={24} weight="regular" />}
                   onClick={() => {
-                    // 길 A — Categories는 wiki page + categoryView mode
                     setCategoryOverview()
-                    setActiveRoute("/wiki")
+                    setActiveRoute("/library/categories")
                   }}
                 />
                 <LibMiniStat
