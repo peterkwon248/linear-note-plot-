@@ -6,6 +6,115 @@
 
 ---
 
+## 2026-05-19 (밤 후속 #2) — 집/Windows, **P0 #1 Plan A++ 완료 (PR #387, 단일 PR)**
+
+> 🎯 **다음 즉시 액션 (다른 컴퓨터 로그인 후 시작점)**:
+>
+> ✅ **P0 #1 (CategoriesView own view + Library Views 제거 + migrate) 완료** (PR #387 squash merged `fb4c2da`)
+>
+> 🟣 **다음 P0 후보** (사용자 결정 대기):
+> - **A. dead block cleanup follow-up** (~3 파일, LOW risk) — side-panel-context.tsx:131-156 dead block + `WikiViewMode` union `"category"` 제거 + setter 함수 정리. PR #387 옵션 A 잔존 정리.
+> - **B. Calendar 사이드바 변화** (사용자 의도 미확정) — Day Summary / 월간 통계 / 현재 노트 detail
+> - **C. Ontology graph node 사이드바** (graph node → 4탭 사이드바 추천)
+> - **D. Activity events 후속** (Granular Wiki/Book + Label entity events)
+> - **E. Books own Views section** (영구 룰 #87 정합 — 1차 entity gap)
+>
+> **다음 머신에서 처음 시작 시**:
+> 1. `git pull origin main` (latest = PR #387 머지 후 + 이 docs sync PR)
+> 2. `npm install && npm run dev` (port 3002, hard refresh)
+> 3. **이 entry + `docs/TODO.md` P0 read 의무** (사용자 mental model 회복용)
+> 4. 사용자 manual smoke 누적 14 PR (#373-#387) — 특히 PR #387 6 cross-entity 호출처 (wiki article 안 category badge / navbox / side panel / category detail panel → /library/categories)
+> 5. 사용자 새 시그널 응답
+>
+> **이번 세션 사용자 의도 (chronological, 그대로 인용)**:
+> 1. "P0. 논의부터 계속 이어가보자. 문제는 라이브러리의 뷰야." → Library = hub 본질 paint
+> 2. "ㅇㅋㅇㅋ" → 방향 A (Library Views section 제거) LOCKED
+> 3. "ㅇㅇ 시작해" → executor-high delegate (Phase 1+2 통합)
+> 4. "옵션 A를 하면 뭐가 바뀌는데??" → architect HIGH risk + 옵션 A/B paint
+> 5. "ㅇㅇ 옵션 A로 가." → Fix executor-high delegate (wiki-view-mode 부작용 제거 + 6 호출처)
+> 6. "오케이 좋아." → squash merge + after-work
+>
+> **머신**: 집 (Windows, 직전 세션 동일)
+> **현재 main HEAD**: `fb4c2da` (PR #387 squash merged) + 이 docs sync PR
+> **Store version**: 143 → **144** (v143→v144 migration)
+
+### 완료 (이번 세션 1 PR squash 머지, P0 #1 Plan A++ 완성)
+
+#### PR #387 — Categories own view + Library Views section 제거 (Plan A++) (squash merged fb4c2da, +315/-162, 20 파일, 1 new)
+
+**본질 결론**: Library = cross-entity hub (space 아님). PR #383 wiki-view 의존 + PR #385 통합 Library Views section은 카테고리 오류 → Plan A++ paired PR로 본질 회복.
+
+**Phase 1 — Categories own view component (8 파일)**:
+- 신규 `components/views/library-categories-view.tsx` (147 lines, own contextKey `"library-categories"`)
+- `components/views/wiki-view.tsx` — `wikiViewMode === "category"` 분기 4곳 + state + import 완전 제거 (~160 lines)
+- `app/(app)/layout.tsx` — WikiView ↔ LibraryCategoriesView mount 분리
+- `components/views/library-view.tsx` — Categories card navigate `/wiki` → `/library/categories` + stale 코멘트 제거
+- `app/(app)/library/categories/page.tsx` — stale JSDoc 제거
+- `lib/table-route.ts` + `lib/view-engine/types.ts` + `lib/view-engine/defaults.ts` + `lib/view-engine/view-configs.tsx` — `"library-categories"` 등록 (4 파일)
+
+**Phase 2 — Library Views section 제거 + migrate (4 파일)**:
+- `components/linear-sidebar.tsx` — Library section `renderViewsSection` 제거 + Categories sub-page conditional own Views + `getSavedViewSpaceForActivity(activeSpace, activeRoute)` route 인자 추가
+- `lib/types.ts` — `SavedView.space` union: `"library"` 제거 + `"library-categories"` 추가
+- `lib/store/migrate.ts` — v143→v144 migration (실제 mutation, `space === "library"` → `"library-categories"` re-tag, idempotent + 데이터 보존)
+- `lib/store/index.ts` — persist version 144
+- `lib/view-engine/saved-view-context.ts` — 시그니처 확장 + `"library-categories"` 매핑
+
+**HIGH risk fix (옵션 A, 6 파일)** — Architect 1차 verification에서 발견:
+- `lib/wiki-view-mode.ts` — `setActiveCategoryView()` / `setCategoryOverview()`에서 `setWikiViewMode("category")` 부작용 제거. `_activeCategoryId` 갱신만 함.
+- 6 cross-entity 호출처 router.push("/library/categories") 페어링:
+  - `components/wiki-editor/wiki-article-view.tsx:1124-1129` (handleCategoryClick)
+  - `components/wiki-editor/navbox-block.tsx:293-299` (handleCategoryHeaderClick)
+  - `components/side-panel/side-panel-context.tsx` (CategorySidePanel onSelect, useRouter import 추가)
+  - `components/side-panel/side-panel-connections.tsx` (navigateToCategory useCallback, 2 onClick)
+  - `components/side-panel/category-detail-panel.tsx` (navigateToCategory useCallback, 2 onClick)
+
+### 영구 LOCKED 결정 추가 (#86-#88, 이 PR로 LOCKED)
+
+이번 PR이 Plot 본질 결정 3건 LOCKED. brainstorming 4단 (직전 세션) + 코드 구현 완료 + Architect APPROVED:
+
+- **#86. Save view 의미 = entity 본질 따라 differentiate** — Notes/Wiki/Books 큼, Categories 의미, Tags/Labels/Files/References/Stickers 약함 (이미 코드 호출 없음). `getSavedViewSpaceForActivity` 시그니처 (space + route)가 entity differentiation 본질 정합.
+- **#87. Library = hub. own Views section 없음. 1차 시민이지만 view는 sub-entity가** — Library Activity Bar 6번째 = 진입 1차. 단 own view는 sub-entity가 보유 (Categories만 currently). Linear 패턴 정합 (each space own views는 single-entity space에만 적용). multi-entity hub은 sub-entity가 view 보유.
+- **#88. Categories own view component (cross-entity 본질 회복, wiki 종속 부조화 해소)** — WikiCategory 풀 공유 (Note/Wiki/Book)이므로 categories click → /library/categories. wiki article 안 6 cross-entity 호출처 모두 paired route navigate 의무.
+
+### 기술 학습 (영구, 2026-05-19 밤 후속 #2)
+
+- **wiki-view-mode external store 부작용 분리 패턴**: setter 함수가 wikiViewMode 전환 + 다른 state 함께 갱신할 때, wikiViewMode가 더 이상 처리 안 되면 setter에서 wikiViewMode 호출만 제거 + 다른 state는 유지. enum value 잔존은 LOW risk (별도 cleanup PR로 분리 OK).
+- **Cross-entity click handler paired route navigate 패턴**: cross-entity 자원 (categories 풀 공유)을 click 시 own page navigate 의무. handler 시그니처 `setX(id) + setActiveRoute(path) + router.push(path)` 3-tuple. side panel에서는 useCallback wrapping (router deps).
+- **Architect verification 2회 패턴 효율**: 1차 opus APPROVED_WITH_NOTES → fix → 2차 sonnet medium re-verify (짧게) → APPROVED. opus 1회 + sonnet 1회 비용으로 정확도 + 효율 balance.
+- **getSavedViewSpaceForActivity 시그니처 확장 (space + route)**: PR #385 (space 단독) → PR #387 (space + route) — Library sub-route 분리 위해. activeSpace 단독으로는 sub-entity 분리 불충분 (Linear/Notion도 sub-route별 view).
+- **VIEW_CONFIGS defensive shallow clone 패턴**: `{ ...WIKI_CATEGORY_VIEW_CONFIG }` — 같은 config 객체를 두 key에 매핑 시 future cross-contamination 회피. filterCategories[i].values 같은 dynamic field가 한 쪽 mutate 시 다른 쪽 영향.
+
+### 영구 룰 추가 (#84-#85 — 이번 PR 부산물)
+
+executor-high 자체 식별 (1차 verification 통과 후):
+
+- **#84. wiki-view-mode external store는 LibraryCategoriesView가 직접 구독** — `useActiveCategoryId()` / `setActiveCategoryView()` external store 그대로 유지. own component가 own state subscribe.
+- **#85. layout.tsx mount 조건 분리 패턴** — `activeRoute === "/library/categories"` 같은 정확 매핑 필요. `startsWith("/library")` too broad — main-content panel 양분 (PR #382 회귀 사례). 정확 매핑 의무.
+
+### Watch Out (다음 세션)
+
+- 🟣 **dead block cleanup follow-up** (~3 파일, LOW risk) — side-panel-context.tsx:131-156 `isCategoryMode` dead block (옵션 A 후 영원히 false) + `WikiViewMode` union `"category"` 리터럴 잔존 (dead enum) + setter 함수 deprecate 또는 이름 변경. 현재 기능 영향 0, 미래 타입 오염 방지.
+- 🔴 **사용자 manual smoke 누적 14 PR (#373-#387)** — fresh dev 재현 권장. 특히 PR #387 본질 변경 검증:
+  - Wiki article 본문 안 category badge click → `/library/categories` + 해당 category selected
+  - Navbox category header click → `/library/categories`
+  - Side panel Connections / Category detail panel parent/sub click → `/library/categories`
+  - Library home Categories card click → `/library/categories`
+  - `/wiki` 정상 동작 (회귀 없음, wikiViewMode "category" 트리거 안 됨)
+  - Tags/Labels/Files/References/Stickers click → Views section 노출 안 됨
+  - 기존 saved view (PR #385 "library" space) → v144 migrate 후 Categories sub-page 노출
+- 🟡 **Categories Save view 시그널 검증**: Categories sub-page에서 Save view → Categories Views section에 즉시 노출 (own contextKey + own space)
+- 🟢 **v143 → v144 migration log 확인**: `[migrate] v143→v144: SavedView.space "library" → "library-categories"` console log. 사용자 데이터에 "library" space 있을 때만 발생.
+
+### 환경 변경
+
+- Main HEAD: `529cfcb` (PR #386) → `fb4c2da` (PR #387) → docs sync PR (이 entry)
+- Store version: 143 → **144** (실제 mutation migration)
+- 신규 file: `components/views/library-categories-view.tsx` (147 lines)
+- 변경 type: `SavedView.space` union ("library" 제거 + "library-categories" 추가), `ViewContextKey` ("library-categories" 추가)
+- 영구 룰 추가: #84-#88 (이 PR로 5개 LOCKED) — wiki-view-mode external store 패턴 / layout mount 정확 매핑 / Save view differentiate / Library hub 본질 / Categories cross-entity own view
+
+---
+
 ## 2026-05-19 (밤 후속) — 집/Windows, **13 PR squash 머지 + Library Views 본질 brainstorming**
 
 > 🎯 **다음 즉시 액션 (다른 컴퓨터 로그인 후 시작점)**:
