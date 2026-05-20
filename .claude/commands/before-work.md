@@ -24,9 +24,10 @@
 - 충돌 해결 후: stage + `merge: sync with origin/main` 커밋
 - **Uncommitted 체크**: `git status` 실행. 직전 머신에서 commit 안 한 변경이 있으면 사용자에게 큰소리로 알림
 
-### 1.5. Dependencies sync
-- `node_modules` 누락 시 (새 worktree 또는 cross-machine) `npm install` — package.json에 새 패키지 추가됐을 수 있음
-- 에러 나면 무시하고 진행. 빌드 시점에서 다시 잡힘.
+### 1.5. 환경 셋업 (dependencies + dev server)
+- **`npm install`** — **매번 실행**. cross-machine / 새 worktree에선 `node_modules`가 비었거나, package.json에 새 패키지가 추가됐는데 미설치일 수 있음 (node_modules 폴더가 존재해도 특정 패키지만 누락 가능 — "폴더 존재" 체크로는 못 잡음). 이미 최신이면 npm install은 빠르게 no-op. 에러 나면 무시하고 진행 — 빌드 시점에 다시 잡힘.
+- **`npm run dev`** — dev 서버를 **background**로 실행 (preview MCP `preview_start "dev"` 우선, 없으면 background Bash. port 3002). 아래 컨텍스트 복원 단계가 도는 동안 미리 컴파일되도록 먼저 띄운다.
+- 둘 다 한 뒤 단계 2로 진행. 최종 Report에 dev 서버 URL(`localhost:3002`) 포함.
 
 ### 2. 머신 변경 감지 (가장 빠르게 알림)
 - `docs/SESSION-LOG.md` 최신 entry의 머신 표기 확인
