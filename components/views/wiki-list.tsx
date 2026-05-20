@@ -33,6 +33,8 @@ import { X as PhX } from "@phosphor-icons/react/dist/ssr/X"
 import { FolderOpen } from "@phosphor-icons/react/dist/ssr/FolderOpen"
 import { CaretRight } from "@phosphor-icons/react/dist/ssr/CaretRight"
 import { Link as PhLink } from "@phosphor-icons/react/dist/ssr/Link"
+import { Target } from "@phosphor-icons/react/dist/ssr/Target"
+import { Calendar as CalendarUI } from "@/components/ui/calendar"
 import { FolderPickerInlineSubmenu } from "@/components/folder-picker"
 
 /* ── ShowConnectedSubmenu ──────────────────────────────────
@@ -79,6 +81,69 @@ function ShowConnectedSubmenu({
  * "FolderPickerSubmenu" in this file lands on the explanation rather
  * than nothing. The shared component is kind-aware — wiki-list passes
  * `kind="wiki"` so the picker only shows / creates wiki-kind folders. */
+
+/* ── PlanForSubmenu (timeline-planning, 2026-05-20) ────────────
+ * Inline expand-to-calendar pattern (matches FolderPickerInlineSubmenu's
+ * shape so it works inside both Popover and Radix ContextMenu containers
+ * without losing its own open state when the container portal renders). */
+function PlanForSubmenu({
+  currentDate,
+  onSelect,
+  onClear,
+}: {
+  currentDate: string | null | undefined
+  onSelect: (iso: string) => void
+  onClear: () => void
+}) {
+  const [open, setOpen] = useState(false)
+  const selected = currentDate ? new Date(currentDate) : undefined
+  return (
+    <div className="flex flex-col">
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        className="flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-2xs text-foreground/80 hover:bg-active-bg transition-colors"
+      >
+        <Target size={14} weight="regular" />
+        <span className="flex-1 text-left">
+          {currentDate ? `Planned: ${format(currentDate)}` : "Plan for…"}
+        </span>
+        <CaretRight size={10} weight="bold" className={cn("transition-transform", open && "rotate-90")} />
+      </button>
+      {open && (
+        <div className="mt-1 mb-1 px-1">
+          <CalendarUI
+            mode="single"
+            selected={selected}
+            onSelect={(d) => {
+              if (!d) return
+              onSelect(d.toISOString())
+              setOpen(false)
+            }}
+            className="p-0"
+          />
+          {currentDate && (
+            <button
+              type="button"
+              onClick={() => { onClear(); setOpen(false) }}
+              className="mt-1 flex w-full items-center justify-center gap-1 rounded-md px-2 py-1 text-2xs text-muted-foreground transition-colors hover:bg-active-bg hover:text-foreground"
+            >
+              <PhX size={10} weight="bold" />
+              Clear plan
+            </button>
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
+
+/** Compact date formatter for the "Planned: …" submenu trigger. */
+function format(iso: string): string {
+  const d = new Date(iso)
+  if (Number.isNaN(d.getTime())) return iso
+  return d.toLocaleDateString("en-US", { month: "short", day: "numeric" })
+}
 
 /* ── WikiArticleMenuItems ─────────────────────────────────────
  * Menu body shared between the row's DotsThree click Popover, the row's
@@ -132,6 +197,21 @@ export function WikiArticleMenuItems({
         />
       )}
       {onShowConnected && <div className="my-1 h-px bg-border/40" />}
+      {/* Plan for… — timeline-planning (2026-05-20). Inline-expand Calendar
+          submenu (FolderPickerInlineSubmenu pattern). Setter does NOT touch
+          updatedAt — planning = intent, not content activity. */}
+      <PlanForSubmenu
+        currentDate={note.plannedDate ?? null}
+        onSelect={(iso) => {
+          close()
+          usePlotStore.getState().setWikiArticlePlannedDate(note.id, iso)
+        }}
+        onClear={() => {
+          close()
+          usePlotStore.getState().setWikiArticlePlannedDate(note.id, null)
+        }}
+      />
+      <div className="my-1 h-px bg-border/40" />
       <FolderPickerInlineSubmenu
         kind="wiki"
         currentFolderIds={note.folderIds}
@@ -549,7 +629,7 @@ function ArticleTableRow({
                 <DotsThree size={14} weight="bold" />
               </button>
             </PopoverTrigger>
-            <PopoverContent align="end" className="w-44 p-1" onOpenAutoFocus={(e) => e.preventDefault()}>
+            <PopoverContent align="end" className="w-64 p-1" onOpenAutoFocus={(e) => e.preventDefault()}>
               <WikiArticleMenuItems
                 note={note}
                 close={() => setMenuOpen(false)}
@@ -584,7 +664,7 @@ function ArticleTableRow({
   return (
     <ContextMenu>
       <ContextMenuTrigger asChild>{rowContent}</ContextMenuTrigger>
-      <ContextMenuContent className="w-44 p-1">
+      <ContextMenuContent className="w-64 p-1">
         <WikiArticleMenuItems
           note={note}
           close={() => {/* Radix auto-closes after item click */}}

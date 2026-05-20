@@ -238,6 +238,25 @@ export function createWikiArticlesSlice(set: Set, get: Get, appendEvent: AppendE
       }))
     },
 
+    /** timeline-planning (2026-05-20) — set/clear plannedDate (article horizon
+     *  in the timeline view). `date = null` clears the plan (delete-style).
+     *  Does NOT update `updatedAt` — planning is intent, not content activity
+     *  (design §3.4). No entityEvent emitted (Phase 1 keeps the log clean;
+     *  future "planned_date_set" event hook is the natural extension). */
+    setWikiArticlePlannedDate: (articleId: string, date: string | null) => {
+      set((state: any) => ({
+        wikiArticles: state.wikiArticles.map((a: WikiArticle) => {
+          if (a.id !== articleId) return a
+          if (date === null) {
+            // Clear — omit the field rather than leaving an explicit null.
+            const { plannedDate: _drop, ...rest } = a as WikiArticle & { plannedDate?: string | null }
+            return rest as WikiArticle
+          }
+          return { ...a, plannedDate: date }
+        }),
+      }))
+    },
+
     /* ── Block Operations ── */
 
     addWikiBlock: (articleId: string, block: Omit<WikiBlock, "id">, afterBlockId?: string) => {

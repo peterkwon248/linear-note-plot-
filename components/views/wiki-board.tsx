@@ -383,7 +383,7 @@ function CardInner({
       {hasContextActions ? (
         <ContextMenu>
           <ContextMenuTrigger asChild>{visual}</ContextMenuTrigger>
-          <ContextMenuContent className="w-48 p-1">
+          <ContextMenuContent className="w-64 p-1">
             <WikiArticleMenuItems
               note={article}
               close={() => {}}

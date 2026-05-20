@@ -1271,7 +1271,7 @@ export function WikiView() {
                 return (
                   <ContextMenu>
                     <ContextMenuTrigger asChild>{card}</ContextMenuTrigger>
-                    <ContextMenuContent className="w-44 p-1">
+                    <ContextMenuContent className="w-64 p-1">
                       <WikiArticleMenuItems
                         note={article}
                         close={() => {/* Radix auto-closes after item click */}}
