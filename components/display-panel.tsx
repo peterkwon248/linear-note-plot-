@@ -9,6 +9,7 @@ import { GridFour } from "@phosphor-icons/react/dist/ssr/GridFour"
 import { Images } from "@phosphor-icons/react/dist/ssr/Images"
 import { Graph } from "@phosphor-icons/react/dist/ssr/Graph"
 import { ChartLine } from "@phosphor-icons/react/dist/ssr/ChartLine"
+import { Ruler } from "@phosphor-icons/react/dist/ssr/Ruler"
 import { SortAscending } from "@phosphor-icons/react/dist/ssr/SortAscending"
 import { SortDescending } from "@phosphor-icons/react/dist/ssr/SortDescending"
 import { Plus as PhPlus } from "@phosphor-icons/react/dist/ssr/Plus"
@@ -64,7 +65,8 @@ const MODE_DEFS: { mode: ViewMode; icon: ReactNode; label: string }[] = [
   { mode: "gallery",  icon: <Images size={14} weight="regular" />,   label: "Gallery" },
   { mode: "grid",     icon: <GridFour size={14} weight="regular" />, label: "Grid" },
   { mode: "graph",    icon: <Graph size={14} weight="regular" />,    label: "Graph" },
-  { mode: "insights", icon: <ChartLine size={14} weight="regular" />, label: "Insights" },
+  { mode: "insights",  icon: <ChartLine size={14} weight="regular" />, label: "Insights" },
+  { mode: "timeline",  icon: <Ruler size={14} weight="regular" />,     label: "Timeline" },
 ]
 
 function resolveViewMode(viewMode: ViewMode): ViewMode {

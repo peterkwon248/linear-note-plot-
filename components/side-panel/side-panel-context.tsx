@@ -39,10 +39,6 @@ import { StatusDropdown, LabelDropdown } from "@/components/note-fields"
 import { isReadyToPromote, needsReview, isStaleSuggest, getSnoozeTime, getInboxNotes } from "@/lib/queries/notes"
 import { useBacklinksIndex } from "@/lib/search/use-backlinks-index"
 import { toast } from "sonner"
-import { useRouter } from "next/navigation"
-import { useActiveRoute, setActiveRoute } from "@/lib/table-route"
-import { useWikiViewMode, useActiveCategoryId, setActiveCategoryView } from "@/lib/wiki-view-mode"
-import { CategorySidePanel } from "@/components/views/wiki-category-page"
 import { FolderPicker } from "@/components/folder-picker"
 import { CategoryPicker } from "@/components/category-picker"
 import { getEntityColor } from "@/lib/colors" // v109: opt-in color fallback
@@ -122,42 +118,7 @@ export function SidePanelContext({ noteId: propNoteId }: { noteId?: string | nul
     setSelectedNoteId(next?.id ?? null)
   }, [note, notes, backlinks, setSelectedNoteId])
 
-  // Category mode — show category panel instead of note details
-  const router = useRouter()
-  const activeRoute = useActiveRoute()
-  const wikiViewMode = useWikiViewMode()
-  const activeCategoryId = useActiveCategoryId()
   const wikiCategories = usePlotStore((s) => s.wikiCategories)
-  const wikiArticles = usePlotStore((s) => s.wikiArticles)
-
-  const isCategoryMode = activeRoute === "/wiki" && wikiViewMode === "category"
-
-  if (isCategoryMode) {
-    if (!activeCategoryId) {
-      return (
-        <div className="flex flex-1 items-center justify-center p-8 text-center">
-          <div className="space-y-2">
-            <p className="text-note text-muted-foreground">Select a category to see details</p>
-          </div>
-        </div>
-      )
-    }
-    return (
-      <CategorySidePanel
-        categories={wikiCategories}
-        articles={wikiArticles}
-        selectedId={activeCategoryId}
-        selectedIds={new Set()}
-        onSelect={(id) => {
-          setActiveCategoryView(id)
-          setActiveRoute("/library/categories")
-          router.push("/library/categories")
-        }}
-        onDeleteSelected={() => {}}
-        onSelectAll={() => {}}
-      />
-    )
-  }
 
   if (!note) return (
     <div className="flex flex-1 flex-col items-center justify-center gap-3 text-muted-foreground px-4">

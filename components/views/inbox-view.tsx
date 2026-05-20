@@ -1,12 +1,13 @@
 "use client"
 
 import { useState, useCallback } from "react"
+import { useRouter } from "next/navigation"
 import { usePlotStore } from "@/lib/store"
 import { setActiveRoute } from "@/lib/table-route"
 import { useInbox, type InboxItem } from "@/lib/hooks/use-inbox"
 import type { InboxItemKind } from "@/lib/store/slices/inbox"
 import { ViewHeader } from "@/components/view-header"
-import { IconInbox } from "@/components/plot-icons"
+import { IconInbox, IconChevronRight } from "@/components/plot-icons"
 import { FilterPanel } from "@/components/filter-panel"
 import { INBOX_VIEW_CONFIG } from "@/lib/view-engine/view-configs"
 import type { FilterRule } from "@/lib/view-engine/types"
@@ -287,6 +288,7 @@ function EmptyFilter({ tab }: { tab: FilterTab }) {
 /* ── Main InboxView ───────────────────────────────────── */
 
 export function InboxView() {
+  const router = useRouter()
   const [activeTab, setActiveTab] = useState<FilterTab>("all")
   // Path-A-Step-5: local filter state (no IDB persistence — resets on reload, Linear pattern for inbox).
   const [filterRules, setFilterRules] = useState<FilterRule[]>([])
@@ -295,6 +297,31 @@ export function InboxView() {
   const dismissInbox = usePlotStore((s) => s.dismissInbox)
   const snoozeInbox = usePlotStore((s) => s.snoozeInbox)
   const openNote = usePlotStore((s) => s.openNote)
+
+  const navigateToHome = () => {
+    setActiveRoute("/home")
+    router.push("/home")
+  }
+
+  const inboxBreadcrumb = (
+    <nav className="flex items-center gap-1 min-w-0">
+      <button
+        onClick={navigateToHome}
+        className="shrink-0 text-note font-medium text-muted-foreground transition-colors hover:text-foreground cursor-pointer"
+      >
+        Home
+      </button>
+      <IconChevronRight size={16} className="shrink-0 text-muted-foreground/70" />
+      <span className="text-note font-medium text-foreground">
+        Inbox
+        {allItems.length > 0 && (
+          <span className="ml-0.5 text-note font-normal text-muted-foreground tabular-nums">
+            {allItems.length}
+          </span>
+        )}
+      </span>
+    </nav>
+  )
 
   // Filter toggle handler — mirrors Files/References handleFilesFilterToggle pattern.
   const handleInboxFilterToggle = useCallback((rule: FilterRule) => {
@@ -346,6 +373,7 @@ export function InboxView() {
         icon={<IconInbox size={20} strokeWidth={1.5} />}
         title="Inbox"
         count={allItems.length}
+        titleNode={inboxBreadcrumb}
         showFilter={INBOX_VIEW_CONFIG.showFilter}
         hasActiveFilters={filterRules.length > 0}
         filterContent={
