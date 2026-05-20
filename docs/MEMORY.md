@@ -8,6 +8,33 @@
 
 ---
 
+## 🚀 2026-05-20 — **4영역 작업 + timeline-planning bars-first 전환** ⭐⭐⭐⭐
+
+**범위**: dead-block cleanup + Home Overview NavLink + breadcrumb 통일 + timeline-planning(PDCA Plan/Design + 구현 진행 중). 단일 PR.
+
+### 완료
+- **dead block cleanup** (3 파일) — PR #387 옵션 A 잔존: `wiki-view-mode.ts` `WikiViewMode` union `"category"` 제거 / `side-panel-context.tsx` `isCategoryMode` dead block 제거 / `library-categories-view.tsx` stale 주석.
+- **Home "Overview" NavLink** — `linear-sidebar.tsx` Home 사이드바에 Overview 진입점 추가 (Home Overview = `HomeView` 대시보드, 이미 존재했고 사이드바 NavLink만 부재였음).
+- **Breadcrumb 통일** — `library/book-breadcrumb.tsx` crumb 아이콘 제거(텍스트-only, Notes 기준) + `inbox-view.tsx` "Home › Inbox" breadcrumb 신설.
+- **timeline-planning PDCA Plan+Design** — `docs/01-plan/features/timeline-planning.plan.md` + `docs/02-design/features/timeline-planning.design.md` 신규.
+- **timeline-planning 구현 진행 중** — `wiki-timeline-view.tsx` 신규 + `WikiArticle.plannedDate?` 필드 + `ViewMode "timeline"` 등록(types/view-configs/display-panel) + `wiki-view.tsx` 분기. **dots 기반 (bars-first 재설계 직전)**.
+
+### 핵심 결정 (영구)
+- **timeline-planning**: Todo = **1a(지식 엔티티 계획 도구)** 채택, 1b(TickTick 범용 투두) 폐기 — Plot 코어 이탈. planning layer = 경량 `WikiArticle.plannedDate` 필드 (신규 엔티티 X). Timeline = **view-engine display mode** (List/Board/Gallery 형제), Calendar 전용 X.
+- **★ bars-first 전환**: dots-only 타임라인은 약함 (Reticle 레퍼런스 비교 — 막대라야 타임라인). 막대 = `createdAt → horizon(plannedDate ?? updatedAt)`. 막대 범위 = planning이므로 Stage 1(dots)/Stage 2(planning) 구분 폐기·통합.
+- **Home/Inbox 구조 정정**: Inbox = attention 큐(reminder/SRS/snooze/wiki제안). Home Overview = `HomeView` 대시보드 (기존). status와 Inbox는 별개 layer.
+
+### 기술 학습 (영구)
+- **신규 뷰 컴포넌트는 Plot 토큰/패턴 명시 지시 의무** — agent standalone 제작 시 Plot 타이포 토큰(`text-note`/`text-2xs`)과 단절. 기존 뷰 reference 명시 + 시각 검증.
+- **SVG/CSS `height="100%"`는 부모 명시 height 필요** — `min-height`로는 % 해소 X. 스크롤 영역 채우기 = ResizeObserver 측정 → 명시 px.
+- **타임라인은 planning(막대) 없이 약함** — dots = 산점도, 범위 막대라야 타임라인.
+
+### 환경
+- Store version: **144** (변경 없음 — `plannedDate`는 additive optional, migration 불필요)
+- 다음: timeline-planning **bars-first 재설계** (design §5/§3/§11 재작성 → `wiki-timeline-view.tsx` 재구현). SESSION-LOG 최신 entry hook 참조.
+
+---
+
 ## 🚀 2026-05-19 (밤 후속 #2) — **P0 #1 Plan A++ 완료 (PR #387)** ⭐⭐⭐⭐⭐
 
 **범위**: 1 worktree (`nervous-pare-362441`). 단일 PR #387 (20 파일 +315/-162, 신규 1) + 이번 docs sync. Plan A++ — Categories own view component 분리 + Library Views section 제거 + SavedView.space migrate v143→v144 + HIGH risk fix.

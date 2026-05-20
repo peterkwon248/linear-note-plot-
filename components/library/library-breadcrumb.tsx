@@ -18,7 +18,6 @@ import { useRouter } from "next/navigation"
 import { setActiveRoute } from "@/lib/table-route"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { IconChevronRight } from "@/components/plot-icons"
-import { Books } from "@phosphor-icons/react/dist/ssr/Books"
 import { Tag as PhTag } from "@phosphor-icons/react/dist/ssr/Tag"
 import { Folder } from "@phosphor-icons/react/dist/ssr/Folder"
 import { Quotes } from "@phosphor-icons/react/dist/ssr/Quotes"
@@ -61,16 +60,14 @@ export function LibraryBreadcrumb({
   }
 
   const currentMeta = ENTITY_META[current]
-  const CurrentIcon = currentMeta.icon
 
   return (
     <nav className="flex items-center gap-1 min-w-0">
       {/* Library root crumb */}
       <button
         onClick={navigateToLibrary}
-        className="shrink-0 flex items-center gap-1.5 text-note font-medium text-muted-foreground transition-colors hover:text-foreground cursor-pointer"
+        className="shrink-0 text-note font-medium text-muted-foreground transition-colors hover:text-foreground cursor-pointer"
       >
-        <Books size={16} weight="regular" />
         Library
       </button>
 
@@ -107,7 +104,6 @@ export function LibraryBreadcrumb({
 
       {/* Current entity crumb */}
       <span className="flex items-center gap-1.5 min-w-0 text-note font-medium text-foreground">
-        <CurrentIcon size={14} weight="regular" className="shrink-0 text-muted-foreground" />
         <span className="truncate">{currentMeta.label}</span>
         {count !== undefined && (
           <span className="ml-0.5 text-note font-normal text-muted-foreground tabular-nums">

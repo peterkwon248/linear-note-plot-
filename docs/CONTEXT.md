@@ -51,6 +51,23 @@
 
 ---
 
+## 🚀 2026-05-20 — 4영역 작업 + timeline-planning bars-first 전환 ⭐⭐⭐⭐
+
+dead-block cleanup / Home Overview NavLink / breadcrumb 통일 / timeline-planning(PDCA Plan+Design+구현 진행 중). 단일 PR.
+
+**완료**: PR #387 옵션 A dead code 정리(3 파일) · Home 사이드바 Overview NavLink · breadcrumb 텍스트-only 통일 + Inbox "Home › Inbox" breadcrumb · timeline-planning Plan/Design 문서 + `wiki-timeline-view.tsx`(dots 기반, 미완).
+
+**핵심 결정**:
+- **timeline-planning** — Todo 1a(지식 엔티티 계획 도구) 채택 / 1b(TickTick) 폐기. planning = 경량 `WikiArticle.plannedDate` 필드. Timeline = view-engine display mode (List/Board/Gallery 형제).
+- **★ bars-first 전환** — dots-only 타임라인 약함(Reticle 레퍼런스 비교) → 막대(`createdAt→horizon`) 우선 재설계 확정. Stage 1/2 통합.
+- **Home/Inbox 정정** — Inbox = attention 큐, Home Overview = `HomeView` 대시보드(기존).
+
+**기술 학습**: 신규 뷰 컴포넌트는 Plot 토큰/패턴 명시 지시 의무 (agent standalone 제작 시 토큰 단절) · SVG/CSS `height="100%"`는 부모 명시 height 필요(min-height로 % 해소 X).
+
+**다음**: timeline-planning bars-first 재설계 (design §5/§3/§11 재작성 → `wiki-timeline-view.tsx` 재구현). SESSION-LOG 최신 entry hook 참조.
+
+---
+
 ## 🚀 2026-05-19 (밤 후속 #2) — P0 #1 Plan A++ 완료 (PR #387) ⭐⭐⭐⭐⭐
 
 **범위**: 단일 PR (#387, 20 파일 +315/-162, 신규 1). Plan A++ — Categories own view component 분리 + Library Views section 제거 + SavedView.space migrate v143→v144 + HIGH risk fix.

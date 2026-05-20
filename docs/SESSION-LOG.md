@@ -6,6 +6,71 @@
 
 ---
 
+## 2026-05-20 — 집/Windows, **4영역 작업 + timeline-planning bars-first 전환**
+
+> 🎯 **다음 즉시 액션 (다른 컴퓨터 로그인 후 시작점)**:
+>
+> **timeline-planning을 bars-first로 재설계.** Reticle(포트폴리오 플래너) 레퍼런스 비교 → "dots-only 타임라인은 약하다, 막대라야 타임라인" 결론. bars-first 전환 **확정**.
+>
+> **다음 머신에서 처음 시작 시**:
+> 1. `git pull origin main`
+> 2. **`npm install`** (★ `fractional-indexing` 등 — node_modules는 다른 머신에 없음)
+> 3. `npm run dev` (port 3002, hard refresh)
+> 4. `docs/02-design/features/timeline-planning.design.md` 읽기 (현 설계 = dots 기반, §5/§3/§11 재작성 필요)
+> 5. **막대 모델 사용자 최종 확인** → 설계 bars-first 재작성 → `components/views/wiki-timeline-view.tsx` 재구현
+>
+> **막대 모델 (제안 — bars-first 방향은 확정, 세부 모델은 사용자 OK 대기)**:
+> - 모든 article = 막대 1개. 막대 = `createdAt → horizon`
+> - horizon = `plannedDate`(있으면, now 넘어 미래로 뻗음) / `updatedAt`(없으면, 과거 lifespan)
+> - 생성=수정(무편집) → ≈0폭 → 작은 마커
+> - 색 = 상태(stub 앰버/article 그린), now 이후 미래 구간 점선, 끝점 = 상태점, "now"선 굵게(Reticle TODAY처럼)
+> - `plannedDate` 설정 UI(detail 패널/우클릭) 포함 — 기존 Stage 1/2 구분 폐기, 통합
+> - Reticle 도메인(수익률 %·진행률 채움)은 안 베낌 — 구조만 차용
+>
+> **머신**: 집 (Windows)
+> **Store version**: 144 (변경 없음 — `plannedDate`는 additive optional, migration 불필요)
+
+### 완료 (이번 세션, 단일 PR)
+
+1. **빌드 fix** — `fractional-indexing` 미설치 → `npm install`. (package.json엔 있었으나 node_modules 누락 → 미리보기 빌드 에러)
+2. **dead block cleanup** (구 TODO P0 #1, 3 파일) — PR #387 옵션 A 잔존 정리:
+   - `lib/wiki-view-mode.ts` — `WikiViewMode` union `"category"` 리터럴 제거
+   - `components/side-panel/side-panel-context.tsx` — `isCategoryMode` dead block(38줄) + dead import 4개 제거 (`wikiCategories` 유지)
+   - `components/views/library-categories-view.tsx` — stale `"category"` 주석 수정
+3. **Home "Overview" NavLink** — `linear-sidebar.tsx` Home 사이드바(`activeSpace==="home"`)에 Overview NavLink 추가 (→`/home`, Inbox 위). Wiki/Library 패턴 미러. Home Overview(=`HomeView` 대시보드)는 **이미 존재** — 사이드바 진입점만 부재였음 ("Inbox에서 돌아갈 곳 없음" 해소).
+4. **Breadcrumb 통일** — `library-breadcrumb.tsx`/`book-breadcrumb.tsx` crumb 아이콘 제거(텍스트-only, Notes `editor-breadcrumb` 기준) + `inbox-view.tsx`에 "Home › Inbox" breadcrumb(ViewHeader `titleNode`) 신설. picker popover 메뉴 아이콘은 유지.
+5. **timeline-planning PDCA Plan + Design** — `docs/01-plan/features/timeline-planning.plan.md` + `docs/02-design/features/timeline-planning.design.md` 신규.
+6. **timeline-planning 구현 (진행 중·미완)** — `components/views/wiki-timeline-view.tsx` 신규 + `WikiArticle.plannedDate?` 필드 + `ViewMode "timeline"` 등록(`view-engine/types.ts`·`view-configs.tsx`·`display-panel.tsx`) + `wiki-view.tsx` 분기. 작동하지만 **dots 기반 — bars-first 재설계 직전 상태**로 머지.
+
+### 브레인스토밍 & 큰 결정
+
+- **timeline-planning 풀 브레인스토밍** (출발 = 구 TODO #2 Calendar 사이드바 → "시간/계획"으로 수렴):
+  - Todo 갈래 = **1a(지식 엔티티 계획 도구)** 채택 / 1b(TickTick급 범용 투두) 폐기 — Plot 코어 이탈.
+  - planning layer = 경량 `plannedDate` 필드 (신규 엔티티 X).
+  - **Timeline = view-engine display mode** (List/Board/Gallery 형제), Calendar 전용 X.
+  - Todo 실체 = `lib/todo-index.ts` — 노트 본문 체크박스 인덱스일 뿐 (엔티티 아님, 날짜 없음).
+- **Home/Inbox 구조 정정** — Inbox = attention 큐(reminder/SRS/snooze/wiki제안, `inbox-view.tsx`). Home Overview = `HomeView` 대시보드(이미 존재). status(stone/brick/block)와 Inbox는 별개 layer.
+- **★ bars-first 전환 (세션 막판, 가장 중요)** — Reticle 레퍼런스 비교 → dots-only 약함. **bars-first 확정.** 막대 = 범위 = planning이므로 Stage 1(dots)/Stage 2(planning) 구분 폐기, 통합.
+
+### 기술 학습 (영구)
+
+- **신규 뷰 컴포넌트는 Plot 뷰 시스템 토큰/패턴을 명시 지시할 것** — agent가 standalone 시각화로 만들면 Plot 타이포 토큰(`text-note`/`text-2xs`)·행 패턴과 단절 → "다른 앱" 느낌. 기존 뷰(List 등)를 reference로 명시 + 결과 시각 검증 의무.
+- **SVG/CSS `height="100%"`는 부모 명시 height 필요** — 부모가 `min-height`만 있으면 % 해소 안 됨(content 높이로 collapse). 스크롤 영역 채우려면 JS 측정(ResizeObserver) → 명시 px.
+- **타임라인은 planning(막대) 없이 약함** — dots-only = 산점도. 범위 막대라야 "타임라인다움". 막대 범위 = planning layer가 제공.
+
+### Watch Out
+
+- 🔴 **timeline 미완** — 작동하는 dots 버전이 main에 머지됨. 다음 세션 bars-first로 재설계(덮어쓰기).
+- 🟡 **`npm install` 필수** — `fractional-indexing` 등 node_modules 다른 머신에 없음.
+- 🟡 미리보기 스크린샷 도구가 렌더를 작게 잡음 — 시각 검증을 사용자에게 의존했음.
+- 🟢 누적 미스모크 (fresh dev 권장): dead block cleanup / Home Overview NavLink / breadcrumb 통일.
+- 🟢 Parked: 기존 체크박스-todo → Inbox 새 `InboxItemKind "task"`로 이전 검토.
+
+### 머신
+집 (Windows)
+
+---
+
 ## 2026-05-19 (밤 후속 #2) — 집/Windows, **P0 #1 Plan A++ 완료 (PR #387, 단일 PR)**
 
 > 🎯 **다음 즉시 액션 (다른 컴퓨터 로그인 후 시작점)**:

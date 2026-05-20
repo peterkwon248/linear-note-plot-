@@ -72,6 +72,7 @@ import { useSaveViewProps } from "@/lib/view-engine/use-save-view-props"
 import { useBookContextNav } from "@/hooks/use-book-context-nav"
 import { BookContextNav } from "@/components/books/book-context-nav"
 import { GalleryView, type GalleryGroup, type GalleryItem } from "@/components/views/gallery-view"
+import { WikiTimelineView } from "@/components/views/wiki-timeline-view"
 import type { WikiArticle, WikiCategory } from "@/lib/types"
 
 export function WikiView() {
@@ -1246,7 +1247,17 @@ export function WikiView() {
            List Mode (table-list view)
            ══════════════════════════════════════════════════ */
         <div className="flex flex-1 overflow-hidden">
-          {wikiViewState.viewMode === "gallery" ? (
+          {wikiViewState.viewMode === "timeline" ? (
+            <WikiTimelineView
+              articles={sortedFilteredWikiNotes}
+              viewState={wikiViewState}
+              selectedIds={selectedArticleIds}
+              activeArticleId={selectedWikiArticleId}
+              onOpenArticle={openArticle}
+              onSelect={(id, opts) => handleArticleSelect(id, opts)}
+              onUpdateViewState={updateWikiViewState}
+            />
+          ) : wikiViewState.viewMode === "gallery" ? (
             <GalleryView
               groups={buildWikiGalleryGroups(sortedFilteredWikiNotes, wikiCategories)}
               activeId={selectedWikiArticleId}

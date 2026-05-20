@@ -5,6 +5,7 @@ import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
 import {
   IconStone,
+  IconHome,
   IconInbox,
   IconNotes,
   IconCalendar,
@@ -1755,6 +1756,12 @@ export function LinearSidebar() {
         {activeSpace === "home" && (
           <>
             <div className="space-y-px">
+              <NavLink
+                href="/home"
+                icon={<IconHome size={20} />}
+                label="Overview"
+                active={isActive("/home")}
+              />
               <NavLink
                 href="/inbox"
                 icon={<IconInbox size={20} />}

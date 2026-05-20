@@ -3,77 +3,57 @@
 > 우선순위 기반 작업 목록. **P0 = 다음 세션 즉시 시작점** (NEXT-ACTION.md 폐지, 2026-05-12).
 > 완료 항목은 즉시 삭제. 자세한 history는 SESSION-LOG.md + MEMORY.md.
 
-**마지막 갱신**: 2026-05-19 (밤 후속 #2) — P0 #1 Plan A++ 완료 (PR #387 squash merged `fb4c2da`). Library = hub 본질 회복 + 영구 룰 #84-#88 LOCKED.
+**마지막 갱신**: 2026-05-20 — dead-block cleanup + Home Overview NavLink + breadcrumb 통일 완료. **timeline-planning bars-first 재설계**가 다음 P0.
 
 ---
 
-## 🟣 P0 — 즉시 (cross-machine 진입점, 2026-05-19 밤 후속 #2)
+## 🟣 P0 — 즉시 (cross-machine 진입점, 2026-05-20)
 
-### 1. **🟣 dead block cleanup follow-up** (~3 파일, LOW risk, 옵션 A 잔존 정리)
+### 1. **🔴 timeline-planning — bars-first 재설계** (진행 중, 최우선)
 
-PR #387 옵션 A로 wiki-view-mode setter 부작용 제거 + 6 호출처 route navigate paired. 단 enum 잔존:
+PDCA Plan/Design 완료, 구현 진행 중. dots 기반 1차 구현이 main에 머지됨 → Reticle 레퍼런스 비교 후 **bars-first 재설계 확정**.
 
-- `components/side-panel/side-panel-context.tsx:131-156` — `isCategoryMode` dead block (옵션 A 후 영원히 false, 회귀 risk 0)
-- `lib/wiki-view-mode.ts:9` — `WikiViewMode` union에 `"category"` 리터럴 잔존 (dead enum value)
-- `lib/wiki-view-mode.ts` — `setActiveCategoryView` / `setCategoryOverview` 함수 시그니처 정리 (deprecate 또는 이름 변경 — `useActiveCategoryId` 갱신용으로만 사용됨)
+다음 스텝:
+1. `docs/02-design/features/timeline-planning.design.md` §5(UI)·§3(데이터모델)·§11(구현순서)를 bars-first로 재작성
+2. `components/views/wiki-timeline-view.tsx` 재구현 (현 dots 버전 덮어쓰기)
 
-cleanup:
-1. side-panel-context.tsx 131-156 dead block 제거 + `useWikiViewMode` import 제거
-2. WikiViewMode union에서 "category" 리터럴 제거
-3. setter 함수 시그니처 또는 docs 정리
+막대 모델 (bars-first 방향 확정 / 세부 모델은 사용자 최종 OK 대기):
+- 모든 article = 막대 `createdAt → horizon`. horizon = `plannedDate`(미래로 뻗음) / `updatedAt`(과거 lifespan).
+- 색 = 상태(stub/article), now 이후 미래 구간 점선, 끝점 = 상태점, "now"선 굵게.
+- `plannedDate` 설정 UI(detail 패널/우클릭) 포함. Stage 1/2 구분 폐기·통합.
+- Reticle 구조 차용, 도메인(수익률 %) 안 베낌.
 
-**위험**: 0 (현재 기능 영향 0, 미래 타입 오염 방지)
+이미 머지된 것: `WikiArticle.plannedDate?` 필드 / `ViewMode "timeline"` 등록 / `wiki-view.tsx` 분기 / `wiki-timeline-view.tsx`(dots, 미완).
 
-### 2. **🟡 Calendar 사이드바 변화** (사용자 의도 미확정)
+### 2. **🟡 Ontology graph node 사이드바 동기화** (사용자 의도 미확정)
 
-이전 시그널: "Calendar의 우측 사이드바도 뭔가 변화가 필요해. 좋은 의미로."
+- Graph node → 4탭 사이드바 (추천) / OntologyDetailPanel / 사이드바 graph mode
 
-후보:
-- Day Summary panel / 월간 통계 / 현재 노트 detail 강화
-
-### 3. **🟡 Ontology graph node 사이드바 동기화** (사용자 의도 미확정)
-
-후보:
-- Graph node → 4탭 사이드바 (추천)
-- OntologyDetailPanel + 4탭 둘 다
-- 사이드바에 graph mode
-
-### 4. **🟡 Activity events 후속**
+### 3. **🟡 Activity events 후속**
 
 - Granular Wiki/Book events wire-up (block_added/item_added 등)
 - Label entity events 발화 (tags.ts 패턴 정합)
 
-### 5. **🟡 Books own Views section** (entity-uniformity 확장, 영구 룰 #87 정합)
+### 4. **🟡 Books own Views section** (entity-uniformity, 영구 룰 #87 정합)
 
-영구 룰 #87: Library = hub. own view는 sub-entity가. **Books는 1차 entity (Note/Wiki 동급)이지만 own Views section 없음 (gap)**.
+- `linear-sidebar.tsx` Books section에 own Views section. `SavedView.space "books"`는 이미 union에 있음.
 
-- `renderViewsSection`에 books space 매핑 추가
-- `linear-sidebar.tsx` Books section에 own Views section
-- SavedView.space `"books"`는 이미 union에 있음 (별도 migrate 불필요)
+### 5. **🟢 manual smoke 누적**
 
-### 6. **🟢 사용자 manual smoke 누적 14 PR (#373-#387)**
-
-PR #373-#387 fresh dev에서 cross-verify. 특히 PR #387 본질 변경:
-
-- Wiki article 본문 안 category badge click → `/library/categories` + 해당 category selected
-- Navbox category header click → `/library/categories`
-- Side panel Connections / Category detail panel parent/sub click → `/library/categories`
-- Library home Categories card click → `/library/categories`
-- `/wiki` 정상 동작 (wikiViewMode "category" 트리거 안 됨)
-- Tags/Labels/Files/References/Stickers click → Views section 노출 안 됨
-- 기존 saved view (PR #385 "library" space) → v144 migrate 후 Categories sub-page 노출
+- 이번 세션: dead block cleanup / Home Overview NavLink / breadcrumb 통일 (fresh dev 재확인)
+- 이전: PR #373-#387
 
 ---
 
-## 영구 LOCKED 결정 (PR #387로 #84-#88 추가, 누적 #88)
+## Parked / Brainstorm
 
-이번 PR 5개 신규 LOCKED:
+- **기존 체크박스-todo → Inbox kind 이전 검토** — `lib/todo-index.ts`(노트 본문 체크박스 인덱스)를 독립 "Todos" 기능으로 키우지 말고, Inbox(attention 큐)에 새 `InboxItemKind "task"`로 추가. Home open-loops 통합. timeline-planning 완료 후.
 
-- **#84**: wiki-view-mode external store는 LibraryCategoriesView가 직접 구독 (own component own state subscribe)
-- **#85**: layout.tsx mount 조건 정확 매핑 의무 (`activeRoute === "/library/categories"` vs `startsWith` too broad — PR #382 회귀 사례)
-- **#86**: Save view 의미 = entity 본질 따라 differentiate
-- **#87**: Library = hub. own Views section 없음. 1차 시민이지만 view는 sub-entity가
-- **#88**: Categories own view component (cross-entity 본질 회복, wiki 종속 부조화 해소)
+---
+
+## 영구 LOCKED 결정 (누적 #88)
+
+최근 (PR #387): #84-#88 — wiki-view-mode 직접 구독 / layout.tsx 정확 매핑 / Save view entity differentiate / Library = hub (view는 sub-entity) / Categories own view.
 
 전체 영구 룰 #1-#88: docs/MEMORY.md + docs/CONTEXT.md 참조.
 

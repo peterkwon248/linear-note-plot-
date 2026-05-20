@@ -122,8 +122,8 @@ export function LibraryCategoriesView() {
         onOpenArticle={(articleId) => {
           // Library Categories does not host the article reader itself.
           // Navigate to /wiki and queue the article for WikiView to open.
-          // Reset wikiViewMode away from "category" so WikiView lands in
-          // its default article render path instead of category overview.
+          // Set wikiViewMode to "dashboard" so WikiView lands in its
+          // default render path when the article is later closed.
           setWikiViewMode("dashboard")
           navigateToWikiArticle(articleId)
           setActiveRoute("/wiki")

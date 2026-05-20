@@ -14,7 +14,6 @@ import { usePlotStore } from "@/lib/store"
 import { setActiveRoute } from "@/lib/table-route"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { IconChevronRight } from "@/components/plot-icons"
-import { Books as BooksIcon } from "@phosphor-icons/react/dist/ssr/Books"
 import { BookKindIcon } from "@/components/property-chips"
 import { getBookKind } from "@/lib/view-engine/use-books-view"
 import { cn } from "@/lib/utils"
@@ -61,16 +60,13 @@ export function BookBreadcrumb({
     setQuery("")
   }
 
-  const currentIcon = <BookKindIcon kind={getBookKind(book)} size={14} />
-
   return (
     <nav className="flex items-center gap-1 min-w-0">
       {/* Books root crumb */}
       <button
         onClick={navigateToBooks}
-        className="shrink-0 flex items-center gap-1.5 text-note font-medium text-muted-foreground transition-colors hover:text-foreground cursor-pointer"
+        className="shrink-0 text-note font-medium text-muted-foreground transition-colors hover:text-foreground cursor-pointer"
       >
-        <BooksIcon size={16} weight="regular" />
         Books
       </button>
 
@@ -119,7 +115,6 @@ export function BookBreadcrumb({
 
       {/* Current book crumb */}
       <span className={cn("flex items-center gap-1.5 min-w-0 text-note font-medium text-foreground")}>
-        <span className="shrink-0 text-muted-foreground">{currentIcon}</span>
         <span className="truncate">{book.title || "Untitled book"}</span>
         {count !== undefined && (
           <span className="ml-0.5 text-note font-normal text-muted-foreground tabular-nums">

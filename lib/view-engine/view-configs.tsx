@@ -289,7 +289,7 @@ export const WIKI_VIEW_CONFIG: ViewConfig = {
     ]},
   ],
   displayConfig: {
-    supportedModes: ["list", "board", "gallery"],
+    supportedModes: ["list", "board", "gallery", "timeline"],
     // Wiki board default = "wikiStatus" (Stub / Article) — **2 column 고정
     // 보장**. Notes의 Stone/Brick/Block 패턴 정확 mirror (영구 룰 21 정합).
     // Status는 isWikiStub 기반 derived (block count >= 3 = article) →

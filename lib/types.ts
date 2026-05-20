@@ -514,6 +514,9 @@ export interface WikiArticle {
   hatnotes?: Hatnote[]
   createdAt: string
   updatedAt: string
+  /** Stage 1 (timeline-planning): planned work date for this article (ISO date string).
+   *  undefined = no plan. null = plan explicitly cleared. Stage 2 will expose setter UI. */
+  plannedDate?: string | null
 }
 
 /** Saved custom view — user-defined filter/sort/grouping combination */

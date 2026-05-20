@@ -1,6 +1,6 @@
 {
   "version": "2.0",
-  "lastUpdated": "2026-05-15T08:47:26.748Z",
+  "lastUpdated": "2026-05-20T08:06:03.531Z",
   "activeFeatures": [
     "editor",
     "wizardly-kare",
@@ -35,7 +35,9 @@
     "books",
     "crazy-raman-838a0c",
     "quirky-colden-bcf3de",
-    "xenodochial-wing-654662"
+    "xenodochial-wing-654662",
+    "eloquent-wilbur-832887",
+    "library"
   ],
   "primaryFeature": "editor",
   "features": {
@@ -191,9 +193,9 @@
       "documents": {},
       "timestamps": {
         "started": "2026-03-11T04:44:20.714Z",
-        "lastUpdated": "2026-05-15T08:47:26.748Z"
+        "lastUpdated": "2026-05-20T07:11:36.194Z"
       },
-      "lastFile": "C:\\Users\\kwonkyunghun\\Desktop\\리니어 노트앱\\.claude\\worktrees\\xenodochial-wing-654662\\lib\\view-engine\\view-configs.tsx"
+      "lastFile": "C:\\Users\\kwonkyunghun\\Desktop\\리니어 노트앱\\.claude\\worktrees\\eloquent-wilbur-832887\\lib\\view-engine\\view-configs.tsx"
     },
     "slices": {
       "phase": "do",
@@ -308,9 +310,9 @@
       "documents": {},
       "timestamps": {
         "started": "2026-04-03T02:40:12.004Z",
-        "lastUpdated": "2026-05-15T03:20:43.374Z"
+        "lastUpdated": "2026-05-20T02:00:37.537Z"
       },
-      "lastFile": "C:\\Users\\kwonkyunghun\\Desktop\\리니어 노트앱\\.claude\\worktrees\\xenodochial-wing-654662\\components\\side-panel\\category-detail-panel.tsx"
+      "lastFile": "C:\\Users\\kwonkyunghun\\Desktop\\리니어 노트앱\\.claude\\worktrees\\eloquent-wilbur-832887\\components\\side-panel\\side-panel-context.tsx"
     },
     "workspace": {
       "phase": "do",
@@ -438,9 +440,9 @@
       "documents": {},
       "timestamps": {
         "started": "2026-05-12T00:30:50.080Z",
-        "lastUpdated": "2026-05-12T08:43:04.874Z"
+        "lastUpdated": "2026-05-20T05:56:00.633Z"
       },
-      "lastFile": "C:\\Users\\kwonkyunghun\\Desktop\\리니어 노트앱\\.claude\\worktrees\\quirky-colden-bcf3de\\components\\books\\book-table.tsx"
+      "lastFile": "C:\\Users\\kwonkyunghun\\Desktop\\리니어 노트앱\\.claude\\worktrees\\eloquent-wilbur-832887\\components\\books\\book-breadcrumb.tsx"
     },
     "crazy-raman-838a0c": {
       "phase": "do",
@@ -480,6 +482,32 @@
         "lastUpdated": "2026-05-15T08:44:58.455Z"
       },
       "lastFile": "C:\\Users\\kwonkyunghun\\Desktop\\리니어 노트앱\\.claude\\worktrees\\xenodochial-wing-654662\\components\\wiki-board-workbench.tsx"
+    },
+    "eloquent-wilbur-832887": {
+      "phase": "do",
+      "phaseNumber": 3,
+      "matchRate": null,
+      "iterationCount": 0,
+      "requirements": [],
+      "documents": {},
+      "timestamps": {
+        "started": "2026-05-20T02:00:23.770Z",
+        "lastUpdated": "2026-05-20T08:06:03.531Z"
+      },
+      "lastFile": "C:\\Users\\kwonkyunghun\\Desktop\\리니어 노트앱\\.claude\\worktrees\\eloquent-wilbur-832887\\components\\views\\wiki-timeline-view.tsx"
+    },
+    "library": {
+      "phase": "do",
+      "phaseNumber": 3,
+      "matchRate": null,
+      "iterationCount": 0,
+      "requirements": [],
+      "documents": {},
+      "timestamps": {
+        "started": "2026-05-20T05:55:17.569Z",
+        "lastUpdated": "2026-05-20T05:55:33.987Z"
+      },
+      "lastFile": "C:\\Users\\kwonkyunghun\\Desktop\\리니어 노트앱\\.claude\\worktrees\\eloquent-wilbur-832887\\components\\library\\library-breadcrumb.tsx"
     }
   },
   "pipeline": {
@@ -490,7 +518,7 @@
   "session": {
     "startedAt": "2026-03-05T00:16:19.956Z",
     "onboardingCompleted": false,
-    "lastActivity": "2026-05-15T08:47:26.748Z"
+    "lastActivity": "2026-05-20T08:06:03.531Z"
   },
   "history": [
     {
@@ -7444,6 +7472,294 @@
     {
       "timestamp": "2026-05-15T08:47:26.748Z",
       "feature": "view-engine",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-20T02:00:23.770Z",
+      "feature": "eloquent-wilbur-832887",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-20T02:00:29.389Z",
+      "feature": "side-panel",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-20T02:00:37.537Z",
+      "feature": "side-panel",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-20T02:00:44.179Z",
+      "feature": "eloquent-wilbur-832887",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-20T05:29:14.492Z",
+      "feature": "eloquent-wilbur-832887",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-20T05:29:19.506Z",
+      "feature": "eloquent-wilbur-832887",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-20T05:55:17.569Z",
+      "feature": "library",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-20T05:55:23.509Z",
+      "feature": "library",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-20T05:55:28.231Z",
+      "feature": "library",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-20T05:55:33.987Z",
+      "feature": "library",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-20T05:55:39.707Z",
+      "feature": "books",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-20T05:55:44.020Z",
+      "feature": "books",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-20T05:55:55.191Z",
+      "feature": "books",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-20T05:56:00.633Z",
+      "feature": "books",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-20T05:56:06.772Z",
+      "feature": "eloquent-wilbur-832887",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-20T05:56:10.956Z",
+      "feature": "eloquent-wilbur-832887",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-20T05:56:21.418Z",
+      "feature": "eloquent-wilbur-832887",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-20T05:56:26.016Z",
+      "feature": "eloquent-wilbur-832887",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-20T07:11:17.583Z",
+      "feature": "eloquent-wilbur-832887",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-20T07:11:22.388Z",
+      "feature": "view-engine",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-20T07:11:26.382Z",
+      "feature": "view-engine",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-20T07:11:36.194Z",
+      "feature": "view-engine",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-20T07:12:10.818Z",
+      "feature": "eloquent-wilbur-832887",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-20T07:12:14.834Z",
+      "feature": "eloquent-wilbur-832887",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-20T07:13:43.021Z",
+      "feature": "eloquent-wilbur-832887",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-20T07:13:51.467Z",
+      "feature": "eloquent-wilbur-832887",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-20T07:14:06.635Z",
+      "feature": "eloquent-wilbur-832887",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-20T07:14:58.453Z",
+      "feature": "eloquent-wilbur-832887",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-20T07:15:13.725Z",
+      "feature": "eloquent-wilbur-832887",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-20T07:32:26.364Z",
+      "feature": "eloquent-wilbur-832887",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-20T07:51:39.420Z",
+      "feature": "eloquent-wilbur-832887",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-20T07:51:43.235Z",
+      "feature": "eloquent-wilbur-832887",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-20T07:51:45.293Z",
+      "feature": "eloquent-wilbur-832887",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-20T07:51:47.378Z",
+      "feature": "eloquent-wilbur-832887",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-20T07:51:49.933Z",
+      "feature": "eloquent-wilbur-832887",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-20T07:51:52.119Z",
+      "feature": "eloquent-wilbur-832887",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-20T07:51:54.221Z",
+      "feature": "eloquent-wilbur-832887",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-20T08:05:14.110Z",
+      "feature": "eloquent-wilbur-832887",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-20T08:05:18.413Z",
+      "feature": "eloquent-wilbur-832887",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-20T08:05:22.676Z",
+      "feature": "eloquent-wilbur-832887",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-20T08:05:29.662Z",
+      "feature": "eloquent-wilbur-832887",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-20T08:05:34.521Z",
+      "feature": "eloquent-wilbur-832887",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-20T08:05:39.289Z",
+      "feature": "eloquent-wilbur-832887",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-20T08:05:45.633Z",
+      "feature": "eloquent-wilbur-832887",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-20T08:05:50.454Z",
+      "feature": "eloquent-wilbur-832887",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-20T08:05:55.067Z",
+      "feature": "eloquent-wilbur-832887",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-20T08:05:59.842Z",
+      "feature": "eloquent-wilbur-832887",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-20T08:06:03.531Z",
+      "feature": "eloquent-wilbur-832887",
       "phase": "do",
       "action": "updated"
     }
