@@ -15,7 +15,9 @@ import { PushPin } from "@phosphor-icons/react/dist/ssr/PushPin"
 import { FolderOpen } from "@phosphor-icons/react/dist/ssr/FolderOpen"
 import { X as PhX } from "@phosphor-icons/react/dist/ssr/X"
 import { Plus as PhPlus } from "@phosphor-icons/react/dist/ssr/Plus"
+import { Target } from "@phosphor-icons/react/dist/ssr/Target"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { Calendar as CalendarUI } from "@/components/ui/calendar"
 import { FolderPicker } from "@/components/folder-picker"
 import { IconWikiStub, IconWikiArticle } from "@/components/plot-icons"
 import { setActiveRoute } from "@/lib/table-route"
@@ -66,7 +68,9 @@ export function WikiArticleDetailPanel({ article }: { article: WikiArticle | nul
   // the multi-select picker.
   const removeWikiFromFolder = usePlotStore((s) => s.removeWikiFromFolder)
   const setWikiFolders = usePlotStore((s) => s.setWikiFolders)
+  const setWikiArticlePlannedDate = usePlotStore((s) => s.setWikiArticlePlannedDate)
   const [folderOpen, setFolderOpen] = useState(false)
+  const [planOpen, setPlanOpen] = useState(false)
 
   const articleFolders = useMemo(() => {
     if (!article?.folderIds?.length) return []
@@ -365,6 +369,56 @@ export function WikiArticleDetailPanel({ article }: { article: WikiArticle | nul
         ) : (
           <span className="text-note text-muted-foreground">No sections</span>
         )}
+      </InspectorSection>
+
+      <div className="mx-4 border-b border-border" />
+
+      {/* Plan — timeline-planning (2026-05-20). plannedDate horizon for the
+          Timeline view's bar end. Clearing returns horizon to updatedAt
+          (see lib/wiki-utils.ts:getHorizon). Setter does NOT touch
+          updatedAt — intent is not content activity. */}
+      <InspectorSection title="Plan" icon={<Target size={16} weight="regular" />}>
+        <div className="flex items-center justify-between gap-2">
+          <Popover open={planOpen} onOpenChange={setPlanOpen}>
+            <PopoverTrigger asChild>
+              <button
+                type="button"
+                className="flex items-center gap-1.5 rounded-md border border-dashed border-border px-2 py-1 text-2xs text-foreground/85 transition-colors hover:border-muted-foreground hover:text-foreground"
+              >
+                <CalendarBlank size={12} weight="regular" />
+                {article.plannedDate
+                  ? format(new Date(article.plannedDate), "MMM d, yyyy")
+                  : "Set planned date"}
+              </button>
+            </PopoverTrigger>
+            <PopoverContent align="start" className="w-auto p-2">
+              <CalendarUI
+                mode="single"
+                selected={article.plannedDate ? new Date(article.plannedDate) : undefined}
+                onSelect={(d) => {
+                  if (!d) return
+                  setWikiArticlePlannedDate(article.id, d.toISOString())
+                  setPlanOpen(false)
+                }}
+                className="p-0"
+              />
+            </PopoverContent>
+          </Popover>
+          {article.plannedDate && (
+            <button
+              type="button"
+              onClick={() => setWikiArticlePlannedDate(article.id, null)}
+              className="flex items-center gap-1 rounded-md px-2 py-1 text-2xs text-muted-foreground transition-colors hover:bg-hover-bg hover:text-foreground"
+              title="Clear planned date"
+            >
+              <PhX size={10} weight="bold" />
+              Clear
+            </button>
+          )}
+        </div>
+        <p className="mt-1.5 text-2xs text-muted-foreground/70">
+          Sets this article&apos;s horizon on the Wiki timeline. Clearing it returns the horizon to the last update.
+        </p>
       </InspectorSection>
 
       <div className="mx-4 border-b border-border" />

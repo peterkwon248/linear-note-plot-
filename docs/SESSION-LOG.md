@@ -6,6 +6,175 @@
 
 ---
 
+## 2026-05-21 — 집/Windows, **timeline-planning bars-first 3 라운드 refine 완성 (단일 거대 PR)**
+
+> 🎯 **다음 즉시 액션 (다른 컴퓨터 로그인 후 시작점)**:
+>
+> **🔴 P0 #1 — bars-first timeline 시각 검증 + 사용자 OK 시 옵션 C (drag로 plannedDate)**
+>
+> 이번 세션에서 1+2+3 라운드 모두 적용 + squash merge 완료. 단 **사용자 본인 viewport 시각 검증 미완** (사용자가 "after-work 우선 진행" 신호로 머지함). 다른 컴퓨터에서 가장 먼저 할 일 = 시각 검증 → OK 시 옵션 C (drag) 또는 추가 다듬기.
+>
+> **사용자 의도 (그대로 인용)**:
+> 1. "1라운드 (A+B) → ㅇㅇ 진행" → 막대 안 title + TODAY 톤다운 + Future stripe
+> 2. "왜 이렇게 날짜가 겹치지?? 날짜간의 간격을 좀 넓게 넓게 할 순 없나? 바가 길어져도 되잖아" → 2라운드 (가로 스크롤 + sticky)
+> 3. "C먼저 해라. 그리고 이게 타임라인의 어떤 시각적 효과나 이런 것들이 부실하네" → 3라운드 (A+B+D 시각 효과 풍부화)
+> 4. "오케이 우선 다른컴퓨터로 이어갈 거니까 after-work" → 시각 검증 없이 머지 진행
+>
+> **첫 스텝 (다른 머신에서 바로 시작)**:
+> 1. `git pull origin main` (latest = 이번 단일 거대 PR squash merge 후 + 이 docs sync PR)
+> 2. `npm install && npm run dev` (port 3002)
+> 3. **dummy data 추가** (본인 browser console에 paste, IDB 비어있으면 9 article + plannedDate 다양):
+>    ```js
+>    (() => { const s=window.__plotStore, t=Date.now(), d=(n)=>new Date(t+n*86400000).toISOString();
+>    const items=[["Q2 Strategy",3],["Summer Trip",7],["Tax Filing",14],["Annual Report",30],["Reading List",5],["Recipes",10],["Side Project",21],["Onboarding",45],["Quick Notes",null]];
+>    const ids=items.map(([title])=>s.getState().createWikiArticle({title}));
+>    items.forEach(([,p],i)=>{ if(p!==null) s.getState().setWikiArticlePlannedDate(ids[i],d(p)); });
+>    return s.getState().wikiArticles.length; })()
+>    ```
+>    검증 끝나면 Trash에서 9개 정리.
+> 4. **Wiki space → Timeline view mode** 진입 후 Week / Month / Quarter / Year 4 zoom 모두 시각 확인:
+>    - tick label 안 겹치는지 (특히 Quarter/Year 가로 스크롤 확인)
+>    - "Now" 라벨이 vertical line 우측 5px offset (start anchor)로 깨끗 분리
+>    - 가로 스크롤 시 좌측 article 라벨 column + 상단 axis header sticky 유지
+>    - Stub 막대 끝 hollow circle (raw 메타포) / Article 막대 끝 solid (completed)
+>    - 막대 hover 시 row 전체 highlight + stroke ring + 4-line tooltip
+>    - Weekend stripe (subtle dim) + Month boundary line (강조)
+>    - now line gradient: past 0.78 → future 1.0 부드러운 transition
+>    - plannedDate horizon 막대 우측 끝 dashed vertical / updatedAt horizon은 solid
+> 5. 시각 검증 결과:
+>    - **OK**: 옵션 C (drag로 plannedDate 우측 끝 조정, dnd-kit 적용 ~150줄) 별도 PR
+>    - **NG**: 부족한 부분 fix
+>
+> **컴포넌트 구조 / 데이터 흐름**:
+> - `components/views/wiki-timeline-view.tsx` (1067줄, 이번 세션 단일 거대 rewrite):
+>   - ZoomConfig 매핑: Week 80/24/60, Month 32/18/60, Quarter 10/12/50, Year 3/8/40 (pxPerDay / MIN_BAR_WIDTH / TITLE_THRESHOLD)
+>   - canvas 폭 = `pxPerDay × totalDays` (viewport fit 강제 X)
+>   - `buildTicks()` zoom별 step: Week=1일 / Month=Monday-snap 7일 / Quarter=14일 / Year=월초-snap
+>   - `buildDayRange()` + `dayOfWeek===0||6` weekend stripe rect
+>   - `buildMonthBoundaries()` 매월 1일 vertical line 강조
+>   - SVG `<linearGradient>` past/future opacity gradient (gradStop = (nowX-x)/width clamped)
+>   - hover state: React `hoveredId` + onMouseEnter/Leave (SVG :hover 불충분)
+>   - Tooltip wrapper: absolute div 4-line (SVG foreignObject 회피)
+>   - sticky: axis header top + corner cell + label column left (모두 불투명 var(--bg))
+> - `lib/wiki-utils.ts` 신규 헬퍼:
+>   - `safeDate(iso)` — null-safe Date parser
+>   - `horizonOf(article)` — plannedDate ?? updatedAt ?? createdAt
+>   - `getHorizonSource(article): "planned" | "updated" | "created"` — source 분리 (D2 dashed end-cap)
+> - `lib/store/types.ts` + `lib/store/slices/wiki-articles.ts`:
+>   - `setWikiArticlePlannedDate(articleId, date | null)` action 신규. **updatedAt 갱신 X** (planning ≠ content activity)
+>   - 정의 위치: `lib/store/types.ts:438-441`, slice: `wiki-articles.ts:241-258`
+> - `components/views/wiki-list.tsx` (+84) — Timeline list 통합 (변경 미세 검토 필요)
+> - `components/side-panel/wiki-article-detail-panel.tsx` (+54) — plannedDate 설정 UI (날짜 picker)
+>
+> **Store action 매핑**:
+> - `createWikiArticle({title}): articleId` — `lib/store/slices/wiki-articles.ts:14`
+> - `setWikiArticlePlannedDate(id, iso | null)` — 신규, planning intent (updatedAt 안 건드림)
+> - `updateWikiArticle(id, patch)` — 기존, content activity → updatedAt 갱신
+>
+> **위험 + 회피**:
+> - 🔴 **사용자 본인 viewport 시각 검증 미완** — dummy data sync 안 된 채로 머지. 다른 머신에서 본인 viewport console snippet으로 dummy 추가 후 4 zoom 시각 검증 의무.
+> - 🟡 **wiki-timeline-view.tsx 1067줄 단일 파일** — 너무 거대. 향후 sub-component 분리 검토 (Axis / Bars / Tooltip / Grid 분리).
+> - 🟡 **`window.__plotStore` dev expose** — dev only 노출인지 확인 필요 (production build에서 노출되면 안 됨). 다음 세션 grep.
+> - 🟡 **wiki-list.tsx +84줄 변경 미검증** — Timeline 통합 부분이 List/Board view 회귀 안 일으키는지 확인.
+> - 🟢 **`nul` 파일 + `.claude/worktrees/` untracked** — 이번 commit에서 nul 삭제 + .claude/worktrees/ gitignore 처리.
+>
+> **참고 파일** (작업 시 read 우선순위):
+> - `components/views/wiki-timeline-view.tsx` (메인 — 1067줄)
+> - `lib/wiki-utils.ts` (헬퍼 — safeDate / horizonOf / getHorizonSource)
+> - `lib/store/types.ts:438-441` + `lib/store/slices/wiki-articles.ts:241-258` (plannedDate action)
+> - `docs/02-design/features/timeline-planning.design.md` (bars-first 설계 — §3/§5/§11 재작성됨, +225줄)
+> - `components/side-panel/wiki-article-detail-panel.tsx` (plannedDate UI)
+>
+> **머신**: 집 (Windows)
+> **현재 main HEAD**: 이번 거대 PR squash merge 후 + 이 docs sync PR
+> **branch worktree**: 새 worktree 권장 (이번 작업은 main 직접 이라 worktree 없이 했음. 다음 세션 옵션 C는 worktree 권장)
+
+### 완료 (이번 세션 단일 거대 PR, 1+2+3 라운드 합산)
+
+**전체 규모**: +1000/-506, 9 파일 modified, lib/wiki-utils.ts 헬퍼 3개 신규, wiki-timeline-view.tsx 1067줄 거대 rewrite
+
+#### Round 1 — 막대 정보 컨테이너 + TODAY 톤다운 + Future stripe
+- 막대 안 title embed (TITLE_THRESHOLD 60px) — 충분히 넓으면 inside (white text + SVG clipPath 양끝 잘림 방지), 좁으면 outside (`var(--muted-foreground)` start anchor)
+- TODAY 빨강 → `var(--border-strong)` 1px opacity 0.7 subtle line
+- "TODAY" 큰 빨간 라벨 → axis row 안 작은 "Now" (`text-2xs var(--muted-foreground)` weight 500)
+- Future zone SVG rect `fill="var(--muted)"` opacity 0.06 (nowX → canvasWidth)
+- 레이어 순서: stripe → bars → NOW line
+
+#### Round 2 — 가로 스크롤 + sticky + zoom별 px-per-day
+- viewport fit 강제 제거. canvas 폭 = `pxPerDay × totalDays`
+- ZoomConfig: Week 80/24/60, Month 32/18/60, Quarter 10/12/50, Year 3/8/40
+- totalDays: Week 14 / Month 60 / Quarter 120 / Year 400
+- Tick collision: Week 1일 / Month Monday-snap 7일 / Quarter 14일 / Year 월초-snap
+- "Now" 라벨 옵션 c: vertical line 우측 5px offset (textAnchor: start, fontWeight 600)
+- Sticky: axis header top (z=20) + corner cell (z=30) + label column left (z=10) + 모두 불투명 var(--bg)
+
+#### Round 3 — 캔버스 depth + 막대 affordance + Past/Future gradient
+- **A1 Weekend stripe**: `buildDayRange()` + `dayOfWeek===0||6` 필터, rect `fill="var(--muted)" opacity={0.04}`
+- **A2 Month boundary**: `buildMonthBoundaries()` 매월 1일, day tick 0.5/0.25 vs month 1/0.5 opacity 차별
+- **A3 Row separator**: 기존 lane-sep opacity 0.25 → 0.2 (weekend stripe와 noise 회피)
+- **B1 Hover state**: React `hoveredId` + mouseEnter/Leave. rect bg 0.12 + stroke ring 0.5 + 라벨 column `bg-secondary/40`
+- **B2 Tooltip**: absolute div 4줄 (Title+icon / Status badge / Created / Planned in N days or Updated)
+- **B3 Status dot**: Stub hollow (`fill=bg, stroke=color, sw=2`) / Article solid (`fill=color, sw=0`)
+- **D1 Past/Future gradient**: `<linearGradient>` 한 개, past 0.78 → future 1.0, gradStop clamped, 픽셀 완벽
+- **D2 horizon source**: `getHorizonSource(article)` 헬퍼 신규 (`"planned" | "updated" | "created"`). plannedDate horizon 시 우측 끝 dashed vertical overlay
+
+#### 부수 변경
+- `lib/wiki-utils.ts` 신규 헬퍼 3개 (`safeDate`, `horizonOf`, `getHorizonSource`)
+- `lib/store/types.ts` + `slices/wiki-articles.ts`: `setWikiArticlePlannedDate` action (planning ≠ updatedAt activity)
+- `components/side-panel/wiki-article-detail-panel.tsx` (+54): plannedDate 설정 UI (날짜 picker)
+- `components/views/wiki-list.tsx` (+84): Timeline list 통합
+- `components/views/wiki-board.tsx` + `wiki-view.tsx` (+2/-2 각각): 분기 조정
+- `docs/02-design/features/timeline-planning.design.md` (+225): bars-first §3/§5/§11 재작성
+
+### 브레인스토밍 & 큰 결정 (영구)
+
+- **bars-first timeline 본질 = 막대가 정보 컨테이너 (Reticle 패턴)** — dots-first는 산점도 (위치만), bars-first는 timeline (위치 + 길이 + 정보). 막대 안/옆 title + 끝점 status dot + Tooltip이 본질.
+- **viewport fit 강제는 timeline antipattern** — 1일에 충분한 px (zoom별 80/32/10/3) + 가로 스크롤 인정 = Gantt/Linear/Reticle 표준. fit forcing은 tick label도 막대도 다 압축.
+- **"Now" 라벨은 axis tick과 다른 alignment** — vertical line 우측 5px offset + textAnchor "start". 같은 row여도 alignment 차로 collision 회피 (옵션 c, 가장 깔끔).
+- **Plot "Gentle by default" 톤 = subtle layers + opt-in affordance** — Weekend stripe 0.04 / Future stripe 0.06 / NOW line opacity 0.7 / hover ring opacity 0.5 / gradient 0.78→1.0. 모든 시각 효과 subtle, intrusive X.
+- **planning intent ≠ content activity** — setWikiArticlePlannedDate는 updatedAt 안 건드림. plannedDate 설정은 intent 표명일 뿐 실제 content 변경 아님. (영구 룰 후보)
+- **Status dot 메타포 (timeline 한정)** — Stub = hollow (raw, unfinished), Article = solid (completed, present). 색은 status 토큰 그대로.
+- **horizon source 3분기** — `plannedDate` (intent, dashed end-cap), `updatedAt` (last activity, solid), `createdAt` (last-resort fallback, near-0-width). 우측 끝 dashed vs solid가 source 시각 분리.
+
+### 기술 학습 (영구)
+
+- **SVG hover는 React state + mouseEnter/Leave 패턴** — CSS `:hover` 안 통함 (SVG 자식들 selector 까다로움). React state로 hoveredId 관리하면 SVG 그룹 전체에 적용 + 라벨 column 동기 가능.
+- **SVG bar에 Tooltip = absolute div wrapper** — `<foreignObject>`는 브라우저 호환 + z-index 까다로움. 막대 위 invisible hit area + 외부 absolute div Tooltip이 더 안전.
+- **D1 Past/Future gradient = linearGradient 1개 > split rect 2개** — gradStop 비율로 부드러운 transition. split rect는 픽셀 경계 어색.
+- **gradient stop clamp 의무** — `gradStop = Math.max(0, Math.min(1, (nowX - x) / width))`. nowX가 막대 밖에 있으면 0 또는 1로 클램프 안 하면 gradient invalid.
+- **sticky element 불투명 배경 의무** — `position: sticky` + 불투명 `var(--bg)` 명시. 투명하면 막대가 비춰 sticky 효과 X.
+- **sticky z-index 위계** — corner (max) > sticky col (mid) > sticky header (low) > content (base). 가로 + 세로 스크롤 동시 작동 시 corner가 가장 위.
+- **px-per-day 곱셈은 zoom 별 상수 매핑이 비례 공식보다 안전** — `pxPerDay * factor` 계산은 zoom 경계에서 minBar 점프 발생. zoom 별 상수가 명시적이고 디버깅 쉬움.
+- **`window.__plotStore` dev expose 패턴** — Plot은 store를 window에 노출 (dev 검증용). preview MCP eval로 store action 직접 호출 가능. **단 production build에서도 노출되는지는 별도 확인 의무**.
+- **preview MCP IDB는 사용자 본인 viewport와 분리** — 같은 origin 같은 path여도 별도 browser context. dummy data sync 안 됨. 시각 검증은 사용자 본인 viewport가 진실 source.
+- **wiki-timeline-view.tsx 1067줄은 너무 거대** — sub-component 분리 권장 (`<TimelineAxis>` / `<TimelineBars>` / `<TimelineGrid>` / `<TimelineTooltip>`). 향후 리팩토링.
+
+### Watch Out (다음 세션)
+
+- 🔴 **사용자 본인 viewport 시각 검증 미완** — 머지 후 사용자가 첫 시도. 부족한 부분 발견 시 fix 라운드 또는 옵션 C 보류.
+- 🔴 **9 dummy article은 preview MCP에만** — 사용자 본인 IDB에 sync 안 됨. console snippet 본인 viewport에서 paste 필요.
+- 🟡 **`window.__plotStore` production 노출 여부** — `grep "__plotStore" lib/store/` 확인. prod expose면 dev-only 가드 추가.
+- 🟡 **wiki-list.tsx +84줄 Timeline 통합** — List/Board view 회귀 여부 검증 (사용자 시각 확인 시 List/Board도 한번 클릭).
+- 🟡 **wiki-timeline-view.tsx sub-component 분리 권장** — 1067줄 단일 파일. 향후 1+1 리팩토링 후보.
+- 🟢 **dnd-kit drag로 plannedDate** (옵션 C) — 별도 PR 권장 (~150줄, dnd-kit 추가 의존성 없음 — 이미 설치). 막대 우측 끝 grab handle + onDragEnd로 setWikiArticlePlannedDate.
+
+### 환경 변경
+
+- Main HEAD: `491d8a1` (PR #391) → 이번 PR squash merge 후 + 이 docs sync PR
+- Store version: 144 (변경 없음 — `plannedDate`는 additive optional, migration 불필요)
+- 신규 store action: `setWikiArticlePlannedDate(articleId, iso | null)` (planning intent, updatedAt 안 건드림)
+- 신규 헬퍼 (`lib/wiki-utils.ts`): `safeDate`, `horizonOf`, `getHorizonSource`
+- ZoomConfig 매핑 (`wiki-timeline-view.tsx`): Week 80/24/60, Month 32/18/60, Quarter 10/12/50, Year 3/8/40 (pxPerDay / MIN_BAR / TITLE_THRESHOLD)
+- 영구 룰 후보: planning intent ≠ content activity (next 세션에서 사용자 OK 시 LOCKED)
+- TS 부채 0 유지: `tsc --noEmit` clean, `npm run build` ✓
+- 사용자 IDB stale data: 없음 (additive optional 필드만)
+- 정리: `nul` 파일 삭제 + `.claude/worktrees/` gitignore 추가
+
+### 머신
+집 (Windows, 직전 세션 동일). **다음 세션 = 다른 컴퓨터 예정**.
+
+---
+
 ## 2026-05-20 — 집/Windows, **4영역 작업 + timeline-planning bars-first 전환**
 
 > 🎯 **다음 즉시 액션 (다른 컴퓨터 로그인 후 시작점)**:

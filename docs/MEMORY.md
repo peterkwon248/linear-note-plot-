@@ -8,6 +8,70 @@
 
 ---
 
+## 🚀 2026-05-21 — **bars-first timeline 3 라운드 refine 완성 (단일 거대 PR)** ⭐⭐⭐⭐⭐
+
+**범위**: 단일 거대 PR (+1000/-506, 9 파일 modified, wiki-timeline-view.tsx 1067줄 거대 rewrite). 1+2+3 라운드 누적 완성. dots → bars-first 본질 회복 + 가로 스크롤 표준 패턴 + 시각 효과 풍부화. **사용자 본인 viewport 시각 검증 미완** (after-work 우선 진행 신호로 머지).
+
+### Round 1+2+3 누적 변경
+
+#### Round 1 — 막대 정보 컨테이너 + TODAY 톤다운 + Future stripe
+- 막대 안 title embed (`TITLE_THRESHOLD` 60px) — 충분히 넓으면 inside (white + SVG clipPath), 좁으면 outside (`var(--muted-foreground)` start anchor)
+- TODAY 빨강 → `var(--border-strong)` 1px opacity 0.7 subtle
+- "TODAY" 큰 빨간 라벨 → axis row 안 작은 "Now" (`text-2xs var(--muted-foreground)`)
+- Future zone SVG rect `fill="var(--muted)" opacity={0.06}` (nowX → canvasWidth)
+
+#### Round 2 — 가로 스크롤 + sticky + zoom별 px-per-day
+- viewport fit 강제 제거. canvas 폭 = `pxPerDay × totalDays`
+- ZoomConfig 매핑: Week 80/24/60, Month 32/18/60, Quarter 10/12/50, Year 3/8/40 (px-per-day / MIN_BAR / TITLE_THRESHOLD)
+- totalDays: Week 14 / Month 60 / Quarter 120 / Year 400
+- Tick collision: Week 1일 / Month Monday-snap 7일 / Quarter 14일 / Year 월초-snap
+- "Now" 라벨 옵션 c: vertical line 우측 5px offset (textAnchor: start)
+- Sticky: axis header top (z=20) + corner cell (z=30) + label column left (z=10), 모두 불투명 `var(--bg)`
+
+#### Round 3 — 캔버스 depth + 막대 affordance + Past/Future gradient
+- **A1 Weekend stripe** — `dayOfWeek===0||6`, opacity 0.04 (Year zoom에선 자연 fade)
+- **A2 Month boundary** — 매월 1일 1px opacity 0.5, 일반 day tick 0.5px opacity 0.25 (차별화)
+- **A3 Row separator** — 기존 lane-sep opacity 0.25 → 0.2
+- **B1 Hover state** — React `hoveredId` + mouseEnter/Leave (SVG :hover 불충분). rect bg 0.12 + stroke ring 0.5 + 라벨 column `bg-secondary/40`
+- **B2 Tooltip** — absolute div 4줄 (Title+icon / Status / Created / Planned in N days or Updated). SVG foreignObject 회피
+- **B3 Status dot** — Stub hollow (`fill=bg, stroke=color, sw=2`, raw 메타포) / Article solid (completed 메타포)
+- **D1 Past/Future gradient** — `<linearGradient>` 1개, past 0.78 → future 1.0, gradStop = (nowX-x)/width clamped
+- **D2 horizon source** — `getHorizonSource(article): "planned" | "updated" | "created"` 헬퍼 신규. plannedDate horizon 시 우측 끝 dashed vertical overlay
+
+### 핵심 결정 (영구 후보 #89, 누적 영구 룰)
+
+- **#89 후보** (사용자 OK 대기): **planning intent ≠ content activity** — `setWikiArticlePlannedDate`는 `updatedAt` 갱신 안 함. planning은 의도 표명이지 content 변경 아님.
+- **bars-first timeline = 막대가 정보 컨테이너 (Reticle 패턴)** — dots-first는 산점도 (위치만), bars-first는 timeline (위치 + 길이 + 정보). 막대 안/옆 title + 끝점 status dot + Tooltip이 본질.
+- **viewport fit 강제는 timeline antipattern** — 1일에 충분한 px (zoom별 80/32/10/3) + 가로 스크롤 인정 = Gantt/Linear/Reticle 표준. fit forcing은 tick label도 막대도 다 압축.
+- **"Now" 라벨은 axis tick과 다른 alignment** — vertical line 우측 5px offset + textAnchor "start". 같은 row여도 alignment 차로 collision 회피.
+- **Plot "Gentle" 톤 = subtle layers + opt-in affordance** — Weekend stripe 0.04 / Future stripe 0.06 / NOW line 0.7 / hover ring 0.5 / gradient 0.78→1.0. 모든 시각 효과 subtle, intrusive X.
+- **Status dot 메타포 (timeline 한정)** — Stub = hollow (raw, unfinished), Article = solid (completed, present).
+- **horizon source 3분기** — `plannedDate` (intent, dashed end-cap) / `updatedAt` (last activity, solid) / `createdAt` (last-resort fallback). 우측 끝 dashed vs solid가 source 시각 분리.
+
+### 기술 학습 (영구, 2026-05-21)
+
+- **SVG hover는 React state + mouseEnter/Leave 패턴** — CSS :hover 불충분 (SVG 자식 selector 까다로움). React state hoveredId로 SVG 그룹 전체 + 라벨 column 동기.
+- **SVG bar에 Tooltip = absolute div wrapper** — `<foreignObject>`는 z-index / 브라우저 호환 까다로움. 막대 위 invisible hit area + 외부 absolute Tooltip이 안전.
+- **D1 Past/Future gradient = linearGradient 1개 > split rect 2개** — 부드러운 transition + 픽셀 완벽.
+- **gradient stop clamp 의무** — `Math.max(0, Math.min(1, ratio))`. 클램프 안 하면 nowX가 막대 밖일 때 invalid.
+- **sticky element 불투명 배경 의무** — `position: sticky` + 불투명 `var(--bg)`. 투명하면 막대가 비춰 sticky 효과 X.
+- **sticky z-index 위계** — corner (max) > sticky col (mid) > sticky header (low) > content (base).
+- **px-per-day zoom 별 상수 매핑 > 비례 공식** — `pxPerDay * factor` 계산은 zoom 경계에서 minBar 점프 발생. zoom 별 상수가 명시적 + 디버깅 쉬움.
+- **`window.__plotStore` dev expose 패턴** — Plot은 store를 window에 노출 (dev 검증용). preview MCP eval로 store action 직접 호출 가능. **production 노출 여부 확인 의무** (다음 세션 grep).
+- **preview MCP IDB는 사용자 본인 viewport와 분리** — 같은 origin 같은 path여도 별도 browser context. dummy data sync 안 됨. 시각 검증은 사용자 본인 viewport가 진실 source.
+
+### 환경
+
+- Store version: **144** (변경 없음 — `plannedDate`는 additive optional, migration 불필요)
+- 신규 store action: `setWikiArticlePlannedDate(articleId, iso | null)` (planning intent, updatedAt 안 건드림)
+- 신규 헬퍼 (`lib/wiki-utils.ts`): `safeDate`, `horizonOf`, `getHorizonSource`
+- 단일 거대 파일 부담: `wiki-timeline-view.tsx` 1067줄 — sub-component 분리 후보
+- 정리: `nul` 파일 삭제 + `.claude/worktrees/` gitignore
+- TS 부채 0 유지: `tsc --noEmit` clean, `npm run build` ✓
+- 다음: **bars-first 시각 검증** (사용자 본인 viewport, dummy snippet) → OK 시 **옵션 C (drag로 plannedDate)** 별도 PR. SESSION-LOG 최신 entry hook 참조.
+
+---
+
 ## 🚀 2026-05-20 — **4영역 작업 + timeline-planning bars-first 전환** ⭐⭐⭐⭐
 
 **범위**: dead-block cleanup + Home Overview NavLink + breadcrumb 통일 + timeline-planning(PDCA Plan/Design + 구현 진행 중). 단일 PR.

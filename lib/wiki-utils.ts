@@ -15,3 +15,53 @@ export function isWikiStub(article: WikiArticle): boolean {
   if (textBlocks.length === 0) return true // no text blocks = only section headers = stub
   return textBlocks.every((b) => !b.content?.trim())
 }
+
+/* ── Timeline planning (2026-05-20) ────────────────────────
+ * Shared helpers for the bars-first WikiTimelineView. Kept in `wiki-utils.ts`
+ * (not the view component) because the same horizon rule will likely surface
+ * in future Smart Book chapter ordering / dashboard "Up next" surfaces. */
+
+/** Parse an ISO string into a Date, returning null on any invalid input.
+ *  Matches the WikiTimelineView's `safeDate` invariant — every consumer
+ *  must guard NaN epochs (영구 룰: lookup map null guard). */
+export function safeDate(iso: string | null | undefined): Date | null {
+  if (!iso) return null
+  const d = new Date(iso)
+  if (Number.isNaN(d.getTime())) return null
+  return d
+}
+
+/**
+ * Horizon = the right end of an article's timeline bar (design §3.2).
+ *
+ * Precedence (D3, plannedDate always wins):
+ *   1. `plannedDate` — explicit intent. Even when `updatedAt > plannedDate`,
+ *      this stays the horizon (overrun is currently NOT visualized; future
+ *      Phase may add bar-internal styling).
+ *   2. `updatedAt`   — real activity fallback.
+ *   3. `createdAt`   — last-resort (returns a near-0-width bar, MIN_BAR_WIDTH
+ *      kicks in at the renderer).
+ *
+ * If `createdAt` itself fails to parse the article is dropped upstream
+ * (see WikiTimelineView's `validArticles` filter).
+ */
+export function getHorizon(article: WikiArticle): Date | null {
+  const planned = safeDate(article.plannedDate)
+  if (planned) return planned
+  const updated = safeDate(article.updatedAt)
+  if (updated) return updated
+  return safeDate(article.createdAt)
+}
+
+/** Source of the horizon date — used by the timeline renderer to visually
+ *  differentiate "user-planned" (dashed right edge) vs "auto fallback" (solid).
+ *  Does NOT change `getHorizon()` return value — pure metadata.
+ *  Callers that only need the date should keep using `getHorizon()`. */
+export type HorizonSource = "planned" | "updated" | "created"
+
+/** Returns which field drives the horizon for an article (D2 visual split). */
+export function getHorizonSource(article: WikiArticle): HorizonSource {
+  if (safeDate(article.plannedDate)) return "planned"
+  if (safeDate(article.updatedAt)) return "updated"
+  return "created"
+}

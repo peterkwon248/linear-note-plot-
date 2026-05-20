@@ -51,6 +51,30 @@
 
 ---
 
+## 🚀 2026-05-21 — bars-first timeline 3 라운드 refine 완성 (단일 거대 PR) ⭐⭐⭐⭐⭐
+
+**범위**: 단일 거대 PR (+1000/-506, 9 파일, `wiki-timeline-view.tsx` 1067줄 거대 rewrite). bars-first 본질 회복 + 가로 스크롤 표준 + 시각 효과 풍부화. 사용자 본인 viewport 시각 검증 미완 (다른 컴퓨터 cross-machine 진행 신호로 머지).
+
+**완료 (1+2+3 라운드 누적)**:
+- **R1**: 막대 정보 컨테이너 (title inside/outside) + TODAY 톤다운 (`var(--border-strong)` 1px 0.7 + "Now" 작은 라벨) + Future stripe (opacity 0.06)
+- **R2**: 가로 스크롤 + zoom별 px-per-day (Week 80/Month 32/Quarter 10/Year 3) + tick collision 회피 (Monday-snap / 14일 step / 월초-snap) + "Now" 라벨 옵션 c (vertical line 우측 5px offset) + sticky (axis header / corner / label column 모두 불투명 `var(--bg)`)
+- **R3**: Weekend stripe (opacity 0.04) + Month boundary 강조 (1px 0.5) + Row separator 미세 감쇄 + Hover state (React `hoveredId` + row highlight + stroke ring + 4-line tooltip) + Status dot Stub/Article 분리 (hollow vs solid) + Past/Future gradient (linearGradient 0.78→1.0) + horizon source dashed end-cap (`getHorizonSource` 헬퍼 신규)
+
+**핵심 결정**:
+- **bars-first = 막대가 정보 컨테이너 (Reticle 패턴)** — dots는 산점도, bars는 timeline. 막대 안/옆 title + 끝점 status dot + Tooltip이 본질.
+- **viewport fit 강제는 timeline antipattern** — 1일에 충분한 px + 가로 스크롤 = Gantt/Linear/Reticle 표준.
+- **"Now" 라벨은 axis tick과 다른 alignment** — vertical line 우측 5px offset + start anchor.
+- **Plot "Gentle" 톤 = subtle layers + opt-in affordance** — 모든 시각 효과 subtle (0.04~0.7 opacity 범위), intrusive X.
+- **planning intent ≠ content activity** (영구 룰 #89 후보) — `setWikiArticlePlannedDate`는 `updatedAt` 안 건드림.
+- **horizon source 3분기** — plannedDate (intent, dashed) / updatedAt (activity, solid) / createdAt (fallback).
+- **Status dot 메타포** — Stub hollow (raw), Article solid (completed).
+
+**기술 학습**: SVG hover는 React state 패턴 / Tooltip은 absolute div wrapper (foreignObject 회피) / Past/Future gradient는 linearGradient 1개 (split rect 대비) / gradient stop clamp 의무 / sticky 불투명 배경 + z-index 위계 / px-per-day zoom 상수 매핑 / `window.__plotStore` dev expose (production 노출 확인 필요) / preview MCP IDB는 사용자 본인 viewport와 분리.
+
+**다음**: **bars-first 시각 검증** (사용자 본인 viewport에서 dummy snippet 적용 후 4 zoom 확인) → OK 시 **옵션 C (drag로 plannedDate, dnd-kit ~150줄)** 별도 PR. SESSION-LOG hook 참조.
+
+---
+
 ## 🚀 2026-05-20 — 4영역 작업 + timeline-planning bars-first 전환 ⭐⭐⭐⭐
 
 dead-block cleanup / Home Overview NavLink / breadcrumb 통일 / timeline-planning(PDCA Plan+Design+구현 진행 중). 단일 PR.

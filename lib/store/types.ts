@@ -438,6 +438,9 @@ export interface PlotState {
   /** PR-E2 — Theme color setter (hex string or null). Cascades to infobox header,
    *  group headers, hatnote accent border, and h2 section borders via CSS variable. */
   setWikiArticleThemeColor: (articleId: string, themeColor: string | null) => void
+  /** timeline-planning (2026-05-20) — set/clear plannedDate. `null` clears.
+   *  Does NOT update `updatedAt` (planning = intent, not content activity). */
+  setWikiArticlePlannedDate: (articleId: string, date: string | null) => void
   addWikiBlock: (articleId: string, block: Omit<WikiBlock, "id">, afterBlockId?: string) => string
   removeWikiBlock: (articleId: string, blockId: string) => void
   updateWikiBlock: (articleId: string, blockId: string, patch: Partial<Omit<WikiBlock, "id">>) => void
