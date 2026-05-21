@@ -51,6 +51,20 @@
 
 ---
 
+## 🚀 2026-05-21 (저녁 후속 #2) — Ontology graph node → SmartSidePanel 동기화 (P0 #1 완료) ⭐⭐⭐⭐
+
+**범위**: 3 파일 (+40/-227). Ontology graph node 클릭 → 통합 4탭 사이드바.
+
+**완료**: `ontology-view.tsx` — 싱글클릭 → `setSidePanelContext` + `setSidePanelOpen` (note/wiki/tag, prefix strip), 더블클릭 → 에디터 (note `openNote` / wiki `navigateToWikiArticle` / tag no-op). `ontology-detail-panel.tsx` 삭제 (215줄 legacy). `side-panel-detail.tsx` ontology placeholder 가드 fix.
+
+**핵심 결정**: Ontology node 클릭 = SmartSidePanel 4탭 (legacy OntologyDetailPanel 제거 — "모든 entity 4탭 통일" 룰 정합). graph node id 스킴: note raw / wiki `"wiki:"` prefix / tag `"tag:"` prefix.
+
+**기술 학습**: Plot 내부 라우팅은 `setActiveRoute` external store (Next router 아님) — `router.push("/wiki/[id]")`는 그 라우트 없어 404. wiki 열기 = `setActiveRoute("/wiki")` + `navigateToWikiArticle(id)`. `side-panel-detail.tsx` space별 하드 가드 주의. explore agent 결과는 가설 — ground truth는 코드/실행.
+
+**다음**: P0 #2 Activity events 후속.
+
+---
+
 ## 🚀 2026-05-21 (저녁 후속) — timeline 막대 끝점 재설계 (circle dot → Article 화살촉 / Stub rounded) ⭐⭐⭐⭐
 
 **범위**: 단일 파일 `wiki-timeline-view.tsx` (+22/-36). PR #393 후속. 사용자 "마음에 든다 이 정도면" → timeline 시각 작업 일단락.

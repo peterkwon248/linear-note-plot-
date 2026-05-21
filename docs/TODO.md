@@ -3,28 +3,25 @@
 > 우선순위 기반 작업 목록. **P0 = 다음 세션 즉시 시작점** (NEXT-ACTION.md 폐지, 2026-05-12).
 > 완료 항목은 즉시 삭제. 자세한 history는 SESSION-LOG.md + MEMORY.md.
 
-**마지막 갱신**: 2026-05-21 (저녁 후속) — timeline 막대 끝점 재설계 (circle dot → Article 화살촉 / Stub rounded). 사용자 "마음에 든다 이 정도면" → timeline 일단락. 다음 P0 = Ontology graph node 사이드바.
+**마지막 갱신**: 2026-05-21 (저녁 후속 #2) — Ontology graph node → SmartSidePanel 동기화 완료. 다음 P0 = Activity events 후속.
 
 ---
 
-## 🟣 P0 — 즉시 (cross-machine 진입점, 2026-05-21 저녁 후속)
+## 🟣 P0 — 즉시 (cross-machine 진입점, 2026-05-21 저녁 후속 #2)
 
-### 1. **🟡 Ontology graph node 사이드바 동기화** (최우선, 사용자 의도 미확정)
+### 1. **🟡 Activity events 후속** (최우선)
 
-- Graph node 클릭 → 4탭 사이드바 (Detail/Connections/Activity/Bookmarks — 추천) / OntologyDetailPanel / 사이드바 graph mode 중 택
-- 사용자 의향 청취 후 진행 (어느 패턴 원하는지)
+- **Granular Wiki/Book events wire-up** — 현재 wiki는 `created/updated/trashed/untrashed`만 emit (`lib/store/slices/wiki-articles.ts:61/81/83/85/177`). `block_added`/`block_removed`/`block_reordered` (wiki block 변경), `item_added`/`item_removed` 등 (books) 미연결. EntityEventType union(`lib/types.ts:934-945`)에 타입은 이미 정의됨. `appendEvent({kind:"wiki",id}, "block_added", {...})` 패턴으로 mutation 지점에 추가.
+- **`opened` 이벤트 emit** — wiki article 열 때 opened 발화 (현재 미emit). `ui.ts` `openNote`는 note만 `appendEvent(id,"opened")`. wiki는 `navigateToWikiArticle` consume 지점(WikiView)에서 emit 검토.
+- **Label entity events** — `tags.ts` 이벤트 발화 패턴 정합으로 label 이벤트 추가.
+- **시너지**: timeline 마커 chip(#90)이 unknown type fallback 보유 → wire-up 완료 시 timeline chip 자동으로 풍부해짐.
+- **첫 스텝**: `lib/store/slices/wiki-articles.ts` + `books.ts` + `lib/types.ts:934-945` read → mutation별 event 매핑 → 사용자 확인 후 wire-up.
 
-### 2. **🟡 Activity events 후속**
-
-- Granular Wiki/Book events wire-up (block_added/item_added 등) — timeline marker chip(#90)이 unknown type fallback 보유라 wire-up 완료 시 자동 풍부해짐
-- Label entity events 발화 (tags.ts 패턴 정합)
-- `opened` 이벤트 emit (현재 wiki article은 미emit — `lib/store/slices/wiki-articles.ts`는 created/updated/trashed/untrashed만)
-
-### 3. **🟡 Books own Views section** (entity-uniformity, 영구 룰 #87 정합)
+### 2. **🟡 Books own Views section** (entity-uniformity, 영구 룰 #87 정합)
 
 - `linear-sidebar.tsx` Books section에 own Views section. `SavedView.space "books"`는 이미 union에 있음.
 
-### 4. **🟢 timeline 추가 polish (사용자 명시 요청 시만)**
+### 3. **🟢 timeline 추가 polish (사용자 명시 요청 시만)**
 
 timeline은 사용자 "마음에 든다 이 정도면" 으로 일단락. 추가 polish는 사용자가 다시 요청할 때만. 후보 (보류):
 - (a) 막대 typography 키움 (title 폰트 11→12, weight 500→600)
@@ -33,13 +30,17 @@ timeline은 사용자 "마음에 든다 이 정도면" 으로 일단락. 추가 
 - (d) axis long label collision 강화 (Quarter/Year zoom)
 - (e) selected article 이벤트 list separate panel
 
-### 5. **🟢 wiki-timeline-view.tsx sub-component 분리**
+### 4. **🟢 wiki-timeline-view.tsx sub-component 분리**
 
 - 1500+ 줄 단일 파일. `<TimelineAxis>` / `<TimelineBars>` / `<TimelineEventMarkers>` / `<TimelineTooltip>` / `<TimelineGrid>` 5분할 후보. 별도 리팩토링 PR.
 
+### 5. **🟢 `router.push("/wiki/[id]")` dead code 정리**
+
+- `recent-cards.tsx` / `mixed-quicklinks.tsx` / `pinned-list.tsx` 등이 `router.push("/wiki/${id}")` 호출하나 `/wiki/[id]` Next 라우트 없어 404. `setActiveRoute("/wiki")` + `navigateToWikiArticle(id)` 패턴으로 교체 OR `/wiki/[id]` 라우트 신설.
+
 ### 6. **🟢 manual smoke 누적**
 
-- 이번 세션: 옵션 C drag + 마커 chip + Reticle polish + 끝점 재설계 (PR #393 + 끝점 PR)
+- 이번 세션: Ontology node 사이드바 + 옵션 C drag + 마커 chip + Reticle polish + 끝점 재설계
 - 이전: PR #392 (bars-first 3 라운드) + PR #373-#391
 
 **시각 검증 (선택)** — timeline 본인 viewport 확인 시 dummy snippet (SESSION-LOG 직전 entry hook 안 6 article 버전):
@@ -69,6 +70,7 @@ return `seeded ${ids.length}`;})()
 
 ## ✅ 최근 완료
 
+- **2026-05-21 (저녁 후속 #2)**: Ontology graph node → SmartSidePanel 동기화 — 싱글클릭 노드 → 4탭 사이드바 (note/wiki/tag), 더블클릭 → 에디터 (note `openNote` / wiki `navigateToWikiArticle` / tag no-op). legacy `OntologyDetailPanel` 삭제 (215줄). `side-panel-detail.tsx` ontology placeholder 가드 fix. 3 파일 +40/-227.
 - **2026-05-21 (저녁 후속)**: timeline 막대 끝점 재설계 — 떠 있던 circle status dot 제거 → Article = 막대 끝 solid 화살촉 ▶ / Stub = rounded end. dashed tail 초안 추가 후 사용자 "별론데" → 제거. 단일 파일 +22/-36. 사용자 "마음에 든다 이 정도면" 승인.
 - **2026-05-21 (저녁)**: timeline 옵션 C drag + event marker chips (Phosphor icon inline + filled ring) + Reticle-feel polish — 단일 거대 PR #393 (1 파일 `wiki-timeline-view.tsx`, +526/-50). 4 라운드 누적 (drag → marker 도입 → 도형 다양화 → 도형 폐기 + Phosphor chip).
 - **2026-05-21**: bars-first timeline 3 라운드 refine 완성 (PR #392) — 막대 정보 컨테이너 + 가로 스크롤 + sticky + 시각 효과 풍부화. 단일 거대 PR, +1000/-506, 9 파일.

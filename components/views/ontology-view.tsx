@@ -2,10 +2,10 @@
 
 import { useState, useMemo, useEffect, useRef, useCallback } from "react"
 import { usePlotStore } from "@/lib/store"
+import { navigateToWikiArticle } from "@/lib/wiki-article-nav"
 import { buildOntologyGraphData, type OntologyGraph, type OntologyNode } from "@/lib/graph"
 import { OntologyGraphCanvas } from "@/components/ontology/ontology-graph-canvas"
 import { OntologyLegend } from "@/components/ontology/ontology-legend"
-import { OntologyDetailPanel } from "@/components/ontology/ontology-detail-panel"
 // OntologyTabBar removed in Phase 7 — view mode lives in Display popover
 import { OntologyInsightsPanel } from "@/components/ontology/ontology-insights-panel"
 import { OntologyDashboardPanel } from "@/components/ontology/ontology-dashboard-panel"
@@ -32,7 +32,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { cn } from "@/lib/utils"
-import { useActiveViewId } from "@/lib/table-route"
+import { useActiveViewId, setActiveRoute } from "@/lib/table-route"
 import { useSaveViewProps } from "@/lib/view-engine/use-save-view-props"
 import { getEntityColor } from "@/lib/colors" // v109: opt-in color fallback
 
@@ -501,8 +501,43 @@ export function OntologyView() {
             tags={tags.map((t) => ({ id: t.id, name: t.name, color: getEntityColor(t.color) }))}
             searchMatchIds={searchMatchIds}
             selectedNodeId={selectedNodeId}
-            onSelectNode={setSelectedNodeId}
-            onOpenNote={(noteId) => openNote(noteId)}
+            onSelectNode={(nodeId) => {
+              setSelectedNodeId(nodeId)
+              if (!nodeId || !graph) return
+              const node = graph.nodes.find((n) => n.id === nodeId)
+              if (!node) return
+              const store = usePlotStore.getState()
+              if (node.nodeType === "wiki") {
+                const wikiId = nodeId.startsWith("wiki:") ? nodeId.slice(5) : nodeId
+                store.setSidePanelContext({ type: "wiki", id: wikiId })
+                store.setSidePanelOpen(true)
+              } else if (node.nodeType === "tag") {
+                const tagId = nodeId.startsWith("tag:") ? nodeId.slice(4) : nodeId
+                store.setSidePanelContext({ type: "tag", id: tagId })
+                store.setSidePanelOpen(true)
+              } else {
+                store.setSidePanelContext({ type: "note", id: nodeId })
+                store.setSidePanelOpen(true)
+              }
+            }}
+            onOpenNote={(nodeId) => {
+              const node = graph?.nodes.find((n) => n.id === nodeId)
+              if (!node) {
+                // Fallback: treat as a note id (preserves prior behavior)
+                openNote(nodeId)
+                return
+              }
+              if (node.nodeType === "wiki") {
+                const wikiId = nodeId.startsWith("wiki:") ? nodeId.slice(5) : nodeId
+                setActiveRoute("/wiki")
+                navigateToWikiArticle(wikiId)
+              } else if (node.nodeType === "tag") {
+                // Tags have no editor — single-click side panel already shows tag detail.
+                return
+              } else {
+                openNote(nodeId)
+              }
+            }}
             onPositionsUpdate={handlePositionsUpdate}
           />
         ) : (
@@ -512,13 +547,6 @@ export function OntologyView() {
               Computing layout...
             </div>
           </div>
-        )}
-        {selectedNodeId && (
-          <OntologyDetailPanel
-            noteId={selectedNodeId}
-            onClose={() => setSelectedNodeId(null)}
-            onOpenNote={(noteId) => openNote(noteId)}
-          />
         )}
       </div>
 
