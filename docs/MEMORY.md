@@ -8,6 +8,76 @@
 
 ---
 
+## 🚀 2026-05-21 (저녁) — **timeline 옵션 C drag + event marker chips + Reticle polish (단일 거대 PR)** ⭐⭐⭐⭐⭐
+
+**범위**: 단일 거대 PR (1 파일 `wiki-timeline-view.tsx`, +526/-50). 4 사용자 피드백 라운드 누적 (drag → marker 도입 → 도형 다양화 → 도형 폐기 + Phosphor chip + Reticle polish). 사용자 평 **"아직은 아쉬운데"** → 시각 polish 미완, 다음 세션 후속.
+
+### Round 1+2+3+4 누적 변경
+
+#### Round 1 — 옵션 C drag로 plannedDate
+- `dragState` + window-level pointer listeners + Escape 취소 + `document.body.style.cursor` 잠금
+- `clientXToSvgX` + `snapEndXToDay` + `endXToPlannedISO` 헬퍼
+- grab handle 12px (cursor ew-resize) + hover/drag 중 vertical hint line
+- 막대 width 실시간 확장 (`liveEndX`/`liveWidth` override) + `isPlanned` forced → dashed end-cap 즉시 전환
+- `pointerup` → `setWikiArticlePlannedDate(id, iso)` (planning intent)
+- 라이브 tooltip "Planning {date} ({relative})"
+
+#### Round 2 — 이벤트 마커 도입
+- `entityEvents` selector + `eventsByArticleId` memo + "Events" 토글
+- 같은 날 클러스터 → 개별 분리 + 7px stack + `+N` overflow
+- 색 매핑 (14 타입)
+
+#### Round 3 — 추상 도형 다양화 (중간, polish 도중 폐기)
+- 11종 도형 (ring/circle/square/square-ring/diamond/diamond-ring/triangle/triangle-ring/cross/x/pentagon)
+- 사용자 평 "그냥 컬러 dot만 나오는데" → 식별 불가 → **Phosphor chip으로 폐기 전환**
+
+#### Round 4 (최종) — Phosphor 아이콘 chip + Reticle-feel polish
+- **Phosphor 아이콘 chip** (Round 3 도형 완전 대체):
+  - `MarkerConfig: { icon: Icon, color, label }` — 14 매핑
+  - `<circle r=7 fill={color}/>` + `<IconComp x y width height weight="bold" color="white"/>` (nested SVG)
+  - 아이콘 12개 import: Plus / PencilSimple / Eye / Trash / ArrowCounterClockwise / LinkSimple / LinkBreak / StackPlus / StackMinus / ArrowsLeftRight / Paperclip / DotOutline
+- **Reticle-feel polish**:
+  - 막대 dimension: `LANE_HEIGHT 48→52` / `BAR_HEIGHT 24→28` / `BAR_RADIUS 6→8`
+  - 막대 depth: 2-layer fill (past/future + vertical highlight gradient) + `feDropShadow` filter
+  - Now anchor: vertical line + top dot (r=3.5) + label fontWeight 700
+  - Today 컬럼 subtle tint (0.04 opacity)
+  - Axis typography 위계: month-start bold / day muted
+  - 컨트롤 바 divider (Events / zoom 사이)
+
+### 핵심 결정 (영구 후보 #90, 누적 영구 룰)
+
+- **#90 후보** (사용자 OK 대기): **event markers = icon chip 패턴** — filled colored ring + Phosphor 흰 아이콘 inline (nested SVG). 추상 도형은 작은 사이즈에서 식별 불가 (작업 원칙 #8 reinforce). Gentle ≠ illegible. 사이즈 식별 가능 > 컬러 다양성 > 도형 다양성.
+- **bars + events 보완 관계** — bars = 수명 (느린 서사) / events = 사용 활동 (펑크처드 markers). Reticle 패턴 확장.
+- **마커 디자인 우선순위** — 사이즈 식별 가능 > 컬러 다양성 > 도형 다양성. 사이즈가 너무 작으면 컬러/도형 변형 무력.
+- **막대 depth = 2-layer gradient + drop-shadow 패턴** — past/future 가로 gradient + vertical highlight + `feDropShadow`. SVG filter는 CSS filter보다 SVG element에 정합.
+- **Now anchor = vertical line + top dot** — 라인만으론 시각 무게 약함. 4px top dot 추가하면 "지금 여기" 앵커 시각 확립.
+- **Today 컬럼 subtle tint** — 라인의 보완. 컬럼 tint = "공간" → 오늘 일자 컨텍스트 자연 그루핑.
+- **axis typography 위계** — month vs day differentiation. 1일 tick bold + fg / 일반 day tick light + muted.
+
+### 기술 학습 (영구, 2026-05-21 저녁)
+
+- **SVG nested SVG는 모던 브라우저 정합** — `<svg><svg x y width height>...</svg></svg>` 패턴. Phosphor React component는 자체 `<svg viewBox>` 출력하므로 부모 SVG 안에서 x/y prop으로 위치. foreignObject 회피.
+- **Phosphor `weight="bold" color="white"` 패턴** — 작은 사이즈(8~10px)에서 stroke 굵기가 식별성 좌우.
+- **SVG `feDropShadow` filter** — `<defs><filter id><feDropShadow dx dy stdDeviation floodColor floodOpacity/></filter></defs>` + `<rect filter="url(#id)"/>`. 막대 main rect에만 적용 (overlay/cap/dot에는 X — muddiness 회피).
+- **SVG `<linearGradient>` 2개 매김** — `${gradId}-vh` 패턴으로 ID 충돌 회피.
+- **native pointer events vs dnd-kit** — 단순 drag (한 축 + snap)는 native pointer events만으로 충분. 의존성 절약.
+- **drag closure 패턴** — useEffect dep에 `dragState?.id, dragState?.pointerId` + 핸들러 내부에서 매번 lanes.find() 로 최신 lane 조회. stale closure 회피.
+- **`document.body.style.cursor` 드래그 잠금** + **cleanup에서 prev cursor 복원** 의무.
+- **`onMouseLeave` 가드 (드래그 중 tooltip 유지)** — `if (dragState?.id === article.id) return;` 가드.
+- **추상 도형 변형은 작은 사이즈(r<5)에서 식별 불가** — 컬러는 식별되지만 도형은 "그냥 dot" 인지. 사이즈 키우거나 Phosphor 아이콘 inline 패턴.
+- **`<IconComp x y width height>` 동적 컴포넌트 JSX** — `const IconComp = mc.icon; <IconComp .../>` 패턴이 type-safe.
+- **showStubs 토글 = wiki articles 노출 기본 OFF** — 신규 article은 stub 기본. 시드 데이터 검증 시 showStubs ON 의무.
+
+### 환경
+
+- Store version: **144** (변경 없음 — UI 변경만)
+- Phosphor 12개 신규 import (`@phosphor-icons/react/dist/ssr/{Name}` SSR variant)
+- 단일 파일 부담: `wiki-timeline-view.tsx` 1500+ 줄 — sub-component 분리 후보 (Watch Out)
+- TS 부채 0 유지: `tsc --noEmit` clean, `npm run build` ✓
+- 다음: **사용자 시각 검증 + polish 후속** (a-e 후보 중 사용자 우선순위 청취) → OK 시 P0 #2-6 진행. SESSION-LOG hook 참조.
+
+---
+
 ## 🚀 2026-05-21 — **bars-first timeline 3 라운드 refine 완성 (단일 거대 PR)** ⭐⭐⭐⭐⭐
 
 **범위**: 단일 거대 PR (+1000/-506, 9 파일 modified, wiki-timeline-view.tsx 1067줄 거대 rewrite). 1+2+3 라운드 누적 완성. dots → bars-first 본질 회복 + 가로 스크롤 표준 패턴 + 시각 효과 풍부화. **사용자 본인 viewport 시각 검증 미완** (after-work 우선 진행 신호로 머지).

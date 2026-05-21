@@ -31,12 +31,27 @@
 import { useState, useMemo, useCallback, useRef, useEffect } from "react"
 import { CaretLeft } from "@phosphor-icons/react/dist/ssr/CaretLeft"
 import { CaretRight } from "@phosphor-icons/react/dist/ssr/CaretRight"
+import { Plus } from "@phosphor-icons/react/dist/ssr/Plus"
+import { PencilSimple } from "@phosphor-icons/react/dist/ssr/PencilSimple"
+import { Eye } from "@phosphor-icons/react/dist/ssr/Eye"
+import { Trash } from "@phosphor-icons/react/dist/ssr/Trash"
+import { ArrowCounterClockwise } from "@phosphor-icons/react/dist/ssr/ArrowCounterClockwise"
+import { LinkSimple } from "@phosphor-icons/react/dist/ssr/LinkSimple"
+import { LinkBreak } from "@phosphor-icons/react/dist/ssr/LinkBreak"
+import { StackPlus } from "@phosphor-icons/react/dist/ssr/StackPlus"
+import { StackMinus } from "@phosphor-icons/react/dist/ssr/StackMinus"
+import { ArrowsLeftRight } from "@phosphor-icons/react/dist/ssr/ArrowsLeftRight"
+import { Paperclip } from "@phosphor-icons/react/dist/ssr/Paperclip"
+import { DotOutline } from "@phosphor-icons/react/dist/ssr/DotOutline"
 import { IconWikiStub, IconWikiArticle } from "@/components/plot-icons"
 import { isWikiStub, safeDate, getHorizon, getHorizonSource } from "@/lib/wiki-utils"
 import { cn } from "@/lib/utils"
 import { WIKI_STATUS_HEX } from "@/lib/colors"
-import type { WikiArticle } from "@/lib/types"
+import { usePlotStore } from "@/lib/store"
+import type { WikiArticle, EntityEvent, EntityEventType } from "@/lib/types"
+import type { Icon } from "@phosphor-icons/react"
 import type { ViewState } from "@/lib/view-engine/types"
+import { getEventsForEntity } from "@/lib/datalog/helpers"
 
 /* ── Types ───────────────────────────────────────────────── */
 
@@ -119,14 +134,72 @@ const TICK_STEP_DAYS: Record<ZoomLevel, number> = {
 
 /* ── Constants ───────────────────────────────────────────── */
 
-const LANE_HEIGHT = 48
-const BAR_HEIGHT = 24
-const BAR_RADIUS = 6
-const END_DOT_SIZE = 16
-const END_DOT_OFFSET = 8
+const LANE_HEIGHT = 52
+const BAR_HEIGHT = 28
+const BAR_RADIUS = 8
+const END_DOT_SIZE = 18
+const END_DOT_OFFSET = 9
 const AXIS_HEIGHT = 32
 const LABEL_COL_WIDTH = 200
 const TODAY_LINE_COLOR = "var(--border-strong)"
+
+/**
+ * Per-event-type visual config — icon chip (filled ring + Phosphor icon).
+ * Markers sit ABOVE the bar centerline.
+ * Unknown types fall back to EVENT_MARKER_FALLBACK.
+ */
+
+interface MarkerConfig {
+  /** Phosphor icon component (SSR variant) */
+  icon: Icon
+  /** Type color (used for ring fill) */
+  color: string
+  /** Human-readable label for tooltip */
+  label: string
+}
+
+const EVENT_MARKER_CONFIG: Partial<Record<EntityEventType, MarkerConfig>> = {
+  // Lifecycle
+  created:    { icon: Plus,                  color: WIKI_STATUS_HEX.article,   label: "Created" },
+  updated:    { icon: PencilSimple,          color: "#3b82f6",                  label: "Updated" },
+  opened:     { icon: Eye,                   color: "var(--muted-foreground)",  label: "Opened" },
+  trashed:    { icon: Trash,                 color: "#ef4444",                  label: "Trashed" },
+  untrashed:  { icon: ArrowCounterClockwise, color: "#ef4444",                  label: "Restored" },
+  // Wiki granular
+  block_added:     { icon: StackPlus,        color: "#10b981", label: "Block added" },
+  block_removed:   { icon: StackMinus,       color: "#10b981", label: "Block removed" },
+  block_reordered: { icon: ArrowsLeftRight,  color: "#10b981", label: "Block reordered" },
+  // Linking
+  link_added:   { icon: LinkSimple, color: "#8b5cf6", label: "Link added" },
+  link_removed: { icon: LinkBreak,  color: "#8b5cf6", label: "Link removed" },
+  // Relations
+  relation_added:   { icon: ArrowsLeftRight, color: "#f59e0b", label: "Relation added" },
+  relation_removed: { icon: LinkBreak,       color: "#f59e0b", label: "Relation removed" },
+  // Attachments
+  attachment_added:   { icon: Paperclip, color: "#06b6d4", label: "Attachment added" },
+  attachment_removed: { icon: Paperclip, color: "#06b6d4", label: "Attachment removed" },
+}
+
+const EVENT_MARKER_FALLBACK: MarkerConfig = {
+  icon: DotOutline,
+  color: "var(--muted-foreground)",
+  label: "Event",
+}
+
+/** Ring radius (visible circle). Icon centered inside. */
+const EVENT_MARKER_RING_R = 7
+
+/** Icon size (Phosphor `size` prop). Roughly ring_r * 1.4 for nice fit. */
+const EVENT_MARKER_ICON_SIZE = 9
+
+/** Y offset above the bar centerline (negative = above) */
+const EVENT_MARKER_Y_OFFSET = -12
+
+/** Per-event horizontal offset when stacking same-day events */
+const EVENT_MARKER_STACK_GAP = 14
+
+/** Max markers per day before showing +N overflow */
+const EVENT_MARKER_MAX_PER_DAY = 4
 
 /* ── Utilities ───────────────────────────────────────────── */
 
@@ -275,7 +348,25 @@ export function WikiTimelineView({
   const [tooltip, setTooltip] = useState<{ id: string; laneIndex: number; x: number } | null>(null)
   /** B1: hovered article id — drives stroke ring + row highlight */
   const [hoveredId, setHoveredId] = useState<string | null>(null)
+  const [showEvents, setShowEvents] = useState(true)
+  const [eventTooltip, setEventTooltip] = useState<{
+    laneIndex: number
+    x: number
+    dateLabel: string
+    labels: string[]
+    count: number
+  } | null>(null)
+  const entityEvents = usePlotStore((s) => s.entityEvents)
 
+  const [dragState, setDragState] = useState<{
+    id: string
+    pointerId: number
+    startClientX: number
+    originalEndX: number
+    currentEndX: number
+  } | null>(null)
+
+  const canvasSvgRef = useRef<SVGSVGElement>(null)
   const bodyRef = useRef<HTMLDivElement>(null)
   const canvasScrollRef = useRef<HTMLDivElement>(null)
   const [viewportH, setViewportH] = useState(0)
@@ -295,6 +386,23 @@ export function WikiTimelineView({
     () => laneArticles(validArticles, winStart, zoom),
     [validArticles, winStart, zoom],
   )
+
+  /** Events for each laned article, filtered to current window. Stable per render. */
+  const eventsByArticleId = useMemo(() => {
+    if (!showEvents) return new Map<string, EntityEvent[]>()
+    const winStartMs = winStart.getTime()
+    const winEndMs = winEnd.getTime()
+    const m = new Map<string, EntityEvent[]>()
+    for (const { article } of lanes) {
+      const all = getEventsForEntity(entityEvents, { kind: "wiki", id: article.id })
+      const within = all.filter((e) => {
+        const t = new Date(e.at).getTime()
+        return t >= winStartMs && t <= winEndMs
+      })
+      if (within.length > 0) m.set(article.id, within)
+    }
+    return m
+  }, [lanes, entityEvents, winStart, winEnd, showEvents])
 
   const ticks = useMemo(
     () => buildTicks(winStart, winEnd, zoom),
@@ -325,6 +433,54 @@ export function WikiTimelineView({
     return () => ro.disconnect()
   }, [])
 
+  /* ── Drag: pointer listeners (window-level for smooth tracking) ── */
+
+  useEffect(() => {
+    if (!dragState) return
+    function onMove(e: PointerEvent) {
+      if (e.pointerId !== dragState!.pointerId) return
+      const svg = canvasSvgRef.current
+      if (!svg) return
+      const rect = svg.getBoundingClientRect()
+      const rawEndX = e.clientX - rect.left
+      const lane = lanes.find((l) => l.article.id === dragState!.id)
+      if (!lane) return
+      const minEndX = lane.x + cfg.minBarWidth
+      const snapped = Math.round(rawEndX / cfg.pxPerDay) * cfg.pxPerDay
+      const clampedEndX = Math.max(snapped, minEndX)
+      setDragState((prev) => prev ? { ...prev, currentEndX: clampedEndX } : null)
+    }
+    function onUp(e: PointerEvent) {
+      if (e.pointerId !== dragState!.pointerId) return
+      const days = Math.round(dragState!.currentEndX / cfg.pxPerDay)
+      const date = startOfDay(addDays(winStart, days))
+      const iso = date.toISOString()
+      usePlotStore.getState().setWikiArticlePlannedDate(dragState!.id, iso)
+      setDragState(null)
+    }
+    function onCancel(e: PointerEvent) {
+      if (e.pointerId !== dragState!.pointerId) return
+      setDragState(null)
+    }
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "Escape") setDragState(null)
+    }
+    window.addEventListener("pointermove", onMove)
+    window.addEventListener("pointerup", onUp)
+    window.addEventListener("pointercancel", onCancel)
+    window.addEventListener("keydown", onKey)
+    const prevCursor = document.body.style.cursor
+    document.body.style.cursor = "ew-resize"
+    return () => {
+      window.removeEventListener("pointermove", onMove)
+      window.removeEventListener("pointerup", onUp)
+      window.removeEventListener("pointercancel", onCancel)
+      window.removeEventListener("keydown", onKey)
+      document.body.style.cursor = prevCursor
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [dragState?.id, dragState?.pointerId, lanes, cfg.pxPerDay, cfg.minBarWidth, winStart])
+
   /* ── Navigation ── */
 
   const navigate = useCallback(
@@ -339,6 +495,120 @@ export function WikiTimelineView({
     setAnchor(startOfDay(now))
   }, [now])
 
+  /* ── Render: event markers above bar ── */
+
+  /**
+   * Render event markers for one lane. Each event = own marker. Same-day events
+   * stack horizontally with EVENT_MARKER_STACK_GAP. If a day has > EVENT_MARKER_MAX_PER_DAY
+   * events, show the first MAX and a "+N" overflow text after them.
+   */
+  function renderEventMarkers(article: WikiArticle, laneIndex: number) {
+    const events = eventsByArticleId.get(article.id)
+    if (!events || events.length === 0) return null
+
+    const cy = laneIndex * LANE_HEIGHT + LANE_HEIGHT / 2
+    const markerY = cy - BAR_HEIGHT / 2 + EVENT_MARKER_Y_OFFSET
+
+    // Bucket events by yyyy-mm-dd (oldest first within each day so left-to-right stack)
+    const byDay = new Map<string, EntityEvent[]>()
+    for (const ev of events) {
+      const d = new Date(ev.at)
+      const key = `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`
+      if (!byDay.has(key)) byDay.set(key, [])
+      byDay.get(key)!.push(ev)
+    }
+    // sort each day's events by time ascending
+    for (const arr of byDay.values()) {
+      arr.sort((a, b) => new Date(a.at).getTime() - new Date(b.at).getTime())
+    }
+
+    const dayBuckets = Array.from(byDay.entries()).map(([key, evs]) => {
+      const first = new Date(evs[0].at)
+      const dayStart = new Date(first.getFullYear(), first.getMonth(), first.getDate())
+      const dayCenterX = diffDays(dayStart, winStart) * cfg.pxPerDay + cfg.pxPerDay / 2
+      return { key, dayCenterX, events: evs }
+    })
+
+    return (
+      <g key={`events-${article.id}`} style={{ pointerEvents: "none" }}>
+        {dayBuckets.map(({ key, dayCenterX, events: evs }) => {
+          const visible = evs.slice(0, EVENT_MARKER_MAX_PER_DAY)
+          const overflow = evs.length - visible.length
+          // Center the row of markers horizontally around dayCenterX
+          const totalW = (visible.length - 1) * EVENT_MARKER_STACK_GAP + (overflow > 0 ? EVENT_MARKER_STACK_GAP + 12 : 0)
+          const startX = dayCenterX - totalW / 2
+
+          return (
+            <g key={key}>
+              {visible.map((ev, i) => {
+                const mc: MarkerConfig = EVENT_MARKER_CONFIG[ev.type] ?? EVENT_MARKER_FALLBACK
+                const IconComp = mc.icon
+                const mx = startX + i * EVENT_MARKER_STACK_GAP
+                return (
+                  <g
+                    key={ev.id}
+                    transform={`translate(${mx}, ${markerY})`}
+                    style={{ pointerEvents: "all" }}
+                  >
+                    {/* Hit area — larger than visible ring for easier hover */}
+                    <circle
+                      r={10}
+                      fill="transparent"
+                      onMouseEnter={(e) => {
+                        e.stopPropagation()
+                        const dateLabel = new Date(ev.at).toLocaleDateString("en-US", {
+                          month: "short", day: "numeric", year: "numeric",
+                        })
+                        const timeLabel = new Date(ev.at).toLocaleTimeString("en-US", {
+                          hour: "numeric", minute: "2-digit",
+                        })
+                        const label = (EVENT_MARKER_CONFIG[ev.type] ?? EVENT_MARKER_FALLBACK).label
+                        setEventTooltip({
+                          laneIndex,
+                          x: mx,
+                          dateLabel: `${dateLabel} · ${timeLabel}`,
+                          labels: [label],
+                          count: 1,
+                        })
+                      }}
+                      onMouseLeave={() => setEventTooltip(null)}
+                    />
+                    {/* Visible chip — filled ring + centered Phosphor icon */}
+                    <circle
+                      r={EVENT_MARKER_RING_R}
+                      fill={mc.color}
+                      opacity={0.95}
+                    />
+                    <IconComp
+                      x={-EVENT_MARKER_ICON_SIZE / 2}
+                      y={-EVENT_MARKER_ICON_SIZE / 2}
+                      width={EVENT_MARKER_ICON_SIZE}
+                      height={EVENT_MARKER_ICON_SIZE}
+                      weight="bold"
+                      color="white"
+                    />
+                  </g>
+                )
+              })}
+              {overflow > 0 && (
+                <text
+                  x={startX + visible.length * EVENT_MARKER_STACK_GAP}
+                  y={markerY + 3}
+                  fill="var(--muted-foreground)"
+                  fontSize={9}
+                  fontWeight={600}
+                  style={{ pointerEvents: "none" }}
+                >
+                  +{overflow}
+                </text>
+              )}
+            </g>
+          )
+        })}
+      </g>
+    )
+  }
+
   /* ── Render: single bar per lane ── */
 
   function renderLaneBar(item: LanedArticle, laneIndex: number) {
@@ -347,34 +617,40 @@ export function WikiTimelineView({
     const isActive = article.id === activeArticleId
     const isSelected = selectedIds.has(article.id)
     const isHovered = article.id === hoveredId
+    const isDragging = dragState?.id === article.id
     const color = stub ? WIKI_STATUS_HEX.stub : WIKI_STATUS_HEX.article
     const cy = laneIndex * LANE_HEIGHT + LANE_HEIGHT / 2
     const barY = cy - BAR_HEIGHT / 2
-    const endX = x + width
-    const dotCx = endX + END_DOT_OFFSET
-    const titleInside = width >= cfg.titleThreshold
+
+    /** Live end/width during drag; else use static computed values */
+    const liveEndX = isDragging ? dragState!.currentEndX : x + width
+    const liveWidth = liveEndX - x
+
+    const dotCx = liveEndX + END_DOT_OFFSET
+    const titleInside = liveWidth >= cfg.titleThreshold
     const outsideTitleX = dotCx + END_DOT_SIZE / 2 + 4
     const titleLabel = article.title || "Untitled"
 
     /** D1: gradient id for past→future opacity split */
     const gradId = `grad-${article.id}`
 
-    /** D1: nowX relative to bar start, clamped 0..1 */
+    /** D1: nowX relative to bar start, clamped 0..1 (use liveWidth) */
     const gradStop = (() => {
-      if (nowX <= x) return 0      // entire bar is future
-      if (nowX >= endX) return 1   // entire bar is past
-      return (nowX - x) / width    // partial split
+      if (nowX <= x) return 0           // entire bar is future
+      if (nowX >= liveEndX) return 1    // entire bar is past
+      return (nowX - x) / liveWidth     // partial split
     })()
 
-    /** D2: planned horizon → dashed right cap */
+    /** D2: planned horizon → dashed right cap; also forced true while dragging */
     const horizonSource = getHorizonSource(article)
-    const isPlanned = horizonSource === "planned"
+    const isPlanned = isDragging || horizonSource === "planned"
 
     return (
       <g
         key={article.id}
         style={{ cursor: "pointer" }}
         onClick={(e) => {
+          if (isDragging) return
           e.stopPropagation()
           onOpenArticle(article.id)
           onSelect(article.id, { multi: e.metaKey || e.ctrlKey, shift: e.shiftKey, index: laneIndex })
@@ -384,22 +660,28 @@ export function WikiTimelineView({
           setTooltip({ id: article.id, laneIndex, x })
         }}
         onMouseLeave={() => {
+          if (dragState?.id === article.id) return  // keep tooltip during drag
           setHoveredId(null)
           setTooltip(null)
         }}
         role="button"
         aria-label={article.title}
       >
-        {/* D1: Past→Future gradient definition */}
+        {/* D1: Past→Future gradient definition + vertical highlight */}
         <defs>
           <linearGradient id={gradId} x1="0" y1="0" x2="1" y2="0">
             <stop offset={`${gradStop * 100}%`} stopColor={color} stopOpacity={0.78} />
             <stop offset={`${gradStop * 100}%`} stopColor={color} stopOpacity={1.0} />
           </linearGradient>
+          {/* Vertical highlight gradient — top white-ish, fade to transparent at 50% */}
+          <linearGradient id={`${gradId}-vh`} x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="white" stopOpacity={0.14} />
+            <stop offset="50%" stopColor="white" stopOpacity={0} />
+          </linearGradient>
         </defs>
 
         {/* B1: Row hover bg highlight (full width behind bar row) */}
-        {isHovered && (
+        {(isHovered || isDragging) && (
           <rect
             x={0}
             y={laneIndex * LANE_HEIGHT}
@@ -415,7 +697,7 @@ export function WikiTimelineView({
           <rect
             x={x - 2}
             y={barY - 2}
-            width={width + 4}
+            width={liveWidth + 4}
             height={BAR_HEIGHT + 4}
             rx={BAR_RADIUS + 2}
             fill="none"
@@ -425,14 +707,26 @@ export function WikiTimelineView({
           />
         )}
 
-        {/* Main bar — D1 gradient fill */}
+        {/* Main bar — D1 gradient fill + drop shadow */}
         <rect
           x={x}
           y={barY}
-          width={width}
+          width={liveWidth}
           height={BAR_HEIGHT}
           rx={BAR_RADIUS}
           fill={`url(#${gradId})`}
+          filter="url(#bar-shadow)"
+        />
+
+        {/* Vertical highlight overlay — 3D depth (top catches "light") */}
+        <rect
+          x={x}
+          y={barY}
+          width={liveWidth}
+          height={BAR_HEIGHT}
+          rx={BAR_RADIUS}
+          fill={`url(#${gradId}-vh)`}
+          pointerEvents="none"
         />
 
         {/* B1: Hover ring */}
@@ -440,7 +734,7 @@ export function WikiTimelineView({
           <rect
             x={x - 1}
             y={barY - 1}
-            width={width + 2}
+            width={liveWidth + 2}
             height={BAR_HEIGHT + 2}
             rx={BAR_RADIUS + 1}
             fill="none"
@@ -453,9 +747,9 @@ export function WikiTimelineView({
         {/* D2: Planned horizon — dashed right-edge cap overlay */}
         {isPlanned && (
           <line
-            x1={endX}
+            x1={liveEndX}
             y1={barY + 2}
-            x2={endX}
+            x2={liveEndX}
             y2={barY + BAR_HEIGHT - 2}
             stroke={color}
             strokeWidth={2}
@@ -468,7 +762,7 @@ export function WikiTimelineView({
         {titleInside && (
           <>
             <clipPath id={`clip-bar-${article.id}`}>
-              <rect x={x + 6} y={barY} width={width - 12} height={BAR_HEIGHT} />
+              <rect x={x + 6} y={barY} width={liveWidth - 12} height={BAR_HEIGHT} />
             </clipPath>
             <text
               x={x + 8}
@@ -507,6 +801,41 @@ export function WikiTimelineView({
           >
             {titleLabel}
           </text>
+        )}
+
+        {/* Grab handle: 12px wide hit zone on right edge */}
+        <rect
+          x={liveEndX - 6}
+          y={barY - 2}
+          width={12}
+          height={BAR_HEIGHT + 4}
+          fill="transparent"
+          style={{ cursor: "ew-resize", pointerEvents: "all" }}
+          onPointerDown={(e) => {
+            e.stopPropagation()
+            e.preventDefault()
+            setDragState({
+              id: article.id,
+              pointerId: e.pointerId,
+              startClientX: e.clientX,
+              originalEndX: x + width,
+              currentEndX: x + width,
+            })
+          }}
+        />
+
+        {/* Visible affordance: subtle vertical hint on hover or drag */}
+        {(isHovered || isDragging) && (
+          <line
+            x1={liveEndX}
+            y1={barY + 3}
+            x2={liveEndX}
+            y2={barY + BAR_HEIGHT - 3}
+            stroke={color}
+            strokeWidth={2}
+            opacity={isDragging ? 0.9 : 0.55}
+            style={{ pointerEvents: "none" }}
+          />
         )}
       </g>
     )
@@ -564,6 +893,21 @@ export function WikiTimelineView({
         </button>
 
         <div className="flex-1" />
+
+        <button
+          onClick={() => setShowEvents((v) => !v)}
+          className={cn(
+            "rounded px-2 py-0.5 text-2xs transition-colors",
+            showEvents
+              ? "bg-secondary text-foreground"
+              : "text-muted-foreground hover:text-foreground",
+          )}
+          title={showEvents ? "Hide event markers" : "Show event markers"}
+        >
+          Events
+        </button>
+
+        <div className="h-4 w-px bg-border-subtle" />
 
         <div className="flex items-center gap-0.5 rounded-md border border-border-subtle p-0.5 text-2xs">
           {ZOOM_ORDER.map((z) => (
@@ -648,26 +992,32 @@ export function WikiTimelineView({
                       stroke="var(--border)"
                       strokeWidth={1}
                     />
-                    <text
-                      x={0}
-                      y={AXIS_HEIGHT - 10}
-                      textAnchor="middle"
-                      fill="var(--muted-foreground)"
-                      className="select-none text-2xs"
-                    >
-                      {cfg.formatTick(tick)}
-                    </text>
+                    {(() => {
+                      const isMonthStart = tick.getDate() === 1
+                      return (
+                        <text
+                          x={0}
+                          y={AXIS_HEIGHT - 10}
+                          textAnchor="middle"
+                          fill={isMonthStart ? "var(--fg, var(--foreground))" : "var(--muted-foreground)"}
+                          className="select-none text-2xs"
+                          style={{ fontWeight: isMonthStart ? 600 : 400, opacity: isMonthStart ? 1 : 0.85 }}
+                        >
+                          {cfg.formatTick(tick)}
+                        </text>
+                      )
+                    })()}
                   </g>
                 )
               })}
               {nowX >= 0 && nowX <= canvasWidth && (
                 <text
-                  x={nowX + 5}
+                  x={nowX + 6}
                   y={AXIS_HEIGHT - 10}
                   textAnchor="start"
                   fill="var(--fg, var(--foreground))"
                   className="select-none text-2xs"
-                  style={{ fontWeight: 600 }}
+                  style={{ fontWeight: 700, letterSpacing: "0.02em" }}
                 >
                   Now
                 </text>
@@ -759,11 +1109,19 @@ export function WikiTimelineView({
               onClick={() => setTooltip(null)}
             >
               <svg
+                ref={canvasSvgRef}
                 width={Math.max(canvasWidth, 400)}
                 height={svgHeight}
                 className="block select-none"
                 style={{ display: "block" }}
               >
+                {/* ── Global defs: bar drop-shadow filter ── */}
+                <defs>
+                  <filter id="bar-shadow" x="-5%" y="-50%" width="110%" height="200%">
+                    <feDropShadow dx="0" dy="1.2" stdDeviation="1" floodColor="#000" floodOpacity="0.35" />
+                  </filter>
+                </defs>
+
                 {/* ── A1: Weekend column stripes (Sat=6, Sun=0) ── */}
                 {allDays.map((day, i) => {
                   const dow = day.getDay()
@@ -782,6 +1140,24 @@ export function WikiTimelineView({
                     />
                   )
                 })}
+
+                {/* ── Today column tint — soft accent on the current day's column ── */}
+                {(() => {
+                  const today = startOfDay(now)
+                  const todayX = diffDays(today, winStart) * cfg.pxPerDay
+                  if (todayX + cfg.pxPerDay < 0 || todayX > canvasWidth) return null
+                  return (
+                    <rect
+                      x={todayX}
+                      y={0}
+                      width={cfg.pxPerDay}
+                      height={svgHeight}
+                      fill="var(--fg, var(--foreground))"
+                      opacity={0.04}
+                      pointerEvents="none"
+                    />
+                  )
+                })()}
 
                 {/* ── Vertical grid lines (tick positions, day ticks) ── */}
                 {ticks.map((tick, i) => {
@@ -829,7 +1205,7 @@ export function WikiTimelineView({
                     y2={(laneIndex + 1) * LANE_HEIGHT}
                     stroke="var(--border)"
                     strokeWidth={0.5}
-                    opacity={0.2}
+                    opacity={0.15}
                   />
                 ))}
 
@@ -848,17 +1224,30 @@ export function WikiTimelineView({
                 {/* Article bars */}
                 {lanes.map((item, laneIndex) => renderLaneBar(item, laneIndex))}
 
-                {/* NOW vertical line */}
+                {/* Event markers (above bars) */}
+                {lanes.map((item, laneIndex) => renderEventMarkers(item.article, laneIndex))}
+
+                {/* NOW vertical line + top anchor dot */}
                 {nowX >= 0 && nowX <= canvasWidth && (
-                  <line
-                    x1={nowX}
-                    y1={0}
-                    x2={nowX}
-                    y2={svgHeight}
-                    stroke={TODAY_LINE_COLOR}
-                    strokeWidth={1}
-                    opacity={0.7}
-                  />
+                  <g>
+                    <line
+                      x1={nowX}
+                      y1={0}
+                      x2={nowX}
+                      y2={svgHeight}
+                      stroke={TODAY_LINE_COLOR}
+                      strokeWidth={1.2}
+                      opacity={0.85}
+                    />
+                    {/* Top anchor dot — visual confidence at top of Now line */}
+                    <circle
+                      cx={nowX}
+                      cy={4}
+                      r={3.5}
+                      fill="var(--fg, var(--foreground))"
+                      opacity={0.9}
+                    />
+                  </g>
                 )}
               </svg>
 
@@ -916,13 +1305,28 @@ export function WikiTimelineView({
                       return created ? `Created ${fmt(created)}` : null
                     })()}
                   </div>
-                  {/* Line 4: Planned date or Updated date */}
+                  {/* Line 4: Live drag date OR planned/updated date */}
                   <div className="mt-0.5 text-2xs tabular-nums">
                     {(() => {
-                      const planned = safeDate(tooltipArticle.plannedDate)
-                      const updated = safeDate(tooltipArticle.updatedAt)
                       const fmt = (d: Date) =>
                         d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
+
+                      // During drag — show live planning date
+                      if (dragState && tooltipArticle.id === dragState.id) {
+                        const days = Math.round(dragState.currentEndX / cfg.pxPerDay)
+                        const liveDragDate = startOfDay(addDays(winStart, days))
+                        const rel = relativeDateLabel(liveDragDate, now)
+                        return (
+                          <span className="text-muted-foreground">
+                            <span style={{ color: WIKI_STATUS_HEX.stub, fontWeight: 500 }}>Planning</span>{" "}
+                            {fmt(liveDragDate)}
+                            <span className="opacity-60"> ({rel})</span>
+                          </span>
+                        )
+                      }
+
+                      const planned = safeDate(tooltipArticle.plannedDate)
+                      const updated = safeDate(tooltipArticle.updatedAt)
                       if (planned) {
                         const rel = relativeDateLabel(planned, now)
                         return (
@@ -943,6 +1347,28 @@ export function WikiTimelineView({
                       }
                       return null
                     })()}
+                  </div>
+                </div>
+              )}
+
+              {/* Event marker tooltip */}
+              {eventTooltip && (
+                <div
+                  className="pointer-events-none absolute z-30 rounded-md border border-border-subtle bg-popover px-2 py-1 shadow-md"
+                  style={{
+                    left: Math.min(eventTooltip.x + 8, (canvasScrollRef.current?.clientWidth ?? 400) - 160),
+                    top: eventTooltip.laneIndex * LANE_HEIGHT + LANE_HEIGHT / 2 - BAR_HEIGHT / 2 - 32,
+                  }}
+                >
+                  <div className="text-2xs font-medium text-foreground tabular-nums">
+                    {eventTooltip.dateLabel}
+                  </div>
+                  <div className="mt-0.5 flex flex-col gap-0.5">
+                    {eventTooltip.labels.map((l, i) => (
+                      <span key={i} className="text-2xs text-muted-foreground">
+                        • {l}
+                      </span>
+                    ))}
                   </div>
                 </div>
               )}

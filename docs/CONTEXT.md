@@ -51,6 +51,30 @@
 
 ---
 
+## 🚀 2026-05-21 (저녁) — timeline 옵션 C drag + event marker chips + Reticle polish (단일 거대 PR) ⭐⭐⭐⭐⭐
+
+**범위**: 단일 거대 PR (1 파일 `wiki-timeline-view.tsx`, +526/-50). 4 사용자 피드백 라운드 누적. **사용자 평 "아직은 아쉬운데"** → 시각 polish 미완, 다음 세션 후속.
+
+**완료 (4 라운드 누적)**:
+- **R1**: 옵션 C drag로 plannedDate — 막대 우측 끝 grab handle (12px ew-resize) + native pointer events (window-level move/up/cancel + Escape) + snap-to-day + `liveEndX`/`liveWidth` override + dashed cap 즉시 전환 + body cursor 잠금 + 라이브 tooltip "Planning {date}"
+- **R2**: 이벤트 마커 도입 — `entityEvents` selector + `eventsByArticleId` memo + "Events" 토글 + 같은 날 클러스터 → 개별 분리 + horizontal stack + `+N` overflow + 14 타입 색 매핑
+- **R3 (중간 폐기)**: 추상 도형 11종 다양화 → 사용자 평 "그냥 컬러 dot만 나오는데" → 픽셀 단위 도형 식별 불가 → R4 폐기 전환
+- **R4 (최종)**: Phosphor 아이콘 chip 패턴 (`<circle r=7 fill={color}/>` + nested `<IconComp x y width height weight="bold" color="white"/>`) + Reticle-feel polish (막대 28/8 + 2-layer gradient + `feDropShadow` filter + Now anchor top dot + Today 컬럼 tint + axis typography 위계 + 컨트롤 바 divider)
+
+**핵심 결정**:
+- **#90 후보**: **event markers = icon chip 패턴** — filled colored ring + Phosphor 흰 아이콘 inline (nested SVG). 추상 도형은 작은 사이즈에서 식별 불가. **마커 디자인 우선순위: 사이즈 식별 가능 > 컬러 다양성 > 도형 다양성** (작업 원칙 #8 reinforce).
+- **bars + events 보완 관계** — bars = 수명 (느린 서사) / events = 사용 활동 (펑크처드 markers). Reticle 패턴 확장.
+- **막대 depth = 2-layer gradient + drop-shadow** — past/future 가로 + vertical highlight (top 14%→0) + `feDropShadow`. SVG filter는 SVG element에 정합. CSS filter보다 우선.
+- **Now anchor = vertical line + top dot** — 라인만으론 시각 무게 약함. 4px top dot으로 "지금 여기" 앵커 시각 확립.
+- **Today 컬럼 subtle tint** — 라인의 보완. 컬럼 tint = "공간" 그루핑 (오늘 일자 컨텍스트).
+- **axis typography 위계** — month-start tick = bold 600 fg / day tick = 0.85 muted.
+
+**기술 학습**: SVG nested SVG 모던 브라우저 정합 (Phosphor x/y prop) / Phosphor `weight="bold" color="white"` 작은 사이즈 식별성 / SVG `feDropShadow` filter는 main rect에만 적용 (overlay에 X — muddiness) / `${gradId}-vh` paired ID 패턴 / native pointer events 단순 drag 충분 (dnd-kit 회피) / drag closure 패턴 (id+pointerId dep + 내부 매번 lanes.find) / body cursor 잠금 + cleanup 복원 / `onMouseLeave` 가드 (드래그 중 tooltip 유지) / 추상 도형 변형 r<5 식별 불가 / `<IconComp x y w h>` 동적 컴포넌트 JSX type-safe / showStubs 토글 OFF 기본.
+
+**다음**: **시각 검증 + polish 후속** (사용자 본인 viewport에서 dummy snippet 적용 + 4 zoom + chip 식별 + drag 검증) → 사용자 평 결과 따라 추가 polish 후보 a-e 청취. SESSION-LOG hook 참조.
+
+---
+
 ## 🚀 2026-05-21 — bars-first timeline 3 라운드 refine 완성 (단일 거대 PR) ⭐⭐⭐⭐⭐
 
 **범위**: 단일 거대 PR (+1000/-506, 9 파일, `wiki-timeline-view.tsx` 1067줄 거대 rewrite). bars-first 본질 회복 + 가로 스크롤 표준 + 시각 효과 풍부화. 사용자 본인 viewport 시각 검증 미완 (다른 컴퓨터 cross-machine 진행 신호로 머지).
