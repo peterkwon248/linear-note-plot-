@@ -51,9 +51,23 @@
 
 ---
 
-## 🚀 2026-05-21 (저녁) — timeline 옵션 C drag + event marker chips + Reticle polish (단일 거대 PR) ⭐⭐⭐⭐⭐
+## 🚀 2026-05-21 (저녁 후속) — timeline 막대 끝점 재설계 (circle dot → Article 화살촉 / Stub rounded) ⭐⭐⭐⭐
 
-**범위**: 단일 거대 PR (1 파일 `wiki-timeline-view.tsx`, +526/-50). 4 사용자 피드백 라운드 누적. **사용자 평 "아직은 아쉬운데"** → 시각 polish 미완, 다음 세션 후속.
+**범위**: 단일 파일 `wiki-timeline-view.tsx` (+22/-36). PR #393 후속. 사용자 "마음에 든다 이 정도면" → timeline 시각 작업 일단락.
+
+**완료**: 떠 있던 circle status dot 제거 → Article = 막대 끝 solid 화살촉 ▶ (`<polygon>` ARROW_DEPTH 9px) / Stub = 막대 rounded end. dashed tail 초안 추가 후 사용자 "별론데" → 제거. `getHorizonSource` timeline import 제거 (헬퍼 자체는 `lib/wiki-utils.ts` 유지).
+
+**핵심 결정 (영구 후보 #91)**: 막대 끝점 = status는 도형 자체로 (Article 화살촉 / Stub rounded end). 떠 있는 dot은 disconnect. horizon source(planned/updated)는 막대 위치(future stripe)로 자명 → 별도 마커 폐기 (시각 신호 중복 제거 원칙).
+
+**기술 학습**: SVG `<polygon>` 화살촉 = rect 막대 끝 triangle tip / `fillOpacity`로 gradient 끝 opacity 매칭 / status는 떠있는 요소보다 막대 본체 도형 일부가 통합감.
+
+**다음**: timeline 일단락. P0 = Ontology graph node 사이드바 → Activity events → Books own Views.
+
+---
+
+## 🚀 2026-05-21 (저녁) — timeline 옵션 C drag + event marker chips + Reticle polish (단일 거대 PR #393) ⭐⭐⭐⭐⭐
+
+**범위**: 단일 거대 PR #393 (1 파일 `wiki-timeline-view.tsx`, +526/-50). 4 사용자 피드백 라운드 누적. 사용자 평 "아직은 아쉬운데" → 끝점 재설계 후속으로 일단락.
 
 **완료 (4 라운드 누적)**:
 - **R1**: 옵션 C drag로 plannedDate — 막대 우측 끝 grab handle (12px ew-resize) + native pointer events (window-level move/up/cancel + Escape) + snap-to-day + `liveEndX`/`liveWidth` override + dashed cap 즉시 전환 + body cursor 잠금 + 라이브 tooltip "Planning {date}"

@@ -8,9 +8,29 @@
 
 ---
 
+## 🚀 2026-05-21 (저녁 후속) — **timeline 막대 끝점 재설계 (circle dot → Article 화살촉 / Stub rounded)** ⭐⭐⭐⭐
+
+**범위**: 단일 파일 `wiki-timeline-view.tsx` (+22/-36, 순 −14줄 청소). PR #393 후속. 사용자가 막대 끝 circle dot을 보고 "요 동그라미가 최선인가?" → 브레인스토밍 → 옵션 C 채택.
+
+**완료**:
+- 떠 있던 circle status dot 제거 → **Article = 막대 끝 solid 화살촉 ▶ (`<polygon>`, ARROW_DEPTH 9px)** / **Stub = 막대 rounded end (별도 요소 없음)**
+- planned horizon dashed tail 초안 추가 → 사용자 "별론데" → **제거** (막대가 Now 라인 넘어 future stripe 진입 = 계획됨, 위치로 자명 — 시각 신호 중복)
+- `horizonSource`/`isPlanned` const + `getHorizonSource` import 제거 (dashed tail 폐기로 unused). 헬퍼 자체는 `lib/wiki-utils.ts` 유지.
+- 사용자 평 **"마음에 든다 이 정도면"** → timeline 시각 작업 일단락.
+
+**핵심 결정 (영구 후보 #91)**:
+- **#91 후보**: 막대 끝점 = status는 도형 자체로 (Article 화살촉 / Stub rounded end). 떠 있는 circle dot은 막대와 disconnect + 단조로움. 도형이 곧 메타포 (화살촉 = 도착/완성/directional, rounded = soft/open).
+- **시각 신호 중복 제거 원칙** — 한 정보를 두 곳에서 표현하면 군더더기. horizon source는 막대 위치(future stripe)가 이미 말함 → dashed tail 폐기.
+
+**기술 학습**: SVG `<polygon>` 화살촉 = rect 막대 끝 triangle tip (`points` 3점), `fillOpacity`로 막대 gradient 끝 opacity 매칭, `filter="url(#bar-shadow)"` 공유 → 막대와 시각 통합 / status는 떠있는 요소보다 막대 본체 도형 일부가 통합감.
+
+**다음**: timeline 일단락. P0 = Ontology graph node 사이드바 → Activity events → Books own Views. SESSION-LOG hook 참조.
+
+---
+
 ## 🚀 2026-05-21 (저녁) — **timeline 옵션 C drag + event marker chips + Reticle polish (단일 거대 PR)** ⭐⭐⭐⭐⭐
 
-**범위**: 단일 거대 PR (1 파일 `wiki-timeline-view.tsx`, +526/-50). 4 사용자 피드백 라운드 누적 (drag → marker 도입 → 도형 다양화 → 도형 폐기 + Phosphor chip + Reticle polish). 사용자 평 **"아직은 아쉬운데"** → 시각 polish 미완, 다음 세션 후속.
+**범위**: 단일 거대 PR #393 (1 파일 `wiki-timeline-view.tsx`, +526/-50). 4 사용자 피드백 라운드 누적 (drag → marker 도입 → 도형 다양화 → 도형 폐기 + Phosphor chip + Reticle polish). 사용자 평 **"아직은 아쉬운데"** → 끝점 재설계 후속으로 일단락.
 
 ### Round 1+2+3+4 누적 변경
 
