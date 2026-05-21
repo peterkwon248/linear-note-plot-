@@ -1,9 +1,9 @@
 "use client"
 
 import { useMemo } from "react"
-import { useRouter } from "next/navigation"
 import { usePlotStore } from "@/lib/store"
 import { setActiveRoute } from "@/lib/table-route"
+import { navigateToWikiArticle } from "@/lib/wiki-article-nav"
 import { useBacklinksIndex } from "@/lib/search/use-backlinks-index"
 import { FileText } from "@phosphor-icons/react/dist/ssr/FileText"
 import { BookOpen } from "@phosphor-icons/react/dist/ssr/BookOpen"
@@ -26,7 +26,6 @@ import type { Note, WikiArticle } from "@/lib/types"
  *   - 100ms transition-colors only
  */
 export function RecentCards({ limit = 8 }: { limit?: number }) {
-  const router = useRouter()
   const notes = usePlotStore((s) => s.notes)
   const wikiArticles = usePlotStore((s) => s.wikiArticles)
   const tags = usePlotStore((s) => s.tags)
@@ -91,13 +90,13 @@ export function RecentCards({ limit = 8 }: { limit?: number }) {
         meta: metaParts.join(" · "),
         onClick: () => {
           setActiveRoute("/wiki")
-          router.push(`/wiki/${w.id}`)
+          navigateToWikiArticle(w.id)
         },
       })
     }
 
     return result.sort((a, b) => b.ts.localeCompare(a.ts)).slice(0, limit)
-  }, [notes, wikiArticles, openNote, router, backlinks, tagNames, limit])
+  }, [notes, wikiArticles, openNote, backlinks, tagNames, limit])
 
   if (items.length === 0) {
     return (

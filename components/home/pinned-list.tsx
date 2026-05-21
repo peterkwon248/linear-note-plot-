@@ -3,7 +3,7 @@
 import { useMemo } from "react"
 import { usePlotStore } from "@/lib/store"
 import { setActiveRoute } from "@/lib/table-route"
-import { useRouter } from "next/navigation"
+import { navigateToWikiArticle } from "@/lib/wiki-article-nav"
 import { FileText } from "@phosphor-icons/react/dist/ssr/FileText"
 import { BookOpen } from "@phosphor-icons/react/dist/ssr/BookOpen"
 import { BookmarkSimple } from "@phosphor-icons/react/dist/ssr/BookmarkSimple"
@@ -27,7 +27,6 @@ import type { GlobalBookmark, WikiArticle } from "@/lib/types"
  * Empty state: hidden (no section header at all) — keeps Home tight.
  */
 export function PinnedList({ limit = 8 }: { limit?: number }) {
-  const router = useRouter()
   const notes = usePlotStore((s) => s.notes)
   const wikiArticles = usePlotStore((s) => s.wikiArticles)
   const globalBookmarks = usePlotStore((s) => s.globalBookmarks) as Record<string, GlobalBookmark>
@@ -74,7 +73,7 @@ export function PinnedList({ limit = 8 }: { limit?: number }) {
           label: article.title !== bm.label ? article.title : undefined,
           onClick: () => {
             setActiveRoute("/wiki")
-            router.push(`/wiki/${article.id}#${bm.anchorId}`)
+            navigateToWikiArticle(article.id)
           },
         })
       } else {
@@ -96,7 +95,7 @@ export function PinnedList({ limit = 8 }: { limit?: number }) {
     }
 
     return result.slice(0, limit)
-  }, [notes, wikiArticles, globalBookmarks, limit, openNote, router])
+  }, [notes, wikiArticles, globalBookmarks, limit, openNote])
 
   if (items.length === 0) return null
 

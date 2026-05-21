@@ -12,7 +12,6 @@
  */
 
 import { useMemo } from "react"
-import { useRouter } from "next/navigation"
 import { Books as BooksIcon } from "@phosphor-icons/react/dist/ssr/Books"
 import { usePlotStore } from "@/lib/store"
 import { setActiveRoute } from "@/lib/table-route"
@@ -25,7 +24,6 @@ interface InBooksSectionProps {
 }
 
 export function InBooksSection({ kind, refId }: InBooksSectionProps) {
-  const router = useRouter()
   const books = usePlotStore((s) => s.books)
   const notes = usePlotStore((s) => s.notes)
   const folders = usePlotStore((s) => s.folders)
@@ -50,7 +48,6 @@ export function InBooksSection({ kind, refId }: InBooksSectionProps) {
       setSelectedNoteId(null)
       setActiveRoute("/wiki")
       navigateToWikiArticle(refId)
-      router.push(`/wiki/${refId}`)
     }
   }
 

@@ -4,6 +4,7 @@ import { useMemo } from "react"
 import { useRouter } from "next/navigation"
 import { usePlotStore } from "@/lib/store"
 import { setActiveRoute } from "@/lib/table-route"
+import { navigateToWikiArticle } from "@/lib/wiki-article-nav"
 import { FileText } from "@phosphor-icons/react/dist/ssr/FileText"
 import { BookOpen } from "@phosphor-icons/react/dist/ssr/BookOpen"
 import { Books } from "@phosphor-icons/react/dist/ssr/Books"
@@ -74,7 +75,7 @@ export function MixedQuicklinks({ limit = 8 }: { limit?: number }) {
         sortKey: `2-${w.updatedAt}`,
         onClick: () => {
           setActiveRoute("/wiki")
-          router.push(`/wiki/${w.id}`)
+          navigateToWikiArticle(w.id)
         },
       })
     }
@@ -149,7 +150,7 @@ export function MixedQuicklinks({ limit = 8 }: { limit?: number }) {
           sortKey: `5-${bm.createdAt}`,
           onClick: () => {
             setActiveRoute("/wiki")
-            router.push(`/wiki/${article.id}#${bm.anchorId}`)
+            navigateToWikiArticle(article.id)
           },
         })
       } else {

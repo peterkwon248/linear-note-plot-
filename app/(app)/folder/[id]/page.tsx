@@ -39,6 +39,7 @@ import { useRouter } from "next/navigation"
 import { usePlotStore } from "@/lib/store"
 import { setActiveFolderId, setActiveRoute } from "@/lib/table-route"
 import { TABLE_VIEW_ROUTES } from "@/lib/table-route"
+import { navigateToWikiArticle } from "@/lib/wiki-article-nav"
 import { FolderOpen } from "@phosphor-icons/react/dist/ssr/FolderOpen"
 import { Plus } from "@phosphor-icons/react/dist/ssr/Plus"
 import { CaretDown } from "@phosphor-icons/react/dist/ssr/CaretDown"
@@ -145,7 +146,7 @@ export default function FolderPage({ params }: { params: Promise<{ id: string }>
                   type="button"
                   onClick={() => {
                     const wikiId = createWikiArticle({ title: "Untitled", folderIds: [id] })
-                    if (wikiId) router.push(`/wiki/${wikiId}`)
+                    if (wikiId) { setActiveRoute("/wiki"); navigateToWikiArticle(wikiId) }
                   }}
                   className="flex w-full items-center gap-2 rounded-md px-2.5 py-1.5 text-note text-left hover:bg-accent"
                 >
@@ -196,7 +197,7 @@ export default function FolderPage({ params }: { params: Promise<{ id: string }>
                   actionLabel="Create one"
                   onAction={() => {
                     const wikiId = createWikiArticle({ title: "Untitled", folderIds: [id] })
-                    if (wikiId) router.push(`/wiki/${wikiId}`)
+                    if (wikiId) { setActiveRoute("/wiki"); navigateToWikiArticle(wikiId) }
                   }}
                 />
               ) : (
@@ -205,7 +206,7 @@ export default function FolderPage({ params }: { params: Promise<{ id: string }>
                     <li key={w.id}>
                       <button
                         type="button"
-                        onClick={() => router.push(`/wiki/${w.id}`)}
+                        onClick={() => { setActiveRoute("/wiki"); navigateToWikiArticle(w.id) }}
                         className="flex w-full items-center gap-3 px-3 py-2 text-left bg-card hover:bg-hover-bg"
                       >
                         <span className="h-2 w-2 rounded-full bg-violet-500 shrink-0" />
