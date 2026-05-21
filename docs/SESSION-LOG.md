@@ -6,6 +6,188 @@
 
 ---
 
+## 2026-05-21 (저녁) — 다른컴퓨터/Windows, **timeline 옵션 C drag + event marker chips + Reticle polish (단일 거대 PR)**
+
+> 🎯 **다음 즉시 액션 (다른 컴퓨터 로그인 후 시작점)**:
+>
+> **🔴 P0 #1 — timeline 시각 추가 polish (사용자 평 "아직은 아쉬운데" 의 후속)**
+>
+> 이번 세션에 옵션 C (drag) + 이벤트 마커 chip (Phosphor icon inline) + Reticle-feel polish 적용. 사용자 본인 viewport 시각 검증 필수. 본인 viewport에서 dummy snippet 적용 후 4 zoom + 마커 hover + drag 동작 확인 필요.
+>
+> **사용자 의도 (그대로 인용)**:
+> 1. "옵션 C 진행해라" → 막대 우측 끝 drag로 plannedDate 설정 (native pointer events)
+> 2. "위키의 생성, 위키를 읽은 날, 링크한 날, 참고한 날, 수정한 날 등등 이런 것들을 뱃지로 표시하는 건 어때?" → 타임라인에 이벤트 마커 추가
+> 3. "뱃지가 너무 단조로운 거 같은데..아닌가??" → 클러스터 → 개별 이벤트 분리 + 타입별 색
+> 4. "근데 뱃지 마커가 이렇게 밖에 안 되나?? 좀 다양한 아이콘이 뱃지로 들어갈 순 없나??" → 추상 도형 → Phosphor 아이콘 chip 전환 (filled ring + 흰 아이콘)
+> 5. "레티클에 비해 비주얼은 별론데" → 막대 depth (drop-shadow + vertical highlight gradient) + Now anchor (top dot) + axis typography 위계 + today column tint
+> 6. "아직은 아쉬운데 우선은 after-work" → 시각 polish 미완. 다음 세션 추가 폴리시.
+>
+> **첫 스텝 (다른 머신에서 바로 시작)**:
+> 1. `git pull origin main` (latest = 이번 squash merge 직후)
+> 2. `npm install && npm run dev` (port 3002)
+> 3. **dummy data 추가** (본인 console에 paste, IDB 비어있으면 6 article + 다양한 이벤트):
+>    ```js
+>    (() => { const s=window.__plotStore, now=Date.now(), d=(o)=>new Date(now+o*86400000).toISOString();
+>    const articles=[["Q2 Strategy",-28,7,[-20,-10,-3]],["Summer Trip",-21,14,[-15,-7]],["Tax Filing",-14,21,[-12,-8,-5,-2]],["Annual Report",-10,null,[-6,-1]],["Recipes",-7,null,[-4]],["Side Project",-3,5,[-1,0]]];
+>    const ids=articles.map(([t])=>s.getState().createWikiArticle({title:t}));
+>    s.setState(state=>{
+>      const u=new Map(ids.map((id,i)=>[id,articles[i]]));
+>      const newA=state.wikiArticles.map(a=>{const c=u.get(a.id); if(!c)return a; return {...a,createdAt:d(c[1]),updatedAt:d(c[3].at(-1)??c[1]),plannedDate:c[2]!==null?d(c[2]):undefined};});
+>      const f=state.entityEvents.filter(e=>!ids.includes(e.entity.id));
+>      let eid=900000; const ne=[];
+>      ids.forEach((id,i)=>{const [,cr,,ups]=articles[i];
+>        ne.push({id:`s-${eid++}`,entity:{kind:"wiki",id},type:"created",at:d(cr)});
+>        ups.forEach(o=>ne.push({id:`s-${eid++}`,entity:{kind:"wiki",id},type:"updated",at:d(o)}));
+>        ne.push({id:`s-${eid++}`,entity:{kind:"wiki",id},type:"opened",at:d(cr+1)});
+>        if(i%2===0) ne.push({id:`s-${eid++}`,entity:{kind:"wiki",id},type:"link_added",at:d(cr+2)});
+>        if(i%3===0) ne.push({id:`s-${eid++}`,entity:{kind:"wiki",id},type:"block_added",at:d(ups[0]??cr)});
+>        if(i===1) ne.push({id:`s-${eid++}`,entity:{kind:"wiki",id},type:"attachment_added",at:d(cr+3)});
+>        if(i===3) ne.push({id:`s-${eid++}`,entity:{kind:"wiki",id},type:"relation_added",at:d(ups[0]??cr)});
+>      });
+>      return {wikiArticles:newA, entityEvents:[...f,...ne]};
+>    });
+>    return `seeded ${ids.length}`;})()
+>    ```
+> 4. Wiki → Overview → "View all N articles" → Timeline view mode → Month zoom. showStubs ON 의무. 정상 시 ~14 막대 + 컬러 chip 다수.
+> 5. **시각 검증 포인트**:
+>    - 막대 위 chip (14px 컬러 ring + 흰색 Phosphor 아이콘) 시인성
+>    - 컬러+아이콘 매핑 즉시 식별 가능 여부 (created=Plus, updated=Pencil, opened=Eye, link=LinkSimple, ...)
+>    - 막대 drop-shadow + vertical highlight (top 살짝 밝음) → 막대가 입체 객체로 보이는지
+>    - Now line + top anchor dot (4px) + "Now" 라벨 (fontWeight 700)
+>    - Today 컬럼 subtle tint (0.04 opacity)
+>    - Axis month-start tick = bold 600 fg vs day tick = 0.85 opacity muted
+>    - 막대 우측 끝 hover → ew-resize cursor + 작은 vertical hint → drag → 막대 실시간 확장 + dashed end-cap + live tooltip → 놓으면 plannedDate 저장
+> 6. **시각 검증 결과 → 결정**:
+>    - **OK**: P0 #2 (시각 polish 마무리 완료 / 다음 작업 진행)
+>    - **NG (사용자 평 "아직 아쉬운데")**: 추가 polish 라운드 — 후보 (a) 막대 typography 키움 (title 폰트 11→12, weight 500→600), (b) Now line glow filter 추가, (c) chip border `var(--background)` ring 1px (어떤 bg에서도 contrast), (d) axis tick "May 18" 같은 long label 마지막 zoom에서 collision 회피 강화, (e) 사이드 panel처럼 selected article의 이벤트 list separate panel
+>
+> **컴포넌트 구조 / 데이터 흐름**:
+> - `components/views/wiki-timeline-view.tsx` (1067 → 1500+ 줄, 이번 세션 누적 변경 +526/-50)
+>   - 신규 import: `usePlotStore`, `getEventsForEntity`, 12 Phosphor 아이콘 (Plus / PencilSimple / Eye / Trash / ArrowCounterClockwise / LinkSimple / LinkBreak / StackPlus / StackMinus / ArrowsLeftRight / Paperclip / DotOutline) + `EntityEvent`/`EntityEventType` types + `Icon` type
+>   - `dragState: { id, pointerId, startClientX, originalEndX, currentEndX } | null` + `canvasSvgRef: SVGSVGElement` + window-level pointer listeners (move/up/cancel + Escape) + body cursor lock
+>   - `showEvents` toggle + `eventTooltip` state + `entityEvents = usePlotStore((s) => s.entityEvents)` selector
+>   - `eventsByArticleId` memo: 각 article별 events 필터 (window range)
+>   - `renderEventMarkers(article, laneIndex)`: day-bucket → horizontal stack (gap 14) → 최대 4개 + overflow `+N` text → 각 마커 = `<circle r=7 fill={color}/>` + nested `<IconComp x y width height weight="bold" color="white"/>` (Phosphor SVG inline)
+>   - `EVENT_MARKER_CONFIG: Partial<Record<EntityEventType, { icon: Icon, color: string, label: string }>>` — 14 타입 매핑 + DotOutline fallback
+>   - `renderLaneBar` 변경: liveEndX/liveWidth (drag override) + 2-layer fill (`url(#${gradId})` past/future + `url(#${gradId}-vh)` vertical highlight) + `filter="url(#bar-shadow)"` (SVG feDropShadow) + planning isPlanned forced during drag + grab handle rect (12px, ew-resize) + visible hint vertical line on hover/drag
+>   - Now anchor 추가: vertical line (strokeWidth 1.2) + top dot (`<circle cx={nowX} cy={4} r={3.5}/>`)
+>   - Today 컬럼 tint: 오늘 컬럼 전체 `var(--fg)` opacity 0.04
+>   - Axis tick typography 분기: month-start (`tick.getDate() === 1`) → bold 600 fg vs day → 0.85 opacity muted
+>   - 컨트롤 바: Events 토글 + divider `<div className="h-4 w-px bg-border-subtle"/>` + zoom 그룹
+>   - 상수: `LANE_HEIGHT 52` / `BAR_HEIGHT 28` / `BAR_RADIUS 8` / `END_DOT_SIZE 18` / `END_DOT_OFFSET 9` / `EVENT_MARKER_RING_R 7` / `EVENT_MARKER_ICON_SIZE 9` / `EVENT_MARKER_STACK_GAP 14` / `EVENT_MARKER_MAX_PER_DAY 4` / `EVENT_MARKER_Y_OFFSET -12`
+>
+> **Store action 매핑**:
+> - `setWikiArticlePlannedDate(id, iso | null)` — drag end commit (planning intent, updatedAt 안 건드림)
+> - `entityEvents: EntityEvent[]` selector — 마커 렌더 데이터 source
+> - `getEventsForEntity(events, { kind: "wiki", id }, limit?)` — entity별 filter helper
+>
+> **위험 + 회피**:
+> - 🔴 **사용자 본인 viewport 시각 검증 미완** — preview MCP IDB 와 본인 IDB 분리. 다른 머신에서 본인 viewport에 dummy snippet paste 후 4 zoom + chip 식별 + drag 동작 검증 의무.
+> - 🔴 **시각 polish 미완** ("아직은 아쉬운데") — 다음 세션 추가 polish 후보 a~e (위 5번 항목) 중 사용자 우선순위 청취 후 진행.
+> - 🟡 **wiki-timeline-view.tsx 1500+ 줄 거대화** — sub-component 분리 권고 (Axis / Bars / EventMarkers / Tooltip / Grid). 시각 polish 라운드 정리 후 별도 리팩토링 PR.
+> - 🟡 **showStubs OFF (기본)** — 신규 article은 stub로 생성됨. timeline에서 안 보이는 경우 toggles.showStubs ON 필요. 사용자 첫 진입 confused 가능. 향후 stub/article 통합 또는 toggle 명시 안내 검토.
+> - 🟡 **Phosphor nested SVG accessibility** — `<IconComp x={} y={} width={} height={}/>`는 SVG 안 SVG 패턴. 모던 브라우저 지원 OK, 단 키보드 접근/role/aria 처리 향후 검토 (현재 chip은 마우스 hover로만 식별).
+> - 🟢 **현재 wiki article은 `opened` 이벤트 emit 안 됨** — `lib/store/slices/wiki-articles.ts`에는 created/updated/trashed/untrashed만. 시드 데이터 안 쓰면 chip 종류 제한적. P0 #4 (Activity events 후속) 와 연계.
+>
+> **참고 파일** (작업 시 read 우선순위):
+> - `components/views/wiki-timeline-view.tsx` (메인, 1500+줄)
+> - `lib/wiki-utils.ts` (safeDate / horizonOf / getHorizonSource)
+> - `lib/store/slices/wiki-articles.ts:241-258` (`setWikiArticlePlannedDate` action)
+> - `lib/datalog/helpers.ts:20` (`getEventsForEntity`)
+> - `lib/types.ts:893-961` (`EntityEvent` / `EntityEventType` 정의)
+>
+> **머신**: 다른컴퓨터 (Windows, 직전 세션 "집/Windows" 와 다른 머신)
+> **현재 main HEAD**: e9c8d36 (PR #392) → 이번 PR squash merge 후
+> **branch worktree**: `claude/sharp-lumiere-e5fb03` (clean, ff merge로 main 동기화 됨)
+
+### 완료 (이번 세션 단일 거대 PR, 4 라운드 누적)
+
+**전체 규모**: +526/-50, 1 파일 modified (`components/views/wiki-timeline-view.tsx`), Phosphor 12개 신규 import, 4 사용자 피드백 라운드 누적
+
+#### Round 1 — 옵션 C drag로 plannedDate
+- `dragState` + window-level pointer listeners (move / up / cancel) + Escape 취소
+- `clientXToSvgX` + `snapEndXToDay` (cfg.pxPerDay 격자 snap, minBarWidth clamp) + `endXToPlannedISO` (winStart + days 변환)
+- grab handle 12px 투명 rect (cursor ew-resize) + 호버/드래그 중 vertical hint line
+- 드래그 중 막대 width 실시간 확장 (`liveEndX`/`liveWidth` override) + `isPlanned` forced true → dashed end-cap 즉시 전환
+- `pointerup` → `usePlotStore.getState().setWikiArticlePlannedDate(id, iso)` (planning intent, updatedAt 안 건드림)
+- `document.body.style.cursor = "ew-resize"` 잠금 (드래그 중)
+- 라이브 tooltip "Planning {date} ({relative})" — `onMouseLeave` 가드로 드래그 중 tooltip 유지
+
+#### Round 2 — 이벤트 마커 도입 (per-event 개별 + 타입별 색)
+- `usePlotStore((s) => s.entityEvents)` selector + `eventsByArticleId` memo (window range filter)
+- 컨트롤 바에 "Events" 토글 (default ON)
+- 같은 날 클러스터 → 개별 이벤트 분리 + 7px horizontal stack + `+N` overflow (>4)
+- `eventTooltip` state + tooltip 렌더 (z=30, 라벨 + 시간)
+- 색 매핑: created=emerald, updated=blue #3b82f6, opened=muted, trashed=red #ef4444, untrashed=hollow red, link=purple #8b5cf6, block=green #10b981, relation=amber #f59e0b, attachment=cyan #06b6d4
+
+#### Round 3 — 추상 도형 다양화 (이번 세션 중간, polish 도중 폐기)
+- 11종 도형 (ring/circle/square/square-ring/diamond/diamond-ring/triangle/triangle-ring/cross/x/pentagon) 정의
+- `renderMarkerShape(shape, color, size)` 함수 (SVG primitive)
+- 사용자 평 "그냥 컬러 dot만 나오는데" → 픽셀 단위 도형 식별 불가 → **Phosphor 아이콘 chip으로 폐기 전환**
+
+#### Round 4 (현재 최종) — Phosphor 아이콘 chip + Reticle-feel polish
+- **Phosphor 아이콘 chip** (Round 3 도형 시스템 완전 대체):
+  - `MarkerConfig: { icon: Icon, color: string, label: string }` — 14 매핑
+  - `<circle r=7 fill={color}/>` + `<IconComp x y width height weight="bold" color="white"/>` (nested SVG)
+  - 아이콘: Plus / PencilSimple / Eye / Trash / ArrowCounterClockwise / LinkSimple / LinkBreak / StackPlus / StackMinus / ArrowsLeftRight / Paperclip / DotOutline (fallback)
+  - 사이즈 r=7 (시각 폭 14px), gap 14, y-offset -12
+- **Reticle-feel polish** (이번 라운드 동시 적용):
+  - 막대 dimension: `LANE_HEIGHT 48→52` / `BAR_HEIGHT 24→28` / `BAR_RADIUS 6→8`
+  - 막대 depth: 2-layer fill = past/future gradient + vertical highlight gradient (top white 14% → 0 at 50%) + `feDropShadow` filter (dx=0 dy=1.2 stdDeviation=1 opacity 0.35)
+  - Now anchor: vertical line strokeWidth 1.2 opacity 0.85 + top dot `<circle cx={nowX} cy={4} r={3.5}/>` + label fontWeight 700 letterSpacing 0.02em
+  - Today 컬럼 subtle tint (`var(--fg)` opacity 0.04 full-height rect)
+  - Axis typography 위계: month-start tick → bold 600 fg / day tick → 0.85 opacity muted
+  - 컨트롤 바 divider (Events / zoom 사이 `h-4 w-px bg-border-subtle`)
+  - Lane separator opacity 0.2 → 0.15 (막대 무게 강화)
+
+### 브레인스토밍 & 큰 결정 (영구)
+
+- **#90 후보 (사용자 OK 대기): event markers = icon chip 패턴 (filled ring + Phosphor inline)** — 추상 도형 변형은 작은 사이즈에서 식별 불가. 사용자 직관 = 디자인 시그널 (작업 원칙 #8). Phosphor 아이콘 nested SVG (12 import) + filled colored ring = 즉시 식별 + 컬러 그룹화 동시. "Gentle by default" 위반 X — gentle ≠ illegible.
+- **bars + events 보완 관계** — bars = 수명 (느린 서사) / events = 사용 활동 (펑크처드 markers). 이 둘이 timeline의 본질. Reticle 패턴 확장.
+- **마커 디자인 결정 우선순위** — 사이즈 식별 가능 > 컬러 다양성 > 도형 다양성. 사이즈가 너무 작으면 컬러/도형 변형 무력. 작업 원칙 #8 reinforce.
+- **막대 depth = 2-layer gradient + drop-shadow 패턴** — past/future 가로 gradient + 위→아래 vertical highlight (top 14%→0) + SVG `feDropShadow` 결합. SVG filter는 CSS filter보다 막대 자체 effect로 더 정합. Reticle visual authority의 핵심.
+- **Now anchor = vertical line + top dot** — 라인만으로는 시각 무게 약함. 4px top dot (filled fg) 추가하면 "지금 여기" 앵커 시각 확립.
+- **Today 컬럼 subtle tint = full-height rect 0.04 opacity** — vertical line의 보완. 라인만 강조하면 "선"이지만 컬럼 tint는 "공간" → 오늘 일자의 모든 이벤트가 같은 공간 안 → 컨텍스트 그루핑 자연 인식.
+- **axis typography 위계 = month vs day differentiation** — 모든 tick이 같은 weight면 위계 없음. 1일 tick은 bold + fg / 일반 day tick은 light + muted → 한 눈에 month 구조 파악.
+
+### 기술 학습 (영구)
+
+- **SVG nested SVG는 모던 브라우저에서 정합** — `<svg><svg x={} y={} width={} height={}>...</svg></svg>` 패턴. Phosphor React component는 자체 `<svg viewBox>` 출력하므로 부모 SVG 안에서 x/y prop 통해 위치 결정 가능. foreignObject 회피.
+- **Phosphor `weight="bold" color="white"` 패턴** — 작은 사이즈(8~10px)에서 stroke 굵기가 식별성 좌우. bold weight + 흰색 fill이 컬러 ring 위에서 최고 contrast.
+- **SVG `feDropShadow` filter** — `<defs><filter id><feDropShadow dx dy stdDeviation floodColor floodOpacity/></filter></defs>` + `<rect filter="url(#id)"/>`. CSS box-shadow보다 SVG element에 정확. filter 자식 요소에 누적 적용 시 muddiness 발생 → 막대 main rect에만 적용, 하이라이트 overlay/cap/dot에는 적용 X.
+- **SVG `<linearGradient>` 2개 매김 (horizontal + vertical)** — past/future 분기는 `x1=0 y1=0 x2=1 y2=0`, top highlight는 `x1=0 y1=0 x2=0 y2=1`. ID 충돌 회피 위해 `${gradId}-vh` 패턴.
+- **native pointer events vs dnd-kit** — 단순 drag (한 축 + snap)는 `pointerdown`/`pointermove`/`pointerup` window-level listener 만으로 충분. dnd-kit는 multi-element collision/sortable 시 적합. 의존성 절약.
+- **drag closure 패턴** — `useEffect(() => { ... }, [dragState?.id, dragState?.pointerId, ...])` 에서 dragState 직접 capture 시 stale closure 위험. id+pointerId가 변경되지 않는 한 같은 effect 인스턴스 유지하되, 핸들러 내부에서 매번 `lanes.find()` 로 최신 lane 조회.
+- **`document.body.style.cursor` 드래그 잠금** — drag 중 막대 밖으로 이동 시 cursor가 default로 돌아가는 문제 회피. cleanup 시 prev cursor 복원 의무.
+- **`onMouseLeave` 가드 (드래그 중 tooltip 유지)** — drag 중 마우스가 막대 영역 벗어나도 tooltip 유지 → `if (dragState?.id === article.id) return;` 가드.
+- **추상 도형 변형은 작은 사이즈(r<5)에서 식별 불가** — ring vs circle, square vs diamond, triangle vs pentagon은 픽셀 5~10개로는 눈이 구별 못함. 컬러는 식별되지만 도형은 "그냥 dot" 인지. → 사이즈 키우거나 (10px+) Phosphor 아이콘 inline 패턴.
+- **`<IconComp x y width height>` 동적 컴포넌트 JSX** — `const IconComp = mc.icon; <IconComp .../>` 패턴이 type-safe. `<mc.icon />` 직접 사용은 TypeScript JSX 파서 까다로움.
+- **showStubs 토글 = wiki articles 노출 기본 OFF** — 신규 article은 stub 상태 (content 미작성), 기본 toggles.showStubs false. 시드 데이터 검증 시 showStubs ON 의무.
+- **preview MCP IDB는 사용자 본인 viewport와 분리** — 이미 LOCKED 학습이지만 재확인. 본인 viewport 검증 의무 항상 명시.
+
+### Watch Out (다음 세션)
+
+- 🔴 **사용자 본인 viewport 시각 검증 미완** — 본인 IDB에 dummy snippet paste 후 4 zoom + chip + drag 검증 필수.
+- 🔴 **시각 polish 미완 ("아직은 아쉬운데")** — 다음 세션 추가 polish 후보 a-e 중 사용자 우선순위 청취.
+- 🟡 **wiki-timeline-view.tsx 1500+ 줄** — sub-component 분리 필요 (Axis / Bars / EventMarkers / Tooltip / Grid). 시각 polish 완료 후 별도 리팩토링 PR.
+- 🟡 **wiki article `opened` 이벤트 emit 안 됨** — 시드 데이터로만 표현. 실제 사용 시 `created`/`updated`/`trashed` 만 chip로 보임. P0 #4 (Activity events 후속 — granular wire-up) 와 연계.
+- 🟢 **시드 snippet 자체 SESSION-LOG/TODO 에 보존** — 다음 머신에서 또 paste 필요 시 hook 안 1 라인으로 재사용 가능.
+
+### 환경 변경
+
+- Main HEAD: `e9c8d36` (PR #392) → 이번 PR squash merge 후
+- Store version: 144 (변경 없음 — `plannedDate` 필드는 이미 추가됨, 이번 PR은 UI 변경만)
+- Phosphor 12개 신규 import: Plus / PencilSimple / Eye / Trash / ArrowCounterClockwise / LinkSimple / LinkBreak / StackPlus / StackMinus / ArrowsLeftRight / Paperclip / DotOutline
+- 영구 룰 후보: #90 (event markers = icon chip)
+- TS 부채 0 유지: `npx tsc --noEmit` clean, `npm run build` ✓
+- 사용자 IDB stale data: 없음 (UI 변경만)
+- 신규 파일: 없음
+
+### 머신
+다른컴퓨터 (Windows, 직전 세션 "집/Windows"와 다른 머신). **다음 세션 머신**: 미정.
+
+---
+
 ## 2026-05-21 — 집/Windows, **timeline-planning bars-first 3 라운드 refine 완성 (단일 거대 PR)**
 
 > 🎯 **다음 즉시 액션 (다른 컴퓨터 로그인 후 시작점)**:
