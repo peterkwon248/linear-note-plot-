@@ -6,9 +6,77 @@
 
 ---
 
+## 2026-05-21 (저녁 후속 #6) — 다른컴퓨터/Windows, **wiki-timeline-view.tsx sub-component 분리 (1380→386줄) — 세션 종료**
+
+> 🎯 **다음 즉시 액션 (다른 컴퓨터 로그인 후 시작점)**:
+>
+> **🟢 P0 #1 — EVENT_MARKER_CONFIG 신규 이벤트 매핑** (사용자가 "다음 세션에서" 명시)
+>
+> P0 #2 Activity events에서 wire-up된 granular events 중 일부가 timeline 마커 chip에 fallback dot(`DotOutline`)으로만 표시됨. `components/views/wiki-timeline/wiki-timeline-config.ts`의 `EVENT_MARKER_CONFIG`에 누락 타입 매핑 추가:
+> - 현재 매핑됨: created/updated/opened/trashed/untrashed/block_added/block_removed/block_reordered/link_added/link_removed/relation_added/relation_removed/attachment_added/attachment_removed
+> - **누락 (fallback dot으로 표시 중)**: `merged`, `unmerged`, `split`, `item_added`, `item_removed`, `item_reordered`, `chapter_added`, `smart_source_added`, `smart_source_removed`, `member_added`, `member_removed`, `color_changed`, `renamed`, `section_collapsed`, `converted_to_manual`
+> - **첫 스텝**: `wiki-timeline-config.ts` `EVENT_MARKER_CONFIG` (line 143) read → 누락 타입에 Phosphor 아이콘 + 색 추가. 단 timeline은 **wiki entity event만** 표시하므로 (`getEventsForEntity(entityEvents, { kind: "wiki", id })`) book/tag/label 전용 이벤트(item_*/smart_source_*/member_*/color_changed/renamed)는 wiki 노드엔 안 나타남 → 실질 추가 대상은 **`merged`/`unmerged`/`split`/`section_collapsed`** (wiki entity에 발화되는 것). 매핑 추가 시 이 4개만 우선.
+>
+> **이번 세션 (P0 #2 sub-component 분리 = Task A)**:
+> - `wiki-timeline-view.tsx` 1380줄 → **386줄 orchestrator**로 축소. 9개 파일 신규 (`components/views/wiki-timeline/`):
+>   - `wiki-timeline-config.ts` (221줄) — types/constants/`ZOOM_CONFIGS`/`EVENT_MARKER_CONFIG`/state shape interfaces (`TimelineTooltipState`/`TimelineEventTooltipState`/`TimelineDragState`)
+>   - `wiki-timeline-utils.ts` — pure 함수 (startOfDay/addDays/diffDays/windowStart/buildTicks/buildDayRange/buildMonthBoundaries/periodLabel/relativeDateLabel/laneArticles)
+>   - `timeline-controls.tsx` — `<TimelineControls>` (컨트롤 바)
+>   - `timeline-axis.tsx` — `<TimelineAxis>` (sticky 축 헤더 SVG)
+>   - `timeline-grid.tsx` — `<TimelineGrid>` (배경 레이어: defs/weekend/today/grid/month/separator/future/NOW line)
+>   - `timeline-bar.tsx` — `<TimelineBar>` (renderLaneBar → 컴포넌트)
+>   - `timeline-event-markers.tsx` — `<TimelineEventMarkers>` (renderEventMarkers → 컴포넌트)
+>   - `timeline-label-column.tsx` — `<TimelineLabelColumn>` (좌측 sticky 라벨 컬럼)
+>   - `timeline-tooltip.tsx` — `<TimelineTooltip>` + `<TimelineEventTooltip>` (2개 tooltip div)
+>   - orchestrator(`wiki-timeline-view.tsx`)는 모든 React state/memo/effect/callback 보유 + 위 컴포넌트 조합. drag useEffect 그대로.
+> - **순수 리팩토링** — 런타임 behavior 불변. 검증: `tsc --noEmit` clean / `npm run build` clean / preview 시각 렌더 동일 (36 bars / 3 arrowhead / 45 chip) / console 경고는 원본에도 동일 (pre-existing, refactor 무관 — stash 비교로 확인).
+>
+> **위험 + 회피**:
+> - 🟡 **timeline에 pre-existing console 경고** — "Can't perform a React state update on a component that hasn't mounted yet" 8개. **refactor와 무관** (stash로 원본 비교 시 동일하게 발생). 별도 조사 필요 — render 중 setState 하는 곳 추적 (timeline 또는 wiki-view 어딘가). 우선순위 낮음.
+> - 🟢 sub-component는 모두 explicit Props interface — tsc가 prop 누락/오타 잡음. `any` 미사용.
+>
+> **참고 파일**: `components/views/wiki-timeline-view.tsx` (386줄 orchestrator) + `components/views/wiki-timeline/*` (9 파일)
+>
+> **머신**: 다른컴퓨터 (Windows)
+> **현재 main HEAD**: 이번 sub-component 분리 PR squash merge 후
+> **branch worktree**: 새 worktree 권장
+
+### 완료 — wiki-timeline-view.tsx sub-component 분리 (P0 #2 = Task A)
+
+- 1380줄 단일 파일 → 386줄 orchestrator + 9 모듈 파일 (`components/views/wiki-timeline/`)
+- executor-high 작업 → 사용자 after-work 요청으로 직접 검증·커밋
+- 순수 리팩토링 (런타임 불변), tsc + build + 시각 렌더 + console-parity 검증 완료
+
+### 브레인스토밍 & 큰 결정 (영구)
+
+- **거대 컴포넌트 분리 = orchestrator + presentational 패턴** — 모든 state/memo/effect는 orchestrator 유지, 시각 조각은 explicit-props 컴포넌트로. closure → props 전환. tsc가 prop contract 강제 (explicit Props interface, `any` 금지).
+- **순수 리팩토링 검증 4종** — tsc clean + build clean + 시각 렌더 동일 + console-parity (stash로 원본 비교). 이 4종 통과 시 behavior 불변 확신.
+
+### 기술 학습 (영구)
+
+- **`git stash push <file>`로 단일 파일만 stash** → 원본 vs 변경본 런타임 비교 테스트 가능. untracked 신규 파일은 stash 안 됨 (원본 파일이 self-contained면 OK).
+- **render-function → component 전환** — `renderX(item, i)` 함수 호출을 `<X item={} laneIndex={i} key={}/>`로. `key`는 map된 element로 이동. SVG sub-component는 fragment `<>` 반환 (부모 `<svg>` 안에서 유효).
+
+### Watch Out (다음 세션)
+
+- 🟡 **timeline pre-existing console 경고 8개** — refactor 무관, 별도 조사 (낮은 우선순위).
+- 🟢 **EVENT_MARKER_CONFIG 누락 타입** — `merged`/`unmerged`/`split`/`section_collapsed`가 fallback dot으로 표시 중. 다음 세션 P0 #1.
+
+### 환경 변경
+
+- Store version: 144 (변경 없음 — 순수 리팩토링)
+- 신규 파일: `components/views/wiki-timeline/` 9개
+- `wiki-timeline-view.tsx`: 1380 → 386줄
+- TS 부채 0 유지: `tsc --noEmit` clean, `npm run build` ✓
+
+### 머신
+다른컴퓨터 (Windows). **세션 종료** — 다음 세션 다른 컴퓨터에서 이어감.
+
+---
+
 ## 2026-05-21 (저녁 후속 #5) — 다른컴퓨터/Windows, **`router.push("/wiki/[id]")` dead code 정리**
 
-> 🎯 **다음 즉시 액션**: wiki-timeline-view.tsx sub-component 분리 작업 진행 중 (같은 세션 내 다음 PR). 완료 후 SESSION-LOG 추가 entry 참조.
+> 🎯 **다음 즉시 액션**: (이 hook은 후속 #6 entry로 대체됨 — SESSION-LOG 최상단 참조)
 >
 > **이번 작업 (P0 #3 — dead code 정리)**: 6 파일에서 `router.push("/wiki/${id}")` (존재하지 않는 Next 라우트 → 404) 9개 call site를 `setActiveRoute("/wiki")` + `navigateToWikiArticle(id)` 패턴으로 교체. anchor(`#${anchorId}`) 가진 북마크 2 site는 anchor 드롭 (navigateToWikiArticle은 anchor 미지원, 단 현재 404 상태라 strict improvement).
 >

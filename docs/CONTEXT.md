@@ -51,6 +51,20 @@
 
 ---
 
+## 🚀 2026-05-21 (저녁 후속 #6) — wiki-timeline-view.tsx sub-component 분리 (1380→386줄) ⭐⭐⭐⭐
+
+**범위**: 거대 컴포넌트 리팩토링. `wiki-timeline-view.tsx` 1380줄 → 386줄 orchestrator + 9 모듈 파일 (`components/views/wiki-timeline/`: config + utils + Controls/Axis/Grid/Bar/EventMarkers/LabelColumn/Tooltip).
+
+**핵심 결정**: 거대 컴포넌트 분리 = orchestrator(state/memo/effect 보유) + presentational 컴포넌트(explicit props). 순수 리팩토링 — 런타임 불변. 검증 4종: tsc + build + 시각 렌더 + console-parity (stash 비교).
+
+**Watch Out**: timeline console 경고 8개 — refactor 무관 pre-existing (별도 조사).
+
+**(저녁 후속 #5, PR #398)**: `router.push("/wiki/[id]")` dead code 정리 — 404 유발 호출 9개를 내부 라우팅 패턴으로 교체.
+
+**다음**: EVENT_MARKER_CONFIG 신규 이벤트 매핑.
+
+---
+
 ## 🚀 2026-05-21 (저녁 후속 #4) — Books own Views section (P0 #3 완료) ⭐⭐⭐
 
 **범위**: `linear-sidebar.tsx` 2줄. Books section에 `renderViewsSection("books", "/books")` 추가 — Books space 사이드바 own Views section (Notes/Wiki/Calendar/Ontology 동일 패턴). 영구 룰 #87 정합. 인프라는 이미 준비됨 (호출만 누락이었음).
