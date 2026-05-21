@@ -9,9 +9,9 @@
  *   A3. Row separators already present — opacity tuned
  *   B1. Hover state: hoveredId React state, stroke ring + row bg highlight
  *   B2. Tooltip: richer content — title / status / created + planned relative
- *   B3. Status dot: stub = hollow circle, article = filled solid
+ *   B3. Status end shape: stub = rounded bar end, article = solid arrowhead tip
  *   D1. Past vs Future opacity via SVG linearGradient (smooth, single rect)
- *   D2. Planned horizon → dashed right-end stroke overlay; updatedAt → solid
+ *   D2. Planned horizon → dashed tail trailing right; updatedAt → no tail
  *
  * v0.3 (2026-05-21):
  *   - Horizontal scroll + big px-per-day per zoom
@@ -44,7 +44,7 @@ import { ArrowsLeftRight } from "@phosphor-icons/react/dist/ssr/ArrowsLeftRight"
 import { Paperclip } from "@phosphor-icons/react/dist/ssr/Paperclip"
 import { DotOutline } from "@phosphor-icons/react/dist/ssr/DotOutline"
 import { IconWikiStub, IconWikiArticle } from "@/components/plot-icons"
-import { isWikiStub, safeDate, getHorizon, getHorizonSource } from "@/lib/wiki-utils"
+import { isWikiStub, safeDate, getHorizon } from "@/lib/wiki-utils"
 import { cn } from "@/lib/utils"
 import { WIKI_STATUS_HEX } from "@/lib/colors"
 import { usePlotStore } from "@/lib/store"
@@ -137,8 +137,8 @@ const TICK_STEP_DAYS: Record<ZoomLevel, number> = {
 const LANE_HEIGHT = 52
 const BAR_HEIGHT = 28
 const BAR_RADIUS = 8
-const END_DOT_SIZE = 18
-const END_DOT_OFFSET = 9
+/** Article arrowhead: how far the tip extends past the bar's right edge (px). */
+const ARROW_DEPTH = 9
 const AXIS_HEIGHT = 32
 const LABEL_COL_WIDTH = 200
 const TODAY_LINE_COLOR = "var(--border-strong)"
@@ -626,9 +626,7 @@ export function WikiTimelineView({
     const liveEndX = isDragging ? dragState!.currentEndX : x + width
     const liveWidth = liveEndX - x
 
-    const dotCx = liveEndX + END_DOT_OFFSET
     const titleInside = liveWidth >= cfg.titleThreshold
-    const outsideTitleX = dotCx + END_DOT_SIZE / 2 + 4
     const titleLabel = article.title || "Untitled"
 
     /** D1: gradient id for past→future opacity split */
@@ -641,9 +639,12 @@ export function WikiTimelineView({
       return (nowX - x) / liveWidth     // partial split
     })()
 
-    /** D2: planned horizon → dashed right cap; also forced true while dragging */
-    const horizonSource = getHorizonSource(article)
-    const isPlanned = isDragging || horizonSource === "planned"
+    /** Right-most x of the status end shape (arrowhead tip for Article, bar edge for Stub). */
+    const endShapeRightX = liveEndX + (stub ? 0 : ARROW_DEPTH)
+    /** Bar's right-edge fill opacity — matches the past/future gradient end. */
+    const endOpacity = nowX >= liveEndX ? 0.78 : 1
+    /** Outside-title x — clears the end shape. */
+    const outsideTitleX = endShapeRightX + 6
 
     return (
       <g
@@ -744,20 +745,6 @@ export function WikiTimelineView({
           />
         )}
 
-        {/* D2: Planned horizon — dashed right-edge cap overlay */}
-        {isPlanned && (
-          <line
-            x1={liveEndX}
-            y1={barY + 2}
-            x2={liveEndX}
-            y2={barY + BAR_HEIGHT - 2}
-            stroke={color}
-            strokeWidth={2}
-            strokeDasharray="2 2"
-            opacity={0.9}
-          />
-        )}
-
         {/* Inside title — clipped to bar width */}
         {titleInside && (
           <>
@@ -778,16 +765,15 @@ export function WikiTimelineView({
           </>
         )}
 
-        {/* B3: Status dot — hollow for stub, filled for article */}
-        <circle
-          cx={dotCx}
-          cy={cy}
-          r={END_DOT_SIZE / 2}
-          fill={stub ? "var(--background)" : color}
-          stroke={color}
-          strokeWidth={stub ? 2 : 0}
-          opacity={0.95}
-        />
+        {/* Status end shape — Article gets a solid arrowhead; Stub keeps the bar's rounded end */}
+        {!stub && (
+          <polygon
+            points={`${liveEndX},${barY} ${liveEndX + ARROW_DEPTH},${cy} ${liveEndX},${barY + BAR_HEIGHT}`}
+            fill={color}
+            fillOpacity={endOpacity}
+            filter="url(#bar-shadow)"
+          />
+        )}
 
         {/* Outside title — right of dot when bar is narrow */}
         {!titleInside && (
@@ -803,11 +789,11 @@ export function WikiTimelineView({
           </text>
         )}
 
-        {/* Grab handle: 12px wide hit zone on right edge */}
+        {/* Grab handle: hit zone covers right edge + arrowhead for article */}
         <rect
           x={liveEndX - 6}
           y={barY - 2}
-          width={12}
+          width={12 + (stub ? 0 : ARROW_DEPTH)}
           height={BAR_HEIGHT + 4}
           fill="transparent"
           style={{ cursor: "ew-resize", pointerEvents: "all" }}

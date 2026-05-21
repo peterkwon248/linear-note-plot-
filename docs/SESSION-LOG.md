@@ -6,6 +6,70 @@
 
 ---
 
+## 2026-05-21 (저녁 후속) — 다른컴퓨터/Windows, **timeline 막대 끝점 재설계 (circle dot → Article 화살촉 / Stub rounded)**
+
+> 🎯 **다음 즉시 액션 (다른 컴퓨터 로그인 후 시작점)**:
+>
+> **🟡 P0 #2 — Ontology graph node 사이드바 동기화** (timeline은 사용자 "마음에 든다 이 정도면" 으로 일단락)
+>
+> timeline 시각 작업 종료 (사용자 승인). 다음은 TODO P0 순서 — Ontology graph node 사이드바 / Activity events 후속 / Books own Views section. 어느 것부터 할지는 사용자 의향 청취.
+>
+> **이번 세션 (직전 거대 PR #393 후속)**:
+> - 직전 PR #393 (옵션 C drag + event marker chips + Reticle polish) 머지 후, 사용자가 막대 끝점 circle dot을 보고 "요 동그라미가 최선인가?" → 브레인스토밍 → **옵션 C 채택** (도형 자체로 status 표현)
+> - 끝점 재설계: 떠 있던 circle dot 제거 → **Article = 막대 끝 solid 화살촉 ▶ (`<polygon>`, ARROW_DEPTH 9px)** / **Stub = 막대 rounded end (별도 요소 없음)**
+> - 초안엔 planned horizon = dashed tail (`- - -`) 추가했으나 사용자 "별론데" → **제거** (막대가 Now 라인 넘어 future stripe 진입 = 계획됨, 위치로 자명. tail은 중복 + disconnect)
+> - 최종: 끝점 = status만 (Article 화살촉 / Stub rounded). `horizonSource`/`isPlanned`/`getHorizonSource` import 제거 (dashed tail 폐기로 unused).
+>
+> **시각 검증 (선택)**:
+> - 다른 머신에서 본인 viewport에 dummy snippet (직전 entry hook 참조) → timeline → Article 막대 끝 화살촉 / Stub 막대 rounded end 확인
+> - timeline은 사용자 승인 완료이므로 추가 polish는 사용자 명시 요청 시만
+>
+> **컴포넌트 변경** (`components/views/wiki-timeline-view.tsx`):
+> - 상수: `END_DOT_SIZE`/`END_DOT_OFFSET` 제거 → `ARROW_DEPTH = 9` 신규 (`PLANNED_TAIL_LEN`/`PLANNED_TAIL_GAP`는 초안에 추가했다 제거)
+> - `renderLaneBar`: `<circle>` status dot 제거 → `{!stub && <polygon points={`${liveEndX},${barY} ${liveEndX+ARROW_DEPTH},${cy} ${liveEndX},${barY+BAR_HEIGHT}`} fill={color} fillOpacity={endOpacity} filter="url(#bar-shadow)"/>}`
+> - `endShapeRightX = liveEndX + (stub ? 0 : ARROW_DEPTH)` / `endOpacity = nowX >= liveEndX ? 0.78 : 1` / `outsideTitleX = endShapeRightX + 6`
+> - grab handle width `12 + (stub ? 0 : ARROW_DEPTH)` (화살촉 커버)
+> - `horizonSource`/`isPlanned` const 제거, `getHorizonSource` import 제거
+>
+> **위험 + 회피**:
+> - 🟢 `getHorizonSource` 헬퍼는 `lib/wiki-utils.ts`에 그대로 존재 (timeline import만 제거). 향후 재사용 가능.
+> - 🟢 끝점이 status만 표현 → planned/updated 구분은 막대 위치(future stripe)에 위임. 의도된 단순화.
+>
+> **참고 파일**: `components/views/wiki-timeline-view.tsx` (renderLaneBar ~line 615+)
+>
+> **머신**: 다른컴퓨터 (Windows)
+> **현재 main HEAD**: edf74fb (PR #393) → 이번 PR squash merge 후
+> **branch worktree**: `claude/sharp-lumiere-e5fb03`
+
+### 완료
+
+- timeline 막대 끝점 재설계 (단일 파일 `wiki-timeline-view.tsx`, +22/-36 — 순 −14줄 청소):
+  - circle status dot 제거 → Article 화살촉 `<polygon>` / Stub rounded end
+  - dashed tail 초안 추가 → 사용자 피드백 "별론데" → 제거
+  - `getHorizonSource` import + `horizonSource`/`isPlanned` const 정리
+
+### 브레인스토밍 & 큰 결정 (영구)
+
+- **#91 후보: 막대 끝점 = status는 도형 자체로 (Article 화살촉 / Stub rounded end), horizon은 막대 위치로** — 떠 있는 circle dot은 막대와 disconnect + 단조로움. 도형 자체가 메타포 (화살촉 = 도착/완성/directional, rounded = soft/open). horizon source (planned/updated)는 별도 마커 없이 막대가 future stripe 진입하는 위치로 자명 — 중복 시각 신호 제거. "Gentle by default" 정합.
+- **시각 신호 중복 제거 원칙** — 한 정보를 두 곳에서 표현하면 (막대 위치 + dashed tail) 군더더기. 위치가 이미 말하면 마커는 빼는 게 깔끔.
+
+### 기술 학습 (영구)
+
+- **SVG `<polygon>` 화살촉 = rect 막대 끝에 triangle tip 부착** — `points` 3점 (top / tip / bottom)으로 isoceles triangle. `fillOpacity`로 막대 gradient 끝 opacity 매칭 (`nowX >= liveEndX ? 0.78 : 1`). `filter="url(#bar-shadow)"` 공유 → 막대와 시각 통합 (seam 더블섀도 invisible).
+- **status 표현 = 별도 떠있는 요소 < 막대 본체 도형 일부** — 끝점이 막대에서 떨어져 있으면 (offset) disconnect 인지. 막대 끝 모양 자체가 status면 통합감.
+
+### 환경 변경
+
+- Store version: 144 (변경 없음 — UI 변경만)
+- TS 부채 0 유지: `tsc --noEmit` clean, `npm run build` ✓
+- 신규 파일: 없음. 사용자 IDB stale data: 없음.
+- `getHorizonSource` timeline import 제거 (헬퍼 자체는 `lib/wiki-utils.ts` 유지)
+
+### 머신
+다른컴퓨터 (Windows). **다음 세션 머신**: 미정.
+
+---
+
 ## 2026-05-21 (저녁) — 다른컴퓨터/Windows, **timeline 옵션 C drag + event marker chips + Reticle polish (단일 거대 PR)**
 
 > 🎯 **다음 즉시 액션 (다른 컴퓨터 로그인 후 시작점)**:
