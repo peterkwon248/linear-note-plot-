@@ -28,7 +28,7 @@ export function SidePanelDetail() {
   const wikiCategories = usePlotStore((s) => s.wikiCategories)
   const wikiTemplates = usePlotStore((s) => Array.isArray(s.wikiTemplates) ? s.wikiTemplates : [])
 
-  if (activeSpace === "ontology") {
+  if (activeSpace === "ontology" && !sidePanelContext) {
     return <GraphDetailPlaceholder />
   }
 

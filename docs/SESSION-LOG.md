@@ -6,6 +6,70 @@
 
 ---
 
+## 2026-05-21 (저녁 후속 #2) — 다른컴퓨터/Windows, **Ontology graph node → SmartSidePanel 동기화 (P0 #1 완료)**
+
+> 🎯 **다음 즉시 액션 (다른 컴퓨터 로그인 후 시작점)**:
+>
+> **🟡 P0 #2 — Activity events 후속** (Ontology P0 #1 완료, 다음 페이즈)
+>
+> 이번 세션에 Ontology graph node 사이드바 동기화 완료. 다음 = Activity events wire-up. timeline 마커 chip(#90, unknown type fallback 보유)과 시너지 — 이벤트 풍부해지면 timeline chip도 다양해짐.
+>
+> **P0 #2 작업 내용**:
+> 1. **Granular Wiki/Book events wire-up** — 현재 wiki는 `created/updated/trashed/untrashed`만 emit (`lib/store/slices/wiki-articles.ts`). `block_added`/`block_removed`/`block_reordered` (wiki block 변경 시), `item_added`/`item_removed` 등 (books) 미연결. `appendEvent({ kind: "wiki", id }, "block_added", {...})` 패턴으로 추가. EntityEventType union(`lib/types.ts:934-945`)에 이미 타입 정의됨.
+> 2. **`opened` 이벤트 emit** — wiki article 열 때 opened 이벤트 발화 (현재 미emit). `ui.ts`의 `openNote`는 note만 `appendEvent(id, "opened")` 호출. wiki article 여는 경로(`navigateToWikiArticle` consume 지점 = WikiView)에서 `appendEvent({kind:"wiki",id}, "opened")` 추가 검토.
+> 3. **Label entity events** — `tags.ts`의 이벤트 발화 패턴 정합으로 label 이벤트 추가.
+>
+> **첫 스텝**: `lib/store/slices/wiki-articles.ts` (appendEvent 호출 지점들) + `lib/store/slices/books.ts` + `lib/types.ts:934-945` (EntityEventType) read → 어느 mutation에서 어떤 granular event emit할지 매핑 → 사용자 확인 후 wire-up.
+>
+> **참고 — Activity events 인프라**:
+> - `EntityEvent { id, entity: {kind,id}, type: EntityEventType, at: ISO, meta? }` — `lib/types.ts:955`
+> - `appendEvent` — store slice 생성 시 주입되는 AppendEventFn. slice 파일들이 `createXSlice(set, get, appendEvent)` 시그니처로 받음.
+> - `getEventsForEntity(events, {kind,id}, limit?)` — `lib/datalog/helpers.ts:20`
+> - 현재 wiki emit 지점: `wiki-articles.ts:61` (created), `:85` (updated), `:81/:83/:177` (trashed/untrashed)
+>
+> **머신**: 다른컴퓨터 (Windows)
+> **현재 main HEAD**: 이번 Ontology PR squash merge 후
+> **branch worktree**: `claude/sharp-lumiere-e5fb03`
+
+### 완료 — Ontology graph node → SmartSidePanel 동기화 (P0 #1)
+
+3 파일 변경 (+40/-227):
+- **`ontology-view.tsx`** — `onSelectNode` (싱글클릭): `setSidePanelContext` + `setSidePanelOpen(true)` 추가. node type별 매핑 — note는 raw id `{type:"note"}`, wiki는 `"wiki:"` prefix strip 후 `{type:"wiki"}`, tag는 `"tag:"` prefix strip 후 `{type:"tag"}`. `setSelectedNodeId`(캔버스 selection ring)도 유지.
+- **`ontology-view.tsx`** — `onOpenNote` (더블클릭): node type별 — note는 `openNote(id)`, wiki는 `setActiveRoute("/wiki")` + `navigateToWikiArticle(wikiId)`, tag는 no-op (에디터 없음).
+- **`ontology-detail-panel.tsx` 삭제** (215줄 legacy note-only floating 패널). SmartSidePanel 4탭이 대체 — "모든 entity 4탭 사이드바 통일" 영구 룰 정합.
+- **`side-panel-detail.tsx`** — `activeSpace === "ontology"` placeholder 가드를 `&& !sidePanelContext` 조건 추가 (노드 선택 후에도 placeholder가 디테일 차단하던 버그).
+
+### 브레인스토밍 & 큰 결정 (영구)
+
+- **Ontology node 클릭 = SmartSidePanel 4탭 (별도 패널 X)** — legacy `OntologyDetailPanel`(note-only, floating)은 "모든 entity 4탭 통일" 룰 위반 + wiki/tag 노드 미지원. SmartSidePanel은 note/wiki/tag 다 커버 → 엄밀히 더 capable. 제거가 정답. `unlinked mentions` 같은 고유 기능이 아쉬우면 SmartSidePanel Connections 탭에 global하게 추가 (Ontology 전용이 아니라 모든 entity 혜택).
+- **graph node id 스킴** — note는 raw entity id, **wiki는 `"wiki:" + id`, tag는 `"tag:" + id`** (`lib/graph.ts:218,250`). 사이드바/네비게이션 wire 시 prefix strip 의무.
+
+### 기술 학습 (영구)
+
+- **Ontology node → SmartSidePanel 열기 = `setSidePanelContext({type,id})` + `setSidePanelOpen(true)`** — 표준 2줄 패턴 (wiki-view.tsx:241 등). `SidePanelContext` union(`lib/store/types.ts:30`)에 note/wiki/tag 이미 존재 → 신규 kind 불필요.
+- **Plot 내부 라우팅 = `setActiveRoute` (external store), Next.js router 아님** — `setActiveRoute("/wiki")`가 뷰 전환. `router.push("/wiki/[id]")`는 **그 Next 라우트가 존재하지 않아 404** (`/wiki`, `/wiki/templates` 페이지만 있음). wiki article 열기 = `setActiveRoute("/wiki")` + `navigateToWikiArticle(id)` (`lib/wiki-article-nav.ts` external store, WikiView가 mount 시 consume). `wikilink-context-menu.tsx:179` 검증된 패턴.
+- **`router.push("/wiki/${id}")`는 코드베이스 곳곳에 있지만 dead** — `recent-cards.tsx`/`mixed-quicklinks.tsx`/`pinned-list.tsx` 등이 쓰지만 `/wiki/[id]` 라우트 없어 404. 향후 정리 대상 (또는 `/wiki/[id]` 라우트 신설).
+- **`side-panel-detail.tsx`에 space별 하드 가드 존재** — `activeSpace === "ontology"`면 placeholder 강제 반환하던 legacy 가드. 신규 entity를 ontology space에서 사이드바에 띄울 땐 이런 space 가드 확인 의무.
+- **explore agent 결과는 검증 필요** — 이번 explore agent가 "wiki 노드 id는 raw"라 보고했으나 실제론 `"wiki:"` prefix. preview eval로 실데이터 확인하니 드러남. agent 보고 = 가설, ground truth는 코드/실행.
+
+### Watch Out (다음 세션)
+
+- 🟡 **double-click for tag nodes = no-op** — 의도된 동작 (tag는 에디터 없음). 향후 tag 더블클릭에 "tag 필터 뷰로 이동" 같은 동작 원하면 별도 작업.
+- 🟡 **`router.push("/wiki/[id]")` dead code** — 여러 파일에 산재. P0 아니지만 언젠가 정리 (라우트 신설 또는 호출 교체).
+- 🟢 **`OntologyDetailPanel`의 unlinked mentions 기능 소실** — 제거됨. 원하면 SmartSidePanel Connections 탭에 global 추가 (별도 작업).
+
+### 환경 변경
+
+- Store version: 144 (변경 없음 — UI 배선만)
+- 삭제 파일: `components/ontology/ontology-detail-panel.tsx` (215줄)
+- TS 부채 0 유지: `tsc --noEmit` clean, `npm run build` ✓
+- 사용자 IDB stale data: 없음
+
+### 머신
+다른컴퓨터 (Windows).
+
+---
+
 ## 2026-05-21 (저녁 후속) — 다른컴퓨터/Windows, **timeline 막대 끝점 재설계 (circle dot → Article 화살촉 / Stub rounded)**
 
 > 🎯 **다음 즉시 액션 (다른 컴퓨터 로그인 후 시작점)**:

@@ -8,6 +8,28 @@
 
 ---
 
+## 🚀 2026-05-21 (저녁 후속 #2) — **Ontology graph node → SmartSidePanel 동기화 (P0 #1 완료)** ⭐⭐⭐⭐
+
+**범위**: 3 파일 (+40/-227). Ontology graph node 클릭 → 통합 사이드바 동기화. legacy 패널 제거.
+
+**완료**:
+- `ontology-view.tsx` — 싱글클릭(`onSelectNode`): `setSidePanelContext({type,id})` + `setSidePanelOpen(true)`. node type별 — note raw id / wiki `"wiki:"` strip / tag `"tag:"` strip. 더블클릭(`onOpenNote`): note `openNote` / wiki `setActiveRoute("/wiki")`+`navigateToWikiArticle` / tag no-op.
+- `ontology-detail-panel.tsx` **삭제** (215줄 legacy note-only floating 패널) — SmartSidePanel 4탭이 대체.
+- `side-panel-detail.tsx` — `activeSpace === "ontology"` placeholder 가드에 `&& !sidePanelContext` 추가 (노드 선택 후 디테일 차단 버그 fix).
+
+**핵심 결정 (영구)**:
+- **Ontology node 클릭 = SmartSidePanel 4탭** — legacy OntologyDetailPanel(note-only)은 "모든 entity 4탭 통일" 룰 위반 + wiki/tag 미지원. SmartSidePanel이 더 capable → 제거가 정답.
+- **graph node id 스킴** — note는 raw id, **wiki는 `"wiki:" + id`, tag는 `"tag:" + id`** (`lib/graph.ts:218,250`). 사이드바/네비 wire 시 prefix strip 의무.
+
+**기술 학습 (영구)**:
+- **Plot 내부 라우팅 = `setActiveRoute` (external store), Next.js router 아님** — `router.push("/wiki/[id]")`는 그 Next 라우트가 없어 **404**. wiki article 열기 = `setActiveRoute("/wiki")` + `navigateToWikiArticle(id)` (`wikilink-context-menu.tsx:179` 검증 패턴). `router.push("/wiki/${id}")`는 코드베이스 곳곳에 있지만 dead code (P0 #5로 정리 대상).
+- **`side-panel-detail.tsx`에 space별 하드 가드** — `activeSpace === "ontology"`면 placeholder 강제. 신규 entity를 특정 space 사이드바에 띄울 땐 space 가드 확인 의무.
+- **explore agent 결과 = 가설** — agent가 "wiki 노드 id는 raw"라 보고했으나 실제론 `"wiki:"` prefix. preview eval 실데이터로 드러남. ground truth는 코드/실행.
+
+**다음**: P0 #2 Activity events 후속 (granular wiki/book events wire-up + opened emit + label events). SESSION-LOG hook 참조.
+
+---
+
 ## 🚀 2026-05-21 (저녁 후속) — **timeline 막대 끝점 재설계 (circle dot → Article 화살촉 / Stub rounded)** ⭐⭐⭐⭐
 
 **범위**: 단일 파일 `wiki-timeline-view.tsx` (+22/-36, 순 −14줄 청소). PR #393 후속. 사용자가 막대 끝 circle dot을 보고 "요 동그라미가 최선인가?" → 브레인스토밍 → 옵션 C 채택.
