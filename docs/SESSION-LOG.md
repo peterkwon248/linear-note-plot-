@@ -6,6 +6,45 @@
 
 ---
 
+## 2026-05-21 (저녁 후속 #4) — 다른컴퓨터/Windows, **Books own Views section (P0 #3 완료) — 🟡 P0 전부 소진**
+
+> 🎯 **다음 즉시 액션 (다른 컴퓨터 로그인 후 시작점)**:
+>
+> **🟢 P0 전부 🟢(낮은 우선순위)만 남음 — 사용자 의향 청취 필요**
+>
+> 이번 세션에 P0 #1(Ontology 사이드바)·#2(Activity events)·#3(Books Views) 완료. TODO.md P0의 🟡(medium) 항목 전부 소진. 남은 P0는 모두 🟢:
+> - timeline 추가 polish (사용자 명시 요청 시만 — "마음에 든다 이 정도면"으로 일단락됨)
+> - wiki-timeline-view.tsx sub-component 분리 (1500+줄 리팩토링)
+> - `router.push("/wiki/[id]")` dead code 정리 (404 유발, 여러 파일 산재)
+> - `EVENT_MARKER_CONFIG` 신규 이벤트 매핑 (P0 #2 wire-up된 granular events에 전용 아이콘)
+>
+> 다음 세션은 위 🟢 중 택 또는 신규 방향 — **사용자에게 무엇을 할지 물어볼 것**. 자동으로 🟢 진입하지 말 것.
+>
+> **이번 세션 (P0 #3)**: `linear-sidebar.tsx` Books section에 `renderViewsSection("books", "/books")` 한 줄 추가. `renderViewsSection`은 generic 헬퍼 (Notes/Wiki/Calendar/Ontology 공용). `getSavedViewSpaceForActivity`(books 지원, line 89)·`SavedView.space` union(books 포함) 이미 준비됨 — 호출만 누락이었음.
+>
+> **머신**: 다른컴퓨터 (Windows)
+> **현재 main HEAD**: 이번 P0 #3 PR squash merge 후
+> **branch worktree**: `claude/sharp-lumiere-e5fb03`
+
+### 완료 — Books own Views section (P0 #3)
+
+- `components/linear-sidebar.tsx` — Books section (`activeSpace === "books"` 블록)에 `renderViewsSection("books", "/books")` 추가 (All Books NavLink 직후, Pinned 위). 2줄 (주석 + 호출).
+- 영구 룰 #87 정합 — single-entity space(Books)는 own Views section 보유.
+
+### 기술 학습
+
+- `renderViewsSection(spaceFilter, routeOnClick)` = 완전 generic 헬퍼 (`linear-sidebar.tsx:655`). 신규 space에 Views section = 호출 한 줄. `savedViews.filter(v => v.space === spaceFilter)` + `isInOwnContext = activeSpace === spaceFilter`.
+
+### 환경 변경
+
+- Store version: 144 (변경 없음)
+- TS 부채 0 유지: `tsc --noEmit` clean, `npm run build` ✓
+
+### 머신
+다른컴퓨터 (Windows).
+
+---
+
 ## 2026-05-21 (저녁 후속 #3) — 다른컴퓨터/Windows, **Activity events 후속 — granular events wire-up (P0 #2 완료)**
 
 > 🎯 **다음 즉시 액션 (다른 컴퓨터 로그인 후 시작점)**:

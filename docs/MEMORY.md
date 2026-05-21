@@ -8,6 +8,18 @@
 
 ---
 
+## 🚀 2026-05-21 (저녁 후속 #4) — **Books own Views section (P0 #3 완료) — 🟡 P0 전부 소진** ⭐⭐⭐
+
+**범위**: `linear-sidebar.tsx` 2줄. Books section에 `renderViewsSection("books", "/books")` 추가.
+
+**완료**: Books space 사이드바에 own Views section (Notes/Wiki/Calendar/Ontology와 동일 패턴). 영구 룰 #87 정합 (single-entity space는 own Views 보유). 인프라(`getSavedViewSpaceForActivity` books 지원, `SavedView.space` union books 포함)는 이미 준비됨 — 호출만 누락이었음.
+
+**기술 학습**: `renderViewsSection(spaceFilter, routeOnClick)`는 완전 generic 헬퍼 — 신규 space에 Views = 호출 한 줄.
+
+**현황**: TODO.md P0의 🟡(medium) 항목 전부 소진. 남은 P0는 모두 🟢 (timeline polish 요청 시만 / sub-component 분리 / router.push dead code 정리 / EVENT_MARKER_CONFIG 매핑). 다음 세션은 사용자 의향 청취.
+
+---
+
 ## 🚀 2026-05-21 (저녁 후속 #3) — **Activity events 후속 — granular events wire-up (P0 #2 완료)** ⭐⭐⭐⭐
 
 **범위**: 4 파일 (+83/-11). wiki/book/label entity에 discrete activity events 발화 wire-up.

@@ -51,6 +51,14 @@
 
 ---
 
+## 🚀 2026-05-21 (저녁 후속 #4) — Books own Views section (P0 #3 완료) ⭐⭐⭐
+
+**범위**: `linear-sidebar.tsx` 2줄. Books section에 `renderViewsSection("books", "/books")` 추가 — Books space 사이드바 own Views section (Notes/Wiki/Calendar/Ontology 동일 패턴). 영구 룰 #87 정합. 인프라는 이미 준비됨 (호출만 누락이었음).
+
+**현황**: P0 🟡 항목 전부 소진. 남은 P0는 모두 🟢 — 다음 세션 사용자 의향 청취.
+
+---
+
 ## 🚀 2026-05-21 (저녁 후속 #3) — Activity events granular wire-up (P0 #2 완료) ⭐⭐⭐⭐
 
 **범위**: 4 파일 (+83/-11). wiki/book/label entity에 discrete activity events 발화.
