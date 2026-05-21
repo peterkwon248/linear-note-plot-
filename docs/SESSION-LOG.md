@@ -6,6 +6,33 @@
 
 ---
 
+## 2026-05-21 (저녁 후속 #5) — 다른컴퓨터/Windows, **`router.push("/wiki/[id]")` dead code 정리**
+
+> 🎯 **다음 즉시 액션**: wiki-timeline-view.tsx sub-component 분리 작업 진행 중 (같은 세션 내 다음 PR). 완료 후 SESSION-LOG 추가 entry 참조.
+>
+> **이번 작업 (P0 #3 — dead code 정리)**: 6 파일에서 `router.push("/wiki/${id}")` (존재하지 않는 Next 라우트 → 404) 9개 call site를 `setActiveRoute("/wiki")` + `navigateToWikiArticle(id)` 패턴으로 교체. anchor(`#${anchorId}`) 가진 북마크 2 site는 anchor 드롭 (navigateToWikiArticle은 anchor 미지원, 단 현재 404 상태라 strict improvement).
+>
+> **머신**: 다른컴퓨터 (Windows)
+
+### 완료 — router.push dead code 정리 (P0 #3)
+
+- 6 파일 (+15/-17): `in-books-section.tsx`(중복 router.push 삭제) / `linear-sidebar.tsx` / `recent-cards.tsx` / `mixed-quicklinks.tsx`(2 site) / `pinned-list.tsx` / `app/(app)/folder/[id]/page.tsx`(3 site)
+- 패턴: `router.push("/wiki/${id}")` → `setActiveRoute("/wiki")` + `navigateToWikiArticle(id)`
+- 부수: unused된 `useRouter`/`router` 정리 (in-books-section / recent-cards / pinned-list에서 제거, linear-sidebar / mixed-quicklinks / folder page는 다른 라우트에 여전히 사용 → 유지)
+
+### 기술 학습
+
+- **`/wiki/[id]` Next 라우트는 존재하지 않음** — `/wiki`, `/wiki/templates` 페이지만. wiki article 열기는 항상 `setActiveRoute("/wiki")` + `navigateToWikiArticle(id)` 내부 라우팅.
+- **wiki 북마크 anchor 스크롤은 미지원** — `navigateToWikiArticle`는 anchor 안 받음, WikiView는 `setSelectedWikiArticleId`만. anchor 스크롤 원하면 `navigateToWikiArticle(id, anchorId?)` 확장 + WikiView consume 필요 (별도 작업).
+
+### 환경 변경
+- Store version: 144 (변경 없음). TS 부채 0 유지.
+
+### 머신
+다른컴퓨터 (Windows).
+
+---
+
 ## 2026-05-21 (저녁 후속 #4) — 다른컴퓨터/Windows, **Books own Views section (P0 #3 완료) — 🟡 P0 전부 소진**
 
 > 🎯 **다음 즉시 액션 (다른 컴퓨터 로그인 후 시작점)**:

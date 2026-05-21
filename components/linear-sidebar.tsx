@@ -53,6 +53,7 @@ import { setWikiCategoryFilter } from "@/lib/wiki-category-filter"
 import { getCurrentViewContextKey, getSavedViewSpaceForActivity } from "@/lib/view-engine/saved-view-context"
 import type { ViewContextKey } from "@/lib/view-engine/types"
 import { ALL_SIDEBAR_ROUTES, setActiveRoute, getActiveRoute, setActiveFolderId, setActiveTagId, setActiveLabelId, useActiveRoute, useActiveFolderId, useActiveTagId, useActiveLabelId, useActiveSpace, setActiveViewId, useActiveViewId, routeGoBack, routeGoForward } from "@/lib/table-route"
+import { navigateToWikiArticle } from "@/lib/wiki-article-nav"
 import type { Note, NoteStatus, ActivitySpace } from "@/lib/types"
 import { cn } from "@/lib/utils"
 import { useKnowledgeMetrics } from "@/hooks/use-knowledge-metrics"
@@ -1788,7 +1789,7 @@ export function LinearSidebar() {
                       } else if (item.kind === "wiki") {
                         setActiveRoute("/wiki")
                         usePlotStore.getState().setSelectedNoteId(null)
-                        router.push(`/wiki/${item.id}`)
+                        navigateToWikiArticle(item.id)
                       } else {
                         // book
                         const href = `/books/${item.id}`

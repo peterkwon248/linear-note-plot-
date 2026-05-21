@@ -24,15 +24,11 @@ timeline은 사용자 "마음에 든다 이 정도면" 으로 일단락. 추가 
 
 - 1500+ 줄 단일 파일. `<TimelineAxis>` / `<TimelineBars>` / `<TimelineEventMarkers>` / `<TimelineTooltip>` / `<TimelineGrid>` 5분할 후보. 별도 리팩토링 PR.
 
-### 3. **🟢 `router.push("/wiki/[id]")` dead code 정리**
+### 3. **🟢 EVENT_MARKER_CONFIG 신규 이벤트 매핑** (다음 세션 예정)
 
-- `recent-cards.tsx` / `mixed-quicklinks.tsx` / `pinned-list.tsx` 등이 `router.push("/wiki/${id}")` 호출하나 `/wiki/[id]` Next 라우트 없어 404. `setActiveRoute("/wiki")` + `navigateToWikiArticle(id)` 패턴으로 교체 OR `/wiki/[id]` 라우트 신설.
+- P0 #2에서 wire-up된 granular events (block_added/removed/reordered, merged, unmerged, split, item_added 등)가 timeline 마커 chip에 fallback dot으로 표시됨. `wiki-timeline-view.tsx` `EVENT_MARKER_CONFIG`에 전용 아이콘/색 매핑 추가하면 timeline이 더 풍부. **사용자가 다음 세션에서 하기로 함.**
 
-### 4. **🟢 EVENT_MARKER_CONFIG 신규 이벤트 매핑** (선택)
-
-- P0 #2에서 wire-up된 granular events (block_added/removed/reordered, merged, unmerged, split, item_added 등)가 timeline 마커 chip에 fallback dot으로 표시됨. `wiki-timeline-view.tsx` `EVENT_MARKER_CONFIG`에 전용 아이콘/색 매핑 추가하면 timeline이 더 풍부. timeline polish 시 같이.
-
-### 5. **🟢 manual smoke 누적**
+### 4. **🟢 manual smoke 누적**
 
 - 이번 세션: Books Views + Activity events wire-up + Ontology node 사이드바 + timeline 작업 누적
 - 이전: PR #392 (bars-first 3 라운드) + PR #373-#391
