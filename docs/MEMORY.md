@@ -8,6 +8,31 @@
 
 ---
 
+## 🚀 2026-05-21 (저녁 후속 #3) — **Activity events 후속 — granular events wire-up (P0 #2 완료)** ⭐⭐⭐⭐
+
+**범위**: 4 파일 (+83/-11). wiki/book/label entity에 discrete activity events 발화 wire-up.
+
+**완료**:
+- `wiki-articles.ts` — `block_added`/`block_removed`/`block_reordered`/`merged`/`unmerged`/`split` + `opened`(incrementWikiArticleReads)
+- `books.ts` — `item_added`/`item_removed`/`chapter_added`/`smart_source_added`/`smart_source_removed`
+- `labels.ts` — slice가 `appendEvent` 전무였음 → `createLabelsSlice(set, appendEvent)` 시그니처 변경 + `store/index.ts` 인자 추가. `created`/`renamed`/`color_changed`/`updated`/`trashed`/`untrashed`/`member_added`/`member_removed` (tags.ts 패턴 정합).
+- 의도적 제외: `updateWikiBlock` (블록 본문 편집 — 키스트로크 flood).
+- preview 검증: 6 신규 이벤트 발화 확인.
+
+**핵심 결정 (영구)**:
+- **granular event는 구조적 mutation만, 본문 편집 제외** — block add/remove/reorder/merge/unmerge/split은 discrete. `updateWikiBlock`(본문 편집)은 키스트로크마다 호출 → flood → 제외. 본문 변경은 article-level `updated`로 충분.
+- **slice가 appendEvent 안 받으면 그 entity 활동 추적 불가** — labels가 그 상태였음. 신규 entity slice는 `createXSlice(set, appendEvent)` 시그니처 권장.
+- **1:1 관계 setter는 set/clear/switch/no-op 4-case 분기 의무** — `setNoteLabel` switch(A→B) 시 A `member_removed` + B `member_added` 둘 다.
+
+**기술 학습 (영구)**:
+- Zustand `set(updater)` 안에서 closure 변수로 이전 값 capture 가능 (updater 동기 실행).
+- `EntityEventType`은 `NoteEventType` 포함 — `split`/`opened` 등을 wiki/book에도 사용 가능.
+- success-path event = `let added=false` flag 패턴 (dedup 가드 있는 mutation).
+
+**다음**: P0 #3 Books own Views section. SESSION-LOG hook 참조.
+
+---
+
 ## 🚀 2026-05-21 (저녁 후속 #2) — **Ontology graph node → SmartSidePanel 동기화 (P0 #1 완료)** ⭐⭐⭐⭐
 
 **범위**: 3 파일 (+40/-227). Ontology graph node 클릭 → 통합 사이드바 동기화. legacy 패널 제거.

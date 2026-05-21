@@ -120,7 +120,7 @@ export const usePlotStore = create<PlotState>()(
         ...createWorkflowSlice(set, get, appendEvent),
         ...createFoldersSlice(set),
         ...createTagsSlice(set, appendEvent),
-        ...createLabelsSlice(set),
+        ...createLabelsSlice(set, appendEvent),
         ...createStickersSlice(set, get, appendEvent),
         ...createThreadSlice(set, get, appendEvent),
         ...createMapsSlice(set),

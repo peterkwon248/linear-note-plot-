@@ -234,6 +234,7 @@ export function createBooksSlice(set: Set, _get: Get, appendEvent: AppendEventFn
     /* ── Item management ── */
 
     addItemToBook: (bookId: string, item: { kind: "note" | "wiki"; refId: string }) => {
+      let added = false
       set((state: any) =>
         touchBook(state, bookId, (book) => {
           // Dedup: same (kind, refId) cannot appear twice in one book.
@@ -241,6 +242,7 @@ export function createBooksSlice(set: Set, _get: Get, appendEvent: AppendEventFn
             (i) => i.kind === item.kind && (i as { refId?: string }).refId === item.refId,
           )
           if (exists) return book
+          added = true
           const newItem: BookItem = {
             kind: item.kind,
             id: genId(),
@@ -250,6 +252,10 @@ export function createBooksSlice(set: Set, _get: Get, appendEvent: AppendEventFn
           return { ...book, items: [...book.items, newItem] }
         }),
       )
+      // entity event log — only on success path
+      if (added) {
+        appendEvent({ kind: "book", id: bookId }, "item_added", { kind: item.kind, refId: item.refId })
+      }
     },
 
     addChapterHeading: (bookId: string, title: string, afterItemId?: string) => {
@@ -279,6 +285,8 @@ export function createBooksSlice(set: Set, _get: Get, appendEvent: AppendEventFn
           return { ...book, items: [...book.items, heading] }
         }),
       )
+      // entity event log
+      appendEvent({ kind: "book", id: bookId }, "chapter_added", { title })
     },
 
     removeItemFromBook: (bookId: string, itemId: string) => {
@@ -289,6 +297,8 @@ export function createBooksSlice(set: Set, _get: Get, appendEvent: AppendEventFn
           return { ...book, items: next }
         }),
       )
+      // entity event log
+      appendEvent({ kind: "book", id: bookId }, "item_removed")
     },
 
     reorderBookItems: (
@@ -366,6 +376,10 @@ export function createBooksSlice(set: Set, _get: Get, appendEvent: AppendEventFn
           return { ...book, smartSources: [...existing, source] }
         }),
       )
+      // entity event log — only on success path
+      if (added) {
+        appendEvent({ kind: "book", id: bookId }, "smart_source_added")
+      }
       return added
     },
 
@@ -378,6 +392,8 @@ export function createBooksSlice(set: Set, _get: Get, appendEvent: AppendEventFn
           return { ...book, smartSources: next }
         }),
       )
+      // entity event log
+      appendEvent({ kind: "book", id: bookId }, "smart_source_removed")
     },
 
     addExcludeId: (bookId: string, entityId: string) => {
