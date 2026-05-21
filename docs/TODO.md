@@ -3,15 +3,25 @@
 > 우선순위 기반 작업 목록. **P0 = 다음 세션 즉시 시작점** (NEXT-ACTION.md 폐지, 2026-05-12).
 > 완료 항목은 즉시 삭제. 자세한 history는 SESSION-LOG.md + MEMORY.md.
 
-**마지막 갱신**: 2026-05-21 (저녁 후속 #4) — Books own Views section 완료. **🟡 P0 전부 소진** — 남은 P0는 모두 🟢 (사용자 의향 청취 필요).
+**마지막 갱신**: 2026-05-21 (저녁 후속 #6) — wiki-timeline-view.tsx sub-component 분리 완료 (1380→386줄). 다음 P0 = EVENT_MARKER_CONFIG 신규 이벤트 매핑 (사용자 명시).
 
 ---
 
-## 🟣 P0 — 즉시 (cross-machine 진입점, 2026-05-21 저녁 후속 #4)
+## 🟣 P0 — 즉시 (cross-machine 진입점, 2026-05-21 저녁 후속 #6)
 
-> ⚠️ 🟡(medium) P0 전부 완료. 남은 건 모두 🟢(낮은 우선순위) — 다음 세션은 사용자에게 무엇을 할지 물어볼 것.
+### 1. **🟢 EVENT_MARKER_CONFIG 신규 이벤트 매핑** (최우선 — 사용자가 "다음 세션에서" 명시)
 
-### 1. **🟢 timeline 추가 polish (사용자 명시 요청 시만)**
+- P0 #2 Activity events에서 wire-up된 granular events 중 일부가 timeline 마커 chip에 fallback dot(`DotOutline`)으로만 표시됨.
+- `components/views/wiki-timeline/wiki-timeline-config.ts`의 `EVENT_MARKER_CONFIG` (line 143)에 누락 타입 매핑 추가.
+- **단 timeline은 wiki entity event만 표시** (`getEventsForEntity(entityEvents, { kind: "wiki", id })`). book/tag/label 전용 이벤트(item_*/smart_source_*/member_*/color_changed/renamed)는 wiki 노드에 안 나타남.
+- **실질 추가 대상 (wiki entity 발화 + 현재 미매핑)**: `merged` / `unmerged` / `split` / `section_collapsed`. 이 4개에 Phosphor 아이콘 + 색 추가.
+- **첫 스텝**: `wiki-timeline-config.ts:143` `EVENT_MARKER_CONFIG` read → 위 4타입 매핑 추가.
+
+### 2. **🟡 timeline pre-existing console 경고 조사** (refactor 무관, 별도)
+
+- timeline 진입 시 "Can't perform a React state update on a component that hasn't mounted yet" 8개 발생. **sub-component 분리 refactor 무관** (stash로 원본 비교 시 동일). render 중 setState 하는 곳 추적 필요 — timeline 또는 wiki-view 어딘가. 우선순위 중간.
+
+### 3. **🟢 timeline 추가 polish (사용자 명시 요청 시만)**
 
 timeline은 사용자 "마음에 든다 이 정도면" 으로 일단락. 추가 polish는 사용자가 다시 요청할 때만. 후보 (보류):
 - (a) 막대 typography 키움 (title 폰트 11→12, weight 500→600)
@@ -20,17 +30,9 @@ timeline은 사용자 "마음에 든다 이 정도면" 으로 일단락. 추가 
 - (d) axis long label collision 강화 (Quarter/Year zoom)
 - (e) selected article 이벤트 list separate panel
 
-### 2. **🟢 wiki-timeline-view.tsx sub-component 분리**
-
-- 1500+ 줄 단일 파일. `<TimelineAxis>` / `<TimelineBars>` / `<TimelineEventMarkers>` / `<TimelineTooltip>` / `<TimelineGrid>` 5분할 후보. 별도 리팩토링 PR.
-
-### 3. **🟢 EVENT_MARKER_CONFIG 신규 이벤트 매핑** (다음 세션 예정)
-
-- P0 #2에서 wire-up된 granular events (block_added/removed/reordered, merged, unmerged, split, item_added 등)가 timeline 마커 chip에 fallback dot으로 표시됨. `wiki-timeline-view.tsx` `EVENT_MARKER_CONFIG`에 전용 아이콘/색 매핑 추가하면 timeline이 더 풍부. **사용자가 다음 세션에서 하기로 함.**
-
 ### 4. **🟢 manual smoke 누적**
 
-- 이번 세션: Books Views + Activity events wire-up + Ontology node 사이드바 + timeline 작업 누적
+- 이번 세션: timeline sub-component 분리 + Books Views + Activity events + Ontology node 사이드바 누적
 - 이전: PR #392 (bars-first 3 라운드) + PR #373-#391
 
 **시각 검증 (선택)** — timeline 본인 viewport 확인 시 dummy snippet (SESSION-LOG 직전 entry hook 안 6 article 버전):
@@ -60,6 +62,8 @@ return `seeded ${ids.length}`;})()
 
 ## ✅ 최근 완료
 
+- **2026-05-21 (저녁 후속 #6)**: wiki-timeline-view.tsx sub-component 분리 — 1380줄 단일 파일 → 386줄 orchestrator + 9 모듈 파일 (`components/views/wiki-timeline/`: config/utils + Controls/Axis/Grid/Bar/EventMarkers/LabelColumn/Tooltip). 순수 리팩토링 (런타임 불변), tsc+build+시각+console-parity 검증.
+- **2026-05-21 (저녁 후속 #5)**: `router.push("/wiki/[id]")` dead code 정리 — 6 파일 9 call site, 404 유발 호출을 `setActiveRoute`+`navigateToWikiArticle` 패턴으로 교체 (PR #398).
 - **2026-05-21 (저녁 후속 #4)**: Books own Views section — `linear-sidebar.tsx` Books section에 `renderViewsSection("books", "/books")` 추가 (2줄). 영구 룰 #87 정합. 인프라(`getSavedViewSpaceForActivity`/`SavedView.space`)는 이미 준비돼 호출만 누락이었음.
 - **2026-05-21 (저녁 후속 #3)**: Activity events granular wire-up — wiki(block_added/removed/reordered, merged/unmerged, split, opened) + books(item_added/removed, chapter_added, smart_source_added/removed) + labels(slice가 appendEvent 전무였음 → 시그니처 변경 + 전체 이벤트 wire-up). 4 파일 +83/-11. `updateWikiBlock` 본문 편집은 의도적 제외 (flood 회피).
 - **2026-05-21 (저녁 후속 #2)**: Ontology graph node → SmartSidePanel 동기화 — 싱글클릭 노드 → 4탭 사이드바 (note/wiki/tag), 더블클릭 → 에디터 (note `openNote` / wiki `navigateToWikiArticle` / tag no-op). legacy `OntologyDetailPanel` 삭제 (215줄). `side-panel-detail.tsx` ontology placeholder 가드 fix. 3 파일 +40/-227.

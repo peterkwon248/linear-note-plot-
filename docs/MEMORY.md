@@ -8,6 +8,31 @@
 
 ---
 
+## 🚀 2026-05-21 (저녁 후속 #6) — **wiki-timeline-view.tsx sub-component 분리 (1380→386줄)** ⭐⭐⭐⭐
+
+**범위**: 거대 컴포넌트 리팩토링. `wiki-timeline-view.tsx` 1380줄 → **386줄 orchestrator** + 9 모듈 파일 (`components/views/wiki-timeline/`).
+
+**완료**:
+- 신규 9 파일: `wiki-timeline-config.ts` (types/constants/ZOOM_CONFIGS/EVENT_MARKER_CONFIG/state interfaces) / `wiki-timeline-utils.ts` (pure 함수) / `timeline-controls.tsx` / `timeline-axis.tsx` / `timeline-grid.tsx` / `timeline-bar.tsx` / `timeline-event-markers.tsx` / `timeline-label-column.tsx` / `timeline-tooltip.tsx`
+- orchestrator는 모든 React state/memo/effect/callback 보유, 시각 조각만 컴포넌트로
+- 순수 리팩토링 (런타임 behavior 불변). 검증 4종: tsc clean + build clean + 시각 렌더 동일 + console-parity (stash로 원본 비교)
+
+**핵심 결정 (영구)**:
+- **거대 컴포넌트 분리 = orchestrator + presentational 패턴** — state/memo/effect는 orchestrator, 시각 조각은 explicit-props 컴포넌트. closure → props. tsc가 prop contract 강제 (explicit Props interface, `any` 금지).
+- **순수 리팩토링 검증 4종** — tsc + build + 시각 렌더 + console-parity (`git stash push <file>`로 원본 비교).
+
+**기술 학습 (영구)**:
+- `git stash push <file>`로 단일 파일만 stash → 원본 vs 변경본 런타임 비교. untracked 신규 파일은 stash 안 됨 (원본이 self-contained면 OK).
+- render-function → component 전환: `renderX(item,i)` → `<X item={} laneIndex={i} key={}/>`, key는 map element로. SVG sub-component는 fragment `<>` 반환.
+
+**Watch Out**: timeline 진입 시 console 경고 8개 ("state update on component that hasn't mounted") — **refactor 무관, pre-existing** (stash 비교 확인). 별도 조사 (다음 P0 #2).
+
+**(저녁 후속 #5, PR #398)**: `router.push("/wiki/[id]")` dead code 정리 — 6 파일 9 call site, 404 유발 호출을 `setActiveRoute("/wiki")`+`navigateToWikiArticle(id)` 패턴으로 교체. `/wiki/[id]` Next 라우트 미존재.
+
+**다음**: P0 #1 EVENT_MARKER_CONFIG 신규 이벤트 매핑 (merged/unmerged/split/section_collapsed). SESSION-LOG hook 참조.
+
+---
+
 ## 🚀 2026-05-21 (저녁 후속 #4) — **Books own Views section (P0 #3 완료) — 🟡 P0 전부 소진** ⭐⭐⭐
 
 **범위**: `linear-sidebar.tsx` 2줄. Books section에 `renderViewsSection("books", "/books")` 추가.
