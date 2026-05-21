@@ -1676,6 +1676,9 @@ export function LinearSidebar() {
               />
             </div>
 
+            {/* Books Views — entity-uniformity (영구 룰 #87: single-entity space는 own Views section 보유) */}
+            {renderViewsSection("books", "/books")}
+
             {/* Pinned books — surfaces favorite collections (PRD §10) */}
             {(() => {
               const pinnedBooks = books
