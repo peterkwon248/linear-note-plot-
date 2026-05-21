@@ -6,6 +6,66 @@
 
 ---
 
+## 2026-05-21 (저녁 후속 #3) — 다른컴퓨터/Windows, **Activity events 후속 — granular events wire-up (P0 #2 완료)**
+
+> 🎯 **다음 즉시 액션 (다른 컴퓨터 로그인 후 시작점)**:
+>
+> **🟡 P0 #3 — Books own Views section** (Activity events P0 #2 완료, 다음 페이즈)
+>
+> `linear-sidebar.tsx`의 Books section에 own Views section 추가. `SavedView.space "books"`는 이미 union에 있음 — 영구 룰 #87 (single-entity space는 own views 보유, multi-entity hub은 sub-entity가) 정합. Notes/Wiki section의 `renderViewsSection` 패턴 참조.
+>
+> **첫 스텝**: `components/linear-sidebar.tsx` read → Notes/Wiki section의 Views section 렌더 패턴 확인 → Books section에 동일 패턴 적용. `getSavedViewSpaceForActivity` 시그니처 확인 (영구 룰 #86).
+>
+> **이번 세션 (P0 #2 완료)**:
+> - Activity events granular wire-up — 4 파일 (`wiki-articles.ts`/`books.ts`/`labels.ts`/`store/index.ts`), +83/-11
+> - wiki: `block_added`/`block_removed`/`block_reordered`/`merged`/`unmerged`/`split` + `opened` (incrementWikiArticleReads)
+> - books: `item_added`/`item_removed`/`chapter_added`/`smart_source_added`/`smart_source_removed`
+> - labels: slice가 `appendEvent` 전무였음 → `createLabelsSlice(set, appendEvent)` 시그니처 변경 + store index 갱신 + `created`/`renamed`/`color_changed`/`updated`/`trashed`/`untrashed`/`member_added`/`member_removed` (tags.ts 패턴 정합)
+> - 의도적 제외: `updateWikiBlock` (블록 본문 편집 — 키스트로크 flood 위험)
+> - preview 검증: 6 신규 이벤트 발화 확인 (wiki:block_added/opened, label:created/member_added/member_removed)
+>
+> **머신**: 다른컴퓨터 (Windows)
+> **현재 main HEAD**: 이번 P0 #2 PR squash merge 후
+> **branch worktree**: `claude/sharp-lumiere-e5fb03`
+
+### 완료 — Activity events granular wire-up (P0 #2)
+
+4 파일 (+83/-11):
+- **`wiki-articles.ts`** — `addWikiBlock`→block_added(meta blockType) / `removeWikiBlock`→block_removed / `moveWikiBlock`+`reorderWikiBlocks`→block_reordered / `mergeWikiArticles`+`mergeMultipleWikiArticles`(into/new 양쪽)→merged / `unmergeWikiArticle`+`unmergeFromHistory`→unmerged / `splitWikiArticle`→split / `incrementWikiArticleReads`→opened
+- **`books.ts`** — `addItemToBook`→item_added (added flag로 success path) / `removeItemFromBook`→item_removed / `addChapterHeading`→chapter_added / `addSmartSource`→smart_source_added (success path) / `removeSmartSource`→smart_source_removed
+- **`labels.ts`** — `createLabelsSlice(set)` → `(set, appendEvent)` 시그니처 변경. `createLabel`→created / `updateLabel`→color_changed|renamed|updated / `deleteLabel`→trashed / `restoreLabel`→untrashed / `permanentlyDeleteLabel`→entityEvents cascade filter / `setNoteLabel`→set/clear/switch 4-case 정확 처리 (oldLabelId capture)
+- **`store/index.ts`** — `createLabelsSlice(set, appendEvent)` 인자 추가
+
+### 브레인스토밍 & 큰 결정 (영구)
+
+- **granular event는 구조적 mutation만, 본문 편집은 제외** — `block_added`/`removed`/`reordered`/`merged`/`unmerged`/`split`은 discrete event. `updateWikiBlock`(블록 본문 편집)은 키스트로크마다 호출돼 event log flood → 발화 제외. 본문 변경은 article-level `updated`로 충분. (다음 세션 영구 룰 후보)
+- **slice가 appendEvent 안 받으면 = 그 entity는 활동 추적 불가** — labels가 그 상태였음. 신규 entity slice는 처음부터 `createXSlice(set, appendEvent)` 시그니처 권장.
+- **`setNoteLabel` 같은 1:1 관계 setter는 set/clear/switch/no-op 4-case 분기 의무** — switch(A→B) 시 A에 `member_removed` + B에 `member_added` 둘 다 발화. 한쪽만 처리하면 활동 로그 부정확.
+
+### 기술 학습 (영구)
+
+- **Zustand `set(updater)` 안에서 closure 변수로 이전 값 capture 가능** — updater fn은 동기 실행되므로 `let oldX; set(s => { oldX = s.x; return {...} })` 후 `oldX` 사용 안전. `setNoteLabel`의 `oldLabelId` 패턴.
+- **`EntityEventType`은 `NoteEventType` 포함** — `split`/`opened` 등 NoteEventType 값을 wiki/book entity에도 그대로 사용 가능 (`appendEvent({kind:"wiki",id}, "split")` type-valid).
+- **`EntityKind`에 `"label"` 포함됨** (`lib/types.ts:689`) — label entity event 발화 가능.
+- **success-path event 발화 = `let added=false` flag 패턴** — dedup 가드가 있는 mutation(`addItemToBook`/`addSmartSource`)은 set updater 안에서 `added=true` 세팅 후 밖에서 `if(added) appendEvent(...)`.
+
+### Watch Out (다음 세션)
+
+- 🟢 **block content 편집은 여전히 event 없음** — `updateWikiBlock` 의도적 제외. 향후 debounce된 `block_edited` 같은 event 원하면 별도 설계 필요.
+- 🟢 **timeline 마커 chip이 신규 이벤트 자동 표시** — `block_added`(green triangle), `merged` 등 일부는 EVENT_MARKER_CONFIG 매핑, 나머지는 fallback dot. 매핑 추가는 timeline polish 시 선택.
+
+### 환경 변경
+
+- Store version: 144 (변경 없음 — entityEvents 배열에 append만, state shape 불변)
+- `createLabelsSlice` 시그니처 변경 (`set` → `set, appendEvent`)
+- TS 부채 0 유지: `tsc --noEmit` clean, `npm run build` ✓
+- 사용자 IDB stale data: 없음
+
+### 머신
+다른컴퓨터 (Windows).
+
+---
+
 ## 2026-05-21 (저녁 후속 #2) — 다른컴퓨터/Windows, **Ontology graph node → SmartSidePanel 동기화 (P0 #1 완료)**
 
 > 🎯 **다음 즉시 액션 (다른 컴퓨터 로그인 후 시작점)**:

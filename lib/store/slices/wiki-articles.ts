@@ -140,6 +140,8 @@ export function createWikiArticlesSlice(set: Set, get: Get, appendEvent: AppendE
             : a
         ),
       }))
+      // entity event log
+      appendEvent({ kind: "wiki", id: articleId }, "opened")
     },
 
     /** Toggle whole-article pin. Mirrors Note.pinned semantics. */
@@ -283,6 +285,8 @@ export function createWikiArticlesSlice(set: Set, get: Get, appendEvent: AppendE
       if (newBlock.type === "text" && (newBlock.content || newBlock.contentJson)) {
         persistBlockBody({ id: newBlock.id, content: newBlock.content ?? "", contentJson: newBlock.contentJson })
       }
+      // entity event log
+      appendEvent({ kind: "wiki", id: articleId }, "block_added", { blockType: (newBlock as WikiBlock).type })
       return newBlock.id
     },
 
@@ -299,6 +303,8 @@ export function createWikiArticlesSlice(set: Set, get: Get, appendEvent: AppendE
       }))
       // Remove block body from IDB
       removeBlockBody(blockId)
+      // entity event log
+      appendEvent({ kind: "wiki", id: articleId }, "block_removed")
     },
 
     updateWikiBlock: (articleId: string, blockId: string, patch: Partial<Omit<WikiBlock, "id">>) => {
@@ -339,6 +345,8 @@ export function createWikiArticlesSlice(set: Set, get: Get, appendEvent: AppendE
           return { ...a, blocks, sectionIndex, updatedAt: now() }
         }),
       }))
+      // entity event log
+      appendEvent({ kind: "wiki", id: articleId }, "block_reordered")
     },
 
     reorderWikiBlocks: (articleId: string, blockIds: string[]) => {
@@ -354,6 +362,8 @@ export function createWikiArticlesSlice(set: Set, get: Get, appendEvent: AppendE
           return { ...a, blocks: ordered, sectionIndex, linksOut: extractLinksFromWikiBlocks(ordered), updatedAt: now() }
         }),
       }))
+      // entity event log
+      appendEvent({ kind: "wiki", id: articleId }, "block_reordered")
     },
 
     mergeWikiArticles: (primaryId: string, secondaryId: string, options?: { title?: string }) => {
@@ -419,6 +429,8 @@ export function createWikiArticlesSlice(set: Set, get: Get, appendEvent: AppendE
       set((state: any) => ({
         wikiArticles: state.wikiArticles.filter((a: WikiArticle) => a.id !== secondaryId),
       }))
+      // entity event log
+      appendEvent({ kind: "wiki", id: primaryId }, "merged", { secondaryId })
     },
 
     splitWikiArticle: (sourceId: string, blockIds: string[], newTitle: string): string | null => {
@@ -475,6 +487,8 @@ export function createWikiArticlesSlice(set: Set, get: Get, appendEvent: AppendE
         }
       }
 
+      // entity event log
+      appendEvent({ kind: "wiki", id: sourceId }, "split", { newId })
       return newId
     },
 
@@ -583,6 +597,8 @@ export function createWikiArticlesSlice(set: Set, get: Get, appendEvent: AppendE
       persistArticleBlocks(articleId, remainingBlocks)
       persistArticleBlocks(restoredId, extractedBlocks)
 
+      // entity event log
+      appendEvent({ kind: "wiki", id: articleId }, "unmerged")
       return restoredId
     },
 
@@ -694,6 +710,8 @@ export function createWikiArticlesSlice(set: Set, get: Get, appendEvent: AppendE
           if (id !== targetId) removeArticleBlocks(id)
         }
 
+        // entity event log
+        appendEvent({ kind: "wiki", id: targetId }, "merged", { sourceCount: sourceIds.length })
         return targetId
       } else {
         // Mode: create new article. Union of folder memberships across
@@ -739,6 +757,8 @@ export function createWikiArticlesSlice(set: Set, get: Get, appendEvent: AppendE
           removeArticleBlocks(id)
         }
 
+        // entity event log
+        appendEvent({ kind: "wiki", id: newId }, "merged", { sourceCount: sourceIds.length })
         return newId
       }
     },
@@ -821,6 +841,8 @@ export function createWikiArticlesSlice(set: Set, get: Get, appendEvent: AppendE
         }
       }
 
+      // entity event log
+      appendEvent({ kind: "wiki", id: articleId }, "unmerged")
       return [restoredId]
     },
   }

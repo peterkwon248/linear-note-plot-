@@ -51,6 +51,20 @@
 
 ---
 
+## 🚀 2026-05-21 (저녁 후속 #3) — Activity events granular wire-up (P0 #2 완료) ⭐⭐⭐⭐
+
+**범위**: 4 파일 (+83/-11). wiki/book/label entity에 discrete activity events 발화.
+
+**완료**: wiki(`block_added`/`block_removed`/`block_reordered`/`merged`/`unmerged`/`split`/`opened`) + books(`item_added`/`item_removed`/`chapter_added`/`smart_source_added`/`smart_source_removed`) + labels(slice가 appendEvent 전무 → `createLabelsSlice(set, appendEvent)` 시그니처 변경 + 전체 이벤트 wire-up, tags.ts 패턴 정합). `updateWikiBlock` 본문 편집 의도적 제외.
+
+**핵심 결정**: granular event는 구조적 mutation만 (본문 편집 제외 — flood 회피). slice가 appendEvent 안 받으면 활동 추적 불가 → 신규 slice는 처음부터 시그니처에 포함. 1:1 setter(`setNoteLabel`)는 set/clear/switch/no-op 4-case 분기.
+
+**기술 학습**: Zustand `set(updater)` 안 closure로 이전 값 capture / `EntityEventType`은 `NoteEventType` 포함 / success-path event는 `added` flag 패턴.
+
+**다음**: P0 #3 Books own Views section.
+
+---
+
 ## 🚀 2026-05-21 (저녁 후속 #2) — Ontology graph node → SmartSidePanel 동기화 (P0 #1 완료) ⭐⭐⭐⭐
 
 **범위**: 3 파일 (+40/-227). Ontology graph node 클릭 → 통합 4탭 사이드바.
