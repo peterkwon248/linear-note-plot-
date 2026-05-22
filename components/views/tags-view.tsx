@@ -43,7 +43,7 @@ import { IconTag } from "@/components/plot-icons"
 import { ViewHeader } from "@/components/view-header"
 import { LibraryBreadcrumb } from "@/components/library/library-breadcrumb"
 import { useNotesView } from "@/lib/view-engine/use-notes-view"
-import { useTagsView } from "@/lib/view-engine/use-tags-view"
+import { useTagsView, type TagWithCount } from "@/lib/view-engine/use-tags-view"
 import { FilterButton, FilterChipBar } from "@/components/filter-bar"
 import { FilterPanel } from "@/components/filter-panel"
 import { DisplayPanel } from "@/components/display-panel"
@@ -139,6 +139,36 @@ function InlineSelect<T extends string>({
   )
 }
 
+/* ── Index (firstLetter) grouping ───────────────────────── */
+
+interface TagLetterGroup {
+  key: string
+  label: string
+  tags: TagWithCount[]
+}
+
+/** Bucket tags by uppercased first letter; non-letters → "#" (sorted last).
+ * Mirrors lib/view-engine/wiki-list-pipeline.ts firstLetter case. */
+function groupTagsByFirstLetter(tags: TagWithCount[]): TagLetterGroup[] {
+  const buckets: Record<string, TagWithCount[]> = {}
+  for (const t of tags) {
+    const first = ((t.name ?? "").trim()[0] ?? "#").toUpperCase()
+    const key = /[A-Z]/.test(first) ? first : "#"
+    ;(buckets[key] ??= []).push(t)
+  }
+  return Object.entries(buckets)
+    .sort(([a], [b]) => {
+      if (a === "#" && b !== "#") return 1
+      if (b === "#" && a !== "#") return -1
+      return a.localeCompare(b)
+    })
+    .map(([letter, items]) => ({ key: `letter-${letter}`, label: letter, tags: items }))
+}
+
+type TagRenderItem =
+  | { type: "header"; key: string; label: string; count: number }
+  | { type: "tag"; tag: TagWithCount; tagIndex: number }
+
 const ROW_HEIGHT = 40 // py-2.5 ≈ 40px
 const HEADER_HEIGHT = 37 // the header row height
 const DRAG_THRESHOLD = 5
@@ -228,11 +258,34 @@ export function TagsView() {
   // hideEmpty toggle — stored in viewState.toggles
   const hideEmpty = tagsListViewState.toggles?.hideEmpty ?? false
 
-  // Apply hideEmpty filter on top of the view-engine result
-  const visibleTags = useMemo(
-    () => hideEmpty ? sortedTags.filter((t) => t.noteCount > 0) : sortedTags,
-    [sortedTags, hideEmpty],
-  )
+  // Index grouping. tagGroups = render-order groups (single "_all" group when
+  // ungrouped). visibleTags = flattened in render order — all selection logic
+  // (toggleAll / shift-range / ctrl+A) indexes into this array.
+  const tagGroups = useMemo<TagLetterGroup[]>(() => {
+    const base = hideEmpty ? sortedTags.filter((t) => t.noteCount > 0) : sortedTags
+    if (tagsListViewState.groupBy === "firstLetter") return groupTagsByFirstLetter(base)
+    return [{ key: "_all", label: "", tags: base }]
+  }, [sortedTags, hideEmpty, tagsListViewState.groupBy])
+
+  const isGrouped = tagGroups.length > 0 && tagGroups[0].key !== "_all"
+
+  const visibleTags = useMemo(() => tagGroups.flatMap((g) => g.tags), [tagGroups])
+
+  // Render sequence: group-header bands interleaved with tags. Single source
+  // for both grid + list maps. Headers carry letter + count.
+  const tagRenderItems = useMemo<TagRenderItem[]>(() => {
+    if (!isGrouped) return visibleTags.map((tag, i) => ({ type: "tag", tag, tagIndex: i }))
+    const items: TagRenderItem[] = []
+    let idx = 0
+    for (const g of tagGroups) {
+      items.push({ type: "header", key: g.key, label: g.label, count: g.tags.length })
+      for (const tag of g.tags) {
+        items.push({ type: "tag", tag, tagIndex: idx })
+        idx++
+      }
+    }
+    return items
+  }, [isGrouped, tagGroups, visibleTags])
 
   // View engine for tag detail mode (must be called unconditionally)
   const tagExtras = useMemo(() => ({ tagId: selectedTagId ?? undefined }), [selectedTagId])
@@ -386,6 +439,9 @@ export function TagsView() {
 
   // Drag-to-select: mousedown on scroll container
   const handleDragMouseDown = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+    // Drag-to-select disabled in grouped mode — header bands break the
+    // fixed-row-height rect math. ctrl/shift-click still work.
+    if (isGrouped) return
     // Ignore clicks on interactive elements
     if ((e.target as HTMLElement).closest("button, input, a")) return
     // Only left button
@@ -400,7 +456,7 @@ export function TagsView() {
       scrollTop: container.scrollTop,
     }
     isDraggingRef.current = false
-  }, [])
+  }, [isGrouped])
 
   // 2026-05-16 — sub-page 진입 시 우측 4탭 사이드바 자동 노출 (영구 룰 21
   // entity-uniformity). Labels sub-page 정합 패턴.
@@ -529,6 +585,169 @@ export function TagsView() {
       const dir = field === "noteCount" ? "desc" : "asc"
       updateTagsListView({ sortFields: [{ field, direction: dir }] })
     }
+  }
+
+  // ── Render helpers (closures over component state/handlers) ──
+
+  function renderTagCard(tag: TagWithCount) {
+    return (
+      <ContextMenu key={tag.id}>
+        <ContextMenuTrigger asChild>
+          <div
+            className={cn(
+              "group relative flex flex-col gap-2 rounded-lg border border-border/60 p-3 transition-all cursor-pointer",
+              checkedTags.has(tag.id)
+                ? "bg-accent/8 border-accent/40"
+                : "bg-card hover:bg-hover-bg hover:border-border",
+            )}
+            onClick={(e) => {
+              if ((e.target as HTMLElement).closest("button")) return
+              toggleCheck(tag.id)
+            }}
+          >
+            {/* Checkbox (top-right) */}
+            <div
+              onClick={(e) => { e.stopPropagation(); toggleCheck(tag.id) }}
+              className={cn(
+                "absolute right-2 top-2 h-4 w-4 shrink-0 rounded-[4px] border flex items-center justify-center cursor-pointer transition-all shadow-sm",
+                checkedTags.has(tag.id)
+                  ? "bg-accent border-accent opacity-100"
+                  : "opacity-0 group-hover:opacity-100 bg-card border-zinc-400 dark:border-zinc-600",
+              )}
+            >
+              {checkedTags.has(tag.id) && (
+                <PhCheck size={10} weight="bold" className="text-accent-foreground" />
+              )}
+            </div>
+
+            {/* Color dot */}
+            <span
+              className="h-2.5 w-2.5 shrink-0 rounded-full"
+              style={{ backgroundColor: getEntityColor(tag.color) }}
+            />
+
+            {/* Tag name */}
+            <button
+              onClick={() => setSelectedTagId(tag.id)}
+              className="text-left text-ui text-foreground transition-colors hover:text-accent leading-tight"
+            >
+              <span className="text-muted-foreground text-note">#</span>
+              {tag.name}
+            </button>
+
+            {/* PropertyChip row */}
+            <div className="flex items-center gap-1 min-w-0">
+              <TagNoteCountChip count={tag.noteCount} />
+            </div>
+          </div>
+        </ContextMenuTrigger>
+        <ContextMenuContent className="w-48">
+          <ContextMenuSub>
+            <ContextMenuSubTrigger>Change color</ContextMenuSubTrigger>
+            <ContextMenuSubContent className="p-2">
+              <ColorPickerGrid
+                value={getEntityColor(tag.color)}
+                onChange={(color) => updateTag(tag.id, { color })}
+              />
+            </ContextMenuSubContent>
+          </ContextMenuSub>
+          <ContextMenuItem onClick={() => updateTag(tag.id, { color: null })}>
+            Reset color
+          </ContextMenuItem>
+          <ContextMenuSeparator />
+          <ContextMenuItem
+            onClick={() => deleteTag(tag.id)}
+            className="text-destructive focus:text-destructive"
+          >
+            Delete
+          </ContextMenuItem>
+        </ContextMenuContent>
+      </ContextMenu>
+    )
+  }
+
+  function renderTagListRow(tag: TagWithCount, index: number) {
+    return (
+      // v109: row-level ContextMenu — Set color picker entry point.
+      <ContextMenu key={tag.id}>
+        <ContextMenuTrigger asChild>
+          <div
+            data-tag-index={index}
+            className={`group flex items-center gap-3 px-6 py-2.5 transition-colors ${
+              checkedTags.has(tag.id) ? "bg-accent/8" : "hover:bg-hover-bg"
+            }`}
+            onClick={(e) => {
+              // Only handle if click is on the row background (not buttons)
+              if ((e.target as HTMLElement).closest("button")) return
+              handleRowClick(tag.id, index, e)
+            }}
+          >
+            <div
+              data-checkbox
+              onClick={(e) => { e.stopPropagation(); toggleCheck(tag.id) }}
+              className={cn(
+                "h-4 w-4 shrink-0 rounded-[4px] border flex items-center justify-center cursor-pointer transition-colors shadow-sm",
+                checkedTags.has(tag.id)
+                  ? "bg-accent border-accent"
+                  : "bg-card border-zinc-400 dark:border-zinc-600 hover:border-zinc-500 dark:hover:border-zinc-500",
+                checkedTags.size > 0 || checkedTags.has(tag.id) ? "visible" : "invisible group-hover:visible"
+              )}
+            >
+              {checkedTags.has(tag.id) && (
+                <PhCheck size={10} weight="bold" className="text-accent-foreground" />
+              )}
+            </div>
+            {/* v109: leading dot — gray when no color set, hex otherwise. */}
+            <span
+              className="h-2 w-2 shrink-0 rounded-full"
+              style={{ backgroundColor: getEntityColor(tag.color) }}
+            />
+            <button
+              onClick={() => {
+                // 2026-05-14 follow-up (Library Tags Detail panel):
+                // 사이드바 자동 노출 + Detail 표시 (PR #331 Files
+                // 패턴 정합). drill-down (selectedTagId)도 유지 —
+                // 사용자가 row 한 번 클릭하면 노트 목록 페이지 +
+                // side panel detail 둘 다 보이는 풍부한 패턴.
+                setSelectedTagId(tag.id)
+                usePlotStore.setState({
+                  sidePanelContext: { type: "tag", id: tag.id },
+                  sidePanelOpen: true,
+                })
+              }}
+              className="flex-1 text-left text-ui text-foreground transition-colors hover:text-accent"
+            >
+              <span className="text-muted-foreground">#</span>
+              {tag.name}
+            </button>
+            <span className="w-16 text-right text-note tabular-nums text-muted-foreground">
+              {tag.noteCount}
+            </span>
+          </div>
+        </ContextMenuTrigger>
+        <ContextMenuContent className="w-48">
+          <ContextMenuSub>
+            <ContextMenuSubTrigger>Change color</ContextMenuSubTrigger>
+            <ContextMenuSubContent className="p-2">
+              <ColorPickerGrid
+                value={getEntityColor(tag.color)}
+                onChange={(color) => updateTag(tag.id, { color })}
+              />
+            </ContextMenuSubContent>
+          </ContextMenuSub>
+          <ContextMenuItem onClick={() => updateTag(tag.id, { color: null })}>
+            Reset color
+          </ContextMenuItem>
+          <ContextMenuSeparator />
+          <ContextMenuItem
+            onClick={() => deleteTag(tag.id)}
+            className="text-destructive focus:text-destructive"
+          >
+            Delete
+          </ContextMenuItem>
+        </ContextMenuContent>
+      </ContextMenu>
+    )
   }
 
   // ── Tag Detail Mode ──
@@ -847,80 +1066,19 @@ export function TagsView() {
             {/* ── Grid Mode ── */}
             {isGridMode && visibleTags.length > 0 && (
               <div className="grid grid-cols-[repeat(auto-fill,minmax(160px,1fr))] gap-2 p-4">
-                {visibleTags.map((tag) => (
-                  <ContextMenu key={tag.id}>
-                    <ContextMenuTrigger asChild>
-                      <div
-                        className={cn(
-                          "group relative flex flex-col gap-2 rounded-lg border border-border/60 p-3 transition-all cursor-pointer",
-                          checkedTags.has(tag.id)
-                            ? "bg-accent/8 border-accent/40"
-                            : "bg-card hover:bg-hover-bg hover:border-border",
-                        )}
-                        onClick={(e) => {
-                          if ((e.target as HTMLElement).closest("button")) return
-                          toggleCheck(tag.id)
-                        }}
-                      >
-                        {/* Checkbox (top-right) */}
-                        <div
-                          onClick={(e) => { e.stopPropagation(); toggleCheck(tag.id) }}
-                          className={cn(
-                            "absolute right-2 top-2 h-4 w-4 shrink-0 rounded-[4px] border flex items-center justify-center cursor-pointer transition-all shadow-sm",
-                            checkedTags.has(tag.id)
-                              ? "bg-accent border-accent opacity-100"
-                              : "opacity-0 group-hover:opacity-100 bg-card border-zinc-400 dark:border-zinc-600",
-                          )}
-                        >
-                          {checkedTags.has(tag.id) && (
-                            <PhCheck size={10} weight="bold" className="text-accent-foreground" />
-                          )}
-                        </div>
-
-                        {/* Color dot */}
-                        <span
-                          className="h-2.5 w-2.5 shrink-0 rounded-full"
-                          style={{ backgroundColor: getEntityColor(tag.color) }}
-                        />
-
-                        {/* Tag name */}
-                        <button
-                          onClick={() => setSelectedTagId(tag.id)}
-                          className="text-left text-ui text-foreground transition-colors hover:text-accent leading-tight"
-                        >
-                          <span className="text-muted-foreground text-note">#</span>
-                          {tag.name}
-                        </button>
-
-                        {/* PropertyChip row */}
-                        <div className="flex items-center gap-1 min-w-0">
-                          <TagNoteCountChip count={tag.noteCount} />
-                        </div>
-                      </div>
-                    </ContextMenuTrigger>
-                    <ContextMenuContent className="w-48">
-                      <ContextMenuSub>
-                        <ContextMenuSubTrigger>Change color</ContextMenuSubTrigger>
-                        <ContextMenuSubContent className="p-2">
-                          <ColorPickerGrid
-                            value={getEntityColor(tag.color)}
-                            onChange={(color) => updateTag(tag.id, { color })}
-                          />
-                        </ContextMenuSubContent>
-                      </ContextMenuSub>
-                      <ContextMenuItem onClick={() => updateTag(tag.id, { color: null })}>
-                        Reset color
-                      </ContextMenuItem>
-                      <ContextMenuSeparator />
-                      <ContextMenuItem
-                        onClick={() => deleteTag(tag.id)}
-                        className="text-destructive focus:text-destructive"
-                      >
-                        Delete
-                      </ContextMenuItem>
-                    </ContextMenuContent>
-                  </ContextMenu>
-                ))}
+                {tagRenderItems.map((item) =>
+                  item.type === "header" ? (
+                    <div key={item.key} className="a-tg col-span-full">
+                      <span />
+                      <span />
+                      <span className="a-tg__label">{item.label}</span>
+                      <span className="a-tg__count tabular-nums">{item.count}</span>
+                      <div className="a-tg__line" />
+                    </div>
+                  ) : (
+                    renderTagCard(item.tag)
+                  ),
+                )}
               </div>
             )}
 
@@ -985,87 +1143,19 @@ export function TagsView() {
                     <EyeSlash size={14} weight="regular" />
                   </button>
                 </div>
-                {visibleTags.map((tag, index) => (
-                  // v109: row-level ContextMenu — Set color picker entry point.
-                  <ContextMenu key={tag.id}>
-                    <ContextMenuTrigger asChild>
-                      <div
-                        data-tag-index={index}
-                        className={`group flex items-center gap-3 px-6 py-2.5 transition-colors ${
-                          checkedTags.has(tag.id) ? "bg-accent/8" : "hover:bg-hover-bg"
-                        }`}
-                        onClick={(e) => {
-                          // Only handle if click is on the row background (not buttons)
-                          if ((e.target as HTMLElement).closest("button")) return
-                          handleRowClick(tag.id, index, e)
-                        }}
-                      >
-                        <div
-                          data-checkbox
-                          onClick={(e) => { e.stopPropagation(); toggleCheck(tag.id) }}
-                          className={cn(
-                            "h-4 w-4 shrink-0 rounded-[4px] border flex items-center justify-center cursor-pointer transition-colors shadow-sm",
-                            checkedTags.has(tag.id)
-                              ? "bg-accent border-accent"
-                              : "bg-card border-zinc-400 dark:border-zinc-600 hover:border-zinc-500 dark:hover:border-zinc-500",
-                            checkedTags.size > 0 || checkedTags.has(tag.id) ? "visible" : "invisible group-hover:visible"
-                          )}
-                        >
-                          {checkedTags.has(tag.id) && (
-                            <PhCheck size={10} weight="bold" className="text-accent-foreground" />
-                          )}
-                        </div>
-                        {/* v109: leading dot — gray when no color set, hex otherwise. */}
-                        <span
-                          className="h-2 w-2 shrink-0 rounded-full"
-                          style={{ backgroundColor: getEntityColor(tag.color) }}
-                        />
-                        <button
-                          onClick={() => {
-                            // 2026-05-14 follow-up (Library Tags Detail panel):
-                            // 사이드바 자동 노출 + Detail 표시 (PR #331 Files
-                            // 패턴 정합). drill-down (selectedTagId)도 유지 —
-                            // 사용자가 row 한 번 클릭하면 노트 목록 페이지 +
-                            // side panel detail 둘 다 보이는 풍부한 패턴.
-                            setSelectedTagId(tag.id)
-                            usePlotStore.setState({
-                              sidePanelContext: { type: "tag", id: tag.id },
-                              sidePanelOpen: true,
-                            })
-                          }}
-                          className="flex-1 text-left text-ui text-foreground transition-colors hover:text-accent"
-                        >
-                          <span className="text-muted-foreground">#</span>
-                          {tag.name}
-                        </button>
-                        <span className="w-16 text-right text-note tabular-nums text-muted-foreground">
-                          {tag.noteCount}
-                        </span>
-                      </div>
-                    </ContextMenuTrigger>
-                    <ContextMenuContent className="w-48">
-                      <ContextMenuSub>
-                        <ContextMenuSubTrigger>Change color</ContextMenuSubTrigger>
-                        <ContextMenuSubContent className="p-2">
-                          <ColorPickerGrid
-                            value={getEntityColor(tag.color)}
-                            onChange={(color) => updateTag(tag.id, { color })}
-                          />
-                        </ContextMenuSubContent>
-                      </ContextMenuSub>
-                      <ContextMenuItem onClick={() => updateTag(tag.id, { color: null })}>
-                        Reset color
-                      </ContextMenuItem>
-                      <ContextMenuSeparator />
-                      <ContextMenuItem
-                        onClick={() => deleteTag(tag.id)}
-                        className="text-destructive focus:text-destructive"
-                      >
-                        Delete
-                      </ContextMenuItem>
-                    </ContextMenuContent>
-                  </ContextMenu>
-                ))}
+                {tagRenderItems.map((item) =>
+                  item.type === "header" ? (
+                    <div key={item.key} className="a-tg">
+                      <span />
+                      <span />
+                      <span className="a-tg__label">{item.label}</span>
+                      <span className="a-tg__count tabular-nums">{item.count}</span>
+                      <div className="a-tg__line" />
+                    </div>
+                  ) : (
+                    renderTagListRow(item.tag, item.tagIndex)
+                  ),
+                )}
               </div>
             )}
 

@@ -656,6 +656,7 @@ export const LABELS_LIST_VIEW_CONFIG: ViewConfig = {
     ],
     groupingOptions: [
       { value: "none", label: "No grouping" },
+      { value: "firstLetter", label: "Index" },
     ],
     toggles: [],
     properties: [
@@ -690,6 +691,7 @@ export const TAGS_LIST_VIEW_CONFIG: ViewConfig = {
     ],
     groupingOptions: [
       { value: "none", label: "No grouping" },
+      { value: "firstLetter", label: "Index" },
     ],
     toggles: [],
     properties: [
@@ -727,6 +729,7 @@ export const FILES_VIEW_CONFIG: ViewConfig = {
     ],
     groupingOptions: [
       { value: "none", label: "No grouping" },
+      { value: "firstLetter", label: "Index" },
     ],
     toggles: [],
     properties: [
@@ -769,6 +772,7 @@ export const REFERENCES_VIEW_CONFIG: ViewConfig = {
     ],
     groupingOptions: [
       { value: "none", label: "No grouping" },
+      { value: "firstLetter", label: "Index" },
     ],
     toggles: [],
     properties: [
@@ -813,6 +817,7 @@ export const STICKERS_LIST_VIEW_CONFIG: ViewConfig = {
     ],
     groupingOptions: [
       { value: "none", label: "No grouping" },
+      { value: "firstLetter", label: "Index" },
     ],
     toggles: [],
     properties: [
