@@ -8,6 +8,21 @@
 
 ---
 
+## 🚀 2026-05-22 (후속 #2) — **File 엔티티 PRD + TODO 3건 (Timeline 아이콘 / EVENT_MARKER / 라이브러리 Index 그룹핑)** ⭐⭐⭐⭐
+
+**범위**: ① File 독립 엔티티 PRD v0.2 작성 ② P0 #3 Timeline 탭 아이콘 ③ P1 EVENT_MARKER_CONFIG 4종 ④ P0 #2 라이브러리 5종 Index 그룹핑.
+
+**핵심 결정 (영구)**:
+- **File 엔티티 Q1/Q2 LOCKED** — 타입명 `Attachment` 유지 (DOM 전역 `File` 타입 충돌 회피, `keystone`/"Block" 선례). `noteId` → `originEntity: EntityRef | null` (note·wiki origin 정직 표현, provenance 강등 — 제거 X). PRD = `.omc/plans/file-entity-prd.md` v0.2.
+- **라이브러리 Index 그룹핑 = 컴포넌트-사이드 패턴** — 훅 불변. `groupXByFirstLetter` 헬퍼 + render-order 평탄화 배열 + `.a-tg` 헤더 밴드(book-table 패턴). 그룹 모드에선 drag-select 비활성.
+- **영구 룰 #92 (Index = Grouping, not a column) LOCKED** — content 5종(PR #400) + 라이브러리 5종(이번) 완료.
+
+**완료**: `.omc/plans/file-entity-prd.md`(신규) / `display-panel.tsx`(Timeline 아이콘 `ChartBarHorizontal`) / `wiki-timeline-config.ts`(EVENT_MARKER 4종) / `view-configs.tsx` + `tags-view.tsx`·`labels-view.tsx`·`stickers-view.tsx`·`library-view.tsx`(라이브러리 Index). tsc + build clean. Store v144 무변경.
+
+**다음**: File 엔티티 v1 구현 (§6-1, PR 2개 — 마이그레이션+모델 / 피커 UI). 또는 P1 temporal-hooks PRD 후속.
+
+---
+
 ## 🚀 2026-05-22 (후속) — **레거시 Index 토글 제거 (PR #401) + File 독립 엔티티 브레인스토밍** ⭐⭐⭐⭐
 
 **범위**: ① PR #401 — 레거시 `showAlphaIndex`/`showAllArticles` 알파벳-인덱스 토글 메커니즘 완전 제거 (6 파일, +9/−173). ② File(Attachment)를 진짜 독립 Library 엔티티로 만드는 브레인스토밍 — 결정 locked.

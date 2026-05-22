@@ -1,6 +1,6 @@
 {
   "version": "2.0",
-  "lastUpdated": "2026-05-22T03:02:49.963Z",
+  "lastUpdated": "2026-05-22T07:01:10.822Z",
   "activeFeatures": [
     "editor",
     "wizardly-kare",
@@ -38,7 +38,9 @@
     "xenodochial-wing-654662",
     "eloquent-wilbur-832887",
     "library",
-    "romantic-herschel-103d20"
+    "romantic-herschel-103d20",
+    "stupefied-rosalind-ee038e",
+    "wiki-timeline"
   ],
   "primaryFeature": "editor",
   "features": {
@@ -194,9 +196,9 @@
       "documents": {},
       "timestamps": {
         "started": "2026-03-11T04:44:20.714Z",
-        "lastUpdated": "2026-05-22T02:57:15.174Z"
+        "lastUpdated": "2026-05-22T06:54:46.734Z"
       },
-      "lastFile": "C:\\Users\\kwonkyunghun\\Desktop\\리니어 노트앱\\.claude\\worktrees\\romantic-herschel-103d20\\lib\\view-engine\\use-templates-view.ts"
+      "lastFile": "C:\\Users\\kwonkyunghun\\Desktop\\리니어 노트앱\\.claude\\worktrees\\stupefied-rosalind-ee038e\\lib\\view-engine\\view-configs.tsx"
     },
     "slices": {
       "phase": "do",
@@ -522,6 +524,32 @@
         "lastUpdated": "2026-05-22T03:02:49.962Z"
       },
       "lastFile": "C:\\Users\\kwonkyunghun\\Desktop\\리니어 노트앱\\.claude\\worktrees\\romantic-herschel-103d20\\components\\views\\library-categories-view.tsx"
+    },
+    "stupefied-rosalind-ee038e": {
+      "phase": "do",
+      "phaseNumber": 3,
+      "matchRate": null,
+      "iterationCount": 0,
+      "requirements": [],
+      "documents": {},
+      "timestamps": {
+        "started": "2026-05-22T05:56:40.024Z",
+        "lastUpdated": "2026-05-22T07:01:10.822Z"
+      },
+      "lastFile": "C:\\Users\\kwonkyunghun\\Desktop\\리니어 노트앱\\.claude\\worktrees\\stupefied-rosalind-ee038e\\components\\views\\library-view.tsx"
+    },
+    "wiki-timeline": {
+      "phase": "do",
+      "phaseNumber": 3,
+      "matchRate": null,
+      "iterationCount": 0,
+      "requirements": [],
+      "documents": {},
+      "timestamps": {
+        "started": "2026-05-22T06:25:34.203Z",
+        "lastUpdated": "2026-05-22T06:25:37.182Z"
+      },
+      "lastFile": "C:\\Users\\kwonkyunghun\\Desktop\\리니어 노트앱\\.claude\\worktrees\\stupefied-rosalind-ee038e\\components\\views\\wiki-timeline\\wiki-timeline-config.ts"
     }
   },
   "pipeline": {
@@ -532,7 +560,7 @@
   "session": {
     "startedAt": "2026-03-05T00:16:19.956Z",
     "onboardingCompleted": false,
-    "lastActivity": "2026-05-22T03:02:49.963Z"
+    "lastActivity": "2026-05-22T07:01:10.822Z"
   },
   "history": [
     {
@@ -7828,6 +7856,300 @@
     {
       "timestamp": "2026-05-22T03:02:49.962Z",
       "feature": "romantic-herschel-103d20",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-22T05:56:40.024Z",
+      "feature": "stupefied-rosalind-ee038e",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-22T05:56:41.439Z",
+      "feature": "stupefied-rosalind-ee038e",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-22T06:25:34.203Z",
+      "feature": "wiki-timeline",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-22T06:25:37.182Z",
+      "feature": "wiki-timeline",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-22T06:48:52.355Z",
+      "feature": "view-engine",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-22T06:48:56.320Z",
+      "feature": "stupefied-rosalind-ee038e",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-22T06:49:08.788Z",
+      "feature": "stupefied-rosalind-ee038e",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-22T06:49:21.025Z",
+      "feature": "stupefied-rosalind-ee038e",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-22T06:49:30.979Z",
+      "feature": "stupefied-rosalind-ee038e",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-22T06:50:01.171Z",
+      "feature": "stupefied-rosalind-ee038e",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-22T06:50:15.380Z",
+      "feature": "stupefied-rosalind-ee038e",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-22T06:50:33.586Z",
+      "feature": "stupefied-rosalind-ee038e",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-22T06:54:38.830Z",
+      "feature": "view-engine",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-22T06:54:41.797Z",
+      "feature": "view-engine",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-22T06:54:44.791Z",
+      "feature": "view-engine",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-22T06:54:46.734Z",
+      "feature": "view-engine",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-22T06:56:01.594Z",
+      "feature": "stupefied-rosalind-ee038e",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-22T06:56:12.138Z",
+      "feature": "stupefied-rosalind-ee038e",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-22T06:56:22.705Z",
+      "feature": "stupefied-rosalind-ee038e",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-22T06:56:22.857Z",
+      "feature": "stupefied-rosalind-ee038e",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-22T06:56:32.441Z",
+      "feature": "stupefied-rosalind-ee038e",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-22T06:56:37.081Z",
+      "feature": "stupefied-rosalind-ee038e",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-22T06:56:43.353Z",
+      "feature": "stupefied-rosalind-ee038e",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-22T06:56:44.711Z",
+      "feature": "stupefied-rosalind-ee038e",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-22T06:56:49.331Z",
+      "feature": "stupefied-rosalind-ee038e",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-22T06:56:50.371Z",
+      "feature": "stupefied-rosalind-ee038e",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-22T06:56:56.055Z",
+      "feature": "stupefied-rosalind-ee038e",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-22T06:56:58.184Z",
+      "feature": "stupefied-rosalind-ee038e",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-22T06:57:01.851Z",
+      "feature": "stupefied-rosalind-ee038e",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-22T06:57:02.662Z",
+      "feature": "stupefied-rosalind-ee038e",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-22T06:57:09.605Z",
+      "feature": "stupefied-rosalind-ee038e",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-22T06:57:15.499Z",
+      "feature": "stupefied-rosalind-ee038e",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-22T06:57:19.995Z",
+      "feature": "stupefied-rosalind-ee038e",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-22T06:57:35.635Z",
+      "feature": "stupefied-rosalind-ee038e",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-22T06:57:48.599Z",
+      "feature": "stupefied-rosalind-ee038e",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-22T06:58:06.483Z",
+      "feature": "stupefied-rosalind-ee038e",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-22T06:58:09.375Z",
+      "feature": "stupefied-rosalind-ee038e",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-22T06:58:21.156Z",
+      "feature": "stupefied-rosalind-ee038e",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-22T06:58:22.466Z",
+      "feature": "stupefied-rosalind-ee038e",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-22T06:58:33.811Z",
+      "feature": "stupefied-rosalind-ee038e",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-22T06:58:47.350Z",
+      "feature": "stupefied-rosalind-ee038e",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-22T06:59:03.848Z",
+      "feature": "stupefied-rosalind-ee038e",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-22T06:59:10.430Z",
+      "feature": "stupefied-rosalind-ee038e",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-22T06:59:32.346Z",
+      "feature": "stupefied-rosalind-ee038e",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-22T06:59:53.455Z",
+      "feature": "stupefied-rosalind-ee038e",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-22T07:00:20.759Z",
+      "feature": "stupefied-rosalind-ee038e",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-22T07:00:24.851Z",
+      "feature": "stupefied-rosalind-ee038e",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-22T07:00:28.862Z",
+      "feature": "stupefied-rosalind-ee038e",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-22T07:01:10.822Z",
+      "feature": "stupefied-rosalind-ee038e",
       "phase": "do",
       "action": "updated"
     }

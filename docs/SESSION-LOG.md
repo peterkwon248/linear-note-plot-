@@ -6,6 +6,55 @@
 
 ---
 
+## 2026-05-22 (후속 #2) — 다른컴퓨터/Windows, **File 엔티티 PRD + TODO 3건 (Timeline 아이콘 / EVENT_MARKER / 라이브러리 Index 그룹핑)**
+
+> 🎯 **다음 즉시 액션 (다음 세션 시작점)**:
+>
+> **File 독립 엔티티 v1 구현** — PRD(`.omc/plans/file-entity-prd.md` v0.2) 완성됨, Q1/Q2 사용자 승인 반영. §6-1 v1 = 영구 룰 #6(UI ↔ 데이터 모델 분리)대로 PR 2개:
+> - **PR #1 (마이그레이션+모델)**: `Attachment.noteId: string` → `originEntity: EntityRef | null` 강등 + v144→v145 마이그레이션(`state.notes`/`wikiArticles` 조회로 kind 판정, stale id→null) + `addAttachment` 7개 호출처 수정. 타입명 `Attachment` 유지(DOM 전역 `File` 충돌 회피), UI 라벨만 "File".
+> - **PR #2 (피커 UI)**: "기존 파일 삽입" 피커(재사용) + usage 인덱스(콘텐츠 `attachment://` 스캔 derive) + hard delete dangling-ref 경고.
+> - **첫 스텝**: `lib/types.ts:997` `Attachment` + `lib/store/slices/attachments.ts:7` + `lib/store/migrate.ts:1919`(v143→v144 패턴) 읽고 PR #1 착수.
+>
+> 대안: P1 temporal-hooks PRD 후속(open questions 6개, 큰 방향 — 사용자 조율 필요).
+>
+> ⚠️ **P0 #2(라이브러리 Index 그룹핑) 시각 스모크 테스트 미완** — build/tsc만 통과. 사용자 본인 환경에서 Tags/Labels/Stickers/Files/References 각 Display→Grouping→Index 선택해 letter 섹션 렌더 확인 필요.
+>
+> **머신**: 다른컴퓨터 (Windows)
+
+### 완료
+
+- **File 독립 엔티티 PRD v0.2** — `.omc/plans/file-entity-prd.md` (DRAFT). Attachment를 note-scoped → 독립 Library 엔티티로 승격하는 focused PRD. Explore 에이전트로 코드 검증 (브레인스토밍 1건 수정: wiki 이미지는 `noteId=""`가 아니라 실제 wiki id 전달). Q1(타입명 `Attachment` 유지)·Q2(`noteId`→`originEntity: EntityRef|null`) 사용자 승인 반영.
+- **P0 #3 — Timeline 탭 아이콘** — `display-panel.tsx` MODE_DEFS Timeline 아이콘 `Ruler`(얇은 대각선) → `ChartBarHorizontal`(가로 막대, 박스형). bars-first timeline과 의미 정합 + List/Board/Gallery와 시각 통일.
+- **P1 — EVENT_MARKER_CONFIG 4종 매핑** — `wiki-timeline/wiki-timeline-config.ts`에 `merged`/`unmerged`/`split`/`section_collapsed` 추가. merged/unmerged/split = "Composition" 카테고리(rose `#ec4899` 공유 — ArrowsMerge/ArrowsSplit/Scissors), section_collapsed = muted(ArrowsInLineVertical). 기존 fallback `DotOutline` 점 → 의미 있는 아이콘 칩.
+- **P0 #2 — 라이브러리 5종 Index 그룹핑** — Tags/Labels/Stickers/Files/References 뷰에 `firstLetter`("Index") 그룹핑 추가. 컴포넌트-사이드 그룹핑(`groupXByFirstLetter` 헬퍼 + render-order 평탄화 배열 + `.a-tg` 헤더 밴드, list/grid/gallery 전 모드). content 5종(PR #400)에 이어 라이브러리 5종 완료. Tags = template(직접 spec→executor→diff 검토), 나머지 4종 = 병렬 executor.
+
+### 브레인스토밍 & 큰 결정 (영구)
+
+- **File 엔티티 Q1/Q2 확정 (LOCKED)** — 타입명 `Attachment` 유지 (DOM 전역 `File` 타입 충돌 회피, NoteStatus `keystone`/"Block" 선례), UI 라벨만 "File". `noteId`(혼탁한 가짜 FK — `""`/`"__library__"`/note id/wiki id 혼재) → `originEntity: EntityRef | null` (note·wiki origin 정직하게 표현, provenance — 제거 X).
+- **라이브러리 Index 그룹핑 = 컴포넌트-사이드** — 훅의 `applyXGrouping` 불변. tags-view의 `hideEmpty` 같은 post-hook 필터 때문에 컴포넌트가 visible 배열을 그룹핑하는 게 정확. 그룹 헤더 = `.a-tg` 글로벌 클래스(book-table 패턴). 그룹 모드에선 drag-select 비활성(헤더 밴드가 고정행높이 계산 깨뜨림).
+- **영구 룰 #92 (Index = Grouping, not a column) LOCKED** — content 5종(PR #400) + 라이브러리 5종(이번) 모두 완료. Categories는 자체 뷰 컴포넌트라 이미 정합.
+
+### 다음
+
+- File 엔티티 v1 구현 (§6-1, PR 2개) — 위 hook 참조. 또는 P1 temporal-hooks PRD 후속.
+
+### Watch Out (다음 세션)
+
+- **P0 #2 시각 검증 미완** — build/tsc만 통과. preview MCP는 IDB가 사용자 데이터와 분리 → 사용자 본인 환경 스모크 테스트 필요.
+- Files/References 뷰는 표준 `DisplayPanel`이 아니라 커스텀 디스플레이 패널 — Index "Group by" 버튼을 수동 추가함. 향후 이 뷰 손볼 때 인지.
+- 라이브러리 Index: 한글 태그명은 첫 글자가 `[A-Z]`가 아니라 "#" 버킷으로 — content 5종/PR #400과 동일한 의도적 한계.
+- File 엔티티 PRD §7 잔여 Open Q: usage 인덱스 derive vs 저장(derive 권고) / Books 파일 접점 확인(fast-follow 전제).
+
+### 환경 변경
+
+- Store v144 무변경 (전부 view-engine / UI / config / doc 레이어).
+- 신규 파일: `.omc/plans/file-entity-prd.md`.
+
+### 머신
+다른컴퓨터 (Windows).
+
+---
+
 ## 2026-05-22 (후속) — 다른컴퓨터/Windows, **레거시 Index 토글 제거 (PR #401) + File 독립 엔티티 브레인스토밍**
 
 > 🎯 **다음 즉시 액션 (다음 세션 시작점)**:

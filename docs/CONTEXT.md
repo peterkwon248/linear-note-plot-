@@ -51,6 +51,20 @@
 
 ---
 
+## 🚀 2026-05-22 (후속 #2) — File 엔티티 PRD + TODO 3건 (Timeline 아이콘 / EVENT_MARKER / 라이브러리 Index) ⭐⭐⭐⭐
+
+**범위**: File 독립 엔티티 PRD v0.2 + P0 #3 Timeline 탭 아이콘 + P1 EVENT_MARKER 4종 + P0 #2 라이브러리 5종 Index 그룹핑.
+
+**핵심 결정**:
+- **File 엔티티 Q1/Q2** — 타입명 `Attachment` 유지 (DOM `File` 충돌 회피), `noteId` → `originEntity: EntityRef | null` (note·wiki origin 정직 표현). PRD `.omc/plans/file-entity-prd.md` v0.2.
+- **라이브러리 Index = 컴포넌트-사이드 그룹핑** — 훅 불변, `groupXByFirstLetter` + `.a-tg` 헤더 밴드. 영구 룰 #92(Index = Grouping) — content 5종 + 라이브러리 5종 완료로 LOCKED.
+
+**완료**: file-entity-prd.md(신규) / display-panel.tsx / wiki-timeline-config.ts / view-configs.tsx + tags·labels·stickers-view.tsx + library-view.tsx. Store v144 무변경. tsc + build clean.
+
+**다음**: File 엔티티 v1 구현 (§6-1 PR 2개). P0 #2 시각 스모크 테스트 권장(사용자 환경).
+
+---
+
 ## 🚀 2026-05-22 (후속) — 레거시 Index 토글 제거 (PR #401) + File 독립 엔티티 브레인스토밍 ⭐⭐⭐⭐
 
 **범위**: PR #401 (레거시 alphabetical-index 토글 제거) + File 독립 엔티티 브레인스토밍.
