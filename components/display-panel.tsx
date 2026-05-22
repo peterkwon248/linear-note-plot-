@@ -135,7 +135,7 @@ export function DisplayPanel({
       {/* ── Section 0: View Mode (List / Board) ── */}
       {showViewMode && (
         <>
-          <div className="flex rounded-lg border border-border-subtle bg-card p-0.5">
+          <div className="flex gap-0.5 rounded-lg border border-border-subtle bg-card p-0.5">
             {MODE_DEFS.filter((d) => supportedModes.includes(d.mode)).map((def) => {
               const isActive = currentMode === def.mode
               return (
@@ -154,10 +154,10 @@ export function DisplayPanel({
                     }
                     onViewStateChange(patch)
                   }}
-                  className={`flex flex-1 items-center justify-center gap-1.5 rounded-md py-1.5 text-note font-medium transition-all ${
+                  className={`flex flex-1 items-center justify-center gap-1.5 rounded-md px-2.5 py-1.5 text-note font-medium transition-colors ${
                     isActive
                       ? "bg-active-bg-strong text-foreground shadow-sm"
-                      : "text-muted-foreground hover:text-foreground"
+                      : "text-muted-foreground hover:bg-hover-bg hover:text-foreground"
                   }`}
                 >
                   {def.icon}
