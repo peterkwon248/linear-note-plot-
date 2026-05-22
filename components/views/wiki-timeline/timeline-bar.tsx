@@ -13,7 +13,6 @@ import {
   LANE_HEIGHT,
   BAR_HEIGHT,
   BAR_RADIUS,
-  ARROW_DEPTH,
   type ZoomConfig,
   type LanedArticle,
   type TimelineTooltipState,
@@ -80,12 +79,8 @@ export function TimelineBar({
     return (nowX - x) / liveWidth     // partial split
   })()
 
-  /** Right-most x of the status end shape (arrowhead tip for Article, bar edge for Stub). */
-  const endShapeRightX = liveEndX + (stub ? 0 : ARROW_DEPTH)
-  /** Bar's right-edge fill opacity — matches the past/future gradient end. */
-  const endOpacity = nowX >= liveEndX ? 0.78 : 1
-  /** Outside-title x — clears the end shape. */
-  const outsideTitleX = endShapeRightX + 6
+  /** Outside-title x — sits just right of the bar's end. */
+  const outsideTitleX = liveEndX + 6
 
   return (
     <g
@@ -205,17 +200,7 @@ export function TimelineBar({
         </>
       )}
 
-      {/* Status end shape — Article gets a solid arrowhead; Stub keeps the bar's rounded end */}
-      {!stub && (
-        <polygon
-          points={`${liveEndX},${barY} ${liveEndX + ARROW_DEPTH},${cy} ${liveEndX},${barY + BAR_HEIGHT}`}
-          fill={color}
-          fillOpacity={endOpacity}
-          filter="url(#bar-shadow)"
-        />
-      )}
-
-      {/* Outside title — right of dot when bar is narrow */}
+      {/* Outside title — sits right of the bar when it's too narrow for an inside title */}
       {!titleInside && (
         <text
           x={outsideTitleX}
@@ -229,11 +214,11 @@ export function TimelineBar({
         </text>
       )}
 
-      {/* Grab handle: hit zone covers right edge + arrowhead for article */}
+      {/* Grab handle: hit zone over the bar's right edge */}
       <rect
         x={liveEndX - 6}
         y={barY - 2}
-        width={12 + (stub ? 0 : ARROW_DEPTH)}
+        width={12}
         height={BAR_HEIGHT + 4}
         fill="transparent"
         style={{ cursor: "ew-resize", pointerEvents: "all" }}

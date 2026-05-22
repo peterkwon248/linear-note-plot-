@@ -348,7 +348,7 @@ export function ViewHeader({
                   <PopoverContent
                     align="end"
                     sideOffset={5}
-                    className="w-[300px] overflow-hidden rounded-lg border border-border-subtle bg-surface-overlay p-0 shadow-lg"
+                    className="w-[360px] overflow-hidden rounded-lg border border-border-subtle bg-surface-overlay p-0 shadow-lg"
                   >
                     {displayContent}
                   </PopoverContent>
