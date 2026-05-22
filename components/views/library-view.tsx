@@ -17,7 +17,7 @@ import {
 } from "@/components/ui/context-menu"
 import { ViewHeader } from "@/components/view-header"
 import { FilterPanel } from "@/components/filter-panel"
-import { useReferencesView } from "@/lib/view-engine/use-references-view"
+import { useReferencesView, type ReferenceWithMeta } from "@/lib/view-engine/use-references-view"
 import { useFilesView } from "@/lib/view-engine/use-files-view"
 import { REFERENCES_VIEW_CONFIG, FILES_VIEW_CONFIG } from "@/lib/view-engine/view-configs"
 import type { FilterRule } from "@/lib/view-engine/types"
@@ -61,6 +61,66 @@ import type { Reference, Attachment } from "@/lib/types"
 import { STATUS_COLORS, KNOWLEDGE_INDEX_COLORS } from "@/lib/colors"
 import { ReferenceDetailPanel } from "@/components/side-panel/reference-detail-panel"
 import { GalleryView, type GalleryItem } from "@/components/views/gallery-view"
+
+/* ── Index (firstLetter) grouping — Files ───────── */
+
+interface FileLetterGroup {
+  key: string
+  label: string
+  items: Attachment[]
+}
+
+/** Bucket attachments by uppercased first letter of .name; non-letters → "#" (sorted last). */
+function groupFilesByFirstLetter(files: Attachment[]): FileLetterGroup[] {
+  const buckets: Record<string, Attachment[]> = {}
+  for (const f of files) {
+    const first = ((f.name ?? "").trim()[0] ?? "#").toUpperCase()
+    const key = /[A-Z]/.test(first) ? first : "#"
+    ;(buckets[key] ??= []).push(f)
+  }
+  return Object.entries(buckets)
+    .sort(([a], [b]) => {
+      if (a === "#" && b !== "#") return 1
+      if (b === "#" && a !== "#") return -1
+      return a.localeCompare(b)
+    })
+    .map(([letter, items]) => ({ key: `letter-${letter}`, label: letter, items }))
+}
+
+type FileRenderItem =
+  | { type: "header"; key: string; label: string; count: number }
+  | { type: "item"; item: Attachment; itemIndex: number }
+
+/* ── Index (firstLetter) grouping — References ───── */
+
+interface ReferenceLetterGroup {
+  key: string
+  label: string
+  items: ReferenceWithMeta[]
+}
+
+/** Bucket references by uppercased first letter of .title; non-letters → "#" (sorted last). */
+function groupReferencesByFirstLetter(
+  refs: ReferenceWithMeta[],
+): ReferenceLetterGroup[] {
+  const buckets: Record<string, ReferenceWithMeta[]> = {}
+  for (const r of refs) {
+    const first = ((r.title ?? "").trim()[0] ?? "#").toUpperCase()
+    const key = /[A-Z]/.test(first) ? first : "#"
+    ;(buckets[key] ??= []).push(r)
+  }
+  return Object.entries(buckets)
+    .sort(([a], [b]) => {
+      if (a === "#" && b !== "#") return 1
+      if (b === "#" && a !== "#") return -1
+      return a.localeCompare(b)
+    })
+    .map(([letter, items]) => ({ key: `letter-${letter}`, label: letter, items }))
+}
+
+type ReferenceRenderItem =
+  | { type: "header"; key: string; label: string; count: number }
+  | { type: "item"; item: ReferenceWithMeta; itemIndex: number }
 
 /* ── File size formatter ─────────────────────────── */
 function formatFileSize(bytes: number): string {
@@ -1006,16 +1066,42 @@ function FilesView() {
     updateViewState({ sortFields: [{ field, direction: nextDir }] })
   }, [viewState.sortFields, updateViewState])
 
+  // ── Index grouping (firstLetter) — must be before selection callbacks ──
+  const fileGroups = useMemo<FileLetterGroup[]>(() => {
+    if (viewState.groupBy === "firstLetter") return groupFilesByFirstLetter(filtered)
+    return [{ key: "_all", label: "", items: filtered }]
+  }, [filtered, viewState.groupBy])
+
+  const isFilesGrouped = fileGroups.length > 0 && fileGroups[0].key !== "_all"
+
+  /** Flat array in render order — selection logic indexes into this. */
+  const visibleFiles = useMemo(() => fileGroups.flatMap((g) => g.items), [fileGroups])
+
+  /** Render sequence: group-header bands interleaved with file items. */
+  const fileRenderItems = useMemo<FileRenderItem[]>(() => {
+    if (!isFilesGrouped) return visibleFiles.map((item, i) => ({ type: "item", item, itemIndex: i }))
+    const items: FileRenderItem[] = []
+    let idx = 0
+    for (const g of fileGroups) {
+      items.push({ type: "header", key: g.key, label: g.label, count: g.items.length })
+      for (const item of g.items) {
+        items.push({ type: "item", item, itemIndex: idx })
+        idx++
+      }
+    }
+    return items
+  }, [isFilesGrouped, fileGroups, visibleFiles])
+
   /* ── Selection ── */
   const toggleSelect = useCallback((id: string, e?: React.MouseEvent) => {
     if (e?.shiftKey && lastClickedRef.current) {
-      const lastIdx = filtered.findIndex((a) => a.id === lastClickedRef.current)
-      const curIdx = filtered.findIndex((a) => a.id === id)
+      const lastIdx = visibleFiles.findIndex((a) => a.id === lastClickedRef.current)
+      const curIdx = visibleFiles.findIndex((a) => a.id === id)
       if (lastIdx !== -1 && curIdx !== -1) {
         const start = Math.min(lastIdx, curIdx)
         const end = Math.max(lastIdx, curIdx)
         const next = new Set(selectedIds)
-        for (let i = start; i <= end; i++) next.add(filtered[i].id)
+        for (let i = start; i <= end; i++) next.add(visibleFiles[i].id)
         setSelectedIds(next)
         return
       }
@@ -1027,15 +1113,15 @@ function FilesView() {
       return next
     })
     lastClickedRef.current = id
-  }, [filtered, selectedIds])
+  }, [visibleFiles, selectedIds])
 
   const toggleSelectAll = useCallback(() => {
-    if (selectedIds.size === filtered.length && filtered.length > 0) {
+    if (selectedIds.size === visibleFiles.length && visibleFiles.length > 0) {
       setSelectedIds(new Set())
     } else {
-      setSelectedIds(new Set(filtered.map((a) => a.id)))
+      setSelectedIds(new Set(visibleFiles.map((a) => a.id)))
     }
-  }, [selectedIds.size, filtered])
+  }, [selectedIds.size, visibleFiles])
 
   const handleBulkDelete = useCallback(() => {
     selectedIds.forEach((id) => removeAttachment(id))
@@ -1064,8 +1150,8 @@ function FilesView() {
     return () => window.removeEventListener("keydown", handler)
   }, [selectedIds.size])
 
-  const isAllSelected = filtered.length > 0 && selectedIds.size === filtered.length
-  const isPartiallySelected = selectedIds.size > 0 && selectedIds.size < filtered.length
+  const isAllSelected = visibleFiles.length > 0 && selectedIds.size === visibleFiles.length
+  const isPartiallySelected = selectedIds.size > 0 && selectedIds.size < visibleFiles.length
 
   // Grid template: checkbox 32px + Name minmax(160px, 1fr) + Size 80px + Type 100px + Created 100px
   const gridTemplate = "32px minmax(160px, 1fr) 80px 100px 100px"
@@ -1105,7 +1191,7 @@ function FilesView() {
 
             {/* Sort */}
             <div className="text-2xs font-medium text-muted-foreground mb-2">Sort by</div>
-            <div className="flex flex-wrap gap-1">
+            <div className="flex flex-wrap gap-1 mb-3">
               {([
                 { field: "createdAt" as const, label: "Created" },
                 { field: "name" as const, label: "Name" },
@@ -1126,6 +1212,28 @@ function FilesView() {
                   {sortField === field && (
                     sortDirection === "asc" ? <CaretUp size={10} /> : <CaretDown size={10} />
                   )}
+                </button>
+              ))}
+            </div>
+
+            {/* Group by */}
+            <div className="text-2xs font-medium text-muted-foreground mb-2">Group by</div>
+            <div className="flex flex-wrap gap-1">
+              {([
+                { value: "none" as const, label: "None" },
+                { value: "firstLetter" as const, label: "Index" },
+              ]).map(({ value, label }) => (
+                <button
+                  key={value}
+                  onClick={() => updateViewState({ groupBy: value })}
+                  className={cn(
+                    "px-2.5 py-1 rounded-md text-2xs font-medium transition-colors",
+                    viewState.groupBy === value
+                      ? "bg-accent/10 text-accent"
+                      : "text-muted-foreground hover:bg-hover-bg hover:text-foreground"
+                  )}
+                >
+                  {label}
                 </button>
               ))}
             </div>
@@ -1178,7 +1286,19 @@ function FilesView() {
         ) : isGridMode ? (
           /* ── Grid Mode (PR group-c-d-5) ── */
           <div className="grid grid-cols-[repeat(auto-fill,minmax(180px,1fr))] gap-3 p-4">
-            {filtered.map((att) => {
+            {fileRenderItems.map((ri) => {
+              if (ri.type === "header") {
+                return (
+                  <div key={ri.key} className="a-tg col-span-full">
+                    <span />
+                    <span />
+                    <span className="a-tg__label">{ri.label}</span>
+                    <span className="a-tg__count tabular-nums">{ri.count}</span>
+                    <div className="a-tg__line" />
+                  </div>
+                )
+              }
+              const att = ri.item
               const isSelected = selectedIds.has(att.id)
               const isImage = att.type === "image"
               return (
@@ -1331,7 +1451,19 @@ function FilesView() {
             </div>
 
             {/* Rows */}
-            {filtered.map((att) => {
+            {fileRenderItems.map((ri) => {
+              if (ri.type === "header") {
+                return (
+                  <div key={ri.key} className="a-tg">
+                    <span />
+                    <span />
+                    <span className="a-tg__label">{ri.label}</span>
+                    <span className="a-tg__count tabular-nums">{ri.count}</span>
+                    <div className="a-tg__line" />
+                  </div>
+                )
+              }
+              const att = ri.item
               const isSelected = selectedIds.has(att.id)
               const isImage = att.type === "image"
               const timeAgo = att.createdAt
@@ -1705,6 +1837,29 @@ function ReferencesView() {
     }
   }, [selectedIds.size, referenceList])
 
+  // ── Index grouping (firstLetter) ──
+  const refLetterGroups = useMemo<ReferenceLetterGroup[]>(() => {
+    if (viewState.groupBy === "firstLetter") return groupReferencesByFirstLetter(referenceList)
+    return [{ key: "_all", label: "", items: referenceList }]
+  }, [referenceList, viewState.groupBy])
+
+  const isRefLetterGrouped = refLetterGroups.length > 0 && refLetterGroups[0].key !== "_all"
+
+  /** Render sequence: group-header bands interleaved with reference items. */
+  const refRenderItems = useMemo<ReferenceRenderItem[]>(() => {
+    if (!isRefLetterGrouped) return referenceList.map((item, i) => ({ type: "item", item, itemIndex: i }))
+    const items: ReferenceRenderItem[] = []
+    let idx = 0
+    for (const g of refLetterGroups) {
+      items.push({ type: "header", key: g.key, label: g.label, count: g.items.length })
+      for (const item of g.items) {
+        items.push({ type: "item", item, itemIndex: idx })
+        idx++
+      }
+    }
+    return items
+  }, [isRefLetterGrouped, refLetterGroups, referenceList])
+
   const isAllSelected = referenceList.length > 0 && selectedIds.size === referenceList.length
   const isPartiallySelected = selectedIds.size > 0 && selectedIds.size < referenceList.length
 
@@ -1860,6 +2015,22 @@ function ReferencesView() {
             {/* Group by */}
             <div className="text-2xs font-medium text-muted-foreground mb-2">Group by</div>
             <div className="flex flex-wrap gap-1">
+              {/* Index (firstLetter) — viewState.groupBy */}
+              <button
+                onClick={() => {
+                  updateViewState({ groupBy: viewState.groupBy === "firstLetter" ? "none" : "firstLetter" })
+                  setGroupBy("none")
+                  setGroupFieldKey(null)
+                }}
+                className={cn(
+                  "px-2.5 py-1 rounded-md text-2xs font-medium transition-colors",
+                  viewState.groupBy === "firstLetter"
+                    ? "bg-accent/10 text-accent"
+                    : "text-muted-foreground hover:bg-hover-bg hover:text-foreground"
+                )}
+              >
+                Index
+              </button>
               {([
                 { value: "none" as const, label: "None" },
                 { value: "type" as const, label: "Type" },
@@ -1867,10 +2038,15 @@ function ReferencesView() {
               ]).map(({ value, label }) => (
                 <button
                   key={value}
-                  onClick={() => { setGroupBy(value); if (value !== "fieldKey") setGroupFieldKey(null) }}
+                  onClick={() => {
+                    setGroupBy(value)
+                    if (value !== "fieldKey") setGroupFieldKey(null)
+                    // Selecting a local group clears the firstLetter grouping
+                    if (viewState.groupBy === "firstLetter") updateViewState({ groupBy: "none" })
+                  }}
                   className={cn(
                     "px-2.5 py-1 rounded-md text-2xs font-medium transition-colors",
-                    groupBy === value
+                    groupBy === value && viewState.groupBy !== "firstLetter"
                       ? "bg-accent/10 text-accent"
                       : "text-muted-foreground hover:bg-hover-bg hover:text-foreground"
                   )}
@@ -1927,56 +2103,92 @@ function ReferencesView() {
             <EmptyReferences onCreate={handleCreate} />
           )
         ) : isGalleryMode ? (
-          <GalleryView
-            items={buildReferencesGalleryItems(referenceList)}
-            activeId={selectedId}
-            onItemClick={handleRowClick}
-          />
+          isRefLetterGrouped ? (
+            /* Gallery + Index grouping: render group headers between GalleryView segments */
+            <div>
+              {refLetterGroups.map((g) => (
+                <div key={g.key}>
+                  <div className="a-tg px-4">
+                    <span />
+                    <span />
+                    <span className="a-tg__label">{g.label}</span>
+                    <span className="a-tg__count tabular-nums">{g.items.length}</span>
+                    <div className="a-tg__line" />
+                  </div>
+                  <GalleryView
+                    items={buildReferencesGalleryItems(g.items)}
+                    activeId={selectedId}
+                    onItemClick={handleRowClick}
+                  />
+                </div>
+              ))}
+            </div>
+          ) : (
+            <GalleryView
+              items={buildReferencesGalleryItems(referenceList)}
+              activeId={selectedId}
+              onItemClick={handleRowClick}
+            />
+          )
         ) : isGridMode ? (
           /* ── Grid Mode (PR group-c-d-4) ── */
           <div className="grid grid-cols-[repeat(auto-fill,minmax(220px,1fr))] gap-3 p-4">
-            {referenceList.map((ref) => (
-              <div
-                key={ref.id}
-                onClick={() => handleRowClick(ref.id)}
-                className={cn(
-                  "group relative flex flex-col gap-2 rounded-lg border border-border/60 p-3 transition-all cursor-pointer",
-                  selectedIds.has(ref.id)
-                    ? "bg-accent/8 border-accent/40"
-                    : selectedId === ref.id
-                      ? "bg-accent/5 border-accent/30"
-                      : "bg-card hover:bg-hover-bg hover:border-border",
-                )}
-              >
-                {/* Image preview (if any) */}
-                {ref.hasImage && ref.imageUrl && (
-                  <img
-                    src={ref.imageUrl}
-                    alt=""
-                    className="w-full h-24 object-cover rounded shrink-0"
-                  />
-                )}
+            {refRenderItems.map((ri) => {
+              if (ri.type === "header") {
+                return (
+                  <div key={ri.key} className="a-tg col-span-full">
+                    <span />
+                    <span />
+                    <span className="a-tg__label">{ri.label}</span>
+                    <span className="a-tg__count tabular-nums">{ri.count}</span>
+                    <div className="a-tg__line" />
+                  </div>
+                )
+              }
+              const ref = ri.item
+              return (
+                <div
+                  key={ref.id}
+                  onClick={() => handleRowClick(ref.id)}
+                  className={cn(
+                    "group relative flex flex-col gap-2 rounded-lg border border-border/60 p-3 transition-all cursor-pointer",
+                    selectedIds.has(ref.id)
+                      ? "bg-accent/8 border-accent/40"
+                      : selectedId === ref.id
+                        ? "bg-accent/5 border-accent/30"
+                        : "bg-card hover:bg-hover-bg hover:border-border",
+                  )}
+                >
+                  {/* Image preview (if any) */}
+                  {ref.hasImage && ref.imageUrl && (
+                    <img
+                      src={ref.imageUrl}
+                      alt=""
+                      className="w-full h-24 object-cover rounded shrink-0"
+                    />
+                  )}
 
-                {/* Title */}
-                <h3 className="text-ui font-medium text-foreground line-clamp-2 leading-tight">
-                  {ref.title || "Untitled Reference"}
-                </h3>
+                  {/* Title */}
+                  <h3 className="text-ui font-medium text-foreground line-clamp-2 leading-tight">
+                    {ref.title || "Untitled Reference"}
+                  </h3>
 
-                {/* Content preview */}
-                {ref.content.trim() && (
-                  <p className="text-2xs text-muted-foreground line-clamp-3">
-                    {ref.content}
-                  </p>
-                )}
+                  {/* Content preview */}
+                  {ref.content.trim() && (
+                    <p className="text-2xs text-muted-foreground line-clamp-3">
+                      {ref.content}
+                    </p>
+                  )}
 
-                {/* PropertyChip row */}
-                <div className="flex items-center gap-1 mt-auto flex-wrap">
-                  <RefTypeChip type={ref.refType} />
-                  <RefFieldCountChip count={ref.fieldCount} />
-                  {ref.hasImage && <RefImageChip />}
+                  {/* PropertyChip row */}
+                  <div className="flex items-center gap-1 mt-auto flex-wrap">
+                    <RefTypeChip type={ref.refType} />
+                    <RefFieldCountChip count={ref.fieldCount} />
+                    {ref.hasImage && <RefImageChip />}
+                  </div>
                 </div>
-              </div>
-            ))}
+              )
+            })}
           </div>
         ) : (
           <>
@@ -2024,7 +2236,33 @@ function ReferencesView() {
                 )}
               </button>
             </div>
-            {groupedReferences ? (
+            {isRefLetterGrouped ? (
+              /* Index (firstLetter) grouping — .a-tg header bands */
+              refRenderItems.map((ri) =>
+                ri.type === "header" ? (
+                  <div key={ri.key} className="a-tg">
+                    <span />
+                    <span />
+                    <span className="a-tg__label">{ri.label}</span>
+                    <span className="a-tg__count tabular-nums">{ri.count}</span>
+                    <div className="a-tg__line" />
+                  </div>
+                ) : (
+                  <ReferenceRow
+                    key={ri.item.id}
+                    ref_={ri.item}
+                    isSelected={selectedId === ri.item.id}
+                    isMultiSelected={selectedIds.has(ri.item.id)}
+                    isMultiMode={isMultiMode}
+                    onClick={() => handleRowClick(ri.item.id)}
+                    onMultiSelect={(e) => handleMultiSelect(ri.item.id, e)}
+                    onDelete={() => handleDelete(ri.item.id)}
+                    onCopyTitle={() => handleCopyTitle(ri.item.title)}
+                    onEdit={() => handleEdit(ri.item.id)}
+                  />
+                )
+              )
+            ) : groupedReferences ? (
               groupedReferences.map((group) => (
                 <div key={group.label}>
                   <div className="sticky top-0 z-10 flex items-center gap-2 border-b border-border-subtle bg-background/95 backdrop-blur-sm px-5 py-1.5">
@@ -2103,7 +2341,7 @@ export function LibraryView() {
 /* ── References gallery adapter ─────────────────────────────────────────── */
 
 function buildReferencesGalleryItems(
-  refs: import("@/lib/view-engine/use-references-view").ReferenceWithMeta[],
+  refs: ReferenceWithMeta[],
 ): GalleryItem[] {
   return refs.map((r) => {
     // Accent: KNOWLEDGE_INDEX_COLORS.references hex (Plot canonical reference color).

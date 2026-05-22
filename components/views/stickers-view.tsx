@@ -34,7 +34,7 @@ import { ViewHeader } from "@/components/view-header"
 import { LibraryBreadcrumb } from "@/components/library/library-breadcrumb"
 import { DisplayPanel } from "@/components/display-panel"
 import { FilterPanel } from "@/components/filter-panel"
-import { useStickersView } from "@/lib/view-engine/use-stickers-view"
+import { useStickersView, type StickerWithCount } from "@/lib/view-engine/use-stickers-view"
 import { STICKERS_LIST_VIEW_CONFIG } from "@/lib/view-engine/view-configs"
 import type { FilterRule } from "@/lib/view-engine/types"
 import { StickerMemberCountChip } from "@/components/property-chips"
@@ -44,6 +44,36 @@ import { setActiveRoute } from "@/lib/table-route"
 const DRAG_THRESHOLD = 5
 const ROW_HEIGHT = 40
 const HEADER_HEIGHT = 37
+
+/* ── Index (firstLetter) grouping ───────────────────────── */
+
+interface StickerLetterGroup {
+  key: string
+  label: string
+  stickers: StickerWithCount[]
+}
+
+/** Bucket stickers by uppercased first letter; non-letters → "#" (sorted last).
+ * Mirrors groupTagsByFirstLetter in tags-view.tsx. */
+function groupStickersByFirstLetter(stickers: StickerWithCount[]): StickerLetterGroup[] {
+  const buckets: Record<string, StickerWithCount[]> = {}
+  for (const s of stickers) {
+    const first = ((s.name ?? "").trim()[0] ?? "#").toUpperCase()
+    const key = /[A-Z]/.test(first) ? first : "#"
+    ;(buckets[key] ??= []).push(s)
+  }
+  return Object.entries(buckets)
+    .sort(([a], [b]) => {
+      if (a === "#" && b !== "#") return 1
+      if (b === "#" && a !== "#") return -1
+      return a.localeCompare(b)
+    })
+    .map(([letter, items]) => ({ key: `letter-${letter}`, label: letter, stickers: items }))
+}
+
+type StickerRenderItem =
+  | { type: "header"; key: string; label: string; count: number }
+  | { type: "item"; sticker: StickerWithCount; itemIndex: number }
 
 export function StickersView() {
   const stickers = usePlotStore((s) => s.stickers)
@@ -67,6 +97,34 @@ export function StickersView() {
   const isGridMode = viewState.viewMode === "grid"
   const sortField = viewState.sortFields[0]?.field ?? "name"
   const sortDirection = viewState.sortFields[0]?.direction ?? "asc"
+
+  // Index grouping. stickerGroups = render-order groups (single "_all" group
+  // when ungrouped). visibleStickers = flattened in render order — all
+  // selection logic (toggleAll / shift-range / ctrl+A) indexes into this array.
+  const stickerGroups = useMemo<StickerLetterGroup[]>(() => {
+    if (viewState.groupBy === "firstLetter") return groupStickersByFirstLetter(flatStickers)
+    return [{ key: "_all", label: "", stickers: flatStickers }]
+  }, [flatStickers, viewState.groupBy])
+
+  const isGrouped = stickerGroups.length > 0 && stickerGroups[0].key !== "_all"
+
+  const visibleStickers = useMemo(() => stickerGroups.flatMap((g) => g.stickers), [stickerGroups])
+
+  // Render sequence: group-header bands interleaved with stickers. Single
+  // source for both grid + list maps.
+  const stickerRenderItems = useMemo<StickerRenderItem[]>(() => {
+    if (!isGrouped) return visibleStickers.map((sticker, i) => ({ type: "item", sticker, itemIndex: i }))
+    const items: StickerRenderItem[] = []
+    let idx = 0
+    for (const g of stickerGroups) {
+      items.push({ type: "header", key: g.key, label: g.label, count: g.stickers.length })
+      for (const sticker of g.stickers) {
+        items.push({ type: "item", sticker, itemIndex: idx })
+        idx++
+      }
+    }
+    return items
+  }, [isGrouped, stickerGroups, visibleStickers])
 
   // UI-only local state (not in viewState)
   const [selectedStickerId, setSelectedStickerId] = useState<string | null>(null)
@@ -293,10 +351,10 @@ export function StickersView() {
   }
 
   const toggleAll = () => {
-    if (checkedStickers.size === flatStickers.length) {
+    if (checkedStickers.size === visibleStickers.length) {
       setCheckedStickers(new Set())
     } else {
-      setCheckedStickers(new Set(flatStickers.map((s) => s.id)))
+      setCheckedStickers(new Set(visibleStickers.map((s) => s.id)))
     }
   }
 
@@ -311,7 +369,7 @@ export function StickersView() {
     if (e.shiftKey && lastClickedRef.current !== null) {
       const start = Math.min(lastClickedRef.current, rowIndex)
       const end = Math.max(lastClickedRef.current, rowIndex)
-      const rangeIds = stickersRef.current.slice(start, end + 1).map((s) => s.id)
+      const rangeIds = visibleStickers.slice(start, end + 1).map((s) => s.id)
       setCheckedStickers(new Set(rangeIds))
       e.preventDefault()
       return
@@ -338,19 +396,22 @@ export function StickersView() {
         setCheckedStickers(new Set())
         e.preventDefault()
       }
-      if ((e.metaKey || e.ctrlKey) && e.key === "a" && flatStickers.length > 0) {
+      if ((e.metaKey || e.ctrlKey) && e.key === "a" && visibleStickers.length > 0) {
         const tag = (e.target as HTMLElement)?.tagName?.toLowerCase()
         if (tag === "input" || tag === "textarea") return
-        setCheckedStickers(new Set(flatStickers.map((s) => s.id)))
+        setCheckedStickers(new Set(visibleStickers.map((s) => s.id)))
         e.preventDefault()
       }
     }
     window.addEventListener("keydown", handler)
     return () => window.removeEventListener("keydown", handler)
-  }, [checkedStickers.size, flatStickers])
+  }, [checkedStickers.size, visibleStickers])
 
   // Drag-to-select
   const handleDragMouseDown = useCallback((e: React.MouseEvent) => {
+    // Drag-to-select disabled in grouped mode — header bands break the
+    // fixed-row-height rect math. ctrl/shift-click still work.
+    if (isGrouped) return
     if (e.button !== 0) return
     const target = e.target as HTMLElement
     if (target.closest("button, a, input, [data-no-drag]")) return
@@ -360,7 +421,7 @@ export function StickersView() {
       scrollTop: scrollContainerRef.current?.scrollTop ?? 0
     }
     isDraggingRef.current = false
-  }, [])
+  }, [isGrouped])
 
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
@@ -525,6 +586,233 @@ export function StickersView() {
     )
   }
 
+  // ── Render helpers (closures over component state/handlers) ──
+
+  function renderStickerCard(sticker: StickerWithCount) {
+    return (
+      <ContextMenu key={sticker.id}>
+        <ContextMenuTrigger asChild>
+          <div
+            className={cn(
+              "group relative flex flex-col gap-2 rounded-lg border border-border/60 p-3 transition-all cursor-pointer",
+              checkedStickers.has(sticker.id)
+                ? "bg-accent/8 border-accent/40"
+                : "bg-card hover:bg-hover-bg hover:border-border",
+            )}
+            onClick={(e) => {
+              if ((e.target as HTMLElement).closest("button")) return
+              toggleCheck(sticker.id)
+            }}
+          >
+            {/* Checkbox (top-right) */}
+            <button
+              onClick={(e) => { e.stopPropagation(); toggleCheck(sticker.id) }}
+              className={cn(
+                "absolute right-2 top-2 h-4 w-4 shrink-0 rounded-[4px] border flex items-center justify-center cursor-pointer transition-all shadow-sm",
+                checkedStickers.has(sticker.id)
+                  ? "bg-accent border-accent opacity-100"
+                  : "opacity-0 group-hover:opacity-100 bg-card border-zinc-400 dark:border-zinc-600",
+              )}
+            >
+              {checkedStickers.has(sticker.id) && (
+                <PhCheck size={10} weight="bold" className="text-accent-foreground" />
+              )}
+            </button>
+
+            {/* Color dot — required color (drives graph hull) */}
+            <span
+              className="h-2.5 w-2.5 shrink-0 rounded-full ring-1 ring-black/5 dark:ring-white/10"
+              style={{ backgroundColor: sticker.color }}
+            />
+
+            {/* Sticker name — click to view items + open side panel */}
+            <button
+              onClick={() => {
+                // 2026-05-14 follow-up (Library Stickers Detail panel):
+                // 사이드바 자동 노출 + Detail 표시 (PR #331 Files +
+                // PR #334 Tags 패턴 정합). drill-down (selectedStickerId)도
+                // 유지 — 사용자가 row 한 번 클릭하면 items 페이지 +
+                // side panel detail 둘 다 보이는 풍부한 패턴.
+                setSelectedStickerId(sticker.id)
+                usePlotStore.setState({
+                  sidePanelContext: { type: "sticker", id: sticker.id },
+                  sidePanelOpen: true,
+                })
+              }}
+              className="text-left text-ui text-foreground transition-colors hover:text-accent leading-tight"
+              title="Click to view items"
+            >
+              {sticker.name}
+            </button>
+
+            {/* PropertyChip row */}
+            <div className="flex items-center gap-1 min-w-0">
+              <StickerMemberCountChip count={sticker.memberCount} />
+            </div>
+          </div>
+        </ContextMenuTrigger>
+        <ContextMenuContent className="w-48">
+          <ContextMenuSub>
+            <ContextMenuSubTrigger>Change color</ContextMenuSubTrigger>
+            <ContextMenuSubContent className="p-2">
+              <ColorPickerGrid
+                value={sticker.color}
+                onChange={(color) => updateSticker(sticker.id, { color })}
+              />
+            </ContextMenuSubContent>
+          </ContextMenuSub>
+          <ContextMenuItem
+            onClick={() => setSelectedStickerId(sticker.id)}
+            className="text-note"
+          >
+            View items
+          </ContextMenuItem>
+          <ContextMenuSeparator />
+          <ContextMenuItem
+            onClick={() => deleteSticker(sticker.id)}
+            className="text-note text-destructive focus:text-destructive"
+          >
+            <Trash className="mr-2" size={14} weight="regular" />
+            Delete
+          </ContextMenuItem>
+        </ContextMenuContent>
+      </ContextMenu>
+    )
+  }
+
+  function renderStickerListRow(sticker: StickerWithCount, index: number) {
+    const isEditing = editingId === sticker.id
+    const dotColor = isEditing ? editColor : sticker.color
+    return (
+      <ContextMenu key={sticker.id} onOpenChange={(open) => {
+        if (open) setContextMenuStickerId(sticker.id)
+        else setContextMenuStickerId(null)
+      }}>
+        <ContextMenuTrigger asChild>
+          <div
+            data-sticker-index={index}
+            className={`flex items-start gap-3 px-6 py-2.5 transition-colors group cursor-default${
+              checkedStickers.has(sticker.id) ? " bg-accent/10" : " hover:bg-hover-bg"
+            }`}
+            onClick={(e) => {
+              if ((e.target as HTMLElement).closest("button, input, [data-no-drag]")) return
+              if (isEditing) return
+              handleRowClick(sticker.id, index, e)
+            }}
+          >
+            <button
+              onClick={(e) => { e.stopPropagation(); toggleCheck(sticker.id) }}
+              className={cn(
+                "flex h-4 w-4 shrink-0 items-center justify-center rounded-[4px] border transition-colors mt-0.5 shadow-sm",
+                checkedStickers.has(sticker.id)
+                  ? "bg-accent border-accent text-accent-foreground"
+                  : "bg-card border-zinc-400 dark:border-zinc-600 hover:border-zinc-500",
+                checkedStickers.size > 0 || checkedStickers.has(sticker.id) ? "visible" : "invisible group-hover:visible"
+              )}
+            >
+              {checkedStickers.has(sticker.id) && (
+                <PhCheck size={10} weight="bold" />
+              )}
+            </button>
+
+            {/* Color dot — popover trigger */}
+            <Popover
+              open={colorPickerOpenId === sticker.id}
+              onOpenChange={(open) => {
+                if (!open) setColorPickerOpenId(null)
+              }}
+            >
+              <PopoverTrigger asChild>
+                <button
+                  onClick={(e) => handleColorDotClick(sticker, e)}
+                  className="h-3 w-3 rounded-full shrink-0 mt-0.5 ring-1 ring-black/5 dark:ring-white/10 hover:ring-2 hover:ring-foreground/20 transition-all cursor-pointer"
+                  style={{ backgroundColor: dotColor }}
+                  title="Change color"
+                  type="button"
+                />
+              </PopoverTrigger>
+              <PopoverContent
+                className="w-[280px] p-3"
+                align="start"
+                sideOffset={6}
+                onClick={(e) => e.stopPropagation()}
+                onOpenAutoFocus={(e) => e.preventDefault()}
+              >
+                <ColorPickerGrid
+                  value={dotColor}
+                  onChange={(color) => {
+                    if (isEditing) handleEditColorChange(color)
+                    else handleQuickColorChange(sticker.id, color)
+                  }}
+                />
+              </PopoverContent>
+            </Popover>
+
+            {/* Name — click to rename, double-click to navigate */}
+            {isEditing ? (
+              <div className="flex-1 flex items-center gap-2">
+                <input
+                  ref={editInputRef}
+                  type="text"
+                  value={editName}
+                  onChange={(e) => setEditName(e.target.value)}
+                  onKeyDown={handleEditKeyDown}
+                  onBlur={handleEditBlur}
+                  onClick={(e) => e.stopPropagation()}
+                  className="flex-1 h-7 max-w-md rounded-md border border-border bg-card px-2.5 text-note text-foreground focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-colors"
+                  placeholder="Sticker name"
+                />
+              </div>
+            ) : (
+              <button
+                onClick={(e) => handleNameClick(sticker, e)}
+                className="flex-1 text-left text-ui text-foreground hover:text-accent transition-colors"
+                title="Click to rename · Double-click to view items"
+              >
+                {sticker.name}
+              </button>
+            )}
+
+            {!isEditing && (
+              <span className="w-16 text-right text-note text-muted-foreground tabular-nums self-center">
+                {sticker.memberCount}
+              </span>
+            )}
+          </div>
+        </ContextMenuTrigger>
+        <ContextMenuContent className="w-48">
+          <ContextMenuItem
+            onClick={() => startEdit(sticker)}
+            className="text-note"
+          >
+            <PencilSimple className="mr-2 text-muted-foreground" size={14} weight="regular" />
+            Rename
+          </ContextMenuItem>
+          <ContextMenuItem
+            onClick={() => setColorPickerOpenId(sticker.id)}
+            className="text-note"
+          >
+            <span className="mr-2 h-3 w-3 shrink-0 rounded-full inline-block" style={{ backgroundColor: sticker.color }} />
+            Change color
+          </ContextMenuItem>
+          <ContextMenuItem
+            onClick={() => setSelectedStickerId(sticker.id)}
+            className="text-note"
+          >
+            View items
+          </ContextMenuItem>
+          <ContextMenuItem
+            onClick={() => deleteSticker(sticker.id)}
+            className="text-note text-destructive focus:text-destructive"
+          >
+            <Trash className="mr-2" size={14} weight="regular" />
+            Delete
+          </ContextMenuItem>
+        </ContextMenuContent>
+      </ContextMenu>
+    )
+  }
+
   // ── Sticker List Mode ──
   return (
     <div className="flex flex-1 flex-col overflow-hidden">
@@ -605,98 +893,22 @@ export function StickersView() {
                   Click &quot;New sticker&quot; to create one
                 </span>
               </div>
-            ) : isGridMode && flatStickers.length > 0 ? (
+            ) : isGridMode && visibleStickers.length > 0 ? (
               /* ── Grid Mode ── */
               <div className="grid grid-cols-[repeat(auto-fill,minmax(160px,1fr))] gap-2 p-4">
-                {flatStickers.map((sticker) => (
-                  <ContextMenu key={sticker.id}>
-                    <ContextMenuTrigger asChild>
-                      <div
-                        className={cn(
-                          "group relative flex flex-col gap-2 rounded-lg border border-border/60 p-3 transition-all cursor-pointer",
-                          checkedStickers.has(sticker.id)
-                            ? "bg-accent/8 border-accent/40"
-                            : "bg-card hover:bg-hover-bg hover:border-border",
-                        )}
-                        onClick={(e) => {
-                          if ((e.target as HTMLElement).closest("button")) return
-                          toggleCheck(sticker.id)
-                        }}
-                      >
-                        {/* Checkbox (top-right) */}
-                        <button
-                          onClick={(e) => { e.stopPropagation(); toggleCheck(sticker.id) }}
-                          className={cn(
-                            "absolute right-2 top-2 h-4 w-4 shrink-0 rounded-[4px] border flex items-center justify-center cursor-pointer transition-all shadow-sm",
-                            checkedStickers.has(sticker.id)
-                              ? "bg-accent border-accent opacity-100"
-                              : "opacity-0 group-hover:opacity-100 bg-card border-zinc-400 dark:border-zinc-600",
-                          )}
-                        >
-                          {checkedStickers.has(sticker.id) && (
-                            <PhCheck size={10} weight="bold" className="text-accent-foreground" />
-                          )}
-                        </button>
-
-                        {/* Color dot — required color (drives graph hull) */}
-                        <span
-                          className="h-2.5 w-2.5 shrink-0 rounded-full ring-1 ring-black/5 dark:ring-white/10"
-                          style={{ backgroundColor: sticker.color }}
-                        />
-
-                        {/* Sticker name — click to view items + open side panel */}
-                        <button
-                          onClick={() => {
-                            // 2026-05-14 follow-up (Library Stickers Detail panel):
-                            // 사이드바 자동 노출 + Detail 표시 (PR #331 Files +
-                            // PR #334 Tags 패턴 정합). drill-down (selectedStickerId)도
-                            // 유지 — 사용자가 row 한 번 클릭하면 items 페이지 +
-                            // side panel detail 둘 다 보이는 풍부한 패턴.
-                            setSelectedStickerId(sticker.id)
-                            usePlotStore.setState({
-                              sidePanelContext: { type: "sticker", id: sticker.id },
-                              sidePanelOpen: true,
-                            })
-                          }}
-                          className="text-left text-ui text-foreground transition-colors hover:text-accent leading-tight"
-                          title="Click to view items"
-                        >
-                          {sticker.name}
-                        </button>
-
-                        {/* PropertyChip row */}
-                        <div className="flex items-center gap-1 min-w-0">
-                          <StickerMemberCountChip count={sticker.memberCount} />
-                        </div>
-                      </div>
-                    </ContextMenuTrigger>
-                    <ContextMenuContent className="w-48">
-                      <ContextMenuSub>
-                        <ContextMenuSubTrigger>Change color</ContextMenuSubTrigger>
-                        <ContextMenuSubContent className="p-2">
-                          <ColorPickerGrid
-                            value={sticker.color}
-                            onChange={(color) => updateSticker(sticker.id, { color })}
-                          />
-                        </ContextMenuSubContent>
-                      </ContextMenuSub>
-                      <ContextMenuItem
-                        onClick={() => setSelectedStickerId(sticker.id)}
-                        className="text-note"
-                      >
-                        View items
-                      </ContextMenuItem>
-                      <ContextMenuSeparator />
-                      <ContextMenuItem
-                        onClick={() => deleteSticker(sticker.id)}
-                        className="text-note text-destructive focus:text-destructive"
-                      >
-                        <Trash className="mr-2" size={14} weight="regular" />
-                        Delete
-                      </ContextMenuItem>
-                    </ContextMenuContent>
-                  </ContextMenu>
-                ))}
+                {stickerRenderItems.map((item) =>
+                  item.type === "header" ? (
+                    <div key={item.key} className="a-tg col-span-full">
+                      <span />
+                      <span />
+                      <span className="a-tg__label">{item.label}</span>
+                      <span className="a-tg__count tabular-nums">{item.count}</span>
+                      <div className="a-tg__line" />
+                    </div>
+                  ) : (
+                    renderStickerCard(item.sticker)
+                  ),
+                )}
               </div>
             ) : (
               <div>
@@ -709,17 +921,17 @@ export function StickersView() {
                     onClick={toggleAll}
                     className={cn(
                       "h-4 w-4 shrink-0 rounded-[4px] border flex items-center justify-center cursor-pointer transition-colors shadow-sm",
-                      checkedStickers.size === flatStickers.length && flatStickers.length > 0
+                      checkedStickers.size === visibleStickers.length && visibleStickers.length > 0
                         ? "bg-accent border-accent"
                         : checkedStickers.size > 0
                           ? "bg-accent/50 border-accent"
                           : "bg-card border-zinc-400 dark:border-zinc-600 hover:border-zinc-500 dark:hover:border-zinc-500"
                     )}
                   >
-                    {checkedStickers.size === flatStickers.length && flatStickers.length > 0 && (
+                    {checkedStickers.size === visibleStickers.length && visibleStickers.length > 0 && (
                       <PhCheck size={10} weight="bold" className="text-accent-foreground" />
                     )}
-                    {checkedStickers.size > 0 && checkedStickers.size < flatStickers.length && (
+                    {checkedStickers.size > 0 && checkedStickers.size < visibleStickers.length && (
                       <Minus size={10} weight="regular" className="text-accent-foreground" />
                     )}
                   </div>
@@ -748,138 +960,19 @@ export function StickersView() {
                   <span className="w-16" />
                 </div>
 
-                {flatStickers.map((sticker, index) => {
-                  const isEditing = editingId === sticker.id
-                  const dotColor = isEditing ? editColor : sticker.color
-                  return (
-                    <ContextMenu key={sticker.id} onOpenChange={(open) => {
-                      if (open) setContextMenuStickerId(sticker.id)
-                      else setContextMenuStickerId(null)
-                    }}>
-                      <ContextMenuTrigger asChild>
-                        <div
-                          data-sticker-index={index}
-                          className={`flex items-start gap-3 px-6 py-2.5 transition-colors group cursor-default${
-                            checkedStickers.has(sticker.id) ? " bg-accent/10" : " hover:bg-hover-bg"
-                          }`}
-                          onClick={(e) => {
-                            if ((e.target as HTMLElement).closest("button, input, [data-no-drag]")) return
-                            if (isEditing) return
-                            handleRowClick(sticker.id, index, e)
-                          }}
-                        >
-                          <button
-                            onClick={(e) => { e.stopPropagation(); toggleCheck(sticker.id) }}
-                            className={cn(
-                              "flex h-4 w-4 shrink-0 items-center justify-center rounded-[4px] border transition-colors mt-0.5 shadow-sm",
-                              checkedStickers.has(sticker.id)
-                                ? "bg-accent border-accent text-accent-foreground"
-                                : "bg-card border-zinc-400 dark:border-zinc-600 hover:border-zinc-500",
-                              checkedStickers.size > 0 || checkedStickers.has(sticker.id) ? "visible" : "invisible group-hover:visible"
-                            )}
-                          >
-                            {checkedStickers.has(sticker.id) && (
-                              <PhCheck size={10} weight="bold" />
-                            )}
-                          </button>
-
-                          {/* Color dot — popover trigger */}
-                          <Popover
-                            open={colorPickerOpenId === sticker.id}
-                            onOpenChange={(open) => {
-                              if (!open) setColorPickerOpenId(null)
-                            }}
-                          >
-                            <PopoverTrigger asChild>
-                              <button
-                                onClick={(e) => handleColorDotClick(sticker, e)}
-                                className="h-3 w-3 rounded-full shrink-0 mt-0.5 ring-1 ring-black/5 dark:ring-white/10 hover:ring-2 hover:ring-foreground/20 transition-all cursor-pointer"
-                                style={{ backgroundColor: dotColor }}
-                                title="Change color"
-                                type="button"
-                              />
-                            </PopoverTrigger>
-                            <PopoverContent
-                              className="w-[280px] p-3"
-                              align="start"
-                              sideOffset={6}
-                              onClick={(e) => e.stopPropagation()}
-                              onOpenAutoFocus={(e) => e.preventDefault()}
-                            >
-                              <ColorPickerGrid
-                                value={dotColor}
-                                onChange={(color) => {
-                                  if (isEditing) handleEditColorChange(color)
-                                  else handleQuickColorChange(sticker.id, color)
-                                }}
-                              />
-                            </PopoverContent>
-                          </Popover>
-
-                          {/* Name — click to rename, double-click to navigate */}
-                          {isEditing ? (
-                            <div className="flex-1 flex items-center gap-2">
-                              <input
-                                ref={editInputRef}
-                                type="text"
-                                value={editName}
-                                onChange={(e) => setEditName(e.target.value)}
-                                onKeyDown={handleEditKeyDown}
-                                onBlur={handleEditBlur}
-                                onClick={(e) => e.stopPropagation()}
-                                className="flex-1 h-7 max-w-md rounded-md border border-border bg-card px-2.5 text-note text-foreground focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-colors"
-                                placeholder="Sticker name"
-                              />
-                            </div>
-                          ) : (
-                            <button
-                              onClick={(e) => handleNameClick(sticker, e)}
-                              className="flex-1 text-left text-ui text-foreground hover:text-accent transition-colors"
-                              title="Click to rename · Double-click to view items"
-                            >
-                              {sticker.name}
-                            </button>
-                          )}
-
-                          {!isEditing && (
-                            <span className="w-16 text-right text-note text-muted-foreground tabular-nums self-center">
-                              {sticker.memberCount}
-                            </span>
-                          )}
-                        </div>
-                      </ContextMenuTrigger>
-                      <ContextMenuContent className="w-48">
-                        <ContextMenuItem
-                          onClick={() => startEdit(sticker)}
-                          className="text-note"
-                        >
-                          <PencilSimple className="mr-2 text-muted-foreground" size={14} weight="regular" />
-                          Rename
-                        </ContextMenuItem>
-                        <ContextMenuItem
-                          onClick={() => setColorPickerOpenId(sticker.id)}
-                          className="text-note"
-                        >
-                          <span className="mr-2 h-3 w-3 shrink-0 rounded-full inline-block" style={{ backgroundColor: sticker.color }} />
-                          Change color
-                        </ContextMenuItem>
-                        <ContextMenuItem
-                          onClick={() => setSelectedStickerId(sticker.id)}
-                          className="text-note"
-                        >
-                          View items
-                        </ContextMenuItem>
-                        <ContextMenuItem
-                          onClick={() => deleteSticker(sticker.id)}
-                          className="text-note text-destructive focus:text-destructive"
-                        >
-                          <Trash className="mr-2" size={14} weight="regular" />
-                          Delete
-                        </ContextMenuItem>
-                      </ContextMenuContent>
-                    </ContextMenu>
-                  )
-                })}
+                {stickerRenderItems.map((item) =>
+                  item.type === "header" ? (
+                    <div key={item.key} className="a-tg">
+                      <span />
+                      <span />
+                      <span className="a-tg__label">{item.label}</span>
+                      <span className="a-tg__count tabular-nums">{item.count}</span>
+                      <div className="a-tg__line" />
+                    </div>
+                  ) : (
+                    renderStickerListRow(item.sticker, item.itemIndex)
+                  ),
+                )}
               </div>
             )}
 
