@@ -51,6 +51,21 @@
 
 ---
 
+## 🚀 2026-05-22 — 통합 시간 모델 PRD + Index→Grouping 통일 (content 5종) ⭐⭐⭐⭐⭐
+
+**범위**: ① `.omc/plans/unified-temporal-hooks-prd.md` (DRAFT v0.1) — snooze/SRS/plannedDate/staleness를 단일 `Hook` 모델로 통합하는 설계 ② Index를 가짜 DP 칩에서 Grouping으로 통일 ③ 빌드 에러 픽스.
+
+**핵심 결정**:
+- **Index = Grouping, not a column** — Display Properties 칩은 진짜 컬럼과 1:1. "Index"(알파벳 그룹핑 모드)는 Grouping 드롭다운에 속함. Wiki/Templates의 가짜 `showAlphaIndex` 칩 제거 + Wiki/Templates/Books groupingOptions에 `firstLetter` 추가. Notes/Categories는 기존 정합. (영구 룰 후보 #92.)
+- **사용자 원칙**: Display 패널 지원 모든 엔티티 = Index를 Grouping으로. 라이브러리 5종(Tags/Labels/Stickers/Files/References)은 다음 세션 (A) — 뷰가 flat-only라 그룹 렌더링 신규 필요.
+- **통합 시간 모델**: snooze/SRS/plannedDate/staleness = "언제 다시 띄울까" 파편 → 단일 `Hook`. 상세 PRD. DRAFT — 구현 승인 전.
+
+**완료**: `view-configs.tsx` / `wiki-list-pipeline.ts` / `use-books-view.ts` / `use-templates-view.ts` / `library-categories-view.tsx`. Store v144 무변경 (view-engine 레이어만). 빌드 clean.
+
+**다음**: A — 라이브러리 5종 Index 그룹핑.
+
+---
+
 ## 🚀 2026-05-21 (저녁 후속 #6) — wiki-timeline-view.tsx sub-component 분리 (1380→386줄) ⭐⭐⭐⭐
 
 **범위**: 거대 컴포넌트 리팩토링. `wiki-timeline-view.tsx` 1380줄 → 386줄 orchestrator + 9 모듈 파일 (`components/views/wiki-timeline/`: config + utils + Controls/Axis/Grid/Bar/EventMarkers/LabelColumn/Tooltip).

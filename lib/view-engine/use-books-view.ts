@@ -218,6 +218,25 @@ function applyBookGrouping(books: Book[], groupBy: GroupBy): BookGroup[] {
     return out
   }
 
+  // Alphabetical Index grouping — first letter of title. Non-letter starts
+  // bucket under "#". Mirrors group.ts:groupByFirstLetter (cross-entity).
+  if (groupBy === "firstLetter") {
+    const buckets: Record<string, Book[]> = {}
+    for (const b of books) {
+      const first = ((b.title ?? "").trim()[0] ?? "#").toUpperCase()
+      const key = /[A-Z]/.test(first) ? first : "#"
+      if (!buckets[key]) buckets[key] = []
+      buckets[key].push(b)
+    }
+    return Object.entries(buckets)
+      .sort(([x], [y]) => {
+        if (x === "#" && y !== "#") return 1
+        if (y === "#" && x !== "#") return -1
+        return x.localeCompare(y)
+      })
+      .map(([letter, items]) => ({ key: `letter-${letter}`, label: letter, books: items }))
+  }
+
   // Unknown grouping → single bucket (stable for stale state).
   return [{ key: "_all", label: "", books }]
 }
