@@ -2,7 +2,6 @@
 
 import { useMemo, useState, useEffect } from "react"
 import { cn } from "@/lib/utils"
-import { groupByInitial } from "@/lib/korean-utils"
 import { WikiGroupHeaderIcon } from "@/components/views/wiki-shared"
 import { shortRelative } from "@/lib/format-utils"
 import { setWikiViewMode } from "@/lib/wiki-view-mode"
@@ -24,7 +23,6 @@ import { PushPin } from "@phosphor-icons/react/dist/ssr/PushPin"
 import { Minus } from "@phosphor-icons/react/dist/ssr/Minus"
 import { ArrowLeft } from "@phosphor-icons/react/dist/ssr/ArrowLeft"
 import { BookOpen } from "@phosphor-icons/react/dist/ssr/BookOpen"
-import { ListBullets } from "@phosphor-icons/react/dist/ssr/ListBullets"
 import { GitMerge } from "@phosphor-icons/react/dist/ssr/GitMerge"
 import { DotsThree } from "@phosphor-icons/react/dist/ssr/DotsThree"
 import { Trash } from "@phosphor-icons/react/dist/ssr/Trash"
@@ -260,8 +258,6 @@ interface WikiListProps {
   // Filter state
   dashFilter: "all" | "articles" | "stubs"
   setDashFilter: (f: "all" | "articles" | "stubs") => void
-  showAllArticles: boolean
-  setShowAllArticles: (show: boolean) => void
 
   // Category filter
   categoryFilterLabel?: string | null
@@ -318,17 +314,12 @@ function ColumnHeaders({
   isAllSelected,
   isPartiallySelected,
   visibleColumns,
-  showAlphaIndex,
-  onToggleAlphaIndex,
 }: {
   hasSelection?: boolean
   onSelectAll?: () => void
   isAllSelected?: boolean
   isPartiallySelected?: boolean
   visibleColumns?: string[]
-  /** Index toggle state — when provided, renders an Index button next to Title */
-  showAlphaIndex?: boolean
-  onToggleAlphaIndex?: () => void
 }) {
   // undefined visibleColumns => all visible (backwards compat).
   const isVisible = (key: string) => !visibleColumns || visibleColumns.includes(key)
@@ -359,23 +350,6 @@ function ColumnHeaders({
       )}
       <span className="min-w-0 flex-1 flex items-center gap-2 pr-0">
         <span>Title</span>
-        {/* Alphabetical Index toggle — sits right next to Title
-            (the column it groups by initial letter). */}
-        {onToggleAlphaIndex && (
-          <button
-            onClick={(e) => { e.stopPropagation(); onToggleAlphaIndex() }}
-            className={cn(
-              "flex h-6 items-center gap-1 rounded-md px-1.5 text-note font-medium transition-all duration-100",
-              showAlphaIndex
-                ? "bg-foreground/10 text-foreground"
-                : "text-foreground/70 hover:bg-hover-bg hover:text-foreground"
-            )}
-            title={showAlphaIndex ? "Exit alphabetical index" : "Show alphabetical index"}
-          >
-            <ListBullets size={12} weight="bold" />
-            <span>Index</span>
-          </button>
-        )}
       </span>
       {isVisible("status") && <span className="w-[72px] shrink-0 px-2">Status</span>}
       {isVisible("tags") && <span className="w-[140px] shrink-0 px-2">Categories</span>}
@@ -678,35 +652,6 @@ function ArticleTableRow({
   )
 }
 
-/* ── Index Row (used in alphabetical view) ── */
-
-function IndexTableRow({
-  note,
-  backlinkCount,
-  onClick,
-}: {
-  note: WikiArticle
-  backlinkCount: number
-  onClick: () => void
-}) {
-  return (
-    <button
-      onClick={onClick}
-      className="flex w-full items-center px-5 py-2 hover:bg-hover-bg transition-colors duration-100 cursor-pointer text-left"
-    >
-      <span className="min-w-0 flex-1 truncate text-note text-foreground/90">
-        {note.title || "Untitled"}
-      </span>
-      <span className="w-[60px] shrink-0 text-right text-2xs tabular-nums text-muted-foreground/60">
-        {backlinkCount > 0 ? backlinkCount : "\u2014"}
-      </span>
-      <span className="w-[70px] shrink-0 text-right text-2xs tabular-nums text-muted-foreground/60">
-        {shortRelative(note.updatedAt)}
-      </span>
-    </button>
-  )
-}
-
 /* ── Empty State ── */
 
 function EmptyState() {
@@ -728,8 +673,6 @@ export function WikiList({
   backlinkCounts,
   dashFilter,
   setDashFilter,
-  showAllArticles,
-  setShowAllArticles,
   categoryFilterLabel,
   onClearCategoryFilter,
   onOpenArticle,
@@ -758,7 +701,6 @@ export function WikiList({
   activeArticleId,
 }: WikiListProps) {
   const selectionActive = selectedIds ? selectedIds.size > 0 : false
-  const groupedArticles = groupByInitial(filteredWikiNotes, (n: WikiArticle) => n.title || "Untitled")
 
   // Compute visible notes for the current filter (used for select-all)
   const visibleNotes = sortedFilteredWikiNotes.filter((note) => {
@@ -865,11 +807,10 @@ export function WikiList({
               key={tab}
               onClick={() => {
                 setDashFilter(tab)
-                setShowAllArticles(false)
               }}
               className={cn(
                 "rounded-md px-2.5 py-1.5 text-2xs font-medium transition-all duration-100",
-                dashFilter === tab && !showAllArticles
+                dashFilter === tab
                   ? tab === "stubs" ? "bg-amber-500/15 text-amber-600 dark:text-amber-400"
                     : "bg-foreground/10 text-foreground"
                   : tab === "stubs" ? "text-amber-600/80 dark:text-amber-400/80 hover:bg-hover-bg hover:text-amber-600 dark:hover:text-amber-400"
@@ -908,43 +849,14 @@ export function WikiList({
       </div>
 
       {/* ── Table Content ── */}
-      {showAllArticles ? (
-        /* ── Alphabetical Index ── */
-        <div className="flex-1 overflow-y-auto">
-          <ColumnHeaders
-            visibleColumns={visibleColumns}
-            showAlphaIndex={showAllArticles}
-            onToggleAlphaIndex={() => setShowAllArticles(!showAllArticles)}
-          />
-          <div>
-            {Array.from(groupedArticles.entries()).map(([group, articles]) => (
-              <div key={group} id={`wiki-group-${group}`}>
-                <div className="sticky top-0 z-10 bg-background py-1.5 px-5 text-2xs font-medium text-muted-foreground/70 border-b border-border-subtle">
-                  {group}
-                </div>
-                {(articles as WikiArticle[]).map(note => (
-                  <IndexTableRow
-                    key={note.id}
-                    note={note}
-                    backlinkCount={backlinkCounts.get(note.id) ?? 0}
-                    onClick={() => onOpenArticle(note.id)}
-                  />
-                ))}
-              </div>
-            ))}
-          </div>
-        </div>
-      ) : (
-        /* ── Filtered Article Table ── */
-        <div className="flex-1 overflow-y-auto">
+      {/* ── Filtered Article Table ── */}
+      <div className="flex-1 overflow-y-auto">
           <ColumnHeaders
             hasSelection={!!onSelect}
             onSelectAll={handleSelectAll}
             isAllSelected={isAllSelected}
             isPartiallySelected={isPartiallySelected}
             visibleColumns={visibleColumns}
-            showAlphaIndex={showAllArticles}
-            onToggleAlphaIndex={() => setShowAllArticles(!showAllArticles)}
           />
           {sortedFilteredWikiNotes.length === 0 ? (
             <EmptyState />
@@ -1049,8 +961,7 @@ export function WikiList({
               {dashFilter === "stubs" && (stubCount ?? 0) === 0 && <EmptyState />}
             </div>
           )}
-        </div>
-      )}
+      </div>
     </div>
   )
 }

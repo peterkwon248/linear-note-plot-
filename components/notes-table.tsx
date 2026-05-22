@@ -536,7 +536,7 @@ export function NotesTable({
   // Now: viewState.groupBy === "firstLetter" — Index lives in the grouping
   // dropdown alongside every other axis. Legacy toggle reads forward for one
   // store version (auto-promoted to groupBy on hydrate), then dropped.
-  const showAlphaIndex = viewState.groupBy === "firstLetter" || (viewState.toggles?.showAlphaIndex ?? false)
+  const showAlphaIndex = viewState.groupBy === "firstLetter"
 
   const groups = useMemo<NoteGroup[]>(() => {
     const baseGroups = isTrashView && trashFilter !== "all"

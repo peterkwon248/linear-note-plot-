@@ -138,17 +138,6 @@ export function WikiView() {
     [setViewState]
   )
 
-  // All Articles view state — alphabetical index. Lives in viewState.toggles
-  // (showAlphaIndex) so saved views preserve the index-on/off setting.
-  // Must be declared after wikiViewState/updateWikiViewState.
-  const showAllArticles = wikiViewState.toggles?.showAlphaIndex ?? false
-  const setShowAllArticles = useCallback(
-    (show: boolean) => {
-      updateWikiViewState({ toggles: { ...(wikiViewState.toggles ?? {}), showAlphaIndex: show } })
-    },
-    [wikiViewState.toggles, updateWikiViewState],
-  )
-
   // Saved view restoration — when a wiki-scoped saved view becomes active,
   // hydrate its viewState into viewStateByContext["wiki"]
   const activeViewId = useActiveViewId()
@@ -1359,8 +1348,6 @@ export function WikiView() {
               backlinkCounts={backlinkCounts}
               dashFilter={dashFilter}
               setDashFilter={setDashFilter}
-              showAllArticles={showAllArticles}
-              setShowAllArticles={setShowAllArticles}
               categoryFilterLabel={categoryFilterTagId ? wikiCategories.find(c => c.id === categoryFilterTagId)?.name ?? null : null}
               onClearCategoryFilter={() => setWikiCategoryFilter(null)}
               onOpenArticle={openArticle}

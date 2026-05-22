@@ -42,7 +42,6 @@ import { FilterPanel } from "@/components/filter-panel"
 import { DisplayPanel } from "@/components/display-panel"
 import { TEMPLATES_VIEW_CONFIG } from "@/lib/view-engine/view-configs"
 import { useTemplatesView } from "@/lib/view-engine/use-templates-view"
-import { groupByInitial } from "@/lib/korean-utils"
 import { shortRelative } from "@/lib/format-utils"
 import { TemplatesTable } from "@/components/views/templates-table"
 import { TemplateEditPage } from "@/components/views/template-edit-page"
@@ -358,21 +357,6 @@ export function TemplatesView() {
       .filter((g) => g.templates.length > 0)
   }, [groups, searchedFlat, search])
 
-  // Alphabetical Index toggle — same pattern as notes-table.tsx.
-  // When enabled, overrides groupBy and re-groups the flat list by first letter.
-  const showAlphaIndex = viewState.toggles?.showAlphaIndex ?? false
-  const onToggleAlphaIndex = useCallback(() => {
-    const next = !showAlphaIndex
-    updateViewState({ toggles: { ...(viewState.toggles ?? {}), showAlphaIndex: next } })
-  }, [showAlphaIndex, viewState.toggles, updateViewState])
-
-  const displayGroups = useMemo(() => {
-    if (!showAlphaIndex) return searchedGroups
-    const allFlat = searchedFlat
-    const map = groupByInitial(allFlat, (t) => t.name || "Untitled")
-    return Array.from(map.entries()).map(([key, templates]) => ({ key, label: key, templates }))
-  }, [showAlphaIndex, searchedGroups, searchedFlat])
-
   // Hydrate runtime filter values (label / folder / tags) — TEMPLATES_VIEW_CONFIG
   // declares empty `values: []` for these and we fill them from the store.
   const filterCategories = useMemo(() => {
@@ -580,9 +564,9 @@ export function TemplatesView() {
         </div>
       ) : viewState.viewMode !== "grid" ? (
         <TemplatesTable
-          groups={displayGroups}
+          groups={searchedGroups}
           flatTemplates={searchedFlat}
-          groupBy={showAlphaIndex ? "none" : viewState.groupBy}
+          groupBy={viewState.groupBy}
           visibleColumns={viewState.visibleColumns}
           selectedTemplateId={selectedTemplateId}
           onSelect={(id) => setSelectedTemplateId(id)}
@@ -590,8 +574,6 @@ export function TemplatesView() {
           onDelete={handleDelete}
           onTogglePin={toggleTemplatePin}
           onCreateNew={handleCreateNew}
-          showAlphaIndex={showAlphaIndex}
-          onToggleAlphaIndex={onToggleAlphaIndex}
           selectedIds={selectedIds}
           onSelectionChange={setSelectedIds}
         />

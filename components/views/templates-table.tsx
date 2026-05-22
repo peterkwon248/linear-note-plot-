@@ -32,7 +32,6 @@ import { PushPinSlash } from "@phosphor-icons/react/dist/ssr/PushPinSlash"
 import { Trash } from "@phosphor-icons/react/dist/ssr/Trash"
 import { FileText } from "@phosphor-icons/react/dist/ssr/FileText"
 import { CaretDown } from "@phosphor-icons/react/dist/ssr/CaretDown"
-import { ListBullets } from "@phosphor-icons/react/dist/ssr/ListBullets"
 import { Plus as PhPlus } from "@phosphor-icons/react/dist/ssr/Plus"
 import { Check as PhCheck } from "@phosphor-icons/react/dist/ssr/Check"
 import { Minus as PhMinus } from "@phosphor-icons/react/dist/ssr/Minus"
@@ -72,8 +71,6 @@ interface TemplatesTableProps {
   onDelete: (id: string) => void
   onTogglePin: (id: string) => void
   onCreateNew: () => void
-  showAlphaIndex: boolean
-  onToggleAlphaIndex: () => void
   // Multi-select (lifted up to templates-view)
   selectedIds: Set<string>
   onSelectionChange: (ids: Set<string>) => void
@@ -90,8 +87,6 @@ export function TemplatesTable({
   onDelete,
   onTogglePin,
   onCreateNew,
-  showAlphaIndex,
-  onToggleAlphaIndex,
   selectedIds,
   onSelectionChange,
 }: TemplatesTableProps) {
@@ -219,25 +214,7 @@ export function TemplatesTable({
             )}
           >
             {c.id === "title" ? (
-              <>
-                <span>{c.label}</span>
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    e.preventDefault()
-                    onToggleAlphaIndex()
-                  }}
-                  className={`flex h-6 items-center gap-1 rounded-md px-1.5 text-note font-medium transition-all duration-100 ${
-                    showAlphaIndex
-                      ? "bg-foreground/10 text-foreground"
-                      : "text-foreground/70 hover:bg-hover-bg hover:text-foreground"
-                  }`}
-                  title={showAlphaIndex ? "Exit alphabetical index" : "Show alphabetical index"}
-                >
-                  <ListBullets size={12} weight="bold" />
-                  <span>Index</span>
-                </button>
-              </>
+              <span>{c.label}</span>
             ) : (
               c.label
             )}
@@ -251,7 +228,7 @@ export function TemplatesTable({
           <TemplateGroupSection
             key={group.key}
             group={group}
-            showHeader={groupBy !== "none" || showAlphaIndex}
+            showHeader={groupBy !== "none"}
             activeColumns={activeColumns}
             selectedTemplateId={selectedTemplateId}
             selectedIds={selectedIds}
