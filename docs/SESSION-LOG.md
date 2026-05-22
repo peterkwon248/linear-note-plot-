@@ -6,6 +6,48 @@
 
 ---
 
+## 2026-05-22 (후속) — 다른컴퓨터/Windows, **레거시 Index 토글 제거 (PR #401) + File 독립 엔티티 브레인스토밍**
+
+> 🎯 **다음 즉시 액션 (다음 세션 시작점)**:
+>
+> P0 3개 정리됨 (TODO.md 참조). **추천 시작점 = File 독립 엔티티 PRD 작성** (작고, 결정 locked, A의 Files 부분보다 선행).
+>
+> **File 독립 엔티티** — `Attachment`(파일)를 note-scoped에서 진짜 독립 Library 엔티티로. 브레인스토밍 완료, 결정 locked:
+> - **핵심 발견 (코드 확인)**: ① 노트 contentJson은 이미 `attachment://<id>` 스킴으로 파일을 *ID 참조* — N:M 참조의 아키텍처 전제가 이미 됨 (가장 어려운 부분). ② `Attachment.noteId`는 이미 vestigial — Library 업로드=`"__library__"`, wiki 이미지=`""`, 노트 드롭만 real id. "모든 파일 note 소유" 불변식 이미 깨짐. ③ 모든 `addAttachment`가 레코드 생성 → Files Library 뷰가 소스. 파일은 `{kind:"file"}` entity event도 이미 가짐.
+> - **남은 작업**: `noteId`→`originNote` 강등 / "기존 파일 삽입" 피커(재사용) / N:M usage 인덱스(콘텐츠 `attachment://` 스캔) / `Attachment`→`File` 리네임.
+> - **결정 (사용자 confirm)**: (1) `noteId` → `originNote?: string|null` 강등 — provenance, 제거 X. (2) dedup(content-hash) — Phase 2. (3) Books 파일 접점 — fast-follow (v1 = Note/Wiki).
+> - **첫 스텝**: `.omc/plans/file-entity-prd.md` 작성 (위 결정 반영). temporal-hooks-prd보다 작은 focused PRD.
+>
+> 다른 P0: **A — 라이브러리 5종 Index 그룹핑** (Tags/Labels/Stickers/Files/References — 뷰 flat-only) / **Timeline 탭 아이콘** (작음). TODO.md P0 #2·#3.
+>
+> **머신**: 다른컴퓨터 (Windows)
+
+### 완료
+
+- **PR #401 — 레거시 alphabetical-index 토글 제거** — `showAlphaIndex`/`showAllArticles` 메커니즘 완전 제거. 6 파일(+9/−173): wiki-list(ColumnHeaders Index 버튼 + `IndexTableRow` + `showAllArticles` 렌더 분기 제거), wiki-view, templates-view, templates-table, display-panel(dead 분기), notes-table. **Index는 이제 Status와 100% 동일한 순수 Grouping 옵션** — 옛 `≡ Index` 토글 버튼 사라짐. executor-high 에이전트 작업 → diff + 빌드 독립 검증 후 머지.
+- **글로벌 엔티티 검증** — Tag/Label/Category(LOCKED #53-#58) + Sticker = global/cross-entity standalone (코드 확인). **File만 예외** — `Attachment.noteId` note-scoped. "독립 엔티티"는 `BRAINSTORM-2026-04-06.md`의 브레인스토밍이었지 LOCKED 결정 아니었음 → File 독립화 브레인스토밍으로 이어짐.
+
+### 브레인스토밍 & 큰 결정 (영구)
+
+- **File 독립 엔티티로 간다** — 위 hook의 발견·결정 참조. 핵심: `attachment://` ID 스킴 덕에 풀 리빌드가 아니라 "정직한 정리 + 피커 + usage 인덱스 + 리네임" 수준.
+- **Index = 순수 Grouping 옵션** (영구 룰 후보 #92 강화) — PR #401로 레거시 토글 완전 제거. (라이브러리 5종 A 완료 시 #92 LOCKED.)
+
+### Watch Out (다음 세션)
+
+- File 독립화 까다로운 점: 삭제+사용중 dangling ref (usage 인덱스 + soft-trash로 완화) / Books 파일 접점 현재 없을 가능성 / usage 스캔 perf (인덱스 캐시).
+- PR #401 `wiki-list.tsx` collapsed 블록 들여쓰기 한 단계 깊음 — 순수 cosmetic, 빌드/기능 무관. formatter 패스로 정리 가능.
+- A(라이브러리 Index): 뷰 flat-only가 핵심 난관.
+
+### 환경 변경
+
+- main: `af192c8` (PR #401). Store v144 무변경 (PR #400·#401 다 view-engine/UI 레이어).
+- 신규 파일: 없음 (PR #401은 순수 제거).
+
+### 머신
+다른컴퓨터 (Windows).
+
+---
+
 ## 2026-05-22 — 다른컴퓨터/Windows, **통합 시간 모델 PRD + Index→Grouping 통일 (content 5종)**
 
 > 🎯 **다음 즉시 액션 (다음 세션 시작점)**:
