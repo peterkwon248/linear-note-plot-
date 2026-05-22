@@ -8,6 +8,21 @@
 
 ---
 
+## 🚀 2026-05-22 (후속 #3) — **Display 탭 Linear segmented control + 타임라인 화살촉 제거** ⭐⭐⭐
+
+**범위**: ① Display 패널 view-mode 탭 스트립 = Linear segmented control (popover 360px 확대 + flex-1) ② 타임라인 막대 status 화살촉 제거 ③ 막대 이름·마커 clip 결정 (구현은 다음 세션).
+
+**핵심 결정 (영구)**:
+- **타임라인 막대 = 순수 수명, 이름은 좌측 라벨 컬럼 전담 (A안 확정)** — 막대 너비(수명) ↔ 이름 너비(글자수) 무관 → "항상 막대 안"은 물리적 불가. 좌측 `timeline-label-column`이 이미 이름 담당 → 막대엔 이름 제거 (구현 = 다음 세션).
+- **타임라인 status = 막대 색만** — 화살촉 폐기. 영구 룰 후보 #91 obsolete.
+- **Display 탭 = Linear segmented control** — 둥근 컨테이너 + flex-1 균등 탭 + active pill + gap seam, popover는 탭 수용 폭(360px).
+
+**완료**: `display-panel.tsx`·`view-header.tsx`(탭 스트립 + popover 360px) / `timeline-bar.tsx`·`wiki-timeline-config.ts`(화살촉·ARROW_DEPTH 제거). tsc clean. Store v144 무변경.
+
+**다음**: 타임라인 폴리시 — 막대 이름 제거(A안) + 마커 clip 수정(`LANE_TOP_PAD` 캔버스 inset, 6곳). 그 다음 File 엔티티 v1. SESSION-LOG hook 참조.
+
+---
+
 ## 🚀 2026-05-22 (후속 #2) — **File 엔티티 PRD + TODO 3건 (Timeline 아이콘 / EVENT_MARKER / 라이브러리 Index 그룹핑)** ⭐⭐⭐⭐
 
 **범위**: ① File 독립 엔티티 PRD v0.2 작성 ② P0 #3 Timeline 탭 아이콘 ③ P1 EVENT_MARKER_CONFIG 4종 ④ P0 #2 라이브러리 5종 Index 그룹핑.

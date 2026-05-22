@@ -1,6 +1,6 @@
 {
   "version": "2.0",
-  "lastUpdated": "2026-05-22T07:01:10.822Z",
+  "lastUpdated": "2026-05-22T08:37:22.047Z",
   "activeFeatures": [
     "editor",
     "wizardly-kare",
@@ -534,9 +534,9 @@
       "documents": {},
       "timestamps": {
         "started": "2026-05-22T05:56:40.024Z",
-        "lastUpdated": "2026-05-22T07:01:10.822Z"
+        "lastUpdated": "2026-05-22T08:37:22.047Z"
       },
-      "lastFile": "C:\\Users\\kwonkyunghun\\Desktop\\리니어 노트앱\\.claude\\worktrees\\stupefied-rosalind-ee038e\\components\\views\\library-view.tsx"
+      "lastFile": "C:\\Users\\kwonkyunghun\\Desktop\\리니어 노트앱\\.claude\\worktrees\\stupefied-rosalind-ee038e\\components\\view-header.tsx"
     },
     "wiki-timeline": {
       "phase": "do",
@@ -547,7 +547,7 @@
       "documents": {},
       "timestamps": {
         "started": "2026-05-22T06:25:34.203Z",
-        "lastUpdated": "2026-05-22T06:25:37.182Z"
+        "lastUpdated": "2026-05-22T08:37:05.759Z"
       },
       "lastFile": "C:\\Users\\kwonkyunghun\\Desktop\\리니어 노트앱\\.claude\\worktrees\\stupefied-rosalind-ee038e\\components\\views\\wiki-timeline\\wiki-timeline-config.ts"
     }
@@ -560,7 +560,7 @@
   "session": {
     "startedAt": "2026-03-05T00:16:19.956Z",
     "onboardingCompleted": false,
-    "lastActivity": "2026-05-22T07:01:10.822Z"
+    "lastActivity": "2026-05-22T08:37:22.047Z"
   },
   "history": [
     {
@@ -8149,6 +8149,66 @@
     },
     {
       "timestamp": "2026-05-22T07:01:10.822Z",
+      "feature": "stupefied-rosalind-ee038e",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-22T08:28:55.955Z",
+      "feature": "stupefied-rosalind-ee038e",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-22T08:28:58.377Z",
+      "feature": "stupefied-rosalind-ee038e",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-22T08:36:52.841Z",
+      "feature": "stupefied-rosalind-ee038e",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-22T08:36:54.540Z",
+      "feature": "stupefied-rosalind-ee038e",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-22T08:36:56.242Z",
+      "feature": "wiki-timeline",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-22T08:36:59.269Z",
+      "feature": "wiki-timeline",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-22T08:37:01.697Z",
+      "feature": "wiki-timeline",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-22T08:37:04.221Z",
+      "feature": "wiki-timeline",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-22T08:37:05.759Z",
+      "feature": "wiki-timeline",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-22T08:37:22.047Z",
       "feature": "stupefied-rosalind-ee038e",
       "phase": "do",
       "action": "updated"

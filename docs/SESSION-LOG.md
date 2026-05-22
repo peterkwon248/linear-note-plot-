@@ -6,6 +6,47 @@
 
 ---
 
+## 2026-05-22 (후속 #3) — 다른컴퓨터/Windows, **Display 탭 Linear segmented control + 타임라인 화살촉 제거 / 막대 이름·마커 결정**
+
+> 🎯 **다음 즉시 액션 (다음 세션 시작점)** — 둘 다 사용자 확정, 다음 컴퓨터에서 구현:
+>
+> **타임라인 폴리시 — `timeline-bar` 영역, 한 PR로 묶을 만함**:
+>
+> **(A) 막대 이름 제거**: 타임라인 막대 = 순수 수명 표시. 이름은 좌측 라벨 컬럼(`timeline-label-column.tsx` — status 아이콘+이름+생성일 이미 표시)이 전담. `timeline-bar.tsx`에서 inside-title 블록(`{titleInside && ...}` — clipPath + `<text>`)과 outside-title 블록(`{!titleInside && <text>}`) 제거 → unused化되는 `titleInside`/`titleLabel`/`outsideTitleX` 정리. `wiki-timeline-config.ts` ZOOM_CONFIGS의 `titleThreshold`도 unused → ZoomConfig 인터페이스 + 4 config에서 제거. **이유**: 막대 너비=수명, 이름 너비=글자수 → 무관해 "항상 안에"는 물리적 불가. 좌측 컬럼이 이미 이름 담당 → 막대는 비움 (Reticle/Gantt 표준).
+>
+> **(B) 마커 clip 수정**: lane 0(맨 위) 이벤트 마커가 SVG 상단(y=0)에서 잘림 — 마커는 막대 위(`markerY = cy − BAR_HEIGHT/2 + EVENT_MARKER_Y_OFFSET`, OFFSET −12)에 그려지는데 lane 0은 `cy=26 → markerY≈0`, ring r=7이 y<0 넘침. **해결 = 캔버스 상단 inset**: `wiki-timeline-config.ts`에 `LANE_TOP_PAD`(≈14) 신설 후 lane Y 계산 6곳 일괄 가산 — ① `timeline-bar.tsx` `cy`(~line 63) + 행 hover bg `y={laneIndex*LANE_HEIGHT}`(~line 128) ② `timeline-event-markers.tsx` `cy`(~line 50) ③ `timeline-grid.tsx` lane separator `(laneIndex+1)*LANE_HEIGHT`(~line 130/132) ④ `timeline-tooltip.tsx` 두 tooltip `top:`(~line 56, ~166) ⑤ `wiki-timeline-view.tsx` `svgHeight`(~line 228-229) ⑥ `timeline-label-column.tsx` 컬럼 상단 `LANE_TOP_PAD` 높이 spacer div. **검증**: tooltip·grid 라인·라벨 컬럼이 막대와 정렬되는지 + tsc/build.
+>
+> 그 다음 P0 = **File 엔티티 v1 구현** (`.omc/plans/file-entity-prd.md` v0.2 — TODO P0 #2).
+>
+> **머신**: 다른컴퓨터 (Windows). 다음도 다른 컴퓨터 예정.
+
+### 완료
+
+- **Display 패널 탭 = Linear segmented control** — `view-header.tsx` Display popover `w-[300px]`→`w-[360px]` (4탭 수용 폭) + `display-panel.tsx` view-mode 탭 스트립 `flex-1`(popover 꽉 채움) + `gap-0.5` seam + inactive hover 배경 + `transition-colors`. 직전 후속 #2의 P0 #3(아이콘 교체) 위 간격/정렬 폴리시. (중간에 content-width 시도 → 좁은 popover 넘쳐 "Timeline" 잘림 → popover 확대 + flex-1로 정착.)
+- **타임라인 막대 status 화살촉 제거** — `timeline-bar.tsx` Article arrowhead `<polygon>` 제거 → 모든 막대 둥근 끝 통일. `wiki-timeline-config.ts` `ARROW_DEPTH` + 관련(`endShapeRightX`/`endOpacity`) 정리. status = 막대 색(초록 Article/주황 Stub)만.
+
+### 브레인스토밍 & 큰 결정 (영구)
+
+- **타임라인 막대 = 순수 수명, 이름은 좌측 라벨 컬럼 전담 (A안 확정)** — 막대 너비(수명) ↔ 이름 너비(글자수) 무관 → "항상 막대 안"은 물리적 불가. 좌측 컬럼이 이미 모든 이름 표시 → 막대엔 이름 없음. 구현 = 다음 세션 (위 hook).
+- **타임라인 status = 막대 색만** — 화살촉 폐기 (영구 룰 후보 #91 obsolete). status 단일 인코딩.
+- **Display 탭 = Linear segmented control 패턴** — 둥근 컨테이너 + flex-1 균등 탭 + active pill + gap seam. popover는 탭 수용 가능하게 충분히 넓게.
+
+### Watch Out (다음 세션)
+
+- 마커 clip 수정 = `LANE_TOP_PAD`를 6곳에 일관 가산. 한 곳 누락 시 tooltip/grid/라벨컬럼이 막대와 어긋남 — 정렬 검증 필수.
+- A안 후 `titleThreshold` 등 unused 정리 — `tsc --noEmit`로 확인.
+- 화살촉 제거로 영구 룰 후보 #91 폐기 (TODO LOCKED 반영함).
+- PR #403 라이브러리 Index 그룹핑 시각 스모크 테스트 여전히 미완.
+
+### 환경 변경
+
+- Store v144 무변경 (전부 UI 레이어). 이번 후속 #3 = PR #403 이후 follow-up PR.
+
+### 머신
+다른컴퓨터 (Windows).
+
+---
+
 ## 2026-05-22 (후속 #2) — 다른컴퓨터/Windows, **File 엔티티 PRD + TODO 3건 (Timeline 아이콘 / EVENT_MARKER / 라이브러리 Index 그룹핑)**
 
 > 🎯 **다음 즉시 액션 (다음 세션 시작점)**:
