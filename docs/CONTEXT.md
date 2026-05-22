@@ -51,6 +51,18 @@
 
 ---
 
+## 🚀 2026-05-22 (후속) — 레거시 Index 토글 제거 (PR #401) + File 독립 엔티티 브레인스토밍 ⭐⭐⭐⭐
+
+**범위**: PR #401 (레거시 alphabetical-index 토글 제거) + File 독립 엔티티 브레인스토밍.
+
+**핵심 결정**:
+- **Index = 순수 Grouping 옵션** — 옛 `showAlphaIndex`/`showAllArticles` 토글 메커니즘 PR #401로 완전 제거 (wiki-list/wiki-view/templates-view/templates-table/display-panel/notes-table 6파일). Index는 Status와 100% 동일하게 동작 (영구 룰 후보 #92 강화).
+- **File 독립 엔티티 방향 확정** — `Attachment`를 note-scoped에서 진짜 독립 Library 엔티티로. `attachment://` ID 스킴(콘텐츠가 이미 파일을 ID 참조) + vestigial `noteId` 덕에 풀 리빌드 아닌 "정직한 정리" 수준. 결정: `noteId`→`originNote` 강등 / dedup Phase 2 / Books fast-follow. PRD 작성이 다음.
+
+**다음**: File 독립 엔티티 PRD (`.omc/plans/file-entity-prd.md`) / A 라이브러리 Index 그룹핑 / Timeline 탭 아이콘.
+
+---
+
 ## 🚀 2026-05-22 — 통합 시간 모델 PRD + Index→Grouping 통일 (content 5종) ⭐⭐⭐⭐⭐
 
 **범위**: ① `.omc/plans/unified-temporal-hooks-prd.md` (DRAFT v0.1) — snooze/SRS/plannedDate/staleness를 단일 `Hook` 모델로 통합하는 설계 ② Index를 가짜 DP 칩에서 Grouping으로 통일 ③ 빌드 에러 픽스.

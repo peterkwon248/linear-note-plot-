@@ -8,6 +8,21 @@
 
 ---
 
+## 🚀 2026-05-22 (후속) — **레거시 Index 토글 제거 (PR #401) + File 독립 엔티티 브레인스토밍** ⭐⭐⭐⭐
+
+**범위**: ① PR #401 — 레거시 `showAlphaIndex`/`showAllArticles` 알파벳-인덱스 토글 메커니즘 완전 제거 (6 파일, +9/−173). ② File(Attachment)를 진짜 독립 Library 엔티티로 만드는 브레인스토밍 — 결정 locked.
+
+**핵심 결정 (영구)**:
+- **Index = 순수 Grouping 옵션** — PR #401로 옛 토글 버튼 + `showAllArticles` 렌더 경로 완전 제거. Index는 Status 등과 차별 없는 그룹핑 옵션 (영구 룰 후보 #92 — 라이브러리 5종 완료 시 LOCKED).
+- **File 독립 엔티티로 간다** — `attachment://<id>` 스킴 덕에 콘텐츠는 이미 파일을 ID 참조 + `Attachment.noteId`는 이미 vestigial(`""`/`"__library__"` sentinel) → 풀 리빌드 아님. 작업: `noteId`→`originNote` 강등 / "기존 파일 삽입" 피커 / N:M usage 인덱스 / `Attachment`→`File` 리네임. 결정: noteId 강등(제거 X) / dedup Phase 2 / Books fast-follow.
+- **글로벌 엔티티 현황** — Tag/Label/Category(LOCKED #53-#58) + Sticker = standalone cross-entity. File만 note-scoped 예외였음 (→ 위 독립화).
+
+**완료**: PR #401 (executor-high 에이전트 작업, diff + 빌드 독립 검증 후 머지). main `af192c8`. Store 무변경.
+
+**다음**: File 독립 엔티티 PRD 작성 (`.omc/plans/file-entity-prd.md`) / A 라이브러리 Index 그룹핑 / Timeline 탭 아이콘. SESSION-LOG hook 참조.
+
+---
+
 ## 🚀 2026-05-22 — **통합 시간 모델 PRD + Index→Grouping 통일 (content 5종)** ⭐⭐⭐⭐⭐
 
 **범위**: ① 통합 시간 모델 심층 브레인스토밍 → `.omc/plans/unified-temporal-hooks-prd.md` (DRAFT v0.1) ② Index를 가짜 DP 칩에서 Grouping으로 통일 (Wiki/Templates/Books — Notes/Categories는 기존 정합) ③ 빌드 에러 픽스 (worktree node_modules).
