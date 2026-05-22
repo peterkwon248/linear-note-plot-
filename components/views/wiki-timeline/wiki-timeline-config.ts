@@ -123,8 +123,6 @@ export const TICK_STEP_DAYS: Record<ZoomLevel, number> = {
 export const LANE_HEIGHT = 52
 export const BAR_HEIGHT = 28
 export const BAR_RADIUS = 8
-/** Article arrowhead: how far the tip extends past the bar's right edge (px). */
-export const ARROW_DEPTH = 9
 export const AXIS_HEIGHT = 32
 export const LABEL_COL_WIDTH = 200
 export const TODAY_LINE_COLOR = "var(--border-strong)"
