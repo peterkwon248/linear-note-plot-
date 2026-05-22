@@ -2,7 +2,7 @@
 
 /**
  * timeline-grid.tsx — static SVG background layers rendered inside the canvas
- * <svg>: bar-shadow filter <defs>, weekend stripes, today tint, grid lines,
+ * <svg>: weekend stripes, today tint, grid lines,
  * month boundaries, lane separators, future stripe, and the NOW line + dot.
  * Extracted from WikiTimelineView's main render.
  */
@@ -42,13 +42,6 @@ export function TimelineGrid({
 }: TimelineGridProps) {
   return (
     <>
-      {/* ── Global defs: bar drop-shadow filter ── */}
-      <defs>
-        <filter id="bar-shadow" x="-5%" y="-50%" width="110%" height="200%">
-          <feDropShadow dx="0" dy="1.2" stdDeviation="1" floodColor="#000" floodOpacity="0.35" />
-        </filter>
-      </defs>
-
       {/* ── A1: Weekend column stripes (Sat=6, Sun=0) ── */}
       {allDays.map((day, i) => {
         const dow = day.getDay()

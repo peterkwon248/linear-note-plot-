@@ -52,6 +52,8 @@ import type { Icon } from "@phosphor-icons/react"
 /* ── Types ───────────────────────────────────────────────── */
 
 export type ZoomLevel = "week" | "month" | "quarter" | "year"
+/** All timeline modes — the 4 fixed zooms + the data-fitted "all" overview. */
+export type TimelineMode = ZoomLevel | "all"
 
 /* ── Zoom config ─────────────────────────────────────────── */
 
@@ -63,8 +65,6 @@ export interface ZoomConfig {
   totalDays: number
   /** Minimum bar width (px) — proportional to pxPerDay to avoid info distortion. */
   minBarWidth: number
-  /** If bar width >= this, render title inside; else outside dot. */
-  titleThreshold: number
   formatTick: (d: Date) => string
 }
 
@@ -74,7 +74,6 @@ export const ZOOM_CONFIGS: Record<ZoomLevel, ZoomConfig> = {
     pxPerDay: 80,
     totalDays: 14,
     minBarWidth: 24,
-    titleThreshold: 60,
     formatTick: (d) =>
       d.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" }),
   },
@@ -83,7 +82,6 @@ export const ZOOM_CONFIGS: Record<ZoomLevel, ZoomConfig> = {
     pxPerDay: 32,
     totalDays: 60,
     minBarWidth: 18,
-    titleThreshold: 60,
     formatTick: (d) =>
       d.toLocaleDateString("en-US", { month: "short", day: "numeric" }),
   },
@@ -92,7 +90,6 @@ export const ZOOM_CONFIGS: Record<ZoomLevel, ZoomConfig> = {
     pxPerDay: 10,
     totalDays: 120,
     minBarWidth: 12,
-    titleThreshold: 50,
     formatTick: (d) =>
       d.toLocaleDateString("en-US", { month: "short", day: "numeric" }),
   },
@@ -101,13 +98,19 @@ export const ZOOM_CONFIGS: Record<ZoomLevel, ZoomConfig> = {
     pxPerDay: 3,
     totalDays: 400,
     minBarWidth: 8,
-    titleThreshold: 40,
     formatTick: (d) =>
       d.toLocaleDateString("en-US", { month: "short", year: "2-digit" }),
   },
 }
 
-export const ZOOM_ORDER: ZoomLevel[] = ["week", "month", "quarter", "year"]
+/** Mode buttons in the controls bar, in order. */
+export const TIMELINE_MODES: { mode: TimelineMode; label: string }[] = [
+  { mode: "week", label: "Week" },
+  { mode: "month", label: "Month" },
+  { mode: "quarter", label: "Quarter" },
+  { mode: "year", label: "Year" },
+  { mode: "all", label: "All" },
+]
 
 /* ── Tick step (collision avoidance) ────────────────────── */
 
@@ -121,7 +124,8 @@ export const TICK_STEP_DAYS: Record<ZoomLevel, number> = {
 /* ── Constants ───────────────────────────────────────────── */
 
 export const LANE_HEIGHT = 52
-export const BAR_HEIGHT = 28
+/** Bar thickness — a thin line; event chips are larger and visually dominate. */
+export const BAR_HEIGHT = 5
 export const BAR_RADIUS = 8
 export const AXIS_HEIGHT = 32
 export const LABEL_COL_WIDTH = 200
@@ -182,11 +186,11 @@ export const EVENT_MARKER_RING_R = 7
 /** Icon size (Phosphor `size` prop). Roughly ring_r * 1.4 for nice fit. */
 export const EVENT_MARKER_ICON_SIZE = 9
 
-/** Y offset above the bar centerline (negative = above) */
-export const EVENT_MARKER_Y_OFFSET = -12
+/** Y offset from the bar centerline (0 = centered on the bar; negative = above) */
+export const EVENT_MARKER_Y_OFFSET = 0
 
-/** Per-event horizontal offset when stacking same-day events */
-export const EVENT_MARKER_STACK_GAP = 14
+/** Per-event horizontal offset when stacking same-day events (> chip diameter so white borders don't merge) */
+export const EVENT_MARKER_STACK_GAP = 18
 
 /** Max markers per day before showing +N overflow */
 export const EVENT_MARKER_MAX_PER_DAY = 4

@@ -2,22 +2,22 @@
 
 /**
  * timeline-controls.tsx — the controls bar (prev/next, period label,
- * Events toggle, zoom segmented control). Extracted from WikiTimelineView.
+ * Events toggle, mode segmented control). Extracted from WikiTimelineView.
  */
 
 import { CaretLeft } from "@phosphor-icons/react/dist/ssr/CaretLeft"
 import { CaretRight } from "@phosphor-icons/react/dist/ssr/CaretRight"
 import { cn } from "@/lib/utils"
 import { periodLabel } from "./wiki-timeline-utils"
-import { ZOOM_ORDER, ZOOM_CONFIGS, type ZoomLevel } from "./wiki-timeline-config"
+import { TIMELINE_MODES, type TimelineMode } from "./wiki-timeline-config"
 
 export interface TimelineControlsProps {
-  zoom: ZoomLevel
+  zoom: TimelineMode
   anchor: Date
   showEvents: boolean
   onNavigate: (dir: -1 | 1) => void
   onGoToToday: () => void
-  onSetZoom: (z: ZoomLevel) => void
+  onSetZoom: (z: TimelineMode) => void
   onToggleEvents: () => void
 }
 
@@ -30,11 +30,18 @@ export function TimelineControls({
   onSetZoom,
   onToggleEvents,
 }: TimelineControlsProps) {
+  // "All" fits the whole span — there is no period to navigate.
+  const navDisabled = zoom === "all"
+
   return (
     <div className="flex shrink-0 items-center gap-2 border-b border-border-subtle px-4 py-2">
       <button
         onClick={() => onNavigate(-1)}
-        className="flex h-6 w-6 items-center justify-center rounded-md text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors"
+        disabled={navDisabled}
+        className={cn(
+          "flex h-6 w-6 items-center justify-center rounded-md text-muted-foreground transition-colors",
+          navDisabled ? "opacity-30" : "hover:bg-secondary hover:text-foreground",
+        )}
         aria-label="Previous period"
       >
         <CaretLeft size={12} weight="bold" />
@@ -42,15 +49,23 @@ export function TimelineControls({
 
       <button
         onClick={onGoToToday}
-        className="min-w-[140px] text-center text-sm font-medium text-foreground hover:text-foreground/80 transition-colors"
-        title="Click to return to today"
+        disabled={navDisabled}
+        className={cn(
+          "min-w-[140px] text-center text-sm font-medium text-foreground transition-colors",
+          navDisabled ? "opacity-50" : "hover:text-foreground/80",
+        )}
+        title={navDisabled ? undefined : "Click to return to today"}
       >
         {periodLabel(anchor, zoom)}
       </button>
 
       <button
         onClick={() => onNavigate(1)}
-        className="flex h-6 w-6 items-center justify-center rounded-md text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors"
+        disabled={navDisabled}
+        className={cn(
+          "flex h-6 w-6 items-center justify-center rounded-md text-muted-foreground transition-colors",
+          navDisabled ? "opacity-30" : "hover:bg-secondary hover:text-foreground",
+        )}
         aria-label="Next period"
       >
         <CaretRight size={12} weight="bold" />
@@ -74,18 +89,18 @@ export function TimelineControls({
       <div className="h-4 w-px bg-border-subtle" />
 
       <div className="flex items-center gap-0.5 rounded-md border border-border-subtle p-0.5 text-2xs">
-        {ZOOM_ORDER.map((z) => (
+        {TIMELINE_MODES.map(({ mode, label }) => (
           <button
-            key={z}
-            onClick={() => onSetZoom(z)}
+            key={mode}
+            onClick={() => onSetZoom(mode)}
             className={cn(
               "rounded px-2 py-0.5 transition-colors",
-              zoom === z
+              zoom === mode
                 ? "bg-secondary text-foreground"
                 : "text-muted-foreground hover:text-foreground",
             )}
           >
-            {ZOOM_CONFIGS[z].label}
+            {label}
           </button>
         ))}
       </div>

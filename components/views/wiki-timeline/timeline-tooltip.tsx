@@ -106,8 +106,9 @@ export function TimelineTooltip({
 
           // During drag — show live planning date
           if (dragState && tooltipArticle.id === dragState.id) {
+            // bar right edge covers whole day cells → horizon day = days - 1
             const days = Math.round(dragState.currentEndX / cfg.pxPerDay)
-            const liveDragDate = startOfDay(addDays(winStart, days))
+            const liveDragDate = startOfDay(addDays(winStart, days - 1))
             const rel = relativeDateLabel(liveDragDate, now)
             return (
               <span className="text-muted-foreground">

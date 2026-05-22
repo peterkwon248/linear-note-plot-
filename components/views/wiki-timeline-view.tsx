@@ -19,7 +19,7 @@ import {
   LANE_HEIGHT,
   LABEL_COL_WIDTH,
   ZOOM_CONFIGS,
-  type ZoomLevel,
+  type TimelineMode,
   type TimelineTooltipState,
   type TimelineEventTooltipState,
   type TimelineDragState,
@@ -33,6 +33,7 @@ import {
   buildDayRange,
   buildMonthBoundaries,
   laneArticles,
+  computeAllFit,
 } from "./wiki-timeline/wiki-timeline-utils"
 import { TimelineControls } from "./wiki-timeline/timeline-controls"
 import { TimelineAxis } from "./wiki-timeline/timeline-axis"
@@ -65,7 +66,7 @@ export function WikiTimelineView({
 }: WikiTimelineViewProps) {
   const now = useMemo(() => new Date(), [])
 
-  const [zoom, setZoom] = useState<ZoomLevel>("month")
+  const [zoom, setZoom] = useState<TimelineMode>("all")
   const [anchor, setAnchor] = useState<Date>(() => startOfDay(now))
   const [tooltip, setTooltip] = useState<TimelineTooltipState | null>(null)
   /** B1: hovered article id — drives stroke ring + row highlight */
@@ -80,21 +81,31 @@ export function WikiTimelineView({
   const bodyRef = useRef<HTMLDivElement>(null)
   const canvasScrollRef = useRef<HTMLDivElement>(null)
   const [viewportH, setViewportH] = useState(0)
-
-  const cfg = ZOOM_CONFIGS[zoom]
-  const winStart = useMemo(() => windowStart(anchor, zoom), [anchor, zoom])
-  const winEnd = useMemo(() => addDays(winStart, cfg.totalDays), [winStart, cfg.totalDays])
-
-  const canvasWidth = cfg.pxPerDay * cfg.totalDays
+  const [viewportW, setViewportW] = useState(0)
 
   const validArticles = useMemo(
     () => articles.filter((a) => safeDate(a.createdAt) !== null),
     [articles],
   )
 
+  /** "All" mode: data-fitted config + winStart. Computed always (cheap); used when zoom === "all". */
+  const allFit = useMemo(
+    () => computeAllFit(validArticles, Math.max((viewportW || 1000) - LABEL_COL_WIDTH, 1), now),
+    [validArticles, viewportW, now],
+  )
+
+  const cfg = zoom === "all" ? allFit.cfg : ZOOM_CONFIGS[zoom]
+  const winStart = useMemo(
+    () => (zoom === "all" ? allFit.winStart : windowStart(anchor, zoom)),
+    [zoom, allFit, anchor],
+  )
+  const winEnd = useMemo(() => addDays(winStart, cfg.totalDays), [winStart, cfg.totalDays])
+
+  const canvasWidth = cfg.pxPerDay * cfg.totalDays
+
   const lanes = useMemo(
-    () => laneArticles(validArticles, winStart, zoom),
-    [validArticles, winStart, zoom],
+    () => laneArticles(validArticles, winStart, cfg.pxPerDay, cfg.minBarWidth),
+    [validArticles, winStart, cfg.pxPerDay, cfg.minBarWidth],
   )
 
   /** Events for each laned article, filtered to current window. Stable per render. */
@@ -136,7 +147,10 @@ export function WikiTimelineView({
   useEffect(() => {
     const el = bodyRef.current
     if (!el) return
-    const measure = () => setViewportH(el.clientHeight)
+    const measure = () => {
+      setViewportH(el.clientHeight)
+      setViewportW(el.clientWidth)
+    }
     measure()
     const ro = new ResizeObserver(measure)
     ro.observe(el)
@@ -162,8 +176,10 @@ export function WikiTimelineView({
     }
     function onUp(e: PointerEvent) {
       if (e.pointerId !== dragState!.pointerId) return
+      // currentEndX is the bar's right edge = (horizonDayIdx + 1) * pxPerDay
+      // (the bar covers whole day cells), so the horizon day itself is days - 1.
       const days = Math.round(dragState!.currentEndX / cfg.pxPerDay)
-      const date = startOfDay(addDays(winStart, days))
+      const date = startOfDay(addDays(winStart, days - 1))
       const iso = date.toISOString()
       usePlotStore.getState().setWikiArticlePlannedDate(dragState!.id, iso)
       setDragState(null)
@@ -195,10 +211,11 @@ export function WikiTimelineView({
 
   const navigate = useCallback(
     (dir: -1 | 1) => {
+      if (zoom === "all") return // "all" fits the whole span — nothing to navigate
       const stepDays = Math.round(cfg.totalDays * 0.4)
       setAnchor((prev) => addDays(prev, dir * stepDays))
     },
-    [cfg.totalDays],
+    [zoom, cfg.totalDays],
   )
 
   const goToToday = useCallback(() => {
@@ -324,7 +341,6 @@ export function WikiTimelineView({
                     selectedIds={selectedIds}
                     hoveredId={hoveredId}
                     dragState={dragState}
-                    cfg={cfg}
                     nowX={nowX}
                     canvasWidth={canvasWidth}
                     setHoveredId={setHoveredId}
@@ -335,12 +351,13 @@ export function WikiTimelineView({
                   />
                 ))}
 
-                {/* Event markers (above bars) */}
+                {/* Start chip (always shown) + activity markers (hidden when the Events toggle is off) */}
                 {lanes.map((item, laneIndex) => (
                   <TimelineEventMarkers
                     key={`events-${item.article.id}`}
                     article={item.article}
                     laneIndex={laneIndex}
+                    barX={item.x}
                     eventsByArticleId={eventsByArticleId}
                     cfg={cfg}
                     winStart={winStart}
