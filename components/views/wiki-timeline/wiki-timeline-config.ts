@@ -40,6 +40,10 @@ import { StackPlus } from "@phosphor-icons/react/dist/ssr/StackPlus"
 import { StackMinus } from "@phosphor-icons/react/dist/ssr/StackMinus"
 import { ArrowsLeftRight } from "@phosphor-icons/react/dist/ssr/ArrowsLeftRight"
 import { Paperclip } from "@phosphor-icons/react/dist/ssr/Paperclip"
+import { ArrowsMerge } from "@phosphor-icons/react/dist/ssr/ArrowsMerge"
+import { ArrowsSplit } from "@phosphor-icons/react/dist/ssr/ArrowsSplit"
+import { Scissors } from "@phosphor-icons/react/dist/ssr/Scissors"
+import { ArrowsInLineVertical } from "@phosphor-icons/react/dist/ssr/ArrowsInLineVertical"
 import { DotOutline } from "@phosphor-icons/react/dist/ssr/DotOutline"
 import { WIKI_STATUS_HEX } from "@/lib/colors"
 import type { WikiArticle, EntityEventType } from "@/lib/types"
@@ -160,6 +164,12 @@ export const EVENT_MARKER_CONFIG: Partial<Record<EntityEventType, MarkerConfig>>
   // Attachments
   attachment_added:   { icon: Paperclip, color: "#06b6d4", label: "Attachment added" },
   attachment_removed: { icon: Paperclip, color: "#06b6d4", label: "Attachment removed" },
+  // Composition (wiki article structure)
+  merged:    { icon: ArrowsMerge, color: "#ec4899", label: "Merged" },
+  unmerged:  { icon: ArrowsSplit, color: "#ec4899", label: "Unmerged" },
+  split:     { icon: Scissors,    color: "#ec4899", label: "Split" },
+  // Section
+  section_collapsed: { icon: ArrowsInLineVertical, color: "var(--muted-foreground)", label: "Section collapsed" },
 }
 
 export const EVENT_MARKER_FALLBACK: MarkerConfig = {
