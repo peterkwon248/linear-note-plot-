@@ -8,6 +8,23 @@
 
 ---
 
+## 🚀 2026-05-23 — **타임라인 비주얼 리디자인 (얇은 선 / 스타트칩 / status 색) + "All" 모드** ⭐⭐⭐⭐⭐
+
+**범위**: 사용자와 다단계 브레인스토밍·반복으로 타임라인 막대/마커/색 전면 재설계. 단일 PR, 8파일 (+224/−141, 전부 `components/views/wiki-timeline*`). Store v144 무변경.
+
+**핵심 결정 (영구)**:
+- **타임라인 막대 = 얇은 선, 이벤트 칩이 주인공** — 막대는 "정보 컨테이너"가 아님(이름 없음). 막대 일 = 길이(수명) + 색(status) + 그라데이션(과거/미래). `BAR_HEIGHT` 28→5.
+- **스타트칩 = 막대 고유 origin 요소 (이벤트 아님)** — `created`는 *활동*이 아니라 *수명 시작 경계*. 막대 왼쪽 끝에 항상 렌더 (이벤트 로그/window 필터/Events 토글 무관). `created` 이벤트는 별도 마커 X.
+- **선 색 = status 아이콘 색 일치** — stub 주황 `#f97316` / article 에메랄드 `#10b981` (`WIKI_STATUS_HEX`). 중립 회색 시도 → 라벨 컬럼 컬러 아이콘과 따로 놀아 폐기.
+- **"All" 모드 = fit-to-content overview** — 5번째 timeline 모드, 기본값. 전체 content span을 viewport에 맞춤. readability floor(6px/day)로 거대 데이터 degrade. viewport-fit은 *옵션*이면 antipattern 아님.
+- **이벤트 마커 = 막대 안(중앙선)** — `EVENT_MARKER_Y_OFFSET` 0, 칩 흰 테두리(어떤 막대 색 위에서도 분리).
+
+**완료**: `wiki-timeline-config.ts`(`TimelineMode` 타입·`TIMELINE_MODES`·`BAR_HEIGHT` 5) / `wiki-timeline-utils.ts`(`computeAllFit`·`laneArticles` day-quantize·`buildTicks` adaptive) / `wiki-timeline-view.tsx`(cfg/winStart "all" 분기·viewport 폭 측정) / `timeline-bar`·`timeline-event-markers`·`timeline-grid`·`timeline-tooltip`·`timeline-controls`. tsc exit 0.
+
+**다음**: P0 #1 = Display Properties / Grouping / Ordering 신뢰성 (전 view mode 감사, 계획부터). #2 = Notes/Books Timeline 모드. #3 = File 엔티티 v1. SESSION-LOG 2026-05-23 hook 참조.
+
+---
+
 ## 🚀 2026-05-22 (후속 #3) — **Display 탭 Linear segmented control + 타임라인 화살촉 제거** ⭐⭐⭐
 
 **범위**: ① Display 패널 view-mode 탭 스트립 = Linear segmented control (popover 360px 확대 + flex-1) ② 타임라인 막대 status 화살촉 제거 ③ 막대 이름·마커 clip 결정 (구현은 다음 세션).

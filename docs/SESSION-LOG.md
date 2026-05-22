@@ -6,6 +6,72 @@
 
 ---
 
+## 2026-05-23 — 다른컴퓨터/Windows, **타임라인 비주얼 리디자인 (얇은 선 / 스타트칩 / status 색) + "All" 모드 신설**
+
+> 🎯 **다음 즉시 액션 (다음 세션 시작점)**: **Display Properties / Grouping / Ordering 신뢰성 — 전 view mode 감사 + 일일이 수정. 단, 코드 수정 전 "계획부터".**
+>
+> **사용자 의도 (요약 인용)**: "타임라인의 디스플레이 프로퍼티스가 제대로 작동을 안 함. 타임라인뿐 아니라 그리드·보드 모드에서도 가끔 벌어짐. 완벽하고 확실한 해결책 필요. 필터는 테스트해보니 웬만한 건 다 됨 — **DP / 그룹핑 / 오더링**이 문제. 코드 전체를 아주 꼼꼼하게 (토큰 소모 감수) 확인하고 일일이 하나하나 수정해야 할 듯. 우선 계획부터."
+>
+> **첫 스텝** (다른 머신에서 바로 — 1번은 *계획 수립*, 코드 수정 X):
+> 1. `lib/view-engine/` 읽기 — view config + `ViewState` 타입 구조 (filter/grouping/ordering/displayProperties가 어떻게 정의·전달되는지).
+> 2. 각 view mode 컴포넌트가 viewState를 어떻게 소비하는지 추적: list(`notes-table` 등) / board / gallery / timeline(`wiki-timeline-view.tsx`).
+> 3. DP·grouping·ordering이 끊기는 지점 식별 → 모드별 작동/미작동 표 → 수정 계획 문서.
+>
+> **데이터 흐름**: view-engine이 `ViewState`(filter/grouping/ordering/displayProperties) 보유 → 각 view 컴포넌트가 prop으로 받아 적용. 필터는 대체로 OK = 파이프라인 일부는 동작. DP/grouping/ordering만 모드별로 불안정.
+>
+> **위험 + 가설**: `WikiTimelineView`는 `viewState` prop을 받지만 grouping/ordering/DP를 **거의 안 씀** — 막대를 createdAt 순으로만 배치. "타임라인에서 DP 안 됨"의 유력 원인 = 타임라인이 viewState를 미구현. ⚠️ 가설 — 코드로 검증. + "날짜 배치 뷰에서 grouping/ordering이 의미가 있나?"부터 정의 필요.
+>
+> **참고 파일**: `lib/view-engine/` (types·configs), `components/views/wiki-timeline-view.tsx` (viewState 미사용 확인), grid/board/gallery view 컴포넌트, `components/views/display-panel.tsx` (DP UI).
+>
+> **2번째 P0**: 노트·북에도 Timeline을 디스플레이 모드로 추가 (현재 Timeline = Wiki 전용). 사용자 명시 — "타임라인 완성됐으니 노트랑 북에도 넣어야".
+>
+> **머신**: 다른컴퓨터 (Windows). 다음도 다른 컴퓨터 예정.
+> **현재 main HEAD**: 이번 세션 PR 머지 후 = 타임라인 리디자인 PR. (직전 = PR #404 `5808276`)
+> **branch worktree**: 새 worktree 생성 권장.
+
+### 완료 — 타임라인 비주얼 리디자인 (단일 PR, 8파일 +224/−141, 전부 `components/views/wiki-timeline*`)
+
+사용자와 다단계 브레인스토밍·반복으로 타임라인 막대/마커/색 전면 재설계:
+- **막대 이름 제거** — `timeline-bar.tsx` inside/outside title 블록 제거 + `wiki-timeline-config.ts` `titleThreshold` 제거. 이름은 좌측 라벨 컬럼 전담.
+- **이벤트 마커 = 막대 위 → 막대 안(중앙선)** — `EVENT_MARKER_Y_OFFSET` −12→0. 칩에 흰 테두리(1.25px) → 어떤 막대 색 위에서도 분리. `STACK_GAP` 14→18 (같은날 칩 테두리 merge 방지).
+- **막대 day-quantize** — `laneArticles`가 막대를 날짜-칸 단위 (createdDay~horizonDay 셀). drag off-by-one 정합 (막대 우측 = `(horizonDay+1)`칸 → onUp/tooltip `days−1`).
+- **스타트칩 = 막대 고유 origin 노드** — `timeline-event-markers.tsx`가 막대 왼쪽 끝(`barX`)에 항상 스타트칩 렌더. `created` 이벤트는 별도 마커에서 제외. Events 토글 무관하게 항상 표시.
+- **Events 토글 = 활동 마커만** — orchestrator 게이트 제거. 스타트칩 항상, 활동 마커만 토글.
+- **얇은 선 디자인** — `BAR_HEIGHT` 28→5 (막대=얇은 선, 칩이 주인공). drop shadow 제거(`bar-shadow` 필터 def 정리) + 상단 하이라이트 그라데이션 제거.
+- **선 색 = status (라벨 아이콘 색과 일치)** — stub 주황 `#f97316` / article 에메랄드 `#10b981`. (중간에 중립 회색 시도 → 사용자 "별로" → 아이콘 색 매칭으로 정착.)
+- **"All" 모드 신설 (5번째 timeline 모드, 기본값)** — `TimelineMode = ZoomLevel | "all"`. `computeAllFit` = 가장 이른 createdAt ~ 최신 horizon 전체 span을 viewport 폭에 맞춤. readability floor(6px/day) — 너무 길면 floor에서 멈추고 스크롤. `< >` navigate는 "all"에서 비활성.
+
+검증: tsc exit 0 / 18 article 전부 렌더 / 시각 확인.
+
+### 브레인스토밍 & 큰 결정 (영구)
+
+- **타임라인 막대 = 얇은 선, 이벤트 칩이 주인공** — 막대는 "정보 컨테이너"가 아님. 막대 일 = 길이(수명) + 색(status) + 그라데이션(과거/미래). 얇은 선으로 충분.
+- **스타트칩 = 막대 고유 요소 (이벤트 아님)** — `created`는 *활동*이 아니라 *수명 시작 경계*. 막대 왼쪽 끝 = 생성 = 스타트칩. 이벤트 로그/window 필터 무관하게 항상 막대 origin에 렌더. `created` 이벤트 별도 마커 X (중복).
+- **선 색 = status 아이콘 색과 일치** — 중립 회색은 라벨 컬럼 컬러 아이콘과 따로 놀아 "별로". 선·아이콘 같은 색이어야 일관.
+- **"All" 모드 = fit-to-content overview** — 고정 줌은 *고정 배율 + 스크롤*, "All"은 *데이터 맞춤 + 전부 보임 보장*. 역할 다름. viewport-fit은 "강제"가 antipattern이지 *옵션 overview*는 표준 (readability floor로 거대 데이터 degrade).
+
+### 기술 학습 (영구)
+
+- **멀티파일 빠른 편집 → dev 서버 stale 모듈 그래프** — 4파일 ~18 edit을 빠르게 하면 HMR이 중간 불일치 상태를 캐시 → "X is not exported" 에러가 최종 상태에도 잔존. tsc exit 0이면 코드는 정상 — dev 서버 재시작 + `.next` 삭제로 해결 (lightningcss 때와 동일).
+- **타임라인 막대 X(정확 timestamp) ↔ 마커 X(day-칸 중앙) 좌표계 불일치** — day-quantize로 통일. createdAt UTC가 로컬 늦은 시각이면 막대가 그 날 86% 지점부터 시작, 마커는 50% → 어긋나 보임.
+
+### Watch Out (다음 세션)
+
+- **dev 서버 stale 가능** — before-work 시 타임라인 이상하면 서버 재시작 + `.next` 삭제 먼저.
+- 다음 P0(DP/grouping/ordering)는 **계획 먼저** — 사용자 명시. 바로 코드 수정 X.
+- "All" 모드 readability floor / 거대 데이터 케이스 미검증 (사용자 데이터 18개로 fit 잘 됨). 위키 수백 개 시점 재확인.
+- 머지 전 `npm run build` 한 번 권장 (이번 검증은 tsc + dev 렌더로 갈음).
+
+### 환경 변경
+
+- Store v144 무변경 (전부 view/UI 레이어).
+- 신규 export: `TimelineMode` 타입, `TIMELINE_MODES`, `computeAllFit`. 제거: `ZOOM_ORDER`.
+
+### 머신
+다른컴퓨터 (Windows).
+
+---
+
 ## 2026-05-22 (후속 #3) — 다른컴퓨터/Windows, **Display 탭 Linear segmented control + 타임라인 화살촉 제거 / 막대 이름·마커 결정**
 
 > 🎯 **다음 즉시 액션 (다음 세션 시작점)** — 둘 다 사용자 확정, 다음 컴퓨터에서 구현:

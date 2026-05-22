@@ -51,6 +51,23 @@
 
 ---
 
+## 🚀 2026-05-23 — 타임라인 비주얼 리디자인 (얇은 선 / 마커 in-bar / 스타트칩 / "All" 모드) ⭐⭐⭐⭐⭐
+
+**범위**: 단일 PR (8 파일 `components/views/wiki-timeline*`, +224/−141). 막대 비주얼 리디자인 + 마커 in-bar 이동 + "All" 줌 모드 신설.
+
+**핵심 결정 (영구 후보 #93~)**:
+- **타임라인 막대 = 얇은 선, 이벤트 칩이 주인공** — `BAR_HEIGHT` 28→5px + drop shadow 제거. 막대는 수명 트랙, 이벤트 마커가 시각 초점.
+- **이벤트 마커 = 막대 중앙선 위 + 흰 테두리** — 막대 위에 떠 있던 마커를 막대 안 중앙선으로. 막대 day-quantize(`laneArticles` winStart 기준 px 계산)로 마커-막대 정합.
+- **스타트칩 = 막대 고유 origin 노드 (이벤트 아님)** — `created` 이벤트를 마커에서 필터링, `barX` 위치에 항상 렌더. Events 토글 OFF여도 스타트칩은 표시 (옵션 B).
+- **선 색 = status 아이콘 색 일치** — stub 주황 `#f97316` / article 에메랄드 `#10b981` (`WIKI_STATUS_HEX`). 좌측 라벨 컬럼 아이콘 색과 통일. 중립 회색·화살촉 폐기.
+- **"All" 모드 = 5번째 줌** — 전체 콘텐츠 span을 viewport에 fit (`computeAllFit`, `ALL_FLOOR_PX_PER_DAY` 가독성 바닥값). 기본 줌. prev/next/label nav 비활성(`zoom === "all"`).
+
+**완료**: wiki-timeline-config.ts(`TimelineMode`/`TIMELINE_MODES`/`BAR_HEIGHT`) · wiki-timeline-utils.ts(`computeAllFit`/day-quantize `laneArticles`) · wiki-timeline-view.tsx(`zoom`/`viewportW`/`allFit`) · timeline-bar.tsx(얇은 선/status 색) · timeline-event-markers.tsx(`barX` 스타트칩/in-bar) · timeline-controls.tsx(`TIMELINE_MODES` 매핑) · timeline-grid·tooltip.tsx. Store v144 무변경. tsc clean.
+
+**다음**: P0 #1 = Display Properties / Grouping / Ordering 신뢰성 전 view mode 감사 (**계획부터**). #2 = Notes/Books Timeline 모드. #3 = File 엔티티 v1.
+
+---
+
 ## 🚀 2026-05-22 (후속 #3) — Display 탭 Linear segmented control + 타임라인 화살촉 제거 ⭐⭐⭐
 
 **범위**: Display 패널 view-mode 탭 = Linear segmented control + 타임라인 막대 화살촉 제거 + 막대 이름·마커 결정(구현 다음 세션).
