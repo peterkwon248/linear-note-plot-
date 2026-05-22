@@ -52,7 +52,7 @@ export function LibraryCategoriesView() {
   // Derived convenience aliases for passing to children
   const categoryViewMode = (catViewState.viewMode === "board" ? "board" : "list") as "list" | "board"
   const categoryOrdering = catViewState.sortField as "title" | "articles" | "updatedAt" | "parent" | "tier" | "sub"
-  const categoryGrouping = catViewState.groupBy as "none" | "tier" | "parent" | "family"
+  const categoryGrouping = catViewState.groupBy as "none" | "tier" | "parent" | "family" | "firstLetter" | "createdAt"
   const categorySortDirection = catViewState.sortDirection
   const categoryShowDescription = catViewState.toggles?.showDescription !== false
   const categoryShowEmpty = catViewState.showEmptyGroups

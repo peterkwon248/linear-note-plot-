@@ -6,6 +6,53 @@
 
 ---
 
+## 2026-05-22 — 다른컴퓨터/Windows, **통합 시간 모델 PRD + Index→Grouping 통일 (content 5종)**
+
+> 🎯 **다음 즉시 액션 (다음 세션 시작점)**:
+>
+> **A — 라이브러리 5종(Tags/Labels/Stickers/Files/References) Index 그룹핑.** content 5종(Notes/Wiki/Books/Templates/Categories)은 이번 세션에 Index=Grouping 통일 완료. 남은 게 라이브러리 5종.
+>
+> - **걸림돌**: 라이브러리 뷰는 flat-only — `use-X-view` 훅이 `groups`를 반환해도 뷰 컴포넌트가 `flatX`만 렌더 (`stickers-view.tsx` 확인 — `flatStickers.map()`). config+훅만으론 화면 변화 0 = "골라도 아무 일 없는" 버그. **뷰에 그룹 헤더 렌더링을 새로 넣어야 함.**
+> - **엔티티당 3단**: ① `view-configs.tsx` groupingOptions에 `firstLetter`("Index") — 5개가 정확히 `none`만 가짐 → `replace_all` 안전 ② `use-X-view.ts` `applyXGrouping`에 `firstLetter` case + `groupBy` 파라미터 신규 (tags/labels/stickers/files/references는 grouping 함수가 groupBy를 안 받음 → 추가 / `GroupBy` import / 훅 호출에 `viewState.groupBy` 전달) ③ 뷰에 그룹 헤더 렌더링 (`flatX.map` → `groups.map`)
+> - **이름 필드**: Tags/Labels/Stickers/Files=`.name`, References=`.title`. 로직 = `group.ts:groupByFirstLetter` 미러 (첫 글자 대문자, 비문자 "#" 버킷).
+> - **첫 스텝**: `components/views/{tags,labels,files,references}-view.tsx` 읽고 list/grid 렌더 구조 파악 → grid 모드 그룹 여부 결정.
+> - **참고**: `wiki-list-pipeline.ts`/`use-books-view.ts`의 `firstLetter` case (이번 세션 추가분) 미러.
+>
+> P0 #2 레거시 정리(옛 Index 버튼) / #3 Timeline 탭 아이콘 — TODO.md 참조.
+>
+> **머신**: 다른컴퓨터 (Windows)
+
+### 완료
+
+- **통합 시간 모델 PRD** — `.omc/plans/unified-temporal-hooks-prd.md` (DRAFT v0.1). "Books에 타임라인?" 질문 → snooze/SRS/plannedDate/staleness가 *같은 필요의 파편*임을 발견 → 심층 브레인스토밍 → 단일 `Hook` 모델 통합 설계. 선행 PRD(`inbox-layer.md`/`activity-unification-prd.md`) 위에 쌓음.
+- **Index → Grouping 통일 (content 5종)** — Wiki/Templates가 Index를 가짜 DP 칩(`showAlphaIndex`)으로 노출하던 걸 정리. `view-configs.tsx`(Wiki/Templates/Books grouping에 `firstLetter`, Wiki/Templates DP 칩 제거, `IndexIcon` 제거) + `wiki-list-pipeline.ts`/`use-books-view.ts`/`use-templates-view.ts`(`firstLetter` case) + `library-categories-view.tsx`(타입 캐스트 정정). 빌드 clean.
+- **빌드 에러 픽스** — `Module not found: 'fractional-indexing'` — worktree `node_modules`가 거의 비어있었음, `npm install`로 395 패키지. 코드 버그 아님.
+
+### 브레인스토밍 & 큰 결정 (영구)
+
+- **통합 시간 모델 (temporal hooks)** — snooze/SRS/plannedDate/staleness = "이거 언제 다시 띄울까 + 왜"의 4중 파편. 단일 `Hook={trigger,action}`, 이벤트 축(예정형/반응형), `EntityEvent` 스트림=척추, 2 표면(Inbox 섹션화/Timeline), atom(Note/Wiki) vs aggregate(Book), 6 정책. 상세 = PRD. **DRAFT — 구현 승인 전, open questions 미해결.**
+- **Index = Grouping, not a column** — DP 칩 = 진짜 컬럼과 1:1 (사용자 핵심 원칙). "Index"는 알파벳 그룹핑 모드 → Grouping 드롭다운. `group.ts:groupByFirstLetter` docstring이 이미 "replaces legacy showAlphaIndex" 명시 — Notes만 됐던 마이그레이션을 Wiki/Templates/Books로 확장.
+- **사용자 원칙**: Display 패널 지원하는 모든 엔티티는 Index를 Grouping으로 지원 → 라이브러리 5종도 대상 (A).
+- **SRS 학습**: Plot SRS = `lib/srs` 7단 사다리(`[1,3,7,14,30,60,120]`일), keystone 노트 enroll, `promote`→`enrollSRS` 자동. 스누즈(`reviewAt`)=1회 deferral, SRS=무한 적응 반복 — 둘 다 "resurfacing" 가족.
+
+### Watch Out (다음 세션)
+
+- **라이브러리 뷰 flat-only** — A의 핵심 난관. 각 뷰에 그룹 헤더 렌더링 신규 필요 (config+훅만으론 안 보임).
+- **레거시 미정리** — Wiki/Templates 헤더에 옛 "Index 토글 버튼" 잔존 (`wiki-list.tsx:364`/`templates-table.tsx:228`) — TODO P0 #2.
+- **Timeline 탭 아이콘** — `display-panel.tsx` MODE_DEFS `Ruler` 아이콘 시각 불일치 — TODO P0 #3.
+- **EVENT_MARKER_CONFIG** — 지난 세션 P0였으나 이번 세션이 Index/temporal-hooks 방향으로 진행 → 미완, TODO P1로 이동.
+
+### 환경 변경
+
+- Store version: **v144 (변경 없음)** — Index 그룹핑은 view-engine 레이어만, persist schema 무변경.
+- 신규 파일: `.omc/plans/unified-temporal-hooks-prd.md`
+- `node_modules` 재설치 (worktree, 395 패키지). TS 부채 0, `npm run build` clean.
+
+### 머신
+다른컴퓨터 (Windows).
+
+---
+
 ## 2026-05-21 (저녁 후속 #6) — 다른컴퓨터/Windows, **wiki-timeline-view.tsx sub-component 분리 (1380→386줄) — 세션 종료**
 
 > 🎯 **다음 즉시 액션 (다른 컴퓨터 로그인 후 시작점)**:

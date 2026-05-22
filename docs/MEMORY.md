@@ -8,6 +8,23 @@
 
 ---
 
+## 🚀 2026-05-22 — **통합 시간 모델 PRD + Index→Grouping 통일 (content 5종)** ⭐⭐⭐⭐⭐
+
+**범위**: ① 통합 시간 모델 심층 브레인스토밍 → `.omc/plans/unified-temporal-hooks-prd.md` (DRAFT v0.1) ② Index를 가짜 DP 칩에서 Grouping으로 통일 (Wiki/Templates/Books — Notes/Categories는 기존 정합) ③ 빌드 에러 픽스 (worktree node_modules).
+
+**핵심 결정 (영구)**:
+- **Index = Grouping, not a column** — DP(Display Properties) 칩은 진짜 컬럼과 1:1이어야 함 (사용자 핵심 원칙). "Index"는 컬럼이 아니라 알파벳 그룹핑 모드 → Grouping 드롭다운. `group.ts:groupByFirstLetter` docstring이 이미 "replaces legacy showAlphaIndex" 명시 — Notes만 마이그레이션됐던 걸 이번에 Wiki/Templates/Books로 확장.
+- **사용자 원칙**: Display 패널 지원하는 모든 엔티티는 Index를 Grouping으로 지원 → 라이브러리 5종(Tags/Labels/Stickers/Files/References) 다음 세션 (A).
+- **통합 시간 모델 (temporal hooks)** — snooze/SRS/plannedDate/staleness = "언제 다시 띄울까 + 왜"의 4중 파편. 단일 `Hook` 모델로 통합 (이벤트 축, `EntityEvent` 스트림 척추, Inbox/Timeline 2 표면, atom/aggregate). 상세 = `unified-temporal-hooks-prd.md`. **DRAFT — 구현 승인 전.**
+
+**완료**: `view-configs.tsx`(Wiki/Templates/Books grouping `firstLetter` + `showAlphaIndex` 칩 제거 + `IndexIcon` 제거) / `wiki-list-pipeline.ts`·`use-books-view.ts`·`use-templates-view.ts`(`firstLetter` case) / `library-categories-view.tsx`(타입 캐스트 정정). 빌드 clean. Store v144 변경 없음 (view-engine 레이어만).
+
+**기술 학습**: Plot SRS = `lib/srs` 7단 사다리(`INTERVALS=[1,3,7,14,30,60,120]`일), keystone enroll, `promote`→`enrollSRS` 자동. 라이브러리 뷰(`stickers-view.tsx` 등)는 flat-only — 훅의 `groups` 무시하고 `flatX` 렌더.
+
+**다음**: A — 라이브러리 5종 Index 그룹핑 (뷰 flat-only → 그룹 렌더링 신규). SESSION-LOG hook 참조.
+
+---
+
 ## 🚀 2026-05-21 (저녁 후속 #6) — **wiki-timeline-view.tsx sub-component 분리 (1380→386줄)** ⭐⭐⭐⭐
 
 **범위**: 거대 컴포넌트 리팩토링. `wiki-timeline-view.tsx` 1380줄 → **386줄 orchestrator** + 9 모듈 파일 (`components/views/wiki-timeline/`).

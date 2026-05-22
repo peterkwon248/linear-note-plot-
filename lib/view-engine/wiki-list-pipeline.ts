@@ -676,6 +676,26 @@ export function applyWikiGrouping(
       ]
     }
 
+    // Alphabetical Index grouping — first letter of title. Non-letter starts
+    // (digits, hangul, symbols) bucket under "#". Mirrors group.ts:
+    // groupByFirstLetter (Notes) for cross-entity consistency.
+    case "firstLetter": {
+      const buckets: Record<string, WikiArticle[]> = {}
+      for (const a of articles) {
+        const first = ((a.title ?? "").trim()[0] ?? "#").toUpperCase()
+        const key = /[A-Z]/.test(first) ? first : "#"
+        if (!buckets[key]) buckets[key] = []
+        buckets[key].push(a)
+      }
+      return Object.entries(buckets)
+        .sort(([x], [y]) => {
+          if (x === "#" && y !== "#") return 1
+          if (y === "#" && x !== "#") return -1
+          return x.localeCompare(y)
+        })
+        .map(([letter, arts]) => ({ key: `letter-${letter}`, label: letter, articles: arts }))
+    }
+
     default:
       return [{ key: "_all", label: "", articles }]
   }

@@ -1,6 +1,6 @@
 {
   "version": "2.0",
-  "lastUpdated": "2026-05-20T08:06:03.531Z",
+  "lastUpdated": "2026-05-22T03:02:49.963Z",
   "activeFeatures": [
     "editor",
     "wizardly-kare",
@@ -37,7 +37,8 @@
     "quirky-colden-bcf3de",
     "xenodochial-wing-654662",
     "eloquent-wilbur-832887",
-    "library"
+    "library",
+    "romantic-herschel-103d20"
   ],
   "primaryFeature": "editor",
   "features": {
@@ -193,9 +194,9 @@
       "documents": {},
       "timestamps": {
         "started": "2026-03-11T04:44:20.714Z",
-        "lastUpdated": "2026-05-20T07:11:36.194Z"
+        "lastUpdated": "2026-05-22T02:57:15.174Z"
       },
-      "lastFile": "C:\\Users\\kwonkyunghun\\Desktop\\리니어 노트앱\\.claude\\worktrees\\eloquent-wilbur-832887\\lib\\view-engine\\view-configs.tsx"
+      "lastFile": "C:\\Users\\kwonkyunghun\\Desktop\\리니어 노트앱\\.claude\\worktrees\\romantic-herschel-103d20\\lib\\view-engine\\use-templates-view.ts"
     },
     "slices": {
       "phase": "do",
@@ -508,6 +509,19 @@
         "lastUpdated": "2026-05-20T05:55:33.987Z"
       },
       "lastFile": "C:\\Users\\kwonkyunghun\\Desktop\\리니어 노트앱\\.claude\\worktrees\\eloquent-wilbur-832887\\components\\library\\library-breadcrumb.tsx"
+    },
+    "romantic-herschel-103d20": {
+      "phase": "do",
+      "phaseNumber": 3,
+      "matchRate": null,
+      "iterationCount": 0,
+      "requirements": [],
+      "documents": {},
+      "timestamps": {
+        "started": "2026-05-22T03:02:49.962Z",
+        "lastUpdated": "2026-05-22T03:02:49.962Z"
+      },
+      "lastFile": "C:\\Users\\kwonkyunghun\\Desktop\\리니어 노트앱\\.claude\\worktrees\\romantic-herschel-103d20\\components\\views\\library-categories-view.tsx"
     }
   },
   "pipeline": {
@@ -518,7 +532,7 @@
   "session": {
     "startedAt": "2026-03-05T00:16:19.956Z",
     "onboardingCompleted": false,
-    "lastActivity": "2026-05-20T08:06:03.531Z"
+    "lastActivity": "2026-05-22T03:02:49.963Z"
   },
   "history": [
     {
@@ -7760,6 +7774,60 @@
     {
       "timestamp": "2026-05-20T08:06:03.531Z",
       "feature": "eloquent-wilbur-832887",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-22T02:45:03.389Z",
+      "feature": "view-engine",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-22T02:45:06.299Z",
+      "feature": "view-engine",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-22T02:45:10.473Z",
+      "feature": "view-engine",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-22T02:45:12.557Z",
+      "feature": "view-engine",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-22T02:45:17.239Z",
+      "feature": "view-engine",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-22T02:45:21.069Z",
+      "feature": "view-engine",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-22T02:46:32.848Z",
+      "feature": "view-engine",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-22T02:57:15.174Z",
+      "feature": "view-engine",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-22T03:02:49.962Z",
+      "feature": "romantic-herschel-103d20",
       "phase": "do",
       "action": "updated"
     }

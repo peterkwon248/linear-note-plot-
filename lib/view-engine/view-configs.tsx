@@ -105,8 +105,6 @@ const TrashIcon = <svg width={14} height={14} viewBox="0 0 16 16" fill="none" st
 const SortIcon = <svg width={14} height={14} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"><line x1="2.5" y1="4" x2="10" y2="4"/><line x1="2.5" y1="8" x2="7.5" y2="8"/><line x1="2.5" y1="12" x2="5" y2="12"/></svg>
 // Color dot: filled circle suggesting "color swatch"
 const ColorDotIcon = <svg width={14} height={14} viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="4.5" fill="currentColor"/></svg>
-// Index (alphabetical group): 4 horizontal bars with leading dot bullets — "list with markers"
-const IndexIcon = <svg width={14} height={14} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"><circle cx="3" cy="3.5" r="0.8" fill="currentColor" stroke="none"/><circle cx="3" cy="8" r="0.8" fill="currentColor" stroke="none"/><circle cx="3" cy="12.5" r="0.8" fill="currentColor" stroke="none"/><line x1="6" y1="3.5" x2="13.5" y2="3.5"/><line x1="6" y1="8" x2="13.5" y2="8"/><line x1="6" y1="12.5" x2="13.5" y2="12.5"/></svg>
 const GraphIcon = <svg width={14} height={14} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"><circle cx="8" cy="3.3" r="1.7"/><circle cx="3.3" cy="12.7" r="1.7"/><circle cx="12.7" cy="12.7" r="1.7"/><line x1="8" y1="5" x2="3.3" y2="11"/><line x1="8" y1="5" x2="12.7" y2="11"/><line x1="5" y1="12.7" x2="11" y2="12.7"/></svg>
 // Wiki: 활동바 BookOpen과 동일 — 일관성
 const WikiIcon = <BookOpen size={14} weight="regular" />
@@ -318,17 +316,16 @@ export const WIKI_VIEW_CONFIG: ViewConfig = {
       { value: "label", label: "Category" },
       { value: "family", label: "Family" },
       { value: "date", label: "Updated" },
+      { value: "firstLetter", label: "Index" },
     ],
     toggles: [
       { key: "showStubs", label: "Show stubs", icon: ContentIcon },
       { key: "filterAwareRole", label: "Filter-aware role" },
     ],
     properties: [
-      // Index lives alongside other display properties — toggling it switches
-      // the table to alphabetical group view. DisplayPanel routes it to
-      // viewState.toggles.showAlphaIndex (not visibleColumns).
-      { key: "showAlphaIndex", label: "Index", icon: IndexIcon },
-      // Title intentionally omitted — it's a required column, not toggleable
+      // Title intentionally omitted — it's a required column, not toggleable.
+      // Index moved to the grouping dropdown (firstLetter, label "Index") —
+      // Plot-consistent UX: every display-properties chip = a real 1:1 column.
       { key: "status", label: "Status", icon: CircleHalfIcon },
       { key: "links", label: "Backlinks", icon: LinkIcon },
       { key: "reads", label: "Reads", icon: EyeIcon },
@@ -623,10 +620,11 @@ export const TEMPLATES_VIEW_CONFIG: ViewConfig = {
       { value: "label", label: "Label" },
       { value: "folder", label: "Folder" },
       { value: "date", label: "Updated" },
+      { value: "firstLetter", label: "Index" },
     ],
     toggles: [],
     properties: [
-      { key: "showAlphaIndex", label: "Index", icon: IndexIcon },
+      // Index lives in the grouping dropdown (firstLetter) — not a chip.
       { key: "updatedAt", label: "Updated", icon: CalendarIcon },
       { key: "createdAt", label: "Created", icon: CalendarIcon },
     ],
@@ -882,6 +880,7 @@ export const BOOKS_VIEW_CONFIG: ViewConfig = {
       { value: "kind",   label: "Kind" },
       { value: "pinned", label: "Pin status" },
       { value: "date",   label: "Updated" },
+      { value: "firstLetter", label: "Index" },
     ],
     // showTrashed toggle is handled in books-view.tsx ViewHeader actions.
     toggles: [],

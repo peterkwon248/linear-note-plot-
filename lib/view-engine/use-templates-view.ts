@@ -212,6 +212,25 @@ function applyTemplateGrouping(
     return groups
   }
 
+  // Alphabetical Index grouping — first letter of name. Non-letter starts
+  // bucket under "#". Mirrors group.ts:groupByFirstLetter (cross-entity).
+  if (groupBy === "firstLetter") {
+    const buckets: Record<string, NoteTemplate[]> = {}
+    for (const t of templates) {
+      const first = ((t.name ?? "").trim()[0] ?? "#").toUpperCase()
+      const key = /[A-Z]/.test(first) ? first : "#"
+      if (!buckets[key]) buckets[key] = []
+      buckets[key].push(t)
+    }
+    return Object.entries(buckets)
+      .sort(([x], [y]) => {
+        if (x === "#" && y !== "#") return 1
+        if (y === "#" && x !== "#") return -1
+        return x.localeCompare(y)
+      })
+      .map(([letter, items]) => ({ key: `letter-${letter}`, label: letter, templates: items }))
+  }
+
   // Unknown grouping → fall back to single bucket.
   return [{ key: "_all", label: "", templates }]
 }
