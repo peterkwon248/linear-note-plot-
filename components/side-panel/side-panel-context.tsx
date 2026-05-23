@@ -7,30 +7,32 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { CalendarBlank } from "@phosphor-icons/react/dist/ssr/CalendarBlank"
-import { FolderOpen } from "@phosphor-icons/react/dist/ssr/FolderOpen"
-import { Tag as PhTag } from "@phosphor-icons/react/dist/ssr/Tag"
-import { X as PhX } from "@phosphor-icons/react/dist/ssr/X"
-import { Plus as PhPlus } from "@phosphor-icons/react/dist/ssr/Plus"
-import { CaretDown } from "@phosphor-icons/react/dist/ssr/CaretDown"
-import { Hash as PhHash } from "@phosphor-icons/react/dist/ssr/Hash"
-import { FileText } from "@phosphor-icons/react/dist/ssr/FileText"
-import { PushPin } from "@phosphor-icons/react/dist/ssr/PushPin"
-import { TextAlignLeft } from "@phosphor-icons/react/dist/ssr/TextAlignLeft"
-import { Paperclip } from "@phosphor-icons/react/dist/ssr/Paperclip"
-import { Link as PhLink } from "@phosphor-icons/react/dist/ssr/Link"
-import { Shield as PhShield } from "@phosphor-icons/react/dist/ssr/Shield"
-import { Sparkle } from "@phosphor-icons/react/dist/ssr/Sparkle"
-import { Check as PhCheck } from "@phosphor-icons/react/dist/ssr/Check"
-import { Alarm } from "@phosphor-icons/react/dist/ssr/Alarm"
-import { Trash } from "@phosphor-icons/react/dist/ssr/Trash"
-import { ArrowUpRight } from "@phosphor-icons/react/dist/ssr/ArrowUpRight"
-import { ArrowDownLeft } from "@phosphor-icons/react/dist/ssr/ArrowDownLeft"
-import { Tray } from "@phosphor-icons/react/dist/ssr/Tray"
-import { Warning } from "@phosphor-icons/react/dist/ssr/Warning"
-import { GitMerge } from "@phosphor-icons/react/dist/ssr/GitMerge"
-import { CircleDashed } from "@phosphor-icons/react/dist/ssr/CircleDashed"
-import { Info as PhInfo } from "@phosphor-icons/react/dist/ssr/Info"
+import {
+  Calendar as CalendarBlank,
+  FolderOpen,
+  Tag as PhTag,
+  X as PhX,
+  Plus as PhPlus,
+  ChevronDown as CaretDown,
+  Hash as PhHash,
+  FileText,
+  Pin as PushPin,
+  AlignLeft as TextAlignLeft,
+  Paperclip,
+  Link as PhLink,
+  Shield as PhShield,
+  Sparkles as Sparkle,
+  Check as PhCheck,
+  AlarmClock as Alarm,
+  Trash2 as Trash,
+  ArrowUpRight,
+  ArrowDownLeft,
+  Inbox as Tray,
+  AlertTriangle as Warning,
+  GitMerge,
+  CircleDashed,
+  Info as PhInfo,
+} from "lucide-react"
 import { cn } from "@/lib/utils"
 import { format, formatDistanceToNow } from "date-fns"
 import { usePlotStore } from "@/lib/store"
@@ -122,7 +124,7 @@ export function SidePanelContext({ noteId: propNoteId }: { noteId?: string | nul
 
   if (!note) return (
     <div className="flex flex-1 flex-col items-center justify-center gap-3 text-muted-foreground px-4">
-      <PhInfo size={24} weight="light" className="text-muted-foreground/70" />
+      <PhInfo size={24} strokeWidth={1.5} className="text-muted-foreground/70" />
       <p className="text-note text-center">Select a note to see details</p>
     </div>
   )
@@ -151,7 +153,7 @@ export function SidePanelContext({ noteId: propNoteId }: { noteId?: string | nul
       <div className="flex flex-wrap items-center gap-2 px-4 py-3 border-b border-border">
         {note.pinned && (
           <span className="flex items-center gap-1 rounded-md bg-chart-3/10 px-2 py-0.5 text-2xs font-medium text-chart-3">
-            <PushPin size={14} weight="regular" />
+            <PushPin size={14} strokeWidth={2} />
             Pinned
           </span>
         )}
@@ -165,12 +167,12 @@ export function SidePanelContext({ noteId: propNoteId }: { noteId?: string | nul
             ? "bg-chart-5/10 text-chart-5"
             : "bg-accent/10 text-accent"
         }`}>
-          {note.status === "keystone" && <PhShield size={14} weight="regular" />}
+          {note.status === "keystone" && <PhShield size={14} strokeWidth={2} />}
           {note.status ? note.status.charAt(0).toUpperCase() + note.status.slice(1) : "Stone"}
         </span>
         {note.status === "brick" && isReadyToPromote(note, backlinks) && (
           <span className="flex items-center gap-1 rounded-md bg-chart-5/10 px-2 py-0.5 text-2xs font-medium text-chart-5">
-            <Sparkle size={14} weight="regular" />
+            <Sparkle size={14} strokeWidth={2} />
             Ready to promote
           </span>
         )}
@@ -183,15 +185,15 @@ export function SidePanelContext({ noteId: propNoteId }: { noteId?: string | nul
             onClick={() => { triageKeep(note.id); toast("Done — moved to Brick"); advanceToNextInbox() }}
             className="inline-flex items-center gap-1 rounded-md bg-accent px-2 py-1 text-2xs font-medium text-accent-foreground transition-colors hover:bg-accent/80"
           >
-            <PhCheck size={14} weight="bold" />
+            <PhCheck size={14} strokeWidth={2.5} />
             Done
           </button>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <button className="inline-flex items-center gap-1 rounded-md border border-border bg-card px-2 py-1 text-2xs font-medium text-foreground transition-colors hover:bg-hover-bg">
-                <Alarm size={14} weight="regular" />
+                <Alarm size={14} strokeWidth={2} />
                 Snooze
-                <CaretDown className="text-muted-foreground" size={10} weight="regular" />
+                <CaretDown className="text-muted-foreground" size={10} strokeWidth={2} />
               </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="start" className="w-44">
@@ -210,7 +212,7 @@ export function SidePanelContext({ noteId: propNoteId }: { noteId?: string | nul
             onClick={() => { triageTrash(note.id); toast("Trashed"); advanceToNextInbox() }}
             className="inline-flex items-center gap-1 rounded-md border border-border bg-card px-2 py-1 text-2xs font-medium text-destructive transition-colors hover:bg-destructive/10"
           >
-            <Trash size={14} weight="regular" />
+            <Trash size={14} strokeWidth={2} />
             Trash
           </button>
         </div>
@@ -227,20 +229,20 @@ export function SidePanelContext({ noteId: propNoteId }: { noteId?: string | nul
                   : "border border-border bg-card text-foreground hover:bg-hover-bg"
               }`}
             >
-              <ArrowUpRight size={14} weight="regular" />
+              <ArrowUpRight size={14} strokeWidth={2} />
               Promote
             </button>
             <button
               onClick={() => { moveBackToInbox(note.id); toast("Moved back to Stone") }}
               className="inline-flex items-center gap-1 rounded-md border border-border bg-card px-2 py-1 text-2xs font-medium text-muted-foreground transition-colors hover:bg-hover-bg hover:text-foreground"
             >
-              <Tray size={14} weight="regular" />
+              <Tray size={14} strokeWidth={2} />
               Back to Stone
             </button>
           </div>
           {staleSuggest && (
             <div className="flex items-center gap-2 bg-destructive/5 px-4 py-2">
-              <Warning className="shrink-0 text-destructive" size={14} weight="regular" />
+              <Warning className="shrink-0 text-destructive" size={14} strokeWidth={2} />
               <span className="text-2xs text-destructive">14+ days untouched.</span>
               <button
                 onClick={() => { moveBackToInbox(note.id); toast("Moved back to Stone") }}
@@ -252,7 +254,7 @@ export function SidePanelContext({ noteId: propNoteId }: { noteId?: string | nul
           )}
           {!staleSuggest && stale && (
             <div className="flex items-center gap-2 bg-chart-3/5 px-4 py-2">
-              <Warning className="shrink-0 text-chart-3" size={14} weight="regular" />
+              <Warning className="shrink-0 text-chart-3" size={14} strokeWidth={2} />
               <span className="text-2xs text-chart-3">Review needed - 7+ days untouched.</span>
             </div>
           )}
@@ -266,13 +268,13 @@ export function SidePanelContext({ noteId: propNoteId }: { noteId?: string | nul
               onClick={() => { undoPromote(note.id); toast("Demoted to Brick") }}
               className="inline-flex items-center gap-1 rounded-md border border-border bg-card px-2 py-1 text-2xs font-medium text-muted-foreground transition-colors hover:bg-hover-bg hover:text-foreground"
             >
-              <ArrowDownLeft size={14} weight="regular" />
+              <ArrowDownLeft size={14} strokeWidth={2} />
               Demote to Brick
             </button>
           </div>
           {linkCount === 0 && (
             <div className="flex items-center gap-2 bg-chart-3/5 px-4 py-2">
-              <PhLink className="shrink-0 text-chart-3" size={14} weight="regular" />
+              <PhLink className="shrink-0 text-chart-3" size={14} strokeWidth={2} />
               <span className="text-2xs text-chart-3">Unlinked - add connections to strengthen graph.</span>
             </div>
           )}
@@ -280,7 +282,7 @@ export function SidePanelContext({ noteId: propNoteId }: { noteId?: string | nul
       )}
 
       {/* Dates */}
-      <InspectorSection title="Dates" icon={<CalendarBlank size={16} weight="regular" />}>
+      <InspectorSection title="Dates" icon={<CalendarBlank size={16} strokeWidth={2} />}>
         <div className="space-y-2">
           <div className="flex items-center justify-between">
             <span className="text-note text-muted-foreground">Created</span>
@@ -300,7 +302,7 @@ export function SidePanelContext({ noteId: propNoteId }: { noteId?: string | nul
       <div className="mx-4 border-b border-border" />
 
       {/* Status */}
-      <InspectorSection title="Status" icon={<CircleDashed size={16} weight="regular" />}>
+      <InspectorSection title="Status" icon={<CircleDashed size={16} strokeWidth={2} />}>
         <StatusDropdown
           value={note.status}
           onChange={(s) => updateNote(note.id, { status: s })}
@@ -316,7 +318,7 @@ export function SidePanelContext({ noteId: propNoteId }: { noteId?: string | nul
           commits the entire new set on Apply. Single-folder UX is gone —
           this is the surface that exposes the N:M model to users.
           Section title is plural to reinforce the cardinality change. */}
-      <InspectorSection title="Folders" icon={<FolderOpen size={16} weight="regular" />}>
+      <InspectorSection title="Folders" icon={<FolderOpen size={16} strokeWidth={2} />}>
         <div className="flex flex-wrap items-center gap-1.5">
           {noteFolders.map((f) => (
             <span
@@ -328,7 +330,7 @@ export function SidePanelContext({ noteId: propNoteId }: { noteId?: string | nul
               }}
               title={f.name}
             >
-              <FolderOpen size={10} weight="regular" />
+              <FolderOpen size={10} strokeWidth={2} />
               <span className="truncate max-w-[120px]">{f.name}</span>
               <button
                 type="button"
@@ -336,14 +338,14 @@ export function SidePanelContext({ noteId: propNoteId }: { noteId?: string | nul
                 className="rounded-sm p-0.5 transition-colors hover:bg-hover-bg/40"
                 title={`Remove from ${f.name}`}
               >
-                <PhX size={10} weight="bold" />
+                <PhX size={10} strokeWidth={2.5} />
               </button>
             </span>
           ))}
           <Popover open={folderOpen} onOpenChange={setFolderOpen}>
             <PopoverTrigger asChild>
               <button className="flex items-center gap-1 rounded-md border border-dashed border-border px-2 py-0.5 text-2xs text-muted-foreground transition-colors hover:border-muted-foreground hover:text-foreground">
-                <PhPlus size={10} weight="regular" />
+                <PhPlus size={10} strokeWidth={2} />
                 {noteFolders.length === 0 ? "Add to folders" : "Add"}
               </button>
             </PopoverTrigger>
@@ -368,7 +370,7 @@ export function SidePanelContext({ noteId: propNoteId }: { noteId?: string | nul
       <div className="mx-4 border-b border-border" />
 
       {/* Label */}
-      <InspectorSection title="Label" icon={<PhTag size={16} weight="regular" />}>
+      <InspectorSection title="Label" icon={<PhTag size={16} strokeWidth={2} />}>
         <LabelDropdown
           value={note.labelId}
           labels={labels.filter((l) => !l.trashed)}
@@ -380,7 +382,7 @@ export function SidePanelContext({ noteId: propNoteId }: { noteId?: string | nul
       <div className="mx-4 border-b border-border" />
 
       {/* Tags */}
-      <InspectorSection title="Tags" icon={<PhHash size={16} weight="regular" />}>
+      <InspectorSection title="Tags" icon={<PhHash size={16} strokeWidth={2} />}>
         <div className="flex flex-wrap items-center gap-1.5">
           {noteTags.map((tag) => (
             <span
@@ -396,7 +398,7 @@ export function SidePanelContext({ noteId: propNoteId }: { noteId?: string | nul
                 onClick={() => removeTagFromNote(note.id, tag.id)}
                 className="rounded-full p-0.5 transition-colors hover:bg-hover-bg"
               >
-                <PhX size={10} weight="regular" />
+                <PhX size={10} strokeWidth={2} />
               </button>
             </span>
           ))}
@@ -404,7 +406,7 @@ export function SidePanelContext({ noteId: propNoteId }: { noteId?: string | nul
             <Popover open={tagOpen} onOpenChange={setTagOpen}>
               <PopoverTrigger asChild>
                 <button className="flex items-center gap-1 rounded-full border border-dashed border-border px-2 py-0.5 text-2xs text-muted-foreground transition-colors hover:border-muted-foreground hover:text-foreground">
-                  <PhPlus size={10} weight="regular" />
+                  <PhPlus size={10} strokeWidth={2} />
                   Add
                 </button>
               </PopoverTrigger>
@@ -438,7 +440,7 @@ export function SidePanelContext({ noteId: propNoteId }: { noteId?: string | nul
 
       {/* Categories — 2026-05-17 cross-entity 확장. WikiCategory 풀 공유.
           inline Create 자동 포함. labelId null + categoryIds 빈 array도 자유. */}
-      <InspectorSection title="Categories" icon={<PhTag size={16} weight="regular" />}>
+      <InspectorSection title="Categories" icon={<PhTag size={16} strokeWidth={2} />}>
         <CategoryPicker
           entityId={note.id}
           selectedCategoryIds={note.categoryIds ?? []}
@@ -473,7 +475,7 @@ export function SidePanelContext({ noteId: propNoteId }: { noteId?: string | nul
       <div className="mx-4 border-b border-border" />
 
       {/* Outline (TOC block > headings fallback) */}
-      <InspectorSection title="Outline" icon={<TextAlignLeft size={16} weight="regular" />}>
+      <InspectorSection title="Outline" icon={<TextAlignLeft size={16} strokeWidth={2} />}>
         {outline.items.length > 0 ? (
           <div className="space-y-0.5">
             {outline.source === "toc" && (
@@ -512,7 +514,7 @@ export function SidePanelContext({ noteId: propNoteId }: { noteId?: string | nul
       <div className="mx-4 border-b border-border" />
 
       {/* Properties */}
-      <InspectorSection title="Properties" icon={<FileText size={16} weight="regular" />}>
+      <InspectorSection title="Properties" icon={<FileText size={16} strokeWidth={2} />}>
         <div className="space-y-2">
           <div className="flex items-center justify-between">
             <span className="text-note text-muted-foreground">Words</span>
@@ -536,20 +538,20 @@ export function SidePanelContext({ noteId: propNoteId }: { noteId?: string | nul
       <div className="mx-4 border-b border-border" />
 
       {/* Actions */}
-      <InspectorSection title="Actions" icon={<GitMerge size={16} weight="regular" />}>
+      <InspectorSection title="Actions" icon={<GitMerge size={16} strokeWidth={2} />}>
         <div className="flex flex-col gap-1.5">
           <button
             onClick={() => setMergePickerOpen(true, note.id)}
             className="flex w-full items-center gap-2 rounded-md border border-border bg-card px-3 py-1.5 text-note font-medium text-muted-foreground transition-colors hover:bg-hover-bg hover:text-foreground"
           >
-            <GitMerge size={14} weight="regular" />
+            <GitMerge size={14} strokeWidth={2} />
             GitMerge with...
           </button>
           <button
             onClick={() => setLinkPickerOpen(true, note.id)}
             className="flex w-full items-center gap-2 rounded-md border border-border bg-card px-3 py-1.5 text-note font-medium text-muted-foreground transition-colors hover:bg-hover-bg hover:text-foreground"
           >
-            <PhLink size={14} weight="regular" />
+            <PhLink size={14} strokeWidth={2} />
             Link to...
           </button>
         </div>
@@ -558,7 +560,7 @@ export function SidePanelContext({ noteId: propNoteId }: { noteId?: string | nul
       <div className="mx-4 border-b border-border" />
 
       {/* Attachments (placeholder) */}
-      <InspectorSection title="Attachments" icon={<Paperclip size={16} weight="regular" />}>
+      <InspectorSection title="Attachments" icon={<Paperclip size={16} strokeWidth={2} />}>
         <span className="text-note text-muted-foreground">No attachments</span>
       </InspectorSection>
 

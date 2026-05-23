@@ -18,11 +18,7 @@ import { useRouter } from "next/navigation"
 import { setActiveRoute } from "@/lib/table-route"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { IconChevronRight } from "@/components/plot-icons"
-import { Tag as PhTag } from "@phosphor-icons/react/dist/ssr/Tag"
-import { Folder } from "@phosphor-icons/react/dist/ssr/Folder"
-import { Quotes } from "@phosphor-icons/react/dist/ssr/Quotes"
-import { Sticker as StickerIcon } from "@phosphor-icons/react/dist/ssr/Sticker"
-import { Bookmark as PhBookmark } from "@phosphor-icons/react/dist/ssr/Bookmark"
+import { Tag as PhTag, Folder, Quote as Quotes, Sticker as StickerIcon, Bookmark as PhBookmark } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 type LibraryEntity = "tags" | "files" | "references" | "stickers" | "labels"
@@ -94,7 +90,7 @@ export function LibraryBreadcrumb({
                     : "text-foreground/80 hover:bg-hover-bg hover:text-foreground",
                 )}
               >
-                <Icon size={14} weight="regular" className="shrink-0" />
+                <Icon size={14} className="shrink-0" />
                 <span className="truncate">{meta.label}</span>
               </button>
             )

@@ -12,22 +12,24 @@ import type { Note, NoteStatus } from "@/lib/types"
 import { MergeDialog } from "@/components/merge-dialog"
 import { WikiAssemblyDialog } from "@/components/wiki-assembly-dialog"
 import { pushUndo } from "@/lib/undo-manager"
-import { X as PhX } from "@phosphor-icons/react/dist/ssr/X"
-import { Lightning } from "@phosphor-icons/react/dist/ssr/Lightning"
-import { Check as PhCheck } from "@phosphor-icons/react/dist/ssr/Check"
-import { Trash } from "@phosphor-icons/react/dist/ssr/Trash"
-import { PushPin } from "@phosphor-icons/react/dist/ssr/PushPin"
-import { PushPinSlash } from "@phosphor-icons/react/dist/ssr/PushPinSlash"
-import { ArrowUpRight } from "@phosphor-icons/react/dist/ssr/ArrowUpRight"
-import { ArrowDownLeft } from "@phosphor-icons/react/dist/ssr/ArrowDownLeft"
-import { Tray } from "@phosphor-icons/react/dist/ssr/Tray"
-import { GitMerge } from "@phosphor-icons/react/dist/ssr/GitMerge"
-import { Scissors } from "@phosphor-icons/react/dist/ssr/Scissors"
-import { Link as PhLink } from "@phosphor-icons/react/dist/ssr/Link"
+import {
+  X as PhX,
+  Zap as Lightning,
+  Check as PhCheck,
+  Trash2 as Trash,
+  Pin as PushPin,
+  PinOff as PushPinSlash,
+  ArrowUpRight,
+  ArrowDownLeft,
+  Inbox as Tray,
+  GitMerge,
+  Scissors,
+  Link as PhLink,
+  RotateCcw as ArrowCounterClockwise,
+  BookOpen,
+  FolderOpen,
+} from "lucide-react"
 import { setSplitTargetNoteId } from "@/lib/note-split-mode"
-import { ArrowCounterClockwise } from "@phosphor-icons/react/dist/ssr/ArrowCounterClockwise"
-import { BookOpen } from "@phosphor-icons/react/dist/ssr/BookOpen"
-import { FolderOpen } from "@phosphor-icons/react/dist/ssr/FolderOpen"
 import { FolderPicker } from "@/components/folder-picker"
 
 /* ── Props ────────────────────────────────────────────── */
@@ -220,13 +222,13 @@ export function FloatingActionBar({
               onClick={handleRestoreAll}
               className="inline-flex items-center gap-1 rounded-md bg-accent/10 px-3 py-2 text-ui font-medium text-accent hover:bg-accent/20 transition-colors"
             >
-              <ArrowCounterClockwise size={16} weight="regular" /> Restore
+              <ArrowCounterClockwise size={16} /> Restore
             </button>
             <button
               onClick={handleDeletePermanently}
               className="inline-flex items-center gap-1 rounded-md bg-destructive/10 px-3 py-2 text-ui font-medium text-destructive hover:bg-destructive/20 transition-colors"
             >
-              <Trash size={16} weight="regular" /> Delete
+              <Trash size={16} /> Delete
             </button>
           </>
         )
@@ -237,7 +239,7 @@ export function FloatingActionBar({
             onClick={handleKeepAll}
             className="inline-flex items-center gap-1 rounded-md bg-accent/10 px-3 py-2 text-ui font-medium text-accent hover:bg-accent/20 transition-colors"
           >
-            <PhCheck size={16} weight="bold" /> Done
+            <PhCheck size={16} strokeWidth={2.5} /> Done
           </button>
         )
 
@@ -248,13 +250,13 @@ export function FloatingActionBar({
               onClick={handlePromoteAll}
               className="inline-flex items-center gap-1 rounded-md bg-chart-5/10 px-3 py-2 text-ui font-medium text-chart-5 hover:bg-chart-5/20 transition-colors"
             >
-              <ArrowUpRight size={16} weight="regular" /> Promote
+              <ArrowUpRight size={16} /> Promote
             </button>
             <button
               onClick={handleMoveBackAll}
               className="inline-flex items-center gap-1 rounded-md bg-secondary/60 px-3 py-2 text-ui font-medium text-muted-foreground hover:bg-hover-bg transition-colors"
             >
-              <Tray size={16} weight="regular" /> Back to Stone
+              <Tray size={16} /> Back to Stone
             </button>
           </>
         )
@@ -265,7 +267,7 @@ export function FloatingActionBar({
             onClick={handleDemoteAll}
             className="inline-flex items-center gap-1 rounded-md bg-secondary/60 px-3 py-2 text-ui font-medium text-muted-foreground hover:bg-hover-bg transition-colors"
           >
-            <ArrowDownLeft size={16} weight="regular" /> Demote
+            <ArrowDownLeft size={16} /> Demote
           </button>
         )
 
@@ -278,7 +280,7 @@ export function FloatingActionBar({
                 onClick={handleKeepInboxOnly}
                 className="inline-flex items-center gap-1 rounded-md bg-accent/10 px-3 py-2 text-ui font-medium text-accent hover:bg-accent/20 transition-colors"
               >
-                <PhCheck size={16} weight="bold" /> Done {inboxCount}
+                <PhCheck size={16} strokeWidth={2.5} /> Done {inboxCount}
               </button>
             )}
             {captureCount > 0 && (
@@ -286,7 +288,7 @@ export function FloatingActionBar({
                 onClick={handlePromoteCaptureOnly}
                 className="inline-flex items-center gap-1 rounded-md bg-chart-5/10 px-3 py-2 text-ui font-medium text-chart-5 hover:bg-chart-5/20 transition-colors"
               >
-                <ArrowUpRight size={16} weight="regular" /> Promote {captureCount}
+                <ArrowUpRight size={16} /> Promote {captureCount}
               </button>
             )}
             {permanentCount > 0 && (
@@ -294,7 +296,7 @@ export function FloatingActionBar({
                 onClick={handleDemotePermanentOnly}
                 className="inline-flex items-center gap-1 rounded-md bg-secondary/60 px-3 py-2 text-ui font-medium text-muted-foreground hover:bg-hover-bg transition-colors"
               >
-                <ArrowDownLeft size={16} weight="regular" /> Demote {permanentCount}
+                <ArrowDownLeft size={16} /> Demote {permanentCount}
               </button>
             )}
           </>
@@ -313,7 +315,7 @@ export function FloatingActionBar({
       <div className="flex items-center gap-1 px-4 py-2.5">
         {/* Selection info */}
         <div className="flex items-center gap-1.5 px-1.5">
-          <Lightning className="text-accent" size={16} weight="regular" />
+          <Lightning className="text-accent" size={16} />
           <span className="text-ui font-medium text-foreground whitespace-nowrap">
             {count} selected
           </span>
@@ -321,7 +323,7 @@ export function FloatingActionBar({
             onClick={onClearSelection}
             className="rounded-md p-0.5 text-muted-foreground hover:text-foreground hover:bg-hover-bg transition-colors"
           >
-            <PhX size={16} weight="regular" />
+            <PhX size={16} />
           </button>
         </div>
 
@@ -410,9 +412,9 @@ export function FloatingActionBar({
               className="inline-flex items-center gap-1 rounded-md bg-secondary/60 px-3 py-2 text-ui font-medium text-muted-foreground hover:bg-hover-bg hover:text-foreground transition-colors"
             >
               {selectedNotes.every((n) => n.pinned) ? (
-                <><PushPinSlash size={16} weight="regular" /> Unpin</>
+                <><PushPinSlash size={16} /> Unpin</>
               ) : (
-                <><PushPin size={16} weight="regular" className="text-amber-500" /> Pin</>
+                <><PushPin size={16} className="text-amber-500" /> Pin</>
               )}
             </button>
 
@@ -422,7 +424,7 @@ export function FloatingActionBar({
               onClick={handleTrashAll}
               className="inline-flex items-center gap-1 rounded-md bg-destructive/10 px-3 py-2 text-ui font-medium text-destructive hover:bg-destructive/20 transition-colors"
             >
-              <Trash size={16} weight="regular" /> Trash
+              <Trash size={16} /> Trash
             </button>
 
             {/* GitMerge */}
@@ -437,7 +439,7 @@ export function FloatingActionBar({
               }}
               className="inline-flex items-center gap-1 rounded-md bg-secondary/60 px-3 py-2 text-ui font-medium text-muted-foreground hover:bg-hover-bg hover:text-foreground transition-colors"
             >
-              <GitMerge size={16} weight="regular" /> GitMerge
+              <GitMerge size={16} /> GitMerge
             </button>
 
             {/* Split (single selection only) */}
@@ -450,7 +452,7 @@ export function FloatingActionBar({
                 className="inline-flex items-center gap-1 rounded-md bg-secondary/60 px-3 py-2 text-ui font-medium text-muted-foreground hover:bg-hover-bg hover:text-foreground transition-colors"
                 title="Split this note into two"
               >
-                <Scissors size={16} weight="regular" /> Split
+                <Scissors size={16} /> Split
               </button>
             )}
 
@@ -459,7 +461,7 @@ export function FloatingActionBar({
               onClick={() => setWikiAssemblyOpen(true)}
               className="inline-flex items-center gap-1 rounded-md bg-secondary/60 px-3 py-2 text-ui font-medium text-muted-foreground hover:bg-hover-bg hover:text-foreground transition-colors"
             >
-              <BookOpen size={16} weight="regular" /> Wiki
+              <BookOpen size={16} /> Wiki
             </button>
 
             {/* Link */}
@@ -468,7 +470,7 @@ export function FloatingActionBar({
               onClick={() => setLinkOpen(true)}
               className="inline-flex items-center gap-1 rounded-md bg-secondary/60 px-3 py-2 text-ui font-medium text-muted-foreground hover:bg-hover-bg hover:text-foreground transition-colors"
             >
-              <PhLink size={16} weight="regular" /> Link
+              <PhLink size={16} /> Link
             </button>
 
             {/* Move to folder — bulk single-folder replace. Each selected
@@ -482,7 +484,7 @@ export function FloatingActionBar({
                   className="inline-flex items-center gap-1 rounded-md bg-secondary/60 px-3 py-2 text-ui font-medium text-muted-foreground hover:bg-hover-bg hover:text-foreground transition-colors"
                   title="Move selected notes to a folder (replaces existing memberships)"
                 >
-                  <FolderOpen size={16} weight="regular" /> Move
+                  <FolderOpen size={16} /> Move
                 </button>
               </PopoverTrigger>
               <PopoverContent align="center" className="w-56 p-1">
@@ -518,7 +520,7 @@ export function FloatingActionBar({
                   className="inline-flex items-center gap-1 rounded-md bg-secondary/60 px-3 py-2 text-ui font-medium text-muted-foreground hover:bg-hover-bg hover:text-foreground transition-colors"
                   title="Add selected notes to one or more folders (preserves existing memberships)"
                 >
-                  <FolderOpen size={16} weight="regular" /> Add to
+                  <FolderOpen size={16} /> Add to
                 </button>
               </PopoverTrigger>
               <PopoverContent align="center" className="w-56 p-1">

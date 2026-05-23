@@ -25,11 +25,13 @@ import {
   ContextMenuTrigger,
   ContextMenuSeparator,
 } from "@/components/ui/context-menu"
-import { Plus as PhPlus } from "@phosphor-icons/react/dist/ssr/Plus"
-import { Trash } from "@phosphor-icons/react/dist/ssr/Trash"
-import { PushPin } from "@phosphor-icons/react/dist/ssr/PushPin"
-import { PushPinSlash } from "@phosphor-icons/react/dist/ssr/PushPinSlash"
-import { MagnifyingGlass } from "@phosphor-icons/react/dist/ssr/MagnifyingGlass"
+import {
+  Plus as PhPlus,
+  Trash2 as Trash,
+  Pin as PushPin,
+  PinOff as PushPinSlash,
+  Search as MagnifyingGlass,
+} from "lucide-react"
 import { cn } from "@/lib/utils"
 import type { WikiTemplate } from "@/lib/types"
 import { ViewHeader } from "@/components/view-header"
@@ -80,7 +82,7 @@ function TemplateCard({
               <IconTemplate size={16} />
               <span className="truncate text-ui font-medium text-foreground">{template.name}</span>
             </div>
-            {template.pinned && <PushPin size={12} weight="fill" className="shrink-0 text-accent" />}
+            {template.pinned && <PushPin size={12} fill="currentColor" className="shrink-0 text-accent" />}
           </div>
           {template.description && (
             <p className="text-2xs text-muted-foreground line-clamp-2">{template.description}</p>
@@ -97,26 +99,26 @@ function TemplateCard({
       </ContextMenuTrigger>
       <ContextMenuContent>
         <ContextMenuItem onClick={onApply}>
-          <PhPlus size={14} weight="regular" className="mr-2" />
+          <PhPlus size={14} strokeWidth={2} className="mr-2" />
           Create wiki from this
         </ContextMenuItem>
         <ContextMenuSeparator />
         <ContextMenuItem onClick={onPin}>
           {template.pinned ? (
             <>
-              <PushPinSlash size={14} weight="regular" className="mr-2" />
+              <PushPinSlash size={14} strokeWidth={2} className="mr-2" />
               Unpin
             </>
           ) : (
             <>
-              <PushPin size={14} weight="regular" className="mr-2" />
+              <PushPin size={14} strokeWidth={2} className="mr-2" />
               Pin
             </>
           )}
         </ContextMenuItem>
         <ContextMenuSeparator />
         <ContextMenuItem onClick={onDelete} className="text-destructive">
-          <Trash size={14} weight="regular" className="mr-2" />
+          <Trash size={14} strokeWidth={2} className="mr-2" />
           Move to trash
         </ContextMenuItem>
       </ContextMenuContent>
@@ -185,7 +187,7 @@ export function WikiTemplatesView() {
             <div className="relative">
               <MagnifyingGlass
                 size={14}
-                weight="regular"
+                strokeWidth={2}
                 className="absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none"
               />
               <input

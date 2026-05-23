@@ -13,16 +13,18 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import { House } from "@phosphor-icons/react/dist/ssr/House"
-import { NotePencil } from "@phosphor-icons/react/dist/ssr/NotePencil"
-// Wiki space icon = Phosphor `BookOpen` (matches activity bar / sidebar /
-// sidepanel — single source of truth). Aliased as `BookOpenText` to keep
-// the local lookup map below readable; the import name no longer matters.
-import { BookOpen as BookOpenText } from "@phosphor-icons/react/dist/ssr/BookOpen"
-import { CalendarBlank } from "@phosphor-icons/react/dist/ssr/CalendarBlank"
-import { Graph } from "@phosphor-icons/react/dist/ssr/Graph"
-import { Books } from "@phosphor-icons/react/dist/ssr/Books"
-import { CaretDown } from "@phosphor-icons/react/dist/ssr/CaretDown"
+import {
+  Home as House,
+  NotebookPen as NotePencil,
+  // Wiki space icon = Lucide `BookOpen` (matches activity bar / sidebar /
+  // sidepanel — single source of truth). Aliased as `BookOpenText` to keep
+  // the local lookup map below readable; the import name no longer matters.
+  BookOpen as BookOpenText,
+  Calendar as CalendarBlank,
+  Network as Graph,
+  Library as Books,
+  ChevronDown as CaretDown,
+} from "lucide-react"
 import type { Note, ActivitySpace } from "@/lib/types"
 import { StatusShapeIcon } from "@/components/status-icon"
 import { getNoteAncestors } from "@/lib/note-hierarchy"
@@ -122,7 +124,7 @@ export function EditorBreadcrumb({ note, onClose, pane = 'primary' }: EditorBrea
               className="shrink-0 flex items-center gap-1 text-lg text-muted-foreground transition-colors hover:text-foreground cursor-pointer"
             >
               {SPACE_LABELS[currentSpace]}
-              <CaretDown size={12} weight="bold" className="text-muted-foreground/60" />
+              <CaretDown size={12} strokeWidth={2.5} className="text-muted-foreground/60" />
             </button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="start" className="w-40">
@@ -134,7 +136,7 @@ export function EditorBreadcrumb({ note, onClose, pane = 'primary' }: EditorBrea
                   onClick={() => handleSecondarySpaceSwitch(space)}
                   className={cn(currentSpace === space && "bg-accent/10 text-accent")}
                 >
-                  <Icon size={16} weight="regular" />
+                  <Icon size={16} />
                   {SPACE_LABELS[space]}
                 </DropdownMenuItem>
               )

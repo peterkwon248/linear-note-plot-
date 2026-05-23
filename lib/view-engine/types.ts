@@ -252,12 +252,14 @@ export const VALID_SORT_FIELDS: SortField[] = [
   "name", "noteCount", "memberCount", "fieldCount", "size", "fileType",
   // books-view-engine-2
   "itemCount",
+  // wiki-categories descendant article count
+  "articles",
 ]
 
 export const VALID_GROUP_BY: GroupBy[] = [
   "none", "status", "priority", "date", "folder", "label", "triage", "linkCount",
   // Wiki-specific
-  "tier", "parent",
+  "tier", "parent", "wikiStatus",
   // Tree grouping
   "family",
   // Hierarchy role
@@ -266,6 +268,10 @@ export const VALID_GROUP_BY: GroupBy[] = [
   "tag", "category", "sticker", "book", "connections",
   // books-view-engine-3 (Books)
   "kind", "pinned",
+  // Alphabetical index grouping (cross-entity — replaces legacy showAlphaIndex)
+  "firstLetter",
+  // Time-bucket grouping by createdAt (5-tier — used by Wiki Categories etc.)
+  "createdAt",
 ]
 
 export const VALID_VIEW_MODES: ViewMode[] = ["list", "board", "grid", "insights", "calendar", "graph", "gallery", "timeline"]

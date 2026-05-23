@@ -8,6 +8,48 @@
 
 ---
 
+## 🚀 2026-05-23 (후속) — **Audit v2 + PR-A 데이터 무결성 + Lucide 마이그레이션 90 파일 (PR-X1~X4)** ⭐⭐⭐⭐⭐
+
+**범위**: 거대 세션 단일 PR. 16+ round 사용자 대화 (audit 브레인스토밍 → Linear 마인드셋 결정 → PR-X1~X4 mechanical batch). Audit 문서 v2 + PR-A 데이터 무결성 5건 + Lucide 마이그레이션 90 파일. Store v144 무변경.
+
+**핵심 결정 (영구, 후보 #94~#97)**:
+
+- **#94 Lucide-react = Plot icon library 통일 표준** (shadcn 정통). Linear/Vercel/Tailwind 톤. Phosphor의 weight variant 다양성 대신 sharp/geometric/minimal 톤 + shadcn 정합. Plot의 Linear-level polish 추구와 align.
+- **#95 Brand icon 5종만 phosphor 유지** — Stone(Hexagon)/Brick(Cube)/Block(Cuboid2x2 자체)/Stub(IconWikiStub 자체)/Article(IconWikiArticle 자체). Smart/Hybrid/Manual Books는 utility로 통일 (Zap/Sparkles/Pencil). Plot 자체 컴포넌트는 phosphor weight prop만 받음 → lucide 변환 시 자체 컴포넌트엔 strokeWidth 박지 말 것.
+- **#96 Phosphor → Lucide weight prop 변환 룰** — `regular`→`strokeWidth={2}` / `bold`→`strokeWidth={2.5}` / `light`→`strokeWidth={1.5}` / `thin`→`strokeWidth={1}` / `fill`→`fill="currentColor"` / `duotone`→`strokeWidth={1.5}` / dynamic `weight={cond?"fill":"regular"}`→`fill={cond?"currentColor":"none"}`.
+- **#97 (후보, PR-B에서 구현) Mode-aware UI 룰 (Linear-style)**:
+  - L1: UI 노출 = 100% 동작 (modes 선언과 코드 갭 해소는 같은 PR)
+  - L2: Show, don't disable (의미 없으면 안 보여줌)
+  - L3: View is a memo, not a config (mode 전환 시 invalid 옵션 normalize auto reset)
+  - L4: Make the right thing default (각 mode default groupBy/sort product 결정)
+  - L5: Self-documenting source of truth (view-configs.tsx declarative modes 필드)
+
+**Audit + 계획 산출물**: `.omc/plans/view-state-reliability-audit.md` v2 — 4 dimension × 11 ViewConfig × view modes 매트릭스 + PR 분할 7개 (PR-A~G) + §8 사용자 결정 3개 (timeline default groupBy / PR-B2 같이 갈지 / Library hook 통합).
+
+**완료**:
+
+- **PR-A 데이터 무결성 5건** (사용자 신고 "가끔 안 됨" 8할 해소):
+  - B1 types.ts:257 — `VALID_GROUP_BY`에 `firstLetter`/`createdAt`/`wikiStatus` 추가
+  - B2 types.ts:248 — `VALID_SORT_FIELDS`에 `articles` 추가
+  - B3 defaults.ts:17 — `"words"` → `"wordCount"` (VALID_COLUMNS 매치)
+  - B8 use-tags/stickers/references-view — fail-closed `return false` → fail-open `return true`
+  - B9 use-files-view — searchQuery stage 추가
+- **PR-X1~X4 Lucide 마이그레이션 90 파일**: UI primitive 21 + chrome 17 + side-panel 17 + view components 30 = 85 (+ 잔여 5 wiki-timeline/wiki-editor/workspace)
+- **부수 효과**: carousel.tsx KeyboardEvent.key 비교 버그 자동 fix (`'PhArrowLeft'` → `'ArrowLeft'`, lucide alias replace_all로)
+
+**기술 학습 (영구)**:
+
+- **자체 컴포넌트는 lucide-incompatible** — Plot icons는 phosphor weight prop만 받는 자체 SVG. strokeWidth 박으면 TS error. lucide 변환 대상에서 의도적 제외.
+- **carousel.tsx 사례 — alias 이름이 string literal로 박힌 패턴** — KeyboardEvent.key 같은 비교 string도 lucide alias replace_all로 부수 fix됨.
+- **timeline-event-markers처럼 indirect phosphor 사용** — phosphor import 없어도 다른 module(wiki-timeline-config)에서 import한 컴포넌트 사용. 잔여 weight 잡으려면 grep 풀스캔.
+- **마이그레이션 batch 패턴** — Grep 인벤토리 → Read 부분 (import 영역) → import block 통째 교체 → weight 4-5종 replace_all → tsc → 잔여 fix.
+- **Phosphor 별칭 import 패턴 (alias 유지)** — `import { Lucide as PhAlias } from "lucide-react"` — JSX 변경 0 (minimum-diff).
+- **Audit-first 워크플로우의 가치** — "계획부터" 룰로 거대 작업 (90 파일 + 14 버그) 깔끔 진행. PR-A는 audit 끝나야 진입. PR-X1~X4는 mechanical이라 audit 없이 batch.
+
+**다음**: PR-X5 (editor + wiki block + comments lucide ~30 파일) → audit §8 사용자 결정 후 PR-B (mode-aware UI) → PR-X6 잔여 lucide. SESSION-LOG 2026-05-23 후속 hook 참조.
+
+---
+
 ## 🚀 2026-05-23 — **타임라인 비주얼 리디자인 (얇은 선 / 스타트칩 / status 색) + "All" 모드** ⭐⭐⭐⭐⭐
 
 **범위**: 사용자와 다단계 브레인스토밍·반복으로 타임라인 막대/마커/색 전면 재설계. 단일 PR, 8파일 (+224/−141, 전부 `components/views/wiki-timeline*`). Store v144 무변경.

@@ -23,9 +23,11 @@
 
 import { useMemo } from "react"
 import { usePlotStore } from "@/lib/store"
-import { Bookmark as PhBookmark } from "@phosphor-icons/react/dist/ssr/Bookmark"
-import { FileText } from "@phosphor-icons/react/dist/ssr/FileText"
-import { Link as PhLink } from "@phosphor-icons/react/dist/ssr/Link"
+import {
+  Bookmark as PhBookmark,
+  FileText,
+  Link as PhLink,
+} from "lucide-react"
 import { cn } from "@/lib/utils"
 import type { Label } from "@/lib/types"
 
@@ -70,7 +72,7 @@ export function LabelDetailPanel({ label }: { label: Label }) {
       <div className="flex items-center justify-between border-b border-border px-4 py-3">
         <div className="flex items-center gap-2 min-w-0">
           <span className="inline-flex items-center gap-1 rounded-md bg-secondary/40 px-1.5 py-0.5 text-2xs font-medium text-muted-foreground">
-            <PhBookmark size={11} weight="regular" />
+            <PhBookmark size={11} />
             Label
           </span>
           <span
@@ -88,7 +90,7 @@ export function LabelDetailPanel({ label }: { label: Label }) {
       </div>
 
       {/* ── Properties (= stats only) ────────────────────── */}
-      <InspectorSection title="Properties" icon={<FileText size={16} weight="regular" />}>
+      <InspectorSection title="Properties" icon={<FileText size={16} />}>
         <div className="space-y-2">
           <div className="flex items-center justify-between">
             <span className="text-note text-muted-foreground">Notes</span>
@@ -114,7 +116,7 @@ export function LabelDetailPanel({ label }: { label: Label }) {
       <div className="mx-4 border-b border-border" />
 
       {/* ── Used by (cross-reference) ────────────────────── */}
-      <InspectorSection title="Used by" icon={<PhLink size={16} weight="regular" />}>
+      <InspectorSection title="Used by" icon={<PhLink size={16} />}>
         {labeledNotes.length === 0 ? (
           <p className="text-note text-muted-foreground/70 italic px-2">
             No notes use this label yet
@@ -127,7 +129,7 @@ export function LabelDetailPanel({ label }: { label: Label }) {
                 onClick={() => openNote(n.id)}
                 className="flex w-full items-center gap-2 rounded-md px-2 py-1 text-left text-note text-foreground hover:bg-hover-bg transition-colors"
               >
-                <FileText size={13} weight="regular" className="shrink-0 text-muted-foreground" />
+                <FileText size={13} className="shrink-0 text-muted-foreground" />
                 <span className="truncate flex-1">{n.title || "Untitled"}</span>
               </button>
             ))}

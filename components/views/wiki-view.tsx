@@ -16,24 +16,30 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover"
-import { BookOpen } from "@phosphor-icons/react/dist/ssr/BookOpen"
+import { BookOpen } from "lucide-react"
 import { IconWiki, IconChevronRight, IconWikiStub, IconWikiArticle } from "@/components/plot-icons"
-import { Plus as PhPlus } from "@phosphor-icons/react/dist/ssr/Plus"
-import { MagnifyingGlass } from "@phosphor-icons/react/dist/ssr/MagnifyingGlass"
-import { Warning } from "@phosphor-icons/react/dist/ssr/Warning"
-import { ArrowLeft } from "@phosphor-icons/react/dist/ssr/ArrowLeft"
+import {
+  Plus as PhPlus,
+  Search as MagnifyingGlass,
+  AlertTriangle as Warning,
+  ArrowLeft,
+} from "lucide-react"
 import { WikiReaderSettings } from "@/components/wiki-editor/wiki-reader-settings"
-import { PencilLine } from "@phosphor-icons/react/dist/ssr/PencilLine"
-import { Check as PhCheck } from "@phosphor-icons/react/dist/ssr/Check"
-import { ArrowLineUp } from "@phosphor-icons/react/dist/ssr/ArrowLineUp"
-import { FileText } from "@phosphor-icons/react/dist/ssr/FileText"
-import { DotsThree } from "@phosphor-icons/react/dist/ssr/DotsThree"
-import { GitMerge } from "@phosphor-icons/react/dist/ssr/GitMerge"
-import { CaretLeft } from "@phosphor-icons/react/dist/ssr/CaretLeft"
+import {
+  PenLine as PencilLine,
+  Check as PhCheck,
+  ArrowUpToLine as ArrowLineUp,
+  FileText,
+  MoreHorizontal as DotsThree,
+  GitMerge,
+  ChevronLeft as CaretLeft,
+} from "lucide-react"
 import { WikiLayoutToggle } from "@/components/wiki-editor/wiki-layout-toggle"
-import { TextAa } from "@phosphor-icons/react/dist/ssr/TextAa"
-import { SplitHorizontal } from "@phosphor-icons/react/dist/ssr/SplitHorizontal"
-import { SidebarSimple } from "@phosphor-icons/react/dist/ssr/SidebarSimple"
+import {
+  CaseSensitive as TextAa,
+  SplitSquareHorizontal as SplitHorizontal,
+  PanelLeft as SidebarSimple,
+} from "lucide-react"
 import {
   Dialog,
   DialogContent,
@@ -805,7 +811,7 @@ export function WikiView() {
                     className="flex h-8 w-8 items-center justify-center rounded-md text-foreground/75 dark:text-muted-foreground/60 hover:bg-hover-bg hover:text-foreground dark:hover:text-muted-foreground transition-all duration-100"
                     title="Font size"
                   >
-                    <TextAa size={18} weight="regular" />
+                    <TextAa size={18} strokeWidth={2} />
                   </button>
                 </PopoverTrigger>
                 <PopoverContent align="end" className="w-auto p-0" sideOffset={4}>
@@ -864,7 +870,7 @@ export function WikiView() {
                   onClick={() => setIsEditingWikiArticle(false)}
                   className="flex items-center gap-1.5 rounded-md bg-emerald-600 px-2.5 py-1 text-note font-medium text-white transition-colors duration-150 hover:bg-emerald-700"
                 >
-                  <PhCheck size={14} weight="bold" />
+                  <PhCheck size={14} strokeWidth={2.5} />
                   Done
                 </button>
               ) : (
@@ -872,7 +878,7 @@ export function WikiView() {
                   onClick={() => setIsEditingWikiArticle(true)}
                   className="flex items-center gap-1.5 rounded-md bg-accent px-2.5 py-1 text-note font-medium text-accent-foreground transition-colors duration-150 hover:bg-accent/90"
                 >
-                  <PencilLine size={14} weight="regular" />
+                  <PencilLine size={14} strokeWidth={2} />
                   Edit
                 </button>
               )}
@@ -896,7 +902,7 @@ export function WikiView() {
               onClick={() => { setSelectedWikiArticleId(null); setIsEditingWikiArticle(false) }}
               className="flex items-center gap-1.5 rounded-md px-2 py-1 text-note text-muted-foreground transition-colors duration-150 hover:bg-hover-bg hover:text-foreground"
             >
-              <ArrowLeft size={14} weight="regular" />
+              <ArrowLeft size={14} strokeWidth={2} />
               Back
             </button>
             <WikiPickerChevron
@@ -941,7 +947,7 @@ export function WikiView() {
     return (
       <div className="flex flex-1 flex-col overflow-hidden">
         <ViewHeader
-          icon={<BookOpen size={20} weight="regular" />}
+          icon={<BookOpen size={20} strokeWidth={2} />}
           title={selectedNote.title || "Untitled"}
           actions={
             <div className="flex items-center gap-2">
@@ -951,7 +957,7 @@ export function WikiView() {
                     className="flex items-center justify-center h-7 w-7 rounded-md text-muted-foreground transition-colors duration-150 hover:bg-hover-bg hover:text-foreground"
                     aria-label="More actions"
                   >
-                    <DotsThree size={16} weight="bold" />
+                    <DotsThree size={16} strokeWidth={2.5} />
                   </button>
                 </PopoverTrigger>
                 <PopoverContent align="end" className="w-48 p-1">
@@ -959,7 +965,7 @@ export function WikiView() {
                     onClick={() => { toggleTrash(selectedArticleId); setSelectedArticleId(null) }}
                     className="flex w-full items-center gap-2.5 rounded-md px-3 py-2 text-left text-note text-destructive transition-colors duration-150 hover:bg-destructive/10"
                   >
-                    <Warning size={14} weight="regular" />
+                    <Warning size={14} strokeWidth={2} />
                     Move to Trash
                   </button>
                 </PopoverContent>
@@ -969,7 +975,7 @@ export function WikiView() {
                   onClick={handleDoneEditing}
                   className="flex items-center gap-1.5 rounded-md bg-emerald-600 px-2.5 py-1 text-note font-medium text-white transition-colors duration-150 hover:bg-emerald-700"
                 >
-                  <PhCheck size={14} weight="bold" />
+                  <PhCheck size={14} strokeWidth={2.5} />
                   Done
                 </button>
               ) : (
@@ -977,7 +983,7 @@ export function WikiView() {
                   onClick={handleEditArticle}
                   className="flex items-center gap-1.5 rounded-md bg-accent px-2.5 py-1 text-note font-medium text-accent-foreground transition-colors duration-150 hover:bg-accent/90"
                 >
-                  <PencilLine size={14} weight="regular" />
+                  <PencilLine size={14} strokeWidth={2} />
                   Edit
                 </button>
               )}
@@ -990,7 +996,7 @@ export function WikiView() {
               onClick={handleBack}
               className="flex items-center gap-1.5 rounded-md px-2 py-1 text-note text-muted-foreground transition-colors duration-150 hover:bg-hover-bg hover:text-foreground"
             >
-              <ArrowLeft size={14} weight="regular" />
+              <ArrowLeft size={14} strokeWidth={2} />
               Back
             </button>
           </div>
@@ -1009,7 +1015,7 @@ export function WikiView() {
   return (
     <div data-editor-scope="wiki" className="flex flex-1 flex-col overflow-hidden">
       <ViewHeader
-        icon={<BookOpen size={20} weight="regular" />}
+        icon={<BookOpen size={20} strokeWidth={2} />}
         title="Wiki"
         count={stats.total}
         saveViewMode={wikiViewMode === "dashboard" ? "hidden" : wikiSaveViewMode}
@@ -1069,7 +1075,7 @@ export function WikiView() {
                   <button
                     className="flex items-center gap-1.5 rounded-md border border-border bg-secondary/60 px-2.5 py-1 text-note font-medium text-foreground transition-colors duration-150 hover:bg-hover-bg"
                   >
-                    <ArrowLineUp size={14} weight="regular" />
+                    <ArrowLineUp size={14} strokeWidth={2} />
                     Import Note
                   </button>
                 </PopoverTrigger>
@@ -1079,7 +1085,7 @@ export function WikiView() {
                       <div className="border-b border-border px-3 py-2">
                         <p className="mb-1.5 text-2xs font-medium uppercase tracking-wider text-muted-foreground">Step 1 — Select a note</p>
                         <div className="relative">
-                          <MagnifyingGlass className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" size={14} weight="regular" />
+                          <MagnifyingGlass className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" size={14} strokeWidth={2} />
                           <input
                             ref={importInputRef}
                             type="text"
@@ -1102,7 +1108,7 @@ export function WikiView() {
                               onClick={() => handleImportSelectNote(note.id)}
                               className="flex w-full items-center gap-2.5 px-3 py-2 text-left text-note text-foreground transition-colors duration-150 hover:bg-hover-bg"
                             >
-                              <FileText className="shrink-0 text-muted-foreground" size={14} weight="regular" />
+                              <FileText className="shrink-0 text-muted-foreground" size={14} strokeWidth={2} />
                               <span className="min-w-0 flex-1 truncate">
                                 {note.title || "Untitled"}
                               </span>
@@ -1119,12 +1125,12 @@ export function WikiView() {
                       <div className="border-b border-border px-3 py-2">
                         <div className="mb-1.5 flex items-center gap-1.5">
                           <button onClick={() => { setImportStep("select-note"); setImportTargetQuery("") }} className="text-muted-foreground hover:text-foreground transition-colors">
-                            <CaretLeft size={14} weight="bold" />
+                            <CaretLeft size={14} strokeWidth={2.5} />
                           </button>
                           <p className="text-2xs font-medium uppercase tracking-wider text-muted-foreground">Step 2 — Select target</p>
                         </div>
                         <div className="relative">
-                          <MagnifyingGlass className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" size={14} weight="regular" />
+                          <MagnifyingGlass className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" size={14} strokeWidth={2} />
                           <input
                             ref={importTargetInputRef}
                             type="text"
@@ -1141,7 +1147,7 @@ export function WikiView() {
                           onClick={handleImportCreateNew}
                           className="flex w-full items-center gap-2.5 px-3 py-2 text-left text-note text-accent transition-colors duration-150 hover:bg-hover-bg"
                         >
-                          <PhPlus className="shrink-0" size={14} weight="bold" />
+                          <PhPlus className="shrink-0" size={14} strokeWidth={2.5} />
                           <span className="font-medium">Create new article</span>
                         </button>
 
@@ -1155,7 +1161,7 @@ export function WikiView() {
                                 onClick={() => handleImportIntoExisting(a.id)}
                                 className="flex w-full items-center gap-2.5 px-3 py-2 text-left text-note text-foreground transition-colors duration-150 hover:bg-hover-bg"
                               >
-                                <BookOpen size={14} weight="regular" className="shrink-0 text-muted-foreground" />
+                                <BookOpen size={14} strokeWidth={2} className="shrink-0 text-muted-foreground" />
                                 <span className="min-w-0 flex-1 truncate">{a.title}</span>
                               </button>
                             ))}
@@ -1172,7 +1178,7 @@ export function WikiView() {
                                 onClick={() => handleImportIntoRedLink(r.title)}
                                 className="flex w-full items-center gap-2.5 px-3 py-2 text-left text-note text-foreground transition-colors duration-150 hover:bg-hover-bg"
                               >
-                                <Warning size={14} weight="regular" className="shrink-0 text-muted-foreground" />
+                                <Warning size={14} strokeWidth={2} className="shrink-0 text-muted-foreground" />
                                 <span className="min-w-0 flex-1 truncate">{r.title}</span>
                                 <span className="shrink-0 text-2xs text-muted-foreground">{r.refCount} refs</span>
                               </button>

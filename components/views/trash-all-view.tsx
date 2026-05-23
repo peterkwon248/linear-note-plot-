@@ -22,17 +22,19 @@ import type {
   Attachment,
   NoteStatus,
 } from "@/lib/types"
-import { ArrowCounterClockwise } from "@phosphor-icons/react/dist/ssr/ArrowCounterClockwise"
-import { Trash } from "@phosphor-icons/react/dist/ssr/Trash"
-import { BookOpen } from "@phosphor-icons/react/dist/ssr/BookOpen"
-import { Hash } from "@phosphor-icons/react/dist/ssr/Hash"
-import { Tag as TagIcon } from "@phosphor-icons/react/dist/ssr/Tag"
-import { FileText } from "@phosphor-icons/react/dist/ssr/FileText"
-import { BookmarkSimple } from "@phosphor-icons/react/dist/ssr/BookmarkSimple"
-import { Paperclip } from "@phosphor-icons/react/dist/ssr/Paperclip"
-import { Check as PhCheck } from "@phosphor-icons/react/dist/ssr/Check"
-import { Minus as PhMinus } from "@phosphor-icons/react/dist/ssr/Minus"
-import { X as PhX } from "@phosphor-icons/react/dist/ssr/X"
+import {
+  RotateCcw as ArrowCounterClockwise,
+  Trash2 as Trash,
+  BookOpen,
+  Hash,
+  Tag as TagIcon,
+  FileText,
+  Bookmark as BookmarkSimple,
+  Paperclip,
+  Check as PhCheck,
+  Minus as PhMinus,
+  X as PhX,
+} from "lucide-react"
 
 type EntityKind = "note" | "wiki" | "book" | "tag" | "label" | "template" | "reference" | "attachment"
 
@@ -97,10 +99,10 @@ function EntityKindIcon({
   }
   const cls = "shrink-0 text-muted-foreground"
   switch (kind) {
-    case "template": return <FileText size={14} weight="regular" className={cls} />
-    case "reference": return <BookmarkSimple size={14} weight="regular" className={cls} />
-    case "attachment": return <Paperclip size={14} weight="regular" className={cls} />
-    default: return <FileText size={14} weight="regular" className={cls} />
+    case "template": return <FileText size={14} strokeWidth={2} className={cls} />
+    case "reference": return <BookmarkSimple size={14} strokeWidth={2} className={cls} />
+    case "attachment": return <Paperclip size={14} strokeWidth={2} className={cls} />
+    default: return <FileText size={14} strokeWidth={2} className={cls} />
   }
 }
 
@@ -156,7 +158,7 @@ function TrashRow({
             ? "bg-accent border-accent"
             : "bg-card border-zinc-400 dark:border-zinc-600 hover:border-zinc-500",
         )}>
-          {isSelected && <PhCheck size={10} weight="bold" className="text-accent-foreground" />}
+          {isSelected && <PhCheck size={10} strokeWidth={2.5} className="text-accent-foreground" />}
         </div>
       </div>
       <div className="w-6 shrink-0 flex items-center justify-center">
@@ -190,7 +192,7 @@ function TrashRow({
           className="flex items-center gap-1 rounded-md px-2 py-1 text-note text-muted-foreground transition-colors hover:bg-hover-bg hover:text-foreground"
           title="Restore"
         >
-          <ArrowCounterClockwise size={14} weight="regular" />
+          <ArrowCounterClockwise size={14} strokeWidth={2} />
           Restore
         </button>
         <button
@@ -198,7 +200,7 @@ function TrashRow({
           className="flex items-center gap-1 rounded-md px-2 py-1 text-note text-destructive transition-colors hover:bg-destructive/10"
           title="Delete permanently"
         >
-          <Trash size={14} weight="regular" />
+          <Trash size={14} strokeWidth={2} />
         </button>
       </div>
     </div>
@@ -391,7 +393,7 @@ export function TrashAllView() {
     return (
       <div className="flex flex-1 items-center justify-center text-center">
         <div>
-          <Trash className="mx-auto mb-3 text-muted-foreground/70" size={40} weight="regular" />
+          <Trash className="mx-auto mb-3 text-muted-foreground/70" size={40} strokeWidth={2} />
           <p className="text-ui text-muted-foreground">Trash is empty</p>
         </div>
       </div>
@@ -464,9 +466,9 @@ export function TrashAllView() {
             aria-label={isAllSelected ? "Deselect all trashed items" : "Select all trashed items"}
           >
             {isAllSelected ? (
-              <PhCheck size={10} weight="bold" className="text-accent-foreground" />
+              <PhCheck size={10} strokeWidth={2.5} className="text-accent-foreground" />
             ) : isSomeSelected ? (
-              <PhMinus size={10} weight="bold" className="text-accent-foreground" />
+              <PhMinus size={10} strokeWidth={2.5} className="text-accent-foreground" />
             ) : null}
           </div>
         </div>
@@ -543,14 +545,14 @@ export function TrashAllView() {
             onClick={handleBulkRestore}
             className="flex items-center gap-1.5 rounded-md px-2.5 py-1 text-note text-foreground transition-colors hover:bg-hover-bg"
           >
-            <ArrowCounterClockwise size={14} weight="regular" />
+            <ArrowCounterClockwise size={14} strokeWidth={2} />
             Restore
           </button>
           <button
             onClick={handleBulkDelete}
             className="flex items-center gap-1.5 rounded-md px-2.5 py-1 text-note text-destructive transition-colors hover:bg-destructive/10"
           >
-            <Trash size={14} weight="regular" />
+            <Trash size={14} strokeWidth={2} />
             Delete forever
           </button>
           <button
@@ -558,7 +560,7 @@ export function TrashAllView() {
             className="flex items-center justify-center rounded-md p-1 text-muted-foreground transition-colors hover:bg-hover-bg hover:text-foreground"
             title="Clear selection"
           >
-            <PhX size={14} weight="regular" />
+            <PhX size={14} strokeWidth={2} />
           </button>
         </div>
       )}

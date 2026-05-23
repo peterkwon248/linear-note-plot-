@@ -12,25 +12,27 @@ import {
   DropdownMenuSubContent,
 } from "@/components/ui/dropdown-menu"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import { FunnelSimple } from "@phosphor-icons/react/dist/ssr/FunnelSimple"
-import { Plus as PhPlus } from "@phosphor-icons/react/dist/ssr/Plus"
-import { X as PhX } from "@phosphor-icons/react/dist/ssr/X"
-import { Check as PhCheck } from "@phosphor-icons/react/dist/ssr/Check"
-import { Lightning } from "@phosphor-icons/react/dist/ssr/Lightning"
-import { Clock as PhClock } from "@phosphor-icons/react/dist/ssr/Clock"
-import { Link as PhLink } from "@phosphor-icons/react/dist/ssr/Link"
-import { Eye as PhEye } from "@phosphor-icons/react/dist/ssr/Eye"
-import { FileMagnifyingGlass } from "@phosphor-icons/react/dist/ssr/FileMagnifyingGlass"
-import { FolderOpen } from "@phosphor-icons/react/dist/ssr/FolderOpen"
-import { Tag as PhTag } from "@phosphor-icons/react/dist/ssr/Tag"
-import { PushPin } from "@phosphor-icons/react/dist/ssr/PushPin"
-import { CircleDashed } from "@phosphor-icons/react/dist/ssr/CircleDashed"
-import { Globe } from "@phosphor-icons/react/dist/ssr/Globe"
-import { BookOpen } from "@phosphor-icons/react/dist/ssr/BookOpen"
-import { FileText } from "@phosphor-icons/react/dist/ssr/FileText"
-import { TextT } from "@phosphor-icons/react/dist/ssr/TextT"
-import { TextAa } from "@phosphor-icons/react/dist/ssr/TextAa"
-import { Hash as PhHash } from "@phosphor-icons/react/dist/ssr/Hash"
+import {
+  Filter as FunnelSimple,
+  Plus as PhPlus,
+  X as PhX,
+  Check as PhCheck,
+  Zap as Lightning,
+  Clock as PhClock,
+  Link as PhLink,
+  Eye as PhEye,
+  FileSearch as FileMagnifyingGlass,
+  FolderOpen,
+  Tag as PhTag,
+  Pin as PushPin,
+  CircleDashed,
+  Globe,
+  BookOpen,
+  FileText,
+  Type as TextT,
+  CaseSensitive as TextAa,
+  Hash as PhHash,
+} from "lucide-react"
 import { StatusBadge } from "@/components/note-fields"
 import type { FilterRule, FilterField, GroupBy } from "@/lib/view-engine/types"
 import type { NoteStatus, NoteSource, Folder, Tag as TagType, Label } from "@/lib/types"
@@ -120,23 +122,23 @@ export function formatFilterLabel(rule: FilterRule, folderList?: Folder[], tagLi
 /* ── Filter chip 4-part decomposition (Linear-style) ─── */
 
 const FIELD_INFO: Record<string, { label: string; icon: React.ReactNode }> = {
-  status:         { label: "Status",    icon: <CircleDashed size={11} weight="regular" /> },
-  folder:         { label: "Folder",    icon: <FolderOpen size={11} weight="regular" /> },
-  label:          { label: "Label",     icon: <PhTag size={11} weight="regular" /> },
-  tags:           { label: "Tags",      icon: <PhHash size={11} weight="regular" /> },
-  source:         { label: "Source",    icon: <FileText size={11} weight="regular" /> },
-  updatedAt:      { label: "Updated",   icon: <PhClock size={11} weight="regular" /> },
-  createdAt:      { label: "Created",   icon: <PhClock size={11} weight="regular" /> },
-  links:          { label: "Links",     icon: <PhLink size={11} weight="regular" /> },
-  reads:          { label: "Reads",     icon: <PhEye size={11} weight="regular" /> },
-  pinned:         { label: "Pinned",    icon: <PushPin size={11} weight="regular" /> },
-  wikiRegistered: { label: "Wiki",      icon: <BookOpen size={11} weight="regular" /> },
-  content:        { label: "Content",   icon: <FileText size={11} weight="regular" /> },
-  title:          { label: "Title",     icon: <TextT size={11} weight="regular" /> },
-  wordCount:      { label: "Words",     icon: <TextAa size={11} weight="regular" /> },
-  category:       { label: "Category",  icon: <PhTag size={11} weight="regular" /> },
-  wikiTier:       { label: "Hierarchy", icon: <PhLink size={11} weight="regular" /> },
-  connectedTo:    { label: "Connected", icon: <PhLink size={11} weight="regular" /> },
+  status:         { label: "Status",    icon: <CircleDashed size={11} /> },
+  folder:         { label: "Folder",    icon: <FolderOpen size={11} /> },
+  label:          { label: "Label",     icon: <PhTag size={11} /> },
+  tags:           { label: "Tags",      icon: <PhHash size={11} /> },
+  source:         { label: "Source",    icon: <FileText size={11} /> },
+  updatedAt:      { label: "Updated",   icon: <PhClock size={11} /> },
+  createdAt:      { label: "Created",   icon: <PhClock size={11} /> },
+  links:          { label: "Links",     icon: <PhLink size={11} /> },
+  reads:          { label: "Reads",     icon: <PhEye size={11} /> },
+  pinned:         { label: "Pinned",    icon: <PushPin size={11} /> },
+  wikiRegistered: { label: "Wiki",      icon: <BookOpen size={11} /> },
+  content:        { label: "Content",   icon: <FileText size={11} /> },
+  title:          { label: "Title",     icon: <TextT size={11} /> },
+  wordCount:      { label: "Words",     icon: <TextAa size={11} /> },
+  category:       { label: "Category",  icon: <PhTag size={11} /> },
+  wikiTier:       { label: "Hierarchy", icon: <PhLink size={11} /> },
+  connectedTo:    { label: "Connected", icon: <PhLink size={11} /> },
 }
 
 export function formatFilterChip(
@@ -264,7 +266,7 @@ function ActiveBadge({ count }: { count: number }) {
 /* ── PhCheck icon for toggleable items ─────────────────── */
 
 function CheckMark({ active }: { active: boolean }) {
-  return <PhCheck className={`shrink-0 ${active ? "text-accent opacity-100" : "opacity-0"}`} size={14} weight="bold" />
+  return <PhCheck className={`shrink-0 ${active ? "text-accent opacity-100" : "opacity-0"}`} size={14} strokeWidth={2.5} />
 }
 
 /* ── Shared menu items (nested sub-menus) ────────────── */
@@ -317,7 +319,7 @@ export function FilterMenuItems({
     <>
       {/* ── Quick Filters (presets) ── */}
       <DropdownMenuItem className="text-2xs font-medium text-muted-foreground" disabled>
-        <Lightning className="mr-1" size={14} weight="regular" /> Quick Filters
+        <Lightning className="mr-1" size={14} /> Quick Filters
       </DropdownMenuItem>
       <DropdownMenuItem onSelect={(e) => {
         e.preventDefault()
@@ -352,7 +354,7 @@ export function FilterMenuItems({
       {showStatusFilter && (
         <DropdownMenuSub>
           <DropdownMenuSubTrigger>
-            <CircleDashed className="text-muted-foreground" size={16} weight="regular" />
+            <CircleDashed className="text-muted-foreground" size={16} />
             <span className="text-note">Status</span>
             <ActiveBadge count={statusCount} />
           </DropdownMenuSubTrigger>
@@ -384,7 +386,7 @@ export function FilterMenuItems({
       {showFolderFilter && (
         <DropdownMenuSub>
           <DropdownMenuSubTrigger>
-            <FolderOpen className="text-muted-foreground" size={16} weight="regular" />
+            <FolderOpen className="text-muted-foreground" size={16} />
             <span className="text-note">Folder</span>
             <ActiveBadge count={folderCount} />
           </DropdownMenuSubTrigger>
@@ -423,7 +425,7 @@ export function FilterMenuItems({
       {groupBy !== "label" && (
         <DropdownMenuSub>
           <DropdownMenuSubTrigger>
-            <PhTag className="text-muted-foreground" size={16} weight="regular" />
+            <PhTag className="text-muted-foreground" size={16} />
             <span className="text-note">Label</span>
             <ActiveBadge count={labelCount} />
           </DropdownMenuSubTrigger>
@@ -464,19 +466,19 @@ export function FilterMenuItems({
       {/* ── Tags ── */}
       <DropdownMenuSub>
         <DropdownMenuSubTrigger>
-          <PhHash className="text-muted-foreground" size={16} weight="regular" />
+          <PhHash className="text-muted-foreground" size={16} />
           <span className="text-note">Tags</span>
           <ActiveBadge count={tagCount} />
         </DropdownMenuSubTrigger>
         <DropdownMenuSubContent className="w-52 max-h-80 overflow-y-auto">
           <DropdownMenuItem onSelect={(e) => { e.preventDefault(); onToggleFilter("tags", "_any") }}>
             <CheckMark active={hasFilter(filters, "tags", "_any")} />
-            <PhTag className="text-muted-foreground" size={16} weight="regular" />
+            <PhTag className="text-muted-foreground" size={16} />
             <span className="text-note">Has tags</span>
           </DropdownMenuItem>
           <DropdownMenuItem onSelect={(e) => { e.preventDefault(); onToggleFilter("tags", "_none") }}>
             <CheckMark active={hasFilter(filters, "tags", "_none")} />
-            <PhTag className="text-muted-foreground" size={16} weight="regular" />
+            <PhTag className="text-muted-foreground" size={16} />
             <span className="text-note">No tags</span>
           </DropdownMenuItem>
           {tags.length > 0 && <DropdownMenuSeparator />}
@@ -511,7 +513,7 @@ export function FilterMenuItems({
       {/* ── Source ── */}
       <DropdownMenuSub>
         <DropdownMenuSubTrigger>
-          <Globe className="text-muted-foreground" size={16} weight="regular" />
+          <Globe className="text-muted-foreground" size={16} />
           <span className="text-note">Source</span>
           <ActiveBadge count={sourceCount} />
         </DropdownMenuSubTrigger>
@@ -557,7 +559,7 @@ export function FilterMenuItems({
       {/* ── Dates ── */}
       <DropdownMenuSub>
         <DropdownMenuSubTrigger>
-          <PhClock className="text-muted-foreground" size={16} weight="regular" />
+          <PhClock className="text-muted-foreground" size={16} />
           <span className="text-note">Dates</span>
           <ActiveBadge count={dateCount} />
         </DropdownMenuSubTrigger>
@@ -618,7 +620,7 @@ export function FilterMenuItems({
       {showLinksFilter && (
         <DropdownMenuSub>
           <DropdownMenuSubTrigger>
-            <PhLink className="text-muted-foreground" size={16} weight="regular" />
+            <PhLink className="text-muted-foreground" size={16} />
             <span className="text-note">Links</span>
             <ActiveBadge count={linksCount} />
           </DropdownMenuSubTrigger>
@@ -672,7 +674,7 @@ export function FilterMenuItems({
       {/* ── Content ── */}
       <DropdownMenuSub>
         <DropdownMenuSubTrigger>
-          <FileText className="text-muted-foreground" size={16} weight="regular" />
+          <FileText className="text-muted-foreground" size={16} />
           <span className="text-note">Content</span>
           <ActiveBadge count={contentCount} />
         </DropdownMenuSubTrigger>
@@ -691,21 +693,21 @@ export function FilterMenuItems({
           {"empty body".includes(contentSearch.toLowerCase()) && (
             <DropdownMenuItem onSelect={(e) => { e.preventDefault(); onToggleFilter("content", "empty") }}>
               <CheckMark active={hasFilter(filters, "content", "empty")} />
-              <FileMagnifyingGlass className="text-muted-foreground" size={16} weight="regular" />
+              <FileMagnifyingGlass className="text-muted-foreground" size={16} />
               <span className="text-note">Empty body</span>
             </DropdownMenuItem>
           )}
           {"untitled".includes(contentSearch.toLowerCase()) && (
             <DropdownMenuItem onSelect={(e) => { e.preventDefault(); onToggleFilter("title", "empty") }}>
               <CheckMark active={hasFilter(filters, "title", "empty")} />
-              <TextT className="text-muted-foreground" size={16} weight="regular" />
+              <TextT className="text-muted-foreground" size={16} />
               <span className="text-note">Untitled</span>
             </DropdownMenuItem>
           )}
           {"unread".includes(contentSearch.toLowerCase()) && (
             <DropdownMenuItem onSelect={(e) => { e.preventDefault(); onToggleFilter("reads", "0") }}>
               <CheckMark active={hasFilter(filters, "reads", "0")} />
-              <PhEye className="text-muted-foreground" size={16} weight="regular" />
+              <PhEye className="text-muted-foreground" size={16} />
               <span className="text-note">Unread</span>
             </DropdownMenuItem>
           )}
@@ -718,21 +720,21 @@ export function FilterMenuItems({
           {"short 50 words".includes(contentSearch.toLowerCase()) && (
             <DropdownMenuItem onSelect={(e) => { e.preventDefault(); onToggleFilter("wordCount", "50", "lt") }}>
               <CheckMark active={hasFilter(filters, "wordCount", "50", "lt")} />
-              <TextAa className="text-muted-foreground" size={16} weight="regular" />
+              <TextAa className="text-muted-foreground" size={16} />
               <span className="text-note">Short (&lt; 50 words)</span>
             </DropdownMenuItem>
           )}
           {"long 200 words".includes(contentSearch.toLowerCase()) && (
             <DropdownMenuItem onSelect={(e) => { e.preventDefault(); onToggleFilter("wordCount", "199", "gt") }}>
               <CheckMark active={hasFilter(filters, "wordCount", "199", "gt")} />
-              <TextAa className="text-muted-foreground" size={16} weight="regular" />
+              <TextAa className="text-muted-foreground" size={16} />
               <span className="text-note">Long (200+ words)</span>
             </DropdownMenuItem>
           )}
           {"very long 500 words".includes(contentSearch.toLowerCase()) && (
             <DropdownMenuItem onSelect={(e) => { e.preventDefault(); onToggleFilter("wordCount", "499", "gt") }}>
               <CheckMark active={hasFilter(filters, "wordCount", "499", "gt")} />
-              <TextAa className="text-muted-foreground" size={16} weight="regular" />
+              <TextAa className="text-muted-foreground" size={16} />
               <span className="text-note">Very long (500+ words)</span>
             </DropdownMenuItem>
           )}
@@ -742,7 +744,7 @@ export function FilterMenuItems({
       {/* ── Pinned ── */}
       <DropdownMenuSub>
         <DropdownMenuSubTrigger>
-          <PushPin className="text-muted-foreground" size={16} weight="regular" />
+          <PushPin className="text-muted-foreground" size={16} />
           <span className="text-note">Pinned</span>
           <ActiveBadge count={pinnedCount} />
         </DropdownMenuSubTrigger>
@@ -932,12 +934,12 @@ export function FilterFieldContent({ groupKey, filters, folders, tags, labels = 
         <>
           <DropdownMenuItem onSelect={(e) => { e.preventDefault(); onToggleFilter("tags", "_any") }}>
             <CheckMark active={hasFilter(filters, "tags", "_any")} />
-            <PhTag className="text-muted-foreground" size={16} weight="regular" />
+            <PhTag className="text-muted-foreground" size={16} />
             <span className="text-note">Has tags</span>
           </DropdownMenuItem>
           <DropdownMenuItem onSelect={(e) => { e.preventDefault(); onToggleFilter("tags", "_none") }}>
             <CheckMark active={hasFilter(filters, "tags", "_none")} />
-            <PhTag className="text-muted-foreground" size={16} weight="regular" />
+            <PhTag className="text-muted-foreground" size={16} />
             <span className="text-note">No tags</span>
           </DropdownMenuItem>
           {tags.length > 0 && <DropdownMenuSeparator />}
@@ -1120,7 +1122,7 @@ export function FilterButton({ hideLabel, ...props }: FilterButtonProps) {
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <button className="flex items-center gap-1.5 rounded-md px-2 py-1 text-note text-muted-foreground transition-colors hover:bg-hover-bg hover:text-foreground">
-          <FunnelSimple size={16} weight="regular" />
+          <FunnelSimple size={16} />
           {!hideLabel && "Filter"}
           {props.filters.length > 0 && (
             <span className="flex h-4 min-w-4 items-center justify-center rounded-full bg-accent/15 px-1 text-2xs font-medium text-accent">
@@ -1207,7 +1209,7 @@ export function FilterChipBar({
                         className={`flex w-full items-center gap-2 px-2.5 py-1.5 text-note text-left rounded hover:bg-accent ${isCurrent ? "font-medium text-foreground" : "text-foreground/80"}`}
                       >
                         {labels[dir]}
-                        {isCurrent && <PhCheck className="ml-auto text-accent" size={12} weight="bold" />}
+                        {isCurrent && <PhCheck className="ml-auto text-accent" size={12} strokeWidth={2.5} />}
                       </button>
                     )
                   })}
@@ -1223,7 +1225,7 @@ export function FilterChipBar({
               className="inline-flex items-center px-1.5 py-0.5 text-accent/60 hover:bg-accent/25 hover:text-accent transition-colors"
               aria-label="Remove filter"
             >
-              <PhX size={10} weight="regular" />
+              <PhX size={10} />
             </button>
           </div>
         )
@@ -1233,7 +1235,7 @@ export function FilterChipBar({
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <button className="inline-flex items-center justify-center rounded-md p-0.5 text-muted-foreground transition-colors hover:bg-hover-bg hover:text-foreground">
-            <PhPlus size={16} weight="regular" />
+            <PhPlus size={16} />
           </button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start" className="w-56">

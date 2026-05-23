@@ -1,12 +1,14 @@
 "use client"
 
 import { useState, useEffect, type ReactNode } from "react"
-import { MagnifyingGlass } from "@phosphor-icons/react/dist/ssr/MagnifyingGlass"
-import { X as PhX } from "@phosphor-icons/react/dist/ssr/X"
-import { FunnelSimple } from "@phosphor-icons/react/dist/ssr/FunnelSimple"
-import { SlidersHorizontal } from "@phosphor-icons/react/dist/ssr/SlidersHorizontal"
-import { SidebarSimple } from "@phosphor-icons/react/dist/ssr/SidebarSimple"
-import { Plus } from "@phosphor-icons/react/dist/ssr/Plus"
+import {
+  Search as MagnifyingGlass,
+  X as PhX,
+  Filter as FunnelSimple,
+  SlidersHorizontal,
+  PanelLeft as SidebarSimple,
+  Plus,
+} from "lucide-react"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { PanelsMenu } from "@/components/panels-menu"
 import {
@@ -15,14 +17,16 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { CaretDown } from "@phosphor-icons/react/dist/ssr/CaretDown"
-import { X as PhXIcon } from "@phosphor-icons/react/dist/ssr/X"
-import { SplitHorizontal } from "@phosphor-icons/react/dist/ssr/SplitHorizontal"
+import {
+  ChevronDown as CaretDown,
+  X as PhXIcon,
+  SplitSquareHorizontal as SplitHorizontal,
+} from "lucide-react"
 import { setSecondarySpace, getSecondarySpace } from "@/lib/table-route"
 import { useActiveSpace } from "@/lib/table-route"
 import { usePane } from "@/components/workspace/pane-context"
 import { usePlotStore } from "@/lib/store"
-import { FloppyDisk } from "@phosphor-icons/react/dist/ssr/FloppyDisk"
+import { Save as FloppyDisk } from "lucide-react"
 
 /* ── Header Icon Button ── */
 
@@ -229,7 +233,7 @@ export function ViewHeader({
         {/* Search bar */}
         {showSearch && (
           <div className="relative flex items-center">
-            <MagnifyingGlass size={14} weight="regular" className="pointer-events-none absolute left-2.5 text-muted-foreground" />
+            <MagnifyingGlass size={14} className="pointer-events-none absolute left-2.5 text-muted-foreground" />
             <input
               type="text"
               value={search}
@@ -242,7 +246,7 @@ export function ViewHeader({
                 onClick={() => setSearch("")}
                 className="absolute right-2 text-muted-foreground hover:text-foreground"
               >
-                <PhX size={14} weight="regular" />
+                <PhX size={14} />
               </button>
             )}
           </div>
@@ -267,7 +271,7 @@ export function ViewHeader({
                   title="Save changes to this view"
                   aria-label="Save changes"
                 >
-                  <FloppyDisk size={16} weight="regular" />
+                  <FloppyDisk size={16} />
                 </button>
               ) : (
                 hydrated ? (
@@ -275,7 +279,7 @@ export function ViewHeader({
                     <PopoverTrigger asChild>
                       <div>
                         <HBtn active={saveAsOpen}>
-                          <FloppyDisk size={16} weight="regular" />
+                          <FloppyDisk size={16} />
                         </HBtn>
                       </div>
                     </PopoverTrigger>
@@ -304,7 +308,7 @@ export function ViewHeader({
                     title="Save current view"
                     aria-label="Save view"
                   >
-                    <FloppyDisk size={16} weight="regular" />
+                    <FloppyDisk size={16} />
                   </button>
                 )
               )
@@ -316,7 +320,7 @@ export function ViewHeader({
                   <PopoverTrigger asChild>
                     <div>
                       <HBtn active={filterOpen || hasActiveFilters}>
-                        <FunnelSimple size={16} weight="regular" />
+                        <FunnelSimple size={16} />
                       </HBtn>
                     </div>
                   </PopoverTrigger>
@@ -330,7 +334,7 @@ export function ViewHeader({
                 </Popover>
               ) : (
                 <HBtn active={hasActiveFilters}>
-                  <FunnelSimple size={16} weight="regular" />
+                  <FunnelSimple size={16} />
                 </HBtn>
               )
             )}
@@ -341,7 +345,7 @@ export function ViewHeader({
                   <PopoverTrigger asChild>
                     <div>
                       <HBtn active={displayOpen}>
-                        <SlidersHorizontal size={16} weight="regular" />
+                        <SlidersHorizontal size={16} />
                       </HBtn>
                     </div>
                   </PopoverTrigger>
@@ -355,14 +359,14 @@ export function ViewHeader({
                 </Popover>
               ) : (
                 <HBtn>
-                  <SlidersHorizontal size={16} weight="regular" />
+                  <SlidersHorizontal size={16} />
                 </HBtn>
               )
             )}
 
             {resolvedShowDetailPanel && (
               <HBtn active={resolvedDetailPanelOpen} onClick={resolvedOnDetailPanelToggle}>
-                <SidebarSimple size={16} weight="regular" />
+                <SidebarSimple size={16} />
               </HBtn>
             )}
 
@@ -372,23 +376,23 @@ export function ViewHeader({
               hydrated ? (
                 <Popover>
                   <PopoverTrigger asChild>
-                    <div><HBtn><Plus size={16} weight="regular" /></HBtn></div>
+                    <div><HBtn><Plus size={16} /></HBtn></div>
                   </PopoverTrigger>
                   <PopoverContent align="end" sideOffset={5} className="!w-auto !max-w-none rounded-lg border border-border-subtle bg-surface-overlay p-0 shadow-lg">
                     {createMenuContent}
                   </PopoverContent>
                 </Popover>
               ) : (
-                <HBtn><Plus size={16} weight="regular" /></HBtn>
+                <HBtn><Plus size={16} /></HBtn>
               )
             ) : onCreateNew ? (
               <HBtn onClick={onCreateNew}>
-                <Plus size={16} weight="regular" />
+                <Plus size={16} />
               </HBtn>
             ) : null}
             {pane === 'secondary' && (
               <HBtn onClick={() => usePlotStore.getState().closeSecondary()}>
-                <PhXIcon size={16} weight="regular" />
+                <PhXIcon size={16} />
               </HBtn>
             )}
           </div>
@@ -404,9 +408,11 @@ export function ViewHeader({
 /** Secondary pane title — dropdown to switch spaces + close button */
 
 import { IconHome, IconNotes, IconWiki, IconCalendar } from "@/components/plot-icons"
-import { Graph as GraphIcon } from "@phosphor-icons/react/dist/ssr/Graph"
-import { Books } from "@phosphor-icons/react/dist/ssr/Books"
-import { BookOpen } from "@phosphor-icons/react/dist/ssr/BookOpen"
+import {
+  Network as GraphIcon,
+  Library as Books,
+  BookOpen,
+} from "lucide-react"
 
 const SECONDARY_SPACE_CONFIG: Array<{ key: string; label: string; Icon: any }> = [
   { key: "home", label: "Home", Icon: IconHome },
@@ -430,7 +436,7 @@ function SecondaryTitleDropdown({ currentTitle, icon, count }: { currentTitle: s
               {count !== undefined && (
                 <span className="text-note font-normal text-muted-foreground">{count}</span>
               )}
-              <CaretDown size={12} weight="bold" className="text-muted-foreground/60 ml-0.5" />
+              <CaretDown size={12} strokeWidth={2.5} className="text-muted-foreground/60 ml-0.5" />
             </h1>
           </button>
         </DropdownMenuTrigger>
@@ -478,7 +484,7 @@ function SplitViewButton() {
         }
       }}
     >
-      <SplitHorizontal size={16} weight="regular" />
+      <SplitHorizontal size={16} />
     </HBtn>
   )
 }

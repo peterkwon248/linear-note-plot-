@@ -21,9 +21,11 @@ import type { FilterRule, ViewContextKey, ViewState } from "@/lib/view-engine/ty
 import { buildViewStateForContext } from "@/lib/view-engine/defaults"
 import { rulesToOntologyFilters } from "@/lib/view-engine/graph-filter-adapter"
 import type { OntologyFilters } from "@/components/ontology/ontology-graph-canvas"
-import { Graph } from "@phosphor-icons/react/dist/ssr/Graph"
-import { CaretRight } from "@phosphor-icons/react/dist/ssr/CaretRight"
-import { ChartBar } from "@phosphor-icons/react/dist/ssr/ChartBar"
+import {
+  Network as Graph,
+  ChevronRight as CaretRight,
+  BarChart3 as ChartBar,
+} from "lucide-react"
 import { IconInsight } from "@/components/plot-icons"
 import {
   DropdownMenu,
@@ -344,7 +346,7 @@ export function OntologyView() {
   return (
     <main className="flex h-full flex-1 flex-col overflow-hidden bg-background">
       <ViewHeader
-        icon={<Graph size={20} weight="regular" />}
+        icon={<Graph size={20} strokeWidth={2} />}
         title="Ontology"
         subtitle={
           <>
@@ -355,7 +357,7 @@ export function OntologyView() {
                   className="shrink-0 rounded p-0.5 text-muted-foreground/70 hover:text-muted-foreground hover:bg-hover-bg transition-colors"
                   aria-label="Switch ontology view mode"
                 >
-                  <CaretRight size={14} weight="regular" />
+                  <CaretRight size={14} strokeWidth={2} />
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="start" className="min-w-[140px]">
@@ -363,7 +365,7 @@ export function OntologyView() {
                   onClick={() => updateGraphViewState({ viewMode: "graph" })}
                   className={cn(tab === "graph" && "bg-accent/10 text-accent")}
                 >
-                  <Graph size={16} weight="regular" />
+                  <Graph size={16} strokeWidth={2} />
                   Graph
                 </DropdownMenuItem>
                 <DropdownMenuItem
@@ -377,7 +379,7 @@ export function OntologyView() {
                   onClick={() => updateGraphViewState({ viewMode: "dashboard" })}
                   className={cn(tab === "dashboard" && "bg-accent/10 text-accent")}
                 >
-                  <ChartBar size={16} weight="regular" />
+                  <ChartBar size={16} strokeWidth={2} />
                   Dashboard
                 </DropdownMenuItem>
               </DropdownMenuContent>

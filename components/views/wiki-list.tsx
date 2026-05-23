@@ -18,20 +18,22 @@ import {
   ContextMenuTrigger,
   ContextMenuContent,
 } from "@/components/ui/context-menu"
-import { Check as PhCheck } from "@phosphor-icons/react/dist/ssr/Check"
-import { PushPin } from "@phosphor-icons/react/dist/ssr/PushPin"
-import { Minus } from "@phosphor-icons/react/dist/ssr/Minus"
-import { ArrowLeft } from "@phosphor-icons/react/dist/ssr/ArrowLeft"
-import { BookOpen } from "@phosphor-icons/react/dist/ssr/BookOpen"
-import { GitMerge } from "@phosphor-icons/react/dist/ssr/GitMerge"
-import { DotsThree } from "@phosphor-icons/react/dist/ssr/DotsThree"
-import { Trash } from "@phosphor-icons/react/dist/ssr/Trash"
-import { Scissors } from "@phosphor-icons/react/dist/ssr/Scissors"
-import { X as PhX } from "@phosphor-icons/react/dist/ssr/X"
-import { FolderOpen } from "@phosphor-icons/react/dist/ssr/FolderOpen"
-import { CaretRight } from "@phosphor-icons/react/dist/ssr/CaretRight"
-import { Link as PhLink } from "@phosphor-icons/react/dist/ssr/Link"
-import { Target } from "@phosphor-icons/react/dist/ssr/Target"
+import {
+  Check as PhCheck,
+  Pin as PushPin,
+  Minus,
+  ArrowLeft,
+  BookOpen,
+  GitMerge,
+  MoreHorizontal as DotsThree,
+  Trash2 as Trash,
+  Scissors,
+  X as PhX,
+  FolderOpen,
+  ChevronRight as CaretRight,
+  Link as PhLink,
+  Target,
+} from "lucide-react"
 import { Calendar as CalendarUI } from "@/components/ui/calendar"
 import { FolderPickerInlineSubmenu } from "@/components/folder-picker"
 
@@ -52,9 +54,9 @@ function ShowConnectedSubmenu({
         onClick={() => setOpen((v) => !v)}
         className="flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-2xs text-foreground/80 hover:bg-active-bg transition-colors"
       >
-        <PhLink size={14} weight="regular" />
+        <PhLink size={14} strokeWidth={2} />
         <span className="flex-1 text-left">Show connected</span>
-        <CaretRight size={10} weight="bold" className={cn("transition-transform", open && "rotate-90")} />
+        <CaretRight size={10} strokeWidth={2.5} className={cn("transition-transform", open && "rotate-90")} />
       </button>
       {open && (
         <div className="ml-4 mt-0.5 mb-1 flex flex-col gap-px">
@@ -102,11 +104,11 @@ function PlanForSubmenu({
         onClick={() => setOpen((v) => !v)}
         className="flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-2xs text-foreground/80 hover:bg-active-bg transition-colors"
       >
-        <Target size={14} weight="regular" />
+        <Target size={14} strokeWidth={2} />
         <span className="flex-1 text-left">
           {currentDate ? `Planned: ${format(currentDate)}` : "Plan for…"}
         </span>
-        <CaretRight size={10} weight="bold" className={cn("transition-transform", open && "rotate-90")} />
+        <CaretRight size={10} strokeWidth={2.5} className={cn("transition-transform", open && "rotate-90")} />
       </button>
       {open && (
         <div className="mt-1 mb-1 px-1">
@@ -126,7 +128,7 @@ function PlanForSubmenu({
               onClick={() => { onClear(); setOpen(false) }}
               className="mt-1 flex w-full items-center justify-center gap-1 rounded-md px-2 py-1 text-2xs text-muted-foreground transition-colors hover:bg-active-bg hover:text-foreground"
             >
-              <PhX size={10} weight="bold" />
+              <PhX size={10} strokeWidth={2.5} />
               Clear plan
             </button>
           )}
@@ -172,7 +174,7 @@ export function WikiArticleMenuItems({
           onClick={() => { close(); onMerge() }}
           className="flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-2xs text-foreground/80 hover:bg-active-bg transition-colors"
         >
-          <GitMerge size={14} weight="regular" /> Merge into...
+          <GitMerge size={14} strokeWidth={2} /> Merge into...
         </button>
       )}
       {onSplit && (
@@ -180,7 +182,7 @@ export function WikiArticleMenuItems({
           onClick={() => { close(); onSplit() }}
           className="flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-2xs text-foreground/80 hover:bg-active-bg transition-colors"
         >
-          <Scissors size={14} weight="regular" /> Split wiki
+          <Scissors size={14} strokeWidth={2} /> Split wiki
         </button>
       )}
       {(onMerge || onSplit) && onShowConnected && (
@@ -214,7 +216,7 @@ export function WikiArticleMenuItems({
         kind="wiki"
         currentFolderIds={note.folderIds}
         triggerLabel="Move to folder"
-        triggerIcon={<FolderOpen size={14} weight="regular" />}
+        triggerIcon={<FolderOpen size={14} strokeWidth={2} />}
         onSelect={(folderId) => {
           close()
           usePlotStore.getState().updateWikiArticle(note.id, {
@@ -227,7 +229,7 @@ export function WikiArticleMenuItems({
         currentFolderIds={note.folderIds}
         selectMode="multi"
         triggerLabel="Add to folders…"
-        triggerIcon={<FolderOpen size={14} weight="regular" />}
+        triggerIcon={<FolderOpen size={14} strokeWidth={2} />}
         onApply={(folderIds) => {
           close()
           usePlotStore.getState().setWikiFolders(note.id, folderIds)
@@ -241,7 +243,7 @@ export function WikiArticleMenuItems({
           onClick={() => { close(); onDelete() }}
           className="flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-2xs text-destructive hover:bg-active-bg transition-colors"
         >
-          <Trash size={14} weight="regular" /> Delete
+          <Trash size={14} strokeWidth={2} /> Delete
         </button>
       )}
     </>
@@ -340,8 +342,8 @@ function ColumnHeaders({
                     : "bg-card border-zinc-400 dark:border-zinc-600 hover:border-zinc-500 dark:hover:border-zinc-500"
               )}
             >
-              {isAllSelected && <PhCheck size={10} weight="bold" className="text-accent-foreground" />}
-              {isPartiallySelected && !isAllSelected && <Minus size={10} weight="regular" className="text-accent-foreground" />}
+              {isAllSelected && <PhCheck size={10} strokeWidth={2.5} className="text-accent-foreground" />}
+              {isPartiallySelected && !isAllSelected && <Minus size={10} strokeWidth={2} className="text-accent-foreground" />}
             </div>
           ) : (
             <span />
@@ -445,7 +447,7 @@ function ArticleTableRow({
               ? "bg-accent border-accent"
               : "bg-card border-zinc-400 dark:border-zinc-600 hover:border-zinc-500"
           )}>
-            {isSelected && <PhCheck size={10} weight="bold" className="text-accent-foreground" />}
+            {isSelected && <PhCheck size={10} strokeWidth={2.5} className="text-accent-foreground" />}
           </div>
         </div>
       )}
@@ -489,7 +491,7 @@ function ArticleTableRow({
         {(note as { pinned?: boolean }).pinned && (
           <PushPin
             size={11}
-            weight="fill"
+            fill="currentColor"
             className="ml-1 shrink-0 text-amber-500"
           />
         )}
@@ -600,7 +602,7 @@ function ArticleTableRow({
                 onClick={(e) => { e.stopPropagation(); setMenuOpen(true) }}
                 className="rounded-md p-1 text-muted-foreground/60 opacity-0 group-hover:opacity-100 hover:bg-active-bg hover:text-muted-foreground/60 transition-all duration-100"
               >
-                <DotsThree size={14} weight="bold" />
+                <DotsThree size={14} strokeWidth={2.5} />
               </button>
             </PopoverTrigger>
             <PopoverContent align="end" className="w-64 p-1" onOpenAutoFocus={(e) => e.preventDefault()}>
@@ -658,7 +660,7 @@ function EmptyState() {
   return (
     <div className="flex flex-col items-center gap-3 py-20 text-center">
       <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-secondary/60">
-        <BookOpen className="text-muted-foreground/70" size={20} weight="regular" />
+        <BookOpen className="text-muted-foreground/70" size={20} strokeWidth={2} />
       </div>
       <p className="text-note text-muted-foreground/60">No articles found</p>
     </div>
@@ -792,7 +794,7 @@ export function WikiList({
           onClick={() => { setWikiViewMode("dashboard"); onClearCategoryFilter?.() }}
           className="flex items-center gap-1 text-note text-muted-foreground hover:text-foreground transition-colors duration-100 mr-1"
         >
-          <ArrowLeft size={12} weight="regular" />
+          <ArrowLeft size={12} strokeWidth={2} />
           Overview
         </button>
 
@@ -837,7 +839,7 @@ export function WikiList({
                 onClick={onClearCategoryFilter}
                 className="ml-0.5 rounded-sm p-0.5 hover:bg-accent/20 transition-colors duration-100"
               >
-                <PhX size={10} weight="regular" />
+                <PhX size={10} strokeWidth={2} />
               </button>
             </span>
           </>

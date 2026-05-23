@@ -19,10 +19,7 @@
 import { useState, useRef, useEffect, useMemo } from "react"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { cn } from "@/lib/utils"
-import { Plus as PhPlus } from "@phosphor-icons/react/dist/ssr/Plus"
-import { Check as PhCheck } from "@phosphor-icons/react/dist/ssr/Check"
-import { X as PhX } from "@phosphor-icons/react/dist/ssr/X"
-import { FolderSimple } from "@phosphor-icons/react/dist/ssr/FolderSimple"
+import { Plus as PhPlus, Check as PhCheck, X as PhX, Folder as FolderSimple } from "lucide-react"
 
 export interface CategoryPickerCategory {
   id: string
@@ -96,13 +93,13 @@ export function CategoryPicker({
               color: c.color ?? "#6b7280",
             }}
           >
-            <FolderSimple size={10} weight="regular" />
+            <FolderSimple size={10} />
             {c.name}
             <button
               onClick={(e) => { e.stopPropagation(); onRemoveCategory(entityId, c.id) }}
               className="ml-0.5 rounded-full p-0 opacity-0 transition-opacity group-hover/cat:opacity-100 hover:bg-black/10"
             >
-              <PhX size={10} weight="regular" />
+              <PhX size={10} />
             </button>
           </span>
         ))}
@@ -115,7 +112,7 @@ export function CategoryPicker({
             className="inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-hover-bg hover:text-foreground"
             onClick={(e) => e.stopPropagation()}
           >
-            <PhPlus size={12} weight="regular" />
+            <PhPlus size={12} />
           </button>
         </PopoverTrigger>
         <PopoverContent align="end" className="w-56 p-0" onOpenAutoFocus={(e) => e.preventDefault()}>
@@ -155,7 +152,7 @@ export function CategoryPicker({
                     <span className="text-foreground">{c.name}</span>
                   </span>
                   {isSelected && (
-                    <PhCheck className="text-muted-foreground" size={12} weight="bold" />
+                    <PhCheck className="text-muted-foreground" size={12} strokeWidth={2.5} />
                   )}
                 </button>
               )
@@ -168,7 +165,7 @@ export function CategoryPicker({
                   handleCreate()
                 }}
               >
-                <PhPlus size={12} weight="regular" />
+                <PhPlus size={12} />
                 Create &ldquo;{search.trim()}&rdquo;
               </button>
             )}

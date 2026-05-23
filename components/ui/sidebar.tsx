@@ -15,7 +15,7 @@ import {
   SheetHeader,
   SheetTitle,
 } from '@/components/ui/sheet'
-import { SidebarSimple as SidebarSimpleIcon } from "@phosphor-icons/react/dist/ssr/SidebarSimple"
+import { PanelLeft } from "lucide-react"
 import { Skeleton } from '@/components/ui/skeleton'
 import {
   Tooltip,
@@ -272,7 +272,7 @@ function SidebarTrigger({
       }}
       {...props}
     >
-      <SidebarSimpleIcon />
+      <PanelLeft />
       <span className="sr-only">Toggle Sidebar</span>
     </Button>
   )

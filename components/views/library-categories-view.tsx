@@ -7,7 +7,7 @@ import { buildViewStateForContext } from "@/lib/view-engine/defaults"
 import { FilterPanel } from "@/components/filter-panel"
 import { DisplayPanel } from "@/components/display-panel"
 import { WIKI_CATEGORY_VIEW_CONFIG } from "@/lib/view-engine/view-configs"
-import { Folders } from "@phosphor-icons/react/dist/ssr/Folders"
+import { Folders } from "lucide-react"
 import { usePlotStore } from "@/lib/store"
 import { useActiveCategoryId, setActiveCategoryView, setWikiViewMode } from "@/lib/wiki-view-mode"
 import { setActiveRoute } from "@/lib/table-route"
@@ -70,7 +70,7 @@ export function LibraryCategoriesView() {
   return (
     <div className="flex flex-1 flex-col overflow-hidden">
       <ViewHeader
-        icon={<Folders size={20} weight="regular" />}
+        icon={<Folders size={20} strokeWidth={2} />}
         title="Categories"
         saveViewMode={catSaveViewMode}
         onSaveView={onSaveCategoryView}

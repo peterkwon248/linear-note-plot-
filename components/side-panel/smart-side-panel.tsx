@@ -6,11 +6,13 @@ import { SidePanelDetail } from "./side-panel-detail"
 import { SidePanelConnections } from "./side-panel-connections"
 import { SidePanelActivity } from "./side-panel-activity"
 import { SidePanelBookmarks } from "./side-panel-bookmarks"
-import { X as PhX } from "@phosphor-icons/react/dist/ssr/X"
-import { SidebarSimple } from "@phosphor-icons/react/dist/ssr/SidebarSimple"
-import { Graph } from "@phosphor-icons/react/dist/ssr/Graph"
-import { ClockCounterClockwise } from "@phosphor-icons/react/dist/ssr/ClockCounterClockwise"
-import { BookmarkSimple } from "@phosphor-icons/react/dist/ssr/BookmarkSimple"
+import {
+  X as PhX,
+  PanelLeft as SidebarSimple,
+  Network as Graph,
+  History as ClockCounterClockwise,
+  Bookmark as BookmarkSimple,
+} from "lucide-react"
 import type { SidePanelMode } from "@/lib/store/types"
 
 /**
@@ -58,28 +60,28 @@ export function SmartSidePanel() {
             onClick={() => setMode('detail')}
             className={tabClass(sidePanelMode === 'detail')}
           >
-            <SidebarSimple className="inline mr-0.5" size={13} weight="regular" />
+            <SidebarSimple className="inline mr-0.5" size={13} />
             Detail
           </button>
           <button
             onClick={() => setMode('connections')}
             className={tabClass(sidePanelMode === 'connections')}
           >
-            <Graph className="inline mr-0.5" size={13} weight="regular" />
+            <Graph className="inline mr-0.5" size={13} />
             Connections
           </button>
           <button
             onClick={() => setMode('activity')}
             className={tabClass(sidePanelMode === 'activity')}
           >
-            <ClockCounterClockwise className="inline mr-0.5" size={13} weight="regular" />
+            <ClockCounterClockwise className="inline mr-0.5" size={13} />
             Activity
           </button>
           <button
             onClick={() => setMode('bookmarks')}
             className={tabClass(sidePanelMode === 'bookmarks')}
           >
-            <BookmarkSimple className="inline mr-0.5" size={13} weight="regular" />
+            <BookmarkSimple className="inline mr-0.5" size={13} />
             Bookmarks
           </button>
         </div>
@@ -88,7 +90,7 @@ export function SmartSidePanel() {
           className="shrink-0 rounded-md p-1 text-muted-foreground transition-colors hover:bg-hover-bg hover:text-foreground"
           aria-label="Close panel"
         >
-          <PhX size={14} weight="regular" />
+          <PhX size={14} />
         </button>
       </header>
 

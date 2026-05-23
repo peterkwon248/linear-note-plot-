@@ -15,10 +15,12 @@
 import { useMemo } from "react"
 import { toast } from "sonner"
 import { usePlotStore } from "@/lib/store"
-import { X as PhX } from "@phosphor-icons/react/dist/ssr/X"
-import { PushPin } from "@phosphor-icons/react/dist/ssr/PushPin"
-import { PushPinSlash } from "@phosphor-icons/react/dist/ssr/PushPinSlash"
-import { Trash } from "@phosphor-icons/react/dist/ssr/Trash"
+import {
+  X as PhX,
+  Pin as PushPin,
+  PinOff as PushPinSlash,
+  Trash2 as Trash,
+} from "lucide-react"
 import type { NoteTemplate } from "@/lib/types"
 
 /* ── Props ────────────────────────────────────────────── */
@@ -109,7 +111,7 @@ export function TemplatesFloatingActionBar({
             onClick={onClearSelection}
             className="rounded-md p-0.5 text-muted-foreground hover:text-foreground hover:bg-hover-bg transition-colors"
           >
-            <PhX size={16} weight="regular" />
+            <PhX size={16} />
           </button>
         </div>
 
@@ -122,12 +124,12 @@ export function TemplatesFloatingActionBar({
         >
           {allPinned ? (
             <>
-              <PushPinSlash size={16} weight="regular" />
+              <PushPinSlash size={16} />
               Unpin
             </>
           ) : (
             <>
-              <PushPin size={16} weight="regular" />
+              <PushPin size={16} />
               Pin
             </>
           )}
@@ -140,7 +142,7 @@ export function TemplatesFloatingActionBar({
           onClick={handleDelete}
           className="inline-flex items-center gap-1 rounded-md bg-destructive/10 px-3 py-2 text-ui font-medium text-destructive hover:bg-destructive/20 transition-colors"
         >
-          <Trash size={16} weight="regular" />
+          <Trash size={16} />
           Delete
         </button>
       </div>

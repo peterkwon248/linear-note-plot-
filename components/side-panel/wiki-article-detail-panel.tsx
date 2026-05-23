@@ -3,19 +3,21 @@
 import { useMemo, useState } from "react"
 import { usePlotStore } from "@/lib/store"
 import { format, formatDistanceToNow } from "date-fns"
-import { CalendarBlank } from "@phosphor-icons/react/dist/ssr/CalendarBlank"
-import { FileText } from "@phosphor-icons/react/dist/ssr/FileText"
-import { TextAlignLeft } from "@phosphor-icons/react/dist/ssr/TextAlignLeft"
-import { Tag as PhTag } from "@phosphor-icons/react/dist/ssr/Tag"
-import { Info as PhInfo } from "@phosphor-icons/react/dist/ssr/Info"
-import { Layout } from "@phosphor-icons/react/dist/ssr/Layout"
-import { Trash } from "@phosphor-icons/react/dist/ssr/Trash"
-import { Image as PhImage } from "@phosphor-icons/react/dist/ssr/Image"
-import { PushPin } from "@phosphor-icons/react/dist/ssr/PushPin"
-import { FolderOpen } from "@phosphor-icons/react/dist/ssr/FolderOpen"
-import { X as PhX } from "@phosphor-icons/react/dist/ssr/X"
-import { Plus as PhPlus } from "@phosphor-icons/react/dist/ssr/Plus"
-import { Target } from "@phosphor-icons/react/dist/ssr/Target"
+import {
+  Calendar as CalendarBlank,
+  FileText,
+  AlignLeft as TextAlignLeft,
+  Tag as PhTag,
+  Info as PhInfo,
+  LayoutGrid as Layout,
+  Trash2 as Trash,
+  Image as PhImage,
+  Pin as PushPin,
+  FolderOpen,
+  X as PhX,
+  Plus as PhPlus,
+  Target,
+} from "lucide-react"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Calendar as CalendarUI } from "@/components/ui/calendar"
 import { FolderPicker } from "@/components/folder-picker"
@@ -137,7 +139,7 @@ export function WikiArticleDetailPanel({ article }: { article: WikiArticle | nul
   if (!article) {
     return (
       <div className="flex flex-1 flex-col items-center justify-center gap-3 text-muted-foreground px-4">
-        <PhInfo size={24} weight="light" className="text-muted-foreground/70" />
+        <PhInfo size={24} strokeWidth={1.5} className="text-muted-foreground/70" />
         <p className="text-note text-center">Select a wiki article to see details</p>
       </div>
     )
@@ -163,7 +165,7 @@ export function WikiArticleDetailPanel({ article }: { article: WikiArticle | nul
         )}
         {typeof article.layout === "string" && article.layout && article.layout !== "default" && (
           <span className="flex items-center gap-1 rounded-md bg-chart-2/10 px-2 py-0.5 text-2xs font-medium text-chart-2">
-            <Layout size={14} weight="regular" />
+            <Layout size={14} strokeWidth={2} />
             {article.layout.charAt(0).toUpperCase() + article.layout.slice(1)}
           </span>
         )}
@@ -177,7 +179,7 @@ export function WikiArticleDetailPanel({ article }: { article: WikiArticle | nul
           }`}
           title={article.pinned ? "Unpin from Quicklinks" : "Pin to Quicklinks"}
         >
-          <PushPin size={12} weight={article.pinned ? "fill" : "regular"} />
+          <PushPin size={12} fill={article.pinned ? "currentColor" : "none"} />
           {article.pinned ? "Pinned" : "Pin"}
         </button>
       </div>
@@ -185,7 +187,7 @@ export function WikiArticleDetailPanel({ article }: { article: WikiArticle | nul
       {/* Aliases */}
       {article.aliases.length > 0 && (
         <>
-          <InspectorSection title="Aliases" icon={<PhInfo size={16} weight="regular" />}>
+          <InspectorSection title="Aliases" icon={<PhInfo size={16} strokeWidth={2} />}>
             <div className="flex flex-wrap gap-1.5">
               {article.aliases.map((alias, i) => (
                 <span
@@ -203,7 +205,7 @@ export function WikiArticleDetailPanel({ article }: { article: WikiArticle | nul
 
       {/* Label — 2026-05-17 cross-entity 확장. labelId 없으면 "Add label"
           placeholder만 표시 (chip hide 패턴, 영구 룰). */}
-      <InspectorSection title="Label" icon={<PhTag size={16} weight="regular" />}>
+      <InspectorSection title="Label" icon={<PhTag size={16} strokeWidth={2} />}>
         <LabelPicker
           noteId={article.id}
           currentLabelId={article.labelId ?? null}
@@ -224,7 +226,7 @@ export function WikiArticleDetailPanel({ article }: { article: WikiArticle | nul
 
       {/* Categories — 2026-05-17 read-only chip strip → CategoryPicker (편집
           가능). WikiCategory 풀 공유. inline Create 자동 포함. */}
-      <InspectorSection title="Categories" icon={<PhTag size={16} weight="regular" />}>
+      <InspectorSection title="Categories" icon={<PhTag size={16} strokeWidth={2} />}>
         <CategoryPicker
           entityId={article.id}
           selectedCategoryIds={article.categoryIds ?? []}
@@ -261,7 +263,7 @@ export function WikiArticleDetailPanel({ article }: { article: WikiArticle | nul
           folder management is the primary surface for the N:M model in
           the wiki context too. Click "+ Add" to open the multi-select
           picker; click chip X to remove from that folder. */}
-      <InspectorSection title="Folders" icon={<FolderOpen size={16} weight="regular" />}>
+      <InspectorSection title="Folders" icon={<FolderOpen size={16} strokeWidth={2} />}>
         <div className="flex flex-wrap items-center gap-1.5">
           {articleFolders.map((f) => (
             <span
@@ -273,7 +275,7 @@ export function WikiArticleDetailPanel({ article }: { article: WikiArticle | nul
               }}
               title={f.name}
             >
-              <FolderOpen size={10} weight="regular" />
+              <FolderOpen size={10} strokeWidth={2} />
               <span className="truncate max-w-[120px]">{f.name}</span>
               <button
                 type="button"
@@ -281,14 +283,14 @@ export function WikiArticleDetailPanel({ article }: { article: WikiArticle | nul
                 className="rounded-sm p-0.5 transition-colors hover:bg-hover-bg/40"
                 title={`Remove from ${f.name}`}
               >
-                <PhX size={10} weight="bold" />
+                <PhX size={10} strokeWidth={2.5} />
               </button>
             </span>
           ))}
           <Popover open={folderOpen} onOpenChange={setFolderOpen}>
             <PopoverTrigger asChild>
               <button className="flex items-center gap-1 rounded-md border border-dashed border-border px-2 py-0.5 text-2xs text-muted-foreground transition-colors hover:border-muted-foreground hover:text-foreground">
-                <PhPlus size={10} weight="regular" />
+                <PhPlus size={10} strokeWidth={2} />
                 {articleFolders.length === 0 ? "Add to folders" : "Add"}
               </button>
             </PopoverTrigger>
@@ -311,7 +313,7 @@ export function WikiArticleDetailPanel({ article }: { article: WikiArticle | nul
       {/* Tags — 2026-05-16 read-only chip 표시에서 TagPicker로 업그레이드.
           Note Detail panel과 동일 패턴 (영구 룰 21 entity-uniformity).
           inline Create 기능 자동 포함 (검색 input → "Create '...'" 옵션). */}
-      <InspectorSection title="Tags" icon={<PhTag size={16} weight="regular" />}>
+      <InspectorSection title="Tags" icon={<PhTag size={16} strokeWidth={2} />}>
         <TagPicker
           noteId={article.id}
           selectedTagIds={article.tags ?? []}
@@ -348,7 +350,7 @@ export function WikiArticleDetailPanel({ article }: { article: WikiArticle | nul
       <div className="mx-4 border-b border-border" />
 
       {/* Sections (Outline) */}
-      <InspectorSection title="Outline" icon={<TextAlignLeft size={16} weight="regular" />}>
+      <InspectorSection title="Outline" icon={<TextAlignLeft size={16} strokeWidth={2} />}>
         {stats.sections > 0 ? (
           <div className="space-y-1">
             {article.blocks
@@ -377,7 +379,7 @@ export function WikiArticleDetailPanel({ article }: { article: WikiArticle | nul
           Timeline view's bar end. Clearing returns horizon to updatedAt
           (see lib/wiki-utils.ts:getHorizon). Setter does NOT touch
           updatedAt — intent is not content activity. */}
-      <InspectorSection title="Plan" icon={<Target size={16} weight="regular" />}>
+      <InspectorSection title="Plan" icon={<Target size={16} strokeWidth={2} />}>
         <div className="flex items-center justify-between gap-2">
           <Popover open={planOpen} onOpenChange={setPlanOpen}>
             <PopoverTrigger asChild>
@@ -385,7 +387,7 @@ export function WikiArticleDetailPanel({ article }: { article: WikiArticle | nul
                 type="button"
                 className="flex items-center gap-1.5 rounded-md border border-dashed border-border px-2 py-1 text-2xs text-foreground/85 transition-colors hover:border-muted-foreground hover:text-foreground"
               >
-                <CalendarBlank size={12} weight="regular" />
+                <CalendarBlank size={12} strokeWidth={2} />
                 {article.plannedDate
                   ? format(new Date(article.plannedDate), "MMM d, yyyy")
                   : "Set planned date"}
@@ -411,7 +413,7 @@ export function WikiArticleDetailPanel({ article }: { article: WikiArticle | nul
               className="flex items-center gap-1 rounded-md px-2 py-1 text-2xs text-muted-foreground transition-colors hover:bg-hover-bg hover:text-foreground"
               title="Clear planned date"
             >
-              <PhX size={10} weight="bold" />
+              <PhX size={10} strokeWidth={2.5} />
               Clear
             </button>
           )}
@@ -424,7 +426,7 @@ export function WikiArticleDetailPanel({ article }: { article: WikiArticle | nul
       <div className="mx-4 border-b border-border" />
 
       {/* Dates */}
-      <InspectorSection title="Dates" icon={<CalendarBlank size={16} weight="regular" />}>
+      <InspectorSection title="Dates" icon={<CalendarBlank size={16} strokeWidth={2} />}>
         <div className="space-y-2">
           <div className="flex items-center justify-between">
             <span className="text-note text-muted-foreground">Created</span>
@@ -444,7 +446,7 @@ export function WikiArticleDetailPanel({ article }: { article: WikiArticle | nul
       <div className="mx-4 border-b border-border" />
 
       {/* Properties */}
-      <InspectorSection title="Properties" icon={<FileText size={16} weight="regular" />}>
+      <InspectorSection title="Properties" icon={<FileText size={16} strokeWidth={2} />}>
         <div className="space-y-2">
           <div className="flex items-center justify-between">
             <span className="text-note text-muted-foreground">Blocks</span>
@@ -479,7 +481,7 @@ export function WikiArticleDetailPanel({ article }: { article: WikiArticle | nul
       {sources.length > 0 && (
         <>
           <div className="mx-4 border-b border-border" />
-          <InspectorSection title="Sources" icon={<FileText size={16} weight="regular" />}>
+          <InspectorSection title="Sources" icon={<FileText size={16} strokeWidth={2} />}>
             <div className="space-y-px">
               {sources.map((src, i) => (
                 <button
@@ -504,8 +506,8 @@ export function WikiArticleDetailPanel({ article }: { article: WikiArticle | nul
                   <span className="shrink-0 text-2xs font-semibold text-accent tabular-nums w-4">
                     {i + 1}
                   </span>
-                  {src.type === "note" && <FileText className="shrink-0 text-muted-foreground" size={12} weight="bold" />}
-                  {src.type === "image" && <PhImage className="shrink-0 text-muted-foreground" size={12} weight="bold" />}
+                  {src.type === "note" && <FileText className="shrink-0 text-muted-foreground" size={12} strokeWidth={2.5} />}
+                  {src.type === "image" && <PhImage className="shrink-0 text-muted-foreground" size={12} strokeWidth={2.5} />}
                   <span className="flex-1 min-w-0 truncate text-note text-foreground">
                     {src.label}
                   </span>
@@ -529,7 +531,7 @@ export function WikiArticleDetailPanel({ article }: { article: WikiArticle | nul
           }}
           className="flex items-center gap-2 text-2xs text-red-400 hover:text-red-300 transition-colors"
         >
-          <Trash size={14} weight="regular" />
+          <Trash size={14} strokeWidth={2} />
           Delete article
         </button>
       </div>

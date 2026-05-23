@@ -5,16 +5,18 @@ import { cn } from "@/lib/utils"
 import { shortRelative } from "@/lib/format-utils"
 import type { Note, WikiArticle } from "@/lib/types"
 import { WikiInsightsChart } from "@/components/wiki-editor/wiki-insights-chart"
-import { BookOpen } from "@phosphor-icons/react/dist/ssr/BookOpen"
-import { MagnifyingGlass } from "@phosphor-icons/react/dist/ssr/MagnifyingGlass"
-import { Plus as PhPlus } from "@phosphor-icons/react/dist/ssr/Plus"
-import { Clock as PhClock } from "@phosphor-icons/react/dist/ssr/Clock"
-import { TrendUp } from "@phosphor-icons/react/dist/ssr/TrendUp"
-import { Warning } from "@phosphor-icons/react/dist/ssr/Warning"
-import { FileText } from "@phosphor-icons/react/dist/ssr/FileText"
-import { ArrowRight } from "@phosphor-icons/react/dist/ssr/ArrowRight"
-import { Sparkle } from "@phosphor-icons/react/dist/ssr/Sparkle"
-import { PushPin } from "@phosphor-icons/react/dist/ssr/PushPin"
+import {
+  BookOpen,
+  Search as MagnifyingGlass,
+  Plus as PhPlus,
+  Clock as PhClock,
+  TrendingUp as TrendUp,
+  AlertTriangle as Warning,
+  FileText,
+  ArrowRight,
+  Sparkles as Sparkle,
+  Pin as PushPin,
+} from "lucide-react"
 
 /* ── Types ── */
 
@@ -97,7 +99,7 @@ export function WikiDashboard({
         {/* ── Search ── */}
         <div className="relative mb-6">
           <div className="relative">
-            <MagnifyingGlass className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={14} weight="bold" />
+            <MagnifyingGlass className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={14} strokeWidth={2.5} />
             <input
               ref={searchInputRef}
               type="text"
@@ -171,7 +173,7 @@ export function WikiDashboard({
             className="group mb-6 flex w-full items-start gap-4 rounded-lg border border-border bg-card p-4 text-left shadow-sm transition-all duration-150 hover:border-accent/30 hover:bg-accent/[0.03] hover:shadow"
           >
             <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-accent/10">
-              <Sparkle className="text-accent" size={16} weight="regular" />
+              <Sparkle className="text-accent" size={16} strokeWidth={2} />
             </div>
             <div className="min-w-0 flex-1">
               <div className="mb-0.5 flex items-center gap-2">
@@ -185,7 +187,7 @@ export function WikiDashboard({
                 {(featured.categoryIds?.length ?? 0) > 0 && ` · ${featured.categoryIds!.length} categories`}
               </p>
             </div>
-            <ArrowRight className="mt-1 shrink-0 text-muted-foreground/70 transition-colors group-hover:text-accent" size={16} weight="regular" />
+            <ArrowRight className="mt-1 shrink-0 text-muted-foreground/70 transition-colors group-hover:text-accent" size={16} strokeWidth={2} />
           </button>
         )}
 
@@ -199,7 +201,7 @@ export function WikiDashboard({
             <div className="mb-6">
               <SectionLabel>
                 <span className="inline-flex items-center gap-1.5">
-                  <PushPin size={11} weight="fill" />
+                  <PushPin size={11} fill="currentColor" />
                   Pinned
                 </span>
               </SectionLabel>
@@ -212,7 +214,7 @@ export function WikiDashboard({
                   >
                     <PushPin
                       size={12}
-                      weight="fill"
+                      fill="currentColor"
                       className="shrink-0 text-accent"
                     />
                     <span className="truncate text-note text-foreground group-hover:text-accent">
@@ -347,7 +349,7 @@ export function WikiDashboard({
         {wikiNotes.length === 0 && (
           <div className="flex flex-col items-center gap-3 py-20 text-center">
             <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-secondary/60">
-              <BookOpen className="text-muted-foreground" size={20} weight="regular" />
+              <BookOpen className="text-muted-foreground" size={20} strokeWidth={2} />
             </div>
             <p className="text-note font-medium text-muted-foreground">No wiki articles yet</p>
             <p className="text-2xs text-muted-foreground/60">Create your first article or import existing notes</p>

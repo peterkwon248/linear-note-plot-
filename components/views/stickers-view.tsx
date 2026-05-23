@@ -12,19 +12,21 @@ import {
   ContextMenuSubContent,
   ContextMenuSeparator,
 } from "@/components/ui/context-menu"
-import { ArrowLeft } from "@phosphor-icons/react/dist/ssr/ArrowLeft"
-import { ArrowUp } from "@phosphor-icons/react/dist/ssr/ArrowUp"
-import { ArrowDown } from "@phosphor-icons/react/dist/ssr/ArrowDown"
-import { Plus as PhPlus } from "@phosphor-icons/react/dist/ssr/Plus"
-import { Trash } from "@phosphor-icons/react/dist/ssr/Trash"
-import { PencilSimple } from "@phosphor-icons/react/dist/ssr/PencilSimple"
-import { X as PhX } from "@phosphor-icons/react/dist/ssr/X"
-import { Lightning } from "@phosphor-icons/react/dist/ssr/Lightning"
-import { Check as PhCheck } from "@phosphor-icons/react/dist/ssr/Check"
-import { Minus } from "@phosphor-icons/react/dist/ssr/Minus"
-import { Sticker as StickerIcon } from "@phosphor-icons/react/dist/ssr/Sticker"
-import { BookOpen } from "@phosphor-icons/react/dist/ssr/BookOpen"
-import { Note as PhNote } from "@phosphor-icons/react/dist/ssr/Note"
+import {
+  ArrowLeft,
+  ArrowUp,
+  ArrowDown,
+  Plus as PhPlus,
+  Trash2 as Trash,
+  Pencil as PencilSimple,
+  X as PhX,
+  Zap as Lightning,
+  Check as PhCheck,
+  Minus,
+  Sticker as StickerIcon,
+  BookOpen,
+  StickyNote as PhNote,
+} from "lucide-react"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { cn } from "@/lib/utils"
 import { ColorPickerGrid } from "@/components/color-picker-grid"
@@ -485,7 +487,7 @@ export function StickersView() {
             onClick={() => setSelectedStickerId(null)}
             className="flex items-center justify-center h-7 w-7 rounded-md hover:bg-hover-bg text-muted-foreground hover:text-foreground transition-colors"
           >
-            <ArrowLeft size={16} weight="regular" />
+            <ArrowLeft size={16} strokeWidth={2} />
           </button>
           <span
             className="w-3 h-3 rounded-sm shrink-0"
@@ -501,7 +503,7 @@ export function StickersView() {
             }}
             className="flex items-center gap-1.5 px-2.5 py-1 rounded-md text-note text-red-400 hover:bg-red-400/10 transition-colors"
           >
-            <Trash size={14} weight="regular" />
+            <Trash size={14} strokeWidth={2} />
             Delete sticker
           </button>
         </div>
@@ -520,7 +522,7 @@ export function StickersView() {
               {selectedStickerNotes.length > 0 && (
                 <div>
                   <div className="sticky top-0 z-10 flex items-center gap-2 border-b border-border-subtle bg-background px-6 py-2">
-                    <PhNote size={14} weight="regular" className="text-muted-foreground" />
+                    <PhNote size={14} strokeWidth={2} className="text-muted-foreground" />
                     <span className="text-note font-medium text-muted-foreground">Notes</span>
                     <span className="text-note text-muted-foreground tabular-nums">
                       {selectedStickerNotes.length}
@@ -550,7 +552,7 @@ export function StickersView() {
               {selectedStickerWikis.length > 0 && (
                 <div>
                   <div className="sticky top-0 z-10 flex items-center gap-2 border-b border-border-subtle bg-background px-6 py-2">
-                    <BookOpen size={14} weight="regular" className="text-muted-foreground" />
+                    <BookOpen size={14} strokeWidth={2} className="text-muted-foreground" />
                     <span className="text-note font-medium text-muted-foreground">Wiki articles</span>
                     <span className="text-note text-muted-foreground tabular-nums">
                       {selectedStickerWikis.length}
@@ -615,7 +617,7 @@ export function StickersView() {
               )}
             >
               {checkedStickers.has(sticker.id) && (
-                <PhCheck size={10} weight="bold" className="text-accent-foreground" />
+                <PhCheck size={10} strokeWidth={2.5} className="text-accent-foreground" />
               )}
             </button>
 
@@ -672,7 +674,7 @@ export function StickersView() {
             onClick={() => deleteSticker(sticker.id)}
             className="text-note text-destructive focus:text-destructive"
           >
-            <Trash className="mr-2" size={14} weight="regular" />
+            <Trash className="mr-2" size={14} strokeWidth={2} />
             Delete
           </ContextMenuItem>
         </ContextMenuContent>
@@ -711,7 +713,7 @@ export function StickersView() {
               )}
             >
               {checkedStickers.has(sticker.id) && (
-                <PhCheck size={10} weight="bold" />
+                <PhCheck size={10} strokeWidth={2.5} />
               )}
             </button>
 
@@ -785,7 +787,7 @@ export function StickersView() {
             onClick={() => startEdit(sticker)}
             className="text-note"
           >
-            <PencilSimple className="mr-2 text-muted-foreground" size={14} weight="regular" />
+            <PencilSimple className="mr-2 text-muted-foreground" size={14} strokeWidth={2} />
             Rename
           </ContextMenuItem>
           <ContextMenuItem
@@ -805,7 +807,7 @@ export function StickersView() {
             onClick={() => deleteSticker(sticker.id)}
             className="text-note text-destructive focus:text-destructive"
           >
-            <Trash className="mr-2" size={14} weight="regular" />
+            <Trash className="mr-2" size={14} strokeWidth={2} />
             Delete
           </ContextMenuItem>
         </ContextMenuContent>
@@ -817,7 +819,7 @@ export function StickersView() {
   return (
     <div className="flex flex-1 flex-col overflow-hidden">
       <ViewHeader
-        icon={<StickerIcon size={20} weight="regular" />}
+        icon={<StickerIcon size={20} strokeWidth={2} />}
         title="Stickers"
         titleNode={<LibraryBreadcrumb current="stickers" count={flatCount} />}
         count={flatCount}
@@ -929,10 +931,10 @@ export function StickersView() {
                     )}
                   >
                     {checkedStickers.size === visibleStickers.length && visibleStickers.length > 0 && (
-                      <PhCheck size={10} weight="bold" className="text-accent-foreground" />
+                      <PhCheck size={10} strokeWidth={2.5} className="text-accent-foreground" />
                     )}
                     {checkedStickers.size > 0 && checkedStickers.size < visibleStickers.length && (
-                      <Minus size={10} weight="regular" className="text-accent-foreground" />
+                      <Minus size={10} strokeWidth={2} className="text-accent-foreground" />
                     )}
                   </div>
                   <button
@@ -942,8 +944,8 @@ export function StickersView() {
                     Name
                     {sortField === "name" && (
                       sortDirection === "asc"
-                        ? <ArrowUp size={12} weight="bold" className="text-muted-foreground" />
-                        : <ArrowDown size={12} weight="bold" className="text-muted-foreground" />
+                        ? <ArrowUp size={12} strokeWidth={2.5} className="text-muted-foreground" />
+                        : <ArrowDown size={12} strokeWidth={2.5} className="text-muted-foreground" />
                     )}
                   </button>
                   <button
@@ -953,8 +955,8 @@ export function StickersView() {
                     Items
                     {sortField === "memberCount" && (
                       sortDirection === "desc"
-                        ? <ArrowDown size={12} weight="bold" className="text-muted-foreground" />
-                        : <ArrowUp size={12} weight="bold" className="text-muted-foreground" />
+                        ? <ArrowDown size={12} strokeWidth={2.5} className="text-muted-foreground" />
+                        : <ArrowUp size={12} strokeWidth={2.5} className="text-muted-foreground" />
                     )}
                   </button>
                   <span className="w-16" />
@@ -990,7 +992,7 @@ export function StickersView() {
             onClick={() => setCreating(true)}
             className="text-note"
           >
-            <PhPlus className="mr-2 text-muted-foreground" size={16} weight="regular" />
+            <PhPlus className="mr-2 text-muted-foreground" size={16} strokeWidth={2} />
             New sticker
           </ContextMenuItem>
         </ContextMenuContent>
@@ -1004,9 +1006,9 @@ export function StickersView() {
               onClick={() => setCheckedStickers(new Set())}
               className="mr-1 flex items-center gap-1.5 rounded-md px-2 py-1.5 text-2xs font-medium text-muted-foreground hover:bg-active-bg transition-colors"
             >
-              <Lightning size={14} weight="fill" className="text-accent" />
+              <Lightning size={14} fill="currentColor" className="text-accent" />
               {checkedStickers.size} selected
-              <PhX size={12} weight="regular" className="ml-0.5 text-muted-foreground/70" />
+              <PhX size={12} strokeWidth={2} className="ml-0.5 text-muted-foreground/70" />
             </button>
             <div className="h-7 w-px bg-border mx-1.5" />
             {checkedStickers.size === 1 && (
@@ -1015,7 +1017,7 @@ export function StickersView() {
                   onClick={handleFabRename}
                   className="inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-2xs font-medium text-foreground hover:bg-hover-bg transition-colors"
                 >
-                  <PencilSimple size={14} weight="regular" /> Rename
+                  <PencilSimple size={14} strokeWidth={2} /> Rename
                 </button>
                 <button
                   onClick={handleFabRecolor}
@@ -1035,7 +1037,7 @@ export function StickersView() {
               onClick={handleDeleteChecked}
               className="inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-2xs font-medium text-destructive hover:bg-destructive/10 transition-colors"
             >
-              <Trash size={16} weight="regular" /> Delete
+              <Trash size={16} strokeWidth={2} /> Delete
             </button>
           </div>
         </div>

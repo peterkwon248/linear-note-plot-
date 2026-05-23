@@ -38,13 +38,15 @@ import { usePane } from "@/components/workspace/pane-context"
 import { shortRelative } from "@/lib/format-utils"
 import { toast } from "sonner"
 import { cn } from "@/lib/utils"
-import { Books } from "@phosphor-icons/react/dist/ssr/Books"
-import { PushPin } from "@phosphor-icons/react/dist/ssr/PushPin"
-import { PushPinSlash } from "@phosphor-icons/react/dist/ssr/PushPinSlash"
-import { Trash } from "@phosphor-icons/react/dist/ssr/Trash"
-import { TrashSimple } from "@phosphor-icons/react/dist/ssr/TrashSimple"
-import { ArrowCounterClockwise } from "@phosphor-icons/react/dist/ssr/ArrowCounterClockwise"
-import { PencilSimple } from "@phosphor-icons/react/dist/ssr/PencilSimple"
+import {
+  Library as Books,
+  Pin as PushPin,
+  PinOff as PushPinSlash,
+  Trash2 as Trash,
+  Trash as TrashSimple,
+  RotateCcw as ArrowCounterClockwise,
+  Pencil as PencilSimple,
+} from "lucide-react"
 import {
   ContextMenu,
   ContextMenuContent,
@@ -212,7 +214,7 @@ function BooksGrid() {
   return (
     <div className="flex flex-1 flex-col overflow-hidden">
       <ViewHeader
-        icon={<Books size={20} weight="regular" />}
+        icon={<Books size={20} strokeWidth={2} />}
         title="Books"
         count={liveCount > 0 ? liveCount : undefined}
         searchPlaceholder="Search books"
@@ -425,7 +427,7 @@ function BooksGrid() {
 function EmptyBooks({ onCreate }: { onCreate: () => void }) {
   return (
     <div className="flex flex-col items-center gap-3 px-6 pt-20">
-      <Books size={32} weight="regular" className="text-muted-foreground/25" />
+      <Books size={32} strokeWidth={2} className="text-muted-foreground/25" />
       <div className="text-center">
         <p className="text-sm font-medium text-foreground">No books yet</p>
         <p className="mt-0.5 text-xs text-muted-foreground">

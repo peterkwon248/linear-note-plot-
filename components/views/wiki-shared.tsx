@@ -1,10 +1,12 @@
 "use client"
 
 import { cn } from "@/lib/utils"
-import type { Icon as PhIcon } from "@phosphor-icons/react"
-import { Tree as PhTree } from "@phosphor-icons/react/dist/ssr/Tree"
-import { Stack as PhStack } from "@phosphor-icons/react/dist/ssr/Stack"
-import { Link as PhLink } from "@phosphor-icons/react/dist/ssr/Link"
+import type { LucideIcon as PhIcon } from "lucide-react"
+import {
+  TreePine as PhTree,
+  Layers as PhStack,
+  Link as PhLink,
+} from "lucide-react"
 import type { GroupBy } from "@/lib/view-engine/types"
 import type { WikiCategory } from "@/lib/types"
 
@@ -126,11 +128,11 @@ export function WikiGroupHeaderIcon({
     case "family":
     case "parent":
     case "role":
-      return <PhTree className="text-muted-foreground shrink-0" size={14} weight="regular" />
+      return <PhTree className="text-muted-foreground shrink-0" size={14} strokeWidth={2} />
     case "tier":
-      return <PhStack className="text-muted-foreground shrink-0" size={14} weight="regular" />
+      return <PhStack className="text-muted-foreground shrink-0" size={14} strokeWidth={2} />
     case "linkCount":
-      return <PhLink className="text-muted-foreground shrink-0" size={14} weight="regular" />
+      return <PhLink className="text-muted-foreground shrink-0" size={14} strokeWidth={2} />
     case "label": {
       const catId = groupKey.startsWith("label-") ? groupKey.slice("label-".length) : null
       const color = catId ? wikiCategories?.find((c) => c.id === catId)?.color : null

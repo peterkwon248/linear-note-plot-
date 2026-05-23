@@ -3,9 +3,7 @@
 import * as React from 'react'
 import * as ContextMenuPrimitive from '@radix-ui/react-context-menu'
 import { cn } from '@/lib/utils'
-import { Check as PhCheckIcon } from "@phosphor-icons/react/dist/ssr/Check"
-import { CaretRight as CaretRightIcon } from "@phosphor-icons/react/dist/ssr/CaretRight"
-import { Circle as PhCircleIcon } from "@phosphor-icons/react/dist/ssr/Circle"
+import { Check, ChevronRight, Circle } from "lucide-react"
 
 function ContextMenu({
   ...props
@@ -73,7 +71,7 @@ function ContextMenuSubTrigger({
       {...props}
     >
       {children}
-      <CaretRightIcon className="ml-auto" />
+      <ChevronRight className="ml-auto" />
     </ContextMenuPrimitive.SubTrigger>
   )
 }
@@ -155,7 +153,7 @@ function ContextMenuCheckboxItem({
     >
       <span className="pointer-events-none absolute left-2 flex size-3.5 items-center justify-center">
         <ContextMenuPrimitive.ItemIndicator>
-          <PhCheckIcon className="size-4" />
+          <Check className="size-4" />
         </ContextMenuPrimitive.ItemIndicator>
       </span>
       {children}
@@ -179,7 +177,7 @@ function ContextMenuRadioItem({
     >
       <span className="pointer-events-none absolute left-2 flex size-3.5 items-center justify-center">
         <ContextMenuPrimitive.ItemIndicator>
-          <PhCircleIcon className="size-2 fill-current" />
+          <Circle className="size-2 fill-current" />
         </ContextMenuPrimitive.ItemIndicator>
       </span>
       {children}

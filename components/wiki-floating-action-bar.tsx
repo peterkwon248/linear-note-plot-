@@ -8,16 +8,18 @@ import { pushUndo } from "@/lib/undo-manager"
 import { cn } from "@/lib/utils"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { FolderPicker } from "@/components/folder-picker"
-import { X as PhX } from "@phosphor-icons/react/dist/ssr/X"
-import { Trash } from "@phosphor-icons/react/dist/ssr/Trash"
-import { GitMerge } from "@phosphor-icons/react/dist/ssr/GitMerge"
-import { Scissors } from "@phosphor-icons/react/dist/ssr/Scissors"
-import { Lightning } from "@phosphor-icons/react/dist/ssr/Lightning"
-import { PushPin } from "@phosphor-icons/react/dist/ssr/PushPin"
-import { PushPinSlash } from "@phosphor-icons/react/dist/ssr/PushPinSlash"
-import { FolderOpen } from "@phosphor-icons/react/dist/ssr/FolderOpen"
-import { Tag as PhTag } from "@phosphor-icons/react/dist/ssr/Tag"
-import { Check as PhCheck } from "@phosphor-icons/react/dist/ssr/Check"
+import {
+  X as PhX,
+  Trash2 as Trash,
+  GitMerge,
+  Scissors,
+  Zap as Lightning,
+  Pin as PushPin,
+  PinOff as PushPinSlash,
+  FolderOpen,
+  Tag as PhTag,
+  Check as PhCheck,
+} from "lucide-react"
 
 interface WikiFloatingActionBarProps {
   selectedIds: Set<string>
@@ -104,9 +106,9 @@ export function WikiFloatingActionBar({
           onClick={onClearSelection}
           className="mr-1 flex items-center gap-1.5 rounded-md px-2 py-1.5 text-2xs font-medium text-muted-foreground hover:bg-active-bg transition-colors"
         >
-          <Lightning size={14} weight="fill" className="text-accent" />
+          <Lightning size={14} fill="currentColor" className="text-accent" />
           {count} selected
-          <PhX size={12} weight="regular" className="ml-0.5 text-muted-foreground/70" />
+          <PhX size={12} className="ml-0.5 text-muted-foreground/70" />
         </button>
 
         <Divider />
@@ -119,9 +121,9 @@ export function WikiFloatingActionBar({
           title={allPinned ? "Unpin selected articles" : "Pin selected articles"}
         >
           {allPinned ? (
-            <><PushPinSlash size={16} weight="regular" /> Unpin</>
+            <><PushPinSlash size={16} /> Unpin</>
           ) : (
-            <><PushPin size={16} weight="regular" className="text-amber-500" /> Pin</>
+            <><PushPin size={16} className="text-amber-500" /> Pin</>
           )}
         </button>
 
@@ -135,7 +137,7 @@ export function WikiFloatingActionBar({
               className="inline-flex items-center gap-1 rounded-md bg-secondary/60 px-3 py-2 text-2xs font-medium text-foreground/80 transition-colors hover:bg-hover-bg hover:text-foreground"
               title="Move selected articles to a folder (replaces existing memberships)"
             >
-              <FolderOpen size={16} weight="regular" /> Move
+              <FolderOpen size={16} /> Move
             </button>
           </PopoverTrigger>
           <PopoverContent align="center" className="w-56 p-1">
@@ -186,7 +188,7 @@ export function WikiFloatingActionBar({
               className="inline-flex items-center gap-1 rounded-md bg-secondary/60 px-3 py-2 text-2xs font-medium text-foreground/80 transition-colors hover:bg-hover-bg hover:text-foreground"
               title={count >= 2 ? "Open merge page with selected articles" : "Merge into another article"}
             >
-              <GitMerge size={16} weight="regular" />
+              <GitMerge size={16} />
               Merge
             </button>
             <Divider />
@@ -200,7 +202,7 @@ export function WikiFloatingActionBar({
               onClick={() => { onSplit(ids[0]); onClearSelection() }}
               className="inline-flex items-center gap-1 rounded-md bg-secondary/60 px-3 py-2 text-2xs font-medium text-foreground/80 transition-colors hover:bg-hover-bg hover:text-foreground"
             >
-              <Scissors size={16} weight="regular" />
+              <Scissors size={16} />
               Split
             </button>
             <Divider />
@@ -212,7 +214,7 @@ export function WikiFloatingActionBar({
           onClick={handleDelete}
           className="inline-flex items-center gap-1 rounded-md bg-destructive/10 px-3 py-2 text-2xs font-medium text-destructive transition-colors hover:bg-destructive/20"
         >
-          <Trash size={16} weight="regular" />
+          <Trash size={16} />
           Delete
         </button>
       </div>
@@ -256,7 +258,7 @@ function CategoryAddPopover({
           className="inline-flex items-center gap-1 rounded-md bg-secondary/60 px-3 py-2 text-2xs font-medium text-foreground/80 transition-colors hover:bg-hover-bg hover:text-foreground"
           title="Add selected articles to one or more categories"
         >
-          <PhTag size={16} weight="regular" /> Add to category
+          <PhTag size={16} /> Add to category
         </button>
       </PopoverTrigger>
       <PopoverContent align="center" className="w-56 p-1">
@@ -287,7 +289,7 @@ function CategoryAddPopover({
                           : "bg-card border-zinc-400 dark:border-zinc-600",
                       )}
                     >
-                      {checked && <PhCheck size={10} weight="bold" className="text-accent-foreground" />}
+                      {checked && <PhCheck size={10} strokeWidth={2.5} className="text-accent-foreground" />}
                     </span>
                     <span
                       className="h-2 w-2 rounded-full shrink-0"

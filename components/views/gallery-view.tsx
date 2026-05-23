@@ -14,7 +14,7 @@
  */
 
 import React from "react"
-import { Hash } from "@phosphor-icons/react/dist/ssr/Hash"
+import { Hash } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 export interface GalleryItem {
@@ -298,7 +298,7 @@ const GalleryCard = React.forwardRef<HTMLElement, {
             <div className="flex min-w-0 items-center gap-1.5 truncate">
               {item.metaLeft.slice(0, 2).map((t, i) => (
                 <span key={i} className="inline-flex items-center gap-0.5">
-                  {/^#/.test(t) || i === 0 ? <Hash size={9} weight="regular" className="opacity-60" /> : null}
+                  {/^#/.test(t) || i === 0 ? <Hash size={9} strokeWidth={2} className="opacity-60" /> : null}
                   <span className="truncate">{t.replace(/^#/, "")}</span>
                 </span>
               ))}

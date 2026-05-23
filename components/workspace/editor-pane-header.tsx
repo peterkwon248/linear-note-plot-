@@ -3,10 +3,7 @@
 import { usePlotStore } from "@/lib/store"
 import type { WorkspaceTab } from "@/lib/workspace/types"
 import { cn } from "@/lib/utils"
-import { X as PhX } from "@phosphor-icons/react/dist/ssr/X"
-import { SidebarSimple } from "@phosphor-icons/react/dist/ssr/SidebarSimple"
-import { CaretLeft } from "@phosphor-icons/react/dist/ssr/CaretLeft"
-import { CaretRight } from "@phosphor-icons/react/dist/ssr/CaretRight"
+import { X as PhX, PanelLeft as SidebarSimple, ChevronLeft as CaretLeft, ChevronRight as CaretRight } from "lucide-react"
 
 interface EditorPaneHeaderProps {
   tabs?: WorkspaceTab[]
@@ -47,7 +44,7 @@ export function EditorPaneHeader({ tabs, activeTabId, noteTitle, pane, showClose
             )}
             title="Go back"
           >
-            <CaretLeft size={12} weight="bold" />
+            <CaretLeft size={12} strokeWidth={2.5} />
           </button>
           <button
             onClick={(e) => { e.stopPropagation(); secondaryGoForward() }}
@@ -60,7 +57,7 @@ export function EditorPaneHeader({ tabs, activeTabId, noteTitle, pane, showClose
             )}
             title="Go forward"
           >
-            <CaretRight size={12} weight="bold" />
+            <CaretRight size={12} strokeWidth={2.5} />
           </button>
           <span className="text-2xs text-muted-foreground truncate ml-1">{noteTitle || "Untitled"}</span>
         </div>
@@ -73,14 +70,14 @@ export function EditorPaneHeader({ tabs, activeTabId, noteTitle, pane, showClose
             )}
             title={sidePanelOpen ? "Close side panel" : "Open side panel"}
           >
-            <SidebarSimple size={12} weight="regular" />
+            <SidebarSimple size={12} />
           </button>
           {showClose && (
             <button
               onClick={(e) => { e.stopPropagation(); closeSecondary() }}
               className="rounded-md p-1 text-muted-foreground/70 hover:text-foreground hover:bg-hover-bg transition-colors"
             >
-              <PhX size={12} weight="regular" />
+              <PhX size={12} />
             </button>
           )}
         </div>
@@ -113,7 +110,7 @@ export function EditorPaneHeader({ tabs, activeTabId, noteTitle, pane, showClose
                 onClick={(e) => { e.stopPropagation(); closeEditorTab(tab.id) }}
                 className="rounded p-0.5 opacity-0 group-hover:opacity-100 hover:bg-hover-bg transition-opacity"
               >
-                <PhX size={10} weight="regular" />
+                <PhX size={10} />
               </button>
             )}
           </div>

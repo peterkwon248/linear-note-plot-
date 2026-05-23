@@ -113,7 +113,7 @@ export function TimelineEventMarkers({
           y={-EVENT_MARKER_ICON_SIZE / 2}
           width={EVENT_MARKER_ICON_SIZE}
           height={EVENT_MARKER_ICON_SIZE}
-          weight="bold"
+          strokeWidth={2.5}
           color="white"
         />
       </g>
@@ -171,7 +171,7 @@ export function TimelineEventMarkers({
                     y={-EVENT_MARKER_ICON_SIZE / 2}
                     width={EVENT_MARKER_ICON_SIZE}
                     height={EVENT_MARKER_ICON_SIZE}
-                    weight="bold"
+                    strokeWidth={2.5}
                     color="white"
                   />
                 </g>

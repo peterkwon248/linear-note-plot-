@@ -26,29 +26,33 @@ import {
   IconDoc,
   IconGear,
 } from "@/components/plot-icons"
-import { CaretDown } from "@phosphor-icons/react/dist/ssr/CaretDown"
-import { CaretRight } from "@phosphor-icons/react/dist/ssr/CaretRight"
-import { CaretLeft } from "@phosphor-icons/react/dist/ssr/CaretLeft"
-import { MagnifyingGlass } from "@phosphor-icons/react/dist/ssr/MagnifyingGlass"
+import {
+  ChevronDown as CaretDown,
+  ChevronRight as CaretRight,
+  ChevronLeft as CaretLeft,
+  Search as MagnifyingGlass,
+} from "lucide-react"
 import { usePlotStore } from "@/lib/store"
 import { PRESET_COLORS, getEntityColor, WIKI_STATUS_HEX } from "@/lib/colors" // v109: opt-in color fallback
 import { isWikiStub } from "@/lib/wiki-utils"
 import { setWikiViewMode, useWikiViewMode, setCategoryOverview } from "@/lib/wiki-view-mode"
-import { GitMerge } from "@phosphor-icons/react/dist/ssr/GitMerge"
-import { Scissors } from "@phosphor-icons/react/dist/ssr/Scissors"
-import { ArrowRight } from "@phosphor-icons/react/dist/ssr/ArrowRight"
-import { Folders } from "@phosphor-icons/react/dist/ssr/Folders"
-import { SidebarSimple } from "@phosphor-icons/react/dist/ssr/SidebarSimple"
-import { ChartBar } from "@phosphor-icons/react/dist/ssr/ChartBar"
-import { Graph } from "@phosphor-icons/react/dist/ssr/Graph"
-import { ChartPie } from "@phosphor-icons/react/dist/ssr/ChartPie"
-import { CheckSquare as CheckSquareIcon } from "@phosphor-icons/react/dist/ssr/CheckSquare"
-import { Books } from "@phosphor-icons/react/dist/ssr/Books"
-import { BookOpen } from "@phosphor-icons/react/dist/ssr/BookOpen"
-import { Quotes } from "@phosphor-icons/react/dist/ssr/Quotes"
-import { Tag as PhTag } from "@phosphor-icons/react/dist/ssr/Tag"
-import { Paperclip } from "@phosphor-icons/react/dist/ssr/Paperclip"
-import { Sticker as StickerPhosphor } from "@phosphor-icons/react/dist/ssr/Sticker"
+import {
+  GitMerge,
+  Scissors,
+  ArrowRight,
+  Folders,
+  PanelLeft as SidebarSimple,
+  BarChart3 as ChartBar,
+  Network as Graph,
+  PieChart as ChartPie,
+  CheckSquare as CheckSquareIcon,
+  Library as Books,
+  BookOpen,
+  Quote as Quotes,
+  Tag as PhTag,
+  Paperclip,
+  Sticker as StickerPhosphor,
+} from "lucide-react"
 import { setWikiCategoryFilter } from "@/lib/wiki-category-filter"
 import { getCurrentViewContextKey, getSavedViewSpaceForActivity } from "@/lib/view-engine/saved-view-context"
 import type { ViewContextKey } from "@/lib/view-engine/types"
@@ -216,9 +220,9 @@ function Section({
             <span className="a-sb-section__hint">{count}</span>
           )}
           {open ? (
-            <CaretDown size={14} weight="regular" />
+            <CaretDown size={14} />
           ) : (
-            <CaretRight size={14} weight="regular" />
+            <CaretRight size={14} />
           )}
         </button>
         {onHeaderClick && (
@@ -813,14 +817,14 @@ export function LinearSidebar() {
           className="flex items-center justify-center h-7 w-7 rounded-md text-sidebar-muted hover:text-sidebar-foreground hover:bg-sidebar-hover transition-colors"
           title="Back"
         >
-          <CaretLeft size={14} weight="bold" />
+          <CaretLeft size={14} strokeWidth={2.5} />
         </button>
         <button
           onClick={handleGoForward}
           className="flex items-center justify-center h-7 w-7 rounded-md text-sidebar-muted hover:text-sidebar-foreground hover:bg-sidebar-hover transition-colors"
           title="Forward"
         >
-          <CaretRight size={14} weight="bold" />
+          <CaretRight size={14} strokeWidth={2.5} />
         </button>
 
         <div className="flex-1" />
@@ -831,7 +835,7 @@ export function LinearSidebar() {
           className="flex items-center justify-center h-7 w-7 rounded-md text-sidebar-muted hover:text-sidebar-foreground hover:bg-sidebar-hover transition-colors"
           title="Search (⌘K)"
         >
-          <MagnifyingGlass size={14} weight="regular" />
+          <MagnifyingGlass size={14} />
         </button>
 
         {/* Close sidebar button removed — PanelsMenu (workspace header hamburger) handles toggle */}
@@ -1075,7 +1079,7 @@ export function LinearSidebar() {
             <div className="space-y-px">
               <NavLink
                 href="/wiki"
-                icon={<BookOpen size={20} weight="regular" />}
+                icon={<BookOpen size={20} />}
                 label="Overview"
                 count={wikiCount > 0 ? wikiCount : undefined}
                 active={isActive("/wiki") && wikiViewMode !== "merge" && wikiViewMode !== "split"}
@@ -1091,7 +1095,7 @@ export function LinearSidebar() {
                 data-active={wikiViewMode === "merge" ? "true" : undefined}
               >
                 <span className="flex shrink-0 items-center justify-center w-5 h-5">
-                  <GitMerge size={16} weight="regular" />
+                  <GitMerge size={16} />
                 </span>
                 <span className="truncate text-left flex-1">Merge</span>
               </button>
@@ -1106,7 +1110,7 @@ export function LinearSidebar() {
                 data-active={wikiViewMode === "split" ? "true" : undefined}
               >
                 <span className="flex shrink-0 items-center justify-center w-5 h-5">
-                  <Scissors size={16} weight="regular" />
+                  <Scissors size={16} />
                 </span>
                 <span className="truncate text-left flex-1">Split</span>
               </button>
@@ -1421,7 +1425,7 @@ export function LinearSidebar() {
                   <>
                     <NavLink
                       href="/ontology"
-                      icon={<Graph size={20} weight="regular" />}
+                      icon={<Graph size={20} />}
                       label="Graph"
                       count={allNotesCount > 0 ? allNotesCount : undefined}
                       active={isOnOntology && currentMode === "graph"}
@@ -1437,7 +1441,7 @@ export function LinearSidebar() {
                     />
                     <NavLink
                       href="/ontology"
-                      icon={<ChartBar size={20} weight="regular" />}
+                      icon={<ChartBar size={20} />}
                       label="Dashboard"
                       active={isOnOntology && currentMode === "dashboard"}
                       onClickOverride={() => switchMode("dashboard")}
@@ -1582,20 +1586,20 @@ export function LinearSidebar() {
             <div className="space-y-px">
               <NavLink
                 href="/library"
-                icon={<Books size={20} weight="regular" />}
+                icon={<Books size={20} />}
                 label="Overview"
                 active={isActive("/library")}
               />
               <NavLink
                 href="/library/references"
-                icon={<Quotes size={20} weight="regular" />}
+                icon={<Quotes size={20} />}
                 label="References"
                 count={Object.keys(references).length > 0 ? Object.keys(references).length : undefined}
                 active={isActive("/library/references")}
               />
               <NavLink
                 href="/library/tags"
-                icon={<PhTag size={20} weight="light" />}
+                icon={<PhTag size={20} strokeWidth={1.5} />}
                 label="Tags"
                 count={tags.filter(t => !t.trashed).length > 0 ? tags.filter(t => !t.trashed).length : undefined}
                 active={isActive("/library/tags")}
@@ -1627,7 +1631,7 @@ export function LinearSidebar() {
                 data-active={activeRoute === "/library/categories" ? "true" : undefined}
               >
                 <span className="flex shrink-0 items-center justify-center w-5 h-5">
-                  <Folders size={20} weight="regular" />
+                  <Folders size={20} />
                 </span>
                 <span className="truncate text-left flex-1">Categories</span>
                 {wikiCategories.length > 0 && (
@@ -1638,7 +1642,7 @@ export function LinearSidebar() {
               </button>
               <NavLink
                 href="/library/files"
-                icon={<Paperclip size={20} weight="light" />}
+                icon={<Paperclip size={20} strokeWidth={1.5} />}
                 label="Files"
                 count={attachments.length > 0 ? attachments.length : undefined}
                 active={isActive("/library/files")}
@@ -1670,7 +1674,7 @@ export function LinearSidebar() {
             <div className="space-y-px">
               <NavLink
                 href="/books"
-                icon={<Books size={20} weight="regular" />}
+                icon={<Books size={20} />}
                 label="All Books"
                 count={books.filter((b) => !b.trashed).length || undefined}
                 active={isActive("/books")}
@@ -1702,7 +1706,7 @@ export function LinearSidebar() {
                         data-active={activeRoute === href ? "true" : undefined}
                       >
                         <span className="flex shrink-0 items-center justify-center w-5 h-5">
-                          <BookOpen size={14} weight="regular" />
+                          <BookOpen size={14} />
                         </span>
                         <span className="truncate text-left flex-1">{book.title || "Untitled"}</span>
                         <span className="a-sb-link__count tabular-nums">
@@ -1738,7 +1742,7 @@ export function LinearSidebar() {
                         data-active={activeRoute === href ? "true" : undefined}
                       >
                         <span className="flex shrink-0 items-center justify-center w-5 h-5">
-                          <BookOpen size={14} weight="regular" />
+                          <BookOpen size={14} />
                         </span>
                         <span className="truncate text-left flex-1">{book.title || "Untitled"}</span>
                         <span className="a-sb-link__count tabular-nums">
@@ -1810,7 +1814,7 @@ export function LinearSidebar() {
                           <IconWikiArticle size={14} style={{ color: WIKI_STATUS_HEX.article }} />
                         )
                       ) : (
-                        <BookOpen size={14} weight="regular" style={{ color: "var(--space-books)" }} />
+                        <BookOpen size={14} style={{ color: "var(--space-books)" }} />
                       )}
                     </span>
                     <span className="truncate text-left flex-1">{item.title}</span>

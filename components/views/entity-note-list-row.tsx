@@ -15,7 +15,7 @@
  */
 
 import { cn } from "@/lib/utils"
-import { Check as PhCheck } from "@phosphor-icons/react/dist/ssr/Check"
+import { Check as PhCheck } from "lucide-react"
 import { shortRelative } from "@/lib/format-utils"
 import type { Note } from "@/lib/types"
 
@@ -77,7 +77,7 @@ export function EntityNoteListRow({
             : "border-zinc-400 bg-card opacity-0 group-hover:opacity-100 hover:border-zinc-500 dark:border-zinc-600 dark:hover:border-zinc-500",
         )}
       >
-        {isSelected && <PhCheck size={10} weight="bold" className="text-accent-foreground" />}
+        {isSelected && <PhCheck size={10} strokeWidth={2.5} className="text-accent-foreground" />}
       </div>
 
       <span className="flex-1 truncate text-ui text-foreground">

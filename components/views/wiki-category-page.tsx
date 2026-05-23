@@ -14,18 +14,20 @@ import {
   useSensor,
 } from "@dnd-kit/core"
 import type { DragEndEvent, DragStartEvent } from "@dnd-kit/core"
-import { FolderOpen } from "@phosphor-icons/react/dist/ssr/FolderOpen"
-import { FolderSimple } from "@phosphor-icons/react/dist/ssr/FolderSimple"
-import { SortAscending } from "@phosphor-icons/react/dist/ssr/SortAscending"
-import { SortDescending } from "@phosphor-icons/react/dist/ssr/SortDescending"
-import { Trash } from "@phosphor-icons/react/dist/ssr/Trash"
-import { ArrowLeft } from "@phosphor-icons/react/dist/ssr/ArrowLeft"
-import { ArrowRight } from "@phosphor-icons/react/dist/ssr/ArrowRight"
-import { ArrowsDownUp } from "@phosphor-icons/react/dist/ssr/ArrowsDownUp"
-import { CursorClick } from "@phosphor-icons/react/dist/ssr/CursorClick"
-import { Check as PhCheck } from "@phosphor-icons/react/dist/ssr/Check"
-import { CaretRight } from "@phosphor-icons/react/dist/ssr/CaretRight"
-import { Plus as PhPlus } from "@phosphor-icons/react/dist/ssr/Plus"
+import {
+  FolderOpen,
+  Folder as FolderSimple,
+  ArrowUpAZ as SortAscending,
+  ArrowDownAZ as SortDescending,
+  Trash2 as Trash,
+  ArrowLeft,
+  ArrowRight,
+  ArrowUpDown as ArrowsDownUp,
+  MousePointerClick as CursorClick,
+  Check as PhCheck,
+  ChevronRight as CaretRight,
+  Plus as PhPlus,
+} from "lucide-react"
 import { cn } from "@/lib/utils"
 import { toast } from "sonner"
 import { pushUndo, popUndo } from "@/lib/undo-manager"
@@ -216,11 +218,11 @@ function CategoryBoardCard({
           onSelect(cat.id, { ...e, ctrlKey: true } as React.MouseEvent)
         }}
       >
-        {isSelected && <PhCheck className="text-accent-foreground" size={10} weight="bold" />}
+        {isSelected && <PhCheck className="text-accent-foreground" size={10} strokeWidth={2.5} />}
       </div>
       {/* Title row */}
       <div className="flex items-center gap-2">
-        <FolderSimple size={14} weight="regular" className="text-muted-foreground/60 shrink-0" />
+        <FolderSimple size={14} strokeWidth={2} className="text-muted-foreground/60 shrink-0" />
         <span className="text-note font-medium text-foreground truncate">{cat.name}</span>
       </div>
       {/* Description */}
@@ -244,7 +246,7 @@ function CategoryBoardCardOverlay({ cat }: { cat: WikiCategory }) {
   return (
     <div className="rounded-lg border border-accent/50 bg-card p-3 shadow-lg w-[236px] opacity-90">
       <div className="flex items-center gap-2">
-        <FolderSimple size={14} weight="regular" className="text-muted-foreground/60 shrink-0" />
+        <FolderSimple size={14} strokeWidth={2} className="text-muted-foreground/60 shrink-0" />
         <span className="text-note font-medium text-foreground truncate">{cat.name}</span>
       </div>
     </div>
@@ -882,11 +884,11 @@ function CategoryFullListView({
 
   function SortIcon({ col }: { col: CategoryOrdering }) {
     if (ordering !== col) {
-      return <ArrowsDownUp size={10} weight="regular" className="opacity-0 group-hover/th:opacity-50 transition-opacity" />
+      return <ArrowsDownUp size={10} strokeWidth={2} className="opacity-0 group-hover/th:opacity-50 transition-opacity" />
     }
     return sortDirection === "asc"
-      ? <SortAscending size={10} weight="regular" className="text-accent" />
-      : <SortDescending size={10} weight="regular" className="text-accent" />
+      ? <SortAscending size={10} strokeWidth={2} className="text-accent" />
+      : <SortDescending size={10} strokeWidth={2} className="text-accent" />
   }
 
   return (
@@ -1006,7 +1008,7 @@ function CategoryFullListView({
                     />
                     <FolderSimple
                       size={16}
-                      weight="duotone"
+                      strokeWidth={1.5}
                       className={
                         selectedId === cat.id
                           ? "shrink-0 text-accent"
@@ -1110,7 +1112,7 @@ function CategoryFullListView({
         <div className="flex flex-col items-center justify-center py-20 text-center gap-3">
           <FolderSimple
             size={32}
-            weight="thin"
+            strokeWidth={1}
             className="text-muted-foreground/50"
           />
           <p className="text-note text-muted-foreground/70">No categories yet</p>
@@ -1290,7 +1292,7 @@ function CategoryEditor({
           onClick={onClose}
           className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-hover-bg hover:text-foreground"
         >
-          <ArrowLeft size={16} weight="regular" />
+          <ArrowLeft size={16} strokeWidth={2} />
         </button>
       </div>
 
@@ -1362,7 +1364,7 @@ function CategoryEditor({
                 title="Change parent category"
               >
                 <span>{parentCat?.name ?? "None (root)"}</span>
-                <CaretRight size={12} weight="regular" className="text-muted-foreground/70 rotate-90" />
+                <CaretRight size={12} strokeWidth={2} className="text-muted-foreground/70 rotate-90" />
               </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" sideOffset={4} className="w-56 max-h-[400px] overflow-y-auto">
@@ -1373,7 +1375,7 @@ function CategoryEditor({
                   !category.parentIds[0] && "bg-accent/10 text-accent focus:bg-accent/15 focus:text-accent"
                 )}
               >
-                <FolderOpen size={14} weight="regular" className="shrink-0 text-muted-foreground/70" />
+                <FolderOpen size={14} strokeWidth={2} className="shrink-0 text-muted-foreground/70" />
                 <span>None (root)</span>
               </DropdownMenuItem>
               {categories
@@ -1392,7 +1394,7 @@ function CategoryEditor({
                   >
                     <FolderSimple
                       size={14}
-                      weight="regular"
+                      strokeWidth={2}
                       className="shrink-0"
                       style={{ color: c.color }}
                     />
@@ -1435,7 +1437,7 @@ function CategoryEditor({
                 >
                   <FolderOpen
                     size={14}
-                    weight="regular"
+                    strokeWidth={2}
                     className="text-accent/50 shrink-0"
                   />
                   <span className="flex-1 truncate text-left">{anc.name}</span>
@@ -1468,7 +1470,7 @@ function CategoryEditor({
               className="flex items-center gap-0.5 rounded-md px-1.5 py-0.5 text-2xs text-muted-foreground/60 transition-colors hover:bg-hover-bg hover:text-foreground"
               title="Create new subcategory"
             >
-              <PhPlus size={10} weight="bold" />
+              <PhPlus size={10} strokeWidth={2.5} />
               New
             </button>
           </div>
@@ -1477,7 +1479,7 @@ function CategoryEditor({
         {/* Inline new subcategory input */}
         {showNewSub && (
           <div className="flex items-center gap-2 px-3 py-1.5 mb-1">
-            <FolderSimple size={14} weight="regular" className="text-accent/60 shrink-0" />
+            <FolderSimple size={14} strokeWidth={2} className="text-accent/60 shrink-0" />
             <input
               autoFocus
               type="text"
@@ -1526,7 +1528,7 @@ function CategoryEditor({
                     }}
                     className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-note text-foreground/80 transition-colors hover:bg-hover-bg"
                   >
-                    <FolderSimple size={12} weight="regular" className="text-muted-foreground/70 shrink-0" />
+                    <FolderSimple size={12} strokeWidth={2} className="text-muted-foreground/70 shrink-0" />
                     <span className="truncate text-left">{c.name}</span>
                     {c.parentIds.length > 0 && (
                       <span className="text-2xs text-muted-foreground/70 ml-auto shrink-0">
@@ -1552,13 +1554,13 @@ function CategoryEditor({
               >
                 <FolderSimple
                   size={14}
-                  weight="regular"
+                  strokeWidth={2}
                   className="text-muted-foreground/70 shrink-0"
                 />
                 <span className="flex-1 truncate text-left">{sub.name}</span>
                 <CaretRight
                   size={12}
-                  weight="regular"
+                  strokeWidth={2}
                   className="text-muted-foreground/60 shrink-0"
                 />
               </button>
@@ -1604,7 +1606,7 @@ function CategoryEditor({
             onClick={handleDelete}
             className="flex items-center gap-2 rounded-md px-3 py-2 text-note font-medium text-destructive transition-colors hover:bg-destructive/10"
           >
-            <Trash size={16} weight="regular" />
+            <Trash size={16} strokeWidth={2} />
             Delete Category
           </button>
         </div>
@@ -1641,7 +1643,7 @@ export function CategorySidePanel({
     return (
       <div className="p-4">
         <h3 className="text-ui font-semibold text-foreground flex items-center gap-2 mb-4">
-          <FolderSimple className="text-accent" size={16} weight="regular" />
+          <FolderSimple className="text-accent" size={16} strokeWidth={2} />
           Selected
         </h3>
 
@@ -1660,7 +1662,7 @@ export function CategorySidePanel({
                 onClick={onDeleteSelected}
                 className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-note font-medium text-red-400 transition-colors hover:bg-red-400/10"
               >
-                <Trash size={16} weight="regular" />
+                <Trash size={16} strokeWidth={2} />
                 Delete selected
               </button>
             </div>
@@ -1684,7 +1686,7 @@ export function CategorySidePanel({
     return (
       <div className="p-4">
         <h3 className="text-ui font-semibold text-foreground flex items-center gap-2 mb-4">
-          <FolderSimple className="text-accent" size={16} weight="regular" />
+          <FolderSimple className="text-accent" size={16} strokeWidth={2} />
           {category.name}
         </h3>
 
@@ -1747,7 +1749,7 @@ export function CategorySidePanel({
                     onClick={() => onSelect(sub.id)}
                     className="flex w-full items-center gap-2 rounded-md px-3 py-1.5 text-note text-foreground/80 transition-colors hover:bg-hover-bg"
                   >
-                    <FolderSimple size={12} weight="regular" className="text-muted-foreground/70 shrink-0" />
+                    <FolderSimple size={12} strokeWidth={2} className="text-muted-foreground/70 shrink-0" />
                     <span className="truncate">{sub.name}</span>
                   </button>
                 ))}
@@ -1785,7 +1787,7 @@ export function CategorySidePanel({
   return (
     <div className="p-4">
       <h3 className="text-ui font-semibold text-foreground flex items-center gap-2 mb-4">
-        <FolderSimple className="text-accent" size={16} weight="regular" />
+        <FolderSimple className="text-accent" size={16} strokeWidth={2} />
         All Overview
       </h3>
 
@@ -1836,7 +1838,7 @@ export function CategorySidePanel({
               onClick={onSelectAll}
               className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-note font-medium text-foreground transition-colors hover:bg-hover-bg"
             >
-              <CursorClick size={16} weight="regular" />
+              <CursorClick size={16} strokeWidth={2} />
               Select All
             </button>
           </div>

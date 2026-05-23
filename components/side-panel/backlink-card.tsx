@@ -1,7 +1,7 @@
 "use client"
 
 import { useCallback } from "react"
-import { FileText } from "@phosphor-icons/react/dist/ssr/FileText"
+import { FileText } from "lucide-react"
 import { IconWiki } from "@/components/plot-icons"
 import { showNotePreviewById, hideNotePreview } from "@/components/editor/note-hover-preview"
 import type { BacklinkSource } from "@/hooks/use-backlinks-with-context"

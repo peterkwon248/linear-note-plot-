@@ -27,7 +27,7 @@ import { TipTapEditor } from "@/components/editor/TipTapEditor"
 import { FootnotesFooter } from "@/components/editor/footnotes-footer"
 import { FixedToolbar } from "@/components/editor/FixedToolbar"
 import { usePlotStore } from "@/lib/store"
-import { Layout } from "@phosphor-icons/react/dist/ssr/Layout"
+import { LayoutGrid as Layout } from "lucide-react"
 import type { NoteTemplate } from "@/lib/types"
 
 /**
@@ -56,7 +56,7 @@ function TitlePatternBar({
 }) {
   return (
     <div className="flex items-center gap-2 border-b border-border bg-secondary/10 px-6 py-2.5 shrink-0">
-      <Layout size={14} weight="regular" className="text-muted-foreground shrink-0" />
+      <Layout size={14} strokeWidth={2} className="text-muted-foreground shrink-0" />
       <span className="text-2xs font-medium uppercase tracking-wide text-muted-foreground shrink-0">
         Title pattern
       </span>

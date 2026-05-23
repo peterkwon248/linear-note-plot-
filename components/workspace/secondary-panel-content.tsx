@@ -9,19 +9,21 @@ import { WikiLayoutToggle } from "@/components/wiki-editor/wiki-layout-toggle"
 import { useBookContextNav } from "@/hooks/use-book-context-nav"
 import { BookContextNav } from "@/components/books/book-context-nav"
 import { cn } from "@/lib/utils"
-import { X as PhX } from "@phosphor-icons/react/dist/ssr/X"
-import { CaretDown } from "@phosphor-icons/react/dist/ssr/CaretDown"
-import { TextAa } from "@phosphor-icons/react/dist/ssr/TextAa"
+import {
+  X as PhX,
+  ChevronDown as CaretDown,
+  Type as TextAa,
+  Home as House,
+  NotebookPen as NotePencil,
+  // Wiki space icon = Lucide `BookOpen` (matches activity bar / sidebar /
+  // sidepanel — single source of truth). Aliased to keep the lookup table
+  // readable; the import name no longer matters.
+  BookOpen as BookOpenText,
+  Calendar as CalendarBlank,
+  Network as Graph,
+  Library as Books,
+} from "lucide-react"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import { House } from "@phosphor-icons/react/dist/ssr/House"
-import { NotePencil } from "@phosphor-icons/react/dist/ssr/NotePencil"
-// Wiki space icon = Phosphor `BookOpen` (matches activity bar / sidebar /
-// sidepanel — single source of truth). Aliased to keep the lookup table
-// readable; the import name no longer matters.
-import { BookOpen as BookOpenText } from "@phosphor-icons/react/dist/ssr/BookOpen"
-import { CalendarBlank } from "@phosphor-icons/react/dist/ssr/CalendarBlank"
-import { Graph } from "@phosphor-icons/react/dist/ssr/Graph"
-import { Books } from "@phosphor-icons/react/dist/ssr/Books"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -92,7 +94,7 @@ function SecondaryViewHeader() {
             className="flex items-center gap-1.5 text-note font-medium text-foreground transition-colors hover:text-foreground/80 cursor-pointer"
           >
             {SPACE_LABELS[currentSpace]}
-            <CaretDown size={12} weight="bold" className="text-muted-foreground/60" />
+            <CaretDown size={12} strokeWidth={2.5} className="text-muted-foreground/60" />
           </button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start" className="w-40">
@@ -104,7 +106,7 @@ function SecondaryViewHeader() {
                 onClick={() => setSecondarySpace(space)}
                 className={cn(currentSpace === space && "bg-accent/10 text-accent")}
               >
-                <Icon size={16} weight="regular" />
+                <Icon size={16} />
                 {SPACE_LABELS[space]}
               </DropdownMenuItem>
             )
@@ -117,7 +119,7 @@ function SecondaryViewHeader() {
         className="rounded-md p-1.5 text-muted-foreground transition-colors hover:text-foreground hover:bg-hover-bg"
         title="Close panel"
       >
-        <PhX size={16} weight="regular" />
+        <PhX size={16} />
       </button>
     </header>
   )
@@ -192,7 +194,7 @@ function SecondaryWikiArticle({ articleId }: { articleId: string }) {
                 className="shrink-0 flex items-center gap-1.5 text-note font-medium text-muted-foreground transition-colors hover:text-foreground cursor-pointer"
               >
                 {SPACE_LABELS[currentSpace]}
-                <CaretDown size={12} weight="bold" className="text-muted-foreground/60" />
+                <CaretDown size={12} strokeWidth={2.5} className="text-muted-foreground/60" />
               </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="start" className="w-40">
@@ -207,7 +209,7 @@ function SecondaryWikiArticle({ articleId }: { articleId: string }) {
                     }}
                     className={cn(currentSpace === space && "bg-accent/10 text-accent")}
                   >
-                    <Icon size={16} weight="regular" />
+                    <Icon size={16} />
                     {SPACE_LABELS[space]}
                   </DropdownMenuItem>
                 )
@@ -242,7 +244,7 @@ function SecondaryWikiArticle({ articleId }: { articleId: string }) {
                   className="flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground/70 hover:bg-hover-bg hover:text-muted-foreground transition-all"
                   title="Font size"
                 >
-                  <TextAa size={18} weight="regular" />
+                  <TextAa size={18} />
                 </button>
               </PopoverTrigger>
               <PopoverContent align="end" className="w-auto p-2.5" sideOffset={4}>
@@ -308,7 +310,7 @@ function SecondaryWikiArticle({ articleId }: { articleId: string }) {
             className="rounded-md p-1.5 text-muted-foreground transition-colors hover:text-foreground hover:bg-hover-bg"
             title="Close panel"
           >
-            <PhX size={16} weight="regular" />
+            <PhX size={16} />
           </button>
         </div>
       </header>

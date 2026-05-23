@@ -32,7 +32,7 @@ import { useBookContextNav } from "@/hooks/use-book-context-nav"
 import { PanelsMenu } from "@/components/panels-menu"
 import { WikiLayoutToggle } from "@/components/wiki-editor/wiki-layout-toggle"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import { TextAa } from "@phosphor-icons/react/dist/ssr/TextAa"
+import { CaseSensitive as TextAa } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { setActiveRoute } from "@/lib/table-route"
 import { navigateToWikiArticle } from "@/lib/wiki-article-nav"
@@ -54,19 +54,21 @@ import {
   verticalListSortingStrategy,
   sortableKeyboardCoordinates,
 } from "@dnd-kit/sortable"
-import { Books } from "@phosphor-icons/react/dist/ssr/Books"
+import { Library as Books } from "lucide-react"
 import { BookKindIcon } from "@/components/property-chips"
 import { BookBreadcrumb } from "@/components/books/book-breadcrumb"
 import { getBookKind } from "@/lib/view-engine/use-books-view"
 import { IconChevronRight } from "@/components/plot-icons"
-import { ArrowLeft } from "@phosphor-icons/react/dist/ssr/ArrowLeft"
-import { Play } from "@phosphor-icons/react/dist/ssr/Play"
-import { Rewind } from "@phosphor-icons/react/dist/ssr/Rewind"
-import { Plus as PhPlus } from "@phosphor-icons/react/dist/ssr/Plus"
-import { TextH } from "@phosphor-icons/react/dist/ssr/TextH"
-import { FileText } from "@phosphor-icons/react/dist/ssr/FileText"
-import { BookOpen } from "@phosphor-icons/react/dist/ssr/BookOpen"
-import { Trash } from "@phosphor-icons/react/dist/ssr/Trash"
+import {
+  ArrowLeft,
+  Play,
+  Rewind,
+  Plus as PhPlus,
+  Heading1 as TextH,
+  FileText,
+  BookOpen,
+  Trash2 as Trash,
+} from "lucide-react"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -74,9 +76,11 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { DotsThree } from "@phosphor-icons/react/dist/ssr/DotsThree"
-import { PushPin } from "@phosphor-icons/react/dist/ssr/PushPin"
-import { PushPinSlash } from "@phosphor-icons/react/dist/ssr/PushPinSlash"
+import {
+  MoreHorizontal as DotsThree,
+  Pin as PushPin,
+  PinOff as PushPinSlash,
+} from "lucide-react"
 
 interface BookDetailPageProps {
   bookId: string
@@ -357,11 +361,11 @@ export function BookDetailPage({ bookId }: BookDetailPageProps) {
     return (
       <div className="flex flex-1 flex-col overflow-hidden">
         <ViewHeader
-          icon={<Books size={20} weight="regular" />}
+          icon={<Books size={20} strokeWidth={2} />}
           title="Book not found"
         />
         <div className="flex flex-col items-center gap-3 px-6 pt-20">
-          <Books size={32} weight="regular" className="text-muted-foreground/25" />
+          <Books size={32} strokeWidth={2} className="text-muted-foreground/25" />
           <div className="text-center">
             <p className="text-sm font-medium text-foreground">This book no longer exists</p>
             <p className="mt-0.5 text-xs text-muted-foreground">
@@ -471,7 +475,7 @@ export function BookDetailPage({ bookId }: BookDetailPageProps) {
                       title="Start over"
                       aria-label="Start over"
                     >
-                      <Rewind size={11} weight="regular" />
+                      <Rewind size={11} strokeWidth={2} />
                       Start over
                     </button>
                   )}
@@ -487,7 +491,7 @@ export function BookDetailPage({ bookId }: BookDetailPageProps) {
                     }
                     aria-label={lastReadItem ? "Resume reading" : "Read from start"}
                   >
-                    <Play size={11} weight="fill" />
+                    <Play size={11} fill="currentColor" />
                     {lastReadItem ? "Resume" : "Read"}
                   </button>
                 </>
@@ -501,19 +505,19 @@ export function BookDetailPage({ bookId }: BookDetailPageProps) {
                   title="Book actions"
                   aria-label="Book actions"
                 >
-                  <DotsThree size={16} weight="bold" />
+                  <DotsThree size={16} strokeWidth={2.5} />
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-44">
                 <DropdownMenuItem onClick={handleTogglePin} className="text-note">
                   {book.pinned ? (
                     <>
-                      <PushPinSlash size={14} weight="regular" className="mr-2 text-muted-foreground" />
+                      <PushPinSlash size={14} strokeWidth={2} className="mr-2 text-muted-foreground" />
                       Unpin
                     </>
                   ) : (
                     <>
-                      <PushPin size={14} weight="regular" className="mr-2 text-muted-foreground" />
+                      <PushPin size={14} strokeWidth={2} className="mr-2 text-muted-foreground" />
                       Pin to sidebar
                     </>
                   )}
@@ -523,7 +527,7 @@ export function BookDetailPage({ bookId }: BookDetailPageProps) {
                   onClick={handleDelete}
                   className="text-note text-destructive focus:text-destructive"
                 >
-                  <Trash size={14} weight="regular" className="mr-2" />
+                  <Trash size={14} strokeWidth={2} className="mr-2" />
                   Move to trash
                 </DropdownMenuItem>
               </DropdownMenuContent>
@@ -620,7 +624,7 @@ export function BookDetailPage({ bookId }: BookDetailPageProps) {
           {/* Items list */}
           {resolvedItems.length === 0 ? (
             <div className="flex flex-col items-center gap-3 py-12 border border-dashed border-border/60 rounded-lg">
-              <Books size={28} weight="regular" className="text-muted-foreground/25" />
+              <Books size={28} strokeWidth={2} className="text-muted-foreground/25" />
               <div className="text-center">
                 <p className="text-note font-medium text-foreground">
                   This book is empty
@@ -815,7 +819,7 @@ function BookWikiReader({
                     className="flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground/70 hover:bg-hover-bg hover:text-muted-foreground transition-all"
                     title="Font size"
                   >
-                    <TextAa size={18} weight="regular" />
+                    <TextAa size={18} strokeWidth={2} />
                   </button>
                 </PopoverTrigger>
                 <PopoverContent align="end" className="w-auto p-2.5" sideOffset={4}>
@@ -919,13 +923,13 @@ function FooterAddActions({
 }) {
   return (
     <div className="mt-3 flex items-center gap-1">
-      <FooterButton onClick={onAddNote} icon={<FileText size={13} weight="regular" />}>
+      <FooterButton onClick={onAddNote} icon={<FileText size={13} strokeWidth={2} />}>
         Add note
       </FooterButton>
-      <FooterButton onClick={onAddWiki} icon={<BookOpen size={13} weight="regular" />}>
+      <FooterButton onClick={onAddWiki} icon={<BookOpen size={13} strokeWidth={2} />}>
         Add wiki
       </FooterButton>
-      <FooterButton onClick={onAddHeading} icon={<TextH size={13} weight="regular" />}>
+      <FooterButton onClick={onAddHeading} icon={<TextH size={13} strokeWidth={2} />}>
         Add heading
       </FooterButton>
     </div>
@@ -947,7 +951,7 @@ function FooterButton({
       onClick={onClick}
       className="inline-flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-2xs font-medium text-muted-foreground transition-colors hover:bg-hover-bg hover:text-foreground"
     >
-      <PhPlus size={11} weight="bold" />
+      <PhPlus size={11} strokeWidth={2.5} />
       {icon}
       {children}
     </button>

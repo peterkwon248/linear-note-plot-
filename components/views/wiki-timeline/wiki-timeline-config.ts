@@ -29,25 +29,27 @@
  * (no React, no closures). Single source of truth for the timeline modules.
  */
 
-import { Plus } from "@phosphor-icons/react/dist/ssr/Plus"
-import { PencilSimple } from "@phosphor-icons/react/dist/ssr/PencilSimple"
-import { Eye } from "@phosphor-icons/react/dist/ssr/Eye"
-import { Trash } from "@phosphor-icons/react/dist/ssr/Trash"
-import { ArrowCounterClockwise } from "@phosphor-icons/react/dist/ssr/ArrowCounterClockwise"
-import { LinkSimple } from "@phosphor-icons/react/dist/ssr/LinkSimple"
-import { LinkBreak } from "@phosphor-icons/react/dist/ssr/LinkBreak"
-import { StackPlus } from "@phosphor-icons/react/dist/ssr/StackPlus"
-import { StackMinus } from "@phosphor-icons/react/dist/ssr/StackMinus"
-import { ArrowsLeftRight } from "@phosphor-icons/react/dist/ssr/ArrowsLeftRight"
-import { Paperclip } from "@phosphor-icons/react/dist/ssr/Paperclip"
-import { ArrowsMerge } from "@phosphor-icons/react/dist/ssr/ArrowsMerge"
-import { ArrowsSplit } from "@phosphor-icons/react/dist/ssr/ArrowsSplit"
-import { Scissors } from "@phosphor-icons/react/dist/ssr/Scissors"
-import { ArrowsInLineVertical } from "@phosphor-icons/react/dist/ssr/ArrowsInLineVertical"
-import { DotOutline } from "@phosphor-icons/react/dist/ssr/DotOutline"
+import {
+  Plus,
+  Pencil as PencilSimple,
+  Eye,
+  Trash2 as Trash,
+  RotateCcw as ArrowCounterClockwise,
+  Link as LinkSimple,
+  Unlink as LinkBreak,
+  Layers as StackPlus,
+  Layers as StackMinus,
+  ArrowLeftRight as ArrowsLeftRight,
+  Paperclip,
+  Merge as ArrowsMerge,
+  Split as ArrowsSplit,
+  Scissors,
+  FoldVertical as ArrowsInLineVertical,
+  Circle as DotOutline,
+} from "lucide-react"
 import { WIKI_STATUS_HEX } from "@/lib/colors"
 import type { WikiArticle, EntityEventType } from "@/lib/types"
-import type { Icon } from "@phosphor-icons/react"
+import type { LucideIcon as Icon } from "lucide-react"
 
 /* ── Types ───────────────────────────────────────────────── */
 

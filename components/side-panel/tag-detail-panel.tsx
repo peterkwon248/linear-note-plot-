@@ -21,10 +21,12 @@
 
 import { useMemo } from "react"
 import { usePlotStore } from "@/lib/store"
-import { Tag as PhTag } from "@phosphor-icons/react/dist/ssr/Tag"
-import { FileText } from "@phosphor-icons/react/dist/ssr/FileText"
-import { Link as PhLink } from "@phosphor-icons/react/dist/ssr/Link"
-import { BookOpen } from "@phosphor-icons/react/dist/ssr/BookOpen"
+import {
+  Tag as PhTag,
+  FileText,
+  Link as PhLink,
+  BookOpen,
+} from "lucide-react"
 import { IconWiki } from "@/components/plot-icons"
 import { cn } from "@/lib/utils"
 import { getEntityColor } from "@/lib/colors"
@@ -97,7 +99,7 @@ export function TagDetailPanel({ tag }: { tag: Tag }) {
       <div className="flex items-center justify-between border-b border-border px-4 py-3">
         <div className="flex items-center gap-2 min-w-0">
           <span className="inline-flex items-center gap-1 rounded-md bg-secondary/40 px-1.5 py-0.5 text-2xs font-medium text-muted-foreground">
-            <PhTag size={11} weight="regular" />
+            <PhTag size={11} />
             Tag
           </span>
           <span
@@ -116,7 +118,7 @@ export function TagDetailPanel({ tag }: { tag: Tag }) {
       </div>
 
       {/* ── Connections (cross-entity stats) ──────────────── */}
-      <InspectorSection title="Connections" icon={<PhLink size={16} weight="regular" />}>
+      <InspectorSection title="Connections" icon={<PhLink size={16} />}>
         {totalCount === 0 ? (
           <p className="text-note text-muted-foreground/70 italic px-2 py-1">
             Not used yet
@@ -166,7 +168,7 @@ export function TagDetailPanel({ tag }: { tag: Tag }) {
       <div className="mx-4 border-b border-border" />
 
       {/* ── Properties (= stats only) ────────────────────── */}
-      <InspectorSection title="Properties" icon={<FileText size={16} weight="regular" />}>
+      <InspectorSection title="Properties" icon={<FileText size={16} />}>
         <div className="space-y-2">
           <div className="flex items-center justify-between">
             <span className="text-note text-muted-foreground">Notes</span>
@@ -202,7 +204,7 @@ export function TagDetailPanel({ tag }: { tag: Tag }) {
       <div className="mx-4 border-b border-border" />
 
       {/* ── Used by (unified cross-entity list) ──────────── */}
-      <InspectorSection title="Used by" icon={<PhLink size={16} weight="regular" />}>
+      <InspectorSection title="Used by" icon={<PhLink size={16} />}>
         {totalCount === 0 ? (
           <p className="text-note text-muted-foreground/70 italic px-2">
             No entities use this tag yet
@@ -215,7 +217,7 @@ export function TagDetailPanel({ tag }: { tag: Tag }) {
                 onClick={() => openNote(n.id)}
                 className="flex w-full items-center gap-2 rounded-md px-2 py-1 text-left text-note text-foreground hover:bg-hover-bg transition-colors"
               >
-                <FileText size={13} weight="regular" className="shrink-0 text-muted-foreground" />
+                <FileText size={13} className="shrink-0 text-muted-foreground" />
                 <span className="truncate flex-1">{n.title || "Untitled"}</span>
               </button>
             ))}
