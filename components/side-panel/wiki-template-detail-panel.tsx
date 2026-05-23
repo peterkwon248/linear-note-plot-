@@ -21,16 +21,18 @@ import { useMemo, useState } from "react"
 import { useRouter } from "next/navigation"
 import { format, formatDistanceToNow } from "date-fns"
 import { usePlotStore } from "@/lib/store"
-import { CalendarBlank } from "@phosphor-icons/react/dist/ssr/CalendarBlank"
-import { TextAlignLeft } from "@phosphor-icons/react/dist/ssr/TextAlignLeft"
-import { Layout } from "@phosphor-icons/react/dist/ssr/Layout"
-import { Lightning } from "@phosphor-icons/react/dist/ssr/Lightning"
-import { PushPin } from "@phosphor-icons/react/dist/ssr/PushPin"
-import { Trash } from "@phosphor-icons/react/dist/ssr/Trash"
-import { FileText } from "@phosphor-icons/react/dist/ssr/FileText"
-import { Bookmark } from "@phosphor-icons/react/dist/ssr/Bookmark"
-import { BookOpen } from "@phosphor-icons/react/dist/ssr/BookOpen"
-import { Image as ImageIcon } from "@phosphor-icons/react/dist/ssr/Image"
+import {
+  Calendar as CalendarBlank,
+  AlignLeft as TextAlignLeft,
+  LayoutGrid as Layout,
+  Zap as Lightning,
+  Pin as PushPin,
+  Trash2 as Trash,
+  FileText,
+  Bookmark,
+  BookOpen,
+  Image as ImageIcon,
+} from "lucide-react"
 import { cn } from "@/lib/utils"
 import { toast } from "sonner"
 import type { WikiTemplate, WikiBlock } from "@/lib/types"
@@ -165,7 +167,7 @@ export function WikiTemplateDetailPanel({ template }: { template: WikiTemplate }
       <div className="flex items-center justify-between border-b border-border px-4 py-3">
         <div className="flex items-center gap-2">
           <span className="inline-flex items-center gap-1 rounded-md bg-secondary/40 px-1.5 py-0.5 text-2xs font-medium text-muted-foreground">
-            <Layout size={11} weight="regular" />
+            <Layout size={11} strokeWidth={2} />
             Wiki Template
           </span>
           {template.infoboxPreset && template.infoboxPreset !== "custom" && (
@@ -175,7 +177,7 @@ export function WikiTemplateDetailPanel({ template }: { template: WikiTemplate }
           )}
           {template.pinned && (
             <span className="inline-flex items-center gap-1 rounded-md bg-accent/10 px-1.5 py-0.5 text-2xs font-medium text-accent">
-              <PushPin size={11} weight="fill" />
+              <PushPin size={11} fill="currentColor" />
               Pinned
             </span>
           )}
@@ -186,9 +188,9 @@ export function WikiTemplateDetailPanel({ template }: { template: WikiTemplate }
           className="flex items-center justify-center h-7 w-7 rounded-md hover:bg-hover-bg text-muted-foreground hover:text-foreground transition-colors"
         >
           {template.pinned ? (
-            <Bookmark size={14} weight="fill" className="text-accent" />
+            <Bookmark size={14} fill="currentColor" className="text-accent" />
           ) : (
-            <Bookmark size={14} weight="regular" />
+            <Bookmark size={14} strokeWidth={2} />
           )}
         </button>
       </div>
@@ -204,7 +206,7 @@ export function WikiTemplateDetailPanel({ template }: { template: WikiTemplate }
       )}
 
       {/* ── Hero image (PR-C follow-up) ───────────────────── */}
-      <InspectorSection title="Hero image" icon={<ImageIcon size={16} weight="regular" />}>
+      <InspectorSection title="Hero image" icon={<ImageIcon size={16} strokeWidth={2} />}>
         {template.infoboxHero ? (
           <div className="space-y-2">
             <figure className="rounded-md overflow-hidden border border-border">
@@ -254,7 +256,7 @@ export function WikiTemplateDetailPanel({ template }: { template: WikiTemplate }
       <div className="mx-4 border-b border-border" />
 
       {/* ── Dates ─────────────────────────────────────────── */}
-      <InspectorSection title="Dates" icon={<CalendarBlank size={16} weight="regular" />}>
+      <InspectorSection title="Dates" icon={<CalendarBlank size={16} strokeWidth={2} />}>
         <div className="space-y-2">
           <div className="flex items-center justify-between">
             <span className="text-note text-muted-foreground">Created</span>
@@ -274,7 +276,7 @@ export function WikiTemplateDetailPanel({ template }: { template: WikiTemplate }
       <div className="mx-4 border-b border-border" />
 
       {/* ── Outline ───────────────────────────────────────── */}
-      <InspectorSection title="Outline" icon={<TextAlignLeft size={16} weight="regular" />}>
+      <InspectorSection title="Outline" icon={<TextAlignLeft size={16} strokeWidth={2} />}>
         {outline.length > 0 ? (
           <div className="space-y-0.5">
             {outline.map((item, i) => (
@@ -298,7 +300,7 @@ export function WikiTemplateDetailPanel({ template }: { template: WikiTemplate }
       <div className="mx-4 border-b border-border" />
 
       {/* ── Properties (stats) ────────────────────────────── */}
-      <InspectorSection title="Properties" icon={<FileText size={16} weight="regular" />}>
+      <InspectorSection title="Properties" icon={<FileText size={16} strokeWidth={2} />}>
         <div className="space-y-2">
           <div className="flex items-center justify-between">
             <span className="text-note text-muted-foreground">Blocks</span>
@@ -332,14 +334,14 @@ export function WikiTemplateDetailPanel({ template }: { template: WikiTemplate }
       <div className="mx-4 border-b border-border" />
 
       {/* ── Actions ───────────────────────────────────────── */}
-      <InspectorSection title="Actions" icon={<Lightning size={16} weight="regular" />}>
+      <InspectorSection title="Actions" icon={<Lightning size={16} strokeWidth={2} />}>
         <div className="flex flex-col gap-2">
           <button
             onClick={handleApply}
             title="Create a new wiki article from this template — placeholders will be expanded"
             className="flex items-center justify-center gap-2 rounded-md bg-accent px-3 py-2 text-note font-medium text-accent-foreground hover:bg-accent/90 transition-colors"
           >
-            <BookOpen size={14} weight="regular" />
+            <BookOpen size={14} strokeWidth={2} />
             Template &rarr; Wiki article
           </button>
           <button
@@ -349,7 +351,7 @@ export function WikiTemplateDetailPanel({ template }: { template: WikiTemplate }
             }}
             className="flex items-center justify-center gap-2 rounded-md border border-border px-3 py-2 text-note text-muted-foreground hover:bg-red-500/10 hover:text-red-500 hover:border-red-500/30 transition-colors"
           >
-            <Trash size={14} weight="regular" />
+            <Trash size={14} strokeWidth={2} />
             Delete template
           </button>
         </div>

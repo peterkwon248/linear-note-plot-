@@ -80,6 +80,20 @@ function applyFileFilters(attachments: Attachment[], filters: ViewState["filters
   )
 }
 
+/* ── Stage 0.5: Search ───────────────────────────────── */
+
+/**
+ * Attachment-specific search (PR-A B9). Mirrors useTagsView/useLabelsView/
+ * useStickersView pattern — case-insensitive substring match on `name`.
+ * Previously useFilesView didn't subscribe to searchQuery, so the global
+ * search input had zero effect on the Files view.
+ */
+function applyFileSearch(attachments: Attachment[], query: string): Attachment[] {
+  const q = query.trim().toLowerCase()
+  if (!q) return attachments
+  return attachments.filter((a) => (a.name || "").toLowerCase().includes(q))
+}
+
 /* ── Stage 1: Sort ────────────────────────────────────── */
 
 function applyFileSort(attachments: Attachment[], viewState: ViewState): Attachment[] {
@@ -143,6 +157,7 @@ export function useFilesView(
 ): UseFilesViewResult {
   const viewState = usePlotStore((s) => s.viewStateByContext[contextKey]) ?? buildViewStateForContext(contextKey)
   const isHydrated = usePlotStore((s) => s._viewStateHydrated)
+  const searchQuery = usePlotStore((s) => s.searchQuery)
   const setViewState = usePlotStore((s) => s.setViewState)
 
   // Stage 0: filter (type filter via viewState.filters)
@@ -151,10 +166,16 @@ export function useFilesView(
     [attachments, viewState.filters],
   )
 
+  // Stage 0.5: search (PR-A B9 — global searchQuery, mirrors sibling hooks)
+  const searched = useMemo(
+    () => applyFileSearch(filtered, searchQuery),
+    [filtered, searchQuery],
+  )
+
   // Stage 1: sort
   const sorted = useMemo(
-    () => applyFileSort(filtered, viewState),
-    [filtered, viewState],
+    () => applyFileSort(searched, viewState),
+    [searched, viewState],
   )
 
   // Stage 2: group (none-only in this PR)

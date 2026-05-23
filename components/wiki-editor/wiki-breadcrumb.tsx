@@ -4,7 +4,7 @@ import { useMemo } from "react"
 import { usePlotStore } from "@/lib/store"
 import { getAncestors } from "@/lib/wiki-hierarchy"
 import { navigateToWikiArticle } from "@/lib/wiki-article-nav"
-import { CaretRight } from "@phosphor-icons/react/dist/ssr/CaretRight"
+import { ChevronRight as CaretRight } from "lucide-react"
 
 interface WikiBreadcrumbProps {
   articleId: string
@@ -35,7 +35,7 @@ export function WikiBreadcrumb({ articleId }: WikiBreadcrumbProps) {
           {i > 0 && (
             <CaretRight
               size={10}
-              weight="bold"
+              strokeWidth={2.5}
               className="text-muted-foreground/60 shrink-0"
             />
           )}
@@ -50,7 +50,7 @@ export function WikiBreadcrumb({ articleId }: WikiBreadcrumbProps) {
       ))}
       <CaretRight
         size={10}
-        weight="bold"
+        strokeWidth={2.5}
         className="text-muted-foreground/60 shrink-0"
       />
     </nav>

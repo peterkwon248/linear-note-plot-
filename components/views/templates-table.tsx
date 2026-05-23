@@ -26,15 +26,17 @@ import {
   ContextMenuTrigger,
   ContextMenuSeparator,
 } from "@/components/ui/context-menu"
-import { Layout } from "@phosphor-icons/react/dist/ssr/Layout"
-import { PushPin } from "@phosphor-icons/react/dist/ssr/PushPin"
-import { PushPinSlash } from "@phosphor-icons/react/dist/ssr/PushPinSlash"
-import { Trash } from "@phosphor-icons/react/dist/ssr/Trash"
-import { FileText } from "@phosphor-icons/react/dist/ssr/FileText"
-import { CaretDown } from "@phosphor-icons/react/dist/ssr/CaretDown"
-import { Plus as PhPlus } from "@phosphor-icons/react/dist/ssr/Plus"
-import { Check as PhCheck } from "@phosphor-icons/react/dist/ssr/Check"
-import { Minus as PhMinus } from "@phosphor-icons/react/dist/ssr/Minus"
+import {
+  LayoutGrid as Layout,
+  Pin as PushPin,
+  PinOff as PushPinSlash,
+  Trash2 as Trash,
+  FileText,
+  ChevronDown as CaretDown,
+  Plus as PhPlus,
+  Check as PhCheck,
+  Minus as PhMinus,
+} from "lucide-react"
 import { format, formatDistanceToNow } from "date-fns"
 import { cn } from "@/lib/utils"
 import type { TemplateGroup } from "@/lib/view-engine/use-templates-view"
@@ -154,13 +156,13 @@ export function TemplatesTable({
     return (
       <div className="flex flex-1 items-center justify-center px-4">
         <div className="flex flex-col items-center gap-2">
-          <Layout className="text-muted-foreground/60" size={32} weight="regular" />
+          <Layout className="text-muted-foreground/60" size={32} strokeWidth={2} />
           <span className="text-2xs text-muted-foreground">No templates match the current view</span>
           <button
             onClick={onCreateNew}
             className="mt-1 flex items-center gap-1 px-2.5 py-1.5 rounded-md text-2xs bg-accent text-accent-foreground hover:bg-accent/90 transition-colors"
           >
-            <PhPlus size={12} weight="regular" />
+            <PhPlus size={12} strokeWidth={2} />
             New template
           </button>
         </div>
@@ -199,8 +201,8 @@ export function TemplatesTable({
               }
             }}
           >
-            {allSelected && <PhCheck className="text-accent-foreground" size={10} weight="bold" />}
-            {someSelected && <PhMinus className="text-accent-foreground" size={10} weight="regular" />}
+            {allSelected && <PhCheck className="text-accent-foreground" size={10} strokeWidth={2.5} />}
+            {someSelected && <PhMinus className="text-accent-foreground" size={10} strokeWidth={2} />}
           </div>
         </div>
         {activeColumns.map((c) => (
@@ -277,7 +279,7 @@ function TemplateGroupSection({
     <div>
       {showHeader && (
         <div className="flex items-center gap-2 px-5 py-2 mt-3 mb-0.5">
-          <CaretDown size={12} weight="regular" className="text-muted-foreground" />
+          <CaretDown size={12} strokeWidth={2} className="text-muted-foreground" />
           <span className="text-note font-semibold text-foreground">
             {group.label || "Ungrouped"}
           </span>
@@ -349,7 +351,7 @@ function TemplateRow({
               {tmpl.name || "Untitled template"}
             </span>
             {tmpl.pinned && (
-              <PushPin className="text-accent shrink-0" size={12} weight="regular" />
+              <PushPin className="text-accent shrink-0" size={12} strokeWidth={2} />
             )}
           </div>
         )
@@ -410,7 +412,7 @@ function TemplateRow({
                   : "bg-card border-zinc-400 dark:border-zinc-600 hover:border-zinc-500",
               )}
             >
-              {isChecked && <PhCheck className="text-accent-foreground" size={8} weight="bold" />}
+              {isChecked && <PhCheck className="text-accent-foreground" size={8} strokeWidth={2.5} />}
             </div>
           </div>
           {activeColumns.map((c) => (
@@ -425,25 +427,25 @@ function TemplateRow({
           className="text-note"
           onClick={() => onUseTemplate(tmpl.id)}
         >
-          <FileText className="mr-2 text-accent" size={16} weight="regular" />
+          <FileText className="mr-2 text-accent" size={16} strokeWidth={2} />
           Use template
         </ContextMenuItem>
         <ContextMenuItem
           className="text-note"
           onClick={() => onRowClick(tmpl.id, rowIndex, { shiftKey: false, metaKey: false, ctrlKey: false } as React.MouseEvent)}
         >
-          <Layout className="mr-2 text-muted-foreground" size={16} weight="regular" />
+          <Layout className="mr-2 text-muted-foreground" size={16} strokeWidth={2} />
           Edit
         </ContextMenuItem>
         <ContextMenuItem className="text-note" onClick={() => onTogglePin(tmpl.id)}>
           {tmpl.pinned ? (
             <>
-              <PushPinSlash className="mr-2 text-muted-foreground" size={16} weight="regular" />
+              <PushPinSlash className="mr-2 text-muted-foreground" size={16} strokeWidth={2} />
               Unpin
             </>
           ) : (
             <>
-              <PushPin className="mr-2 text-accent" size={16} weight="regular" />
+              <PushPin className="mr-2 text-accent" size={16} strokeWidth={2} />
               Pin
             </>
           )}
@@ -453,7 +455,7 @@ function TemplateRow({
           onClick={() => onDelete(tmpl.id)}
           className="text-red-400 focus:text-red-400"
         >
-          <Trash className="mr-2" size={16} weight="regular" />
+          <Trash className="mr-2" size={16} strokeWidth={2} />
           Delete
         </ContextMenuItem>
       </ContextMenuContent>

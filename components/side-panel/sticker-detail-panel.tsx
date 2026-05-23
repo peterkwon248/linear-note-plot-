@@ -25,11 +25,13 @@
 import { useMemo } from "react"
 import { format, formatDistanceToNow } from "date-fns"
 import { usePlotStore } from "@/lib/store"
-import { Sticker as StickerIcon } from "@phosphor-icons/react/dist/ssr/Sticker"
-import { CalendarBlank } from "@phosphor-icons/react/dist/ssr/CalendarBlank"
-import { FileText } from "@phosphor-icons/react/dist/ssr/FileText"
-import { Link as PhLink } from "@phosphor-icons/react/dist/ssr/Link"
-import { Tag as PhTag } from "@phosphor-icons/react/dist/ssr/Tag"
+import {
+  Sticker as StickerIcon,
+  Calendar as CalendarBlank,
+  FileText,
+  Link as PhLink,
+  Tag as PhTag,
+} from "lucide-react"
 import { IconWiki } from "@/components/plot-icons"
 import { navigateToWikiArticle } from "@/lib/wiki-article-nav"
 import { cn } from "@/lib/utils"
@@ -158,7 +160,7 @@ export function StickerDetailPanel({ sticker }: { sticker: Sticker }) {
       <div className="flex items-center justify-between border-b border-border px-4 py-3">
         <div className="flex items-center gap-2 min-w-0">
           <span className="inline-flex items-center gap-1 rounded-md bg-secondary/40 px-1.5 py-0.5 text-2xs font-medium text-muted-foreground">
-            <StickerIcon size={11} weight="regular" />
+            <StickerIcon size={11} />
             Sticker
           </span>
           <span
@@ -176,7 +178,7 @@ export function StickerDetailPanel({ sticker }: { sticker: Sticker }) {
       </div>
 
       {/* ── Dates ────────────────────────────────────────── */}
-      <InspectorSection title="Dates" icon={<CalendarBlank size={16} weight="regular" />}>
+      <InspectorSection title="Dates" icon={<CalendarBlank size={16} />}>
         <div className="space-y-2">
           <div className="flex items-center justify-between">
             <span className="text-note text-muted-foreground">Created</span>
@@ -196,7 +198,7 @@ export function StickerDetailPanel({ sticker }: { sticker: Sticker }) {
       <div className="mx-4 border-b border-border" />
 
       {/* ── Properties (= stats only) ────────────────────── */}
-      <InspectorSection title="Properties" icon={<FileText size={16} weight="regular" />}>
+      <InspectorSection title="Properties" icon={<FileText size={16} />}>
         <div className="space-y-2">
           <div className="flex items-center justify-between">
             <span className="text-note text-muted-foreground">Total members</span>
@@ -229,7 +231,7 @@ export function StickerDetailPanel({ sticker }: { sticker: Sticker }) {
       <div className="mx-4 border-b border-border" />
 
       {/* ── Used by (cross-entity members) ───────────────── */}
-      <InspectorSection title="Used by" icon={<PhLink size={16} weight="regular" />}>
+      <InspectorSection title="Used by" icon={<PhLink size={16} />}>
         {totalMembers === 0 ? (
           <p className="text-note text-muted-foreground/70 italic px-2">
             No members yet

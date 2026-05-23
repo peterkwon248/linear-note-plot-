@@ -27,21 +27,23 @@ import { format, formatDistanceToNow } from "date-fns"
 import { usePlotStore } from "@/lib/store"
 import { resolveBookItems, type ResolvedBookItem } from "@/lib/books/resolver"
 import { getBookKind, type BookKind } from "@/lib/view-engine/use-books-view"
-import { CalendarBlank } from "@phosphor-icons/react/dist/ssr/CalendarBlank"
-import { TextAlignLeft } from "@phosphor-icons/react/dist/ssr/TextAlignLeft"
-import { Lightning } from "@phosphor-icons/react/dist/ssr/Lightning"
-import { Books as BooksIcon } from "@phosphor-icons/react/dist/ssr/Books"
-import { PushPin } from "@phosphor-icons/react/dist/ssr/PushPin"
-import { Trash } from "@phosphor-icons/react/dist/ssr/Trash"
-import { FileText } from "@phosphor-icons/react/dist/ssr/FileText"
-import { Sparkle } from "@phosphor-icons/react/dist/ssr/Sparkle"
-import { Folder as PhFolder } from "@phosphor-icons/react/dist/ssr/Folder"
-import { Tag as PhTag } from "@phosphor-icons/react/dist/ssr/Tag"
-import { Hash as PhHash } from "@phosphor-icons/react/dist/ssr/Hash"
-import { Stack } from "@phosphor-icons/react/dist/ssr/Stack"
-import { Sticker as PhSticker } from "@phosphor-icons/react/dist/ssr/Sticker"
-import { Play } from "@phosphor-icons/react/dist/ssr/Play"
-import { BookOpen } from "@phosphor-icons/react/dist/ssr/BookOpen"
+import {
+  Calendar as CalendarBlank,
+  AlignLeft as TextAlignLeft,
+  Zap as Lightning,
+  Library as BooksIcon,
+  Pin as PushPin,
+  Trash2 as Trash,
+  FileText,
+  Sparkles as Sparkle,
+  Folder as PhFolder,
+  Tag as PhTag,
+  Hash as PhHash,
+  Layers as Stack,
+  Sticker as PhSticker,
+  Play,
+  BookOpen,
+} from "lucide-react"
 import { cn } from "@/lib/utils"
 import { SPACE_COLORS } from "@/lib/colors"
 import type { Book, AutoSourceKind } from "@/lib/types"
@@ -81,7 +83,7 @@ function KindBadge({ kind }: { kind: BookKind }) {
   const c = config[kind]
   return (
     <span className={cn("inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-2xs font-medium", c.bg, c.text)}>
-      <Sparkle size={11} weight="regular" />
+      <Sparkle size={11} strokeWidth={2} />
       {c.label}
     </span>
   )
@@ -179,13 +181,13 @@ export function BookDetailPanel({ book }: { book: Book }) {
               color: SPACE_COLORS.books,
             }}
           >
-            <BooksIcon size={11} weight="regular" />
+            <BooksIcon size={11} strokeWidth={2} />
             Book
           </span>
           <KindBadge kind={kind} />
           {book.pinned && (
             <span className="inline-flex items-center gap-1 rounded-md bg-accent/10 px-1.5 py-0.5 text-2xs font-medium text-accent">
-              <PushPin size={11} weight="fill" />
+              <PushPin size={11} fill="currentColor" />
               Pinned
             </span>
           )}
@@ -197,7 +199,7 @@ export function BookDetailPanel({ book }: { book: Book }) {
         >
           <PushPin
             size={14}
-            weight={book.pinned ? "fill" : "regular"}
+            fill={book.pinned ? "currentColor" : "none"}
             className={book.pinned ? "text-accent" : ""}
           />
         </button>
@@ -216,7 +218,7 @@ export function BookDetailPanel({ book }: { book: Book }) {
       )}
 
       {/* ── Dates ────────────────────────────────────────── */}
-      <InspectorSection title="Dates" icon={<CalendarBlank size={16} weight="regular" />}>
+      <InspectorSection title="Dates" icon={<CalendarBlank size={16} strokeWidth={2} />}>
         <div className="space-y-2">
           <div className="flex items-center justify-between">
             <span className="text-note text-muted-foreground">Created</span>
@@ -240,7 +242,7 @@ export function BookDetailPanel({ book }: { book: Book }) {
         <>
           <InspectorSection
             title="Smart sources"
-            icon={<Sparkle size={16} weight="regular" />}
+            icon={<Sparkle size={16} strokeWidth={2} />}
           >
             <div className="flex flex-col gap-1">
               {smartSources.map((s, i) => {
@@ -248,7 +250,7 @@ export function BookDetailPanel({ book }: { book: Book }) {
                 return (
                   <div key={`${s.kind}-${s.refId}-${i}`} className="flex items-center gap-2 text-note">
                     <span className="shrink-0 text-muted-foreground/70">
-                      <Icon size={12} weight="regular" />
+                      <Icon size={12} />
                     </span>
                     <span className="uppercase tracking-wider text-[9px] text-muted-foreground/60 w-14 shrink-0">
                       {s.kind}
@@ -268,7 +270,7 @@ export function BookDetailPanel({ book }: { book: Book }) {
         <>
           <InspectorSection
             title="Chapters"
-            icon={<TextAlignLeft size={16} weight="regular" />}
+            icon={<TextAlignLeft size={16} strokeWidth={2} />}
           >
             <div className="space-y-1">
               {chapters.map((ch) => (
@@ -289,7 +291,7 @@ export function BookDetailPanel({ book }: { book: Book }) {
       )}
 
       {/* ── 2026-05-17 cross-entity Label / Category / Tag ── */}
-      <InspectorSection title="Label" icon={<PhTag size={16} weight="regular" />}>
+      <InspectorSection title="Label" icon={<PhTag size={16} strokeWidth={2} />}>
         <LabelPicker
           noteId={book.id}
           currentLabelId={book.labelId ?? null}
@@ -308,7 +310,7 @@ export function BookDetailPanel({ book }: { book: Book }) {
       </InspectorSection>
       <div className="mx-4 border-b border-border" />
 
-      <InspectorSection title="Categories" icon={<PhTag size={16} weight="regular" />}>
+      <InspectorSection title="Categories" icon={<PhTag size={16} strokeWidth={2} />}>
         <CategoryPicker
           entityId={book.id}
           selectedCategoryIds={book.categoryIds ?? []}
@@ -340,7 +342,7 @@ export function BookDetailPanel({ book }: { book: Book }) {
       </InspectorSection>
       <div className="mx-4 border-b border-border" />
 
-      <InspectorSection title="Tags" icon={<PhTag size={16} weight="regular" />}>
+      <InspectorSection title="Tags" icon={<PhTag size={16} strokeWidth={2} />}>
         <TagPicker
           noteId={book.id}
           selectedTagIds={book.tags ?? []}
@@ -368,7 +370,7 @@ export function BookDetailPanel({ book }: { book: Book }) {
       <div className="mx-4 border-b border-border" />
 
       {/* ── Properties (stats only) ──────────────────────── */}
-      <InspectorSection title="Properties" icon={<FileText size={16} weight="regular" />}>
+      <InspectorSection title="Properties" icon={<FileText size={16} strokeWidth={2} />}>
         <div className="space-y-2">
           <Stat label="Total items" value={stats.totalItems} />
           <Stat label="Notes" value={stats.notesCount} />
@@ -383,7 +385,7 @@ export function BookDetailPanel({ book }: { book: Book }) {
       {book.lastReadAt && book.lastReadItemId && (
         <>
           <div className="mx-4 border-b border-border" />
-          <InspectorSection title="Reading" icon={<BookOpen size={16} weight="regular" />}>
+          <InspectorSection title="Reading" icon={<BookOpen size={16} strokeWidth={2} />}>
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <span className="text-note text-muted-foreground">Last read</span>
@@ -409,7 +411,7 @@ export function BookDetailPanel({ book }: { book: Book }) {
       <div className="mx-4 border-b border-border" />
 
       {/* ── Actions ──────────────────────────────────────── */}
-      <InspectorSection title="Actions" icon={<Lightning size={16} weight="regular" />}>
+      <InspectorSection title="Actions" icon={<Lightning size={16} strokeWidth={2} />}>
         <div className="flex flex-col gap-2">
           <button
             onClick={() => {
@@ -419,7 +421,7 @@ export function BookDetailPanel({ book }: { book: Book }) {
             }}
             className="flex items-center justify-center gap-2 rounded-md border border-border px-3 py-2 text-note text-muted-foreground hover:bg-red-500/10 hover:text-red-500 hover:border-red-500/30 transition-colors"
           >
-            <Trash size={14} weight="regular" />
+            <Trash size={14} strokeWidth={2} />
             Delete book
           </button>
         </div>

@@ -15,22 +15,24 @@ import {
 } from "@/components/ui/context-menu"
 import { ColorPickerGrid } from "@/components/color-picker-grid"
 import { getEntityColor } from "@/lib/colors"
-import { ArrowLeft } from "@phosphor-icons/react/dist/ssr/ArrowLeft"
-import { ArrowUp } from "@phosphor-icons/react/dist/ssr/ArrowUp"
-import { ArrowDown } from "@phosphor-icons/react/dist/ssr/ArrowDown"
-import { ArrowsDownUp } from "@phosphor-icons/react/dist/ssr/ArrowsDownUp"
-import { Hash as PhHash } from "@phosphor-icons/react/dist/ssr/Hash"
-import { Tag as PhTag } from "@phosphor-icons/react/dist/ssr/Tag"
-import { Plus as PhPlus } from "@phosphor-icons/react/dist/ssr/Plus"
-import { Trash } from "@phosphor-icons/react/dist/ssr/Trash"
-import { X as PhX } from "@phosphor-icons/react/dist/ssr/X"
-import { Lightning } from "@phosphor-icons/react/dist/ssr/Lightning"
-import { SlidersHorizontal } from "@phosphor-icons/react/dist/ssr/SlidersHorizontal"
-import { Stack } from "@phosphor-icons/react/dist/ssr/Stack"
-import { CaretDown } from "@phosphor-icons/react/dist/ssr/CaretDown"
-import { Check as PhCheck } from "@phosphor-icons/react/dist/ssr/Check"
-import { Minus } from "@phosphor-icons/react/dist/ssr/Minus"
-import { EyeSlash } from "@phosphor-icons/react/dist/ssr/EyeSlash"
+import {
+  ArrowLeft,
+  ArrowUp,
+  ArrowDown,
+  ArrowUpDown as ArrowsDownUp,
+  Hash as PhHash,
+  Tag as PhTag,
+  Plus as PhPlus,
+  Trash2 as Trash,
+  X as PhX,
+  Zap as Lightning,
+  SlidersHorizontal,
+  Layers as Stack,
+  ChevronDown as CaretDown,
+  Check as PhCheck,
+  Minus,
+  EyeOff as EyeSlash,
+} from "lucide-react"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import {
   DropdownMenu,
@@ -48,7 +50,7 @@ import { FilterButton, FilterChipBar } from "@/components/filter-bar"
 import { FilterPanel } from "@/components/filter-panel"
 import { DisplayPanel } from "@/components/display-panel"
 import { TAGS_LIST_VIEW_CONFIG, NOTES_VIEW_CONFIG } from "@/lib/view-engine/view-configs"
-import { FunnelSimple } from "@phosphor-icons/react/dist/ssr/FunnelSimple"
+import { Filter as FunnelSimple } from "lucide-react"
 import { TagNoteCountChip } from "@/components/property-chips"
 import type { SortField, FilterRule, GroupBy } from "@/lib/view-engine/types"
 import { EntityNoteListRow } from "@/components/views/entity-note-list-row"
@@ -114,7 +116,7 @@ function InlineSelect<T extends string>({
         className="flex items-center gap-1.5 rounded-md bg-secondary/60 px-2.5 py-1.5 text-note text-foreground transition-colors hover:bg-hover-bg"
       >
         {current?.label ?? value}
-        <CaretDown className={`text-muted-foreground transition-transform duration-150 ${open ? "rotate-180" : ""}`} size={14} weight="regular" />
+        <CaretDown className={`text-muted-foreground transition-transform duration-150 ${open ? "rotate-180" : ""}`} size={14} strokeWidth={2} />
       </button>
       {open && (
         <div className="absolute right-0 top-full z-50 mt-1 min-w-[140px] rounded-md border border-border bg-surface-overlay py-1 shadow-md animate-in fade-in-0 zoom-in-95 duration-200">
@@ -128,7 +130,7 @@ function InlineSelect<T extends string>({
                   active ? "text-foreground" : "text-muted-foreground"
                 }`}
               >
-                <PhCheck className={`shrink-0 ${active ? "text-accent opacity-100" : "opacity-0"}`} size={14} weight="bold" />
+                <PhCheck className={`shrink-0 ${active ? "text-accent opacity-100" : "opacity-0"}`} size={14} strokeWidth={2.5} />
                 {opt.label}
               </button>
             )
@@ -616,7 +618,7 @@ export function TagsView() {
               )}
             >
               {checkedTags.has(tag.id) && (
-                <PhCheck size={10} weight="bold" className="text-accent-foreground" />
+                <PhCheck size={10} strokeWidth={2.5} className="text-accent-foreground" />
               )}
             </div>
 
@@ -694,7 +696,7 @@ export function TagsView() {
               )}
             >
               {checkedTags.has(tag.id) && (
-                <PhCheck size={10} weight="bold" className="text-accent-foreground" />
+                <PhCheck size={10} strokeWidth={2.5} className="text-accent-foreground" />
               )}
             </div>
             {/* v109: leading dot — gray when no color set, hex otherwise. */}
@@ -760,7 +762,7 @@ export function TagsView() {
             onClick={() => setSelectedTagId(null)}
             className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-hover-bg hover:text-foreground"
           >
-            <ArrowLeft size={16} weight="regular" />
+            <ArrowLeft size={16} strokeWidth={2} />
           </button>
           <h1 className="text-ui font-semibold text-foreground">
             #{selectedTag.name}
@@ -776,7 +778,7 @@ export function TagsView() {
             }}
             className="flex items-center gap-1.5 rounded-md px-2.5 py-1 text-note text-red-400 transition-colors hover:bg-red-400/10"
           >
-            <Trash size={14} weight="regular" />
+            <Trash size={14} strokeWidth={2} />
             Delete tag
           </button>
         </div>
@@ -787,7 +789,7 @@ export function TagsView() {
           <Popover open={filterPopoverOpen} onOpenChange={setFilterPopoverOpen}>
             <PopoverTrigger asChild>
               <button className="flex items-center gap-1.5 rounded-md px-2 py-1 text-note text-muted-foreground transition-colors hover:bg-hover-bg hover:text-foreground">
-                <FunnelSimple size={14} weight="regular" />
+                <FunnelSimple size={14} strokeWidth={2} />
                 Filter
                 {tagViewState.filters.length > 0 && (
                   <span className="flex h-4 min-w-4 items-center justify-center rounded-full bg-accent/15 px-1 text-2xs font-medium text-accent">
@@ -810,7 +812,7 @@ export function TagsView() {
           <Popover>
             <PopoverTrigger asChild>
               <button className="flex items-center gap-1.5 rounded-md px-2 py-1 text-note text-muted-foreground transition-colors hover:bg-hover-bg hover:text-foreground">
-                <SlidersHorizontal size={16} weight="regular" />
+                <SlidersHorizontal size={16} strokeWidth={2} />
                 Display
               </button>
             </PopoverTrigger>
@@ -818,7 +820,7 @@ export function TagsView() {
               {/* Grouping */}
               <div className="flex items-center justify-between px-4 py-3">
                 <div className="flex items-center gap-2">
-                  <Stack className="text-muted-foreground" size={16} weight="regular" />
+                  <Stack className="text-muted-foreground" size={16} strokeWidth={2} />
                   <span className="text-ui text-foreground">Grouping</span>
                 </div>
                 <InlineSelect
@@ -830,7 +832,7 @@ export function TagsView() {
               {/* Ordering */}
               <div className="flex items-center justify-between px-4 py-3">
                 <div className="flex items-center gap-2">
-                  <ArrowsDownUp className="text-muted-foreground" size={16} weight="regular" />
+                  <ArrowsDownUp className="text-muted-foreground" size={16} strokeWidth={2} />
                   <span className="text-ui text-foreground">Ordering</span>
                 </div>
                 <div className="flex items-center gap-1.5">
@@ -844,8 +846,8 @@ export function TagsView() {
                     className="flex items-center justify-center rounded-md border border-border p-1.5 text-muted-foreground transition-colors hover:bg-hover-bg hover:text-foreground"
                   >
                     {tagViewState.sortDirection === "asc"
-                      ? <ArrowUp size={14} weight="regular" />
-                      : <ArrowDown size={14} weight="regular" />
+                      ? <ArrowUp size={14} strokeWidth={2} />
+                      : <ArrowDown size={14} strokeWidth={2} />
                     }
                   </button>
                 </div>
@@ -1039,7 +1041,7 @@ export function TagsView() {
             {/* Create tag form */}
             {creatingTag && (
               <div className="px-6 py-3 border-b border-border flex items-center gap-3">
-                <PhHash className="text-muted-foreground shrink-0" size={14} weight="regular" />
+                <PhHash className="text-muted-foreground shrink-0" size={14} strokeWidth={2} />
                 <input
                   ref={tagInputRef}
                   type="text"
@@ -1051,7 +1053,7 @@ export function TagsView() {
                   className="h-8 flex-1 rounded-md border border-border bg-background px-3 text-note text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-accent"
                 />
                 <button onClick={() => { setTagInput(""); setCreatingTag(false) }} className="text-muted-foreground hover:text-foreground transition-colors">
-                  <PhX size={14} weight="regular" />
+                  <PhX size={14} strokeWidth={2} />
                 </button>
               </div>
             )}
@@ -1102,10 +1104,10 @@ export function TagsView() {
                     )}
                   >
                     {checkedTags.size === visibleTags.length && visibleTags.length > 0 && (
-                      <PhCheck size={10} weight="bold" className="text-accent-foreground" />
+                      <PhCheck size={10} strokeWidth={2.5} className="text-accent-foreground" />
                     )}
                     {checkedTags.size > 0 && checkedTags.size < visibleTags.length && (
-                      <Minus size={10} weight="regular" className="text-accent-foreground" />
+                      <Minus size={10} strokeWidth={2} className="text-accent-foreground" />
                     )}
                   </div>
                   <button
@@ -1115,8 +1117,8 @@ export function TagsView() {
                     Name
                     {(currentSortField === "name" || currentSortField === "title") && (
                       currentSortDir === "asc"
-                        ? <ArrowUp size={12} weight="regular" className="text-accent" />
-                        : <ArrowDown size={12} weight="regular" className="text-accent" />
+                        ? <ArrowUp size={12} strokeWidth={2} className="text-accent" />
+                        : <ArrowDown size={12} strokeWidth={2} className="text-accent" />
                     )}
                   </button>
                   <button
@@ -1126,8 +1128,8 @@ export function TagsView() {
                     Notes
                     {currentSortField === "noteCount" && (
                       currentSortDir === "desc"
-                        ? <ArrowDown size={12} weight="regular" className="text-accent" />
-                        : <ArrowUp size={12} weight="regular" className="text-accent" />
+                        ? <ArrowDown size={12} strokeWidth={2} className="text-accent" />
+                        : <ArrowUp size={12} strokeWidth={2} className="text-accent" />
                     )}
                   </button>
                   <button
@@ -1140,7 +1142,7 @@ export function TagsView() {
                     )}
                     title={hideEmpty ? "Show all" : "Hide empty"}
                   >
-                    <EyeSlash size={14} weight="regular" />
+                    <EyeSlash size={14} strokeWidth={2} />
                   </button>
                 </div>
                 {tagRenderItems.map((item) =>
@@ -1175,7 +1177,7 @@ export function TagsView() {
             }}
             className="text-note"
           >
-            <PhPlus className="mr-2 text-muted-foreground" size={16} weight="regular" />
+            <PhPlus className="mr-2 text-muted-foreground" size={16} strokeWidth={2} />
             New tag
           </ContextMenuItem>
         </ContextMenuContent>
@@ -1189,16 +1191,16 @@ export function TagsView() {
               onClick={() => setCheckedTags(new Set())}
               className="mr-1 flex items-center gap-1.5 rounded-md px-2 py-1.5 text-2xs font-medium text-muted-foreground hover:bg-active-bg transition-colors"
             >
-              <Lightning size={14} weight="fill" className="text-accent" />
+              <Lightning size={14} fill="currentColor" className="text-accent" />
               {checkedTags.size} selected
-              <PhX size={12} weight="regular" className="ml-0.5 text-muted-foreground/70" />
+              <PhX size={12} strokeWidth={2} className="ml-0.5 text-muted-foreground/70" />
             </button>
             <div className="h-7 w-px bg-border mx-1.5" />
             <button
               onClick={handleDeleteChecked}
               className="inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-2xs font-medium text-destructive hover:bg-destructive/10 transition-colors"
             >
-              <Trash size={16} weight="regular" /> Delete
+              <Trash size={16} strokeWidth={2} /> Delete
             </button>
           </div>
         </div>

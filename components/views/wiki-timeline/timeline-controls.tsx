@@ -5,8 +5,7 @@
  * Events toggle, mode segmented control). Extracted from WikiTimelineView.
  */
 
-import { CaretLeft } from "@phosphor-icons/react/dist/ssr/CaretLeft"
-import { CaretRight } from "@phosphor-icons/react/dist/ssr/CaretRight"
+import { ChevronLeft as CaretLeft, ChevronRight as CaretRight } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { periodLabel } from "./wiki-timeline-utils"
 import { TIMELINE_MODES, type TimelineMode } from "./wiki-timeline-config"
@@ -44,7 +43,7 @@ export function TimelineControls({
         )}
         aria-label="Previous period"
       >
-        <CaretLeft size={12} weight="bold" />
+        <CaretLeft size={12} strokeWidth={2.5} />
       </button>
 
       <button
@@ -68,7 +67,7 @@ export function TimelineControls({
         )}
         aria-label="Next period"
       >
-        <CaretRight size={12} weight="bold" />
+        <CaretRight size={12} strokeWidth={2.5} />
       </button>
 
       <div className="flex-1" />

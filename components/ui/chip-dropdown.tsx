@@ -1,8 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { CaretDown } from "@phosphor-icons/react/dist/ssr/CaretDown"
-import { Check } from "@phosphor-icons/react/dist/ssr/Check"
+import { ChevronDown, Check } from "lucide-react"
 
 export function ChipDropdown<T extends string>({
   value,
@@ -25,7 +24,7 @@ export function ChipDropdown<T extends string>({
         className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md border border-border-subtle bg-surface-overlay text-note font-medium"
       >
         {currentLabel}
-        <CaretDown size={10} weight="bold" />
+        <ChevronDown size={10} strokeWidth={2.5} />
       </button>
 
       {open && (
@@ -53,7 +52,7 @@ export function ChipDropdown<T extends string>({
                   <span>{opt.label}</span>
                   {value === opt.value && (
                     <span className="text-accent">
-                      <Check size={12} weight="bold" />
+                      <Check size={12} strokeWidth={2.5} />
                     </span>
                   )}
                 </button>

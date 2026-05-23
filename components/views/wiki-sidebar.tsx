@@ -2,7 +2,7 @@
 
 import { shortRelative } from "@/lib/format-utils"
 import type { Note } from "@/lib/types"
-import { Plus as PhPlus } from "@phosphor-icons/react/dist/ssr/Plus"
+import { Plus as PhPlus } from "lucide-react"
 import type React from "react"
 
 interface WikiSidebarProps {
@@ -107,7 +107,7 @@ export function WikiSidebar({
                   onClick={() => onCreateFromRedLink(item.title)}
                   className="hidden shrink-0 items-center gap-0.5 text-2xs font-medium text-accent group-hover:flex"
                 >
-                  <PhPlus size={12} weight="regular" />
+                  <PhPlus size={12} strokeWidth={2} />
                   Create
                 </button>
               </div>

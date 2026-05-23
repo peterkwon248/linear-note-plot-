@@ -3,17 +3,19 @@
 import { useMemo, useState } from "react"
 import { useSidePanelEntity } from "./use-side-panel-entity"
 import { usePlotStore } from "@/lib/store"
-import { BookmarkSimple } from "@phosphor-icons/react/dist/ssr/BookmarkSimple"
-import { MapPin } from "@phosphor-icons/react/dist/ssr/MapPin"
-import { TextAlignLeft } from "@phosphor-icons/react/dist/ssr/TextAlignLeft"
-import { FileText } from "@phosphor-icons/react/dist/ssr/FileText"
-import { BookOpen } from "@phosphor-icons/react/dist/ssr/BookOpen"
-import { MagnifyingGlass } from "@phosphor-icons/react/dist/ssr/MagnifyingGlass"
-import { X } from "@phosphor-icons/react/dist/ssr/X"
+import {
+  Bookmark as BookmarkSimple,
+  MapPin,
+  AlignLeft as TextAlignLeft,
+  FileText,
+  BookOpen,
+  Search as MagnifyingGlass,
+  X,
+} from "lucide-react"
 import { extractAnchorsFromContentJson, extractAnchorsFromWikiBlocks } from "@/lib/anchor-utils"
 import { navigateToWikiArticle } from "@/lib/wiki-article-nav"
 import { resolveBookItems } from "@/lib/books/resolver"
-import { Books as BooksIcon } from "@phosphor-icons/react/dist/ssr/Books"
+import { Library as BooksIcon } from "lucide-react"
 import type { GlobalBookmark, Book, WikiArticle } from "@/lib/types"
 import { cn } from "@/lib/utils"
 import { SPACE_COLORS } from "@/lib/colors"
@@ -130,7 +132,7 @@ export function SidePanelBookmarks() {
           <div className="relative mb-2">
             <MagnifyingGlass
               size={14}
-              weight="bold"
+              strokeWidth={2.5}
               className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground"
             />
             <input
@@ -176,14 +178,14 @@ export function SidePanelBookmarks() {
                   {kind === "wiki" ? (
                     <BookOpen
                       size={13}
-                      weight="fill"
+                      fill="currentColor"
                       className="mt-0.5 flex-shrink-0"
                       style={{ color: isDeleted ? "var(--muted-foreground)" : SPACE_COLORS.wiki }}
                     />
                   ) : (
                     <MapPin
                       size={13}
-                      weight="fill"
+                      fill="currentColor"
                       className="mt-0.5 flex-shrink-0"
                       style={{ color: isDeleted ? "var(--muted-foreground)" : SPACE_COLORS.notes }}
                     />
@@ -223,7 +225,7 @@ export function SidePanelBookmarks() {
                     }}
                     title="Unpin"
                   >
-                    <X size={11} weight="regular" className="text-muted-foreground/60" />
+                    <X size={11} strokeWidth={2} className="text-muted-foreground/60" />
                   </button>
                 </li>
               )
@@ -363,7 +365,7 @@ function SectionHeader({
 }) {
   return (
     <div className="flex items-center gap-2 mb-2 text-accent/80">
-      <Icon size={13} weight="bold" />
+      <Icon size={13} strokeWidth={2.5} />
       <span className="text-2xs font-semibold uppercase tracking-wider">{label}</span>
       <span className="text-2xs text-accent tabular-nums">{count}</span>
     </div>
@@ -423,9 +425,9 @@ function NoteLocalAnchors({
               onClick={() => scrollToAnchor(anchor.id)}
             >
               {anchor.type === "heading" ? (
-                <TextAlignLeft size={12} weight="bold" className="text-muted-foreground shrink-0" />
+                <TextAlignLeft size={12} strokeWidth={2.5} className="text-muted-foreground shrink-0" />
               ) : (
-                <MapPin size={12} weight="bold" className="text-muted-foreground shrink-0" />
+                <MapPin size={12} strokeWidth={2.5} className="text-muted-foreground shrink-0" />
               )}
               <span className="flex-1 truncate text-note text-foreground">{anchor.label}</span>
               <button
@@ -443,7 +445,7 @@ function NoteLocalAnchors({
               >
                 <BookmarkSimple
                   size={12}
-                  weight={isPinned ? "fill" : "regular"}
+                  fill={isPinned ? "currentColor" : "none"}
                   className={isPinned ? "text-accent" : "text-muted-foreground/60"}
                 />
               </button>
@@ -518,9 +520,9 @@ function WikiLocalAnchors({
               onClick={() => scrollToAnchor(anchor.id)}
             >
               {anchor.type === "heading" ? (
-                <TextAlignLeft size={12} weight="bold" className="text-muted-foreground shrink-0" />
+                <TextAlignLeft size={12} strokeWidth={2.5} className="text-muted-foreground shrink-0" />
               ) : (
-                <MapPin size={12} weight="bold" className="text-muted-foreground shrink-0" />
+                <MapPin size={12} strokeWidth={2.5} className="text-muted-foreground shrink-0" />
               )}
               <span className="flex-1 truncate text-note text-foreground">{anchor.label}</span>
               <button
@@ -538,7 +540,7 @@ function WikiLocalAnchors({
               >
                 <BookmarkSimple
                   size={12}
-                  weight={isPinned ? "fill" : "regular"}
+                  fill={isPinned ? "currentColor" : "none"}
                   className={isPinned ? "text-accent" : "text-muted-foreground/60"}
                 />
               </button>
@@ -646,14 +648,14 @@ function BookContextBookmarks({
                 {kind === "wiki" ? (
                   <BookOpen
                     size={13}
-                    weight="fill"
+                    fill="currentColor"
                     className="mt-0.5 flex-shrink-0"
                     style={{ color: isDeleted ? "var(--muted-foreground)" : SPACE_COLORS.wiki }}
                   />
                 ) : (
                   <MapPin
                     size={13}
-                    weight="fill"
+                    fill="currentColor"
                     className="mt-0.5 flex-shrink-0"
                     style={{ color: isDeleted ? "var(--muted-foreground)" : SPACE_COLORS.notes }}
                   />

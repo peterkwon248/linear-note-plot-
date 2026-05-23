@@ -22,13 +22,15 @@
 import { useMemo } from "react"
 import { format, formatDistanceToNow } from "date-fns"
 import { usePlotStore } from "@/lib/store"
-import { CalendarBlank } from "@phosphor-icons/react/dist/ssr/CalendarBlank"
-import { FileText } from "@phosphor-icons/react/dist/ssr/FileText"
-import { Paperclip } from "@phosphor-icons/react/dist/ssr/Paperclip"
-import { Image as PhImage } from "@phosphor-icons/react/dist/ssr/Image"
-import { Lightning } from "@phosphor-icons/react/dist/ssr/Lightning"
-import { ArrowSquareOut } from "@phosphor-icons/react/dist/ssr/ArrowSquareOut"
-import { Link as PhLink } from "@phosphor-icons/react/dist/ssr/Link"
+import {
+  Calendar as CalendarBlank,
+  FileText,
+  Paperclip,
+  Image as PhImage,
+  Zap as Lightning,
+  ExternalLink as ArrowSquareOut,
+  Link as PhLink,
+} from "lucide-react"
 import { IconWiki } from "@/components/plot-icons"
 import { cn } from "@/lib/utils"
 import type { Attachment } from "@/lib/types"
@@ -98,7 +100,7 @@ export function FileDetailPanel({ attachment }: { attachment: Attachment }) {
       <div className="flex items-center justify-between border-b border-border px-4 py-3">
         <div className="flex items-center gap-2">
           <span className="inline-flex items-center gap-1 rounded-md bg-secondary/40 px-1.5 py-0.5 text-2xs font-medium text-muted-foreground">
-            {isImage ? <PhImage size={11} weight="regular" /> : <Paperclip size={11} weight="regular" />}
+            {isImage ? <PhImage size={11} /> : <Paperclip size={11} />}
             File
           </span>
           <span className="inline-flex items-center gap-1 rounded-md bg-accent/10 px-1.5 py-0.5 text-2xs font-medium text-accent">
@@ -126,7 +128,7 @@ export function FileDetailPanel({ attachment }: { attachment: Attachment }) {
       )}
 
       {/* ── Dates ────────────────────────────────────────── */}
-      <InspectorSection title="Dates" icon={<CalendarBlank size={16} weight="regular" />}>
+      <InspectorSection title="Dates" icon={<CalendarBlank size={16} />}>
         <div className="space-y-2">
           <div className="flex items-center justify-between">
             <span className="text-note text-muted-foreground">Uploaded</span>
@@ -146,13 +148,13 @@ export function FileDetailPanel({ attachment }: { attachment: Attachment }) {
       <div className="mx-4 border-b border-border" />
 
       {/* ── Source (where it was uploaded) ───────────────── */}
-      <InspectorSection title="Source" icon={<FileText size={16} weight="regular" />}>
+      <InspectorSection title="Source" icon={<FileText size={16} />}>
         {sourceNote ? (
           <button
             onClick={() => openNote(sourceNote.id)}
             className="flex w-full items-center gap-2 rounded-md px-2 py-1 text-left text-note text-foreground hover:bg-hover-bg transition-colors"
           >
-            <FileText size={13} weight="regular" className="shrink-0 text-muted-foreground" />
+            <FileText size={13} className="shrink-0 text-muted-foreground" />
             <span className="truncate flex-1">{sourceNote.title || "Untitled"}</span>
           </button>
         ) : (
@@ -165,7 +167,7 @@ export function FileDetailPanel({ attachment }: { attachment: Attachment }) {
       {/* ── Used in (cross-reference) ────────────────────── */}
       {(usedInWikis.length > 0) && (
         <>
-          <InspectorSection title="Used in" icon={<PhLink size={16} weight="regular" />}>
+          <InspectorSection title="Used in" icon={<PhLink size={16} />}>
             <div className="flex flex-col gap-0.5">
               {usedInWikis.map((a) => (
                 <div
@@ -183,7 +185,7 @@ export function FileDetailPanel({ attachment }: { attachment: Attachment }) {
       )}
 
       {/* ── Properties (= stats only) ────────────────────── */}
-      <InspectorSection title="Properties" icon={<FileText size={16} weight="regular" />}>
+      <InspectorSection title="Properties" icon={<FileText size={16} />}>
         <div className="space-y-2">
           <div className="flex items-center justify-between">
             <span className="text-note text-muted-foreground">Size</span>
@@ -211,7 +213,7 @@ export function FileDetailPanel({ attachment }: { attachment: Attachment }) {
       {/* ── Actions ──────────────────────────────────────── */}
       {/* Delete action 미구현 — attachments slice에 deleteAttachment 액션 없음.
           별도 PR에서 trash flow 추가 시 활성화. 이번 PR은 Detail 정보 표시 한정. */}
-      <InspectorSection title="Actions" icon={<Lightning size={16} weight="regular" />}>
+      <InspectorSection title="Actions" icon={<Lightning size={16} />}>
         <div className="flex flex-col gap-2">
           {attachment.url && (
             <a
@@ -220,7 +222,7 @@ export function FileDetailPanel({ attachment }: { attachment: Attachment }) {
               rel="noopener noreferrer"
               className="flex items-center justify-center gap-2 rounded-md border border-border px-3 py-2 text-note font-medium text-muted-foreground hover:bg-hover-bg hover:text-foreground transition-colors"
             >
-              <ArrowSquareOut size={14} weight="regular" />
+              <ArrowSquareOut size={14} />
               Open in new tab
             </a>
           )}

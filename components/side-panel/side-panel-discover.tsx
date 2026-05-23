@@ -4,13 +4,15 @@ import { useMemo, useState, useCallback } from "react"
 import { usePlotStore } from "@/lib/store"
 import { discoverRelated, type DiscoverResult } from "@/lib/search/discover-engine"
 import { useBacklinksFor } from "@/lib/search/use-backlinks-for"
-import { NotePencil } from "@phosphor-icons/react/dist/ssr/NotePencil"
-import { BookOpen } from "@phosphor-icons/react/dist/ssr/BookOpen"
-import { Tag as PhTag } from "@phosphor-icons/react/dist/ssr/Tag"
-import { Plus as PhPlus } from "@phosphor-icons/react/dist/ssr/Plus"
-import { CaretRight } from "@phosphor-icons/react/dist/ssr/CaretRight"
-import { CaretDown } from "@phosphor-icons/react/dist/ssr/CaretDown"
-import { MagnifyingGlass } from "@phosphor-icons/react/dist/ssr/MagnifyingGlass"
+import {
+  NotebookPen as NotePencil,
+  BookOpen,
+  Tag as PhTag,
+  Plus as PhPlus,
+  ChevronRight as CaretRight,
+  ChevronDown as CaretDown,
+  Search as MagnifyingGlass,
+} from "lucide-react"
 import { cn } from "@/lib/utils"
 
 // ── Collapsible Section ──────────────────────────────────
@@ -37,7 +39,7 @@ function DiscoverSection({
         className="flex w-full items-center gap-2 px-4 py-2.5 text-left transition-colors hover:bg-hover-bg"
       >
         <span className="text-muted-foreground">
-          {open ? <CaretDown size={12} weight="bold" /> : <CaretRight size={12} weight="bold" />}
+          {open ? <CaretDown size={12} strokeWidth={2.5} /> : <CaretRight size={12} strokeWidth={2.5} />}
         </span>
         <span className="text-muted-foreground">{icon}</span>
         <span className="text-note font-medium text-foreground">{title}</span>
@@ -146,7 +148,7 @@ function SuggestedTagChip({
           className="rounded-sm p-0.5 text-accent transition-colors hover:bg-hover-bg"
           aria-label={`Add tag ${tagName}`}
         >
-          <PhPlus size={12} weight="bold" />
+          <PhPlus size={12} strokeWidth={2.5} />
         </button>
       ) : (
         <span className="text-2xs text-muted-foreground">added</span>
@@ -238,7 +240,7 @@ export function SidePanelDiscover() {
   if (!selectedNoteId || !selectedNote) {
     return (
       <div className="flex flex-1 flex-col items-center justify-center gap-2 px-6 text-center">
-        <MagnifyingGlass size={32} weight="regular" className="text-muted-foreground/70" />
+        <MagnifyingGlass size={32} className="text-muted-foreground/70" />
         <p className="text-note text-muted-foreground">
           Select a note to discover related content
         </p>
@@ -249,7 +251,7 @@ export function SidePanelDiscover() {
   if (!result || (result.relatedNotes.length === 0 && result.relatedWiki.length === 0 && result.suggestedTags.length === 0)) {
     return (
       <div className="flex flex-1 flex-col items-center justify-center gap-2 px-6 text-center">
-        <MagnifyingGlass size={32} weight="regular" className="text-muted-foreground/70" />
+        <MagnifyingGlass size={32} className="text-muted-foreground/70" />
         <p className="text-note text-muted-foreground">
           No related content found
         </p>
@@ -265,7 +267,7 @@ export function SidePanelDiscover() {
       {result.relatedNotes.length > 0 && (
         <DiscoverSection
           title="Related Notes"
-          icon={<NotePencil size={14} weight="regular" />}
+          icon={<NotePencil size={14} />}
           count={result.relatedNotes.length}
         >
           <div className="flex flex-col gap-0.5">
@@ -285,7 +287,7 @@ export function SidePanelDiscover() {
       {result.relatedWiki.length > 0 && (
         <DiscoverSection
           title="Related Wiki"
-          icon={<BookOpen size={14} weight="regular" />}
+          icon={<BookOpen size={14} />}
           count={result.relatedWiki.length}
         >
           <div className="flex flex-col gap-0.5">
@@ -305,7 +307,7 @@ export function SidePanelDiscover() {
       {result.suggestedTags.length > 0 && (
         <DiscoverSection
           title="Suggested Tags"
-          icon={<PhTag size={14} weight="regular" />}
+          icon={<PhTag size={14} />}
           count={result.suggestedTags.length}
         >
           <div className="flex flex-col gap-2 px-2">

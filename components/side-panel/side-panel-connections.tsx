@@ -16,22 +16,26 @@ import { useBacklinksWithContext } from "@/hooks/use-backlinks-with-context"
 import { BacklinkCard } from "./backlink-card"
 import { detectUnlinkedMentions } from "@/lib/unlinked-mentions"
 import { discoverRelated, type DiscoverResult } from "@/lib/search/discover-engine"
-import { LinkSimple } from "@phosphor-icons/react/dist/ssr/LinkSimple"
-import { Compass } from "@phosphor-icons/react/dist/ssr/Compass"
-import { FileText } from "@phosphor-icons/react/dist/ssr/FileText"
-import { FolderSimple } from "@phosphor-icons/react/dist/ssr/FolderSimple"
-import { FolderOpen } from "@phosphor-icons/react/dist/ssr/FolderOpen"
+import {
+  Link as LinkSimple,
+  Compass,
+  FileText,
+  Folder as FolderSimple,
+  FolderOpen,
+} from "lucide-react"
 import { IconWiki } from "@/components/plot-icons"
 import { setActiveCategoryView } from "@/lib/wiki-view-mode"
-import { Warning } from "@phosphor-icons/react/dist/ssr/Warning"
-import { Tag as PhTag } from "@phosphor-icons/react/dist/ssr/Tag"
-import { Plus as PhPlus } from "@phosphor-icons/react/dist/ssr/Plus"
-import { X as PhX } from "@phosphor-icons/react/dist/ssr/X"
-import { GitBranch } from "@phosphor-icons/react/dist/ssr/GitBranch"
-import { ArrowUp } from "@phosphor-icons/react/dist/ssr/ArrowUp"
-import { ArrowDown } from "@phosphor-icons/react/dist/ssr/ArrowDown"
-import { CaretRight } from "@phosphor-icons/react/dist/ssr/CaretRight"
-import { CaretDown } from "@phosphor-icons/react/dist/ssr/CaretDown"
+import {
+  AlertTriangle as Warning,
+  Tag as PhTag,
+  Plus as PhPlus,
+  X as PhX,
+  GitBranch,
+  ArrowUp,
+  ArrowDown,
+  ChevronRight as CaretRight,
+  ChevronDown as CaretDown,
+} from "lucide-react"
 import { cn } from "@/lib/utils"
 import { NotePickerDialog } from "@/components/note-picker-dialog"
 import { WikiPickerDialog } from "@/components/wiki-picker-dialog"
@@ -63,7 +67,7 @@ function ConnectionSection({
         className="flex w-full items-center gap-2 px-4 py-2.5 text-left transition-colors hover:bg-hover-bg"
       >
         <span className="text-muted-foreground">
-          {open ? <CaretDown size={12} weight="bold" /> : <CaretRight size={12} weight="bold" />}
+          {open ? <CaretDown size={12} strokeWidth={2.5} /> : <CaretRight size={12} strokeWidth={2.5} />}
         </span>
         <span className="text-muted-foreground">{icon}</span>
         <span className="text-note font-medium text-foreground">{title}</span>
@@ -108,7 +112,7 @@ function SuggestedTagChip({
 
   return (
     <div className="flex items-center gap-1.5">
-      <PhTag size={12} weight="regular" className="shrink-0 text-muted-foreground/60" />
+      <PhTag size={12} strokeWidth={2} className="shrink-0 text-muted-foreground/60" />
       <span className="text-note text-muted-foreground">#{tagName}</span>
       {!added ? (
         <button
@@ -116,7 +120,7 @@ function SuggestedTagChip({
           className="rounded-sm p-0.5 text-accent transition-colors hover:bg-hover-bg"
           aria-label={`Add tag ${tagName}`}
         >
-          <PhPlus size={12} weight="bold" />
+          <PhPlus size={12} strokeWidth={2.5} />
         </button>
       ) : (
         <span className="text-2xs text-muted-foreground">added</span>
@@ -317,7 +321,7 @@ function WikiArticleConnections() {
       {/* Hierarchy — parent + children */}
       <ConnectionSection
         title="Hierarchy"
-        icon={<GitBranch size={14} weight="regular" />}
+        icon={<GitBranch size={14} strokeWidth={2} />}
         count={hierarchyCount}
         defaultOpen
       >
@@ -340,7 +344,7 @@ function WikiArticleConnections() {
                 title="Remove parent"
                 className="shrink-0 text-muted-foreground hover:text-red-400 transition-colors duration-100 p-0.5 rounded"
               >
-                <PhX size={12} weight="bold" />
+                <PhX size={12} strokeWidth={2.5} />
               </button>
             </div>
           ) : (
@@ -348,7 +352,7 @@ function WikiArticleConnections() {
               onClick={() => setParentPickerOpen(true)}
               className="flex items-center gap-1.5 text-note text-muted-foreground hover:text-foreground transition-colors duration-100 px-2 py-0.5"
             >
-              <PhPlus size={12} weight="bold" />
+              <PhPlus size={12} strokeWidth={2.5} />
               Set parent
             </button>
           )}
@@ -374,7 +378,7 @@ function WikiArticleConnections() {
             onClick={() => setAddChildOpen(true)}
             className="flex items-center gap-1.5 text-note text-muted-foreground hover:text-foreground transition-colors duration-100 px-2 py-0.5"
           >
-            <PhPlus size={12} weight="bold" />
+            <PhPlus size={12} strokeWidth={2.5} />
             Add child
           </button>
         </div>
@@ -383,7 +387,7 @@ function WikiArticleConnections() {
       {/* Connected */}
       <ConnectionSection
         title="Connected"
-        icon={<LinkSimple size={14} weight="regular" />}
+        icon={<LinkSimple size={14} strokeWidth={2} />}
         count={totalCount}
         defaultOpen
       >
@@ -403,7 +407,7 @@ function WikiArticleConnections() {
                     className="flex items-center gap-2 w-full text-left px-2 py-0.5 rounded text-note text-muted-foreground hover:text-foreground hover:bg-hover-bg transition-colors"
                   >
                     <DirArrow dir="out" />
-                    <FileText className="shrink-0 text-muted-foreground/60" size={14} weight="regular" />
+                    <FileText className="shrink-0 text-muted-foreground/60" size={14} strokeWidth={2} />
                     <span className="truncate">{n.title || "Untitled"}</span>
                   </button>
                 ))}
@@ -583,7 +587,7 @@ function CategoryConnections() {
       {parentCat && (
         <ConnectionSection
           title="Parent"
-          icon={<ArrowUp size={16} weight="regular" />}
+          icon={<ArrowUp size={16} strokeWidth={2} />}
           count={1}
         >
           <button
@@ -592,7 +596,7 @@ function CategoryConnections() {
           >
             <FolderSimple
               size={14}
-              weight="regular"
+              strokeWidth={2}
               className="shrink-0"
               style={{ color: parentCat.color ?? undefined }}
             />
@@ -601,7 +605,7 @@ function CategoryConnections() {
             </span>
             <CaretRight
               size={11}
-              weight="regular"
+              strokeWidth={2}
               className="text-muted-foreground/40 group-hover:text-muted-foreground transition-colors"
             />
           </button>
@@ -610,7 +614,7 @@ function CategoryConnections() {
 
       <ConnectionSection
         title="Subcategories"
-        icon={<FolderOpen size={16} weight="regular" />}
+        icon={<FolderOpen size={16} strokeWidth={2} />}
         count={subcategories.length}
       >
         {subcategories.length === 0 ? (
@@ -627,7 +631,7 @@ function CategoryConnections() {
               >
                 <FolderSimple
                   size={13}
-                  weight="regular"
+                  strokeWidth={2}
                   className="shrink-0"
                   style={{ color: sub.color ?? undefined }}
                 />
@@ -636,7 +640,7 @@ function CategoryConnections() {
                 </span>
                 <CaretRight
                   size={11}
-                  weight="regular"
+                  strokeWidth={2}
                   className="text-muted-foreground/40 group-hover:text-muted-foreground transition-colors"
                 />
               </button>
@@ -647,7 +651,7 @@ function CategoryConnections() {
 
       <ConnectionSection
         title="Articles"
-        icon={<FileText size={16} weight="regular" />}
+        icon={<FileText size={16} strokeWidth={2} />}
         count={catArticles.length}
       >
         {catArticles.length === 0 ? (
@@ -669,7 +673,7 @@ function CategoryConnections() {
               >
                 <FileText
                   size={13}
-                  weight="regular"
+                  strokeWidth={2}
                   className="shrink-0 text-muted-foreground"
                 />
                 <span className="truncate flex-1">
@@ -719,7 +723,7 @@ function LabelConnections() {
     <div className="flex-1 overflow-y-auto">
       <ConnectionSection
         title="Labeled notes"
-        icon={<LinkSimple size={14} weight="regular" />}
+        icon={<LinkSimple size={14} strokeWidth={2} />}
         count={total}
         defaultOpen
       >
@@ -743,7 +747,7 @@ function LabelConnections() {
                   onClick={() => openInSecondary(n.id)}
                   className="flex w-full items-center gap-2 rounded-md px-2 py-0.5 text-left text-note text-foreground hover:bg-hover-bg transition-colors"
                 >
-                  <FileText size={12} className="shrink-0 text-muted-foreground" weight="regular" />
+                  <FileText size={12} className="shrink-0 text-muted-foreground" strokeWidth={2} />
                   <span className="truncate flex-1">{n.title || "Untitled"}</span>
                 </button>
               ))}
@@ -795,7 +799,7 @@ function TagConnections() {
     <div className="flex-1 overflow-y-auto">
       <ConnectionSection
         title="Tagged notes"
-        icon={<LinkSimple size={14} weight="regular" />}
+        icon={<LinkSimple size={14} strokeWidth={2} />}
         count={total}
         defaultOpen
       >
@@ -821,7 +825,7 @@ function TagConnections() {
                   onClick={() => openInSecondary(n.id)}
                   className="flex w-full items-center gap-2 rounded-md px-2 py-0.5 text-left text-note text-foreground hover:bg-hover-bg transition-colors"
                 >
-                  <FileText size={12} className="shrink-0 text-muted-foreground" weight="regular" />
+                  <FileText size={12} className="shrink-0 text-muted-foreground" strokeWidth={2} />
                   <span className="truncate flex-1">{n.title || "Untitled"}</span>
                 </button>
               ))}
@@ -892,7 +896,7 @@ function StickerConnections() {
     <div className="flex-1 overflow-y-auto">
       <ConnectionSection
         title="Members by kind & status"
-        icon={<LinkSimple size={14} weight="regular" />}
+        icon={<LinkSimple size={14} strokeWidth={2} />}
         count={total}
         defaultOpen
       >
@@ -933,7 +937,7 @@ function StickerConnections() {
                     onClick={() => openInSecondary(n.id)}
                     className="flex w-full items-center gap-2 rounded-md px-2 py-0.5 text-left text-note text-foreground hover:bg-hover-bg transition-colors"
                   >
-                    <FileText size={12} className="shrink-0 text-muted-foreground" weight="regular" />
+                    <FileText size={12} className="shrink-0 text-muted-foreground" strokeWidth={2} />
                     <span className="truncate flex-1">{n.title}</span>
                   </button>
                 ))}
@@ -987,7 +991,7 @@ function FileConnections() {
     <div className="flex-1 overflow-y-auto">
       <ConnectionSection
         title="Cross-entity"
-        icon={<LinkSimple size={14} weight="regular" />}
+        icon={<LinkSimple size={14} strokeWidth={2} />}
         count={total}
         defaultOpen
       >
@@ -1004,7 +1008,7 @@ function FileConnections() {
                   onClick={() => openInSecondary(sourceNote.id)}
                   className="flex w-full items-center gap-2 rounded-md px-2 py-0.5 text-left text-note text-foreground hover:bg-hover-bg transition-colors"
                 >
-                  <FileText size={12} className="shrink-0 text-muted-foreground" weight="regular" />
+                  <FileText size={12} className="shrink-0 text-muted-foreground" strokeWidth={2} />
                   <span className="truncate flex-1">{sourceNote.title || "Untitled"}</span>
                 </button>
               </div>
@@ -1074,7 +1078,7 @@ function ReferenceConnections() {
     <div className="flex-1 overflow-y-auto">
       <ConnectionSection
         title="Cited by"
-        icon={<LinkSimple size={14} weight="regular" />}
+        icon={<LinkSimple size={14} strokeWidth={2} />}
         count={total}
         defaultOpen
       >
@@ -1093,7 +1097,7 @@ function ReferenceConnections() {
                     onClick={() => openInSecondary(n.id)}
                     className="flex w-full items-center gap-2 rounded-md px-2 py-0.5 text-left text-note text-foreground hover:bg-hover-bg transition-colors"
                   >
-                    <FileText size={12} className="shrink-0 text-muted-foreground" weight="regular" />
+                    <FileText size={12} className="shrink-0 text-muted-foreground" strokeWidth={2} />
                     <span className="truncate flex-1">{n.title || "Untitled"}</span>
                   </button>
                 ))}
@@ -1227,7 +1231,7 @@ function BookConnections() {
       {/* Items by kind & status */}
       <ConnectionSection
         title="Items"
-        icon={<LinkSimple size={14} weight="regular" />}
+        icon={<LinkSimple size={14} strokeWidth={2} />}
         count={itemsCount}
         defaultOpen
       >
@@ -1268,7 +1272,7 @@ function BookConnections() {
       {smartSources.length > 0 && (
         <ConnectionSection
           title="Smart sources"
-          icon={<Compass size={14} weight="regular" />}
+          icon={<Compass size={14} strokeWidth={2} />}
           count={smartSources.length}
           defaultOpen={false}
         >
@@ -1379,7 +1383,7 @@ function TemplateConnections() {
     <div className="flex-1 overflow-y-auto">
       <ConnectionSection
         title="Used by"
-        icon={<FileText size={14} weight="regular" />}
+        icon={<FileText size={14} strokeWidth={2} />}
         count={usedByNotes.length}
         defaultOpen
       >
@@ -1396,7 +1400,7 @@ function TemplateConnections() {
                 onClick={() => openInSecondary(n.id)}
                 className="flex w-full items-center gap-2 rounded-md px-2 py-0.5 text-left text-note text-foreground hover:bg-hover-bg transition-colors"
               >
-                <FileText size={12} className="shrink-0 text-muted-foreground" weight="regular" />
+                <FileText size={12} className="shrink-0 text-muted-foreground" strokeWidth={2} />
                 <span className="truncate flex-1">{n.title}</span>
                 <span className="text-2xs text-muted-foreground/70 shrink-0">
                   {formatDistanceToNow(new Date(n.at), { addSuffix: true })}
@@ -1745,7 +1749,7 @@ function NoteConnections() {
       {/* Hierarchy */}
       <ConnectionSection
         title="Hierarchy"
-        icon={<GitBranch size={14} weight="regular" />}
+        icon={<GitBranch size={14} strokeWidth={2} />}
         count={hierarchyCount}
         defaultOpen
       >
@@ -1768,7 +1772,7 @@ function NoteConnections() {
                 title="Remove parent"
                 className="shrink-0 text-muted-foreground hover:text-red-400 transition-colors duration-100 p-0.5 rounded"
               >
-                <PhX size={12} weight="bold" />
+                <PhX size={12} strokeWidth={2.5} />
               </button>
             </div>
           ) : (
@@ -1776,7 +1780,7 @@ function NoteConnections() {
               onClick={() => setParentPickerOpen(true)}
               className="flex items-center gap-1.5 text-note text-muted-foreground hover:text-foreground transition-colors duration-100 px-2 py-0.5"
             >
-              <PhPlus size={12} weight="bold" />
+              <PhPlus size={12} strokeWidth={2.5} />
               Set parent
             </button>
           )}
@@ -1794,7 +1798,7 @@ function NoteConnections() {
               onClick={() => openInSecondary(child.id)}
               className="flex w-full items-center gap-2 rounded-md px-2 py-0.5 text-left text-note text-foreground hover:bg-hover-bg hover:text-foreground transition-colors duration-100"
             >
-              <FileText size={12} className="shrink-0 text-muted-foreground" weight="regular" />
+              <FileText size={12} className="shrink-0 text-muted-foreground" strokeWidth={2} />
               <span className="truncate">{child.title || "Untitled"}</span>
             </button>
           ))}
@@ -1802,7 +1806,7 @@ function NoteConnections() {
             onClick={() => setAddChildOpen(true)}
             className="flex items-center gap-1.5 text-note text-muted-foreground hover:text-foreground transition-colors duration-100 px-2 py-0.5"
           >
-            <PhPlus size={12} weight="bold" />
+            <PhPlus size={12} strokeWidth={2.5} />
             Add child
           </button>
         </div>
@@ -1835,7 +1839,7 @@ function NoteConnections() {
       {/* Connected */}
       <ConnectionSection
         title="Connected"
-        icon={<LinkSimple size={14} weight="regular" />}
+        icon={<LinkSimple size={14} strokeWidth={2} />}
         count={connectedCount}
         defaultOpen
       >
@@ -1924,7 +1928,7 @@ function NoteConnections() {
                     className="flex items-center gap-2 w-full text-left px-2 py-0.5 rounded text-note text-muted-foreground hover:text-foreground hover:bg-hover-bg transition-colors"
                   >
                     <DirArrow dir="out" />
-                    <FileText className="shrink-0 text-muted-foreground/60" size={14} weight="regular" />
+                    <FileText className="shrink-0 text-muted-foreground/60" size={14} strokeWidth={2} />
                     <span className="truncate">{n.title || "Untitled"}</span>
                     {inboundIds.has(n.id) && (
                       <span className="shrink-0 text-2xs text-accent/60 font-medium" title="Mutual link">↔</span>
@@ -1964,7 +1968,7 @@ function NoteConnections() {
                     key={m.noteId + m.title}
                     className="flex items-center gap-2 group px-2 py-0.5 rounded hover:bg-hover-bg transition-colors"
                   >
-                    <Warning className="shrink-0 text-muted-foreground/60" size={14} weight="regular" />
+                    <Warning className="shrink-0 text-muted-foreground/60" size={14} strokeWidth={2} />
                     <span className="truncate flex-1 text-note text-muted-foreground">
                       {m.title}
                     </span>
@@ -1988,7 +1992,7 @@ function NoteConnections() {
       {/* Discover */}
       <ConnectionSection
         title="Discover"
-        icon={<Compass size={14} weight="regular" />}
+        icon={<Compass size={14} strokeWidth={2} />}
         count={discoverCount}
         defaultOpen
       >
@@ -2010,7 +2014,7 @@ function NoteConnections() {
                       key={item.noteId}
                       className="flex items-center gap-2 group px-2 py-0.5 rounded hover:bg-hover-bg transition-colors"
                     >
-                      <FileText className="shrink-0 text-muted-foreground/60" size={14} weight="regular" />
+                      <FileText className="shrink-0 text-muted-foreground/60" size={14} strokeWidth={2} />
                       <button
                         onClick={() => openInSecondary(item.noteId)}
                         className="truncate flex-1 text-left text-note text-muted-foreground hover:text-foreground transition-colors"

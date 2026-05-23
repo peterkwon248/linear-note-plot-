@@ -18,11 +18,13 @@
 
 import { useEffect, useMemo, useState, type ReactNode } from "react"
 import { toast } from "sonner"
-import { FileText } from "@phosphor-icons/react/dist/ssr/FileText"
-import { Folder as FolderIcon } from "@phosphor-icons/react/dist/ssr/Folder"
-import { Tag as TagIcon } from "@phosphor-icons/react/dist/ssr/Tag"
-import { Hash } from "@phosphor-icons/react/dist/ssr/Hash"
-import { Tree } from "@phosphor-icons/react/dist/ssr/Tree"
+import {
+  FileText,
+  Folder as FolderIcon,
+  Tag as TagIcon,
+  Hash,
+  TreePine as Tree,
+} from "lucide-react"
 import { ViewHeader } from "@/components/view-header"
 import { FilterPanel } from "@/components/filter-panel"
 import { DisplayPanel } from "@/components/display-panel"
@@ -206,7 +208,7 @@ export function GalleryViewShell({
   return (
     <main className="flex h-full flex-1 flex-col overflow-hidden bg-background">
       <ViewHeader
-        icon={<FileText size={20} weight="regular" />}
+        icon={<FileText size={20} strokeWidth={2} />}
         title={title ?? "Notes"}
         count={flatNotes.length}
         saveViewMode={saveViewMode}
@@ -381,14 +383,14 @@ function getGroupIcon(
       return <span className="h-2.5 w-2.5 rounded-full shrink-0" style={{ backgroundColor: color }} />
     }
     case "folder":
-      return <FolderIcon size={14} weight="regular" className="text-muted-foreground" />
+      return <FolderIcon size={14} strokeWidth={2} className="text-muted-foreground" />
     case "tag":
-      return <Hash size={14} weight="regular" className="text-muted-foreground" />
+      return <Hash size={14} strokeWidth={2} className="text-muted-foreground" />
     case "priority":
-      return <TagIcon size={14} weight="regular" className="text-muted-foreground" />
+      return <TagIcon size={14} strokeWidth={2} className="text-muted-foreground" />
     case "family":
     case "parent":
-      return <Tree size={14} weight="regular" className="text-muted-foreground" />
+      return <Tree size={14} strokeWidth={2} className="text-muted-foreground" />
     default:
       return null
   }

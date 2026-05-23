@@ -3,9 +3,7 @@
 import * as React from 'react'
 import * as MenubarPrimitive from '@radix-ui/react-menubar'
 import { cn } from '@/lib/utils'
-import { Check as PhCheckIcon } from "@phosphor-icons/react/dist/ssr/Check"
-import { CaretRight as CaretRightIcon } from "@phosphor-icons/react/dist/ssr/CaretRight"
-import { Circle as PhCircleIcon } from "@phosphor-icons/react/dist/ssr/Circle"
+import { Check, ChevronRight, Circle } from "lucide-react"
 
 function Menubar({
   className,
@@ -130,7 +128,7 @@ function MenubarCheckboxItem({
     >
       <span className="pointer-events-none absolute left-2 flex size-3.5 items-center justify-center">
         <MenubarPrimitive.ItemIndicator>
-          <PhCheckIcon className="size-4" />
+          <Check className="size-4" />
         </MenubarPrimitive.ItemIndicator>
       </span>
       {children}
@@ -154,7 +152,7 @@ function MenubarRadioItem({
     >
       <span className="pointer-events-none absolute left-2 flex size-3.5 items-center justify-center">
         <MenubarPrimitive.ItemIndicator>
-          <PhCircleIcon className="size-2 fill-current" />
+          <Circle className="size-2 fill-current" />
         </MenubarPrimitive.ItemIndicator>
       </span>
       {children}
@@ -236,7 +234,7 @@ function MenubarSubTrigger({
       {...props}
     >
       {children}
-      <CaretRightIcon className="ml-auto h-4 w-4" />
+      <ChevronRight className="ml-auto h-4 w-4" />
     </MenubarPrimitive.SubTrigger>
   )
 }

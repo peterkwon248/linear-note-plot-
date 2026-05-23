@@ -3,35 +3,45 @@
 > 우선순위 기반 작업 목록. **P0 = 다음 세션 즉시 시작점** (NEXT-ACTION.md 폐지, 2026-05-12).
 > 완료 항목은 즉시 삭제. 자세한 history는 SESSION-LOG.md + MEMORY.md.
 
-**마지막 갱신**: 2026-05-23 — 타임라인 비주얼 리디자인 (얇은 선 / 스타트칩 / status 색 / "All" 모드) 완료. 다음 P0 = Display Properties / Grouping / Ordering 신뢰성 (계획부터).
+**마지막 갱신**: 2026-05-23 (후속) — Audit v2 + PR-A 데이터 무결성 5건 + Lucide 마이그레이션 90 파일 (PR-X1~X4) 완료. 다음 P0 = PR-X5 (editor lucide) + audit §8 사용자 결정 후 PR-B (mode-aware UI).
 
 ---
 
-## 🟣 P0 — 즉시 (cross-machine 진입점, 2026-05-23)
+## 🟣 P0 — 즉시 (cross-machine 진입점, 2026-05-23 후속)
 
-> P0 #1 = Display Properties / Grouping / Ordering 신뢰성 (사용자 명시 "가장 먼저", **계획부터**). #2 = Notes/Books Timeline 모드. #3 = File 엔티티 v1.
+> P0 #1 = PR-X5 (editor + wiki block + comments lucide 마이그레이션 ~30 파일). #2 = audit §8 사용자 결정 후 PR-B 진입. #3 = PR-X6 잔여 lucide ~30 파일.
 
-### 1. **Display Properties / Grouping / Ordering 신뢰성 — 전 view mode 감사 + 수정** (계획부터)
+### 1. **PR-X5: Editor + wiki block + comments lucide 마이그레이션 (~30 파일)**
 
-상세 = SESSION-LOG 2026-05-23 hook.
+상세 = SESSION-LOG 2026-05-23 (후속) hook + audit 문서 `.omc/plans/view-state-reliability-audit.md`.
 
-- **증상**: 타임라인에서 Display Properties가 제대로 작동 안 함. 타임라인뿐 아니라 grid·board 모드에서도 가끔. 필터는 대체로 OK (사용자 테스트). **DP / grouping / ordering**이 문제.
-- **첫 스텝 = 계획 수립** (코드 수정 X): `lib/view-engine/` (`ViewState` 타입) → 각 view 컴포넌트(list/board/gallery/timeline)의 viewState 소비 추적 → 끊기는 지점 식별 → 모드별 작동/미작동 표 → 수정 계획 문서.
-- **유력 가설**: `WikiTimelineView`가 `viewState` prop을 받지만 grouping/ordering/DP를 거의 미구현 (createdAt 순 배치만). ⚠️ 코드 검증 필요. + "날짜 배치 뷰에서 grouping/ordering이 의미 있나"부터 정의.
-- 사용자 의도: "완벽하고 확실한 해결책. 코드 전체 꼼꼼히 (토큰 소모 감수) 일일이 수정."
+- **대상 폴더**: `components/editor/*` (~10 파일 — TipTap node 컴포넌트, picker dialog 등) + `components/wiki-editor/*` (~15 파일 — article-view, block-renderer, hatnotes, infobox 등) + `components/comments/*` (~3 파일)
+- **첫 스텝**: `Grep import .* from "@phosphor-icons/react" --path components/editor` → 인벤토리 → 작은 파일부터 batch (PR-X1~X4 패턴 그대로)
+- **변환 룰**: import block 통째 교체 (alias 유지) + weight prop replace_all (regular→strokeWidth=2 / bold→2.5 / light→1.5 / fill→fill="currentColor" / duotone→strokeWidth=1.5 / dynamic→conditional fill)
+- **자체 컴포넌트 인지 (Plot icons)**: lucide 변환 대상에서 제외 (strokeWidth 박지 말 것)
+- **검증**: tsc + runtime HMR 매 batch
 
-### 2. **노트·북에도 Timeline 디스플레이 모드 추가**
+### 2. **PR-B: Mode-aware UI 룰 구현** (audit §8 사용자 결정 후)
 
-현재 Timeline = Wiki 전용. 타임라인 리디자인 완료(2026-05-23) → 노트/북 뷰에도 Timeline view mode 추가. 사용자 명시. DP/grouping/ordering(P0 #1) 정리 후 진행 권장 (타임라인을 더 많은 entity로 확장하기 전에 viewState 흐름이 견고해야).
+`.omc/plans/view-state-reliability-audit.md` PR-B 단위. **사용자 결정 3개 받은 후 진입**:
 
-### 3. **File 독립 엔티티 v1 구현** (PRD 완성 — `.omc/plans/file-entity-prd.md` v0.2)
+- **#1**: Wiki timeline default groupBy → 추천 `wikiStatus` (Stub/Article 시간축)
+- **#2**: PR-B2 (timeline lane 그룹 헤더 구현) → (a) PR-B와 같이 vs (b) 후속. Linear L1 엄격이면 (a) 추천
+- **#3**: Library 5종 hook 통합 (PR-D) → 추천 미루기 (컴포넌트-사이드 firstLetter 패턴 유지)
 
-`Attachment`를 note-scoped → 독립 Library 엔티티로. PRD §6-1 v1 = PR 2개:
+작업: view-configs.tsx 타입 확장 (`modes` 필드 추가) + 11 ViewConfig declarative modes 선언 + DisplayPanel/FilterPanel filter + normalizeViewState mode-aware auto-cleanup + PR-B2 갭 해소 (B4 timeline, B5 gallery, B6 label-column, B11 references, B12 templates grid).
 
-- **PR #1 (마이그레이션+모델)**: `Attachment.noteId: string` → `originEntity: EntityRef | null` 강등 + v144→v145 마이그레이션 + `addAttachment` 7개 호출처 수정. 타입명 `Attachment` 유지(DOM 전역 `File` 충돌 회피).
-- **PR #2 (피커 UI)**: "기존 파일 삽입" 피커 + usage 인덱스(콘텐츠 `attachment://` 스캔 derive) + hard delete dangling-ref 경고.
-- **첫 스텝**: `lib/types.ts:997` `Attachment` + `lib/store/slices/attachments.ts:7` + `lib/store/migrate.ts:1919` 읽고 PR #1 착수.
-- **Q1/Q2**: v0.2 사용자 승인 완료. **§7 잔여 Open Q**: usage 인덱스 derive 권고 / Books 파일 접점 확인.
+### 3. **PR-X6: 나머지 lucide 마이그레이션 (~30 파일)**
+
+`components/notes-table.tsx`, `notes-board.tsx`, `note-editor.tsx`, `note-fields.tsx`, `note-context-menu-items.tsx`, `note-picker-dialog.tsx`, `note-list.tsx`, `merge-dialog.tsx`, `link-suggestion.tsx`, `insights-view.tsx`, `insert-menu.tsx`, `home/*`, `inbox/*`, `inspector/*`, `ontology/*`, `books/*`, `comments/*` 등.
+
+### 4. **File 독립 엔티티 v1 구현** (PRD 완성 — `.omc/plans/file-entity-prd.md` v0.2)
+
+PR-X 시리즈 끝나고 진행. `Attachment`를 note-scoped → 독립 Library 엔티티로. PRD §6-1 v1 = PR 2개 (마이그레이션+모델 / 피커 UI). 첫 스텝: `lib/types.ts:997` `Attachment` + `lib/store/slices/attachments.ts:7` + `lib/store/migrate.ts:1919`.
+
+### 5. **노트·북에도 Timeline 디스플레이 모드 추가**
+
+PR-B 완료 후. 현재 Timeline = Wiki 전용. viewState 흐름이 견고해진 후 노트/북에도 Timeline view mode 추가.
 
 ---
 
@@ -45,6 +55,7 @@
 
 ## ✅ 최근 완료
 
+- **2026-05-23 (후속)**: 거대 세션 단일 PR — (a) `.omc/plans/view-state-reliability-audit.md` v2 Linear 마인드셋 통합 + (b) PR-A 데이터 무결성 5건 (VALID_GROUP_BY/VALID_SORT_FIELDS/wordCount/fail-closed 3개/Files searchQuery) + (c) Lucide 마이그레이션 90 파일 (PR-X1 UI primitive 21 / PR-X2 chrome 17 / PR-X3 side-panel 17 / PR-X4 view components 30). 부수 효과: carousel.tsx KeyboardEvent.key 버그 자동 fix. Brand 5종(Stone/Brick/Block + Stub/Article) phosphor 유지. tsc clean.
 - **2026-05-23**: 타임라인 비주얼 리디자인 (단일 PR, 8파일 +224/−141) — 막대 이름 제거 / 이벤트 마커 막대 안(중앙선)+흰 테두리 / 막대 day-quantize+drag 정합 / 스타트칩 = 막대 고유 origin 노드 / 얇은 선(`BAR_HEIGHT` 28→5)+drop shadow 제거 / 선 색 = status 아이콘 색(stub 주황·article 에메랄드) / **"All" 모드 신설**(5번째 줌, fit-to-content overview, 기본값). tsc clean.
 - **2026-05-22 (후속 #3)**: Display 패널 탭 = Linear segmented control (popover 360px + flex-1 + gap seam) + 타임라인 막대 status 화살촉 제거(ARROW_DEPTH 정리). 막대 이름 제거(A안)·마커 clip 수정은 결정 완료 → 다음 세션 P0 #1.
 - **2026-05-22 (후속 #2)**: File 엔티티 PRD v0.2 작성 (`file-entity-prd.md`) + P0 #3 Timeline 탭 아이콘(`Ruler`→`ChartBarHorizontal`) + P1 EVENT_MARKER 4종 매핑(merged/unmerged/split/section_collapsed) + P0 #2 라이브러리 5종 Index 그룹핑(Tags/Labels/Stickers/Files/References — 컴포넌트-사이드 + `.a-tg` 헤더). ⚠️ P0 #2 시각 스모크 테스트 미완.

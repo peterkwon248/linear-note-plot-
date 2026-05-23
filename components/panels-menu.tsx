@@ -12,8 +12,7 @@
 
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { usePlotStore } from "@/lib/store"
-import { List as ListIcon } from "@phosphor-icons/react/dist/ssr/List"
-import { Check } from "@phosphor-icons/react/dist/ssr/Check"
+import { List as ListIcon, Check } from "lucide-react"
 
 export function PanelsMenu() {
   const sidebarCollapsed = usePlotStore((s) => s.sidebarCollapsed)
@@ -47,7 +46,7 @@ export function PanelsMenu() {
           aria-label="Toggle panels"
           title="Toggle panels"
         >
-          <ListIcon size={14} weight="regular" />
+          <ListIcon size={14} />
         </button>
       </PopoverTrigger>
       <PopoverContent
@@ -121,7 +120,7 @@ function PanelToggle({
       {shortcut && (
         <span className="text-2xs text-muted-foreground/60 tabular-nums">{shortcut}</span>
       )}
-      {checked && <Check size={12} weight="bold" className="text-accent" />}
+      {checked && <Check size={12} strokeWidth={2.5} className="text-accent" />}
     </button>
   )
 }

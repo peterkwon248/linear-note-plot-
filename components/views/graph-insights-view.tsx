@@ -7,15 +7,17 @@ import { useBacklinksIndex } from "@/lib/search/use-backlinks-index"
 import { ViewHeader } from "@/components/view-header"
 import { shortRelative } from "@/lib/format-utils"
 import type React from "react"
-import { GitBranch } from "@phosphor-icons/react/dist/ssr/GitBranch"
-import { Circle as PhCircle } from "@phosphor-icons/react/dist/ssr/Circle"
-import { Warning } from "@phosphor-icons/react/dist/ssr/Warning"
-import { Lightning } from "@phosphor-icons/react/dist/ssr/Lightning"
-import { TrendUp } from "@phosphor-icons/react/dist/ssr/TrendUp"
-import { Link as PhLink } from "@phosphor-icons/react/dist/ssr/Link"
-import { BookOpen } from "@phosphor-icons/react/dist/ssr/BookOpen"
-import { Clock as PhClock } from "@phosphor-icons/react/dist/ssr/Clock"
-import { FileText } from "@phosphor-icons/react/dist/ssr/FileText"
+import {
+  GitBranch,
+  Circle as PhCircle,
+  AlertTriangle as Warning,
+  Zap as Lightning,
+  TrendingUp as TrendUp,
+  Link as PhLink,
+  BookOpen,
+  Clock as PhClock,
+  FileText,
+} from "lucide-react"
 
 /* ── StatCard ─────────────────────────────────────────── */
 
@@ -143,7 +145,7 @@ export function GraphInsightsView() {
   return (
     <div className="flex flex-1 flex-col overflow-hidden">
       <ViewHeader
-        icon={<GitBranch size={20} weight="regular" />}
+        icon={<GitBranch size={20} strokeWidth={2} />}
         title="Graph Insights"
       />
 
@@ -178,7 +180,7 @@ export function GraphInsightsView() {
             {/* Density card with progress bar */}
             <div className="rounded-lg border border-border bg-card p-4">
               <div className="flex items-center gap-2 mb-1">
-                <TrendUp className="text-chart-5" size={16} weight="regular" />
+                <TrendUp className="text-chart-5" size={16} strokeWidth={2} />
                 <span className="text-2xs font-medium text-muted-foreground">Density</span>
               </div>
               <p className="text-2xl font-semibold tabular-nums text-foreground">
@@ -215,7 +217,7 @@ export function GraphInsightsView() {
                     onClick={() => openNote(note.id)}
                     className="group flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left transition-colors duration-150 hover:bg-hover-bg"
                   >
-                    <FileText className="shrink-0 text-chart-3" size={12} weight="regular" />
+                    <FileText className="shrink-0 text-chart-3" size={12} strokeWidth={2} />
                     <span className="min-w-0 flex-1 truncate text-2xs text-foreground">
                       {note.title || "Untitled"}
                     </span>
@@ -248,7 +250,7 @@ export function GraphInsightsView() {
                     onClick={() => openNote(note.id)}
                     className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left transition-colors duration-150 hover:bg-hover-bg"
                   >
-                    <Lightning className="shrink-0 text-chart-2" size={12} weight="regular" />
+                    <Lightning className="shrink-0 text-chart-2" size={12} strokeWidth={2} />
                     <span className="min-w-0 flex-1 truncate text-2xs text-foreground">
                       {note.title || "Untitled"}
                     </span>
@@ -319,7 +321,7 @@ export function GraphInsightsView() {
                     onClick={() => openNote(note.id)}
                     className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left transition-colors duration-150 hover:bg-hover-bg"
                   >
-                    <PhClock className="shrink-0 text-muted-foreground" size={12} weight="regular" />
+                    <PhClock className="shrink-0 text-muted-foreground" size={12} strokeWidth={2} />
                     <span className="min-w-0 flex-1 truncate text-2xs text-foreground">
                       {note.title || "Untitled"}
                     </span>

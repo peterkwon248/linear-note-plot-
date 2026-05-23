@@ -26,15 +26,17 @@ import {
   ContextMenuTrigger,
   ContextMenuSeparator,
 } from "@/components/ui/context-menu"
-import { Plus as PhPlus } from "@phosphor-icons/react/dist/ssr/Plus"
-import { Trash } from "@phosphor-icons/react/dist/ssr/Trash"
-import { PushPin } from "@phosphor-icons/react/dist/ssr/PushPin"
-import { PushPinSlash } from "@phosphor-icons/react/dist/ssr/PushPinSlash"
-import { Layout } from "@phosphor-icons/react/dist/ssr/Layout"
-import { X as PhX } from "@phosphor-icons/react/dist/ssr/X"
-import { ArrowLeft } from "@phosphor-icons/react/dist/ssr/ArrowLeft"
+import {
+  Plus as PhPlus,
+  Trash2 as Trash,
+  Pin as PushPin,
+  PinOff as PushPinSlash,
+  LayoutGrid as Layout,
+  X as PhX,
+  ArrowLeft,
+} from "lucide-react"
 import { cn } from "@/lib/utils"
-import { FileText } from "@phosphor-icons/react/dist/ssr/FileText"
+import { FileText } from "lucide-react"
 import type { NoteTemplate } from "@/lib/types"
 import type { FilterRule } from "@/lib/view-engine/types"
 import { ViewHeader } from "@/components/view-header"
@@ -97,7 +99,7 @@ function TemplateFormDialog({
             onClick={onCancel}
             className="flex items-center justify-center h-7 w-7 rounded-md hover:bg-hover-bg text-muted-foreground hover:text-foreground transition-colors"
           >
-            <PhX size={16} weight="regular" />
+            <PhX size={16} strokeWidth={2} />
           </button>
         </div>
 
@@ -191,12 +193,12 @@ function TemplateCard({
           <div className="flex flex-col gap-2 p-4">
             <div className="flex items-start gap-2.5">
               <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-secondary/40 text-muted-foreground">
-                <Layout size={16} weight="regular" />
+                <Layout size={16} strokeWidth={2} />
               </span>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-1.5">
                   <span className="text-note font-semibold text-foreground truncate">{tmpl.name}</span>
-                  {tmpl.pinned && <PushPin className="text-accent shrink-0" size={12} weight="regular" />}
+                  {tmpl.pinned && <PushPin className="text-accent shrink-0" size={12} strokeWidth={2} />}
                 </div>
               </div>
             </div>
@@ -255,36 +257,36 @@ function TemplateCard({
               className="flex items-center justify-center h-6 w-6 rounded-md bg-card/80 backdrop-blur-sm border border-border text-muted-foreground hover:text-foreground hover:bg-hover-bg transition-colors"
               title="Edit"
             >
-              <Layout size={14} weight="regular" />
+              <Layout size={14} strokeWidth={2} />
             </button>
             <button
               onClick={(e) => { e.stopPropagation(); onDelete(tmpl.id) }}
               className="flex items-center justify-center h-6 w-6 rounded-md bg-card/80 backdrop-blur-sm border border-border text-muted-foreground hover:text-red-400 hover:bg-hover-bg transition-colors"
               title="Delete"
             >
-              <Trash size={14} weight="regular" />
+              <Trash size={14} strokeWidth={2} />
             </button>
           </div>
         </div>
       </ContextMenuTrigger>
       <ContextMenuContent className="w-48">
         <ContextMenuItem className="text-note" onClick={() => onUse(tmpl.id)}>
-          <FileText className="mr-2 text-accent" size={16} weight="regular" />
+          <FileText className="mr-2 text-accent" size={16} strokeWidth={2} />
           Use template
         </ContextMenuItem>
         <ContextMenuItem className="text-note" onClick={() => onEdit(tmpl.id)}>
-          <Layout className="mr-2 text-muted-foreground" size={16} weight="regular" />
+          <Layout className="mr-2 text-muted-foreground" size={16} strokeWidth={2} />
           Edit
         </ContextMenuItem>
         <ContextMenuItem className="text-note" onClick={() => onPin(tmpl.id)}>
           {tmpl.pinned ? (
             <>
-              <PushPinSlash className="mr-2 text-muted-foreground" size={16} weight="regular" />
+              <PushPinSlash className="mr-2 text-muted-foreground" size={16} strokeWidth={2} />
               Unpin
             </>
           ) : (
             <>
-              <PushPin className="mr-2 text-accent" size={16} weight="regular" />
+              <PushPin className="mr-2 text-accent" size={16} strokeWidth={2} />
               Pin
             </>
           )}
@@ -294,7 +296,7 @@ function TemplateCard({
           onClick={() => onDelete(tmpl.id)}
           className="text-red-400 focus:text-red-400"
         >
-          <Trash className="mr-2" size={16} weight="regular" />
+          <Trash className="mr-2" size={16} strokeWidth={2} />
           Delete
         </ContextMenuItem>
       </ContextMenuContent>
@@ -482,7 +484,7 @@ export function TemplatesView() {
             onClick={() => setSelectedTemplateId(null)}
             className="flex items-center gap-1 rounded-md px-2 py-1 text-2xs text-muted-foreground hover:bg-hover-bg hover:text-foreground transition-colors"
           >
-            <ArrowLeft size={12} weight="regular" />
+            <ArrowLeft size={12} strokeWidth={2} />
             Templates
           </button>
           <span className="text-2xs text-muted-foreground/60">/</span>
@@ -500,7 +502,7 @@ export function TemplatesView() {
   return (
     <div className="flex flex-1 flex-col overflow-hidden">
       <ViewHeader
-        icon={<Layout size={20} weight="regular" />}
+        icon={<Layout size={20} strokeWidth={2} />}
         title="Templates"
         count={totalCount}
         searchPlaceholder="Search templates..."
@@ -552,13 +554,13 @@ export function TemplatesView() {
           empty-filtered case themselves. */}
       {allTemplates.filter((t) => !t.trashed).length === 0 ? (
         <div className="flex flex-1 flex-col items-center justify-center h-48 gap-2 px-4">
-          <Layout className="text-muted-foreground/60" size={32} weight="regular" />
+          <Layout className="text-muted-foreground/60" size={32} strokeWidth={2} />
           <span className="text-2xs text-muted-foreground text-center">No templates yet</span>
           <button
             onClick={handleCreateNew}
             className="mt-1 flex items-center gap-1 px-2.5 py-1.5 rounded-md text-2xs bg-accent text-accent-foreground hover:bg-accent/90 transition-colors"
           >
-            <PhPlus size={12} weight="regular" />
+            <PhPlus size={12} strokeWidth={2} />
             New template
           </button>
         </div>

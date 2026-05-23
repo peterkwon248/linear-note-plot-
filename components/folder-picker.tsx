@@ -42,8 +42,7 @@
  */
 
 import { useState, useEffect } from "react"
-import { Check as PhCheck } from "@phosphor-icons/react/dist/ssr/Check"
-import { Plus as PhPlus } from "@phosphor-icons/react/dist/ssr/Plus"
+import { Check as PhCheck, Plus as PhPlus } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { usePlotStore } from "@/lib/store"
 import { PRESET_COLORS, getEntityColor } from "@/lib/colors" // v109: opt-in color fallback
@@ -139,7 +138,7 @@ export function FolderPicker({
               noneSelected ? "text-foreground font-medium" : "text-muted-foreground"
             )}
           >
-            <span className="shrink-0 w-2.5">{noneSelected && <PhCheck size={10} weight="bold" className="text-accent" />}</span>
+            <span className="shrink-0 w-2.5">{noneSelected && <PhCheck size={10} strokeWidth={2.5} className="text-accent" />}</span>
             <span className="flex-1 text-left">No folder</span>
           </button>
         )}
@@ -173,7 +172,7 @@ export function FolderPicker({
                 style={{ backgroundColor: getEntityColor(f.color) }}
               />
               <span className="flex-1 text-left truncate">{f.name}</span>
-              {selected && <PhCheck size={12} weight="bold" className="text-accent shrink-0" />}
+              {selected && <PhCheck size={12} strokeWidth={2.5} className="text-accent shrink-0" />}
             </button>
           )
         })}
@@ -188,7 +187,7 @@ export function FolderPicker({
                 sizeCreate
               )}
             >
-              <PhPlus size={12} weight="bold" />
+              <PhPlus size={12} strokeWidth={2.5} />
               <span>New {kind === "wiki" ? "wiki" : "note"} folder…</span>
             </button>
           </>
@@ -330,7 +329,7 @@ function FolderPickerMulti({
                   : "border-border bg-card",
               )}
             >
-              {checked && <PhCheck size={10} weight="bold" />}
+              {checked && <PhCheck size={10} strokeWidth={2.5} />}
             </span>
             <span
               className="h-2 w-2 rounded-full shrink-0"
@@ -351,7 +350,7 @@ function FolderPickerMulti({
               sizeCreate
             )}
           >
-            <PhPlus size={12} weight="bold" />
+            <PhPlus size={12} strokeWidth={2.5} />
             <span>New {kind === "wiki" ? "wiki" : "note"} folder…</span>
           </button>
         </>

@@ -3,7 +3,7 @@
 import * as React from 'react'
 import * as RadioGroupPrimitive from '@radix-ui/react-radio-group'
 import { cn } from '@/lib/utils'
-import { Circle as PhCircleIcon } from "@phosphor-icons/react/dist/ssr/Circle"
+import { Circle } from "lucide-react"
 
 function RadioGroup({
   className,
@@ -35,7 +35,7 @@ function RadioGroupItem({
         data-slot="radio-group-indicator"
         className="relative flex items-center justify-center"
       >
-        <PhCircleIcon className="fill-primary absolute top-1/2 left-1/2 size-2 -translate-x-1/2 -translate-y-1/2" />
+        <Circle className="fill-primary absolute top-1/2 left-1/2 size-2 -translate-x-1/2 -translate-y-1/2" />
       </RadioGroupPrimitive.Indicator>
     </RadioGroupPrimitive.Item>
   )

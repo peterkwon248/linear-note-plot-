@@ -65,7 +65,9 @@ function applyTagFilters(tags: TagWithCount[], filters: FilterRule[]): TagWithCo
           if (rule.value === "unset") return !hasColor
           return false
         }
-        return false
+        // Unknown field — pass-through (fail-open). Stale rule from older
+        // viewState shouldn't blank the view; matches use-files-view pattern.
+        return true
       })
       if (!matchesAny) return false
     }

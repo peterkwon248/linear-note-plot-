@@ -73,7 +73,9 @@ function applyStickerFilters(stickers: StickerWithCount[], filters: FilterRule[]
         if (field === "memberKind") {
           return (sticker.members ?? []).some((m) => m.kind === rule.value)
         }
-        return false
+        // Unknown field — pass-through (fail-open). Stale rule from older
+        // viewState shouldn't blank the view; matches use-files-view pattern.
+        return true
       })
       if (!matchesAny) return false
     }

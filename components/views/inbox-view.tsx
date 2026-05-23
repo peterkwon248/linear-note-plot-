@@ -14,8 +14,7 @@ import type { FilterRule } from "@/lib/view-engine/types"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { toast } from "sonner"
 import { InboxSourceIcon } from "@/components/inbox/inbox-source-icon"
-import { X as PhX } from "@phosphor-icons/react/dist/ssr/X"
-import { Clock } from "@phosphor-icons/react/dist/ssr/Clock"
+import { X as PhX, Clock } from "lucide-react"
 
 /* ── Filter tab types ─────────────────────────────────── */
 
@@ -159,7 +158,7 @@ function InboxRowFull({
               title="Snooze"
               aria-label="Snooze"
             >
-              <Clock size={13} weight="regular" />
+              <Clock size={13} strokeWidth={2} />
             </button>
           </PopoverTrigger>
           <PopoverContent side="bottom" align="end" className="w-44 p-1">
@@ -182,7 +181,7 @@ function InboxRowFull({
           title="Dismiss"
           aria-label="Dismiss"
         >
-          <PhX size={13} weight="regular" />
+          <PhX size={13} strokeWidth={2} />
         </button>
       </div>
     </div>
@@ -259,7 +258,7 @@ function EmptyAll() {
       </div>
       {nextUp && (
         <div className="mt-6 flex max-w-xs items-center gap-2 rounded-md border border-border-subtle/40 bg-card/40 px-3 py-2 text-2xs text-muted-foreground">
-          <Clock size={12} weight="regular" className="shrink-0 opacity-70" />
+          <Clock size={12} strokeWidth={2} className="shrink-0 opacity-70" />
           <span className="truncate">
             <span className="text-muted-foreground/70">Next up · </span>
             <span className="text-foreground/80 font-medium">{nextUp.label}</span>

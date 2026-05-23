@@ -3,23 +3,25 @@
 import { useState, useCallback, useMemo } from "react"
 import { usePlotStore } from "@/lib/store"
 import { format, formatDistanceToNow } from "date-fns"
-import { CalendarBlank } from "@phosphor-icons/react/dist/ssr/CalendarBlank"
-import { FileText } from "@phosphor-icons/react/dist/ssr/FileText"
-import { Info as PhInfo } from "@phosphor-icons/react/dist/ssr/Info"
-import { Plus } from "@phosphor-icons/react/dist/ssr/Plus"
-import { X as PhX } from "@phosphor-icons/react/dist/ssr/X"
-import { Trash } from "@phosphor-icons/react/dist/ssr/Trash"
-import { Books } from "@phosphor-icons/react/dist/ssr/Books"
-import { ListBullets } from "@phosphor-icons/react/dist/ssr/ListBullets"
-import { TextAlignLeft } from "@phosphor-icons/react/dist/ssr/TextAlignLeft"
-import { Globe } from "@phosphor-icons/react/dist/ssr/Globe"
-import { ArrowSquareOut } from "@phosphor-icons/react/dist/ssr/ArrowSquareOut"
-import { Image as PhImage } from "@phosphor-icons/react/dist/ssr/Image"
-import { ClockCounterClockwise } from "@phosphor-icons/react/dist/ssr/ClockCounterClockwise"
-import { PencilSimple } from "@phosphor-icons/react/dist/ssr/PencilSimple"
-import { Link } from "@phosphor-icons/react/dist/ssr/Link"
-import { LinkBreak } from "@phosphor-icons/react/dist/ssr/LinkBreak"
-import { Sparkle } from "@phosphor-icons/react/dist/ssr/Sparkle"
+import {
+  Calendar as CalendarBlank,
+  FileText,
+  Info as PhInfo,
+  Plus,
+  X as PhX,
+  Trash2 as Trash,
+  Library as Books,
+  List as ListBullets,
+  AlignLeft as TextAlignLeft,
+  Globe,
+  ExternalLink as ArrowSquareOut,
+  Image as PhImage,
+  History as ClockCounterClockwise,
+  Pencil as PencilSimple,
+  Link,
+  Unlink as LinkBreak,
+  Sparkles as Sparkle,
+} from "lucide-react"
 import { shortRelative } from "@/lib/format-utils"
 import { IconWiki } from "@/components/plot-icons"
 import { navigateToWikiArticle } from "@/lib/wiki-article-nav"
@@ -177,7 +179,7 @@ export function ReferenceDetailPanel({ referenceId }: { referenceId: string }) {
   if (!reference) {
     return (
       <div className="flex flex-1 flex-col items-center justify-center gap-3 text-muted-foreground px-4">
-        <PhInfo size={24} weight="light" className="text-muted-foreground/70" />
+        <PhInfo size={24} strokeWidth={1.5} className="text-muted-foreground/70" />
         <p className="text-note text-center">Reference not found</p>
       </div>
     )
@@ -189,13 +191,13 @@ export function ReferenceDetailPanel({ referenceId }: { referenceId: string }) {
       {/* Type Badge */}
       <div className="flex flex-wrap items-center gap-2 px-4 py-3 border-b border-border">
         <span className="flex items-center gap-1 rounded-md bg-chart-3/10 px-2 py-0.5 text-2xs font-medium text-chart-3">
-          <Books size={14} weight="duotone" />
+          <Books size={14} strokeWidth={1.5} />
           Reference
         </span>
       </div>
 
       {/* Title (editable) */}
-      <InspectorSection title="Title" icon={<FileText size={16} weight="regular" />}>
+      <InspectorSection title="Title" icon={<FileText size={16} strokeWidth={2} />}>
         <input
           type="text"
           defaultValue={reference.title}
@@ -208,7 +210,7 @@ export function ReferenceDetailPanel({ referenceId }: { referenceId: string }) {
       <div className="mx-4 border-b border-border" />
 
       {/* URL (dedicated field) */}
-      <InspectorSection title="URL" icon={<Globe size={16} weight="regular" />}>
+      <InspectorSection title="URL" icon={<Globe size={16} strokeWidth={2} />}>
         <div className="flex items-center gap-1.5">
           <input
             type="url"
@@ -226,7 +228,7 @@ export function ReferenceDetailPanel({ referenceId }: { referenceId: string }) {
               className="shrink-0 rounded-md p-1.5 text-muted-foreground/60 transition-colors hover:bg-hover-bg hover:text-accent"
               title="Open URL"
             >
-              <ArrowSquareOut size={14} weight="regular" />
+              <ArrowSquareOut size={14} strokeWidth={2} />
             </a>
           )}
         </div>
@@ -235,7 +237,7 @@ export function ReferenceDetailPanel({ referenceId }: { referenceId: string }) {
       <div className="mx-4 border-b border-border" />
 
       {/* Image URL */}
-      <InspectorSection title="Image URL" icon={<PhImage size={16} weight="regular" />}>
+      <InspectorSection title="Image URL" icon={<PhImage size={16} strokeWidth={2} />}>
         <div className="space-y-2">
           <input
             type="text"
@@ -262,7 +264,7 @@ export function ReferenceDetailPanel({ referenceId }: { referenceId: string }) {
       <div className="mx-4 border-b border-border" />
 
       {/* Content (editable textarea) */}
-      <InspectorSection title="Content" icon={<TextAlignLeft size={16} weight="regular" />}>
+      <InspectorSection title="Content" icon={<TextAlignLeft size={16} strokeWidth={2} />}>
         <textarea
           defaultValue={reference.content}
           onBlur={handleContentBlur}
@@ -275,7 +277,7 @@ export function ReferenceDetailPanel({ referenceId }: { referenceId: string }) {
       <div className="mx-4 border-b border-border" />
 
       {/* Fields (key-value pairs) */}
-      <InspectorSection title="Fields" icon={<ListBullets size={16} weight="regular" />}>
+      <InspectorSection title="Fields" icon={<ListBullets size={16} strokeWidth={2} />}>
         {reference.fields.filter((f) => f.key.toLowerCase() !== "url").length > 0 ? (
           <div className="space-y-1.5">
             {reference.fields.map((field, i) => {
@@ -302,7 +304,7 @@ export function ReferenceDetailPanel({ referenceId }: { referenceId: string }) {
                     className="shrink-0 rounded-md p-0.5 text-muted-foreground/70 transition-colors hover:bg-hover-bg hover:text-destructive"
                     title="Remove field"
                   >
-                    <PhX size={12} weight="bold" />
+                    <PhX size={12} strokeWidth={2.5} />
                   </button>
                 </div>
               )
@@ -315,7 +317,7 @@ export function ReferenceDetailPanel({ referenceId }: { referenceId: string }) {
           onClick={handleAddField}
           className="mt-2 flex items-center gap-1 rounded-md px-2 py-1 text-2xs font-medium text-accent/80 transition-colors hover:bg-accent/8 hover:text-accent"
         >
-          <Plus size={12} weight="bold" />
+          <Plus size={12} strokeWidth={2.5} />
           Add field
         </button>
       </InspectorSection>
@@ -323,7 +325,7 @@ export function ReferenceDetailPanel({ referenceId }: { referenceId: string }) {
       <div className="mx-4 border-b border-border" />
 
       {/* Usage — notes & wiki that reference this */}
-      <InspectorSection title="Usage" icon={<Books size={16} weight="regular" />}>
+      <InspectorSection title="Usage" icon={<Books size={16} strokeWidth={2} />}>
         {referencingNotes.length === 0 && referencingArticles.length === 0 ? (
           <p className="text-2xs text-muted-foreground/70">No notes or wiki articles reference this yet</p>
         ) : (
@@ -337,7 +339,7 @@ export function ReferenceDetailPanel({ referenceId }: { referenceId: string }) {
                     onClick={() => openNote(n.id)}
                     className="flex w-full items-center gap-2 rounded-md px-1.5 py-1 text-2xs text-muted-foreground hover:bg-hover-bg hover:text-foreground transition-colors"
                   >
-                    <FileText size={14} weight="regular" className="shrink-0 opacity-50" />
+                    <FileText size={14} strokeWidth={2} className="shrink-0 opacity-50" />
                     <span className="truncate">{n.title || "Untitled"}</span>
                   </button>
                 ))}
@@ -368,7 +370,7 @@ export function ReferenceDetailPanel({ referenceId }: { referenceId: string }) {
       <div className="mx-4 border-b border-border" />
 
       {/* Dates */}
-      <InspectorSection title="Dates" icon={<CalendarBlank size={16} weight="regular" />}>
+      <InspectorSection title="Dates" icon={<CalendarBlank size={16} strokeWidth={2} />}>
         <div className="space-y-2">
           <div className="flex items-center justify-between">
             <span className="text-note text-muted-foreground">Created</span>
@@ -389,15 +391,15 @@ export function ReferenceDetailPanel({ referenceId }: { referenceId: string }) {
 
       {/* History Timeline */}
       {reference.history && reference.history.length > 0 && (
-        <InspectorSection title="History" icon={<ClockCounterClockwise size={16} weight="regular" />}>
+        <InspectorSection title="History" icon={<ClockCounterClockwise size={16} strokeWidth={2} />}>
           <div className="space-y-1.5">
             {[...reference.history].reverse().slice(0, 10).map((entry, i) => (
               <div key={i} className="flex items-center gap-2 text-2xs">
                 <span className="shrink-0 text-muted-foreground/70">
-                  {entry.action === "created" && <Sparkle size={11} weight="fill" />}
-                  {entry.action === "edited" && <PencilSimple size={11} weight="regular" />}
-                  {entry.action === "linked" && <Link size={11} weight="regular" />}
-                  {entry.action === "unlinked" && <LinkBreak size={11} weight="regular" />}
+                  {entry.action === "created" && <Sparkle size={11} fill="currentColor" />}
+                  {entry.action === "edited" && <PencilSimple size={11} strokeWidth={2} />}
+                  {entry.action === "linked" && <Link size={11} strokeWidth={2} />}
+                  {entry.action === "unlinked" && <LinkBreak size={11} strokeWidth={2} />}
                 </span>
                 <span className="text-muted-foreground/60 capitalize">{entry.action}</span>
                 {entry.detail && <span className="text-muted-foreground/70">— {entry.detail}</span>}
@@ -435,7 +437,7 @@ export function ReferenceDetailPanel({ referenceId }: { referenceId: string }) {
             onClick={() => setConfirmDelete(true)}
             className="flex items-center gap-1.5 text-2xs font-medium text-destructive/70 transition-colors hover:text-destructive"
           >
-            <Trash size={14} weight="regular" />
+            <Trash size={14} strokeWidth={2} />
             Delete reference
           </button>
         )}

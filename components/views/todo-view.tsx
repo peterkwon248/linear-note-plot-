@@ -4,11 +4,13 @@ import { useMemo, useState, useEffect, useRef } from "react"
 import { usePlotStore } from "@/lib/store"
 import { setActiveRoute } from "@/lib/table-route"
 import type { TaskItem } from "@/lib/todo-index"
-import { CheckSquare } from "@phosphor-icons/react/dist/ssr/CheckSquare"
-import { Square } from "@phosphor-icons/react/dist/ssr/Square"
-import { Plus } from "@phosphor-icons/react/dist/ssr/Plus"
-import { CaretDown } from "@phosphor-icons/react/dist/ssr/CaretDown"
-import { CaretRight } from "@phosphor-icons/react/dist/ssr/CaretRight"
+import {
+  CheckSquare,
+  Square,
+  Plus,
+  ChevronDown as CaretDown,
+  ChevronRight as CaretRight,
+} from "lucide-react"
 
 export function TodoView() {
   const todoTasks = usePlotStore((s) => s.todoTasks)
@@ -161,7 +163,7 @@ function TaskRow({
         className="shrink-0 text-muted-foreground hover:text-foreground transition-colors"
       >
         {task.checked ? (
-          <CheckSquare size={20} weight="fill" className="text-chart-5" />
+          <CheckSquare size={20} fill="currentColor" className="text-chart-5" />
         ) : (
           <Square size={20} />
         )}

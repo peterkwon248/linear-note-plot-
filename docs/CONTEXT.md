@@ -51,6 +51,30 @@
 
 ---
 
+## 🚀 2026-05-23 (후속) — Audit v2 + PR-A 데이터 무결성 + Lucide 마이그레이션 90 파일 (PR-X1~X4) ⭐⭐⭐⭐⭐
+
+**범위**: 거대 세션 단일 PR. Audit + PR-A + 90 파일 마이그레이션. 16+ round 사용자 대화.
+
+**핵심 결정 (영구 후보 #94~#97)**:
+- **Lucide-react = Plot icon library 통일 표준** (shadcn 정통, Linear 톤)
+- **Brand icon 5종만 phosphor 유지** — Stone(Hexagon)/Brick(Cube)/Block(Cuboid2x2)/Stub/Article
+- **weight prop 변환 룰** — regular→strokeWidth=2 / bold→2.5 / light→1.5 / fill→fill="currentColor" / duotone→1.5 / dynamic→conditional fill
+- **Mode-aware UI 룰 (PR-B에서 구현)** — UI 노출 = 100% 동작 / Show don't disable / View is a memo, not a config / Make the right thing default / Self-documenting
+
+**산출물**: `.omc/plans/view-state-reliability-audit.md` v2 (Linear 마인드셋 4 dimension audit + PR 분할 7개 + §8 결정 3개).
+
+**완료**:
+- PR-A 데이터 무결성 5건 (lib/view-engine/types.ts + defaults.ts + 4 use-*-view.ts)
+- PR-X1 UI primitive lucide (21 파일)
+- PR-X2 Chrome lucide (17)
+- PR-X3 Side panels lucide (17)
+- PR-X4 View components lucide (30)
+- 부수 효과: carousel.tsx KeyboardEvent.key 버그 자동 fix
+
+**다음**: PR-X5 (editor + wiki block + comments ~30) → audit §8 결정 후 PR-B (mode-aware UI 구현) → PR-X6 (~30).
+
+---
+
 ## 🚀 2026-05-23 — 타임라인 비주얼 리디자인 (얇은 선 / 마커 in-bar / 스타트칩 / "All" 모드) ⭐⭐⭐⭐⭐
 
 **범위**: 단일 PR (8 파일 `components/views/wiki-timeline*`, +224/−141). 막대 비주얼 리디자인 + 마커 in-bar 이동 + "All" 줌 모드 신설.

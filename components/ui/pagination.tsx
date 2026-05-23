@@ -1,9 +1,7 @@
 import * as React from 'react'
 import { cn } from '@/lib/utils'
 import { Button, buttonVariants } from '@/components/ui/button'
-import { CaretLeft as CaretLeftIcon } from "@phosphor-icons/react/dist/ssr/CaretLeft"
-import { CaretRight as CaretRightIcon } from "@phosphor-icons/react/dist/ssr/CaretRight"
-import { DotsThree as DotsThreeIcon } from "@phosphor-icons/react/dist/ssr/DotsThree"
+import { ChevronLeft, ChevronRight, MoreHorizontal } from "lucide-react"
 
 function Pagination({ className, ...props }: React.ComponentProps<'nav'>) {
   return (
@@ -73,7 +71,7 @@ function PaginationPrevious({
       className={cn('gap-1 px-2.5 sm:pl-2.5', className)}
       {...props}
     >
-      <CaretLeftIcon />
+      <ChevronLeft />
       <span className="hidden sm:block">Previous</span>
     </PaginationLink>
   )
@@ -91,7 +89,7 @@ function PaginationNext({
       {...props}
     >
       <span className="hidden sm:block">Next</span>
-      <CaretRightIcon />
+      <ChevronRight />
     </PaginationLink>
   )
 }
@@ -107,7 +105,7 @@ function PaginationEllipsis({
       className={cn('flex size-9 items-center justify-center', className)}
       {...props}
     >
-      <DotsThreeIcon className="size-4" />
+      <MoreHorizontal className="size-4" />
       <span className="sr-only">More pages</span>
     </span>
   )

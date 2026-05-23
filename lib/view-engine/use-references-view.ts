@@ -88,7 +88,9 @@ function applyRefFilters(refs: ReferenceWithMeta[], filters: FilterRule[]): Refe
         if (field === "type") {
           return rule.value === ref.refType
         }
-        return false // unknown field → no-op (fail open)
+        // Unknown field — pass-through (fail-open). Comment claimed "fail
+        // open" but the code returned false. Now matches the contract.
+        return true
       })
       if (!matchesAny) return false // AND across fields
     }

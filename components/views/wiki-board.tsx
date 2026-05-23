@@ -14,8 +14,7 @@ import {
 import type { DragEndEvent, DragStartEvent } from "@dnd-kit/core"
 import { SortableContext, horizontalListSortingStrategy, arrayMove, useSortable } from "@dnd-kit/sortable"
 import { CSS } from "@dnd-kit/utilities"
-import { FileText } from "@phosphor-icons/react/dist/ssr/FileText"
-import { Check as PhCheck } from "@phosphor-icons/react/dist/ssr/Check"
+import { FileText, Check as PhCheck } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { isWikiStub } from "@/lib/wiki-utils"
 import { usePlotStore } from "@/lib/store"
@@ -329,7 +328,7 @@ function CardInner({
           onSelect?.(article.id, e)
         }}
       >
-        {isSelected && <PhCheck className="text-accent-foreground" size={10} weight="bold" />}
+        {isSelected && <PhCheck className="text-accent-foreground" size={10} strokeWidth={2.5} />}
       </div>
 
       {/* Title row — uses IconWikiStub / IconWikiArticle (status-specific
@@ -620,7 +619,7 @@ export function WikiBoard({
     return (
       <div className="flex flex-1 items-center justify-center text-center">
         <div>
-          <FileText className="mx-auto mb-3 text-muted-foreground/70" size={40} weight="regular" />
+          <FileText className="mx-auto mb-3 text-muted-foreground/70" size={40} strokeWidth={2} />
           <p className="text-ui text-muted-foreground">No articles found</p>
           <p className="mt-1 text-note text-muted-foreground/60">
             {viewState.filters.length > 0 ? "Try adjusting your filters." : "Create your first wiki article."}

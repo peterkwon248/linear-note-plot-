@@ -27,12 +27,14 @@ import { usePlotStore } from "@/lib/store"
 import { setActiveCategoryView } from "@/lib/wiki-view-mode"
 import { setActiveRoute } from "@/lib/table-route"
 import { getCategoryColorName } from "@/lib/store/slices/wiki-categories"
-import { FolderSimple } from "@phosphor-icons/react/dist/ssr/FolderSimple"
-import { FolderOpen } from "@phosphor-icons/react/dist/ssr/FolderOpen"
-import { FileText } from "@phosphor-icons/react/dist/ssr/FileText"
-import { Link as PhLink } from "@phosphor-icons/react/dist/ssr/Link"
-import { ArrowUp } from "@phosphor-icons/react/dist/ssr/ArrowUp"
-import { CaretRight } from "@phosphor-icons/react/dist/ssr/CaretRight"
+import {
+  Folder as FolderSimple,
+  FolderOpen,
+  FileText,
+  Link as PhLink,
+  ArrowUp,
+  ChevronRight as CaretRight,
+} from "lucide-react"
 import { shortRelative } from "@/lib/format-utils"
 import { cn } from "@/lib/utils"
 import {
@@ -132,7 +134,7 @@ export function CategoryDetailPanel({
       <div className="flex items-center justify-between border-b border-border px-4 py-3">
         <div className="flex items-center gap-2 min-w-0">
           <span className="inline-flex items-center gap-1 rounded-md bg-secondary/40 px-1.5 py-0.5 text-2xs font-medium text-muted-foreground">
-            <FolderSimple size={11} weight="regular" />
+            <FolderSimple size={11} strokeWidth={2} />
             Category
           </span>
           {category.color && (
@@ -163,7 +165,7 @@ export function CategoryDetailPanel({
       {/* ── Properties ─────────────────────────────────── */}
       <InspectorSection
         title="Properties"
-        icon={<FileText size={16} weight="regular" />}
+        icon={<FileText size={16} strokeWidth={2} />}
       >
         <div className="space-y-2">
           <div className="flex items-center justify-between">
@@ -241,7 +243,7 @@ export function CategoryDetailPanel({
         <>
           <InspectorSection
             title="Parent Category"
-            icon={<ArrowUp size={16} weight="regular" />}
+            icon={<ArrowUp size={16} strokeWidth={2} />}
           >
             <button
               onClick={() => navigateToCategory(parentCat.id)}
@@ -249,8 +251,7 @@ export function CategoryDetailPanel({
             >
               <FolderSimple
                 size={14}
-                weight="regular"
-                className="shrink-0"
+                               className="shrink-0"
                 style={{ color: parentCat.color ?? undefined }}
               />
               <span className="truncate flex-1 text-note text-foreground">
@@ -258,8 +259,7 @@ export function CategoryDetailPanel({
               </span>
               <CaretRight
                 size={12}
-                weight="regular"
-                className="text-muted-foreground/40 group-hover:text-muted-foreground transition-colors"
+                               className="text-muted-foreground/40 group-hover:text-muted-foreground transition-colors"
               />
             </button>
           </InspectorSection>
@@ -270,7 +270,7 @@ export function CategoryDetailPanel({
       {/* ── Subcategories preview ───────────────────────── */}
       <InspectorSection
         title={`Subcategories (${subcategories.length})`}
-        icon={<FolderOpen size={16} weight="regular" />}
+        icon={<FolderOpen size={16} strokeWidth={2} />}
       >
         {subcategories.length === 0 ? (
           <p className="text-note text-muted-foreground/70 italic px-2">
@@ -286,8 +286,7 @@ export function CategoryDetailPanel({
               >
                 <FolderSimple
                   size={13}
-                  weight="regular"
-                  className="shrink-0"
+                                   className="shrink-0"
                   style={{ color: sub.color ?? undefined }}
                 />
                 <span className="truncate flex-1 text-note text-foreground">
@@ -295,8 +294,7 @@ export function CategoryDetailPanel({
                 </span>
                 <CaretRight
                   size={11}
-                  weight="regular"
-                  className="text-muted-foreground/40 group-hover:text-muted-foreground transition-colors"
+                                   className="text-muted-foreground/40 group-hover:text-muted-foreground transition-colors"
                 />
               </button>
             ))}
@@ -314,7 +312,7 @@ export function CategoryDetailPanel({
       {/* ── Articles preview ───────────────────────────── */}
       <InspectorSection
         title={`Articles (${catArticles.length})`}
-        icon={<PhLink size={16} weight="regular" />}
+        icon={<PhLink size={16} strokeWidth={2} />}
       >
         {catArticles.length === 0 ? (
           <p className="text-note text-muted-foreground/70 italic px-2">
@@ -335,8 +333,7 @@ export function CategoryDetailPanel({
               >
                 <FileText
                   size={13}
-                  weight="regular"
-                  className="shrink-0 text-muted-foreground"
+                                   className="shrink-0 text-muted-foreground"
                 />
                 <span className="truncate flex-1">
                   {a.title || "Untitled"}

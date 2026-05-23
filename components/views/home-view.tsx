@@ -7,11 +7,13 @@ import { QuickCapture } from "@/components/home/quick-capture"
 import { StatsRow } from "@/components/home/stats-row"
 import { RecentCards } from "@/components/home/recent-cards"
 import { MixedQuicklinks } from "@/components/home/mixed-quicklinks"
-import { Clock as PhClock } from "@phosphor-icons/react/dist/ssr/Clock"
-import { Sparkle } from "@phosphor-icons/react/dist/ssr/Sparkle"
-import { TrendUp } from "@phosphor-icons/react/dist/ssr/TrendUp"
-import { ArrowRight } from "@phosphor-icons/react/dist/ssr/ArrowRight"
-import { FileText } from "@phosphor-icons/react/dist/ssr/FileText"
+import {
+  Clock as PhClock,
+  Sparkles as Sparkle,
+  TrendingUp as TrendUp,
+  ArrowRight,
+  FileText,
+} from "lucide-react"
 import { IconInbox, IconHome } from "@/components/plot-icons"
 import { ViewHeader } from "@/components/view-header"
 import { useBacklinksIndex } from "@/lib/search/use-backlinks-index"
@@ -99,7 +101,7 @@ export function HomeView() {
             className="group mb-6 flex w-full items-start gap-4 rounded-lg border border-border bg-card p-4 text-left transition-all duration-150 hover:border-accent/30 hover:bg-accent/[0.03] hover:shadow-sm"
           >
             <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-accent/10">
-              <Sparkle className="text-accent" size={16} weight="regular" />
+              <Sparkle className="text-accent" size={16} strokeWidth={2} />
             </div>
             <div className="min-w-0 flex-1">
               <div className="mb-0.5 flex items-center gap-2">
@@ -112,7 +114,7 @@ export function HomeView() {
                 {insights.featured.preview || "No preview available"}
               </p>
             </div>
-            <ArrowRight className="mt-1 shrink-0 text-muted-foreground/60 transition-colors group-hover:text-accent" size={16} weight="regular" />
+            <ArrowRight className="mt-1 shrink-0 text-muted-foreground/60 transition-colors group-hover:text-accent" size={16} strokeWidth={2} />
           </button>
         )}
 
@@ -270,7 +272,7 @@ function NoteItem({
       onClick={onClick}
       className="group flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-left transition-colors duration-100 hover:bg-hover-bg"
     >
-      <FileText className="shrink-0 text-muted-foreground" size={14} weight="bold" />
+      <FileText className="shrink-0 text-muted-foreground" size={14} strokeWidth={2.5} />
       <span className="min-w-0 flex-1 truncate text-note text-foreground group-hover:text-foreground">{title}</span>
       <span className="shrink-0 text-2xs tabular-nums text-muted-foreground">{meta}</span>
     </button>
