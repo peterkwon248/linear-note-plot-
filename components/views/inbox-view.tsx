@@ -6,6 +6,7 @@ import { usePlotStore } from "@/lib/store"
 import { setActiveRoute } from "@/lib/table-route"
 import { useT } from "@/lib/i18n"
 import { useInboxBySection, type InboxItem, type InboxSection } from "@/lib/hooks/use-inbox"
+import { navigateToWikiArticle } from "@/lib/wiki-article-nav"
 import type { InboxItemKind } from "@/lib/store/slices/inbox"
 import { ViewHeader } from "@/components/view-header"
 import { IconInbox, IconChevronRight } from "@/components/plot-icons"
@@ -65,11 +66,14 @@ function InboxRowFull({
     } else if (item.kind === "plan-due") {
       setActiveRoute("/wiki")
     } else if (item.kind === "task") {
-      // Phase α-2: entityKind === "wiki" 면 위키 view로 이동, 아니면 노트 열기.
-      // (wiki article 자체 선택은 별도 store action 미정착 — view 진입까지만)
+      // Phase α-2 + 사용자 명시 (2026-05-25): 클릭 시 원문 출처로 navigate.
+      // wiki entityKind → wiki article 직접 open (navigateToWikiArticle).
+      // note entityKind → 노트 open (openNote).
       const task = usePlotStore.getState().todoTasks.find((t) => t.id === item.sourceId)
       if (task?.entityKind === "wiki") {
         setActiveRoute("/wiki")
+        usePlotStore.getState().setSelectedNoteId(null)
+        navigateToWikiArticle(task.noteId)
       } else if (task) {
         onOpenNote(task.noteId)
       }
@@ -111,6 +115,8 @@ function InboxRowFull({
             const task = usePlotStore.getState().todoTasks.find((t) => t.id === item.sourceId)
             if (task?.entityKind === "wiki") {
               setActiveRoute("/wiki")
+              usePlotStore.getState().setSelectedNoteId(null)
+              navigateToWikiArticle(task.noteId)
             } else if (task) {
               onOpenNote(task.noteId)
             }
@@ -124,7 +130,7 @@ function InboxRowFull({
       {/* Source icon */}
       <InboxSourceIcon
         kind={item.kind}
-        className="shrink-0 text-muted-foreground/50 transition-colors group-hover:text-muted-foreground/70"
+        className="shrink-0 text-muted-foreground/60 transition-colors group-hover:text-muted-foreground/80"
       />
 
       {/* Title */}
@@ -132,9 +138,13 @@ function InboxRowFull({
         {item.title}
       </span>
 
-      {/* Meta (snooze-expired secondary info) */}
+      {/* Meta — source 출처 (노트/위키 제목 등). hover 시 native tooltip으로
+          full text 노출, 시각적으로도 /70 opacity로 light mode 가독성 확보. */}
       {item.meta && (
-        <span className="shrink-0 text-2xs text-muted-foreground/50">
+        <span
+          className="shrink-0 max-w-[140px] truncate text-2xs text-muted-foreground/70"
+          title={item.meta}
+        >
           {item.meta}
         </span>
       )}
@@ -241,12 +251,12 @@ function SectionCard({
         <span className="text-2xs text-muted-foreground tabular-nums">
           {items.length}
         </span>
-        <span className="ml-1 truncate text-2xs text-muted-foreground/60">
+        <span className="ml-1 truncate text-2xs text-muted-foreground/75">
           {t(meta.subtitleKey)}
         </span>
       </header>
       {items.length === 0 ? (
-        <div className="px-1 py-1 text-2xs text-muted-foreground/50">
+        <div className="px-1 py-1 text-2xs text-muted-foreground/70">
           {t(meta.emptyKey)}
         </div>
       ) : (
