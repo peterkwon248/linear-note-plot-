@@ -33,6 +33,7 @@ import {
   Search as MagnifyingGlass,
 } from "lucide-react"
 import { usePlotStore } from "@/lib/store"
+import { useT } from "@/lib/i18n"
 import { getSnoozeHooks } from "@/lib/store/hook-selectors"
 import { PRESET_COLORS, getEntityColor, WIKI_STATUS_HEX } from "@/lib/colors" // v109: opt-in color fallback
 import { isWikiStub } from "@/lib/wiki-utils"
@@ -249,6 +250,7 @@ function Section({
 /* ── Sidebar ─────────────────────────────────────────── */
 
 export function LinearSidebar() {
+  const t = useT()
   const pathname = usePathname()
   const router = useRouter()
   const openNote = usePlotStore((s) => s.openNote)
@@ -668,7 +670,7 @@ export function LinearSidebar() {
       (spaceFilter === "library-categories" && activeRoute === "/library/categories")
     return (
       <Section
-        title="Views"
+        title={t("sidebar.section.views")}
         trailing={
           <button
             onClick={() => setNewViewOpen(true)}
@@ -852,35 +854,35 @@ export function LinearSidebar() {
               <NavLink
                 href="/notes"
                 icon={<IconNotes size={20} />}
-                label="All Notes"
+                label={t("status.all_notes")}
                 count={allNotesCount > 0 ? allNotesCount : undefined}
                 active={isActive("/notes")}
               />
               <NavLink
                 href="/stone"
                 icon={<IconStone size={20} />}
-                label="Stone"
+                label={t("status.stone")}
                 count={inboxCount > 0 ? inboxCount : undefined}
                 active={isActive("/stone")}
               />
               <NavLink
                 href="/brick"
                 icon={<IconBrick size={20} />}
-                label="Brick"
+                label={t("status.brick")}
                 count={captureCount > 0 ? captureCount : undefined}
                 active={isActive("/brick")}
               />
               <NavLink
                 href="/keystone"
                 icon={<IconBlock size={20} />}
-                label="Block"
+                label={t("status.block")}
                 count={permanentCount > 0 ? permanentCount : undefined}
                 active={isActive("/keystone")}
               />
               <NavLink
                 href="/pinned"
                 icon={<IconPin size={20} />}
-                label="Pinned"
+                label={t("sidebar.section.pinned")}
                 count={pinnedNotes.length > 0 ? pinnedNotes.length : undefined}
                 active={isActive("/pinned")}
               />
@@ -894,7 +896,7 @@ export function LinearSidebar() {
                 analogous section below; the two no longer share a folder
                 pool. */}
             <Section
-              title="Folders"
+              title={t("sidebar.section.folders")}
               trailing={
                 <button
                   onClick={() => setNewFolderKind("note")}
@@ -1012,14 +1014,14 @@ export function LinearSidebar() {
                 2026-05-17 — Labels는 Library hub로 이동 (cross-entity 분류
                 메커니즘은 Library에 모이는 영구 룰). Templates는 Note-recipe
                 이므로 Notes 사이드바에 유지. */}
-            <Section title="More">
+            <Section title={t("sidebar.section.more")}>
               {/* Stickers entry intentionally lives only in Library
                   (33 design decisions #8 — Sticker = cross-everything,
                   belongs with cross-cutting library indices). */}
               <NavLink
                 href="/templates"
                 icon={<IconTemplate size={20} />}
-                label="Templates"
+                label={t("sidebar.templates")}
                 count={templates.length}
                 active={isActive("/templates")}
                 dragContent={{ type: "templates" }}
@@ -1027,7 +1029,7 @@ export function LinearSidebar() {
               <NavLink
                 href="/insights"
                 icon={<IconInsight size={20} />}
-                label="Insights"
+                label={t("sidebar.insights")}
                 active={isActive("/insights")}
                 dragContent={{ type: "insights" }}
               />
@@ -1035,7 +1037,7 @@ export function LinearSidebar() {
 
             {/* Pinned section */}
             {pinnedNotes.length > 0 && (
-              <Section title="Pinned">
+              <Section title={t("sidebar.section.pinned")}>
                 {pinnedNotes.map((item) => (
                   <button
                     key={item.id}
@@ -1055,7 +1057,7 @@ export function LinearSidebar() {
 
             {/* Recent section */}
             {recentNotes.length > 0 && (
-              <Section title="Recent">
+              <Section title={t("sidebar.section.recent")}>
                 {recentNotes.map((item) => (
                   <button
                     key={item.id}
@@ -1082,7 +1084,7 @@ export function LinearSidebar() {
               <NavLink
                 href="/wiki"
                 icon={<BookOpen size={20} />}
-                label="Overview"
+                label={t("sidebar.overview")}
                 count={wikiCount > 0 ? wikiCount : undefined}
                 active={isActive("/wiki") && wikiViewMode !== "merge" && wikiViewMode !== "split"}
               />
@@ -1122,7 +1124,7 @@ export function LinearSidebar() {
               <NavLink
                 href="/wiki/templates"
                 icon={<IconTemplate size={20} />}
-                label="Templates"
+                label={t("sidebar.templates")}
                 count={wikiTemplates.filter((t) => !t.trashed).length}
                 active={isActive("/wiki/templates")}
                 dragContent={{ type: "wiki-templates" } as any}
@@ -1143,7 +1145,7 @@ export function LinearSidebar() {
                 articles get their own first-class folder organisation, fully
                 isolated from note folders by Folder.kind. */}
             <Section
-              title="Folders"
+              title={t("sidebar.section.folders")}
               trailing={
                 <button
                   onClick={() => setNewFolderKind("wiki")}
@@ -1263,7 +1265,7 @@ export function LinearSidebar() {
             {(() => {
               const pinnedWiki = notes.filter((n) => n.noteType === "wiki" && !n.trashed && n.pinned)
               return pinnedWiki.length > 0 ? (
-                <Section title="Pinned">
+                <Section title={t("sidebar.section.pinned")}>
                   {pinnedWiki.map((note) => (
                     <button
                       key={note.id}
@@ -1287,7 +1289,7 @@ export function LinearSidebar() {
                 return note?.noteType === "wiki"
               })
               return recentWiki.length > 0 ? (
-                <Section title="Recent">
+                <Section title={t("sidebar.section.recent")}>
                   {recentWiki.map((item) => (
                     <button
                       key={item.id}
@@ -1366,7 +1368,7 @@ export function LinearSidebar() {
               const top = upcoming.slice(0, 5)
 
               return top.length > 0 ? (
-                <Section title="Upcoming">
+                <Section title={t("sidebar.section.upcoming")}>
                   {top.map(({ note, at }) => {
                     let relDate = ""
                     try {
@@ -1447,7 +1449,7 @@ export function LinearSidebar() {
                     <NavLink
                       href="/ontology"
                       icon={<IconInsight size={20} />}
-                      label="Insights"
+                      label={t("sidebar.insights")}
                       active={isOnOntology && currentMode === "insights"}
                       onClickOverride={() => switchMode("insights")}
                     />
@@ -1599,7 +1601,7 @@ export function LinearSidebar() {
               <NavLink
                 href="/library"
                 icon={<Books size={20} />}
-                label="Overview"
+                label={t("sidebar.overview")}
                 active={isActive("/library")}
               />
               <NavLink
@@ -1703,7 +1705,7 @@ export function LinearSidebar() {
                 .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt))
               if (pinnedBooks.length === 0) return null
               return (
-                <Section title="Pinned">
+                <Section title={t("sidebar.section.pinned")}>
                   {pinnedBooks.map((book) => {
                     const href = `/books/${book.id}`
                     return (
@@ -1739,7 +1741,7 @@ export function LinearSidebar() {
                 .slice(0, 5)
               if (recentBooks.length === 0) return null
               return (
-                <Section title="Recent">
+                <Section title={t("sidebar.section.recent")}>
                   {recentBooks.map((book) => {
                     const href = `/books/${book.id}`
                     return (
@@ -1779,13 +1781,13 @@ export function LinearSidebar() {
               <NavLink
                 href="/home"
                 icon={<IconHome size={20} />}
-                label="Overview"
+                label={t("sidebar.overview")}
                 active={isActive("/home")}
               />
               <NavLink
                 href="/inbox"
                 icon={<IconInbox size={20} />}
-                label="Inbox"
+                label={t("sidebar.inbox")}
                 count={inboxItemsCount > 0 ? inboxItemsCount : undefined}
                 active={isActive("/inbox")}
               />
@@ -1793,7 +1795,7 @@ export function LinearSidebar() {
 
             {/* Pinned section (cross-entity quick access: notes + wiki) */}
             {homePinnedItems.length > 0 && (
-              <Section title="Pinned">
+              <Section title={t("sidebar.section.pinned")}>
                 {homePinnedItems.map((item) => (
                   <button
                     key={`${item.kind}:${item.id}`}
@@ -1840,7 +1842,7 @@ export function LinearSidebar() {
 
             {/* Recent section */}
             {recentNotes.length > 0 && (
-              <Section title="Recent">
+              <Section title={t("sidebar.section.recent")}>
                 {recentNotes.map((item) => (
                   <button
                     key={item.id}
@@ -1866,13 +1868,13 @@ export function LinearSidebar() {
         <NavLink
           href="/settings"
           icon={<IconGear size={16} />}
-          label="Settings"
+          label={t("nav.settings")}
           active={isActive("/settings")}
         />
         <NavLink
           href="/trash"
           icon={<IconTrash size={20} />}
-          label="Trash"
+          label={t("nav.trash")}
           count={trashCount > 0 ? trashCount : undefined}
           active={isActive("/trash")}
         />

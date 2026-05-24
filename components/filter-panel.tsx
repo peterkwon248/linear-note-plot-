@@ -3,6 +3,7 @@
 import React, { useMemo, useState, useRef, useCallback } from "react"
 import type { ReactNode } from "react"
 import type { FilterRule, FilterField } from "@/lib/view-engine/types"
+import { useT } from "@/lib/i18n"
 
 /* ── Inline SVG Icons ───────────────────────────────────── */
 
@@ -29,6 +30,8 @@ const CheckIcon = () => (
 export interface FilterValue {
   key: string
   label: string
+  /** Optional i18n key — when set, FilterPanel renders `t(labelKey)`. */
+  labelKey?: string
   color?: string
   count?: number
   icon?: ReactNode
@@ -45,13 +48,16 @@ export interface FilterValue {
 export interface FilterCategory {
   key: string
   label: string
+  labelKey?: string
   icon: ReactNode
   values: FilterValue[]
 }
 
 export interface QuickFilter {
   label: string
+  labelKey?: string
   desc: string
+  descKey?: string
   rules: FilterRule[]
 }
 
@@ -89,6 +95,7 @@ export function FilterPanel({
   quickFilters,
   onQuickFilter,
 }: FilterPanelProps) {
+  const t = useT()
   const [openCat, setOpenCat] = useState<string | null>(null)
   const [subPanelTop, setSubPanelTop] = useState(0)
   const [searchQuery, setSearchQuery] = useState("")
@@ -138,7 +145,7 @@ export function FilterPanel({
           <div className="px-2 pb-1">
             <input
               type="text"
-              placeholder="Filter..."
+              placeholder={t("filter.search.placeholder")}
               value={subSearch}
               onChange={(e) => setSubSearch(e.target.value)}
               onClick={(e) => e.stopPropagation()}
@@ -186,7 +193,7 @@ export function FilterPanel({
                       />
                     ) : null}
                     <span className={`flex-1 text-left text-note ${isActive ? "text-foreground font-medium" : "text-foreground"}`}>
-                      {val.label}
+                      {val.labelKey ? t(val.labelKey) : val.label}
                     </span>
                     {val.count !== undefined && (
                       <span className="text-2xs text-muted-foreground/70 tabular-nums">{val.count}</span>
@@ -205,7 +212,7 @@ export function FilterPanel({
         <div className="px-2 pb-1.5" onMouseEnter={() => setOpenCat(null)}>
           <input
             type="text"
-            placeholder="Filter..."
+            placeholder={t("filter.search.placeholder")}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="w-full rounded-md border border-border-subtle bg-background/50 px-2.5 py-1.5 text-note text-foreground placeholder:text-muted-foreground/70 focus:outline-none focus:border-accent/50 focus:ring-1 focus:ring-accent/30 transition-colors"
@@ -218,7 +225,7 @@ export function FilterPanel({
           <div className="pb-1.5" onMouseEnter={() => setOpenCat(null)}>
             <div className="flex items-center gap-1.5 px-3 py-1.5 text-2xs font-semibold text-accent uppercase tracking-wider">
               <SparkleIcon />
-              <span>Quick Filters</span>
+              <span>{t("filter.quick.title")}</span>
             </div>
             {filteredQuickFilters.map((qf) => (
               <button
@@ -226,8 +233,8 @@ export function FilterPanel({
                 className="w-full flex items-center justify-between px-3 pl-8 py-1.5 hover:bg-hover-bg transition-colors cursor-default"
                 onClick={() => onQuickFilter?.(qf.rules)}
               >
-                <span className="text-note text-foreground leading-none">{qf.label}</span>
-                <span className="text-2xs text-muted-foreground leading-none">{qf.desc}</span>
+                <span className="text-note text-foreground leading-none">{qf.labelKey ? t(qf.labelKey) : qf.label}</span>
+                <span className="text-2xs text-muted-foreground leading-none">{qf.descKey ? t(qf.descKey) : qf.desc}</span>
               </button>
             ))}
           </div>
@@ -257,7 +264,7 @@ export function FilterPanel({
                   activeCount > 0 || isOpen ? "text-foreground font-medium" : "text-muted-foreground",
                 ].join(" ")}
               >
-                {cat.label}
+                {cat.labelKey ? t(cat.labelKey) : cat.label}
               </span>
               {activeCount > 0 && (
                 <span className="rounded-full bg-accent/20 px-1.5 text-2xs text-accent font-medium tabular-nums">

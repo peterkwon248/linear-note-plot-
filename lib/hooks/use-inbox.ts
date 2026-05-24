@@ -2,7 +2,7 @@
 import { useMemo } from "react"
 import { usePlotStore } from "@/lib/store"
 import type { InboxItemKind } from "@/lib/store/slices/inbox"
-import { getSnoozeHooks, getSRSHooks } from "@/lib/store/hook-selectors"
+import { getSnoozeHooks, getSRSHooks, getPlanHooks } from "@/lib/store/hook-selectors"
 import type { SRSState } from "@/lib/srs"
 
 /**
@@ -12,12 +12,24 @@ import type { SRSState } from "@/lib/srs"
  * (`kind`)와 그 원본 entity (`sourceId`)를 추적한다. Entity 분류가 아닌
  * action source 기준으로 묶인다 ("정리 안 된 dashboard"가 아님).
  *
- * Sources: reminder / srs / snooze-expired / wiki-redlink / auto-enroll.
+ * Sources: reminder / srs / snooze-expired / wiki-redlink / auto-enroll / plan-due.
+ *
+ * Phase 1c (unified-temporal-hooks-prd §6): each item also carries an
+ * intent `section` that maps to the Inbox UI's three columns:
+ *  - `do`       — 할 일 (snooze due / plan due / triage / snooze-expired)
+ *  - `review`   — 되새김 (SRS — empties is not the goal)
+ *  - `detected` — 시스템이 찾은 것 (wiki-redlink / auto-enroll / staleness)
+ *
+ * Empty `do` + non-empty `review`/`detected` = "Inbox-zero" semantics (Q6).
  */
+export type InboxSection = "do" | "review" | "detected"
+
 export interface InboxItem {
   /** Action source — *왜* 이게 inbox에 있는가 */
   kind: InboxItemKind
-  /** 원본 entity ID (note id / suggestion id 등) */
+  /** Intent section the item lives in (PRD §6 mapping). */
+  section: InboxSection
+  /** 원본 entity ID (note id / wiki id / suggestion id 등) */
   sourceId: string
   /** Display label (note title / "5 cards due" / etc.) */
   title: string
@@ -27,6 +39,28 @@ export interface InboxItem {
   action?: string
   /** Optional secondary meta (folder, tag, source detail) */
   meta?: string
+}
+
+/** Convenience grouping returned by `useInboxBySection`. */
+export interface InboxSections {
+  do: InboxItem[]
+  review: InboxItem[]
+  detected: InboxItem[]
+}
+
+/** Map an InboxItemKind to its intent section (PRD §6 mapping). */
+function sectionFor(kind: InboxItemKind): InboxSection {
+  switch (kind) {
+    case "reminder":
+    case "plan-due":
+    case "snooze-expired":
+      return "do"
+    case "srs":
+      return "review"
+    case "wiki-redlink":
+    case "auto-enroll":
+      return "detected"
+  }
 }
 
 export function useInbox(): InboxItem[] {
@@ -59,8 +93,12 @@ export function useInbox(): InboxItem[] {
 
     // noteId → note 빠른 조회용 (snooze-expired title 해소에 사용)
     const noteById = new Map(notes.map((n) => [n.id, n]))
+    const wikiById = new Map(wikiArticles.map((a) => [a.id, a]))
 
     const items: InboxItem[] = []
+    const push = (item: Omit<InboxItem, "section">) => {
+      items.push({ ...item, section: sectionFor(item.kind) })
+    }
 
     // Source: reminder — snooze hook scheduled <= todayEnd (today + overdue).
     // Phase 1b2: reads from unified `hooks` slice instead of Note.reviewAt.
@@ -79,7 +117,7 @@ export function useInbox(): InboxItem[] {
         dueMs <= now ? "Due now" :
         "Due today"
 
-      items.push({
+      push({
         kind: "reminder",
         sourceId: note.id,
         title: note.title || "Untitled",
@@ -106,11 +144,38 @@ export function useInbox(): InboxItem[] {
       const overdueDays = Math.floor((now - dueMs) / 86_400_000)
       const action = overdueDays >= 1 ? `Review overdue ${overdueDays}d` : "Review now"
 
-      items.push({
+      push({
         kind: "srs",
         sourceId: h.target.id,
         title: note.title || "Untitled",
         ts: srs.dueAt,
+        action,
+      })
+    }
+
+    // Source: plan-due — wiki article plan hook scheduled <= todayEnd.
+    // Phase 1c: planned dates that hit "today or overdue" land in Do. Future
+    // plans stay on the timeline only (pull surface, see PRD §6.2).
+    for (const h of getPlanHooks(hooks)) {
+      if (h.target.kind !== "wiki") continue
+      if (h.trigger.kind !== "scheduled") continue
+      const article = wikiById.get(h.target.id)
+      if (!article || article.trashed) continue
+      const dueMs = new Date(h.trigger.at).getTime()
+      if (dueMs > todayEndMs) continue
+      if (!isVisible("plan-due", article.id)) continue
+
+      const overdueDays = Math.floor((now - dueMs) / 86_400_000)
+      const action =
+        overdueDays >= 1 ? `Overdue ${overdueDays}d` :
+        dueMs <= now ? "Plan due now" :
+        "Plan due today"
+
+      push({
+        kind: "plan-due",
+        sourceId: article.id,
+        title: article.title || "Untitled",
+        ts: h.trigger.at,
         action,
       })
     }
@@ -125,7 +190,7 @@ export function useInbox(): InboxItem[] {
       const note = noteById.get(snoozed.sourceId)
       const title = note ? (note.title || "Untitled") : snoozed.sourceId
 
-      items.push({
+      push({
         kind: "snooze-expired",
         sourceId: snoozed.sourceId,
         title,
@@ -164,7 +229,7 @@ export function useInbox(): InboxItem[] {
         if (n && n.updatedAt > maxTs) maxTs = n.updatedAt
       }
 
-      items.push({
+      push({
         kind: "wiki-redlink",
         sourceId: normalized,
         title: redLinkOriginal.get(normalized) ?? normalized,
@@ -182,7 +247,7 @@ export function useInbox(): InboxItem[] {
       const firstTitle = suggestion.conceptTitles[0] ?? "Unnamed cluster"
       const extraCount = suggestion.conceptTitles.length - 1
 
-      items.push({
+      push({
         kind: "auto-enroll",
         sourceId: suggestion.id,
         title: extraCount > 0 ? `${firstTitle} +${extraCount}` : firstTitle,
@@ -197,4 +262,18 @@ export function useInbox(): InboxItem[] {
 
     return items
   }, [notes, dismissedInboxItems, snoozedInboxItems, hooks, wikiArticles, clusterSuggestions])
+}
+
+/**
+ * Group the flat InboxItem list by intent section (PRD §6). Empty sections
+ * still surface in the UI — Q6 RESOLVED: Review/Detected are "영원" and the
+ * three cards always render, even when empty.
+ */
+export function useInboxBySection(): InboxSections {
+  const items = useInbox()
+  return useMemo(() => {
+    const out: InboxSections = { do: [], review: [], detected: [] }
+    for (const item of items) out[item.section].push(item)
+    return out
+  }, [items])
 }

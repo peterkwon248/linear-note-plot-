@@ -20,6 +20,7 @@ export type InboxItemKind =
   | "snooze-expired"  // 사용자 snooze가 만료된 항목 (self-referential)
   | "wiki-redlink"    // [[새 wiki]] 작성됐는데 article 미생성
   | "auto-enroll"     // clusterSuggestion (자동 등재 제안)
+  | "plan-due"        // wiki article plan hook (scheduled) due — Phase 1c
 
 export interface InboxDismissed {
   kind: InboxItemKind

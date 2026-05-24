@@ -8,6 +8,10 @@ import { WIKI_STATUS_HEX } from "@/lib/colors"
 export interface FilterCategory {
   key: string
   label: string
+  /** Optional i18n key — when set, FilterPanel renders `t(labelKey)` instead
+   *  of `label`. Keeps view-configs.tsx as a static export while still
+   *  letting the active locale translate the visible chrome. */
+  labelKey?: string
   icon: ReactNode
   values: FilterValue[]
 }
@@ -15,6 +19,7 @@ export interface FilterCategory {
 export interface FilterValue {
   key: string
   label: string
+  labelKey?: string
   color?: string
   count?: number
   icon?: ReactNode
@@ -30,7 +35,9 @@ export interface FilterValue {
 
 export interface QuickFilter {
   label: string
+  labelKey?: string
   desc: string
+  descKey?: string
   rules: Array<{ field: string; operator: string; value: string }>
 }
 
@@ -38,6 +45,7 @@ export interface QuickFilter {
 export interface DisplayToggle {
   key: string
   label: string
+  labelKey?: string
   icon?: ReactNode
 }
 
@@ -57,6 +65,7 @@ export type ModeList = ViewMode[] | "all"
 export interface GroupingOption {
   value: GroupBy
   label: string
+  labelKey?: string
   modes?: ModeList
 }
 
@@ -64,6 +73,7 @@ export interface GroupingOption {
 export interface OrderingOption {
   value: SortField
   label: string
+  labelKey?: string
   modes?: ModeList
 }
 
@@ -73,6 +83,7 @@ export interface OrderingOption {
 export interface DisplayProperty {
   key: string
   label: string
+  labelKey?: string
   icon?: ReactNode
   /** @deprecated Use `modes: ["board"]` instead. Kept for back-compat
    *  during the modes migration; DisplayPanel treats it as a synonym. */
@@ -170,20 +181,20 @@ export const NOTES_VIEW_CONFIG: ViewConfig = {
   showDisplay: true,
   showDetailPanel: true,
   filterCategories: [
-    { key: "status", label: "Status", icon: StatusIcon, values: [
-      { key: "stone", label: "Stone", color: "rgba(255,255,255,0.32)", icon: <Hexagon size={14} weight="regular" style={{ color: "var(--chart-2)" }} /> },
-      { key: "brick", label: "Brick", color: "#f5a623", icon: <Cube size={14} weight="regular" style={{ color: "var(--chart-3)" }} /> },
-      { key: "keystone", label: "Block", icon: <Cuboid2x2 size={14} weight="regular" style={{ color: "var(--status-keystone)" }} /> },
+    { key: "status", label: "Status", labelKey: "filter.category.status", icon: StatusIcon, values: [
+      { key: "stone", label: "Stone", labelKey: "status.stone", color: "rgba(255,255,255,0.32)", icon: <Hexagon size={14} weight="regular" style={{ color: "var(--chart-2)" }} /> },
+      { key: "brick", label: "Brick", labelKey: "status.brick", color: "#f5a623", icon: <Cube size={14} weight="regular" style={{ color: "var(--chart-3)" }} /> },
+      { key: "keystone", label: "Block", labelKey: "status.block", icon: <Cuboid2x2 size={14} weight="regular" style={{ color: "var(--status-keystone)" }} /> },
     ]},
-    { key: "folder", label: "Folder", icon: FolderIcon, values: [] },
-    { key: "label", label: "Label", icon: LabelIcon, values: [] },
-    { key: "tags", label: "Tags", icon: TagIcon, values: [] },
-    { key: "source", label: "Source", icon: SourceIcon, values: [
+    { key: "folder", label: "Folder", labelKey: "filter.category.folder", icon: FolderIcon, values: [] },
+    { key: "label", label: "Label", labelKey: "filter.category.label", icon: LabelIcon, values: [] },
+    { key: "tags", label: "Tags", labelKey: "filter.category.tags", icon: TagIcon, values: [] },
+    { key: "source", label: "Source", labelKey: "filter.category.source", icon: SourceIcon, values: [
       { key: "manual", label: "Manual", icon: <PencilSimple size={14} weight="regular" className="text-muted-foreground" /> },
       { key: "webclip", label: "Web Clip", icon: <Globe size={14} weight="regular" className="text-muted-foreground" /> },
       { key: "import", label: "Import", icon: <DownloadSimple size={14} weight="regular" className="text-muted-foreground" /> },
     ]},
-    { key: "updatedAt", label: "Dates", icon: CalendarIcon, values: [
+    { key: "updatedAt", label: "Dates", labelKey: "filter.category.dates", icon: CalendarIcon, values: [
       { key: "today", label: "Today" },
       { key: "yesterday", label: "Yesterday" },
       { key: "this-week", label: "This week" },
@@ -192,41 +203,41 @@ export const NOTES_VIEW_CONFIG: ViewConfig = {
       { key: "last-30-days", label: "Last 30 days" },
       { key: "stale", label: "Stale (30+ days)" },
     ]},
-    { key: "links", label: "Links", icon: LinkIcon, values: [
+    { key: "links", label: "Links", labelKey: "filter.category.links", icon: LinkIcon, values: [
       { key: "_any", label: "Has links" },
       { key: "backlinks", label: "Has backlinks" },
       { key: "_none", label: "No outbound" },
       { key: "_orphan", label: "True orphans (no in/out)" },
     ]},
-    { key: "wikiRegistered", label: "Wiki", icon: WikiIcon, values: [
+    { key: "wikiRegistered", label: "Wiki", labelKey: "filter.category.wiki", icon: WikiIcon, values: [
       { key: "true", label: "In wiki" },
       { key: "false", label: "Not in wiki" },
     ]},
-    { key: "content", label: "Content", icon: ContentIcon, values: [
+    { key: "content", label: "Content", labelKey: "filter.category.content", icon: ContentIcon, values: [
       { key: "hasImage", label: "Has images" },
       { key: "hasCode", label: "Has code blocks" },
       { key: "hasTable", label: "Has tables" },
     ]},
-    { key: "pinned", label: "Pinned", icon: PinIcon, values: [
+    { key: "pinned", label: "Pinned", labelKey: "filter.category.pinned", icon: PinIcon, values: [
       { key: "true", label: "Pinned" },
       { key: "false", label: "Not pinned" },
     ]},
   ],
   quickFilters: [
-    { label: "Needs attention", desc: "stale + unlinked", rules: [
+    { label: "Needs attention", labelKey: "filter.quick.needs_attention", desc: "stale + unlinked", descKey: "filter.quick.needs_attention_desc", rules: [
       { field: "updatedAt", operator: "lt", value: "stale" },
       { field: "links", operator: "eq", value: "_none" },
     ]},
-    { label: "Active work", desc: "updated < 7d", rules: [
+    { label: "Active work", labelKey: "filter.quick.active_work", desc: "updated < 7d", descKey: "filter.quick.active_work_desc", rules: [
       { field: "updatedAt", operator: "eq", value: "this-week" },
     ]},
-    { label: "Unlinked", desc: "no outbound links", rules: [
+    { label: "Unlinked", labelKey: "filter.quick.unlinked", desc: "no outbound links", descKey: "filter.quick.unlinked_desc", rules: [
       { field: "links", operator: "eq", value: "_none" },
     ]},
-    { label: "True orphans", desc: "no in/out links", rules: [
+    { label: "True orphans", labelKey: "filter.quick.true_orphans", desc: "no in/out links", descKey: "filter.quick.true_orphans_desc", rules: [
       { field: "links", operator: "eq", value: "_orphan" },
     ]},
-    { label: "Wiki-registered", desc: "promoted to wiki", rules: [
+    { label: "Wiki-registered", labelKey: "filter.quick.wiki_registered", desc: "promoted to wiki", descKey: "filter.quick.wiki_registered_desc", rules: [
       { field: "wikiRegistered", operator: "eq", value: "true" },
     ]},
   ],
@@ -238,11 +249,11 @@ export const NOTES_VIEW_CONFIG: ViewConfig = {
     supportedModes: ["list", "board", "grid", "timeline"],
     supportsSubGrouping: true,
     orderingOptions: [
-      { value: "updatedAt", label: "Updated" },
-      { value: "createdAt", label: "Created" },
-      { value: "title", label: "Name" },
-      { value: "links", label: "Links" },
-      { value: "reads", label: "Word count" },
+      { value: "updatedAt", label: "Updated", labelKey: "display.ordering.updated" },
+      { value: "createdAt", label: "Created", labelKey: "display.ordering.created" },
+      { value: "title", label: "Name", labelKey: "display.ordering.title" },
+      { value: "links", label: "Links", labelKey: "filter.category.links" },
+      { value: "reads", label: "Word count", labelKey: "display.property.words" },
     ],
     // L4: per-mode default groupBy. Timeline default = "status" mirrors
     // the Wiki timeline default ("wikiStatus") — Stone/Brick/Block lanes
@@ -255,21 +266,21 @@ export const NOTES_VIEW_CONFIG: ViewConfig = {
     // Timeline Y-axis encodes time → sort by createdAt asc is canonical.
     defaultSortByMode: { timeline: { field: "createdAt", direction: "asc" } },
     groupingOptions: [
-      { value: "none", label: "No grouping" },
+      { value: "none", label: "No grouping", labelKey: "display.grouping.none" },
       // 2026-05-24 — explicit modes for every grouping (Linear-style L1 "UI
       // 노출 = 100% 동작"). Grid is a flat card grid → no grouping options
       // outside "none". List/board keep the full axis set.
-      { value: "status", label: "Status", modes: ["list", "board"] },
-      { value: "folder", label: "Folder", modes: ["list", "board"] },
-      { value: "label", label: "Label", modes: ["list", "board"] },
-      { value: "parent", label: "Parent", modes: ["list", "board"] },
+      { value: "status", label: "Status", labelKey: "display.property.status", modes: ["list", "board"] },
+      { value: "folder", label: "Folder", labelKey: "display.property.folder", modes: ["list", "board"] },
+      { value: "label", label: "Label", labelKey: "filter.category.label", modes: ["list", "board"] },
+      { value: "parent", label: "Parent", labelKey: "display.property.parent", modes: ["list", "board"] },
       { value: "role", label: "Role", modes: ["list", "board"] },
       // family tree only makes sense in list (indent column). Board would
       // need allowFamilyOnBoard override (categories case).
       { value: "family", label: "Family", modes: ["list"] },
       // updatedAt time-bucket grouping. Timeline X-axis already encodes
       // time, so date grouping would duplicate the axis — hide in timeline.
-      { value: "date", label: "Updated", modes: ["list", "board"] },
+      { value: "date", label: "Updated", labelKey: "display.ordering.updated", modes: ["list", "board"] },
       // Plot-consistent UX: alphabetical "Index" grouping moved from a
       // properties-chip toggle (legacy showAlphaIndex) into the grouping
       // dropdown alongside other grouping axes. Wired in lib/view-engine/group.ts.
@@ -278,7 +289,7 @@ export const NOTES_VIEW_CONFIG: ViewConfig = {
       { value: "firstLetter", label: "Index", modes: ["list"] },
     ],
     toggles: [
-      { key: "showTrashed", label: "Show trashed", icon: TrashIcon },
+      { key: "showTrashed", label: "Show trashed", labelKey: "display.show_trashed", icon: TrashIcon },
       // Visible only when groupBy === "role" (display-panel.tsx guard).
       // ON: classify roles within the filtered slice. OFF (default):
       // classify against the full store so a filter doesn't lie about
@@ -286,22 +297,22 @@ export const NOTES_VIEW_CONFIG: ViewConfig = {
       { key: "filterAwareRole", label: "Role from filtered view" },
     ],
     properties: [
-      { key: "status", label: "Status", icon: StatusIcon },
+      { key: "status", label: "Status", labelKey: "display.property.status", icon: StatusIcon },
       // priority/label/tags surface only on the Board card (no equivalent
       // list column). modes: ["board"] hides them in non-board view modes —
       // prevents "chip toggles nothing" bug in list/gallery.
       { key: "priority", label: "Priority", icon: PriorityIcon, modes: ["board"] },
-      { key: "label", label: "Label", icon: LabelIcon, modes: ["board"] },
-      { key: "tags", label: "Tags", icon: TagIcon, modes: ["board"] },
-      { key: "folder", label: "Folder", icon: FolderIcon },
-      { key: "parent", label: "Parent", icon: ParentIcon },
-      { key: "children", label: "Children", icon: ChildrenIcon },
-      { key: "links", label: "Backlinks", icon: LinkIcon },
-      { key: "wordCount", label: "Words", icon: ContentIcon },
+      { key: "label", label: "Label", labelKey: "filter.category.label", icon: LabelIcon, modes: ["board"] },
+      { key: "tags", label: "Tags", labelKey: "filter.category.tags", icon: TagIcon, modes: ["board"] },
+      { key: "folder", label: "Folder", labelKey: "display.property.folder", icon: FolderIcon },
+      { key: "parent", label: "Parent", labelKey: "display.property.parent", icon: ParentIcon },
+      { key: "children", label: "Children", labelKey: "display.property.children", icon: ChildrenIcon },
+      { key: "links", label: "Backlinks", labelKey: "display.property.backlinks", icon: LinkIcon },
+      { key: "wordCount", label: "Words", labelKey: "display.property.words", icon: ContentIcon },
       // createdAt/updatedAt are also meaningful for the timeline label
       // column (date row). Most other properties don't fit the narrow column.
-      { key: "updatedAt", label: "Updated", icon: CalendarIcon, modes: ["list", "board", "timeline"] },
-      { key: "createdAt", label: "Created", icon: CalendarIcon, modes: ["list", "board", "timeline"] },
+      { key: "updatedAt", label: "Updated", labelKey: "display.property.updated", icon: CalendarIcon, modes: ["list", "board", "timeline"] },
+      { key: "createdAt", label: "Created", labelKey: "display.property.created", icon: CalendarIcon, modes: ["list", "board", "timeline"] },
     ],
   },
 }
