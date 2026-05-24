@@ -72,9 +72,11 @@ function InspectorSection({
 import { extractOutlineFromContentJson, type OutlineResult } from "@/lib/anchor-utils"
 import { InBooksSection } from "@/components/books/in-books-section"
 import { useT } from "@/lib/i18n"
+import { useDateFormat } from "@/lib/i18n-date"
 
 export function SidePanelContext({ noteId: propNoteId }: { noteId?: string | null }) {
   const t = useT()
+  const df = useDateFormat()
   const selectedNoteId = usePlotStore((s) => s.selectedNoteId)
   const previewNoteId = usePlotStore((s) => s.previewNoteId)
   const noteId = propNoteId ?? selectedNoteId ?? previewNoteId
@@ -291,13 +293,13 @@ export function SidePanelContext({ noteId: propNoteId }: { noteId?: string | nul
           <div className="flex items-center justify-between">
             <span className="text-note text-muted-foreground">Created</span>
             <span className="text-note text-foreground">
-              {format(new Date(note.createdAt), "MMM d, yyyy")}
+              {df.longDate(new Date(note.createdAt))}
             </span>
           </div>
           <div className="flex items-center justify-between">
             <span className="text-note text-muted-foreground">Updated</span>
             <span className="text-note text-foreground">
-              {formatDistanceToNow(new Date(note.updatedAt), { addSuffix: true })}
+              {formatDistanceToNow(new Date(note.updatedAt), { addSuffix: true, locale: df.locale })}
             </span>
           </div>
         </div>

@@ -32,6 +32,7 @@ import { FilterPanel } from "@/components/filter-panel"
 import { DisplayPanel } from "@/components/display-panel"
 import { CALENDAR_VIEW_CONFIG } from "@/lib/view-engine/view-configs"
 import { useT } from "@/lib/i18n"
+import { useDateFormat } from "@/lib/i18n-date"
 import type { FilterRule, ViewContextKey } from "@/lib/view-engine/types"
 import type { Note } from "@/lib/types"
 
@@ -652,6 +653,7 @@ export function CalendarView({
   activePreviewId,
 }: CalendarViewProps) {
   const t = useT()
+  const df = useDateFormat()
   const dayLabels = useMemo(
     () => [
       t("calendar.day.mon"),
@@ -867,12 +869,13 @@ export function CalendarView({
       const ws = startOfWeek(currentDate, { weekStartsOn: 1 })
       const we = endOfWeek(currentDate, { weekStartsOn: 1 })
       if (isSameMonth(ws, we)) {
-        return format(ws, "MMMM yyyy")
+        return `${df.monthDay(ws)} – ${format(we, "d")}, ${format(we, "yyyy")}`
       }
-      return `${format(ws, "MMM d")} – ${format(we, "MMM d, yyyy")}`
+      return `${df.monthDay(ws)} – ${df.longDate(we)}`
     }
-    return format(currentDate, "MMMM yyyy")
-  }, [currentDate, calendarMode])
+    return df.monthYear(currentDate)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentDate, calendarMode, df.monthYear, df.monthDay, df.longDate])
 
   /* ── Render ──────────────────────────────────────── */
 
