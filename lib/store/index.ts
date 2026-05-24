@@ -23,6 +23,7 @@ import { createRelationsSlice } from "./slices/relations"
 import { createEditorSlice } from "./slices/editor"
 import { createWorkspaceSlice } from "./slices/workspace"
 import { createAttachmentsSlice } from "./slices/attachments"
+import { createHooksSlice } from "./slices/hooks"
 import { createOntologySlice } from "./slices/ontology"
 import { createWikiCollectionsSlice } from "./slices/wiki-collections"
 import { createSavedViewsSlice } from "./slices/saved-views"
@@ -81,6 +82,8 @@ export const usePlotStore = create<PlotState>()(
         commandPaletteMode: "commands" as const,
         relations: [] as Relation[],
         attachments: [] as Attachment[],
+        // temporal-hooks-prd v0.2 Phase 1 — unified Hook store.
+        hooks: [] as import("../types").Hook[],
         coOccurrences: [] as CoOccurrence[],
         relationSuggestions: [] as RelationSuggestion[],
         clusterSuggestions: [] as import("../types").WikiClusterSuggestion[],
@@ -131,6 +134,7 @@ export const usePlotStore = create<PlotState>()(
         ...createEditorSlice(set, get),
         ...createWorkspaceSlice(set, get),
         ...createAttachmentsSlice(set, get, appendEvent),
+        ...createHooksSlice(set, get, appendEvent),
         ...createOntologySlice(set, get, appendEvent),
         ...createWikiCollectionsSlice(set, get),
         ...createSavedViewsSlice(set),
@@ -261,7 +265,7 @@ export const usePlotStore = create<PlotState>()(
     },
     {
       name: "plot-store",
-      version: 145,
+      version: 146,
       storage: createIDBStorage<PlotState>(),
       partialize: (state) => {
         // eslint-disable-next-line @typescript-eslint/no-unused-vars

@@ -2299,5 +2299,72 @@ export function migrate(persistedState: unknown): PlotState {
     }
   }
 
+  // v145 → v146: unified-temporal-hooks-prd v0.2 Phase 1.
+  // Absorbs three legacy fragments into a single `hooks` array:
+  //   - Note.reviewAt + triageStatus="snoozed" → snooze hook (passive)
+  //   - srsStateByNoteId[noteId] → srs hook (active, srs trigger)
+  //   - WikiArticle.plannedDate → plan hook (passive)
+  // Phase 1 keeps legacy fields in place (1-step migration moves the
+  // *data*; Phase 1b removes legacy reads). Idempotent: skips if `hooks`
+  // already populated (i.e. migration ran in a prior session).
+  if (!Array.isArray(state.hooks) || (state.hooks as unknown[]).length === 0) {
+    const hooks: Array<Record<string, unknown>> = []
+    const mkId = () => (typeof crypto !== "undefined" && crypto.randomUUID
+      ? crypto.randomUUID()
+      : `hook-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`)
+    const nowIso = new Date().toISOString()
+    // 1) Note reminders/snoozes
+    if (Array.isArray(state.notes)) {
+      for (const n of state.notes as Array<Record<string, unknown>>) {
+        const at = n.reviewAt as string | undefined | null
+        if (typeof at !== "string" || !at) continue
+        const isSnoozed = n.triageStatus === "snoozed"
+        hooks.push({
+          id: mkId(),
+          target: { kind: "note", id: n.id },
+          policy: "snooze",
+          trigger: { kind: "scheduled", at },
+          action: { loudness: isSnoozed ? "passive" : "active" },
+          createdAt: nowIso,
+        })
+      }
+    }
+    // 2) SRS enrollments
+    if (state.srsStateByNoteId && typeof state.srsStateByNoteId === "object") {
+      const srsMap = state.srsStateByNoteId as Record<string, Record<string, unknown>>
+      for (const [noteId, srsState] of Object.entries(srsMap)) {
+        if (!srsState || typeof srsState !== "object") continue
+        hooks.push({
+          id: mkId(),
+          target: { kind: "note", id: noteId },
+          policy: "srs",
+          trigger: { kind: "srs", srsState },
+          action: { loudness: "active" },
+          state: { srsState },
+          createdAt: nowIso,
+        })
+      }
+    }
+    // 3) Wiki article plannedDate
+    if (Array.isArray(state.wikiArticles)) {
+      for (const a of state.wikiArticles as Array<Record<string, unknown>>) {
+        const plannedDate = a.plannedDate as string | undefined | null
+        if (typeof plannedDate !== "string" || !plannedDate) continue
+        hooks.push({
+          id: mkId(),
+          target: { kind: "wiki", id: a.id },
+          policy: "plan",
+          trigger: { kind: "scheduled", at: plannedDate },
+          action: { loudness: "passive" },
+          createdAt: nowIso,
+        })
+      }
+    }
+    state.hooks = hooks
+    if (hooks.length > 0) {
+      console.log(`[migrate] v145→v146: ${hooks.length} hook(s) generated (snooze+srs+plan unified)`)
+    }
+  }
+
   return state as unknown as PlotState
 }

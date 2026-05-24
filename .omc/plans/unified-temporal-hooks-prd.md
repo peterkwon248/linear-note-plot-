@@ -1,4 +1,4 @@
-# Unified Temporal Hooks — PRD v0.1
+# Unified Temporal Hooks — PRD v0.2
 
 > **Scope**: Plot에 흩어진 "미래 시점 알림" 메커니즘(snooze / SRS / plannedDate / staleness / inbox sources)을
 > 단일 `Hook` 모델로 통합. 모든 엔티티(Note / Wiki / Book)가 동일한 시간 관계를 가질 수 있게 한다.
@@ -6,8 +6,8 @@
 > **Trigger**: "타임라인을 Books/Notes에도 적용할 수 있나?"라는 질문(2026-05-22 세션)에서 출발 →
 > snooze/SRS/plannedDate가 *같은 필요의 파편*임을 발견 → 통합 브레인스토밍.
 >
-> **Status**: DRAFT v0.1 — 브레인스토밍 합의 결과를 문서화한 것. **구현 승인 전.** §11 Open Questions 미해결.
-> ("Plan files ≠ user decisions" — 이 문서는 합의된 *모델*이고, 구현 착수는 별도 승인 필요.)
+> **Status**: **v0.2 — Phase 1 구현 승인 (2026-05-24 심야)**. Q3/Q4/Q6 결정 반영 (§11). Phase 2/3은
+> Phase 1 완료 후 사용자 신호 보고 진입 (Q1/Q2/Q5는 그때 결정).
 >
 > **선행 PRD (이 문서가 그 위에 쌓는다)**:
 > - `inbox-layer.md` (APPROVED, 구현됨) — Inbox = action notification queue. 5 source kind.
@@ -326,12 +326,23 @@ Timeline 컴포넌트 일반화(§12)는 Phase 1과 병행 가능 (PRD 독립).
 
 ## §11. Open Questions
 
-1. **`EventPattern` 문법** — 반응형 trigger 조건을 어떻게 표현? (이벤트 타입 + 범위 + 필터의 shape)
-2. **`WorkItemRef` 정의** — Layer B target. `CommentAnchor` 재사용? 본문 체크박스는 어떻게 참조?
-3. **마이그레이션 전략** — 1-step vs 2-step (deprecated 필드 유예). `inbox-layer.md`/`activity-unification` 선례는 1-step.
-4. **전이 규칙 범위** — 단계 승격 시 hook 자동 전이를 어디까지? (promote→SRS는 기존. stone→brick→plan 자동?)
-5. **`recurring` 범위** — 고정 반복을 atom에도? 아니면 Book/시스템(다이제스트)만?
-6. **Inbox 비우기 의미** — Do는 비우고 Review는 안 비워질 때, "Inbox zero" 카피/UX 어떻게?
+### Phase 1에서 결정 (v0.2, 2026-05-24 심야 사용자 승인)
+
+3. **마이그레이션 전략** — **RESOLVED: 1-step**. `inbox-layer.md`/`activity-unification` 선례 정합. store v145 → v146 일괄 변환. idempotent + rollback-safe. 데이터 손실 0. 코드베이스 cleanliness 우선 (deprecated 유예 = 영원한 잔존 위험).
+
+4. **전이 규칙 범위** — **RESOLVED: 기존 `promote → enrollSRS` 패턴만 일반화**. Plot이 이미 구현한 유일한 전이 케이스. 더 큰 범위 (stone→brick 진입 시 plan hook 자동 장착 등) = Phase 2/3 사용자 신호 보고 결정. 자동 hook 장착은 사용자 직관과 충돌 위험 — 보수적 default.
+
+6. **Inbox 비우기 의미** — **RESOLVED: "Do 비우기 = Inbox-zero"**. Review(SRS) + Detected(반응형)은 영원히 안 비워져도 OK라 명시적 라벨로 본질 분리:
+   - **Do** = 할 일 (✅ 비워짐)
+   - **Review** = 되새김 (♻️ 무한 반복이 정상)
+   - **Detected** = 시스템 감지 (📡 항상 흐름)
+   - 카피 예: "All caught up — Review / Detected are always running."
+
+### Phase 2/3 진입 시 결정 (DEFERRED)
+
+1. **`EventPattern` 문법** — 반응형 trigger 조건을 어떻게 표현? (이벤트 타입 + 범위 + 필터의 shape). **DEFERRED to Phase 2** — watch/recurring 도입 시 실제 사용 패턴 보고 결정.
+2. **`WorkItemRef` 정의** — Layer B target. `CommentAnchor` 재사용? 본문 체크박스는 어떻게 참조? **DEFERRED to Phase 3** — Layer B 풀 통합 시점.
+5. **`recurring` 범위** — 고정 반복을 atom에도? 아니면 Book/시스템(다이제스트)만? **DEFERRED to Phase 2** — Phase 1 작동 후 사용자 의도 신호 보고 결정.
 
 ---
 

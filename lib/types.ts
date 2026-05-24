@@ -697,6 +697,39 @@ export type EntityKind =
   | "book"
   | "sticker"
 
+/* ── Temporal Hooks (unified-temporal-hooks-prd.md v0.2) ─────────
+ * Single Hook model unifying Note.reviewAt + triageStatus +
+ * srsStateByNoteId + WikiArticle.plannedDate + staleness. Phase 1 scope —
+ * see PRD §11 for deferred policies (recurring, watch) and Layer B.
+ */
+
+export type HookPolicy = "snooze" | "plan" | "srs" | "staleness"
+
+export interface HookActionConfig {
+  /** Surface loudness — silent (timeline only) / passive (Inbox Detected)
+   *  / active (Inbox Do/Review + alert). PRD §8. */
+  loudness: "silent" | "passive" | "active"
+}
+
+/** Phase 1 trigger union. Phase 2 adds `recurring` + `event-match` (PRD §11). */
+export type HookTrigger =
+  | { kind: "scheduled"; at: string }
+  | { kind: "srs"; srsState: import("./srs/types").SRSState }
+  | { kind: "staleness"; thresholdDays: number }
+
+export interface Hook {
+  id: string
+  /** Phase 1: EntityRef only. Phase 3 adds WorkItemRef (Layer B). */
+  target: EntityRef
+  policy: HookPolicy
+  trigger: HookTrigger
+  action: HookActionConfig
+  /** Policy-specific state. SRS uses this for the SRSState (mirror of
+   *  `trigger.srsState` for query convenience). Others may add fields. */
+  state?: Record<string, unknown>
+  createdAt: string
+}
+
 /**
  * EntityRef — typed pointer to any first-class entity in the store.
  *
