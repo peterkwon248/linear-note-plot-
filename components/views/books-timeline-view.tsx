@@ -96,6 +96,8 @@ export interface BooksTimelineViewProps {
   activeBookId: string | null
   onOpenBook: (id: string) => void
   onSelect: (id: string, opts: { multi?: boolean; shift?: boolean; index?: number }) => void
+  /** PR-Q4 parity (wiki/notes): caller writes collapse state back. */
+  onUpdateViewState?: (patch: Partial<ViewState>) => void
 }
 
 /* ── Component ──────────────────────────────────────────────── */
@@ -108,7 +110,25 @@ export function BooksTimelineView({
   activeBookId,
   onOpenBook,
   onSelect,
+  onUpdateViewState,
 }: BooksTimelineViewProps) {
+  // PR-Q4 (wiki parity): store-backed group collapse + "Expand all" affordance.
+  const collapsedGroupsArr = viewState.collapsedGroups ?? []
+  const collapsedGroupsSet = useMemo(() => new Set(collapsedGroupsArr), [collapsedGroupsArr])
+  const toggleGroupCollapse = useCallback(
+    (groupKey: string) => {
+      if (!onUpdateViewState) return
+      const next = new Set(collapsedGroupsArr)
+      if (next.has(groupKey)) next.delete(groupKey)
+      else next.add(groupKey)
+      onUpdateViewState({ collapsedGroups: Array.from(next) })
+    },
+    [collapsedGroupsArr, onUpdateViewState],
+  )
+  const expandAllGroups = useCallback(() => {
+    if (!onUpdateViewState || collapsedGroupsArr.length === 0) return
+    onUpdateViewState({ collapsedGroups: [] })
+  }, [collapsedGroupsArr.length, onUpdateViewState])
   const now = useMemo(() => new Date(), [])
 
   const [zoom, setZoom] = useState<TimelineMode>("all")
@@ -181,14 +201,24 @@ export function BooksTimelineView({
 
   const canvasWidth = cfg.pxPerDay * cfg.totalDays
 
-  const lanes = useMemo(
+  const allLanes = useMemo(
     () => laneArticles(validBooks, winStart, cfg.pxPerDay, cfg.minBarWidth, bookHorizon),
     [validBooks, winStart, cfg.pxPerDay, cfg.minBarWidth],
   )
 
+  // PR-Q4: collapsed group filter (cascading reflow).
+  const lanes = useMemo(() => {
+    if (collapsedGroupsSet.size === 0 || !groupingActive) return allLanes
+    return allLanes.filter(({ article }) => {
+      const meta = bookGroupMeta.get(article.id)
+      const key = meta?.key ?? "_ungrouped"
+      return !collapsedGroupsSet.has(key)
+    })
+  }, [allLanes, collapsedGroupsSet, groupingActive, bookGroupMeta])
+
   const groupBoundaries = useMemo(() => {
     if (!groupingActive || bookGroupMeta.size === 0) return null
-    const out: { laneIndex: number; label: string; count: number }[] = []
+    const out: { laneIndex: number; label: string; count: number; key: string }[] = []
     let lastKey: string | null = null
     let runStart = 0
     lanes.forEach(({ article }, laneIndex) => {
@@ -196,7 +226,7 @@ export function BooksTimelineView({
       const key = meta?.key ?? "_ungrouped"
       if (key !== lastKey) {
         if (out.length > 0) out[out.length - 1].count = laneIndex - runStart
-        out.push({ laneIndex, label: meta?.label ?? "Other", count: 0 })
+        out.push({ laneIndex, label: meta?.label ?? "Other", count: 0, key })
         lastKey = key
         runStart = laneIndex
       }
@@ -245,6 +275,8 @@ export function BooksTimelineView({
         onGoToToday={handleToday}
         onSetZoom={setZoom}
         onToggleEvents={() => {}}
+        collapsedGroupCount={collapsedGroupsArr.length}
+        onExpandAllGroups={expandAllGroups}
       />
 
       <div className="flex flex-1 min-h-0">
@@ -266,6 +298,7 @@ export function BooksTimelineView({
               svgHeight={svgHeight}
               visibleColumns={viewState.visibleColumns}
               groupBoundaries={groupBoundaries}
+              onToggleGroup={toggleGroupCollapse}
               setHoveredId={setHoveredId}
               setTooltip={setTooltip}
               onOpenArticle={onOpenBook}
