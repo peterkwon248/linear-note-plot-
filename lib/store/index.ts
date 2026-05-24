@@ -149,7 +149,8 @@ export const usePlotStore = create<PlotState>()(
         // ── Todo Index ──
         rebuildTodoIndex: async () => {
           const state = get()
-          const tasks = await todoIndex.buildFromScratch(state.notes, getAllBodies)
+          // Phase α-2: wiki article blocks도 함께 인덱싱 (text block의 contentJson).
+          const tasks = await todoIndex.buildFromScratch(state.notes, state.wikiArticles, getAllBodies)
           set({ todoTasks: tasks })
         },
 
@@ -394,9 +395,9 @@ export const usePlotStore = create<PlotState>()(
             }
           }
 
-          // Build todo index from note bodies
+          // Build todo index from note bodies + wiki article blocks (Phase α-2)
           if (typeof indexedDB !== "undefined") {
-            todoIndex.buildFromScratch(state.notes, getAllBodies).then((tasks) => {
+            todoIndex.buildFromScratch(state.notes, state.wikiArticles, getAllBodies).then((tasks) => {
               usePlotStore.setState({ todoTasks: tasks })
             })
           }

@@ -253,6 +253,22 @@ export function useInbox(): InboxItem[] {
     for (const task of todoTasks) {
       if (task.checked) continue
       if (!isVisible("task", task.id)) continue
+
+      // Phase α-2: task의 origin은 노트 또는 위키 article. entityKind 기준 분기
+      // (default "note" for α-1 backward compat).
+      if (task.entityKind === "wiki") {
+        const wiki = wikiById.get(task.noteId)
+        if (!wiki || wiki.trashed) continue
+        push({
+          kind: "task",
+          sourceId: task.id,
+          title: task.text || t("common.untitled_task"),
+          ts: wiki.updatedAt,
+          meta: wiki.title || t("common.untitled"),
+        })
+        continue
+      }
+
       const note = noteById.get(task.noteId)
       if (!note || note.trashed) continue
 

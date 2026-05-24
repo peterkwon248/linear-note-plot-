@@ -65,9 +65,14 @@ function InboxRowFull({
     } else if (item.kind === "plan-due") {
       setActiveRoute("/wiki")
     } else if (item.kind === "task") {
-      // sourceId is task.id (composite noteId:position) — resolve noteId via store.
+      // Phase α-2: entityKind === "wiki" 면 위키 view로 이동, 아니면 노트 열기.
+      // (wiki article 자체 선택은 별도 store action 미정착 — view 진입까지만)
       const task = usePlotStore.getState().todoTasks.find((t) => t.id === item.sourceId)
-      if (task) onOpenNote(task.noteId)
+      if (task?.entityKind === "wiki") {
+        setActiveRoute("/wiki")
+      } else if (task) {
+        onOpenNote(task.noteId)
+      }
     } else {
       onOpenNote(item.sourceId)
     }
@@ -104,7 +109,11 @@ function InboxRowFull({
             setActiveRoute("/wiki")
           } else if (item.kind === "task") {
             const task = usePlotStore.getState().todoTasks.find((t) => t.id === item.sourceId)
-            if (task) onOpenNote(task.noteId)
+            if (task?.entityKind === "wiki") {
+              setActiveRoute("/wiki")
+            } else if (task) {
+              onOpenNote(task.noteId)
+            }
           } else {
             onOpenNote(item.sourceId)
           }
