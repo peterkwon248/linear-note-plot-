@@ -1371,7 +1371,7 @@ export function LinearSidebar() {
                     <NavLink
                       href="/ontology"
                       icon={<Graph size={20} />}
-                      label="Graph"
+                      label={t("ontology.graph")}
                       count={allNotesCount > 0 ? allNotesCount : undefined}
                       active={isOnOntology && currentMode === "graph"}
                       dragContent={{ type: "ontology" }}
@@ -1387,7 +1387,7 @@ export function LinearSidebar() {
                     <NavLink
                       href="/ontology"
                       icon={<ChartBar size={20} />}
-                      label="Dashboard"
+                      label={t("ontology.dashboard")}
                       active={isOnOntology && currentMode === "dashboard"}
                       onClickOverride={() => switchMode("dashboard")}
                     />
@@ -1408,7 +1408,7 @@ export function LinearSidebar() {
                 read in one glance. Rates (Orphans / Untagged / Coverage)
                 follow as small rows. Hover any row for a contextual tip
                 (full Dashboard has the deep breakdown). */}
-            <Section title="Stats">
+            <Section title={t("ontology.stats")}>
               {(() => {
                 const m = knowledgeMetrics
                 const orphanCount = Math.round(m.orphanRate * m.totalNotes)
@@ -1467,7 +1467,7 @@ export function LinearSidebar() {
                       className="flex items-center justify-between text-2xs cursor-help"
                       title={`Notes with no incoming or outgoing connections.${previewTitles(orphanNotes)}`}
                     >
-                      <span className="text-sidebar-muted">Orphans</span>
+                      <span className="text-sidebar-muted">{t("ontology.stats.orphans")}</span>
                       <span
                         className={`tabular-nums ${
                           orphanCount > 0 ? "text-chart-3" : "text-sidebar-foreground"
@@ -1480,7 +1480,7 @@ export function LinearSidebar() {
                       className="flex items-center justify-between text-2xs cursor-help"
                       title={`${untaggedCount} notes without any tag.${previewTitles(untaggedNotes)}`}
                     >
-                      <span className="text-sidebar-muted">Untagged</span>
+                      <span className="text-sidebar-muted">{t("ontology.stats.untagged")}</span>
                       <span className={`tabular-nums ${untaggedPct > 0 ? "text-chart-3" : "text-sidebar-foreground"}`}>
                         {untaggedPct}%
                       </span>
@@ -1489,14 +1489,14 @@ export function LinearSidebar() {
                       className="flex items-center justify-between text-2xs cursor-help"
                       title="% of notes that have been promoted to a wiki article. Higher = more knowledge codified."
                     >
-                      <span className="text-sidebar-muted">Wiki coverage</span>
+                      <span className="text-sidebar-muted">{t("ontology.stats.wiki_coverage")}</span>
                       <span className="text-sidebar-foreground tabular-nums">{wikiPercent}%</span>
                     </div>
                     <div
                       className="flex items-center justify-between text-2xs cursor-help"
                       title={hubLeader ? `${hubName} — ${hubLeader.backlinks} connections (the hub of your graph).` : "No hub yet — add some links."}
                     >
-                      <span className="text-sidebar-muted">Most linked</span>
+                      <span className="text-sidebar-muted">{t("ontology.stats.most_linked")}</span>
                       <span className="text-sidebar-foreground truncate ml-2">
                         {hubDisplay}
                       </span>
@@ -1508,10 +1508,10 @@ export function LinearSidebar() {
                       title={`${m.totalEdges} total connections across notes and wiki articles. See Dashboard for breakdown by edge kind.`}
                     >
                       <span className="text-sidebar-muted text-[10px] tabular-nums">
-                        {m.totalEdges} edges
+                        {m.totalEdges} {t("ontology.stats.edges")}
                       </span>
                       <span className="text-sidebar-muted text-[10px]">
-                        →&nbsp;Dashboard
+                        →&nbsp;{t("ontology.dashboard")}
                       </span>
                     </div>
                   </div>
