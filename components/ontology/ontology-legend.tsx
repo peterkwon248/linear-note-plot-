@@ -22,6 +22,7 @@ import { IconStone, IconBrick, IconBlock, IconWikiStub, IconWikiArticle } from "
 import { Zap as Lightning, Sparkles as Sparkle, Pencil as PencilSimple, ChevronDown as CaretDown, ChevronRight as CaretRight } from "lucide-react"
 import { NOTE_STATUS_HEX, WIKI_STATUS_HEX, SPACE_COLORS } from "@/lib/colors"
 import { cn } from "@/lib/utils"
+import { useT } from "@/lib/i18n"
 
 function GroupHeader({ label }: { label: string }) {
   return (
@@ -55,6 +56,7 @@ function LegendRow({
 
 export function OntologyLegend({ className }: { className?: string }) {
   const [open, setOpen] = useState(true)
+  const t = useT()
 
   return (
     <div
@@ -70,60 +72,60 @@ export function OntologyLegend({ className }: { className?: string }) {
       <button
         onClick={() => setOpen(!open)}
         className="flex w-full items-center gap-1.5 px-2.5 py-1.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground hover:text-foreground transition-colors"
-        title={open ? "Collapse legend" : "Expand legend"}
+        title={open ? t("ontology.legend") : t("ontology.legend")}
       >
         {open ? <CaretDown size={10} strokeWidth={2.5} /> : <CaretRight size={10} strokeWidth={2.5} />}
-        Legend
+        {t("ontology.legend")}
       </button>
 
       {open && (
         <div className="border-t border-border-subtle pb-1.5">
           {/* NOTES */}
-          <GroupHeader label="Notes" />
+          <GroupHeader label={t("ontology.legend.notes")} />
           <LegendRow
             icon={<IconStone size={13} />}
-            label="Stone"
+            label={t("status.stone")}
             color={NOTE_STATUS_HEX.stone}
           />
           <LegendRow
             icon={<IconBrick size={13} />}
-            label="Brick"
+            label={t("status.brick")}
             color={NOTE_STATUS_HEX.brick}
           />
           <LegendRow
             icon={<IconBlock size={13} />}
-            label="Block"
+            label={t("status.block")}
             color={NOTE_STATUS_HEX.keystone}
           />
 
           {/* WIKI */}
-          <GroupHeader label="Wiki" />
+          <GroupHeader label={t("ontology.legend.wiki")} />
           <LegendRow
             icon={<IconWikiStub size={13} />}
-            label="Stub"
+            label={t("ontology.legend.stub")}
             color={WIKI_STATUS_HEX.stub}
           />
           <LegendRow
             icon={<IconWikiArticle size={13} />}
-            label="Article"
+            label={t("ontology.legend.article")}
             color={WIKI_STATUS_HEX.article}
           />
 
           {/* BOOKS — kind icons (Smart/Hybrid/Manual). Color is per-book
               (book.color), not fixed by kind, so we use a neutral muted
               tone here; the canvas itself shows the actual book hull color. */}
-          <GroupHeader label="Books" />
+          <GroupHeader label={t("ontology.legend.books")} />
           <LegendRow
             icon={<Lightning size={13} strokeWidth={2} />}
-            label="Smart"
+            label={t("ontology.legend.smart")}
           />
           <LegendRow
             icon={<Sparkle size={13} strokeWidth={2} />}
-            label="Hybrid"
+            label={t("ontology.legend.hybrid")}
           />
           <LegendRow
             icon={<PencilSimple size={13} strokeWidth={2} />}
-            label="Manual"
+            label={t("ontology.legend.manual")}
           />
 
           {/* Wiki entity vs Article state — explicit note about the
@@ -136,7 +138,7 @@ export function OntologyLegend({ className }: { className?: string }) {
                 className="h-2 w-2 shrink-0 rounded-full"
                 style={{ backgroundColor: SPACE_COLORS.wiki }}
               />
-              <span>Wiki entity</span>
+              <span>{t("ontology.legend.wiki_entity")}</span>
             </div>
           </div>
         </div>
