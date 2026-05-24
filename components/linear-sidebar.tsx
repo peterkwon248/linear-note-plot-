@@ -1032,7 +1032,7 @@ export function LinearSidebar() {
                 <span className="flex shrink-0 items-center justify-center w-5 h-5">
                   <GitMerge size={16} />
                 </span>
-                <span className="truncate text-left flex-1">Merge</span>
+                <span className="truncate text-left flex-1">{t("wiki.merge")}</span>
               </button>
               <button
                 onClick={() => {
@@ -1047,7 +1047,7 @@ export function LinearSidebar() {
                 <span className="flex shrink-0 items-center justify-center w-5 h-5">
                   <Scissors size={16} />
                 </span>
-                <span className="truncate text-left flex-1">Split</span>
+                <span className="truncate text-left flex-1">{t("wiki.split")}</span>
               </button>
               {/* 2026-05-18 — Wiki Templates entry (Notes Templates 정합).
                   Wiki article recipe — Concept/Person/Place 등 pre-seeded
@@ -1246,20 +1246,20 @@ export function LinearSidebar() {
               <NavLink
                 href="/calendar"
                 icon={<IconCalendar size={20} />}
-                label="Calendar"
+                label={t("calendar.title")}
                 active={isActive("/calendar")}
               />
               <NavLink
                 href="/todos"
                 icon={<CheckSquareIcon size={20} />}
-                label="Todos"
+                label={t("todos.title")}
                 count={todoTaskCount > 0 ? todoTaskCount : undefined}
                 active={isActive("/todos")}
               />
             </div>
 
             {/* Today's Summary */}
-            <Section title="Today">
+            <Section title={t("calendar.today")}>
               {(() => {
                 const todayStr = new Date().toISOString().slice(0, 10)
                 const created = notes.filter(n => !n.trashed && n.createdAt.startsWith(todayStr)).length
@@ -1268,11 +1268,11 @@ export function LinearSidebar() {
                 return (
                   <div className="flex flex-col gap-1.5 px-2.5">
                     <div className="flex items-center justify-between text-2xs">
-                      <span className="text-sidebar-muted">Created</span>
+                      <span className="text-sidebar-muted">{t("calendar.created")}</span>
                       <span className="text-sidebar-foreground tabular-nums">{created}</span>
                     </div>
                     <div className="flex items-center justify-between text-2xs">
-                      <span className="text-sidebar-muted">Updated</span>
+                      <span className="text-sidebar-muted">{t("calendar.updated")}</span>
                       <span className="text-sidebar-foreground tabular-nums">{updated}</span>
                     </div>
                   </div>

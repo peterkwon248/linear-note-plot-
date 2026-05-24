@@ -3,6 +3,7 @@
 import { useMemo, useState, useEffect, useRef } from "react"
 import { usePlotStore } from "@/lib/store"
 import { setActiveRoute } from "@/lib/table-route"
+import { useT } from "@/lib/i18n"
 import type { TaskItem } from "@/lib/todo-index"
 import {
   CheckSquare,
@@ -13,6 +14,7 @@ import {
 } from "lucide-react"
 
 export function TodoView() {
+  const t = useT()
   const todoTasks = usePlotStore((s) => s.todoTasks)
   const toggleTaskChecked = usePlotStore((s) => s.toggleTaskChecked)
   const addQuickTask = usePlotStore((s) => s.addQuickTask)
@@ -44,7 +46,7 @@ export function TodoView() {
       <div className="mx-auto max-w-3xl px-6 py-8">
         {/* Header */}
         <div className="mb-6">
-          <h1 className="text-xl font-semibold text-foreground">Todos</h1>
+          <h1 className="text-xl font-semibold text-foreground">{t("todos.title")}</h1>
           <div className="mt-2 flex items-center gap-3">
             <div className="flex-1 h-1.5 rounded-full bg-secondary/60">
               <div
@@ -72,11 +74,11 @@ export function TodoView() {
                 setNewTaskText("")
               }
             }}
-            placeholder="Add a task..."
+            placeholder={t("todos.add_placeholder")}
             className="flex-1 bg-transparent text-note text-foreground placeholder:text-muted-foreground/70 focus:outline-none"
           />
           {newTaskText.trim() && (
-            <span className="text-2xs text-muted-foreground">Enter to add</span>
+            <span className="text-2xs text-muted-foreground">{t("todos.add_hint")}</span>
           )}
         </div>
 
@@ -84,9 +86,9 @@ export function TodoView() {
         {total === 0 && (
           <div className="flex flex-col items-center gap-3 py-16 text-center">
             <CheckSquare size={32} className="text-muted-foreground/70" />
-            <p className="text-note text-muted-foreground">No tasks yet</p>
+            <p className="text-note text-muted-foreground">{t("todos.empty.title")}</p>
             <p className="text-2xs text-muted-foreground/60">
-              Type above to add your first task
+              {t("todos.empty.hint")}
             </p>
           </div>
         )}
@@ -95,7 +97,7 @@ export function TodoView() {
         {incomplete.length > 0 && (
           <section className="mb-6">
             <h2 className="text-2xs font-medium text-muted-foreground uppercase tracking-wide mb-2">
-              Incomplete ({incomplete.length})
+              {t("todos.incomplete")} ({incomplete.length})
             </h2>
             <div className="rounded-lg border border-border-subtle bg-surface-overlay">
               {incomplete.map((task, i) => (
@@ -119,7 +121,7 @@ export function TodoView() {
               className="flex items-center gap-1.5 text-2xs font-medium text-muted-foreground uppercase tracking-wide mb-2 hover:text-foreground transition-colors"
             >
               {showCompleted ? <CaretDown size={12} /> : <CaretRight size={12} />}
-              Completed ({completed.length})
+              {t("todos.completed")} ({completed.length})
             </button>
             {showCompleted && (
               <div className="rounded-lg border border-border-subtle bg-surface-overlay">

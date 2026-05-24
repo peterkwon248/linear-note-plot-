@@ -187,7 +187,7 @@ export function DisplayPanel({
                     }
                     onViewStateChange(patch)
                   }}
-                  className={`flex flex-1 items-center justify-center gap-1.5 rounded-md px-2.5 py-1.5 text-note font-medium transition-colors ${
+                  className={`flex flex-1 items-center justify-center gap-1.5 whitespace-nowrap rounded-md px-2.5 py-1.5 text-note font-medium transition-colors ${
                     isActive
                       ? "bg-active-bg-strong text-foreground shadow-sm"
                       : "text-muted-foreground hover:bg-hover-bg hover:text-foreground"

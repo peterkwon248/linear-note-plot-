@@ -3,36 +3,51 @@
 > 우선순위 기반 작업 목록. **P0 = 다음 세션 즉시 시작점** (NEXT-ACTION.md 폐지, 2026-05-12).
 > 완료 항목은 즉시 삭제. 자세한 history는 SESSION-LOG.md + MEMORY.md.
 
-**마지막 갱신**: 2026-05-24 (저녁 후속) — GlobalTopBar 신설 + Phase 1c + i18n 깊은 확장 + cmdk polish + production-ui-refine. 다음 P0 #1 = i18n 잔여 surface.
+**마지막 갱신**: 2026-05-24 (밤) — i18n 잔여 surface + Merge/Split + Books labelKey + Timeline wrap fix. 다음 P0 #1 = production-ui-refiner 후보 선택 + refine.
 
 ---
 
-## 🟣 P0 — 즉시 (cross-machine 진입점, 2026-05-24 저녁 후속)
+## 🟣 P0 — 즉시 (cross-machine 진입점, 2026-05-24 밤)
 
-### 1. **🔴 i18n 잔여 surface + 사용자 viewport 검증**
+### 1. **🔴 production-ui-refiner 후보 선택 + 5-phase refine**
 
-**범위**: 한국어 토글 시 잔여 영어가 보이는 view (Wiki / Books / Library / Ontology / Calendar / Templates) + 우클릭 메뉴 + 일부 dialog. Status pill 음역 (rows의 Block/Stone/Brick badge).
+**범위**: 사용자가 4 후보 중 선택 후 5-phase AUDIT/DIAGNOSE/PRESCRIBE/APPLY/VERIFY. 사용자가 "다음 세션 첫번째 todo로 이어갈 수 있도록" 명시.
+
+**후보 4개 (사용자 선택 대기)**:
+1. **Inbox 3 SectionCard** (`components/views/inbox-view.tsx`) — Do/Review/Detected 3 카드, Phase 1c 신규
+2. **Library 6 stat card grid** (`components/views/library-view.tsx`:861+) — 자료실 6 카드 (참고문헌/태그/라벨/카테고리/파일/스티커)
+3. **Books grid card** — 책 카드 grid layout
+4. **SearchDialog 더 깊게** (`components/search-dialog.tsx`) — Cmd+K command palette
 
 **첫 스텝**:
-1. KO 토글 후 viewport 순회 — Wiki/Books/Library/Ontology/Calendar/Insights/Templates. 각 view header / filter chips / display panel / 우클릭 메뉴 한국어 노출 확인.
-2. 미번역 발견 시 `lib/i18n.ts` dictionary 확장 + 컴포넌트 useT wire.
-3. Module-level static config (view-configs WIKI_VIEW_CONFIG / BOOKS_VIEW_CONFIG / LIBRARY_VIEW_CONFIG)에 labelKey 추가 (NOTES_VIEW_CONFIG 패턴 정합).
-4. Status pill 음역 — `components/notes-table.tsx` status cell + `components/note-fields.tsx` StatusDropdown 옵션 wire.
-5. **사용자 viewport 검증 (4건 미완)**: (a) Phase 1c Inbox 3 섹션 카드, (b) Backup Restore round-trip, (c) GlobalTopBar Hide-all-panels, (d) Cmd+K Escape.
+1. AskUserQuestion 재시도 — 4 후보 중 어느 것?
+2. 선택 컴포넌트 viewport screenshot + 코드 audit
+3. 18 카테고리 진단 (자동 측정 + vision)
+4. 카테고리 그룹별 PRESCRIBE → 사용자 승인 → APPLY → VERIFY
 
-**참고 파일**: SESSION-LOG 2026-05-24 (저녁 후속) hook
+**참고**: SESSION-LOG 2026-05-24 (밤) hook에 후보별 사전 진단 + 진입 패턴 documented.
 
-### 2. **🟢 Phase 2 의제 — temporal hooks watch + recurring**
+### 2. **🟢 i18n 잔여 mini-polish**
 
-watch + recurring 신규 정책 (PRD §11 Q1 EventPattern + Q5 recurring 범위 결정 필요). 우클릭 프리셋 + 타임라인 드래그 hook UI.
+- Books grid card description i18n
+- Wiki dashboard stats (Wiki Articles / Stubs / Uncategorized / Featured Article / Pinned / Categories / Growth)
+- Ontology legend(범례) detail (Stone/Brick/Block badge, Smart/Hybrid/Manual)
+- Status pill 음역 — note rows의 Block/Stone/Brick badge
 
-### 3. **🟢 production-ui-refiner 다른 surface**
+### 3. **🟢 사용자 viewport 검증 (4건 미완)**
 
-Inbox SectionCard (Do/Review/Detected) / SearchDialog 더 깊게 / Settings 페이지 chrome polish.
+- Phase 1c Inbox 3 SectionCard 작동
+- Backup Restore round-trip (Full Backup → Import → reload)
+- GlobalTopBar Hide-all-panels 후 chrome 접근
+- Cmd+K Escape 닫힘
 
-### 4. **🟢 검색 결과 row Linear 정합**
+### 4. **🟢 Phase 2 temporal hooks**
 
-Cmd+K dialog 안 노트 검색 결과 item이 plain text — Linear는 highlight + breadcrumb. 다음 polish 후보.
+watch + recurring (PRD §11 Q1 EventPattern + Q5 recurring 범위). 우클릭 프리셋 + 타임라인 드래그 hook UI.
+
+### 5. **🟢 검색 결과 row Linear 정합**
+
+Cmd+K dialog 검색 결과 item plain text → highlight + breadcrumb.
 
 ---
 
@@ -46,6 +61,7 @@ Cmd+K dialog 안 노트 검색 결과 item이 plain text — Linear는 highlight
 
 ## ✅ 최근 완료
 
+- **2026-05-24 (밤)**: **i18n 잔여 surface + Merge/Split + Books labelKey + Timeline wrap fix** (PR pending). 2 chunk — (1) Todos/Calendar sidebar/Ontology/Library/Wiki/Books 6 view 한국어 wire (~70 i18n keys 신규) + (2) Wiki Merge/Split → 병합/분리, 타임라인 button whitespace-nowrap, BOOKS_VIEW_CONFIG 전체 labelKey (orderingOptions/groupingOptions/properties), book-table BOOK_COLUMNS labelKey wire, Library "Top Tags"/"unused tag"/"unlinked reference" 누락 한국어. 영구 LOCKED #122 (module-level static config labelKey 일관 적용 의무).
 - **2026-05-24 (저녁 후속)**: **GlobalTopBar 신설 + Phase 1c Inbox 3 카드 + i18n 깊은 확장 (필터/디스플레이/cmdk) + production-ui-refine** (PR #414 + 후속 PR). 5 chunk 누적 — Phase 1c (use-inbox section + 3 SectionCard, plan-due source 신규) / i18n main app (Activity Bar/Sidebar/Home/Quick Capture/StatsRow) / i18n 깊은 확장 (Library→자료실 #117, Stone/Brick/Block 음역 #118, Filter+Display Panel labelKey 패턴, Notes column headers) / GlobalTopBar (PanelsMenu + 시계 + < > + 검색 input + 테마/설정/휴지통 — sidebar 헤더/푸터 제거 + activity-bar 테마 제거 + view-header PanelsMenu 제거 #119/#120) / Command palette hybrid mode badge (#121) + i18n + Escape handler + production-ui-refine 5-phase (A spacing+B icon+C search+D right cluster). 영구 LOCKED #117~#121. tsc/build clean.
 - **2026-05-24 (오후)**: **Phase 1b 통합 (1b1+1b2+1b3) + Settings 전수 wire (5/5)** — 단일 거대 PR. (a) Phase 1b1 workflow.ts/wiki-articles.ts hooks slice wire (dual-write) + (b) Phase 1b2 read-site 마이그 12+ 파일 (신규 lib/store/hook-selectors.ts + getReviewQueue/useInbox/wiki-timeline/sidebar/insights/settings 모두 hooks 기반) + (c) Phase 1b3 legacy 제거 (Note.reviewAt / WikiArticle.plannedDate / srsStateByNoteId 영구 삭제 + v146→v147 strip migration + reviewAt filter operator drop + helpers.ts/test fixtures cleanup) + (d) Settings #1 Start view wire (app/(app)/layout.tsx 라우팅, persist hydration 대기) + (e) Settings #2 Sync 솔직한 reframe (backupReminder/lastBackupAt 신규, toast nudge) + (f) Settings #3 Line numbers wire (CSS counter gutter) + (g) Settings #4 Backup Restore (restoreFromBackup + Import UI + 자동 reload) + (h) Settings #5 i18n (lib/i18n.ts 신규, EN/KO 완전 dictionary, useT 훅, 모든 Settings 페이지 적용). 영구 LOCKED #113~#116. tsc/build clean.
 - **2026-05-24 (새벽)**: Temporal Hooks PRD v0.2 + Phase 1a foundation 머지 (PR #411). PRD §11 Q3/Q4/Q6 RESOLVED (1-step migration / 보수적 전이 / Inbox Do-Review-Detected). Q1/Q2/Q5 DEFERRED to Phase 2/3. 4 파일 변경 + 1 신규 (lib/store/slices/hooks.ts) + PRD update. Hook model + slice + v145→v146 migration (Note.reviewAt+triageStatus / srsStateByNoteId / WikiArticle.plannedDate → Hook 일괄 흡수, idempotent). legacy 필드 Phase 1a 한정 keep. tsc/build clean. Round-trip 검증.
@@ -101,6 +117,7 @@ Cmd+K dialog 안 노트 검색 결과 item이 plain text — Linear는 highlight
 - **#119 LOCKED (2026-05-24 저녁)**: GlobalTopBar = workspace chrome single source. 시계/<>/검색/테마/설정/휴지통 모두 top bar. Hide-all-panels 상태에서도 chrome 접근 가능 — 모든 다른 dialog/popup도 같은 원칙.
 - **#120 LOCKED (2026-05-24 저녁)**: PanelsMenu = top bar 단일 mount. view-header에서 제거. 다른 컴포넌트에 추가 mount 금지 — 햄버거 중복은 사용자 혼란.
 - **#121 LOCKED (2026-05-24 저녁)**: Command palette hybrid mode badge. 기본 commands 모드 뱃지 제거 (Linear 정합 minimal), sub-mode (links/thinking)만 뱃지. Plot multi-mode 정체성 + Linear 정합 절충.
+- **#122 LOCKED (2026-05-24 밤)**: module-level static config (view-configs / COLUMN_DEFS / BOOK_COLUMNS) labelKey 옵셔널 필드 패턴 = entity별 일관 적용 의무. NOTES만 labelKey + Books/Wiki/Library 영어 mix는 사용자 혼란 — 새 view config 추가 시 labelKey 동시 추가.
 
 전체 영구 룰 #1-#88: docs/MEMORY.md + docs/CONTEXT.md 참조.
 

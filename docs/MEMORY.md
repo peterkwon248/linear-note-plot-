@@ -8,6 +8,26 @@
 
 ---
 
+## 🚀 2026-05-24 (밤) — **i18n 잔여 surface 마무리 + Linear 정합 polish** ⭐⭐⭐⭐
+
+**범위**: 한국어 일관성 마무리 chunk. Todos/Calendar/Ontology/Library/Wiki/Books 6 view 한국어 wire + Wiki sidebar Merge/Split 한국어 + 타임라인 button wrap fix + Books 컬럼 + view-configs Books labelKey 모두 적용.
+
+**핵심 결정 (영구 LOCKED #122)**:
+- **#122 module-level static config labelKey 일관 적용 의무** — NOTES_VIEW_CONFIG / BOOKS_VIEW_CONFIG / BookColumnDef 등 모든 entity-specific column/property def에 labelKey 필드 동시 추가 패턴 강제. 영어/한국어 mix는 사용자 혼란.
+
+**완료**: 6 view i18n wire (~70 keys 신규), Wiki Merge/Split → 병합/분리, 타임라인 whitespace-nowrap, BOOKS_VIEW_CONFIG + book-table 전체 labelKey, Library 잔여 (Top Tags / unused tag / unlinked ref) 한국어.
+
+**기술 학습 (영구)**:
+- whitespace-nowrap = 다국어 button label wrap 회피 표준 (한국어가 영어보다 글자당 폭 ↑)
+- module-level static config labelKey 패턴 확장 (#122) — BookColumnDef 등 entity-specific도 동일 적용
+- AskUserQuestion "다음 세션으로" 답변 시 — SESSION-LOG hook에 후보 + 사전 진단 보존해야 다음 세션 첫 행동 즉시 진입 가능
+
+**미완**: production-ui-refiner 후보 선택 + 5-phase refine — 사용자가 다음 세션 첫 todo로 명시.
+
+**다음**: refiner 4 후보 (Inbox SectionCard / Library 6 stat / Books grid card / SearchDialog 더 깊게) 중 사용자 선택 → 5-phase.
+
+---
+
 ## 🚀 2026-05-24 (저녁 후속) — **GlobalTopBar 신설 + Phase 1c Inbox + i18n 깊은 확장 + cmdk polish + production-ui-refine — 5 chunk 누적** ⭐⭐⭐⭐⭐
 
 **범위**: 사용자 의도 흐름 따른 multi-chunk 세션 (Phase 1c → i18n main app → i18n 깊은 확장 필터/디스플레이 → GlobalTopBar 재구성 → cmdk polish + production-ui-refine). 한국어 일관성 + Linear chrome 정합이 메타 의도.

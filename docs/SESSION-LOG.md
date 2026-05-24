@@ -6,6 +6,104 @@
 
 ---
 
+## 2026-05-24 (밤) — Windows, **i18n 잔여 surface (Wiki/Books/Library/Ontology/Todos + Merge/Split + 컬럼 labelKey)**
+
+> 🎯 **다음 즉시 액션 (다음 세션 시작점)**: **production-ui-refiner 후보 선택 + 5-phase 진행**. 사용자가 "다음 세션 첫번째 todo로 지금 이 논의 이어갈 수 있도록" 명시. 4 후보 중 사용자가 선택 (AskUserQuestion 결과 미선택, after-work 우선 요청). 후보 = (1) Inbox 3 SectionCard, (2) Library 6 stat card grid, (3) Books grid card, (4) SearchDialog 더 깊게.
+>
+> **사용자 의도**: 한국어 일관성 거의 끝남 → 신규/visible chrome surface 디자인 polish (Linear 수준). 사용자가 직접 본 surface 위주.
+>
+> **첫 스텝** (다른 머신에서 바로):
+> 1. 사용자에게 4 후보 중 어느 것 refine할지 물어봄 (AskUserQuestion 재시도)
+> 2. `.claude/.active-skill`에 `production-ui-refiner` 기록
+> 3. 선택 컴포넌트 Read + viewport screenshot + 코드 audit (Phase 1 AUDIT)
+> 4. 18 카테고리 진단 — 자동 측정 (height/spacing/icon size/border/font size 등) + vision (hierarchy/visual weight/cluster grouping)
+> 5. PRESCRIBE 그룹별 → 사용자 승인 → APPLY → VERIFY (audit 재실행 비교)
+>
+> **후보별 사전 진단 (Phase 1 미리)**:
+> - **Inbox 3 SectionCard** (`components/views/inbox-view.tsx`): Do/Review/Detected 3 카드. 현재 spacing-y-6 + section padding 균일. 개선 여지: empty state 시각적 hierarchy 약함 (3 카드 모두 empty 시), card border 일관 (Linear는 borderless 더 minimal), section header subtitle 옅음 (text-muted-foreground/70).
+> - **Library 6 stat card grid** (`components/views/library-view.tsx`:861+): 6 카드 2/3 column. 개선 여지: card hover state, value vs label 시각적 weight 차등, icon-color 매핑 일관 (KNOWLEDGE_INDEX_COLORS).
+> - **Books grid card** (`components/books/book-card.tsx` 또는 `books-view.tsx` 안): 책 카드 grid. 개선 여지: cover icon + title typography, description line-clamp, items meta typography.
+> - **SearchDialog 더 깊게** (`components/search-dialog.tsx`): item row padding (h-12 → h-11 더 dense), shortcut chip 일관성, group header spacing, separator opacity.
+>
+> **컴포넌트 구조 / 진입 패턴**:
+> - 5-phase: AUDIT → DIAGNOSE → PRESCRIBE (그룹별 처방) → APPLY (사용자 승인) → VERIFY
+> - 처방 카테고리: A spacing/gap, B icon stroke 일관, C visual hierarchy/prominence, D cluster grouping, E hover/empty state polish
+> - hedged language for vision items, definitive for measurements
+>
+> **위험 + 회피**:
+> - production-ui-refiner는 audit script가 plot-frontend plugin에 없음 — vision + 코드 검사로 manual AUDIT
+> - 카테고리 그룹별 사용자 승인 필수 — 한 번에 모두 변경 금지 (사용자 직관 vs Linear 패턴 충돌 시 사용자 우선)
+> - 18 카테고리 그대로 적용 X — 사용자 시각 검증 + 컴포넌트 본질 고려
+>
+> **참고 파일**:
+> - `components/views/inbox-view.tsx` (SectionCard 구현 line 197+)
+> - `components/views/library-view.tsx` (LibMiniStat 컴포넌트 + 6 card grid line 858+)
+> - `components/books/book-card.tsx` (또는 books-view.tsx 안 BookCard render)
+> - `components/search-dialog.tsx` (CommandDialog + CommandInput + CommandGroup)
+> - `~/.claude/plugins/.../production-ui-refiner/SKILL.md` (skill 명세 — 5-phase 흐름)
+>
+> **2번째 P0 후보** (#1 끝나면):
+> - Phase 2 temporal hooks — watch + recurring policies (PRD §11 Q1 EventPattern + Q5 recurring 범위 결정). 우클릭 프리셋 + 타임라인 드래그 hook UI.
+> - i18n 잔여 mini-polish (status pill 음역 — Block/Stone/Brick 행 badge / Wiki view stats / Books grid card text)
+> - 사용자 viewport 검증 4건 (Phase 1c Inbox / Backup Restore / Hide-all panels / Cmd+K Escape)
+>
+> **3번째 P0 후보**: 검색 결과 row Linear 정합 polish (현재 plain text → highlight + breadcrumb)
+>
+> **머신**: Windows. cross-machine 가능.
+> **현재 main HEAD**: 이번 세션 PR 머지 후.
+> **branch worktree**: `claude/i18n-rest` (cleanup 후 새 worktree 권장).
+
+### 완료 (이번 세션 — 2 chunk)
+
+**Chunk 1 — i18n 잔여 surface (Todos/Calendar/Ontology/Library/Wiki/Books)**:
+- Todos view 전체 (title / placeholder / empty state / incomplete · completed)
+- Calendar sidebar context (Calendar / Todos / Today / Created / Updated)
+- Ontology view (title / Graph / Insights / Dashboard / 노드 검색)
+- Library view (자료실 + 6 stat cards + 주의 필요 + 사용되지 않는 태그 N개 / 미연결 참고문헌 N개 + 최근 + 상위 태그)
+- Wiki view title
+- Books view (title + 책 검색 placeholder)
+- 신규 i18n keys ~70개: todos.* / calendar.* / ontology.* / wiki.* / library.* / books.*
+
+**Chunk 2 — i18n 잔여 polish**:
+- Wiki sidebar **Merge / Split** → 병합 / 분리
+- Display panel "타임라인" button 한 줄 띄기 fix (`whitespace-nowrap`)
+- **BOOKS_VIEW_CONFIG** orderingOptions / groupingOptions / properties 모두 labelKey 추가 (Item count / Kind / Smart sources / Pin / Pin status — 항목 수/종류/스마트 소스/고정/고정 상태)
+- **book-table.tsx BOOK_COLUMNS** labelKey 추가 + cols.map render에 t() resolve (Name/Kind/Items/Sources/Pin/Updated/Created — 제목/종류/항목 수/스마트 소스/고정/수정일/생성일)
+- Library "Top Tags" 누락 → "상위 태그"
+- Library "1 unused tag" / "1 unlinked reference" → "사용되지 않는 태그 N개" / "미연결 참고문헌 N개"
+
+### 브레인스토밍 & 큰 결정 (영구 LOCKED #122~)
+
+- **#122 LOCKED (2026-05-24 밤)**: **module-level static config (view-configs / COLUMN_DEFS) labelKey 옵셔널 필드 패턴 = entity별 일관 적용 의무**. NOTES만 labelKey + Books/Wiki/Library 영어 mix는 사용자 혼란. 새 view config 추가 시 labelKey 필드 동시 추가 (i18n 잔존 영어 회피).
+- **#123 (vision, 비-locked)**: 한국어와 영어의 시각적 weight 차이 — CJK 글자가 라틴보다 자연스럽게 더 큼. text-note (13px) 동일 size 유지가 정통. KO-only font-size 조정은 미세 polish 후보 (사용자 명시 시).
+
+### 기술 학습 (영구)
+
+- **whitespace-nowrap = 다국어 button label wrap 회피 표준**. 영어보다 한국어가 글자당 폭 더 넓어 4글자가 button 4-tab 분할 시 wrap 가능 ("타임라인" 사례). flex item button에 `whitespace-nowrap` 추가가 안전.
+- **module-level static config labelKey 패턴 (확장)**: BookColumnDef 같은 entity-specific column def에도 동일하게 적용. consumer (book-table.tsx)에서 `c.labelKey ? t(c.labelKey) : c.label` 한 줄로 resolve. NOTES → Books → 다른 entity로 확장 시 동일 mechanical 패턴 — 패턴 정합 강제 (#122).
+- **AskUserQuestion 답이 "다음 세션으로"일 때**: 현재 세션 진행 중단하고 다음 세션 hook에 후보 + 의도 documented. SESSION-LOG hook이 "사용자가 명시한 4 후보 + 사전 진단" 까지 보존해야 다음 세션 첫 행동 즉시 진입 가능.
+
+### Watch Out (다음 세션)
+
+- **production-ui-refiner 후보 선택부터** — 사용자가 4 후보 중 답 미선택. AskUserQuestion 재시도 권장.
+- **사전 진단 정확도**: 위 후보별 사전 진단은 코드 grep 기반 추정 — 실제 viewport screenshot 후 정정 가능.
+- **i18n 미커버**: Books grid card description / Wiki dashboard stats / status pill 음역 / Ontology legend(범례) detail — 다음 polish 사이클에서.
+- **claude/global-top-bar 로컬 브랜치**: PR #415 머지 후 cleanup 미완. claude/i18n-rest 머지 후 둘 다 정리 권장.
+
+### 환경 변경
+
+- Store v147 무변경
+- 신규 파일: 없음
+- 변경 파일 10: todo-view / linear-sidebar / ontology-view / library-view / wiki-view / books-view / books/book-table / display-panel / view-configs / i18n
+- 신규 i18n keys ~70개 (todos / calendar / ontology / wiki / library / books)
+- 사용자 IDB stale data: 없음
+
+### 머신
+
+Windows. cohesive i18n 잔여 마무리 세션 — chunk별 surface 정리 후 viewport 검증 → 사용자 polish 지적 → 즉시 fix 사이클.
+
+---
+
 ## 2026-05-24 (저녁 후속) — Windows, **GlobalTopBar 신설 + Command palette polish + production-ui-refine + i18n 깊은 확장 (필터/디스플레이/cmdk)**
 
 > 🎯 **다음 즉시 액션 (다음 세션 시작점)**: **i18n 잔여 surface 마저 끝내기** — Wiki view / Books view / Library view / Ontology view / 우클릭 메뉴 / dialog 잔여 영어 모두 한국어 + 사용자 viewport 검증 (Phase 1c Inbox 3 카드 + Backup Restore round-trip).

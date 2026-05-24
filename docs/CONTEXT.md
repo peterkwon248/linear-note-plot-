@@ -51,6 +51,19 @@
 
 ---
 
+## 🚀 2026-05-24 (밤) — i18n 잔여 surface + Merge/Split + Books labelKey + Timeline wrap fix ⭐⭐⭐⭐
+
+**범위**: 한국어 일관성 마무리. 6 view (Todos/Calendar/Ontology/Library/Wiki/Books) 한국어 wire + ~70 i18n keys 신규 + Wiki sidebar Merge/Split / 타임라인 wrap / BOOKS_VIEW_CONFIG labelKey / book-table COLUMN labelKey 모두 정합.
+
+**핵심 결정 (영구 LOCKED #122)**:
+- **#122 module-level static config labelKey 일관 적용 의무** (NOTES + Books + 향후 entity 일관)
+
+**완료**: 6 view 한국어 wire / Books 전체 labelKey / Wiki sidebar 병합·분리 / 타임라인 wrap fix.
+
+**미완**: production-ui-refiner 4 후보 (Inbox / Library / Books grid / SearchDialog) 중 선택 후 5-phase — 다음 세션 첫 todo.
+
+---
+
 ## 🚀 2026-05-24 (저녁 후속) — GlobalTopBar 신설 + Phase 1c + i18n 깊은 확장 + cmdk polish + production-ui-refine ⭐⭐⭐⭐⭐
 
 **범위**: 5 chunk 누적 multi-PR. 한국어 일관성 + Linear chrome 정합 메타 의도.

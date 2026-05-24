@@ -1004,27 +1004,27 @@ export const BOOKS_VIEW_CONFIG: ViewConfig = {
     // Timeline Y-axis encodes time → sort by createdAt asc is canonical.
     defaultSortByMode: { timeline: { field: "createdAt", direction: "asc" } },
     orderingOptions: [
-      { value: "updatedAt", label: "Updated" },
-      { value: "createdAt", label: "Created" },
-      { value: "title",     label: "Title" },
-      { value: "itemCount", label: "Item count" },
+      { value: "updatedAt", label: "Updated",    labelKey: "display.ordering.updated" },
+      { value: "createdAt", label: "Created",    labelKey: "display.ordering.created" },
+      { value: "title",     label: "Title",      labelKey: "display.ordering.title" },
+      { value: "itemCount", label: "Item count", labelKey: "books.prop.item_count" },
     ],
     groupingOptions: [
-      { value: "none",   label: "No grouping" },
-      { value: "kind",   label: "Kind" },
-      { value: "pinned", label: "Pin status" },
+      { value: "none",   label: "No grouping", labelKey: "display.grouping.none" },
+      { value: "kind",   label: "Kind",        labelKey: "books.prop.kind" },
+      { value: "pinned", label: "Pin status",  labelKey: "books.group.pin_status" },
       // updatedAt time-bucket — timeline already encodes time; hide there.
-      { value: "date",   label: "Updated", modes: ["list", "board"] },
+      { value: "date",   label: "Updated", labelKey: "display.ordering.updated", modes: ["list", "board"] },
       // firstLetter alphabetical index — list-only.
       { value: "firstLetter", label: "Index", modes: ["list"] },
     ],
     // showTrashed toggle is handled in books-view.tsx ViewHeader actions.
     toggles: [],
     properties: [
-      { key: "itemCount", label: "Item count",    icon: SortIcon },
-      { key: "kind",      label: "Kind",          icon: SourceIcon },
-      { key: "sources",   label: "Smart sources", icon: SourceIcon },
-      { key: "pinned",    label: "Pin",           icon: PinIcon },
+      { key: "itemCount", label: "Item count",    labelKey: "books.prop.item_count",   icon: SortIcon },
+      { key: "kind",      label: "Kind",          labelKey: "books.prop.kind",         icon: SourceIcon },
+      { key: "sources",   label: "Smart sources", labelKey: "books.prop.smart_sources", icon: SourceIcon },
+      { key: "pinned",    label: "Pin",           labelKey: "books.prop.pin",          icon: PinIcon },
     ],
   },
 }

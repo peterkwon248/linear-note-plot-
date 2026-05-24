@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useMemo, useRef, useCallback, useEffect, type ReactNode } from "react"
+import { useT } from "@/lib/i18n"
 import type { FilterRule, ViewState, ViewContextKey } from "@/lib/view-engine/types"
 import { buildViewStateForContext } from "@/lib/view-engine/defaults"
 import { applyWikiFilters, applyWikiSort, applyWikiGrouping } from "@/lib/view-engine/wiki-list-pipeline"
@@ -83,6 +84,7 @@ import { WikiGridView } from "@/components/views/wiki-grid-view"
 import type { WikiArticle, WikiCategory } from "@/lib/types"
 
 export function WikiView() {
+  const t = useT()
   const notes = usePlotStore((s) => s.notes)
   const openNote = usePlotStore((s) => s.openNote)
   const createWikiArticle = usePlotStore((s) => s.createWikiArticle)
@@ -1017,7 +1019,7 @@ export function WikiView() {
     <div data-editor-scope="wiki" className="flex flex-1 flex-col overflow-hidden">
       <ViewHeader
         icon={<BookOpen size={20} strokeWidth={2} />}
-        title="Wiki"
+        title={t("wiki.title")}
         count={stats.total}
         saveViewMode={wikiViewMode === "dashboard" ? "hidden" : wikiSaveViewMode}
         onSaveView={onSaveWikiView}
