@@ -337,30 +337,9 @@ function matchesRule(note: Note, rule: FilterRule, extras?: Pick<PipelineExtras,
       return operator === "eq" ? connected : !connected
     }
 
-    case "reviewAt": {
-      if (!note.reviewAt) return operator === "eq" ? false : true
-      const noteTime = new Date(note.reviewAt).getTime()
-      // Support ISO date prefix (e.g., "2026-04-04")
-      if (value.match(/^\d{4}-\d{2}-\d{2}$/)) {
-        const targetEnd = new Date(value + "T23:59:59.999Z").getTime()
-        const targetStart = new Date(value + "T00:00:00.000Z").getTime()
-        switch (operator) {
-          case "eq": return noteTime >= targetStart && noteTime <= targetEnd
-          case "lt": return noteTime < targetStart
-          case "gt": return noteTime > targetEnd
-          default: return true
-        }
-      }
-      // Fallback: relative time
-      const ms = parseRelativeTime(value)
-      if (ms === null) return true
-      const cutoff = Date.now() - ms
-      switch (operator) {
-        case "gt": return noteTime > cutoff
-        case "lt": return noteTime < cutoff
-        default: return true
-      }
-    }
+    // Phase 1b3: `reviewAt` filter field removed — reminders live in the
+    // unified hooks slice. A hook-aware filter operator can be added later
+    // via a separate path (filter would need the hooks array passed in).
 
     default:
       return true

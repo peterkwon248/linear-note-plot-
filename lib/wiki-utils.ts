@@ -42,11 +42,16 @@ export function safeDate(iso: string | null | undefined): Date | null {
  *   3. `createdAt`   — last-resort (returns a near-0-width bar, MIN_BAR_WIDTH
  *      kicks in at the renderer).
  *
+ * Phase 1b2 (unified-temporal-hooks-prd v0.2): `plannedDate` is now passed
+ * in by the caller (resolved from the `hooks` slice via
+ * `getPlannedDateForWiki`). Article.plannedDate is being retired — Phase 1b3
+ * drops it entirely. Pass `null` when no plan hook exists.
+ *
  * If `createdAt` itself fails to parse the article is dropped upstream
  * (see WikiTimelineView's `validArticles` filter).
  */
-export function getHorizon(article: WikiArticle): Date | null {
-  const planned = safeDate(article.plannedDate)
+export function getHorizon(article: WikiArticle, plannedDate: string | null = null): Date | null {
+  const planned = safeDate(plannedDate)
   if (planned) return planned
   const updated = safeDate(article.updatedAt)
   if (updated) return updated
@@ -60,8 +65,8 @@ export function getHorizon(article: WikiArticle): Date | null {
 export type HorizonSource = "planned" | "updated" | "created"
 
 /** Returns which field drives the horizon for an article (D2 visual split). */
-export function getHorizonSource(article: WikiArticle): HorizonSource {
-  if (safeDate(article.plannedDate)) return "planned"
+export function getHorizonSource(article: WikiArticle, plannedDate: string | null = null): HorizonSource {
+  if (safeDate(plannedDate)) return "planned"
   if (safeDate(article.updatedAt)) return "updated"
   return "created"
 }

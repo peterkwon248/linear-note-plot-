@@ -4,6 +4,8 @@ import { useMemo } from "react"
 import { Switch } from "@/components/ui/switch"
 import { useSettingsStore } from "@/lib/settings-store"
 import { usePlotStore } from "@/lib/store"
+import { getSRSHooks } from "@/lib/store/hook-selectors"
+import { useT } from "@/lib/i18n"
 import { toast } from "sonner"
 import {
   SettingsPageTitle,
@@ -14,6 +16,7 @@ import {
 } from "@/components/settings-ui"
 
 export default function PreferencesPage() {
+  const t = useT()
   const language = useSettingsStore((s) => s.language)
   const setLanguage = useSettingsStore((s) => s.setLanguage)
   const startView = useSettingsStore((s) => s.startView)
@@ -22,20 +25,25 @@ export default function PreferencesPage() {
   const setConfirmDelete = useSettingsStore((s) => s.setConfirmDelete)
 
   const notes = usePlotStore((s) => s.notes)
-  const srsStateByNoteId = usePlotStore((s) => s.srsStateByNoteId)
+  // Phase 1b2: SRS enrollment count derives from the unified `hooks` slice.
+  const hooks = usePlotStore((s) => s.hooks)
   const enrollAllPermanentSRS = usePlotStore((s) => s.enrollAllPermanentSRS)
 
-  const unenrolledCount = useMemo(
-    () => notes.filter((n) => n.status === "keystone" && !n.trashed && !srsStateByNoteId[n.id]).length,
-    [notes, srsStateByNoteId]
-  )
+  const unenrolledCount = useMemo(() => {
+    const enrolled = new Set(
+      getSRSHooks(hooks)
+        .filter((h) => h.target.kind === "note")
+        .map((h) => h.target.id),
+    )
+    return notes.filter((n) => n.status === "keystone" && !n.trashed && !enrolled.has(n.id)).length
+  }, [notes, hooks])
 
   return (
     <>
-      <SettingsPageTitle>Preferences</SettingsPageTitle>
+      <SettingsPageTitle>{t("settings.preferences.title")}</SettingsPageTitle>
 
-      <SettingsCard title="General">
-        <SettingRow label="Language" description="Interface display language">
+      <SettingsCard title={t("settings.preferences.general")}>
+        <SettingRow label={t("settings.preferences.language.label")} description={t("settings.preferences.language.description")}>
           <SelectControl
             value={language}
             onChange={setLanguage}
@@ -50,29 +58,30 @@ export default function PreferencesPage() {
           />
         </SettingRow>
         <Divider />
-        <SettingRow label="Start view" description="Default view when opening the app">
+        <SettingRow label={t("settings.preferences.startview.label")} description={t("settings.preferences.startview.description")}>
           <SelectControl
             value={startView}
-            onChange={(v) => setStartView(v as "all" | "stone" | "pinned")}
+            onChange={(v) => setStartView(v as "home" | "all" | "stone" | "pinned")}
             options={[
-              { label: "All Notes", value: "all" },
-              { label: "Stone", value: "stone" },
-              { label: "Pinned", value: "pinned" },
+              { label: t("settings.preferences.startview.home"), value: "home" },
+              { label: t("settings.preferences.startview.all"), value: "all" },
+              { label: t("settings.preferences.startview.stone"), value: "stone" },
+              { label: t("settings.preferences.startview.pinned"), value: "pinned" },
             ]}
           />
         </SettingRow>
         <Divider />
         <SettingRow
-          label="Confirm before deleting"
-          description="Show confirmation dialog when deleting notes"
+          label={t("settings.preferences.confirmdelete.label")}
+          description={t("settings.preferences.confirmdelete.description")}
         >
           <Switch checked={confirmDelete} onCheckedChange={setConfirmDelete} />
         </SettingRow>
       </SettingsCard>
 
-      <SettingsCard title="Spaced Repetition">
+      <SettingsCard title={t("settings.preferences.srs.title")}>
         <SettingRow
-          label="Bulk enroll keystone notes"
+          label={t("settings.preferences.srs.bulk.label")}
           description={`${unenrolledCount} keystone note${unenrolledCount === 1 ? "" : "s"} not yet enrolled in SRS`}
         >
           <button
@@ -87,7 +96,7 @@ export default function PreferencesPage() {
             disabled={unenrolledCount === 0}
             className="inline-flex items-center gap-1.5 rounded-md border border-border bg-card px-3 py-1.5 text-note font-medium text-foreground transition-colors hover:bg-hover-bg disabled:opacity-40 disabled:cursor-not-allowed"
           >
-            Enroll All
+            {t("settings.preferences.srs.bulk.button")}
           </button>
         </SettingRow>
       </SettingsCard>

@@ -286,3 +286,135 @@ export function formatSize(bytes: number): string {
   if (bytes < 1024 * 1024 * 1024) return `${(bytes / (1024 * 1024)).toFixed(2)} MB`
   return `${(bytes / (1024 * 1024 * 1024)).toFixed(2)} GB`
 }
+
+// ── Restore from backup ─────────────────────────────────────────────────
+
+function base64ToArrayBuffer(b64: string): ArrayBuffer {
+  const bin = atob(b64)
+  const len = bin.length
+  const bytes = new Uint8Array(len)
+  for (let i = 0; i < len; i++) bytes[i] = bin.charCodeAt(i)
+  return bytes.buffer
+}
+
+/** Open the target DB for writing, creating the object store if missing.
+ *  Tries a plain (versionless) open first; if the required store is absent,
+ *  re-opens with version + 1 and runs an upgrade transaction. */
+function openDbForRestore(dbName: string, storeName: string): Promise<IDBDatabase> {
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.open(dbName)
+    req.onerror = () => reject(req.error)
+    req.onsuccess = () => {
+      const db = req.result
+      if (db.objectStoreNames.contains(storeName)) {
+        resolve(db)
+        return
+      }
+      const nextVersion = db.version + 1
+      db.close()
+      const upgradeReq = indexedDB.open(dbName, nextVersion)
+      upgradeReq.onerror = () => reject(upgradeReq.error)
+      upgradeReq.onupgradeneeded = () => {
+        const upgraded = upgradeReq.result
+        if (!upgraded.objectStoreNames.contains(storeName)) {
+          // The "kv" store from `plot-zustand` is keyed externally;
+          // every other Plot store keys by an `id` property. Pick the
+          // shape from the backup target list.
+          const keyPath = storeName === "kv" ? undefined : "id"
+          upgraded.createObjectStore(storeName, keyPath ? { keyPath } : undefined)
+        }
+      }
+      upgradeReq.onsuccess = () => resolve(upgradeReq.result)
+    }
+  })
+}
+
+async function restoreDump(dump: BackupDBDump): Promise<{ written: number }> {
+  if (dump.missing) return { written: 0 }
+  const db = await openDbForRestore(dump.dbName, dump.storeName)
+  try {
+    const tx = db.transaction(dump.storeName, "readwrite")
+    const store = tx.objectStore(dump.storeName)
+    await promisifyReq(store.clear())
+
+    let written = 0
+    if (dump.format === "kv") {
+      for (const entry of dump.entries as Array<{ key: string; value: unknown }>) {
+        store.put(entry.value, entry.key)
+        written++
+      }
+    } else if (dump.format === "attachments") {
+      for (const entry of dump.entries as Array<{ id: string; data_base64: string }>) {
+        store.put({ id: entry.id, data: base64ToArrayBuffer(entry.data_base64) })
+        written++
+      }
+    } else {
+      // "objects" — id keyPath; the value already carries `id`.
+      for (const entry of dump.entries as Array<Record<string, unknown>>) {
+        store.put(entry)
+        written++
+      }
+    }
+
+    await new Promise<void>((resolve, reject) => {
+      tx.oncomplete = () => resolve()
+      tx.onerror = () => reject(tx.error)
+      tx.onabort = () => reject(tx.error)
+    })
+    return { written }
+  } finally {
+    db.close()
+  }
+}
+
+export interface RestoreSummary {
+  perDb: Array<{ dbName: string; storeName: string; written: number; skipped?: string }>
+  totalWritten: number
+}
+
+/**
+ * Restore a Plot backup into the current browser. Clears the target DBs
+ * before writing — the user's existing data in any included store is
+ * replaced. Caller is responsible for prompting confirmation and reloading
+ * the page so the Zustand store re-hydrates from the new snapshot.
+ */
+export async function restoreFromBackup(raw: unknown): Promise<RestoreSummary> {
+  const backup = raw as PlotBackup
+  if (!backup || backup.generator !== "plot") {
+    throw new Error("Not a Plot backup file (generator mismatch)")
+  }
+  if (backup.version !== "1") {
+    throw new Error(`Unsupported backup version: ${backup.version}`)
+  }
+  if (!Array.isArray(backup.dbs)) {
+    throw new Error("Backup is missing the `dbs` payload")
+  }
+
+  const summary: RestoreSummary = { perDb: [], totalWritten: 0 }
+  for (const dump of backup.dbs) {
+    if (dump.missing) {
+      summary.perDb.push({ dbName: dump.dbName, storeName: dump.storeName, written: 0, skipped: "missing in backup" })
+      continue
+    }
+    if (dump.error) {
+      summary.perDb.push({ dbName: dump.dbName, storeName: dump.storeName, written: 0, skipped: `dump error: ${dump.error}` })
+      continue
+    }
+    const { written } = await restoreDump(dump)
+    summary.perDb.push({ dbName: dump.dbName, storeName: dump.storeName, written })
+    summary.totalWritten += written
+  }
+  return summary
+}
+
+/** Read a File handle as JSON and pipe through {@link restoreFromBackup}. */
+export async function restoreFromFile(file: File): Promise<RestoreSummary> {
+  const text = await file.text()
+  let parsed: unknown
+  try {
+    parsed = JSON.parse(text)
+  } catch (e) {
+    throw new Error(`File is not valid JSON: ${e instanceof Error ? e.message : String(e)}`)
+  }
+  return restoreFromBackup(parsed)
+}

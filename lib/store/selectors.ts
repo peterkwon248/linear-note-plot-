@@ -48,8 +48,19 @@ export function getFilteredNotes(state: PlotState): Note[] {
   )
 }
 
-/** Route-based filter (used by NoteList via filter prop) */
-export function filterNotesByRoute(notes: Note[], filter: NoteFilter, searchQuery = ""): Note[] {
+/**
+ * Route-based filter (used by NoteList via filter prop).
+ *
+ * Phase 1b2: snoozed-due test on the `status-stone` route reads from the
+ * caller-supplied `dueSnoozeNoteIds` set instead of `Note.reviewAt`. Pass an
+ * empty set (default) to skip the snoozed-due bucket entirely.
+ */
+export function filterNotesByRoute(
+  notes: Note[],
+  filter: NoteFilter,
+  searchQuery = "",
+  dueSnoozeNoteIds: Set<string> = new Set(),
+): Note[] {
   let filtered = notes
   const isActive = (n: Note) => !n.trashed
 
@@ -77,7 +88,7 @@ export function filterNotesByRoute(notes: Note[], filter: NoteFilter, searchQuer
         n.status === "stone" &&
         isActive(n) &&
         n.triageStatus !== "trashed" &&
-        (n.triageStatus === "untriaged" || (n.triageStatus === "snoozed" && n.reviewAt && new Date(n.reviewAt) <= new Date()))
+        (n.triageStatus === "untriaged" || (n.triageStatus === "snoozed" && dueSnoozeNoteIds.has(n.id)))
       )
       break
     case "status-brick":

@@ -3,64 +3,56 @@
 > 우선순위 기반 작업 목록. **P0 = 다음 세션 즉시 시작점** (NEXT-ACTION.md 폐지, 2026-05-12).
 > 완료 항목은 즉시 삭제. 자세한 history는 SESSION-LOG.md + MEMORY.md.
 
-**마지막 갱신**: 2026-05-24 (새벽) — Temporal Hooks PRD v0.2 + Phase 1a foundation 머지 (PR #411). 다음 P0 #1 = Phase 1b.
+**마지막 갱신**: 2026-05-24 (오후) — Phase 1b 완성 (1b1+1b2+1b3 통합) + Settings 전수 wire (5/5). 다음 P0 #1 = Phase 1c.
 
 ---
 
-## 🟣 P0 — 즉시 (cross-machine 진입점, 2026-05-24 새벽)
+## 🟣 P0 — 즉시 (cross-machine 진입점, 2026-05-24 오후)
 
-> P0 #1 = Phase 1b (workflow wire + read-site + legacy 제거). #2 = Phase 1c (Inbox 재배선). #3 = Phase 2 의제.
+### 1. **🔴 Phase 1c — Inbox Do/Review/Detected 섹션 재배선**
 
-### 1. **🔴 Phase 1b — workflow wire + read-site + legacy 필드 제거**
-
-**범위**: Phase 1a Hook foundation을 실제 코드 path에 연결. 1-step migration 완성 (PRD §11 Q3).
+**범위**: 기존 5종 source (reminder/srs/snooze-expired/wiki-redlink/auto-enroll)를 PRD §6의 의도 섹션 (Do / Review / Detected)으로 분류 + UI 3 카드로 분리. Q6 결정 ("Do 비우기 = Inbox-zero" + "Review/Detected는 영원") 적용.
 
 **첫 스텝**:
-1. `lib/store/slices/workflow.ts` 액션 wire:
-   - `setReminder(id, reviewAt)` → `addHook({ target:{kind:"note",id}, policy:"snooze", trigger:{kind:"scheduled",at:reviewAt}, action:{loudness:"active"} })`. 기존 `n.reviewAt` set 제거.
-   - `clearReminder(id)` → `removeHooksByPolicy({kind:"note",id}, "snooze")`
-   - `triageSnooze(id, reviewAt)` → addHook (loudness: "passive")
-   - `batchSetReminder(ids, reviewAt)` → forEach(addHook)
-   - `enrollSRS(noteId)` → `addHook({ target:{kind:"note",id:noteId}, policy:"srs", trigger:{kind:"srs",srsState}, action:{loudness:"active"}, state:{srsState} })`. 기존 srsStateByNoteId set 제거.
-   - `unenrollSRS(noteId)` → `removeHooksByPolicy({kind:"note",id:noteId}, "srs")`
-   - `updateSRSState(noteId, srsState)` → updateHook 또는 remove+add
-2. `lib/store/slices/wiki-articles.ts`:
-   - `setWikiArticlePlannedDate(id, plannedDate)` → addHook (plan, scheduled) + 기존 plannedDate 제거
-3. Read-site 변경:
-   - `lib/queries/notes.ts:164` getReviewQueue — srsMap → hooks query
-   - Inbox source 5종 — reviewAt → hooks
-   - Wiki timeline plannedDate drag (`wiki-timeline-view.tsx`) — plannedDate → hooks
-   - SRS review UI — srsStateByNoteId → hooks state
-4. `lib/types.ts` legacy 필드 제거:
-   - `Note.reviewAt` / `Note.triageStatus` (가능?) / `WikiArticle.plannedDate` / `PlotState.srsStateByNoteId`
-5. store v146 → v147 migration (legacy field strip, idempotent)
-6. `promoteToPermanent` 자동 SRS Hook 장착 (Q4 결정)
+1. PRD `.omc/plans/unified-temporal-hooks-prd.md` §6 + Q6 RESOLVED 재독.
+2. `lib/hooks/use-inbox.ts`:
+   - InboxItem에 `section: "do" | "review" | "detected"` 필드 추가
+   - Hook → section 매핑: snooze+active → Do / srs → Do / snooze+passive → Review / plan(wiki) → Review / wiki-redlink → Detected / auto-enroll → Detected / snooze-expired → Do
+3. `components/views/inbox-view.tsx` — 3 카드 (Do / Review / Detected). 각 카드 항상 표시 (Q6). Do empty + Review/Detected non-empty → "All caught up" 카피.
+4. EmptyAll 상태 카피 갱신.
+
+**Hook → section 매핑**:
+```
+snooze + active           → Do (reminder due)
+srs                       → Do (review due)
+snooze + passive          → Review (intentional snooze)
+plan (wiki)               → Review (planned horizon)
+wiki-redlink (non-hook)   → Detected
+auto-enroll (non-hook)    → Detected
+snooze-expired (transient)→ Do (sticky return path)
+```
 
 **위험 + 회피**:
-- 큰 작업 — 단일 PR vs 1b1 (workflow wire) / 1b2 (read-site) / 1b3 (legacy 제거) 분할 가능
-- SRS 엔진(`lib/srs/`) 그대로 (PRD §5) — Hook.state로 wrapping shape 결정 (Hook.state.srsState vs Hook.trigger.srsState 단일화)
-- Multi-action transaction — setReminder는 addHook + 기존 reviewAt null을 single setState로 묶기
+- 단일 PR로 가능 vs Phase 1c1 (분류만) + Phase 1c2 (UI 분리) 분할 가능
+- 빈 Detected 카드 처리 — Q6 "영원" 정합 (empty state 카피)
+- dismissedInboxItems / snoozedInboxItems 패턴 keep (cross-section)
 
-**참고 파일**:
-- `lib/store/slices/workflow.ts` — wire 대상
-- `lib/store/slices/hooks.ts` — Phase 1a slice (Phase 1b의 building block)
-- `lib/queries/notes.ts:164` — getReviewQueue
-- `lib/srs/` — SRS 엔진
-- `components/views/wiki-timeline-view.tsx` — plannedDate drag
-- `lib/hooks/use-inbox.ts` — Inbox source 5종
+**참고 파일**: SESSION-LOG 2026-05-24 (오후) hook + `.omc/plans/unified-temporal-hooks-prd.md` §6
 
-### 2. **🟡 Phase 1c — Inbox Do/Review/Detected 재배선**
+### 2. **🟢 i18n 확장 (선택)**
 
-PRD §6-1: 기존 source 5종 → intent 섹션 (Do / Review / Detected). Q6 결정 적용. "All caught up — Review/Detected are always running" 카피.
+- JA/ES/FR/DE dictionary 채우기 (현재 placeholder)
+- Settings 외 surface 확장 — sidebar nav, activity bar tooltip, command palette
+
+사용자 신호 시 진입. 부분 적용 권장.
 
 ### 3. **🟢 Phase 2 의제 (Phase 1 완료 후)**
 
-watch + recurring 신규 정책. open questions Q1 (EventPattern 문법) + Q5 (recurring 범위) 결정 필요. 우클릭 프리셋 + 타임라인 드래그 hook UI.
+watch + recurring hooks + 우클릭 프리셋 + 타임라인 드래그 hook UI. PRD §11 Q1 (EventPattern) + Q5 (recurring 범위) 결정 필요.
 
-### 4. **🟢 사용자 viewport 검증 (Ghost Row v0.1 + Phase 1a migration)**
+### 4. **🟢 사용자 viewport 검증 (Phase 1b 마이그)**
 
-- Ghost Row v0.1 (PR #410) — Wiki/Notes/Books timeline + grouping → group header click → ghost row inject 확인
-- Phase 1a migration (PR #411) — 기존 reviewAt / srsState / plannedDate가 정상 Hook 변환되었는지 검사
+기존 reviewAt / srsState / plannedDate가 정상 Hook 변환되었는지 inbox / sidebar / timeline / SRS UI에서 확인. Ghost Row v0.1 (PR #410) viewport 시각 확인도 함께.
 
 ---
 
@@ -74,6 +66,7 @@ watch + recurring 신규 정책. open questions Q1 (EventPattern 문법) + Q5 (r
 
 ## ✅ 최근 완료
 
+- **2026-05-24 (오후)**: **Phase 1b 통합 (1b1+1b2+1b3) + Settings 전수 wire (5/5)** — 단일 거대 PR. (a) Phase 1b1 workflow.ts/wiki-articles.ts hooks slice wire (dual-write) + (b) Phase 1b2 read-site 마이그 12+ 파일 (신규 lib/store/hook-selectors.ts + getReviewQueue/useInbox/wiki-timeline/sidebar/insights/settings 모두 hooks 기반) + (c) Phase 1b3 legacy 제거 (Note.reviewAt / WikiArticle.plannedDate / srsStateByNoteId 영구 삭제 + v146→v147 strip migration + reviewAt filter operator drop + helpers.ts/test fixtures cleanup) + (d) Settings #1 Start view wire (app/(app)/layout.tsx 라우팅, persist hydration 대기) + (e) Settings #2 Sync 솔직한 reframe (backupReminder/lastBackupAt 신규, toast nudge) + (f) Settings #3 Line numbers wire (CSS counter gutter) + (g) Settings #4 Backup Restore (restoreFromBackup + Import UI + 자동 reload) + (h) Settings #5 i18n (lib/i18n.ts 신규, EN/KO 완전 dictionary, useT 훅, 모든 Settings 페이지 적용). 영구 LOCKED #113~#116. tsc/build clean.
 - **2026-05-24 (새벽)**: Temporal Hooks PRD v0.2 + Phase 1a foundation 머지 (PR #411). PRD §11 Q3/Q4/Q6 RESOLVED (1-step migration / 보수적 전이 / Inbox Do-Review-Detected). Q1/Q2/Q5 DEFERRED to Phase 2/3. 4 파일 변경 + 1 신규 (lib/store/slices/hooks.ts) + PRD update. Hook model + slice + v145→v146 migration (Note.reviewAt+triageStatus / srsStateByNoteId / WikiArticle.plannedDate → Hook 일괄 흡수, idempotent). legacy 필드 Phase 1a 한정 keep. tsc/build clean. Round-trip 검증.
 - **2026-05-24 (심야)**: Ghost Row v0.1 universal — 7 파일 변경. DisplayLane<T> union (LanedItem | LanedCollapsedHeader) + sub-components TS narrowing (timeline-bar/grid/label-column) + 3 entity timeline orchestrators (wiki/notes/books) visibleLanes ghost inject + 모든 caller ghost skip. 시각: 그룹 header 클릭 → ghost row 1줄 (chevron right + label + N hidden + Expand hint), click expand 복구. Linear/Notion 정합. tsc/build clean.
 - **2026-05-24 (밤)**: Group collapse universal 완성 — 5 파일 변경 (PR #409): (1) Wiki Board column collapse (notes-board PR-Q5 패턴 복제) + (2) Notes Timeline lane collapse (PR-Q4 wiki 패턴) + (3) Books Timeline lane collapse (동일). 5 entity-mode 조합 모두 `viewState.collapsedGroups` 공유 — list/board/timeline cross-mode 일관 fold state. tsc/build clean.
@@ -118,6 +111,10 @@ watch + recurring 신규 정책. open questions Q1 (EventPattern 문법) + Q5 (r
 - **#108 LOCKED (2026-05-24 저녁)**: Grouping = organize / Filter = focus. 사용자가 "특정 영역만 보기" 의도는 filter primary path. 큰 corpus에선 group collapse + quick filter chip이 scaling 본질 도구.
 - **#109 LOCKED (2026-05-24 저녁)**: Linear board column collapse pattern — 40px narrow vertical bar + chevron up + vertical label (writing-mode: vertical-rl) + status icon + count. expanded 시 header에 chevron-down.
 - **#110 LOCKED (2026-05-24 저녁)**: File 엔티티 v1 완료 (PR 1a/1b/1c/1b'/2/3). v2 (content-hash dedup / hard-delete dangling cleanup) Phase 2로 이관. Books 접점 직접 참조 0 (간접만).
+- **#113 LOCKED (2026-05-24 오후)**: Hook = single source of truth. legacy 필드 영구 제거. 신규 temporal 기능은 무조건 Hook 위에.
+- **#114 LOCKED (2026-05-24 오후)**: planning intent ≠ content activity 확장 — setReminder/clearReminder/batchSetReminder가 notes.updatedAt 갱신하지 않음 (#89 wiki 한정 룰을 note까지). triageSnooze는 triageStatus/snoozeCount/lastTouchedAt만 갱신 (non-temporal workflow state는 별개).
+- **#115 LOCKED (2026-05-24 오후)**: Sync 페이지 = honesty over hype. fake auto-sync 제거, "Multi-device sync: Not available" 명시. backup reminder + 마지막 백업 timestamp만 진짜 기능.
+- **#116 LOCKED (2026-05-24 오후)**: i18n = 간단한 dictionary lookup. 외부 의존성 없이 `lib/i18n.ts` + `useT()` 훅. 미번역 키는 EN fallback → literal key fallback.
 
 전체 영구 룰 #1-#88: docs/MEMORY.md + docs/CONTEXT.md 참조.
 

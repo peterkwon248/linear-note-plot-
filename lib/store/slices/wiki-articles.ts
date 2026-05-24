@@ -206,6 +206,11 @@ export function createWikiArticlesSlice(set: Set, get: Get, appendEvent: AppendE
           if (next.length === members.length) return s
           return { ...s, members: next }
         }),
+        // Phase 1b2: cascade plan/staleness hooks targeting the deleted
+        // article so the unified hooks slice doesn't accrue dangling refs.
+        hooks: (state.hooks ?? []).filter(
+          (h: any) => !(h.target?.kind === "wiki" && h.target?.id === articleId),
+        ),
       }))
     },
 
@@ -244,19 +249,21 @@ export function createWikiArticlesSlice(set: Set, get: Get, appendEvent: AppendE
      *  in the timeline view). `date = null` clears the plan (delete-style).
      *  Does NOT update `updatedAt` — planning is intent, not content activity
      *  (design §3.4). No entityEvent emitted (Phase 1 keeps the log clean;
-     *  future "planned_date_set" event hook is the natural extension). */
+     *  future "planned_date_set" event hook is the natural extension).
+     *
+     *  Phase 1b3: the legacy `WikiArticle.plannedDate` field is retired. The
+     *  plan now lives exclusively on the `hooks` slice (`plan` policy,
+     *  `scheduled` trigger, `passive` loudness). */
     setWikiArticlePlannedDate: (articleId: string, date: string | null) => {
-      set((state: any) => ({
-        wikiArticles: state.wikiArticles.map((a: WikiArticle) => {
-          if (a.id !== articleId) return a
-          if (date === null) {
-            // Clear — omit the field rather than leaving an explicit null.
-            const { plannedDate: _drop, ...rest } = a as WikiArticle & { plannedDate?: string | null }
-            return rest as WikiArticle
-          }
-          return { ...a, plannedDate: date }
-        }),
-      }))
+      get().removeHooksByPolicy({ kind: "wiki", id: articleId }, "plan")
+      if (date !== null) {
+        get().addHook({
+          target: { kind: "wiki", id: articleId },
+          policy: "plan",
+          trigger: { kind: "scheduled", at: date },
+          action: { loudness: "passive" },
+        })
+      }
     },
 
     /* ── Block Operations ── */

@@ -38,7 +38,7 @@ import { format, formatDistanceToNow } from "date-fns"
 import { usePlotStore } from "@/lib/store"
 import { useState, useMemo, useCallback } from "react"
 import { StatusDropdown, LabelDropdown } from "@/components/note-fields"
-import { isReadyToPromote, needsReview, isStaleSuggest, getSnoozeTime, getInboxNotes } from "@/lib/queries/notes"
+import { isReadyToPromote, needsReview, isStaleSuggest, getSnoozeTime, getInboxNotes, buildDueSnoozeSet } from "@/lib/queries/notes"
 import { useBacklinksIndex } from "@/lib/search/use-backlinks-index"
 import { toast } from "sonner"
 import { FolderPicker } from "@/components/folder-picker"
@@ -113,12 +113,14 @@ export function SidePanelContext({ noteId: propNoteId }: { noteId?: string | nul
     [note?.contentJson] // eslint-disable-line react-hooks/exhaustive-deps
   )
 
+  // Phase 1b2: snoozed-due notes are resolved from the unified hooks slice.
+  const hooks = usePlotStore((s) => s.hooks)
   const advanceToNextInbox = useCallback(() => {
     if (!note || note.status !== "stone") return
-    const inbox = getInboxNotes(notes, backlinks)
+    const inbox = getInboxNotes(notes, backlinks, buildDueSnoozeSet(hooks))
     const next = inbox.find((n) => n.id !== note.id)
     setSelectedNoteId(next?.id ?? null)
-  }, [note, notes, backlinks, setSelectedNoteId])
+  }, [note, notes, backlinks, hooks, setSelectedNoteId])
 
   const wikiCategories = usePlotStore((s) => s.wikiCategories)
 

@@ -7,6 +7,7 @@ import { shortRelative } from "@/lib/format-utils"
 import { setWikiViewMode } from "@/lib/wiki-view-mode"
 import { isWikiStub } from "@/lib/wiki-utils"
 import { usePlotStore } from "@/lib/store"
+import { getPlannedDateForWiki } from "@/lib/store/hook-selectors"
 import { WIKI_STATUS_HEX } from "@/lib/colors"
 import { IconWikiStub, IconWikiArticle } from "@/components/plot-icons"
 import type { WikiArticle, WikiCategory } from "@/lib/types"
@@ -167,6 +168,8 @@ export function WikiArticleMenuItems({
   onDelete?: () => void
   onShowConnected?: (direction: "both" | "in" | "out") => void
 }) {
+  // Phase 1b2: plannedDate read-site moved to the `hooks` slice.
+  const plannedDate = usePlotStore((s) => getPlannedDateForWiki(s.hooks, note.id))
   return (
     <>
       {onMerge && (
@@ -201,7 +204,7 @@ export function WikiArticleMenuItems({
           submenu (FolderPickerInlineSubmenu pattern). Setter does NOT touch
           updatedAt — planning = intent, not content activity. */}
       <PlanForSubmenu
-        currentDate={note.plannedDate ?? null}
+        currentDate={plannedDate}
         onSelect={(iso) => {
           close()
           usePlotStore.getState().setWikiArticlePlannedDate(note.id, iso)

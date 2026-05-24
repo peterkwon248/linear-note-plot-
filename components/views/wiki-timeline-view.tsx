@@ -11,6 +11,7 @@
 import { useState, useMemo, useCallback, useRef, useEffect } from "react"
 import { isWikiStub, safeDate, getHorizon } from "@/lib/wiki-utils"
 import { usePlotStore } from "@/lib/store"
+import { getPlannedDateForWiki } from "@/lib/store/hook-selectors"
 import type { WikiArticle, EntityEvent } from "@/lib/types"
 import type { ViewState } from "@/lib/view-engine/types"
 import type { WikiGroup } from "@/lib/view-engine/wiki-list-pipeline"
@@ -107,6 +108,24 @@ export function WikiTimelineView({
   const [eventTooltip, setEventTooltip] = useState<TimelineEventTooltipState | null>(null)
   const entityEvents = usePlotStore((s) => s.entityEvents)
 
+  // Phase 1b2: planned dates now live on the `hooks` slice. Build a map once
+  // per render so the layout adapters resolve plannedDate without touching
+  // `article.plannedDate` (retired in Phase 1b3).
+  const hooks = usePlotStore((s) => s.hooks)
+  const plannedDateByArticleId = useMemo(() => {
+    const m = new Map<string, string>()
+    for (const h of hooks) {
+      if (h.policy !== "plan" || h.target.kind !== "wiki") continue
+      if (h.trigger.kind !== "scheduled") continue
+      m.set(h.target.id, h.trigger.at)
+    }
+    return m
+  }, [hooks])
+  const horizonForArticle = useCallback(
+    (a: WikiArticle) => getHorizon(a, plannedDateByArticleId.get(a.id) ?? null),
+    [plannedDateByArticleId],
+  )
+
   const [dragState, setDragState] = useState<TimelineDragState | null>(null)
 
   const canvasSvgRef = useRef<SVGSVGElement>(null)
@@ -149,8 +168,8 @@ export function WikiTimelineView({
 
   /** "All" mode: data-fitted config + winStart. Computed always (cheap); used when zoom === "all". */
   const allFit = useMemo(
-    () => computeAllFit(validArticles, Math.max((viewportW || 1000) - LABEL_COL_WIDTH, 1), now, getHorizon),
-    [validArticles, viewportW, now],
+    () => computeAllFit(validArticles, Math.max((viewportW || 1000) - LABEL_COL_WIDTH, 1), now, horizonForArticle),
+    [validArticles, viewportW, now, horizonForArticle],
   )
 
   const cfg = zoom === "all" ? allFit.cfg : ZOOM_CONFIGS[zoom]
@@ -163,8 +182,8 @@ export function WikiTimelineView({
   const canvasWidth = cfg.pxPerDay * cfg.totalDays
 
   const allLanes = useMemo(
-    () => laneArticles(validArticles, winStart, cfg.pxPerDay, cfg.minBarWidth, getHorizon),
-    [validArticles, winStart, cfg.pxPerDay, cfg.minBarWidth],
+    () => laneArticles(validArticles, winStart, cfg.pxPerDay, cfg.minBarWidth, horizonForArticle),
+    [validArticles, winStart, cfg.pxPerDay, cfg.minBarWidth, horizonForArticle],
   )
 
   // PR-Q4 v2: visible lanes = expanded-group article lanes + ghost-lane
@@ -554,7 +573,7 @@ export function WikiTimelineView({
                       </span>
                     )
                   }
-                  const planned = safeDate(a.plannedDate)
+                  const planned = safeDate(plannedDateByArticleId.get(a.id) ?? null)
                   const updated = safeDate(a.updatedAt)
                   if (planned) {
                     const rel = relativeDateLabel(planned, now)

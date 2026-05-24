@@ -1,5 +1,6 @@
-import type { Note } from "@/lib/types"
+import type { Note, Hook } from "@/lib/types"
 import type { SRSState } from "@/lib/srs"
+import { getSRSStateForNote, getReminderForNote } from "@/lib/store/hook-selectors"
 
 /* ── Inbox Rank ────────────────────────────────────────── */
 
@@ -90,15 +91,22 @@ export function isStaleSuggest(note: Note): boolean {
 /**
  * Get stone notes sorted by inboxRank desc, then createdAt desc.
  * Only shows untriaged or snoozed-that-are-due.
+ *
+ * Phase 1b2: "snoozed due" is sourced from the unified hooks slice — caller
+ * passes a `dueSnoozeNoteIds` set (precomputed via `buildDueSnoozeSet`). If
+ * the set is omitted, snoozed notes are never auto-surfaced.
  */
-export function getInboxNotes(allNotes: Note[], backlinks: Map<string, number>): Note[] {
-  const nowMs = Date.now()
+export function getInboxNotes(
+  allNotes: Note[],
+  backlinks: Map<string, number>,
+  dueSnoozeNoteIds: Set<string> = new Set(),
+): Note[] {
   return allNotes
     .filter((n) => {
       if (n.status !== "stone") return false
       if (n.triageStatus === "trashed") return false
       if (n.triageStatus === "untriaged") return true
-      if (n.triageStatus === "snoozed" && n.reviewAt && new Date(n.reviewAt).getTime() <= nowMs) return true
+      if (n.triageStatus === "snoozed" && dueSnoozeNoteIds.has(n.id)) return true
       return false
     })
     .map((n) => ({ ...n, inboxRank: computeInboxRank(n, backlinks) }))
@@ -106,6 +114,18 @@ export function getInboxNotes(allNotes: Note[], backlinks: Map<string, number>):
       if (b.inboxRank !== a.inboxRank) return b.inboxRank - a.inboxRank
       return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
     })
+}
+
+/** Build the precomputed "due snooze" set from the hooks slice — note ids
+ *  whose scheduled snooze hook is due now (`trigger.at <= now`). */
+export function buildDueSnoozeSet(hooks: Hook[], nowMs: number = Date.now()): Set<string> {
+  const out = new Set<string>()
+  for (const h of hooks) {
+    if (h.policy !== "snooze" || h.target.kind !== "note") continue
+    if (h.trigger.kind !== "scheduled") continue
+    if (new Date(h.trigger.at).getTime() <= nowMs) out.add(h.target.id)
+  }
+  return out
 }
 
 /* ── Brick query ────────────────────────────────────── */
@@ -160,8 +180,16 @@ export interface ReviewItem {
  * 2. Snoozed notes that are due
  * 3. Stale brick (7+ days untouched)
  * 4. Unlinked keystone notes
+ *
+ * Phase 1b2: snooze/SRS/remind buckets all source from the unified `hooks`
+ * slice. Caller passes the hooks array; the legacy `Note.reviewAt` and
+ * `srsStateByNoteId` are no longer consulted.
  */
-export function getReviewQueue(allNotes: Note[], backlinks: Map<string, number>, srsMap?: Record<string, SRSState>): ReviewItem[] {
+export function getReviewQueue(
+  allNotes: Note[],
+  backlinks: Map<string, number>,
+  hooks: Hook[] = [],
+): ReviewItem[] {
   const nowMs = Date.now()
   const items: ReviewItem[] = []
 
@@ -170,14 +198,14 @@ export function getReviewQueue(allNotes: Note[], backlinks: Map<string, number>,
     .filter((n) => n.status === "stone" && n.triageStatus === "untriaged")
     .forEach((note) => items.push({ note, reason: "stone-untriaged" }))
 
-  // 2. Snoozed due
+  // 2. Snoozed due — note has triageStatus="snoozed" AND a snooze hook due now.
+  const dueSnoozeIds = buildDueSnoozeSet(hooks, nowMs)
   allNotes
     .filter(
       (n) =>
         n.status === "stone" &&
         n.triageStatus === "snoozed" &&
-        n.reviewAt &&
-        new Date(n.reviewAt).getTime() <= nowMs
+        dueSnoozeIds.has(n.id),
     )
     .forEach((note) => items.push({ note, reason: "snoozed-due" }))
 
@@ -196,33 +224,33 @@ export function getReviewQueue(allNotes: Note[], backlinks: Map<string, number>,
     )
     .forEach((note) => items.push({ note, reason: "unlinked-keystone" }))
 
-  // 5. SRS due
-  if (srsMap) {
-    const nowISO = new Date().toISOString()
+  // 5. SRS due — keystone notes with a srs hook whose state.dueAt <= now.
+  {
+    const nowISO = new Date(nowMs).toISOString()
     const seen = new Set(items.map((i) => i.note.id))
     for (const note of allNotes) {
       if (note.status !== "keystone") continue
       if (note.triageStatus === "trashed") continue
       if (seen.has(note.id)) continue
-      const srs = srsMap[note.id]
+      const srs: SRSState | null = getSRSStateForNote(hooks, note.id)
       if (srs && srs.dueAt <= nowISO) {
         items.push({ note, reason: "srs-due" })
       }
     }
   }
 
-  // 6. Remind-due (non-stone notes with reviewAt in the past)
+  // 6. Remind-due — non-stone notes with a snooze hook scheduled <= now.
   {
     const seen = new Set(items.map((i) => i.note.id))
-    allNotes
-      .filter((n) => {
-        if (n.status === "stone") return false
-        if (n.triageStatus === "trashed") return false
-        if (!n.reviewAt) return false
-        return new Date(n.reviewAt).getTime() <= nowMs
-      })
-      .filter((n) => !seen.has(n.id))
-      .forEach((note) => items.push({ note, reason: "remind-due" }))
+    for (const note of allNotes) {
+      if (note.status === "stone") continue
+      if (note.triageStatus === "trashed") continue
+      if (seen.has(note.id)) continue
+      const at = getReminderForNote(hooks, note.id)
+      if (at && new Date(at).getTime() <= nowMs) {
+        items.push({ note, reason: "remind-due" })
+      }
+    }
   }
 
   return items

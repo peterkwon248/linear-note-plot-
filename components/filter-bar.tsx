@@ -789,7 +789,8 @@ const FIELD_TO_GROUP: Record<FilterField, FilterGroupKey> = {
   showWikilinks: "content",
   showTagNodes: "content",
   hullEntity: "content",
-  reviewAt: "dates",
+  // Phase 1b3: `reviewAt` filter field removed — reminders now live on
+  // the unified hooks slice (see `lib/view-engine/filter.ts` comment).
   // Wiki-specific fields
   category: "tags",
   wikiTier: "content",

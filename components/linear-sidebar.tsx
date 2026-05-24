@@ -33,6 +33,7 @@ import {
   Search as MagnifyingGlass,
 } from "lucide-react"
 import { usePlotStore } from "@/lib/store"
+import { getSnoozeHooks } from "@/lib/store/hook-selectors"
 import { PRESET_COLORS, getEntityColor, WIKI_STATUS_HEX } from "@/lib/colors" // v109: opt-in color fallback
 import { isWikiStub } from "@/lib/wiki-utils"
 import { setWikiViewMode, useWikiViewMode, setCategoryOverview } from "@/lib/wiki-view-mode"
@@ -252,6 +253,7 @@ export function LinearSidebar() {
   const router = useRouter()
   const openNote = usePlotStore((s) => s.openNote)
   const notes = usePlotStore((s) => s.notes)
+  const hooks = usePlotStore((s) => s.hooks)
   const wikiArticles = usePlotStore((s) => s.wikiArticles)
   const folders = usePlotStore((s) => s.folders)
   const createFolder = usePlotStore((s) => s.createFolder)
@@ -1345,20 +1347,30 @@ export function LinearSidebar() {
               })()}
             </Section>
 
-            {/* Upcoming Reminders */}
+            {/* Upcoming Reminders — Phase 1b2: snooze hooks (scheduled at > now). */}
             {(() => {
               const now = new Date()
-              const upcoming = notes.filter(n => {
-                if (n.trashed || !n.reviewAt) return false
-                try { return new Date(n.reviewAt) > now } catch { return false }
-              }).sort((a, b) => new Date(a.reviewAt!).getTime() - new Date(b.reviewAt!).getTime()).slice(0, 5)
+              const nowMs = now.getTime()
+              const noteById = new Map(notes.map((n) => [n.id, n]))
+              type UpcomingItem = { note: typeof notes[number]; at: string }
+              const upcoming: UpcomingItem[] = []
+              for (const h of getSnoozeHooks(hooks)) {
+                if (h.target.kind !== "note" || h.trigger.kind !== "scheduled") continue
+                const note = noteById.get(h.target.id)
+                if (!note || note.trashed) continue
+                const t = new Date(h.trigger.at).getTime()
+                if (Number.isNaN(t) || t <= nowMs) continue
+                upcoming.push({ note, at: h.trigger.at })
+              }
+              upcoming.sort((a, b) => new Date(a.at).getTime() - new Date(b.at).getTime())
+              const top = upcoming.slice(0, 5)
 
-              return upcoming.length > 0 ? (
+              return top.length > 0 ? (
                 <Section title="Upcoming">
-                  {upcoming.map(note => {
+                  {top.map(({ note, at }) => {
                     let relDate = ""
                     try {
-                      const d = new Date(note.reviewAt!)
+                      const d = new Date(at)
                       const diff = Math.ceil((d.getTime() - now.getTime()) / (1000*60*60*24))
                       relDate = diff === 0 ? "Today" : diff === 1 ? "Tomorrow" : `In ${diff}d`
                     } catch {}

@@ -15,7 +15,7 @@
  * the item appears in the inbox queue.
  */
 export type InboxItemKind =
-  | "reminder"        // Note.reviewAt 도래 (today + overdue)
+  | "reminder"        // snooze hook (scheduled) due (today + overdue)
   | "srs"             // SRS scheduled review 도래
   | "snooze-expired"  // 사용자 snooze가 만료된 항목 (self-referential)
   | "wiki-redlink"    // [[새 wiki]] 작성됐는데 article 미생성

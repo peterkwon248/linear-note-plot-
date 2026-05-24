@@ -23,7 +23,6 @@ function makeNote(overrides: Partial<Note> = {}): Note {
     createdAt: new Date(Date.now() - 86400000).toISOString(), // 1 day ago
     updatedAt: new Date().toISOString(),
     triageStatus: "untriaged",
-    reviewAt: null,
     inboxRank: 0,
     summary: null,
     source: "manual",

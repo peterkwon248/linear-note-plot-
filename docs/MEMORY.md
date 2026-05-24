@@ -8,6 +8,41 @@
 
 ---
 
+## 🚀 2026-05-24 (오후) — **Phase 1b 통합 (1b1+1b2+1b3) + Settings 전수 wire (5/5) — 8 task 단일 PR** ⭐⭐⭐⭐⭐
+
+**범위**: 단일 거대 PR. (a) Phase 1b 전 단계 통합 — workflow.ts/wiki-articles.ts hooks wire (1b1) → read-site 12+ 파일 마이그 (1b2) → legacy 필드 영구 제거 + v146→v147 migration (1b3). (b) 사용자 "Settings 모두 구현되어야 한다" 신호로 Settings 5 페이지 전수 wire — Start view 라우팅 / Sync 솔직한 backup reminder reframe / Line numbers CSS gutter / Backup Restore (Import) / i18n (EN+KO 완전).
+
+**핵심 결정 (영구 LOCKED #113~#116)**:
+- **#113 Hook = single source of truth** — `Note.reviewAt` / `WikiArticle.plannedDate` / `srsStateByNoteId` 영구 제거. 1-step migration (Q3) 완수. 신규 temporal 기능은 무조건 Hook 위에.
+- **#114 planning intent ≠ content activity 확장** — setReminder/clearReminder/batchSetReminder는 notes.updatedAt 갱신하지 않음 (#89 wiki 한정 룰을 note까지). triageSnooze는 triageStatus/snoozeCount만 갱신 (non-temporal workflow state).
+- **#115 Sync 페이지 = honesty over hype** — Plot은 cloud sync 백엔드 없음. fake auto-sync 제거, backup reminder + "Not available" 명시 disclosure가 정통.
+- **#116 i18n = 간단한 dictionary lookup** — next-intl 등 외부 의존성 없이 `lib/i18n.ts` + `useT()` 훅. 미번역 키는 EN fallback → literal key fallback (graceful degradation).
+
+**완료** (8 task 단일 PR):
+1. Phase 1b1 — workflow + wiki-articles hooks wire (dual-write 안전)
+2. Phase 1b2 — read-site 마이그 (getReviewQueue/useInbox/wiki-timeline/sidebar/insights/settings 모두 hooks 기반, lib/store/hook-selectors.ts 신규)
+3. Phase 1b3 — legacy 제거 + v146→v147 strip migration + reviewAt filter operator drop
+4. Settings #1 Start view — app/(app)/layout.tsx 라우팅 (persist hydration 대기 패턴)
+5. Settings #2 Sync reframe — backupReminder/lastBackupAt + toast nudge
+6. Settings #3 Line numbers — CSS counter 기반 gutter
+7. Settings #4 Backup Restore — restoreFromBackup + Import UI + reload
+8. Settings #5 i18n — lib/i18n.ts (Locale union + EN/KO dictionary + ja/es/fr/de placeholders + useT 훅)
+
+**기술 학습 (영구)**:
+- Zustand persist hydration 타이밍 — 첫 mount useEffect는 비동기 hydration 전 fire 가능 → `useStore.persist.hasHydrated()` + `onFinishHydration` 콜백 패턴
+- pure 헬퍼는 set/precomputed param이 best — `buildDueSnoozeSet(hooks)` 미리 계산 후 전달
+- SRS state mirror = trigger.srsState + state.srsState 둘 다 set (read는 trigger 우선)
+- Backup restore openDbForRestore 패턴 — plain open → store 없으면 version+1 upgrade
+- CSS counter line numbers — `.ProseMirror > *::before { counter-increment }` + position absolute gutter, NodeView 불필요
+- i18n flat key + Partial<Record> + translate fallback chain (target → EN → key)
+- router.replace vs push for start-view — replace = history 누적 X, push = back loop
+
+**미완**: Phase 1c (Inbox Do/Review/Detected 섹션 재배선) — 다음 P0 #1. i18n 확장 (ja/es/fr/de) + 외 surface — 사용자 신호 시.
+
+**다음**: Phase 1c → i18n 확장 (선택) → Phase 2 (watch + recurring).
+
+---
+
 ## 🚀 2026-05-24 (새벽) — **Temporal Hooks PRD v0.2 + Phase 1a foundation (Hook model + slice + v145→v146 migration)** ⭐⭐⭐⭐
 
 **범위**: PR #411 머지. temporal-hooks PRD v0.1 → v0.2 (Q3/Q4/Q6 RESOLVED). Phase 1a foundation — Hook 모델 + slice + 마이그레이션. legacy 필드 Phase 1a keep, Phase 1b에서 wire + 제거.

@@ -276,7 +276,7 @@ Read-only analysis engine producing insights about notes.
 - Types: `lib/srs/types.ts`
 - Fixed intervals: `[1, 3, 7, 14, 30, 60, 120]` days (index = step)
 - `SRSRating`: `0=Again` (reset to step 0), `1=Hard` (hold/step back), `2=Good` (+1 step), `3=Easy` (+2 steps)
-- State stored as `srsStateByNoteId: Record<string, SRSState>` in the main store
+- State stored on the unified `hooks` slice (`policy: "srs"`, `target: {kind:"note",id}`, `trigger.srsState` + `state.srsState`). Phase 1b3 retired the legacy `srsStateByNoteId` map.
 - Only `status === "keystone"` notes can be enrolled
 - `SRSState` fields: `step`, `dueAt` (ISO), `lastReviewedAt`, `introducedAt`, `lapses`
 

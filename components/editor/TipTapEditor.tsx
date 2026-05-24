@@ -44,6 +44,7 @@ export function TipTapEditor({
   const wordWrap = useSettingsStore((s) => s.wordWrap)
   const tabSize = useSettingsStore((s) => s.tabSize)
   const codeFontFamily = useSettingsStore((s) => s.codeFontFamily)
+  const lineNumbers = useSettingsStore((s) => s.lineNumbers)
 
   // Focus Mode detection for Typewriter Mode
   const sidebarCollapsed = usePlotStore((s) => s.sidebarCollapsed)
@@ -219,6 +220,7 @@ export function TipTapEditor({
       data-word-wrap={wordWrap ? "on" : "off"}
       data-tab-size={tabSize}
       data-code-font={codeFontFamily}
+      data-line-numbers={lineNumbers ? "on" : "off"}
     >
       <div ref={editorWrapRef} className="flex-1 relative">
         <BlockDragOverlay editor={editor}>

@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react"
 import { usePlotStore } from "@/lib/store"
+import { getPlannedDateForWiki } from "@/lib/store/hook-selectors"
 import { format, formatDistanceToNow } from "date-fns"
 import {
   Calendar as CalendarBlank,
@@ -71,6 +72,10 @@ export function WikiArticleDetailPanel({ article }: { article: WikiArticle | nul
   const removeWikiFromFolder = usePlotStore((s) => s.removeWikiFromFolder)
   const setWikiFolders = usePlotStore((s) => s.setWikiFolders)
   const setWikiArticlePlannedDate = usePlotStore((s) => s.setWikiArticlePlannedDate)
+  // Phase 1b2: plannedDate read-site moved to the `hooks` slice. `article`
+  // may be null (panel renders an empty state in that case) — fall back to
+  // null so the hook subscription stays consistent across the conditional.
+  const plannedDate = usePlotStore((s) => (article ? getPlannedDateForWiki(s.hooks, article.id) : null))
   const [folderOpen, setFolderOpen] = useState(false)
   const [planOpen, setPlanOpen] = useState(false)
 
@@ -388,15 +393,15 @@ export function WikiArticleDetailPanel({ article }: { article: WikiArticle | nul
                 className="flex items-center gap-1.5 rounded-md border border-dashed border-border px-2 py-1 text-2xs text-foreground/85 transition-colors hover:border-muted-foreground hover:text-foreground"
               >
                 <CalendarBlank size={12} strokeWidth={2} />
-                {article.plannedDate
-                  ? format(new Date(article.plannedDate), "MMM d, yyyy")
+                {plannedDate
+                  ? format(new Date(plannedDate), "MMM d, yyyy")
                   : "Set planned date"}
               </button>
             </PopoverTrigger>
             <PopoverContent align="start" className="w-auto p-2">
               <CalendarUI
                 mode="single"
-                selected={article.plannedDate ? new Date(article.plannedDate) : undefined}
+                selected={plannedDate ? new Date(plannedDate) : undefined}
                 onSelect={(d) => {
                   if (!d) return
                   setWikiArticlePlannedDate(article.id, d.toISOString())
@@ -406,7 +411,7 @@ export function WikiArticleDetailPanel({ article }: { article: WikiArticle | nul
               />
             </PopoverContent>
           </Popover>
-          {article.plannedDate && (
+          {plannedDate && (
             <button
               type="button"
               onClick={() => setWikiArticlePlannedDate(article.id, null)}
