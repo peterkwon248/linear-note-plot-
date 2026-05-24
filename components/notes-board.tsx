@@ -188,6 +188,8 @@ function BoardColumn({
   isDragDisabled,
   dragCount,
   activeDragId,
+  isCollapsed,
+  onToggleCollapse,
 }: {
   group: NoteGroup
   groupBy: GroupBy
@@ -195,6 +197,10 @@ function BoardColumn({
   isDragDisabled: boolean
   dragCount: number
   activeDragId: string | null
+  /** PR-Q5: when true, column renders as a narrow vertical bar (Linear
+   *  board-collapse pattern). Click the column-header chevron to toggle. */
+  isCollapsed?: boolean
+  onToggleCollapse?: () => void
 }) {
   // Sortable for column reorder (drag handle on header)
   const {
@@ -276,6 +282,45 @@ function BoardColumn({
     return null
   }, [groupBy, group.key])
 
+  // PR-Q5 collapse path — render a 40px-wide bar with a vertical label
+  // when the column is collapsed. Click anywhere on the bar to expand.
+  if (isCollapsed) {
+    return (
+      <div
+        ref={(node) => { setSortableRef(node); setDropRef(node); }}
+        style={sortableStyle}
+        className={`group/col-collapsed flex w-10 shrink-0 flex-col items-center gap-2 rounded-lg border border-border-subtle py-3 transition-colors ${
+          isCardOver ? "bg-accent/10 ring-1 ring-accent/30" : "bg-secondary/40 hover:bg-secondary/60"
+        }`}
+      >
+        <button
+          type="button"
+          onClick={onToggleCollapse}
+          className="flex w-full flex-1 cursor-pointer flex-col items-center gap-2 px-1"
+          title={`Expand ${group.label}`}
+        >
+          {/* Chevron up: hint that clicking expands the column. */}
+          <span className="text-muted-foreground/70 group-hover/col-collapsed:text-foreground transition-colors">
+            <CaretDown size={12} strokeWidth={2} className="rotate-180" />
+          </span>
+          {headerIcon ? (
+            <span className="flex shrink-0 items-center">{headerIcon}</span>
+          ) : headerColor ? (
+            <div className="h-2 w-2 rounded-full" style={{ backgroundColor: headerColor.color }} />
+          ) : null}
+          {/* Vertical label — writing-mode keeps text readable in narrow column. */}
+          <span
+            className="text-note font-semibold text-foreground"
+            style={{ writingMode: "vertical-rl" }}
+          >
+            {group.label}
+          </span>
+          <span className="text-2xs tabular-nums text-muted-foreground">{group.notes.length}</span>
+        </button>
+      </div>
+    )
+  }
+
   return (
     <div
       ref={(node) => { setSortableRef(node); setDropRef(node); }}
@@ -297,6 +342,19 @@ function BoardColumn({
         ) : null}
         <span className="text-note font-semibold text-foreground">{group.label}</span>
         <span className="text-2xs text-muted-foreground">{group.notes.length}</span>
+        <div className="flex-1" />
+        {/* PR-Q5: collapse affordance — chevron-down → narrow column. */}
+        {onToggleCollapse && (
+          <button
+            type="button"
+            onClick={(e) => { e.stopPropagation(); onToggleCollapse() }}
+            onPointerDown={(e) => e.stopPropagation()}
+            className="flex h-5 w-5 cursor-pointer items-center justify-center rounded text-muted-foreground/70 hover:bg-hover-bg hover:text-foreground transition-colors"
+            title={`Collapse ${group.label}`}
+          >
+            <CaretDown size={12} strokeWidth={2} />
+          </button>
+        )}
       </div>
       {/* Drop feedback banner */}
       {isCardOver && activeDragId && !activeDragId.startsWith("col-") && (
@@ -1158,6 +1216,9 @@ export function NotesBoard({
             onQuickFilter={(rules) => updateViewState({ filters: rules })}
           />
         }
+        quickFilters={NOTES_VIEW_CONFIG.quickFilters as any}
+        activeFilters={viewState.filters as any}
+        onFiltersChange={(filters) => updateViewState({ filters: filters as any })}
         showDisplay
         displayContent={
           <DisplayPanel
@@ -1345,7 +1406,21 @@ export function NotesBoard({
                 )
 
                 return (
-                  <BoardColumn key={group.key} group={group} groupBy={viewState.groupBy} isDragDisabled={isDragDisabled} dragCount={dragCount} activeDragId={activeDragId}>
+                  <BoardColumn
+                    key={group.key}
+                    group={group}
+                    groupBy={viewState.groupBy}
+                    isDragDisabled={isDragDisabled}
+                    dragCount={dragCount}
+                    activeDragId={activeDragId}
+                    isCollapsed={(viewState.collapsedGroups ?? []).includes(group.key)}
+                    onToggleCollapse={() => {
+                      const current = new Set(viewState.collapsedGroups ?? [])
+                      if (current.has(group.key)) current.delete(group.key)
+                      else current.add(group.key)
+                      updateViewState({ collapsedGroups: Array.from(current) })
+                    }}
+                  >
                     {group.subGroups && group.subGroups.length > 0 ? (
                       // Render sub-groups with headers
                       (() => {

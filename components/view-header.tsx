@@ -119,6 +119,21 @@ interface ViewHeaderProps {
   saveViewMode?: "hidden" | "save-as" | "update" | "clean"
   /** Called when user clicks Save (update mode) or submits the name (save-as mode) */
   onSaveView?: (name?: string) => void
+
+  /* ── Quick filter chips (PR-Q3) ── */
+
+  /** Suggested 1-click filter presets surfaced as chips below the header
+   *  row. Each chip toggles the whole rule-set on/off. Mode-agnostic — the
+   *  same chip works in list, board, grid, timeline. */
+  quickFilters?: Array<{
+    label: string
+    desc: string
+    rules: Array<{ field: string; operator: string; value: string }>
+  }>
+  /** Current active filter rules. Used to compute each chip's active state. */
+  activeFilters?: Array<{ field: string; operator: string; value: string }>
+  /** Receive the new filter list after a quick-chip toggle. */
+  onFiltersChange?: (filters: Array<{ field: string; operator: string; value: string }>) => void
 }
 
 export function ViewHeader({
@@ -145,6 +160,9 @@ export function ViewHeader({
   createMenuContent,
   saveViewMode = "hidden",
   onSaveView,
+  quickFilters,
+  activeFilters,
+  onFiltersChange,
 }: ViewHeaderProps) {
   const pane = usePane()
 
@@ -398,6 +416,63 @@ export function ViewHeader({
           </div>
         )}
       </div>
+
+      {/* Quick filter chips (PR-Q3) — 1-click presets from view-configs
+          quickFilters. Mode-agnostic so the same chip surface works in
+          list / board / grid / timeline. Skipped entirely when no presets
+          are defined for this entity (entity caller passes [] or omits). */}
+      {quickFilters && quickFilters.length > 0 && (
+        <div className="flex shrink-0 items-center gap-1.5 overflow-x-auto border-b border-border/60 px-4 py-1.5">
+          {quickFilters.map((qf, i) => {
+            const filters = activeFilters ?? []
+            const active = qf.rules.every((r) =>
+              filters.some(
+                (f) => f.field === r.field && f.operator === r.operator && f.value === r.value,
+              ),
+            )
+            const onClick = () => {
+              if (!onFiltersChange) return
+              if (active) {
+                onFiltersChange(
+                  filters.filter(
+                    (f) =>
+                      !qf.rules.some(
+                        (r) => r.field === f.field && r.operator === f.operator && r.value === f.value,
+                      ),
+                  ),
+                )
+              } else {
+                const merged = [...filters]
+                for (const r of qf.rules) {
+                  if (
+                    !merged.some(
+                      (f) => f.field === r.field && f.operator === r.operator && f.value === r.value,
+                    )
+                  ) {
+                    merged.push(r)
+                  }
+                }
+                onFiltersChange(merged)
+              }
+            }
+            return (
+              <button
+                key={`${qf.label}-${i}`}
+                type="button"
+                onClick={onClick}
+                title={qf.desc}
+                className={
+                  active
+                    ? "shrink-0 rounded-full border border-accent/40 bg-accent/10 px-2.5 py-0.5 text-2xs font-medium text-accent transition-colors"
+                    : "shrink-0 rounded-full border border-border/70 bg-secondary/30 px-2.5 py-0.5 text-2xs font-medium text-muted-foreground transition-colors hover:border-border hover:text-foreground"
+                }
+              >
+                {qf.label}
+              </button>
+            )
+          })}
+        </div>
+      )}
 
       {/* Children slot (filter chips, tabs, etc.) */}
       {children}

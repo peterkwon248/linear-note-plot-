@@ -74,6 +74,7 @@ import { useSaveViewProps } from "@/lib/view-engine/use-save-view-props"
 import { FilterPanel } from "@/components/filter-panel"
 import { DisplayPanel } from "@/components/display-panel"
 import { NOTES_VIEW_CONFIG } from "@/lib/view-engine/view-configs"
+import { buildAttachmentDeleteWarning } from "@/lib/extract-attachment-refs"
 import { setActiveFolderId, usePendingFilters, clearPendingFilters } from "@/lib/table-route"
 import { setNoteDragData } from "@/lib/drag-helpers"
 import { pushUndo } from "@/lib/undo-manager"
@@ -263,7 +264,15 @@ function TrashEntityList({ type }: { type: "books" | "tags" | "labels" | "templa
   }
 
   const handleDelete = (id: string, name: string) => {
-    if (!window.confirm(`Permanently delete "${name}"? This cannot be undone.`)) return
+    // file-entity-prd §5: when deleting a file, surface usage so the user
+    // knows which notes/wikis will get dangling references.
+    let message = `Permanently delete "${name}"? This cannot be undone.`
+    if (type === "files") {
+      const s = usePlotStore.getState()
+      const warning = buildAttachmentDeleteWarning(id, name, s.notes, s.wikiArticles)
+      if (warning) message = warning
+    }
+    if (!window.confirm(message)) return
     deleteSilent(id)
     toast(`Deleted ${singularNoun}`)
   }
@@ -568,7 +577,19 @@ export function NotesTable({
   }, [selectedIds])
 
   // ── Group collapse state ──
-  const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(new Set())
+  // PR-Q2 — store-backed (viewState.collapsedGroups) so the fold state
+  // persists across view-mode switches and IDB reloads. Local Set wrapper
+  // keeps the existing `.has` / `setCollapsedGroups(prev => ...)` call
+  // sites unchanged.
+  const collapsedGroupsArray = viewState.collapsedGroups ?? []
+  const collapsedGroups = useMemo(() => new Set(collapsedGroupsArray), [collapsedGroupsArray])
+  const setCollapsedGroups = useCallback(
+    (updater: Set<string> | ((prev: Set<string>) => Set<string>)) => {
+      const next = typeof updater === "function" ? updater(collapsedGroups) : updater
+      updateViewState({ collapsedGroups: Array.from(next) })
+    },
+    [collapsedGroups, updateViewState],
+  )
 
   // ── Group header pointer-based reorder state ──
   const [reorderSource, setReorderSource] = useState<string | null>(null)
@@ -1171,6 +1192,9 @@ export function NotesTable({
             onQuickFilter={(rules) => updateViewState({ filters: rules })}
           />
         }
+        quickFilters={NOTES_VIEW_CONFIG.quickFilters as any}
+        activeFilters={viewState.filters as any}
+        onFiltersChange={(filters) => updateViewState({ filters: filters as any })}
         showDisplay
         displayContent={
           <DisplayPanel

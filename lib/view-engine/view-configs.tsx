@@ -248,16 +248,22 @@ export const NOTES_VIEW_CONFIG: ViewConfig = {
     // the Wiki timeline default ("wikiStatus") — Stone/Brick/Block lanes
     // give a "notes maturity over time" view that's the most useful
     // glance for the Notes timeline.
-    defaultGroupByByMode: { board: "status", timeline: "status" },
+    // 2026-05-24 — grid mode = Books-parity flat card grid (no grouping
+    // semantics). normalizeViewState reads this and resets invalid groupBy
+    // on mode switch.
+    defaultGroupByByMode: { board: "status", timeline: "status", grid: "none" },
     // Timeline Y-axis encodes time → sort by createdAt asc is canonical.
     defaultSortByMode: { timeline: { field: "createdAt", direction: "asc" } },
     groupingOptions: [
       { value: "none", label: "No grouping" },
-      { value: "status", label: "Status" },
-      { value: "folder", label: "Folder" },
-      { value: "label", label: "Label" },
-      { value: "parent", label: "Parent" },
-      { value: "role", label: "Role" },
+      // 2026-05-24 — explicit modes for every grouping (Linear-style L1 "UI
+      // 노출 = 100% 동작"). Grid is a flat card grid → no grouping options
+      // outside "none". List/board keep the full axis set.
+      { value: "status", label: "Status", modes: ["list", "board"] },
+      { value: "folder", label: "Folder", modes: ["list", "board"] },
+      { value: "label", label: "Label", modes: ["list", "board"] },
+      { value: "parent", label: "Parent", modes: ["list", "board"] },
+      { value: "role", label: "Role", modes: ["list", "board"] },
       // family tree only makes sense in list (indent column). Board would
       // need allowFamilyOnBoard override (categories case).
       { value: "family", label: "Family", modes: ["list"] },
@@ -273,7 +279,11 @@ export const NOTES_VIEW_CONFIG: ViewConfig = {
     ],
     toggles: [
       { key: "showTrashed", label: "Show trashed", icon: TrashIcon },
-      { key: "filterAwareRole", label: "Filter-aware role" },
+      // Visible only when groupBy === "role" (display-panel.tsx guard).
+      // ON: classify roles within the filtered slice. OFF (default):
+      // classify against the full store so a filter doesn't lie about
+      // "this note is a hub" vs "in this view it's a hub".
+      { key: "filterAwareRole", label: "Role from filtered view" },
     ],
     properties: [
       { key: "status", label: "Status", icon: StatusIcon },
@@ -365,7 +375,7 @@ export const WIKI_VIEW_CONFIG: ViewConfig = {
     boardDefaultGroupBy: "wikiStatus",
     // L4: per-mode default groupBy. Timeline default = wikiStatus (Stub vs
     // Article lane on time axis — the most useful "wiki at a glance" view).
-    defaultGroupByByMode: { board: "wikiStatus", timeline: "wikiStatus" },
+    defaultGroupByByMode: { board: "wikiStatus", timeline: "wikiStatus", grid: "none" },
     // L4: timeline Y-axis encodes time → sort by createdAt asc is canonical.
     defaultSortByMode: { timeline: { field: "createdAt", direction: "asc" } },
     // priority 제외 (wiki에 의미 없음)
@@ -381,12 +391,14 @@ export const WIKI_VIEW_CONFIG: ViewConfig = {
     // wikiStatus (Stub / Article) — Notes Stone/Brick/Block 정합 axis.
     groupingOptions: [
       { value: "none", label: "No grouping" },
-      { value: "wikiStatus", label: "Status" },
-      { value: "tier", label: "Tier" },
-      { value: "linkCount", label: "Link count" },
-      { value: "parent", label: "Parent article" },
-      { value: "role", label: "Role" },
-      { value: "label", label: "Category" },
+      // 2026-05-24 — explicit modes for every grouping (Linear-style L1).
+      // Grid = flat card grid → no grouping options outside "none".
+      { value: "wikiStatus", label: "Status", modes: ["list", "board"] },
+      { value: "tier", label: "Tier", modes: ["list", "board"] },
+      { value: "linkCount", label: "Link count", modes: ["list", "board"] },
+      { value: "parent", label: "Parent article", modes: ["list", "board"] },
+      { value: "role", label: "Role", modes: ["list", "board"] },
+      { value: "label", label: "Category", modes: ["list", "board"] },
       // family tree only makes sense in list (indent column).
       { value: "family", label: "Family", modes: ["list"] },
       // updatedAt grouping in timeline would duplicate the time axis.
@@ -397,7 +409,11 @@ export const WIKI_VIEW_CONFIG: ViewConfig = {
     ],
     toggles: [
       { key: "showStubs", label: "Show stubs", icon: ContentIcon },
-      { key: "filterAwareRole", label: "Filter-aware role" },
+      // Visible only when groupBy === "role" (display-panel.tsx guard).
+      // ON: classify roles within the filtered slice. OFF (default):
+      // classify against full store — a filter doesn't lie about
+      // "this article is a hub" vs "in this view it's a hub".
+      { key: "filterAwareRole", label: "Role from filtered view" },
     ],
     properties: [
       // Title intentionally omitted — it's a required column, not toggleable.

@@ -6,6 +6,7 @@ import { useSettingsStore } from "@/lib/settings-store"
 import { NotesTable } from "@/components/notes-table"
 import { NotesBoard } from "@/components/notes-board"
 import { NotesTimelineShell } from "@/components/notes-timeline-shell"
+import { NotesGridShell } from "@/components/notes-grid-shell"
 // 2026-05-24: GalleryViewShell import removed — gallery mode deprecated
 import { WorkspaceEditorArea } from "@/components/workspace/workspace-editor-area"
 import { usePane } from "@/components/workspace/pane-context"
@@ -117,6 +118,9 @@ export function NotesTableView() {
       <div className="flex flex-1 overflow-hidden">
         <NotesTimelineShell
           context={contextKey}
+          title={config.title}
+          hideCreateButton={config.hideCreateButton}
+          createNoteOverrides={config.createNoteOverrides}
           folderId={activeFolderId ?? undefined}
           tagId={activeTagId ?? undefined}
           labelId={activeLabelId ?? undefined}
@@ -128,8 +132,28 @@ export function NotesTableView() {
   }
 
   // 2026-05-24: gallery mode deprecated — persisted "gallery" auto-migrates
-  // to "grid" via normalizeViewState. NotesTable handles grid rendering
-  // (no separate shell needed).
+  // to "grid" via normalizeViewState. Grid mode now renders Books-parity
+  // cards (NotesGridShell + NotesGridView). Earlier inline note said
+  // "NotesTable handles grid rendering" — that was false: it silently
+  // fell through to list. User signal 2026-05-24 ("북스의 그리드처럼")
+  // closes that gap.
+  if (viewMode === "grid" && !isTrashView) {
+    return (
+      <div className="flex flex-1 overflow-hidden">
+        <NotesGridShell
+          context={contextKey}
+          title={config.title}
+          hideCreateButton={config.hideCreateButton}
+          createNoteOverrides={config.createNoteOverrides}
+          folderId={activeFolderId ?? undefined}
+          tagId={activeTagId ?? undefined}
+          labelId={activeLabelId ?? undefined}
+          onRowClick={(noteId) => setPreviewNoteId(noteId)}
+          activePreviewId={previewNoteId}
+        />
+      </div>
+    )
+  }
 
   // Table / Board view + optional detail panel
   const ViewComponent = viewMode === "board" ? NotesBoard : NotesTable

@@ -14,7 +14,7 @@ import {
   Paperclip,
   Plus as PhPlus,
 } from "@/lib/editor/editor-icons"
-import { LayoutTemplate as PhLayout } from "lucide-react"
+import { LayoutTemplate as PhLayout, FolderOpen } from "lucide-react"
 import { usePlotStore } from "@/lib/store"
 import { persistAttachmentBlob } from "@/lib/store/helpers"
 import {
@@ -22,6 +22,8 @@ import {
   type BlockGroup,
 } from "@/components/editor/block-registry"
 import { SelectFromTemplatesModal } from "@/components/editor/SelectFromTemplatesModal"
+import { FilePicker } from "@/components/file-picker"
+import type { Attachment } from "@/lib/types"
 
 interface InsertMenuProps {
   editor: Editor
@@ -55,6 +57,34 @@ export function InsertMenu({ editor, noteId }: InsertMenuProps) {
   const addAttachment = usePlotStore((s) => s.addAttachment)
   // Templates entry — UpNote-pattern modal trigger (33-decisions §15).
   const [templatesOpen, setTemplatesOpen] = useState(false)
+  // file-entity-prd §4: "Insert from library" picker — reuse existing files
+  // instead of always creating a new upload/blob.
+  const [filePickerOpen, setFilePickerOpen] = useState(false)
+
+  const handleInsertFromLibrary = (att: Attachment) => {
+    const isImg = att.type === "image" || (att.mimeType?.startsWith("image/") ?? false)
+    const pos = editor.state.selection.anchor
+    if (isImg) {
+      editor
+        .chain()
+        .focus()
+        .insertContentAt(pos, {
+          type: "image",
+          attrs: { src: `attachment://${att.id}`, alt: att.name },
+        })
+        .run()
+    } else {
+      const safeName = att.name.replace(/"/g, "&quot;")
+      editor
+        .chain()
+        .focus()
+        .insertContentAt(
+          pos,
+          `<a href="attachment://${att.id}" download="${safeName}">${safeName} (${formatFileSize(att.size)})</a>`,
+        )
+        .run()
+    }
+  }
 
   // ── Attachments (kept local — need file-input refs and noteId) ────────
   const handleImage = () => imageInputRef.current?.click()
@@ -65,7 +95,7 @@ export function InsertMenu({ editor, noteId }: InsertMenuProps) {
 
     const buffer = await file.arrayBuffer()
     const attachmentId = addAttachment({
-      noteId: noteId ?? "",
+      originEntity: noteId ? { kind: "note", id: noteId } : null,
       name: file.name,
       type: "image",
       url: "",
@@ -95,7 +125,7 @@ export function InsertMenu({ editor, noteId }: InsertMenuProps) {
 
     const buffer = await file.arrayBuffer()
     const attachmentId = addAttachment({
-      noteId: noteId ?? "",
+      originEntity: noteId ? { kind: "note", id: noteId } : null,
       name: file.name,
       type: "file",
       url: "",
@@ -167,6 +197,18 @@ export function InsertMenu({ editor, noteId }: InsertMenuProps) {
             <Paperclip size={14} />
             <span className="flex-1">File</span>
           </DropdownMenuItem>
+          {/* file-entity-prd §4: reuse existing file from the library.
+              Unlike the Templates… entry (which uses a Radix-portaled Dialog
+              and intentionally keeps the dropdown open to manage focus), the
+              FilePicker is a plain overlay — we let the dropdown close
+              naturally so it doesn't paint over the picker. */}
+          <DropdownMenuItem
+            onSelect={() => setFilePickerOpen(true)}
+            className={ITEM_CLASS}
+          >
+            <FolderOpen size={14} strokeWidth={2} />
+            <span className="flex-1">From library…</span>
+          </DropdownMenuItem>
 
           {/* Templates — opens the UpNote-pattern picker modal. Hardcoded
               entry (not registry-driven) because it needs local React state
@@ -213,6 +255,15 @@ export function InsertMenu({ editor, noteId }: InsertMenuProps) {
         open={templatesOpen}
         onOpenChange={setTemplatesOpen}
         editor={editor}
+      />
+
+      {/* file-entity-prd §4 — existing-file picker. accept="all" so the user
+          can pick either image or file in one place. */}
+      <FilePicker
+        open={filePickerOpen}
+        onOpenChange={setFilePickerOpen}
+        accept="all"
+        onPick={handleInsertFromLibrary}
       />
     </>
   )

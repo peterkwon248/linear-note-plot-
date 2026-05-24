@@ -75,7 +75,27 @@ export function WikiTimelineView({
   activeArticleId,
   onOpenArticle,
   onSelect,
+  onUpdateViewState,
 }: WikiTimelineViewProps) {
+  // PR-Q4: store-backed group collapse (viewState.collapsedGroups from PR-Q2).
+  // Clicking a group header in the label column toggles the group's key in
+  // this set; collapsed groups drop out of visibleLanes entirely (cascading
+  // reflow). "Expand all" button in TimelineControls restores everything.
+  const collapsedGroupsArr = viewState.collapsedGroups ?? []
+  const collapsedGroupsSet = useMemo(() => new Set(collapsedGroupsArr), [collapsedGroupsArr])
+  const toggleGroupCollapse = useCallback(
+    (groupKey: string) => {
+      const next = new Set(collapsedGroupsArr)
+      if (next.has(groupKey)) next.delete(groupKey)
+      else next.add(groupKey)
+      onUpdateViewState({ collapsedGroups: Array.from(next) })
+    },
+    [collapsedGroupsArr, onUpdateViewState],
+  )
+  const expandAllGroups = useCallback(() => {
+    if (collapsedGroupsArr.length === 0) return
+    onUpdateViewState({ collapsedGroups: [] })
+  }, [collapsedGroupsArr.length, onUpdateViewState])
   const now = useMemo(() => new Date(), [])
 
   const [zoom, setZoom] = useState<TimelineMode>("all")
@@ -142,10 +162,21 @@ export function WikiTimelineView({
 
   const canvasWidth = cfg.pxPerDay * cfg.totalDays
 
-  const lanes = useMemo(
+  const allLanes = useMemo(
     () => laneArticles(validArticles, winStart, cfg.pxPerDay, cfg.minBarWidth, getHorizon),
     [validArticles, winStart, cfg.pxPerDay, cfg.minBarWidth],
   )
+
+  // PR-Q4: visible lanes = allLanes minus articles whose group is collapsed.
+  // When no group is collapsed (common case), this is a no-op pointer alias.
+  const lanes = useMemo(() => {
+    if (collapsedGroupsSet.size === 0 || !groupingActive) return allLanes
+    return allLanes.filter(({ article }) => {
+      const meta = articleGroupMeta.get(article.id)
+      const key = meta?.key ?? "_ungrouped"
+      return !collapsedGroupsSet.has(key)
+    })
+  }, [allLanes, collapsedGroupsSet, groupingActive, articleGroupMeta])
 
   /** B4: precompute group boundaries from the (already group-sorted) lanes
    *  so both the label column (header band) and the canvas grid (divider
@@ -153,7 +184,8 @@ export function WikiTimelineView({
    *  where a new group starts + its label + how many lanes it contains. */
   const groupBoundaries = useMemo(() => {
     if (!groupingActive || articleGroupMeta.size === 0) return null
-    const out: { laneIndex: number; label: string; count: number }[] = []
+    // PR-Q4: `key` added so TimelineLabelColumn can emit it on header click.
+    const out: { laneIndex: number; label: string; count: number; key: string }[] = []
     let lastKey: string | null = null
     let runStart = 0
     lanes.forEach(({ article }, laneIndex) => {
@@ -161,7 +193,7 @@ export function WikiTimelineView({
       const key = meta?.key ?? "_ungrouped"
       if (key !== lastKey) {
         if (out.length > 0) out[out.length - 1].count = laneIndex - runStart
-        out.push({ laneIndex, label: meta?.label ?? "Other", count: 0 })
+        out.push({ laneIndex, label: meta?.label ?? "Other", count: 0, key })
         lastKey = key
         runStart = laneIndex
       }
@@ -318,6 +350,8 @@ export function WikiTimelineView({
         onGoToToday={goToToday}
         onSetZoom={setZoom}
         onToggleEvents={() => setShowEvents((v) => !v)}
+        collapsedGroupCount={collapsedGroupsArr.length}
+        onExpandAllGroups={expandAllGroups}
       />
 
       {/* ── Scrollable body ── */}
@@ -371,6 +405,7 @@ export function WikiTimelineView({
               svgHeight={svgHeight}
               visibleColumns={viewState.visibleColumns}
               groupBoundaries={groupBoundaries}
+              onToggleGroup={toggleGroupCollapse}
               setHoveredId={setHoveredId}
               setTooltip={setTooltip}
               onOpenArticle={onOpenArticle}

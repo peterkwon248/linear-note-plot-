@@ -468,7 +468,7 @@ async function handleEditorFiles(
       const buffer = await file.arrayBuffer()
       const isImage = file.type.startsWith("image/")
       const attachmentId = addAttachment({
-        noteId: noteId ?? "",
+        originEntity: noteId ? { kind: "note", id: noteId } : null,
         name: file.name || (isImage ? "image" : "file"),
         type: isImage ? "image" : "file",
         url: "",

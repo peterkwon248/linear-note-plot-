@@ -483,7 +483,7 @@ function AddFileButton({
 
     const buffer = await file.arrayBuffer()
     const attachmentId = addAttachment({
-      noteId,
+      originEntity: noteId ? { kind: "note", id: noteId } : null,
       name: file.name,
       type: file.type.startsWith("image/") ? "image" : "file",
       url: "",

@@ -1,17 +1,19 @@
 "use client"
 
 /**
- * NotesTimelineShell — data + selection + chrome wrapper around NotesTimelineView.
+ * NotesGridShell — chrome wrapper around NotesGridView.
  *
- * Mirrors NotesTable's chrome (ViewHeader + FilterChipBar) so the timeline
- * view exposes the same Filter / Display / Save view / Detail panel toolbar
- * that the list/board views have. Without this Shell wiring the ViewHeader,
- * Notes timeline would lose its filter+display panel (NotesTable hosts the
- * ViewHeader inline, so the timeline mode in NotesTableView previously
- * rendered headless).
+ * Mirrors NotesTimelineShell so the grid mode exposes the same ViewHeader
+ * (Filter / Display / Save view / Detail panel / Create) as list/board.
+ * Without this shell, NotesTableView's grid branch would render a headless
+ * card grid — `NotesTable`'s ViewHeader is bound to its own list view.
+ *
+ * Pattern: same chrome composition as `notes-timeline-shell.tsx`. Cleanup
+ * follow-up could extract the chrome into a reusable `<NotesViewChrome>`
+ * — keeping it inline for v1 to bound the diff.
  */
 
-import { useState, useCallback, useMemo } from "react"
+import { useCallback, useMemo } from "react"
 import { FileText } from "lucide-react"
 import type { ViewContextKey, FilterRule } from "@/lib/view-engine/types"
 import type { Note, NoteStatus } from "@/lib/types"
@@ -19,7 +21,7 @@ import { usePlotStore } from "@/lib/store"
 import { useBacklinksIndex } from "@/lib/search/use-backlinks-index"
 import { useNotesView } from "@/lib/view-engine/use-notes-view"
 import { useSaveViewProps } from "@/lib/view-engine/use-save-view-props"
-import { NotesTimelineView } from "@/components/views/notes-timeline-view"
+import { NotesGridView } from "@/components/views/notes-grid-view"
 import { ViewHeader } from "@/components/view-header"
 import { StatusShapeIcon } from "@/components/status-icon"
 import { FilterPanel } from "@/components/filter-panel"
@@ -27,7 +29,7 @@ import { DisplayPanel } from "@/components/display-panel"
 import { FilterChipBar } from "@/components/filter-bar"
 import { NOTES_VIEW_CONFIG } from "@/lib/view-engine/view-configs"
 
-interface NotesTimelineShellProps {
+interface NotesGridShellProps {
   context: ViewContextKey
   title?: string
   hideCreateButton?: boolean
@@ -35,12 +37,11 @@ interface NotesTimelineShellProps {
   folderId?: string
   tagId?: string
   labelId?: string
-  /** Single-click → side-panel preview (Notes parity). */
   onRowClick?: (noteId: string) => void
   activePreviewId?: string | null
 }
 
-export function NotesTimelineShell({
+export function NotesGridShell({
   context,
   title,
   hideCreateButton = false,
@@ -50,7 +51,7 @@ export function NotesTimelineShell({
   labelId,
   onRowClick,
   activePreviewId,
-}: NotesTimelineShellProps) {
+}: NotesGridShellProps) {
   const backlinksMap = useBacklinksIndex()
   const folders = usePlotStore((s) => s.folders)
   const labels = usePlotStore((s) => s.labels)
@@ -60,7 +61,7 @@ export function NotesTimelineShell({
   const openNote = usePlotStore((s) => s.openNote)
   const sidePanelOpen = usePlotStore((s) => s.sidePanelOpen)
 
-  const { flatNotes, groups, viewState, updateViewState } = useNotesView(context, {
+  const { flatNotes, viewState, updateViewState } = useNotesView(context, {
     backlinksMap,
     folderId,
     tagId,
@@ -71,8 +72,6 @@ export function NotesTimelineShell({
 
   const isSingleStatusTab = ["stone", "brick", "keystone"].includes(context)
 
-  // Dynamic filter categories — inject folder/label/tag counts so the
-  // FilterPanel inside ViewHeader matches NotesTable's shape exactly.
   const notesFilterCategories = useMemo(() => {
     return NOTES_VIEW_CONFIG.filterCategories.map((cat) => {
       if (cat.key === "folder") {
@@ -123,8 +122,6 @@ export function NotesTimelineShell({
     })
   }, [folders, labels, tags, notes])
 
-  // Single-status tabs (stone/brick/keystone) hide the Status category — the
-  // context already pre-filters to a single status.
   const filteredCategories = useMemo(() => {
     if (isSingleStatusTab) {
       return notesFilterCategories.filter((cat) => cat.key !== "status")
@@ -163,34 +160,6 @@ export function NotesTimelineShell({
       updateViewState({ filters: viewState.filters.filter((_, i) => i !== idx) })
     },
     [viewState.filters, updateViewState],
-  )
-
-  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
-
-  const handleOpenNote = useCallback(
-    (id: string) => {
-      // Single-click → preview (handled by onRowClick). Real open routes
-      // through the editor stack via openNote in handlers above.
-      onRowClick?.(id)
-    },
-    [onRowClick],
-  )
-
-  const handleSelect = useCallback(
-    (id: string, opts: { multi?: boolean; shift?: boolean; index?: number }) => {
-      setSelectedIds((prev) => {
-        const next = new Set(prev)
-        if (opts.multi) {
-          if (next.has(id)) next.delete(id)
-          else next.add(id)
-        } else {
-          next.clear()
-          next.add(id)
-        }
-        return next
-      })
-    },
-    [],
   )
 
   return (
@@ -275,17 +244,11 @@ export function NotesTimelineShell({
         />
       </ViewHeader>
 
-      <div className="flex flex-1 overflow-hidden">
-        <NotesTimelineView
-          notes={flatNotes}
-          viewState={viewState}
-          noteGroups={groups}
-          selectedIds={selectedIds}
-          activeNoteId={activePreviewId ?? null}
-          onOpenNote={handleOpenNote}
-          onSelect={handleSelect}
-        />
-      </div>
+      <NotesGridView
+        notes={flatNotes}
+        onRowClick={onRowClick}
+        activePreviewId={activePreviewId}
+      />
     </main>
   )
 }

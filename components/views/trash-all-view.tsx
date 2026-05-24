@@ -11,6 +11,7 @@ import { WIKI_STATUS_HEX } from "@/lib/colors"
 import { isWikiStub } from "@/lib/wiki-utils"
 import { getBookKind } from "@/lib/view-engine/use-books-view"
 import { shortRelative } from "@/lib/format-utils"
+import { buildAttachmentDeleteWarning } from "@/lib/extract-attachment-refs"
 import type {
   Note,
   WikiArticle,
@@ -384,7 +385,15 @@ export function TrashAllView() {
   }
 
   const handleDelete = (kind: EntityKind, id: string, label: string) => {
-    if (!window.confirm(`Permanently delete "${label}"? This cannot be undone.`)) return
+    // file-entity-prd §5: surface attachment usage in the confirm prompt so
+    // the user knows which notes/wikis will get dangling references.
+    let message = `Permanently delete "${label}"? This cannot be undone.`
+    if (kind === "attachment") {
+      const s = usePlotStore.getState()
+      const warning = buildAttachmentDeleteWarning(id, label, s.notes, s.wikiArticles)
+      if (warning) message = warning
+    }
+    if (!window.confirm(message)) return
     handleDeleteSilent(kind, id)
     toast(`Deleted ${ENTITY_SINGULAR[kind].toLowerCase()}: ${label}`)
   }

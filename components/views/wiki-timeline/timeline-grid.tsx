@@ -141,20 +141,34 @@ export function TimelineGrid({
         Each group boundary marks the top of its first lane — i.e. the line
         is drawn between the previous lane and the group's starting lane.
         The first group's boundary (laneIndex === 0) is skipped so we don't
-        draw a divider above the very first lane (the axis already marks it). */}
+        draw a divider above the very first lane (the axis already marks it).
+        2026-05-24 — user signal "타임라인 그룹 너무 따닥따닥". Bumped
+        strokeWidth + opacity + added a thin tint band above each group so
+        the boundary reads as a section break (vs a lane separator). */}
       {groupBoundaries?.map((b, i) => {
         if (b.laneIndex === 0) return null
+        const y = b.laneIndex * LANE_HEIGHT
         return (
-          <line
-            key={`group-div-${i}`}
-            x1={0}
-            y1={b.laneIndex * LANE_HEIGHT}
-            x2={Math.max(canvasWidth, 400)}
-            y2={b.laneIndex * LANE_HEIGHT}
-            stroke="var(--border)"
-            strokeWidth={1}
-            opacity={0.55}
-          />
+          <g key={`group-div-${i}`}>
+            {/* Tint band above the boundary line — soft section break. */}
+            <rect
+              x={0}
+              y={y - 4}
+              width={Math.max(canvasWidth, 400)}
+              height={4}
+              fill="var(--muted)"
+              opacity={0.18}
+            />
+            <line
+              x1={0}
+              y1={y}
+              x2={Math.max(canvasWidth, 400)}
+              y2={y}
+              stroke="var(--border)"
+              strokeWidth={1.5}
+              opacity={0.85}
+            />
+          </g>
         )
       })}
 

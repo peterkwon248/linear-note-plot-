@@ -5,6 +5,10 @@ import { useRouter } from "next/navigation"
 import { formatDistanceToNow } from "date-fns"
 import { usePlotStore } from "@/lib/store"
 import { setActiveRoute } from "@/lib/table-route"
+import {
+  extractAttachmentRefs,
+  extractAttachmentRefsFromWikiBlocks,
+} from "@/lib/extract-attachment-refs"
 import { resolveBookItems } from "@/lib/books/resolver"
 import { isWikiStub } from "@/lib/wiki-utils"
 import { getBody, getAllBodies } from "@/lib/note-body-store"
@@ -963,18 +967,30 @@ function FileConnections() {
   const openInSecondary = usePlotStore((s) => s.openInSecondary)
 
   const sourceNote = useMemo(
-    () => (attachment ? notes.find((n) => n.id === attachment.noteId) ?? null : null),
+    () =>
+      attachment && attachment.originEntity?.kind === "note"
+        ? notes.find((n) => n.id === attachment.originEntity!.id) ?? null
+        : null,
     [attachment, notes],
   )
 
+  // file-entity-prd §3: usage = derived from content. Notes (contentJson
+  // tree) + Wiki blocks (image attachmentId direct + text contentJson walk).
+  const usedInNotes = useMemo(() => {
+    if (!attachment) return [] as typeof notes
+    return notes.filter((n) => {
+      if (n.trashed) return false
+      if (!n.contentJson) return false
+      return extractAttachmentRefs(n.contentJson).includes(attachment.id)
+    })
+  }, [attachment, notes])
+
   const usedInWikis = useMemo(() => {
     if (!attachment) return [] as typeof wikiArticles
-    return wikiArticles.filter((a) =>
-      (a.blocks ?? []).some(
-        (b: { type: string; attachmentId?: string }) =>
-          b.type === "image" && b.attachmentId === attachment.id,
-      ),
-    )
+    return wikiArticles.filter((a) => {
+      if ((a as any).trashed) return false
+      return extractAttachmentRefsFromWikiBlocks(a.blocks).includes(attachment.id)
+    })
   }, [attachment, wikiArticles])
 
   if (!attachment) {
@@ -985,7 +1001,7 @@ function FileConnections() {
     )
   }
 
-  const total = (sourceNote ? 1 : 0) + usedInWikis.length
+  const total = (sourceNote ? 1 : 0) + usedInNotes.length + usedInWikis.length
 
   return (
     <div className="flex-1 overflow-y-auto">
@@ -1011,6 +1027,21 @@ function FileConnections() {
                   <FileText size={12} className="shrink-0 text-muted-foreground" strokeWidth={2} />
                   <span className="truncate flex-1">{sourceNote.title || "Untitled"}</span>
                 </button>
+              </div>
+            )}
+            {usedInNotes.length > 0 && (
+              <div className="space-y-0.5">
+                <SubLabel>Used in notes</SubLabel>
+                {usedInNotes.map((n) => (
+                  <button
+                    key={n.id}
+                    onClick={() => openInSecondary(n.id)}
+                    className="flex w-full items-center gap-2 rounded-md px-2 py-0.5 text-left text-note text-foreground hover:bg-hover-bg transition-colors"
+                  >
+                    <FileText size={12} className="shrink-0 text-muted-foreground" strokeWidth={2} />
+                    <span className="truncate flex-1">{n.title || "Untitled"}</span>
+                  </button>
+                ))}
               </div>
             )}
             {usedInWikis.length > 0 && (

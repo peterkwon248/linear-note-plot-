@@ -64,10 +64,9 @@ export function BookGridCard({
           )}
 
           {/* Cover icon — BookKindIcon (kind-shape carries meaning).
-              emoji 영구 폐기 (2026-05-12 결정): Plot phosphor 시스템 정합. */}
-          <div className="flex h-12 w-12 items-center justify-center rounded-md bg-secondary/40 text-muted-foreground/70">
-            <BookKindIcon kind={getBookKind(book)} size={22} />
-          </div>
+              emoji 영구 폐기 (2026-05-12 결정): Plot phosphor 시스템 정합.
+              LOCKED #103 (2026-05-24): no tinted box wrapper, color tone only. */}
+          <BookKindIcon kind={getBookKind(book)} size={22} />
 
           {/* Title */}
           <h3 className="text-note font-medium text-foreground line-clamp-2 leading-snug">

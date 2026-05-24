@@ -51,6 +51,30 @@
 
 ---
 
+## 🚀 2026-05-24 (저녁) — 거대 세션 #2: Notes timeline ViewHeader + File 엔티티 v1 (6 PR) + Notes/Wiki Grid + Display Panel Audit + Q-series (11 변경 단위) ⭐⭐⭐⭐⭐
+
+**범위**: 단일 거대 PR (36 파일 변경 + 5 신규). 30+ round 사용자 대화. 사용자 신호 기반 cleanup + scaling 본질 도구 구축.
+
+**핵심 결정 (영구 LOCKED #105~#110)**:
+- **#105 ViewHeader = chrome layer 통일** — 모든 mode 일관 UX. quickFilters/display/filter/save/detail panel 모두 ViewHeader-level.
+- **#106 Grid mode = flat card grid (Books parity)** — no grouping semantics. view-configs explicit `modes: ["list", "board"]` (grid 제외).
+- **#107 collapsedGroups = store-level (viewState)** — list/board/timeline 일관 fold state.
+- **#108 Grouping = organize / Filter = focus** — 큰 corpus에선 group collapse + quick filter chip이 scaling 본질 도구.
+- **#109 Linear board column collapse pattern** — 40px narrow + chevron + vertical label (writing-mode: vertical-rl).
+- **#110 File 엔티티 v1 완료** — PR 1a~3. Books 접점 직접 참조 0. v2 (content-hash dedup) Phase 2 이관.
+
+**완료** (11 변경 단위, 단일 PR):
+- Notes timeline ViewHeader (P0 #1) + File 엔티티 v1 (PR 1a 모델/마이그v144→v145 + 1b Note picker + 1c Wiki picker + 1b' Books close-out + 2 Usage 인덱스 + 3 Hard delete 경고)
+- Library Labels 아이콘 fix (#103 cascading) + Notes/Wiki Grid Display (Books parity)
+- Display Panel Audit 3-Fix (grid 정합 / timeline group spacing / filterAwareRole 라벨)
+- Q-series Q1~Q5: Grid 박스 폐기 + Quick filter chip universal + collapsedGroups store + Wiki timeline lane collapse + Notes Board column collapse
+
+**미완**: Wiki Board column collapse + Notes/Books Timeline lane collapse + Group-collapse ghost row v2 — 다음 P0.
+
+**다음**: Wiki Board column collapse → Notes/Books Timeline lane collapse → ghost row v2.
+
+---
+
 ## 🚀 2026-05-24 — 거대 세션: PR-X5/X6 + Activity bar lucide + audit v2 완성 + Notes/Books Timeline + Gallery 폐기 ⭐⭐⭐⭐⭐
 
 **범위**: 단일 거대 PR (93 파일 / +1891 −2622). 20+ round 사용자 대화.
@@ -70,10 +94,6 @@
 - Notes/Books Timeline 신규 (sub-components generic + 3 신규 파일 + view 분기 + VIEW_CONFIG 갱신)
 - Gallery 전수 폐기 (4 entity supportedModes + ViewMode union + view 분기 + 3 파일 삭제 + normalize alias migration)
 - spacing/icon polish (.a-row__icon + Books py-2.5)
-
-**미완**: Notes timeline에 ViewHeader (filter/display) 누락 — 다음 P0 #1.
-
-**다음**: Notes timeline ViewHeader 추가 → File 엔티티 v1 → temporal-hooks PRD 후속.
 
 ---
 

@@ -21,6 +21,8 @@ export const DEFAULT_VIEW_STATE: ViewState = {
   groupOrder: null,
   subGroupOrder: null,
   subGroupSortBy: "default",
+  // PR-Q2: persisted collapse state for grouped views. Empty = expanded.
+  collapsedGroups: [],
 }
 
 /* ── Context-specific overrides ────────────────────────── */
@@ -258,6 +260,11 @@ export function normalizeViewState(raw: Partial<ViewState>, ctx: ViewContextKey)
       ? merged.subGroupOrder as Record<string, string[]>
       : null,
     subGroupSortBy: VALID_GROUP_SORT_BY.includes(merged.subGroupSortBy as GroupSortBy) ? (merged.subGroupSortBy as GroupSortBy) : "default",
+    // PR-Q2: collapse keys array — preserve through normalize so persisted
+    // group-fold state survives reload + view-mode switches.
+    collapsedGroups: Array.isArray(merged.collapsedGroups)
+      ? merged.collapsedGroups.filter((k): k is string => typeof k === "string")
+      : [],
   }
 }
 

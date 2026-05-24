@@ -34,6 +34,10 @@ import {
 import { IconWiki } from "@/components/plot-icons"
 import { cn } from "@/lib/utils"
 import type { Attachment } from "@/lib/types"
+import {
+  extractAttachmentRefs,
+  extractAttachmentRefsFromWikiBlocks,
+} from "@/lib/extract-attachment-refs"
 
 function InspectorSection({
   title,
@@ -73,19 +77,38 @@ export function FileDetailPanel({ attachment }: { attachment: Attachment }) {
   const isImage = attachment.type === "image" || attachment.mimeType?.startsWith("image/")
 
   // Source note: where the attachment was originally uploaded.
+  // file-entity-prd v1: originEntity is the provenance hint; only resolves
+  // for note-origin uploads. Wiki/library origins show no "Source note".
   const sourceNote = useMemo(
-    () => notes.find((n) => n.id === attachment.noteId) ?? null,
-    [notes, attachment.noteId],
+    () =>
+      attachment.originEntity?.kind === "note"
+        ? notes.find((n) => n.id === attachment.originEntity!.id) ?? null
+        : null,
+    [notes, attachment.originEntity],
   )
 
-  // Used in: wiki articles whose blocks reference this attachment.
-  // (Plot wiki blocks of type "image" carry `attachmentId`.)
+  // Used in (file-entity-prd §3): notes + wiki articles whose CONTENT
+  // references this attachment. Two scans:
+  //   - Notes: contentJson tree walk for `attachment://<id>` (image src,
+  //     link href, mark href).
+  //   - Wikis: image block attachmentId (direct) + text block contentJson
+  //     walk (for inline links).
+  // The source note shown above is a separate "provenance" signal — a file
+  // can have a source note that never embedded it, and can be embedded by
+  // notes/wikis that aren't its source.
+  const usedInNotes = useMemo(() => {
+    return notes.filter((n) => {
+      if (n.trashed) return false
+      if (!n.contentJson) return false
+      return extractAttachmentRefs(n.contentJson).includes(attachment.id)
+    })
+  }, [notes, attachment.id])
+
   const usedInWikis = useMemo(() => {
-    return wikiArticles.filter((a) =>
-      (a.blocks ?? []).some(
-        (b) => b.type === "image" && b.attachmentId === attachment.id,
-      ),
-    )
+    return wikiArticles.filter((a) => {
+      if ((a as any).trashed) return false
+      return extractAttachmentRefsFromWikiBlocks(a.blocks).includes(attachment.id)
+    })
   }, [wikiArticles, attachment.id])
 
   const typeLabel = (() => {
@@ -164,11 +187,24 @@ export function FileDetailPanel({ attachment }: { attachment: Attachment }) {
 
       <div className="mx-4 border-b border-border" />
 
-      {/* ── Used in (cross-reference) ────────────────────── */}
-      {(usedInWikis.length > 0) && (
+      {/* ── Used in (cross-reference, file-entity-prd §3) ───── */}
+      {(usedInNotes.length + usedInWikis.length > 0) && (
         <>
-          <InspectorSection title="Used in" icon={<PhLink size={16} />}>
+          <InspectorSection
+            title={`Used in · ${usedInNotes.length + usedInWikis.length}`}
+            icon={<PhLink size={16} />}
+          >
             <div className="flex flex-col gap-0.5">
+              {usedInNotes.map((n) => (
+                <button
+                  key={n.id}
+                  onClick={() => openNote(n.id)}
+                  className="flex items-center gap-2 rounded-md px-2 py-1 text-left text-note text-foreground hover:bg-hover-bg transition-colors"
+                >
+                  <FileText size={13} className="shrink-0 text-muted-foreground" />
+                  <span className="truncate">{n.title || "Untitled"}</span>
+                </button>
+              ))}
               {usedInWikis.map((a) => (
                 <div
                   key={a.id}
