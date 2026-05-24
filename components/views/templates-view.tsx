@@ -40,6 +40,7 @@ import { FileText } from "lucide-react"
 import type { NoteTemplate } from "@/lib/types"
 import type { FilterRule } from "@/lib/view-engine/types"
 import { ViewHeader } from "@/components/view-header"
+import { useT } from "@/lib/i18n"
 import { FilterPanel } from "@/components/filter-panel"
 import { DisplayPanel } from "@/components/display-panel"
 import { TEMPLATES_VIEW_CONFIG } from "@/lib/view-engine/view-configs"
@@ -307,6 +308,7 @@ function TemplateCard({
 /* ── Templates View ───────────────────────────────────── */
 
 export function TemplatesView() {
+  const t = useT()
   const allTemplates = usePlotStore((s) => s.templates) as NoteTemplate[]
   const labels = usePlotStore((s) => s.labels)
   const folders = usePlotStore((s) => s.folders)
@@ -503,7 +505,7 @@ export function TemplatesView() {
     <div className="flex flex-1 flex-col overflow-hidden">
       <ViewHeader
         icon={<Layout size={20} strokeWidth={2} />}
-        title="Templates"
+        title={t("sidebar.templates")}
         count={totalCount}
         searchPlaceholder="Search templates..."
         searchValue={search}

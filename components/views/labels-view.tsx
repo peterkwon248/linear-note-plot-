@@ -41,6 +41,7 @@ import { LabelNoteCountChip } from "@/components/property-chips"
 import type { SortField, FilterRule, GroupBy } from "@/lib/view-engine/types"
 import type { Label } from "@/lib/types"
 import { ViewHeader } from "@/components/view-header"
+import { useT } from "@/lib/i18n"
 import { LibraryBreadcrumb } from "@/components/library/library-breadcrumb"
 import { EntityNoteListRow } from "@/components/views/entity-note-list-row"
 import { setActiveRoute } from "@/lib/table-route"
@@ -158,6 +159,7 @@ const ROW_HEIGHT = 40
 const HEADER_HEIGHT = 37
 
 export function LabelsView() {
+  const t = useT()
   const router = useRouter()
   const labels = usePlotStore((s) => s.labels)
   const folders = usePlotStore((s) => s.folders)
@@ -969,7 +971,7 @@ export function LabelsView() {
     <div className="flex flex-1 flex-col overflow-hidden">
       <ViewHeader
         icon={<BookmarkSimple size={20} strokeWidth={2} />}
-        title="Labels"
+        title={t("library.tab.labels")}
         titleNode={<LibraryBreadcrumb current="labels" count={flatCount} />}
         count={flatCount}
         onCreateNew={() => setCreating(true)}

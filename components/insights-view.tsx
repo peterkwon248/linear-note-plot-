@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from "react"
 import { ViewHeader } from "@/components/view-header"
+import { useT } from "@/lib/i18n"
 import { DisplayPanel } from "@/components/display-panel"
 import { INSIGHTS_VIEW_CONFIG } from "@/lib/view-engine/view-configs"
 import { DEFAULT_VIEW_STATE } from "@/lib/view-engine/defaults"
@@ -257,6 +258,7 @@ function InsightCard({ result }: { result: AnalysisResult }) {
 /* ── InsightsView ─────────────────────────────────────── */
 
 export function InsightsView() {
+  const t = useT()
   const notes = usePlotStore((s) => s.notes)
   const entityEvents = usePlotStore((s) => s.entityEvents)
   // Phase 1b2: derive srsMap from the unified `hooks` slice (back-compat shape).
@@ -295,7 +297,7 @@ export function InsightsView() {
       {/* Header */}
       <ViewHeader
         icon={<IconInsight size={20} />}
-        title="Insights"
+        title={t("sidebar.insights")}
         showDisplay
         displayContent={
           <DisplayPanel

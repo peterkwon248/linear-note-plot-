@@ -43,6 +43,7 @@ import {
 import { cn } from "@/lib/utils"
 import { IconTag } from "@/components/plot-icons"
 import { ViewHeader } from "@/components/view-header"
+import { useT } from "@/lib/i18n"
 import { LibraryBreadcrumb } from "@/components/library/library-breadcrumb"
 import { useNotesView } from "@/lib/view-engine/use-notes-view"
 import { useTagsView, type TagWithCount } from "@/lib/view-engine/use-tags-view"
@@ -176,6 +177,7 @@ const HEADER_HEIGHT = 37 // the header row height
 const DRAG_THRESHOLD = 5
 
 export function TagsView() {
+  const t = useT()
   const router = useRouter()
   const tags = usePlotStore((s) => s.tags)
   const labels = usePlotStore((s) => s.labels)
@@ -997,7 +999,7 @@ export function TagsView() {
     <div className="flex flex-1 flex-col overflow-hidden">
       <ViewHeader
         icon={<IconTag size={20} />}
-        title="Tags"
+        title={t("library.tab.tags")}
         titleNode={<LibraryBreadcrumb current="tags" count={flatCount} />}
         count={flatCount}
         onCreateNew={() => {
