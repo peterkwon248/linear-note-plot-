@@ -28,6 +28,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { cn } from "@/lib/utils"
 import { PRESET_COLORS, getEntityColor } from "@/lib/colors" // v109: opt-in color fallback
 import type { NoteStatus, NotePriority } from "@/lib/types"
+import { useT } from "@/lib/i18n"
 
 export function pickColor(name: string): string {
   let hash = 0
@@ -39,10 +40,11 @@ export function pickColor(name: string): string {
 
 export const STATUS_CONFIG: Record<
   NoteStatus,
-  { label: string; color: string; bg: string; border: string; icon: React.ReactNode }
+  { label: string; labelKey: string; color: string; bg: string; border: string; icon: React.ReactNode }
 > = {
   stone: {
     label: "Stone",
+    labelKey: "status.stone",
     // 2026-05-13: var(--chart-2)는 chart 시각화 전용 — status 색과 unrelated.
     // var(--status-stone)으로 통일 → row icon(NOTE_STATUS_COLORS)과 정확
     // 동일 색. (이전 PR #319에서 keystone만 fix되고 stone/brick은 lazy
@@ -54,6 +56,7 @@ export const STATUS_CONFIG: Record<
   },
   brick: {
     label: "Brick",
+    labelKey: "status.brick",
     // 2026-05-13: var(--chart-3) → var(--status-brick) 통일 (위 stone 동일 이유).
     color: "var(--status-brick)",
     bg: "color-mix(in srgb, var(--status-brick) 18%, transparent)",
@@ -62,6 +65,7 @@ export const STATUS_CONFIG: Record<
   },
   keystone: {
     label: "Block",
+    labelKey: "status.block",
     color: "var(--status-keystone)",
     bg: "color-mix(in srgb, var(--status-keystone) 18%, transparent)",
     border: "color-mix(in srgb, var(--status-keystone) 35%, transparent)",
@@ -109,6 +113,7 @@ const PRIORITY_OPTIONS: NotePriority[] = ["none", "urgent", "high", "medium", "l
 /* ── StatusBadge ──────────────────────────────────────── */
 
 export function StatusBadge({ status }: { status: NoteStatus }) {
+  const t = useT()
   const cfg = STATUS_CONFIG[status] ?? STATUS_CONFIG.brick
   return (
     <span
@@ -116,7 +121,7 @@ export function StatusBadge({ status }: { status: NoteStatus }) {
       style={{ backgroundColor: cfg.bg, color: cfg.color, borderColor: cfg.border }}
     >
       {cfg.icon}
-      {cfg.label}
+      {t(cfg.labelKey)}
     </span>
   )
 }
@@ -150,6 +155,7 @@ export function StatusDropdown({
   onChange: (status: NoteStatus) => void
   variant?: "button" | "inline"
 }) {
+  const t = useT()
   const current = STATUS_CONFIG[value] ?? STATUS_CONFIG.brick
 
   return (
@@ -162,7 +168,7 @@ export function StatusDropdown({
             onClick={(e) => e.stopPropagation()}
           >
             {current.icon}
-            {current.label}
+            {t(current.labelKey)}
           </button>
         ) : (
           <button
@@ -171,7 +177,7 @@ export function StatusDropdown({
           >
             <span className="flex items-center gap-2" style={{ color: current.color }}>
               {current.icon}
-              {current.label}
+              {t(current.labelKey)}
             </span>
             <CaretDown className="text-muted-foreground" size={14} strokeWidth={2} />
           </button>
@@ -191,7 +197,7 @@ export function StatusDropdown({
             >
               <span className="flex items-center gap-2" style={{ color: cfg.color }}>
                 {cfg.icon}
-                <span className="text-foreground">{cfg.label}</span>
+                <span className="text-foreground">{t(cfg.labelKey)}</span>
               </span>
               {value === s && <PhCheck className="text-muted-foreground" size={14} strokeWidth={2.5} />}
             </DropdownMenuItem>
