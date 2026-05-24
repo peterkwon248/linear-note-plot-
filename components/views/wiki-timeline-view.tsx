@@ -167,16 +167,40 @@ export function WikiTimelineView({
     [validArticles, winStart, cfg.pxPerDay, cfg.minBarWidth],
   )
 
-  // PR-Q4: visible lanes = allLanes minus articles whose group is collapsed.
-  // When no group is collapsed (common case), this is a no-op pointer alias.
+  // PR-Q4 v2: visible lanes = expanded-group article lanes + ghost-lane
+  // placeholders for collapsed groups. The ghost lane keeps the user in
+  // control (click to expand) while still trimming the canvas down to
+  // just one row per collapsed group.
   const lanes = useMemo(() => {
-    if (collapsedGroupsSet.size === 0 || !groupingActive) return allLanes
-    return allLanes.filter(({ article }) => {
-      const meta = articleGroupMeta.get(article.id)
+    if (!groupingActive || !wikiGroups || collapsedGroupsSet.size === 0) return allLanes
+    type GhostLane = { isCollapsedHeader: true; groupKey: string; label: string; count: number; x: 0; width: 0 }
+    type Lane = (typeof allLanes)[number] | GhostLane
+    const lanesByGroup = new Map<string, typeof allLanes>()
+    for (const lane of allLanes) {
+      const meta = articleGroupMeta.get(lane.article.id)
       const key = meta?.key ?? "_ungrouped"
-      return !collapsedGroupsSet.has(key)
-    })
-  }, [allLanes, collapsedGroupsSet, groupingActive, articleGroupMeta])
+      if (!lanesByGroup.has(key)) lanesByGroup.set(key, [])
+      lanesByGroup.get(key)!.push(lane)
+    }
+    const out: Lane[] = []
+    for (const g of wikiGroups) {
+      if (g.articles.length === 0) continue
+      if (collapsedGroupsSet.has(g.key)) {
+        out.push({
+          isCollapsedHeader: true,
+          groupKey: g.key,
+          label: g.label,
+          count: g.articles.length,
+          x: 0,
+          width: 0,
+        })
+      } else {
+        const inGroup = lanesByGroup.get(g.key) ?? []
+        out.push(...inGroup)
+      }
+    }
+    return out
+  }, [allLanes, collapsedGroupsSet, groupingActive, articleGroupMeta, wikiGroups])
 
   /** B4: precompute group boundaries from the (already group-sorted) lanes
    *  so both the label column (header band) and the canvas grid (divider
@@ -185,11 +209,20 @@ export function WikiTimelineView({
   const groupBoundaries = useMemo(() => {
     if (!groupingActive || articleGroupMeta.size === 0) return null
     // PR-Q4: `key` added so TimelineLabelColumn can emit it on header click.
+    // PR-Q4 v2: ghost lanes carry their own key/label/count and don't need
+    // a header band above them (label column already renders them as headers).
     const out: { laneIndex: number; label: string; count: number; key: string }[] = []
     let lastKey: string | null = null
     let runStart = 0
-    lanes.forEach(({ article }, laneIndex) => {
-      const meta = articleGroupMeta.get(article.id)
+    lanes.forEach((item, laneIndex) => {
+      if ("isCollapsedHeader" in item) {
+        // Close the previous run, but don't emit a header for the ghost.
+        if (out.length > 0) out[out.length - 1].count = laneIndex - runStart
+        lastKey = null
+        runStart = laneIndex + 1
+        return
+      }
+      const meta = articleGroupMeta.get(item.article.id)
       const key = meta?.key ?? "_ungrouped"
       if (key !== lastKey) {
         if (out.length > 0) out[out.length - 1].count = laneIndex - runStart
@@ -208,7 +241,10 @@ export function WikiTimelineView({
     const winStartMs = winStart.getTime()
     const winEndMs = winEnd.getTime()
     const m = new Map<string, EntityEvent[]>()
-    for (const { article } of lanes) {
+    for (const item of lanes) {
+      // PR-Q4 v2: ghost lanes have no article — skip in event indexing.
+      if ("isCollapsedHeader" in item) continue
+      const { article } = item
       const all = getEventsForEntity(entityEvents, { kind: "wiki", id: article.id })
       const within = all.filter((e) => {
         const t = new Date(e.at).getTime()
@@ -261,8 +297,8 @@ export function WikiTimelineView({
       if (!svg) return
       const rect = svg.getBoundingClientRect()
       const rawEndX = e.clientX - rect.left
-      const lane = lanes.find((l) => l.article.id === dragState!.id)
-      if (!lane) return
+      const lane = lanes.find((l) => !("isCollapsedHeader" in l) && l.article.id === dragState!.id)
+      if (!lane || "isCollapsedHeader" in lane) return
       const minEndX = lane.x + cfg.minBarWidth
       const snapped = Math.round(rawEndX / cfg.pxPerDay) * cfg.pxPerDay
       const clampedEndX = Math.max(snapped, minEndX)
@@ -440,41 +476,49 @@ export function WikiTimelineView({
                   groupBoundaries={groupBoundaries}
                 />
 
-                {/* Article bars — wiki adapter resolves stub/article color. */}
-                {lanes.map((item, laneIndex) => (
-                  <TimelineBar
-                    key={item.article.id}
-                    item={item}
-                    statusColor={isWikiStub(item.article) ? WIKI_STATUS_HEX.stub : WIKI_STATUS_HEX.article}
-                    canEditHorizon
-                    laneIndex={laneIndex}
-                    activeArticleId={activeArticleId}
-                    selectedIds={selectedIds}
-                    hoveredId={hoveredId}
-                    dragState={dragState}
-                    nowX={nowX}
-                    canvasWidth={canvasWidth}
-                    setHoveredId={setHoveredId}
-                    setTooltip={setTooltip}
-                    setDragState={setDragState}
-                    onOpenArticle={onOpenArticle}
-                    onSelect={onSelect}
-                  />
-                ))}
+                {/* Article bars — wiki adapter resolves stub/article color.
+                    PR-Q4 v2: ghost lanes (collapsed-group headers) are
+                    skipped in the bar layer; label column owns their UI. */}
+                {lanes.map((item, laneIndex) => {
+                  if ("isCollapsedHeader" in item) return null
+                  return (
+                    <TimelineBar
+                      key={item.article.id}
+                      item={item}
+                      statusColor={isWikiStub(item.article) ? WIKI_STATUS_HEX.stub : WIKI_STATUS_HEX.article}
+                      canEditHorizon
+                      laneIndex={laneIndex}
+                      activeArticleId={activeArticleId}
+                      selectedIds={selectedIds}
+                      hoveredId={hoveredId}
+                      dragState={dragState}
+                      nowX={nowX}
+                      canvasWidth={canvasWidth}
+                      setHoveredId={setHoveredId}
+                      setTooltip={setTooltip}
+                      setDragState={setDragState}
+                      onOpenArticle={onOpenArticle}
+                      onSelect={onSelect}
+                    />
+                  )
+                })}
 
                 {/* Start chip (always shown) + activity markers (hidden when the Events toggle is off) */}
-                {lanes.map((item, laneIndex) => (
-                  <TimelineEventMarkers
-                    key={`events-${item.article.id}`}
-                    article={item.article}
-                    laneIndex={laneIndex}
-                    barX={item.x}
-                    eventsByArticleId={eventsByArticleId}
-                    cfg={cfg}
-                    winStart={winStart}
-                    setEventTooltip={setEventTooltip}
-                  />
-                ))}
+                {lanes.map((item, laneIndex) => {
+                  if ("isCollapsedHeader" in item) return null
+                  return (
+                    <TimelineEventMarkers
+                      key={`events-${item.article.id}`}
+                      article={item.article}
+                      laneIndex={laneIndex}
+                      barX={item.x}
+                      eventsByArticleId={eventsByArticleId}
+                      cfg={cfg}
+                      winStart={winStart}
+                      setEventTooltip={setEventTooltip}
+                    />
+                  )
+                })}
               </svg>
 
               {/* ── B2: Tooltip — wiki adapter inline (stub/article icon +

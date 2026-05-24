@@ -204,25 +204,53 @@ export function NotesTimelineView({
     [validNotes, winStart, cfg.pxPerDay, cfg.minBarWidth],
   )
 
-  // PR-Q4: visible lanes = allLanes minus articles whose group is collapsed.
+  // PR-Q4 v2 (wiki parity): expanded-group lanes + ghost-lane placeholders.
   const lanes = useMemo(() => {
-    if (collapsedGroupsSet.size === 0 || !groupingActive) return allLanes
-    return allLanes.filter(({ article }) => {
-      const meta = noteGroupMeta.get(article.id)
+    if (!groupingActive || !noteGroups || collapsedGroupsSet.size === 0) return allLanes
+    type GhostLane = { isCollapsedHeader: true; groupKey: string; label: string; count: number; x: 0; width: 0 }
+    type Lane = (typeof allLanes)[number] | GhostLane
+    const lanesByGroup = new Map<string, typeof allLanes>()
+    for (const lane of allLanes) {
+      const meta = noteGroupMeta.get(lane.article.id)
       const key = meta?.key ?? "_ungrouped"
-      return !collapsedGroupsSet.has(key)
-    })
-  }, [allLanes, collapsedGroupsSet, groupingActive, noteGroupMeta])
+      if (!lanesByGroup.has(key)) lanesByGroup.set(key, [])
+      lanesByGroup.get(key)!.push(lane)
+    }
+    const out: Lane[] = []
+    for (const g of noteGroups) {
+      if (g.notes.length === 0) continue
+      if (collapsedGroupsSet.has(g.key)) {
+        out.push({
+          isCollapsedHeader: true,
+          groupKey: g.key,
+          label: g.label,
+          count: g.notes.length,
+          x: 0,
+          width: 0,
+        })
+      } else {
+        const inGroup = lanesByGroup.get(g.key) ?? []
+        out.push(...inGroup)
+      }
+    }
+    return out
+  }, [allLanes, collapsedGroupsSet, groupingActive, noteGroupMeta, noteGroups])
 
-  /** B4: group boundary lane indices, shared between label column header
-   *  bands and canvas divider lines. PR-Q4: `key` added for collapse toggle. */
+  /** B4: group boundary lane indices. PR-Q4 v2: skip ghost lanes (label
+   *  column owns their UI). */
   const groupBoundaries = useMemo(() => {
     if (!groupingActive || noteGroupMeta.size === 0) return null
     const out: { laneIndex: number; label: string; count: number; key: string }[] = []
     let lastKey: string | null = null
     let runStart = 0
-    lanes.forEach(({ article }, laneIndex) => {
-      const meta = noteGroupMeta.get(article.id)
+    lanes.forEach((item, laneIndex) => {
+      if ("isCollapsedHeader" in item) {
+        if (out.length > 0) out[out.length - 1].count = laneIndex - runStart
+        lastKey = null
+        runStart = laneIndex + 1
+        return
+      }
+      const meta = noteGroupMeta.get(item.article.id)
       const key = meta?.key ?? "_ungrouped"
       if (key !== lastKey) {
         if (out.length > 0) out[out.length - 1].count = laneIndex - runStart
@@ -329,40 +357,48 @@ export function NotesTimelineView({
                   groupBoundaries={groupBoundaries}
                 />
 
-                {lanes.map((item, laneIndex) => (
-                  <TimelineBar
-                    key={item.article.id}
-                    item={item}
-                    statusColor={noteStatusColor((item.article as Note).status)}
-                    canEditHorizon={false}
-                    laneIndex={laneIndex}
-                    activeArticleId={activeNoteId}
-                    selectedIds={selectedIds}
-                    hoveredId={hoveredId}
-                    dragState={null}
-                    nowX={nowX}
-                    canvasWidth={canvasWidth}
-                    setHoveredId={setHoveredId}
-                    setTooltip={setTooltip}
-                    setDragState={() => {}}
-                    onOpenArticle={onOpenNote}
-                    onSelect={onSelect}
-                  />
-                ))}
+                {lanes.map((item, laneIndex) => {
+                  // PR-Q4 v2: ghost lanes (collapsed-group headers) are
+                  // rendered by the label column; bar layer skips them.
+                  if ("isCollapsedHeader" in item) return null
+                  return (
+                    <TimelineBar
+                      key={item.article.id}
+                      item={item}
+                      statusColor={noteStatusColor((item.article as Note).status)}
+                      canEditHorizon={false}
+                      laneIndex={laneIndex}
+                      activeArticleId={activeNoteId}
+                      selectedIds={selectedIds}
+                      hoveredId={hoveredId}
+                      dragState={null}
+                      nowX={nowX}
+                      canvasWidth={canvasWidth}
+                      setHoveredId={setHoveredId}
+                      setTooltip={setTooltip}
+                      setDragState={() => {}}
+                      onOpenArticle={onOpenNote}
+                      onSelect={onSelect}
+                    />
+                  )
+                })}
 
                 {/* Bar-origin start chips (no activity markers — empty events map) */}
-                {lanes.map((item, laneIndex) => (
-                  <TimelineEventMarkers
-                    key={`events-${item.article.id}`}
-                    article={item.article}
-                    laneIndex={laneIndex}
-                    barX={item.x}
-                    eventsByArticleId={EMPTY_EVENTS_MAP}
-                    cfg={cfg}
-                    winStart={winStart}
-                    setEventTooltip={() => {}}
-                  />
-                ))}
+                {lanes.map((item, laneIndex) => {
+                  if ("isCollapsedHeader" in item) return null
+                  return (
+                    <TimelineEventMarkers
+                      key={`events-${item.article.id}`}
+                      article={item.article}
+                      laneIndex={laneIndex}
+                      barX={item.x}
+                      eventsByArticleId={EMPTY_EVENTS_MAP}
+                      cfg={cfg}
+                      winStart={winStart}
+                      setEventTooltip={() => {}}
+                    />
+                  )
+                })}
               </svg>
 
               <TimelineAxis

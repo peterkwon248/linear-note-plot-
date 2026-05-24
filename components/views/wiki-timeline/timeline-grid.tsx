@@ -13,6 +13,7 @@ import {
   TODAY_LINE_COLOR,
   type ZoomConfig,
   type LanedItem,
+  type LanedCollapsedHeader,
   type TimelineEntity,
 } from "./wiki-timeline-config"
 
@@ -20,7 +21,8 @@ export interface TimelineGridProps {
   allDays: Date[]
   ticks: Date[]
   monthBoundaries: Date[]
-  lanes: LanedItem<TimelineEntity>[]
+  // PR-Q4 v2 — accept ghost lanes (only `.length` is read for height accounting).
+  lanes: Array<LanedItem<TimelineEntity> | LanedCollapsedHeader>
   cfg: ZoomConfig
   winStart: Date
   canvasWidth: number
