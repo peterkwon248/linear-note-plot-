@@ -6,6 +6,126 @@
 
 ---
 
+## 2026-05-24 (새벽) — Windows, **Temporal Hooks PRD v0.2 + Phase 1a foundation (Hook model + slice + v145→v146 migration)**
+
+> 🎯 **다음 즉시 액션 (다음 세션 시작점)**: **Phase 1b — workflow.ts wire + read-site 변경 + legacy 필드 제거**.
+>
+> **사용자 의도**: temporal-hooks PRD 진입 → Q3/Q4/Q6 결정 → Phase 1a foundation 머지 (PR #411). Phase 1b는 read-site 마이그레이션 + legacy 제거.
+>
+> **첫 스텝** (다른 머신에서 바로):
+> 1. `lib/store/slices/workflow.ts` 액션 wire 변경:
+>    - `setReminder(id, reviewAt)` → `addHook({ target: {kind:"note",id}, policy:"snooze", trigger:{kind:"scheduled", at:reviewAt}, action:{loudness:"active"} })` + 기존 `n.reviewAt` set 제거
+>    - `clearReminder(id)` → `removeHooksByPolicy({kind:"note",id}, "snooze")`
+>    - `triageSnooze(id, reviewAt)` → `addHook(...)` (loudness: "passive") + 기존 reviewAt/triageStatus="snoozed" 제거
+>    - `batchSetReminder(ids, reviewAt)` → ids.forEach(addHook)
+>    - `enrollSRS(noteId)` → `addHook({ target: {kind:"note",id:noteId}, policy:"srs", trigger:{kind:"srs", srsState}, action:{loudness:"active"}, state:{srsState} })` + 기존 `srsStateByNoteId` set 제거
+>    - `unenrollSRS(noteId)` → `removeHooksByPolicy({kind:"note",id:noteId}, "srs")`
+>    - `updateSRSState(noteId, srsState)` → updateHook (또는 remove+add)
+> 2. `wiki-articles.ts` 액션:
+>    - `setWikiArticlePlannedDate(id, plannedDate)` → addHook (plan, scheduled) + 기존 plannedDate 제거
+> 3. Read-site 변경 (Note.reviewAt / WikiArticle.plannedDate / srsStateByNoteId 참조):
+>    - `lib/queries/notes.ts:164` getReviewQueue — srsMap 대신 hooks query
+>    - Inbox source 5종 (`lib/hooks/use-inbox.ts` 등) — reviewAt → hooks
+>    - Wiki timeline plannedDate drag (`wiki-timeline-view.tsx`) — plannedDate → hooks
+>    - SRS review UI (`lib/srs/` callers) — srsStateByNoteId → hooks state
+> 4. `lib/types.ts`에서 legacy 필드 제거:
+>    - `Note.reviewAt`, `Note.triageStatus`(가능?)
+>    - `WikiArticle.plannedDate`
+>    - PlotState.srsStateByNoteId
+> 5. store v146 → v147 migration: legacy 필드 들어있어도 무시 (마이그레이션 이미 v146에서 Hook 추출)
+> 6. `promoteToPermanent` 자동 SRS Hook 장착 (Q4 결정 — 기존 `enrollSRS` 호출을 `addHook(srs)`로 wire)
+>
+> **위험 + 회피**:
+> - read-site 마이그레이션 큰 작업 — Inbox / Timeline / Wiki article view 등 다양. 한 PR로 가능한지 검토 → 단계별 PR 분할 가능 (Phase 1b1 = workflow wire / Phase 1b2 = read-site / Phase 1b3 = legacy 제거)
+> - SRS UI (review queue, rating)는 SRSState를 깊게 사용 — Hook.state로 wrapping 후에도 동일 호출 가능해야 (lib/srs 엔진 그대로 유지, PRD §5)
+> - 기존 `enrollAllPermanentSRS()` 일괄 등록 함수 — Phase 1b에서 hooks query로 재구현
+>
+> **컴포넌트 구조 / Hook 사용 패턴 (Phase 1b 정통)**:
+> ```
+> store
+> ├── hooks: Hook[]                 ← single source of truth (Phase 1a 완료)
+> └── notes / wikiArticles 등 entity ← legacy 필드 제거됨
+>
+> selectors / hooks (Phase 1b 신규):
+>   useHooksForEntity(target)        → Hook[]
+>   useDueHooks()                    → Hook[] (scheduled at <= now)
+>   useSRSStateForNote(noteId)       → SRSState | null (hooks에서 추출)
+>   useReminderForNote(noteId)       → ISO string | null
+>   usePlannedDateForWiki(articleId) → ISO string | null
+> ```
+>
+> **참고 파일** (Phase 1b 작업 시):
+> - `lib/store/slices/workflow.ts` — wire 대상 (setReminder/triageSnooze/enrollSRS/unenrollSRS/promote/...)
+> - `lib/store/slices/wiki-articles.ts` — setWikiArticlePlannedDate
+> - `lib/store/slices/hooks.ts` — Phase 1a slice (addHook/removeHooksByPolicy/...)
+> - `lib/queries/notes.ts:164` — getReviewQueue (read-site)
+> - `lib/srs/` — SRS 엔진 (PRD §5 — Hook.state wrapping만, 변경 없음)
+> - `components/views/wiki-timeline-view.tsx` — plannedDate drag (read-site)
+> - `lib/hooks/use-inbox.ts` — Inbox source 5종 (Phase 1c에서 Do/Review/Detected 재배선)
+>
+> **2번째 P0 후보** (#1 끝나면): Phase 1c — Inbox Do/Review/Detected 섹션 재배선.
+>
+> **3번째 P0 후보**: Phase 2 진입 의제 — watch + recurring + 우클릭 프리셋 + 타임라인 드래그 (open questions Q1 EventPattern + Q5 recurring 범위 결정).
+>
+> **머신**: Windows. 다음 cross-machine 가능.
+> **현재 main HEAD**: 이번 docs PR 머지 후 (PR `#???`).
+> **branch worktree**: `claude/peaceful-faraday-b50f16` (cleanup 후 새 worktree 권장).
+
+### 완료 (이번 세션)
+
+**Temporal Hooks PRD v0.2 + Phase 1a foundation** — PR #411 머지:
+
+1. **PRD `.omc/plans/unified-temporal-hooks-prd.md` v0.1 → v0.2**:
+   - Q3 RESOLVED: 1-step migration (deprecated 유예 없음)
+   - Q4 RESOLVED: 기존 promote→enrollSRS 전이만 일반화 (보수적 default)
+   - Q6 RESOLVED: "Do 비우기 = Inbox-zero" + Review/Detected는 영원
+   - Q1/Q2/Q5 DEFERRED to Phase 2/3
+
+2. **Phase 1a — Hook foundation (4 파일 + 1 PRD)**:
+   - `lib/types.ts` — Hook interface + HookPolicy (snooze/plan/srs/staleness) + HookTrigger union (scheduled/srs/staleness) + HookActionConfig (loudness: silent/passive/active)
+   - `lib/store/slices/hooks.ts` (신규) — addHook / removeHook / updateHook / removeHooksForEntity / removeHooksByPolicy
+   - `lib/store/index.ts` — slice 등록 + hooks: [] state + version 145→146
+   - `lib/store/migrate.ts` — v145→v146 migration (Note.reviewAt+triageStatus / srsStateByNoteId / WikiArticle.plannedDate → Hook 1-step 흡수, idempotent)
+   - Round-trip 검증: addHook 2건 (note snooze + wiki plan) / removeHooksByPolicy / store v146
+
+3. **legacy 필드는 Phase 1a 한정 keep** — read-site 코드 변경 0. Phase 1b에서 wire + 제거.
+
+### 브레인스토밍 & 큰 결정 (영구 LOCKED #111~#112)
+
+- **#111 LOCKED (2026-05-24 새벽)**: **temporal 도구는 단일 `Hook` 모델로 통합** (snooze/plan/srs/staleness/recurring/watch 6 정책, 하나의 Hook 추상). per-entity 필드 (reviewAt/plannedDate/srsStateByNoteId) = 파편화 재발 — 절대 추가 X. EntityRef-keyed store 사용. 신규 temporal 기능은 모두 `Hook` 위에.
+- **#112 LOCKED (2026-05-24 새벽)**: **Hook trigger 갈래는 둘 (scheduled / event-match), 엔진은 하나**. EntityEvent 스트림(activity-unification-prd.md)이 척추. Timeline = 시각화 / Hook engine = 구독 / Inbox = 발화된 hook의 due 슬라이스. 세 소비자가 한 스트림 공유.
+- **temporal-hooks PRD §11 Q3 (1-step migration)**: 모든 마이그레이션의 default. dual-write deprecated 유예는 영원한 잔존 위험.
+- **temporal-hooks PRD §11 Q4 (보수적 자동 전이)**: 기존 promote→enrollSRS만. stone→brick→plan 등 추가 자동 전이는 사용자 신호 보고 결정 (Phase 2/3).
+
+### 기술 학습 (영구)
+
+- **Hook foundation 단계별 commit 전략 안정**: Phase 1a = data 통합 (model + slice + migration), Phase 1b = code wire (workflow + read-site + legacy 제거). 1a에 read-site/workflow 미터치 — 코드 변경 0이라 risk 낮음. 데이터만 통합, 사용자 가시 0.
+- **idempotent migration 패턴**: `if (!Array.isArray(state.hooks) || state.hooks.length === 0)` 가드 + 재실행 시 skip. 사용자가 다른 컴퓨터 첫 진입 시 다시 안 돌게.
+- **Store slice generic 패턴**: `(set, get, appendEvent) => actions`. attachments / hooks 동일 시그니처. 향후 entity-level slice 추가 시 그대로.
+- **dual representation 패턴**: 데이터 모델(store)과 entity 필드의 dual 유지 → 단계별 마이그레이션. 안전하지만 일관성 약화 → Phase 1b/1c에서 단일화.
+
+### Watch Out (다음 세션)
+
+- **🔴 Phase 1b 작업 큼**: workflow wire (5+ actions) + read-site 변경 (Inbox + Timeline + SRS UI + Note panel 등) + legacy 필드 제거 (Note.reviewAt / triageStatus / WikiArticle.plannedDate / srsStateByNoteId). 단일 PR 가능성 검토 vs 1b1/1b2/1b3 분할.
+- **SRS 엔진 (lib/srs/)**: PRD §5에 "기존 lib/srs 엔진 유지, Hook.state로 wrapping만" 명시. computeNextStep / SRSRating / INTERVALS 그대로. wrapping shape 결정 필요 (Hook.state.srsState vs Hook.trigger.srsState — 현재 둘 다 set, 추후 단일화).
+- **`enrollAllPermanentSRS()` 호환**: 일괄 등록 함수 — Phase 1b에서 hooks slice로 재구현. 신규 promote 시 자동 enrollSRS도 동일 path.
+- **Multi-action transaction**: setReminder → addHook + (가능하면) 기존 reviewAt null 처리 동기. 단일 setState 안에 묶기.
+- **사용자 IDB stale data**: v145 → v146 migration 자동. 단 사용자의 기존 reviewAt/srsState/plannedDate가 정상 Hook으로 변환되었는지 사용자 viewport 검증 권장 (Phase 1b 진입 전).
+
+### 환경 변경
+
+- Store v145 → **v146** (Hook foundation)
+- 신규 파일 1: `lib/store/slices/hooks.ts`
+- 변경 파일 4: types.ts + store/index.ts + store/migrate.ts + .omc/plans/unified-temporal-hooks-prd.md (v0.2)
+- ViewState 무변경
+- 사용자 IDB stale data: 없음 (v146 migration 자동 처리)
+
+### 머신
+
+Windows. cohesive 세션 (PRD 조율 + Phase 1a foundation 머지).
+
+---
+
 ## 2026-05-24 (심야) — Windows, **Ghost Row v0.1 universal — Timeline collapsed group의 자리에 chevron right + label + "N hidden" 1-row inject**
 
 > 🎯 **다음 즉시 액션**: 사용자 viewport 검증 (Wiki/Notes/Books timeline + status grouping → group header click → ghost row 1줄 inject 시각 확인 → click 시 expand 작동) → temporal-hooks PRD 정리 (P1).

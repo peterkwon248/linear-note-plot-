@@ -51,6 +51,20 @@
 
 ---
 
+## 🚀 2026-05-24 (새벽) — Temporal Hooks PRD v0.2 + Phase 1a foundation ⭐⭐⭐⭐
+
+**범위**: PR #411. PRD v0.1 → v0.2 (Q3/Q4/Q6 RESOLVED). Hook model + slice + v145→v146 migration.
+
+**핵심 결정 (영구 LOCKED #111~#112)**:
+- **#111 단일 `Hook` 모델 통합** — 6 정책 (snooze/plan/srs/staleness/recurring/watch) 하나의 추상. per-entity 필드 추가 금지.
+- **#112 Hook trigger 갈래 둘 / 엔진 하나** — EntityEvent 스트림 척추. Timeline/Hook engine/Inbox 3 소비자.
+
+**완료**: Hook model + slice + v145→v146 migration (legacy 3종 흡수, idempotent).
+
+**미완**: Phase 1b (workflow wire + read-site + legacy 제거).
+
+---
+
 ## 🚀 2026-05-24 (저녁) — 거대 세션 #2: Notes timeline ViewHeader + File 엔티티 v1 (6 PR) + Notes/Wiki Grid + Display Panel Audit + Q-series (11 변경 단위) ⭐⭐⭐⭐⭐
 
 **범위**: 단일 거대 PR (36 파일 변경 + 5 신규). 30+ round 사용자 대화. 사용자 신호 기반 cleanup + scaling 본질 도구 구축.
