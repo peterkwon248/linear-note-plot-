@@ -3,56 +3,36 @@
 > 우선순위 기반 작업 목록. **P0 = 다음 세션 즉시 시작점** (NEXT-ACTION.md 폐지, 2026-05-12).
 > 완료 항목은 즉시 삭제. 자세한 history는 SESSION-LOG.md + MEMORY.md.
 
-**마지막 갱신**: 2026-05-24 (오후) — Phase 1b 완성 (1b1+1b2+1b3 통합) + Settings 전수 wire (5/5). 다음 P0 #1 = Phase 1c.
+**마지막 갱신**: 2026-05-24 (저녁 후속) — GlobalTopBar 신설 + Phase 1c + i18n 깊은 확장 + cmdk polish + production-ui-refine. 다음 P0 #1 = i18n 잔여 surface.
 
 ---
 
-## 🟣 P0 — 즉시 (cross-machine 진입점, 2026-05-24 오후)
+## 🟣 P0 — 즉시 (cross-machine 진입점, 2026-05-24 저녁 후속)
 
-### 1. **🔴 Phase 1c — Inbox Do/Review/Detected 섹션 재배선**
+### 1. **🔴 i18n 잔여 surface + 사용자 viewport 검증**
 
-**범위**: 기존 5종 source (reminder/srs/snooze-expired/wiki-redlink/auto-enroll)를 PRD §6의 의도 섹션 (Do / Review / Detected)으로 분류 + UI 3 카드로 분리. Q6 결정 ("Do 비우기 = Inbox-zero" + "Review/Detected는 영원") 적용.
+**범위**: 한국어 토글 시 잔여 영어가 보이는 view (Wiki / Books / Library / Ontology / Calendar / Templates) + 우클릭 메뉴 + 일부 dialog. Status pill 음역 (rows의 Block/Stone/Brick badge).
 
 **첫 스텝**:
-1. PRD `.omc/plans/unified-temporal-hooks-prd.md` §6 + Q6 RESOLVED 재독.
-2. `lib/hooks/use-inbox.ts`:
-   - InboxItem에 `section: "do" | "review" | "detected"` 필드 추가
-   - Hook → section 매핑: snooze+active → Do / srs → Do / snooze+passive → Review / plan(wiki) → Review / wiki-redlink → Detected / auto-enroll → Detected / snooze-expired → Do
-3. `components/views/inbox-view.tsx` — 3 카드 (Do / Review / Detected). 각 카드 항상 표시 (Q6). Do empty + Review/Detected non-empty → "All caught up" 카피.
-4. EmptyAll 상태 카피 갱신.
+1. KO 토글 후 viewport 순회 — Wiki/Books/Library/Ontology/Calendar/Insights/Templates. 각 view header / filter chips / display panel / 우클릭 메뉴 한국어 노출 확인.
+2. 미번역 발견 시 `lib/i18n.ts` dictionary 확장 + 컴포넌트 useT wire.
+3. Module-level static config (view-configs WIKI_VIEW_CONFIG / BOOKS_VIEW_CONFIG / LIBRARY_VIEW_CONFIG)에 labelKey 추가 (NOTES_VIEW_CONFIG 패턴 정합).
+4. Status pill 음역 — `components/notes-table.tsx` status cell + `components/note-fields.tsx` StatusDropdown 옵션 wire.
+5. **사용자 viewport 검증 (4건 미완)**: (a) Phase 1c Inbox 3 섹션 카드, (b) Backup Restore round-trip, (c) GlobalTopBar Hide-all-panels, (d) Cmd+K Escape.
 
-**Hook → section 매핑**:
-```
-snooze + active           → Do (reminder due)
-srs                       → Do (review due)
-snooze + passive          → Review (intentional snooze)
-plan (wiki)               → Review (planned horizon)
-wiki-redlink (non-hook)   → Detected
-auto-enroll (non-hook)    → Detected
-snooze-expired (transient)→ Do (sticky return path)
-```
+**참고 파일**: SESSION-LOG 2026-05-24 (저녁 후속) hook
 
-**위험 + 회피**:
-- 단일 PR로 가능 vs Phase 1c1 (분류만) + Phase 1c2 (UI 분리) 분할 가능
-- 빈 Detected 카드 처리 — Q6 "영원" 정합 (empty state 카피)
-- dismissedInboxItems / snoozedInboxItems 패턴 keep (cross-section)
+### 2. **🟢 Phase 2 의제 — temporal hooks watch + recurring**
 
-**참고 파일**: SESSION-LOG 2026-05-24 (오후) hook + `.omc/plans/unified-temporal-hooks-prd.md` §6
+watch + recurring 신규 정책 (PRD §11 Q1 EventPattern + Q5 recurring 범위 결정 필요). 우클릭 프리셋 + 타임라인 드래그 hook UI.
 
-### 2. **🟢 i18n 확장 (선택)**
+### 3. **🟢 production-ui-refiner 다른 surface**
 
-- JA/ES/FR/DE dictionary 채우기 (현재 placeholder)
-- Settings 외 surface 확장 — sidebar nav, activity bar tooltip, command palette
+Inbox SectionCard (Do/Review/Detected) / SearchDialog 더 깊게 / Settings 페이지 chrome polish.
 
-사용자 신호 시 진입. 부분 적용 권장.
+### 4. **🟢 검색 결과 row Linear 정합**
 
-### 3. **🟢 Phase 2 의제 (Phase 1 완료 후)**
-
-watch + recurring hooks + 우클릭 프리셋 + 타임라인 드래그 hook UI. PRD §11 Q1 (EventPattern) + Q5 (recurring 범위) 결정 필요.
-
-### 4. **🟢 사용자 viewport 검증 (Phase 1b 마이그)**
-
-기존 reviewAt / srsState / plannedDate가 정상 Hook 변환되었는지 inbox / sidebar / timeline / SRS UI에서 확인. Ghost Row v0.1 (PR #410) viewport 시각 확인도 함께.
+Cmd+K dialog 안 노트 검색 결과 item이 plain text — Linear는 highlight + breadcrumb. 다음 polish 후보.
 
 ---
 
@@ -66,6 +46,7 @@ watch + recurring hooks + 우클릭 프리셋 + 타임라인 드래그 hook UI. 
 
 ## ✅ 최근 완료
 
+- **2026-05-24 (저녁 후속)**: **GlobalTopBar 신설 + Phase 1c Inbox 3 카드 + i18n 깊은 확장 (필터/디스플레이/cmdk) + production-ui-refine** (PR #414 + 후속 PR). 5 chunk 누적 — Phase 1c (use-inbox section + 3 SectionCard, plan-due source 신규) / i18n main app (Activity Bar/Sidebar/Home/Quick Capture/StatsRow) / i18n 깊은 확장 (Library→자료실 #117, Stone/Brick/Block 음역 #118, Filter+Display Panel labelKey 패턴, Notes column headers) / GlobalTopBar (PanelsMenu + 시계 + < > + 검색 input + 테마/설정/휴지통 — sidebar 헤더/푸터 제거 + activity-bar 테마 제거 + view-header PanelsMenu 제거 #119/#120) / Command palette hybrid mode badge (#121) + i18n + Escape handler + production-ui-refine 5-phase (A spacing+B icon+C search+D right cluster). 영구 LOCKED #117~#121. tsc/build clean.
 - **2026-05-24 (오후)**: **Phase 1b 통합 (1b1+1b2+1b3) + Settings 전수 wire (5/5)** — 단일 거대 PR. (a) Phase 1b1 workflow.ts/wiki-articles.ts hooks slice wire (dual-write) + (b) Phase 1b2 read-site 마이그 12+ 파일 (신규 lib/store/hook-selectors.ts + getReviewQueue/useInbox/wiki-timeline/sidebar/insights/settings 모두 hooks 기반) + (c) Phase 1b3 legacy 제거 (Note.reviewAt / WikiArticle.plannedDate / srsStateByNoteId 영구 삭제 + v146→v147 strip migration + reviewAt filter operator drop + helpers.ts/test fixtures cleanup) + (d) Settings #1 Start view wire (app/(app)/layout.tsx 라우팅, persist hydration 대기) + (e) Settings #2 Sync 솔직한 reframe (backupReminder/lastBackupAt 신규, toast nudge) + (f) Settings #3 Line numbers wire (CSS counter gutter) + (g) Settings #4 Backup Restore (restoreFromBackup + Import UI + 자동 reload) + (h) Settings #5 i18n (lib/i18n.ts 신규, EN/KO 완전 dictionary, useT 훅, 모든 Settings 페이지 적용). 영구 LOCKED #113~#116. tsc/build clean.
 - **2026-05-24 (새벽)**: Temporal Hooks PRD v0.2 + Phase 1a foundation 머지 (PR #411). PRD §11 Q3/Q4/Q6 RESOLVED (1-step migration / 보수적 전이 / Inbox Do-Review-Detected). Q1/Q2/Q5 DEFERRED to Phase 2/3. 4 파일 변경 + 1 신규 (lib/store/slices/hooks.ts) + PRD update. Hook model + slice + v145→v146 migration (Note.reviewAt+triageStatus / srsStateByNoteId / WikiArticle.plannedDate → Hook 일괄 흡수, idempotent). legacy 필드 Phase 1a 한정 keep. tsc/build clean. Round-trip 검증.
 - **2026-05-24 (심야)**: Ghost Row v0.1 universal — 7 파일 변경. DisplayLane<T> union (LanedItem | LanedCollapsedHeader) + sub-components TS narrowing (timeline-bar/grid/label-column) + 3 entity timeline orchestrators (wiki/notes/books) visibleLanes ghost inject + 모든 caller ghost skip. 시각: 그룹 header 클릭 → ghost row 1줄 (chevron right + label + N hidden + Expand hint), click expand 복구. Linear/Notion 정합. tsc/build clean.
@@ -115,6 +96,11 @@ watch + recurring hooks + 우클릭 프리셋 + 타임라인 드래그 hook UI. 
 - **#114 LOCKED (2026-05-24 오후)**: planning intent ≠ content activity 확장 — setReminder/clearReminder/batchSetReminder가 notes.updatedAt 갱신하지 않음 (#89 wiki 한정 룰을 note까지). triageSnooze는 triageStatus/snoozeCount/lastTouchedAt만 갱신 (non-temporal workflow state는 별개).
 - **#115 LOCKED (2026-05-24 오후)**: Sync 페이지 = honesty over hype. fake auto-sync 제거, "Multi-device sync: Not available" 명시. backup reminder + 마지막 백업 timestamp만 진짜 기능.
 - **#116 LOCKED (2026-05-24 오후)**: i18n = 간단한 dictionary lookup. 외부 의존성 없이 `lib/i18n.ts` + `useT()` 훅. 미번역 키는 EN fallback → literal key fallback.
+- **#117 LOCKED (2026-05-24 저녁)**: Library → 자료실. 5글자 "라이브러리" 활동 바 잘림 → 3글자 음역 절충 (Plot 정체성 + 한국어 흐름).
+- **#118 LOCKED (2026-05-24 저녁)**: Stone/Brick/Block 음역 (스톤/브릭/블록). 영어 정체성 + 한국어 흐름 정합. 의역 시 시그니처 워크플로우 단어 정체성 약화 — 음역이 절충.
+- **#119 LOCKED (2026-05-24 저녁)**: GlobalTopBar = workspace chrome single source. 시계/<>/검색/테마/설정/휴지통 모두 top bar. Hide-all-panels 상태에서도 chrome 접근 가능 — 모든 다른 dialog/popup도 같은 원칙.
+- **#120 LOCKED (2026-05-24 저녁)**: PanelsMenu = top bar 단일 mount. view-header에서 제거. 다른 컴포넌트에 추가 mount 금지 — 햄버거 중복은 사용자 혼란.
+- **#121 LOCKED (2026-05-24 저녁)**: Command palette hybrid mode badge. 기본 commands 모드 뱃지 제거 (Linear 정합 minimal), sub-mode (links/thinking)만 뱃지. Plot multi-mode 정체성 + Linear 정합 절충.
 
 전체 영구 룰 #1-#88: docs/MEMORY.md + docs/CONTEXT.md 참조.
 

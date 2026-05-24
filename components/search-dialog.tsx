@@ -44,6 +44,7 @@ import {
 import {
   setActiveRoute,
 } from "@/lib/table-route"
+import { useT } from "@/lib/i18n"
 function highlightQuery(text: string, q: string): ReactNode {
   if (!q.trim()) return text
   const lower = text.toLowerCase()
@@ -69,6 +70,7 @@ const MODE_LABELS: Record<PaletteMode, string> = {
 }
 
 export function SearchDialog() {
+  const t = useT()
   const searchOpen = usePlotStore((s) => s.searchOpen)
   const setSearchOpen = usePlotStore((s) => s.setSearchOpen)
   const notes = usePlotStore((s) => s.notes)
@@ -144,14 +146,26 @@ export function SearchDialog() {
     prevQueryRef.current = query
   }, [query, commandPaletteMode, setCommandPaletteMode, selectedNoteId])
 
-  // Handle backspace on empty input to go back to commands mode
+  // Backspace on empty input → back to commands mode. Escape → close.
+  // Radix Dialog has built-in Escape handling via onEscapeKeyDown, but cmdk's
+  // CommandPrimitive.Input intercepts the key in some IME/composition states
+  // (notably Korean), so we close explicitly here. `closePalette` is a hoisted
+  // function declaration below, which is why it can be called from this
+  // useCallback without extra deps.
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
+      if (e.key === "Escape") {
+        e.preventDefault()
+        e.stopPropagation()
+        closePalette()
+        return
+      }
       if (e.key === "Backspace" && query === "" && commandPaletteMode === "links") {
         e.preventDefault()
         setCommandPaletteMode("commands")
       }
     },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [query, commandPaletteMode, setCommandPaletteMode]
   )
 
@@ -239,11 +253,16 @@ export function SearchDialog() {
   const inputPlaceholder = useMemo(() => {
     switch (commandPaletteMode) {
       case "commands":
-        return "Type a command..."
+        return t("cmdk.placeholder.commands")
       case "links":
-        return "Search notes to link..."
+        return t("cmdk.placeholder.links")
     }
-  }, [commandPaletteMode])
+  }, [commandPaletteMode, t])
+
+  // Linear-style hybrid: 기본 commands 모드는 뱃지 없이 깔끔. links 같은
+  // sub-mode일 때만 뱃지로 모드를 명시 (UX 명확성). #117/#118의 정체성
+  // 절충 원칙을 그대로 적용 — 기본 surface는 minimal, special path는 explicit.
+  const showModeBadge = commandPaletteMode !== "commands"
 
   return (
     <CommandDialog
@@ -257,20 +276,21 @@ export function SearchDialog() {
       filter={cmdkFilter}
     >
       <div className="relative">
-        {/* Mode badge — always shown */}
-        <div className="absolute left-3 top-1/2 -translate-y-1/2 z-10 flex items-center">
-          <span className="inline-flex items-center gap-1 rounded-md bg-accent px-2 py-0.5 text-2xs font-medium text-accent-foreground">
-            {commandPaletteMode === "commands" && <Terminal size={14} />}
-            {commandPaletteMode === "links" && <PhLink size={14} />}
-            {MODE_LABELS[commandPaletteMode]}
-          </span>
-        </div>
+        {/* Sub-mode badge — Commands 모드일 땐 숨김. Linear 정합. */}
+        {showModeBadge && (
+          <div className="pointer-events-none absolute left-4 top-1/2 z-10 -translate-y-1/2">
+            <span className="inline-flex items-center gap-1 rounded-md bg-accent px-2 py-0.5 text-2xs font-medium text-accent-foreground">
+              {commandPaletteMode === "links" && <PhLink size={12} strokeWidth={2} />}
+              {commandPaletteMode === "links" && t("cmdk.mode.links")}
+            </span>
+          </div>
+        )}
         {thinkingStepInput ? (
-          <div className="flex h-12 items-center gap-2 border-b px-3">
-            <PhBrain className="shrink-0 opacity-50" size={16} />
+          <div className="flex h-14 items-center gap-3 border-b border-border px-4">
+            <PhBrain className="shrink-0 text-muted-foreground" size={18} strokeWidth={2} />
             <input
-              className="flex h-10 w-full rounded-md bg-transparent py-3 text-note outline-none placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-50"
-              placeholder="Enter thinking step text..."
+              className="flex h-12 w-full rounded-md bg-transparent text-base text-foreground outline-none placeholder:text-muted-foreground/70 disabled:cursor-not-allowed disabled:opacity-50"
+              placeholder={t("cmdk.placeholder.thinking")}
               value={thinkingStepText}
               onChange={(e) => setThinkingStepText(e.target.value)}
               onKeyDown={(e) => {
@@ -294,7 +314,7 @@ export function SearchDialog() {
             value={query}
             onValueChange={setQuery}
             onKeyDown={handleKeyDown}
-            className="pl-24"
+            className={showModeBadge ? "pl-20 text-base" : "text-base"}
           />
         )}
       </div>
@@ -302,21 +322,21 @@ export function SearchDialog() {
       {!thinkingStepInput && (
         <CommandList>
           <CommandEmpty>
-            {commandPaletteMode === "commands" && "No matching commands."}
-            {commandPaletteMode === "links" && (isIndexing ? "Building search index..." : "No notes found to link.")}
+            {commandPaletteMode === "commands" && t("cmdk.empty.commands")}
+            {commandPaletteMode === "links" && (isIndexing ? t("cmdk.empty.links_indexing") : t("cmdk.empty.links"))}
           </CommandEmpty>
 
           {/* ====== COMMANDS MODE ====== */}
           {commandPaletteMode === "commands" && (
             <>
               {/* Navigation */}
-              <CommandGroup heading="Navigation">
+              <CommandGroup heading={t("cmdk.group.navigation")}>
                 <CommandItem
                   value="go-to-stone"
                   onSelect={() => { router.push("/stone"); closePalette() }}
                 >
                   <Tray size={16} />
-                  <span>Go to Stone</span>
+                  <span>{t("cmdk.cmd.go_to_stone")}</span>
                   <CommandShortcut>G I</CommandShortcut>
                 </CommandItem>
                 <CommandItem
@@ -324,7 +344,7 @@ export function SearchDialog() {
                   onSelect={() => { router.push("/brick"); closePalette() }}
                 >
                   <Stack size={16} />
-                  <span>Go to Brick</span>
+                  <span>{t("cmdk.cmd.go_to_brick")}</span>
                   <CommandShortcut>G C</CommandShortcut>
                 </CommandItem>
                 <CommandItem
@@ -332,7 +352,7 @@ export function SearchDialog() {
                   onSelect={() => { router.push("/keystone"); closePalette() }}
                 >
                   <PhShield size={16} />
-                  <span>Go to Keystone</span>
+                  <span>{t("cmdk.cmd.go_to_keystone")}</span>
                   <CommandShortcut>G M</CommandShortcut>
                 </CommandItem>
                 <CommandItem
@@ -340,7 +360,7 @@ export function SearchDialog() {
                   onSelect={() => { router.push("/notes"); closePalette() }}
                 >
                   <FileText size={16} />
-                  <span>Go to All Notes</span>
+                  <span>{t("cmdk.cmd.go_to_all_notes")}</span>
                   <CommandShortcut>G N</CommandShortcut>
                 </CommandItem>
                 <CommandItem
@@ -348,14 +368,14 @@ export function SearchDialog() {
                   onSelect={() => { router.push("/settings"); closePalette() }}
                 >
                   <GearSix size={16} />
-                  <span>Go to GearSix</span>
+                  <span>{t("cmdk.cmd.go_to_settings")}</span>
                 </CommandItem>
               </CommandGroup>
 
               <CommandSeparator />
 
               {/* Creation */}
-              <CommandGroup heading="Creation">
+              <CommandGroup heading={t("cmdk.group.creation")}>
                 <CommandItem
                   value="create-new-note"
                   onSelect={() =>
@@ -367,7 +387,7 @@ export function SearchDialog() {
                   }
                 >
                   <PhPlus size={16} />
-                  <span>Create New Note</span>
+                  <span>{t("cmdk.cmd.create_new_note")}</span>
                   <CommandShortcut>C</CommandShortcut>
                 </CommandItem>
               </CommandGroup>
@@ -375,7 +395,7 @@ export function SearchDialog() {
               <CommandSeparator />
 
               {/* System */}
-              <CommandGroup heading="System">
+              <CommandGroup heading={t("cmdk.group.system")}>
                 <CommandItem
                   value="toggle-theme"
                   onSelect={() =>
@@ -390,41 +410,41 @@ export function SearchDialog() {
                   ) : (
                     <Moon size={16} />
                   )}
-                  <span>Toggle Theme</span>
+                  <span>{t("cmdk.cmd.toggle_theme")}</span>
                 </CommandItem>
               </CommandGroup>
 
               <CommandSeparator />
 
               {/* Graph */}
-              <CommandGroup heading="Graph">
+              <CommandGroup heading={t("cmdk.group.graph")}>
                 <CommandItem
                   value="graph-focus-depth-1"
                   onSelect={() => execCommand(() => setGraphFocusDepth(1), "Graph focus: depth 1")}
                 >
                   <Crosshair size={16} />
-                  <span>Set Graph Crosshair Depth 1</span>
+                  <span>{t("cmdk.cmd.graph_focus_depth")} 1</span>
                 </CommandItem>
                 <CommandItem
                   value="graph-focus-depth-2"
                   onSelect={() => execCommand(() => setGraphFocusDepth(2), "Graph focus: depth 2")}
                 >
                   <Crosshair size={16} />
-                  <span>Set Graph Crosshair Depth 2</span>
+                  <span>{t("cmdk.cmd.graph_focus_depth")} 2</span>
                 </CommandItem>
                 <CommandItem
                   value="graph-focus-depth-3"
                   onSelect={() => execCommand(() => setGraphFocusDepth(3), "Graph focus: depth 3")}
                 >
                   <Crosshair size={16} />
-                  <span>Set Graph Crosshair Depth 3</span>
+                  <span>{t("cmdk.cmd.graph_focus_depth")} 3</span>
                 </CommandItem>
                 <CommandItem
                   value="graph-focus-off"
                   onSelect={() => execCommand(() => setGraphFocusDepth(0), "Graph focus: off")}
                 >
                   <Crosshair size={16} />
-                  <span>Set Graph Crosshair Off</span>
+                  <span>{t("cmdk.cmd.graph_focus_off")}</span>
                 </CommandItem>
               </CommandGroup>
 
@@ -432,7 +452,7 @@ export function SearchDialog() {
               {selectedNote && (
                 <>
                   <CommandSeparator />
-                  <CommandGroup heading={`Note: ${selectedNote.title || "Untitled"}`}>
+                  <CommandGroup heading={`${t("cmdk.group.note_prefix")}: ${selectedNote.title || t("common.untitled")}`}>
                     <CommandItem
                       value="toggle-pin-note"
                       onSelect={() =>
@@ -443,7 +463,7 @@ export function SearchDialog() {
                       }
                     >
                       <PushPin size={16} />
-                      <span>{selectedNote.pinned ? "Unpin Note" : "PushPin Note"}</span>
+                      <span>{t("cmdk.cmd.toggle_pin")}</span>
                       <CommandShortcut>⌘⇧P</CommandShortcut>
                     </CommandItem>
 
@@ -459,7 +479,7 @@ export function SearchDialog() {
                         }
                       >
                         <PhBrain size={16} />
-                        <span>Start Thinking Chain</span>
+                        <span>{t("cmdk.cmd.start_thread")}</span>
                       </CommandItem>
                     )}
                     {activeChain && (
@@ -472,7 +492,7 @@ export function SearchDialog() {
                           }}
                         >
                           <SkipForward size={16} />
-                          <span>Add Thinking Step</span>
+                          <span>{t("cmdk.cmd.add_step")}</span>
                         </CommandItem>
                         <CommandItem
                           value="end-thinking-chain"
@@ -484,7 +504,7 @@ export function SearchDialog() {
                           }
                         >
                           <CheckCircle size={16} />
-                          <span>End Thinking Chain</span>
+                          <span>{t("cmdk.cmd.end_thread")}</span>
                         </CommandItem>
                       </>
                     )}
@@ -498,7 +518,7 @@ export function SearchDialog() {
                       }}
                     >
                       <PhLink size={16} />
-                      <span>Link to Note...</span>
+                      <span>{t("cmdk.cmd.link_to_note")}</span>
                       <CommandShortcut>{"[["}</CommandShortcut>
                     </CommandItem>
 
@@ -511,7 +531,7 @@ export function SearchDialog() {
                       }}
                     >
                       <GitMerge size={16} />
-                      <span>GitMerge with...</span>
+                      <span>{t("cmdk.cmd.merge_with")}</span>
                     </CommandItem>
 
                   </CommandGroup>

@@ -150,25 +150,8 @@ export function ActivityBar() {
         )
       })}
 
-      {/* Spacer — pushes theme toggle to bottom */}
-      <div className="flex-1" />
-
-      {/* Tier 2 — theme toggle */}
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <button
-            onClick={toggleTheme}
-            className="a-ab"
-            aria-label={theme === "dark" ? t("nav.theme.toggle_to_light") : t("nav.theme.toggle_to_dark")}
-          >
-            {theme === "dark" ? <IconSun size={20} /> : <IconMoon size={20} />}
-            <span className="a-ab__label">{theme === "dark" ? t("nav.theme.light_label") : t("nav.theme.dark_label")}</span>
-          </button>
-        </TooltipTrigger>
-        <TooltipContent side="right" className="text-2xs">
-          {theme === "dark" ? t("nav.theme.light_mode") : t("nav.theme.dark_mode")}
-        </TooltipContent>
-      </Tooltip>
+      {/* Theme toggle moved to GlobalTopBar (right cluster). Activity bar is
+       *  now a pure space switcher — no chrome controls. */}
     </aside>
   )
 }

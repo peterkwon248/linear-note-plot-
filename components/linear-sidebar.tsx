@@ -772,81 +772,12 @@ export function LinearSidebar() {
 
   return (
     <aside className="a-sidebar h-full w-full shrink-0 select-none" data-active-space={activeSpace}>
-      {/* Header: RecentlyViewed + Back/Forward + spacer + Search + Close */}
-      <div className="flex items-center gap-0.5 px-2.5 pt-2.5 pb-1.5">
-        {/* Recently Viewed */}
-        <div className="relative" ref={recentlyViewedRef}>
-          <button
-            onClick={() => setRecentlyViewedOpen(!recentlyViewedOpen)}
-            className={`flex items-center justify-center h-7 w-7 rounded-md transition-colors ${
-              recentlyViewedOpen ? "text-sidebar-foreground bg-sidebar-hover" : "text-sidebar-muted hover:text-sidebar-foreground hover:bg-sidebar-hover"
-            }`}
-            aria-label="Recently viewed"
-          >
-            <IconClock size={16} />
-          </button>
-          {recentlyViewedOpen && (
-            <div className="absolute left-0 top-full mt-1 z-50 w-72 rounded-lg border border-border bg-surface-overlay shadow-lg animate-in fade-in slide-in-from-top-1 duration-150">
-              <div className="px-3 py-2 border-b border-border">
-                <span className="text-2xs font-medium text-muted-foreground">Recently Viewed</span>
-              </div>
-              {recentlyViewed.length === 0 ? (
-                <div className="px-3 py-4 text-center text-note text-muted-foreground">
-                  No recently viewed notes
-                </div>
-              ) : (
-                <div className="max-h-[320px] overflow-y-auto py-1">
-                  {recentlyViewed.map((item) => (
-                    <button
-                      key={item.id}
-                      onClick={(e) => {
-                        openNote(item.id, { forceNewTab: e.ctrlKey || e.metaKey })
-                        setRecentlyViewedOpen(false)
-                      }}
-                      className="flex w-full items-center gap-2 px-3 py-1.5 text-left transition-colors hover:bg-sidebar-hover"
-                    >
-                      <IconDoc size={14} className="shrink-0 text-muted-foreground" />
-                      <span className="truncate text-note text-foreground">{item.title}</span>
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
-        </div>
-
-        {/* Back/Forward */}
-        <button
-          onClick={handleGoBack}
-          className="flex items-center justify-center h-7 w-7 rounded-md text-sidebar-muted hover:text-sidebar-foreground hover:bg-sidebar-hover transition-colors"
-          title="Back"
-        >
-          <CaretLeft size={14} strokeWidth={2.5} />
-        </button>
-        <button
-          onClick={handleGoForward}
-          className="flex items-center justify-center h-7 w-7 rounded-md text-sidebar-muted hover:text-sidebar-foreground hover:bg-sidebar-hover transition-colors"
-          title="Forward"
-        >
-          <CaretRight size={14} strokeWidth={2.5} />
-        </button>
-
-        <div className="flex-1" />
-
-        {/* Search trigger */}
-        <button
-          onClick={() => setSearchOpen(true)}
-          className="flex items-center justify-center h-7 w-7 rounded-md text-sidebar-muted hover:text-sidebar-foreground hover:bg-sidebar-hover transition-colors"
-          title="Search (⌘K)"
-        >
-          <MagnifyingGlass size={14} />
-        </button>
-
-        {/* Close sidebar button removed — PanelsMenu (workspace header hamburger) handles toggle */}
-      </div>
+      {/* Header (clock/back/forward/search) moved to GlobalTopBar.
+       *  Sidebar now starts directly with navigation — workspace chrome lives
+       *  in the top bar so "Hide all panels" leaves those controls reachable. */}
 
       {/* Navigation */}
-      <nav className="flex-1 overflow-y-auto px-2.5 py-2">
+      <nav className="flex-1 overflow-y-auto px-2.5 pt-2.5 pb-2">
         {/* ── Notes Context ─────────────────────────── */}
         {activeSpace === "notes" && (
           <>
@@ -1863,22 +1794,8 @@ export function LinearSidebar() {
         )}
       </nav>
 
-      {/* Footer */}
-      <div className="border-t border-sidebar-border px-2.5 py-2 space-y-px">
-        <NavLink
-          href="/settings"
-          icon={<IconGear size={16} />}
-          label={t("nav.settings")}
-          active={isActive("/settings")}
-        />
-        <NavLink
-          href="/trash"
-          icon={<IconTrash size={20} />}
-          label={t("nav.trash")}
-          count={trashCount > 0 ? trashCount : undefined}
-          active={isActive("/trash")}
-        />
-      </div>
+      {/* Footer (settings/trash) moved to GlobalTopBar right cluster — same
+       *  reasoning as the header: those shortcuts must survive Hide-all-panels. */}
     </aside>
   )
 }

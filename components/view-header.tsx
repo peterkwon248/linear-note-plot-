@@ -10,7 +10,7 @@ import {
   Plus,
 } from "lucide-react"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import { PanelsMenu } from "@/components/panels-menu"
+// PanelsMenu lives in GlobalTopBar — view headers no longer mount it.
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -225,8 +225,9 @@ export function ViewHeader({
   return (
     <>
       <div className="flex h-(--header-height) shrink-0 items-center gap-2 border-b border-border px-4">
-        {/* Panels toggle menu (mockup spec: hamburger ≡ → Activity bar / Sidebar / Detail toggle popover) */}
-        {pane === 'primary' && <PanelsMenu />}
+        {/* PanelsMenu moved to GlobalTopBar (single source of truth). Keeping
+         *  it here too would duplicate the hamburger between the global top
+         *  bar and every view's header. */}
 
         {/* Title area — in secondary pane, show space dropdown instead */}
         {pane === 'secondary' ? (

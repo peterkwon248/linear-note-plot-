@@ -6,6 +6,129 @@
 
 ---
 
+## 2026-05-24 (저녁 후속) — Windows, **GlobalTopBar 신설 + Command palette polish + production-ui-refine + i18n 깊은 확장 (필터/디스플레이/cmdk)**
+
+> 🎯 **다음 즉시 액션 (다음 세션 시작점)**: **i18n 잔여 surface 마저 끝내기** — Wiki view / Books view / Library view / Ontology view / 우클릭 메뉴 / dialog 잔여 영어 모두 한국어 + 사용자 viewport 검증 (Phase 1c Inbox 3 카드 + Backup Restore round-trip).
+>
+> **사용자 의도**: "전부 구현되어야 한다" (Settings) → "한국어 토글이 메인 화면도 영향" → "필터/디스플레이도 번안" → "사이드바 시계/<>/검색/설정/휴지통/테마 다 top bar로 옮겨" → "커맨드 팔레트 Linear처럼". 일관된 한국어 + Linear 수준 chrome 정합 의도. 사용자 viewport 검증 미완.
+>
+> **첫 스텝** (다른 머신에서 바로):
+> 1. KO 토글 후 viewport 순회 — Wiki / Books / Library / Ontology / Calendar / Insights / Templates / Library categories. 각 view header + filter chips + display panel + 우클릭 menu 한국어 노출 확인.
+> 2. 미번역 발견 시 `lib/i18n.ts` dictionary 확장 + 컴포넌트 useT wire (PR 414/그 후속 패턴 그대로).
+> 3. 부수 작업: status pills 음역 ("Block/Stone/Brick" badge in rows) — wire-up 위치 = `components/notes-table.tsx` status cell render, `components/note-fields.tsx` StatusDropdown 옵션. labelKey 옵셔널 추가 패턴.
+> 4. **사용자 viewport 검증 항목** (모두 미완): (a) Phase 1c Inbox 3 섹션 카드, (b) Backup Restore — Full Backup → Import → reload round-trip, (c) GlobalTopBar — Hide all panels 후에도 chrome 접근 확인, (d) Cmd+K — Escape로 닫힘.
+>
+> **컴포넌트 구조 / 데이터 흐름** (i18n 패턴):
+> - `lib/i18n.ts` — flat dictionary + `useT()` 훅 + `Partial<Record<DictKey, string>>` fallback chain (target → EN → key literal)
+> - 동적 config (view-configs/COLUMN_DEFS/SPACES 등 module-level static)는 **labelKey?: string** 옵셔널 필드 패턴 → consumer가 `t(labelKey ?? label)` 또는 `labelKey ? t(labelKey) : label` resolve
+> - 한국어 잔여 추적: `grep -r '"[A-Z][a-z]\+\s*[A-Z]' components/views/ --include="*.tsx" | grep -v labelKey` 같은 휴리스틱
+>
+> **GlobalTopBar 구조** (이번 세션 신설, 다음 세션 polish 가능):
+> - layout.tsx top sticky, 전체 너비, h-12
+> - 좌측: PanelsMenu / divider / 시계(RecentlyViewed) / < > nav
+> - 중앙: 검색 input (max-w-xl, ⌘K trigger setSearchOpen)
+> - 우측 (divider 후): 테마 토글 / 설정 / 휴지통
+> - linear-sidebar 헤더/푸터 + activity-bar 테마 토글 모두 제거 — top bar가 단일 source
+> - view-header에서 PanelsMenu 제거 (햄버거 중복 해소)
+>
+> **위험 + 회피**:
+> - i18n 확장 시 module-level static config는 labelKey 패턴 사용 — useT를 모듈 스코프에서 호출 금지 (Hook rules)
+> - StatusDropdown 같은 component는 option array를 useT 안에서 동적 생성. 외부 prop으로 받는 경우 labelKey 추가.
+> - GlobalTopBar에서 PanelsMenu 단독 source로 옮겼으므로 다른 곳 (view-header 등)에서 mount 추가 시 중복 발생 — 검사 필요.
+> - i18n missing-key 사일런트 (EN fallback → literal key) — 의도된 graceful degradation. 실수로 EN missing 시 literal key 노출되므로 `translate()` 함수 마지막 fallback 확인.
+>
+> **참고 파일** (i18n 잔여 작업 시):
+> - `lib/i18n.ts` — dictionary 확장
+> - `components/views/wiki-view.tsx` / `books-view.tsx` / `library-view.tsx` / `ontology-view.tsx` — 잔여 영어 hardcoded
+> - `lib/view-engine/view-configs.tsx` WIKI_VIEW_CONFIG / BOOKS_VIEW_CONFIG / LIBRARY_VIEW_CONFIG — filter/display labelKey 추가 (NOTES_VIEW_CONFIG 패턴 그대로)
+> - `components/notes-table.tsx` status cell — status pill 음역 wire
+> - `components/note-fields.tsx` StatusDropdown — 상태 옵션 음역
+> - `components/global-top-bar.tsx` — Polish 더 필요한지 사용자 viewport 검증 후
+>
+> **2번째 P0 후보** (#1 끝나면):
+> - Phase 2 temporal hooks — watch + recurring policies (PRD §11 Q1 EventPattern + Q5 recurring 범위). 우클릭 프리셋 + 타임라인 드래그 hook UI.
+> - 검색 결과 (Cmd+K dialog 안 노트 검색)를 Linear 정합으로 polish — 현재 result item이 plain text, Linear는 highlight + breadcrumb.
+>
+> **3번째 P0 후보**: Production-ui-refiner 다른 컴포넌트 (Inbox SectionCard / SearchDialog 더 깊게 / Settings 페이지 chrome)
+>
+> **머신**: Windows. cross-machine 가능.
+> **현재 main HEAD**: 이번 세션 PR 머지 후.
+> **branch worktree**: `claude/global-top-bar` (cleanup 후 새 worktree 권장).
+
+### 완료 (이번 세션 — 단일 거대 PR 누적, 5 chunk)
+
+이번 세션은 사용자 신호 따라 chunk별로 진행. 모두 단일 worktree `claude/phase-1c-inbox-sections` (i18n까지) + `claude/global-top-bar` (top bar 이후).
+
+**Chunk 1 — Phase 1c (Inbox Do/Review/Detected)** (PR #414):
+- `lib/hooks/use-inbox.ts` — InboxItem.section 필드 + Hook policy → section 매핑 (snooze+active/srs/snooze-expired/plan-due → Do, snooze+passive (사용 안함) → Review (SRS만), wiki-redlink/auto-enroll → Detected)
+- 신규 plan-due source (wiki article plan hook scheduled <= today, getPlanHooks 활용)
+- useInboxBySection 헬퍼
+- `components/views/inbox-view.tsx` — 단일 리스트 → 3 SectionCard. Q6 정합 ("Inbox zero" Do empty 시 + Review/Detected 영원 카드 항상 표시)
+- inbox-source-icon plan-due (Target 아이콘)
+
+**Chunk 2 — i18n 확장 main app** (PR #414에 포함):
+- Activity bar / Linear sidebar / Home view / Quick capture / StatsRow 모두 useT wire
+- 한국어 EN/KO 완전 dictionary 추가
+
+**Chunk 3 — i18n 깊은 확장 필터/디스플레이** (PR #414에 포함):
+- Library → 자료실 (활동 바 잘림 해소)
+- Stone/Brick/Block 음역 (스톤/브릭/블록 — Plot 시그니처 정체성 보존 #118)
+- Filter Panel + Display Panel + ChipDropdown + Notes table column headers wire
+- view-configs.tsx labelKey/descKey 옵셔널 필드 패턴 (consumer resolve)
+
+**Chunk 4 — GlobalTopBar 신설 + chrome 재구성** (별도 PR):
+- 신규 `components/global-top-bar.tsx` — PanelsMenu / 시계(RecentlyViewed) / < > / 검색 input / 테마 / 설정 / 휴지통
+- linear-sidebar 헤더 (시계/<>/검색) 제거 + 푸터 (설정/휴지통) 제거 — 본체 라벨만 남김
+- activity-bar 테마 토글 제거 — 7 space pure switcher로 정리
+- view-header에서 PanelsMenu 제거 (햄버거 중복 해소)
+- layout.tsx에 GlobalTopBar mount (전체 너비, sticky top, h-12)
+- Hide-all-panels 했을 때도 모든 chrome 액션 접근 가능
+- i18n keys: topbar.* (recently_viewed / nav.back / nav.forward / search.placeholder)
+
+**Chunk 5 — Command palette Linear 정합 + production-ui-refine** (이 PR):
+- Search Dialog hybrid: 기본 commands 모드 뱃지 제거 (Linear 정합), links 모드만 뱃지
+- Escape handler 추가 (handleKeyDown에서 closePalette 직접 호출 — cmdk Korean IME 중 native bubble 안 됨 회피)
+- 전 placeholder + group heading + command label 한국어 wire (cmdk.* keys)
+- Input 크기 키움 (h-14, text-base)
+- GlobalTopBar production-ui-refine 5-phase: Group A spacing/gap (h-12, gap-1.5, px-4) + Group B icon stroke 통일 (Caret strokeWidth 2.5 → 2) + Group C search input prominence (max-w-xl, py-2, border-subtle) + Group D right cluster divider (3 영역 분리)
+
+### 브레인스토밍 & 큰 결정 (영구 LOCKED #117~#121)
+
+- **#117 LOCKED (2026-05-24 저녁)**: **Library → 자료실** (5글자 "라이브러리" 잘림 → 3글자 음역 절충). 활동 바 폭(72px) 제약 + Plot 정체성 균형.
+- **#118 LOCKED (2026-05-24 저녁)**: **Stone/Brick/Block 음역 (스톤/브릭/블록)** — 영어 정체성 + 한국어 흐름 정합. 의역("초안/정리/완성") 시 Plot 시그니처 워크플로우 단어 정체성 약화 — 음역이 절충.
+- **#119 LOCKED (2026-05-24 저녁)**: **GlobalTopBar = workspace chrome single source**. 시계/<>/검색/테마/설정/휴지통 모두 top bar. linear-sidebar/activity-bar는 본질 액션만. Hide-all-panels 상태에서도 chrome 접근 가능 — 모든 다른 dialog/popup도 같은 원칙.
+- **#120 LOCKED (2026-05-24 저녁)**: **PanelsMenu = top bar 단일 mount**. view-header에서 제거. 다른 컴포넌트에 mount 추가 금지 — 중복 햄버거가 사용자 혼란.
+- **#121 LOCKED (2026-05-24 저녁)**: **Command palette hybrid mode badge** — 기본 commands 모드 뱃지 제거 (Linear 정합 minimal), sub-mode (links/thinking)일 때만 뱃지로 mode 명시. Plot의 multi-mode 디자인 정체성 보존 + Linear 정합 절충.
+
+### 기술 학습 (영구)
+
+- **i18n labelKey 패턴**: module-level static config (view-configs / COLUMN_DEFS / SPACES 같은 외부 import 객체)는 useT를 호출 못 함 (React Hook 규칙). 옵셔널 `labelKey?: string` 필드 추가 → 컴포넌트(consumer)에서 `t(labelKey) ?? label`로 resolve. 객체 shape 그대로 유지하며 점진 i18n 가능. 빠뜨려도 label fallback이라 graceful.
+- **cmdk Escape 안 통하는 IME 케이스**: Korean composition flag 동안 CommandPrimitive.Input의 Escape가 Radix Dialog로 bubble 안 됨. handleKeyDown에서 `closePalette()` 명시 호출이 안전한 fallback.
+- **Zustand persist hydration 타이밍** (재확인): root URL에서 startView redirect, backup-reminder toast 둘 다 useEffect 첫 mount에 fire되지만 persist가 비동기. `useStore.persist.hasHydrated()` + `onFinishHydration` 콜백으로 wrap.
+- **production-ui-refiner 5-phase 워크플로우** (audit script 없는 환경): vision + 코드 검사로 AUDIT, hedged language로 DIAGNOSE, 카테고리 그룹별 PRESCRIBE, 사용자 그룹 승인 후 APPLY, 시각 비교로 VERIFY. plot-frontend plugin이 SKILL.md만 제공하더라도 동일 원칙 적용.
+- **GlobalTopBar like single chrome source**: hide-all-panels 시에도 사용 가능한 컨트롤은 chrome layer (top bar)로. sidebar/activity-bar는 panel-scope 액션만. 미래 컨트롤 추가 시 이 분리 원칙으로 위치 결정.
+
+### Watch Out (다음 세션)
+
+- **i18n 미완 surfaces**: Wiki/Books/Library/Ontology view + 우클릭 메뉴 + 일부 dialog + status pill 음역. KO 토글 후 viewport 순회로 잔여 영어 찾기.
+- **사용자 viewport 검증 미완 (4건)**: (a) Phase 1c Inbox 3 카드, (b) Backup Restore round-trip, (c) GlobalTopBar Hide-all-panels, (d) Cmd+K Escape. 다음 세션 첫 행동으로 권장.
+- **PanelsMenu 중복 가능성**: view-header에서 제거했지만 다른 surface에 mount 시 햄버거 또 보임. 추가 통합 dialog/popup 만들 때 #120 규칙 상기.
+- **commandPaletteMode "commands"는 뱃지 없음** — Plot 디자인 의도. 미래 새 mode 추가 시 뱃지 + placeholder 매핑 같이 추가.
+- **search-dialog 검색 결과 row 디자인**: 현재 plain text. Linear는 highlight + breadcrumb. 다음 polish 후보.
+
+### 환경 변경
+
+- Store: v147 무변경 (모든 view layer)
+- 신규 파일 1: `components/global-top-bar.tsx`
+- 변경 파일 ~20: lib/i18n.ts, view-configs.tsx (labelKey 필드), filter-panel/display-panel/chip-dropdown (labelKey resolve), notes-table (labelKey), inbox-view (3 SectionCard), use-inbox (section field), activity-bar (테마 토글 제거), linear-sidebar (헤더/푸터 제거), view-header (PanelsMenu 제거), layout.tsx (TopBar mount), search-dialog (hybrid + Escape + i18n), inbox-source-icon (plan-due)
+- 사용자 IDB stale data: 없음 (view layer만)
+
+### 머신
+
+Windows. 거대 multi-chunk 세션 — Phase 1c → i18n 확장 → 깊은 확장 → GlobalTopBar 재구성 → cmdk polish → production-ui-refine. 사용자 의도(한국어 일관성 + Linear chrome 정합)에 따라 chunk 누적.
+
+---
+
 ## 2026-05-24 (오후) — Windows, **Temporal Hooks Phase 1b (1b1+1b2+1b3 통합) + Settings 전수 wire (5/5)**
 
 > 🎯 **다음 즉시 액션 (다음 세션 시작점)**: **Phase 1c — Inbox Do/Review/Detected 섹션 재배선** (PRD §6 + Q6 결정 적용).
