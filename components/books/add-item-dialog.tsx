@@ -32,10 +32,7 @@ import { isWikiStub } from "@/lib/wiki-utils"
 import { WIKI_STATUS_HEX } from "@/lib/colors"
 import { shortRelative } from "@/lib/format-utils"
 import { cn } from "@/lib/utils"
-import { FileText } from "@phosphor-icons/react/dist/ssr/FileText"
-import { BookOpen } from "@phosphor-icons/react/dist/ssr/BookOpen"
-import { Folder as PhFolder } from "@phosphor-icons/react/dist/ssr/Folder"
-import { Sparkle } from "@phosphor-icons/react/dist/ssr/Sparkle"
+import { FileText, BookOpen, Folder as PhFolder, Sparkles as Sparkle } from "lucide-react"
 
 type Tab = "notes" | "wiki" | "smart"
 
@@ -177,21 +174,21 @@ export function AddItemDialog({
         {/* Tabs */}
         <div className="flex border-b border-border">
           <TabButton active={tab === "notes"} onClick={() => setTab("notes")}>
-            <FileText size={14} weight="regular" />
+            <FileText size={14} strokeWidth={2} />
             Notes
             <span className="text-2xs text-muted-foreground/70 tabular-nums">
               {noteCandidates.length}
             </span>
           </TabButton>
           <TabButton active={tab === "wiki"} onClick={() => setTab("wiki")}>
-            <BookOpen size={14} weight="regular" />
+            <BookOpen size={14} strokeWidth={2} />
             Wikis
             <span className="text-2xs text-muted-foreground/70 tabular-nums">
               {wikiCandidates.length}
             </span>
           </TabButton>
           <TabButton active={tab === "smart"} onClick={() => setTab("smart")}>
-            <Sparkle size={14} weight="regular" />
+            <Sparkle size={14} strokeWidth={2} />
             Smart
             <span className="text-2xs text-muted-foreground/70 tabular-nums">
               {folderCandidates.length}
@@ -230,7 +227,7 @@ export function AddItemDialog({
               <>
                 <CommandEmpty>
                   <div className="flex flex-col items-center gap-1.5 py-4">
-                    <FileText className="text-muted-foreground/60" size={28} weight="regular" />
+                    <FileText className="text-muted-foreground/60" size={28} strokeWidth={2} />
                     <p className="text-note text-muted-foreground">
                       {noteCandidates.length === 0
                         ? "No notes available — every note is already in this book."
@@ -268,7 +265,7 @@ export function AddItemDialog({
               <>
                 <CommandEmpty>
                   <div className="flex flex-col items-center gap-1.5 py-4">
-                    <BookOpen className="text-muted-foreground/60" size={28} weight="regular" />
+                    <BookOpen className="text-muted-foreground/60" size={28} strokeWidth={2} />
                     <p className="text-note text-muted-foreground">
                       {wikiCandidates.length === 0
                         ? "No wiki articles available — every article is already in this book."
@@ -313,7 +310,7 @@ export function AddItemDialog({
               <>
                 <CommandEmpty>
                   <div className="flex flex-col items-center gap-1.5 py-4">
-                    <PhFolder className="text-muted-foreground/60" size={28} weight="regular" />
+                    <PhFolder className="text-muted-foreground/60" size={28} strokeWidth={2} />
                     <p className="text-note text-muted-foreground">
                       {folderCandidates.length === 0
                         ? "No folders available — every note folder is already a source."
@@ -339,7 +336,7 @@ export function AddItemDialog({
                         onSelect={() => handleAddFolder(folder.id, folder.name)}
                         className="flex items-center gap-3 px-3 py-2.5"
                       >
-                        <PhFolder size={14} weight="regular" className="text-muted-foreground" />
+                        <PhFolder size={14} strokeWidth={2} className="text-muted-foreground" />
                         <div className="flex-1 min-w-0">
                           <span className="truncate text-note font-medium text-foreground block">
                             {folder.name}

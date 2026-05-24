@@ -4,9 +4,7 @@ import { useMemo } from "react"
 import { usePlotStore } from "@/lib/store"
 import { setActiveRoute } from "@/lib/table-route"
 import { navigateToWikiArticle } from "@/lib/wiki-article-nav"
-import { FileText } from "@phosphor-icons/react/dist/ssr/FileText"
-import { BookOpen } from "@phosphor-icons/react/dist/ssr/BookOpen"
-import { BookmarkSimple } from "@phosphor-icons/react/dist/ssr/BookmarkSimple"
+import { FileText, BookOpen, Bookmark as BookmarkSimple } from "lucide-react"
 import { HomeSection } from "./home-section"
 import { HomeRow } from "./home-row"
 import type { GlobalBookmark, WikiArticle } from "@/lib/types"
@@ -125,10 +123,10 @@ export function PinnedList({ limit = 8 }: { limit?: number }) {
 function iconFor(kind: "note" | "wiki" | "bookmark") {
   switch (kind) {
     case "note":
-      return <FileText size={13} weight="regular" />
+      return <FileText size={13} strokeWidth={2} />
     case "wiki":
-      return <BookOpen size={13} weight="regular" />
+      return <BookOpen size={13} strokeWidth={2} />
     case "bookmark":
-      return <BookmarkSimple size={13} weight="fill" />
+      return <BookmarkSimple size={13} fill="currentColor" strokeWidth={2} />
   }
 }

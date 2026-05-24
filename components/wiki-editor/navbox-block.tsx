@@ -26,21 +26,23 @@ import {
   navboxBorderTint,
 } from "@/lib/wiki-color-contrast"
 import { BannerColorPickerPopover } from "@/components/editor/nodes/banner-block-node"
-import { CaretDown } from "@phosphor-icons/react/dist/ssr/CaretDown"
-import { CaretRight } from "@phosphor-icons/react/dist/ssr/CaretRight"
-import { Folders } from "@phosphor-icons/react/dist/ssr/Folders"
-import { BookOpen } from "@phosphor-icons/react/dist/ssr/BookOpen"
-import { FileText } from "@phosphor-icons/react/dist/ssr/FileText"
-import { LinkSimple } from "@phosphor-icons/react/dist/ssr/LinkSimple"
-import { PencilSimple } from "@phosphor-icons/react/dist/ssr/PencilSimple"
-import { DotsThree } from "@phosphor-icons/react/dist/ssr/DotsThree"
-import { DotsSixVertical } from "@phosphor-icons/react/dist/ssr/DotsSixVertical"
-import { Trash } from "@phosphor-icons/react/dist/ssr/Trash"
-import { Plus } from "@phosphor-icons/react/dist/ssr/Plus"
-import { X as PhX } from "@phosphor-icons/react/dist/ssr/X"
-import { PaintBucket } from "@phosphor-icons/react/dist/ssr/PaintBucket"
-import { ArrowUp } from "@phosphor-icons/react/dist/ssr/ArrowUp"
-import { ArrowDown } from "@phosphor-icons/react/dist/ssr/ArrowDown"
+import {
+  ChevronDown as CaretDown,
+  ChevronRight as CaretRight,
+  FolderTree as Folders,
+  BookOpen,
+  FileText,
+  Link as LinkSimple,
+  Pencil as PencilSimple,
+  MoreHorizontal as DotsThree,
+  GripVertical as DotsSixVertical,
+  Trash2 as Trash,
+  Plus,
+  X as PhX,
+  PaintBucket,
+  ArrowUp,
+  ArrowDown,
+} from "lucide-react"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import type { DraggableSyntheticListeners } from "@dnd-kit/core"
 import { BlockCommentMarker } from "@/components/comments/block-comment-marker"
@@ -382,7 +384,7 @@ export function NavboxBlock({
               }}
               className="opacity-0 group-hover/navbox:opacity-30 hover:!opacity-100 p-1 text-muted-foreground hover:text-foreground transition-all duration-100"
             >
-              <DotsThree size={14} weight="bold" />
+              <DotsThree size={14} strokeWidth={2.5} />
             </button>
           </PopoverTrigger>
           <PopoverContent
@@ -399,7 +401,7 @@ export function NavboxBlock({
                 }}
                 className="flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-2xs text-destructive hover:bg-active-bg transition-colors"
               >
-                <Trash size={14} weight="regular" />
+                <Trash size={14} strokeWidth={2} />
                 Delete navbox
               </button>
             )}
@@ -448,7 +450,7 @@ export function NavboxBlock({
           className="mt-2 p-0.5 opacity-0 group-hover/navbox:opacity-30 hover:!opacity-100 cursor-grab shrink-0 text-muted-foreground transition-opacity duration-100"
           {...(dragHandleProps ?? {})}
         >
-          <DotsSixVertical size={14} weight="regular" />
+          <DotsSixVertical size={14} strokeWidth={2} />
         </button>
       )}
       <div className="relative flex-1">
@@ -491,9 +493,9 @@ export function NavboxBlock({
             ) : (
               <div className={cn("shrink-0", headerFgClass || "text-muted-foreground/70")}>
                 {mode === "category" ? (
-                  <Folders size={16} weight="regular" />
+                  <Folders size={16} strokeWidth={2} />
                 ) : (
-                  <BookOpen size={16} weight="regular" />
+                  <BookOpen size={16} strokeWidth={2} />
                 )}
               </div>
             )}
@@ -564,7 +566,7 @@ export function NavboxBlock({
                         : "text-muted-foreground/60 hover:text-foreground hover:bg-hover-bg",
                     )}
                   >
-                    <PaintBucket size={12} weight="regular" />
+                    <PaintBucket size={12} strokeWidth={2} />
                   </button>
                   {mode === "category" && (
                     <div className="relative" ref={categoryPickerRef}>
@@ -578,7 +580,7 @@ export function NavboxBlock({
                             : "text-muted-foreground/60 hover:text-foreground hover:bg-hover-bg",
                         )}
                       >
-                        <PencilSimple size={12} weight="regular" />
+                        <PencilSimple size={12} strokeWidth={2} />
                       </button>
                       {categoryPickerOpen && (
                         <div className="absolute right-0 top-full mt-1.5 z-50">
@@ -609,7 +611,7 @@ export function NavboxBlock({
               >
                 <CaretDown
                   size={12}
-                  weight="bold"
+                  strokeWidth={2.5}
                   className={cn(
                     "transition-transform",
                     boxCollapsed && "-rotate-90",
@@ -748,7 +750,7 @@ export function NavboxBlock({
                   onClick={addGroup}
                   className="w-full flex items-center justify-center gap-1.5 py-2 text-2xs text-muted-foreground/60 hover:text-foreground hover:bg-hover-bg transition-colors border-t border-dashed border-border-subtle"
                 >
-                  <Plus size={12} weight="bold" />
+                  <Plus size={12} strokeWidth={2.5} />
                   Add group
                 </button>
               )}
@@ -828,7 +830,7 @@ function UnconfiguredView({
         className="p-0.5 opacity-0 group-hover/navbox:opacity-30 hover:!opacity-100 cursor-grab shrink-0 text-muted-foreground transition-opacity duration-100"
         {...(dragHandleProps ?? {})}
       >
-        <DotsSixVertical size={14} weight="regular" />
+        <DotsSixVertical size={14} strokeWidth={2} />
       </button>
       <div className="relative flex-1 rounded-lg border-2 border-dashed border-border-subtle bg-secondary/10 px-4 py-5">
         {dotMenu}
@@ -843,7 +845,7 @@ function UnconfiguredView({
                   : "text-muted-foreground/70 hover:text-foreground",
               )}
             >
-              <Folders size={11} weight="regular" className="inline mr-1" />
+              <Folders size={11} strokeWidth={2} className="inline mr-1" />
               Category
             </button>
             <button
@@ -855,7 +857,7 @@ function UnconfiguredView({
                   : "text-muted-foreground/70 hover:text-foreground",
               )}
             >
-              <BookOpen size={11} weight="regular" className="inline mr-1" />
+              <BookOpen size={11} strokeWidth={2} className="inline mr-1" />
               Manual
             </button>
           </div>
@@ -867,9 +869,9 @@ function UnconfiguredView({
                 onClick={() => setCategoryPickerOpen(!categoryPickerOpen)}
                 className="inline-flex items-center gap-2 rounded-md px-4 py-2 text-sm text-muted-foreground hover:bg-hover-bg hover:text-foreground transition-colors"
               >
-                <Folders size={16} weight="regular" />
+                <Folders size={16} strokeWidth={2} />
                 Pick a category
-                <CaretDown size={12} weight="bold" />
+                <CaretDown size={12} strokeWidth={2.5} />
               </button>
               {categoryPickerOpen && (
                 <div className="absolute left-1/2 -translate-x-1/2 top-full mt-2 z-50">
@@ -886,7 +888,7 @@ function UnconfiguredView({
               onClick={onAddGroup}
               className="inline-flex items-center gap-2 rounded-md px-4 py-2 text-sm text-muted-foreground hover:bg-hover-bg hover:text-foreground transition-colors"
             >
-              <Plus size={16} weight="regular" />
+              <Plus size={16} strokeWidth={2} />
               Add first group
             </button>
           )}
@@ -995,9 +997,9 @@ function NavboxGroupRow({
             )}
           >
             {collapsed ? (
-              <CaretRight size={11} weight="bold" />
+              <CaretRight size={11} strokeWidth={2.5} />
             ) : (
-              <CaretDown size={11} weight="bold" />
+              <CaretDown size={11} strokeWidth={2.5} />
             )}
           </button>
 
@@ -1047,7 +1049,7 @@ function NavboxGroupRow({
                     : "text-muted-foreground/60 hover:text-foreground hover:bg-hover-bg",
                 )}
               >
-                <PaintBucket size={11} weight="regular" />
+                <PaintBucket size={11} strokeWidth={2} />
               </button>
               <button
                 onClick={() =>
@@ -1066,7 +1068,7 @@ function NavboxGroupRow({
                     : "text-muted-foreground/60 hover:text-foreground hover:bg-hover-bg",
                 )}
               >
-                <PaintBucket size={11} weight="fill" />
+                <PaintBucket size={11} fill="currentColor" strokeWidth={2} />
               </button>
               <button
                 onClick={() => onMoveGroup(-1)}
@@ -1081,7 +1083,7 @@ function NavboxGroupRow({
                     : "opacity-30 cursor-not-allowed",
                 )}
               >
-                <ArrowUp size={11} weight="bold" />
+                <ArrowUp size={11} strokeWidth={2.5} />
               </button>
               <button
                 onClick={() => onMoveGroup(1)}
@@ -1096,7 +1098,7 @@ function NavboxGroupRow({
                     : "opacity-30 cursor-not-allowed",
                 )}
               >
-                <ArrowDown size={11} weight="bold" />
+                <ArrowDown size={11} strokeWidth={2.5} />
               </button>
               <button
                 onClick={onRemoveGroup}
@@ -1108,7 +1110,7 @@ function NavboxGroupRow({
                     : "text-muted-foreground/60 hover:text-destructive hover:bg-hover-bg",
                 )}
               >
-                <Trash size={11} weight="regular" />
+                <Trash size={11} strokeWidth={2} />
               </button>
             </div>
           )}
@@ -1189,7 +1191,7 @@ function NavboxGroupRow({
                     : "text-muted-foreground/70 hover:text-foreground hover:bg-hover-bg",
                 )}
               >
-                <BookOpen size={10} weight="regular" />
+                <BookOpen size={10} strokeWidth={2} />
                 + Wiki
               </button>
               <button
@@ -1201,7 +1203,7 @@ function NavboxGroupRow({
                     : "text-muted-foreground/70 hover:text-foreground hover:bg-hover-bg",
                 )}
               >
-                <FileText size={10} weight="regular" />
+                <FileText size={10} strokeWidth={2} />
                 + Note
               </button>
               <button
@@ -1213,7 +1215,7 @@ function NavboxGroupRow({
                     : "text-muted-foreground/70 hover:text-foreground hover:bg-hover-bg",
                 )}
               >
-                <LinkSimple size={10} weight="regular" />
+                <LinkSimple size={10} strokeWidth={2} />
                 + URL
               </button>
             </div>
@@ -1366,7 +1368,7 @@ function NavboxItemCell({
               : "text-muted-foreground/60 hover:text-foreground hover:bg-hover-bg",
           )}
         >
-          <TypeIcon size={10} weight="regular" />
+          <TypeIcon size={10} strokeWidth={2} />
         </button>
         <input
           type="text"
@@ -1395,7 +1397,7 @@ function NavboxItemCell({
               : "text-muted-foreground hover:text-destructive",
           )}
         >
-          <PhX size={9} weight="bold" />
+          <PhX size={9} strokeWidth={2.5} />
         </button>
       </div>
 
@@ -1427,7 +1429,7 @@ function NavboxItemCell({
                   itemLight ? "text-white/60 hover:text-white" : "text-muted-foreground/60 hover:text-destructive",
                 )}
               >
-                <PhX size={8} weight="bold" />
+                <PhX size={8} strokeWidth={2.5} />
               </button>
             </div>
           ) : (
@@ -1440,7 +1442,7 @@ function NavboxItemCell({
                   : "border-border-subtle text-muted-foreground/60 hover:text-foreground hover:border-border",
               )}
             >
-              <LinkSimple size={9} weight="regular" />
+              <LinkSimple size={9} strokeWidth={2} />
               Pick {targetType}
             </button>
           )
@@ -1468,7 +1470,7 @@ function NavboxItemCell({
             itemLight ? "text-white/70 hover:text-white" : "text-muted-foreground hover:text-foreground",
           )}
         >
-          <ArrowUp size={9} weight="bold" />
+          <ArrowUp size={9} strokeWidth={2.5} />
         </button>
         <button
           onClick={() => onMove(1)}
@@ -1480,7 +1482,7 @@ function NavboxItemCell({
             itemLight ? "text-white/70 hover:text-white" : "text-muted-foreground hover:text-foreground",
           )}
         >
-          <ArrowDown size={9} weight="bold" />
+          <ArrowDown size={9} strokeWidth={2.5} />
         </button>
       </div>
     </div>

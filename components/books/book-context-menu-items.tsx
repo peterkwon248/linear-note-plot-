@@ -18,11 +18,7 @@ import {
   ContextMenuItem,
   ContextMenuSeparator,
 } from "@/components/ui/context-menu"
-import { PushPin } from "@phosphor-icons/react/dist/ssr/PushPin"
-import { PushPinSlash } from "@phosphor-icons/react/dist/ssr/PushPinSlash"
-import { Trash } from "@phosphor-icons/react/dist/ssr/Trash"
-import { ArrowCounterClockwise } from "@phosphor-icons/react/dist/ssr/ArrowCounterClockwise"
-import { PencilSimple } from "@phosphor-icons/react/dist/ssr/PencilSimple"
+import { Pin as PushPin, PinOff as PushPinSlash, Trash2 as Trash, RotateCcw as ArrowCounterClockwise, Pencil as PencilSimple } from "lucide-react"
 
 export interface BookContextMenuItemsProps {
   book: Book
@@ -48,7 +44,7 @@ export function BookContextMenuItems({
           onClick={() => onRestore(book.id, book.title)}
           className="text-note"
         >
-          <ArrowCounterClockwise size={14} weight="regular" className="mr-2 text-muted-foreground" />
+          <ArrowCounterClockwise size={14} strokeWidth={2} className="mr-2 text-muted-foreground" />
           Restore
         </ContextMenuItem>
         <ContextMenuSeparator />
@@ -56,7 +52,7 @@ export function BookContextMenuItems({
           onClick={() => onPermanentDelete(book.id, book.title)}
           className="text-note text-destructive focus:text-destructive"
         >
-          <Trash size={14} weight="regular" className="mr-2" />
+          <Trash size={14} strokeWidth={2} className="mr-2" />
           Delete forever
         </ContextMenuItem>
       </>
@@ -65,7 +61,7 @@ export function BookContextMenuItems({
   return (
     <>
       <ContextMenuItem onClick={() => onRename(book.id, book.title)} className="text-note">
-        <PencilSimple size={14} weight="regular" className="mr-2 text-muted-foreground" />
+        <PencilSimple size={14} strokeWidth={2} className="mr-2 text-muted-foreground" />
         Rename
       </ContextMenuItem>
       <ContextMenuItem
@@ -74,12 +70,12 @@ export function BookContextMenuItems({
       >
         {book.pinned ? (
           <>
-            <PushPinSlash size={14} weight="regular" className="mr-2 text-muted-foreground" />
+            <PushPinSlash size={14} strokeWidth={2} className="mr-2 text-muted-foreground" />
             Unpin
           </>
         ) : (
           <>
-            <PushPin size={14} weight="regular" className="mr-2 text-muted-foreground" />
+            <PushPin size={14} strokeWidth={2} className="mr-2 text-muted-foreground" />
             Pin to sidebar
           </>
         )}
@@ -89,7 +85,7 @@ export function BookContextMenuItems({
         onClick={() => onDelete(book.id, book.title)}
         className="text-note text-destructive focus:text-destructive"
       >
-        <Trash size={14} weight="regular" className="mr-2" />
+        <Trash size={14} strokeWidth={2} className="mr-2" />
         Move to trash
       </ContextMenuItem>
     </>

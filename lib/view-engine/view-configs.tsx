@@ -1,5 +1,5 @@
 import type { ReactNode } from "react"
-import type { SortField, ViewMode, GroupBy } from "./types"
+import type { SortField, SortDirection, ViewMode, GroupBy, SortRule, ViewContextKey } from "./types"
 import { Hexagon, Cube, BookOpen, CircleHalf, Sticker as StickerIcon, Lightning, PencilSimple, Sparkle, Globe, DownloadSimple } from "@phosphor-icons/react"
 import { Cuboid2x2 } from "@/components/icons/Cuboid2x2"
 import { IconWikiStub, IconWikiArticle } from "@/components/plot-icons"
@@ -41,6 +41,32 @@ export interface DisplayToggle {
   icon?: ReactNode
 }
 
+/** Mode visibility for grouping/property/sort options.
+ *  - `"all"` (default when omitted) = visible in every view mode.
+ *  - `ViewMode[]` = visible only in listed modes (hidden elsewhere).
+ *
+ *  This is the Linear-style "Show, don't disable" (audit L2): options that
+ *  have no effect in the current mode are not rendered, instead of being
+ *  shown as grayed-out noise. Combined with `normalizeViewState`
+ *  mode-aware auto-cleanup (L3), the persisted state stays clean across
+ *  mode transitions. */
+export type ModeList = ViewMode[] | "all"
+
+/** Single grouping option for the DisplayPanel grouping dropdown.
+ *  `modes` filters which view modes the option appears in. */
+export interface GroupingOption {
+  value: GroupBy
+  label: string
+  modes?: ModeList
+}
+
+/** Single ordering (sort) option for the DisplayPanel ordering dropdown. */
+export interface OrderingOption {
+  value: SortField
+  label: string
+  modes?: ModeList
+}
+
 /** A toggleable property chip rendered in DisplayPanel's "Display properties" section.
  *  Property keys map to viewState.visibleColumns (or a special toggle channel
  *  for showAlphaIndex). */
@@ -48,26 +74,35 @@ export interface DisplayProperty {
   key: string
   label: string
   icon?: ReactNode
-  /** Property is only meaningful for the Board card surface (not list/gallery).
-   *  E.g. Notes tag pills — too long for a list column, perfect for a card
-   *  badge area. DisplayPanel hides board-only chips in non-board view modes
-   *  so users don't toggle a property that has no visible effect. */
+  /** @deprecated Use `modes: ["board"]` instead. Kept for back-compat
+   *  during the modes migration; DisplayPanel treats it as a synonym. */
   boardOnly?: boolean
+  /** Visible view modes for this property chip. Omitted → "all".
+   *  Common patterns:
+   *    - `["list", "board"]` for properties that map to visibleColumns
+   *    - `["board"]` for board-only badges (replaces `boardOnly`)
+   *    - `["list"]` for list-only columns (rare)
+   *    - omitted ("all") for universal properties like Title/Updated
+   */
+  modes?: ModeList
 }
 
 /** Single source of truth for display-panel configuration shape.
  *  Consumed by both view-configs.tsx (declares per-context configs) and
  *  components/display-panel.tsx (renders the popover). */
 export interface DisplayConfig {
-  orderingOptions: Array<{ value: SortField; label: string }>
-  groupingOptions: Array<{ value: GroupBy; label: string }>
+  orderingOptions: OrderingOption[]
+  groupingOptions: GroupingOption[]
   toggles: DisplayToggle[]
   properties: DisplayProperty[]
   supportedModes?: ViewMode[]
   /** Default groupBy when switching to board mode from groupBy="none".
    *  Notes use "status" (the canonical board axis); Wiki has no status,
    *  so defaults to "label" (Category). DisplayPanel reads this on the
-   *  list→board mode switch. */
+   *  list→board mode switch.
+   *  @deprecated Prefer `defaultGroupByByMode.board` (audit L4 — explicit
+   *  per-mode defaults). Kept for back-compat; if both set,
+   *  `defaultGroupByByMode.board` wins. */
   boardDefaultGroupBy?: GroupBy
   /** Allow "family" grouping in Board mode. Default false (family tree
    *  doesn't fit board columns for most entities). Wiki Categories
@@ -78,6 +113,19 @@ export interface DisplayConfig {
    *  Default false — entities without subGroupBy handling hide the option
    *  from the DisplayPanel to avoid the "selection has no effect" bug. */
   supportsSubGrouping?: boolean
+  /** Per-mode default groupBy. Audit L4: "Make the right thing default".
+   *  When user enters a mode (or normalizeViewState auto-cleans an
+   *  invalid groupBy for the mode), this map decides the fallback.
+   *  Examples:
+   *    - Wiki: `{ board: "wikiStatus", timeline: "wikiStatus" }`
+   *    - Notes: `{ board: "status" }`
+   *    - Books: `{ board: "kind" }`
+   *  Falls back to "none" if not specified. */
+  defaultGroupByByMode?: Partial<Record<ViewMode, GroupBy>>
+  /** Per-mode default sort rule. Used when entering a mode resets sort,
+   *  or as the canonical sort for modes whose Y-axis encodes order
+   *  (timeline = createdAt asc). */
+  defaultSortByMode?: Partial<Record<ViewMode, SortRule>>
 }
 
 export interface ViewConfig {
@@ -183,7 +231,11 @@ export const NOTES_VIEW_CONFIG: ViewConfig = {
     ]},
   ],
   displayConfig: {
-    supportedModes: ["list", "board", "gallery"],
+    // 2026-05-24: gallery mode deprecated app-wide — Grid view replaces it
+    // (user feedback: grid layout reads cleaner than the gallery card stack).
+    // Persisted viewMode === "gallery" auto-migrates to "grid" in
+    // normalizeViewState. supportedModes order matches the DisplayPanel tab strip.
+    supportedModes: ["list", "board", "grid", "timeline"],
     supportsSubGrouping: true,
     orderingOptions: [
       { value: "updatedAt", label: "Updated" },
@@ -192,6 +244,13 @@ export const NOTES_VIEW_CONFIG: ViewConfig = {
       { value: "links", label: "Links" },
       { value: "reads", label: "Word count" },
     ],
+    // L4: per-mode default groupBy. Timeline default = "status" mirrors
+    // the Wiki timeline default ("wikiStatus") — Stone/Brick/Block lanes
+    // give a "notes maturity over time" view that's the most useful
+    // glance for the Notes timeline.
+    defaultGroupByByMode: { board: "status", timeline: "status" },
+    // Timeline Y-axis encodes time → sort by createdAt asc is canonical.
+    defaultSortByMode: { timeline: { field: "createdAt", direction: "asc" } },
     groupingOptions: [
       { value: "none", label: "No grouping" },
       { value: "status", label: "Status" },
@@ -199,12 +258,18 @@ export const NOTES_VIEW_CONFIG: ViewConfig = {
       { value: "label", label: "Label" },
       { value: "parent", label: "Parent" },
       { value: "role", label: "Role" },
-      { value: "family", label: "Family" },
-      { value: "date", label: "Updated" },
+      // family tree only makes sense in list (indent column). Board would
+      // need allowFamilyOnBoard override (categories case).
+      { value: "family", label: "Family", modes: ["list"] },
+      // updatedAt time-bucket grouping. Timeline X-axis already encodes
+      // time, so date grouping would duplicate the axis — hide in timeline.
+      { value: "date", label: "Updated", modes: ["list", "board"] },
       // Plot-consistent UX: alphabetical "Index" grouping moved from a
       // properties-chip toggle (legacy showAlphaIndex) into the grouping
       // dropdown alongside other grouping axes. Wired in lib/view-engine/group.ts.
-      { value: "firstLetter", label: "Index" },
+      // L1: firstLetter only meaningful in list mode (board/gallery have
+      // their own card/column language; alphabetical headers fight with them).
+      { value: "firstLetter", label: "Index", modes: ["list"] },
     ],
     toggles: [
       { key: "showTrashed", label: "Show trashed", icon: TrashIcon },
@@ -213,18 +278,20 @@ export const NOTES_VIEW_CONFIG: ViewConfig = {
     properties: [
       { key: "status", label: "Status", icon: StatusIcon },
       // priority/label/tags surface only on the Board card (no equivalent
-      // list column). Marked boardOnly so DisplayPanel hides them in non-board
-      // view modes — prevents "chip toggles nothing" bug in list/gallery.
-      { key: "priority", label: "Priority", icon: PriorityIcon, boardOnly: true },
-      { key: "label", label: "Label", icon: LabelIcon, boardOnly: true },
-      { key: "tags", label: "Tags", icon: TagIcon, boardOnly: true },
+      // list column). modes: ["board"] hides them in non-board view modes —
+      // prevents "chip toggles nothing" bug in list/gallery.
+      { key: "priority", label: "Priority", icon: PriorityIcon, modes: ["board"] },
+      { key: "label", label: "Label", icon: LabelIcon, modes: ["board"] },
+      { key: "tags", label: "Tags", icon: TagIcon, modes: ["board"] },
       { key: "folder", label: "Folder", icon: FolderIcon },
       { key: "parent", label: "Parent", icon: ParentIcon },
       { key: "children", label: "Children", icon: ChildrenIcon },
       { key: "links", label: "Backlinks", icon: LinkIcon },
       { key: "wordCount", label: "Words", icon: ContentIcon },
-      { key: "updatedAt", label: "Updated", icon: CalendarIcon },
-      { key: "createdAt", label: "Created", icon: CalendarIcon },
+      // createdAt/updatedAt are also meaningful for the timeline label
+      // column (date row). Most other properties don't fit the narrow column.
+      { key: "updatedAt", label: "Updated", icon: CalendarIcon, modes: ["list", "board", "timeline"] },
+      { key: "createdAt", label: "Created", icon: CalendarIcon, modes: ["list", "board", "timeline"] },
     ],
   },
 }
@@ -287,7 +354,8 @@ export const WIKI_VIEW_CONFIG: ViewConfig = {
     ]},
   ],
   displayConfig: {
-    supportedModes: ["list", "board", "gallery", "timeline"],
+    // 2026-05-24: gallery deprecated → grid replaces. See NOTES_VIEW_CONFIG.
+    supportedModes: ["list", "board", "grid", "timeline"],
     // Wiki board default = "wikiStatus" (Stub / Article) — **2 column 고정
     // 보장**. Notes의 Stone/Brick/Block 패턴 정확 mirror (영구 룰 21 정합).
     // Status는 isWikiStub 기반 derived (block count >= 3 = article) →
@@ -295,6 +363,11 @@ export const WIKI_VIEW_CONFIG: ViewConfig = {
     // 가장 잘 표현. tier는 부차 axis로 dropdown에서 선택 가능 (parentArticleId
     // chain 풍부할 때 유용).
     boardDefaultGroupBy: "wikiStatus",
+    // L4: per-mode default groupBy. Timeline default = wikiStatus (Stub vs
+    // Article lane on time axis — the most useful "wiki at a glance" view).
+    defaultGroupByByMode: { board: "wikiStatus", timeline: "wikiStatus" },
+    // L4: timeline Y-axis encodes time → sort by createdAt asc is canonical.
+    defaultSortByMode: { timeline: { field: "createdAt", direction: "asc" } },
     // priority 제외 (wiki에 의미 없음)
     orderingOptions: [
       { value: "updatedAt", label: "Updated" },
@@ -314,9 +387,13 @@ export const WIKI_VIEW_CONFIG: ViewConfig = {
       { value: "parent", label: "Parent article" },
       { value: "role", label: "Role" },
       { value: "label", label: "Category" },
-      { value: "family", label: "Family" },
-      { value: "date", label: "Updated" },
-      { value: "firstLetter", label: "Index" },
+      // family tree only makes sense in list (indent column).
+      { value: "family", label: "Family", modes: ["list"] },
+      // updatedAt grouping in timeline would duplicate the time axis.
+      { value: "date", label: "Updated", modes: ["list", "board"] },
+      // firstLetter alphabetical index — list-only (board has fixed cols,
+      // gallery has card layout, timeline has time axis).
+      { value: "firstLetter", label: "Index", modes: ["list"] },
     ],
     toggles: [
       { key: "showStubs", label: "Show stubs", icon: ContentIcon },
@@ -333,8 +410,10 @@ export const WIKI_VIEW_CONFIG: ViewConfig = {
       { key: "aliases", label: "Aliases", icon: ContentIcon },
       { key: "parent", label: "Parent", icon: ParentIcon },
       { key: "children", label: "Children", icon: ChildrenIcon },
-      { key: "createdAt", label: "Created", icon: CalendarIcon },
-      { key: "updatedAt", label: "Updated", icon: CalendarIcon },
+      // B6: createdAt/updatedAt are also meaningful for the timeline label
+      // column (date row). Most other properties don't fit the narrow column.
+      { key: "createdAt", label: "Created", icon: CalendarIcon, modes: ["list", "board", "timeline"] },
+      { key: "updatedAt", label: "Updated", icon: CalendarIcon, modes: ["list", "board", "timeline"] },
     ],
   },
 }
@@ -379,8 +458,11 @@ export const WIKI_CATEGORY_VIEW_CONFIG: ViewConfig = {
       { value: "none", label: "No grouping" },
       { value: "tier", label: "Tier" },
       { value: "parent", label: "Parent" },
+      // family allowed in board (allowFamilyOnBoard: true) — Categories
+      // exception (family-root-per-column is meaningful).
       { value: "family", label: "Family" },
-      { value: "firstLetter", label: "Index" },
+      // firstLetter alphabetical index — list-only.
+      { value: "firstLetter", label: "Index", modes: ["list"] },
       { value: "createdAt", label: "Created" },
     ],
     toggles: [
@@ -620,7 +702,8 @@ export const TEMPLATES_VIEW_CONFIG: ViewConfig = {
       { value: "label", label: "Label" },
       { value: "folder", label: "Folder" },
       { value: "date", label: "Updated" },
-      { value: "firstLetter", label: "Index" },
+      // firstLetter alphabetical index — list-only (grid uses card layout).
+      { value: "firstLetter", label: "Index", modes: ["list"] },
     ],
     toggles: [],
     properties: [
@@ -656,7 +739,8 @@ export const LABELS_LIST_VIEW_CONFIG: ViewConfig = {
     ],
     groupingOptions: [
       { value: "none", label: "No grouping" },
-      { value: "firstLetter", label: "Index" },
+      // firstLetter alphabetical index — list-only (grid uses card layout).
+      { value: "firstLetter", label: "Index", modes: ["list"] },
     ],
     toggles: [],
     properties: [
@@ -691,7 +775,8 @@ export const TAGS_LIST_VIEW_CONFIG: ViewConfig = {
     ],
     groupingOptions: [
       { value: "none", label: "No grouping" },
-      { value: "firstLetter", label: "Index" },
+      // firstLetter alphabetical index — list-only (grid uses card layout).
+      { value: "firstLetter", label: "Index", modes: ["list"] },
     ],
     toggles: [],
     properties: [
@@ -729,7 +814,8 @@ export const FILES_VIEW_CONFIG: ViewConfig = {
     ],
     groupingOptions: [
       { value: "none", label: "No grouping" },
-      { value: "firstLetter", label: "Index" },
+      // firstLetter alphabetical index — list-only (grid uses card layout).
+      { value: "firstLetter", label: "Index", modes: ["list"] },
     ],
     toggles: [],
     properties: [
@@ -763,7 +849,8 @@ export const REFERENCES_VIEW_CONFIG: ViewConfig = {
   ],
   quickFilters: [],
   displayConfig: {
-    supportedModes: ["list", "grid", "gallery"],
+    // 2026-05-24: gallery deprecated → grid replaces. See NOTES_VIEW_CONFIG.
+    supportedModes: ["list", "grid"],
     orderingOptions: [
       { value: "updatedAt", label: "Updated" },
       { value: "createdAt", label: "Created" },
@@ -772,7 +859,13 @@ export const REFERENCES_VIEW_CONFIG: ViewConfig = {
     ],
     groupingOptions: [
       { value: "none", label: "No grouping" },
-      { value: "firstLetter", label: "Index" },
+      // B11 — lifted from local React state into viewState single-source-of-truth.
+      // "type" = link vs citation derived from url field; "fieldKey" pairs with
+      // a separate local `groupFieldKey` selector (which key string to group by).
+      { value: "type", label: "Type" },
+      { value: "fieldKey", label: "Field key" },
+      // firstLetter alphabetical index — list-only (grid uses card layout).
+      { value: "firstLetter", label: "Index", modes: ["list"] },
     ],
     toggles: [],
     properties: [
@@ -817,7 +910,8 @@ export const STICKERS_LIST_VIEW_CONFIG: ViewConfig = {
     ],
     groupingOptions: [
       { value: "none", label: "No grouping" },
-      { value: "firstLetter", label: "Index" },
+      // firstLetter alphabetical index — list-only (grid uses card layout).
+      { value: "firstLetter", label: "Index", modes: ["list"] },
     ],
     toggles: [],
     properties: [
@@ -868,12 +962,20 @@ export const BOOKS_VIEW_CONFIG: ViewConfig = {
   ],
   quickFilters: [],
   displayConfig: {
-    // books-view-engine-3/4: board mode + gallery mode (entity-agnostic).
-    supportedModes: ["grid", "list", "board", "gallery"],
+    // books-view-engine-3/4: board mode (entity-agnostic).
+    // 2026-05-24: timeline mode added — Book lifespan (createdAt → updatedAt)
+    // on the time axis, grouped by kind (Smart/Hybrid/Manual) by default.
+    // Gallery mode deprecated (replaced by Grid) — see NOTES_VIEW_CONFIG note.
+    supportedModes: ["grid", "list", "board", "timeline"],
     // Books board default = "kind" (Smart / Hybrid / Manual) — **3 column 고정
     // 보장**. Notes status / Wiki wikiStatus 패턴 정합 (영구 룰 21 — entity-
     // uniformity). 모든 board 진입 시 entity-native enum axis로 자동 분류.
     boardDefaultGroupBy: "kind",
+    // L4: per-mode default groupBy. Timeline mirrors board's "kind" axis so
+    // smart/manual lifespans separate visually on the time axis.
+    defaultGroupByByMode: { board: "kind", timeline: "kind" },
+    // Timeline Y-axis encodes time → sort by createdAt asc is canonical.
+    defaultSortByMode: { timeline: { field: "createdAt", direction: "asc" } },
     orderingOptions: [
       { value: "updatedAt", label: "Updated" },
       { value: "createdAt", label: "Created" },
@@ -884,8 +986,10 @@ export const BOOKS_VIEW_CONFIG: ViewConfig = {
       { value: "none",   label: "No grouping" },
       { value: "kind",   label: "Kind" },
       { value: "pinned", label: "Pin status" },
-      { value: "date",   label: "Updated" },
-      { value: "firstLetter", label: "Index" },
+      // updatedAt time-bucket — timeline already encodes time; hide there.
+      { value: "date",   label: "Updated", modes: ["list", "board"] },
+      // firstLetter alphabetical index — list-only.
+      { value: "firstLetter", label: "Index", modes: ["list"] },
     ],
     // showTrashed toggle is handled in books-view.tsx ViewHeader actions.
     toggles: [],
@@ -914,4 +1018,38 @@ export const VIEW_CONFIGS: Record<string, ViewConfig> = {
   references: REFERENCES_VIEW_CONFIG,
   files: FILES_VIEW_CONFIG,
   books: BOOKS_VIEW_CONFIG,
+}
+
+/** ctx-keyed view contexts (all, pinned, stone, folder, ...) that share the
+ *  same Notes pipeline / DisplayConfig. Centralizing this set lets
+ *  `getViewConfigForContext` map every Notes-like ctx to NOTES_VIEW_CONFIG
+ *  without enumerating each ctx string at every call site. */
+const NOTES_LIKE_CTX_KEYS = new Set<ViewContextKey>([
+  "all", "pinned", "stone", "brick", "keystone", "unlinked", "review",
+  "folder", "tag", "label", "trash", "savedView",
+])
+
+/** Resolve a ViewContextKey to its DisplayConfig owner. Returns `null` for
+ *  contexts that don't have a fully-fledged ViewConfig (e.g. `query-*` inline
+ *  query blocks). Callers can fall back to default ViewState behavior.
+ *
+ *  Used by `normalizeViewState` (mode-aware auto-cleanup — audit L3) so the
+ *  validator can ask "is this groupBy/property still valid in the current
+ *  viewMode?" before keeping a stale persisted value. */
+export function getViewConfigForContext(ctx: ViewContextKey): ViewConfig | null {
+  if (NOTES_LIKE_CTX_KEYS.has(ctx)) return NOTES_VIEW_CONFIG
+  if (ctx === "wiki") return WIKI_VIEW_CONFIG
+  if (ctx === "wiki-category") return WIKI_CATEGORY_VIEW_CONFIG
+  if (ctx === "library-categories") return WIKI_CATEGORY_VIEW_CONFIG
+  if (ctx === "graph") return GRAPH_VIEW_CONFIG
+  if (ctx === "calendar") return CALENDAR_VIEW_CONFIG
+  if (ctx === "templates") return TEMPLATES_VIEW_CONFIG
+  if (ctx === "tags-list") return TAGS_LIST_VIEW_CONFIG
+  if (ctx === "labels-list") return LABELS_LIST_VIEW_CONFIG
+  if (ctx === "stickers") return STICKERS_LIST_VIEW_CONFIG
+  if (ctx === "references") return REFERENCES_VIEW_CONFIG
+  if (ctx === "files") return FILES_VIEW_CONFIG
+  if (ctx === "books") return BOOKS_VIEW_CONFIG
+  // query-*, or any future ctx without a config — caller falls back to defaults.
+  return null
 }

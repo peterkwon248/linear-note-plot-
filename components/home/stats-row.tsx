@@ -7,11 +7,7 @@ import { isWikiStub } from "@/lib/wiki-utils"
 import type { Note, WikiArticle } from "@/lib/types"
 import { KNOWLEDGE_INDEX_COLORS } from "@/lib/colors"
 import { IconNotes } from "@/components/plot-icons"
-import { BookOpen } from "@phosphor-icons/react/dist/ssr/BookOpen"
-import { Tag as PhTag } from "@phosphor-icons/react/dist/ssr/Tag"
-import { Quotes } from "@phosphor-icons/react/dist/ssr/Quotes"
-import { Paperclip } from "@phosphor-icons/react/dist/ssr/Paperclip"
-import { Sticker as StickerIcon } from "@phosphor-icons/react/dist/ssr/Sticker"
+import { BookOpen, Tag as PhTag, Quote as Quotes, Paperclip, Sticker as StickerIcon } from "lucide-react"
 
 /**
  * Home > Stats card grid.
@@ -106,11 +102,11 @@ export function StatsRow() {
     icon: React.ReactNode
   }> = [
     { label: "Notes",      value: stats.notes,    sub: stats.notesSub,    route: "/notes",              color: KNOWLEDGE_INDEX_COLORS.notes.text,      bgColor: KNOWLEDGE_INDEX_COLORS.notes.bg,      icon: <IconNotes size={12} /> },
-    { label: "Wiki",       value: stats.wiki,     sub: stats.wikiSub,     route: "/wiki",               color: KNOWLEDGE_INDEX_COLORS.wiki.text,       bgColor: KNOWLEDGE_INDEX_COLORS.wiki.bg,       icon: <BookOpen size={12} weight="regular" /> },
-    { label: "Tags",       value: stats.tags,     sub: stats.tagsSub,     route: "/library/tags",       color: KNOWLEDGE_INDEX_COLORS.tags.text,       bgColor: KNOWLEDGE_INDEX_COLORS.tags.bg,       icon: <PhTag size={12} weight="regular" /> },
-    { label: "References", value: stats.refs,     sub: stats.refsSub,     route: "/library/references", color: KNOWLEDGE_INDEX_COLORS.references.text, bgColor: KNOWLEDGE_INDEX_COLORS.references.bg, icon: <Quotes size={12} weight="regular" /> },
-    { label: "Files",      value: stats.files,    sub: stats.filesSub,    route: "/library/files",      color: KNOWLEDGE_INDEX_COLORS.files.text,      bgColor: KNOWLEDGE_INDEX_COLORS.files.bg,      icon: <Paperclip size={12} weight="regular" /> },
-    { label: "Stickers",   value: stats.stickers, sub: stats.stickersSub, route: "/stickers",           color: KNOWLEDGE_INDEX_COLORS.stickers.text,   bgColor: KNOWLEDGE_INDEX_COLORS.stickers.bg,   icon: <StickerIcon size={12} weight="regular" /> },
+    { label: "Wiki",       value: stats.wiki,     sub: stats.wikiSub,     route: "/wiki",               color: KNOWLEDGE_INDEX_COLORS.wiki.text,       bgColor: KNOWLEDGE_INDEX_COLORS.wiki.bg,       icon: <BookOpen size={12} strokeWidth={2} /> },
+    { label: "Tags",       value: stats.tags,     sub: stats.tagsSub,     route: "/library/tags",       color: KNOWLEDGE_INDEX_COLORS.tags.text,       bgColor: KNOWLEDGE_INDEX_COLORS.tags.bg,       icon: <PhTag size={12} strokeWidth={2} /> },
+    { label: "References", value: stats.refs,     sub: stats.refsSub,     route: "/library/references", color: KNOWLEDGE_INDEX_COLORS.references.text, bgColor: KNOWLEDGE_INDEX_COLORS.references.bg, icon: <Quotes size={12} strokeWidth={2} /> },
+    { label: "Files",      value: stats.files,    sub: stats.filesSub,    route: "/library/files",      color: KNOWLEDGE_INDEX_COLORS.files.text,      bgColor: KNOWLEDGE_INDEX_COLORS.files.bg,      icon: <Paperclip size={12} strokeWidth={2} /> },
+    { label: "Stickers",   value: stats.stickers, sub: stats.stickersSub, route: "/stickers",           color: KNOWLEDGE_INDEX_COLORS.stickers.text,   bgColor: KNOWLEDGE_INDEX_COLORS.stickers.bg,   icon: <StickerIcon size={12} strokeWidth={2} /> },
   ]
 
   return (

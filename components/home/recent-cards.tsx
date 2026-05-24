@@ -5,8 +5,7 @@ import { usePlotStore } from "@/lib/store"
 import { setActiveRoute } from "@/lib/table-route"
 import { navigateToWikiArticle } from "@/lib/wiki-article-nav"
 import { useBacklinksIndex } from "@/lib/search/use-backlinks-index"
-import { FileText } from "@phosphor-icons/react/dist/ssr/FileText"
-import { BookOpen } from "@phosphor-icons/react/dist/ssr/BookOpen"
+import { FileText, BookOpen } from "lucide-react"
 import type { Note, WikiArticle } from "@/lib/types"
 
 /**
@@ -120,9 +119,9 @@ export function RecentCards({ limit = 8 }: { limit?: number }) {
               it.kind === "wiki" ? "bg-violet-500/10 text-violet-600 dark:text-violet-400" : "bg-blue-500/10 text-blue-600 dark:text-blue-400"
             }`}>
               {it.kind === "wiki" ? (
-                <BookOpen size={13} weight="regular" />
+                <BookOpen size={13} strokeWidth={2} />
               ) : (
-                <FileText size={13} weight="regular" />
+                <FileText size={13} strokeWidth={2} />
               )}
             </span>
             <span className="text-2xs tabular-nums text-muted-foreground">

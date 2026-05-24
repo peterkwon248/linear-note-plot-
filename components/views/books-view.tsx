@@ -32,7 +32,8 @@ import { BookDetailPage } from "@/components/views/book-detail-page"
 import { BookTable } from "@/components/books/book-table"
 import { BookGridCard } from "@/components/books/book-grid-card"
 import { BooksBoard } from "@/components/books/books-board"
-import { BooksGalleryAdapter } from "@/components/books/books-gallery-adapter"
+import { BooksTimelineView } from "@/components/views/books-timeline-view"
+// 2026-05-24: BooksGalleryAdapter import removed — gallery mode deprecated
 import { setActiveRoute, useActiveRoute, useSecondaryRoute, getBookIdFromRoute } from "@/lib/table-route"
 import { usePane } from "@/components/workspace/pane-context"
 import { shortRelative } from "@/lib/format-utils"
@@ -96,10 +97,12 @@ function BooksGrid() {
   const setShowTrashed = (next: boolean) =>
     updateViewState({ toggles: { ...viewState.toggles, showTrashed: next } })
 
-  // books-view-engine-2/3/4: viewMode = grid | list | board | gallery.
+  // books-view-engine-2/3/4: viewMode = grid | list | board.
+  // 2026-05-24: timeline mode added; gallery mode deprecated (auto-migrates
+  // to grid via normalizeViewState).
   const isListMode = viewState.viewMode === "list"
   const isBoardMode = viewState.viewMode === "board"
-  const isGalleryMode = viewState.viewMode === "gallery"
+  const isTimelineMode = viewState.viewMode === "timeline"
 
   // books-view-engine-3: card-drag in board mode (groupBy="kind") can request
   // a Smart → Manual conversion. Strips smartSources; Book.items preserved.
@@ -293,16 +296,17 @@ function BooksGrid() {
             onRestore={handleRestore}
             onPermanentDelete={handlePermanentDelete}
           />
-        ) : isGalleryMode ? (
-          // books-view-engine-4: gallery mode via the entity-agnostic
-          // GalleryView (2026-05-11 generic). BooksGalleryAdapter maps Book[]
-          // and BookGroup[] into GalleryItem/GalleryGroup; clicks open the
-          // full editor (Plot standard, NEXT-ACTION 2026-05-11 영구 결정).
-          <BooksGalleryAdapter
+        ) : isTimelineMode ? (
+          // 2026-05-24: bars-first timeline. Uses sub-components from
+          // wiki-timeline (entity-agnostic since the generic refactor).
+          <BooksTimelineView
             books={visibleBooks}
-            groups={groups}
-            groupBy={viewState.groupBy}
-            onOpen={openBook}
+            viewState={viewState}
+            bookGroups={groups}
+            selectedIds={new Set()}
+            activeBookId={null}
+            onOpenBook={openBook}
+            onSelect={() => {}}
           />
         ) : (
           // books-view-engine-1: grid mode (default, preserved from before).

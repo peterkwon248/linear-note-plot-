@@ -17,13 +17,17 @@ import {
 import {
   IconHome,
   IconNotes,
+  IconWiki,
+  IconOntology,
   IconCalendar,
   IconSun,
   IconMoon,
 } from "@/components/plot-icons"
 // Sidebar / CaretRight / PhX removed — PanelsMenu replaces actbar's own panel controls
-import { WikiBook, OntologyWide, Bookshelf } from "@/components/icons/imperial-extras"
-import { Library as BooksIcon } from "lucide-react"
+// 2026-05-24: imperial-extras (WikiBook/OntologyWide/Bookshelf) replaced with
+// lucide for activity-bar consistency. WikiBook → IconWiki (BookOpen),
+// OntologyWide → IconOntology (Network), Bookshelf → LibraryIcon (LibraryBig).
+import { Library as BooksIcon, LibraryBig as LibraryIcon } from "lucide-react"
 import { useSettingsStore } from "@/lib/settings-store"
 import { SPACE_COLORS } from "@/lib/colors"
 
@@ -37,11 +41,11 @@ const SPACES: {
 }[] = [
   { id: "home",     label: "Home",     icon: IconHome,     shortcut: "G then H" },
   { id: "notes",    label: "Notes",    icon: IconNotes,    shortcut: "G then N" },
-  { id: "wiki",     label: "Wiki",     icon: WikiBook,       shortcut: "" },
+  { id: "wiki",     label: "Wiki",     icon: IconWiki,     shortcut: "" },
   { id: "books",    label: "Books",    icon: (p: { size?: number }) => <BooksIcon size={p.size} />, shortcut: "" },
-  { id: "calendar", label: "Calendar", icon: IconCalendar,  shortcut: "" },
-  { id: "ontology", label: "Ontology", icon: OntologyWide,  shortcut: "" },
-  { id: "library",  label: "Library",  icon: Bookshelf,     shortcut: "" },
+  { id: "calendar", label: "Calendar", icon: IconCalendar, shortcut: "" },
+  { id: "ontology", label: "Ontology", icon: IconOntology, shortcut: "" },
+  { id: "library",  label: "Library",  icon: (p: { size?: number }) => <LibraryIcon size={p.size} />, shortcut: "" },
 ]
 
 /* ── Component ──────────────────────────────────────── */

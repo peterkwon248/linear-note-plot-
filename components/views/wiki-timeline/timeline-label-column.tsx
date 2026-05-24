@@ -6,24 +6,43 @@
  * render.
  */
 
-import type { Dispatch, SetStateAction } from "react"
-import { isWikiStub, safeDate } from "@/lib/wiki-utils"
+import type { ReactNode, Dispatch, SetStateAction } from "react"
+import { safeDate } from "@/lib/wiki-utils"
 import { cn } from "@/lib/utils"
-import { WIKI_STATUS_HEX } from "@/lib/colors"
-import { IconWikiStub, IconWikiArticle } from "@/components/plot-icons"
 import {
   LANE_HEIGHT,
   LABEL_COL_WIDTH,
-  type LanedArticle,
+  type LanedItem,
+  type TimelineEntity,
   type TimelineTooltipState,
 } from "./wiki-timeline-config"
 
 export interface TimelineLabelColumnProps {
-  lanes: LanedArticle[]
+  lanes: LanedItem<TimelineEntity>[]
+  /** Caller-resolved status color (one per laned entity, keyed by entity id).
+   *  Wiki: stub orange / article emerald. Notes: stone slate / brick amber /
+   *  keystone emerald. Books: smart indigo / hybrid amber / manual muted. */
+  getStatusColor: (entity: TimelineEntity) => string
+  /** Caller-rendered status silhouette (e.g. IconWikiStub for wiki stubs,
+   *  IconStone for note stones). Sized for the label column (13px default
+   *  inside this component). */
+  renderStatusIcon: (entity: TimelineEntity, size?: number) => ReactNode
   activeArticleId: string | null
   selectedIds: Set<string>
   hoveredId: string | null
   svgHeight: number
+  /** B6: subset of `visibleColumns` from viewState that the label column
+   *  honors. Currently affects the date row only:
+   *    - includes("updatedAt") → show updated date
+   *    - else (or includes("createdAt")) → show created date (default)
+   *  Other property keys are ignored for now (label column is space-bound;
+   *  more properties belong in tooltip / sidepanel). */
+  visibleColumns?: string[]
+  /** B4: pre-computed group boundaries from WikiTimelineView (one entry per
+   *  group, marking the lane index where that group starts). Centralized in
+   *  the orchestrator so the label column and the canvas grid use the same
+   *  source of truth. Omit when no grouping is active. */
+  groupBoundaries?: { laneIndex: number; label: string; count: number }[] | null
   setHoveredId: Dispatch<SetStateAction<string | null>>
   setTooltip: Dispatch<SetStateAction<TimelineTooltipState | null>>
   onOpenArticle: (id: string) => void
@@ -32,15 +51,21 @@ export interface TimelineLabelColumnProps {
 
 export function TimelineLabelColumn({
   lanes,
+  getStatusColor,
+  renderStatusIcon,
   activeArticleId,
   selectedIds,
   hoveredId,
   svgHeight,
+  visibleColumns,
+  groupBoundaries,
   setHoveredId,
   setTooltip,
   onOpenArticle,
   onSelect,
 }: TimelineLabelColumnProps) {
+  // Date column: updatedAt wins if explicitly toggled on, else createdAt.
+  const showUpdated = visibleColumns?.includes("updatedAt") ?? false
   return (
     <div
       style={{
@@ -55,20 +80,25 @@ export function TimelineLabelColumn({
       }}
     >
       {lanes.map(({ article }, laneIndex) => {
-        const stub = isWikiStub(article)
         const isActive = article.id === activeArticleId
         const isSelected = selectedIds.has(article.id)
         const isHovered = article.id === hoveredId
-        const color = stub ? WIKI_STATUS_HEX.stub : WIKI_STATUS_HEX.article
-        const created = safeDate(article.createdAt)
-        const createdLabel = created
-          ? created.toLocaleDateString("en-US", { month: "short", day: "numeric" })
+        const color = getStatusColor(article)
+        // B4: render a slim group-header overlay on the first lane of each
+        // group. Absolute-positioned so it doesn't shift cy positions for
+        // bars/markers in the canvas (which uses laneIndex * LANE_HEIGHT).
+        const groupStart = groupBoundaries?.find((b) => b.laneIndex === laneIndex) ?? null
+        const sourceDate = showUpdated
+          ? safeDate(article.updatedAt) ?? safeDate(article.createdAt)
+          : safeDate(article.createdAt)
+        const dateLabel = sourceDate
+          ? sourceDate.toLocaleDateString("en-US", { month: "short", day: "numeric" })
           : "—"
 
         return (
           <div
             key={article.id}
-            style={{ height: LANE_HEIGHT }}
+            style={{ height: LANE_HEIGHT, position: "relative" }}
             className={cn(
               "group flex cursor-pointer items-start gap-2 px-3 py-1.5 transition-colors",
               isSelected || isActive
@@ -90,8 +120,19 @@ export function TimelineLabelColumn({
               onSelect(article.id, { multi: e.metaKey || e.ctrlKey, shift: e.shiftKey, index: laneIndex })
             }}
           >
+            {groupStart && (
+              <div
+                aria-hidden
+                className="pointer-events-none absolute -top-2 left-0 right-0 flex items-center gap-1.5 px-3 text-[10px] font-medium uppercase tracking-wider text-muted-foreground/80"
+                style={{ height: 16 }}
+              >
+                <span className="text-foreground/70">{groupStart.label}</span>
+                <span className="tabular-nums">{groupStart.count}</span>
+                <span className="ml-1 h-px flex-1 bg-border-subtle/60" />
+              </div>
+            )}
             <span className="shrink-0 mt-0.5" style={{ color }}>
-              {stub ? <IconWikiStub size={13} /> : <IconWikiArticle size={13} />}
+              {renderStatusIcon(article, 13)}
             </span>
             <div className="min-w-0 flex-1 flex flex-col gap-0.5">
               <span
@@ -105,7 +146,7 @@ export function TimelineLabelColumn({
                 {article.title || "Untitled"}
               </span>
               <span className="text-2xs text-muted-foreground tabular-nums">
-                {createdLabel}
+                {dateLabel}
               </span>
             </div>
           </div>

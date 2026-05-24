@@ -7,29 +7,28 @@ import { StatusDropdown, STATUS_CONFIG } from "@/components/note-fields"
 import { RemindPicker } from "@/components/remind-picker"
 import type { ViewContextKey, GroupBy } from "@/lib/view-engine/types"
 import type { Note, NoteStatus, Folder } from "@/lib/types"
-import { Tray } from "@phosphor-icons/react/dist/ssr/Tray"
-import { PencilSimple } from "@phosphor-icons/react/dist/ssr/PencilSimple"
-import { BookOpen } from "@phosphor-icons/react/dist/ssr/BookOpen"
-import { GraduationCap } from "@phosphor-icons/react/dist/ssr/GraduationCap"
-import { Link as PhLink } from "@phosphor-icons/react/dist/ssr/Link"
-import { Lightning } from "@phosphor-icons/react/dist/ssr/Lightning"
-import { Check as PhCheck } from "@phosphor-icons/react/dist/ssr/Check"
-import { Trash } from "@phosphor-icons/react/dist/ssr/Trash"
-import { ArrowUpRight } from "@phosphor-icons/react/dist/ssr/ArrowUpRight"
-import { ArrowDownLeft } from "@phosphor-icons/react/dist/ssr/ArrowDownLeft"
-import { WarningCircle } from "@phosphor-icons/react/dist/ssr/WarningCircle"
-import { CursorClick } from "@phosphor-icons/react/dist/ssr/CursorClick"
-import { CheckCircle } from "@phosphor-icons/react/dist/ssr/CheckCircle"
-import { ArrowCounterClockwise } from "@phosphor-icons/react/dist/ssr/ArrowCounterClockwise"
-import { Bell } from "@phosphor-icons/react/dist/ssr/Bell"
-import { GitMerge } from "@phosphor-icons/react/dist/ssr/GitMerge"
+import {
+  Inbox as Tray,
+  Pencil as PencilSimple,
+  BookOpen,
+  GraduationCap,
+  Link2 as PhLink,
+  Zap as Lightning,
+  Check as PhCheck,
+  Trash2 as Trash,
+  ArrowUpRight,
+  ArrowDownLeft,
+  CircleAlert as WarningCircle,
+  MousePointerClick as CursorClick,
+  CircleCheck as CheckCircle,
+  RotateCcw as ArrowCounterClockwise,
+  Bell,
+  GitMerge,
+} from "lucide-react"
 // 2026-05-12: Linear-principle parity — Pin/Folder/Split added to board
 // workbench so the action set matches the list-mode floating bar. Board's
 // signature side-panel chrome stays untouched.
-import { PushPin } from "@phosphor-icons/react/dist/ssr/PushPin"
-import { PushPinSlash } from "@phosphor-icons/react/dist/ssr/PushPinSlash"
-import { FolderOpen } from "@phosphor-icons/react/dist/ssr/FolderOpen"
-import { Scissors } from "@phosphor-icons/react/dist/ssr/Scissors"
+import { Pin as PushPin, PinOff as PushPinSlash, FolderOpen, Scissors } from "lucide-react"
 import { FolderPicker } from "@/components/folder-picker"
 import { setSplitTargetNoteId } from "@/lib/note-split-mode"
 import { MergeDialog } from "@/components/merge-dialog"
@@ -179,7 +178,7 @@ export function BoardWorkbench({
         <div className="mb-4">
           <div className="flex items-center justify-between">
             <h3 className="text-ui font-semibold text-foreground flex items-center gap-2">
-              <Lightning className="text-accent" size={16} weight="regular" />
+              <Lightning className="text-accent" size={16} strokeWidth={2} />
               {selectedIds.size} note{selectedIds.size > 1 ? "s" : ""} selected
             </h3>
             <button
@@ -279,7 +278,7 @@ export function BoardWorkbench({
                     }}
                     className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-note font-medium text-foreground transition-colors hover:bg-hover-bg"
                   >
-                    <PhCheck className="text-accent" size={16} weight="bold" /> Done {inboxNotes.length}
+                    <PhCheck className="text-accent" size={16} strokeWidth={2.5} /> Done {inboxNotes.length}
                   </button>
                 )}
                 {captureNotes.length > 0 && (
@@ -291,7 +290,7 @@ export function BoardWorkbench({
                     }}
                     className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-note font-medium text-foreground transition-colors hover:bg-hover-bg"
                   >
-                    <ArrowUpRight className="text-accent" size={16} weight="regular" /> Promote {captureNotes.length}
+                    <ArrowUpRight className="text-accent" size={16} strokeWidth={2} /> Promote {captureNotes.length}
                   </button>
                 )}
                 {permanentNotes.length > 0 && (
@@ -303,7 +302,7 @@ export function BoardWorkbench({
                     }}
                     className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-note font-medium text-foreground transition-colors hover:bg-hover-bg"
                   >
-                    <ArrowDownLeft className="text-accent" size={16} weight="regular" /> Demote {permanentNotes.length}
+                    <ArrowDownLeft className="text-accent" size={16} strokeWidth={2} /> Demote {permanentNotes.length}
                   </button>
                 )}
               </div>
@@ -325,7 +324,7 @@ export function BoardWorkbench({
               }}
               triggerContent={
                 <button className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-note font-medium text-foreground transition-colors hover:bg-hover-bg">
-                  <Bell className="text-accent" size={16} weight="regular" />
+                  <Bell className="text-accent" size={16} strokeWidth={2} />
                   Remind
                 </button>
               }
@@ -360,12 +359,12 @@ export function BoardWorkbench({
                 >
                   {allPinned ? (
                     <>
-                      <PushPinSlash className="text-muted-foreground" size={16} weight="regular" />
+                      <PushPinSlash className="text-muted-foreground" size={16} strokeWidth={2} />
                       Unpin
                     </>
                   ) : (
                     <>
-                      <PushPin className="text-amber-500" size={16} weight="regular" />
+                      <PushPin className="text-amber-500" size={16} strokeWidth={2} />
                       Pin
                     </>
                   )}
@@ -379,7 +378,7 @@ export function BoardWorkbench({
             <Popover>
               <PopoverTrigger asChild>
                 <button className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-note font-medium text-foreground transition-colors hover:bg-hover-bg">
-                  <FolderOpen className="text-muted-foreground" size={16} weight="regular" />
+                  <FolderOpen className="text-muted-foreground" size={16} strokeWidth={2} />
                   Move to folder
                 </button>
               </PopoverTrigger>
@@ -407,7 +406,7 @@ export function BoardWorkbench({
                 }}
                 className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-note font-medium text-foreground transition-colors hover:bg-hover-bg"
               >
-                <Scissors className="text-muted-foreground" size={16} weight="regular" />
+                <Scissors className="text-muted-foreground" size={16} strokeWidth={2} />
                 Split this note…
               </button>
             )}
@@ -424,7 +423,7 @@ export function BoardWorkbench({
               onClick={handleTrashAll}
               className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-note font-medium text-destructive transition-colors hover:bg-destructive/10"
             >
-              <Trash className="text-destructive" size={16} weight="regular" /> Trash
+              <Trash className="text-destructive" size={16} strokeWidth={2} /> Trash
             </button>
             <button
               onClick={() => {
@@ -437,19 +436,19 @@ export function BoardWorkbench({
               }}
               className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-note font-medium text-foreground transition-colors hover:bg-hover-bg"
             >
-              <GitMerge className="text-muted-foreground" size={16} weight="regular" /> Merge
+              <GitMerge className="text-muted-foreground" size={16} strokeWidth={2} /> Merge
             </button>
             <button
               onClick={() => setWikiAssemblyOpen(true)}
               className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-note font-medium text-foreground transition-colors hover:bg-hover-bg"
             >
-              <BookOpen className="text-muted-foreground" size={16} weight="regular" /> Wiki
+              <BookOpen className="text-muted-foreground" size={16} strokeWidth={2} /> Wiki
             </button>
             <button
               onClick={() => setLinkOpen(true)}
               className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-note font-medium text-foreground transition-colors hover:bg-hover-bg"
             >
-              <PhLink className="text-muted-foreground" size={16} weight="regular" /> Link
+              <PhLink className="text-muted-foreground" size={16} strokeWidth={2} /> Link
             </button>
           </div>
         </div>
@@ -546,20 +545,20 @@ function WorkflowActions({
 
   if (effectiveTab === "stone") {
     actions.push(
-      { icon: <PhCheck className="text-accent" size={16} weight="bold" />, label: "Done All", onClick: onKeepAll },
+      { icon: <PhCheck className="text-accent" size={16} strokeWidth={2.5} />, label: "Done All", onClick: onKeepAll },
     )
   }
 
   if (effectiveTab === "brick") {
     actions.push(
-      { icon: <ArrowUpRight className="text-accent" size={16} weight="regular" />, label: "Promote All", onClick: onPromoteAll },
-      { icon: <ArrowDownLeft className="text-accent" size={16} weight="regular" />, label: "Back to Stone", onClick: onMoveBackAll },
+      { icon: <ArrowUpRight className="text-accent" size={16} strokeWidth={2} />, label: "Promote All", onClick: onPromoteAll },
+      { icon: <ArrowDownLeft className="text-accent" size={16} strokeWidth={2} />, label: "Back to Stone", onClick: onMoveBackAll },
     )
   }
 
   if (effectiveTab === "keystone") {
     actions.push(
-      { icon: <ArrowDownLeft className="text-accent" size={16} weight="regular" />, label: "Demote All", onClick: onDemoteAll },
+      { icon: <ArrowDownLeft className="text-accent" size={16} strokeWidth={2} />, label: "Demote All", onClick: onDemoteAll },
     )
   }
 
@@ -670,7 +669,7 @@ function InboxOverview({
   return (
     <div>
       <h3 className="text-ui font-semibold text-foreground flex items-center gap-2 mb-4">
-        <Tray className="text-chart-2" size={16} weight="regular" />
+        <Tray className="text-chart-2" size={16} strokeWidth={2} />
         Inbox Overview
       </h3>
 
@@ -702,7 +701,7 @@ function InboxOverview({
               onClick={onSelectAll}
               className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-note font-medium text-foreground transition-colors hover:bg-hover-bg"
             >
-              <CursorClick size={16} weight="regular" />
+              <CursorClick size={16} strokeWidth={2} />
               Select All
             </button>
             {untriagedNotes.length > 0 && (
@@ -710,7 +709,7 @@ function InboxOverview({
                 onClick={selectUntriaged}
                 className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-note font-medium text-foreground transition-colors hover:bg-hover-bg"
               >
-                <CheckCircle size={16} weight="regular" />
+                <CheckCircle size={16} strokeWidth={2} />
                 Select Untriaged ({untriagedNotes.length})
               </button>
             )}
@@ -745,7 +744,7 @@ function CaptureOverview({
   return (
     <div>
       <h3 className="text-ui font-semibold text-foreground flex items-center gap-2 mb-4">
-        <PencilSimple className="text-chart-3" size={16} weight="regular" />
+        <PencilSimple className="text-chart-3" size={16} strokeWidth={2} />
         Capture Overview
       </h3>
 
@@ -770,7 +769,7 @@ function CaptureOverview({
                   onClick={() => onCardClick?.(note.id)}
                   className="flex w-full items-center gap-2 rounded-md px-3 py-1.5 text-left text-note transition-colors hover:bg-hover-bg"
                 >
-                  <PhLink className="text-accent shrink-0" size={14} weight="regular" />
+                  <PhLink className="text-accent shrink-0" size={14} strokeWidth={2} />
                   <span className="truncate text-foreground">{note.title || "Untitled"}</span>
                   <span className="ml-auto text-2xs text-muted-foreground shrink-0">
                     {backlinksMap.get(note.id) ?? 0} links
@@ -791,7 +790,7 @@ function CaptureOverview({
               onClick={onSelectAll}
               className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-note font-medium text-foreground transition-colors hover:bg-hover-bg"
             >
-              <CursorClick size={16} weight="regular" />
+              <CursorClick size={16} strokeWidth={2} />
               Select All
             </button>
           </div>
@@ -833,7 +832,7 @@ function KnowledgeOverview({
   return (
     <div>
       <h3 className="text-ui font-semibold text-foreground flex items-center gap-2 mb-4">
-        <GraduationCap className="text-chart-5" size={16} weight="regular" />
+        <GraduationCap className="text-chart-5" size={16} strokeWidth={2} />
         Permanent Overview
       </h3>
 
@@ -858,7 +857,7 @@ function KnowledgeOverview({
                   onClick={() => onCardClick?.(note.id)}
                   className="flex w-full items-center gap-2 rounded-md px-3 py-1.5 text-left text-note transition-colors hover:bg-hover-bg"
                 >
-                  <WarningCircle className="text-muted-foreground shrink-0" size={14} weight="regular" />
+                  <WarningCircle className="text-muted-foreground shrink-0" size={14} strokeWidth={2} />
                   <span className="truncate text-foreground">{note.title || "Untitled"}</span>
                   <span className="ml-auto text-2xs text-muted-foreground shrink-0">
                     {backlinksMap.get(note.id) ?? 0} links
@@ -879,7 +878,7 @@ function KnowledgeOverview({
               onClick={onSelectAll}
               className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-note font-medium text-foreground transition-colors hover:bg-hover-bg"
             >
-              <CursorClick size={16} weight="regular" />
+              <CursorClick size={16} strokeWidth={2} />
               Select All
             </button>
           </div>
@@ -923,7 +922,7 @@ function DefaultOverview({
               onClick={onSelectAll}
               className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-note font-medium text-foreground transition-colors hover:bg-hover-bg"
             >
-              <CursorClick size={16} weight="regular" />
+              <CursorClick size={16} strokeWidth={2} />
               Select All
             </button>
           </div>

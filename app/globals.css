@@ -1141,32 +1141,21 @@
   line-height: 1;
   flex: none;
 }
+/* 2026-05-24: list row leading icon — background box removed (user
+ *  feedback: the 22×22 tinted square felt like a hover overlay even at
+ *  rest, making the row feel busier than Linear/Plain references). Color
+ *  tone preserved per status (stone/brick/keystone/wiki) so the entity
+ *  signal stays without the chrome. */
 .a-row__icon {
-  width: 22px;
-  height: 22px;
-  border-radius: 5px;
   display: grid;
   place-items: center;
   flex: none;
-  background: var(--muted);
   color: var(--muted-fg);
 }
-.a-row__icon[data-tone="stone"] {
-  color: var(--status-stone);
-  background: color-mix(in srgb, var(--status-stone) 24%, transparent);
-}
-.a-row__icon[data-tone="brick"] {
-  color: var(--status-brick);
-  background: color-mix(in srgb, var(--status-brick) 24%, transparent);
-}
-.a-row__icon[data-tone="keystone"] {
-  color: var(--status-keystone);
-  background: color-mix(in srgb, var(--status-keystone) 24%, transparent);
-}
-.a-row__icon[data-tone="wiki"] {
-  color: var(--space-wiki);
-  background: color-mix(in srgb, var(--space-wiki) 24%, transparent);
-}
+.a-row__icon[data-tone="stone"]    { color: var(--status-stone); }
+.a-row__icon[data-tone="brick"]    { color: var(--status-brick); }
+.a-row__icon[data-tone="keystone"] { color: var(--status-keystone); }
+.a-row__icon[data-tone="wiki"]     { color: var(--space-wiki); }
 .a-row__title {
   font-weight: 500;
   color: var(--fg);

@@ -12,43 +12,45 @@ import {
   ContextMenuSubContent,
   ContextMenuSubTrigger,
 } from "@/components/ui/context-menu"
-import { Plus as PhPlus } from "@phosphor-icons/react/dist/ssr/Plus"
-import { ListBullets } from "@phosphor-icons/react/dist/ssr/ListBullets"
+import {
+  Plus as PhPlus,
+  List as ListBullets,
+  ArrowDownUp as ArrowsDownUp,
+  ArrowUp,
+  ArrowDown,
+  FileText,
+  Pin as PushPin,
+  PinOff as PushPinSlash,
+  Link2 as PhLink,
+  ChevronDown as CaretDown,
+  X as PhX,
+  Check as PhCheck,
+  AlarmClock as Alarm,
+  Trash2 as Trash,
+  ArrowUpRight,
+  ArrowDownLeft,
+  Inbox as Tray,
+  MoreHorizontal as DotsThree,
+  Bell,
+  Clock as PhClock,
+  GitMerge,
+  SplitSquareHorizontal as SplitHorizontal,
+  Scissors,
+  Minus as PhMinus,
+  FolderOpen,
+  RotateCcw as ArrowCounterClockwise,
+  Globe,
+  Download as DownloadSimple,
+  Share2 as ShareNetwork,
+  Zap as Lightning,
+  Pencil as PencilSimple,
+  SquarePen as PhNotePencil,
+} from "lucide-react"
 import { groupByInitial } from "@/lib/korean-utils"
-import { ArrowsDownUp } from "@phosphor-icons/react/dist/ssr/ArrowsDownUp"
-import { ArrowUp } from "@phosphor-icons/react/dist/ssr/ArrowUp"
-import { ArrowDown } from "@phosphor-icons/react/dist/ssr/ArrowDown"
-import { FileText } from "@phosphor-icons/react/dist/ssr/FileText"
-import { PushPin } from "@phosphor-icons/react/dist/ssr/PushPin"
-import { PushPinSlash } from "@phosphor-icons/react/dist/ssr/PushPinSlash"
-import { Link as PhLink } from "@phosphor-icons/react/dist/ssr/Link"
-import { CaretDown } from "@phosphor-icons/react/dist/ssr/CaretDown"
-import { X as PhX } from "@phosphor-icons/react/dist/ssr/X"
-import { Check as PhCheck } from "@phosphor-icons/react/dist/ssr/Check"
-import { Alarm } from "@phosphor-icons/react/dist/ssr/Alarm"
-import { Trash } from "@phosphor-icons/react/dist/ssr/Trash"
-import { ArrowUpRight } from "@phosphor-icons/react/dist/ssr/ArrowUpRight"
-import { ArrowDownLeft } from "@phosphor-icons/react/dist/ssr/ArrowDownLeft"
-import { Tray } from "@phosphor-icons/react/dist/ssr/Tray"
 import { StatusShapeIcon } from "@/components/status-icon"
 import { StatusBadge } from "@/components/note-fields"
-import { DotsThree } from "@phosphor-icons/react/dist/ssr/DotsThree"
-import { Bell } from "@phosphor-icons/react/dist/ssr/Bell"
-import { Clock as PhClock } from "@phosphor-icons/react/dist/ssr/Clock"
-import { GitMerge } from "@phosphor-icons/react/dist/ssr/GitMerge"
-import { SplitHorizontal } from "@phosphor-icons/react/dist/ssr/SplitHorizontal"
 import { NoteContextMenuItems } from "@/components/note-context-menu-items"
-import { Scissors } from "@phosphor-icons/react/dist/ssr/Scissors"
 import { setSplitTargetNoteId } from "@/lib/note-split-mode"
-import { Minus as PhMinus } from "@phosphor-icons/react/dist/ssr/Minus"
-import { FolderOpen } from "@phosphor-icons/react/dist/ssr/FolderOpen"
-import { ArrowCounterClockwise } from "@phosphor-icons/react/dist/ssr/ArrowCounterClockwise"
-import { Globe } from "@phosphor-icons/react/dist/ssr/Globe"
-import { DownloadSimple } from "@phosphor-icons/react/dist/ssr/DownloadSimple"
-import { ShareNetwork } from "@phosphor-icons/react/dist/ssr/ShareNetwork"
-import { Lightning } from "@phosphor-icons/react/dist/ssr/Lightning"
-import { PencilSimple } from "@phosphor-icons/react/dist/ssr/PencilSimple"
-import { NotePencil as PhNotePencil } from "@phosphor-icons/react/dist/ssr/NotePencil"
 import {
   Tooltip,
   TooltipContent,
@@ -63,8 +65,7 @@ import type { ViewContextKey, ViewMode, SortField, SortDirection, GroupBy, Filte
 import { format } from "date-fns"
 import { shortRelative } from "@/lib/format-utils"
 import type { Note, NoteStatus, Folder, NoteSource, Tag, Label, NoteTemplate, Attachment, Reference, Book } from "@/lib/types"
-import { File as PhFile } from "@phosphor-icons/react/dist/ssr/File"
-import { BookOpen } from "@phosphor-icons/react/dist/ssr/BookOpen"
+import { File as PhFile, BookOpen } from "lucide-react"
 import { toast } from "sonner"
 import { FloatingActionBar } from "@/components/floating-action-bar"
 import { FilterChipBar } from "@/components/filter-bar"
@@ -193,9 +194,9 @@ function TH({
     >
       {label}
       {active ? (
-        sortDir === "asc" ? <ArrowUp className="text-muted-foreground" size={12} weight="regular" /> : <ArrowDown className="text-muted-foreground" size={12} weight="regular" />
+        sortDir === "asc" ? <ArrowUp className="text-muted-foreground" size={12} strokeWidth={2} /> : <ArrowDown className="text-muted-foreground" size={12} strokeWidth={2} />
       ) : hideInactiveHint ? null : (
-        <ArrowsDownUp className="opacity-0 group-hover/th:opacity-60" size={12} weight="regular" />
+        <ArrowsDownUp className="opacity-0 group-hover/th:opacity-60" size={12} strokeWidth={2} />
       )}
     </button>
   )
@@ -287,7 +288,7 @@ function TrashEntityList({ type }: { type: "books" | "tags" | "labels" | "templa
     return (
       <div className="flex flex-1 items-center justify-center text-center">
         <div>
-          <Trash className="mx-auto mb-3 text-muted-foreground/70" size={40} weight="regular" />
+          <Trash className="mx-auto mb-3 text-muted-foreground/70" size={40} strokeWidth={2} />
           <p className="text-ui text-muted-foreground">No trashed {type}</p>
         </div>
       </div>
@@ -332,7 +333,7 @@ function TrashEntityList({ type }: { type: "books" | "tags" | "labels" | "templa
                     : "bg-card border-zinc-400 dark:border-zinc-600 hover:border-zinc-500"
                 }`}
               >
-                {isSelected && <PhCheck size={10} weight="bold" className="text-accent-foreground" />}
+                {isSelected && <PhCheck size={10} strokeWidth={2.5} className="text-accent-foreground" />}
               </div>
             </div>
             <div className="flex-1 min-w-0">
@@ -359,7 +360,7 @@ function TrashEntityList({ type }: { type: "books" | "tags" | "labels" | "templa
                 className="flex items-center gap-1 rounded-md px-2 py-1 text-note text-muted-foreground transition-colors hover:bg-hover-bg hover:text-foreground"
                 title="Restore"
               >
-                <ArrowCounterClockwise size={14} weight="regular" />
+                <ArrowCounterClockwise size={14} strokeWidth={2} />
                 Restore
               </button>
               <button
@@ -367,7 +368,7 @@ function TrashEntityList({ type }: { type: "books" | "tags" | "labels" | "templa
                 className="flex items-center gap-1 rounded-md px-2 py-1 text-note text-destructive transition-colors hover:bg-destructive/10"
                 title="Delete permanently"
               >
-                <Trash size={14} weight="regular" />
+                <Trash size={14} strokeWidth={2} />
               </button>
             </div>
           </div>
@@ -383,14 +384,14 @@ function TrashEntityList({ type }: { type: "books" | "tags" | "labels" | "templa
             onClick={handleBulkRestore}
             className="flex items-center gap-1.5 rounded-md px-2.5 py-1 text-note text-foreground transition-colors hover:bg-hover-bg"
           >
-            <ArrowCounterClockwise size={14} weight="regular" />
+            <ArrowCounterClockwise size={14} strokeWidth={2} />
             Restore
           </button>
           <button
             onClick={handleBulkDelete}
             className="flex items-center gap-1.5 rounded-md px-2.5 py-1 text-note text-destructive transition-colors hover:bg-destructive/10"
           >
-            <Trash size={14} weight="regular" />
+            <Trash size={14} strokeWidth={2} />
             Delete forever
           </button>
           <button
@@ -398,7 +399,7 @@ function TrashEntityList({ type }: { type: "books" | "tags" | "labels" | "templa
             className="flex items-center justify-center rounded-md p-1 text-muted-foreground transition-colors hover:bg-hover-bg hover:text-foreground"
             title="Clear selection"
           >
-            <PhX size={14} weight="regular" />
+            <PhX size={14} strokeWidth={2} />
           </button>
         </div>
       )}
@@ -1122,7 +1123,7 @@ export function NotesTable({
         icon={
           context === "stone" || context === "brick" || context === "keystone"
             ? <StatusShapeIcon status={context as NoteStatus} size={20} />
-            : <FileText size={20} weight="regular" />
+            : <FileText size={20} strokeWidth={2} />
         }
         title={title ?? "Notes"}
         count={flatNotes.length}
@@ -1261,7 +1262,7 @@ export function NotesTable({
                 className="inline-flex items-center px-1.5 py-0.5 text-muted-foreground hover:text-foreground hover:bg-hover-bg transition-colors"
                 title="Remove sort"
               >
-                <PhX size={12} weight="regular" />
+                <PhX size={12} strokeWidth={2} />
               </button>
             </div>
           </div>
@@ -1276,13 +1277,13 @@ export function NotesTable({
         const folderName = folders.find((f) => f.id === folderId)?.name
         return folderName ? (
           <div className="flex shrink-0 items-center gap-1.5 border-b border-border px-5 py-1.5">
-            <FolderOpen className="text-muted-foreground" size={14} weight="regular" />
+            <FolderOpen className="text-muted-foreground" size={14} strokeWidth={2} />
             <span className="text-note text-foreground">{folderName}</span>
             <button
               onClick={() => setActiveFolderId(null)}
               className="ml-1 rounded-sm p-0.5 text-muted-foreground hover:text-foreground hover:bg-hover-bg transition-colors"
             >
-              <PhX size={12} weight="regular" />
+              <PhX size={12} strokeWidth={2} />
             </button>
           </div>
         ) : null
@@ -1291,7 +1292,7 @@ export function NotesTable({
       {/* ── Unlinked helper ─────────────────────────────── */}
       {effectiveTab === "unlinked" && flatNotes.length > 0 && (
         <div className="flex shrink-0 items-center gap-2 border-b border-border px-5 py-3">
-          <PhLink className="text-muted-foreground" size={14} weight="regular" />
+          <PhLink className="text-muted-foreground" size={14} strokeWidth={2} />
           <span className="text-2xs text-muted-foreground">
             These notes have no links. Add <span className="font-mono text-foreground/70">[[wiki-links]]</span> to connect them to your knowledge graph.
           </span>
@@ -1309,7 +1310,7 @@ export function NotesTable({
           <div className="flex-1 flex flex-col">
             {virtualItems.length === 0 ? (
               <div className="flex flex-1 flex-col items-center justify-center gap-3 text-muted-foreground">
-                <PhNotePencil size={32} weight="light" className="text-muted-foreground/70" />
+                <PhNotePencil size={32} strokeWidth={1.5} className="text-muted-foreground/70" />
                 <p className="text-note">
                   {context === "trash" ? "Trash is empty" : "No notes yet"}
                 </p>
@@ -1360,10 +1361,10 @@ export function NotesTable({
                       }}
                     >
                       {selectedIds.size === flatNotes.length && flatNotes.length > 0 && (
-                        <PhCheck className="text-accent-foreground" size={10} weight="bold" />
+                        <PhCheck className="text-accent-foreground" size={10} strokeWidth={2.5} />
                       )}
                       {selectedIds.size > 0 && selectedIds.size < flatNotes.length && (
-                        <PhMinus className="text-accent-foreground" size={10} weight="regular" />
+                        <PhMinus className="text-accent-foreground" size={10} strokeWidth={2} />
                       )}
                     </div>
                   </div>
@@ -1438,7 +1439,7 @@ export function NotesTable({
                               if (!reorderMoved.current) toggleGroupCollapse(item.groupKey)
                             }}
                           >
-                            <CaretDown className={`transition-transform ${collapsedGroups.has(item.groupKey) ? "-rotate-90" : ""}`} size={11} weight="regular" />
+                            <CaretDown className={`transition-transform ${collapsedGroups.has(item.groupKey) ? "-rotate-90" : ""}`} size={11} strokeWidth={2} />
                             <GroupHeaderIcon groupBy={item.groupBy} groupKey={item.groupKey} label={item.label} folders={folders} labels={labels} />
                             <span className="a-tg__label">
                               {resolveGroupLabel(item.groupBy, item.groupKey, item.label, folders, labels)}
@@ -1463,7 +1464,7 @@ export function NotesTable({
                               if (!reorderMoved.current) toggleGroupCollapse(item.groupKey)
                             }}
                           >
-                            <CaretDown className={`text-muted-foreground transition-transform ${collapsedGroups.has(item.groupKey) ? "-rotate-90" : ""}`} size={12} weight="regular" />
+                            <CaretDown className={`text-muted-foreground transition-transform ${collapsedGroups.has(item.groupKey) ? "-rotate-90" : ""}`} size={12} strokeWidth={2} />
                             <GroupHeaderIcon groupBy={item.groupBy} groupKey={item.groupKey} label={item.label} folders={folders} labels={labels} />
                             <span className="text-note font-semibold text-foreground">
                               {resolveGroupLabel(item.groupBy, item.groupKey, item.label, folders, labels)}
@@ -1489,7 +1490,7 @@ export function NotesTable({
                               if (!subReorderMoved.current) toggleGroupCollapse(item.groupKey)
                             }}
                           >
-                            <CaretDown className={`transition-transform ${collapsedGroups.has(item.groupKey) ? "-rotate-90" : ""}`} size={10} weight="regular" />
+                            <CaretDown className={`transition-transform ${collapsedGroups.has(item.groupKey) ? "-rotate-90" : ""}`} size={10} strokeWidth={2} />
                             <GroupHeaderIcon groupBy={item.groupBy} groupKey={item.groupKey.split("::")[1] ?? item.groupKey} label={item.label} folders={folders} labels={labels} />
                             <span className="a-tg__label" style={{ fontSize: 12 }}>
                               {resolveGroupLabel(item.groupBy, item.groupKey.split("::")[1] ?? item.groupKey, item.label, folders, labels)}
@@ -1599,7 +1600,7 @@ export function NotesTable({
                   disabled={flatNotes.length === 0}
                   className="text-note"
                 >
-                  <ArrowCounterClockwise className="mr-2 text-muted-foreground" size={16} weight="regular" />
+                  <ArrowCounterClockwise className="mr-2 text-muted-foreground" size={16} strokeWidth={2} />
                   Restore all
                 </ContextMenuItem>
                 <ContextMenuSeparator />
@@ -1613,7 +1614,7 @@ export function NotesTable({
                   disabled={flatNotes.length === 0}
                   className="text-note text-destructive focus:text-destructive"
                 >
-                  <Trash className="mr-2" size={16} weight="regular" />
+                  <Trash className="mr-2" size={16} strokeWidth={2} />
                   Empty trash
                 </ContextMenuItem>
               </>
@@ -1625,7 +1626,7 @@ export function NotesTable({
                 }}
                 className="text-note"
               >
-                <PhPlus className="mr-2 text-muted-foreground" size={16} weight="regular" />
+                <PhPlus className="mr-2 text-muted-foreground" size={16} strokeWidth={2} />
                 New note
               </ContextMenuItem>
             )}
@@ -1734,7 +1735,7 @@ function GroupHeaderIcon({ groupBy, groupKey, label, folders, labels }: {
       // and would miss NOTE_STATUS_COLORS, falling back to currentColor.
       return <StatusShapeIcon status={groupKey as NoteStatus} size={16} />
     case "folder":
-      return <FolderOpen className="text-muted-foreground" size={16} weight="regular" />
+      return <FolderOpen className="text-muted-foreground" size={16} strokeWidth={2} />
     case "label": {
       const labelColor = labels.find((l) => l.id === groupKey)?.color
       return labelColor ? (
@@ -1836,7 +1837,7 @@ function NoteRowInner({
             isSelected ? "bg-accent border-accent" : "bg-card border-zinc-400 dark:border-zinc-600 hover:border-zinc-500"
           }`}
         >
-          {isSelected && <PhCheck className="text-accent-foreground" size={8} weight="bold" />}
+          {isSelected && <PhCheck className="text-accent-foreground" size={8} strokeWidth={2.5} />}
         </div>
       </div>
 
@@ -1855,7 +1856,7 @@ function NoteRowInner({
           {note.pinned && (
             <PushPin
               size={11}
-              weight="fill"
+              fill="currentColor" strokeWidth={2}
               className="shrink-0 text-amber-500"
             />
           )}

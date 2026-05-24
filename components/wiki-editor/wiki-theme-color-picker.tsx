@@ -29,7 +29,7 @@ import {
 } from "@/components/ui/dialog"
 import { PRESET_COLORS, PRESET_COLOR_NAMES } from "@/lib/colors"
 import { cn } from "@/lib/utils"
-import { Check as PhCheck } from "@phosphor-icons/react/dist/ssr/Check"
+import { Check as PhCheck } from "lucide-react"
 
 interface WikiThemeColorPickerProps {
   open: boolean
@@ -101,7 +101,7 @@ export function WikiThemeColorPicker({
                     style={{ backgroundColor: hex }}
                   >
                     {isActive && (
-                      <PhCheck size={14} weight="bold" className="text-white drop-shadow" />
+                      <PhCheck size={14} strokeWidth={2.5} className="text-white drop-shadow" />
                     )}
                   </button>
                 )

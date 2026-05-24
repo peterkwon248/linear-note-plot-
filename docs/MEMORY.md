@@ -8,6 +8,43 @@
 
 ---
 
+## 🚀 2026-05-24 — **거대 세션: PR-X5/X6 (lucide 68파일) + Activity bar lucide + audit v2 완성 (PR-B/B2/C) + Notes/Books Timeline + Gallery 폐기** ⭐⭐⭐⭐⭐
+
+**범위**: 거대 세션 단일 PR (93 파일 / +1891 −2622). 20+ round 사용자 대화. audit v2 *완성판* (PR-B/B2/C) + Plot icon ecosystem 통일 + 신규 entity-level feature (Notes/Books Timeline) + view mode 정리 (Gallery 폐기).
+
+**핵심 결정 (영구 LOCKED #98~#104)**:
+- **#98 Gallery 폐기 → Grid 통일** (4 entity). 자동 마이그레이션 (gallery → grid alias in normalizeViewState).
+- **#99 Wiki timeline bar 단일 색** — D1 past/future gradient 폐기. 모든 entity bar = status color full opacity.
+- **#100 Brand 3종 = Stone/Brick/Block만 phosphor**. Wiki Stub/Article도 lucide (Book/BookMarked). Activity bar + sidebar + action 모두 lucide.
+- **#101 Timeline = entity-agnostic sub-components + entity adapter**: sub-components (timeline-bar/grid/label-column/tooltip/event-markers/utils)는 `<T extends TimelineEntity>` generic + adapter callback prop. Wiki/Notes/Books 모두 같은 sub-components 사용.
+- **#102 Notes timeline = Shell 패턴, Books = 직접 호출**: NotesTable이 자체 ViewHeader 가지므로 NotesTimelineShell이 useNotesView wrapper. Books는 books-view가 직접 BooksTimelineView 호출. *결과: Notes timeline ViewHeader 누락 → 다음 세션 P0 #1.*
+- **#103 `.a-row__icon` 박스 폐기** — 22×22 tinted square 폐기. color tone만 (Linear/Plain 톤).
+- **#104 Books list row = Notes parity** — book-table.tsx h-9 → py-2.5.
+
+**완료**:
+- **PR-X5/X6 lucide 마이그레이션 68 파일** — editor 8 + wiki-editor 13 + comments 3 + notes-table/board/editor/property-chips/display-panel (큰 imports) + books mid+large 10 + home 4 + ontology 4 + inspector + insights + calendar + board-workbench + 기타
+- **plot-icons.tsx 전체 재작성** — 자체 SVG 25+ 함수 → lucide alias wrap (default size 유지, strokeWidth=1.5 mockup tone)
+- **audit v2 PR-B/B2/C 완성**:
+  - PR-B: ModeList/GroupingOption/OrderingOption/DisplayProperty.modes/DisplayConfig.defaultGroupByByMode/defaultSortByMode + 11 ViewConfig modes 선언 + DisplayPanel mode filter + normalizeViewState mode-aware auto-cleanup + getViewConfigForContext export
+  - PR-B2 (5건): B11 References groupBy 단일화 (GroupBy union에 "type"/"fieldKey") / B6 timeline-label-column visibleColumns / B12 templates grid groups / B5 wiki gallery wikiGroups *(그 후 gallery 폐기)* / B4 timeline lane 헤더 + canvas divider
+  - PR-C (4건): B10 wiki tier sort (depthMap closure) / B13 Books board groupOrder+showEmptyGroups / B14 use-templates-view isHydrated / B4 detail canvas divider
+- **Notes/Books Timeline 신규** — sub-components 7개 generic화 + NotesTimelineView/Shell/BooksTimelineView 3 신규 파일 (~900줄) + view 분기 + NOTES/BOOKS_VIEW_CONFIG timeline mode
+- **Gallery 전수 폐기** — 3 파일 삭제 + 4 view 분기 정리 + types.ts ViewMode union/VALID_VIEW_MODES + normalize alias migration
+- **spacing/icon polish** — `.a-row__icon` 박스 폐기 + Books row height parity
+- **wiki timeline 선 단일 색** — D1 gradient 제거
+
+**기술 학습 (영구)**:
+- **lucide 마이그레이션 일관 변환 룰** (PR-X1~X6 누적): weight prop 5종 → strokeWidth/fill. import block 통째 교체 + replace_all + tsc 매 batch.
+- **Generic timeline 추출 패턴** — sub-components를 `T extends TimelineEntity` generic + adapter callback prop. caller가 adapter inline. duplication 0.
+- **alias migration for deprecated viewMode** — normalizeViewState alias로 persisted 데이터 자동 변환. Store-level migration 불필요.
+- **dead branch + dead function 정리** — gallery 분기 제거 시 import + 함수 정의 모두 grep으로 수동 확인.
+
+**미완**: **Notes timeline ViewHeader 누락** (사용자 명시 P0 #1).
+
+**다음**: Notes timeline ViewHeader 추가 → File 엔티티 v1 → temporal-hooks PRD 후속. SESSION-LOG 2026-05-24 hook 참조.
+
+---
+
 ## 🚀 2026-05-23 (후속) — **Audit v2 + PR-A 데이터 무결성 + Lucide 마이그레이션 90 파일 (PR-X1~X4)** ⭐⭐⭐⭐⭐
 
 **범위**: 거대 세션 단일 PR. 16+ round 사용자 대화 (audit 브레인스토밍 → Linear 마인드셋 결정 → PR-X1~X4 mechanical batch). Audit 문서 v2 + PR-A 데이터 무결성 5건 + Lucide 마이그레이션 90 파일. Store v144 무변경.

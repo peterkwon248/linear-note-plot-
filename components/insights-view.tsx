@@ -11,17 +11,9 @@ import { runAnalysis } from "@/lib/analysis/engine"
 import { computeActivityStats } from "@/lib/datalog/helpers"
 import { format } from "date-fns"
 import type { AnalysisResult, AnalysisSeverity } from "@/lib/analysis/types"
-import { WarningCircle } from "@phosphor-icons/react/dist/ssr/WarningCircle"
-import { Warning } from "@phosphor-icons/react/dist/ssr/Warning"
-import { Info as PhInfo } from "@phosphor-icons/react/dist/ssr/Info"
-import { CaretDown } from "@phosphor-icons/react/dist/ssr/CaretDown"
-import { CaretUp } from "@phosphor-icons/react/dist/ssr/CaretUp"
-import { Lightbulb } from "@phosphor-icons/react/dist/ssr/Lightbulb"
+import { CircleAlert as WarningCircle, TriangleAlert as Warning, Info as PhInfo, ChevronDown as CaretDown, ChevronUp as CaretUp, Lightbulb } from "lucide-react"
 import { IconInsight } from "@/components/plot-icons"
-import { Pulse as PhActivity } from "@phosphor-icons/react/dist/ssr/Pulse"
-import { TrendUp } from "@phosphor-icons/react/dist/ssr/TrendUp"
-import { FileText } from "@phosphor-icons/react/dist/ssr/FileText"
-import { Eye as PhEye } from "@phosphor-icons/react/dist/ssr/Eye"
+import { Activity as PhActivity, TrendingUp as TrendUp, FileText, Eye as PhEye } from "lucide-react"
 
 /* ── Severity helpers ─────────────────────────────────── */
 
@@ -82,7 +74,7 @@ function MiniBarChart({ data }: { data: { date: string; count: number }[] }) {
   return (
     <div className="rounded-lg border border-border bg-secondary/30 p-4">
       <div className="flex items-center gap-2 mb-3">
-        <TrendUp className="text-muted-foreground" size={14} weight="regular" />
+        <TrendUp className="text-muted-foreground" size={14} strokeWidth={2} />
         <span className="text-2xs font-medium text-muted-foreground">7-Day PhActivity</span>
       </div>
       <div className="flex items-end gap-1.5 h-16">
@@ -124,7 +116,7 @@ function MostOpenedList({ items }: { items: { noteId: string; title: string; cou
   return (
     <div className="rounded-lg border border-border bg-secondary/30 p-4">
       <div className="flex items-center gap-2 mb-2.5">
-        <PhEye className="text-muted-foreground" size={14} weight="regular" />
+        <PhEye className="text-muted-foreground" size={14} strokeWidth={2} />
         <span className="text-2xs font-medium text-muted-foreground">Most Opened</span>
       </div>
       <div className="space-y-0.5">
@@ -135,7 +127,7 @@ function MostOpenedList({ items }: { items: { noteId: string; title: string; cou
             className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left transition-colors hover:bg-hover-bg"
           >
             <span className="text-2xs text-muted-foreground/70 w-4 text-right">{i + 1}</span>
-            <FileText className="text-muted-foreground shrink-0" size={12} weight="regular" />
+            <FileText className="text-muted-foreground shrink-0" size={12} strokeWidth={2} />
             <span className="flex-1 truncate text-note text-foreground/80">{item.title}</span>
             <span className="text-2xs text-muted-foreground">{item.count}×</span>
           </button>
@@ -157,7 +149,7 @@ function LifecycleStats({ notes }: { notes: any[] }) {
   return (
     <div className="rounded-lg border border-border bg-secondary/30 p-4">
       <div className="flex items-center gap-2 mb-3">
-        <PhActivity className="text-muted-foreground" size={14} weight="regular" />
+        <PhActivity className="text-muted-foreground" size={14} strokeWidth={2} />
         <span className="text-2xs font-medium text-muted-foreground">Note Lifecycle</span>
       </div>
       <div className="grid grid-cols-4 gap-2">
@@ -218,7 +210,7 @@ function InsightCard({ result }: { result: AnalysisResult }) {
           onClick={() => setExpanded(!expanded)}
           className="shrink-0 rounded-md p-1 text-muted-foreground transition-colors hover:bg-hover-bg hover:text-foreground"
         >
-          {expanded ? <CaretUp size={16} weight="regular" /> : <CaretDown size={16} weight="regular" />}
+          {expanded ? <CaretUp size={16} strokeWidth={2} /> : <CaretDown size={16} strokeWidth={2} />}
         </button>
       </div>
 
@@ -252,7 +244,7 @@ function InsightCard({ result }: { result: AnalysisResult }) {
             onClick={() => setExpanded(true)}
             className="flex items-center gap-1 px-2 py-1 text-2xs text-muted-foreground transition-colors hover:text-foreground"
           >
-            <CaretDown size={12} weight="regular" />
+            <CaretDown size={12} strokeWidth={2} />
             Show {matchedNotes.length} notes...
           </button>
         </div>
@@ -385,7 +377,7 @@ export function InsightsView() {
 
           {total === 0 ? (
             <div className="flex flex-col items-center justify-center rounded-lg border border-border bg-secondary/30 py-10 text-center">
-              <Lightbulb className="mb-3 text-muted-foreground/60" size={32} weight="regular" />
+              <Lightbulb className="mb-3 text-muted-foreground/60" size={32} strokeWidth={2} />
               <p className="text-note font-medium text-foreground/70">All good!</p>
               <p className="mt-0.5 text-2xs text-muted-foreground">No issues detected.</p>
             </div>

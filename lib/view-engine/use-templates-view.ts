@@ -30,6 +30,13 @@ export interface UseTemplatesViewResult {
   totalCount: number
   viewState: ViewState
   updateViewState: (patch: Partial<ViewState>) => void
+  /** B14 (audit v2): true once the Zustand persist gate has rehydrated
+   *  viewStateByContext from IDB. Consumers that read default sort/filter
+   *  before hydration risk a flash of stale-default state — gating render
+   *  on isHydrated avoids the FOUC. Currently unused at call sites; added
+   *  for shape parity with the other entity view hooks (use-notes-view /
+   *  use-files-view / etc). */
+  isHydrated: boolean
 }
 
 /* ── Stage 1: User filters ────────────────────────────── */
@@ -298,6 +305,8 @@ export function useTemplatesView(contextKey: ViewContextKey = "templates"): UseT
     [setViewState, contextKey],
   )
 
+  const isHydrated = usePlotStore((s) => s._viewStateHydrated)
+
   return {
     groups,
     flatTemplates: sorted,
@@ -305,5 +314,6 @@ export function useTemplatesView(contextKey: ViewContextKey = "templates"): UseT
     totalCount,
     viewState,
     updateViewState,
+    isHydrated,
   }
 }

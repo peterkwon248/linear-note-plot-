@@ -13,7 +13,7 @@ import { INFOBOX_PRESETS } from "@/lib/wiki-infobox-presets"
 import { UrlInputDialog } from "@/components/editor/url-input-dialog"
 import { WikiFootnotesSection, WikiReferencesSection } from "./wiki-footnotes-section"
 import { cn } from "@/lib/utils"
-import { CaretDown } from "@phosphor-icons/react/dist/ssr/CaretDown"
+import { ChevronDown as CaretDown } from "lucide-react"
 import { computeSectionNumbers, getInitialContentJson, buildVisibleBlocks } from "@/lib/wiki-block-utils"
 import { useWikiBlockActions } from "@/hooks/use-wiki-block-actions"
 import {
@@ -51,7 +51,7 @@ function CollapsibleTOC({ sections, sectionNumbers }: {
         <span className="text-[1.0625em] font-semibold text-foreground/90">Contents</span>
         <CaretDown
           size={14}
-          weight="bold"
+          strokeWidth={2.5}
           className={cn(
             "text-muted-foreground/60 transition-transform duration-200",
             !open && "-rotate-90"

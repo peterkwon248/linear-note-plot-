@@ -10,7 +10,7 @@ import {
 import { BlockCommentMarker } from "@/components/comments/block-comment-marker"
 import { usePlotStore } from "@/lib/store"
 import { cn } from "@/lib/utils"
-import { DotsSixVertical } from "@phosphor-icons/react/dist/ssr/DotsSixVertical"
+import { GripVertical as DotsSixVertical } from "lucide-react"
 import {
   BANNER_SIZE_STYLES,
   BannerSettingsPopover,
@@ -109,7 +109,7 @@ export function WikiBannerBlock({
             className="p-0.5 text-muted-foreground cursor-grab"
             {...(dragHandleProps ?? {})}
           >
-            <DotsSixVertical size={14} weight="regular" />
+            <DotsSixVertical size={14} strokeWidth={2} />
           </button>
         </div>
       )}

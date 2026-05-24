@@ -7,16 +7,18 @@ import type { CommentAnchor, Comment, CommentStatus } from "@/lib/types"
 import { cn } from "@/lib/utils"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { CommentEditor, CommentBodyDisplay } from "./comment-editor"
-import { ChatCircle } from "@phosphor-icons/react/dist/ssr/ChatCircle"
-import { Trash } from "@phosphor-icons/react/dist/ssr/Trash"
-import { PaperPlaneRight } from "@phosphor-icons/react/dist/ssr/PaperPlaneRight"
-import { ArrowBendUpLeft } from "@phosphor-icons/react/dist/ssr/ArrowBendUpLeft"
-import { ArrowSquareOut } from "@phosphor-icons/react/dist/ssr/ArrowSquareOut"
-import { CaretDown } from "@phosphor-icons/react/dist/ssr/CaretDown"
-import { Circle } from "@phosphor-icons/react/dist/ssr/Circle"
-import { CircleDashed } from "@phosphor-icons/react/dist/ssr/CircleDashed"
-import { CheckCircle } from "@phosphor-icons/react/dist/ssr/CheckCircle"
-import { Warning } from "@phosphor-icons/react/dist/ssr/Warning"
+import {
+  MessageCircle as ChatCircle,
+  Trash2 as Trash,
+  Send as PaperPlaneRight,
+  CornerUpLeft as ArrowBendUpLeft,
+  SquareArrowOutUpRight as ArrowSquareOut,
+  ChevronDown as CaretDown,
+  Circle,
+  CircleDashed,
+  CircleCheck as CheckCircle,
+  TriangleAlert as Warning,
+} from "lucide-react"
 import { toast } from "sonner"
 
 interface CommentPopoverProps {
@@ -118,7 +120,7 @@ export function CommentPopover({
       )}
       title={totalCount > 0 ? `${openCount} open, ${totalCount - openCount} resolved` : "Add comment"}
     >
-      <ChatCircle size={14} weight={totalCount > 0 ? "fill" : "regular"} />
+      <ChatCircle size={14} fill={totalCount > 0 ? "currentColor" : "none"} strokeWidth={2} />
       {openCount > 0 && (
         <span className="absolute -top-0.5 -right-0.5 min-w-[14px] h-[14px] px-0.5 rounded-full bg-accent text-[9px] font-bold text-accent-foreground flex items-center justify-center">
           {openCount}
@@ -232,7 +234,7 @@ function CommentList({
           className="p-2 self-end rounded-md text-accent hover:bg-accent/10 disabled:opacity-30 disabled:pointer-events-none transition-colors"
           title="Send (Ctrl+Enter)"
         >
-          <PaperPlaneRight size={16} weight="fill" />
+          <PaperPlaneRight size={16} fill="currentColor" strokeWidth={2} />
         </button>
       </div>
     </div>
@@ -294,9 +296,9 @@ function StatusPicker({
         )}
         title="Change status"
       >
-        <StatusIcon size={12} weight={current === "done" ? "fill" : "regular"} />
+        <StatusIcon size={12} fill={current === "done" ? "currentColor" : "none"} strokeWidth={2} />
         <span>{meta.label}</span>
-        <CaretDown size={9} weight="bold" />
+        <CaretDown size={9} strokeWidth={2.5} />
       </button>
       {open && coords && typeof window !== "undefined" &&
         createPortal(
@@ -321,7 +323,7 @@ function StatusPicker({
                       s === current ? "text-foreground" : "text-muted-foreground/80",
                     )}
                   >
-                    <Icon size={11} weight={s === "done" ? "fill" : "regular"} className={m.color} />
+                    <Icon size={11} fill={s === "done" ? "currentColor" : "none"} strokeWidth={2} className={m.color} />
                     {m.label}
                     {s === current && <span className="ml-auto text-accent">•</span>}
                   </button>
@@ -503,7 +505,7 @@ function CommentItem({
             disabled={isBodyEmpty(replyDraft)}
             className="p-2 self-end rounded text-accent hover:bg-accent/10 disabled:opacity-30 transition-colors"
           >
-            <PaperPlaneRight size={14} weight="fill" />
+            <PaperPlaneRight size={14} fill="currentColor" strokeWidth={2} />
           </button>
         </div>
       )}
@@ -561,7 +563,7 @@ function ReplyItem({ reply }: { reply: Comment }) {
           className="opacity-0 group-hover:opacity-60 hover:!opacity-100 p-0.5 rounded text-muted-foreground hover:text-destructive transition-all"
           title="Delete reply"
         >
-          <Trash size={10} weight="regular" />
+          <Trash size={10} strokeWidth={2} />
         </button>
       </div>
     </li>

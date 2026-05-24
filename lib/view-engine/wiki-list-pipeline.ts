@@ -273,6 +273,7 @@ function compareSingleWiki(
   field: SortRule["field"],
   direction: SortRule["direction"],
   backlinksMap?: Map<string, number>,
+  depthMap?: Map<string, number>,
 ): number {
   const dir = direction === "asc" ? 1 : -1
 
@@ -293,11 +294,13 @@ function compareSingleWiki(
     case "updatedAt":
       return dir * (a.updatedAt < b.updatedAt ? -1 : a.updatedAt > b.updatedAt ? 1 : 0)
 
-    // Wiki-specific sort fields (used by wiki-category mode but harmless here)
+    // Tier = depth from root via parentArticleId. 0 = no parent (root).
+    // B10 (audit v2): depthMap is computed once by applyWikiSort when the
+    // sort chain includes "tier", then closure-passed to every compare call.
     case "tier": {
-      // Tier = depth from root via parentArticleId. 0 if no parent.
-      // Computed lazily — tier sort is rarely the primary chain in list mode.
-      return 0  // No depth lookup here; group.ts handles tier grouping
+      const da = depthMap?.get(a.id) ?? 0
+      const db = depthMap?.get(b.id) ?? 0
+      return dir * (da - db)
     }
     case "parent": {
       const ap = a.parentArticleId ?? ""
@@ -335,10 +338,15 @@ export function applyWikiSort(
 ): WikiArticle[] {
   if (articles.length <= 1) return articles
   const chain = sorts.length > 0 ? sorts : [{ field: "updatedAt" as const, direction: "desc" as const }]
+  // B10: build depthMap once iff tier sort is in the chain (avoids the
+  // O(N) traversal when tier sort is unused — most pipelines hit this hot
+  // path).
+  const needsDepth = chain.some((r) => r.field === "tier")
+  const depthMap = needsDepth ? buildWikiDepthMap(articles) : undefined
   const sorted = [...articles]
   sorted.sort((a, b) => {
     for (const rule of chain) {
-      const result = compareSingleWiki(a, b, rule.field, rule.direction, backlinksMap)
+      const result = compareSingleWiki(a, b, rule.field, rule.direction, backlinksMap, depthMap)
       if (result !== 0) return result
     }
     return 0

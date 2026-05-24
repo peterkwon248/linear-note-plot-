@@ -10,8 +10,7 @@ import {
   DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog"
-import { GitMerge } from "@phosphor-icons/react/dist/ssr/GitMerge"
-import { Trash } from "@phosphor-icons/react/dist/ssr/Trash"
+import { GitMerge, Trash2 as Trash } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { toast } from "sonner"
@@ -90,7 +89,7 @@ export function MergeDialog({
       <DialogContent className="max-w-sm gap-0 p-0 overflow-hidden">
         <DialogHeader className="px-5 pt-5 pb-3">
           <DialogTitle className="flex items-center gap-2 text-ui">
-            <GitMerge size={16} weight="regular" />
+            <GitMerge size={16} strokeWidth={2} />
             GitMerge Notes
           </DialogTitle>
           <DialogDescription className="text-note">
@@ -126,7 +125,7 @@ export function MergeDialog({
 
         {/* Info */}
         <div className="mx-5 mb-3 flex items-center gap-2 rounded-md bg-secondary/30 px-3 py-2">
-          <Trash className="shrink-0 text-muted-foreground/60" size={14} weight="regular" />
+          <Trash className="shrink-0 text-muted-foreground/60" size={14} strokeWidth={2} />
           <p className="text-2xs text-muted-foreground/70 leading-relaxed">
             Source notes will be trashed. Content, tags, and reads will be merged into the target.
           </p>
@@ -146,7 +145,7 @@ export function MergeDialog({
             onClick={handleMerge}
             className="bg-accent text-accent-foreground hover:bg-accent/90"
           >
-            <GitMerge size={14} weight="regular" />
+            <GitMerge size={14} strokeWidth={2} />
             GitMerge into &ldquo;{targetLabel}&rdquo;
           </Button>
         </DialogFooter>

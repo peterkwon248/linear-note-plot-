@@ -14,10 +14,7 @@ import React, {
   forwardRef,
 } from "react"
 import { FileText, Asterisk, Link as LinkIcon, Hash } from "@/lib/editor/editor-icons"
-import { CircleDashed } from "@phosphor-icons/react/dist/ssr/CircleDashed"
-import { CircleHalf } from "@phosphor-icons/react/dist/ssr/CircleHalf"
-import { CheckCircle } from "@phosphor-icons/react/dist/ssr/CheckCircle"
-import { BookOpen } from "@phosphor-icons/react/dist/ssr/BookOpen"
+import { CircleDashed, Contrast as CircleHalf, CircleCheck as CheckCircle, BookOpen } from "lucide-react"
 import { IconWikiStub, IconWikiArticle } from "@/components/plot-icons"
 import { NOTE_STATUS_HEX, WIKI_STATUS_HEX } from "@/lib/colors"
 import { usePlotStore } from "@/lib/store"
@@ -288,7 +285,7 @@ const WikilinkList = forwardRef<WikilinkListRef, WikilinkListProps>(
                         <>
                           <span className="text-accent text-2xs">+</span>
                           {/* Create-Wiki uses BookOpen (entity icon, matches activity bar). */}
-                          <BookOpen size={14} weight="regular" className="shrink-0 text-accent" />
+                          <BookOpen size={14} strokeWidth={2} className="shrink-0 text-accent" />
                           <span className="truncate font-medium text-foreground">{item.title}</span>
                           <span className="ml-auto shrink-0 text-2xs text-accent">+ Create Wiki</span>
                         </>

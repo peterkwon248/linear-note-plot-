@@ -77,7 +77,7 @@ import { isWikiStub } from "@/lib/wiki-utils"
 import { useSaveViewProps } from "@/lib/view-engine/use-save-view-props"
 import { useBookContextNav } from "@/hooks/use-book-context-nav"
 import { BookContextNav } from "@/components/books/book-context-nav"
-import { GalleryView, type GalleryGroup, type GalleryItem } from "@/components/views/gallery-view"
+// 2026-05-24: GalleryView import removed — gallery mode deprecated
 import { WikiTimelineView } from "@/components/views/wiki-timeline-view"
 import type { WikiArticle, WikiCategory } from "@/lib/types"
 
@@ -1246,59 +1246,12 @@ export function WikiView() {
             <WikiTimelineView
               articles={sortedFilteredWikiNotes}
               viewState={wikiViewState}
+              wikiGroups={wikiGroups}
               selectedIds={selectedArticleIds}
               activeArticleId={selectedWikiArticleId}
               onOpenArticle={openArticle}
               onSelect={(id, opts) => handleArticleSelect(id, opts)}
               onUpdateViewState={updateWikiViewState}
-            />
-          ) : wikiViewState.viewMode === "gallery" ? (
-            <GalleryView
-              groups={buildWikiGalleryGroups(sortedFilteredWikiNotes, wikiCategories)}
-              activeId={selectedWikiArticleId}
-              onItemClick={openArticle}
-              renderContextMenu={(item, card) => {
-                // Match wiki-list's row right-click — same handlers, same
-                // menu body via `WikiArticleMenuItems`. Lookup is required
-                // because GalleryItem only carries `id`/cosmetic fields.
-                const article = wikiArticles.find((a) => a.id === item.id)
-                if (!article) return card
-                return (
-                  <ContextMenu>
-                    <ContextMenuTrigger asChild>{card}</ContextMenuTrigger>
-                    <ContextMenuContent className="w-64 p-1">
-                      <WikiArticleMenuItems
-                        note={article}
-                        close={() => {/* Radix auto-closes after item click */}}
-                        onMerge={() => setWikiMergeSourceId(article.id)}
-                        onSplit={() => {
-                          setSelectedWikiArticleId(article.id)
-                          setIsEditingWikiArticle(true)
-                        }}
-                        onDelete={() => {
-                          trashWikiArticle(article.id)
-                          toast.success("Moved to trash")
-                        }}
-                        onShowConnected={(direction) => {
-                          const existingFilters = wikiViewState.filters ?? []
-                          const otherRules = existingFilters.filter((r) => r.field !== "connectedTo")
-                          updateWikiViewState({
-                            filters: [
-                              ...otherRules,
-                              { field: "connectedTo", operator: "eq", value: `${article.id}:${direction}` },
-                            ],
-                          })
-                          const dirLabel =
-                            direction === "in" ? "backlinks" :
-                            direction === "out" ? "links out" :
-                            "both directions"
-                          toast(`Filtering: connected to "${article.title}" (${dirLabel})`)
-                        }}
-                      />
-                    </ContextMenuContent>
-                  </ContextMenu>
-                )
-              }}
             />
           ) : wikiViewState.viewMode === "board" ? (
             <WikiBoard
@@ -1515,54 +1468,6 @@ function WikiPickerChevron({ currentArticleId, onSelect }: { currentArticleId: s
   )
 }
 
-/* ── Wiki gallery adapter: groups articles by status (Article / Stub) ──── */
-
-function buildWikiGalleryGroups(
-  articles: WikiArticle[],
-  categories: WikiCategory[],
-): GalleryGroup[] {
-  const categoryById = new Map(categories.map((c) => [c.id, c]))
-  const articlesBucket: GalleryItem[] = []
-  const stubsBucket: GalleryItem[] = []
-
-  for (const a of articles) {
-    const stub = isWikiStub(a)
-    const firstCategory = a.categoryIds?.[0] ? categoryById.get(a.categoryIds[0]) : undefined
-    const categoryColor = firstCategory?.color ?? null
-    // Accent priority: category color → wiki status hex → wiki space color.
-    const accentColor =
-      categoryColor ||
-      (stub ? WIKI_STATUS_HEX.stub : WIKI_STATUS_HEX.article) ||
-      SPACE_COLORS.wiki
-
-    // Find first image block as cover (optional).
-    const firstImageBlock = a.blocks.find((b) => b.type === "image") as { url?: string } | undefined
-    const coverImage = firstImageBlock?.url
-
-    // Excerpt: first text block.
-    const firstTextBlock = a.blocks.find((b) => b.type === "text") as { text?: string } | undefined
-    const excerpt = (firstTextBlock?.text ?? "").slice(0, 200)
-
-    const categoryNames = (a.categoryIds ?? [])
-      .map((id) => categoryById.get(id)?.name)
-      .filter(Boolean) as string[]
-
-    const item: GalleryItem = {
-      id: a.id,
-      title: a.title || "Untitled",
-      excerpt,
-      accentColor,
-      coverImage,
-      badge: { label: stub ? "Stub" : "Article" },
-      metaLeft: categoryNames,
-      metaRight: [`${a.blocks.length} block${a.blocks.length === 1 ? "" : "s"}`, shortRelative(a.updatedAt)],
-    }
-    if (stub) stubsBucket.push(item)
-    else articlesBucket.push(item)
-  }
-
-  return [
-    { id: "articles", label: "Articles", items: articlesBucket },
-    { id: "stubs", label: "Stubs", items: stubsBucket },
-  ].filter((g) => g.items.length > 0)
-}
+// 2026-05-24: buildWikiGalleryGroups + articleToGalleryItem removed —
+// gallery mode deprecated app-wide. Grid view replaces it via the existing
+// grid renderer in wiki-list.

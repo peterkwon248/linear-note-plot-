@@ -6,6 +6,157 @@
 
 ---
 
+## 2026-05-24 — Windows, **거대 세션: PR-X5/X6 + Activity bar lucide + PR-B/B2/C (audit v2 완성) + Notes/Books Timeline + Gallery 폐기**
+
+> 🎯 **다음 즉시 액션 (다음 세션 시작점)**: **Notes timeline에 ViewHeader (filter/display panel) 추가** — 사용자 신고 "노트 타임라인 위에 필터/디스플레이 등이 사라졌어. 위키/북스처럼 만들어줘."
+>
+> **사용자 의도 (정확 인용)**: "야 노트는 왜 위에 필터, 디스플레이 등등이 사라졌어? 타임라인이 제대로 구현이 안 됐는데? 노트는? ... 다음 세션에서 가장 먼저 할 일을 이걸로 해. 노트의 타임라인 뷰를 필터랑 디스플레이 생기게(위키랑 북스처럼)"
+>
+> **근본 원인**:
+> - Wiki/Books는 view-level orchestrator (`wiki-view.tsx`, `books-view.tsx`)가 `ViewHeader` 자체 렌더 → timeline mode에서도 ViewHeader 보임
+> - Notes는 `NotesTable`이 자체에서 `ViewHeader` 호출. `NotesTableView`가 viewMode === "timeline" 분기에서 `NotesTimelineShell`만 render → ViewHeader 누락
+>
+> **첫 스텝** (다른 머신에서 바로):
+> 1. `components/notes-table.tsx`에서 ViewHeader 호출 코드 grep (어떤 props 받고 어디 render되는지 확인). 보통 line 280-330대 `<ViewHeader ... />`.
+> 2. `components/notes-timeline-shell.tsx`에 동일 ViewHeader render 추가 — `useNotesView`에서 받은 `viewState`, `updateViewState`, `filterCategories` (NOTES_VIEW_CONFIG에서) 등 전달
+> 3. 또는 `components/notes-table-view.tsx`에서 timeline 분기를 `NotesTable`의 ViewHeader render 부분과 통합 (NotesTable이 viewMode 분기 자체에서 timeline 처리 — 더 정통)
+>
+> **컴포넌트 구조** (현재):
+> ```
+> NotesTableView (notes-table-view.tsx)
+>   ├─ viewMode === "timeline" → NotesTimelineShell → NotesTimelineView  ← ViewHeader X
+>   ├─ viewMode === "board" → NotesBoard  ← ViewHeader X (board가 자체로 갖나? 확인)
+>   └─ viewMode === default → NotesTable  ← ViewHeader O (자체 호출)
+> ```
+>
+> **데이터 흐름 — Wiki/Books와 비교**:
+> - `wiki-view.tsx`: 1) ViewHeader render (자체) → 2) viewMode 분기 (timeline / board / list / grid)
+> - `books-view.tsx`: 1) ViewHeader render → 2) viewMode 분기 (timeline / board / grid / list)
+> - `notes-table-view.tsx`: viewMode 분기만, ViewHeader는 NotesTable 안에 — Notes만 다른 패턴
+>
+> **추천 path** = NotesTimelineShell이 ViewHeader도 render (Wiki/Books와 정합). 또는 NotesTableView refactor — viewMode 분기 이전에 ViewHeader render + NotesTable의 ViewHeader 호출 제거. 후자가 정통이지만 NotesTable 큰 refactor.
+>
+> 가장 단순 form 첫 시도: NotesTimelineShell이 ViewHeader render (Shell 안에서 self-contained).
+>
+> **위험 + 회피**:
+> - NotesTable이 자체 ViewHeader 가지므로 NotesTimelineShell도 자체 ViewHeader 가지면 OK. 단 ViewHeader props 일치 필요 (config, viewState, onUpdate, filterCategories, hideCreateButton 등)
+> - 사용자 명시: BooksTimelineShell 패턴은 안 만들었음 (books-view가 직접 BooksTimelineView 호출). Notes는 NotesTimelineShell 패턴 — 다른 구조.
+>
+> **참고 파일** (작업 시 read):
+> - `components/notes-table.tsx` (line 280-330 ViewHeader 호출 위치 — props 검토)
+> - `components/notes-timeline-shell.tsx` (현재 구현 — ViewHeader 추가 대상)
+> - `components/views/wiki-view.tsx` (ViewHeader render 패턴 reference)
+> - `components/views/books-view.tsx` (ViewHeader render 패턴 reference)
+>
+> **2번째 P0 후보** (#1 끝나면): File 엔티티 v1 구현 (`.omc/plans/file-entity-prd.md` v0.2).
+>
+> **머신**: Windows. 다음도 cross-machine 가능.
+> **현재 main HEAD**: 이번 PR 머지 후 (PR `#???` — 머지 시 갱신).
+> **branch worktree**: 새 worktree 권장 (이번 worktree `tender-rosalind` 머지 시 정리).
+
+### 완료 (이번 세션, 단일 거대 PR — 93 파일 / +1891 −2622)
+
+**PR-X5 + PR-X6 — Lucide 마이그레이션 68 파일** (Stone/Brick/Block + Wiki Stub/Article 제외 모두 lucide):
+- PR-X5 (24 파일): `components/editor/*` 8 + `components/wiki-editor/*` 13 + `components/comments/*` 3
+- PR-X6 (44 파일): notes-table/notes-board/note-editor/display-panel/property-chips (가장 큰 27/21/16/11/19 imports) + books mid+large 10 + home 4 + ontology 4 + inspector + insights + calendar + board-workbench + wiki-* (assembly/board-workbench/merge-preview/template-picker) + 기타
+
+**Activity bar + plot-icons 전체 lucide** (사용자 결정 "Stone/Brick/Block 제외 모두"):
+- `components/plot-icons.tsx` 전체 재작성 — 자체 SVG 25+ 함수 → lucide alias wrap (default size 유지, strokeWidth=1.5 mockup tone)
+- Activity bar 9 icon (Home/Inbox/Notes/Wiki/Ontology/Calendar/Sun/Moon/Gear), Sidebar nav 7 (Doc/Folder/Tag/Label/Template/Insight/Pin), Action 14 (Search/Plus/Chevron/Trash/Sort/More/Sparkle/Check/Snooze/ArrowLeft/SplitView/Filter/PanelRight/PanelLeftClose) — 모두 lucide wrap
+- Brand 5종 유지: IconStone (phosphor Hexagon), IconBrick (phosphor Cube), IconBlock (Cuboid2x2 자체 SVG), IconWikiStub (lucide Book), IconWikiArticle (lucide BookMarked)
+- 사용자 명시 후 IconWikiStub/IconWikiArticle도 lucide (Book/BookMarked)로 옮김
+
+**PR-B Foundation (audit v2) — declarative modes**:
+- `lib/view-engine/view-configs.tsx`: ModeList / GroupingOption / OrderingOption / DisplayProperty.modes / DisplayConfig.defaultGroupByByMode / defaultSortByMode 타입 신설 + `getViewConfigForContext(ctx)` export
+- 11 ViewConfig modes 일괄 선언 (firstLetter→list-only, family→list-only, Wiki/Books date→timeline 차단, defaultGroupByByMode 명시)
+- `components/display-panel.tsx`: isGroupingModeAllowed + isPropertyModeAllowed helper, default property modes ["list", "board"]
+- `lib/view-engine/defaults.ts`: applyModeAwareGroupBy + normalizeViewState mode-aware auto-cleanup
+
+**PR-B2 — 갭 해소** (5 sub-tasks):
+- B11: References groupBy 로컬 state 제거 → viewState.groupBy 단일화 (types.ts GroupBy union에 "type"/"fieldKey" 추가)
+- B6: timeline-label-column visibleColumns prop + updatedAt/createdAt 분기 (Wiki properties createdAt/updatedAt modes에 "timeline" 추가)
+- B12: templates grid가 groupBy !== "none"일 때 그룹 헤더 band + 카드 grid per group 렌더
+- B5: wiki gallery `buildWikiGalleryGroups`에 wikiGroups 인자 추가 (entity-agnostic) — *그 후 PR에서 gallery 폐기로 함수 자체 제거*
+- B4: WikiTimelineView articles 그룹 순서 정렬 + groupBoundaries (label-column header band + canvas divider line via TimelineGrid)
+
+**PR-C polish**:
+- B10: wiki tier sort 구현 (compareSingleWiki depthMap arg + applyWikiSort에서 chain에 "tier" 있을 때만 buildWikiDepthMap 호출)
+- B14: use-templates-view에 isHydrated 추가 (다른 entity hook과 shape parity)
+- B13: applyBookGrouping에 BookGroupingOptions ({ showEmptyGroups?, groupOrder? }) — Books board가 Notes/Wiki와 동일하게 빈 그룹 표시 + 컬럼 manual reorder 지원
+
+**Spacing/icon polish**:
+- `.a-row__icon` (globals.css) — width/height/background/border-radius 제거 → 22×22 tinted box 사라짐, color tone만 유지 (Linear/Plain reference 톤)
+- `components/books/book-table.tsx` header h-9 → py-2 / row h-9 → py-2.5 (Notes/Wiki list parity — Books가 가장 좁았던 행 간격 통일)
+
+**Notes/Books Timeline 신규** (generic refactor + 3 신규 파일):
+- Sub-components 7개 generic화: `wiki-timeline-config.ts` (TimelineEntity/EntityTimelineAdapter/LanedItem<T>), `wiki-timeline-utils.ts` (laneArticles/computeAllFit generic), timeline-bar (statusColor + canEditHorizon), timeline-label-column (getStatusColor/renderStatusIcon callbacks), timeline-tooltip (getStatusColor/renderStatusIcon/getStatusLabel/renderHorizonLine callbacks), timeline-event-markers (TimelineEntity), timeline-grid (LanedItem<TimelineEntity>)
+- 신규 `components/views/notes-timeline-view.tsx` (~330줄) — Note adapter inline (IconStone/Brick/Block + NOTE_STATUS_HEX), horizon = updatedAt, canEditHorizon = false, events 제외, TimelineEventMarkers는 start chip만 빈 events Map 전달
+- 신규 `components/notes-timeline-shell.tsx` — useNotesView + selectedIds + handlers wrapper
+- 신규 `components/views/books-timeline-view.tsx` (~310줄) — Book adapter inline (Zap/Sparkles/Pencil + indigo/amber/slate per kind), shell 불필요 (books-view가 직접 호출)
+- `notes-table-view.tsx`에 viewMode === "timeline" 분기 추가
+- `books-view.tsx`에 viewMode === "timeline" 분기 추가
+- NOTES_VIEW_CONFIG / BOOKS_VIEW_CONFIG에 timeline mode + defaultGroupByByMode.timeline + defaultSortByMode.timeline 추가
+- WikiTimelineView caller adapter inline (wiki는 회귀 0 — wikiAdapter inline)
+
+**Gallery 전수 폐기 → Grid view 통일** (사용자 결정):
+- types.ts ViewMode union + VALID_VIEW_MODES에서 "gallery" 제거
+- normalizeViewState: "gallery" → "grid" alias 자동 마이그레이션 (persisted 데이터 보존)
+- 4 ViewConfig (NOTES/WIKI/REFERENCES/BOOKS) supportedModes에서 gallery 제거
+- display-panel.tsx MODE_DEFS에서 gallery 탭 제거
+- 4 view 분기 (notes-table-view / books-view / wiki-view / library-view) gallery 케이스 + import + 미사용 함수 정의 (buildWikiGalleryGroups, articleToGalleryItem, buildReferencesGalleryItems) 제거
+- 파일 삭제: `components/views/gallery-view.tsx`, `gallery-view-shell.tsx`, `components/books/books-gallery-adapter.tsx`
+- 부수 효과: Books DisplayPanel 탭이 5→4로 줄어 timeline 탭 잘림 자동 해소
+
+**Wiki timeline 선 단순화** (사용자 명시 "위키 선도 노트/북스처럼"):
+- `timeline-bar.tsx` D1 past/future opacity gradient 제거 — 단일 status color, full opacity
+- 이전: wiki bar의 future part (plannedDate 미래) 흐림 (0.55 opacity). Notes/Books는 horizon=updatedAt이라 future 0 → 단단함. 불일치 해소
+
+검증: tsc clean (전 단계), npm run build exit 0 (최종)
+
+### 브레인스토밍 & 큰 결정 (영구 LOCKED)
+
+- **#98 — Gallery 폐기, Grid 통일** (2026-05-24, LOCKED): 사용자 결정. Grid view가 시각 더 깔끔. 4 entity (Notes/Wiki/References/Books)에서 통일 + 자동 마이그레이션 (gallery → grid).
+- **#99 — Wiki timeline bar 단일 색** (2026-05-24, LOCKED): D1 past/future gradient는 wiki plannedDate 있는 article에서만 의미 있었음. Notes/Books와 시각 불일치 → 폐기. 모든 entity bar가 status color full opacity.
+- **#100 — Activity bar + sidebar nav + action icons 모두 lucide 통일** (2026-05-24, LOCKED): 영구 룰 #95 update — phosphor 유지는 "brand 5종 (Stone/Brick/Block + Stub/Article)"이 아니라 **brand 3종 (Stone/Brick/Block)만**. Wiki Stub/Article은 lucide Book/BookMarked로 옮김. shadcn 정통 더 엄격 적용.
+- **#101 — Timeline = entity-agnostic sub-components + entity adapter** (2026-05-24, LOCKED): WikiTimelineView가 entity adapter prop 받지는 않지만 sub-components (timeline-bar/grid/label-column/tooltip/event-markers/utils) 모두 generic<T extends TimelineEntity>. Notes/Books는 신규 wrapper. 향후 entity 추가 시 wrapper만 만들면 됨.
+- **#102 — Notes timeline는 Shell 패턴, Books timeline은 직접 호출** (2026-05-24): NotesTable이 자체 ViewHeader 가지므로 NotesTimelineShell이 useNotesView + handlers wrapper로 분리. Books는 books-view가 useBooksView 직접 호출 → BooksTimelineView를 직접 호출하면 됨. *결과: Notes timeline에 ViewHeader 누락 — 다음 세션 P0 #1.*
+- **#103 — `.a-row__icon` 박스 폐기** (2026-05-24): 22×22 tinted square가 hover overlay처럼 느껴짐. color tone만 유지. Linear/Plain 톤 정합.
+- **#104 — Books row height = Notes parity** (2026-05-24): book-table.tsx의 h-9 (36px 고정) → py-2.5. 모든 entity list row 동일.
+
+### 기술 학습 (영구)
+
+- **lucide 마이그레이션 일관 변환 룰** (PR-X1~X6 누적): regular→strokeWidth=2 / bold→2.5 / light→1.5 / fill→fill="currentColor" + strokeWidth=2 / duotone→strokeWidth=1.5 / dynamic `weight={cond?"fill":"regular"}`→`fill={cond?"currentColor":"none"} strokeWidth={2}`. import block 통째 교체 (alias 유지) → replace_all로 weight 변환 → tsc 매 batch.
+- **brand vs lucide 컴포넌트 구별** — Plot 자체 컴포넌트 (Hexagon wrap, Cube wrap, Cuboid2x2 자체)는 phosphor weight prop만 받음. strokeWidth 박으면 TS error. lucide 변환 대상에서 의도적 제외.
+- **`weight: "regular" as const` helper 패턴** (comments-by-entity 사례) — JSX 외 helper에서 weight 박은 곳도 fix 필요. `strokeWidth: 2`로 변환.
+- **Generic timeline 추출 패턴** — sub-components를 `T extends TimelineEntity` generic하게 + status icon/color/horizon/eventRef는 adapter callback prop. caller (wiki/notes/books)가 adapter inline. duplication 0, 회귀 risk 0 (wiki 그대로).
+- **dead branch + dead function 정리** — gallery 분기 제거 시 import + 정의 함수 (buildWikiGalleryGroups, articleToGalleryItem, buildReferencesGalleryItems) 모두 제거. tsc unused 못 잡으므로 grep으로 수동 확인.
+- **alias migration for deprecated viewMode** — types.ts에서 "gallery" 제거하면 사용처 type error. normalizeViewState에 alias ("gallery" → "grid") 추가로 persisted 데이터 자동 변환. Store-level migration 불필요.
+
+### Watch Out (다음 세션)
+
+- **🔴 Notes timeline ViewHeader 누락** (가장 큰 미완) — 사용자가 명시. P0 #1. NotesTimelineShell에 ViewHeader 추가 또는 NotesTableView refactor.
+- **WikiTimelineView vs NotesTimelineView vs BooksTimelineView의 패턴 차이** — Wiki는 직접 ViewHeader 외부 (wiki-view.tsx) / Notes는 NotesTable 자체 ViewHeader / Books는 books-view.tsx 외부. 일관성 위해 NotesTableView refactor 가치 있음. 단 회귀 risk 큼.
+- **D1 gradient 제거** — wiki bar의 future part 시각 단서 사라짐. 사용자가 plannedDate 의도하면 다른 방식 (예: stroke dasharray) 필요할 수도. 사용자 시각 후 redirect 가능.
+- **PR 크기 매우 큼** (93 파일 / +1891 −2622) — 머지 후 회귀 발견 시 디버깅 어려움. 사용자 본인 viewport 시각 검증 권장.
+- **dev server stale possibility** — 거대 refactor 후 `.next` 캐시 stale 가능. before-work 시 의심되면 `.next` 삭제 + dev restart.
+- **TimelineBar의 nowX prop unused** — D1 gradient 제거 후 nowX 사용처 없음. caller는 그대로 전달. unused param TS warning 안 남. 정리 후속.
+
+### 환경 변경
+
+- Store v144 무변경 (전부 view layer + types/utils refactor)
+- 신규 파일 3: `components/notes-timeline-shell.tsx`, `components/views/notes-timeline-view.tsx`, `components/views/books-timeline-view.tsx`
+- 삭제 파일 3: `components/views/gallery-view.tsx`, `components/views/gallery-view-shell.tsx`, `components/books/books-gallery-adapter.tsx`
+- 변경 파일 87 (lucide 마이그레이션 68 + audit/refactor/spacing/timeline 19)
+- types.ts ViewMode union에서 "gallery" 제거 + VALID_VIEW_MODES 정리
+- GroupBy union에 "type"/"fieldKey" 추가 (References viewState 단일화)
+- view-configs.tsx: ModeList/GroupingOption/OrderingOption/DisplayConfig.defaultGroupByByMode/defaultSortByMode 타입 신설 + getViewConfigForContext export
+
+### 머신
+
+Windows. 거대 세션 (20+ 라운드 사용자 대화 + 93 파일 + 1 audit 적용 완성 + 4 신규 timeline 컴포넌트 + gallery 폐기).
+
+---
+
 ## 2026-05-23 (후속) — 다른컴퓨터/Windows, **DP/Grouping/Ordering Audit v2 + PR-A 데이터 무결성 5건 + Lucide 마이그레이션 90 파일 (PR-X1~X4)**
 
 > 🎯 **다음 즉시 액션 (다음 세션 시작점)**: **PR-X5 진입 — Editor + wiki block + comments lucide 마이그레이션 (~30 파일).** 그리고 audit §8 결정사항(timeline default groupBy / PR-B2 같이 갈지 / Library hook 통합) 사용자 답변 받으면 PR-B(modes 선언 + filter + auto-cleanup) 진입.

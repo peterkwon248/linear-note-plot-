@@ -64,7 +64,7 @@ import { persistAttachmentBlob } from "@/lib/store/helpers"
 import type { Reference, Attachment } from "@/lib/types"
 import { STATUS_COLORS, KNOWLEDGE_INDEX_COLORS } from "@/lib/colors"
 import { ReferenceDetailPanel } from "@/components/side-panel/reference-detail-panel"
-import { GalleryView, type GalleryItem } from "@/components/views/gallery-view"
+// 2026-05-24: GalleryView import removed — gallery mode deprecated
 
 /* ── Index (firstLetter) grouping — Files ───────── */
 
@@ -1599,10 +1599,12 @@ function ReferencesView() {
   const [search, setSearch] = useState("")
   const [quickFilter, setQuickFilter] = useState<QuickFilterType>("all")
   const [activeFieldKeys, setActiveFieldKeys] = useState<Set<string>>(new Set())
-  // PR group-c-d-4: sort moved into viewState (persisted via view-engine).
-  // groupBy / groupFieldKey kept local — multi-state with dynamic field key
-  // selector doesn't fit viewState.groupBy union (future PR can lift).
-  const [groupBy, setGroupBy] = useState<"none" | "type" | "fieldKey">("none")
+  // B11 (audit v2): groupBy lifted into viewState (single source of truth).
+  // The selected groupBy axis lives in viewState.groupBy ("none" | "type" |
+  // "fieldKey" | "firstLetter"). Only `groupFieldKey` — which key string to
+  // group by when groupBy === "fieldKey" — stays as local React state because
+  // it's a dynamic value (depends on the current refs' infobox fields) and
+  // doesn't belong on the GroupBy enum.
   const [groupFieldKey, setGroupFieldKey] = useState<string | null>(null)
   const lastClickedIdRef = useRef<string | null>(null)
 
@@ -1688,7 +1690,7 @@ function ReferencesView() {
     updateViewState,
   } = useReferencesView(filteredRefs)
   const isGridMode = viewState.viewMode === "grid"
-  const isGalleryMode = viewState.viewMode === "gallery"
+  // 2026-05-24: gallery mode deprecated — Grid covers the card layout.
   const sortField = viewState.sortFields[0]?.field ?? "updatedAt"
   const sortDirection = viewState.sortFields[0]?.direction ?? "desc"
 
@@ -1726,16 +1728,16 @@ function ReferencesView() {
   }, [viewState.sortFields, updateViewState])
 
   const groupedReferences = useMemo(() => {
-    if (groupBy === "none") return null
+    if (viewState.groupBy === "none" || viewState.groupBy === "firstLetter") return null
 
     const groups: { label: string; items: typeof referenceList }[] = []
 
-    if (groupBy === "type") {
+    if (viewState.groupBy === "type") {
       const links = referenceList.filter((r) => r.fields.some((f) => f.key.toLowerCase() === "url"))
       const citations = referenceList.filter((r) => !r.fields.some((f) => f.key.toLowerCase() === "url"))
       if (links.length > 0) groups.push({ label: "Links", items: links })
       if (citations.length > 0) groups.push({ label: "Citations", items: citations })
-    } else if (groupBy === "fieldKey" && groupFieldKey) {
+    } else if (viewState.groupBy === "fieldKey" && groupFieldKey) {
       const withKey = referenceList.filter((r) => r.fields.some((f) => f.key.trim() === groupFieldKey))
       const withoutKey = referenceList.filter((r) => !r.fields.some((f) => f.key.trim() === groupFieldKey))
       if (withKey.length > 0) groups.push({ label: `Has "${groupFieldKey}"`, items: withKey })
@@ -1743,7 +1745,7 @@ function ReferencesView() {
     }
 
     return groups.length > 0 ? groups : null
-  }, [referenceList, groupBy, groupFieldKey])
+  }, [referenceList, viewState.groupBy, groupFieldKey])
 
   // Clear selection if reference was deleted
   useEffect(() => {
@@ -2016,41 +2018,24 @@ function ReferencesView() {
               ))}
             </div>
 
-            {/* Group by */}
+            {/* Group by — B11: single source of truth (viewState.groupBy) */}
             <div className="text-2xs font-medium text-muted-foreground mb-2">Group by</div>
             <div className="flex flex-wrap gap-1">
-              {/* Index (firstLetter) — viewState.groupBy */}
-              <button
-                onClick={() => {
-                  updateViewState({ groupBy: viewState.groupBy === "firstLetter" ? "none" : "firstLetter" })
-                  setGroupBy("none")
-                  setGroupFieldKey(null)
-                }}
-                className={cn(
-                  "px-2.5 py-1 rounded-md text-2xs font-medium transition-colors",
-                  viewState.groupBy === "firstLetter"
-                    ? "bg-accent/10 text-accent"
-                    : "text-muted-foreground hover:bg-hover-bg hover:text-foreground"
-                )}
-              >
-                Index
-              </button>
               {([
                 { value: "none" as const, label: "None" },
                 { value: "type" as const, label: "Type" },
                 { value: "fieldKey" as const, label: "Field Key" },
+                { value: "firstLetter" as const, label: "Index" },
               ]).map(({ value, label }) => (
                 <button
                   key={value}
                   onClick={() => {
-                    setGroupBy(value)
+                    updateViewState({ groupBy: value })
                     if (value !== "fieldKey") setGroupFieldKey(null)
-                    // Selecting a local group clears the firstLetter grouping
-                    if (viewState.groupBy === "firstLetter") updateViewState({ groupBy: "none" })
                   }}
                   className={cn(
                     "px-2.5 py-1 rounded-md text-2xs font-medium transition-colors",
-                    groupBy === value && viewState.groupBy !== "firstLetter"
+                    viewState.groupBy === value
                       ? "bg-accent/10 text-accent"
                       : "text-muted-foreground hover:bg-hover-bg hover:text-foreground"
                   )}
@@ -2061,7 +2046,7 @@ function ReferencesView() {
             </div>
 
             {/* Field key selector when groupBy === "fieldKey" */}
-            {groupBy === "fieldKey" && fieldKeys.length > 0 && (
+            {viewState.groupBy === "fieldKey" && fieldKeys.length > 0 && (
               <div className="mt-2 flex flex-wrap gap-1">
                 {fieldKeys.map((key) => (
                   <button
@@ -2105,34 +2090,6 @@ function ReferencesView() {
             <SearchEmpty query={search} />
           ) : (
             <EmptyReferences onCreate={handleCreate} />
-          )
-        ) : isGalleryMode ? (
-          isRefLetterGrouped ? (
-            /* Gallery + Index grouping: render group headers between GalleryView segments */
-            <div>
-              {refLetterGroups.map((g) => (
-                <div key={g.key}>
-                  <div className="a-tg px-4">
-                    <span />
-                    <span />
-                    <span className="a-tg__label">{g.label}</span>
-                    <span className="a-tg__count tabular-nums">{g.items.length}</span>
-                    <div className="a-tg__line" />
-                  </div>
-                  <GalleryView
-                    items={buildReferencesGalleryItems(g.items)}
-                    activeId={selectedId}
-                    onItemClick={handleRowClick}
-                  />
-                </div>
-              ))}
-            </div>
-          ) : (
-            <GalleryView
-              items={buildReferencesGalleryItems(referenceList)}
-              activeId={selectedId}
-              onItemClick={handleRowClick}
-            />
           )
         ) : isGridMode ? (
           /* ── Grid Mode (PR group-c-d-4) ── */
@@ -2342,25 +2299,6 @@ export function LibraryView() {
   )
 }
 
-/* ── References gallery adapter ─────────────────────────────────────────── */
-
-function buildReferencesGalleryItems(
-  refs: ReferenceWithMeta[],
-): GalleryItem[] {
-  return refs.map((r) => {
-    // Accent: KNOWLEDGE_INDEX_COLORS.references hex (Plot canonical reference color).
-    const accentColor = KNOWLEDGE_INDEX_COLORS.references.hex
-    return {
-      id: r.id,
-      title: r.title || "Untitled Reference",
-      excerpt: r.content?.trim().slice(0, 200),
-      accentColor,
-      coverImage: r.imageUrl || undefined,
-      badge: r.refType ? { label: r.refType } : undefined,
-      metaLeft: undefined,
-      metaRight: [
-        `${r.fieldCount} field${r.fieldCount === 1 ? "" : "s"}`,
-      ],
-    } satisfies GalleryItem
-  })
-}
+// 2026-05-24: buildReferencesGalleryItems removed — gallery mode
+// deprecated app-wide. Grid view replaces it via the existing grid
+// renderer in references-view.

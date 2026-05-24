@@ -11,14 +11,16 @@ import {
   navboxForegroundClass,
 } from "@/lib/wiki-color-contrast"
 import { BannerColorPickerPopover } from "@/components/editor/nodes/banner-block-node"
-import { ArrowRight } from "@phosphor-icons/react/dist/ssr/ArrowRight"
-import { BookOpen } from "@phosphor-icons/react/dist/ssr/BookOpen"
-import { LinkSimple } from "@phosphor-icons/react/dist/ssr/LinkSimple"
-import { X as PhX } from "@phosphor-icons/react/dist/ssr/X"
-import { DotsThree } from "@phosphor-icons/react/dist/ssr/DotsThree"
-import { DotsSixVertical } from "@phosphor-icons/react/dist/ssr/DotsSixVertical"
-import { Trash } from "@phosphor-icons/react/dist/ssr/Trash"
-import { PaintBucket } from "@phosphor-icons/react/dist/ssr/PaintBucket"
+import {
+  ArrowRight,
+  BookOpen,
+  Link as LinkSimple,
+  X as PhX,
+  MoreHorizontal as DotsThree,
+  GripVertical as DotsSixVertical,
+  Trash2 as Trash,
+  PaintBucket,
+} from "lucide-react"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import type { DraggableSyntheticListeners } from "@dnd-kit/core"
 import { BlockCommentMarker } from "@/components/comments/block-comment-marker"
@@ -151,7 +153,7 @@ export function NavigationBlock({ block, articleId, editable, onUpdate, onDelete
           className="mt-2 p-0.5 opacity-0 group-hover/nav:opacity-30 hover:!opacity-100 cursor-grab shrink-0 text-muted-foreground transition-opacity duration-100"
           {...(dragHandleProps ?? {})}
         >
-          <DotsSixVertical size={14} weight="regular" />
+          <DotsSixVertical size={14} strokeWidth={2} />
         </button>
 
         <div className="relative flex-1">
@@ -170,7 +172,7 @@ export function NavigationBlock({ block, articleId, editable, onUpdate, onDelete
                   onClick={(e) => { e.stopPropagation(); setMenuOpen(true) }}
                   className="opacity-0 group-hover/nav:opacity-30 hover:!opacity-100 p-1 text-muted-foreground hover:text-foreground transition-all duration-100"
                 >
-                  <DotsThree size={14} weight="bold" />
+                  <DotsThree size={14} strokeWidth={2.5} />
                 </button>
               </PopoverTrigger>
               <PopoverContent align="end" className="w-44 p-1" onOpenAutoFocus={(e) => e.preventDefault()} style={{ fontSize: '13px' }}>
@@ -179,7 +181,7 @@ export function NavigationBlock({ block, articleId, editable, onUpdate, onDelete
                     onClick={() => { setMenuOpen(false); onDelete() }}
                     className="flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-2xs text-destructive hover:bg-active-bg transition-colors"
                   >
-                    <Trash size={14} weight="regular" />
+                    <Trash size={14} strokeWidth={2} />
                     Delete navigation
                   </button>
                 )}
@@ -231,7 +233,7 @@ export function NavigationBlock({ block, articleId, editable, onUpdate, onDelete
                   : "text-muted-foreground/60 hover:text-foreground hover:bg-hover-bg",
               )}
             >
-              <PaintBucket size={11} weight="regular" />
+              <PaintBucket size={11} strokeWidth={2} />
             </button>
             {showHeaderColor && (
               <BannerColorPickerPopover
@@ -335,7 +337,7 @@ function SlotDisplay({
 function Divider() {
   return (
     <div className="flex items-center justify-center text-muted-foreground/70 px-1.5">
-      <ArrowRight size={14} weight="regular" />
+      <ArrowRight size={14} strokeWidth={2} />
     </div>
   )
 }
@@ -370,14 +372,14 @@ function SlotEditor({
         <div className="flex items-center gap-1">
           {linkedArticle ? (
             <div className="flex-1 min-w-0 flex items-center gap-1 rounded-md bg-accent/10 px-1.5 py-0.5 text-2xs">
-              <BookOpen size={10} weight="regular" className="text-accent/70 shrink-0" />
+              <BookOpen size={10} strokeWidth={2} className="text-accent/70 shrink-0" />
               <span className="truncate text-foreground/80">{linkedArticle.title}</span>
               <button
                 onClick={clearArticle}
                 className="p-0.5 text-muted-foreground/60 hover:text-destructive shrink-0"
                 title="Remove article link"
               >
-                <PhX size={9} weight="bold" />
+                <PhX size={9} strokeWidth={2.5} />
               </button>
             </div>
           ) : (
@@ -385,7 +387,7 @@ function SlotEditor({
               onClick={onPickArticle}
               className="flex-1 inline-flex items-center gap-1 rounded-md border border-dashed border-border-subtle px-1.5 py-0.5 text-2xs text-muted-foreground/70 hover:border-border hover:text-foreground transition-colors justify-center"
             >
-              <LinkSimple size={10} weight="regular" />
+              <LinkSimple size={10} strokeWidth={2} />
               Link article
             </button>
           )}

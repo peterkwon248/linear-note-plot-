@@ -5,8 +5,7 @@ import { usePlotStore } from "@/lib/store"
 import { RELATION_TYPES, RELATION_TYPE_CONFIG } from "@/lib/relation-helpers"
 import type { RelationType } from "@/lib/types"
 import { cn } from "@/lib/utils"
-import { MagnifyingGlass } from "@phosphor-icons/react/dist/ssr/MagnifyingGlass"
-import { X as PhX } from "@phosphor-icons/react/dist/ssr/X"
+import { Search as MagnifyingGlass, X as PhX } from "lucide-react"
 
 interface RelationPickerProps {
   sourceNoteId: string
@@ -44,7 +43,7 @@ export function RelationPicker({ sourceNoteId, onAdd, onClose }: RelationPickerP
       <div className="flex items-center justify-between">
         <span className="text-2xs font-medium text-muted-foreground">Add Relation</span>
         <button onClick={onClose} className="p-0.5 rounded hover:bg-hover-bg">
-          <PhX className="text-muted-foreground" size={14} weight="regular" />
+          <PhX className="text-muted-foreground" size={14} strokeWidth={2} />
         </button>
       </div>
 
@@ -68,7 +67,7 @@ export function RelationPicker({ sourceNoteId, onAdd, onClose }: RelationPickerP
 
       {/* Search */}
       <div className="relative">
-        <MagnifyingGlass className="absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground/60" size={14} weight="regular" />
+        <MagnifyingGlass className="absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground/60" size={14} strokeWidth={2} />
         <input
           autoFocus
           value={search}

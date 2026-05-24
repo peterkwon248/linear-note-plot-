@@ -3,45 +3,54 @@
 > 우선순위 기반 작업 목록. **P0 = 다음 세션 즉시 시작점** (NEXT-ACTION.md 폐지, 2026-05-12).
 > 완료 항목은 즉시 삭제. 자세한 history는 SESSION-LOG.md + MEMORY.md.
 
-**마지막 갱신**: 2026-05-23 (후속) — Audit v2 + PR-A 데이터 무결성 5건 + Lucide 마이그레이션 90 파일 (PR-X1~X4) 완료. 다음 P0 = PR-X5 (editor lucide) + audit §8 사용자 결정 후 PR-B (mode-aware UI).
+**마지막 갱신**: 2026-05-24 — 거대 세션: PR-X5/X6 + Activity bar lucide + PR-B/B2/C (audit v2 완성) + Notes/Books Timeline + Gallery 폐기 완료. 다음 P0 #1 = Notes timeline ViewHeader 누락 fix (사용자 신고).
 
 ---
 
-## 🟣 P0 — 즉시 (cross-machine 진입점, 2026-05-23 후속)
+## 🟣 P0 — 즉시 (cross-machine 진입점, 2026-05-24)
 
-> P0 #1 = PR-X5 (editor + wiki block + comments lucide 마이그레이션 ~30 파일). #2 = audit §8 사용자 결정 후 PR-B 진입. #3 = PR-X6 잔여 lucide ~30 파일.
+> P0 #1 = Notes timeline ViewHeader 추가 (사용자 명시 — 가장 큰 미완). #2 = File 엔티티 v1.
 
-### 1. **PR-X5: Editor + wiki block + comments lucide 마이그레이션 (~30 파일)**
+### 1. **🔴 Notes timeline ViewHeader 추가 (필터/디스플레이 패널 노출)**
 
-상세 = SESSION-LOG 2026-05-23 (후속) hook + audit 문서 `.omc/plans/view-state-reliability-audit.md`.
+**사용자 신고 (정확 인용)**: "야 노트는 왜 위에 필터, 디스플레이 등등이 사라졌어? 타임라인이 제대로 구현이 안 됐는데? 노트는?"
 
-- **대상 폴더**: `components/editor/*` (~10 파일 — TipTap node 컴포넌트, picker dialog 등) + `components/wiki-editor/*` (~15 파일 — article-view, block-renderer, hatnotes, infobox 등) + `components/comments/*` (~3 파일)
-- **첫 스텝**: `Grep import .* from "@phosphor-icons/react" --path components/editor` → 인벤토리 → 작은 파일부터 batch (PR-X1~X4 패턴 그대로)
-- **변환 룰**: import block 통째 교체 (alias 유지) + weight prop replace_all (regular→strokeWidth=2 / bold→2.5 / light→1.5 / fill→fill="currentColor" / duotone→strokeWidth=1.5 / dynamic→conditional fill)
-- **자체 컴포넌트 인지 (Plot icons)**: lucide 변환 대상에서 제외 (strokeWidth 박지 말 것)
-- **검증**: tsc + runtime HMR 매 batch
+**근본 원인**:
+- Wiki/Books는 view-level orchestrator (`wiki-view.tsx`, `books-view.tsx`)가 자체에서 `ViewHeader` render → timeline mode에서도 자동 포함
+- Notes는 `NotesTable` 자체에서 ViewHeader 호출. `NotesTableView`가 viewMode === "timeline" 분기에서 `NotesTimelineShell`만 render → ViewHeader 누락
 
-### 2. **PR-B: Mode-aware UI 룰 구현** (audit §8 사용자 결정 후)
+**추천 path** (간단 → 정통 순):
+- **A (가장 simple)**: `NotesTimelineShell`이 ViewHeader도 render. Shell 안에서 self-contained.
+- **B (정통)**: `NotesTableView` refactor — viewMode 분기 이전에 ViewHeader render + NotesTable에서 ViewHeader 호출 제거. 단 NotesTable 큰 refactor + 회귀 risk.
 
-`.omc/plans/view-state-reliability-audit.md` PR-B 단위. **사용자 결정 3개 받은 후 진입**:
+가장 단순 form 첫 시도: A. 시간 부족 시 fallback.
 
-- **#1**: Wiki timeline default groupBy → 추천 `wikiStatus` (Stub/Article 시간축)
-- **#2**: PR-B2 (timeline lane 그룹 헤더 구현) → (a) PR-B와 같이 vs (b) 후속. Linear L1 엄격이면 (a) 추천
-- **#3**: Library 5종 hook 통합 (PR-D) → 추천 미루기 (컴포넌트-사이드 firstLetter 패턴 유지)
+**첫 스텝**:
+1. `components/notes-table.tsx`에서 `<ViewHeader` grep — props 검토 (config / viewState / updateViewState / filterCategories / hideCreateButton / onSearch 등)
+2. `components/notes-timeline-shell.tsx`에 동일 ViewHeader render 추가 (useNotesView에서 받은 viewState/updateViewState 전달 + NOTES_VIEW_CONFIG에서 filterCategories)
+3. Notes timeline mode에서 ViewHeader 시각 일치 확인 (Wiki/Books와 동일 chrome)
 
-작업: view-configs.tsx 타입 확장 (`modes` 필드 추가) + 11 ViewConfig declarative modes 선언 + DisplayPanel/FilterPanel filter + normalizeViewState mode-aware auto-cleanup + PR-B2 갭 해소 (B4 timeline, B5 gallery, B6 label-column, B11 references, B12 templates grid).
+**컴포넌트 구조** (현재):
+```
+NotesTableView (notes-table-view.tsx)
+  ├─ viewMode === "timeline" → NotesTimelineShell → NotesTimelineView  ← ViewHeader X
+  ├─ viewMode === "board"    → NotesBoard                              ← ViewHeader (board 자체 확인)
+  └─ viewMode === default    → NotesTable                              ← ViewHeader O
+```
 
-### 3. **PR-X6: 나머지 lucide 마이그레이션 (~30 파일)**
+**위험 + 회피**:
+- NotesTable이 자체 ViewHeader 가지므로 NotesTimelineShell도 자체 ViewHeader 가지면 됨. props 일치 필요.
+- Books는 BooksTimelineView 직접 (Shell 없음) — Notes와 패턴 다름. NotesTimelineShell + Notes 패턴 유지.
 
-`components/notes-table.tsx`, `notes-board.tsx`, `note-editor.tsx`, `note-fields.tsx`, `note-context-menu-items.tsx`, `note-picker-dialog.tsx`, `note-list.tsx`, `merge-dialog.tsx`, `link-suggestion.tsx`, `insights-view.tsx`, `insert-menu.tsx`, `home/*`, `inbox/*`, `inspector/*`, `ontology/*`, `books/*`, `comments/*` 등.
+**참고 파일**:
+- `components/notes-table.tsx` (ViewHeader 호출 위치)
+- `components/notes-timeline-shell.tsx` (ViewHeader 추가 대상)
+- `components/views/wiki-view.tsx` (reference)
+- `components/views/books-view.tsx` (reference)
 
-### 4. **File 독립 엔티티 v1 구현** (PRD 완성 — `.omc/plans/file-entity-prd.md` v0.2)
+### 2. **File 독립 엔티티 v1 구현** (PRD 완성 — `.omc/plans/file-entity-prd.md` v0.2)
 
-PR-X 시리즈 끝나고 진행. `Attachment`를 note-scoped → 독립 Library 엔티티로. PRD §6-1 v1 = PR 2개 (마이그레이션+모델 / 피커 UI). 첫 스텝: `lib/types.ts:997` `Attachment` + `lib/store/slices/attachments.ts:7` + `lib/store/migrate.ts:1919`.
-
-### 5. **노트·북에도 Timeline 디스플레이 모드 추가**
-
-PR-B 완료 후. 현재 Timeline = Wiki 전용. viewState 흐름이 견고해진 후 노트/북에도 Timeline view mode 추가.
+`Attachment`를 note-scoped → 독립 Library 엔티티로. PRD §6-1 v1 = PR 2개 (마이그레이션+모델 / 피커 UI). 첫 스텝: `lib/types.ts:997` `Attachment` + `lib/store/slices/attachments.ts:7` + `lib/store/migrate.ts:1919`.
 
 ---
 
@@ -55,6 +64,7 @@ PR-B 완료 후. 현재 Timeline = Wiki 전용. viewState 흐름이 견고해진
 
 ## ✅ 최근 완료
 
+- **2026-05-24**: 거대 세션 단일 PR (93 파일 / +1891 −2622) — (a) PR-X5/X6 lucide 68 파일 + activity bar/sidebar/action icons 전체 lucide (Stone/Brick/Block만 phosphor 유지, Wiki Stub/Article도 lucide Book/BookMarked로) + (b) audit v2 PR-B foundation (declarative modes + DisplayPanel mode filter + normalizeViewState auto-cleanup) + PR-B2 갭 해소 5건 (B11 References groupBy 단일화 / B6 timeline-label-column visibleColumns / B12 templates grid groups / B5 wiki gallery wikiGroups / B4 timeline lane 헤더+canvas divider) + PR-C polish 4건 (B10 wiki tier sort / B13 Books board groupOrder/showEmpty / B14 isHydrated) + (c) Notes/Books Timeline 신규 (generic refactor + 3 신규 컴포넌트) + (d) Gallery view 전수 폐기 → Grid view 통일 (자동 마이그레이션) + (e) spacing/icon polish (.a-row__icon 박스 제거, Books py-2.5) + (f) wiki timeline D1 gradient 제거 (단일 색). tsc/build clean. **미완: Notes timeline에 ViewHeader (filter/display) 누락 — 다음 세션 P0 #1.**
 - **2026-05-23 (후속)**: 거대 세션 단일 PR — (a) `.omc/plans/view-state-reliability-audit.md` v2 Linear 마인드셋 통합 + (b) PR-A 데이터 무결성 5건 (VALID_GROUP_BY/VALID_SORT_FIELDS/wordCount/fail-closed 3개/Files searchQuery) + (c) Lucide 마이그레이션 90 파일 (PR-X1 UI primitive 21 / PR-X2 chrome 17 / PR-X3 side-panel 17 / PR-X4 view components 30). 부수 효과: carousel.tsx KeyboardEvent.key 버그 자동 fix. Brand 5종(Stone/Brick/Block + Stub/Article) phosphor 유지. tsc clean.
 - **2026-05-23**: 타임라인 비주얼 리디자인 (단일 PR, 8파일 +224/−141) — 막대 이름 제거 / 이벤트 마커 막대 안(중앙선)+흰 테두리 / 막대 day-quantize+drag 정합 / 스타트칩 = 막대 고유 origin 노드 / 얇은 선(`BAR_HEIGHT` 28→5)+drop shadow 제거 / 선 색 = status 아이콘 색(stub 주황·article 에메랄드) / **"All" 모드 신설**(5번째 줌, fit-to-content overview, 기본값). tsc clean.
 - **2026-05-22 (후속 #3)**: Display 패널 탭 = Linear segmented control (popover 360px + flex-1 + gap seam) + 타임라인 막대 status 화살촉 제거(ARROW_DEPTH 정리). 막대 이름 제거(A안)·마커 clip 수정은 결정 완료 → 다음 세션 P0 #1.
@@ -82,6 +92,12 @@ PR-B 완료 후. 현재 Timeline = Wiki 전용. viewState 흐름이 견고해진
 - 후보 (#90): **event markers = icon chip 패턴** — filled colored ring + Phosphor 흰 아이콘 inline.
 - ~~후보 #91 (막대 끝점 = status 도형 / Article 화살촉)~~ — **폐기** (2026-05-22 후속 #3): 화살촉 제거, 타임라인 status = 막대 색만.
 - 후보 (#93~, 2026-05-23 타임라인 리디자인): ① 타임라인 막대 = 얇은 선, 이벤트 칩이 주인공 ② 스타트칩 = 막대 고유 origin 요소(이벤트 아님) ③ 선 색 = status 아이콘 색 일치 ④ "All" 모드 = fit-to-content overview (viewport-fit은 옵션이면 OK). 상세 = SESSION-LOG 2026-05-23.
+- **#98 LOCKED (2026-05-24)**: Gallery view 폐기 → Grid view 통일 (Notes/Wiki/References/Books 4 entity). 자동 마이그레이션 (gallery → grid).
+- **#99 LOCKED (2026-05-24)**: Wiki timeline bar 단일 색 — D1 past/future gradient 폐기. 모든 entity bar가 status color full opacity.
+- **#100 LOCKED (2026-05-24)**: Brand 3종만 phosphor (Stone/Brick/Block). Wiki Stub/Article은 lucide (Book/BookMarked). Activity bar + sidebar + action icons 전체 lucide.
+- **#101 LOCKED (2026-05-24)**: Timeline = entity-agnostic sub-components (T extends TimelineEntity) + entity adapter (status icon/color/horizon/eventRef).
+- **#103 LOCKED (2026-05-24)**: `.a-row__icon` 박스 폐기 — 22×22 tinted square 제거, color tone만 유지 (Linear/Plain 톤).
+- **#104 LOCKED (2026-05-24)**: Books list row height = Notes/Wiki parity (h-9 → py-2.5).
 
 전체 영구 룰 #1-#88: docs/MEMORY.md + docs/CONTEXT.md 참조.
 

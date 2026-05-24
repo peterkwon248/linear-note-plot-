@@ -19,11 +19,7 @@
 
 import { useState } from "react"
 import { IconStone, IconBrick, IconBlock, IconWikiStub, IconWikiArticle } from "@/components/plot-icons"
-import { Lightning } from "@phosphor-icons/react/dist/ssr/Lightning"
-import { Sparkle } from "@phosphor-icons/react/dist/ssr/Sparkle"
-import { PencilSimple } from "@phosphor-icons/react/dist/ssr/PencilSimple"
-import { CaretDown } from "@phosphor-icons/react/dist/ssr/CaretDown"
-import { CaretRight } from "@phosphor-icons/react/dist/ssr/CaretRight"
+import { Zap as Lightning, Sparkles as Sparkle, Pencil as PencilSimple, ChevronDown as CaretDown, ChevronRight as CaretRight } from "lucide-react"
 import { NOTE_STATUS_HEX, WIKI_STATUS_HEX, SPACE_COLORS } from "@/lib/colors"
 import { cn } from "@/lib/utils"
 
@@ -76,7 +72,7 @@ export function OntologyLegend({ className }: { className?: string }) {
         className="flex w-full items-center gap-1.5 px-2.5 py-1.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground hover:text-foreground transition-colors"
         title={open ? "Collapse legend" : "Expand legend"}
       >
-        {open ? <CaretDown size={10} weight="bold" /> : <CaretRight size={10} weight="bold" />}
+        {open ? <CaretDown size={10} strokeWidth={2.5} /> : <CaretRight size={10} strokeWidth={2.5} />}
         Legend
       </button>
 
@@ -118,15 +114,15 @@ export function OntologyLegend({ className }: { className?: string }) {
               tone here; the canvas itself shows the actual book hull color. */}
           <GroupHeader label="Books" />
           <LegendRow
-            icon={<Lightning size={13} weight="regular" />}
+            icon={<Lightning size={13} strokeWidth={2} />}
             label="Smart"
           />
           <LegendRow
-            icon={<Sparkle size={13} weight="regular" />}
+            icon={<Sparkle size={13} strokeWidth={2} />}
             label="Hybrid"
           />
           <LegendRow
-            icon={<PencilSimple size={13} weight="regular" />}
+            icon={<PencilSimple size={13} strokeWidth={2} />}
             label="Manual"
           />
 

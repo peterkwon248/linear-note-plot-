@@ -7,19 +7,26 @@
  */
 
 import type { Dispatch, SetStateAction } from "react"
-import { isWikiStub } from "@/lib/wiki-utils"
-import { WIKI_STATUS_HEX } from "@/lib/colors"
 import {
   LANE_HEIGHT,
   BAR_HEIGHT,
   BAR_RADIUS,
-  type LanedArticle,
+  type LanedItem,
+  type TimelineEntity,
   type TimelineTooltipState,
   type TimelineDragState,
 } from "./wiki-timeline-config"
 
 export interface TimelineBarProps {
-  item: LanedArticle
+  item: LanedItem<TimelineEntity>
+  /** Bar fill color from the entity adapter (e.g. WIKI_STATUS_HEX.stub for
+   *  wiki stubs, NOTE_STATUS_HEX.stone for notes, etc.). Caller resolves
+   *  the status → color mapping so this component stays entity-agnostic. */
+  statusColor: string
+  /** When true, render the drag handle that lets the user extend the bar's
+   *  end date (wiki plannedDate). Notes/Books opt out — their lifespan
+   *  ends at updatedAt and isn't user-editable from the timeline. */
+  canEditHorizon?: boolean
   laneIndex: number
   activeArticleId: string | null
   selectedIds: Set<string>
@@ -36,6 +43,8 @@ export interface TimelineBarProps {
 
 export function TimelineBar({
   item,
+  statusColor,
+  canEditHorizon = false,
   laneIndex,
   activeArticleId,
   selectedIds,
@@ -50,29 +59,18 @@ export function TimelineBar({
   onSelect,
 }: TimelineBarProps) {
   const { article, x, width } = item
-  const stub = isWikiStub(article)
   const isActive = article.id === activeArticleId
   const isSelected = selectedIds.has(article.id)
   const isHovered = article.id === hoveredId
   const isDragging = dragState?.id === article.id
-  /** Line color = the status icon's color (stub orange / article emerald). */
-  const color = stub ? WIKI_STATUS_HEX.stub : WIKI_STATUS_HEX.article
+  /** Line color = the status icon's color (resolved by the entity adapter). */
+  const color = statusColor
   const cy = laneIndex * LANE_HEIGHT + LANE_HEIGHT / 2
   const barY = cy - BAR_HEIGHT / 2
 
   /** Live end/width during drag; else use static computed values */
   const liveEndX = isDragging ? dragState!.currentEndX : x + width
   const liveWidth = liveEndX - x
-
-  /** D1: gradient id for past→future opacity split */
-  const gradId = `grad-${article.id}`
-
-  /** D1: nowX relative to bar start, clamped 0..1 (use liveWidth) */
-  const gradStop = (() => {
-    if (nowX <= x) return 0           // entire bar is future
-    if (nowX >= liveEndX) return 1    // entire bar is past
-    return (nowX - x) / liveWidth     // partial split
-  })()
 
   return (
     <g
@@ -95,14 +93,6 @@ export function TimelineBar({
       role="button"
       aria-label={article.title}
     >
-      {/* D1: Past→Future opacity gradient */}
-      <defs>
-        <linearGradient id={gradId} x1="0" y1="0" x2="1" y2="0">
-          <stop offset={`${gradStop * 100}%`} stopColor={color} stopOpacity={1} />
-          <stop offset={`${gradStop * 100}%`} stopColor={color} stopOpacity={0.55} />
-        </linearGradient>
-      </defs>
-
       {/* B1: Row hover bg highlight (full width behind bar row) */}
       {(isHovered || isDragging) && (
         <rect
@@ -130,14 +120,18 @@ export function TimelineBar({
         />
       )}
 
-      {/* Main bar — status-colored line (D1 past/future opacity) */}
+      {/* Main bar — single solid status color (2026-05-24: dropped the D1
+          past/future opacity gradient — only wiki bars showed the future-
+          half tint because notes/books horizon = updatedAt is always past,
+          so the gradient produced inconsistent bar tone across entities.
+          Single fill matches notes/books appearance and reads cleaner. */}
       <rect
         x={x}
         y={barY}
         width={liveWidth}
         height={BAR_HEIGHT}
         rx={BAR_RADIUS}
-        fill={`url(#${gradId})`}
+        fill={color}
       />
 
       {/* B1: Hover ring */}
@@ -155,26 +149,30 @@ export function TimelineBar({
         />
       )}
 
-      {/* Grab handle: hit zone over the bar's right edge (taller than the line for grabbability) */}
-      <rect
-        x={liveEndX - 6}
-        y={cy - 9}
-        width={12}
-        height={18}
-        fill="transparent"
-        style={{ cursor: "ew-resize", pointerEvents: "all" }}
-        onPointerDown={(e) => {
-          e.stopPropagation()
-          e.preventDefault()
-          setDragState({
-            id: article.id,
-            pointerId: e.pointerId,
-            startClientX: e.clientX,
-            originalEndX: x + width,
-            currentEndX: x + width,
-          })
-        }}
-      />
+      {/* Grab handle: hit zone over the bar's right edge (taller than the line
+          for grabbability). Only rendered when the adapter exposes an
+          editable horizon (wiki plannedDate). */}
+      {canEditHorizon && (
+        <rect
+          x={liveEndX - 6}
+          y={cy - 9}
+          width={12}
+          height={18}
+          fill="transparent"
+          style={{ cursor: "ew-resize", pointerEvents: "all" }}
+          onPointerDown={(e) => {
+            e.stopPropagation()
+            e.preventDefault()
+            setDragState({
+              id: article.id,
+              pointerId: e.pointerId,
+              startClientX: e.clientX,
+              originalEndX: x + width,
+              currentEndX: x + width,
+            })
+          }}
+        />
+      )}
 
       {/* Visible affordance: subtle vertical hint on hover or drag */}
       {(isHovered || isDragging) && (

@@ -16,8 +16,7 @@
 
 import { useEffect, useMemo, useState, useCallback } from "react"
 import { usePlotStore } from "@/lib/store"
-import { X as PhX } from "@phosphor-icons/react/dist/ssr/X"
-import { MagnifyingGlass } from "@phosphor-icons/react/dist/ssr/MagnifyingGlass"
+import { X as PhX, Search as MagnifyingGlass } from "lucide-react"
 import { IconTemplate } from "@/components/plot-icons"
 import { cn } from "@/lib/utils"
 import type { WikiTemplate } from "@/lib/types"
@@ -125,7 +124,7 @@ export function WikiTemplatePicker({
             onClick={() => onOpenChange(false)}
             className="flex items-center justify-center h-7 w-7 rounded-md hover:bg-hover-bg text-muted-foreground hover:text-foreground transition-colors"
           >
-            <PhX size={14} weight="regular" />
+            <PhX size={14} strokeWidth={2} />
           </button>
         </div>
 
@@ -134,7 +133,7 @@ export function WikiTemplatePicker({
           <div className="relative">
             <MagnifyingGlass
               size={14}
-              weight="regular"
+              strokeWidth={2}
               className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none"
             />
             <input

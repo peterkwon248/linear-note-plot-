@@ -48,10 +48,7 @@ import { ImportPresetDialog } from "./import-preset-dialog"
 import { downloadPresetJSON } from "@/lib/wiki-infobox-presets-io"
 import { WikiThemeColorPicker } from "@/components/wiki-editor/wiki-theme-color-picker"
 import { Trash as PhTrash } from "@/lib/editor/editor-icons"
-import { FloppyDisk } from "@phosphor-icons/react/dist/ssr/FloppyDisk"
-import { DownloadSimple } from "@phosphor-icons/react/dist/ssr/DownloadSimple"
-import { UploadSimple } from "@phosphor-icons/react/dist/ssr/UploadSimple"
-import { CircleHalf } from "@phosphor-icons/react/dist/ssr/CircleHalf"
+import { Save as FloppyDisk, Download as DownloadSimple, Upload as UploadSimple, Contrast as CircleHalf } from "lucide-react"
 import { useInfoboxGroupCollapsed } from "@/lib/wiki-infobox-collapse"
 import {
   AlertDialog,

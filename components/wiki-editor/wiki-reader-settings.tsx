@@ -1,9 +1,7 @@
 "use client"
 
 import { cn } from "@/lib/utils"
-import { Plus as PhPlus } from "@phosphor-icons/react/dist/ssr/Plus"
-import { Minus } from "@phosphor-icons/react/dist/ssr/Minus"
-import { ArrowCounterClockwise } from "@phosphor-icons/react/dist/ssr/ArrowCounterClockwise"
+import { Plus as PhPlus, Minus, RotateCcw as ArrowCounterClockwise } from "lucide-react"
 import {
   FONT_SCALE_GROUPS,
   SCALE_MAX,
@@ -111,7 +109,7 @@ export function WikiReaderSettings({
                     disabled={atMin}
                     className="flex h-6 w-6 items-center justify-center rounded text-foreground/70 hover:bg-hover-bg hover:text-foreground disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
                   >
-                    <Minus size={12} weight="bold" />
+                    <Minus size={12} strokeWidth={2.5} />
                   </button>
                   <span className="min-w-[36px] text-center text-2xs tabular-nums text-foreground/80">
                     {value.toFixed(1)}×
@@ -121,7 +119,7 @@ export function WikiReaderSettings({
                     disabled={atMax}
                     className="flex h-6 w-6 items-center justify-center rounded text-foreground/70 hover:bg-hover-bg hover:text-foreground disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
                   >
-                    <PhPlus size={12} weight="bold" />
+                    <PhPlus size={12} strokeWidth={2.5} />
                   </button>
                 </div>
               </div>
@@ -167,7 +165,7 @@ export function WikiReaderSettings({
           onClick={resetAll}
           className="flex w-full items-center justify-center gap-2 px-3 py-2 text-sm font-medium rounded-md text-foreground/75 hover:bg-hover-bg hover:text-foreground transition-colors"
         >
-          <ArrowCounterClockwise size={14} weight="regular" />
+          <ArrowCounterClockwise size={14} strokeWidth={2} />
           Reset all to default
         </button>
       </div>

@@ -11,7 +11,7 @@
  */
 
 import type { Dispatch, SetStateAction } from "react"
-import type { WikiArticle, EntityEvent } from "@/lib/types"
+import type { EntityEvent } from "@/lib/types"
 import { diffDays } from "./wiki-timeline-utils"
 import {
   LANE_HEIGHT,
@@ -23,12 +23,13 @@ import {
   EVENT_MARKER_STACK_GAP,
   EVENT_MARKER_MAX_PER_DAY,
   type MarkerConfig,
+  type TimelineEntity,
   type ZoomConfig,
   type TimelineEventTooltipState,
 } from "./wiki-timeline-config"
 
 export interface TimelineEventMarkersProps {
-  article: WikiArticle
+  article: TimelineEntity
   laneIndex: number
   /** The bar's left-edge X — the start chip anchors here. */
   barX: number

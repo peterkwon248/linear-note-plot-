@@ -39,16 +39,18 @@ import {
   CommandList,
 } from "@/components/ui/command"
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
-import { Folder as PhFolder } from "@phosphor-icons/react/dist/ssr/Folder"
-import { BookOpen as PhBookOpen } from "@phosphor-icons/react/dist/ssr/BookOpen"
-import { Hash as PhHash } from "@phosphor-icons/react/dist/ssr/Hash"
-import { Tag as PhTag } from "@phosphor-icons/react/dist/ssr/Tag"
-import { Sticker as PhSticker } from "@phosphor-icons/react/dist/ssr/Sticker"
-import { Plus as PhPlus } from "@phosphor-icons/react/dist/ssr/Plus"
-import { X as PhX } from "@phosphor-icons/react/dist/ssr/X"
-import { Sparkle } from "@phosphor-icons/react/dist/ssr/Sparkle"
-import { ArrowsClockwise } from "@phosphor-icons/react/dist/ssr/ArrowsClockwise"
-import { Check as PhCheck } from "@phosphor-icons/react/dist/ssr/Check"
+import {
+  Folder as PhFolder,
+  BookOpen as PhBookOpen,
+  Hash as PhHash,
+  Tag as PhTag,
+  Sticker as PhSticker,
+  Plus as PhPlus,
+  X as PhX,
+  Sparkles as Sparkle,
+  RefreshCw as ArrowsClockwise,
+  Check as PhCheck,
+} from "lucide-react"
 import { cn } from "@/lib/utils"
 import type { AutoSourceKind } from "@/lib/types"
 
@@ -115,7 +117,7 @@ export function SourcesSection({ bookId }: SourcesSectionProps) {
             kind: "folder",
             refId: s.refId,
             name: folder.name,
-            icon: <PhFolder size={14} weight="regular" className="text-muted-foreground" />,
+            icon: <PhFolder size={14} strokeWidth={2} className="text-muted-foreground" />,
           })
         }
       } else if (s.kind === "category") {
@@ -383,14 +385,14 @@ export function SourcesSection({ bookId }: SourcesSectionProps) {
   const renderEntryIcon = (e: ResolvedEntry): ReactNode => {
     switch (e.kind) {
       case "folder":
-        return <PhFolder size={14} weight="regular" className="text-muted-foreground" />
+        return <PhFolder size={14} strokeWidth={2} className="text-muted-foreground" />
       case "category":
-        return <PhBookOpen size={14} weight="regular" style={{ color: e.color }} />
+        return <PhBookOpen size={14} strokeWidth={2} style={{ color: e.color }} />
       case "tag":
         return (
           <PhHash
             size={14}
-            weight="regular"
+            strokeWidth={2}
             style={{ color: e.color ?? undefined }}
             className={e.color ? "" : "text-muted-foreground"}
           />
@@ -403,7 +405,7 @@ export function SourcesSection({ bookId }: SourcesSectionProps) {
           />
         )
       case "sticker":
-        return <PhSticker size={14} weight="regular" style={{ color: e.color }} />
+        return <PhSticker size={14} strokeWidth={2} style={{ color: e.color }} />
     }
   }
 
@@ -412,7 +414,7 @@ export function SourcesSection({ bookId }: SourcesSectionProps) {
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-2.5">
         <div className="flex items-center gap-1.5 text-2xs font-semibold uppercase tracking-wide text-muted-foreground">
-          <Sparkle size={12} weight="regular" />
+          <Sparkle size={12} strokeWidth={2} />
           Smart sources
         </div>
         <div className="flex items-center gap-1">
@@ -432,7 +434,7 @@ export function SourcesSection({ bookId }: SourcesSectionProps) {
             className="flex items-center gap-1 rounded-md px-2 py-0.5 text-2xs font-medium text-muted-foreground transition-colors hover:bg-hover-bg hover:text-foreground"
             title="Add source"
           >
-            <PhPlus size={12} weight="bold" />
+            <PhPlus size={12} strokeWidth={2.5} />
             Add source
           </button>
         </div>
@@ -464,7 +466,7 @@ export function SourcesSection({ bookId }: SourcesSectionProps) {
                     className="flex items-center gap-1 rounded-md px-1.5 py-0.5 text-2xs text-muted-foreground transition-colors hover:bg-hover-bg hover:text-foreground"
                     title="이 소스의 사용자 정렬 해제 → updatedAt desc로 복원"
                   >
-                    <ArrowsClockwise size={11} weight="regular" />
+                    <ArrowsClockwise size={11} strokeWidth={2} />
                     Auto-sort
                   </button>
                 )}
@@ -475,7 +477,7 @@ export function SourcesSection({ bookId }: SourcesSectionProps) {
                   title={`Remove source: ${entry.name}`}
                   aria-label={`Remove source: ${entry.name}`}
                 >
-                  <PhX size={12} weight="regular" />
+                  <PhX size={12} strokeWidth={2} />
                 </button>
               </li>
             )
@@ -538,7 +540,7 @@ export function SourcesSection({ bookId }: SourcesSectionProps) {
           >
             <TabsList className="mx-4 mt-1 grid grid-cols-5 gap-0.5">
               <TabsTrigger value="folder" title={`Folder source — ${folderCandidates.length} matches`}>
-                <PhFolder size={12} weight="regular" />
+                <PhFolder size={12} strokeWidth={2} />
                 {folderCandidates.length > 0 && (
                   <span className="ml-1 text-2xs tabular-nums text-muted-foreground/70">
                     {folderCandidates.length}
@@ -546,7 +548,7 @@ export function SourcesSection({ bookId }: SourcesSectionProps) {
                 )}
               </TabsTrigger>
               <TabsTrigger value="category" title={`Wiki category source — ${categoryCandidates.length} matches`}>
-                <PhBookOpen size={12} weight="regular" />
+                <PhBookOpen size={12} strokeWidth={2} />
                 {categoryCandidates.length > 0 && (
                   <span className="ml-1 text-2xs tabular-nums text-muted-foreground/70">
                     {categoryCandidates.length}
@@ -554,7 +556,7 @@ export function SourcesSection({ bookId }: SourcesSectionProps) {
                 )}
               </TabsTrigger>
               <TabsTrigger value="tag" title={`Tag source — ${tagCandidates.length} matches`}>
-                <PhHash size={12} weight="regular" />
+                <PhHash size={12} strokeWidth={2} />
                 {tagCandidates.length > 0 && (
                   <span className="ml-1 text-2xs tabular-nums text-muted-foreground/70">
                     {tagCandidates.length}
@@ -562,7 +564,7 @@ export function SourcesSection({ bookId }: SourcesSectionProps) {
                 )}
               </TabsTrigger>
               <TabsTrigger value="label" title={`Label source — ${labelCandidates.length} matches`}>
-                <PhTag size={12} weight="regular" />
+                <PhTag size={12} strokeWidth={2} />
                 {labelCandidates.length > 0 && (
                   <span className="ml-1 text-2xs tabular-nums text-muted-foreground/70">
                     {labelCandidates.length}
@@ -570,7 +572,7 @@ export function SourcesSection({ bookId }: SourcesSectionProps) {
                 )}
               </TabsTrigger>
               <TabsTrigger value="sticker" title={`Sticker source — ${stickerCandidates.length} matches`}>
-                <PhSticker size={12} weight="regular" />
+                <PhSticker size={12} strokeWidth={2} />
                 {stickerCandidates.length > 0 && (
                   <span className="ml-1 text-2xs tabular-nums text-muted-foreground/70">
                     {stickerCandidates.length}
@@ -591,7 +593,7 @@ export function SourcesSection({ bookId }: SourcesSectionProps) {
                         onSelect={() => bulkMode ? toggleBulk("folder", folder.id, folder.name) : handleAdd("folder", folder.id, folder.name)}
                         className="flex cursor-pointer items-center gap-2"
                       >
-                        <PhFolder size={14} weight="regular" className="text-muted-foreground" />
+                        <PhFolder size={14} strokeWidth={2} className="text-muted-foreground" />
                         <span className="flex-1 truncate">{folder.name}</span>
                         <span className="text-2xs text-muted-foreground/60 tabular-nums">
                           {formatHint(total, inBook)}
@@ -644,7 +646,7 @@ export function SourcesSection({ bookId }: SourcesSectionProps) {
                       >
                         <PhHash
                           size={14}
-                          weight="regular"
+                          strokeWidth={2}
                           style={{ color: tag.color ?? undefined }}
                           className={tag.color ? "" : "text-muted-foreground"}
                         />
@@ -698,7 +700,7 @@ export function SourcesSection({ bookId }: SourcesSectionProps) {
                         onSelect={() => bulkMode ? toggleBulk("sticker", sticker.id, sticker.name) : handleAdd("sticker", sticker.id, sticker.name)}
                         className="flex cursor-pointer items-center gap-2"
                       >
-                        <PhSticker size={14} weight="regular" style={{ color: sticker.color }} />
+                        <PhSticker size={14} strokeWidth={2} style={{ color: sticker.color }} />
                         <span className="flex-1 truncate">{sticker.name}</span>
                         <span className="text-2xs text-muted-foreground/60 tabular-nums">
                           {formatHint(total, inBook)}
@@ -735,7 +737,7 @@ export function SourcesSection({ bookId }: SourcesSectionProps) {
                   disabled={bulkSelected.size === 0}
                   className="flex items-center gap-1 rounded-md bg-accent px-2.5 py-1 text-2xs font-medium text-accent-foreground transition-opacity hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed"
                 >
-                  <PhCheck size={11} weight="bold" />
+                  <PhCheck size={11} strokeWidth={2.5} />
                   Add {bulkSelected.size > 0 ? bulkSelected.size : ""} selected
                 </button>
               </div>

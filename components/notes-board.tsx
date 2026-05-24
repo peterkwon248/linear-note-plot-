@@ -12,27 +12,29 @@ import {
   useSensors,
   useSensor,
 } from "@dnd-kit/core"
-import { Plus as PhPlus } from "@phosphor-icons/react/dist/ssr/Plus"
-import { ArrowsDownUp } from "@phosphor-icons/react/dist/ssr/ArrowsDownUp"
-import { ArrowUp } from "@phosphor-icons/react/dist/ssr/ArrowUp"
-import { ArrowDown } from "@phosphor-icons/react/dist/ssr/ArrowDown"
-import { FileText } from "@phosphor-icons/react/dist/ssr/FileText"
-import { CaretDown } from "@phosphor-icons/react/dist/ssr/CaretDown"
-import { CaretRight } from "@phosphor-icons/react/dist/ssr/CaretRight"
-import { X as PhX } from "@phosphor-icons/react/dist/ssr/X"
-import { Check as PhCheck } from "@phosphor-icons/react/dist/ssr/Check"
-import { Alarm } from "@phosphor-icons/react/dist/ssr/Alarm"
-import { Trash } from "@phosphor-icons/react/dist/ssr/Trash"
-import { ArrowUpRight } from "@phosphor-icons/react/dist/ssr/ArrowUpRight"
-import { ArrowDownLeft } from "@phosphor-icons/react/dist/ssr/ArrowDownLeft"
-import { Tray as InboxIcon } from "@phosphor-icons/react/dist/ssr/Tray"
-import { Clock as PhClock } from "@phosphor-icons/react/dist/ssr/Clock"
-import { Bell } from "@phosphor-icons/react/dist/ssr/Bell"
-import { FolderOpen } from "@phosphor-icons/react/dist/ssr/FolderOpen"
-import { Folder as FolderIcon } from "@phosphor-icons/react/dist/ssr/Folder"
-import { Hash } from "@phosphor-icons/react/dist/ssr/Hash"
-import { Tree } from "@phosphor-icons/react/dist/ssr/Tree"
-import { Tag as TagIcon } from "@phosphor-icons/react/dist/ssr/Tag"
+import {
+  Plus as PhPlus,
+  ArrowDownUp as ArrowsDownUp,
+  ArrowUp,
+  ArrowDown,
+  FileText,
+  ChevronDown as CaretDown,
+  ChevronRight as CaretRight,
+  X as PhX,
+  Check as PhCheck,
+  AlarmClock as Alarm,
+  Trash2 as Trash,
+  ArrowUpRight,
+  ArrowDownLeft,
+  Inbox as InboxIcon,
+  Clock as PhClock,
+  Bell,
+  FolderOpen,
+  Folder as FolderIcon,
+  Hash,
+  ListTree as Tree,
+  Tag as TagIcon,
+} from "lucide-react"
 import { StatusShapeIcon } from "@/components/status-icon"
 import type { DragEndEvent, DragStartEvent } from "@dnd-kit/core"
 import { SortableContext, horizontalListSortingStrategy, arrayMove, useSortable } from "@dnd-kit/sortable"
@@ -117,7 +119,7 @@ function InlineSelect<T extends string>({
         className="flex items-center gap-1.5 rounded-md bg-secondary/60 px-2.5 py-1.5 text-note text-foreground transition-colors hover:bg-hover-bg"
       >
         {current?.label ?? value}
-        <CaretDown className={`text-muted-foreground transition-transform duration-150 ${open ? "rotate-180" : ""}`} size={14} weight="regular" />
+        <CaretDown className={`text-muted-foreground transition-transform duration-150 ${open ? "rotate-180" : ""}`} size={14} strokeWidth={2} />
       </button>
       {open && (
         <div className="absolute right-0 top-full z-50 mt-1 min-w-[140px] rounded-md border border-border bg-surface-overlay py-1 shadow-md animate-in fade-in-0 zoom-in-95 duration-200">
@@ -131,7 +133,7 @@ function InlineSelect<T extends string>({
                   active ? "text-foreground" : "text-muted-foreground"
                 }`}
               >
-                <PhCheck className={`shrink-0 ${active ? "text-accent opacity-100" : "opacity-0"}`} size={14} weight="bold" />
+                <PhCheck className={`shrink-0 ${active ? "text-accent opacity-100" : "opacity-0"}`} size={14} strokeWidth={2.5} />
                 {opt.label}
               </button>
             )
@@ -230,16 +232,16 @@ function BoardColumn({
       }
     }
     if (groupBy === "folder") {
-      return <FolderIcon size={14} weight="regular" className="text-muted-foreground" />
+      return <FolderIcon size={14} strokeWidth={2} className="text-muted-foreground" />
     }
     if (groupBy === "tag") {
-      return <Hash size={14} weight="regular" className="text-muted-foreground" />
+      return <Hash size={14} strokeWidth={2} className="text-muted-foreground" />
     }
     if (groupBy === "family" || groupBy === "parent") {
-      return <Tree size={14} weight="regular" className="text-muted-foreground" />
+      return <Tree size={14} strokeWidth={2} className="text-muted-foreground" />
     }
     if (groupBy === "priority") {
-      return <TagIcon size={14} weight="regular" className="text-muted-foreground" />
+      return <TagIcon size={14} strokeWidth={2} className="text-muted-foreground" />
     }
     return null
   }, [groupBy, group.key])
@@ -569,7 +571,7 @@ function BoardCardInner({
           onSelect?.(note.id, e)
         }}
       >
-        {isSelected && <PhCheck className="text-accent-foreground" size={10} weight="bold" />}
+        {isSelected && <PhCheck className="text-accent-foreground" size={10} strokeWidth={2.5} />}
       </div>
 
       {/* Title row — Status hides when groupBy="status" (redundant) AND
@@ -1139,7 +1141,7 @@ export function NotesBoard({
   return (
     <main className="flex h-full flex-1 flex-col overflow-hidden bg-background">
       <ViewHeader
-        icon={<FileText size={20} weight="regular" />}
+        icon={<FileText size={20} strokeWidth={2} />}
         title={title ?? "Notes"}
         count={flatNotes.length}
         saveViewMode={saveViewMode}
@@ -1219,13 +1221,13 @@ export function NotesBoard({
         const folderName = folders.find((f) => f.id === folderId)?.name
         return folderName ? (
           <div className="flex shrink-0 items-center gap-1.5 border-b border-border px-5 py-1.5">
-            <FolderOpen className="text-muted-foreground" size={14} weight="regular" />
+            <FolderOpen className="text-muted-foreground" size={14} strokeWidth={2} />
             <span className="text-note text-foreground">{folderName}</span>
             <button
               onClick={() => setActiveFolderId(null)}
               className="ml-1 rounded-sm p-0.5 text-muted-foreground hover:text-foreground hover:bg-hover-bg transition-colors"
             >
-              <PhX size={12} weight="regular" />
+              <PhX size={12} strokeWidth={2} />
             </button>
           </div>
         ) : null
@@ -1237,7 +1239,7 @@ export function NotesBoard({
       {flatNotes.length === 0 ? (
         <div className="flex flex-1 items-center justify-center text-center">
           <div>
-            <FileText className="mx-auto mb-3 text-muted-foreground/70" size={40} weight="regular" />
+            <FileText className="mx-auto mb-3 text-muted-foreground/70" size={40} strokeWidth={2} />
             <p className="text-ui text-muted-foreground">No notes found</p>
             <p className="mt-1 text-note text-muted-foreground/60">
               {viewState.filters.length > 0 ? "Try adjusting your filters." : "Create your first note to get started."}
@@ -1369,7 +1371,7 @@ export function NotesBoard({
                                     onClick={() => toggleSubGroup(subKey)}
                                     className="flex items-center gap-1.5 w-full px-1.5 py-1 mt-2 first:mt-0 rounded-md text-2xs text-muted-foreground hover:bg-hover-bg transition-colors"
                                   >
-                                    <CaretRight className={`shrink-0 transition-transform ${isCollapsed ? "" : "rotate-90"}`} size={12} weight="regular" />
+                                    <CaretRight className={`shrink-0 transition-transform ${isCollapsed ? "" : "rotate-90"}`} size={12} strokeWidth={2} />
                                     <span className="font-medium truncate">{subLabel}</span>
                                     <span className="text-muted-foreground/70 tabular-nums ml-auto">{sub.notes.length}</span>
                                   </button>

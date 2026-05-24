@@ -7,22 +7,23 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { Warning } from "@phosphor-icons/react/dist/ssr/Warning"
-import { ArrowUp } from "@phosphor-icons/react/dist/ssr/ArrowUp"
-import { ArrowRight } from "@phosphor-icons/react/dist/ssr/ArrowRight"
-import { ArrowDown } from "@phosphor-icons/react/dist/ssr/ArrowDown"
-import { Minus as PhMinus } from "@phosphor-icons/react/dist/ssr/Minus"
-import { Lightning } from "@phosphor-icons/react/dist/ssr/Lightning"
-import { BookOpen } from "@phosphor-icons/react/dist/ssr/BookOpen"
-import { Archive as ArchiveIcon } from "@phosphor-icons/react/dist/ssr/Archive"
-import { CaretDown } from "@phosphor-icons/react/dist/ssr/CaretDown"
-import { Check as PhCheck } from "@phosphor-icons/react/dist/ssr/Check"
+import {
+  TriangleAlert as Warning,
+  ArrowUp,
+  ArrowRight,
+  ArrowDown,
+  Minus as PhMinus,
+  Zap as Lightning,
+  BookOpen,
+  Archive as ArchiveIcon,
+  ChevronDown as CaretDown,
+  Check as PhCheck,
+} from "lucide-react"
+// Brand icons (Stone/Brick): phosphor 유지 — 영구 룰 #95
 import { Hexagon } from "@phosphor-icons/react/dist/ssr/Hexagon"
 import { Cube } from "@phosphor-icons/react/dist/ssr/Cube"
 import { Cuboid2x2 } from "@/components/icons/Cuboid2x2"
-import { Tag as PhTag } from "@phosphor-icons/react/dist/ssr/Tag"
-import { Plus as PhPlus } from "@phosphor-icons/react/dist/ssr/Plus"
-import { X as PhX } from "@phosphor-icons/react/dist/ssr/X"
+import { Tag as PhTag, Plus as PhPlus, X as PhX } from "lucide-react"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { cn } from "@/lib/utils"
 import { PRESET_COLORS, getEntityColor } from "@/lib/colors" // v109: opt-in color fallback
@@ -79,27 +80,27 @@ export const PRIORITY_CONFIG: Record<
   none: {
     label: "No priority",
     color: "var(--muted-foreground)",
-    icon: <PhMinus size={14} weight="regular" />,
+    icon: <PhMinus size={14} strokeWidth={2} />,
   },
   urgent: {
     label: "Urgent",
     color: "var(--chart-4)",
-    icon: <Warning size={14} weight="regular" />,
+    icon: <Warning size={14} strokeWidth={2} />,
   },
   high: {
     label: "High",
     color: "var(--chart-3)",
-    icon: <ArrowUp size={14} weight="regular" />,
+    icon: <ArrowUp size={14} strokeWidth={2} />,
   },
   medium: {
     label: "Medium",
     color: "var(--chart-3)",
-    icon: <ArrowRight size={14} weight="regular" />,
+    icon: <ArrowRight size={14} strokeWidth={2} />,
   },
   low: {
     label: "Low",
     color: "var(--accent)",
-    icon: <ArrowDown size={14} weight="regular" />,
+    icon: <ArrowDown size={14} strokeWidth={2} />,
   },
 }
 
@@ -172,7 +173,7 @@ export function StatusDropdown({
               {current.icon}
               {current.label}
             </span>
-            <CaretDown className="text-muted-foreground" size={14} weight="regular" />
+            <CaretDown className="text-muted-foreground" size={14} strokeWidth={2} />
           </button>
         )}
       </DropdownMenuTrigger>
@@ -192,7 +193,7 @@ export function StatusDropdown({
                 {cfg.icon}
                 <span className="text-foreground">{cfg.label}</span>
               </span>
-              {value === s && <PhCheck className="text-muted-foreground" size={14} weight="bold" />}
+              {value === s && <PhCheck className="text-muted-foreground" size={14} strokeWidth={2.5} />}
             </DropdownMenuItem>
           )
         })}
@@ -235,7 +236,7 @@ export function PriorityDropdown({
               {current.icon}
               <span className="text-foreground">{current.label}</span>
             </span>
-            <CaretDown className="text-muted-foreground" size={14} weight="regular" />
+            <CaretDown className="text-muted-foreground" size={14} strokeWidth={2} />
           </button>
         )}
       </DropdownMenuTrigger>
@@ -255,7 +256,7 @@ export function PriorityDropdown({
                 {cfg.icon}
                 <span className="text-foreground">{cfg.label}</span>
               </span>
-              {value === p && <PhCheck className="text-muted-foreground" size={14} weight="bold" />}
+              {value === p && <PhCheck className="text-muted-foreground" size={14} strokeWidth={2.5} />}
             </DropdownMenuItem>
           )
         })}
@@ -277,7 +278,7 @@ export function LabelBadge({ label }: { label: { name: string; color: string } }
         borderWidth: "1.5px",
       }}
     >
-      <PhTag size={10} weight="bold" />
+      <PhTag size={10} strokeWidth={2.5} />
       {label.name}
     </span>
   )
@@ -307,7 +308,7 @@ export function LabelDropdown({
             style={current ? { backgroundColor: `${current.color}18`, color: current.color } : {}}
             onClick={(e) => e.stopPropagation()}
           >
-            <PhTag size={10} weight="regular" />
+            <PhTag size={10} strokeWidth={2} />
             {current?.name ?? "No label"}
           </button>
         ) : (
@@ -324,7 +325,7 @@ export function LabelDropdown({
               )}
               {current?.name ?? "No label"}
             </span>
-            <CaretDown className="text-muted-foreground" size={14} weight="regular" />
+            <CaretDown className="text-muted-foreground" size={14} strokeWidth={2} />
           </button>
         )}
       </DropdownMenuTrigger>
@@ -337,7 +338,7 @@ export function LabelDropdown({
           className="flex items-center justify-between"
         >
           <span className="text-muted-foreground">No label</span>
-          {!value && <PhCheck className="text-muted-foreground" size={14} weight="bold" />}
+          {!value && <PhCheck className="text-muted-foreground" size={14} strokeWidth={2.5} />}
         </DropdownMenuItem>
         {labels.map((l) => (
           <DropdownMenuItem
@@ -352,7 +353,7 @@ export function LabelDropdown({
               <span className="h-2 w-2 rounded-full" style={{ backgroundColor: l.color }} />
               <span className="text-foreground">{l.name}</span>
             </span>
-            {value === l.id && <PhCheck className="text-muted-foreground" size={14} weight="bold" />}
+            {value === l.id && <PhCheck className="text-muted-foreground" size={14} strokeWidth={2.5} />}
           </DropdownMenuItem>
         ))}
       </DropdownMenuContent>
@@ -413,7 +414,7 @@ export function TagPicker({
               onClick={(e) => { e.stopPropagation(); onRemoveTag(noteId, t.id) }}
               className="ml-0.5 rounded-full p-0 opacity-0 transition-opacity group-hover/tag:opacity-100 hover:bg-black/10"
             >
-              <PhX size={10} weight="regular" />
+              <PhX size={10} strokeWidth={2} />
             </button>
           </span>
         ))}
@@ -424,7 +425,7 @@ export function TagPicker({
             className="inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-hover-bg hover:text-foreground"
             onClick={(e) => e.stopPropagation()}
           >
-            <PhPlus size={12} weight="regular" />
+            <PhPlus size={12} strokeWidth={2} />
           </button>
         </PopoverTrigger>
         <PopoverContent align="end" className="w-52 p-0" onOpenAutoFocus={(e) => e.preventDefault()}>
@@ -461,7 +462,7 @@ export function TagPicker({
                     <span className="h-2 w-2 rounded-full" style={{ backgroundColor: getEntityColor(t.color) }} />
                     <span className="text-foreground">{t.name}</span>
                   </span>
-                  {isSelected && <PhCheck className="text-muted-foreground" size={12} weight="bold" />}
+                  {isSelected && <PhCheck className="text-muted-foreground" size={12} strokeWidth={2.5} />}
                 </button>
               )
             })}
@@ -474,7 +475,7 @@ export function TagPicker({
                   setSearch("")
                 }}
               >
-                <PhPlus size={12} weight="regular" />
+                <PhPlus size={12} strokeWidth={2} />
                 Create &ldquo;{search.trim()}&rdquo;
               </button>
             )}
@@ -534,7 +535,7 @@ export function LabelPicker({
         >
           {current ? (
             <>
-              <PhTag size={10} weight="regular" />
+              <PhTag size={10} strokeWidth={2} />
               {current.name}
             </>
           ) : (
@@ -569,7 +570,7 @@ export function LabelPicker({
                 setOpen(false)
               }}
             >
-              <PhX size={12} weight="regular" />
+              <PhX size={12} strokeWidth={2} />
               Remove label
             </button>
           )}
@@ -587,7 +588,7 @@ export function LabelPicker({
                 <span className="h-2 w-2 rounded-full" style={{ backgroundColor: l.color }} />
                 <span className="text-foreground">{l.name}</span>
               </span>
-              {currentLabelId === l.id && <PhCheck className="text-muted-foreground" size={12} weight="bold" />}
+              {currentLabelId === l.id && <PhCheck className="text-muted-foreground" size={12} strokeWidth={2.5} />}
             </button>
           ))}
           {showCreate && (
@@ -599,7 +600,7 @@ export function LabelPicker({
                 setSearch("")
               }}
             >
-              <PhPlus size={12} weight="regular" />
+              <PhPlus size={12} strokeWidth={2} />
               Create &ldquo;{search.trim()}&rdquo;
             </button>
           )}

@@ -54,11 +54,7 @@ import {
 import { shortRelative } from "@/lib/format-utils"
 import { cn } from "@/lib/utils"
 import { toast } from "sonner"
-import { PushPin } from "@phosphor-icons/react/dist/ssr/PushPin"
-import { Lightning } from "@phosphor-icons/react/dist/ssr/Lightning"
-import { PencilSimple } from "@phosphor-icons/react/dist/ssr/PencilSimple"
-import { Sparkle } from "@phosphor-icons/react/dist/ssr/Sparkle"
-import { PushPinSimple } from "@phosphor-icons/react/dist/ssr/PushPinSimple"
+import { Pin as PushPin, Zap as Lightning, Pencil as PencilSimple, Sparkles as Sparkle, Pin as PushPinSimple } from "lucide-react"
 import {
   ContextMenu,
   ContextMenuContent,
@@ -298,13 +294,13 @@ function BookBoardColumn({
 
   const headerIcon = useMemo(() => {
     if (groupBy === "kind") {
-      if (group.key === "smart") return <Lightning size={14} weight="regular" className="text-muted-foreground" />
-      if (group.key === "manual") return <PencilSimple size={14} weight="regular" className="text-muted-foreground" />
-      if (group.key === "hybrid") return <Sparkle size={14} weight="regular" className="text-muted-foreground" />
+      if (group.key === "smart") return <Lightning size={14} strokeWidth={2} className="text-muted-foreground" />
+      if (group.key === "manual") return <PencilSimple size={14} strokeWidth={2} className="text-muted-foreground" />
+      if (group.key === "hybrid") return <Sparkle size={14} strokeWidth={2} className="text-muted-foreground" />
     }
     if (groupBy === "pinned") {
-      if (group.key === "pinned") return <PushPin size={14} weight="fill" className="text-amber-500" />
-      return <PushPinSimple size={14} weight="regular" className="text-muted-foreground" />
+      if (group.key === "pinned") return <PushPin size={14} fill="currentColor" strokeWidth={2} className="text-amber-500" />
+      return <PushPinSimple size={14} strokeWidth={2} className="text-muted-foreground" />
     }
     return null
   }, [groupBy, group.key])
@@ -429,7 +425,7 @@ function BookBoardCardInner({
           {book.title || "Untitled book"}
         </span>
         {book.pinned && (
-          <PushPin size={11} weight="fill" className="shrink-0 text-amber-500" />
+          <PushPin size={11} fill="currentColor" strokeWidth={2} className="shrink-0 text-amber-500" />
         )}
       </div>
 

@@ -14,11 +14,7 @@ import type { WikiArticle } from "@/lib/types"
 import { pushUndo } from "@/lib/undo-manager"
 import { toast } from "sonner"
 
-import { GitMerge } from "@phosphor-icons/react/dist/ssr/GitMerge"
-import { ArrowsLeftRight } from "@phosphor-icons/react/dist/ssr/ArrowsLeftRight"
-import { MagnifyingGlass } from "@phosphor-icons/react/dist/ssr/MagnifyingGlass"
-import { BookOpen } from "@phosphor-icons/react/dist/ssr/BookOpen"
-import { Check as PhCheck } from "@phosphor-icons/react/dist/ssr/Check"
+import { GitMerge, ArrowLeftRight as ArrowsLeftRight, Search as MagnifyingGlass, BookOpen, Check as PhCheck } from "lucide-react"
 
 /* ── Types ── */
 
@@ -183,7 +179,7 @@ export function WikiMergePreview({
           <>
             <DialogHeader className="px-5 pt-5 pb-3">
               <DialogTitle className="flex items-center gap-2 text-ui">
-                <GitMerge size={16} weight="regular" />
+                <GitMerge size={16} strokeWidth={2} />
                 Merge Wiki Article
               </DialogTitle>
               <DialogDescription className="text-note">
@@ -220,7 +216,7 @@ export function WikiMergePreview({
                   <BookOpen
                     className="shrink-0 text-muted-foreground/70"
                     size={16}
-                    weight="regular"
+                    strokeWidth={2}
                   />
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-note text-foreground">
@@ -251,7 +247,7 @@ export function WikiMergePreview({
           <>
             <DialogHeader className="px-5 pt-5 pb-3">
               <DialogTitle className="flex items-center gap-2 text-ui">
-                <GitMerge size={16} weight="regular" />
+                <GitMerge size={16} strokeWidth={2} />
                 Merge Preview
               </DialogTitle>
               <DialogDescription className="text-note">
@@ -383,7 +379,7 @@ export function WikiMergePreview({
                   onClick={handleConfirm}
                   className="flex items-center gap-1.5 rounded-md bg-accent px-3 py-1.5 text-2xs font-medium text-accent-foreground transition-colors hover:bg-accent/90"
                 >
-                  <GitMerge size={12} weight="bold" />
+                  <GitMerge size={12} strokeWidth={2.5} />
                   Confirm Merge
                 </button>
               </div>
@@ -459,7 +455,7 @@ function RadioOption({
           checked ? "border-accent bg-accent" : "border-muted-foreground/30",
         )}
       >
-        {checked && <PhCheck size={9} weight="bold" className="text-white" />}
+        {checked && <PhCheck size={9} strokeWidth={2.5} className="text-white" />}
       </span>
       <span className="truncate">{label}</span>
     </button>

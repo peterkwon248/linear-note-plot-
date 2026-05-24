@@ -152,10 +152,39 @@ function applyBookSort(books: Book[], sortFields: SortRule[]): Book[] {
 
 /* ── Stage 4: Group ───────────────────────────────────── */
 
-function applyBookGrouping(books: Book[], groupBy: GroupBy): BookGroup[] {
+interface BookGroupingOptions {
+  /** B13: when true, fixed-column groupings (kind / pinned) emit columns
+   *  even when empty so the board doesn't visually "collapse" as users
+   *  drag the last card out. Notes/Wiki board mirror this pattern. */
+  showEmptyGroups?: boolean
+  /** B13: manual column order from `viewState.groupOrder` (drag-to-reorder
+   *  on board). When provided, the result groups are sorted by this array;
+   *  unknown keys fall back to the natural order at the end. */
+  groupOrder?: string[]
+}
+
+/** B13: apply optional groupOrder reordering to a group array. Stable —
+ *  preserves natural order for any group whose key isn't in `groupOrder`. */
+function reorderGroups(groups: BookGroup[], groupOrder?: string[]): BookGroup[] {
+  if (!groupOrder || groupOrder.length === 0) return groups
+  const indexOf = new Map(groupOrder.map((k, i) => [k, i]))
+  return [...groups].sort((a, b) => {
+    const ai = indexOf.get(a.key) ?? Number.MAX_SAFE_INTEGER
+    const bi = indexOf.get(b.key) ?? Number.MAX_SAFE_INTEGER
+    return ai - bi
+  })
+}
+
+function applyBookGrouping(
+  books: Book[],
+  groupBy: GroupBy,
+  opts?: BookGroupingOptions,
+): BookGroup[] {
   if (groupBy === "none") {
     return [{ key: "_all", label: "", books }]
   }
+
+  const showEmpty = opts?.showEmptyGroups ?? false
 
   // books-view-engine-3: kind = Smart / Manual / Hybrid. Fixed column order
   // mirrors the user mental model (Smart first → Hybrid → Manual gradient).
@@ -170,11 +199,10 @@ function applyBookGrouping(books: Book[], groupBy: GroupBy): BookGroup[] {
       else manualList.push(b)
     }
     const out: BookGroup[] = []
-    if (smartList.length > 0) out.push({ key: "smart", label: "Smart", books: smartList })
-    if (hybridList.length > 0) out.push({ key: "hybrid", label: "Hybrid", books: hybridList })
-    if (manualList.length > 0) out.push({ key: "manual", label: "Manual", books: manualList })
-    // Empty groups stay hidden until showEmptyGroups toggle ships.
-    return out
+    if (showEmpty || smartList.length > 0)  out.push({ key: "smart",  label: "Smart",  books: smartList })
+    if (showEmpty || hybridList.length > 0) out.push({ key: "hybrid", label: "Hybrid", books: hybridList })
+    if (showEmpty || manualList.length > 0) out.push({ key: "manual", label: "Manual", books: manualList })
+    return reorderGroups(out, opts?.groupOrder)
   }
 
   // books-view-engine-3: pinned = Pinned / Others. Two-column binary.
@@ -186,9 +214,9 @@ function applyBookGrouping(books: Book[], groupBy: GroupBy): BookGroup[] {
       else others.push(b)
     }
     const out: BookGroup[] = []
-    if (pinned.length > 0) out.push({ key: "pinned", label: "Pinned", books: pinned })
-    if (others.length > 0) out.push({ key: "others", label: "Others", books: others })
-    return out
+    if (showEmpty || pinned.length > 0) out.push({ key: "pinned", label: "Pinned", books: pinned })
+    if (showEmpty || others.length > 0) out.push({ key: "others", label: "Others", books: others })
+    return reorderGroups(out, opts?.groupOrder)
   }
 
   // 2026-05-14 time grouping: 5-tier Updated bucket (Today / Yesterday /
@@ -287,7 +315,14 @@ export function useBooksView(contextKey: ViewContextKey = "books"): UseBooksView
 
   // Stage 4: group
   const groups = useMemo(
-    () => applyBookGrouping(sorted, viewState.groupBy),
+    () => applyBookGrouping(sorted, viewState.groupBy, {
+      // B13: Books board now honors showEmptyGroups + groupOrder (Wiki/Notes
+      // board parity). Empty fixed-column groups stay visible when the user
+      // opts in via the DisplayPanel toggle; manual reorder persists via
+      // viewState.groupOrder keyed by groupBy.
+      showEmptyGroups: viewState.showEmptyGroups ?? false,
+      groupOrder: viewState.groupOrder?.[viewState.groupBy] ?? undefined,
+    }),
     [sorted, viewState.groupBy],
   )
 
