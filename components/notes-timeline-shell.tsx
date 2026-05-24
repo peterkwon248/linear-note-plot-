@@ -284,6 +284,7 @@ export function NotesTimelineShell({
           activeNoteId={activePreviewId ?? null}
           onOpenNote={handleOpenNote}
           onSelect={handleSelect}
+          onUpdateViewState={updateViewState}
         />
       </div>
     </main>

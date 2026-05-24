@@ -14,7 +14,7 @@ import {
 import type { DragEndEvent, DragStartEvent } from "@dnd-kit/core"
 import { SortableContext, horizontalListSortingStrategy, arrayMove, useSortable } from "@dnd-kit/sortable"
 import { CSS } from "@dnd-kit/utilities"
-import { FileText, Check as PhCheck } from "lucide-react"
+import { FileText, Check as PhCheck, ChevronDown as CaretDown } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { isWikiStub } from "@/lib/wiki-utils"
 import { usePlotStore } from "@/lib/store"
@@ -95,6 +95,8 @@ function BoardColumn({
   children,
   isDragDisabled,
   activeDragId,
+  isCollapsed,
+  onToggleCollapse,
 }: {
   group: WikiGroup
   groupBy: GroupBy
@@ -102,6 +104,11 @@ function BoardColumn({
   children: React.ReactNode
   isDragDisabled: boolean
   activeDragId: string | null
+  /** PR-Q5 (wiki parity): when true, column renders as a narrow vertical
+   *  bar (Linear board-collapse pattern). Click the column-header chevron
+   *  to toggle. */
+  isCollapsed?: boolean
+  onToggleCollapse?: () => void
 }) {
   const {
     setNodeRef: setSortableRef,
@@ -121,6 +128,43 @@ function BoardColumn({
     transform: CSS.Transform.toString(transform),
     transition,
     opacity: isDragging ? 0.5 : 1,
+  }
+
+  // PR-Q5 (wiki parity): 40px narrow vertical bar when collapsed.
+  // Click anywhere on the bar to expand. Mirrors notes-board.tsx.
+  if (isCollapsed) {
+    return (
+      <div
+        ref={(node) => {
+          setSortableRef(node)
+          setDropRef(node)
+        }}
+        style={sortableStyle}
+        className={cn(
+          "group/col-collapsed flex w-10 shrink-0 flex-col items-center gap-2 rounded-lg border border-border-subtle py-3 transition-colors",
+          isCardOver ? "bg-accent/10 ring-1 ring-accent/30" : "bg-secondary/40 hover:bg-secondary/60",
+        )}
+      >
+        <button
+          type="button"
+          onClick={onToggleCollapse}
+          className="flex w-full flex-1 cursor-pointer flex-col items-center gap-2 px-1"
+          title={`Expand ${group.label || "Untitled"}`}
+        >
+          <span className="text-muted-foreground/70 group-hover/col-collapsed:text-foreground transition-colors">
+            <CaretDown size={12} strokeWidth={2} className="rotate-180" />
+          </span>
+          <WikiGroupHeaderIcon groupBy={groupBy} groupKey={group.key} wikiCategories={wikiCategories} />
+          <span
+            className="text-note font-semibold text-foreground"
+            style={{ writingMode: "vertical-rl" }}
+          >
+            {group.label || "Untitled"}
+          </span>
+          <span className="text-2xs tabular-nums text-muted-foreground">{group.articles.length}</span>
+        </button>
+      </div>
+    )
   }
 
   return (
@@ -143,6 +187,19 @@ function BoardColumn({
         <WikiGroupHeaderIcon groupBy={groupBy} groupKey={group.key} wikiCategories={wikiCategories} />
         <span className="text-note font-semibold text-foreground truncate">{group.label || "Untitled"}</span>
         <span className="text-2xs text-muted-foreground">{group.articles.length}</span>
+        <div className="flex-1" />
+        {/* PR-Q5: collapse affordance — chevron-down → narrow column. */}
+        {onToggleCollapse && (
+          <button
+            type="button"
+            onClick={(e) => { e.stopPropagation(); onToggleCollapse() }}
+            onPointerDown={(e) => e.stopPropagation()}
+            className="flex h-5 w-5 cursor-pointer items-center justify-center rounded text-muted-foreground/70 hover:bg-hover-bg hover:text-foreground transition-colors"
+            title={`Collapse ${group.label || "Untitled"}`}
+          >
+            <CaretDown size={12} strokeWidth={2} />
+          </button>
+        )}
       </div>
       {isCardOver && activeDragId && !activeDragId.startsWith("col-") && !isDragDisabled && (
         <div className="mx-1.5 mb-1 rounded-md bg-accent/10 px-2.5 py-1.5 text-center text-2xs font-medium text-accent">
@@ -650,6 +707,13 @@ export function WikiBoard({
                   wikiCategories={wikiCategories}
                   isDragDisabled={isDragDisabled}
                   activeDragId={activeDragId}
+                  isCollapsed={(viewState.collapsedGroups ?? []).includes(group.key)}
+                  onToggleCollapse={() => {
+                    const current = new Set(viewState.collapsedGroups ?? [])
+                    if (current.has(group.key)) current.delete(group.key)
+                    else current.add(group.key)
+                    onUpdateViewState({ collapsedGroups: Array.from(current) })
+                  }}
                 >
                   {visibleArticles.map((article) => {
                     const cardKey = `${article.id}::${group.key}`

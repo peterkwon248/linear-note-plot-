@@ -310,6 +310,7 @@ function BooksGrid() {
             activeBookId={null}
             onOpenBook={openBook}
             onSelect={() => {}}
+            onUpdateViewState={updateViewState}
           />
         ) : (
           // books-view-engine-1: grid mode (default, preserved from before).

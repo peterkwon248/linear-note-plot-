@@ -6,6 +6,94 @@
 
 ---
 
+## 2026-05-24 (밤) — Windows, **Group collapse universal 완성 — Wiki Board + Notes/Books Timeline lane collapse (PR-Q5/Q4 패턴 확장)**
+
+> 🎯 **다음 즉시 액션 (다음 세션 시작점)**: **PR-Q4 v2 ghost row pattern** — collapsed group의 자리에 1-row "ghost lane" inject (chevron right + label + (N hidden) + click → expand). Linear/Notion 정합. 사용자 viewport에서 v1 검증 후 결정 (현재 collapsed group이 시각 자체 안 보임 — "Expand all" 버튼으로만 복구).
+>
+> **사용자 의도**: 직전 세션에서 "그룹 콜파스랑 퀵 필터 칩 이런 걸 추가하자는 너의 제안에 동의" + "이건 타임라인에만 적용되는 게 아니라 다른 모든 디스플레이 모드에도 적용되어야 하는 이슈" — universal scope 명시. 이번 세션은 Wiki Board + Notes/Books Timeline 확장 완성.
+>
+> **첫 스텝** (ghost row v2 — 다른 머신에서):
+> 1. `components/views/wiki-timeline/wiki-timeline-config.ts`에 DisplayLane union type 추가:
+>    `type DisplayLane = { kind: "article"; lane: LanedArticle<T> } | { kind: "collapsedHeader"; groupKey: string; label: string; count: number }`
+> 2. wiki-timeline-view.tsx의 visibleLanes 계산 시 collapsed group 위치에 placeholder lane (kind: "collapsedHeader") inject
+> 3. TimelineBar / TimelineEventMarkers / TimelineLabelColumn 모두 kind === "collapsedHeader" 분기 처리 (bar 안 그리기, label은 chevron right + (N hidden))
+> 4. notes-timeline-view + books-timeline-view 동일 적용
+>
+> **위험 + 회피**:
+> - sub-components가 lanes를 `{ article: T, x, w, ... }` 형태로 받음 — DisplayLane union이면 type cascading. 큰 refactor.
+> - 대안: lane에 sentinel `article: null as any` + `isCollapsedHeader: true` 옵션 필드 — sub-components 시작에 `if (!lane.article) return null` check (skip)
+>
+> **참고 파일**:
+> - `components/views/wiki-timeline-view.tsx:80-105` (collapsedGroups callbacks)
+> - `components/views/wiki-timeline-view.tsx:145-175` (visibleLanes filter — ghost lane inject 위치)
+> - `components/views/wiki-timeline/timeline-label-column.tsx:98-115` (lane render — kind 분기 위치)
+> - `components/views/notes-timeline-view.tsx` + `books-timeline-view.tsx` (동일 적용 대상)
+>
+> **2번째 P0 후보** (#1 끝나면): temporal-hooks PRD 정리 (P1, open questions 6개 — 큰 방향 사용자 조율).
+>
+> **머신**: Windows.
+> **현재 main HEAD**: 이번 PR 머지 후 (PR `#???` — 머지 시 갱신).
+> **branch worktree**: `claude/peaceful-faraday-b50f16` (cleanup 후 새 worktree 권장).
+
+### 완료 (이번 세션, 단일 PR — 5 파일 변경)
+
+**Group collapse universal 완성** — 직전 PR #408의 Q-series (Q1~Q5) cascading extension:
+
+1. **Wiki Board column collapse** (`components/views/wiki-board.tsx`):
+   - notes-board.tsx PR-Q5 패턴 mechanical 복제
+   - BoardColumn에 `isCollapsed` + `onToggleCollapse` prop 추가
+   - Collapsed render: 40px narrow vertical bar + chevron up + WikiGroupHeaderIcon + vertical label (writing-mode: vertical-rl) + count
+   - Expanded header에 chevron-down 버튼 추가 (drag stopPropagation)
+   - Caller에서 `viewState.collapsedGroups` read + toggle wire
+
+2. **Notes Timeline lane collapse** (`components/views/notes-timeline-view.tsx`):
+   - PR-Q4 wiki-timeline-view 패턴 복제
+   - `NotesTimelineViewProps`에 `onUpdateViewState` 추가
+   - collapsedGroupsSet + toggleGroupCollapse/expandAllGroups callbacks
+   - allLanes/lanes split (collapsed group filter — cascading reflow)
+   - groupBoundaries에 `key` 추가
+   - TimelineLabelColumn에 onToggleGroup wire / TimelineControls에 expandAll wire
+   - Caller (notes-timeline-shell.tsx)에서 `onUpdateViewState={updateViewState}` 전달
+
+3. **Books Timeline lane collapse** (`components/views/books-timeline-view.tsx`):
+   - 동일 패턴 (Notes timeline과 mechanical 정합)
+   - Caller (books-view.tsx)에서 onUpdateViewState 전달
+
+검증: tsc clean + build exit 0 모든 3 단위.
+
+### 브레인스토밍 & 큰 결정 (영구 LOCKED #109 cascading)
+
+- **#109 Linear column/lane collapse pattern 확정** — board (40px narrow + vertical label writing-mode: vertical-rl) + timeline (cascading reflow + "Expand all" 버튼). list (group collapse 기존) 포함. 모든 view mode에서 동일 store-backed source (`viewState.collapsedGroups`).
+- **모든 grouping axis가 자동 작동** — collapsedGroups는 key 기반. status / wikiStatus / tier / linkCount / parent / role / folder / label / category 등 모두 자동 지원. mode 전환 시 같은 grouping이면 collapse 유지.
+- **3 timeline entity (wiki/notes/books) 동일 패턴**: WikiTimelineView 패턴이 Notes/Books에 1:1 복제 가능 — sub-components가 generic (PR-Q4 timeline-label-column / timeline-controls에 onToggleGroup / collapsedGroupCount / onExpandAllGroups prop 이미 add됨).
+
+### 기술 학습 (영구)
+
+- **PR-Q4 패턴 mechanical 복제 안정**: WikiTimelineView의 collapsedGroupsSet/visibleLanes/toggleGroupCollapse/expandAllGroups 4가지가 cohesive 단위. 다른 entity timeline에 그대로 복제 가능 (article → note/book만 swap, articleGroupMeta → noteGroupMeta/bookGroupMeta).
+- **wiki-board.tsx vs notes-board.tsx 패턴 정합**: BoardColumn 구조 동일 (useSortable("col-${key}") + useDroppable(group.key) + drop banner + cards container). PR-Q5 mechanical 복제 OK. dnd-kit 패턴이 entity-agnostic해서 향후 entity 추가 시도 동일 가능.
+
+### Watch Out (다음 세션)
+
+- **🟢 PR-Q4 v2 ghost row pattern** — 현재 collapsed group이 시각 자체 안 보임. v2엔 "ghost lane" inject (chevron right + label + (N hidden) + click → expand). 큰 작업 (DisplayLane union 또는 sentinel article). 사용자 viewport 검증 후 결정.
+- **사용자 viewport 검증 필요**:
+  - Wiki Board column collapse 실제 사용감 (notes 정합 시각 확인)
+  - Notes/Books Timeline lane collapse 실제 작동 (group header click → cascading reflow + Expand all 버튼)
+  - 모든 mode 일관성 (list/board/timeline의 group collapse가 같은 store에서 작동하는지 — `viewState.collapsedGroups` shared)
+- **dnd-kit + collapsed column 상호작용**: collapsed column이 drag handle (useSortable)을 여전히 가짐 — drag로 reorder 시도 작동해야 정합. drop은 collapsed에 cards 못 들어가야 더 의도적 — v2에서 검토 가능.
+
+### 환경 변경
+
+- Store v145 무변경 (모두 view layer)
+- 변경 파일 5: wiki-board.tsx + notes-timeline-view.tsx + notes-timeline-shell.tsx + books-timeline-view.tsx + books-view.tsx
+- 신규 파일 0
+- 사용자 IDB stale data: 없음
+
+### 머신
+
+Windows. 짧은 cohesive 세션 — group collapse universal 완성 확장.
+
+---
+
 ## 2026-05-24 (저녁) — Windows, **거대 세션 #2: Notes timeline ViewHeader + File 엔티티 v1 (6 PR) + Notes/Wiki Grid Display + Display Panel Audit + Q-series (Q1~Q5) — 모두 11 변경 단위**
 
 > 🎯 **다음 즉시 액션 (다음 세션 시작점)**: **Wiki Board column collapse** — notes-board.tsx PR-Q5 패턴을 wiki-board.tsx에 mechanical 복제. + Notes/Books Timeline에 PR-Q4 패턴 확장 (현재 Wiki timeline만 lane collapse 작동).
