@@ -409,6 +409,22 @@ const EN = {
   // Quick tasks aggregate note title (auto-created)
   "todos.quick_tasks_note": "Quick Tasks",
 
+  // Floating action bar (multi-select)
+  "floatingbar.selected": "{count} selected",
+  "floatingbar.pin": "Pin",
+  "floatingbar.unpin": "Unpin",
+  "floatingbar.pinned_toast": "Pinned {count} notes",
+  "floatingbar.unpinned_toast": "Unpinned {count} notes",
+  "floatingbar.trash": "Trash",
+  "floatingbar.merge": "Merge",
+  "floatingbar.split": "Split",
+  "floatingbar.wiki": "Wiki",
+  "floatingbar.link": "Link",
+  "floatingbar.move": "Move",
+  "floatingbar.add_to_folder": "Add to folder",
+  "floatingbar.move_out_toast": "{count} note(s) moved out of folder",
+  "floatingbar.move_to_toast": "{count} note(s) moved to {folder}",
+
   // Side panel inspector sections (Detail tab content)
   "sidepanel.inspector.dates": "Dates",
   "sidepanel.inspector.dates.created": "Created",
@@ -895,6 +911,22 @@ const KO: Partial<Record<DictKey, string>> = {
   "inbox.meta.notes_count": "노트 {count}개",
   "common.untitled_task": "제목 없는 할 일",
   "todos.quick_tasks_note": "빠른 할 일",
+
+  // Floating action bar
+  "floatingbar.selected": "{count}개 선택됨",
+  "floatingbar.pin": "고정",
+  "floatingbar.unpin": "고정 해제",
+  "floatingbar.pinned_toast": "노트 {count}개 고정함",
+  "floatingbar.unpinned_toast": "노트 {count}개 고정 해제",
+  "floatingbar.trash": "휴지통",
+  "floatingbar.merge": "병합",
+  "floatingbar.split": "분리",
+  "floatingbar.wiki": "위키",
+  "floatingbar.link": "연결",
+  "floatingbar.move": "이동",
+  "floatingbar.add_to_folder": "폴더에 추가",
+  "floatingbar.move_out_toast": "노트 {count}개를 폴더에서 꺼냈어요",
+  "floatingbar.move_to_toast": "노트 {count}개를 {folder}(으)로 옮겼어요",
 
   // Side panel inspector sections
   "sidepanel.inspector.dates": "날짜",

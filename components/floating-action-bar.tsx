@@ -31,6 +31,7 @@ import {
 } from "lucide-react"
 import { setSplitTargetNoteId } from "@/lib/note-split-mode"
 import { FolderPicker } from "@/components/folder-picker"
+import { useT } from "@/lib/i18n"
 
 /* ── Props ────────────────────────────────────────────── */
 
@@ -55,6 +56,7 @@ export function FloatingActionBar({
   notes,
   onClearSelection,
 }: FloatingActionBarProps) {
+  const t = useT()
   const batchUpdateNotes = usePlotStore((s) => s.batchUpdateNotes)
   const triageKeep = usePlotStore((s) => s.triageKeep)
   const triageTrash = usePlotStore((s) => s.triageTrash)
@@ -222,13 +224,13 @@ export function FloatingActionBar({
               onClick={handleRestoreAll}
               className="inline-flex items-center gap-1 rounded-md bg-accent/10 px-3 py-2 text-ui font-medium text-accent hover:bg-accent/20 transition-colors"
             >
-              <ArrowCounterClockwise size={16} /> Restore
+              <ArrowCounterClockwise size={16} /> {t("sidepanel.workflow.back_to_stone")}
             </button>
             <button
               onClick={handleDeletePermanently}
               className="inline-flex items-center gap-1 rounded-md bg-destructive/10 px-3 py-2 text-ui font-medium text-destructive hover:bg-destructive/20 transition-colors"
             >
-              <Trash size={16} /> Delete
+              <Trash size={16} /> {t("common.delete")}
             </button>
           </>
         )
@@ -239,7 +241,7 @@ export function FloatingActionBar({
             onClick={handleKeepAll}
             className="inline-flex items-center gap-1 rounded-md bg-accent/10 px-3 py-2 text-ui font-medium text-accent hover:bg-accent/20 transition-colors"
           >
-            <PhCheck size={16} strokeWidth={2.5} /> Done
+            <PhCheck size={16} strokeWidth={2.5} /> {t("sidepanel.workflow.done")}
           </button>
         )
 
@@ -250,13 +252,13 @@ export function FloatingActionBar({
               onClick={handlePromoteAll}
               className="inline-flex items-center gap-1 rounded-md bg-chart-5/10 px-3 py-2 text-ui font-medium text-chart-5 hover:bg-chart-5/20 transition-colors"
             >
-              <ArrowUpRight size={16} /> Promote
+              <ArrowUpRight size={16} /> {t("sidepanel.workflow.promote")}
             </button>
             <button
               onClick={handleMoveBackAll}
               className="inline-flex items-center gap-1 rounded-md bg-secondary/60 px-3 py-2 text-ui font-medium text-muted-foreground hover:bg-hover-bg transition-colors"
             >
-              <Tray size={16} /> Back to Stone
+              <Tray size={16} /> {t("sidepanel.workflow.back_to_stone")}
             </button>
           </>
         )
@@ -267,7 +269,7 @@ export function FloatingActionBar({
             onClick={handleDemoteAll}
             className="inline-flex items-center gap-1 rounded-md bg-secondary/60 px-3 py-2 text-ui font-medium text-muted-foreground hover:bg-hover-bg transition-colors"
           >
-            <ArrowDownLeft size={16} /> Demote
+            <ArrowDownLeft size={16} /> {t("sidepanel.workflow.demote")}
           </button>
         )
 
@@ -280,7 +282,7 @@ export function FloatingActionBar({
                 onClick={handleKeepInboxOnly}
                 className="inline-flex items-center gap-1 rounded-md bg-accent/10 px-3 py-2 text-ui font-medium text-accent hover:bg-accent/20 transition-colors"
               >
-                <PhCheck size={16} strokeWidth={2.5} /> Done {inboxCount}
+                <PhCheck size={16} strokeWidth={2.5} /> {t("sidepanel.workflow.done")} {inboxCount}
               </button>
             )}
             {captureCount > 0 && (
@@ -288,7 +290,7 @@ export function FloatingActionBar({
                 onClick={handlePromoteCaptureOnly}
                 className="inline-flex items-center gap-1 rounded-md bg-chart-5/10 px-3 py-2 text-ui font-medium text-chart-5 hover:bg-chart-5/20 transition-colors"
               >
-                <ArrowUpRight size={16} /> Promote {captureCount}
+                <ArrowUpRight size={16} /> {t("sidepanel.workflow.promote")} {captureCount}
               </button>
             )}
             {permanentCount > 0 && (
@@ -296,7 +298,7 @@ export function FloatingActionBar({
                 onClick={handleDemotePermanentOnly}
                 className="inline-flex items-center gap-1 rounded-md bg-secondary/60 px-3 py-2 text-ui font-medium text-muted-foreground hover:bg-hover-bg transition-colors"
               >
-                <ArrowDownLeft size={16} /> Demote {permanentCount}
+                <ArrowDownLeft size={16} /> {t("sidepanel.workflow.demote")} {permanentCount}
               </button>
             )}
           </>
@@ -317,7 +319,7 @@ export function FloatingActionBar({
         <div className="flex items-center gap-1.5 px-1.5">
           <Lightning className="text-accent" size={16} />
           <span className="text-ui font-medium text-foreground whitespace-nowrap">
-            {count} selected
+            {t("floatingbar.selected").replace("{count}", String(count))}
           </span>
           <button
             onClick={onClearSelection}
@@ -405,16 +407,16 @@ export function FloatingActionBar({
                 batchUpdateNotes(ids, { pinned: nextPinned })
                 toast.success(
                   nextPinned
-                    ? `Pinned ${count} note${count === 1 ? "" : "s"}`
-                    : `Unpinned ${count} note${count === 1 ? "" : "s"}`,
+                    ? t("floatingbar.pinned_toast").replace("{count}", String(count))
+                    : t("floatingbar.unpinned_toast").replace("{count}", String(count)),
                 )
               }}
               className="inline-flex items-center gap-1 rounded-md bg-secondary/60 px-3 py-2 text-ui font-medium text-muted-foreground hover:bg-hover-bg hover:text-foreground transition-colors"
             >
               {selectedNotes.every((n) => n.pinned) ? (
-                <><PushPinSlash size={16} /> Unpin</>
+                <><PushPinSlash size={16} /> {t("floatingbar.unpin")}</>
               ) : (
-                <><PushPin size={16} className="text-amber-500" /> Pin</>
+                <><PushPin size={16} className="text-amber-500" /> {t("floatingbar.pin")}</>
               )}
             </button>
 
@@ -424,7 +426,7 @@ export function FloatingActionBar({
               onClick={handleTrashAll}
               className="inline-flex items-center gap-1 rounded-md bg-destructive/10 px-3 py-2 text-ui font-medium text-destructive hover:bg-destructive/20 transition-colors"
             >
-              <Trash size={16} /> Trash
+              <Trash size={16} /> {t("floatingbar.trash")}
             </button>
 
             {/* GitMerge */}
@@ -439,7 +441,7 @@ export function FloatingActionBar({
               }}
               className="inline-flex items-center gap-1 rounded-md bg-secondary/60 px-3 py-2 text-ui font-medium text-muted-foreground hover:bg-hover-bg hover:text-foreground transition-colors"
             >
-              <GitMerge size={16} /> GitMerge
+              <GitMerge size={16} /> {t("floatingbar.merge")}
             </button>
 
             {/* Split (single selection only) */}
@@ -452,7 +454,7 @@ export function FloatingActionBar({
                 className="inline-flex items-center gap-1 rounded-md bg-secondary/60 px-3 py-2 text-ui font-medium text-muted-foreground hover:bg-hover-bg hover:text-foreground transition-colors"
                 title="Split this note into two"
               >
-                <Scissors size={16} /> Split
+                <Scissors size={16} /> {t("floatingbar.split")}
               </button>
             )}
 
@@ -461,7 +463,7 @@ export function FloatingActionBar({
               onClick={() => setWikiAssemblyOpen(true)}
               className="inline-flex items-center gap-1 rounded-md bg-secondary/60 px-3 py-2 text-ui font-medium text-muted-foreground hover:bg-hover-bg hover:text-foreground transition-colors"
             >
-              <BookOpen size={16} /> Wiki
+              <BookOpen size={16} /> {t("floatingbar.wiki")}
             </button>
 
             {/* Link */}
@@ -470,7 +472,7 @@ export function FloatingActionBar({
               onClick={() => setLinkOpen(true)}
               className="inline-flex items-center gap-1 rounded-md bg-secondary/60 px-3 py-2 text-ui font-medium text-muted-foreground hover:bg-hover-bg hover:text-foreground transition-colors"
             >
-              <PhLink size={16} /> Link
+              <PhLink size={16} /> {t("floatingbar.link")}
             </button>
 
             {/* Move to folder — bulk single-folder replace. Each selected
@@ -484,7 +486,7 @@ export function FloatingActionBar({
                   className="inline-flex items-center gap-1 rounded-md bg-secondary/60 px-3 py-2 text-ui font-medium text-muted-foreground hover:bg-hover-bg hover:text-foreground transition-colors"
                   title="Move selected notes to a folder (replaces existing memberships)"
                 >
-                  <FolderOpen size={16} /> Move
+                  <FolderOpen size={16} /> {t("floatingbar.move")}
                 </button>
               </PopoverTrigger>
               <PopoverContent align="center" className="w-56 p-1">
@@ -496,11 +498,15 @@ export function FloatingActionBar({
                   onSelect={(folderId) => {
                     if (folderId === null) {
                       batchUpdateNotes(ids, { folderIds: [] })
-                      toast(`${count} note${count !== 1 ? "s" : ""} moved out of folder`)
+                      toast(t("floatingbar.move_out_toast").replace("{count}", String(count)))
                     } else {
                       const target = folders.find((f) => f.id === folderId)
                       batchUpdateNotes(ids, { folderIds: [folderId] })
-                      toast(`${count} note${count !== 1 ? "s" : ""} moved to ${target?.name ?? "folder"}`)
+                      toast(
+                        t("floatingbar.move_to_toast")
+                          .replace("{count}", String(count))
+                          .replace("{folder}", target?.name ?? "folder"),
+                      )
                     }
                   }}
                 />
@@ -520,7 +526,7 @@ export function FloatingActionBar({
                   className="inline-flex items-center gap-1 rounded-md bg-secondary/60 px-3 py-2 text-ui font-medium text-muted-foreground hover:bg-hover-bg hover:text-foreground transition-colors"
                   title="Add selected notes to one or more folders (preserves existing memberships)"
                 >
-                  <FolderOpen size={16} /> Add to
+                  <FolderOpen size={16} /> {t("floatingbar.add_to_folder")}
                 </button>
               </PopoverTrigger>
               <PopoverContent align="center" className="w-56 p-1">
