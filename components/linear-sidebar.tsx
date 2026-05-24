@@ -1069,26 +1069,34 @@ export function LinearSidebar() {
                   decisions #8 — cross-cutting index). */}
             </div>
 
-            {/* Pinned wiki articles — placed at top per Linear/Notion 표준 (2026-05-24). */}
-            {(() => {
-              const pinnedWiki = notes.filter((n) => n.noteType === "wiki" && !n.trashed && n.pinned)
-              return pinnedWiki.length > 0 ? (
-                <Section title={t("sidebar.section.pinned")}>
-                  {pinnedWiki.map((note) => (
-                    <button
-                      key={note.id}
-                      onClick={(e) => openNote(note.id, { forceNewTab: e.ctrlKey || e.metaKey })}
-                      className="a-sb-link"
-                    >
-                      <span className="flex shrink-0 items-center justify-center w-5 h-5">
-                        <IconDoc size={14} />
-                      </span>
-                      <span className="truncate text-left flex-1">{note.title || "Untitled"}</span>
-                    </button>
-                  ))}
-                </Section>
-              ) : null
-            })()}
+            {/* Pinned wiki articles — placed at top per Linear/Notion 표준 (2026-05-24).
+                Fix: source는 wikiArticles store (별도 entity). 이전 `notes.filter(
+                noteType === "wiki")`는 legacy 데이터 — 현재 모델은 wikiArticles
+                별도 store. click handler는 home sidebar의 cross-entity 패턴 정합. */}
+            {pinnedWikiArticles.length > 0 && (
+              <Section title={t("sidebar.section.pinned")}>
+                {pinnedWikiArticles.map((article) => (
+                  <button
+                    key={article.id}
+                    onClick={() => {
+                      setActiveRoute("/wiki")
+                      usePlotStore.getState().setSelectedNoteId(null)
+                      navigateToWikiArticle(article.id)
+                    }}
+                    className="a-sb-link"
+                  >
+                    <span className="flex shrink-0 items-center justify-center w-5 h-5">
+                      {isWikiStub(article) ? (
+                        <IconWikiStub size={14} style={{ color: WIKI_STATUS_HEX.stub }} />
+                      ) : (
+                        <IconWikiArticle size={14} style={{ color: WIKI_STATUS_HEX.article }} />
+                      )}
+                    </span>
+                    <span className="truncate text-left flex-1">{article.title || "Untitled"}</span>
+                  </button>
+                ))}
+              </Section>
+            )}
 
             {/* Wiki Views */}
             {renderViewsSection("wiki", "/wiki")}
