@@ -21,8 +21,7 @@ import {
 } from "@/components/property-chips"
 import { shortRelative } from "@/lib/format-utils"
 import { cn } from "@/lib/utils"
-import { Books as PhBooks } from "@phosphor-icons/react/dist/ssr/Books"
-import { PushPin } from "@phosphor-icons/react/dist/ssr/PushPin"
+import { Library as PhBooks, Pin as PushPin } from "lucide-react"
 import {
   ContextMenu,
   ContextMenuContent,
@@ -30,10 +29,7 @@ import {
   ContextMenuSeparator,
   ContextMenuTrigger,
 } from "@/components/ui/context-menu"
-import { PencilSimple } from "@phosphor-icons/react/dist/ssr/PencilSimple"
-import { PushPinSlash } from "@phosphor-icons/react/dist/ssr/PushPinSlash"
-import { Trash } from "@phosphor-icons/react/dist/ssr/Trash"
-import { ArrowCounterClockwise } from "@phosphor-icons/react/dist/ssr/ArrowCounterClockwise"
+import { Pencil as PencilSimple, PinOff as PushPinSlash, Trash2 as Trash, RotateCcw as ArrowCounterClockwise } from "lucide-react"
 
 interface BookListRowProps {
   book: Book
@@ -78,7 +74,7 @@ export function BookListRow({
               BookTable로 이관됨 (PR #293). 이 파일은 사용 안 되지만 빌드
               cleanliness 위해 BookKindIcon 분기 정리. */}
           <span className="flex h-5 w-5 shrink-0 items-center justify-center text-muted-foreground/70">
-            <PhBooks size={14} weight="regular" />
+            <PhBooks size={14} strokeWidth={2} />
           </span>
 
           {/* Title (flex-1 truncate) */}
@@ -94,7 +90,7 @@ export function BookListRow({
             {book.pinned && (
               <PushPin
                 size={11}
-                weight="fill"
+                fill="currentColor" strokeWidth={2}
                 className="text-amber-500"
               />
             )}
@@ -111,7 +107,7 @@ export function BookListRow({
               onClick={() => onRestore(book.id, book.title)}
               className="text-note"
             >
-              <ArrowCounterClockwise size={14} weight="regular" className="mr-2 text-muted-foreground" />
+              <ArrowCounterClockwise size={14} strokeWidth={2} className="mr-2 text-muted-foreground" />
               Restore
             </ContextMenuItem>
             <ContextMenuSeparator />
@@ -119,14 +115,14 @@ export function BookListRow({
               onClick={() => onPermanentDelete(book.id, book.title)}
               className="text-note text-destructive focus:text-destructive"
             >
-              <Trash size={14} weight="regular" className="mr-2" />
+              <Trash size={14} strokeWidth={2} className="mr-2" />
               Delete forever
             </ContextMenuItem>
           </>
         ) : (
           <>
             <ContextMenuItem onClick={() => onRename(book.id, book.title)} className="text-note">
-              <PencilSimple size={14} weight="regular" className="mr-2 text-muted-foreground" />
+              <PencilSimple size={14} strokeWidth={2} className="mr-2 text-muted-foreground" />
               Rename
             </ContextMenuItem>
             <ContextMenuItem
@@ -135,12 +131,12 @@ export function BookListRow({
             >
               {book.pinned ? (
                 <>
-                  <PushPinSlash size={14} weight="regular" className="mr-2 text-muted-foreground" />
+                  <PushPinSlash size={14} strokeWidth={2} className="mr-2 text-muted-foreground" />
                   Unpin
                 </>
               ) : (
                 <>
-                  <PushPin size={14} weight="regular" className="mr-2 text-muted-foreground" />
+                  <PushPin size={14} strokeWidth={2} className="mr-2 text-muted-foreground" />
                   Pin to sidebar
                 </>
               )}
@@ -150,7 +146,7 @@ export function BookListRow({
               onClick={() => onDelete(book.id, book.title)}
               className="text-note text-destructive focus:text-destructive"
             >
-              <Trash size={14} weight="regular" className="mr-2" />
+              <Trash size={14} strokeWidth={2} className="mr-2" />
               Move to trash
             </ContextMenuItem>
           </>

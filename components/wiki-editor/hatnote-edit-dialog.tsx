@@ -29,8 +29,7 @@ import {
 import { WikiPickerDialog } from "@/components/wiki-picker-dialog"
 import { usePlotStore } from "@/lib/store"
 import type { Hatnote, HatnoteType } from "@/lib/types"
-import { X as PhX } from "@phosphor-icons/react/dist/ssr/X"
-import { BookOpen as PhBookOpen } from "@phosphor-icons/react/dist/ssr/BookOpen"
+import { X as PhX, BookOpen as PhBookOpen } from "lucide-react"
 
 interface HatnoteEditDialogProps {
   open: boolean

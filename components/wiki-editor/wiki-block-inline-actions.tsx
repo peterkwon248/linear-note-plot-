@@ -2,7 +2,7 @@
 
 import { useMemo } from "react"
 import { usePlotStore } from "@/lib/store"
-import { BookmarkSimple } from "@phosphor-icons/react/dist/ssr/BookmarkSimple"
+import { Bookmark as BookmarkSimple } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 /**
@@ -53,7 +53,7 @@ export function WikiBlockInlineActions({
         className,
       )}
     >
-      <BookmarkSimple size={13} weight={pinned ? "fill" : "regular"} />
+      <BookmarkSimple size={13} fill={pinned ? "currentColor" : "none"} strokeWidth={2} />
     </button>
   )
 }

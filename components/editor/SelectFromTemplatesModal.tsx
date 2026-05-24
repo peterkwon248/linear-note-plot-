@@ -28,8 +28,7 @@ import {
 } from "@/components/ui/command"
 import { usePlotStore } from "@/lib/store"
 import { expandPlaceholders } from "@/lib/store/slices/templates"
-import { Layout } from "@phosphor-icons/react/dist/ssr/Layout"
-import { PushPin } from "@phosphor-icons/react/dist/ssr/PushPin"
+import { LayoutTemplate as Layout, Pin as PushPin } from "lucide-react"
 import type { NoteTemplate } from "@/lib/types"
 
 type Props = {
@@ -90,7 +89,7 @@ export function SelectFromTemplatesModal({ open, onOpenChange, editor }: Props) 
               >
                 <Layout
                   size={16}
-                  weight="regular"
+                  strokeWidth={2}
                   className="shrink-0 text-muted-foreground"
                 />
                 <span className="truncate flex-1 text-note text-foreground">
@@ -99,7 +98,8 @@ export function SelectFromTemplatesModal({ open, onOpenChange, editor }: Props) 
                 {template.pinned && (
                   <PushPin
                     size={12}
-                    weight="fill"
+                    fill="currentColor"
+                    strokeWidth={2}
                     className="shrink-0 text-muted-foreground/70"
                   />
                 )}

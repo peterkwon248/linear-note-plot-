@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { cn } from "@/lib/utils"
-import { Check as PhCheck } from "@phosphor-icons/react/dist/ssr/Check"
+import { Check as PhCheck } from "lucide-react"
 import { PRESET_COLORS, PRESET_COLOR_NAMES } from "@/lib/colors"
 
 const HEX_RE = /^#[0-9a-fA-F]{6}$/
@@ -54,7 +54,7 @@ export function ColorPickerGrid({
               }}
               type="button"
             >
-              {active && <PhCheck className="text-white drop-shadow" size={checkSize} weight="bold" />}
+              {active && <PhCheck className="text-white drop-shadow" size={checkSize} strokeWidth={2.5} />}
             </button>
           )
         })}

@@ -1,7 +1,7 @@
 'use client'
 
 import React from 'react'
-import { Warning } from "@phosphor-icons/react/dist/ssr/Warning"
+import { TriangleAlert as Warning } from "lucide-react"
 
 interface ErrorBoundaryProps {
   children: React.ReactNode

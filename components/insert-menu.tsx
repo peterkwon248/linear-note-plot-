@@ -14,7 +14,7 @@ import {
   Paperclip,
   Plus as PhPlus,
 } from "@/lib/editor/editor-icons"
-import { Layout as PhLayout } from "@phosphor-icons/react/dist/ssr/Layout"
+import { LayoutTemplate as PhLayout } from "lucide-react"
 import { usePlotStore } from "@/lib/store"
 import { persistAttachmentBlob } from "@/lib/store/helpers"
 import {

@@ -14,7 +14,7 @@ import { getBookKind } from "@/lib/view-engine/use-books-view"
 import { BookKindIcon } from "@/components/property-chips"
 import { shortRelative } from "@/lib/format-utils"
 import { cn } from "@/lib/utils"
-import { PushPin } from "@phosphor-icons/react/dist/ssr/PushPin"
+import { Pin as PushPin } from "lucide-react"
 import {
   ContextMenu,
   ContextMenuContent,
@@ -58,7 +58,7 @@ export function BookGridCard({
           {book.pinned && (
             <PushPin
               size={11}
-              weight="fill"
+              fill="currentColor" strokeWidth={2}
               className="absolute right-2 top-2 text-amber-500"
             />
           )}

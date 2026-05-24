@@ -9,7 +9,7 @@ import * as DropdownMenu from "@radix-ui/react-dropdown-menu"
 import { useBlockResize } from "@/components/editor/hooks/use-block-resize"
 import { BlockResizeHandles } from "@/components/editor/hooks/block-resize-handles"
 import { useCommentStatusByBlockId, STATUS_COLORS } from "@/components/comments/use-block-comment-status"
-import { ChatCircle } from "@phosphor-icons/react/dist/ssr/ChatCircle"
+import { MessageCircle as ChatCircle } from "lucide-react"
 
 /* ── Types ─────────────────────────────────────────────────── */
 
@@ -93,7 +93,7 @@ function TocCommentBadge({ blockId }: { blockId: string }) {
       title={`${openCount} open comment${openCount === 1 ? "" : "s"}`}
     >
       <span className={`w-1 h-1 rounded-full ${STATUS_COLORS[topStatus].dot}`} />
-      <ChatCircle size={9} weight="fill" className="text-muted-foreground/70" />
+      <ChatCircle size={9} fill="currentColor" strokeWidth={2} className="text-muted-foreground/70" />
       <span className="tabular-nums">{openCount}</span>
     </span>
   )

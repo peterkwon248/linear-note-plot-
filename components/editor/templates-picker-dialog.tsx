@@ -22,7 +22,7 @@ import {
   CommandGroup,
   CommandItem,
 } from "@/components/ui/command"
-import { Layout } from "@phosphor-icons/react/dist/ssr/Layout"
+import { LayoutTemplate as Layout } from "lucide-react"
 
 interface TemplatesPickerDialogProps {
   open: boolean
@@ -72,7 +72,7 @@ export function TemplatesPickerDialog({
               onSelect={() => handleSelect(t)}
               className="flex items-center gap-2"
             >
-              <Layout size={14} weight="regular" className="text-muted-foreground shrink-0" />
+              <Layout size={14} strokeWidth={2} className="text-muted-foreground shrink-0" />
               <span className="flex-1 truncate text-note">{t.name || "Untitled"}</span>
               {t.pinned && (
                 <span className="text-2xs text-muted-foreground">Pinned</span>

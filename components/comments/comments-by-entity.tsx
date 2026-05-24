@@ -5,37 +5,39 @@ import { createPortal } from "react-dom"
 import { usePlotStore } from "@/lib/store"
 import type { Comment, CommentAnchor, CommentStatus } from "@/lib/types"
 import { cn } from "@/lib/utils"
-import { ChatCircle } from "@phosphor-icons/react/dist/ssr/ChatCircle"
-import { Trash } from "@phosphor-icons/react/dist/ssr/Trash"
-import { PaperPlaneRight } from "@phosphor-icons/react/dist/ssr/PaperPlaneRight"
-import { ArrowBendUpLeft } from "@phosphor-icons/react/dist/ssr/ArrowBendUpLeft"
-import { ArrowSquareOut } from "@phosphor-icons/react/dist/ssr/ArrowSquareOut"
-import { CaretDown } from "@phosphor-icons/react/dist/ssr/CaretDown"
-import { DotsThree } from "@phosphor-icons/react/dist/ssr/DotsThree"
-import { Circle } from "@phosphor-icons/react/dist/ssr/Circle"
-import { CircleDashed } from "@phosphor-icons/react/dist/ssr/CircleDashed"
-import { CheckCircle } from "@phosphor-icons/react/dist/ssr/CheckCircle"
-import { Warning } from "@phosphor-icons/react/dist/ssr/Warning"
-import { MapPin } from "@phosphor-icons/react/dist/ssr/MapPin"
-import { FileText } from "@phosphor-icons/react/dist/ssr/FileText"
-import { TextH } from "@phosphor-icons/react/dist/ssr/TextH"
-import { Paragraph } from "@phosphor-icons/react/dist/ssr/Paragraph"
-import { Image as PhImage } from "@phosphor-icons/react/dist/ssr/Image"
-import { LinkSimple } from "@phosphor-icons/react/dist/ssr/LinkSimple"
-import { Table as PhTable } from "@phosphor-icons/react/dist/ssr/Table"
-import { Folders } from "@phosphor-icons/react/dist/ssr/Folders"
-import { Compass } from "@phosphor-icons/react/dist/ssr/Compass"
-import { ListBullets } from "@phosphor-icons/react/dist/ssr/ListBullets"
-import { ListNumbers } from "@phosphor-icons/react/dist/ssr/ListNumbers"
-import { CheckSquare } from "@phosphor-icons/react/dist/ssr/CheckSquare"
-import { Quotes } from "@phosphor-icons/react/dist/ssr/Quotes"
-import { Code as PhCode } from "@phosphor-icons/react/dist/ssr/Code"
-import { Minus as PhMinus } from "@phosphor-icons/react/dist/ssr/Minus"
-import { Lightbulb } from "@phosphor-icons/react/dist/ssr/Lightbulb"
-import { Article } from "@phosphor-icons/react/dist/ssr/Article"
-import { CaretDoubleDown } from "@phosphor-icons/react/dist/ssr/CaretDoubleDown"
-import { ListNumbers as PhTocIcon } from "@phosphor-icons/react/dist/ssr/ListNumbers"
-import { Megaphone } from "@phosphor-icons/react/dist/ssr/Megaphone"
+import {
+  MessageCircle as ChatCircle,
+  Trash2 as Trash,
+  Send as PaperPlaneRight,
+  CornerUpLeft as ArrowBendUpLeft,
+  SquareArrowOutUpRight as ArrowSquareOut,
+  ChevronDown as CaretDown,
+  MoreHorizontal as DotsThree,
+  Circle,
+  CircleDashed,
+  CircleCheck as CheckCircle,
+  TriangleAlert as Warning,
+  MapPin,
+  FileText,
+  Heading as TextH,
+  Pilcrow as Paragraph,
+  ImageIcon as PhImage,
+  Link as LinkSimple,
+  Table as PhTable,
+  FolderTree as Folders,
+  Compass,
+  List as ListBullets,
+  ListOrdered as ListNumbers,
+  SquareCheck as CheckSquare,
+  Quote as Quotes,
+  Code as PhCode,
+  Minus as PhMinus,
+  Lightbulb,
+  Newspaper as Article,
+  ChevronsDown as CaretDoubleDown,
+  ListOrdered as PhTocIcon,
+  Megaphone,
+} from "lucide-react"
 import { toast } from "sonner"
 import { CommentEditor, CommentBodyDisplay } from "./comment-editor"
 
@@ -65,7 +67,7 @@ type BlockTargetType =
 
 /** Phosphor icon for each block type — consistent with rest of Plot UI. */
 function BlockTypeIcon({ type, size = 14, className }: { type: BlockTargetType; size?: number; className?: string }) {
-  const props = { size, weight: "regular" as const, className: cn("shrink-0", className) }
+  const props = { size, strokeWidth: 2, className: cn("shrink-0", className) }
   switch (type) {
     case "section": return <TextH {...props} />
     case "text":
@@ -417,7 +419,7 @@ export function CommentsByEntity({
   return (
     <div className="px-2 py-2">
       <div className="flex items-center gap-2 mb-2 px-2">
-        <ChatCircle size={14} weight="regular" className="text-muted-foreground" />
+        <ChatCircle size={14} strokeWidth={2} className="text-muted-foreground" />
         <span className="text-2xs font-medium text-muted-foreground uppercase tracking-wider">Comments</span>
         <span className="text-2xs text-muted-foreground/70">{tops.length}</span>
       </div>
@@ -484,11 +486,11 @@ export function CommentsByEntity({
                 </>
               ) : (
                 <>
-                  <FileText size={14} weight="regular" className="shrink-0 text-muted-foreground/70" />
+                  <FileText size={14} strokeWidth={2} className="shrink-0 text-muted-foreground/70" />
                   <span>Document-level</span>
                 </>
               )}
-              <CaretDown size={11} weight="bold" className="ml-auto shrink-0" />
+              <CaretDown size={11} strokeWidth={2.5} className="ml-auto shrink-0" />
             </button>
             {pickerOpen && (
               <>
@@ -505,7 +507,7 @@ export function CommentsByEntity({
                       !targetBlockId ? "text-foreground bg-hover-bg/40" : "text-muted-foreground/80",
                     )}
                   >
-                    <FileText size={14} weight="regular" className="shrink-0 text-muted-foreground/70" />
+                    <FileText size={14} strokeWidth={2} className="shrink-0 text-muted-foreground/70" />
                     <span>Document-level</span>
                     {!targetBlockId && <span className="ml-auto text-accent text-base leading-none">•</span>}
                   </button>
@@ -585,7 +587,7 @@ export function CommentsByEntity({
             disabled={isBodyEmpty(draft)}
             className="p-1.5 self-end rounded text-accent hover:bg-accent/10 disabled:opacity-30 transition-colors"
           >
-            <PaperPlaneRight size={14} weight="fill" />
+            <PaperPlaneRight size={14} fill="currentColor" strokeWidth={2} />
           </button>
         </div>
       </div>
@@ -616,9 +618,9 @@ function StatusPicker({ current, onChange }: { current: CommentStatus; onChange:
         onClick={() => setOpen((v) => !v)}
         className={cn("flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-medium", meta.bg, meta.color)}
       >
-        <StatusIcon size={9} weight={current === "done" ? "fill" : "regular"} />
+        <StatusIcon size={9} fill={current === "done" ? "currentColor" : "none"} strokeWidth={2} />
         <span>{meta.label}</span>
-        <CaretDown size={7} weight="bold" />
+        <CaretDown size={7} strokeWidth={2.5} />
       </button>
       {open && coords && typeof window !== "undefined" &&
         createPortal(
@@ -637,7 +639,7 @@ function StatusPicker({ current, onChange }: { current: CommentStatus; onChange:
                     }}
                     className={cn("flex items-center gap-2 w-full px-2 py-1.5 rounded text-[11px] hover:bg-hover-bg", s === current ? "text-foreground" : "text-muted-foreground/80")}
                   >
-                    <Icon size={11} weight={s === "done" ? "fill" : "regular"} className={m.color} />
+                    <Icon size={11} fill={s === "done" ? "currentColor" : "none"} strokeWidth={2} className={m.color} />
                     {m.label}
                     {s === current && <span className="ml-auto text-accent">•</span>}
                   </button>
@@ -733,12 +735,12 @@ function CommentRow({
             className="flex items-center gap-1 text-[10px] text-muted-foreground/60 hover:text-accent transition-colors"
             title="Jump to block"
           >
-            <MapPin size={9} weight="fill" />
+            <MapPin size={9} fill="currentColor" strokeWidth={2} />
             <span className="truncate max-w-[180px]">{blockLabel || "Block"}</span>
           </button>
         ) : (
           <span className="flex items-center gap-1 text-[10px] text-muted-foreground/70">
-            <FileText size={9} weight="regular" />
+            <FileText size={9} strokeWidth={2} />
             <span>Document-level</span>
           </span>
         )}
@@ -812,7 +814,7 @@ function CommentRow({
             />
           </div>
           <button onClick={submitReply} disabled={isBodyEmpty(replyDraft)} className="p-1 self-end rounded text-accent hover:bg-accent/10 disabled:opacity-30">
-            <PaperPlaneRight size={11} weight="fill" />
+            <PaperPlaneRight size={11} fill="currentColor" strokeWidth={2} />
           </button>
         </div>
       )}
@@ -856,7 +858,7 @@ function MoreMenu({
         title="More actions"
         className="p-1 rounded hover:bg-hover-bg transition-colors text-muted-foreground/60 hover:text-foreground"
       >
-        <DotsThree size={12} weight="bold" />
+        <DotsThree size={12} strokeWidth={2.5} />
       </button>
       {open && (
         <>

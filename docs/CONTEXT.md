@@ -51,6 +51,32 @@
 
 ---
 
+## 🚀 2026-05-24 — 거대 세션: PR-X5/X6 + Activity bar lucide + audit v2 완성 + Notes/Books Timeline + Gallery 폐기 ⭐⭐⭐⭐⭐
+
+**범위**: 단일 거대 PR (93 파일 / +1891 −2622). 20+ round 사용자 대화.
+
+**핵심 결정 (영구 LOCKED #98~#104)**:
+- **#98 Gallery 폐기 → Grid 통일** — 4 entity. 자동 마이그레이션 (gallery → grid).
+- **#99 Wiki timeline bar 단일 색** — D1 past/future gradient 폐기.
+- **#100 Brand 3종 = Stone/Brick/Block만 phosphor** — Wiki Stub/Article도 lucide (Book/BookMarked). Activity bar + sidebar + action 전체 lucide.
+- **#101 Timeline = entity-agnostic sub-components + adapter** — generic<T extends TimelineEntity>.
+- **#102 Notes timeline = Shell 패턴, Books = 직접 호출** — *결과: Notes timeline ViewHeader 누락 → 다음 세션 P0 #1*.
+- **#103 `.a-row__icon` 박스 폐기** — color tone만.
+- **#104 Books row height = Notes parity** — h-9 → py-2.5.
+
+**완료**:
+- PR-X5/X6 lucide 마이그레이션 68 파일 + plot-icons.tsx 전체 lucide wrap (~25 함수)
+- audit v2 PR-B (4 step) + PR-B2 (5 gap fix: B11/B6/B12/B5/B4) + PR-C (4 polish: B10/B13/B14/B4 detail)
+- Notes/Books Timeline 신규 (sub-components generic + 3 신규 파일 + view 분기 + VIEW_CONFIG 갱신)
+- Gallery 전수 폐기 (4 entity supportedModes + ViewMode union + view 분기 + 3 파일 삭제 + normalize alias migration)
+- spacing/icon polish (.a-row__icon + Books py-2.5)
+
+**미완**: Notes timeline에 ViewHeader (filter/display) 누락 — 다음 P0 #1.
+
+**다음**: Notes timeline ViewHeader 추가 → File 엔티티 v1 → temporal-hooks PRD 후속.
+
+---
+
 ## 🚀 2026-05-23 (후속) — Audit v2 + PR-A 데이터 무결성 + Lucide 마이그레이션 90 파일 (PR-X1~X4) ⭐⭐⭐⭐⭐
 
 **범위**: 거대 세션 단일 PR. Audit + PR-A + 90 파일 마이그레이션. 16+ round 사용자 대화.

@@ -581,20 +581,50 @@ export function TemplatesView() {
         />
       ) : (
         <div className="flex-1 overflow-y-auto">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 p-6">
-            {searchedFlat.map((tmpl) => (
-              <TemplateCard
-                key={tmpl.id}
-                tmpl={tmpl}
-                visibleColumns={viewState.visibleColumns}
-                onSelect={(id) => setSelectedTemplateId(id)}
-                onUse={handleUseTemplate}
-                onEdit={(id) => setSelectedTemplateId(id)}
-                onPin={toggleTemplatePin}
-                onDelete={handleDelete}
-              />
-            ))}
-          </div>
+          {viewState.groupBy !== "none" && searchedGroups.length > 0 ? (
+            // B12: grouped grid — group header band + card grid per group.
+            // Mirrors the list-mode `.a-tg` header pattern used by TemplatesTable.
+            <div className="flex flex-col gap-6 p-6">
+              {searchedGroups.map((group) => (
+                <section key={group.label}>
+                  <div className="mb-3 flex items-center gap-2 text-2xs font-medium uppercase tracking-wider text-muted-foreground">
+                    <span className="text-foreground/80">{group.label}</span>
+                    <span className="tabular-nums">{group.templates.length}</span>
+                    <span className="ml-1 h-px flex-1 bg-border-subtle" />
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {group.templates.map((tmpl) => (
+                      <TemplateCard
+                        key={tmpl.id}
+                        tmpl={tmpl}
+                        visibleColumns={viewState.visibleColumns}
+                        onSelect={(id) => setSelectedTemplateId(id)}
+                        onUse={handleUseTemplate}
+                        onEdit={(id) => setSelectedTemplateId(id)}
+                        onPin={toggleTemplatePin}
+                        onDelete={handleDelete}
+                      />
+                    ))}
+                  </div>
+                </section>
+              ))}
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 p-6">
+              {searchedFlat.map((tmpl) => (
+                <TemplateCard
+                  key={tmpl.id}
+                  tmpl={tmpl}
+                  visibleColumns={viewState.visibleColumns}
+                  onSelect={(id) => setSelectedTemplateId(id)}
+                  onUse={handleUseTemplate}
+                  onEdit={(id) => setSelectedTemplateId(id)}
+                  onPin={toggleTemplatePin}
+                  onDelete={handleDelete}
+                />
+              ))}
+            </div>
+          )}
         </div>
       )}
 

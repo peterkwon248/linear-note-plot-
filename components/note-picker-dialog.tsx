@@ -11,15 +11,17 @@ import {
   CommandGroup,
   CommandItem,
 } from "@/components/ui/command"
-import { FileText } from "@phosphor-icons/react/dist/ssr/FileText"
-import { X as PhX } from "@phosphor-icons/react/dist/ssr/X"
-import { Plus as PhPlus } from "@phosphor-icons/react/dist/ssr/Plus"
-import { CaretDown } from "@phosphor-icons/react/dist/ssr/CaretDown"
-import { CircleDashed } from "@phosphor-icons/react/dist/ssr/CircleDashed"
-import { WifiHigh } from "@phosphor-icons/react/dist/ssr/WifiHigh"
-import { Hash as PhHash } from "@phosphor-icons/react/dist/ssr/Hash"
-import { Check as PhCheck } from "@phosphor-icons/react/dist/ssr/Check"
-import type { Icon as PhIcon } from "@phosphor-icons/react"
+import {
+  FileText,
+  X as PhX,
+  Plus as PhPlus,
+  ChevronDown as CaretDown,
+  CircleDashed,
+  Wifi as WifiHigh,
+  Hash as PhHash,
+  Check as PhCheck,
+  type LucideIcon as PhIcon,
+} from "lucide-react"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -307,7 +309,7 @@ export function NotePickerDialog({
                   <GroupIcon className="h-3 w-3 text-accent/70" />
                   <span className="font-medium">{group.label}:</span>
                   <span className="max-w-[120px] truncate text-muted-foreground">{summary}</span>
-                  <CaretDown className="text-muted-foreground/70" size={10} weight="regular" />
+                  <CaretDown className="text-muted-foreground/70" size={10} strokeWidth={2} />
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="start" className="w-52" onCloseAutoFocus={(e) => e.preventDefault()}>
@@ -316,7 +318,7 @@ export function NotePickerDialog({
                     key={value}
                     onSelect={(e) => { e.preventDefault(); toggleValue(groupKey, value) }}
                   >
-                    <PhCheck className={`shrink-0 ${selected.has(value) ? "text-accent opacity-100" : "opacity-0"}`} size={14} weight="bold" />
+                    <PhCheck className={`shrink-0 ${selected.has(value) ? "text-accent opacity-100" : "opacity-0"}`} size={14} strokeWidth={2.5} />
                     {groupKey === "status" ? (
                       <StatusBadge status={value as NoteStatus} />
                     ) : groupKey === "priority" ? (
@@ -360,7 +362,7 @@ export function NotePickerDialog({
                 onClick={() => clearGroup(groupKey)}
                 className="shrink-0 -ml-0.5 rounded-sm p-0.5 text-muted-foreground/70 transition-colors hover:bg-hover-bg hover:text-foreground"
               >
-                <PhX size={10} weight="regular" />
+                <PhX size={10} strokeWidth={2} />
               </button>
             </DropdownMenu>
           )
@@ -373,7 +375,7 @@ export function NotePickerDialog({
             onClick={() => activateGroup(group.key)}
             className="shrink-0 inline-flex items-center gap-1 rounded-md px-2 py-1 text-2xs font-medium text-muted-foreground transition-colors hover:bg-hover-bg hover:text-foreground"
           >
-            <PhPlus size={12} weight="regular" />
+            <PhPlus size={12} strokeWidth={2} />
             {group.label}
           </button>
         ))}
@@ -397,7 +399,7 @@ export function NotePickerDialog({
       <CommandList className="max-h-[560px]">
         <CommandEmpty>
           <div className="flex flex-col items-center gap-1.5 py-2">
-            <FileText className="text-muted-foreground/60" size={32} weight="regular" />
+            <FileText className="text-muted-foreground/60" size={32} strokeWidth={2} />
             <p className="text-note text-muted-foreground">No notes found</p>
             {activeGroupKeys.length > 0 && (
               <button
@@ -427,10 +429,10 @@ export function NotePickerDialog({
                         : "border-border bg-transparent"
                     }`}
                   >
-                    {isChecked && <PhCheck size={10} weight="bold" />}
+                    {isChecked && <PhCheck size={10} strokeWidth={2.5} />}
                   </span>
                 ) : (
-                  <FileText className="shrink-0 text-muted-foreground/70" size={16} weight="regular" />
+                  <FileText className="shrink-0 text-muted-foreground/70" size={16} strokeWidth={2} />
                 )}
                 <div className="flex-1 min-w-0">
                   <span className="truncate text-note font-medium text-foreground block">
@@ -465,7 +467,7 @@ export function NotePickerDialog({
             disabled={selectedIds.size === 0}
             className="inline-flex items-center gap-1.5 rounded-md bg-accent px-3 py-1.5 text-2xs font-medium text-accent-foreground transition-opacity disabled:opacity-40 hover:opacity-90"
           >
-            <PhPlus size={12} weight="bold" />
+            <PhPlus size={12} strokeWidth={2.5} />
             Add {selectedIds.size > 0 ? selectedIds.size : ""}
           </button>
         </div>

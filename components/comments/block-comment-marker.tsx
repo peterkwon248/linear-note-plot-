@@ -3,7 +3,7 @@
 import { cn } from "@/lib/utils"
 import { useBlockCommentStatus, STATUS_COLORS } from "./use-block-comment-status"
 import type { CommentAnchor } from "@/lib/types"
-import { ChatCircle } from "@phosphor-icons/react/dist/ssr/ChatCircle"
+import { MessageCircle as ChatCircle } from "lucide-react"
 import { CommentPopover } from "./comment-popover"
 
 /**
@@ -53,7 +53,7 @@ export function BlockCommentMarker({
         {hasComments && topStatus && (
           <span className={cn("w-1.5 h-1.5 rounded-full shrink-0", STATUS_COLORS[topStatus].dot)} />
         )}
-        <ChatCircle size={11} weight={hasComments ? "fill" : "regular"} className={hasComments ? "text-muted-foreground/70" : ""} />
+        <ChatCircle size={11} fill={hasComments ? "currentColor" : "none"} strokeWidth={2} className={hasComments ? "text-muted-foreground/70" : ""} />
         {hasComments && <span className="tabular-nums">{openCount > 0 ? openCount : totalCount}</span>}
       </button>
     </CommentPopover>

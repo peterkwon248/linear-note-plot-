@@ -12,7 +12,7 @@
  */
 
 import { useMemo } from "react"
-import { Books as BooksIcon } from "@phosphor-icons/react/dist/ssr/Books"
+import { Library as BooksIcon } from "lucide-react"
 import { usePlotStore } from "@/lib/store"
 import { setActiveRoute } from "@/lib/table-route"
 import { booksContainingEntityResolved } from "@/lib/books/utils"
@@ -55,7 +55,7 @@ export function InBooksSection({ kind, refId }: InBooksSectionProps) {
     <div className="px-4 py-3">
       <div className="mb-2 flex items-center gap-2">
         <span className="text-muted-foreground">
-          <BooksIcon size={16} weight="regular" />
+          <BooksIcon size={16} strokeWidth={2} />
         </span>
         <span className="text-2xs font-medium text-muted-foreground">In Books</span>
       </div>
@@ -68,7 +68,7 @@ export function InBooksSection({ kind, refId }: InBooksSectionProps) {
             className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left transition-colors duration-100 hover:bg-hover-bg"
           >
             <span className="flex h-4 w-4 shrink-0 items-center justify-center text-base leading-none">
-              <BooksIcon size={14} weight="regular" className="text-muted-foreground" />
+              <BooksIcon size={14} strokeWidth={2} className="text-muted-foreground" />
             </span>
             <span className="flex-1 truncate text-note font-medium text-foreground">
               {book.title || "Untitled book"}

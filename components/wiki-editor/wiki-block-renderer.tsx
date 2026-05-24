@@ -21,22 +21,24 @@ import { BlockDragOverlay } from "@/components/editor/dnd/block-drag-overlay"
 import { saveBlockBody } from "@/lib/wiki-block-body-store"
 import { setEntityContext } from "@/lib/editor/entity-context"
 import type { DraggableSyntheticListeners } from "@dnd-kit/core"
-import { CaretDown } from "@phosphor-icons/react/dist/ssr/CaretDown"
-import { CaretRight } from "@phosphor-icons/react/dist/ssr/CaretRight"
-import { FileText } from "@phosphor-icons/react/dist/ssr/FileText"
-import { Image as PhImage } from "@phosphor-icons/react/dist/ssr/Image"
-import { DotsSixVertical } from "@phosphor-icons/react/dist/ssr/DotsSixVertical"
-import { Plus as PhPlus } from "@phosphor-icons/react/dist/ssr/Plus"
-import { Trash } from "@phosphor-icons/react/dist/ssr/Trash"
-import { MagnifyingGlass } from "@phosphor-icons/react/dist/ssr/MagnifyingGlass"
-import { UploadSimple } from "@phosphor-icons/react/dist/ssr/UploadSimple"
-import { ArrowSquareOut } from "@phosphor-icons/react/dist/ssr/ArrowSquareOut"
-import { DotsThree } from "@phosphor-icons/react/dist/ssr/DotsThree"
-import { ArrowSquareUpRight } from "@phosphor-icons/react/dist/ssr/ArrowSquareUpRight"
-import { BookOpen } from "@phosphor-icons/react/dist/ssr/BookOpen"
-import { CopySimple } from "@phosphor-icons/react/dist/ssr/CopySimple"
+import {
+  ChevronDown as CaretDown,
+  ChevronRight as CaretRight,
+  FileText,
+  ImageIcon as PhImage,
+  GripVertical as DotsSixVertical,
+  Plus as PhPlus,
+  Trash2 as Trash,
+  Search as MagnifyingGlass,
+  Upload as UploadSimple,
+  SquareArrowOutUpRight as ArrowSquareOut,
+  MoreHorizontal as DotsThree,
+  SquareArrowUpRight as ArrowSquareUpRight,
+  BookOpen,
+  Copy as CopySimple,
+  Link2 as PhLink,
+} from "lucide-react"
 import { ArrowsIn } from "@/lib/editor/editor-icons"
-import { Link as PhLink } from "@phosphor-icons/react/dist/ssr/Link"
 import { toast } from "sonner"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 
@@ -175,7 +177,7 @@ function SectionBlock({ block, editable, sectionNumber, onUpdate, onDelete, drag
             className="opacity-0 group-hover/section:opacity-30 hover:!opacity-100 p-0.5 text-muted-foreground cursor-grab transition-opacity duration-100"
             {...(dragHandleProps ?? {})}
           >
-            <DotsSixVertical size={14} weight="regular" />
+            <DotsSixVertical size={14} strokeWidth={2} />
           </button>
         )}
         <button
@@ -183,8 +185,8 @@ function SectionBlock({ block, editable, sectionNumber, onUpdate, onDelete, drag
           className="p-0.5 text-muted-foreground/70 hover:text-muted-foreground transition-colors duration-100"
         >
           {collapsed
-            ? <CaretRight size={14} weight="regular" />
-            : <CaretDown size={14} weight="regular" />
+            ? <CaretRight size={14} strokeWidth={2} />
+            : <CaretDown size={14} strokeWidth={2} />
           }
         </button>
 
@@ -266,7 +268,7 @@ function SectionBlock({ block, editable, sectionNumber, onUpdate, onDelete, drag
                 onClick={(e) => { e.stopPropagation(); setMenuOpen(true) }}
                 className="opacity-0 group-hover/section:opacity-30 hover:!opacity-100 p-1 text-muted-foreground hover:text-foreground transition-all duration-100"
               >
-                <DotsThree size={14} weight="bold" />
+                <DotsThree size={14} strokeWidth={2.5} />
               </button>
             </PopoverTrigger>
             <PopoverContent align="end" className="w-52 p-1" onOpenAutoFocus={(e) => e.preventDefault()}>
@@ -276,7 +278,7 @@ function SectionBlock({ block, editable, sectionNumber, onUpdate, onDelete, drag
                     onClick={() => { setMenuOpen(false); onSplitSection(block.id) }}
                     className="flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-2xs text-foreground/80 hover:bg-active-bg transition-colors"
                   >
-                    <ArrowSquareUpRight size={14} weight="regular" />
+                    <ArrowSquareUpRight size={14} strokeWidth={2} />
                     Move to new article
                   </button>
                   <button
@@ -300,7 +302,7 @@ function SectionBlock({ block, editable, sectionNumber, onUpdate, onDelete, drag
                     }}
                     className="flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-2xs text-foreground/80 hover:bg-active-bg transition-colors"
                   >
-                    <CopySimple size={14} weight="regular" />
+                    <CopySimple size={14} strokeWidth={2} />
                     Copy to new article
                   </button>
                 </>
@@ -313,9 +315,9 @@ function SectionBlock({ block, editable, sectionNumber, onUpdate, onDelete, drag
                     onClick={() => setMoveSubmenuOpen(!moveSubmenuOpen)}
                     className="flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-2xs text-foreground/80 hover:bg-active-bg transition-colors"
                   >
-                    <ArrowSquareOut size={14} weight="regular" />
+                    <ArrowSquareOut size={14} strokeWidth={2} />
                     <span className="flex-1 text-left">Move to article</span>
-                    <CaretRight size={10} weight="regular" className="text-muted-foreground/70" />
+                    <CaretRight size={10} strokeWidth={2} className="text-muted-foreground/70" />
                   </button>
                   {moveSubmenuOpen && (
                     <div className="absolute left-full top-0 ml-1 w-48 rounded-lg border border-border-subtle bg-surface-overlay shadow-lg py-1 z-10">
@@ -329,7 +331,7 @@ function SectionBlock({ block, editable, sectionNumber, onUpdate, onDelete, drag
                           }}
                           className="flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-2xs text-foreground/80 hover:bg-active-bg transition-colors"
                         >
-                          <BookOpen size={12} weight="regular" className="shrink-0 text-muted-foreground/70" />
+                          <BookOpen size={12} strokeWidth={2} className="shrink-0 text-muted-foreground/70" />
                           <span className="truncate">{a.title}</span>
                         </button>
                       ))}
@@ -346,7 +348,7 @@ function SectionBlock({ block, editable, sectionNumber, onUpdate, onDelete, drag
                     onClick={() => { setMenuOpen(false); handleUnmerge() }}
                     className="flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-2xs text-chart-3 hover:bg-active-bg transition-colors"
                   >
-                    <ArrowSquareUpRight size={14} weight="regular" />
+                    <ArrowSquareUpRight size={14} strokeWidth={2} />
                     Unmerge section
                   </button>
                 </>
@@ -386,7 +388,7 @@ function SectionBlock({ block, editable, sectionNumber, onUpdate, onDelete, drag
                     onClick={() => { setMenuOpen(false); onDelete() }}
                     className="flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-2xs text-destructive hover:bg-active-bg transition-colors"
                   >
-                    <Trash size={14} weight="regular" />
+                    <Trash size={14} strokeWidth={2} />
                     Delete section
                   </button>
                 </>
@@ -497,7 +499,7 @@ function TextBlock({ block, editable, onUpdate, onDelete, dragHandleProps, artic
       {editable && (
         <div className="absolute -left-6 top-1 opacity-0 group-hover/text:opacity-30 hover:!opacity-100 transition-opacity duration-100">
           <button className="p-0.5 text-muted-foreground cursor-grab" {...(dragHandleProps ?? {})}>
-            <DotsSixVertical size={14} weight="regular" />
+            <DotsSixVertical size={14} strokeWidth={2} />
           </button>
         </div>
       )}
@@ -521,7 +523,7 @@ function TextBlock({ block, editable, onUpdate, onDelete, dragHandleProps, artic
                 onClick={(e) => { e.stopPropagation(); setMenuOpen(true) }}
                 className="opacity-0 group-hover/text:opacity-30 hover:!opacity-100 p-1 text-muted-foreground hover:text-foreground transition-all duration-100"
               >
-                <DotsThree size={14} weight="bold" />
+                <DotsThree size={14} strokeWidth={2.5} />
               </button>
             </PopoverTrigger>
           <PopoverContent align="end" className="w-44 p-1" onOpenAutoFocus={(e) => e.preventDefault()} style={{ fontSize: '13px' }}>
@@ -565,7 +567,7 @@ function TextBlock({ block, editable, onUpdate, onDelete, dragHandleProps, artic
                   onClick={() => { setMenuOpen(false); onDelete() }}
                   className="flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-2xs text-destructive hover:bg-active-bg transition-colors"
                 >
-                  <Trash size={14} weight="regular" />
+                  <Trash size={14} strokeWidth={2} />
                   Delete block
                 </button>
               </>
@@ -833,7 +835,7 @@ function NoteRefBlock({ block, editable, onUpdate, onDelete, dragHandleProps, ar
     return (
       <div className="rounded-lg border border-accent/30 bg-card/50 overflow-hidden">
         <div className="flex items-center gap-2 border-b border-border-subtle px-3 py-2">
-          <MagnifyingGlass className="text-muted-foreground/70 shrink-0" size={14} weight="regular" />
+          <MagnifyingGlass className="text-muted-foreground/70 shrink-0" size={14} strokeWidth={2} />
           <input
             ref={inputRef}
             autoFocus
@@ -860,7 +862,7 @@ function NoteRefBlock({ block, editable, onUpdate, onDelete, dragHandleProps, ar
                 onClick={() => handlePickNote(n.id)}
                 className="flex w-full items-center gap-2 px-3 py-2 text-left text-note hover:bg-hover-bg transition-colors duration-100"
               >
-                <FileText className="shrink-0 text-muted-foreground/70" size={14} weight="regular" />
+                <FileText className="shrink-0 text-muted-foreground/70" size={14} strokeWidth={2} />
                 <span className="truncate text-foreground/80">{n.title || "Untitled"}</span>
                 <span className="ml-auto shrink-0 text-2xs text-muted-foreground/60 capitalize">{n.status}</span>
               </button>
@@ -880,7 +882,7 @@ function NoteRefBlock({ block, editable, onUpdate, onDelete, dragHandleProps, ar
             {/* Drag handle */}
             <div className="absolute -left-6 top-3 opacity-0 group-hover/noteref:opacity-30 hover:!opacity-100 transition-opacity duration-100">
               <button className="p-0.5 text-muted-foreground cursor-grab" {...(dragHandleProps ?? {})}>
-                <DotsSixVertical size={14} weight="regular" />
+                <DotsSixVertical size={14} strokeWidth={2} />
               </button>
             </div>
             {/* Delete button */}
@@ -890,7 +892,7 @@ function NoteRefBlock({ block, editable, onUpdate, onDelete, dragHandleProps, ar
                 title="Delete block"
                 className="absolute right-2 top-2 opacity-0 group-hover/noteref:opacity-30 hover:!opacity-100 p-1 text-muted-foreground hover:text-destructive transition-all duration-100 z-10"
               >
-                <Trash size={14} weight="regular" />
+                <Trash size={14} strokeWidth={2} />
               </button>
             )}
           </>
@@ -900,7 +902,7 @@ function NoteRefBlock({ block, editable, onUpdate, onDelete, dragHandleProps, ar
             onClick={() => setPicking(true)}
             className="flex items-center gap-2 text-note text-muted-foreground/70 hover:text-muted-foreground transition-colors"
           >
-            <PhPlus size={14} weight="regular" />
+            <PhPlus size={14} strokeWidth={2} />
             Select a note to embed
           </button>
         ) : (
@@ -916,7 +918,7 @@ function NoteRefBlock({ block, editable, onUpdate, onDelete, dragHandleProps, ar
       {editable && (
         <div className="absolute -left-6 top-3 opacity-0 group-hover/noteref:opacity-30 hover:!opacity-100 transition-opacity duration-100">
           <button className="p-0.5 text-muted-foreground cursor-grab" {...(dragHandleProps ?? {})}>
-            <DotsSixVertical size={14} weight="regular" />
+            <DotsSixVertical size={14} strokeWidth={2} />
           </button>
         </div>
       )}
@@ -936,7 +938,7 @@ function NoteRefBlock({ block, editable, onUpdate, onDelete, dragHandleProps, ar
               onClick={(e) => { e.stopPropagation(); setMenuOpen(true) }}
               className="opacity-0 group-hover/noteref:opacity-30 hover:!opacity-100 p-1 text-muted-foreground hover:text-foreground transition-all duration-100"
             >
-              <DotsThree size={14} weight="bold" />
+              <DotsThree size={14} strokeWidth={2.5} />
             </button>
           </PopoverTrigger>
           <PopoverContent align="end" className="w-44 p-1" onOpenAutoFocus={(e) => e.preventDefault()} style={{ fontSize: '13px' }}>
@@ -944,14 +946,14 @@ function NoteRefBlock({ block, editable, onUpdate, onDelete, dragHandleProps, ar
               onClick={() => { setMenuOpen(false); setPicking(true) }}
               className="flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-2xs text-foreground/80 hover:bg-active-bg transition-colors"
             >
-              <FileText size={14} weight="regular" />
+              <FileText size={14} strokeWidth={2} />
               Change note
             </button>
             <button
               onClick={() => { setMenuOpen(false); usePlotStore.getState().openInSecondary(block.noteId!) }}
               className="flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-2xs text-foreground/80 hover:bg-active-bg transition-colors"
             >
-              <ArrowSquareOut size={14} weight="regular" />
+              <ArrowSquareOut size={14} strokeWidth={2} />
               Open in split
             </button>
             {onDelete && (
@@ -961,7 +963,7 @@ function NoteRefBlock({ block, editable, onUpdate, onDelete, dragHandleProps, ar
                   onClick={() => { setMenuOpen(false); onDelete() }}
                   className="flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-2xs text-destructive hover:bg-active-bg transition-colors"
                 >
-                  <Trash size={14} weight="regular" />
+                  <Trash size={14} strokeWidth={2} />
                   Delete block
                 </button>
               </>
@@ -972,7 +974,7 @@ function NoteRefBlock({ block, editable, onUpdate, onDelete, dragHandleProps, ar
       </div>
 
       <div className="flex items-center gap-2 border-b border-border-subtle px-4 py-2">
-        <FileText className="text-accent/60" size={14} weight="regular" />
+        <FileText className="text-accent/60" size={14} strokeWidth={2} />
         <span className="text-2xs font-medium uppercase tracking-wide text-accent/80">From Note</span>
         <span className="text-note font-medium text-foreground/80 flex-1 truncate">{note.title || "Untitled"}</span>
       </div>
@@ -1037,7 +1039,7 @@ function ImageBlock({ block, editable, onUpdate, onDelete, dragHandleProps, arti
                 onClick={(e) => { e.stopPropagation(); setMenuOpen(true) }}
                 className="absolute right-1 top-1 opacity-0 group-hover/image:opacity-70 hover:!opacity-100 p-1 rounded bg-background/80 text-muted-foreground hover:text-foreground transition-all duration-100 z-10"
               >
-                <DotsThree size={14} weight="bold" />
+                <DotsThree size={14} strokeWidth={2.5} />
               </button>
             </PopoverTrigger>
             <PopoverContent align="end" className="w-44 p-1" onOpenAutoFocus={(e) => e.preventDefault()} style={{ fontSize: '13px' }}>
@@ -1045,7 +1047,7 @@ function ImageBlock({ block, editable, onUpdate, onDelete, dragHandleProps, arti
                 onClick={() => { setMenuOpen(false); onDelete() }}
                 className="flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-2xs text-destructive hover:bg-active-bg transition-colors"
               >
-                <Trash size={14} weight="regular" />
+                <Trash size={14} strokeWidth={2} />
                 Delete block
               </button>
             </PopoverContent>
@@ -1057,12 +1059,12 @@ function ImageBlock({ block, editable, onUpdate, onDelete, dragHandleProps, arti
             onClick={() => fileInputRef.current?.click()}
             className="flex h-28 w-full items-center justify-center gap-2 rounded-lg border border-dashed border-border-subtle bg-secondary/10 text-note text-muted-foreground/70 hover:border-accent/30 hover:text-muted-foreground transition-colors duration-100"
           >
-            <UploadSimple size={16} weight="regular" />
+            <UploadSimple size={16} strokeWidth={2} />
             UploadSimple image
           </button>
         ) : (
           <div className="flex h-28 items-center justify-center rounded-lg border border-dashed border-border-subtle bg-secondary/10 text-2xs text-muted-foreground/70">
-            <PhImage className="mr-2" size={20} weight="regular" />
+            <PhImage className="mr-2" size={20} strokeWidth={2} />
             No image
           </div>
         )}
@@ -1075,7 +1077,7 @@ function ImageBlock({ block, editable, onUpdate, onDelete, dragHandleProps, arti
       {editable && (
         <div className="absolute -left-6 top-2 opacity-0 group-hover/image:opacity-30 hover:!opacity-100 transition-opacity duration-100">
           <button className="p-0.5 text-muted-foreground cursor-grab" {...(dragHandleProps ?? {})}>
-            <DotsSixVertical size={14} weight="regular" />
+            <DotsSixVertical size={14} strokeWidth={2} />
           </button>
         </div>
       )}
@@ -1094,7 +1096,7 @@ function ImageBlock({ block, editable, onUpdate, onDelete, dragHandleProps, arti
           onClick={(e) => { e.stopPropagation(); onDelete() }}
           className="absolute right-1 top-1 opacity-0 group-hover/image:opacity-70 hover:!opacity-100 p-1 rounded bg-background/80 text-muted-foreground hover:text-foreground transition-all duration-100 z-10"
         >
-          <Trash size={14} weight="regular" />
+          <Trash size={14} strokeWidth={2} />
         </button>
       )}
       <input ref={fileInputRef} type="file" accept="image/*" onChange={handleFileSelected} style={{ display: "none" }} />
@@ -1112,7 +1114,7 @@ function ImageBlock({ block, editable, onUpdate, onDelete, dragHandleProps, arti
                   onClick={(e) => { e.stopPropagation(); setMenuOpen(true) }}
                   className="absolute right-1 top-1 opacity-0 group-hover/image:opacity-70 hover:!opacity-100 p-1 rounded bg-background/80 text-muted-foreground hover:text-foreground transition-all duration-100 z-10"
                 >
-                  <DotsThree size={14} weight="bold" />
+                  <DotsThree size={14} strokeWidth={2.5} />
                 </button>
               </PopoverTrigger>
               <PopoverContent align="end" className="w-44 p-1" onOpenAutoFocus={(e) => e.preventDefault()} style={{ fontSize: '13px' }}>
@@ -1120,7 +1122,7 @@ function ImageBlock({ block, editable, onUpdate, onDelete, dragHandleProps, arti
                   onClick={() => { setMenuOpen(false); fileInputRef.current?.click() }}
                   className="flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-2xs text-foreground/80 hover:bg-active-bg transition-colors"
                 >
-                  <UploadSimple size={14} weight="regular" />
+                  <UploadSimple size={14} strokeWidth={2} />
                   Replace image
                 </button>
                 <div className="my-1 h-px bg-border/40" />
@@ -1147,7 +1149,7 @@ function ImageBlock({ block, editable, onUpdate, onDelete, dragHandleProps, arti
                       onClick={() => { setMenuOpen(false); onDelete() }}
                       className="flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-2xs text-destructive hover:bg-active-bg transition-colors"
                     >
-                      <Trash size={14} weight="regular" />
+                      <Trash size={14} strokeWidth={2} />
                       Delete block
                     </button>
                   </>
@@ -1203,7 +1205,7 @@ function ImageBlock({ block, editable, onUpdate, onDelete, dragHandleProps, arti
         </figure>
       ) : (
         <div className="flex h-32 items-center justify-center rounded-lg border border-dashed border-border-subtle bg-secondary/10 text-2xs text-muted-foreground/70">
-          <PhImage className="mr-2" size={20} weight="regular" />
+          <PhImage className="mr-2" size={20} strokeWidth={2} />
           Image not found
         </div>
       )}
@@ -1275,7 +1277,7 @@ function UrlBlock({ block, editable, onUpdate, onDelete, dragHandleProps, articl
                 onClick={(e) => { e.stopPropagation(); setMenuOpen(true) }}
                 className="absolute right-1 top-1 opacity-0 group-hover/url:opacity-30 hover:!opacity-100 p-1 text-muted-foreground hover:text-foreground transition-all duration-100 z-10"
               >
-                <DotsThree size={14} weight="bold" />
+                <DotsThree size={14} strokeWidth={2.5} />
               </button>
             </PopoverTrigger>
             <PopoverContent align="end" className="w-44 p-1" onOpenAutoFocus={(e) => e.preventDefault()} style={{ fontSize: '13px' }}>
@@ -1283,7 +1285,7 @@ function UrlBlock({ block, editable, onUpdate, onDelete, dragHandleProps, articl
                 onClick={() => { setMenuOpen(false); onDelete() }}
                 className="flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-2xs text-destructive hover:bg-active-bg transition-colors"
               >
-                <Trash size={14} weight="regular" />
+                <Trash size={14} strokeWidth={2} />
                 Delete block
               </button>
             </PopoverContent>
@@ -1294,12 +1296,12 @@ function UrlBlock({ block, editable, onUpdate, onDelete, dragHandleProps, articl
             onClick={handleStartEdit}
             className="flex h-14 w-full items-center justify-center gap-2 rounded-lg border border-dashed border-border-subtle bg-secondary/10 text-note text-muted-foreground/70 hover:border-accent/30 hover:text-muted-foreground transition-colors duration-100"
           >
-            <PhLink size={16} weight="regular" />
+            <PhLink size={16} strokeWidth={2} />
             Add URL
           </button>
         ) : (
           <div className="flex h-14 items-center justify-center rounded-lg border border-dashed border-border-subtle bg-secondary/10 text-2xs text-muted-foreground/70">
-            <PhLink className="mr-2" size={16} weight="regular" />
+            <PhLink className="mr-2" size={16} strokeWidth={2} />
             No URL
           </div>
         )}
@@ -1314,7 +1316,7 @@ function UrlBlock({ block, editable, onUpdate, onDelete, dragHandleProps, articl
       {editable && (
         <div className="absolute -left-6 top-2 opacity-0 group-hover/url:opacity-30 hover:!opacity-100 transition-opacity duration-100">
           <button className="p-0.5 text-muted-foreground cursor-grab" {...(dragHandleProps ?? {})}>
-            <DotsSixVertical size={14} weight="regular" />
+            <DotsSixVertical size={14} strokeWidth={2} />
           </button>
         </div>
       )}
@@ -1334,7 +1336,7 @@ function UrlBlock({ block, editable, onUpdate, onDelete, dragHandleProps, articl
               onClick={(e) => { e.stopPropagation(); setMenuOpen(true) }}
               className="opacity-0 group-hover/url:opacity-30 hover:!opacity-100 p-1 text-muted-foreground hover:text-foreground transition-all duration-100"
             >
-              <DotsThree size={14} weight="bold" />
+              <DotsThree size={14} strokeWidth={2.5} />
             </button>
           </PopoverTrigger>
           <PopoverContent align="end" className="w-44 p-1" onOpenAutoFocus={(e) => e.preventDefault()} style={{ fontSize: '13px' }}>
@@ -1342,7 +1344,7 @@ function UrlBlock({ block, editable, onUpdate, onDelete, dragHandleProps, articl
               onClick={() => { setMenuOpen(false); handleStartEdit() }}
               className="flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-2xs text-foreground/80 hover:bg-active-bg transition-colors"
             >
-              <PhLink size={14} weight="regular" />
+              <PhLink size={14} strokeWidth={2} />
               Edit URL
             </button>
             {onDelete && (
@@ -1352,7 +1354,7 @@ function UrlBlock({ block, editable, onUpdate, onDelete, dragHandleProps, articl
                   onClick={() => { setMenuOpen(false); onDelete() }}
                   className="flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-2xs text-destructive hover:bg-active-bg transition-colors"
                 >
-                  <Trash size={14} weight="regular" />
+                  <Trash size={14} strokeWidth={2} />
                   Delete block
                 </button>
               </>
@@ -1418,7 +1420,7 @@ function TableBlock({ block, editable, onUpdate, onDelete, dragHandleProps, arti
       {editable && (
         <div className="absolute -left-6 top-1 opacity-0 group-hover/table:opacity-30 hover:!opacity-100 transition-opacity duration-100">
           <button className="p-0.5 text-muted-foreground cursor-grab" {...(dragHandleProps ?? {})}>
-            <DotsSixVertical size={14} weight="regular" />
+            <DotsSixVertical size={14} strokeWidth={2} />
           </button>
         </div>
       )}
@@ -1438,7 +1440,7 @@ function TableBlock({ block, editable, onUpdate, onDelete, dragHandleProps, arti
               onClick={(e) => { e.stopPropagation(); setMenuOpen(true) }}
               className="opacity-0 group-hover/table:opacity-30 hover:!opacity-100 p-1 text-muted-foreground hover:text-foreground transition-all duration-100"
             >
-              <DotsThree size={14} weight="bold" />
+              <DotsThree size={14} strokeWidth={2.5} />
             </button>
           </PopoverTrigger>
           <PopoverContent align="end" className="w-44 p-1" onOpenAutoFocus={(e) => e.preventDefault()} style={{ fontSize: '13px' }}>
@@ -1473,7 +1475,7 @@ function TableBlock({ block, editable, onUpdate, onDelete, dragHandleProps, arti
                   onClick={() => { setMenuOpen(false); onDelete() }}
                   className="flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-2xs text-destructive hover:bg-active-bg transition-colors"
                 >
-                  <Trash size={14} weight="regular" />
+                  <Trash size={14} strokeWidth={2} />
                   Delete table
                 </button>
               </>
@@ -1594,7 +1596,7 @@ function TableBlock({ block, editable, onUpdate, onDelete, dragHandleProps, arti
                     })
                   }}
                 >
-                  <PhPlus size={12} weight="regular" className="mx-auto text-muted-foreground/60" />
+                  <PhPlus size={12} strokeWidth={2} className="mx-auto text-muted-foreground/60" />
                 </th>
               )}
             </tr>
@@ -1694,7 +1696,7 @@ function TableBlock({ block, editable, onUpdate, onDelete, dragHandleProps, arti
             }}
             className="mt-1 flex w-full items-center justify-center gap-1 rounded-b-lg py-1.5 text-2xs text-muted-foreground/60 hover:text-muted-foreground/60 hover:bg-white/[0.03] transition-colors"
           >
-            <PhPlus size={10} weight="regular" />
+            <PhPlus size={10} strokeWidth={2} />
             Add row
           </button>
         )}
@@ -1752,7 +1754,7 @@ export function AddBlockButton({ onAdd, nearestSectionLevel, onAddFromTemplate }
         onClick={() => setOpen(!open)}
         className="relative z-10 flex items-center gap-1 rounded-md bg-background px-2 py-0.5 text-2xs text-muted-foreground/0 group-hover/add:text-muted-foreground/70 hover:!text-muted-foreground transition-all duration-150"
       >
-        <PhPlus size={12} weight="regular" />
+        <PhPlus size={12} strokeWidth={2} />
         Add block
       </button>
 

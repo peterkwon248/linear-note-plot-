@@ -6,22 +6,24 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip"
-import { PushPin } from "@phosphor-icons/react/dist/ssr/PushPin"
-import { Trash } from "@phosphor-icons/react/dist/ssr/Trash"
-import { DotsThree } from "@phosphor-icons/react/dist/ssr/DotsThree"
-import { Copy as PhCopy } from "@phosphor-icons/react/dist/ssr/Copy"
-import { SidebarSimple } from "@phosphor-icons/react/dist/ssr/SidebarSimple"
-import { GitMerge } from "@phosphor-icons/react/dist/ssr/GitMerge"
-import { Link as PhLink } from "@phosphor-icons/react/dist/ssr/Link"
-import { BookOpen } from "@phosphor-icons/react/dist/ssr/BookOpen"
-import { PencilLine } from "@phosphor-icons/react/dist/ssr/PencilLine"
-import { Cursor as PhCursor } from "@phosphor-icons/react/dist/ssr/Cursor"
-import { Globe } from "@phosphor-icons/react/dist/ssr/Globe"
-import { CaretLeft } from "@phosphor-icons/react/dist/ssr/CaretLeft"
-import { CaretRight } from "@phosphor-icons/react/dist/ssr/CaretRight"
-import { X as PhX } from "@phosphor-icons/react/dist/ssr/X"
-import { SplitHorizontal } from "@phosphor-icons/react/dist/ssr/SplitHorizontal"
-import { Scissors } from "@phosphor-icons/react/dist/ssr/Scissors"
+import {
+  Pin as PushPin,
+  Trash2 as Trash,
+  MoreHorizontal as DotsThree,
+  Copy as PhCopy,
+  PanelRight as SidebarSimple,
+  GitMerge,
+  Link2 as PhLink,
+  BookOpen,
+  PenLine as PencilLine,
+  MousePointer as PhCursor,
+  Globe,
+  ChevronLeft as CaretLeft,
+  ChevronRight as CaretRight,
+  X as PhX,
+  SplitSquareHorizontal as SplitHorizontal,
+  Scissors,
+} from "lucide-react"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -440,7 +442,7 @@ export function NoteEditor({ noteId: propNoteId, onClose, pane = 'primary', defa
 
   if (!note) return (
     <div className="flex flex-1 flex-col items-center justify-center gap-3 text-muted-foreground">
-      <PhCursor size={32} weight="light" className="text-muted-foreground/70" />
+      <PhCursor size={32} strokeWidth={1.5} className="text-muted-foreground/70" />
       <p className="text-note">Select a note to start editing</p>
       <p className="text-2xs text-muted-foreground/60">Or press + to create a new one</p>
     </div>
@@ -473,7 +475,7 @@ export function NoteEditor({ noteId: propNoteId, onClose, pane = 'primary', defa
                 )}
                 title="Go back"
               >
-                <CaretLeft size={14} weight="bold" />
+                <CaretLeft size={14} strokeWidth={2.5} />
               </button>
               <button
                 onClick={() => secondaryGoForward()}
@@ -486,7 +488,7 @@ export function NoteEditor({ noteId: propNoteId, onClose, pane = 'primary', defa
                 )}
                 title="Go forward"
               >
-                <CaretRight size={14} weight="bold" />
+                <CaretRight size={14} strokeWidth={2.5} />
               </button>
             </div>
           )}
@@ -540,7 +542,7 @@ export function NoteEditor({ noteId: propNoteId, onClose, pane = 'primary', defa
                   note.pinned ? "text-chart-3" : "text-muted-foreground"
                 )}
               >
-                <PushPin size={16} weight="regular" />
+                <PushPin size={16} strokeWidth={2} />
               </button>
             </TooltipTrigger>
             <TooltipContent>{note.pinned ? "Unpin" : "PushPin"}</TooltipContent>
@@ -551,31 +553,31 @@ export function NoteEditor({ noteId: propNoteId, onClose, pane = 'primary', defa
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <button className="rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-hover-bg">
-                <DotsThree size={16} weight="bold" />
+                <DotsThree size={16} strokeWidth={2.5} />
               </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-44">
               <DropdownMenuItem onClick={() => duplicateNote(note.id)}>
-                <PhCopy size={16} weight="regular" />
+                <PhCopy size={16} strokeWidth={2} />
                 Duplicate
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => setMergePickerOpen(true, note.id)}>
-                <GitMerge size={16} weight="regular" />
+                <GitMerge size={16} strokeWidth={2} />
                 GitMerge with...
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => setSplitTargetNoteId(note.id)}>
-                <Scissors size={16} weight="regular" />
+                <Scissors size={16} strokeWidth={2} />
                 Split this note...
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => setLinkPickerOpen(true, note.id)}>
-                <PhLink size={16} weight="regular" />
+                <PhLink size={16} strokeWidth={2} />
                 Link to...
               </DropdownMenuItem>
               {pane === 'primary' && (
                 <DropdownMenuItem onClick={() => {
                   usePlotStore.getState().openInSecondary(note.id)
                 }}>
-                  <SplitHorizontal size={16} weight="regular" />
+                  <SplitHorizontal size={16} strokeWidth={2} />
                   Open in Split View
                 </DropdownMenuItem>
               )}
@@ -592,7 +594,7 @@ export function NoteEditor({ noteId: propNoteId, onClose, pane = 'primary', defa
                   onClose ? onClose() : setSelectedNoteId(null)
                 }}
               >
-                <Trash size={16} weight="regular" />
+                <Trash size={16} strokeWidth={2} />
                 Delete
               </DropdownMenuItem>
             </DropdownMenuContent>
@@ -607,7 +609,7 @@ export function NoteEditor({ noteId: propNoteId, onClose, pane = 'primary', defa
                   isReadMode ? "text-accent" : "text-muted-foreground"
                 )}
               >
-                {isReadMode ? <BookOpen size={16} weight="regular" /> : <PencilLine size={16} weight="regular" />}
+                {isReadMode ? <BookOpen size={16} strokeWidth={2} /> : <PencilLine size={16} strokeWidth={2} />}
               </button>
             </TooltipTrigger>
             <TooltipContent>
@@ -625,7 +627,7 @@ export function NoteEditor({ noteId: propNoteId, onClose, pane = 'primary', defa
                   detailsOpen ? "text-foreground" : "text-muted-foreground"
                 )}
               >
-                <SidebarSimple size={16} weight="regular" />
+                <SidebarSimple size={16} strokeWidth={2} />
               </button>
             </TooltipTrigger>
             <TooltipContent>{detailsOpen ? "Hide details" : "Show details"}</TooltipContent>
@@ -646,7 +648,7 @@ export function NoteEditor({ noteId: propNoteId, onClose, pane = 'primary', defa
                   }}
                   className="rounded-md p-1.5 text-muted-foreground transition-colors hover:text-foreground hover:bg-hover-bg"
                 >
-                  <SplitHorizontal size={16} weight="regular" />
+                  <SplitHorizontal size={16} strokeWidth={2} />
                 </button>
               </TooltipTrigger>
               <TooltipContent>Split View</TooltipContent>
@@ -661,7 +663,7 @@ export function NoteEditor({ noteId: propNoteId, onClose, pane = 'primary', defa
                     onClick={() => closeSecondary()}
                     className="rounded-md p-1.5 text-muted-foreground transition-colors hover:text-foreground hover:bg-hover-bg"
                   >
-                    <PhX size={16} weight="regular" />
+                    <PhX size={16} strokeWidth={2} />
                   </button>
                 </TooltipTrigger>
                 <TooltipContent>Close panel</TooltipContent>

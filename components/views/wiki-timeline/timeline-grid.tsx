@@ -12,20 +12,27 @@ import {
   LANE_HEIGHT,
   TODAY_LINE_COLOR,
   type ZoomConfig,
-  type LanedArticle,
+  type LanedItem,
+  type TimelineEntity,
 } from "./wiki-timeline-config"
 
 export interface TimelineGridProps {
   allDays: Date[]
   ticks: Date[]
   monthBoundaries: Date[]
-  lanes: LanedArticle[]
+  lanes: LanedItem<TimelineEntity>[]
   cfg: ZoomConfig
   winStart: Date
   canvasWidth: number
   svgHeight: number
   nowX: number
   now: Date
+  /** B4: group boundary lane indices (computed by WikiTimelineView).
+   *  Rendered as a slightly stronger horizontal divider than the default
+   *  lane separator so users can visually separate groups in the canvas
+   *  too — pairs with the label-column header band. Omit when grouping
+   *  is inactive. */
+  groupBoundaries?: { laneIndex: number; label: string; count: number }[] | null
 }
 
 export function TimelineGrid({
@@ -39,6 +46,7 @@ export function TimelineGrid({
   svgHeight,
   nowX,
   now,
+  groupBoundaries,
 }: TimelineGridProps) {
   return (
     <>
@@ -128,6 +136,27 @@ export function TimelineGrid({
           opacity={0.15}
         />
       ))}
+
+      {/* ── B4: Group divider lines (stronger than lane separators) ──
+        Each group boundary marks the top of its first lane — i.e. the line
+        is drawn between the previous lane and the group's starting lane.
+        The first group's boundary (laneIndex === 0) is skipped so we don't
+        draw a divider above the very first lane (the axis already marks it). */}
+      {groupBoundaries?.map((b, i) => {
+        if (b.laneIndex === 0) return null
+        return (
+          <line
+            key={`group-div-${i}`}
+            x1={0}
+            y1={b.laneIndex * LANE_HEIGHT}
+            x2={Math.max(canvasWidth, 400)}
+            y2={b.laneIndex * LANE_HEIGHT}
+            stroke="var(--border)"
+            strokeWidth={1}
+            opacity={0.55}
+          />
+        )
+      })}
 
       {/* Future zone dim stripe (now → right edge) */}
       {nowX < canvasWidth && (

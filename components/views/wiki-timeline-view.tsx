@@ -9,10 +9,13 @@
  */
 
 import { useState, useMemo, useCallback, useRef, useEffect } from "react"
-import { isWikiStub, safeDate } from "@/lib/wiki-utils"
+import { isWikiStub, safeDate, getHorizon } from "@/lib/wiki-utils"
 import { usePlotStore } from "@/lib/store"
 import type { WikiArticle, EntityEvent } from "@/lib/types"
 import type { ViewState } from "@/lib/view-engine/types"
+import type { WikiGroup } from "@/lib/view-engine/wiki-list-pipeline"
+import { WIKI_STATUS_HEX } from "@/lib/colors"
+import { IconWikiStub, IconWikiArticle } from "@/components/plot-icons"
 import { getEventsForEntity } from "@/lib/datalog/helpers"
 import {
   AXIS_HEIGHT,
@@ -34,6 +37,7 @@ import {
   buildMonthBoundaries,
   laneArticles,
   computeAllFit,
+  relativeDateLabel,
 } from "./wiki-timeline/wiki-timeline-utils"
 import { TimelineControls } from "./wiki-timeline/timeline-controls"
 import { TimelineAxis } from "./wiki-timeline/timeline-axis"
@@ -48,6 +52,12 @@ import { TimelineTooltip, TimelineEventTooltip } from "./wiki-timeline/timeline-
 export interface WikiTimelineViewProps {
   articles: WikiArticle[]
   viewState: ViewState
+  /** B4 (audit v2): viewState.groupBy-aware grouping output from the wiki
+   *  pipeline. When provided with multiple non-empty groups, the timeline
+   *  sorts articles by group order and renders a sticky group-header row
+   *  between each group in the label column. Omit / single-group input → no
+   *  grouping UI (single contiguous lane block). */
+  wikiGroups?: WikiGroup[] | null
   selectedIds: Set<string>
   activeArticleId: string | null
   onOpenArticle: (id: string) => void
@@ -59,6 +69,8 @@ export interface WikiTimelineViewProps {
 
 export function WikiTimelineView({
   articles,
+  viewState,
+  wikiGroups,
   selectedIds,
   activeArticleId,
   onOpenArticle,
@@ -83,14 +95,41 @@ export function WikiTimelineView({
   const [viewportH, setViewportH] = useState(0)
   const [viewportW, setViewportW] = useState(0)
 
-  const validArticles = useMemo(
-    () => articles.filter((a) => safeDate(a.createdAt) !== null),
-    [articles],
-  )
+  /** B4: when grouping is active, sort articles by group order + tag each
+   *  article with its groupKey/groupLabel so label-column can render sticky
+   *  headers between groups. Falls back to a single implicit group when no
+   *  grouping is active (or grouping produces a single bucket). */
+  const groupingActive = useMemo(() => {
+    if (!wikiGroups || wikiGroups.length === 0) return false
+    if (wikiGroups.length === 1 && wikiGroups[0].key === "_all") return false
+    return true
+  }, [wikiGroups])
+
+  const articleGroupMeta = useMemo(() => {
+    const meta = new Map<string, { key: string; label: string; order: number }>()
+    if (!groupingActive || !wikiGroups) return meta
+    wikiGroups.forEach((g, order) => {
+      for (const a of g.articles) {
+        meta.set(a.id, { key: g.key, label: g.label, order })
+      }
+    })
+    return meta
+  }, [groupingActive, wikiGroups])
+
+  const validArticles = useMemo(() => {
+    const filtered = articles.filter((a) => safeDate(a.createdAt) !== null)
+    if (!groupingActive) return filtered
+    // Stable sort: group order primary, original article order secondary.
+    return [...filtered].sort((a, b) => {
+      const ma = articleGroupMeta.get(a.id)?.order ?? Number.MAX_SAFE_INTEGER
+      const mb = articleGroupMeta.get(b.id)?.order ?? Number.MAX_SAFE_INTEGER
+      return ma - mb
+    })
+  }, [articles, groupingActive, articleGroupMeta])
 
   /** "All" mode: data-fitted config + winStart. Computed always (cheap); used when zoom === "all". */
   const allFit = useMemo(
-    () => computeAllFit(validArticles, Math.max((viewportW || 1000) - LABEL_COL_WIDTH, 1), now),
+    () => computeAllFit(validArticles, Math.max((viewportW || 1000) - LABEL_COL_WIDTH, 1), now, getHorizon),
     [validArticles, viewportW, now],
   )
 
@@ -104,9 +143,32 @@ export function WikiTimelineView({
   const canvasWidth = cfg.pxPerDay * cfg.totalDays
 
   const lanes = useMemo(
-    () => laneArticles(validArticles, winStart, cfg.pxPerDay, cfg.minBarWidth),
+    () => laneArticles(validArticles, winStart, cfg.pxPerDay, cfg.minBarWidth, getHorizon),
     [validArticles, winStart, cfg.pxPerDay, cfg.minBarWidth],
   )
+
+  /** B4: precompute group boundaries from the (already group-sorted) lanes
+   *  so both the label column (header band) and the canvas grid (divider
+   *  line) use the same source of truth. Each entry marks the lane index
+   *  where a new group starts + its label + how many lanes it contains. */
+  const groupBoundaries = useMemo(() => {
+    if (!groupingActive || articleGroupMeta.size === 0) return null
+    const out: { laneIndex: number; label: string; count: number }[] = []
+    let lastKey: string | null = null
+    let runStart = 0
+    lanes.forEach(({ article }, laneIndex) => {
+      const meta = articleGroupMeta.get(article.id)
+      const key = meta?.key ?? "_ungrouped"
+      if (key !== lastKey) {
+        if (out.length > 0) out[out.length - 1].count = laneIndex - runStart
+        out.push({ laneIndex, label: meta?.label ?? "Other", count: 0 })
+        lastKey = key
+        runStart = laneIndex
+      }
+    })
+    if (out.length > 0) out[out.length - 1].count = lanes.length - runStart
+    return out.length > 0 ? out : null
+  }, [groupingActive, articleGroupMeta, lanes])
 
   /** Events for each laned article, filtered to current window. Stable per render. */
   const eventsByArticleId = useMemo(() => {
@@ -291,13 +353,24 @@ export function WikiTimelineView({
             className="flex"
             style={{ position: "relative", minHeight: svgHeight }}
           >
-            {/* Left label column — sticky left:0 */}
+            {/* Left label column — sticky left:0. Wiki adapter inline: stub →
+                IconWikiStub + stub orange, article → IconWikiArticle + emerald. */}
             <TimelineLabelColumn
               lanes={lanes}
+              getStatusColor={(article) =>
+                isWikiStub(article as WikiArticle) ? WIKI_STATUS_HEX.stub : WIKI_STATUS_HEX.article
+              }
+              renderStatusIcon={(article, size) =>
+                isWikiStub(article as WikiArticle)
+                  ? <IconWikiStub size={size ?? 13} />
+                  : <IconWikiArticle size={size ?? 13} />
+              }
               activeArticleId={activeArticleId}
               selectedIds={selectedIds}
               hoveredId={hoveredId}
               svgHeight={svgHeight}
+              visibleColumns={viewState.visibleColumns}
+              groupBoundaries={groupBoundaries}
               setHoveredId={setHoveredId}
               setTooltip={setTooltip}
               onOpenArticle={onOpenArticle}
@@ -329,13 +402,16 @@ export function WikiTimelineView({
                   svgHeight={svgHeight}
                   nowX={nowX}
                   now={now}
+                  groupBoundaries={groupBoundaries}
                 />
 
-                {/* Article bars */}
+                {/* Article bars — wiki adapter resolves stub/article color. */}
                 {lanes.map((item, laneIndex) => (
                   <TimelineBar
                     key={item.article.id}
                     item={item}
+                    statusColor={isWikiStub(item.article) ? WIKI_STATUS_HEX.stub : WIKI_STATUS_HEX.article}
+                    canEditHorizon
                     laneIndex={laneIndex}
                     activeArticleId={activeArticleId}
                     selectedIds={selectedIds}
@@ -366,14 +442,62 @@ export function WikiTimelineView({
                 ))}
               </svg>
 
-              {/* ── B2: Tooltip ── */}
+              {/* ── B2: Tooltip — wiki adapter inline (stub/article icon +
+                  planning preview during drag, planned/updated date otherwise). */}
               <TimelineTooltip
                 tooltip={tooltip}
                 tooltipArticle={tooltipArticle}
+                getStatusColor={(article) =>
+                  isWikiStub(article as WikiArticle) ? WIKI_STATUS_HEX.stub : WIKI_STATUS_HEX.article
+                }
+                renderStatusIcon={(article, size) =>
+                  isWikiStub(article as WikiArticle)
+                    ? <IconWikiStub size={size ?? 12} />
+                    : <IconWikiArticle size={size ?? 12} />
+                }
+                getStatusLabel={(article) =>
+                  isWikiStub(article as WikiArticle) ? "Stub" : "Article"
+                }
+                renderHorizonLine={(article, drag) => {
+                  const a = article as WikiArticle
+                  const fmt = (d: Date) =>
+                    d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
+                  // During drag — show live planning date
+                  if (drag && a.id === drag.id) {
+                    const days = Math.round(drag.currentEndX / cfg.pxPerDay)
+                    const liveDragDate = startOfDay(addDays(winStart, days - 1))
+                    const rel = relativeDateLabel(liveDragDate, now)
+                    return (
+                      <span className="text-muted-foreground">
+                        <span style={{ color: WIKI_STATUS_HEX.stub, fontWeight: 500 }}>Planning</span>{" "}
+                        {fmt(liveDragDate)}
+                        <span className="opacity-60"> ({rel})</span>
+                      </span>
+                    )
+                  }
+                  const planned = safeDate(a.plannedDate)
+                  const updated = safeDate(a.updatedAt)
+                  if (planned) {
+                    const rel = relativeDateLabel(planned, now)
+                    return (
+                      <span className="text-muted-foreground">
+                        <span style={{ color: WIKI_STATUS_HEX.stub }}>Planned</span>
+                        {" "}
+                        {fmt(planned)}
+                        <span className="opacity-60"> ({rel})</span>
+                      </span>
+                    )
+                  }
+                  if (updated) {
+                    return (
+                      <span className="text-muted-foreground">
+                        Updated {fmt(updated)}
+                      </span>
+                    )
+                  }
+                  return null
+                }}
                 dragState={dragState}
-                cfg={cfg}
-                winStart={winStart}
-                now={now}
                 canvasScrollRef={canvasScrollRef}
               />
 

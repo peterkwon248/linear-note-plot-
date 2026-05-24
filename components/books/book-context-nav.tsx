@@ -23,14 +23,16 @@
  */
 
 import { useRouter } from "next/navigation"
-import { CaretLeft } from "@phosphor-icons/react/dist/ssr/CaretLeft"
-import { CaretRight } from "@phosphor-icons/react/dist/ssr/CaretRight"
-import { CaretDown } from "@phosphor-icons/react/dist/ssr/CaretDown"
-import { Books } from "@phosphor-icons/react/dist/ssr/Books"
-import { Check } from "@phosphor-icons/react/dist/ssr/Check"
-import { Sparkle } from "@phosphor-icons/react/dist/ssr/Sparkle"
-import { Note } from "@phosphor-icons/react/dist/ssr/Note"
-import { BookOpen } from "@phosphor-icons/react/dist/ssr/BookOpen"
+import {
+  ChevronLeft as CaretLeft,
+  ChevronRight as CaretRight,
+  ChevronDown as CaretDown,
+  Library as Books,
+  Check,
+  Sparkles as Sparkle,
+  StickyNote as Note,
+  BookOpen,
+} from "lucide-react"
 import { usePlotStore } from "@/lib/store"
 import { setActiveRoute } from "@/lib/table-route"
 import { KNOWLEDGE_INDEX_COLORS, WIKI_STATUS_HEX } from "@/lib/colors"
@@ -143,11 +145,11 @@ export function BookContextNav({
                 title="Open table of contents"
                 aria-label="Table of contents"
               >
-                <Books size={12} weight="regular" className="text-muted-foreground/70 group-hover:text-foreground" />
+                <Books size={12} strokeWidth={2} className="text-muted-foreground/70 group-hover:text-foreground" />
                 <span className="max-w-[140px] truncate font-medium">
                   {book.title || "Untitled book"}
                 </span>
-                <CaretDown size={10} weight="bold" className="text-muted-foreground/50 group-hover:text-foreground/70" />
+                <CaretDown size={10} strokeWidth={2.5} className="text-muted-foreground/50 group-hover:text-foreground/70" />
               </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="start" className="w-72 max-h-[60vh] overflow-y-auto">
@@ -181,11 +183,11 @@ export function BookContextNav({
                     )}
                   >
                     <span className="flex h-4 w-5 shrink-0 items-center justify-center text-2xs tabular-nums text-muted-foreground/60">
-                      {isActive ? <Check size={11} weight="bold" className="text-accent" /> : idx + 1}
+                      {isActive ? <Check size={11} strokeWidth={2.5} className="text-accent" /> : idx + 1}
                     </span>
                     <KindIcon
                       size={13}
-                      weight="regular"
+                      strokeWidth={2}
                       aria-label={kindLabel}
                       className={cn("shrink-0", kindColor)}
                     />
@@ -214,7 +216,7 @@ export function BookContextNav({
                     {isAuto && (
                       <Sparkle
                         size={10}
-                        weight="regular"
+                        strokeWidth={2}
                         className="text-muted-foreground/40"
                       />
                     )}
@@ -226,7 +228,7 @@ export function BookContextNav({
                 onClick={handleBackToBook}
                 className="flex items-center gap-2 px-2 py-1.5 text-2xs text-muted-foreground cursor-pointer"
               >
-                <CaretLeft size={11} weight="regular" />
+                <CaretLeft size={11} strokeWidth={2} />
                 Back to book overview
               </DropdownMenuItem>
             </DropdownMenuContent>
@@ -238,7 +240,7 @@ export function BookContextNav({
             className="group flex items-center gap-1 rounded-md px-1 py-0.5 text-2xs text-muted-foreground transition-colors hover:bg-hover-bg hover:text-foreground"
             title={`Back to ${book.title || "book"}`}
           >
-            <Books size={12} weight="regular" className="text-muted-foreground/70 group-hover:text-foreground" />
+            <Books size={12} strokeWidth={2} className="text-muted-foreground/70 group-hover:text-foreground" />
             <span className="max-w-[140px] truncate font-medium">
               {book.title || "Untitled book"}
             </span>
@@ -300,7 +302,7 @@ export function BookContextNav({
               : "cursor-not-allowed text-muted-foreground/30",
           )}
         >
-          <CaretLeft size={12} weight="bold" />
+          <CaretLeft size={12} strokeWidth={2.5} />
         </button>
         <button
           type="button"
@@ -315,7 +317,7 @@ export function BookContextNav({
               : "cursor-not-allowed text-muted-foreground/30",
           )}
         >
-          <CaretRight size={12} weight="bold" />
+          <CaretRight size={12} strokeWidth={2.5} />
         </button>
       </div>
     </div>

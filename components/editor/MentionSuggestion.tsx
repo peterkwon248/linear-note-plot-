@@ -11,9 +11,7 @@ import {
   forwardRef,
 } from "react"
 import { Tag, CalendarBlank, Asterisk } from "@/lib/editor/editor-icons"
-import { CircleDashed } from "@phosphor-icons/react/dist/ssr/CircleDashed"
-import { CircleHalf } from "@phosphor-icons/react/dist/ssr/CircleHalf"
-import { CheckCircle } from "@phosphor-icons/react/dist/ssr/CheckCircle"
+import { CircleDashed, Contrast as CircleHalf, CircleCheck as CheckCircle } from "lucide-react"
 import { IconWikiStub, IconWikiArticle } from "@/components/plot-icons"
 import { usePlotStore } from "@/lib/store"
 import { parseMentionDate } from "@/lib/mention-date-parser"

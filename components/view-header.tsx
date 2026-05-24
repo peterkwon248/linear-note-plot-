@@ -450,7 +450,7 @@ function SecondaryTitleDropdown({ currentTitle, icon, count }: { currentTitle: s
               }}
               className="gap-2.5 py-2 text-sm"
             >
-              <Icon size={18} weight="light" />
+              <Icon size={18} strokeWidth={1.5} />
               {label}
             </DropdownMenuItem>
           ))}

@@ -20,25 +20,27 @@
  */
 
 import { memo, type ReactNode } from "react"
-import { Folder as PhFolder } from "@phosphor-icons/react/dist/ssr/Folder"
-import { Hash as PhHash } from "@phosphor-icons/react/dist/ssr/Hash"
-import { Tag as PhTag } from "@phosphor-icons/react/dist/ssr/Tag"
-import { Link as PhLink } from "@phosphor-icons/react/dist/ssr/Link"
-import { FileText as PhFileText } from "@phosphor-icons/react/dist/ssr/FileText"
-import { Eye as PhEye } from "@phosphor-icons/react/dist/ssr/Eye"
-import { Tree as PhTree } from "@phosphor-icons/react/dist/ssr/Tree"
-import { ArrowBendUpLeft as PhParent } from "@phosphor-icons/react/dist/ssr/ArrowBendUpLeft"
-import { PushPin as PhPushPin } from "@phosphor-icons/react/dist/ssr/PushPin"
-import { NoteBlank as PhNoteBlank } from "@phosphor-icons/react/dist/ssr/NoteBlank"
-import { Stack as PhStack } from "@phosphor-icons/react/dist/ssr/Stack"
-import { Image as PhImage } from "@phosphor-icons/react/dist/ssr/Image"
-import { Quotes as PhQuotes } from "@phosphor-icons/react/dist/ssr/Quotes"
-import { List as PhList } from "@phosphor-icons/react/dist/ssr/List"
-import { Lightning as PhLightning } from "@phosphor-icons/react/dist/ssr/Lightning"
-import { PencilSimple as PhPencilSimple } from "@phosphor-icons/react/dist/ssr/PencilSimple"
-import { Sparkle as PhSparkle } from "@phosphor-icons/react/dist/ssr/Sparkle"
-import { BookOpen as PhBookOpen } from "@phosphor-icons/react/dist/ssr/BookOpen"
-import { Sticker as PhSticker } from "@phosphor-icons/react/dist/ssr/Sticker"
+import {
+  Folder as PhFolder,
+  Hash as PhHash,
+  Tag as PhTag,
+  Link2 as PhLink,
+  FileText as PhFileText,
+  Eye as PhEye,
+  ListTree as PhTree,
+  CornerUpLeft as PhParent,
+  Pin as PhPushPin,
+  StickyNote as PhNoteBlank,
+  Layers as PhStack,
+  ImageIcon as PhImage,
+  Quote as PhQuotes,
+  List as PhList,
+  Zap as PhLightning,
+  Pencil as PhPencilSimple,
+  Sparkles as PhSparkle,
+  BookOpen as PhBookOpen,
+  Sticker as PhSticker,
+} from "lucide-react"
 import { StatusBadge, PriorityBadge } from "@/components/note-fields"
 import { shortRelative } from "@/lib/format-utils"
 import type { NoteStatus, NotePriority } from "@/lib/types"
@@ -106,7 +108,7 @@ export function FolderChip({ folder }: { folder: { name: string; color: string |
         color: resolvedColor,
       }}
     >
-      <PhFolder size={10} weight="regular" />
+      <PhFolder size={10} strokeWidth={2} />
       <span className="truncate max-w-[80px]">{folder.name}</span>
     </ChipShell>
   )
@@ -136,7 +138,7 @@ export function MultiFolderMarker({
       title={`Also in: ${otherFolderNames.join(", ")}`}
       className="inline-flex items-center gap-0.5 h-5 px-1.5 rounded-sm text-2xs font-medium leading-none whitespace-nowrap shrink-0 bg-secondary/60 text-muted-foreground"
     >
-      <PhFolder size={10} weight="regular" />
+      <PhFolder size={10} strokeWidth={2} />
       +{count}
     </span>
   )
@@ -160,7 +162,7 @@ export function LabelChip({ label }: { label: { name: string; color: string } })
         borderStyle: "solid",
       }}
     >
-      <PhTag size={10} weight="regular" />
+      <PhTag size={10} strokeWidth={2} />
       <span className="truncate max-w-[80px]">{label.name}</span>
     </ChipShell>
   )
@@ -184,7 +186,7 @@ export function TagChip({ tag }: { tag: { name: string; color: string | null } }
         color: resolvedColor,
       }}
     >
-      <PhHash size={10} weight="bold" className="-mr-0.5" />
+      <PhHash size={10} strokeWidth={2.5} className="-mr-0.5" />
       <span className="truncate max-w-[64px]">{tag.name}</span>
     </ChipShell>
   )
@@ -199,7 +201,7 @@ export function TagChip({ tag }: { tag: { name: string; color: string | null } }
 export function LinksChip({ count }: { count: number }) {
   return (
     <span className="inline-flex items-center gap-0.5 h-5 text-2xs text-muted-foreground leading-none whitespace-nowrap shrink-0">
-      <PhLink size={10} weight="regular" />
+      <PhLink size={10} strokeWidth={2} />
       {count}
     </span>
   )
@@ -210,7 +212,7 @@ export function LinksChip({ count }: { count: number }) {
 export function WordsChip({ count }: { count: number }) {
   return (
     <span className="inline-flex items-center gap-0.5 h-5 text-2xs text-muted-foreground leading-none whitespace-nowrap shrink-0">
-      <PhFileText size={10} weight="regular" />
+      <PhFileText size={10} strokeWidth={2} />
       {count}w
     </span>
   )
@@ -221,7 +223,7 @@ export function WordsChip({ count }: { count: number }) {
 export function ReadsChip({ count }: { count: number }) {
   return (
     <span className="inline-flex items-center gap-0.5 h-5 text-2xs text-muted-foreground leading-none whitespace-nowrap shrink-0">
-      <PhEye size={10} weight="regular" />
+      <PhEye size={10} strokeWidth={2} />
       {count}
     </span>
   )
@@ -240,7 +242,7 @@ export function CategoryChip({ name, color }: { name: string; color?: string }) 
         title={name}
         style={{ backgroundColor: `${color}1a`, color }}
       >
-        <PhFolder size={10} weight="regular" />
+        <PhFolder size={10} strokeWidth={2} />
         <span className="truncate max-w-[80px]">{name}</span>
       </ChipShell>
     )
@@ -250,7 +252,7 @@ export function CategoryChip({ name, color }: { name: string; color?: string }) 
       title={name}
       className="bg-secondary text-muted-foreground"
     >
-      <PhFolder size={10} weight="regular" />
+      <PhFolder size={10} strokeWidth={2} />
       <span className="truncate max-w-[80px]">{name}</span>
     </ChipShell>
   )
@@ -292,7 +294,7 @@ export function ParentChip({ title }: { title: string }) {
       title={`Parent: ${title}`}
       className="bg-secondary/60 text-muted-foreground"
     >
-      <PhParent size={10} weight="regular" />
+      <PhParent size={10} strokeWidth={2} />
       <span className="truncate max-w-[80px]">{title}</span>
     </ChipShell>
   )
@@ -306,7 +308,7 @@ export function ChildrenChip({ count }: { count: number }) {
       title={`${count} ${count === 1 ? "child" : "children"}`}
       className="inline-flex items-center gap-0.5 h-5 text-2xs text-muted-foreground leading-none whitespace-nowrap shrink-0"
     >
-      <PhTree size={10} weight="regular" />
+      <PhTree size={10} strokeWidth={2} />
       {count}
     </span>
   )
@@ -335,7 +337,7 @@ export function AliasesChip({ count }: { count: number }) {
 export function PinnedChip() {
   return (
     <span title="Pinned" className="inline-flex items-center shrink-0">
-      <PhPushPin className="text-accent" size={12} weight="regular" />
+      <PhPushPin className="text-accent" size={12} strokeWidth={2} />
     </span>
   )
 }
@@ -358,7 +360,7 @@ export function TagNoteCountChip({ count }: { count: number }) {
       title={`${count} ${count === 1 ? "note" : "notes"}`}
       className="inline-flex items-center gap-0.5 h-5 text-2xs text-muted-foreground leading-none whitespace-nowrap shrink-0"
     >
-      <PhNoteBlank size={10} weight="regular" />
+      <PhNoteBlank size={10} strokeWidth={2} />
       {count}
     </span>
   )
@@ -382,7 +384,7 @@ export function LabelNoteCountChip({ count }: { count: number }) {
       title={`${count} ${count === 1 ? "note" : "notes"}`}
       className="inline-flex items-center gap-0.5 h-5 text-2xs text-muted-foreground leading-none whitespace-nowrap shrink-0"
     >
-      <PhNoteBlank size={10} weight="regular" />
+      <PhNoteBlank size={10} strokeWidth={2} />
       {count}
     </span>
   )
@@ -408,7 +410,7 @@ export function StickerMemberCountChip({ count }: { count: number }) {
       title={`${count} ${count === 1 ? "item" : "items"}`}
       className="inline-flex items-center gap-0.5 h-5 text-2xs text-muted-foreground leading-none whitespace-nowrap shrink-0"
     >
-      <PhStack size={10} weight="regular" />
+      <PhStack size={10} strokeWidth={2} />
       {count}
     </span>
   )
@@ -431,7 +433,7 @@ export function RefTypeChip({ type }: { type: "link" | "citation" }) {
       title={type === "link" ? "Link reference" : "Citation"}
       className="bg-secondary/60 text-muted-foreground"
     >
-      <Icon size={10} weight="regular" />
+      <Icon size={10} strokeWidth={2} />
       <span className="capitalize">{type}</span>
     </ChipShell>
   )
@@ -450,7 +452,7 @@ export function RefFieldCountChip({ count }: { count: number }) {
       title={`${count} ${count === 1 ? "field" : "fields"}`}
       className="inline-flex items-center gap-0.5 h-5 text-2xs text-muted-foreground leading-none whitespace-nowrap shrink-0"
     >
-      <PhFileText size={10} weight="regular" />
+      <PhFileText size={10} strokeWidth={2} />
       {count}
     </span>
   )
@@ -468,7 +470,7 @@ export function RefImageChip() {
       title="Has image"
       className="inline-flex items-center h-5 text-2xs text-muted-foreground leading-none whitespace-nowrap shrink-0"
     >
-      <PhImage size={10} weight="regular" />
+      <PhImage size={10} strokeWidth={2} />
     </span>
   )
 }
@@ -489,7 +491,7 @@ export function FileTypeChip({ type }: { type: "image" | "url" | "file" }) {
   const Icon = type === "image" ? PhImage : type === "url" ? PhLink : PhFileText
   return (
     <ChipShell title={label} className="bg-secondary/60 text-muted-foreground">
-      <Icon size={10} weight="regular" />
+      <Icon size={10} strokeWidth={2} />
       {label}
     </ChipShell>
   )
@@ -537,7 +539,7 @@ export function BookItemCountChip({ count }: { count: number }) {
       title={`${count} ${count === 1 ? "item" : "items"}`}
       className="inline-flex items-center gap-0.5 h-5 text-2xs text-muted-foreground leading-none whitespace-nowrap shrink-0"
     >
-      <PhList size={10} weight="regular" />
+      <PhList size={10} strokeWidth={2} />
       {count}
     </span>
   )
@@ -592,7 +594,7 @@ export function BookKindChip({ kind }: { kind: "smart" | "manual" | "hybrid" }) 
       className="inline-flex items-center gap-1 rounded-md border px-1.5 py-0.5 text-2xs font-medium leading-none whitespace-nowrap shrink-0"
       style={{ backgroundColor: cfg.bg, color: cfg.color, borderColor: cfg.border }}
     >
-      <Icon size={10} weight="regular" />
+      <Icon size={10} strokeWidth={2} />
       {cfg.label}
     </span>
   )
@@ -618,12 +620,12 @@ export function BookKindIcon({
   size?: number
 }) {
   if (kind === "smart") {
-    return <PhLightning size={size} weight="regular" className="text-[#5E6AD2] dark:text-[#7C8AE7]" />
+    return <PhLightning size={size} strokeWidth={2} className="text-[#5E6AD2] dark:text-[#7C8AE7]" />
   }
   if (kind === "hybrid") {
-    return <PhSparkle size={size} weight="regular" className="text-amber-600 dark:text-amber-400" />
+    return <PhSparkle size={size} strokeWidth={2} className="text-amber-600 dark:text-amber-400" />
   }
-  return <PhPencilSimple size={size} weight="regular" className="text-muted-foreground" />
+  return <PhPencilSimple size={size} strokeWidth={2} className="text-muted-foreground" />
 }
 
 /* ── BookSourceKindChip mini-bar (books-view-engine-2) ─ */
@@ -662,7 +664,7 @@ export function BookSourceKindChip({ kinds }: { kinds: Array<"folder" | "categor
     >
       {kinds.map((k) => {
         const Icon = SOURCE_KIND_ICON[k]
-        return <Icon key={k} size={10} weight="regular" />
+        return <Icon key={k} size={10} strokeWidth={2} />
       })}
     </span>
   )

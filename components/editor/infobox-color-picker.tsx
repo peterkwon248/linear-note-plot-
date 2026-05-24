@@ -1,7 +1,7 @@
 "use client"
 
 import { cn } from "@/lib/utils"
-import { Check as PhCheck } from "@phosphor-icons/react/dist/ssr/Check"
+import { Check as PhCheck } from "lucide-react"
 import { useTheme } from "next-themes"
 import { boostAlphaForLight } from "@/lib/tinted-bg"
 
@@ -73,7 +73,7 @@ export function InfoboxColorPicker({
               )}
               style={{ backgroundColor: isDefault ? p.swatch : previewColor(p.swatch) }}
             >
-              {isActive && <PhCheck size={12} weight="bold" className="text-foreground" />}
+              {isActive && <PhCheck size={12} strokeWidth={2.5} className="text-foreground" />}
               {!isActive && isDefault && (
                 <span className="block h-px w-3.5 bg-muted-foreground/50 rotate-45" />
               )}

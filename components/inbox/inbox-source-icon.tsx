@@ -1,14 +1,10 @@
 "use client"
 
-import { Bell } from "@phosphor-icons/react/dist/ssr/Bell"
-import { Brain } from "@phosphor-icons/react/dist/ssr/Brain"
-import { MoonStars } from "@phosphor-icons/react/dist/ssr/MoonStars"
-import { LinkBreak } from "@phosphor-icons/react/dist/ssr/LinkBreak"
-import { Sparkle } from "@phosphor-icons/react/dist/ssr/Sparkle"
+import { Bell, Brain, Moon as MoonStars, Unlink as LinkBreak, Sparkles as Sparkle } from "lucide-react"
 import type { InboxItemKind } from "@/lib/store/slices/inbox"
 
 export function InboxSourceIcon({ kind, className }: { kind: InboxItemKind; className?: string }) {
-  const iconProps = { size: 14, weight: "regular" as const, className }
+  const iconProps = { size: 14, strokeWidth: 2, className }
   switch (kind) {
     case "srs":            return <Brain {...iconProps} />
     case "snooze-expired": return <MoonStars {...iconProps} />

@@ -42,14 +42,16 @@ import {
   type DragOverEvent,
   type DragStartEvent,
 } from "@dnd-kit/core"
-import { BookOpen } from "@phosphor-icons/react/dist/ssr/BookOpen"
-import { Check as PhCheck } from "@phosphor-icons/react/dist/ssr/Check"
-import { Scissors } from "@phosphor-icons/react/dist/ssr/Scissors"
-import { Plus as PhPlus } from "@phosphor-icons/react/dist/ssr/Plus"
-import { X as PhX } from "@phosphor-icons/react/dist/ssr/X"
-import { CaretRight } from "@phosphor-icons/react/dist/ssr/CaretRight"
-import { CaretDown } from "@phosphor-icons/react/dist/ssr/CaretDown"
-import { MagnifyingGlass } from "@phosphor-icons/react/dist/ssr/MagnifyingGlass"
+import {
+  BookOpen,
+  Check as PhCheck,
+  Scissors,
+  Plus as PhPlus,
+  X as PhX,
+  ChevronRight as CaretRight,
+  ChevronDown as CaretDown,
+  Search as MagnifyingGlass,
+} from "lucide-react"
 import {
   SortableContext,
   verticalListSortingStrategy,
@@ -88,7 +90,7 @@ function FloatingDragDropBar({
               : "border-border-subtle text-muted-foreground/60 hover:border-border hover:text-muted-foreground/80 hover:scale-[1.01]"
           )}
         >
-          <Scissors size={20} weight="regular" />
+          <Scissors size={20} strokeWidth={2} />
           <span className="text-2xs font-medium whitespace-nowrap">
             {isOverNew ? "Drop to split" : "New Article"}
           </span>
@@ -121,7 +123,7 @@ function ExistingArticleDropTarget({ articleId, title, isOver }: { articleId: st
           : "border-border-subtle text-muted-foreground/70 hover:border-border-subtle hover:text-muted-foreground/70 hover:scale-[1.01]"
       )}
     >
-      <BookOpen size={16} weight="regular" className="shrink-0" />
+      <BookOpen size={16} strokeWidth={2} className="shrink-0" />
       <span className="text-2xs font-medium truncate max-w-full text-center">{title}</span>
     </div>
   )
@@ -412,7 +414,7 @@ export function WikiArticleView({ articleId, editable = false, preview = false, 
     return (
       <div className="flex flex-col items-center gap-3 py-20 text-center">
         <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-secondary/60">
-          <BookOpen className="text-muted-foreground/70" size={20} weight="regular" />
+          <BookOpen className="text-muted-foreground/70" size={20} strokeWidth={2} />
         </div>
         <p className="text-note text-muted-foreground/60">Article not found</p>
       </div>
@@ -707,7 +709,7 @@ export function WikiArticleView({ articleId, editable = false, preview = false, 
                 onClick={() => setSplitMode(true)}
                 className="flex items-center gap-1.5 rounded-md px-2 py-1 text-2xs text-muted-foreground/70 hover:text-foreground hover:bg-hover-bg transition-colors duration-100"
               >
-                <Scissors size={12} weight="regular" />
+                <Scissors size={12} strokeWidth={2} />
                 Split wiki
               </button>
             </div>
@@ -749,7 +751,7 @@ export function WikiArticleView({ articleId, editable = false, preview = false, 
                             ? "bg-accent border-accent text-white"
                             : "border-muted-foreground/30 hover:border-muted-foreground/50"
                         )}>
-                          {selectedBlockIds.has(block.id) && <PhCheck size={10} weight="bold" />}
+                          {selectedBlockIds.has(block.id) && <PhCheck size={10} strokeWidth={2.5} />}
                         </div>
                       </div>
                     )}
@@ -862,7 +864,7 @@ export function WikiArticleView({ articleId, editable = false, preview = false, 
                 disabled={selectedBlockIds.size === 0 || !splitTitle.trim()}
                 className="rounded-md bg-accent px-3 py-1.5 text-2xs font-medium text-white transition-colors hover:bg-accent/90 disabled:opacity-40 disabled:cursor-not-allowed"
               >
-                <Scissors size={12} weight="regular" className="inline mr-1" />
+                <Scissors size={12} strokeWidth={2} className="inline mr-1" />
                 Extract
               </button>
             </div>
@@ -1199,7 +1201,7 @@ export function InlineCategoryTags({
                       className="opacity-0 group-hover/cat:opacity-100 text-muted-foreground/70 hover:text-destructive transition-all p-0.5 -mr-0.5"
                       title={`Remove ${cat.name}`}
                     >
-                      <PhX size={10} weight="bold" />
+                      <PhX size={10} strokeWidth={2.5} />
                     </button>
                   )}
                 </span>
@@ -1217,7 +1219,7 @@ export function InlineCategoryTags({
                 onClick={() => setDropdownOpen(!dropdownOpen)}
                 className="inline-flex items-center gap-1 text-muted-foreground/60 hover:text-foreground transition-colors"
               >
-                <PhPlus size={11} weight="regular" />
+                <PhPlus size={11} strokeWidth={2} />
                 {assignedCategories.length === 0 ? "Add category" : "Add"}
               </button>
               {dropdownOpen && (
@@ -1323,7 +1325,7 @@ export function ArticleCategories({
                 <span className="text-muted-foreground/70">
                   {wikiCategories.find((p) => p.id === cat.parentIds[0])?.name ?? ""}
                 </span>
-                <CaretRight size={8} weight="bold" className="text-muted-foreground/60" />
+                <CaretRight size={8} strokeWidth={2.5} className="text-muted-foreground/60" />
               </>
             )}
             {cat.name}
@@ -1332,7 +1334,7 @@ export function ArticleCategories({
                 onClick={() => handleRemove(cat.id)}
                 className="ml-0.5 hidden rounded-sm p-0 text-muted-foreground/70 transition-colors hover:text-foreground group-hover:inline-flex"
               >
-                <PhX size={10} weight="bold" />
+                <PhX size={10} strokeWidth={2.5} />
               </button>
             )}
           </span>
@@ -1344,7 +1346,7 @@ export function ArticleCategories({
             onClick={() => setDropdownOpen(!dropdownOpen)}
             className="flex items-center gap-1 rounded-md px-1.5 py-1 text-2xs font-medium text-muted-foreground/70 transition-colors hover:bg-hover-bg hover:text-foreground/70"
           >
-            <PhPlus size={12} weight="regular" />
+            <PhPlus size={12} strokeWidth={2} />
             Add category
           </button>
           {dropdownOpen && (

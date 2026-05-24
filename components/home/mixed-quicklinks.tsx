@@ -5,12 +5,7 @@ import { useRouter } from "next/navigation"
 import { usePlotStore } from "@/lib/store"
 import { setActiveRoute } from "@/lib/table-route"
 import { navigateToWikiArticle } from "@/lib/wiki-article-nav"
-import { FileText } from "@phosphor-icons/react/dist/ssr/FileText"
-import { BookOpen } from "@phosphor-icons/react/dist/ssr/BookOpen"
-import { Books } from "@phosphor-icons/react/dist/ssr/Books"
-import { Folder as PhFolder } from "@phosphor-icons/react/dist/ssr/Folder"
-import { Funnel } from "@phosphor-icons/react/dist/ssr/Funnel"
-import { BookmarkSimple } from "@phosphor-icons/react/dist/ssr/BookmarkSimple"
+import { FileText, BookOpen, Library as Books, Folder as PhFolder, Filter as Funnel, Bookmark as BookmarkSimple } from "lucide-react"
 import type { Book, Folder, GlobalBookmark, Note, SavedView, WikiArticle } from "@/lib/types"
 
 /**
@@ -205,17 +200,17 @@ export function MixedQuicklinks({ limit = 8 }: { limit?: number }) {
 function iconFor(kind: "note" | "wiki" | "folder" | "view" | "bookmark" | "book") {
   switch (kind) {
     case "note":
-      return <FileText size={14} weight="regular" />
+      return <FileText size={14} strokeWidth={2} />
     case "wiki":
-      return <BookOpen size={14} weight="regular" />
+      return <BookOpen size={14} strokeWidth={2} />
     case "folder":
-      return <PhFolder size={14} weight="regular" />
+      return <PhFolder size={14} strokeWidth={2} />
     case "view":
-      return <Funnel size={14} weight="regular" />
+      return <Funnel size={14} strokeWidth={2} />
     case "bookmark":
-      return <BookmarkSimple size={14} weight="fill" />
+      return <BookmarkSimple size={14} fill="currentColor" strokeWidth={2} />
     case "book":
-      return <Books size={14} weight="regular" />
+      return <Books size={14} strokeWidth={2} />
   }
 }
 

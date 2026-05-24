@@ -1,7 +1,7 @@
 "use client"
 
 import type { Note } from "@/lib/types"
-import { FileText } from "@phosphor-icons/react/dist/ssr/FileText"
+import { FileText } from "lucide-react"
 
 export function LinkSuggestion({
   suggestions,
@@ -27,7 +27,7 @@ export function LinkSuggestion({
           onClick={() => onSelect(note)}
           className="flex w-full items-center gap-2 px-2 py-1.5 text-left text-note text-foreground transition-colors hover:bg-hover-bg"
         >
-          <FileText className="shrink-0 text-muted-foreground/60" size={14} weight="regular" />
+          <FileText className="shrink-0 text-muted-foreground/60" size={14} strokeWidth={2} />
           <span className="truncate">{note.title}</span>
           <span className="ml-auto shrink-0 rounded-full px-1.5 py-0.5 text-2xs text-muted-foreground bg-secondary">
             {note.status}

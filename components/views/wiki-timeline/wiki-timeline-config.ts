@@ -197,13 +197,65 @@ export const EVENT_MARKER_STACK_GAP = 18
 /** Max markers per day before showing +N overflow */
 export const EVENT_MARKER_MAX_PER_DAY = 4
 
-/* ── Placed article (one row per article, single bar) ───── */
+/* ── Generic entity timeline contracts (2026-05-24) ─────────
+ *
+ * The wiki timeline originally hard-wired WikiArticle everywhere. Notes
+ * and Books now share the same bars-first layout, so the sub-components
+ * accept a generic `TimelineEntity` (id/title/createdAt/updatedAt) plus
+ * an `EntityTimelineAdapter` that maps entity-specific concepts (status
+ * silhouette, lifespan horizon, event lookup ref) into a uniform API.
+ *
+ * Wiki keeps its rich behavior via WikiAdapter (default for WikiTimelineView).
+ * Notes/Books adapters opt out of drag (no plannedDate) and pick their own
+ * status icon set (Stone/Brick/Block + Smart/Hybrid/Manual). */
 
-export interface LanedArticle {
-  article: WikiArticle
+import type { ReactNode } from "react"
+import type { EntityRef } from "@/lib/types"
+
+export interface TimelineEntity {
+  id: string
+  title: string
+  createdAt: string
+  updatedAt: string
+}
+
+export interface EntityTimelineAdapter<T extends TimelineEntity> {
+  /** Lifespan end date: bar spans [createdAt, horizon]. For wiki this is
+   *  `getHorizon(article)` (plannedDate ?? updatedAt ?? createdAt). For
+   *  notes/books, just `new Date(updatedAt)`. Return null to drop the
+   *  entity from the timeline (no valid horizon). */
+  getHorizon: (entity: T) => Date | null
+  /** Stable status key (e.g. "stub"/"article", "stone"/"brick"/"keystone",
+   *  "smart"/"hybrid"/"manual"). Used as the React key for status-tinted
+   *  styling. */
+  getStatusKey: (entity: T) => string
+  /** Status text color (CSS color string) for the bar + label-column icon. */
+  getStatusColor: (entity: T) => string
+  /** Status silhouette icon, sized for the label column (13px default). */
+  renderStatusIcon: (entity: T, size?: number) => ReactNode
+  /** Human label for the status in tooltips ("Stub", "Block", "Smart book"). */
+  getStatusLabel: (entity: T) => string
+  /** Entity reference for `getEventsForEntity(entityEvents, …)` lookup.
+   *  Wiki = { kind: "wiki", id }, Notes = { kind: "note", id }, etc. */
+  getEntityRef: (entity: T) => EntityRef
+  /** Optional: drag-to-set lifespan end (only wiki supports plannedDate
+   *  today). Omit to render bars as read-only. */
+  setHorizonDate?: (id: string, isoDate: string) => void
+}
+
+/* ── Placed entity (one row per entity, single bar) ─────────
+ * Generic over T extends TimelineEntity. WikiTimelineView aliases this
+ * as LanedArticle<WikiArticle> for source compatibility. */
+
+export interface LanedItem<T extends TimelineEntity> {
+  article: T
   x: number
   width: number
 }
+
+/** @deprecated Use `LanedItem<WikiArticle>` directly. Kept as a back-compat
+ *  alias because sub-components and external callers still type-import it. */
+export type LanedArticle = LanedItem<WikiArticle>
 
 /* ── Shared React state shapes (kept here so sub-components type props
  *    without React/closure dependencies) ─────────────────────────── */

@@ -5,7 +5,7 @@ import type { Editor } from "@tiptap/react"
 import { useBlockPositions, getBlockDomRect } from "./dnd/use-block-positions"
 import { BlockCommentMarker } from "@/components/comments/block-comment-marker"
 import { usePlotStore } from "@/lib/store"
-import { BookmarkSimple } from "@phosphor-icons/react/dist/ssr/BookmarkSimple"
+import { Bookmark as BookmarkSimple } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 /**
@@ -155,7 +155,7 @@ function NoteBlockBookmarkButton({ noteId, blockId }: { noteId: string; blockId:
           : "opacity-20 hover:opacity-100 text-muted-foreground hover:text-foreground hover:bg-hover-bg",
       )}
     >
-      <BookmarkSimple size={13} weight={bookmarked ? "fill" : "regular"} />
+      <BookmarkSimple size={13} fill={bookmarked ? "currentColor" : "none"} strokeWidth={2} />
     </button>
   )
 }

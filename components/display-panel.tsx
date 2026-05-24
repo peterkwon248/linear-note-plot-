@@ -3,23 +3,45 @@
 import type { SortField, GroupBy, GroupSortBy, ViewMode, ViewState, SortRule } from "@/lib/view-engine/types"
 import { MAX_SORT_RULES } from "@/lib/view-engine/types"
 import type { ReactNode } from "react"
-import { List } from "@phosphor-icons/react/dist/ssr/List"
-import { Kanban } from "@phosphor-icons/react/dist/ssr/Kanban"
-import { GridFour } from "@phosphor-icons/react/dist/ssr/GridFour"
-import { Images } from "@phosphor-icons/react/dist/ssr/Images"
-import { Graph } from "@phosphor-icons/react/dist/ssr/Graph"
-import { ChartLine } from "@phosphor-icons/react/dist/ssr/ChartLine"
-import { ChartBarHorizontal } from "@phosphor-icons/react/dist/ssr/ChartBarHorizontal"
-import { SortAscending } from "@phosphor-icons/react/dist/ssr/SortAscending"
-import { SortDescending } from "@phosphor-icons/react/dist/ssr/SortDescending"
-import { Plus as PhPlus } from "@phosphor-icons/react/dist/ssr/Plus"
-import { X as PhX } from "@phosphor-icons/react/dist/ssr/X"
+import {
+  List,
+  Kanban,
+  LayoutGrid as GridFour,
+  Images,
+  Network as Graph,
+  LineChart as ChartLine,
+  BarChart3 as ChartBarHorizontal,
+  ArrowDownAZ as SortAscending,
+  ArrowDownZA as SortDescending,
+  Plus as PhPlus,
+  X as PhX,
+} from "lucide-react"
 import { ToggleSwitch } from "@/components/ui/toggle-switch"
 import { ChipDropdown } from "@/components/ui/chip-dropdown"
 // Single source of truth — declared in the view-engine layer, re-exported here
 // for back-compat with any consumer that imports DisplayConfig from this module.
-import type { DisplayConfig, DisplayToggle, DisplayProperty } from "@/lib/view-engine/view-configs"
+import type { DisplayConfig, DisplayToggle, DisplayProperty, ModeList, GroupingOption } from "@/lib/view-engine/view-configs"
 export type { DisplayConfig, DisplayToggle, DisplayProperty }
+
+/* ── Mode-aware helpers (audit L1/L2: "UI 노출 = 동작" / "Show, don't disable") ── */
+
+/** Properties default to list/board only — gallery has fixed card slots,
+ *  timeline has fixed label-column, grid has thumbnail+caption. Toggling
+ *  a property chip in those modes would do nothing. */
+const PROPERTY_DEFAULT_MODES: ViewMode[] = ["list", "board"]
+
+function isGroupingModeAllowed(option: GroupingOption, mode: ViewMode): boolean {
+  if (!option.modes || option.modes === "all") return true
+  return option.modes.includes(mode)
+}
+
+function isPropertyModeAllowed(prop: DisplayProperty, mode: ViewMode): boolean {
+  // Back-compat: `boardOnly: true` is a synonym for `modes: ["board"]`.
+  if (prop.boardOnly) return mode === "board"
+  const modes: ModeList = prop.modes ?? PROPERTY_DEFAULT_MODES
+  if (modes === "all") return true
+  return modes.includes(mode)
+}
 
 interface DisplayPanelProps {
   config: DisplayConfig
@@ -59,14 +81,16 @@ export const SortIcon = () => (
 
 /* ── Mode config helpers ────────────────────────────────── */
 
+// 2026-05-24: Gallery mode removed from the tab strip (deprecated app-wide
+// in favor of Grid — user feedback: grid reads cleaner). Persisted
+// `viewMode === "gallery"` migrates to "grid" via normalizeViewState.
 const MODE_DEFS: { mode: ViewMode; icon: ReactNode; label: string }[] = [
-  { mode: "list",     icon: <List size={14} weight="regular" />,     label: "List" },
-  { mode: "board",    icon: <Kanban size={14} weight="regular" />,   label: "Board" },
-  { mode: "gallery",  icon: <Images size={14} weight="regular" />,   label: "Gallery" },
-  { mode: "grid",     icon: <GridFour size={14} weight="regular" />, label: "Grid" },
-  { mode: "graph",    icon: <Graph size={14} weight="regular" />,    label: "Graph" },
-  { mode: "insights",  icon: <ChartLine size={14} weight="regular" />, label: "Insights" },
-  { mode: "timeline",  icon: <ChartBarHorizontal size={14} weight="regular" />, label: "Timeline" },
+  { mode: "list",     icon: <List size={14} strokeWidth={2} />,     label: "List" },
+  { mode: "board",    icon: <Kanban size={14} strokeWidth={2} />,   label: "Board" },
+  { mode: "grid",     icon: <GridFour size={14} strokeWidth={2} />, label: "Grid" },
+  { mode: "graph",    icon: <Graph size={14} strokeWidth={2} />,    label: "Graph" },
+  { mode: "insights",  icon: <ChartLine size={14} strokeWidth={2} />, label: "Insights" },
+  { mode: "timeline",  icon: <ChartBarHorizontal size={14} strokeWidth={2} />, label: "Timeline" },
 ]
 
 function resolveViewMode(viewMode: ViewMode): ViewMode {
@@ -98,9 +122,16 @@ export function DisplayPanel({
   // viewState.subGroupBy, so showing the option creates a "selection has no
   // effect" bug. Hide the entire sub-grouping UI for those.
   const supportsSubGrouping = config.supportsSubGrouping ?? false
-  const groupingOptions = (config.groupingOptions ?? []).filter(
-    (o) => !(isBoard && o.value === "family" && !allowFamilyOnBoard)
-  )
+  // Audit L1+L2: filter grouping options by current view mode.
+  //   - Declarative `modes` on each option (e.g. firstLetter modes: ["list"])
+  //     hides the option when it has no effect in the current mode.
+  //   - Legacy family/board carve-out kept for back-compat: family is allowed
+  //     in board only when allowFamilyOnBoard is set (Wiki Categories case).
+  const groupingOptions = (config.groupingOptions ?? []).filter((o) => {
+    if (!isGroupingModeAllowed(o, currentMode)) return false
+    if (isBoard && o.value === "family" && !allowFamilyOnBoard) return false
+    return true
+  })
   const subGroupOptions = groupingOptions.filter(
     (o) => o.value !== viewState.groupBy && o.value !== "family"
   )
@@ -308,7 +339,7 @@ export function DisplayPanel({
                       className="inline-flex items-center justify-center w-7 h-7 rounded-md border border-border-subtle bg-surface-overlay text-muted-foreground hover:text-foreground transition-colors"
                       title={rule.direction === "asc" ? "Ascending" : "Descending"}
                     >
-                      {rule.direction === "asc" ? <SortAscending size={12} weight="regular" /> : <SortDescending size={12} weight="regular" />}
+                      {rule.direction === "asc" ? <SortAscending size={12} strokeWidth={2} /> : <SortDescending size={12} strokeWidth={2} />}
                     </button>
                     {idx > 0 && (
                       <button
@@ -316,7 +347,7 @@ export function DisplayPanel({
                         className="inline-flex items-center justify-center w-7 h-7 rounded-md text-muted-foreground/60 hover:text-foreground hover:bg-hover-bg transition-colors"
                         title="Remove sort"
                       >
-                        <PhX size={11} weight="regular" />
+                        <PhX size={11} strokeWidth={2} />
                       </button>
                     )}
                   </div>
@@ -328,7 +359,7 @@ export function DisplayPanel({
                 onClick={addRule}
                 className="self-end inline-flex items-center gap-1 px-2 py-1 rounded-md text-2xs text-muted-foreground hover:text-foreground hover:bg-hover-bg transition-colors"
               >
-                <PhPlus size={11} weight="regular" />
+                <PhPlus size={11} strokeWidth={2} />
                 Add sort
               </button>
             )}
@@ -378,11 +409,13 @@ export function DisplayPanel({
 
       {/* ── Section 5: Display properties ── */}
       {(() => {
-        // Filter out board-only chips when not in board mode. These chips
-        // (e.g. Notes priority/label/tags) only affect the Board card surface;
-        // showing them in list/gallery would toggle nothing.
-        const visibleProperties = config.properties.filter(
-          (p) => !p.boardOnly || isBoard
+        // Audit L1+L2: filter properties by current view mode.
+        //   - Default modes = ["list", "board"] (gallery/timeline/grid have
+        //     fixed card/lane slot design — property chips have no effect)
+        //   - Explicit `modes` overrides (e.g. priority/label/tags = ["board"])
+        //   - `boardOnly: true` kept as legacy synonym for `modes: ["board"]`
+        const visibleProperties = config.properties.filter((p) =>
+          isPropertyModeAllowed(p, currentMode),
         )
         if (visibleProperties.length === 0) return null
         return (

@@ -22,20 +22,13 @@ import { useSortable } from "@dnd-kit/sortable"
 import { CSS } from "@dnd-kit/utilities"
 import { usePlotStore } from "@/lib/store"
 import type { ResolvedBookItem } from "@/lib/books/resolver"
-import { Folder as PhFolder } from "@phosphor-icons/react/dist/ssr/Folder"
-import { BookOpen as PhBookOpen } from "@phosphor-icons/react/dist/ssr/BookOpen"
-import { Hash as PhHash } from "@phosphor-icons/react/dist/ssr/Hash"
-import { Sticker as PhSticker } from "@phosphor-icons/react/dist/ssr/Sticker"
+import { Folder as PhFolder, BookOpen as PhBookOpen, Hash as PhHash, Sticker as PhSticker } from "lucide-react"
 import { toast } from "sonner"
 import { StatusShapeIcon } from "@/components/status-icon"
 import { IconWikiStub, IconWikiArticle } from "@/components/plot-icons"
 import { isWikiStub } from "@/lib/wiki-utils"
 import { WIKI_STATUS_HEX } from "@/lib/colors"
-import { DotsSixVertical } from "@phosphor-icons/react/dist/ssr/DotsSixVertical"
-import { CaretUp } from "@phosphor-icons/react/dist/ssr/CaretUp"
-import { CaretDown } from "@phosphor-icons/react/dist/ssr/CaretDown"
-import { X as PhX } from "@phosphor-icons/react/dist/ssr/X"
-import { Warning } from "@phosphor-icons/react/dist/ssr/Warning"
+import { GripVertical as DotsSixVertical, ChevronUp as CaretUp, ChevronDown as CaretDown, X as PhX, TriangleAlert as Warning } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 interface BookItemRowProps {
@@ -181,7 +174,7 @@ export function BookItemRow({
         style={style}
         className="group flex items-center gap-2 rounded-md px-2 py-1.5 text-note text-muted-foreground/70"
       >
-        <Warning size={14} className="shrink-0 text-amber-500" weight="regular" />
+        <Warning size={14} className="shrink-0 text-amber-500" strokeWidth={2} />
         <span className="flex-1 italic">Item no longer available</span>
         <RemoveButton onClick={handleRemove} />
       </div>
@@ -199,9 +192,9 @@ export function BookItemRow({
   const renderSourceIcon = (size: number): ReactNode => {
     const kind = sourceInfo?.kind
     if (kind === "category")
-      return <PhBookOpen size={size} weight="regular" className="text-muted-foreground/40" />
+      return <PhBookOpen size={size} strokeWidth={2} className="text-muted-foreground/40" />
     if (kind === "tag")
-      return <PhHash size={size} weight="regular" className="text-muted-foreground/40" />
+      return <PhHash size={size} strokeWidth={2} className="text-muted-foreground/40" />
     if (kind === "label")
       return (
         <span
@@ -210,8 +203,8 @@ export function BookItemRow({
         />
       )
     if (kind === "sticker")
-      return <PhSticker size={size} weight="regular" className="text-muted-foreground/40" />
-    return <PhFolder size={size} weight="regular" className="text-muted-foreground/40" />
+      return <PhSticker size={size} strokeWidth={2} className="text-muted-foreground/40" />
+    return <PhFolder size={size} strokeWidth={2} className="text-muted-foreground/40" />
   }
 
   return (
@@ -237,7 +230,7 @@ export function BookItemRow({
           className="flex h-6 w-5 items-center justify-center text-muted-foreground/40 opacity-0 transition-opacity group-hover:opacity-100 cursor-grab active:cursor-grabbing"
           title={isAuto ? "같은 소스 안에서 옮기기" : "Drag to reorder"}
         >
-          <DotsSixVertical size={14} weight="bold" />
+          <DotsSixVertical size={14} strokeWidth={2.5} />
         </button>
       ) : (
         <span
@@ -259,7 +252,7 @@ export function BookItemRow({
           className="flex h-6 w-5 items-center justify-center rounded text-muted-foreground/60 hover:text-foreground hover:bg-hover-bg disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
           title={isAutoHeading ? "자동 챕터 헤딩은 옮길 수 없습니다" : "Move up"}
         >
-          <CaretUp size={11} weight="bold" />
+          <CaretUp size={11} strokeWidth={2.5} />
         </button>
         <button
           type="button"
@@ -269,7 +262,7 @@ export function BookItemRow({
           className="flex h-6 w-5 items-center justify-center rounded text-muted-foreground/60 hover:text-foreground hover:bg-hover-bg disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
           title={isAutoHeading ? "자동 챕터 헤딩은 옮길 수 없습니다" : "Move down"}
         >
-          <CaretDown size={11} weight="bold" />
+          <CaretDown size={11} strokeWidth={2.5} />
         </button>
       </div>
 
@@ -383,7 +376,7 @@ function ChapterHeadingRow({
             className="flex h-6 w-5 items-center justify-center text-muted-foreground/40 opacity-0 transition-opacity group-hover:opacity-100 cursor-grab active:cursor-grabbing"
             title="Drag to reorder"
           >
-            <DotsSixVertical size={14} weight="bold" />
+            <DotsSixVertical size={14} strokeWidth={2.5} />
           </button>
         ) : (
           <div className="w-5" />
@@ -400,7 +393,7 @@ function ChapterHeadingRow({
               className="flex h-6 w-5 items-center justify-center rounded text-muted-foreground/60 hover:text-foreground hover:bg-hover-bg disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
               title="Move up"
             >
-              <CaretUp size={11} weight="bold" />
+              <CaretUp size={11} strokeWidth={2.5} />
             </button>
             <button
               type="button"
@@ -410,7 +403,7 @@ function ChapterHeadingRow({
               className="flex h-6 w-5 items-center justify-center rounded text-muted-foreground/60 hover:text-foreground hover:bg-hover-bg disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
               title="Move down"
             >
-              <CaretDown size={11} weight="bold" />
+              <CaretDown size={11} strokeWidth={2.5} />
             </button>
           </div>
         ) : (
@@ -480,7 +473,7 @@ function RemoveButton({ onClick, title = "Remove from book" }: { onClick: () => 
       title={title}
       className="flex h-6 w-6 shrink-0 items-center justify-center rounded text-muted-foreground/50 opacity-0 transition-all group-hover:opacity-100 hover:bg-destructive/10 hover:text-destructive"
     >
-      <PhX size={12} weight="bold" />
+      <PhX size={12} strokeWidth={2.5} />
     </button>
   )
 }

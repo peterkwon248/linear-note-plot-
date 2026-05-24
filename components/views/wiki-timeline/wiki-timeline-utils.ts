@@ -3,15 +3,15 @@
  * bars-first WikiTimelineView. No React, no closures.
  */
 
-import { safeDate, getHorizon } from "@/lib/wiki-utils"
-import type { WikiArticle } from "@/lib/types"
+import { safeDate } from "@/lib/wiki-utils"
 import {
   ZOOM_CONFIGS,
   TICK_STEP_DAYS,
   type ZoomLevel,
   type TimelineMode,
   type ZoomConfig,
-  type LanedArticle,
+  type LanedItem,
+  type TimelineEntity,
 } from "./wiki-timeline-config"
 
 /* ── Utilities ───────────────────────────────────────────── */
@@ -130,15 +130,20 @@ export function relativeDateLabel(date: Date, now: Date): string {
   return `${Math.abs(diff)} day${Math.abs(diff) !== 1 ? "s" : ""} ago`
 }
 
-/* ── Placed article (one row per article, single bar) ───── */
+/* ── Placed entity (one row per entity, single bar) ───── */
 
-export function laneArticles(
-  articles: WikiArticle[],
+/** Lay out timeline bars. Generic over the entity type — the caller supplies
+ *  `getHorizon(entity) → Date | null` so wiki (plannedDate ?? updatedAt ??
+ *  createdAt), notes (updatedAt), and books (updatedAt) all funnel through
+ *  the same layout math without baking entity types into the helper. */
+export function laneArticles<T extends TimelineEntity>(
+  entities: T[],
   winStart: Date,
   pxPerDay: number,
   minBarWidth: number,
-): LanedArticle[] {
-  return articles
+  getHorizon: (entity: T) => Date | null,
+): LanedItem<T>[] {
+  return entities
     .map((a) => {
       const created = safeDate(a.createdAt)
       const horizon = getHorizon(a)
@@ -168,15 +173,21 @@ const ALL_MARGIN_DAYS = 2
  * (clamped to >= now), scaled so the whole span fits `viewportCanvasWidth`.
  * If the span is too long to fit above the readability floor, px/day caps at
  * the floor and the canvas scrolls instead of squishing.
+ *
+ * Generic over entity type. `getHorizon` is the same adapter callback as in
+ * `laneArticles` — passes through wiki's plannedDate logic or notes/books'
+ * updatedAt-as-horizon convention without baking entity types into the
+ * layout module.
  */
-export function computeAllFit(
-  articles: WikiArticle[],
+export function computeAllFit<T extends TimelineEntity>(
+  entities: T[],
   viewportCanvasWidth: number,
   now: Date,
+  getHorizon: (entity: T) => Date | null,
 ): { winStart: Date; cfg: ZoomConfig } {
   let earliest = now
   let latest = now
-  for (const a of articles) {
+  for (const a of entities) {
     const c = safeDate(a.createdAt)
     const h = getHorizon(a)
     if (c && c < earliest) earliest = c

@@ -20,9 +20,7 @@ import { navigateToWikiArticle } from "@/lib/wiki-article-nav"
 import { cn } from "@/lib/utils"
 import type { Hatnote, HatnoteType } from "@/lib/types"
 import { HatnoteEditDialog } from "./hatnote-edit-dialog"
-import { Plus as PhPlus } from "@phosphor-icons/react/dist/ssr/Plus"
-import { PencilSimple as PhPencilSimple } from "@phosphor-icons/react/dist/ssr/PencilSimple"
-import { Trash as PhTrash } from "@phosphor-icons/react/dist/ssr/Trash"
+import { Plus as PhPlus, Pencil as PhPencilSimple, Trash2 as PhTrash } from "lucide-react"
 
 interface WikiHatnotesProps {
   articleId: string

@@ -19,17 +19,19 @@ import { usePlotStore } from "@/lib/store"
 import { pushUndo } from "@/lib/undo-manager"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { FolderPicker } from "@/components/folder-picker"
-import { Lightning } from "@phosphor-icons/react/dist/ssr/Lightning"
-import { Trash } from "@phosphor-icons/react/dist/ssr/Trash"
-import { CursorClick } from "@phosphor-icons/react/dist/ssr/CursorClick"
-import { PushPin } from "@phosphor-icons/react/dist/ssr/PushPin"
-import { PushPinSlash } from "@phosphor-icons/react/dist/ssr/PushPinSlash"
-import { FolderOpen } from "@phosphor-icons/react/dist/ssr/FolderOpen"
-import { Tag as PhTag } from "@phosphor-icons/react/dist/ssr/Tag"
-import { GitMerge } from "@phosphor-icons/react/dist/ssr/GitMerge"
-import { Scissors } from "@phosphor-icons/react/dist/ssr/Scissors"
-import { Check as PhCheck } from "@phosphor-icons/react/dist/ssr/Check"
-import { Plus as PhPlus } from "@phosphor-icons/react/dist/ssr/Plus"
+import {
+  Zap as Lightning,
+  Trash2 as Trash,
+  MousePointerClick as CursorClick,
+  Pin as PushPin,
+  PinOff as PushPinSlash,
+  FolderOpen,
+  Tag as PhTag,
+  GitMerge,
+  Scissors,
+  Check as PhCheck,
+  Plus as PhPlus,
+} from "lucide-react"
 import { cn } from "@/lib/utils"
 import type { WikiArticle, WikiCategory, Tag } from "@/lib/types"
 
@@ -149,7 +151,7 @@ export function WikiBoardWorkbench({
                 onClick={onSelectAll}
                 className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-note font-medium text-foreground transition-colors hover:bg-hover-bg"
               >
-                <CursorClick size={16} weight="regular" />
+                <CursorClick size={16} strokeWidth={2} />
                 Select All
               </button>
             </div>
@@ -170,7 +172,7 @@ export function WikiBoardWorkbench({
       <div className="mb-4">
         <div className="flex items-center justify-between">
           <h3 className="text-ui font-semibold text-foreground flex items-center gap-2">
-            <Lightning className="text-accent" size={16} weight="regular" />
+            <Lightning className="text-accent" size={16} strokeWidth={2} />
             {count} article{count > 1 ? "s" : ""} selected
           </h3>
           <button
@@ -194,12 +196,12 @@ export function WikiBoardWorkbench({
             >
               {allPinned ? (
                 <>
-                  <PushPinSlash size={14} weight="regular" className="text-muted-foreground" />
+                  <PushPinSlash size={14} strokeWidth={2} className="text-muted-foreground" />
                   <span>Unpin</span>
                 </>
               ) : (
                 <>
-                  <PushPin size={14} weight="regular" className="text-amber-500" />
+                  <PushPin size={14} strokeWidth={2} className="text-amber-500" />
                   <span>Pin</span>
                 </>
               )}
@@ -211,7 +213,7 @@ export function WikiBoardWorkbench({
                   className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-note text-foreground hover:bg-hover-bg transition-colors"
                   title="Move selected articles to a folder"
                 >
-                  <FolderOpen size={14} weight="regular" className="text-muted-foreground" />
+                  <FolderOpen size={14} strokeWidth={2} className="text-muted-foreground" />
                   <span>Move to folder</span>
                 </button>
               </PopoverTrigger>
@@ -289,7 +291,7 @@ export function WikiBoardWorkbench({
                 onClick={handleSplit}
                 className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-note text-foreground hover:bg-hover-bg transition-colors"
               >
-                <Scissors size={14} weight="regular" className="text-muted-foreground" />
+                <Scissors size={14} strokeWidth={2} className="text-muted-foreground" />
                 <span>Split this article…</span>
               </button>
             )}
@@ -306,7 +308,7 @@ export function WikiBoardWorkbench({
                 className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-note text-foreground hover:bg-hover-bg transition-colors"
                 title={count === 1 ? "Merge with another article" : `Merge ${count} articles`}
               >
-                <GitMerge size={14} weight="regular" className="text-muted-foreground" />
+                <GitMerge size={14} strokeWidth={2} className="text-muted-foreground" />
                 <span>{count === 1 ? "Merge…" : `Merge ${count}`}</span>
               </button>
             )}
@@ -315,7 +317,7 @@ export function WikiBoardWorkbench({
               onClick={handleTrash}
               className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-note text-destructive hover:bg-destructive/10 transition-colors"
             >
-              <Trash size={14} weight="regular" />
+              <Trash size={14} strokeWidth={2} />
               <span>Trash {count}</span>
             </button>
           </div>
@@ -378,7 +380,7 @@ function CategoryAddPopover({
           className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-note text-foreground hover:bg-hover-bg transition-colors"
           title="Add selected articles to categories"
         >
-          <PhTag size={14} weight="regular" className="text-muted-foreground" />
+          <PhTag size={14} strokeWidth={2} className="text-muted-foreground" />
           <span>Add to category</span>
         </button>
       </PopoverTrigger>
@@ -428,7 +430,7 @@ function CategoryAddPopover({
                     style={{ backgroundColor: c.color ?? "#6b7280" }}
                   />
                   <span className="truncate flex-1">{c.name}</span>
-                  {isPicked && <PhCheck size={12} weight="bold" className="text-accent shrink-0" />}
+                  {isPicked && <PhCheck size={12} strokeWidth={2.5} className="text-accent shrink-0" />}
                 </button>
               )
             })
@@ -440,7 +442,7 @@ function CategoryAddPopover({
               onClick={handleCreate}
               className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-2xs text-foreground hover:bg-hover-bg transition-colors"
             >
-              <PhPlus size={12} weight="bold" className="text-muted-foreground" />
+              <PhPlus size={12} strokeWidth={2.5} className="text-muted-foreground" />
               <span className="truncate">
                 Create <span className="font-medium">&ldquo;{trimmed}&rdquo;</span>
               </span>
@@ -527,7 +529,7 @@ function TagsAddPopover({
           className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-note text-foreground hover:bg-hover-bg transition-colors"
           title="Add selected articles to tags"
         >
-          <PhTag size={14} weight="regular" className="text-muted-foreground" />
+          <PhTag size={14} strokeWidth={2} className="text-muted-foreground" />
           <span>Add tags</span>
         </button>
       </PopoverTrigger>
@@ -577,7 +579,7 @@ function TagsAddPopover({
                     style={{ backgroundColor: t.color ?? "#6b7280" }}
                   />
                   <span className="truncate flex-1">#{t.name}</span>
-                  {isPicked && <PhCheck size={12} weight="bold" className="text-accent shrink-0" />}
+                  {isPicked && <PhCheck size={12} strokeWidth={2.5} className="text-accent shrink-0" />}
                 </button>
               )
             })
@@ -589,7 +591,7 @@ function TagsAddPopover({
               onClick={handleCreate}
               className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-2xs text-foreground hover:bg-hover-bg transition-colors"
             >
-              <PhPlus size={12} weight="bold" className="text-muted-foreground" />
+              <PhPlus size={12} strokeWidth={2.5} className="text-muted-foreground" />
               <span className="truncate">
                 Create <span className="font-medium">#{trimmed}</span>
               </span>

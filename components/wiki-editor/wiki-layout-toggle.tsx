@@ -2,7 +2,7 @@
 
 import { usePlotStore } from "@/lib/store"
 import type { WikiLayout } from "@/lib/types"
-import { Layout } from "@phosphor-icons/react/dist/ssr/Layout"
+import { LayoutTemplate as Layout } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 interface WikiLayoutToggleProps {
@@ -29,7 +29,7 @@ export function WikiLayoutToggle({ articleId, layout, showIcon = true }: WikiLay
       )}
       title={isEncyclopedia ? "Switch to default layout" : "Switch to encyclopedia layout"}
     >
-      {showIcon && <Layout size={14} weight="regular" />}
+      {showIcon && <Layout size={14} strokeWidth={2} />}
       {isEncyclopedia ? "Encyclopedia" : "Default"}
     </button>
   )

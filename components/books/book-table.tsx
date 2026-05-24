@@ -36,18 +36,20 @@ import {
 } from "@/components/property-chips"
 import { shortRelative } from "@/lib/format-utils"
 import { cn } from "@/lib/utils"
-import { Books as PhBooks } from "@phosphor-icons/react/dist/ssr/Books"
-import { PushPin } from "@phosphor-icons/react/dist/ssr/PushPin"
-import { PushPinSlash } from "@phosphor-icons/react/dist/ssr/PushPinSlash"
-import { Trash } from "@phosphor-icons/react/dist/ssr/Trash"
-import { ArrowCounterClockwise } from "@phosphor-icons/react/dist/ssr/ArrowCounterClockwise"
-import { PencilSimple } from "@phosphor-icons/react/dist/ssr/PencilSimple"
-import { ArrowUp } from "@phosphor-icons/react/dist/ssr/ArrowUp"
-import { ArrowDown } from "@phosphor-icons/react/dist/ssr/ArrowDown"
-import { ArrowsDownUp } from "@phosphor-icons/react/dist/ssr/ArrowsDownUp"
-import { Check as PhCheck } from "@phosphor-icons/react/dist/ssr/Check"
-import { Minus as PhMinus } from "@phosphor-icons/react/dist/ssr/Minus"
-import { X as PhX } from "@phosphor-icons/react/dist/ssr/X"
+import {
+  Library as PhBooks,
+  Pin as PushPin,
+  PinOff as PushPinSlash,
+  Trash2 as Trash,
+  RotateCcw as ArrowCounterClockwise,
+  Pencil as PencilSimple,
+  ArrowUp,
+  ArrowDown,
+  ArrowDownUp as ArrowsDownUp,
+  Check as PhCheck,
+  Minus as PhMinus,
+  X as PhX,
+} from "lucide-react"
 import {
   ContextMenu,
   ContextMenuContent,
@@ -117,10 +119,10 @@ function TH({
       {label}
       {active ? (
         sortDir === "asc"
-          ? <ArrowUp className="text-muted-foreground" size={12} weight="regular" />
-          : <ArrowDown className="text-muted-foreground" size={12} weight="regular" />
+          ? <ArrowUp className="text-muted-foreground" size={12} strokeWidth={2} />
+          : <ArrowDown className="text-muted-foreground" size={12} strokeWidth={2} />
       ) : (
-        <ArrowsDownUp className="opacity-0 group-hover/th:opacity-60" size={12} weight="regular" />
+        <ArrowsDownUp className="opacity-0 group-hover/th:opacity-60" size={12} strokeWidth={2} />
       )}
     </button>
   )
@@ -219,8 +221,9 @@ export function BookTable({
         />
       )}
 
-      {/* Sticky header */}
-      <div className="sticky top-0 z-10 flex h-9 items-center gap-3 border-b border-border bg-background pl-3 pr-6">
+      {/* Sticky header — row height matches Notes/Wiki list (px-5 py-2);
+          previous h-9 was tighter than the rest of the entity lists. */}
+      <div className="sticky top-0 z-10 flex items-center gap-3 border-b border-border bg-background pl-3 pr-6 py-2">
         {/* Select-all checkbox (notes-table parity) */}
         <div className="flex w-8 shrink-0 items-center justify-center">
           <CheckboxBox
@@ -257,10 +260,10 @@ export function BookTable({
                   <BookKindIcon kind={group.key} size={12} />
                 )}
                 {group.key === "pinned" && (
-                  <PushPin size={12} weight="fill" className="text-amber-500" />
+                  <PushPin size={12} fill="currentColor" strokeWidth={2} className="text-amber-500" />
                 )}
                 {group.key === "others" && (
-                  <PushPinSlash size={12} weight="regular" className="text-muted-foreground/60" />
+                  <PushPinSlash size={12} strokeWidth={2} className="text-muted-foreground/60" />
                 )}
                 {!["smart", "manual", "hybrid", "pinned", "others"].includes(group.key) && <span />}
                 <span className="a-tg__label">{group.label || "Untitled"}</span>
@@ -359,7 +362,7 @@ function BookFloatingBar({
           className="flex h-7 items-center gap-1 rounded-md px-2 text-2xs font-medium text-muted-foreground hover:bg-hover-bg hover:text-foreground transition-colors"
           title="Clear selection (Esc)"
         >
-          <PhX size={12} weight="regular" />
+          <PhX size={12} strokeWidth={2} />
           <span className="tabular-nums">{count} selected</span>
         </button>
         <div className="h-5 w-px bg-border mx-0.5" />
@@ -369,8 +372,8 @@ function BookFloatingBar({
           className="flex h-7 items-center gap-1.5 rounded-md px-2 text-2xs font-medium text-foreground hover:bg-hover-bg transition-colors"
         >
           {allPinned
-            ? <PushPinSlash size={13} weight="regular" />
-            : <PushPin size={13} weight="regular" className="text-amber-500" />}
+            ? <PushPinSlash size={13} strokeWidth={2} />
+            : <PushPin size={13} strokeWidth={2} className="text-amber-500" />}
           {allPinned ? "Unpin" : "Pin"}
         </button>
         <button
@@ -378,7 +381,7 @@ function BookFloatingBar({
           onClick={handleTrash}
           className="flex h-7 items-center gap-1.5 rounded-md px-2 text-2xs font-medium text-destructive hover:bg-destructive/10 transition-colors"
         >
-          <Trash size={13} weight="regular" />
+          <Trash size={13} strokeWidth={2} />
           Trash
         </button>
       </div>
@@ -421,8 +424,8 @@ function CheckboxBox({
             : "bg-card border-zinc-400 dark:border-zinc-600 hover:border-zinc-500 dark:hover:border-zinc-500",
       )}
     >
-      {state === "all" && <PhCheck className="text-accent-foreground" size={10} weight="bold" />}
-      {state === "partial" && <PhMinus className="text-accent-foreground" size={10} weight="regular" />}
+      {state === "all" && <PhCheck className="text-accent-foreground" size={10} strokeWidth={2.5} />}
+      {state === "partial" && <PhMinus className="text-accent-foreground" size={10} strokeWidth={2} />}
     </div>
   )
 }
@@ -468,7 +471,9 @@ function BookRow({
             // 2026-05-14: row divider removed for Notes/Wiki list parity —
             // user flagged that books was the only entity with a visible
             // border between rows. Hover bg still provides row separation.
-            "group flex h-9 w-full items-center gap-3 pl-3 pr-6 text-left transition-colors",
+            // 2026-05-24: h-9 (36px tight) → py-2.5 to match Notes/Wiki row
+            // height — Books was visibly tighter than the rest at default zoom.
+            "group flex w-full items-center gap-3 pl-3 pr-6 py-2.5 text-left transition-colors",
             book.trashed
               ? "opacity-50 hover:bg-hover-bg cursor-default"
               : "hover:bg-hover-bg cursor-pointer",
@@ -502,7 +507,7 @@ function BookRow({
               onClick={() => onRestore(book.id, book.title)}
               className="text-note"
             >
-              <ArrowCounterClockwise size={14} weight="regular" className="mr-2 text-muted-foreground" />
+              <ArrowCounterClockwise size={14} strokeWidth={2} className="mr-2 text-muted-foreground" />
               Restore
             </ContextMenuItem>
             <ContextMenuSeparator />
@@ -510,14 +515,14 @@ function BookRow({
               onClick={() => onPermanentDelete(book.id, book.title)}
               className="text-note text-destructive focus:text-destructive"
             >
-              <Trash size={14} weight="regular" className="mr-2" />
+              <Trash size={14} strokeWidth={2} className="mr-2" />
               Delete forever
             </ContextMenuItem>
           </>
         ) : (
           <>
             <ContextMenuItem onClick={() => onRename(book.id, book.title)} className="text-note">
-              <PencilSimple size={14} weight="regular" className="mr-2 text-muted-foreground" />
+              <PencilSimple size={14} strokeWidth={2} className="mr-2 text-muted-foreground" />
               Rename
             </ContextMenuItem>
             <ContextMenuItem
@@ -526,12 +531,12 @@ function BookRow({
             >
               {book.pinned ? (
                 <>
-                  <PushPinSlash size={14} weight="regular" className="mr-2 text-muted-foreground" />
+                  <PushPinSlash size={14} strokeWidth={2} className="mr-2 text-muted-foreground" />
                   Unpin
                 </>
               ) : (
                 <>
-                  <PushPin size={14} weight="regular" className="mr-2 text-muted-foreground" />
+                  <PushPin size={14} strokeWidth={2} className="mr-2 text-muted-foreground" />
                   Pin to sidebar
                 </>
               )}
@@ -541,7 +546,7 @@ function BookRow({
               onClick={() => onDelete(book.id, book.title)}
               className="text-note text-destructive focus:text-destructive"
             >
-              <Trash size={14} weight="regular" className="mr-2" />
+              <Trash size={14} strokeWidth={2} className="mr-2" />
               Move to trash
             </ContextMenuItem>
           </>
@@ -570,7 +575,7 @@ function renderCell(
             {book.title || "Untitled book"}
           </span>
           {book.pinned && (
-            <PushPin size={11} weight="fill" className="ml-1 shrink-0 text-amber-500" />
+            <PushPin size={11} fill="currentColor" strokeWidth={2} className="ml-1 shrink-0 text-amber-500" />
           )}
         </>
       )
@@ -588,7 +593,7 @@ function renderCell(
         : <span className="text-2xs text-muted-foreground/40">—</span>
     case "pinned":
       return book.pinned
-        ? <PushPin size={11} weight="fill" className="text-amber-500" />
+        ? <PushPin size={11} fill="currentColor" strokeWidth={2} className="text-amber-500" />
         : <span className="text-2xs text-muted-foreground/40">—</span>
     case "updatedAt":
       return (

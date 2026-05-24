@@ -32,7 +32,11 @@ export type ViewContextKey =
 
 /* ── View State ────────────────────────────────────────── */
 
-export type ViewMode = "list" | "board" | "grid" | "insights" | "calendar" | "graph" | "dashboard" | "gallery" | "timeline"
+/** Concrete view modes. `gallery` was deprecated 2026-05-24 (replaced by
+ *  `grid`); kept off the union so the type system can flag stale references.
+ *  Persisted `viewMode === "gallery"` values auto-migrate to `"grid"` in
+ *  `normalizeViewState`. */
+export type ViewMode = "list" | "board" | "grid" | "insights" | "calendar" | "graph" | "dashboard" | "timeline"
 
 export type SortField =
   | "updatedAt"
@@ -100,6 +104,12 @@ export type GroupBy =
   // so Wiki board gets the same "always N columns" visual without depending
   // on parent-chain depth (which collapses to 1 column for flat content).
   | "wikiStatus"
+  // References-specific grouping (B11 — viewState single-source-of-truth):
+  //   "type"     = link vs citation (derived from url field presence)
+  //   "fieldKey" = group by an infobox field key (which specific key is
+  //                tracked separately in a local `groupFieldKey` state
+  //                since the GroupBy union must stay finite)
+  | "type" | "fieldKey"
 
 export type GroupSortBy = "default" | "manual" | "name" | "count"
 
@@ -268,13 +278,15 @@ export const VALID_GROUP_BY: GroupBy[] = [
   "tag", "category", "sticker", "book", "connections",
   // books-view-engine-3 (Books)
   "kind", "pinned",
+  // References-specific (B11 — viewState single-source-of-truth)
+  "type", "fieldKey",
   // Alphabetical index grouping (cross-entity — replaces legacy showAlphaIndex)
   "firstLetter",
   // Time-bucket grouping by createdAt (5-tier — used by Wiki Categories etc.)
   "createdAt",
 ]
 
-export const VALID_VIEW_MODES: ViewMode[] = ["list", "board", "grid", "insights", "calendar", "graph", "gallery", "timeline"]
+export const VALID_VIEW_MODES: ViewMode[] = ["list", "board", "grid", "insights", "calendar", "graph", "timeline"]
 
 export const VALID_GROUP_SORT_BY: GroupSortBy[] = ["default", "manual", "name", "count"]
 

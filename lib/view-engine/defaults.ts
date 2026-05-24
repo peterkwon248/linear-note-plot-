@@ -1,5 +1,6 @@
-import type { ViewState, ViewContextKey, GroupBy, GroupSortBy, SortField, SortDirection, SortRule } from "./types"
+import type { ViewState, ViewContextKey, ViewMode, GroupBy, GroupSortBy, SortField, SortDirection, SortRule } from "./types"
 import { VALID_VIEW_CONTEXT_KEYS, VALID_SORT_FIELDS, VALID_GROUP_BY, VALID_VIEW_MODES, VALID_COLUMNS, VALID_GROUP_SORT_BY, MAX_SORT_RULES } from "./types"
+import { getViewConfigForContext, type ViewConfig } from "./view-configs"
 
 /* ── Default ViewState ─────────────────────────────────── */
 
@@ -115,6 +116,37 @@ function isGroupByValidForContext(g: unknown, ctx: ViewContextKey): g is GroupBy
   return true
 }
 
+/** L3 mode-aware groupBy resolver. Given a context-valid groupBy and the
+ *  current view mode, returns the same value if the option's declared
+ *  `modes` includes the current mode (or is "all" / omitted = universal),
+ *  otherwise resets to the per-mode default declared in
+ *  `displayConfig.defaultGroupByByMode`, falling back to "none".
+ *
+ *  Examples:
+ *    - User picks "firstLetter" in list mode, switches to gallery →
+ *      gallery doesn't allow firstLetter → reset to defaultGroupByByMode.gallery
+ *      or "none".
+ *    - User picks "wikiStatus" in board mode, switches to timeline → wikiStatus
+ *      is allowed in timeline → keep.
+ *
+ *  When `config` is null (e.g. query-* contexts), the input passes through
+ *  unchanged — those contexts don't have declarative `modes` rules. */
+function applyModeAwareGroupBy(
+  config: ViewConfig | null,
+  groupBy: GroupBy,
+  viewMode: ViewMode,
+): GroupBy {
+  if (!config) return groupBy
+  if (groupBy === "none") return groupBy
+  const option = config.displayConfig.groupingOptions.find((o) => o.value === groupBy)
+  if (!option) return groupBy
+  const modes = option.modes
+  if (!modes || modes === "all") return groupBy
+  if (modes.includes(viewMode)) return groupBy
+  // Reset to per-mode default — or "none" if not declared.
+  return config.displayConfig.defaultGroupByByMode?.[viewMode] ?? "none"
+}
+
 /* ── Shape Normalization (for migrations) ──────────────── */
 
 /** Columns that must always be present, in guaranteed order (last = rightmost) */
@@ -181,16 +213,34 @@ export function normalizeViewState(raw: Partial<ViewState>, ctx: ViewContextKey)
   }
 
   // Legacy mapping: pre-v112 saved views may have viewMode === "table"
-  // (was a synonym for "list"). Normalize before VALID_VIEW_MODES check.
-  const rawViewMode = (merged.viewMode as string) === "table" ? "list" : merged.viewMode
+  // (was a synonym for "list"). 2026-05-24: viewMode === "gallery" is
+  // deprecated app-wide — Grid view replaces it. Migrate before
+  // VALID_VIEW_MODES check so persisted "gallery" values surface as "grid"
+  // without needing a store-level migration.
+  const aliasedViewMode =
+    (merged.viewMode as string) === "table" ? "list"
+    : (merged.viewMode as string) === "gallery" ? "grid"
+    : merged.viewMode
+  const finalViewMode: ViewMode = VALID_VIEW_MODES.includes(aliasedViewMode) ? aliasedViewMode : base.viewMode
+
+  // L3 (audit "View is a memo, not a config"): mode-aware groupBy / subGroupBy
+  // auto-cleanup. If the persisted groupBy was set in a different view mode
+  // and isn't allowed in the current mode, reset to the per-mode default
+  // (or "none" if no default declared). Prevents stale "Grouping: firstLetter"
+  // sticking around when user switched from list → gallery.
+  const config = getViewConfigForContext(ctx)
+  const ctxValidGroupBy = isGroupByValidForContext(merged.groupBy, ctx) ? merged.groupBy : base.groupBy
+  const ctxValidSubGroupBy = isGroupByValidForContext(merged.subGroupBy, ctx) ? merged.subGroupBy : "none"
+  const finalGroupBy = applyModeAwareGroupBy(config, ctxValidGroupBy, finalViewMode)
+  const finalSubGroupBy = applyModeAwareGroupBy(config, ctxValidSubGroupBy, finalViewMode)
 
   return {
-    viewMode: VALID_VIEW_MODES.includes(rawViewMode) ? rawViewMode : base.viewMode,
+    viewMode: finalViewMode,
     sortFields,
     sortField: sortFields[0].field,
     sortDirection: sortFields[0].direction,
-    groupBy: isGroupByValidForContext(merged.groupBy, ctx) ? merged.groupBy : base.groupBy,
-    subGroupBy: isGroupByValidForContext(merged.subGroupBy, ctx) ? merged.subGroupBy : "none",
+    groupBy: finalGroupBy,
+    subGroupBy: finalSubGroupBy,
     filters: Array.isArray(merged.filters) ? merged.filters : [],
     visibleColumns: ensureRequiredColumns(
       Array.isArray(merged.visibleColumns)

@@ -3,11 +3,7 @@
 import { useState, useMemo, useEffect, useRef, useCallback } from "react"
 import { usePlotStore } from "@/lib/store"
 import { cn } from "@/lib/utils"
-import { CaretDown } from "@phosphor-icons/react/dist/ssr/CaretDown"
-import { CaretRight } from "@phosphor-icons/react/dist/ssr/CaretRight"
-import { Check as PhCheck } from "@phosphor-icons/react/dist/ssr/Check"
-import { Plus as PhPlus } from "@phosphor-icons/react/dist/ssr/Plus"
-import { MagnifyingGlass } from "@phosphor-icons/react/dist/ssr/MagnifyingGlass"
+import { ChevronDown as CaretDown, ChevronRight as CaretRight, Check as PhCheck, Plus as PhPlus, Search as MagnifyingGlass } from "lucide-react"
 
 interface CategoryTreePickerProps {
   mode: "multi" | "single"
@@ -104,9 +100,9 @@ export function CategoryTreePicker({
               className="p-0.5 text-muted-foreground/70 hover:text-muted-foreground transition-colors shrink-0"
             >
               {isExpanded ? (
-                <CaretDown size={10} weight="bold" />
+                <CaretDown size={10} strokeWidth={2.5} />
               ) : (
-                <CaretRight size={10} weight="bold" />
+                <CaretRight size={10} strokeWidth={2.5} />
               )}
             </button>
           ) : (
@@ -126,7 +122,7 @@ export function CategoryTreePicker({
                     : "border-border-subtle hover:border-border"
                 )}
               >
-                {isAssigned && <PhCheck size={9} weight="bold" className="text-white" />}
+                {isAssigned && <PhCheck size={9} strokeWidth={2.5} className="text-white" />}
               </span>
             ) : (
               <span
@@ -152,7 +148,7 @@ export function CategoryTreePicker({
             className="opacity-0 group-hover/node:opacity-100 p-0.5 text-muted-foreground/70 hover:text-accent transition-all shrink-0"
             title={`Add subcategory under ${cat.name}`}
           >
-            <PhPlus size={9} weight="bold" />
+            <PhPlus size={9} strokeWidth={2.5} />
           </button>
         </div>
 
@@ -207,7 +203,7 @@ export function CategoryTreePicker({
       <div className="flex items-center gap-1.5 px-2 py-1.5 border-b border-border-subtle">
         <MagnifyingGlass
           size={12}
-          weight="regular"
+          strokeWidth={2}
           className="text-muted-foreground/70 shrink-0"
         />
         <input

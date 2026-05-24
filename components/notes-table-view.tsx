@@ -5,7 +5,8 @@ import { usePlotStore } from "@/lib/store"
 import { useSettingsStore } from "@/lib/settings-store"
 import { NotesTable } from "@/components/notes-table"
 import { NotesBoard } from "@/components/notes-board"
-import { GalleryViewShell } from "@/components/views/gallery-view-shell"
+import { NotesTimelineShell } from "@/components/notes-timeline-shell"
+// 2026-05-24: GalleryViewShell import removed — gallery mode deprecated
 import { WorkspaceEditorArea } from "@/components/workspace/workspace-editor-area"
 import { usePane } from "@/components/workspace/pane-context"
 import { useActiveRoute, useActiveFolderId, useActiveTagId, useActiveLabelId, useActiveViewId } from "@/lib/table-route"
@@ -109,27 +110,26 @@ export function NotesTableView() {
     )
   }
 
-  // Gallery shell (own ViewHeader chrome, parallel to NotesTable/Board)
-  if (viewMode === "gallery" && !isTrashView) {
+  // Timeline shell — bars-first lifespan view (Notes uses createdAt → updatedAt
+  // as the lifespan; no plannedDate / drag, no event markers in tier 1).
+  if (viewMode === "timeline" && !isTrashView) {
     return (
       <div className="flex flex-1 overflow-hidden">
-        <GalleryViewShell
+        <NotesTimelineShell
           context={contextKey}
-          title={config.title}
-          hideCreateButton={config.hideCreateButton}
           folderId={activeFolderId ?? undefined}
           tagId={activeTagId ?? undefined}
           labelId={activeLabelId ?? undefined}
-          // 2026-05-12: Gallery click parity with list/board — single click =
-          // preview (사이드 패널), double click = open. 이전엔 single click이
-          // 즉시 편집 모드라 list/board와 muscle memory 분기.
-          onNoteClick={(noteId) => setPreviewNoteId(noteId)}
-          onNoteDoubleClick={(noteId) => openNote(noteId)}
+          onRowClick={(noteId) => setPreviewNoteId(noteId)}
           activePreviewId={previewNoteId}
         />
       </div>
     )
   }
+
+  // 2026-05-24: gallery mode deprecated — persisted "gallery" auto-migrates
+  // to "grid" via normalizeViewState. NotesTable handles grid rendering
+  // (no separate shell needed).
 
   // Table / Board view + optional detail panel
   const ViewComponent = viewMode === "board" ? NotesBoard : NotesTable

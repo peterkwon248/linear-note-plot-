@@ -25,14 +25,16 @@
 import { useState, useRef, useEffect } from "react"
 import { usePlotStore } from "@/lib/store"
 import { ColorPickerGrid } from "@/components/color-picker-grid"
-import { Plus } from "@phosphor-icons/react/dist/ssr/Plus"
-import { Sticker as StickerIcon } from "@phosphor-icons/react/dist/ssr/Sticker"
-import { ArrowsOutCardinal } from "@phosphor-icons/react/dist/ssr/ArrowsOutCardinal"
-import { ArrowsInCardinal } from "@phosphor-icons/react/dist/ssr/ArrowsInCardinal"
-import { CaretRight } from "@phosphor-icons/react/dist/ssr/CaretRight"
-import { PencilSimple } from "@phosphor-icons/react/dist/ssr/PencilSimple"
-import { Palette } from "@phosphor-icons/react/dist/ssr/Palette"
-import { Trash } from "@phosphor-icons/react/dist/ssr/Trash"
+import {
+  Plus,
+  Sticker as StickerIcon,
+  Move as ArrowsOutCardinal,
+  Minimize2 as ArrowsInCardinal,
+  ChevronRight as CaretRight,
+  Pencil as PencilSimple,
+  Palette,
+  Trash2 as Trash,
+} from "lucide-react"
 
 /** Default color shown in the new-sticker picker. Matches the first palette
  *  entry the slice would auto-assign so "auto" and "explicit pick" are
@@ -239,7 +241,7 @@ export function NodeContextMenu({
                     }}
                     className="flex items-center gap-2 px-3 py-1.5 text-left hover:bg-accent"
                   >
-                    <PencilSimple size={14} weight="regular" />
+                    <PencilSimple size={14} strokeWidth={2} />
                     Rename
                   </button>
                   <button
@@ -247,7 +249,7 @@ export function NodeContextMenu({
                     onClick={() => setHullStickerColorOpen((v) => !v)}
                     className="flex items-center gap-2 px-3 py-1.5 text-left hover:bg-accent"
                   >
-                    <Palette size={14} weight="regular" />
+                    <Palette size={14} strokeWidth={2} />
                     Change color
                   </button>
                   {hullStickerColorOpen && (
@@ -271,7 +273,7 @@ export function NodeContextMenu({
                     }}
                     className="flex items-center gap-2 px-3 py-1.5 text-left hover:bg-accent text-destructive"
                   >
-                    <Trash size={14} weight="regular" />
+                    <Trash size={14} strokeWidth={2} />
                     Delete sticker
                   </button>
                 </>
@@ -287,10 +289,10 @@ export function NodeContextMenu({
             className="flex items-center justify-between gap-2 px-3 py-1.5 text-left hover:bg-accent"
           >
             <span className="flex items-center gap-2">
-              <StickerIcon size={14} weight="regular" />
+              <StickerIcon size={14} strokeWidth={2} />
               Add sticker…
             </span>
-            <CaretRight size={12} weight="regular" className="opacity-50" />
+            <CaretRight size={12} strokeWidth={2} className="opacity-50" />
           </button>
 
           <div className="my-1 border-t border-border-subtle" />
@@ -304,7 +306,7 @@ export function NodeContextMenu({
               }}
               className="flex items-center gap-2 px-3 py-1.5 text-left hover:bg-accent"
             >
-              <ArrowsOutCardinal size={14} weight="regular" />
+              <ArrowsOutCardinal size={14} strokeWidth={2} />
               Spread these
             </button>
           )}
@@ -317,7 +319,7 @@ export function NodeContextMenu({
               }}
               className="flex items-center gap-2 px-3 py-1.5 text-left hover:bg-accent"
             >
-              <ArrowsInCardinal size={14} weight="regular" />
+              <ArrowsInCardinal size={14} strokeWidth={2} />
               Cluster these
             </button>
           )}
@@ -466,7 +468,7 @@ export function NodeContextMenu({
                 onClick={handleCreateAndApply}
                 className="flex w-full items-center gap-2 px-3 py-1.5 text-note text-left hover:bg-accent border-t border-border-subtle"
               >
-                <Plus size={14} weight="bold" />
+                <Plus size={14} strokeWidth={2.5} />
                 <span className="flex items-center gap-1.5">
                   Create
                   <span className="h-2 w-2 rounded-full inline-block" style={{ backgroundColor: newColor }} />

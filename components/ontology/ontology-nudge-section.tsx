@@ -2,10 +2,7 @@
 
 import { useState } from "react"
 import { toast } from "sonner"
-import { Island } from "@phosphor-icons/react/dist/ssr/Island"
-import { LinkSimple } from "@phosphor-icons/react/dist/ssr/LinkSimple"
-import { ArrowsClockwise } from "@phosphor-icons/react/dist/ssr/ArrowsClockwise"
-import { TrendUp } from "@phosphor-icons/react/dist/ssr/TrendUp"
+import { Palmtree as Island, Link as LinkSimple, RefreshCw as ArrowsClockwise, TrendingUp as TrendUp } from "lucide-react"
 import { useKnowledgeNudges, type NudgeCard, type NudgeKind } from "@/hooks/use-knowledge-nudges"
 import { usePlotStore } from "@/lib/store"
 import {
@@ -128,12 +125,12 @@ function NudgeRow({ card, onClick }: { card: NudgeCard; onClick: () => void }) {
 function iconFor(kind: NudgeKind) {
   switch (kind) {
     case "orphan":
-      return <Island size={13} weight="regular" />
+      return <Island size={13} strokeWidth={2} />
     case "promote":
-      return <TrendUp size={13} weight="regular" />
+      return <TrendUp size={13} strokeWidth={2} />
     case "unlinked":
-      return <LinkSimple size={13} weight="regular" />
+      return <LinkSimple size={13} strokeWidth={2} />
     case "linked":
-      return <ArrowsClockwise size={13} weight="regular" />
+      return <ArrowsClockwise size={13} strokeWidth={2} />
   }
 }
