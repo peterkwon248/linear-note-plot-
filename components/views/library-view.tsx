@@ -3,6 +3,7 @@
 import { useState, useMemo, useCallback, useEffect, useRef } from "react"
 import { createPortal } from "react-dom"
 import { usePlotStore } from "@/lib/store"
+import { useT } from "@/lib/i18n"
 import { TagsView } from "@/components/views/tags-view"
 import { LibraryBreadcrumb } from "@/components/library/library-breadcrumb"
 import { formatDistanceToNow } from "date-fns"
@@ -640,6 +641,7 @@ function LibSectionLabel({ children }: { children: React.ReactNode }) {
 /* ── Library Overview (Wiki Dashboard Style) ──────── */
 
 function LibraryOverview() {
+  const t = useT()
   const references = usePlotStore((s) => s.references)
   const tags = usePlotStore((s) => s.tags)
   const attachments = usePlotStore((s) => s.attachments)
@@ -764,7 +766,7 @@ function LibraryOverview() {
     <div className="flex-1 flex flex-col overflow-hidden">
       <ViewHeader
         icon={<Books strokeWidth={2} className="h-4 w-4" />}
-        title="Library"
+        title={t("library.title")}
         showDetailPanel
         detailPanelOpen={usePlotStore.getState().sidePanelOpen}
         onDetailPanelToggle={() => usePlotStore.getState().toggleSidePanel()}
@@ -860,25 +862,25 @@ function LibraryOverview() {
                   3-col layout (2 row), 그 이하는 2-col. */}
               <div className="mb-6 grid grid-cols-2 gap-3 min-[800px]:grid-cols-3">
                 <LibMiniStat
-                  label="References"
+                  label={t("library.tab.references")}
                   value={refTotal}
-                  sub={`${linkedRefCount} linked`}
+                  sub={t("library.stat.references_linked").replace("{count}", String(linkedRefCount))}
                   color={KNOWLEDGE_INDEX_COLORS.references.text}
                   icon={<Quotes size={24} strokeWidth={2} />}
                   onClick={() => setActiveRoute("/library/references")}
                 />
                 <LibMiniStat
-                  label="Tags"
+                  label={t("library.tab.tags")}
                   value={tagTotal}
-                  sub={`used across ${tagUsedCount} tags`}
+                  sub={t("library.stat.tags_used_across").replace("{count}", String(tagUsedCount))}
                   color={KNOWLEDGE_INDEX_COLORS.tags.text}
                   icon={<Tag size={24} strokeWidth={2} />}
                   onClick={() => setActiveRoute("/library/tags")}
                 />
                 <LibMiniStat
-                  label="Labels"
+                  label={t("library.tab.labels")}
                   value={labelTotal}
-                  sub={`${labelUsedCount} in use`}
+                  sub={t("library.stat.labels_in_use").replace("{count}", String(labelUsedCount))}
                   color={KNOWLEDGE_INDEX_COLORS.labels.text}
                   // 2026-05-24 — sidebar parity (linear-sidebar IconLabel).
                   // Was Tag (collided with Tags card). IconLabel = Bookmark.
@@ -886,9 +888,9 @@ function LibraryOverview() {
                   onClick={() => setActiveRoute("/library/labels")}
                 />
                 <LibMiniStat
-                  label="Categories"
+                  label={t("library.tab.categories")}
                   value={categoryTotal}
-                  sub={`${categoryUsedCount} in use`}
+                  sub={t("library.stat.categories_in_use").replace("{count}", String(categoryUsedCount))}
                   color={KNOWLEDGE_INDEX_COLORS.categories.text}
                   icon={<Folders size={24} strokeWidth={2} />}
                   onClick={() => {
@@ -897,17 +899,17 @@ function LibraryOverview() {
                   }}
                 />
                 <LibMiniStat
-                  label="Files"
+                  label={t("library.tab.files")}
                   value={fileTotal}
-                  sub={`${imageCount} image${imageCount !== 1 ? "s" : ""}, ${docCount} doc${docCount !== 1 ? "s" : ""}`}
+                  sub={t("library.stat.files_images_docs").replace("{images}", String(imageCount)).replace("{docs}", String(docCount))}
                   color={KNOWLEDGE_INDEX_COLORS.files.text}
                   icon={<Paperclip size={24} strokeWidth={2} />}
                   onClick={() => setActiveRoute("/library/files")}
                 />
                 <LibMiniStat
-                  label="Stickers"
+                  label={t("library.tab.stickers")}
                   value={stickerTotal}
-                  sub={`${stickerUsedCount} in use`}
+                  sub={t("library.stat.stickers_in_use").replace("{count}", String(stickerUsedCount))}
                   color={KNOWLEDGE_INDEX_COLORS.stickers.text}
                   icon={<StickerIcon size={24} strokeWidth={2} />}
                   onClick={() => setActiveRoute("/stickers")}
@@ -934,16 +936,16 @@ function LibraryOverview() {
                     <span
                       className="text-2xs font-semibold uppercase tracking-wider"
                       style={{ color: STATUS_COLORS.warning }}
-                    >Needs Attention</span>
+                    >{t("library.needs_attention")}</span>
                     <div className="mt-1 space-y-0.5">
                       {unlinkedRefCount > 0 && (
                         <p className="text-note font-medium" style={{ color: STATUS_COLORS.warning }}>
-                          {unlinkedRefCount} unlinked reference{unlinkedRefCount !== 1 ? "s" : ""}
+                          {t("library.needs_attention.unlinked_reference").replace("{count}", String(unlinkedRefCount))}
                         </p>
                       )}
                       {unusedTagCount > 0 && (
                         <p className="text-note font-medium" style={{ color: STATUS_COLORS.warning }}>
-                          {unusedTagCount} unused tag{unusedTagCount !== 1 ? "s" : ""}
+                          {t("library.needs_attention.unused_tag").replace("{count}", String(unusedTagCount))}
                         </p>
                       )}
                     </div>
@@ -954,7 +956,7 @@ function LibraryOverview() {
               {/* ── Recent Activity ── */}
               {recentFeed.length > 0 && (
                 <div className="mb-6">
-                  <LibSectionLabel>Recent</LibSectionLabel>
+                  <LibSectionLabel>{t("library.section.recent")}</LibSectionLabel>
                   <div className="rounded-lg border border-border-subtle bg-card/30">
                     <div className="px-1.5 py-1">
                       {recentFeed.map((item) => (
@@ -987,7 +989,7 @@ function LibraryOverview() {
               {/* ── Top Tags Grid ── */}
               {topTags.length > 0 && (
                 <div className="mb-6">
-                  <LibSectionLabel>Top Tags</LibSectionLabel>
+                  <LibSectionLabel>{t("library.section.top_tags")}</LibSectionLabel>
                   <div className="grid grid-cols-2 gap-3">
                     {topTags.map((tag) => (
                       <button

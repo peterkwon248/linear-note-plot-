@@ -2,6 +2,7 @@
 
 import { useState, useMemo, useEffect, useRef, useCallback } from "react"
 import { usePlotStore } from "@/lib/store"
+import { useT } from "@/lib/i18n"
 import { navigateToWikiArticle } from "@/lib/wiki-article-nav"
 import { buildOntologyGraphData, type OntologyGraph, type OntologyNode } from "@/lib/graph"
 import { OntologyGraphCanvas } from "@/components/ontology/ontology-graph-canvas"
@@ -49,6 +50,7 @@ function applyFilters(notes: Note[], filters: OntologyFilters): Note[] {
 }
 
 export function OntologyView() {
+  const t = useT()
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null)
   const [graph, setGraph] = useState<OntologyGraph | null>(null)
   const [searchQuery, setSearchQuery] = useState("")
@@ -347,7 +349,7 @@ export function OntologyView() {
     <main className="flex h-full flex-1 flex-col overflow-hidden bg-background">
       <ViewHeader
         icon={<Graph size={20} strokeWidth={2} />}
-        title="Ontology"
+        title={t("ontology.title")}
         subtitle={
           <>
             <DropdownMenu>
@@ -366,28 +368,28 @@ export function OntologyView() {
                   className={cn(tab === "graph" && "bg-accent/10 text-accent")}
                 >
                   <Graph size={16} strokeWidth={2} />
-                  Graph
+                  {t("ontology.graph")}
                 </DropdownMenuItem>
                 <DropdownMenuItem
                   onClick={() => updateGraphViewState({ viewMode: "insights" })}
                   className={cn(tab === "insights" && "bg-accent/10 text-accent")}
                 >
                   <IconInsight size={16} />
-                  Insights
+                  {t("ontology.insights")}
                 </DropdownMenuItem>
                 <DropdownMenuItem
                   onClick={() => updateGraphViewState({ viewMode: "dashboard" })}
                   className={cn(tab === "dashboard" && "bg-accent/10 text-accent")}
                 >
                   <ChartBar size={16} strokeWidth={2} />
-                  Dashboard
+                  {t("ontology.dashboard")}
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
-            <span>{tab === "graph" ? "Graph" : tab === "insights" ? "Insights" : "Dashboard"}</span>
+            <span>{tab === "graph" ? t("ontology.graph") : tab === "insights" ? t("ontology.insights") : t("ontology.dashboard")}</span>
           </>
         }
-        searchPlaceholder="Search nodes..."
+        searchPlaceholder={t("ontology.search_nodes")}
         searchValue={searchQuery}
         onSearchChange={setSearchQuery}
         count={searchMatchIds ? searchMatchIds.size : undefined}

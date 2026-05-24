@@ -25,6 +25,7 @@
 
 import { useState, useEffect } from "react"
 import { usePlotStore } from "@/lib/store"
+import { useT } from "@/lib/i18n"
 import type { Book } from "@/lib/types"
 import type { SortField, SortDirection, GroupBy } from "@/lib/view-engine/types"
 import { getBookKind, type BookGroup } from "@/lib/view-engine/use-books-view"
@@ -68,14 +69,14 @@ interface BookColumnDef {
   sortField?: SortField
 }
 
-const BOOK_COLUMNS: BookColumnDef[] = [
-  { id: "title",     label: "Name",     width: "flex-1 min-w-[120px]", sortField: "title" },
-  { id: "kind",      label: "Kind",     width: "w-[110px] shrink-0", align: "left" },
-  { id: "itemCount", label: "Items",    width: "w-[72px] shrink-0",  align: "right", sortField: "itemCount" },
-  { id: "sources",   label: "Sources",  width: "w-[100px] shrink-0", align: "left" },
-  { id: "pinned",    label: "Pin",      width: "w-[48px] shrink-0",  align: "center" },
-  { id: "updatedAt", label: "Updated",  width: "w-[80px] shrink-0",  align: "right", sortField: "updatedAt" },
-  { id: "createdAt", label: "Created",  width: "w-[80px] shrink-0",  align: "right", sortField: "createdAt" },
+const BOOK_COLUMNS: (BookColumnDef & { labelKey?: string })[] = [
+  { id: "title",     label: "Name",     labelKey: "display.ordering.title",   width: "flex-1 min-w-[120px]", sortField: "title" },
+  { id: "kind",      label: "Kind",     labelKey: "books.prop.kind",          width: "w-[110px] shrink-0", align: "left" },
+  { id: "itemCount", label: "Items",    labelKey: "books.prop.item_count",    width: "w-[72px] shrink-0",  align: "right", sortField: "itemCount" },
+  { id: "sources",   label: "Sources",  labelKey: "books.prop.smart_sources", width: "w-[100px] shrink-0", align: "left" },
+  { id: "pinned",    label: "Pin",      labelKey: "books.prop.pin",           width: "w-[48px] shrink-0",  align: "center" },
+  { id: "updatedAt", label: "Updated",  labelKey: "display.property.updated", width: "w-[80px] shrink-0",  align: "right", sortField: "updatedAt" },
+  { id: "createdAt", label: "Created",  labelKey: "display.property.created", width: "w-[80px] shrink-0",  align: "right", sortField: "createdAt" },
 ]
 
 /* ── Header cell ───────────────────────────────────────── */
@@ -166,6 +167,7 @@ export function BookTable({
 }: BookTableProps) {
   // Grouping is active when caller passed non-trivial groups + a groupBy
   // dimension other than "none". When inactive, fall back to flat `books`.
+  const t = useT()
   const isGrouped =
     !!groupBy &&
     groupBy !== "none" &&
@@ -234,7 +236,7 @@ export function BookTable({
         {cols.map((c) => (
           <div key={c.id} className={cn("flex items-center overflow-hidden", c.width)}>
             <TH
-              label={c.label}
+              label={c.labelKey ? t(c.labelKey) : c.label}
               col={c.sortField}
               sortCol={sortField}
               sortDir={sortDirection}

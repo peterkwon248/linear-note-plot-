@@ -21,6 +21,7 @@
 import { useState, useMemo, useCallback } from "react"
 import { useRouter } from "next/navigation"
 import { usePlotStore } from "@/lib/store"
+import { useT } from "@/lib/i18n"
 import { useBooksView } from "@/lib/view-engine/use-books-view"
 import { useSaveViewProps } from "@/lib/view-engine/use-save-view-props"
 import { BOOKS_VIEW_CONFIG } from "@/lib/view-engine/view-configs"
@@ -80,6 +81,7 @@ export function BooksView() {
 /* ── Grid view ─────────────────────────────────────────────── */
 
 function BooksGrid() {
+  const t = useT()
   const router = useRouter()
   const books = usePlotStore((s) => s.books)
   const createBook = usePlotStore((s) => s.createBook)
@@ -218,9 +220,9 @@ function BooksGrid() {
     <div className="flex flex-1 flex-col overflow-hidden">
       <ViewHeader
         icon={<Books size={20} strokeWidth={2} />}
-        title="Books"
+        title={t("books.title")}
         count={liveCount > 0 ? liveCount : undefined}
-        searchPlaceholder="Search books"
+        searchPlaceholder={t("books.search_books")}
         onCreateNew={() => {
           setCreateTitle("")
           setCreateOpen(true)
