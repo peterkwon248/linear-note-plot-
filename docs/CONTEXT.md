@@ -51,6 +51,23 @@
 
 ---
 
+## 🚀 2026-05-24 (저녁 후속) — GlobalTopBar 신설 + Phase 1c + i18n 깊은 확장 + cmdk polish + production-ui-refine ⭐⭐⭐⭐⭐
+
+**범위**: 5 chunk 누적 multi-PR. 한국어 일관성 + Linear chrome 정합 메타 의도.
+
+**핵심 결정 (영구 LOCKED #117~#121)**:
+- **#117 Library → 자료실** (활동 바 잘림 해소, 음역 절충)
+- **#118 Stone/Brick/Block 음역** (스톤/브릭/블록 — 정체성 + 한국어 흐름)
+- **#119 GlobalTopBar = workspace chrome single source** (Hide-all-panels 상태 chrome 접근)
+- **#120 PanelsMenu top bar 단일 mount** (햄버거 중복 금지)
+- **#121 cmdk hybrid mode badge** (기본 모드 뱃지 제거 — Linear 정합)
+
+**완료**: Phase 1c Inbox 3 카드 + i18n main app 확장 + i18n 깊은 확장 (필터/디스플레이/cmdk) + GlobalTopBar 신설 + cmdk polish + production-ui-refine 5-phase.
+
+**미완**: i18n 잔여 surface (Wiki/Books/Library/Ontology + 우클릭 + dialog 잔여 + status pill 음역). 사용자 viewport 검증 4건.
+
+---
+
 ## 🚀 2026-05-24 (오후) — Phase 1b 통합 + Settings 전수 wire (8 task 단일 PR) ⭐⭐⭐⭐⭐
 
 **범위**: Phase 1b 전 단계 통합 (1b1 wire + 1b2 read-site 마이그 + 1b3 legacy 제거 + v146→v147 migration) + Settings 5 페이지 전수 wire (Start view 라우팅 / Sync reframe / Line numbers / Backup Restore / i18n).

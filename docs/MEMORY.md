@@ -8,6 +8,36 @@
 
 ---
 
+## 🚀 2026-05-24 (저녁 후속) — **GlobalTopBar 신설 + Phase 1c Inbox + i18n 깊은 확장 + cmdk polish + production-ui-refine — 5 chunk 누적** ⭐⭐⭐⭐⭐
+
+**범위**: 사용자 의도 흐름 따른 multi-chunk 세션 (Phase 1c → i18n main app → i18n 깊은 확장 필터/디스플레이 → GlobalTopBar 재구성 → cmdk polish + production-ui-refine). 한국어 일관성 + Linear chrome 정합이 메타 의도.
+
+**핵심 결정 (영구 LOCKED #117~#121)**:
+- **#117 Library → 자료실**: 활동 바 5글자 잘림 → 3글자 음역 절충
+- **#118 Stone/Brick/Block 음역 (스톤/브릭/블록)**: 영어 정체성 + 한국어 흐름. 의역은 시그니처 약화
+- **#119 GlobalTopBar = workspace chrome single source**: 시계/<>/검색/테마/설정/휴지통 모두 top bar. Hide-all-panels 상태 chrome 접근 가능 — 미래 컨트롤도 이 원칙
+- **#120 PanelsMenu = top bar 단일 mount**: view-header 등 다른 곳 추가 mount 금지. 햄버거 중복은 사용자 혼란
+- **#121 Command palette hybrid mode badge**: 기본 commands 모드 뱃지 제거 (Linear 정합), sub-mode만 뱃지
+
+**완료** (5 chunk, 누적 2 PR):
+1. Phase 1c — Inbox Do/Review/Detected 3 SectionCard (use-inbox section field + plan-due source 신규 + Q6 정합)
+2. i18n 확장 main app — Activity Bar/Sidebar/Home/Quick Capture/StatsRow useT wire
+3. i18n 깊은 확장 — Filter Panel + Display Panel + ChipDropdown + Notes table column headers + view-configs labelKey 옵셔널 패턴. Status 음역 (#118) + Library → 자료실 (#117)
+4. GlobalTopBar 신설 — workspace chrome 단일 source (#119). PanelsMenu top bar 단일 mount (#120). linear-sidebar 헤더/푸터 + activity-bar 테마 + view-header PanelsMenu 모두 제거
+5. Command palette Linear 정합 — hybrid mode badge (#121) + 전체 i18n + Escape handler (cmdk Korean IME 회피) + production-ui-refine 5-phase (Group A spacing + B icon + C search + D right cluster divider)
+
+**기술 학습 (영구)**:
+- **i18n labelKey 패턴**: module-level static config (view-configs / COLUMN_DEFS / SPACES)는 React Hook 못 호출. `labelKey?: string` 옵셔널 필드 추가 → consumer가 `t(labelKey) ?? label`로 resolve
+- **cmdk Escape 안 통하는 IME 케이스**: Korean composition flag 동안 CommandPrimitive.Input의 Escape가 Radix Dialog로 bubble 안 됨. handleKeyDown에서 명시 closePalette() 호출이 안전한 fallback
+- **production-ui-refiner 5-phase 워크플로우** (audit script 없는 환경): vision + 코드 검사로 AUDIT, hedged language로 DIAGNOSE, 카테고리 그룹별 PRESCRIBE, 사용자 그룹 승인 후 APPLY, 시각 비교로 VERIFY
+- **single chrome source 원칙** (#119): hide-all-panels 시에도 사용 가능한 컨트롤은 chrome layer. sidebar/activity-bar는 panel-scope 액션만. 미래 컨트롤 추가 시 이 분리 원칙으로 위치 결정
+
+**미완**: i18n 잔여 surface (Wiki/Books/Library/Ontology view + 우클릭 메뉴 + dialog 잔여 + status pill 음역). 사용자 viewport 검증 4건 (Inbox 3 카드 / Backup Restore / GlobalTopBar Hide-all / Cmd+K Escape).
+
+**다음**: i18n 잔여 → Phase 2 (watch + recurring) → production-ui-refiner 다른 surface.
+
+---
+
 ## 🚀 2026-05-24 (오후) — **Phase 1b 통합 (1b1+1b2+1b3) + Settings 전수 wire (5/5) — 8 task 단일 PR** ⭐⭐⭐⭐⭐
 
 **범위**: 단일 거대 PR. (a) Phase 1b 전 단계 통합 — workflow.ts/wiki-articles.ts hooks wire (1b1) → read-site 12+ 파일 마이그 (1b2) → legacy 필드 영구 제거 + v146→v147 migration (1b3). (b) 사용자 "Settings 모두 구현되어야 한다" 신호로 Settings 5 페이지 전수 wire — Start view 라우팅 / Sync 솔직한 backup reminder reframe / Line numbers CSS gutter / Backup Restore (Import) / i18n (EN+KO 완전).

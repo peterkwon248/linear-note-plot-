@@ -7,6 +7,7 @@ import { useSettingsStore } from "@/lib/settings-store"
 import { cn } from "@/lib/utils"
 import { LinearSidebar } from "@/components/linear-sidebar"
 import { ActivityBar } from "@/components/activity-bar"
+import { GlobalTopBar } from "@/components/global-top-bar"
 
 import { SearchDialog } from "@/components/search-dialog"
 import { ShortcutOverlay } from "@/components/shortcut-overlay"
@@ -274,6 +275,8 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   return (
     <TooltipProvider>
       <div className="flex h-screen flex-col overflow-hidden bg-background">
+        {/* ── Global top bar — workspace chrome, survives all panel collapses ── */}
+        <GlobalTopBar />
         {/* ── Body: Activity Bar + Sidebar + Content ── */}
         <div className="flex flex-1 overflow-hidden">
           {/* ── Activity Bar (always visible) ── */}
