@@ -18,6 +18,12 @@ export interface TimelineControlsProps {
   onGoToToday: () => void
   onSetZoom: (z: TimelineMode) => void
   onToggleEvents: () => void
+  /** PR-Q4: number of currently collapsed groups. When > 0 a small
+   *  "Expand all" affordance appears in the controls bar — without it a
+   *  user could collapse every group and lose the discoverability of how
+   *  to bring them back. */
+  collapsedGroupCount?: number
+  onExpandAllGroups?: () => void
 }
 
 export function TimelineControls({
@@ -28,6 +34,8 @@ export function TimelineControls({
   onGoToToday,
   onSetZoom,
   onToggleEvents,
+  collapsedGroupCount = 0,
+  onExpandAllGroups,
 }: TimelineControlsProps) {
   // "All" fits the whole span — there is no period to navigate.
   const navDisabled = zoom === "all"
@@ -71,6 +79,17 @@ export function TimelineControls({
       </button>
 
       <div className="flex-1" />
+
+      {/* PR-Q4: only render when at least one group is collapsed. */}
+      {collapsedGroupCount > 0 && onExpandAllGroups && (
+        <button
+          onClick={onExpandAllGroups}
+          className="rounded px-2 py-0.5 text-2xs text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+          title={`Expand ${collapsedGroupCount} collapsed group${collapsedGroupCount === 1 ? "" : "s"}`}
+        >
+          Expand all
+        </button>
+      )}
 
       <button
         onClick={onToggleEvents}

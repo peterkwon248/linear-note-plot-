@@ -175,13 +175,28 @@ Phase 2: hard delete 시 참조 노트들의 `attachment://` 노드 자동 제�
 - hard delete 시 dangling `attachment://` 노드 자동 정리.
 
 ### 6-3. Fast-follow
-- **Books 파일 접점** — Books smartSources/items의 파일 참조 (현재 접점 거의 없음 — §7 Q5 확인 필요).
+- ~~**Books 파일 접점** — Books smartSources/items의 파일 참조~~ — **CLOSED (2026-05-24, PR 1b')**: 코드 확인 결과 직접 참조 0. `Book.items` discriminated union(`note`/`wiki`/`chapter-heading`), `AutoSource.kind`(`folder`/`category`/`tag`/`label`/`sticker`) 모두 File 미포함. Books가 file을 쓰는 유일한 경로 = 포함한 Note/Wiki article의 콘텐츠 안 `attachment://` 참조 (간접) → 이미 §3 usage 인덱스에 자동 포함. 별도 PR 불필요.
 
 ---
 
 ## §7. Open Questions
 
-1. **usage 인덱스 구현** — pure derive(memoized) vs 저장 역인덱스. v1 derive 권고(§3-2), 노트 대량 시 perf 재평가.
-2. **Books 접점** — Books가 실제로 파일을 참조하는 지점이 있는지 코드 확인 (fast-follow 전제 검증, §6-3).
+1. **usage 인덱스 구현** — pure derive(memoized) vs 저장 역인덱스. v1 derive 권고(§3-2), 노트 대량 시 perf 재평가. **PR 2 (2026-05-24): pure derive 채택 + 검증 완료**. 노트 대량 시 fast-follow.
+2. ~~**Books 접점** — Books가 실제로 파일을 참조하는 지점이 있는지 코드 확인 (fast-follow 전제 검증, §6-3)~~ — **RESOLVED (2026-05-24, PR 1b'): 직접 참조 0**. 상세 §6-3.
 
 > Q1(타입명 유지)·Q2(`originEntity`)는 v0.2에서 해소 — §2 참조. PR 분할은 영구 룰 #6에 따라 §6-1에서 확정 (마이그레이션+모델 PR / 피커 UI PR).
+
+---
+
+## §8. v1 진행 기록 (2026-05-24)
+
+| PR | 범위 | 상태 |
+|---|---|---|
+| 1a | 모델 강등 (`noteId` → `originEntity`) + v144→v145 마이그레이션 + addAttachment 시그니처 + 7 호출처 + read-side 2 (file-detail-panel / side-panel-connections) | ✅ tsc + build + round-trip |
+| 1b | 피커 UI — Note insert-menu "From library…" item + FilePicker (`accept="all"`) | ✅ tsc + build + DOM eval |
+| 1c | 피커 UI — Wiki AddBlockButton "From file…" item + FilePicker (`accept="image"`) | ✅ tsc + build + code wiring |
+| 1b' | Books 접점 확인 | ✅ 직접 참조 0 → fast-follow CLOSED |
+| 2 | Usage 인덱스 (§3) — `extractAttachmentRefs` / `extractAttachmentRefsFromWikiBlocks` + FileDetail/Connections "Used in" 일반화 | ✅ tsc + build + round-trip |
+| 3 | Hard-delete 경고 dialog (§5) — `buildAttachmentDeleteWarning` + notes-table + trash-all-view confirm augment | ✅ tsc + build + helper round-trip |
+
+**v1 완료**. v2 (content-hash dedup / hard-delete dangling cleanup) Phase 2로 이관 — §6-2 LOCKED 결정 그대로.

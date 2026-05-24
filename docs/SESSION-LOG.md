@@ -6,6 +6,161 @@
 
 ---
 
+## 2026-05-24 (저녁) — Windows, **거대 세션 #2: Notes timeline ViewHeader + File 엔티티 v1 (6 PR) + Notes/Wiki Grid Display + Display Panel Audit + Q-series (Q1~Q5) — 모두 11 변경 단위**
+
+> 🎯 **다음 즉시 액션 (다음 세션 시작점)**: **Wiki Board column collapse** — notes-board.tsx PR-Q5 패턴을 wiki-board.tsx에 mechanical 복제. + Notes/Books Timeline에 PR-Q4 패턴 확장 (현재 Wiki timeline만 lane collapse 작동).
+>
+> **사용자 의도 (정확 인용)**:
+> - "오케이 그룹 콜파스랑 퀵 필터 칩 이런 걸 추가하자는 너의 제안에 동의해"
+> - "근데 그러면 이건 타임라인에만 적용되는 게 아니라 다른 모든 디스플레이 모드에도 적용되어야 하는 이슈 아님??"
+> - "너의 제안대로 순차적으로 진행할게. 커밋만 하지 마."
+>
+> **첫 스텝** (다른 머신에서 바로):
+> 1. `components/wiki-board.tsx`에서 group/column render 부분 찾기 (notes-board.tsx의 BoardColumn 패턴 정합)
+> 2. `isCollapsed` + `onToggleCollapse` prop 추가 + collapsed render 분기 (40px narrow + chevron up + vertical label + writing-mode: vertical-rl)
+> 3. expanded header에 chevron-down 버튼 추가 + onClick stopPropagation
+> 4. caller에서 `viewState.collapsedGroups` read + toggle handler wire
+>
+> **컴포넌트 구조 / 데이터 흐름**:
+> ```
+> WikiBoard (wiki-board.tsx)
+>   ├─ groups.map(group => <WikiBoardColumn ... isCollapsed onToggleCollapse />)
+>   └─ store: viewState.collapsedGroups ← updateViewState wrapper
+>
+> WikiBoardColumn (collapsed):
+>   ├─ width 40px (vs expanded 260px)
+>   ├─ ChevronDown rotate-180 (expand hint)
+>   ├─ Status icon (Stub orange / Article emerald)
+>   ├─ Vertical label (writing-mode: vertical-rl)
+>   └─ Count
+> ```
+>
+> **참고 파일** (작업 시 read):
+> - `components/notes-board.tsx:184-313` (BoardColumn 함수 — PR-Q5에서 추가한 collapse render path)
+> - `components/notes-board.tsx:1409` (caller의 collapsedGroups wiring)
+> - `components/wiki-board.tsx` (변경 대상 — 동일 패턴 적용)
+> - `lib/view-engine/types.ts:182` (ViewState.collapsedGroups field)
+>
+> **위험 + 회피**:
+> - notes-board 패턴 그대로 mechanical 복제 — wiki-board가 dnd-kit 사용한다면 sortable id 패턴(`col-${key}`) 유지 + droppable id 분리 정합
+> - Wiki는 status 외에도 tier/linkCount/parent/role/label 등 grouping 옵션 다양 — collapsedGroups는 key 기반이라 모든 grouping에 자동 작동 (key가 동일하면 mode 전환에도 유지)
+>
+> **2번째 P0 후보** (#1 끝나면): Notes/Books Timeline에도 PR-Q4 패턴 확장:
+> - `components/views/notes-timeline-view.tsx` 신규 작성 (현재 notes-timeline-shell.tsx만 있음, view 내부 lane collapse 로직 X)
+> - `components/views/books-timeline-view.tsx` 동일
+> - WikiTimelineView의 collapsedGroupsSet/toggleGroupCollapse/expandAllGroups + visibleLanes filter 패턴 그대로
+>
+> **3번째 P0 후보**: PR-Q4 v2 ghost row pattern — 현재 collapsed group은 시각 자체 안 보임. v2엔 collapsed group의 자리에 1-row "ghost lane" inject (chevron right + label + (N hidden) + click → expand) — Linear/Notion 정합. 큰 작업 (DisplayLane union type).
+>
+> **머신**: Windows.
+> **현재 main HEAD**: 이번 PR 머지 후 (PR `#???` — 머지 시 갱신).
+> **branch worktree**: `claude/peaceful-faraday-b50f16` (이번 머지 시 정리, 새 worktree 권장).
+
+### 완료 (이번 세션, 11 변경 단위 — 단일 거대 PR)
+
+**1. Notes timeline ViewHeader (P0 #1)**:
+- `components/notes-timeline-shell.tsx` — ViewHeader + FilterChipBar chrome wrapper 추가 (NotesTable chrome 패턴 정합)
+- `components/notes-table-view.tsx` — title/hideCreateButton/createNoteOverrides props 전달
+- 사용자 신고 "노트 타임라인 위에 필터/디스플레이 등이 사라졌어" 해소
+
+**2. File 엔티티 v1 — PR 1a (모델 + 마이그레이션)**:
+- `lib/types.ts:997` Attachment.noteId → originEntity (EntityRef | null)
+- `lib/store/slices/attachments.ts` addAttachment 시그니처 + appendEvent 분기 (note origin일 때만 note-timeline)
+- `lib/store/slices/notes.ts:150` cascade filter originEntity.kind === "note"
+- `lib/store/index.ts` version 144 → 145
+- `lib/store/migrate.ts` v144→v145 migration (note/wiki id lookup으로 kind 판정)
+- 7 호출처 + 2 read-side (file-detail-panel / side-panel-connections)
+
+**3. PR 1b — Note picker UI (`components/file-picker.tsx` 신규)**:
+- Dialog overlay + 검색 + image grid + file list + accept filter
+- `components/insert-menu.tsx`에 "From library…" item 추가 (FolderOpen 아이콘 + 자동 close)
+- Wiki/Book picker는 PR 1c (별도)
+
+**4. PR 1c — Wiki picker (AddBlockButton)**:
+- `components/wiki-editor/wiki-block-renderer.tsx` AddBlockButton에 onAddFromFile prop + "From file…" 버튼 + FilePicker mount (`accept="image"`)
+- `wiki-article-view.tsx` 2 caller (prepend/append) onAddFromFile handler — `addWikiBlock(articleId, {type:"image", attachmentId: att.id, caption: att.name}, anchor)` 직접 호출
+
+**5. PR 1b' — Books 접점 close-out**:
+- 코드 확인 결과 Books → attachment 직접 참조 0 (Book.items discriminated union + AutoSource.kind 모두 File 미포함)
+- `.omc/plans/file-entity-prd.md` §6-3 + §7 Q2 CLOSED 표기 + §8 v1 진행 매트릭스 추가
+
+**6. PR 2 — Usage 인덱스 (PRD §3)**:
+- `lib/extract-attachment-refs.ts` 신규 — `extractAttachmentRefs(node)` ProseMirror tree walk + `extractAttachmentRefsFromWikiBlocks(blocks)` (image attachmentId 직접 + text contentJson 재귀) + `findAttachmentUsage` + `buildAttachmentDeleteWarning`
+- `file-detail-panel.tsx` usedInNotes 신규 + usedInWikis 일반화 (블록 contentJson walk 추가) + "Used in · N" 카운트 header
+- `side-panel-connections.tsx` 동일 패턴 적용
+
+**7. PR 3 — Hard delete 경고 dialog (PRD §5)**:
+- `notes-table.tsx` + `trash-all-view.tsx` handleDelete에 attachment 분기 — `buildAttachmentDeleteWarning(id, name, notes, wikiArticles)` 호출로 confirm 메시지 augment
+
+**8. Library Labels 아이콘 fix (LOCKED #103 cascading)**:
+- `library-view.tsx:882` Labels 카드 아이콘 `<Tag>` → `<IconLabel>` (Bookmark) — sidebar `linear-sidebar.tsx:1612`와 통일
+
+**9. Notes/Wiki Grid Display (Books parity)**:
+- 신규 `components/views/notes-grid-view.tsx` — Books-grid-parity 카드 grid (StatusShapeIcon + title + content preview + word count footer + pin)
+- 신규 `components/views/wiki-grid-view.tsx` — IconWikiStub/Article + block count footer + pin
+- 신규 `components/notes-grid-shell.tsx` — ViewHeader chrome wrapper
+- `notes-table-view.tsx` + `wiki-view.tsx`에 grid 분기 추가
+
+**10. Display Panel Audit 3-Fix**:
+- Grid mode 정합: NOTES/WIKI groupingOptions의 default-allowed에 explicit `modes: ["list", "board"]` + `defaultGroupByByMode.grid: "none"` (Grid Display panel에서 Grouping "No grouping" only 노출)
+- Timeline group spacing: timeline-grid.tsx group divider opacity 0.55→0.85 + 4px tint band, timeline-label-column.tsx header band height 16→20 + font 10px regular → 11px semibold
+- filterAwareRole 라벨: "Filter-aware role" → "Role from filtered view" + 주석에 ON/OFF 의미
+
+**11. Q-series (Q1~Q5)**:
+- **PR-Q1**: Grid 카드 아이콘 박스 폐기 (LOCKED #103 cascading fix) — 3 파일 (notes-grid-view / wiki-grid-view / book-grid-card)
+- **PR-Q3**: Quick filter chip toolbar (universal) — ViewHeader에 `quickFilters/activeFilters/onFiltersChange` 3 prop + rounded-full chip strip render + 1-click toggle (모든 mode 자동 적용). 7 caller wiring (notes 4 + wiki + books)
+- **PR-Q2**: collapsedGroups store 승격 — ViewState에 `collapsedGroups?: string[]` 필드 + DEFAULT_VIEW_STATE 빈 배열 + normalizeViewState 보존. notes-table.tsx local Set → store-backed (Set wrapper로 기존 호출 시그니처 유지)
+- **PR-Q4**: Wiki timeline lane collapse — wiki-timeline-view.tsx에 visibleLanes filter + toggleGroupCollapse/expandAllGroups callbacks + groupBoundaries에 key 추가. timeline-label-column header → button (click → toggle). timeline-controls에 "Expand all" 버튼 (collapsedGroupCount > 0 시)
+- **PR-Q5**: Notes Board column collapse (Linear 패턴) — BoardColumn에 isCollapsed/onToggleCollapse prop + 40px narrow render (chevron up + vertical label writing-mode rotate + count) + expanded header에 chevron-down 버튼
+
+검증: 모든 11 단위에서 `npx tsc --noEmit` clean + `npm run build` exit 0
+
+### 브레인스토밍 & 큰 결정 (영구 LOCKED — 후보 #105~#110)
+
+- **#105 LOCKED**: **Plot's chrome layer = ViewHeader** (모든 view mode 공통). quickFilters / display / filter / save / detail panel 모두 ViewHeader-level → 모든 mode 일관 UX. mode-specific render는 ViewHeader children에. (PR-Q3 wiring 핵심)
+- **#106 LOCKED**: **Grid mode = flat card grid (Books parity), no grouping semantics**. view-configs의 grouping options 명시적 `modes: ["list", "board"]` (grid 제외). DisplayPanel mode filter가 자동 hide. Grid 카드 자체 fixed display (status icon + title + preview + footer).
+- **#107 LOCKED**: **collapsedGroups = store-level (viewState)**. list/board/timeline 모두 동일 viewState.collapsedGroups read. mode 전환 시 의도 fold 유지. 단 `useEffect(() => setCollapsedGroups(new Set()), [viewState.groupBy])`는 그룹핑 자체 변경 시 무효화 — valid 정합 동작.
+- **#108 LOCKED**: **Grouping = organize, Filter = focus**. 사용자가 "특정 영역만 보기" 의도는 grouping이 아닌 filter가 primary path. 큰 corpus에선 collapse + quick filter chip이 scaling 본질 도구. (timeline group collapse + quick filter chip의 핵심 통찰)
+- **#109 LOCKED**: **Linear board column collapse pattern**: 40px narrow vertical bar + chevron up + vertical label (`writing-mode: vertical-rl`). expanded 시 header에 chevron-down. expand 시 chevron up + click anywhere on bar.
+- **#110 후보**: **PRD `file-entity-prd.md` v1 완료**. v2 (content-hash dedup / hard-delete dangling cleanup) Phase 2로 이관. Books 접점 직접 참조 0 (간접만 — Note/Wiki contentJson에 자동 포함).
+
+### 기술 학습 (영구)
+
+- **`useEffect` cleanup으로 setState 호출하지 말 것**: PR-Q4 작업 중 board mode 전환 시 collapsedGroups reset 문제 발견 → notes-table.tsx의 `useEffect(() => setCollapsedGroups(new Set()), [viewState.groupBy])`가 그룹핑 변경 시 의도된 reset임. mode 전환 자체로는 reset 안 됨 — valid.
+- **store ViewState 필드 추가 시 normalize 갱신 필수**: PR-Q2에서 ViewState.collapsedGroups 추가했지만 normalizeViewState return object에 명시 안 해 → setViewState 후 즉시 read엔 보이지만 normalize 거치면 stripped. **신규 필드는 types.ts + defaults.ts (DEFAULT_VIEW_STATE) + normalize return 세 곳 모두 추가**.
+- **Set/Array dual representation**: `viewState.collapsedGroups`는 store에 array (IDB serializable), 컴포넌트 안에서 `useMemo(() => new Set(array), [array])`로 Set wrapper. setter도 `useCallback`로 array writeback. 기존 `.has` / `setCollapsedGroups(prev => ...)` 호출 시그니처 유지하면서 store-backed로 migrate 가능 (코드 변경 최소화 패턴).
+- **Hidden secondary pane verification artifact**: puppeteer eval에서 button query는 hidden secondary pane (dual mode)의 element도 잡음. visible pane만 query하려면 `.hidden` ancestor check 필요. 사용자 viewport 검증이 결국 ground truth.
+- **dropdown + plain overlay z-index 충돌**: Radix Dialog (Templates) vs plain overlay (FilePicker). plain overlay는 portal 없어서 dropdown에 가려질 수 있음. `e.preventDefault()` 제거하고 dropdown 자동 close 후 overlay mount하는 게 정통.
+- **Books grid card 박스 잔존 → LOCKED #103 cascading fix**: 영구 룰은 list row의 22×22 tinted box 폐기였는데 grid card의 48×48 box까지 폐기 cascading 발견. 사용자 신호로 발견. 새 컴포넌트 만들 때 reference 패턴에 옛 잔존 위반 있는지 점검 필요.
+
+### Watch Out (다음 세션)
+
+- **🔴 Wiki Board column collapse 미적용**: PR-Q5는 notes-board만. wiki-board는 동일 패턴 mechanical 복제 필요. 다음 P0 #1.
+- **🟡 Notes/Books Timeline lane collapse 미적용**: PR-Q4는 Wiki timeline만. 동일 패턴 확장 필요. 다음 P0 #2.
+- **🟡 Group-collapse ghost row pattern v2**: 현재 collapsed group은 시각 자체 안 보임. "Expand all" 버튼으로만 복구. v2엔 collapsed group의 자리에 1-row ghost lane (chevron right + label + (N hidden) + click → expand). 큰 작업이지만 사용자 viewport 검증 후 결정.
+- **Timeline lane spacing**: Display Panel Audit Fix 2로 group divider/header band 강화했지만 사용자 viewport에서 진짜 시각 효과 확인 필요. 부족하면 ghost row v2가 더 본질적.
+- **Wiki list mode 진입 puppeteer quirk**: wikiViewMode external store (`plot-wiki-view-mode`) — list mode 전환은 사이드바 클릭 아니라 store 직접 변경 필요. 시각 verification은 사용자 viewport에서.
+- **Grid view에 grouping 시도하면 viewState.groupBy 유지되지만 NotesGridView는 flat render** — 의도된 동작. 사용자가 list에서 grouping 켠 상태로 grid 전환하면 viewState.groupBy="status" 그대로지만 grid가 flat. normalizeViewState가 grid mode 진입 시 groupBy "none"으로 reset (defaultGroupByByMode.grid: "none") — 단 normalizeViewState는 IDB read 시점 적용. runtime setViewState는 그대로 박힘.
+
+### 환경 변경
+
+- Store v144 → **v145** (Attachment.noteId → originEntity 마이그레이션)
+- 신규 파일 5:
+  - `components/file-picker.tsx`
+  - `components/notes-grid-shell.tsx`
+  - `components/views/notes-grid-view.tsx`
+  - `components/views/wiki-grid-view.tsx`
+  - `lib/extract-attachment-refs.ts`
+- 변경 파일 31 (Notes/Wiki view layer + view-engine + side-panel + store/slices + Wiki timeline sub-components + view-header)
+- ViewState에 `collapsedGroups?: string[]` 필드 추가
+- ViewConfig groupingOptions에 explicit modes 추가 (grid 제외 일괄)
+
+### 머신
+
+Windows. 거대 세션 (사용자 대화 30+ 라운드 + 11 변경 단위 + 단일 PR cutoff).
+
+---
+
 ## 2026-05-24 — Windows, **거대 세션: PR-X5/X6 + Activity bar lucide + PR-B/B2/C (audit v2 완성) + Notes/Books Timeline + Gallery 폐기**
 
 > 🎯 **다음 즉시 액션 (다음 세션 시작점)**: **Notes timeline에 ViewHeader (filter/display panel) 추가** — 사용자 신고 "노트 타임라인 위에 필터/디스플레이 등이 사라졌어. 위키/북스처럼 만들어줘."

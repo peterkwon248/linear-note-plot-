@@ -3,7 +3,8 @@
 import { useState, useMemo, useRef, useCallback, useEffect } from "react"
 import { cn } from "@/lib/utils"
 import { usePlotStore } from "@/lib/store"
-import type { WikiBlock } from "@/lib/types"
+import type { WikiBlock, Attachment } from "@/lib/types"
+import { FilePicker } from "@/components/file-picker"
 import { emScale } from "@/lib/wiki-font-scales"
 import { useAttachmentUrl } from "@/lib/use-attachment-url"
 import { persistAttachmentBlob } from "@/lib/store/helpers"
@@ -37,6 +38,7 @@ import {
   BookOpen,
   Copy as CopySimple,
   Link2 as PhLink,
+  FolderOpen,
 } from "lucide-react"
 import { ArrowsIn } from "@/lib/editor/editor-icons"
 import { toast } from "sonner"
@@ -1016,7 +1018,8 @@ function ImageBlock({ block, editable, onUpdate, onDelete, dragHandleProps, arti
     if (!file) return
     const buffer = await file.arrayBuffer()
     const attachmentId = addAttachment({
-      noteId: "",
+      // wiki block image upload — origin is the host wiki article.
+      originEntity: articleId ? { kind: "wiki", id: articleId } : null,
       name: file.name,
       type: "image",
       url: "",
@@ -1707,15 +1710,21 @@ function TableBlock({ block, editable, onUpdate, onDelete, dragHandleProps, arti
 
 /* ── Add Block Button ── */
 
-export function AddBlockButton({ onAdd, nearestSectionLevel, onAddFromTemplate }: {
+export function AddBlockButton({ onAdd, nearestSectionLevel, onAddFromTemplate, onAddFromFile }: {
   onAdd: (type: string, level?: number) => void
   /** Level of the nearest section block above this insertion point (2, 3, or 4) */
   nearestSectionLevel?: number
   /** P1 — When provided, surfaces "From template…" entry that triggers a
    *  WikiTemplatePicker (insert mode). Caller handles the actual block splice. */
   onAddFromTemplate?: () => void
+  /** file-entity-prd §4 — when provided, surfaces "From file…" entry that
+   *  opens the FilePicker (accept="image"). Caller receives the picked
+   *  Attachment and is responsible for inserting an image block with
+   *  `attachmentId: att.id` (no new upload — reuse the existing record). */
+  onAddFromFile?: (attachment: Attachment) => void
 }) {
   const [open, setOpen] = useState(false)
+  const [filePickerOpen, setFilePickerOpen] = useState(false)
 
   // Subsection level = nearest section level + 1, capped at 4, minimum 3
   const subsectionLevel = nearestSectionLevel != null
@@ -1796,10 +1805,34 @@ export function AddBlockButton({ onAdd, nearestSectionLevel, onAddFromTemplate }
                 </button>
               </>
             )}
+            {onAddFromFile && (
+              <>
+                <div className="my-1 border-t border-white/[0.06]" />
+                <button
+                  onClick={() => { setFilePickerOpen(true); setOpen(false) }}
+                  className="flex w-full items-center gap-3 px-3 py-2 text-left hover:bg-hover-bg transition-colors duration-100"
+                >
+                  <span className="text-note font-medium text-foreground/80">From file…</span>
+                  <span className="text-2xs text-muted-foreground/60">Reuse an existing image from the library</span>
+                </button>
+              </>
+            )}
             <div className="my-1 border-t border-white/[0.06]" />
             <div className="px-3 py-1 text-2xs text-muted-foreground/50 italic">Use / in text for more</div>
           </div>
         </>
+      )}
+
+      {/* file-entity-prd §4 — picker mounts at button scope so each
+          AddBlockButton instance owns its own open state. accept="image"
+          because Wiki blocks expose only image (not generic file) blocks. */}
+      {onAddFromFile && (
+        <FilePicker
+          open={filePickerOpen}
+          onOpenChange={setFilePickerOpen}
+          accept="image"
+          onPick={(att) => onAddFromFile(att)}
+        />
       )}
     </div>
   )

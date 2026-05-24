@@ -179,6 +179,10 @@ export interface ViewState {
   subGroupOrder: Record<string, string[]> | null
   /** Sub-group sort criterion: default (natural), manual (drag), name (alpha), count (by size) */
   subGroupSortBy: GroupSortBy
+  /** PR-Q2: group keys currently collapsed. Persisted + shared across view
+   *  modes so a group folded in list view stays folded when the user
+   *  switches to board / timeline. Empty/undefined = nothing collapsed. */
+  collapsedGroups?: string[]
   /** ── Graph-only: hidden edge state ────────────────── *
    * Visual-only filters used by the Ontology graph view to let users
    * temporarily declutter the canvas without modifying underlying data.

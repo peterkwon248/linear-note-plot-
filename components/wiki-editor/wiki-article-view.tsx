@@ -720,6 +720,13 @@ export function WikiArticleView({ articleId, editable = false, preview = false, 
             <AddBlockButton
               onAdd={(type, level) => handleAddBlock(type, "__prepend__", level)}
               onAddFromTemplate={() => setTemplateInsertOpen("start")}
+              onAddFromFile={(att) =>
+                addWikiBlock(
+                  articleId,
+                  { type: "image", attachmentId: att.id, caption: att.name },
+                  "__prepend__",
+                )
+              }
             />
           )}
 
@@ -814,6 +821,13 @@ export function WikiArticleView({ articleId, editable = false, preview = false, 
             <AddBlockButton
               onAdd={(type, level) => handleAddBlock(type, undefined, level)}
               onAddFromTemplate={() => setTemplateInsertOpen("end")}
+              onAddFromFile={(att) =>
+                addWikiBlock(
+                  articleId,
+                  { type: "image", attachmentId: att.id, caption: att.name },
+                  undefined,
+                )
+              }
             />
           )}
 

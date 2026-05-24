@@ -42,7 +42,12 @@ export interface TimelineLabelColumnProps {
    *  group, marking the lane index where that group starts). Centralized in
    *  the orchestrator so the label column and the canvas grid use the same
    *  source of truth. Omit when no grouping is active. */
-  groupBoundaries?: { laneIndex: number; label: string; count: number }[] | null
+  groupBoundaries?: { laneIndex: number; label: string; count: number; key?: string }[] | null
+  /** PR-Q4: group header click toggles collapse for the matching group key.
+   *  When provided, the header band gets `cursor: pointer` and emits the
+   *  group's key on click. Caller (timeline orchestrator) owns the
+   *  collapsedGroups set + writes it through to viewState. */
+  onToggleGroup?: (groupKey: string) => void
   setHoveredId: Dispatch<SetStateAction<string | null>>
   setTooltip: Dispatch<SetStateAction<TimelineTooltipState | null>>
   onOpenArticle: (id: string) => void
@@ -59,6 +64,7 @@ export function TimelineLabelColumn({
   svgHeight,
   visibleColumns,
   groupBoundaries,
+  onToggleGroup,
   setHoveredId,
   setTooltip,
   onOpenArticle,
@@ -121,15 +127,31 @@ export function TimelineLabelColumn({
             }}
           >
             {groupStart && (
-              <div
-                aria-hidden
-                className="pointer-events-none absolute -top-2 left-0 right-0 flex items-center gap-1.5 px-3 text-[10px] font-medium uppercase tracking-wider text-muted-foreground/80"
-                style={{ height: 16 }}
+              // PR-Q4 (2026-05-24) — header is now a clickable button when
+              // `onToggleGroup` is wired + groupStart carries a key.
+              // Behavior: click → caller toggles that group key into
+              // viewState.collapsedGroups; collapsed groups drop out of
+              // `lanes` so the canvas reflows below.
+              <button
+                type="button"
+                onClick={(e) => {
+                  if (!onToggleGroup || !groupStart.key) return
+                  e.stopPropagation()
+                  onToggleGroup(groupStart.key)
+                }}
+                aria-label={`Collapse group ${groupStart.label}`}
+                className={cn(
+                  "absolute -top-4 left-0 right-0 flex items-center gap-2 px-3 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground transition-colors",
+                  onToggleGroup && groupStart.key
+                    ? "cursor-pointer hover:text-foreground"
+                    : "pointer-events-none",
+                )}
+                style={{ height: 20 }}
               >
-                <span className="text-foreground/70">{groupStart.label}</span>
-                <span className="tabular-nums">{groupStart.count}</span>
-                <span className="ml-1 h-px flex-1 bg-border-subtle/60" />
-              </div>
+                <span className="text-foreground/85">{groupStart.label}</span>
+                <span className="tabular-nums text-muted-foreground/70">{groupStart.count}</span>
+                <span className="ml-1 h-px flex-1 bg-border/70" />
+              </button>
             )}
             <span className="shrink-0 mt-0.5" style={{ color }}>
               {renderStatusIcon(article, 13)}

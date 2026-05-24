@@ -2272,5 +2272,32 @@ export function migrate(persistedState: unknown): PlotState {
     }
   }
 
+  // v144 → v145: file-entity-prd. Attachment.noteId (bare string FK 시늉) →
+  // originEntity (EntityRef | null, provenance hint). Old noteId mixes note
+  // and wiki IDs and sentinels (`""`, `"__library__"`) — lookup against
+  // state.notes / state.wikiArticles to decide the kind. Stale IDs (deleted
+  // notes etc.) drop to null; provenance loss is harmless (§2-3).
+  if (Array.isArray(state.attachments)) {
+    const noteIds = new Set(((state.notes as Array<{ id: string }> | undefined) ?? []).map((n) => n.id))
+    const wikiIds = new Set(((state.wikiArticles as Array<{ id: string }> | undefined) ?? []).map((w) => w.id))
+    let touched = 0
+    state.attachments = (state.attachments as Array<Record<string, unknown>>).map((a) => {
+      if ("originEntity" in a) return a // idempotent — already migrated
+      const raw = a.noteId as string | undefined
+      let originEntity: { kind: string; id: string } | null = null
+      if (raw && raw !== "__library__") {
+        if (noteIds.has(raw)) originEntity = { kind: "note", id: raw }
+        else if (wikiIds.has(raw)) originEntity = { kind: "wiki", id: raw }
+        // unmatched (e.g. deleted note) → null
+      }
+      const { noteId: _drop, ...rest } = a
+      touched += 1
+      return { ...rest, originEntity }
+    })
+    if (touched > 0) {
+      console.log(`[migrate] v144→v145: ${touched} attachment(s) noteId→originEntity`)
+    }
+  }
+
   return state as unknown as PlotState
 }

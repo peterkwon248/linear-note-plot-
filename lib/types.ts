@@ -996,7 +996,10 @@ export type AttachmentType = "image" | "url" | "file"
 
 export interface Attachment {
   id: string
-  noteId: string
+  // file-entity-prd v1: noteId(가짜 소유권 FK)를 originEntity(출처 힌트)로 강등.
+  // 처음 업로드된 컨텍스트 entity ({kind:"note"|"wiki"|...}). 없으면 null.
+  // 콘텐츠 N:M 참조는 `attachment://<id>` URI + usage 인덱스(§3)로 별도.
+  originEntity: EntityRef | null
   name: string
   type: AttachmentType
   url: string

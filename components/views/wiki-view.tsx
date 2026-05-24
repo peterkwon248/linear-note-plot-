@@ -79,6 +79,7 @@ import { useBookContextNav } from "@/hooks/use-book-context-nav"
 import { BookContextNav } from "@/components/books/book-context-nav"
 // 2026-05-24: GalleryView import removed — gallery mode deprecated
 import { WikiTimelineView } from "@/components/views/wiki-timeline-view"
+import { WikiGridView } from "@/components/views/wiki-grid-view"
 import type { WikiArticle, WikiCategory } from "@/lib/types"
 
 export function WikiView() {
@@ -1031,6 +1032,9 @@ export function WikiView() {
             onQuickFilter={(rules) => updateWikiViewState({ filters: rules })}
           />
         )}
+        quickFilters={wikiViewMode !== "dashboard" ? (WIKI_VIEW_CONFIG.quickFilters as any) : undefined}
+        activeFilters={wikiFilters as any}
+        onFiltersChange={(filters) => updateWikiViewState({ filters: filters as any })}
         showDisplay={wikiViewMode !== "dashboard"}
         displayContent={(
           <DisplayPanel
@@ -1252,6 +1256,15 @@ export function WikiView() {
               onOpenArticle={openArticle}
               onSelect={(id, opts) => handleArticleSelect(id, opts)}
               onUpdateViewState={updateWikiViewState}
+            />
+          ) : wikiViewState.viewMode === "grid" ? (
+            /* User signal 2026-05-24: "북스의 그리드 디스플레이처럼".
+               Grid mode previously fell through to WikiList — this branch
+               replaces it with the Books-parity card grid. */
+            <WikiGridView
+              articles={sortedFilteredWikiNotes}
+              onOpen={openArticle}
+              activeArticleId={selectedWikiArticleId}
             />
           ) : wikiViewState.viewMode === "board" ? (
             <WikiBoard

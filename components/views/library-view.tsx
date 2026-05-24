@@ -22,6 +22,7 @@ import { useFilesView } from "@/lib/view-engine/use-files-view"
 import { REFERENCES_VIEW_CONFIG, FILES_VIEW_CONFIG } from "@/lib/view-engine/view-configs"
 import type { FilterRule } from "@/lib/view-engine/types"
 import { RefTypeChip, RefFieldCountChip, RefImageChip, FileTypeChip, FileSizeChip } from "@/components/property-chips"
+import { IconLabel } from "@/components/plot-icons"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -825,7 +826,7 @@ function LibraryOverview() {
             mimeType: file.type,
             size: file.size,
             url: "",
-            noteId: "",
+            originEntity: null,
           })
           setActiveRoute("/library/files")
           toast.success(`Uploaded ${file.name}`)
@@ -879,7 +880,9 @@ function LibraryOverview() {
                   value={labelTotal}
                   sub={`${labelUsedCount} in use`}
                   color={KNOWLEDGE_INDEX_COLORS.labels.text}
-                  icon={<Tag size={24} strokeWidth={2} />}
+                  // 2026-05-24 — sidebar parity (linear-sidebar IconLabel).
+                  // Was Tag (collided with Tags card). IconLabel = Bookmark.
+                  icon={<IconLabel size={24} />}
                   onClick={() => setActiveRoute("/library/labels")}
                 />
                 <LibMiniStat
@@ -1033,7 +1036,7 @@ function FilesView() {
       const buffer = await file.arrayBuffer()
       const isImage = file.type.startsWith("image/")
       const attachmentId = addAttachment({
-        noteId: "__library__",
+        originEntity: null,
         name: file.name,
         type: isImage ? "image" : "file",
         url: "",

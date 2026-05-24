@@ -146,8 +146,11 @@ export function createNotesSlice(set: Set, get: Get, appendEvent: AppendEventFn)
           relations: state.relations.filter(
             (r: any) => r.sourceNoteId !== id && r.targetNoteId !== id
           ),
+          // file-entity-prd: cascade only when note-origin attachment.
+          // N:M referencing remains derivable via `attachment://` scan; the
+          // dangling-ref UX is owned by PRD §5 (graceful fallback).
           attachments: state.attachments.filter(
-            (a: any) => a.noteId !== id
+            (a: any) => !(a.originEntity?.kind === "note" && a.originEntity?.id === id)
           ),
           relationSuggestions: state.relationSuggestions.filter(
             (s: any) => s.sourceNoteId !== id && s.targetNoteId !== id
