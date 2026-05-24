@@ -27,8 +27,10 @@ import { useMemo } from "react"
 import { usePlotStore } from "@/lib/store"
 import { useKnowledgeMetrics } from "@/hooks/use-knowledge-metrics"
 import { getEntityColor } from "@/lib/colors" // v109: opt-in color fallback
+import { useT } from "@/lib/i18n"
 
 export function OntologyDashboardPanel() {
+  const t = useT()
   const m = useKnowledgeMetrics()
   const notes = usePlotStore((s) => s.notes)
   const wikiArticles = usePlotStore((s) => s.wikiArticles)
@@ -78,57 +80,60 @@ export function OntologyDashboardPanel() {
   return (
     <div className="flex flex-col gap-6 p-6 max-w-4xl mx-auto">
       <header>
-        <h2 className="text-xl font-semibold">Knowledge Dashboard</h2>
+        <h2 className="text-xl font-semibold">{t("ontology.dashboard.title")}</h2>
         <p className="text-note text-muted-foreground mt-1">
-          Sabermetrics for your knowledge base. No action prompts — just stats.
+          {t("ontology.dashboard.subtitle")}
         </p>
       </header>
 
       {/* ── Volume ── */}
-      <Section title="Volume">
+      <Section title={t("ontology.dashboard.section.volume")}>
         <Grid>
-          <Stat label="Notes" value={m.totalNotes}
-            sub={`${statusCounts.stone} stone · ${statusCounts.brick} brick · ${statusCounts.keystone} keystone`} />
-          <Stat label="Wiki articles" value={m.totalWiki ?? wikiArticles.length} />
-          <Stat label="Tags" value={tags.length} />
-          <Stat label="Labels" value={labels.length} />
-          <Stat label="Stickers" value={stickers.length} />
-          <Stat label="Wiki categories" value={wikiCategories.length} />
-          <Stat label="Folders" value={folders.length} />
+          <Stat label={t("ontology.dashboard.stat.notes")} value={m.totalNotes}
+            sub={t("ontology.dashboard.meta.status_breakdown")
+              .replace("{stone}", String(statusCounts.stone))
+              .replace("{brick}", String(statusCounts.brick))
+              .replace("{keystone}", String(statusCounts.keystone))} />
+          <Stat label={t("ontology.dashboard.stat.wiki_articles")} value={m.totalWiki ?? wikiArticles.length} />
+          <Stat label={t("ontology.dashboard.stat.tags")} value={tags.length} />
+          <Stat label={t("ontology.dashboard.stat.labels")} value={labels.length} />
+          <Stat label={t("ontology.dashboard.stat.stickers")} value={stickers.length} />
+          <Stat label={t("ontology.dashboard.stat.wiki_categories")} value={wikiCategories.length} />
+          <Stat label={t("ontology.dashboard.stat.folders")} value={folders.length} />
         </Grid>
       </Section>
 
       {/* ── Connectivity ── */}
-      <Section title="Connectivity">
+      <Section title={t("ontology.dashboard.section.connectivity")}>
         <Grid>
-          <Stat label="Total edges" value={m.totalEdges} />
-          <Stat label="Avg links / note" value={avgLinksPerNote} />
-          <Stat label="Most linked"
+          <Stat label={t("ontology.dashboard.stat.total_edges")} value={m.totalEdges} />
+          <Stat label={t("ontology.dashboard.stat.avg_links")} value={avgLinksPerNote} />
+          <Stat label={t("ontology.dashboard.stat.most_linked")}
             value={topHubs[0]?.title ?? "—"}
-            sub={topHubs[0] ? `${topHubs[0].backlinks} connections` : ""} />
+            sub={topHubs[0] ? t("ontology.dashboard.meta.connections").replace("{count}", String(topHubs[0].backlinks)) : ""} />
         </Grid>
       </Section>
 
       {/* ── Health (actionable rates) ── */}
-      <Section title="Health">
+      <Section title={t("ontology.dashboard.section.health")}>
         <Grid>
-          <Stat label="Orphans"
+          <Stat label={t("ontology.dashboard.stat.orphans")}
             value={Math.round(m.orphanRate * m.totalNotes)}
-            sub={`${Math.round(m.orphanRate * 100)}% of notes`}
+            sub={t("ontology.dashboard.meta.percent_of_notes").replace("{count}", String(Math.round(m.orphanRate * 100)))}
             warn={m.orphanRate > 0} />
-          <Stat label="Untagged"
+          <Stat label={t("ontology.dashboard.stat.untagged")}
             value={`${Math.round((1 - m.tagCoverage) * 100)}%`}
-            sub={`${Math.round((1 - m.tagCoverage) * m.totalNotes)} notes`}
+            sub={t("ontology.dashboard.meta.notes_count").replace("{count}", String(Math.round((1 - m.tagCoverage) * m.totalNotes)))}
             warn={m.tagCoverage < 1} />
-          <Stat label="Wiki coverage"
+          <Stat label={t("ontology.dashboard.stat.wiki_coverage")}
             value={`${m.totalNotes > 0 ? Math.round((m.totalWiki / m.totalNotes) * 100) : 0}%`} />
         </Grid>
       </Section>
 
       {/* ── Top Hubs ── */}
-      <Section title="Top hubs">
+      <Section title={t("ontology.dashboard.section.top_hubs")}>
         {topHubs.length === 0 ? (
-          <Empty>No connections yet.</Empty>
+          <Empty>{t("ontology.dashboard.empty.no_connections")}</Empty>
         ) : (
           <ol className="flex flex-col">
             {topHubs.map((hub, i) => (
@@ -140,12 +145,12 @@ export function OntologyDashboardPanel() {
                   <span className="text-note truncate">{hub.title}</span>
                   {hub.isWiki && (
                     <span className="text-2xs px-1.5 py-0.5 rounded bg-accent text-accent-foreground shrink-0">
-                      wiki
+                      {t("nav.space.wiki")}
                     </span>
                   )}
                 </div>
                 <span className="text-2xs text-muted-foreground tabular-nums shrink-0">
-                  {hub.backlinks} {hub.backlinks === 1 ? "link" : "links"}
+                  {hub.backlinks} {hub.backlinks === 1 ? t("ontology.dashboard.meta.link_singular") : t("ontology.dashboard.meta.link_plural")}
                 </span>
               </li>
             ))}
@@ -154,9 +159,9 @@ export function OntologyDashboardPanel() {
       </Section>
 
       {/* ── Tag frequency ── */}
-      <Section title="Tag frequency">
+      <Section title={t("ontology.dashboard.section.tag_frequency")}>
         {tagFrequency.length === 0 ? (
-          <Empty>No tags in use.</Empty>
+          <Empty>{t("ontology.dashboard.empty.no_tags")}</Empty>
         ) : (
           <ol className="flex flex-col">
             {tagFrequency.map((row, i) => (
@@ -172,7 +177,7 @@ export function OntologyDashboardPanel() {
                   <span className="text-note truncate">{row.tag!.name}</span>
                 </div>
                 <span className="text-2xs text-muted-foreground tabular-nums shrink-0">
-                  {row.count} {row.count === 1 ? "use" : "uses"}
+                  {row.count} {row.count === 1 ? t("ontology.dashboard.meta.use_singular") : t("ontology.dashboard.meta.use_plural")}
                 </span>
               </li>
             ))}
@@ -181,8 +186,7 @@ export function OntologyDashboardPanel() {
       </Section>
 
       <footer className="text-2xs text-muted-foreground pt-4 border-t border-border-subtle">
-        More sections (time series, connectivity distribution, cluster analysis,
-        wiki article stats) coming in a follow-up.
+        {t("ontology.dashboard.footer")}
       </footer>
     </div>
   )
