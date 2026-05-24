@@ -6,6 +6,72 @@
 
 ---
 
+## 2026-05-24 (심야) — Windows, **Ghost Row v0.1 universal — Timeline collapsed group의 자리에 chevron right + label + "N hidden" 1-row inject**
+
+> 🎯 **다음 즉시 액션**: 사용자 viewport 검증 (Wiki/Notes/Books timeline + status grouping → group header click → ghost row 1줄 inject 시각 확인 → click 시 expand 작동) → temporal-hooks PRD 정리 (P1).
+>
+> **사용자 의도**: "다음 todo 작업하자" — TODO.md P0 #1 (ghost row v2)을 명시 진행. Linear/Notion 정합으로 collapsed group이 "사라지는" 게 아니라 "ghost lane으로 줄어듦".
+>
+> **첫 스텝** (사용자 viewport에서):
+> 1. Wiki list mode → timeline + wikiStatus grouping → "Stub" group header click → 그 자리에 1-row ghost ("▶ STUB · N hidden · Expand") inject 확인
+> 2. Notes list → timeline + status grouping → 동일 작동 확인
+> 3. Books → timeline + kind grouping → 동일
+> 4. Ghost row click → expand 복구
+> 5. Toolbar "Expand all" 도 작동 (다중 그룹 일괄 복구)
+>
+> **다음 P0** (#1 사용자 검증 후): temporal-hooks PRD 정리 (P1, open questions 6개).
+>
+> **머신**: Windows.
+> **현재 main HEAD**: 이번 PR 머지 후.
+
+### 완료 (이번 세션, 7 파일 변경)
+
+**Ghost Row v0.1 universal** — Wiki + Notes + Books timeline 모두 일괄 적용:
+
+1. **wiki-timeline-config.ts**: `LanedCollapsedHeader` interface + `DisplayLane<T>` union type
+2. **timeline-bar.tsx**: `item` type union + 시작 narrowing (`if ("isCollapsedHeader" in item) return null`)
+3. **timeline-grid.tsx**: `lanes` type union (height 계산에만 영향)
+4. **timeline-label-column.tsx**: lanes type union + ghost row render 분기 (chevron right + label + "N hidden" + Expand hint + click toggle, LANE_HEIGHT 차지)
+5. **wiki-timeline-view.tsx**: visibleLanes 안에 ghost lane inject (collapsed group 위치) + groupBoundaries에서 ghost lane skip + lanes.map (TimelineBar/EventMarkers caller) 안 ghost skip + drag handler ghost narrowing + eventsByArticleId loop 안 ghost skip
+6. **notes-timeline-view.tsx**: 동일 패턴 (noteGroups → ghost lane inject + 모든 caller narrowing)
+7. **books-timeline-view.tsx**: 동일 (bookGroups)
+
+**시각 동작 (3 entity timeline 모두 동일)**:
+- 그룹 header 클릭 → 해당 그룹의 lanes 모두 ghost row 1줄로 collapse
+- Ghost row: 좌측 chevron right + UPPERCASE label + tabular-nums count + "Expand" hint, secondary/30 배경, hover secondary/60, click → toggle
+- Toolbar "Expand all" 도 그대로 작동 (다중 그룹 복구)
+
+검증: tsc clean + build exit 0.
+
+### 브레인스토밍 & 큰 결정 (영구 LOCKED #109 보강)
+
+- **#109 보강 (2026-05-24 심야)**: Linear column/lane collapse 패턴의 완성형 = **ghost row pattern**. collapse 시 영역 0이 아니라 1-row placeholder가 남아 사용자가 "expand 위치"를 항상 알 수 있음. Linear/Notion 정합. board는 40px narrow vertical bar / timeline은 1-row horizontal ghost — 본질은 같음 (의도된 collapse 표시 + 복구 경로 유지).
+- **DisplayLane<T> union 패턴**: lanes에 article-lane과 ghost-lane이 공존. TypeScript narrowing(`"isCollapsedHeader" in item`)로 type-safe 분기. sub-components 모두 동일 narrowing 패턴. 향후 entity 추가 시 동일 패턴 자동 작동.
+
+### 기술 학습 (영구)
+
+- **TS narrowing으로 ghost lane 처리**: `Array<LanedItem<T> | LanedCollapsedHeader>` union + `if ("isCollapsedHeader" in item)` narrowing → type-safe + no `as any` cast. ghost lane은 article 필드 자체 없음 (sentinel 대신 union).
+- **3 entity sub-components shared**: wiki/notes/books timeline이 timeline-bar/grid/label-column 같은 sub-components 공유 → 한 번 변경하면 3 entity 모두 자동 적용. 단 caller-side ghost inject는 entity별로 추가 필요 (group source가 다름: wikiGroups/noteGroups/bookGroups).
+
+### Watch Out (다음 세션)
+
+- **사용자 viewport 검증 우선**: 3 entity timeline에서 ghost row 시각 직접 확인. v0.1이 충분하면 cutoff, 아니면 polish (예: chevron animation, label color, hover state).
+- **dnd-kit + collapsed timeline**: timeline은 dnd-kit 안 씀 (drag handle은 wiki article의 plannedDate 수정용 별도). 무관.
+- **Notes/Books timeline event markers**: 현재 EMPTY_EVENTS_MAP — ghost skip 추가했지만 향후 event markers 도입 시 동일 narrowing 필요.
+
+### 환경 변경
+
+- Store v145 무변경 (모두 view layer)
+- 변경 파일 7
+- 신규 파일 0
+- 사용자 IDB stale data: 없음
+
+### 머신
+
+Windows. 짧은 cohesive 세션 — ghost row v0.1 universal 완성.
+
+---
+
 ## 2026-05-24 (밤) — Windows, **Group collapse universal 완성 — Wiki Board + Notes/Books Timeline lane collapse (PR-Q5/Q4 패턴 확장)**
 
 > 🎯 **다음 즉시 액션 (다음 세션 시작점)**: **PR-Q4 v2 ghost row pattern** — collapsed group의 자리에 1-row "ghost lane" inject (chevron right + label + (N hidden) + click → expand). Linear/Notion 정합. 사용자 viewport에서 v1 검증 후 결정 (현재 collapsed group이 시각 자체 안 보임 — "Expand all" 버튼으로만 복구).

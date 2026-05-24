@@ -18,7 +18,9 @@ import {
 } from "./wiki-timeline-config"
 
 export interface TimelineBarProps {
-  item: LanedItem<TimelineEntity>
+  // PR-Q4 v2: accept ghost lanes too so wiki-timeline-view can inject
+  // collapsed-group placeholders. We narrow at the top of the component.
+  item: LanedItem<TimelineEntity> | { isCollapsedHeader: true; groupKey: string; label: string; count: number; x: 0; width: 0 }
   /** Bar fill color from the entity adapter (e.g. WIKI_STATUS_HEX.stub for
    *  wiki stubs, NOTE_STATUS_HEX.stone for notes, etc.). Caller resolves
    *  the status → color mapping so this component stays entity-agnostic. */
@@ -58,6 +60,9 @@ export function TimelineBar({
   onOpenArticle,
   onSelect,
 }: TimelineBarProps) {
+  // PR-Q4 v2: ghost lanes (collapsed-group headers) carry no article.
+  // Skip — label column renders the row, this layer just yields its slot.
+  if ("isCollapsedHeader" in item) return null
   const { article, x, width } = item
   const isActive = article.id === activeArticleId
   const isSelected = selectedIds.has(article.id)

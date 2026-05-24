@@ -253,6 +253,26 @@ export interface LanedItem<T extends TimelineEntity> {
   width: number
 }
 
+/** PR-Q4 v2 — ghost lane representing a collapsed group. Lane has no
+ *  article (and zero width); label column renders it as a clickable
+ *  "expand" row, bar/marker layers skip it via the `isCollapsedHeader`
+ *  type guard. Same shape footprint as LanedItem so it can sit in the
+ *  same lanes array without sub-component prop churn. */
+export interface LanedCollapsedHeader {
+  isCollapsedHeader: true
+  groupKey: string
+  label: string
+  count: number
+  /** x/width kept at 0 — bar layer skips before reading them. Lets
+   *  TimelineGrid treat the lane as a regular row for height accounting. */
+  x: 0
+  width: 0
+}
+
+/** Union of article lanes + collapsed-group placeholders. Sub-components
+ *  use `"isCollapsedHeader" in lane` (TypeScript narrowing) to branch. */
+export type DisplayLane<T extends TimelineEntity> = LanedItem<T> | LanedCollapsedHeader
+
 /** @deprecated Use `LanedItem<WikiArticle>` directly. Kept as a back-compat
  *  alias because sub-components and external callers still type-import it. */
 export type LanedArticle = LanedItem<WikiArticle>
