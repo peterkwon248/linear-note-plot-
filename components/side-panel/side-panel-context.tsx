@@ -160,7 +160,7 @@ export function SidePanelContext({ noteId: propNoteId }: { noteId?: string | nul
         {note.pinned && (
           <span className="flex items-center gap-1 rounded-md bg-chart-3/10 px-2 py-0.5 text-2xs font-medium text-chart-3">
             <PushPin size={14} strokeWidth={2} />
-            Pinned
+            {t("sidepanel.workflow.pinned")}
           </span>
         )}
         {/* Stage badge */}
@@ -185,7 +185,7 @@ export function SidePanelContext({ noteId: propNoteId }: { noteId?: string | nul
         {note.status === "brick" && isReadyToPromote(note, backlinks) && (
           <span className="flex items-center gap-1 rounded-md bg-chart-5/10 px-2 py-0.5 text-2xs font-medium text-chart-5">
             <Sparkle size={14} strokeWidth={2} />
-            Ready to promote
+            {t("sidepanel.workflow.ready_to_promote")}
           </span>
         )}
       </div>
@@ -194,38 +194,38 @@ export function SidePanelContext({ noteId: propNoteId }: { noteId?: string | nul
       {note.status === "stone" && note.triageStatus !== "trashed" && (
         <div className="flex items-center gap-1.5 px-4 py-2.5 border-b border-border bg-secondary/10">
           <button
-            onClick={() => { triageKeep(note.id); toast("Done — moved to Brick"); advanceToNextInbox() }}
+            onClick={() => { triageKeep(note.id); toast(t("sidepanel.workflow.done_toast")); advanceToNextInbox() }}
             className="inline-flex items-center gap-1 rounded-md bg-accent px-2 py-1 text-2xs font-medium text-accent-foreground transition-colors hover:bg-accent/80"
           >
             <PhCheck size={14} strokeWidth={2.5} />
-            Done
+            {t("sidepanel.workflow.done")}
           </button>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <button className="inline-flex items-center gap-1 rounded-md border border-border bg-card px-2 py-1 text-2xs font-medium text-foreground transition-colors hover:bg-hover-bg">
                 <Alarm size={14} strokeWidth={2} />
-                Snooze
+                {t("sidepanel.workflow.snooze")}
                 <CaretDown className="text-muted-foreground" size={10} strokeWidth={2} />
               </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="start" className="w-44">
-              <DropdownMenuItem onClick={() => { triageSnooze(note.id, getSnoozeTime("3h")); toast("Snoozed"); advanceToNextInbox() }} className="text-note">
-                3 hours
+              <DropdownMenuItem onClick={() => { triageSnooze(note.id, getSnoozeTime("3h")); toast(t("sidepanel.workflow.snooze_toast")); advanceToNextInbox() }} className="text-note">
+                {t("sidepanel.workflow.snooze.3h")}
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => { triageSnooze(note.id, getSnoozeTime("tomorrow")); toast("Snoozed"); advanceToNextInbox() }} className="text-note">
-                Tomorrow 10:00 AM
+              <DropdownMenuItem onClick={() => { triageSnooze(note.id, getSnoozeTime("tomorrow")); toast(t("sidepanel.workflow.snooze_toast")); advanceToNextInbox() }} className="text-note">
+                {t("sidepanel.workflow.snooze.tomorrow")}
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => { triageSnooze(note.id, getSnoozeTime("next-week")); toast("Snoozed"); advanceToNextInbox() }} className="text-note">
-                Next week 10:00 AM
+              <DropdownMenuItem onClick={() => { triageSnooze(note.id, getSnoozeTime("next-week")); toast(t("sidepanel.workflow.snooze_toast")); advanceToNextInbox() }} className="text-note">
+                {t("sidepanel.workflow.snooze.next_week")}
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
           <button
-            onClick={() => { triageTrash(note.id); toast("Trashed"); advanceToNextInbox() }}
+            onClick={() => { triageTrash(note.id); toast(t("sidepanel.workflow.trash_toast")); advanceToNextInbox() }}
             className="inline-flex items-center gap-1 rounded-md border border-border bg-card px-2 py-1 text-2xs font-medium text-destructive transition-colors hover:bg-destructive/10"
           >
             <Trash size={14} strokeWidth={2} />
-            Trash
+            {t("sidepanel.workflow.trash")}
           </button>
         </div>
       )}
@@ -234,7 +234,7 @@ export function SidePanelContext({ noteId: propNoteId }: { noteId?: string | nul
         <div className="border-b border-border">
           <div className="flex items-center gap-1.5 px-4 py-2.5 bg-secondary/10">
             <button
-              onClick={() => { promoteToPermanent(note.id); toast("Promoted to Keystone") }}
+              onClick={() => { promoteToPermanent(note.id); toast(t("sidepanel.workflow.promote_toast")) }}
               className={`inline-flex items-center gap-1 rounded-md px-2 py-1 text-2xs font-medium transition-colors ${
                 isReadyToPromote(note, backlinks)
                   ? "bg-chart-5 text-primary-foreground hover:bg-chart-5/80"
@@ -242,32 +242,32 @@ export function SidePanelContext({ noteId: propNoteId }: { noteId?: string | nul
               }`}
             >
               <ArrowUpRight size={14} strokeWidth={2} />
-              Promote
+              {t("sidepanel.workflow.promote")}
             </button>
             <button
-              onClick={() => { moveBackToInbox(note.id); toast("Moved back to Stone") }}
+              onClick={() => { moveBackToInbox(note.id); toast(t("sidepanel.workflow.back_to_stone_toast")) }}
               className="inline-flex items-center gap-1 rounded-md border border-border bg-card px-2 py-1 text-2xs font-medium text-muted-foreground transition-colors hover:bg-hover-bg hover:text-foreground"
             >
               <Tray size={14} strokeWidth={2} />
-              Back to Stone
+              {t("sidepanel.workflow.back_to_stone")}
             </button>
           </div>
           {staleSuggest && (
             <div className="flex items-center gap-2 bg-destructive/5 px-4 py-2">
               <Warning className="shrink-0 text-destructive" size={14} strokeWidth={2} />
-              <span className="text-2xs text-destructive">14+ days untouched.</span>
+              <span className="text-2xs text-destructive">{t("sidepanel.warning.stale_14d")}</span>
               <button
-                onClick={() => { moveBackToInbox(note.id); toast("Moved back to Stone") }}
+                onClick={() => { moveBackToInbox(note.id); toast(t("sidepanel.workflow.back_to_stone_toast")) }}
                 className="ml-auto text-2xs font-medium text-destructive underline underline-offset-2 hover:no-underline"
               >
-                Move to Stone?
+                {t("sidepanel.workflow.move_to_stone")}
               </button>
             </div>
           )}
           {!staleSuggest && stale && (
             <div className="flex items-center gap-2 bg-chart-3/5 px-4 py-2">
               <Warning className="shrink-0 text-chart-3" size={14} strokeWidth={2} />
-              <span className="text-2xs text-chart-3">Review needed - 7+ days untouched.</span>
+              <span className="text-2xs text-chart-3">{t("sidepanel.warning.review_7d")}</span>
             </div>
           )}
         </div>
@@ -277,33 +277,33 @@ export function SidePanelContext({ noteId: propNoteId }: { noteId?: string | nul
         <div className="border-b border-border">
           <div className="flex items-center gap-1.5 px-4 py-2.5 bg-secondary/10">
             <button
-              onClick={() => { undoPromote(note.id); toast("Demoted to Brick") }}
+              onClick={() => { undoPromote(note.id); toast(t("sidepanel.workflow.demote_toast")) }}
               className="inline-flex items-center gap-1 rounded-md border border-border bg-card px-2 py-1 text-2xs font-medium text-muted-foreground transition-colors hover:bg-hover-bg hover:text-foreground"
             >
               <ArrowDownLeft size={14} strokeWidth={2} />
-              Demote to Brick
+              {t("sidepanel.workflow.demote")}
             </button>
           </div>
           {linkCount === 0 && (
             <div className="flex items-center gap-2 bg-chart-3/5 px-4 py-2">
               <PhLink className="shrink-0 text-chart-3" size={14} strokeWidth={2} />
-              <span className="text-2xs text-chart-3">Unlinked - add connections to strengthen graph.</span>
+              <span className="text-2xs text-chart-3">{t("sidepanel.warning.unlinked")}</span>
             </div>
           )}
         </div>
       )}
 
       {/* Dates */}
-      <InspectorSection title="Dates" icon={<CalendarBlank size={16} strokeWidth={2} />}>
+      <InspectorSection title={t("sidepanel.inspector.dates")} icon={<CalendarBlank size={16} strokeWidth={2} />}>
         <div className="space-y-2">
           <div className="flex items-center justify-between">
-            <span className="text-note text-muted-foreground">Created</span>
+            <span className="text-note text-muted-foreground">{t("sidepanel.inspector.dates.created")}</span>
             <span className="text-note text-foreground">
               {df.longDate(new Date(note.createdAt))}
             </span>
           </div>
           <div className="flex items-center justify-between">
-            <span className="text-note text-muted-foreground">Updated</span>
+            <span className="text-note text-muted-foreground">{t("sidepanel.inspector.dates.updated")}</span>
             <span className="text-note text-foreground">
               {formatDistanceToNow(new Date(note.updatedAt), { addSuffix: true, locale: df.locale })}
             </span>
@@ -314,7 +314,7 @@ export function SidePanelContext({ noteId: propNoteId }: { noteId?: string | nul
       <div className="mx-4 border-b border-border" />
 
       {/* Status */}
-      <InspectorSection title="Status" icon={<CircleDashed size={16} strokeWidth={2} />}>
+      <InspectorSection title={t("sidepanel.inspector.status")} icon={<CircleDashed size={16} strokeWidth={2} />}>
         <StatusDropdown
           value={note.status}
           onChange={(s) => updateNote(note.id, { status: s })}
@@ -330,7 +330,7 @@ export function SidePanelContext({ noteId: propNoteId }: { noteId?: string | nul
           commits the entire new set on Apply. Single-folder UX is gone —
           this is the surface that exposes the N:M model to users.
           Section title is plural to reinforce the cardinality change. */}
-      <InspectorSection title="Folders" icon={<FolderOpen size={16} strokeWidth={2} />}>
+      <InspectorSection title={t("sidepanel.inspector.folders")} icon={<FolderOpen size={16} strokeWidth={2} />}>
         <div className="flex flex-wrap items-center gap-1.5">
           {noteFolders.map((f) => (
             <span
@@ -348,7 +348,7 @@ export function SidePanelContext({ noteId: propNoteId }: { noteId?: string | nul
                 type="button"
                 onClick={() => removeNoteFromFolder(note.id, f.id)}
                 className="rounded-sm p-0.5 transition-colors hover:bg-hover-bg/40"
-                title={`Remove from ${f.name}`}
+                title={`${t("sidepanel.inspector.folders.remove_prefix")} ${f.name}`}
               >
                 <PhX size={10} strokeWidth={2.5} />
               </button>
@@ -358,7 +358,7 @@ export function SidePanelContext({ noteId: propNoteId }: { noteId?: string | nul
             <PopoverTrigger asChild>
               <button className="flex items-center gap-1 rounded-md border border-dashed border-border px-2 py-0.5 text-2xs text-muted-foreground transition-colors hover:border-muted-foreground hover:text-foreground">
                 <PhPlus size={10} strokeWidth={2} />
-                {noteFolders.length === 0 ? "Add to folders" : "Add"}
+                {noteFolders.length === 0 ? t("sidepanel.inspector.folders.add") : t("sidepanel.inspector.folders.add_short")}
               </button>
             </PopoverTrigger>
             <PopoverContent align="start" className="w-56 p-1">
@@ -382,7 +382,7 @@ export function SidePanelContext({ noteId: propNoteId }: { noteId?: string | nul
       <div className="mx-4 border-b border-border" />
 
       {/* Label */}
-      <InspectorSection title="Label" icon={<PhTag size={16} strokeWidth={2} />}>
+      <InspectorSection title={t("sidepanel.inspector.label")} icon={<PhTag size={16} strokeWidth={2} />}>
         <LabelDropdown
           value={note.labelId}
           labels={labels.filter((l) => !l.trashed)}
@@ -394,7 +394,7 @@ export function SidePanelContext({ noteId: propNoteId }: { noteId?: string | nul
       <div className="mx-4 border-b border-border" />
 
       {/* Tags */}
-      <InspectorSection title="Tags" icon={<PhHash size={16} strokeWidth={2} />}>
+      <InspectorSection title={t("sidepanel.inspector.tags")} icon={<PhHash size={16} strokeWidth={2} />}>
         <div className="flex flex-wrap items-center gap-1.5">
           {noteTags.map((tag) => (
             <span
@@ -419,7 +419,7 @@ export function SidePanelContext({ noteId: propNoteId }: { noteId?: string | nul
               <PopoverTrigger asChild>
                 <button className="flex items-center gap-1 rounded-full border border-dashed border-border px-2 py-0.5 text-2xs text-muted-foreground transition-colors hover:border-muted-foreground hover:text-foreground">
                   <PhPlus size={10} strokeWidth={2} />
-                  Add
+                  {t("sidepanel.inspector.tags.add")}
                 </button>
               </PopoverTrigger>
               <PopoverContent align="start" className="w-48 p-1">
@@ -443,7 +443,7 @@ export function SidePanelContext({ noteId: propNoteId }: { noteId?: string | nul
             </Popover>
           )}
           {noteTags.length === 0 && availableTags.length === 0 && (
-            <span className="text-note text-muted-foreground">No tags available</span>
+            <span className="text-note text-muted-foreground">{t("sidepanel.inspector.tags.empty")}</span>
           )}
         </div>
       </InspectorSection>
@@ -452,7 +452,7 @@ export function SidePanelContext({ noteId: propNoteId }: { noteId?: string | nul
 
       {/* Categories — 2026-05-17 cross-entity 확장. WikiCategory 풀 공유.
           inline Create 자동 포함. labelId null + categoryIds 빈 array도 자유. */}
-      <InspectorSection title="Categories" icon={<PhTag size={16} strokeWidth={2} />}>
+      <InspectorSection title={t("sidepanel.inspector.categories")} icon={<PhTag size={16} strokeWidth={2} />}>
         <CategoryPicker
           entityId={note.id}
           selectedCategoryIds={note.categoryIds ?? []}
@@ -487,12 +487,12 @@ export function SidePanelContext({ noteId: propNoteId }: { noteId?: string | nul
       <div className="mx-4 border-b border-border" />
 
       {/* Outline (TOC block > headings fallback) */}
-      <InspectorSection title="Outline" icon={<TextAlignLeft size={16} strokeWidth={2} />}>
+      <InspectorSection title={t("sidepanel.inspector.outline")} icon={<TextAlignLeft size={16} strokeWidth={2} />}>
         {outline.items.length > 0 ? (
           <div className="space-y-0.5">
             {outline.source === "toc" && (
               <div className="mb-1.5 text-2xs uppercase tracking-wider text-muted-foreground/70">
-                From TOC block
+                {t("sidepanel.inspector.outline.from_toc")}
               </div>
             )}
             {outline.items.map((item, i) => (
@@ -519,29 +519,29 @@ export function SidePanelContext({ noteId: propNoteId }: { noteId?: string | nul
             ))}
           </div>
         ) : (
-          <span className="text-note text-muted-foreground">No structure yet</span>
+          <span className="text-note text-muted-foreground">{t("sidepanel.inspector.outline.empty")}</span>
         )}
       </InspectorSection>
 
       <div className="mx-4 border-b border-border" />
 
       {/* Properties */}
-      <InspectorSection title="Properties" icon={<FileText size={16} strokeWidth={2} />}>
+      <InspectorSection title={t("sidepanel.inspector.properties")} icon={<FileText size={16} strokeWidth={2} />}>
         <div className="space-y-2">
           <div className="flex items-center justify-between">
-            <span className="text-note text-muted-foreground">Words</span>
+            <span className="text-note text-muted-foreground">{t("sidepanel.inspector.properties.words")}</span>
             <span className="text-note tabular-nums text-foreground">{wordCount}</span>
           </div>
           <div className="flex items-center justify-between">
-            <span className="text-note text-muted-foreground">Characters</span>
+            <span className="text-note text-muted-foreground">{t("sidepanel.inspector.properties.characters")}</span>
             <span className="text-note tabular-nums text-foreground">{charCount}</span>
           </div>
           <div className="flex items-center justify-between">
-            <span className="text-note text-muted-foreground">Headings</span>
+            <span className="text-note text-muted-foreground">{t("sidepanel.inspector.properties.headings")}</span>
             <span className="text-note tabular-nums text-foreground">{outline.items.filter(i => i.source === "heading").length}</span>
           </div>
           <div className="flex items-center justify-between">
-            <span className="text-note text-muted-foreground">Source</span>
+            <span className="text-note text-muted-foreground">{t("sidepanel.inspector.properties.source")}</span>
             <span className="text-note text-foreground capitalize">{note.source ?? "manual"}</span>
           </div>
         </div>
@@ -550,21 +550,21 @@ export function SidePanelContext({ noteId: propNoteId }: { noteId?: string | nul
       <div className="mx-4 border-b border-border" />
 
       {/* Actions */}
-      <InspectorSection title="Actions" icon={<GitMerge size={16} strokeWidth={2} />}>
+      <InspectorSection title={t("sidepanel.inspector.actions")} icon={<GitMerge size={16} strokeWidth={2} />}>
         <div className="flex flex-col gap-1.5">
           <button
             onClick={() => setMergePickerOpen(true, note.id)}
             className="flex w-full items-center gap-2 rounded-md border border-border bg-card px-3 py-1.5 text-note font-medium text-muted-foreground transition-colors hover:bg-hover-bg hover:text-foreground"
           >
             <GitMerge size={14} strokeWidth={2} />
-            GitMerge with...
+            {t("sidepanel.action.merge")}
           </button>
           <button
             onClick={() => setLinkPickerOpen(true, note.id)}
             className="flex w-full items-center gap-2 rounded-md border border-border bg-card px-3 py-1.5 text-note font-medium text-muted-foreground transition-colors hover:bg-hover-bg hover:text-foreground"
           >
             <PhLink size={14} strokeWidth={2} />
-            Link to...
+            {t("sidepanel.action.link")}
           </button>
         </div>
       </InspectorSection>
@@ -572,8 +572,8 @@ export function SidePanelContext({ noteId: propNoteId }: { noteId?: string | nul
       <div className="mx-4 border-b border-border" />
 
       {/* Attachments (placeholder) */}
-      <InspectorSection title="Attachments" icon={<Paperclip size={16} strokeWidth={2} />}>
-        <span className="text-note text-muted-foreground">No attachments</span>
+      <InspectorSection title={t("sidepanel.inspector.attachments")} icon={<Paperclip size={16} strokeWidth={2} />}>
+        <span className="text-note text-muted-foreground">{t("sidepanel.inspector.attachments.empty")}</span>
       </InspectorSection>
 
     </div>
