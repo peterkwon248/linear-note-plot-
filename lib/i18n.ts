@@ -1067,7 +1067,7 @@ const KO: Partial<Record<DictKey, string>> = {
   // Library view
   "library.title": "자료실",
   "library.overview": "개요",
-  "library.tab.references": "참고문헌",
+  "library.tab.references": "레퍼런스",
   "library.tab.tags": "태그",
   "library.tab.labels": "라벨",
   // (typo guard) — previous version showed "리벨"; this exists only to confirm

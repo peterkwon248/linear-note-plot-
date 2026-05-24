@@ -31,7 +31,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import {
-  Library as Books,
+  Archive as Books,
   Plus,
   FileText,
   Tag,

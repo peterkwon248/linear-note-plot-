@@ -48,7 +48,7 @@ import {
   Network as Graph,
   PieChart as ChartPie,
   CheckSquare as CheckSquareIcon,
-  Library as Books,
+  Archive as Books,
   BookOpen,
   Quote as Quotes,
   Tag as PhTag,

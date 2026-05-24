@@ -27,7 +27,7 @@ import {
 // 2026-05-24: imperial-extras (WikiBook/OntologyWide/Bookshelf) replaced with
 // lucide for activity-bar consistency. WikiBook → IconWiki (BookOpen),
 // OntologyWide → IconOntology (Network), Bookshelf → LibraryIcon (LibraryBig).
-import { Library as BooksIcon, LibraryBig as LibraryIcon } from "lucide-react"
+import { Library as BooksIcon, Archive as LibraryIcon } from "lucide-react"
 import { useSettingsStore } from "@/lib/settings-store"
 import { useT } from "@/lib/i18n"
 import { SPACE_COLORS } from "@/lib/colors"
