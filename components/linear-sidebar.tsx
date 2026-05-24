@@ -819,6 +819,27 @@ export function LinearSidebar() {
               />
             </div>
 
+            {/* Pinned section — placed at top per Linear/Notion 표준 (2026-05-24).
+                즐겨찾기는 가장 자주 접근하는 항목이라 최상단이 자연. */}
+            {pinnedNotes.length > 0 && (
+              <Section title={t("sidebar.section.pinned")}>
+                {pinnedNotes.map((item) => (
+                  <button
+                    key={item.id}
+                    draggable
+                    onDragStart={(e) => setNoteDragData(e, item.id)}
+                    onClick={(e) => openNote(item.id, { forceNewTab: e.ctrlKey || e.metaKey })}
+                    className="a-sb-link"
+                  >
+                    <span className="flex shrink-0 items-center justify-center w-5 h-5">
+                      <StatusShapeIcon status={item.status} size={14} />
+                    </span>
+                    <span className="truncate text-left flex-1">{item.title || "Untitled"}</span>
+                  </button>
+                ))}
+              </Section>
+            )}
+
             {/* Views section — placed above Folders per user preference (2026-05-05). */}
             {renderViewsSection("notes", "/notes")}
 
@@ -966,26 +987,6 @@ export function LinearSidebar() {
               />
             </Section>
 
-            {/* Pinned section */}
-            {pinnedNotes.length > 0 && (
-              <Section title={t("sidebar.section.pinned")}>
-                {pinnedNotes.map((item) => (
-                  <button
-                    key={item.id}
-                    draggable
-                    onDragStart={(e) => setNoteDragData(e, item.id)}
-                    onClick={(e) => openNote(item.id, { forceNewTab: e.ctrlKey || e.metaKey })}
-                    className="a-sb-link"
-                  >
-                    <span className="flex shrink-0 items-center justify-center w-5 h-5">
-                      <StatusShapeIcon status={item.status} size={14} />
-                    </span>
-                    <span className="truncate text-left flex-1">{item.title || "Untitled"}</span>
-                  </button>
-                ))}
-              </Section>
-            )}
-
             {/* Recent section */}
             {recentNotes.length > 0 && (
               <Section title={t("sidebar.section.recent")}>
@@ -1067,6 +1068,27 @@ export function LinearSidebar() {
               {/* Stickers entry lives only in Library (33 design
                   decisions #8 — cross-cutting index). */}
             </div>
+
+            {/* Pinned wiki articles — placed at top per Linear/Notion 표준 (2026-05-24). */}
+            {(() => {
+              const pinnedWiki = notes.filter((n) => n.noteType === "wiki" && !n.trashed && n.pinned)
+              return pinnedWiki.length > 0 ? (
+                <Section title={t("sidebar.section.pinned")}>
+                  {pinnedWiki.map((note) => (
+                    <button
+                      key={note.id}
+                      onClick={(e) => openNote(note.id, { forceNewTab: e.ctrlKey || e.metaKey })}
+                      className="a-sb-link"
+                    >
+                      <span className="flex shrink-0 items-center justify-center w-5 h-5">
+                        <IconDoc size={14} />
+                      </span>
+                      <span className="truncate text-left flex-1">{note.title || "Untitled"}</span>
+                    </button>
+                  ))}
+                </Section>
+              ) : null
+            })()}
 
             {/* Wiki Views */}
             {renderViewsSection("wiki", "/wiki")}
@@ -1191,27 +1213,6 @@ export function LinearSidebar() {
                 </button>
               )}
             </Section>
-
-            {/* Pinned wiki articles */}
-            {(() => {
-              const pinnedWiki = notes.filter((n) => n.noteType === "wiki" && !n.trashed && n.pinned)
-              return pinnedWiki.length > 0 ? (
-                <Section title={t("sidebar.section.pinned")}>
-                  {pinnedWiki.map((note) => (
-                    <button
-                      key={note.id}
-                      onClick={(e) => openNote(note.id, { forceNewTab: e.ctrlKey || e.metaKey })}
-                      className="a-sb-link"
-                    >
-                      <span className="flex shrink-0 items-center justify-center w-5 h-5">
-                        <IconDoc size={14} />
-                      </span>
-                      <span className="truncate text-left flex-1">{note.title || "Untitled"}</span>
-                    </button>
-                  ))}
-                </Section>
-              ) : null
-            })()}
 
             {/* Recent wiki articles */}
             {(() => {
@@ -1450,14 +1451,14 @@ export function LinearSidebar() {
                         className="rounded-md border border-sidebar-border-subtle bg-sidebar-card/30 px-2 py-1.5 cursor-help"
                         title={`${m.totalNotes} notes total — Inbox ${inboxNotes.length} / Capture ${captureNotes.length} / Permanent ${permanentNotes.length}${previewTitles(liveNotes)}`}
                       >
-                        <div className="text-[10px] text-sidebar-muted uppercase tracking-wide">Notes</div>
+                        <div className="text-[10px] text-sidebar-muted uppercase tracking-wide">{t("ontology.legend.notes")}</div>
                         <div className="text-base font-semibold tabular-nums leading-tight">{m.totalNotes}</div>
                       </div>
                       <div
                         className="rounded-md border border-sidebar-border-subtle bg-sidebar-card/30 px-2 py-1.5 cursor-help"
                         title={`${m.totalWiki} wiki articles${previewTitles(wikiArticles?.filter((w: any) => !w.trashed) ?? [])}`}
                       >
-                        <div className="text-[10px] text-sidebar-muted uppercase tracking-wide">Wiki</div>
+                        <div className="text-[10px] text-sidebar-muted uppercase tracking-wide">{t("ontology.legend.wiki")}</div>
                         <div className="text-base font-semibold tabular-nums leading-tight">{m.totalWiki}</div>
                       </div>
                     </div>
@@ -1626,10 +1627,7 @@ export function LinearSidebar() {
               />
             </div>
 
-            {/* Books Views — entity-uniformity (영구 룰 #87: single-entity space는 own Views section 보유) */}
-            {renderViewsSection("books", "/books")}
-
-            {/* Pinned books — surfaces favorite collections (PRD §10) */}
+            {/* Pinned books — placed at top per Linear/Notion 표준 (2026-05-24). */}
             {(() => {
               const pinnedBooks = books
                 .filter((b) => b.pinned && !b.trashed)
@@ -1663,6 +1661,9 @@ export function LinearSidebar() {
                 </Section>
               )
             })()}
+
+            {/* Books Views — entity-uniformity (영구 룰 #87: single-entity space는 own Views section 보유) */}
+            {renderViewsSection("books", "/books")}
 
             {/* Recent books — top 5 by updatedAt (excludes trashed). */}
             {(() => {
