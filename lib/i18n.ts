@@ -1,0 +1,303 @@
+/**
+ * Lightweight i18n for Plot.
+ *
+ * The Settings → Preferences → Language selector writes a 2-letter code into
+ * the `useSettingsStore`. This module exposes a `useT()` hook that returns a
+ * translator bound to that code; missing keys fall through to the English
+ * dictionary so partially-translated locales degrade gracefully rather than
+ * showing raw lookup keys.
+ *
+ * The dictionary is intentionally flat (no nested objects, no plural rules)
+ * to keep the surface small while we figure out what set of strings we
+ * actually want to translate. Add keys as you wire surfaces; missing keys
+ * just fall back to English (or the key itself as a last resort).
+ */
+
+import { useSettingsStore } from "./settings-store"
+
+export type Locale = "en" | "ko" | "ja" | "es" | "fr" | "de"
+
+const EN = {
+  // Generic
+  "common.back_to_app": "Back to app",
+  "common.cancel": "Cancel",
+  "common.save": "Save",
+  "common.delete": "Delete",
+  "common.confirm": "Confirm",
+  "common.loading": "Loading",
+  "common.search": "Search",
+  "common.untitled": "Untitled",
+
+  // Settings — chrome
+  "settings.section.general": "General",
+  "settings.section.data": "Data",
+  "settings.section.info": "Info",
+  "settings.nav.preferences": "Preferences",
+  "settings.nav.appearance": "Appearance",
+  "settings.nav.editor": "Editor",
+  "settings.nav.shortcuts": "Shortcuts",
+  "settings.nav.sync": "Sync & Storage",
+  "settings.nav.backup": "Backup & Export",
+  "settings.nav.about": "About",
+
+  // Settings — Preferences page
+  "settings.preferences.title": "Preferences",
+  "settings.preferences.general": "General",
+  "settings.preferences.language.label": "Language",
+  "settings.preferences.language.description": "Interface display language",
+  "settings.preferences.startview.label": "Start view",
+  "settings.preferences.startview.description": "Default view when opening the app",
+  "settings.preferences.startview.home": "Home",
+  "settings.preferences.startview.all": "All Notes",
+  "settings.preferences.startview.stone": "Stone",
+  "settings.preferences.startview.pinned": "Pinned",
+  "settings.preferences.confirmdelete.label": "Confirm before deleting",
+  "settings.preferences.confirmdelete.description": "Show confirmation dialog when deleting notes",
+  "settings.preferences.srs.title": "Spaced Repetition",
+  "settings.preferences.srs.bulk.label": "Bulk enroll keystone notes",
+  "settings.preferences.srs.bulk.button": "Enroll All",
+
+  // Settings — Appearance page
+  "settings.appearance.title": "Appearance",
+  "settings.appearance.section": "Interface and theme",
+  "settings.appearance.theme": "Theme",
+  "settings.appearance.theme.light": "Light",
+  "settings.appearance.theme.dark": "Dark",
+  "settings.appearance.theme.system": "System",
+  "settings.appearance.fontsize.label": "Interface font size",
+  "settings.appearance.fontsize.description": "Controls the base font size",
+  "settings.appearance.density.label": "Display density",
+  "settings.appearance.density.description": "Compact or comfortable spacing",
+  "settings.appearance.density.compact": "Compact",
+  "settings.appearance.density.default": "Default",
+  "settings.appearance.density.comfortable": "Comfortable",
+
+  // Settings — Editor page
+  "settings.editor.title": "Editor",
+  "settings.editor.editing": "Editing",
+  "settings.editor.linenumbers.label": "Line numbers",
+  "settings.editor.linenumbers.description": "Show line numbers in the editor gutter",
+  "settings.editor.wordwrap.label": "Word wrap",
+  "settings.editor.wordwrap.description": "Wrap long lines instead of horizontal scroll",
+  "settings.editor.codeblocks": "Code blocks",
+  "settings.editor.tabsize.label": "Tab size",
+  "settings.editor.tabsize.description": "Number of spaces per tab",
+  "settings.editor.codefont.label": "Font family",
+  "settings.editor.codefont.description": "Font used in code blocks",
+  "settings.editor.codefont.mono": "Monospace",
+  "settings.editor.codefont.sans": "Sans-serif",
+
+  // Settings — Sync page
+  "settings.sync.title": "Sync & Storage",
+  "settings.sync.storage": "Storage",
+  "settings.sync.storage.label": "Storage location",
+  "settings.sync.storage.description": "Your notes live in this browser's IndexedDB. Use Backup & Export to move them off-device.",
+  "settings.sync.storage.value": "Local (browser)",
+  "settings.sync.reminders": "Backup reminders",
+  "settings.sync.reminders.toggle.label": "Remind me to back up",
+  "settings.sync.reminders.threshold.label": "Reminder threshold",
+  "settings.sync.reminders.threshold.description": "How long without a backup before Plot nudges you.",
+  "settings.sync.reminders.last.label": "Last full backup",
+  "settings.sync.reminders.last.none": "No backup yet — your data only lives in this browser.",
+  "settings.sync.reminders.backup_now": "Back up now",
+  "settings.sync.multidevice": "Multi-device sync",
+  "settings.sync.multidevice.label": "Cloud sync",
+  "settings.sync.multidevice.description": "Plot currently has no cloud sync backend. Use full backups + Import to move data between devices.",
+  "settings.sync.multidevice.value": "Not available",
+
+  // Settings — Backup page
+  "settings.backup.title": "Backup & Export",
+  "settings.backup.full.title": "Full backup",
+  "settings.backup.full.label": "Full data snapshot",
+  "settings.backup.full.description": "Every IndexedDB database (notes, wiki, references, attachments). Recommended before major changes.",
+  "settings.backup.full.button": "Full Backup",
+  "settings.backup.full.preparing": "Preparing…",
+  "settings.backup.full.download_again": "Download again",
+  "settings.backup.restore.label": "Restore from backup",
+  "settings.backup.restore.description": "Load a previously downloaded full backup. Overwrites this browser's Plot data.",
+  "settings.backup.restore.button": "Import…",
+  "settings.backup.restore.busy": "Restoring…",
+  "settings.backup.restore.done": "Restored",
+  "settings.backup.export.title": "Export",
+  "settings.backup.export.json.label": "Export notes (JSON)",
+  "settings.backup.export.json.button": "Export JSON",
+  "settings.backup.export.md.label": "Export as Markdown",
+  "settings.backup.export.md.description": "Download all notes as a single .md file",
+  "settings.backup.export.md.button": "Export Markdown",
+  "settings.backup.danger.title": "Danger zone",
+  "settings.backup.danger.label": "Delete all notes",
+  "settings.backup.danger.description": "Permanently remove all notes. This cannot be undone.",
+  "settings.backup.danger.button": "Delete All",
+  "settings.backup.danger.deleting": "Deleting...",
+
+  // Settings — About page
+  "settings.about.title": "About",
+  "settings.about.section": "Plot",
+  "settings.about.version.label": "Version",
+  "settings.about.version.description": "Current application version",
+  "settings.about.built_with.label": "Built with",
+  "settings.about.built_with.description": "Framework and tools",
+  "settings.about.license.label": "License",
+  "settings.about.license.description": "Open source license",
+
+  // Settings — Shortcuts page
+  "settings.shortcuts.title": "Keyboard Shortcuts",
+  "settings.shortcuts.general": "General",
+  "settings.shortcuts.navigation": "Navigation",
+  "settings.shortcuts.editor": "Editor",
+  "settings.shortcuts.triage": "Triage",
+}
+
+type DictKey = keyof typeof EN
+
+const KO: Partial<Record<DictKey, string>> = {
+  "common.back_to_app": "앱으로 돌아가기",
+  "common.cancel": "취소",
+  "common.save": "저장",
+  "common.delete": "삭제",
+  "common.confirm": "확인",
+  "common.loading": "불러오는 중",
+  "common.search": "검색",
+  "common.untitled": "제목 없음",
+
+  "settings.section.general": "일반",
+  "settings.section.data": "데이터",
+  "settings.section.info": "정보",
+  "settings.nav.preferences": "환경설정",
+  "settings.nav.appearance": "모양새",
+  "settings.nav.editor": "에디터",
+  "settings.nav.shortcuts": "단축키",
+  "settings.nav.sync": "동기화 및 저장",
+  "settings.nav.backup": "백업 및 내보내기",
+  "settings.nav.about": "정보",
+
+  "settings.preferences.title": "환경설정",
+  "settings.preferences.general": "일반",
+  "settings.preferences.language.label": "언어",
+  "settings.preferences.language.description": "인터페이스 표시 언어",
+  "settings.preferences.startview.label": "시작 화면",
+  "settings.preferences.startview.description": "앱을 열 때 기본으로 보여줄 화면",
+  "settings.preferences.startview.home": "홈",
+  "settings.preferences.startview.all": "모든 노트",
+  "settings.preferences.startview.stone": "Stone",
+  "settings.preferences.startview.pinned": "고정됨",
+  "settings.preferences.confirmdelete.label": "삭제 전 확인",
+  "settings.preferences.confirmdelete.description": "노트 삭제 시 확인 대화상자 표시",
+  "settings.preferences.srs.title": "간격 반복 (SRS)",
+  "settings.preferences.srs.bulk.label": "Keystone 노트 일괄 등록",
+  "settings.preferences.srs.bulk.button": "전체 등록",
+
+  "settings.appearance.title": "모양새",
+  "settings.appearance.section": "인터페이스와 테마",
+  "settings.appearance.theme": "테마",
+  "settings.appearance.theme.light": "밝게",
+  "settings.appearance.theme.dark": "어둡게",
+  "settings.appearance.theme.system": "시스템",
+  "settings.appearance.fontsize.label": "인터페이스 글자 크기",
+  "settings.appearance.fontsize.description": "기준 글자 크기를 조정합니다",
+  "settings.appearance.density.label": "표시 밀도",
+  "settings.appearance.density.description": "여유 있는 또는 빼곡한 간격",
+  "settings.appearance.density.compact": "빼곡하게",
+  "settings.appearance.density.default": "기본",
+  "settings.appearance.density.comfortable": "여유 있게",
+
+  "settings.editor.title": "에디터",
+  "settings.editor.editing": "편집",
+  "settings.editor.linenumbers.label": "줄 번호",
+  "settings.editor.linenumbers.description": "에디터 좌측에 줄 번호 표시",
+  "settings.editor.wordwrap.label": "자동 줄바꿈",
+  "settings.editor.wordwrap.description": "긴 줄을 가로 스크롤 대신 자동으로 줄바꿈",
+  "settings.editor.codeblocks": "코드 블록",
+  "settings.editor.tabsize.label": "탭 크기",
+  "settings.editor.tabsize.description": "탭 1개당 공백 개수",
+  "settings.editor.codefont.label": "글꼴",
+  "settings.editor.codefont.description": "코드 블록에 사용할 글꼴",
+  "settings.editor.codefont.mono": "고정폭",
+  "settings.editor.codefont.sans": "산세리프",
+
+  "settings.sync.title": "동기화 및 저장",
+  "settings.sync.storage": "저장 위치",
+  "settings.sync.storage.label": "저장 위치",
+  "settings.sync.storage.description": "노트는 이 브라우저의 IndexedDB에 저장됩니다. 외부로 옮기려면 백업 및 내보내기를 사용하세요.",
+  "settings.sync.storage.value": "로컬 (브라우저)",
+  "settings.sync.reminders": "백업 알림",
+  "settings.sync.reminders.toggle.label": "백업하라고 알려주기",
+  "settings.sync.reminders.threshold.label": "알림 기준 기간",
+  "settings.sync.reminders.threshold.description": "이 기간 동안 백업이 없으면 알림을 표시합니다.",
+  "settings.sync.reminders.last.label": "마지막 전체 백업",
+  "settings.sync.reminders.last.none": "아직 백업이 없습니다 — 데이터는 이 브라우저에만 있습니다.",
+  "settings.sync.reminders.backup_now": "지금 백업하기",
+  "settings.sync.multidevice": "여러 기기 동기화",
+  "settings.sync.multidevice.label": "클라우드 동기화",
+  "settings.sync.multidevice.description": "Plot에는 아직 클라우드 동기화 백엔드가 없습니다. 전체 백업과 가져오기로 기기 간에 데이터를 옮기세요.",
+  "settings.sync.multidevice.value": "사용 불가",
+
+  "settings.backup.title": "백업 및 내보내기",
+  "settings.backup.full.title": "전체 백업",
+  "settings.backup.full.label": "전체 데이터 스냅샷",
+  "settings.backup.full.description": "모든 IndexedDB 데이터베이스 (노트, 위키, 참고문헌, 첨부파일). 큰 변경 전에 권장.",
+  "settings.backup.full.button": "전체 백업",
+  "settings.backup.full.preparing": "준비 중…",
+  "settings.backup.full.download_again": "다시 받기",
+  "settings.backup.restore.label": "백업에서 복원",
+  "settings.backup.restore.description": "이전에 받은 전체 백업 파일을 불러옵니다. 이 브라우저의 Plot 데이터가 덮어쓰여집니다.",
+  "settings.backup.restore.button": "가져오기…",
+  "settings.backup.restore.busy": "복원 중…",
+  "settings.backup.restore.done": "복원 완료",
+  "settings.backup.export.title": "내보내기",
+  "settings.backup.export.json.label": "노트 내보내기 (JSON)",
+  "settings.backup.export.json.button": "JSON으로 내보내기",
+  "settings.backup.export.md.label": "마크다운으로 내보내기",
+  "settings.backup.export.md.description": "모든 노트를 하나의 .md 파일로 다운로드",
+  "settings.backup.export.md.button": "Markdown으로 내보내기",
+  "settings.backup.danger.title": "위험 구역",
+  "settings.backup.danger.label": "모든 노트 삭제",
+  "settings.backup.danger.description": "모든 노트를 영구적으로 삭제합니다. 되돌릴 수 없습니다.",
+  "settings.backup.danger.button": "전체 삭제",
+  "settings.backup.danger.deleting": "삭제 중...",
+
+  "settings.about.title": "정보",
+  "settings.about.section": "Plot",
+  "settings.about.version.label": "버전",
+  "settings.about.version.description": "현재 애플리케이션 버전",
+  "settings.about.built_with.label": "사용 기술",
+  "settings.about.built_with.description": "프레임워크와 도구",
+  "settings.about.license.label": "라이선스",
+  "settings.about.license.description": "오픈소스 라이선스",
+
+  "settings.shortcuts.title": "키보드 단축키",
+  "settings.shortcuts.general": "일반",
+  "settings.shortcuts.navigation": "탐색",
+  "settings.shortcuts.editor": "에디터",
+  "settings.shortcuts.triage": "분류",
+}
+
+const DICTIONARIES: Record<Locale, Partial<Record<DictKey, string>>> = {
+  en: EN,
+  ko: KO,
+  // Japanese / Spanish / French / German fall back to English until
+  // dictionaries are filled in — keeps the UI usable while showing
+  // the user that the toggle persists.
+  ja: {},
+  es: {},
+  fr: {},
+  de: {},
+}
+
+/** Translate a key against the user's current locale, falling back through
+ *  English → the literal key. Safe to call with arbitrary string keys —
+ *  unknown keys return themselves so untranslated surfaces stay legible. */
+export function translate(key: string, locale: Locale): string {
+  const target = DICTIONARIES[locale]
+  const fromTarget = target ? (target as Record<string, string | undefined>)[key] : undefined
+  if (fromTarget) return fromTarget
+  const fromEN = (EN as Record<string, string | undefined>)[key]
+  return fromEN ?? key
+}
+
+/** React hook bound to the Settings store. Returns a `t(key)` function that
+ *  re-renders the caller whenever the active language changes. */
+export function useT(): (key: string) => string {
+  const lang = useSettingsStore((s) => s.language) as Locale
+  return (key: string) => translate(key, lang)
+}

@@ -10,6 +10,8 @@ import { Keyboard } from "@phosphor-icons/react/dist/ssr/Keyboard"
 import { Cloud as PhCloud } from "@phosphor-icons/react/dist/ssr/Cloud"
 import { DownloadSimple } from "@phosphor-icons/react/dist/ssr/DownloadSimple"
 import { Info as PhInfo } from "@phosphor-icons/react/dist/ssr/Info"
+import { useT } from "@/lib/i18n"
+
 interface NavItemProps {
   href: string
   icon: React.ReactNode
@@ -41,37 +43,38 @@ function SectionHeader({ title }: { title: string }) {
   )
 }
 
-const navGroups = [
-  {
-    section: "General",
-    items: [
-      { href: "/settings/preferences", label: "Preferences", icon: <SlidersHorizontal size={16} weight="regular" /> },
-      { href: "/settings/appearance", label: "Appearance", icon: <Palette size={16} weight="regular" /> },
-      { href: "/settings/editor", label: "Editor", icon: <Pen size={16} weight="regular" /> },
-      { href: "/settings/shortcuts", label: "Shortcuts", icon: <Keyboard size={16} weight="regular" /> },
-    ],
-  },
-  {
-    section: "Data",
-    items: [
-      { href: "/settings/sync", label: "Sync & Storage", icon: <PhCloud size={16} weight="regular" /> },
-      { href: "/settings/backup", label: "Backup & Export", icon: <DownloadSimple size={16} weight="regular" /> },
-    ],
-  },
-  {
-    section: "PhInfo",
-    items: [
-      { href: "/settings/about", label: "About", icon: <PhInfo size={16} weight="regular" /> },
-    ],
-  },
-]
-
 export default function SettingsLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
   const pathname = usePathname()
+  const t = useT()
+
+  const navGroups = [
+    {
+      section: t("settings.section.general"),
+      items: [
+        { href: "/settings/preferences", label: t("settings.nav.preferences"), icon: <SlidersHorizontal size={16} weight="regular" /> },
+        { href: "/settings/appearance", label: t("settings.nav.appearance"), icon: <Palette size={16} weight="regular" /> },
+        { href: "/settings/editor", label: t("settings.nav.editor"), icon: <Pen size={16} weight="regular" /> },
+        { href: "/settings/shortcuts", label: t("settings.nav.shortcuts"), icon: <Keyboard size={16} weight="regular" /> },
+      ],
+    },
+    {
+      section: t("settings.section.data"),
+      items: [
+        { href: "/settings/sync", label: t("settings.nav.sync"), icon: <PhCloud size={16} weight="regular" /> },
+        { href: "/settings/backup", label: t("settings.nav.backup"), icon: <DownloadSimple size={16} weight="regular" /> },
+      ],
+    },
+    {
+      section: t("settings.section.info"),
+      items: [
+        { href: "/settings/about", label: t("settings.nav.about"), icon: <PhInfo size={16} weight="regular" /> },
+      ],
+    },
+  ]
 
   return (
     <div className="flex h-screen overflow-hidden bg-background">
@@ -83,7 +86,7 @@ export default function SettingsLayout({
             className="flex w-full items-center gap-2 rounded-md px-2.5 py-1.5 text-ui text-muted-foreground transition-colors hover:bg-hover-bg hover:text-foreground"
           >
             <ArrowLeft size={16} weight="regular" />
-            <span>Back to app</span>
+            <span>{t("common.back_to_app")}</span>
           </Link>
         </div>
 

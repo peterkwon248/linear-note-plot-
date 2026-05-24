@@ -6,6 +6,7 @@ import { DisplayPanel } from "@/components/display-panel"
 import { INSIGHTS_VIEW_CONFIG } from "@/lib/view-engine/view-configs"
 import { DEFAULT_VIEW_STATE } from "@/lib/view-engine/defaults"
 import { usePlotStore } from "@/lib/store"
+import { buildSRSMapFromHooks } from "@/lib/store/hook-selectors"
 import { useBacklinksIndex } from "@/lib/search/use-backlinks-index"
 import { runAnalysis } from "@/lib/analysis/engine"
 import { computeActivityStats } from "@/lib/datalog/helpers"
@@ -258,7 +259,9 @@ function InsightCard({ result }: { result: AnalysisResult }) {
 export function InsightsView() {
   const notes = usePlotStore((s) => s.notes)
   const entityEvents = usePlotStore((s) => s.entityEvents)
-  const srsMap = usePlotStore((s) => s.srsStateByNoteId)
+  // Phase 1b2: derive srsMap from the unified `hooks` slice (back-compat shape).
+  const hooks = usePlotStore((s) => s.hooks)
+  const srsMap = useMemo(() => buildSRSMapFromHooks(hooks), [hooks])
   const backlinks = useBacklinksIndex()
   const [insightsToggles, setInsightsToggles] = useState<Record<string, boolean>>({})
 

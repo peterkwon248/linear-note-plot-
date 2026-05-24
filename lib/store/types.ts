@@ -1,6 +1,6 @@
-import type { Note, NoteBody, Folder, Tag, Label, Sticker, EntityRef, NoteTemplate, WikiTemplate, ActiveView, EntityEvent, Thread, AutopilotRule, AutopilotLogEntry, Relation, RelationType, Attachment, CoOccurrence, RelationSuggestion, WikiClusterSuggestion, WikiInfoboxEntry, WikiCollectionItem, SavedView, WikiArticle, WikiBlock, WikiCategory, Reference, GlobalBookmark, Comment, CommentAnchor, Book, AutoSource, AutoSourceKind, UserInfoboxPreset } from "../types"
+import type { Note, NoteBody, Folder, Tag, Label, Sticker, EntityRef, NoteTemplate, WikiTemplate, ActiveView, EntityEvent, Thread, AutopilotRule, AutopilotLogEntry, Relation, RelationType, Attachment, CoOccurrence, RelationSuggestion, WikiClusterSuggestion, WikiInfoboxEntry, WikiCollectionItem, SavedView, WikiArticle, WikiBlock, WikiCategory, Reference, GlobalBookmark, Comment, CommentAnchor, Book, AutoSource, AutoSourceKind, UserInfoboxPreset, Hook, HookPolicy } from "../types"
 import type { InboxDismissed, InboxSnoozed, InboxItemKind } from "./slices/inbox"
-import type { SRSState, SRSRating } from "@/lib/srs"
+import type { SRSRating } from "@/lib/srs"
 import type { ViewState, ViewContextKey } from "../view-engine/types"
 import type { WorkspaceTab } from "../workspace/types"
 import type { TaskItem } from "@/lib/todo-index"
@@ -158,8 +158,15 @@ export interface PlotState {
   setDualSelection: (sel: DualSelection | null) => void
   setDualRatio: (ratio: number) => void
 
-  // SRS
-  srsStateByNoteId: Record<string, SRSState>
+  // ── Temporal Hooks (unified-temporal-hooks-prd v0.2 Phase 1) ──
+  // Phase 1b3: legacy `srsStateByNoteId` removed. SRS state now lives on
+  // the matching `srs` hook (`trigger.srsState` + `state.srsState`).
+  hooks: Hook[]
+  addHook: (partial: Omit<Hook, "id" | "createdAt">) => string
+  removeHook: (hookId: string) => void
+  updateHook: (hookId: string, patch: Partial<Omit<Hook, "id" | "createdAt">>) => void
+  removeHooksForEntity: (target: EntityRef) => void
+  removeHooksByPolicy: (target: EntityRef, policy: HookPolicy) => void
 
   // ── Autopilot ──
   autopilotEnabled: boolean

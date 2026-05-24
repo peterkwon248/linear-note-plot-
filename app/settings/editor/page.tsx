@@ -2,6 +2,7 @@
 
 import { Switch } from "@/components/ui/switch"
 import { useSettingsStore } from "@/lib/settings-store"
+import { useT } from "@/lib/i18n"
 import {
   SettingsPageTitle,
   SettingsCard,
@@ -11,6 +12,7 @@ import {
 } from "@/components/settings-ui"
 
 export default function EditorPage() {
+  const t = useT()
   const lineNumbers = useSettingsStore((s) => s.lineNumbers)
   const setLineNumbers = useSettingsStore((s) => s.setLineNumbers)
   const wordWrap = useSettingsStore((s) => s.wordWrap)
@@ -21,20 +23,20 @@ export default function EditorPage() {
   const setCodeFontFamily = useSettingsStore((s) => s.setCodeFontFamily)
   return (
     <>
-      <SettingsPageTitle>Editor</SettingsPageTitle>
+      <SettingsPageTitle>{t("settings.editor.title")}</SettingsPageTitle>
 
-      <SettingsCard title="Editing">
-        <SettingRow label="Line numbers" description="Show line numbers in the editor gutter">
+      <SettingsCard title={t("settings.editor.editing")}>
+        <SettingRow label={t("settings.editor.linenumbers.label")} description={t("settings.editor.linenumbers.description")}>
           <Switch checked={lineNumbers} onCheckedChange={setLineNumbers} />
         </SettingRow>
         <Divider />
-        <SettingRow label="Word wrap" description="Wrap long lines instead of horizontal scroll">
+        <SettingRow label={t("settings.editor.wordwrap.label")} description={t("settings.editor.wordwrap.description")}>
           <Switch checked={wordWrap} onCheckedChange={setWordWrap} />
         </SettingRow>
       </SettingsCard>
 
-      <SettingsCard title="Code blocks">
-        <SettingRow label="Tab size" description="Number of spaces per tab">
+      <SettingsCard title={t("settings.editor.codeblocks")}>
+        <SettingRow label={t("settings.editor.tabsize.label")} description={t("settings.editor.tabsize.description")}>
           <SelectControl
             value={tabSize}
             onChange={(v) => setTabSize(v as "2" | "4")}
@@ -45,13 +47,13 @@ export default function EditorPage() {
           />
         </SettingRow>
         <Divider />
-        <SettingRow label="Font family" description="Font used in code blocks">
+        <SettingRow label={t("settings.editor.codefont.label")} description={t("settings.editor.codefont.description")}>
           <SelectControl
             value={codeFontFamily}
             onChange={(v) => setCodeFontFamily(v as "mono" | "sans")}
             options={[
-              { label: "Monospace", value: "mono" },
-              { label: "Sans-serif", value: "sans" },
+              { label: t("settings.editor.codefont.mono"), value: "mono" },
+              { label: t("settings.editor.codefont.sans"), value: "sans" },
             ]}
           />
         </SettingRow>

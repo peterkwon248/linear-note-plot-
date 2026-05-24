@@ -2,6 +2,8 @@
 import { useMemo } from "react"
 import { usePlotStore } from "@/lib/store"
 import type { InboxItemKind } from "@/lib/store/slices/inbox"
+import { getSnoozeHooks, getSRSHooks } from "@/lib/store/hook-selectors"
+import type { SRSState } from "@/lib/srs"
 
 /**
  * Action-based inbox notification queue (Linear 정합).
@@ -31,7 +33,7 @@ export function useInbox(): InboxItem[] {
   const notes = usePlotStore((s) => s.notes)
   const dismissedInboxItems = usePlotStore((s) => s.dismissedInboxItems)
   const snoozedInboxItems = usePlotStore((s) => s.snoozedInboxItems)
-  const srsStateByNoteId = usePlotStore((s) => s.srsStateByNoteId)
+  const hooks = usePlotStore((s) => s.hooks)
   const wikiArticles = usePlotStore((s) => s.wikiArticles)
   const clusterSuggestions = usePlotStore((s) => s.clusterSuggestions)
 
@@ -60,12 +62,15 @@ export function useInbox(): InboxItem[] {
 
     const items: InboxItem[] = []
 
-    // Source: reminder — Note.reviewAt due (today + overdue)
-    for (const note of notes) {
-      if (note.trashed) continue
-      if (!note.reviewAt) continue
-      const dueMs = new Date(note.reviewAt).getTime()
-      if (dueMs > todayEndMs) continue  // future reminder — skip
+    // Source: reminder — snooze hook scheduled <= todayEnd (today + overdue).
+    // Phase 1b2: reads from unified `hooks` slice instead of Note.reviewAt.
+    for (const h of getSnoozeHooks(hooks)) {
+      if (h.target.kind !== "note") continue
+      if (h.trigger.kind !== "scheduled") continue
+      const note = noteById.get(h.target.id)
+      if (!note || note.trashed) continue
+      const dueMs = new Date(h.trigger.at).getTime()
+      if (dueMs > todayEndMs) continue
       if (!isVisible("reminder", note.id)) continue
 
       const overdueDays = Math.floor((now - dueMs) / 86_400_000)
@@ -78,18 +83,24 @@ export function useInbox(): InboxItem[] {
         kind: "reminder",
         sourceId: note.id,
         title: note.title || "Untitled",
-        ts: note.reviewAt,
+        ts: h.trigger.at,
         action,
       })
     }
 
-    // Source: srs — SRS scheduled review 도래 (dueAt <= now)
-    for (const [noteId, srsState] of Object.entries(srsStateByNoteId)) {
-      const dueMs = new Date(srsState.dueAt).getTime()
-      if (dueMs > now) continue  // future — skip
-      if (!isVisible("srs", noteId)) continue
-
-      const note = noteById.get(noteId)
+    // Source: srs — SRS scheduled review 도래 (state.srsState.dueAt <= now).
+    // Phase 1b2: reads from unified `hooks` slice instead of srsStateByNoteId.
+    for (const h of getSRSHooks(hooks)) {
+      if (h.target.kind !== "note") continue
+      const srs: SRSState | undefined =
+        h.trigger.kind === "srs"
+          ? h.trigger.srsState
+          : (h.state as { srsState?: SRSState } | undefined)?.srsState
+      if (!srs) continue
+      const dueMs = new Date(srs.dueAt).getTime()
+      if (dueMs > now) continue
+      if (!isVisible("srs", h.target.id)) continue
+      const note = noteById.get(h.target.id)
       if (!note || note.trashed) continue
 
       const overdueDays = Math.floor((now - dueMs) / 86_400_000)
@@ -97,9 +108,9 @@ export function useInbox(): InboxItem[] {
 
       items.push({
         kind: "srs",
-        sourceId: noteId,
+        sourceId: h.target.id,
         title: note.title || "Untitled",
-        ts: srsState.dueAt,
+        ts: srs.dueAt,
         action,
       })
     }
@@ -185,5 +196,5 @@ export function useInbox(): InboxItem[] {
     items.sort((a, b) => (a.ts < b.ts ? -1 : a.ts > b.ts ? 1 : 0))
 
     return items
-  }, [notes, dismissedInboxItems, snoozedInboxItems, srsStateByNoteId, wikiArticles, clusterSuggestions])
+  }, [notes, dismissedInboxItems, snoozedInboxItems, hooks, wikiArticles, clusterSuggestions])
 }

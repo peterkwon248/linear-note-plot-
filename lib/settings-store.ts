@@ -34,6 +34,18 @@ export interface SettingsState {
   confirmDelete: boolean
   viewMode: "list" | "board"
 
+  // Sync & Backup — Plot ships with no cloud sync backend yet. The "Auto-sync"
+  // surface is therefore wired as an honest *local backup reminder*: when on,
+  // the app nudges once per session if no full backup has been taken recently.
+  backupReminder: boolean
+  /** Threshold in days for the backup-reminder nudge (default 7). */
+  backupReminderDays: number
+  /** ISO timestamp of the last successful `downloadFullBackup()` call. */
+  lastBackupAt: string | null
+  setBackupReminder: (v: boolean) => void
+  setBackupReminderDays: (v: number) => void
+  markBackupTaken: (atIso?: string) => void
+
   // Toolbar
   toolbarLayout: ToolbarLayout
   setToolbarLayout: (layout: ToolbarLayout) => void
@@ -52,7 +64,7 @@ export interface SettingsState {
   setFontSize: (v: string) => void
   setDensity: (v: "compact" | "default" | "comfortable") => void
   setLanguage: (v: string) => void
-  setStartView: (v: "all" | "stone" | "pinned") => void
+  setStartView: (v: "home" | "all" | "stone" | "pinned") => void
   setConfirmDelete: (v: boolean) => void
   setViewMode: (v: "list" | "board") => void
 }
@@ -76,6 +88,11 @@ export const useSettingsStore = create<SettingsState>()(
       startView: "home",
       confirmDelete: true,
       viewMode: "list",
+
+      // Sync & Backup defaults
+      backupReminder: false,
+      backupReminderDays: 7,
+      lastBackupAt: null,
 
       // Toolbar
       toolbarLayout: DEFAULT_TOOLBAR_LAYOUT,
@@ -101,6 +118,9 @@ export const useSettingsStore = create<SettingsState>()(
       setStartView: (v) => set({ startView: v }),
       setConfirmDelete: (v) => set({ confirmDelete: v }),
       setViewMode: (v) => set({ viewMode: v }),
+      setBackupReminder: (v) => set({ backupReminder: v }),
+      setBackupReminderDays: (v) => set({ backupReminderDays: Math.max(1, Math.min(90, Math.round(v))) }),
+      markBackupTaken: (atIso) => set({ lastBackupAt: atIso ?? new Date().toISOString() }),
     }),
     { name: "plot-settings" }
   )

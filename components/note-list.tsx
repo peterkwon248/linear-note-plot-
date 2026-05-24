@@ -22,6 +22,7 @@ import {
   Trash2 as Trash,
 } from "lucide-react"
 import { usePlotStore, filterNotesByRoute, getFilterTitle } from "@/lib/store"
+import { buildDueSnoozeSet } from "@/lib/queries/notes"
 import { useSettingsStore } from "@/lib/settings-store"
 import type { Note, NoteFilter } from "@/lib/types"
 import { StatusDropdown, PriorityDropdown } from "@/components/note-fields"
@@ -193,7 +194,13 @@ export function NoteList({ filter }: { filter: NoteFilter }) {
   const createNote = usePlotStore((s) => s.createNote)
   const folders = usePlotStore((s) => s.folders)
   const tags = usePlotStore((s) => s.tags)
-  const filteredNotes = useMemo(() => filterNotesByRoute(notes, filter, searchQuery), [notes, filter, searchQuery])
+  // Phase 1b2: status-stone route's "snoozed due" check sources from hooks.
+  const hooks = usePlotStore((s) => s.hooks)
+  const dueSnoozeNoteIds = useMemo(() => buildDueSnoozeSet(hooks), [hooks])
+  const filteredNotes = useMemo(
+    () => filterNotesByRoute(notes, filter, searchQuery, dueSnoozeNoteIds),
+    [notes, filter, searchQuery, dueSnoozeNoteIds],
+  )
   const viewTitle = useMemo(() => getFilterTitle(filter, { folders, tags }), [filter, folders, tags])
   const groups = useMemo(() => groupNotesByDate(filteredNotes), [filteredNotes])
 

@@ -29,7 +29,6 @@ function makeNote(overrides: Partial<Note> = {}): Note {
     createdAt: now,
     updatedAt: now,
     triageStatus: "untriaged",
-    reviewAt: null,
     inboxRank: 0,
     summary: null,
     source: null,

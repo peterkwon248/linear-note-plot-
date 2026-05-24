@@ -2366,5 +2366,42 @@ export function migrate(persistedState: unknown): PlotState {
     }
   }
 
+  // v146 → v147: unified-temporal-hooks-prd v0.2 Phase 1b3.
+  // Strip the legacy fields whose data was absorbed by v145→v146:
+  //   - Note.reviewAt                  → snooze hook (kept on hooks slice)
+  //   - WikiArticle.plannedDate        → plan hook
+  //   - PlotState.srsStateByNoteId map → srs hook (state.srsState + trigger.srsState)
+  // Idempotent: re-running on a v147 store is a no-op since the fields are
+  // already absent and `srsStateByNoteId` is undefined.
+  {
+    let strippedNotes = 0
+    if (Array.isArray(state.notes)) {
+      for (const n of state.notes as Array<Record<string, unknown>>) {
+        if ("reviewAt" in n) {
+          delete n.reviewAt
+          strippedNotes++
+        }
+      }
+    }
+    let strippedArticles = 0
+    if (Array.isArray(state.wikiArticles)) {
+      for (const a of state.wikiArticles as Array<Record<string, unknown>>) {
+        if ("plannedDate" in a) {
+          delete a.plannedDate
+          strippedArticles++
+        }
+      }
+    }
+    const hadSRSMap = state.srsStateByNoteId !== undefined
+    if (hadSRSMap) delete state.srsStateByNoteId
+    if (strippedNotes > 0 || strippedArticles > 0 || hadSRSMap) {
+      console.log(
+        `[migrate] v146→v147: stripped legacy temporal fields ` +
+          `(${strippedNotes} note.reviewAt, ${strippedArticles} wikiArticle.plannedDate, ` +
+          `srsStateByNoteId=${hadSRSMap ? "removed" : "absent"})`,
+      )
+    }
+  }
+
   return state as unknown as PlotState
 }

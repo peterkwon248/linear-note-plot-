@@ -1,3 +1,5 @@
+"use client"
+
 import {
   SettingsPageTitle,
   SettingsCard,
@@ -10,13 +12,15 @@ import {
   editorShortcuts,
   triageShortcuts,
 } from "@/lib/shortcuts-data"
+import { useT } from "@/lib/i18n"
 
 export default function ShortcutsPage() {
+  const t = useT()
   return (
     <>
-      <SettingsPageTitle>Keyboard Shortcuts</SettingsPageTitle>
+      <SettingsPageTitle>{t("settings.shortcuts.title")}</SettingsPageTitle>
 
-      <SettingsCard title="General">
+      <SettingsCard title={t("settings.shortcuts.general")}>
         {generalShortcuts.map((s, i) => (
           <div key={s.description}>
             {i > 0 && <Divider />}
@@ -25,7 +29,7 @@ export default function ShortcutsPage() {
         ))}
       </SettingsCard>
 
-      <SettingsCard title="Navigation">
+      <SettingsCard title={t("settings.shortcuts.navigation")}>
         {navShortcuts.map((s, i) => (
           <div key={s.description}>
             {i > 0 && <Divider />}
@@ -34,7 +38,7 @@ export default function ShortcutsPage() {
         ))}
       </SettingsCard>
 
-      <SettingsCard title="Editor">
+      <SettingsCard title={t("settings.shortcuts.editor")}>
         {editorShortcuts.map((s, i) => (
           <div key={s.description}>
             {i > 0 && <Divider />}
@@ -43,7 +47,7 @@ export default function ShortcutsPage() {
         ))}
       </SettingsCard>
 
-      <SettingsCard title="Triage">
+      <SettingsCard title={t("settings.shortcuts.triage")}>
         {triageShortcuts.map((s, i) => (
           <div key={s.description}>
             {i > 0 && <Divider />}

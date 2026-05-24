@@ -51,6 +51,22 @@
 
 ---
 
+## 🚀 2026-05-24 (오후) — Phase 1b 통합 + Settings 전수 wire (8 task 단일 PR) ⭐⭐⭐⭐⭐
+
+**범위**: Phase 1b 전 단계 통합 (1b1 wire + 1b2 read-site 마이그 + 1b3 legacy 제거 + v146→v147 migration) + Settings 5 페이지 전수 wire (Start view 라우팅 / Sync reframe / Line numbers / Backup Restore / i18n).
+
+**핵심 결정 (영구 LOCKED #113~#116)**:
+- **#113 Hook = single source of truth** — legacy 필드 영구 제거. 신규 temporal 기능은 무조건 Hook 위에.
+- **#114 planning intent ≠ content activity 확장** — setReminder가 updatedAt 안 건드림.
+- **#115 Sync = honesty over hype** — fake auto-sync 제거, 솔직한 backup reminder.
+- **#116 i18n = 간단한 dictionary lookup** — 외부 의존성 없이 lib/i18n.ts + useT.
+
+**완료**: Phase 1b1+1b2+1b3 + Settings #1~#5 (8 task). tsc/build clean.
+
+**미완**: Phase 1c (Inbox Do/Review/Detected) — 다음 P0 #1.
+
+---
+
 ## 🚀 2026-05-24 (새벽) — Temporal Hooks PRD v0.2 + Phase 1a foundation ⭐⭐⭐⭐
 
 **범위**: PR #411. PRD v0.1 → v0.2 (Q3/Q4/Q6 RESOLVED). Hook model + slice + v145→v146 migration.

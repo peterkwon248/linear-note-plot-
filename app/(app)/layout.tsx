@@ -1,8 +1,9 @@
 "use client"
 
 import { useState, useEffect, useRef, useCallback } from "react"
-import { usePathname } from "next/navigation"
+import { usePathname, useRouter } from "next/navigation"
 import { useTheme } from "next-themes"
+import { useSettingsStore } from "@/lib/settings-store"
 import { cn } from "@/lib/utils"
 import { LinearSidebar } from "@/components/linear-sidebar"
 import { ActivityBar } from "@/components/activity-bar"
@@ -16,7 +17,7 @@ import { useAutopilotNudges } from "@/hooks/use-autopilot-nudges"
 import { useCoOccurrences } from "@/hooks/use-co-occurrences"
 import { useRelationSuggestions } from "@/hooks/use-relation-suggestions"
 import { useClusterSuggestions } from "@/hooks/use-cluster-suggestions"
-import { Toaster } from "sonner"
+import { Toaster, toast } from "sonner"
 import { ErrorBoundary } from "@/components/error-boundary"
 import { NotesTableView } from "@/components/notes-table-view"
 import { useActiveRoute, syncFromPathname, TABLE_VIEW_ROUTES, VIEW_ROUTES } from "@/lib/table-route"
@@ -54,6 +55,15 @@ const MIN_WIDTH = 200
 const MAX_WIDTH = 320
 const COLLAPSE_THRESHOLD = 80
 
+/** Settings → Preferences "Start view" maps to the actual route the app
+ *  should land on when the user opens it at the root URL. */
+const START_VIEW_ROUTE: Record<"home" | "all" | "stone" | "pinned", string> = {
+  home: "/home",
+  all: "/notes",
+  stone: "/stone",
+  pinned: "/pinned",
+}
+
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const setSelectedNoteId = usePlotStore((s) => s.setSelectedNoteId)
   const sidebarWidth = usePlotStore((s) => s.sidebarWidth)
@@ -69,12 +79,75 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const setPendingWikiAssembly = usePlotStore((s) => s.setPendingWikiAssembly)
   const { resolvedTheme } = useTheme()
   const pathname = usePathname()
+  const router = useRouter()
   const prevPathname = useRef(pathname)
+  const startViewAppliedRef = useRef(false)
 
   // Sync active-route store from pathname (handles direct URL, back/forward)
   useEffect(() => {
     syncFromPathname(pathname)
   }, [pathname])
+
+  // Start view (Settings → Preferences): on first app entry at the root URL,
+  // redirect to the user's chosen landing route. Runs once per session — once
+  // the user navigates anywhere, this stops firing so back/forward behave.
+  // Waits for Zustand persist hydration so we redirect to the *persisted*
+  // value, not the default that's in memory during the first render.
+  useEffect(() => {
+    if (startViewAppliedRef.current) return
+    if (pathname !== "/" && pathname !== "") return
+    const apply = () => {
+      if (startViewAppliedRef.current) return
+      startViewAppliedRef.current = true
+      const v = useSettingsStore.getState().startView
+      const startRoute = START_VIEW_ROUTE[v] ?? "/home"
+      router.replace(startRoute)
+    }
+    if (useSettingsStore.persist.hasHydrated()) {
+      apply()
+    } else {
+      const unsub = useSettingsStore.persist.onFinishHydration(() => {
+        apply()
+        unsub()
+      })
+    }
+  }, [pathname, router])
+
+  // Backup reminder (Settings → Sync & Storage). When enabled and the last
+  // full backup is older than the configured threshold, show a one-time toast
+  // per session encouraging the user to back up.
+  const backupReminderFiredRef = useRef(false)
+  useEffect(() => {
+    if (backupReminderFiredRef.current) return
+    const trigger = () => {
+      if (backupReminderFiredRef.current) return
+      const s = useSettingsStore.getState()
+      if (!s.backupReminder) return
+      const thresholdMs = Math.max(1, s.backupReminderDays) * 24 * 60 * 60 * 1000
+      const lastMs = s.lastBackupAt ? new Date(s.lastBackupAt).getTime() : 0
+      if (lastMs && Date.now() - lastMs < thresholdMs) return
+      backupReminderFiredRef.current = true
+      const daysLabel = s.lastBackupAt
+        ? `${Math.floor((Date.now() - lastMs) / (24 * 60 * 60 * 1000))}d since last backup`
+        : "No backup yet"
+      toast("Time for a backup?", {
+        description: daysLabel + " — Plot only lives in this browser.",
+        action: {
+          label: "Back up",
+          onClick: () => router.push("/settings/backup"),
+        },
+        duration: 8000,
+      })
+    }
+    if (useSettingsStore.persist.hasHydrated()) {
+      trigger()
+    } else {
+      const unsub = useSettingsStore.persist.onFinishHydration(() => {
+        trigger()
+        unsub()
+      })
+    }
+  }, [router])
 
   const activeRoute = useActiveRoute()
   // Dynamic param routes (/folder/[id], /label/[id], /tag/[id]) used to

@@ -514,9 +514,9 @@ export interface WikiArticle {
   hatnotes?: Hatnote[]
   createdAt: string
   updatedAt: string
-  /** Stage 1 (timeline-planning): planned work date for this article (ISO date string).
-   *  undefined = no plan. null = plan explicitly cleared. Stage 2 will expose setter UI. */
-  plannedDate?: string | null
+  // Phase 1b3: `plannedDate` removed. The plan now lives in the unified
+  // `hooks` slice (plan policy, scheduled trigger). Persisted IDB data is
+  // stripped by v146→v147.
 }
 
 /** Saved custom view — user-defined filter/sort/grouping combination */
@@ -571,7 +571,9 @@ export interface Note {
 
   /* ── Workflow fields ─────────────────────────────── */
   triageStatus: TriageStatus
-  reviewAt: string | null
+  // Phase 1b3 (unified-temporal-hooks-prd v0.2): `reviewAt` removed.
+  // Reminders/snoozes now live in the unified `hooks` slice (snooze policy,
+  // scheduled trigger). Persisted IDB data is stripped by v146→v147.
   inboxRank: number
   summary: string | null
   source: NoteSource

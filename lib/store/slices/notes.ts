@@ -134,14 +134,12 @@ export function createNotesSlice(set: Set, get: Get, appendEvent: AppendEventFn)
       set((state: any) => {
         const navigationHistory = (state.navigationHistory as string[]).filter((nId: string) => nId !== id)
         const navigationIndex = Math.min(state.navigationIndex as number, Math.max(0, navigationHistory.length - 1))
-        const { [id]: _, ...restSRS } = state.srsStateByNoteId
         return {
           notes: state.notes
             .map((n: Note) => n.parentNoteId === id ? { ...n, parentNoteId: null } : n)
             .filter((n: Note) => n.id !== id),
           selectedNoteId: state.selectedNoteId === id ? null : state.selectedNoteId,
           entityEvents: state.entityEvents.filter((e: any) => !(e.entity?.kind === "note" && e.entity?.id === id)),
-          srsStateByNoteId: restSRS,
           threads: state.threads.filter((c: any) => c.noteId !== id),
           relations: state.relations.filter(
             (r: any) => r.sourceNoteId !== id && r.targetNoteId !== id
@@ -165,6 +163,12 @@ export function createNotesSlice(set: Set, get: Get, appendEvent: AppendEventFn)
             if (next.length === members.length) return s
             return { ...s, members: next }
           }),
+          // Phase 1b3: cascade temporal hooks targeting the deleted note
+          // (snooze / srs / staleness). The legacy `srsStateByNoteId` map
+          // is gone — the unified hooks slice is the only place to clean.
+          hooks: (state.hooks ?? []).filter(
+            (h: any) => !(h.target?.kind === "note" && h.target?.id === id),
+          ),
           navigationHistory,
           navigationIndex,
         }

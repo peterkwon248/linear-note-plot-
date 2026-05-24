@@ -2,7 +2,6 @@ import { create } from "zustand"
 import { persist } from "zustand/middleware"
 import type { EntityEvent, AutopilotLogEntry, Relation } from "../types"
 import type { Attachment, CoOccurrence, RelationSuggestion } from "../types"
-import type { SRSState } from "@/lib/srs"
 import { buildDefaultViewStates } from "../view-engine/defaults"
 import { createIDBStorage } from "../idb-storage"
 import { createAppendEvent } from "./helpers"
@@ -101,7 +100,6 @@ export const usePlotStore = create<PlotState>()(
         dualSelection: null as import("./types").DualSelection | null,
         dualRatio: 0.4,
         listPaneWidth: 320,
-        srsStateByNoteId: {} as Record<string, SRSState>,
         autopilotEnabled: true,
         autopilotRules: DEFAULT_AUTOPILOT_RULES,
         autopilotLog: [] as AutopilotLogEntry[],
@@ -265,7 +263,7 @@ export const usePlotStore = create<PlotState>()(
     },
     {
       name: "plot-store",
-      version: 146,
+      version: 147,
       storage: createIDBStorage<PlotState>(),
       partialize: (state) => {
         // eslint-disable-next-line @typescript-eslint/no-unused-vars

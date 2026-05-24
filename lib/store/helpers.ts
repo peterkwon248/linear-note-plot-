@@ -66,11 +66,10 @@ export const now = () => new Date().toISOString()
 /** Default workflow fields for a note */
 export function workflowDefaults(status: NoteStatus = "stone"): Pick<
   Note,
-  "triageStatus" | "reviewAt" | "inboxRank" | "summary" | "source" | "promotedAt" | "lastTouchedAt" | "snoozeCount" | "trashedAt" | "parentNoteId"
+  "triageStatus" | "inboxRank" | "summary" | "source" | "promotedAt" | "lastTouchedAt" | "snoozeCount" | "trashedAt" | "parentNoteId"
 > {
   return {
     triageStatus: status === "stone" ? "untriaged" : "kept",
-    reviewAt: null,
     inboxRank: 0,
     summary: null,
     source: "manual",

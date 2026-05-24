@@ -4,6 +4,7 @@ import { useEffect, useRef } from "react"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 import { usePlotStore } from "@/lib/store"
+import { buildSRSMapFromHooks } from "@/lib/store/hook-selectors"
 import { setActiveRoute } from "@/lib/table-route"
 
 /* ── Cooldown helpers ──────────────────────────────────── */
@@ -37,7 +38,9 @@ function setCooldown(type: string): void {
 
 export function useAutopilotNudges(): void {
   const notes = usePlotStore((s) => s.notes)
-  const srsMap = usePlotStore((s) => s.srsStateByNoteId)
+  // Phase 1b2: SRS due counter derives from the unified `hooks` slice.
+  const hooks = usePlotStore((s) => s.hooks)
+  const srsMap = buildSRSMapFromHooks(hooks)
   const clusterSuggestions = usePlotStore((s) => s.clusterSuggestions)
   const setPendingWikiAssembly = usePlotStore((s) => s.setPendingWikiAssembly)
   const firedRef = useRef(false)

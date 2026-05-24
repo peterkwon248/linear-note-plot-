@@ -6,6 +6,138 @@
 
 ---
 
+## 2026-05-24 (오후) — Windows, **Temporal Hooks Phase 1b (1b1+1b2+1b3 통합) + Settings 전수 wire (5/5)**
+
+> 🎯 **다음 즉시 액션 (다음 세션 시작점)**: **Phase 1c — Inbox Do/Review/Detected 섹션 재배선** (PRD §6 + Q6 결정 적용).
+>
+> **사용자 의도**: temporal-hooks Phase 1 마무리. legacy 필드 제거 완료된 hooks 슬라이스를 Inbox UI에 의도 섹션 (Do / Review / Detected)으로 노출. PRD §11 Q6 RESOLVED = "Do 비우기 = Inbox-zero" + Review/Detected는 영원.
+>
+> **첫 스텝** (다른 머신에서 바로 진입):
+> 1. PRD `.omc/plans/unified-temporal-hooks-prd.md` §6 (Inbox layer) 재독 — Do/Review/Detected 정의 + Q6 RESOLVED 노트 확인.
+> 2. `lib/hooks/use-inbox.ts` — 현재 5종 source (reminder/srs/snooze-expired/wiki-redlink/auto-enroll)를 의도 섹션으로 분류:
+>    - **Do** = `loudness:"active"` hooks (reminder + srs due) → 사용자가 *지금* 처리해야 할 항목
+>    - **Review** = `loudness:"passive"` hooks (triageSnooze passive + wiki plan) → 가볍게 살펴봐도 좋음
+>    - **Detected** = wiki-redlink + auto-enroll (자동 감지 후보) — 항상 존재
+>    - snooze-expired는 Do (return path).
+> 3. `InboxItem` 인터페이스에 `section: "do" | "review" | "detected"` 추가, useInbox 반환 시 분류.
+> 4. `components/views/inbox-view.tsx` — 단일 리스트 → 3 섹션 카드 (Linear inbox 정합). 사용자 명시 카피: "All caught up — Review/Detected are always running".
+> 5. EmptyAll 상태 카피 갱신 (Q6 결정 반영).
+>
+> **컴포넌트 구조 / 데이터 흐름**:
+> - `useInbox(): InboxItem[]` → `useInbox(): { do: InboxItem[], review: InboxItem[], detected: InboxItem[] }` (또는 flat array + section field, caller 선호 따라).
+> - `inbox-view.tsx`는 세 섹션을 SettingsCard-패턴 카드로 분리, 각 카드에 "N items" 카운트.
+> - Do empty + Review/Detected non-empty = "Inbox-zero" 메시지.
+> - 모든 section은 항상 표시 (Detected가 0이어도 카드 자체는 보임 — Q6의 "영원" 정합).
+>
+> **Hook → section 매핑** (참고):
+> ```
+> snooze + active           → Do (reminder due)
+> srs                       → Do (review due)
+> snooze + passive          → Review (intentional snooze)
+> plan (wiki)               → Review (planned horizon)
+> wiki-redlink (non-hook)   → Detected
+> auto-enroll (non-hook)    → Detected
+> snooze-expired (transient)→ Do (sticky return path)
+> ```
+>
+> **위험 + 회피**:
+> - Inbox UI re-layout 큼 — 단일 PR로 가능하지만 Phase 1c1 (useInbox 분류만) + Phase 1c2 (UI 분리)로 쪼개도 OK.
+> - section 카운트가 0인 카드 처리 — empty state 카피 (Q6 정합).
+> - 기존 dismissedInboxItems / snoozedInboxItems 패턴 keep (cross-section).
+> - 사용자가 Q6 결정에 "Detected는 영원" 명시 — 빈 Detected 카드도 렌더링 (단, 빈 상태 카피).
+>
+> **참고 파일** (Phase 1c 작업 시):
+> - `.omc/plans/unified-temporal-hooks-prd.md` §6 + §11 Q6 (RESOLVED)
+> - `lib/hooks/use-inbox.ts` — section 분류 추가 대상
+> - `components/views/inbox-view.tsx` — 3 섹션 UI 재구성
+> - `lib/store/slices/inbox.ts` — InboxItemKind union (변경 없을 가능성 높음)
+> - `lib/store/hook-selectors.ts` (이번 세션 신규) — getSnoozeHooks/getSRSHooks 재활용
+>
+> **2번째 P0 후보** (#1 끝나면):
+> - i18n 확장 — JA/ES/FR/DE dictionary 채우기. 현재 EN+KO만 완전. 사용자 신호 시.
+> - Settings i18n 외 surface 확장 — sidebar nav 라벨, activity bar tooltip, command palette. 부분 적용 권장.
+>
+> **3번째 P0 후보**: Phase 2 — watch + recurring hooks + 우클릭 프리셋 + 타임라인 드래그. PRD §11 Q1/Q5 결정 필요.
+>
+> **머신**: Windows.
+> **현재 main HEAD**: 이번 PR 머지 후.
+> **branch worktree**: `claude/kind-chaplygin-12bdbb` (cleanup 후 새 worktree 권장).
+
+### 완료 (이번 세션 — 8 task, 단일 PR)
+
+**Phase 1b — Temporal Hooks 완성 (3 task)**:
+
+1. **Phase 1b1** (`lib/store/slices/workflow.ts`, `lib/store/slices/wiki-articles.ts`):
+   - workflow.ts: setReminder/clearReminder/batchSetReminder/triageKeep/triageSnooze → addHook(snooze, scheduled) + dual-write
+   - workflow.ts: enrollSRS/unenrollSRS/reviewSRS/enrollAllPermanentSRS → addHook(srs) + dual-write
+   - wiki-articles.ts: setWikiArticlePlannedDate → addHook(plan, scheduled, passive) + dual-write
+2. **Phase 1b2** — read-site 마이그 12+ 파일:
+   - 신규 `lib/store/hook-selectors.ts` — getReminderForNote/getSRSStateForNote/getPlannedDateForWiki/buildSRSMapFromHooks 등
+   - `lib/queries/notes.ts` getReviewQueue 시그니처 변경 (srsMap → hooks), getInboxNotes에 dueSnoozeNoteIds 파라미터
+   - `lib/hooks/use-inbox.ts`, `inbox-view.tsx` useNextUp, `linear-sidebar.tsx` Upcoming Reminders
+   - `wiki-timeline-view.tsx` plannedDateByArticleId Map + horizonForArticle adapter
+   - `wiki-utils.ts` getHorizon/getHorizonSource 시그니처에 plannedDate 파라미터
+   - insights-view.tsx srsMap, app/settings/preferences/page.tsx 등 카운트 산출
+   - notes.ts deleteNote + wiki-articles.ts deleteWikiArticle — hooks cascade
+3. **Phase 1b3** — legacy 제거 + v146→v147:
+   - workflow.ts/wiki-articles.ts dual-write 모두 제거 (set notes.reviewAt + srsStateByNoteId + plannedDate 모두 삭제)
+   - `lib/types.ts` Note.reviewAt 제거, WikiArticle.plannedDate 제거
+   - `lib/store/types.ts` PlotState.srsStateByNoteId 제거 + Hook/HookPolicy 등록 + hooks action 시그니처 추가
+   - `lib/store/index.ts` initialState srsStateByNoteId 제거 + persist version 146 → 147
+   - `lib/store/migrate.ts` v146→v147 (notes.reviewAt strip / wikiArticles.plannedDate strip / srsStateByNoteId 삭제, idempotent)
+   - `lib/view-engine/filter.ts` reviewAt operator drop, `types.ts` FilterField에서 reviewAt 제거
+   - `lib/store/helpers.ts` workflowDefaults에서 reviewAt 제거
+   - 3 test fixture (analysis/autopilot/pipeline) reviewAt 제거
+
+**Settings 전수 wire (5 task — 사용자 "모든 부분이 구현되어야 한다")**:
+
+4. **Settings #1 Start view** — `app/(app)/layout.tsx`에 startView 라우팅 useEffect 추가 (root URL 진입 시 router.replace, persist hydration 대기). `app/settings/preferences/page.tsx`에 Home 옵션 추가.
+5. **Settings #2 Auto-sync → 솔직한 backup reminder reframe** — `lib/settings-store.ts`에 backupReminder/backupReminderDays/lastBackupAt + setters/markBackupTaken 추가. `app/settings/sync/page.tsx` 재작성 (Storage / Backup reminders / Multi-device sync 3 카드). `app/(app)/layout.tsx`에 backup reminder toast (threshold 초과 시 once-per-session). backup 페이지 handleFullBackup이 markBackupTaken 호출.
+6. **Settings #3 Line numbers** — `TipTapEditor.tsx`에 `data-line-numbers` attr 추가. `EditorStyles.css`에 CSS counter 기반 gutter 추가 (`.ProseMirror > *::before`로 모든 top-level block에 줄 번호).
+7. **Settings #4 Backup Restore (Import)** — `lib/idb-backup.ts`에 `restoreFromBackup` + `restoreFromFile` + `RestoreSummary` 신규. base64ToArrayBuffer + openDbForRestore (store 없으면 version bump). `app/settings/backup/page.tsx`에 Import 버튼 + 파일 input + confirm dialog + 자동 reload.
+8. **Settings #5 Language (i18n)** — 신규 `lib/i18n.ts` (Locale union + EN/KO 완전 dictionary + ja/es/fr/de placeholders + translate 함수 + useT 훅). 모든 Settings 페이지 + layout + nav가 useT 사용. 한국어 전환 viewport 검증 완료.
+
+검증: tsc clean × 4, build exit 0 × 3 (각 Phase 1b 단계 후 + 최종).
+
+### 브레인스토밍 & 큰 결정 (영구 LOCKED #113~#116)
+
+- **#113 LOCKED (2026-05-24 오후)**: **Hook = single source of truth**. legacy 필드 (`Note.reviewAt`, `WikiArticle.plannedDate`, `srsStateByNoteId`) 영구 제거. 1-step migration (Q3) 완수. 신규 temporal 기능은 무조건 Hook 위에.
+- **#114 LOCKED (2026-05-24 오후)**: **planning intent ≠ content activity** 확장. setReminder/clearReminder/batchSetReminder는 `notes.updatedAt`을 갱신하지 않음 (#89 wiki 한정 룰을 note까지 확장). triageSnooze는 여전히 triageStatus/snoozeCount/lastTouchedAt 갱신 (non-temporal workflow state).
+- **#115 LOCKED (2026-05-24 오후)**: **Sync 페이지는 honesty over hype**. Plot은 cloud sync 백엔드 없음 — fake auto-sync checkbox 제거. backup reminder + "Multi-device sync: Not available" 명시 disclosure가 정통. 사용자 신뢰 보존.
+- **#116 LOCKED (2026-05-24 오후)**: **i18n = 간단한 dictionary lookup**. next-intl 등 추가 의존성 없이 `lib/i18n.ts` 단일 파일 + `useT()` 훅으로 충분. 미번역 키는 EN fallback → literal key fallback (정상 동작 보장). 새 키 추가 = 단순 dict 갱신.
+
+### 기술 학습 (영구)
+
+- **Zustand persist hydration 타이밍**: 첫 mount의 useEffect는 persist 비동기 hydration 전에 fire 가능 → 잘못된 default value 읽음. 해결: `useSettingsStore.persist.hasHydrated()` 체크 + `onFinishHydration` 콜백으로 wrap. AppLayout의 startView/backupReminder 둘 다 이 패턴.
+- **getReviewQueue/filterNotesByRoute 같은 pure 헬퍼는 set/precomputed param이 best**. hooks 전체를 통째로 받으면 deps array가 매번 변경. caller가 `dueSnoozeNoteIds = useMemo(buildDueSnoozeSet(hooks), [hooks])`로 미리 계산 후 전달.
+- **SRS state mirror = trigger.srsState + state.srsState 둘 다 set**. v145→v146 migration 패턴 정합. 추후 Phase 2에서 단일화 가능하지만 현재는 양쪽 keep (read-site는 trigger 우선).
+- **Backup restore — openDbForRestore 패턴**: 첫 plain open으로 store 존재 확인 → 없으면 version+1 upgrade로 createObjectStore. keyPath는 "kv" 외에는 모두 "id". 사용자가 fresh browser에 backup import할 때도 동작.
+- **CSS counter 기반 line numbers**: `.ProseMirror`에 `counter-reset: editor-line`, `> *::before { counter-increment: editor-line; content: counter(editor-line); }`. position: absolute + padding-left로 gutter. TipTap NodeView 필요 없음.
+- **i18n dictionary 패턴**: flat key (`"settings.preferences.title"`) + 중첩 X. Partial<Record<DictKey, string>>로 부분 번역 허용. translate() 함수에서 target → EN → key 순서 fallback. useT() 훅으로 React reactive.
+- **router.replace vs push for start-view**: 사용자가 "/" 진입 시 의도가 "랜딩 화면 보기"라 history 누적 X = replace. push면 back 버튼이 "/"로 돌아갔다가 다시 redirect되는 loop.
+
+### Watch Out (다음 세션)
+
+- **Phase 1c는 사용자 viewport 검증부터**: Phase 1b 마이그가 모든 시각 surface에 반영됐는지 (Inbox 카운트, sidebar Upcoming, timeline plannedDate, SRS due) 사용자가 확인 후 진입.
+- **i18n placeholders (ja/es/fr/de)**: 사용자가 다른 언어 선택 시 EN fallback. 명시 disclosure 없으니 사용자가 토글 후 "변화 없네?" 혼란 가능 — 추후 alert/badge 검토.
+- **Line numbers + collaborative editing**: TipTap collab (Y.Doc) 사용 시 ProseMirror 구조가 다를 수 있음. 현재 CSS rule은 `.ProseMirror > *` selector — 어떤 DOM이든 작동해야 하지만 사용자 viewport 확인 권장.
+- **Backup restore 후 reload — 사용자 의도치 않은 데이터 손실 위험**: 현재 confirm dialog 1단. 더 두꺼운 confirm (note count 차이 보여주기) 검토.
+- **viewMode (settings-store 필드)**: notes-table-view.tsx에서 읽지만 UI 토글 없음 — dead field일 가능성. 이번 세션에 손대지 않음. 다음 세션에 확인.
+
+### 환경 변경
+
+- Store: **v146 → v147** (legacy 필드 strip)
+- 신규 파일 2: `lib/store/hook-selectors.ts`, `lib/i18n.ts`
+- 변경 파일 ~30: types.ts, 모든 settings pages, layouts, store slices, queries
+- Tests: TS-check clean, build clean
+- 사용자 IDB stale data: 자동 처리 (v146→v147 migration이 strip). 첫 진입 시 console.log로 strip 카운트 출력.
+
+### 머신
+
+Windows. cohesive 8-task 단일 PR 세션 (Phase 1b 통합 마무리 + 사용자 Settings audit 요청 → 5/5 wire).
+
+---
+
 ## 2026-05-24 (새벽) — Windows, **Temporal Hooks PRD v0.2 + Phase 1a foundation (Hook model + slice + v145→v146 migration)**
 
 > 🎯 **다음 즉시 액션 (다음 세션 시작점)**: **Phase 1b — workflow.ts wire + read-site 변경 + legacy 필드 제거**.

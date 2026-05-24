@@ -197,27 +197,33 @@ function InboxRowFull({
  */
 function useNextUp(): { ts: string; label: string; kind: "reminder" | "srs" | "snooze" } | null {
   const notes = usePlotStore((s) => s.notes)
-  const srsStateByNoteId = usePlotStore((s) => s.srsStateByNoteId)
+  const hooks = usePlotStore((s) => s.hooks)
   const snoozedInboxItems = usePlotStore((s) => s.snoozedInboxItems)
 
   return (() => {
     const now = Date.now()
     const candidates: Array<{ ts: string; label: string; kind: "reminder" | "srs" | "snooze" }> = []
+    const noteById = new Map(notes.map((n) => [n.id, n]))
 
-    // Future reminders
-    for (const note of notes) {
-      if (note.trashed || !note.reviewAt) continue
-      if (new Date(note.reviewAt).getTime() <= now) continue
-      candidates.push({ ts: note.reviewAt, label: note.title || "Untitled", kind: "reminder" })
-    }
-
-    // Future SRS due
-    for (const [noteId, state] of Object.entries(srsStateByNoteId)) {
-      if (!state?.dueAt) continue
-      if (new Date(state.dueAt).getTime() <= now) continue
-      const note = notes.find((n) => n.id === noteId)
+    // Future reminders + future SRS due — both sourced from unified hooks (Phase 1b2).
+    for (const h of hooks) {
+      if (h.target.kind !== "note") continue
+      const note = noteById.get(h.target.id)
       if (!note || note.trashed) continue
-      candidates.push({ ts: state.dueAt, label: note.title || "Untitled", kind: "srs" })
+      if (h.policy === "snooze" && h.trigger.kind === "scheduled") {
+        const dueMs = new Date(h.trigger.at).getTime()
+        if (dueMs <= now) continue
+        candidates.push({ ts: h.trigger.at, label: note.title || "Untitled", kind: "reminder" })
+      } else if (h.policy === "srs") {
+        const srs =
+          h.trigger.kind === "srs"
+            ? h.trigger.srsState
+            : (h.state as { srsState?: { dueAt?: string } } | undefined)?.srsState
+        if (!srs?.dueAt) continue
+        const dueMs = new Date(srs.dueAt).getTime()
+        if (dueMs <= now) continue
+        candidates.push({ ts: srs.dueAt, label: note.title || "Untitled", kind: "srs" })
+      }
     }
 
     // Snoozed (will reappear at snoozedUntil)

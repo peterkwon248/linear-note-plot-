@@ -712,6 +712,34 @@
   font-family: var(--font-sans, 'Geist', system-ui, -apple-system, sans-serif);
 }
 
+/* Line numbers (Settings → Editor → Line numbers).
+ * CSS counter-based numbering on every top-level block (paragraphs, headings,
+ * lists, code blocks, …). Numbers render in a dim gutter to the left of the
+ * content without disturbing the existing typography. */
+[data-line-numbers="on"] .ProseMirror {
+  counter-reset: editor-line;
+}
+[data-line-numbers="on"] .ProseMirror > * {
+  position: relative;
+  padding-left: 2.75rem;
+}
+[data-line-numbers="on"] .ProseMirror > *::before {
+  counter-increment: editor-line;
+  content: counter(editor-line);
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 2rem;
+  text-align: right;
+  color: var(--muted-foreground, #94a3b8);
+  font-variant-numeric: tabular-nums;
+  font-size: 0.78em;
+  line-height: 1.6;
+  user-select: none;
+  pointer-events: none;
+  opacity: 0.55;
+}
+
 /* Scrollbar for code blocks */
 .ProseMirror pre::-webkit-scrollbar {
   height: 6px;
