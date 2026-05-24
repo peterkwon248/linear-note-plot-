@@ -1676,8 +1676,8 @@ export function LinearSidebar() {
             <div className="space-y-px">
               <NavLink
                 href="/books"
-                icon={<Books size={20} />}
-                label="All Books"
+                icon={<BookOpen size={20} />}
+                label={t("books.all_books")}
                 count={books.filter((b) => !b.trashed).length || undefined}
                 active={isActive("/books")}
               />
