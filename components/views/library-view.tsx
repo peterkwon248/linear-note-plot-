@@ -1020,6 +1020,7 @@ function LibraryOverview() {
 type FilesSortField = "name" | "size" | "fileType" | "createdAt"
 
 function FilesView() {
+  const t = useT()
   const attachments = usePlotStore((s) => s.attachments)
   const addAttachment = usePlotStore((s) => s.addAttachment)
   const removeAttachment = usePlotStore((s) => s.removeAttachment)
@@ -1169,7 +1170,7 @@ function FilesView() {
     <div className="flex-1 flex flex-col overflow-hidden">
       <ViewHeader
         icon={<Folder strokeWidth={2} className="h-4 w-4" />}
-        title="Files"
+        title={t("library.tab.files")}
         titleNode={<LibraryBreadcrumb current="files" count={activeAttachments.length} />}
         count={activeAttachments.length}
         onCreateNew={() => fileInputRef.current?.click()}
@@ -1594,6 +1595,7 @@ function FilesView() {
 /* ── References View ─────────────────────────────── */
 
 function ReferencesView() {
+  const t = useT()
   const references = usePlotStore((s) => s.references)
   const createReference = usePlotStore((s) => s.createReference)
   const deleteReference = usePlotStore((s) => s.deleteReference)
@@ -1880,7 +1882,7 @@ function ReferencesView() {
     <div className="flex-1 flex flex-col overflow-hidden">
       <ViewHeader
         icon={<Quotes strokeWidth={2} className="h-4 w-4" />}
-        title="References"
+        title={t("library.tab.references")}
         titleNode={<LibraryBreadcrumb current="references" count={totalCount} />}
         count={totalCount}
         searchPlaceholder="Search references..."

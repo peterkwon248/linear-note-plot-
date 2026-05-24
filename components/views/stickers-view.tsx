@@ -33,6 +33,7 @@ import { ColorPickerGrid } from "@/components/color-picker-grid"
 import { PRESET_COLORS } from "@/lib/colors"
 import type { Sticker } from "@/lib/types"
 import { ViewHeader } from "@/components/view-header"
+import { useT } from "@/lib/i18n"
 import { LibraryBreadcrumb } from "@/components/library/library-breadcrumb"
 import { DisplayPanel } from "@/components/display-panel"
 import { FilterPanel } from "@/components/filter-panel"
@@ -78,6 +79,7 @@ type StickerRenderItem =
   | { type: "item"; sticker: StickerWithCount; itemIndex: number }
 
 export function StickersView() {
+  const t = useT()
   const stickers = usePlotStore((s) => s.stickers)
   const notes = usePlotStore((s) => s.notes)
   const wikiArticles = usePlotStore((s) => s.wikiArticles)
@@ -820,7 +822,7 @@ export function StickersView() {
     <div className="flex flex-1 flex-col overflow-hidden">
       <ViewHeader
         icon={<StickerIcon size={20} strokeWidth={2} />}
-        title="Stickers"
+        title={t("library.tab.stickers")}
         titleNode={<LibraryBreadcrumb current="stickers" count={flatCount} />}
         count={flatCount}
         onCreateNew={() => setCreating(true)}

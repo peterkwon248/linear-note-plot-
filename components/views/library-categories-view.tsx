@@ -13,6 +13,7 @@ import { useActiveCategoryId, setActiveCategoryView, setWikiViewMode } from "@/l
 import { setActiveRoute } from "@/lib/table-route"
 import { navigateToWikiArticle } from "@/lib/wiki-article-nav"
 import { ViewHeader } from "@/components/view-header"
+import { useT } from "@/lib/i18n"
 import { WikiCategoryPage } from "./wiki-category-page"
 import { useSaveViewProps } from "@/lib/view-engine/use-save-view-props"
 
@@ -33,6 +34,7 @@ import { useSaveViewProps } from "@/lib/view-engine/use-save-view-props"
  * - WikiCategoryPage 컴포넌트는 재사용 (presentation layer는 wiki/library 공통).
  */
 export function LibraryCategoriesView() {
+  const t = useT()
   const router = useRouter()
   const sidePanelOpen = usePlotStore((s) => s.sidePanelOpen)
   const createWikiCategory = usePlotStore((s) => s.createWikiCategory)
