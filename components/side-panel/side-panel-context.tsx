@@ -71,8 +71,10 @@ function InspectorSection({
 
 import { extractOutlineFromContentJson, type OutlineResult } from "@/lib/anchor-utils"
 import { InBooksSection } from "@/components/books/in-books-section"
+import { useT } from "@/lib/i18n"
 
 export function SidePanelContext({ noteId: propNoteId }: { noteId?: string | null }) {
+  const t = useT()
   const selectedNoteId = usePlotStore((s) => s.selectedNoteId)
   const previewNoteId = usePlotStore((s) => s.previewNoteId)
   const noteId = propNoteId ?? selectedNoteId ?? previewNoteId
@@ -127,7 +129,7 @@ export function SidePanelContext({ noteId: propNoteId }: { noteId?: string | nul
   if (!note) return (
     <div className="flex flex-1 flex-col items-center justify-center gap-3 text-muted-foreground px-4">
       <PhInfo size={24} strokeWidth={1.5} className="text-muted-foreground/70" />
-      <p className="text-note text-center">Select a note to see details</p>
+      <p className="text-note text-center">{t("sidepanel.empty.select_note")}</p>
     </div>
   )
 

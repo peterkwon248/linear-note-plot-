@@ -3,6 +3,7 @@ import { useMemo } from "react"
 import { usePlotStore } from "@/lib/store"
 import type { InboxItemKind } from "@/lib/store/slices/inbox"
 import { getSnoozeHooks, getSRSHooks, getPlanHooks } from "@/lib/store/hook-selectors"
+import { useT } from "@/lib/i18n"
 import type { SRSState } from "@/lib/srs"
 
 /**
@@ -54,6 +55,7 @@ function sectionFor(kind: InboxItemKind): InboxSection {
     case "reminder":
     case "plan-due":
     case "snooze-expired":
+    case "task":
       return "do"
     case "srs":
       return "review"
@@ -70,6 +72,8 @@ export function useInbox(): InboxItem[] {
   const hooks = usePlotStore((s) => s.hooks)
   const wikiArticles = usePlotStore((s) => s.wikiArticles)
   const clusterSuggestions = usePlotStore((s) => s.clusterSuggestions)
+  const todoTasks = usePlotStore((s) => s.todoTasks)
+  const t = useT()
 
   return useMemo(() => {
     const now = Date.now()
@@ -113,14 +117,14 @@ export function useInbox(): InboxItem[] {
 
       const overdueDays = Math.floor((now - dueMs) / 86_400_000)
       const action =
-        overdueDays >= 1 ? `Overdue ${overdueDays}d` :
-        dueMs <= now ? "Due now" :
-        "Due today"
+        overdueDays >= 1 ? t("inbox.action.overdue_days").replace("{count}", String(overdueDays)) :
+        dueMs <= now ? t("inbox.action.due_now") :
+        t("inbox.action.due_today")
 
       push({
         kind: "reminder",
         sourceId: note.id,
-        title: note.title || "Untitled",
+        title: note.title || t("common.untitled"),
         ts: h.trigger.at,
         action,
       })
@@ -142,12 +146,14 @@ export function useInbox(): InboxItem[] {
       if (!note || note.trashed) continue
 
       const overdueDays = Math.floor((now - dueMs) / 86_400_000)
-      const action = overdueDays >= 1 ? `Review overdue ${overdueDays}d` : "Review now"
+      const action = overdueDays >= 1
+        ? t("inbox.action.review_overdue").replace("{count}", String(overdueDays))
+        : t("inbox.action.review_now")
 
       push({
         kind: "srs",
         sourceId: h.target.id,
-        title: note.title || "Untitled",
+        title: note.title || t("common.untitled"),
         ts: srs.dueAt,
         action,
       })
@@ -167,14 +173,14 @@ export function useInbox(): InboxItem[] {
 
       const overdueDays = Math.floor((now - dueMs) / 86_400_000)
       const action =
-        overdueDays >= 1 ? `Overdue ${overdueDays}d` :
-        dueMs <= now ? "Plan due now" :
-        "Plan due today"
+        overdueDays >= 1 ? t("inbox.action.overdue_days").replace("{count}", String(overdueDays)) :
+        dueMs <= now ? t("inbox.action.plan_due_now") :
+        t("inbox.action.plan_due_today")
 
       push({
         kind: "plan-due",
         sourceId: article.id,
-        title: article.title || "Untitled",
+        title: article.title || t("common.untitled"),
         ts: h.trigger.at,
         action,
       })
@@ -188,14 +194,14 @@ export function useInbox(): InboxItem[] {
 
       // 원본 entity title 해소 (reminder/srs → note title)
       const note = noteById.get(snoozed.sourceId)
-      const title = note ? (note.title || "Untitled") : snoozed.sourceId
+      const title = note ? (note.title || t("common.untitled")) : snoozed.sourceId
 
       push({
         kind: "snooze-expired",
         sourceId: snoozed.sourceId,
         title,
         ts: snoozed.snoozedUntil,
-        action: "Snooze ended",
+        action: t("inbox.action.snooze_ended"),
         meta: `(was ${snoozed.kind})`,
       })
     }
@@ -234,8 +240,36 @@ export function useInbox(): InboxItem[] {
         sourceId: normalized,
         title: redLinkOriginal.get(normalized) ?? normalized,
         ts: maxTs || new Date().toISOString(),
-        action: "Create wiki?",
-        meta: `${refs.size} notes`,
+        action: t("inbox.action.create_wiki"),
+        meta: t("inbox.meta.notes_count").replace("{count}", String(refs.size)),
+      })
+    }
+
+    // Source: task — incomplete checkbox in any note body (Phase α-1 Inbox
+    // 흡수). Memory parked → LOCKED: Todos 별도 view 폐기 방향으로 가는 첫
+    // step. todoTasks는 todo-index가 자동 rebuild (노트 본문 walk).
+    // sourceId = task.id (composite noteId:position), title = task.text,
+    // meta = source note title, ts = note.updatedAt (task 자체 ts 없음).
+    for (const task of todoTasks) {
+      if (task.checked) continue
+      if (!isVisible("task", task.id)) continue
+      const note = noteById.get(task.noteId)
+      if (!note || note.trashed) continue
+
+      // "Quick Tasks" auto-generated note title → localized label.
+      // Keep the underlying note title as English (data) so existing
+      // store lookups (find by title === "Quick Tasks") still work.
+      const sourceLabel =
+        note.title === "Quick Tasks"
+          ? t("todos.quick_tasks_note")
+          : note.title || t("common.untitled")
+
+      push({
+        kind: "task",
+        sourceId: task.id,
+        title: task.text || t("common.untitled_task"),
+        ts: note.updatedAt,
+        meta: sourceLabel,
       })
     }
 
@@ -252,8 +286,8 @@ export function useInbox(): InboxItem[] {
         sourceId: suggestion.id,
         title: extraCount > 0 ? `${firstTitle} +${extraCount}` : firstTitle,
         ts: suggestion.createdAt,
-        action: "Enroll wiki?",
-        meta: `${suggestion.noteIds.length} notes`,
+        action: t("inbox.action.enroll_wiki"),
+        meta: t("inbox.meta.notes_count").replace("{count}", String(suggestion.noteIds.length)),
       })
     }
 
@@ -261,7 +295,7 @@ export function useInbox(): InboxItem[] {
     items.sort((a, b) => (a.ts < b.ts ? -1 : a.ts > b.ts ? 1 : 0))
 
     return items
-  }, [notes, dismissedInboxItems, snoozedInboxItems, hooks, wikiArticles, clusterSuggestions])
+  }, [notes, dismissedInboxItems, snoozedInboxItems, hooks, wikiArticles, clusterSuggestions, todoTasks, t])
 }
 
 /**

@@ -3,6 +3,7 @@
 import { useMemo } from "react"
 import { cn } from "@/lib/utils"
 import { shortRelative } from "@/lib/format-utils"
+import { useT } from "@/lib/i18n"
 import type { Note, WikiArticle } from "@/lib/types"
 import { WikiInsightsChart } from "@/components/wiki-editor/wiki-insights-chart"
 import {
@@ -84,6 +85,7 @@ export function WikiDashboard({
   onViewRedLinks,
   onCategoryClick,
 }: WikiDashboardProps) {
+  const t = useT()
 
   // Featured article: most recently edited article
   const featured = useMemo(() => {
@@ -117,7 +119,7 @@ export function WikiDashboard({
                   searchInputRef.current?.blur()
                 }
               }}
-              placeholder="Search wiki articles..."
+              placeholder={t("wiki.search_articles")}
               className="h-9 w-full rounded-lg border border-border-subtle bg-secondary/30 pl-9 pr-3 text-note text-foreground placeholder:text-muted-foreground/70 focus:outline-none focus:border-accent/40 focus:ring-1 focus:ring-accent/20 transition-colors"
             />
           </div>
@@ -145,23 +147,23 @@ export function WikiDashboard({
             distinct from the orange already taken by stub. */}
         <div className="mb-6 grid grid-cols-2 gap-3 min-[800px]:grid-cols-3">
           <MiniStat
-            label="Wiki Articles"
+            label={t("wiki.stats.articles")}
             value={articleCount}
-            sub={`${stats.total} total`}
+            sub={t("wiki.stats.articles_total").replace("{count}", String(stats.total))}
             color="text-emerald-600 dark:text-emerald-400"
             onClick={onViewAll}
           />
           <MiniStat
-            label="Stubs"
+            label={t("wiki.stats.stubs")}
             value={stubCount}
-            sub="need content"
+            sub={t("wiki.stats.stubs_need_content")}
             color="text-orange-600 dark:text-orange-400"
             onClick={onViewStubs}
           />
           <MiniStat
-            label="Uncategorized"
+            label={t("wiki.stats.uncategorized")}
             value={wikiArticles.filter(a => !a.categoryIds || a.categoryIds.length === 0).length}
-            sub="need categories"
+            sub={t("wiki.stats.uncategorized_need_categories")}
             color="text-amber-600 dark:text-amber-400"
           />
         </div>
@@ -177,14 +179,14 @@ export function WikiDashboard({
             </div>
             <div className="min-w-0 flex-1">
               <div className="mb-0.5 flex items-center gap-2">
-                <span className="text-2xs font-medium uppercase tracking-wide text-muted-foreground">Featured Article</span>
+                <span className="text-2xs font-medium uppercase tracking-wide text-muted-foreground">{t("wiki.featured_article")}</span>
               </div>
               <h3 className="text-note font-semibold text-foreground group-hover:text-accent transition-colors">
-                {featured.title || "Untitled"}
+                {featured.title || t("common.untitled")}
               </h3>
               <p className="mt-0.5 text-2xs text-muted-foreground line-clamp-1">
-                Updated {shortRelative(featured.updatedAt)}
-                {(featured.categoryIds?.length ?? 0) > 0 && ` · ${featured.categoryIds!.length} categories`}
+                {t("display.ordering.updated")} {shortRelative(featured.updatedAt)}
+                {(featured.categoryIds?.length ?? 0) > 0 && ` · ${t("wiki.featured.categories_count").replace("{count}", String(featured.categoryIds!.length))}`}
               </p>
             </div>
             <ArrowRight className="mt-1 shrink-0 text-muted-foreground/70 transition-colors group-hover:text-accent" size={16} strokeWidth={2} />
@@ -202,7 +204,7 @@ export function WikiDashboard({
               <SectionLabel>
                 <span className="inline-flex items-center gap-1.5">
                   <PushPin size={11} fill="currentColor" />
-                  Pinned
+                  {t("wiki.section.pinned")}
                 </span>
               </SectionLabel>
               <div className="grid grid-cols-1 gap-2 min-[640px]:grid-cols-2 min-[900px]:grid-cols-3">
@@ -233,7 +235,7 @@ export function WikiDashboard({
         {/* ── Categories Grid ── */}
         {categories.items.length > 0 && (
           <div className="mb-6">
-            <SectionLabel>Categories</SectionLabel>
+            <SectionLabel>{t("wiki.section.categories")}</SectionLabel>
             <div className="flex flex-wrap gap-1.5">
               {categories.items.slice(0, 12).map((cat) => (
                 <button
@@ -247,7 +249,7 @@ export function WikiDashboard({
               ))}
               {categories.uncategorized > 0 && (
                 <span className="rounded-md bg-amber-500/10 px-2.5 py-1 text-2xs font-medium text-amber-600 dark:text-amber-400">
-                  Uncategorized
+                  {t("wiki.stats.uncategorized")}
                   <span className="ml-1 tabular-nums">{categories.uncategorized}</span>
                 </span>
               )}
@@ -267,11 +269,11 @@ export function WikiDashboard({
           <div className="space-y-5">
             {/* Recent Changes */}
             {recentChanges.length > 0 && (
-              <ContentCard title="Recent Changes" icon={PhClock}>
+              <ContentCard title={t("wiki.section.recent_changes")} icon={PhClock}>
                 {recentChanges.map((note) => (
                   <ArticleItem
                     key={note.id}
-                    title={note.title || "Untitled"}
+                    title={note.title || t("common.untitled")}
                     meta={shortRelative(note.updatedAt)}
                     onClick={() => onOpenWikiArticle?.(note.id)}
                   />
@@ -281,12 +283,12 @@ export function WikiDashboard({
 
             {/* Most Connected */}
             {mostConnected.length > 0 && mostConnected[0].count > 0 && (
-              <ContentCard title="Hub Articles" icon={TrendUp}>
+              <ContentCard title={t("wiki.section.hub_articles")} icon={TrendUp}>
                 {mostConnected.filter(({ count }) => count > 0).map(({ note, count }) => (
                   <ArticleItem
                     key={note.id}
-                    title={note.title || "Untitled"}
-                    meta={`${count} links`}
+                    title={note.title || t("common.untitled")}
+                    meta={t("wiki.meta.links_count").replace("{count}", String(count))}
                     onClick={() => onOpenWikiArticle?.(note.id)}
                   />
                 ))}
@@ -298,12 +300,12 @@ export function WikiDashboard({
           <div className="space-y-5">
             {/* Stale Documents */}
             {staleDocuments.length > 0 && (
-              <ContentCard title="Needs Review" icon={FileText}>
+              <ContentCard title={t("wiki.section.needs_review")} icon={FileText}>
                 {staleDocuments.map(({ note, daysAgo }) => (
                   <ArticleItem
                     key={note.id}
-                    title={note.title || "Untitled"}
-                    meta={`${daysAgo}d ago`}
+                    title={note.title || t("common.untitled")}
+                    meta={t("wiki.meta.days_ago").replace("{count}", String(daysAgo))}
                     onClick={() => onOpenWikiArticle?.(note.id)}
                   />
                 ))}
@@ -315,7 +317,7 @@ export function WikiDashboard({
         {/* ── Wiki Articles (Assembly Model) ── */}
         {wikiArticles.length > 0 && (
           <div className="mt-6">
-            <SectionLabel>Wiki Articles</SectionLabel>
+            <SectionLabel>{t("wiki.stats.articles")}</SectionLabel>
             <div className="grid grid-cols-1 gap-2 min-[700px]:grid-cols-2">
               {wikiArticles.slice(0, 6).map((article) => (
                 <button
@@ -328,7 +330,7 @@ export function WikiDashboard({
                       {article.title}
                     </h4>
                     <p className="mt-0.5 text-2xs text-muted-foreground">
-                      {article.blocks.length} blocks
+                      {t("wiki.meta.blocks_count").replace("{count}", String(article.blocks.length))}
                     </p>
                   </div>
                 </button>
@@ -339,7 +341,7 @@ export function WikiDashboard({
                 onClick={onViewAll}
                 className="mt-3 w-full rounded-lg border border-border bg-secondary/50 py-2 text-2xs text-muted-foreground transition-colors hover:bg-hover-bg hover:text-foreground"
               >
-                View all {wikiArticles.length} articles
+                {t("wiki.view_all_count").replace("{count}", String(wikiArticles.length))}
               </button>
             )}
           </div>
@@ -351,8 +353,8 @@ export function WikiDashboard({
             <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-secondary/60">
               <BookOpen className="text-muted-foreground" size={20} strokeWidth={2} />
             </div>
-            <p className="text-note font-medium text-muted-foreground">No wiki articles yet</p>
-            <p className="text-2xs text-muted-foreground/60">Create your first article or import existing notes</p>
+            <p className="text-note font-medium text-muted-foreground">{t("wiki.empty.title")}</p>
+            <p className="text-2xs text-muted-foreground/60">{t("wiki.empty.hint")}</p>
           </div>
         )}
       </div>

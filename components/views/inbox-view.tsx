@@ -4,6 +4,7 @@ import { useState, useCallback } from "react"
 import { useRouter } from "next/navigation"
 import { usePlotStore } from "@/lib/store"
 import { setActiveRoute } from "@/lib/table-route"
+import { useT } from "@/lib/i18n"
 import { useInboxBySection, type InboxItem, type InboxSection } from "@/lib/hooks/use-inbox"
 import type { InboxItemKind } from "@/lib/store/slices/inbox"
 import { ViewHeader } from "@/components/view-header"
@@ -63,6 +64,10 @@ function InboxRowFull({
       setActiveRoute("/wiki")
     } else if (item.kind === "plan-due") {
       setActiveRoute("/wiki")
+    } else if (item.kind === "task") {
+      // sourceId is task.id (composite noteId:position) — resolve noteId via store.
+      const task = usePlotStore.getState().todoTasks.find((t) => t.id === item.sourceId)
+      if (task) onOpenNote(task.noteId)
     } else {
       onOpenNote(item.sourceId)
     }
@@ -97,6 +102,9 @@ function InboxRowFull({
         if (e.key === "Enter" || e.key === " ") {
           if (item.kind === "wiki-redlink" || item.kind === "auto-enroll" || item.kind === "plan-due") {
             setActiveRoute("/wiki")
+          } else if (item.kind === "task") {
+            const task = usePlotStore.getState().todoTasks.find((t) => t.id === item.sourceId)
+            if (task) onOpenNote(task.noteId)
           } else {
             onOpenNote(item.sourceId)
           }
@@ -181,21 +189,24 @@ function InboxRowFull({
 
 /* ── Section card ─────────────────────────────────────── */
 
-const SECTION_META: Record<InboxSection, { title: string; subtitle: string; empty: string }> = {
+// SECTION_META keys — resolved via t() inside SectionCard (module-level
+// labelKey pattern, #122). Component-level useT() avoids React Hook rules
+// violation in module-level static config.
+const SECTION_META: Record<InboxSection, { titleKey: string; subtitleKey: string; emptyKey: string }> = {
   do: {
-    title: "Do",
-    subtitle: "Reminders, plans, and snoozes that came back",
-    empty: "All caught up.",
+    titleKey: "inbox.section.do.title",
+    subtitleKey: "inbox.section.do.subtitle",
+    emptyKey: "inbox.section.do.empty",
   },
   review: {
-    title: "Review",
-    subtitle: "Spaced repetition — meant to keep flowing.",
-    empty: "No reviews due right now.",
+    titleKey: "inbox.section.review.title",
+    subtitleKey: "inbox.section.review.subtitle",
+    emptyKey: "inbox.section.review.empty",
   },
   detected: {
-    title: "Detected",
-    subtitle: "Things Plot noticed for you — always running.",
-    empty: "Nothing detected.",
+    titleKey: "inbox.section.detected.title",
+    subtitleKey: "inbox.section.detected.subtitle",
+    emptyKey: "inbox.section.detected.empty",
   },
 }
 
@@ -212,37 +223,36 @@ function SectionCard({
   onDismiss: (kind: InboxItemKind, sourceId: string) => void
   onSnooze: (kind: InboxItemKind, sourceId: string, until: Date) => void
 }) {
+  const t = useT()
   const meta = SECTION_META[section]
   return (
     <section className="space-y-2">
       <header className="flex items-baseline gap-2 px-1">
-        <h2 className="text-note font-medium text-foreground">{meta.title}</h2>
+        <h2 className="text-note font-medium text-foreground">{t(meta.titleKey)}</h2>
         <span className="text-2xs text-muted-foreground tabular-nums">
           {items.length}
         </span>
-        <span className="ml-1 truncate text-2xs text-muted-foreground/70">
-          {meta.subtitle}
+        <span className="ml-1 truncate text-2xs text-muted-foreground/60">
+          {t(meta.subtitleKey)}
         </span>
       </header>
-      <div className="rounded-lg border border-border bg-card">
-        {items.length === 0 ? (
-          <div className="px-3 py-6 text-center text-2xs text-muted-foreground/70">
-            {meta.empty}
-          </div>
-        ) : (
-          <div className="px-1.5 py-1">
-            {items.map((item) => (
-              <InboxRowFull
-                key={`${item.kind}:${item.sourceId}`}
-                item={item}
-                onOpenNote={onOpenNote}
-                onDismiss={onDismiss}
-                onSnooze={onSnooze}
-              />
-            ))}
-          </div>
-        )}
-      </div>
+      {items.length === 0 ? (
+        <div className="px-1 py-1 text-2xs text-muted-foreground/50">
+          {t(meta.emptyKey)}
+        </div>
+      ) : (
+        <div className="-mx-1">
+          {items.map((item) => (
+            <InboxRowFull
+              key={`${item.kind}:${item.sourceId}`}
+              item={item}
+              onOpenNote={onOpenNote}
+              onDismiss={onDismiss}
+              onSnooze={onSnooze}
+            />
+          ))}
+        </div>
+      )}
     </section>
   )
 }
@@ -322,6 +332,7 @@ function NextUpStrip() {
 
 export function InboxView() {
   const router = useRouter()
+  const t = useT()
   // Path-A-Step-5: local filter state (no IDB persistence — resets on reload, Linear pattern for inbox).
   const [filterRules, setFilterRules] = useState<FilterRule[]>([])
 
@@ -343,11 +354,11 @@ export function InboxView() {
         onClick={navigateToHome}
         className="shrink-0 text-note font-medium text-muted-foreground transition-colors hover:text-foreground cursor-pointer"
       >
-        Home
+        {t("home.title")}
       </button>
       <IconChevronRight size={16} className="shrink-0 text-muted-foreground/70" />
       <span className="text-note font-medium text-foreground">
-        Inbox
+        {t("sidebar.inbox")}
         {totalCount > 0 && (
           <span className="ml-0.5 text-note font-normal text-muted-foreground tabular-nums">
             {totalCount}
@@ -394,7 +405,7 @@ export function InboxView() {
     <div className="flex flex-1 flex-col overflow-hidden">
       <ViewHeader
         icon={<IconInbox size={20} strokeWidth={1.5} />}
-        title="Inbox"
+        title={t("sidebar.inbox")}
         count={totalCount}
         titleNode={inboxBreadcrumb}
         showFilter={INBOX_VIEW_CONFIG.showFilter}
@@ -412,7 +423,7 @@ export function InboxView() {
 
       {/* Content area */}
       <div className="flex-1 overflow-y-auto">
-        <div className="mx-auto w-full max-w-2xl space-y-6 px-6 py-6">
+        <div className="mx-auto w-full max-w-2xl space-y-4 px-6 py-6">
           {doEmpty && reviewItems.length === 0 && detectedItems.length === 0 ? (
             <div className="flex flex-col items-center gap-3 px-6 pt-24 pb-12 text-center">
               <IconInbox size={32} className="text-muted-foreground/25" strokeWidth={1} />
@@ -447,11 +458,6 @@ export function InboxView() {
                 onDismiss={dismissInbox}
                 onSnooze={snoozeInbox}
               />
-              {doEmpty && (
-                <p className="px-1 text-2xs text-muted-foreground/70">
-                  All caught up — Review and Detected are always running.
-                </p>
-              )}
             </>
           )}
         </div>

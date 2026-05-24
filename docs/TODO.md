@@ -3,49 +3,52 @@
 > 우선순위 기반 작업 목록. **P0 = 다음 세션 즉시 시작점** (NEXT-ACTION.md 폐지, 2026-05-12).
 > 완료 항목은 즉시 삭제. 자세한 history는 SESSION-LOG.md + MEMORY.md.
 
-**마지막 갱신**: 2026-05-24 (밤) — i18n 잔여 surface + Merge/Split + Books labelKey + Timeline wrap fix. 다음 P0 #1 = production-ui-refiner 후보 선택 + refine.
+**마지막 갱신**: 2026-05-24 (심야) — Phase α-1 Inbox 'task' 흡수 + 4 surface 한국어 + Inbox refiner (PR #417). 다음 P0 #1 = Phase α-2 todo-index 위키/책 확장.
 
 ---
 
-## 🟣 P0 — 즉시 (cross-machine 진입점, 2026-05-24 밤)
+## 🟣 P0 — 즉시 (cross-machine 진입점, 2026-05-24 심야)
 
-### 1. **🔴 production-ui-refiner 후보 선택 + 5-phase refine**
+### 1. **🔴 Phase α-2 — todo-index 위키/책 확장**
 
-**범위**: 사용자가 4 후보 중 선택 후 5-phase AUDIT/DIAGNOSE/PRESCRIBE/APPLY/VERIFY. 사용자가 "다음 세션 첫번째 todo로 이어갈 수 있도록" 명시.
-
-**후보 4개 (사용자 선택 대기)**:
-1. **Inbox 3 SectionCard** (`components/views/inbox-view.tsx`) — Do/Review/Detected 3 카드, Phase 1c 신규
-2. **Library 6 stat card grid** (`components/views/library-view.tsx`:861+) — 자료실 6 카드 (참고문헌/태그/라벨/카테고리/파일/스티커)
-3. **Books grid card** — 책 카드 grid layout
-4. **SearchDialog 더 깊게** (`components/search-dialog.tsx`) — Cmd+K command palette
+**범위**: `lib/todo-index.ts`의 `extractTasks`를 wiki blocks + book chapters의 체크박스도 walk하도록 확장. Phase α-1 (Inbox task kind 흡수) 후속 작업. 사용자 직관 "할 일 = 모든 영역 통합" 완전 해소.
 
 **첫 스텝**:
-1. AskUserQuestion 재시도 — 4 후보 중 어느 것?
-2. 선택 컴포넌트 viewport screenshot + 코드 audit
-3. 18 카테고리 진단 (자동 측정 + vision)
-4. 카테고리 그룹별 PRESCRIBE → 사용자 승인 → APPLY → VERIFY
+1. `lib/todo-index.ts` + `lib/body-helpers.ts extractTasks` read
+2. WikiArticle.blocks loop 추가 (block.type === "todo" 또는 paragraph 안 체크박스)
+3. Book/Reference 체크박스도 동일 패턴 (Book.contentJson 있으면)
+4. `noteId` 필드를 `entityRef: {kind, id}`로 generalize 또는 task source 분기 (호환성 검토)
+5. tsc + 시드 데이터 (wiki article 안 체크박스 1-2개 추가) + Inbox Do section 확인
 
-**참고**: SESSION-LOG 2026-05-24 (밤) hook에 후보별 사전 진단 + 진입 패턴 documented.
+**위험**: TaskItem.noteId 필드 generalize 시 `addQuickTask` + `toggleTaskChecked` 다 영향. 호환성 위해 noteId 유지 + 새 optional `entityKind`("note"|"wiki"|"book") 추가 권장.
 
-### 2. **🟢 i18n 잔여 mini-polish**
+### 2. **🟢 Phase β — TodoView 폐기 (사용자 검증 OK 후)**
 
-- Books grid card description i18n
-- Wiki dashboard stats (Wiki Articles / Stubs / Uncategorized / Featured Article / Pinned / Categories / Growth)
-- Ontology legend(범례) detail (Stone/Brick/Block badge, Smart/Hybrid/Manual)
-- Status pill 음역 — note rows의 Block/Stone/Brick badge
+Phase α-1+α-2 정착 후, `/todos` route + TodoView 컴포넌트 폐기. Sidebar "할 일" navigation은 `/inbox?filter=task` alias 또는 직접 inbox open. Memory parked → LOCKED 완료.
 
-### 3. **🟢 사용자 viewport 검증 (4건 미완)**
+### 3. **🟢 Inbox 외 영어 잔여 polish**
 
-- Phase 1c Inbox 3 SectionCard 작동
+- WikiInsightsChart (Day/Week/Month / Growth/Connectivity / All/Articles/Stubs / Cumulative / New per month)
+- Notes/Wiki row status pill 음역 — STATUS_CONFIG에서 wire
+- ViewHeader title hardcoded ("Notes" / "Wiki" / "Books")
+- SidePanel inspector sections (Dates/Status/Folders/Label/Tags/Categories/Outline/Properties + Words/Characters/Headings/Source)
+- SidePanel workflow actions (Done/Snooze/Trash/Promote/Demote/GitMerge/Link to)
+- Floating bar (1 selected/GitMerge/Split/Link/Move/Add to)
+- Inbox row hover snooze options (In 1 hour / Tomorrow 9 AM / Next week) + tooltip
+- Toast 메시지 (Dismissed / Snoozed until X)
+
+### 4. **🟢 사용자 viewport 검증 (4건 미완)**
+
+- Phase 1c Inbox 3 SectionCard 작동 (이번 PR로 진행 — 미해결시 확인)
 - Backup Restore round-trip (Full Backup → Import → reload)
 - GlobalTopBar Hide-all-panels 후 chrome 접근
 - Cmd+K Escape 닫힘
 
-### 4. **🟢 Phase 2 temporal hooks**
+### 5. **🟢 Phase 2 temporal hooks**
 
 watch + recurring (PRD §11 Q1 EventPattern + Q5 recurring 범위). 우클릭 프리셋 + 타임라인 드래그 hook UI.
 
-### 5. **🟢 검색 결과 row Linear 정합**
+### 6. **🟢 검색 결과 row Linear 정합**
 
 Cmd+K dialog 검색 결과 item plain text → highlight + breadcrumb.
 
@@ -61,7 +64,8 @@ Cmd+K dialog 검색 결과 item plain text → highlight + breadcrumb.
 
 ## ✅ 최근 완료
 
-- **2026-05-24 (밤)**: **i18n 잔여 surface + Merge/Split + Books labelKey + Timeline wrap fix** (PR pending). 2 chunk — (1) Todos/Calendar sidebar/Ontology/Library/Wiki/Books 6 view 한국어 wire (~70 i18n keys 신규) + (2) Wiki Merge/Split → 병합/분리, 타임라인 button whitespace-nowrap, BOOKS_VIEW_CONFIG 전체 labelKey (orderingOptions/groupingOptions/properties), book-table BOOK_COLUMNS labelKey wire, Library "Top Tags"/"unused tag"/"unlinked reference" 누락 한국어. 영구 LOCKED #122 (module-level static config labelKey 일관 적용 의무).
+- **2026-05-24 (심야)**: **Phase α-1 Inbox 'task' 흡수 + 4 surface 한국어 wire + Inbox refiner** (PR #417). (a) Phase α-1 (Memory parked → LOCKED): InboxItemKind 'task' 추가 + use-inbox todoTasks source loop + sectionFor→do + inbox-source-icon Square + inbox-view handleRowClick task→noteId resolve. TodoView parallel 유지. (b) i18n Wave ~50 신규 keys: WikiDashboard 전체 / Calendar (월·주·일정 + 월·화·수·목·금·토·일) / CALENDAR·TEMPLATES filter labelKey (스톤·브릭·블록 음역 #118) / SmartSidePanel 4 tab (상세·연결·활동·북마크) / SidePanel empty / Inbox breadcrumb + SECTION_META + use-inbox action·meta. (c) Inbox refiner 5건 (production-ui-refiner Inbox SectionCard 후보 1 5-phase): A1 space-y-4 / C1 borderless / C3 subtitle /60 / E1 empty 약화 / E2 footer 중복 삭제. 영구 룰 #111 정합 (단일 Hook 모델 통합 → todo도 같은 단일 attention 큐). tsc clean.
+- **2026-05-24 (밤)**: **i18n 잔여 surface + Merge/Split + Books labelKey + Timeline wrap fix** (PR #416). 2 chunk — (1) Todos/Calendar sidebar/Ontology/Library/Wiki/Books 6 view 한국어 wire (~70 i18n keys 신규) + (2) Wiki Merge/Split → 병합/분리, 타임라인 button whitespace-nowrap, BOOKS_VIEW_CONFIG 전체 labelKey (orderingOptions/groupingOptions/properties), book-table BOOK_COLUMNS labelKey wire, Library "Top Tags"/"unused tag"/"unlinked reference" 누락 한국어. 영구 LOCKED #122 (module-level static config labelKey 일관 적용 의무).
 - **2026-05-24 (저녁 후속)**: **GlobalTopBar 신설 + Phase 1c Inbox 3 카드 + i18n 깊은 확장 (필터/디스플레이/cmdk) + production-ui-refine** (PR #414 + 후속 PR). 5 chunk 누적 — Phase 1c (use-inbox section + 3 SectionCard, plan-due source 신규) / i18n main app (Activity Bar/Sidebar/Home/Quick Capture/StatsRow) / i18n 깊은 확장 (Library→자료실 #117, Stone/Brick/Block 음역 #118, Filter+Display Panel labelKey 패턴, Notes column headers) / GlobalTopBar (PanelsMenu + 시계 + < > + 검색 input + 테마/설정/휴지통 — sidebar 헤더/푸터 제거 + activity-bar 테마 제거 + view-header PanelsMenu 제거 #119/#120) / Command palette hybrid mode badge (#121) + i18n + Escape handler + production-ui-refine 5-phase (A spacing+B icon+C search+D right cluster). 영구 LOCKED #117~#121. tsc/build clean.
 - **2026-05-24 (오후)**: **Phase 1b 통합 (1b1+1b2+1b3) + Settings 전수 wire (5/5)** — 단일 거대 PR. (a) Phase 1b1 workflow.ts/wiki-articles.ts hooks slice wire (dual-write) + (b) Phase 1b2 read-site 마이그 12+ 파일 (신규 lib/store/hook-selectors.ts + getReviewQueue/useInbox/wiki-timeline/sidebar/insights/settings 모두 hooks 기반) + (c) Phase 1b3 legacy 제거 (Note.reviewAt / WikiArticle.plannedDate / srsStateByNoteId 영구 삭제 + v146→v147 strip migration + reviewAt filter operator drop + helpers.ts/test fixtures cleanup) + (d) Settings #1 Start view wire (app/(app)/layout.tsx 라우팅, persist hydration 대기) + (e) Settings #2 Sync 솔직한 reframe (backupReminder/lastBackupAt 신규, toast nudge) + (f) Settings #3 Line numbers wire (CSS counter gutter) + (g) Settings #4 Backup Restore (restoreFromBackup + Import UI + 자동 reload) + (h) Settings #5 i18n (lib/i18n.ts 신규, EN/KO 완전 dictionary, useT 훅, 모든 Settings 페이지 적용). 영구 LOCKED #113~#116. tsc/build clean.
 - **2026-05-24 (새벽)**: Temporal Hooks PRD v0.2 + Phase 1a foundation 머지 (PR #411). PRD §11 Q3/Q4/Q6 RESOLVED (1-step migration / 보수적 전이 / Inbox Do-Review-Detected). Q1/Q2/Q5 DEFERRED to Phase 2/3. 4 파일 변경 + 1 신규 (lib/store/slices/hooks.ts) + PRD update. Hook model + slice + v145→v146 migration (Note.reviewAt+triageStatus / srsStateByNoteId / WikiArticle.plannedDate → Hook 일괄 흡수, idempotent). legacy 필드 Phase 1a 한정 keep. tsc/build clean. Round-trip 검증.
@@ -84,7 +88,7 @@ Cmd+K dialog 검색 결과 item plain text → highlight + breadcrumb.
 
 ## Parked / Brainstorm
 
-- **기존 체크박스-todo → Inbox kind 이전 검토** — `lib/todo-index.ts`(노트 본문 체크박스 인덱스)를 독립 "Todos" 기능으로 키우지 말고 Inbox(attention 큐)에 `InboxItemKind "task"`로 추가. → temporal-hooks PRD의 Layer B(작업 hook)와 직결.
+- ~~기존 체크박스-todo → Inbox kind 이전 검토~~ — **2026-05-24 심야 LOCKED 진입** (PR #417 Phase α-1). InboxItemKind 'task' 추가 완료. Phase α-2 (위키/책 확장) + Phase β (TodoView 폐기) 남음 → P0로 promote.
 
 ---
 

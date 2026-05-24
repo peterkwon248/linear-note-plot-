@@ -31,6 +31,7 @@ import { ViewHeader } from "@/components/view-header"
 import { FilterPanel } from "@/components/filter-panel"
 import { DisplayPanel } from "@/components/display-panel"
 import { CALENDAR_VIEW_CONFIG } from "@/lib/view-engine/view-configs"
+import { useT } from "@/lib/i18n"
 import type { FilterRule, ViewContextKey } from "@/lib/view-engine/types"
 import type { Note } from "@/lib/types"
 
@@ -650,6 +651,19 @@ export function CalendarView({
   onRowClick,
   activePreviewId,
 }: CalendarViewProps) {
+  const t = useT()
+  const dayLabels = useMemo(
+    () => [
+      t("calendar.day.mon"),
+      t("calendar.day.tue"),
+      t("calendar.day.wed"),
+      t("calendar.day.thu"),
+      t("calendar.day.fri"),
+      t("calendar.day.sat"),
+      t("calendar.day.sun"),
+    ],
+    [t],
+  )
   const [currentDate, setCurrentDate] = useState<Date>(new Date())
   const [selectedDate, setSelectedDate] = useState<Date | null>(null)
 
@@ -923,7 +937,7 @@ export function CalendarView({
                   : "text-muted-foreground hover:text-foreground/70",
               )}
             >
-              {mode.charAt(0).toUpperCase() + mode.slice(1)}
+              {t(`calendar.mode.${mode}`)}
             </button>
           ))}
         </div>
@@ -935,7 +949,7 @@ export function CalendarView({
               onClick={goToToday}
               className="mr-1 rounded-md px-2 py-1 text-2xs font-medium text-muted-foreground hover:bg-hover-bg hover:text-foreground"
             >
-              Today
+              {t("calendar.today")}
             </button>
           )}
           <button
@@ -959,7 +973,7 @@ export function CalendarView({
       {/* ── Day-of-week labels (for month and week modes) ── */}
       {calendarMode !== "agenda" && (
         <div className="grid shrink-0 grid-cols-7 border-b border-border">
-          {DAY_LABELS.map((label) => (
+          {dayLabels.map((label) => (
             <div
               key={label}
               className="border-r border-border px-2 py-2 last:border-r-0"

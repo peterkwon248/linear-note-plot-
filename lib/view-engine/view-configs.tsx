@@ -656,14 +656,14 @@ export const CALENDAR_VIEW_CONFIG: ViewConfig = {
   showDisplay: true,
   showDetailPanel: true,
   filterCategories: [
-    { key: "status", label: "Status", icon: StatusIcon, values: [
-      { key: "stone", label: "Stone", color: "rgba(255,255,255,0.32)", icon: <Hexagon size={14} weight="regular" style={{ color: "var(--chart-2)" }} /> },
-      { key: "brick", label: "Brick", color: "#f5a623", icon: <Cube size={14} weight="regular" style={{ color: "var(--chart-3)" }} /> },
-      { key: "keystone", label: "Block", icon: <Cuboid2x2 size={14} weight="regular" style={{ color: "var(--status-keystone)" }} /> },
+    { key: "status", label: "Status", labelKey: "filter.category.status", icon: StatusIcon, values: [
+      { key: "stone", label: "Stone", labelKey: "status.stone", color: "rgba(255,255,255,0.32)", icon: <Hexagon size={14} weight="regular" style={{ color: "var(--chart-2)" }} /> },
+      { key: "brick", label: "Brick", labelKey: "status.brick", color: "#f5a623", icon: <Cube size={14} weight="regular" style={{ color: "var(--chart-3)" }} /> },
+      { key: "keystone", label: "Block", labelKey: "status.block", icon: <Cuboid2x2 size={14} weight="regular" style={{ color: "var(--status-keystone)" }} /> },
     ]},
-    { key: "folder", label: "Folder", icon: FolderIcon, values: [] },
-    { key: "label", label: "Label", icon: LabelIcon, values: [] },
-    { key: "tags", label: "Tags", icon: TagIcon, values: [] },
+    { key: "folder", label: "Folder", labelKey: "filter.category.folder", icon: FolderIcon, values: [] },
+    { key: "label", label: "Label", labelKey: "filter.category.label", icon: LabelIcon, values: [] },
+    { key: "tags", label: "Tags", labelKey: "filter.category.tags", icon: TagIcon, values: [] },
   ],
   quickFilters: [],
   displayConfig: {
@@ -690,10 +690,10 @@ export const TEMPLATES_VIEW_CONFIG: ViewConfig = {
   showDisplay: true,
   showDetailPanel: true,
   filterCategories: [
-    { key: "status", label: "Status", icon: StatusIcon, values: [
-      { key: "stone", label: "Stone", color: "rgba(255,255,255,0.32)", icon: <Hexagon size={14} weight="regular" style={{ color: "var(--chart-2)" }} /> },
-      { key: "brick", label: "Brick", color: "#f5a623", icon: <Cube size={14} weight="regular" style={{ color: "var(--chart-3)" }} /> },
-      { key: "keystone", label: "Block", icon: <Cuboid2x2 size={14} weight="regular" style={{ color: "var(--status-keystone)" }} /> },
+    { key: "status", label: "Status", labelKey: "filter.category.status", icon: StatusIcon, values: [
+      { key: "stone", label: "Stone", labelKey: "status.stone", color: "rgba(255,255,255,0.32)", icon: <Hexagon size={14} weight="regular" style={{ color: "var(--chart-2)" }} /> },
+      { key: "brick", label: "Brick", labelKey: "status.brick", color: "#f5a623", icon: <Cube size={14} weight="regular" style={{ color: "var(--chart-3)" }} /> },
+      { key: "keystone", label: "Block", labelKey: "status.block", icon: <Cuboid2x2 size={14} weight="regular" style={{ color: "var(--status-keystone)" }} /> },
     ]},
     { key: "priority", label: "Priority", icon: PriorityIcon, values: [
       { key: "urgent", label: "Urgent" },

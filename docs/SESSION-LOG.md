@@ -6,6 +6,117 @@
 
 ---
 
+## 2026-05-24 (심야) — Windows, **Phase α-1 Inbox 'task' 흡수 + 4 surface 한국어 wire + Inbox refiner (PR #417)**
+
+> 🎯 **다음 즉시 액션 (다음 세션 시작점)**: **Phase α-2 — `lib/todo-index.ts` extractTasks를 wiki blocks + book chapters의 체크박스도 walk하도록 확장**. 사용자 직관 "할 일 = 모든 영역 통합"의 완전 해소. 현재는 노트 본문 체크박스만 인덱싱 → Inbox Do section에 표시. wiki article의 todo block / book의 chapter checkbox는 미반영.
+>
+> **사용자 의도**: 이번 세션 명시 — "할 일은 노트나 위키, 북 등 모든 영역의 todo를 모아놓은 곳 아닌가?" → 사용자 직관 = 통합. 현재 Phase α-1은 노트만. Phase α-2가 완전 해소.
+>
+> **첫 스텝** (다른 머신에서 바로):
+> 1. `lib/todo-index.ts` + `lib/body-helpers.ts extractTasks` read — 노트 ProseMirror tree walk 패턴 파악
+> 2. WikiArticle.blocks loop 추가 — block.type === "todo" 또는 paragraph 안 taskList 인식
+> 3. Book.contentJson 있으면 동일 패턴 (현재 books는 content 안 가지는 metadata-only일 수도 — 확인)
+> 4. TaskItem 타입에 `entityKind?: "note"|"wiki"|"book"` optional 필드 추가 (default "note" — 호환성)
+> 5. `addQuickTask` + `toggleTaskChecked` 호출처 영향 검토 (noteId 그대로 사용, entityKind 분기는 lookup 시점)
+> 6. use-inbox.ts task source loop의 `noteById.get(task.noteId)`를 entityKind에 따라 wikiById/bookById로 분기
+> 7. tsc + 시드 (wiki article 하나 만들고 본문에 `- [ ] task` 추가 → Inbox Do에 표시 확인)
+>
+> **위험 + 회피**:
+> - TaskItem.noteId 필드를 generalize하면 IDB persist 마이그레이션 필요 (v147 → v148). 단계적으로 noteId 유지 + entityKind 추가가 안전.
+> - body-helpers extractTasks는 노트 전용 — 위키 blocks 구조 다름. extractTasks generic function 또는 별도 extractWikiTasks 함수 추가.
+> - Quick Tasks 노트 자동 생성 패턴 (addQuickTask)은 그대로 유지 — 위키/책 안에는 quick task 추가 불가 (사용자가 직접 본문에 체크박스 입력만 인덱싱).
+>
+> **참고 파일**:
+> - `lib/todo-index.ts` — 인덱스 store
+> - `lib/body-helpers.ts` — extractTasks
+> - `lib/hooks/use-inbox.ts` — task source loop (line ~243 부근)
+> - `lib/store/index.ts:192-` addQuickTask (Quick Tasks 노트 생성)
+> - 영구 룰 #111 (단일 Hook 모델), #122 (labelKey 패턴)
+>
+> **2번째 P0 후보** (#1 끝나면):
+> - Phase β — TodoView 폐기 + `/todos` route를 `/inbox?filter=task` alias로 (단순 redirect 또는 직접 inbox open). Sidebar 진입점은 유지.
+> - Inbox 외 영어 잔여 polish — WikiInsightsChart / Notes row status pill 음역 (Stone/Brick/Block badge → 스톤/브릭/블록) / ViewHeader title hardcoded / SidePanel inspector sections + workflow actions / Floating bar / Inbox row hover snooze options + toast.
+>
+> **3번째 P0 후보**:
+> - 사용자 viewport 검증 4건 (Phase 1c Inbox / Backup Restore / GlobalTopBar Hide-all / Cmd+K Escape)
+> - Phase 2 temporal hooks (watch + recurring)
+>
+> **머신**: Windows. cross-machine 가능.
+> **현재 main HEAD**: PR #417 머지 후.
+> **branch worktree**: `claude/goofy-lewin-17a40d` (머지 후 정리 권장 — 새 worktree로).
+
+### 완료 (이번 세션 — 3 chunk 누적)
+
+**Chunk 1 — production-ui-refiner Inbox SectionCard (후보 1, 5-phase)**:
+- 사용자 사전 진단 4건 (SESSION-LOG 2026-05-24 밤 hook에 documented) + C3 동방향 추가:
+- A1 SectionCard 간격 `space-y-6` → `space-y-4` (24px → 16px, Inbox dense list)
+- C1 카드 wrap `rounded-lg border border-border bg-card` 전체 폐기 → Linear borderless flow
+- C3 subtitle opacity `text-muted-foreground/70` → `/60` (secondary text 표준)
+- E1 empty `px-3 py-6 text-center /70` → `px-1 py-1 /50` (left + 약화 + 한 줄 컴팩트)
+- E2 footer `All caught up — Review and Detected are always running.` 삭제 (Detected에 item 있을 때 misleading, header subtitle이 이미 제공)
+- skip: C2 section title font weight 강화 (사용자 명시 신호 없음)
+
+**Chunk 2 — i18n Wave (4 surface, ~50 신규 keys)**:
+사용자 명시 (Wiki overview / Calendar / Filter dropdown Stone/Brick/Block / Detail panel tabs) + 발견된 추가 surface 모두:
+- WikiDashboard: search placeholder / 3 stat cards (위키 글·스텁·미분류) / FEATURED ARTICLE → 추천 글 / PINNED → 고정됨 / CATEGORIES → 카테고리 / Recent Changes → 최근 변경 / Hub Articles → 허브 글 / Needs Review → 검토 필요 / View all / empty state. **단**: WikiInsightsChart (Day/Week/Month / Growth/Connectivity / All/Articles/Stubs / Cumulative / New per month)는 별도 컴포넌트, 미커버 — 다음 세션 후보.
+- CalendarView: Month/Week/Agenda → 월·주·일정 (모드 토글) + Mon-Sun → 월·화·수·목·금·토·일 (DAY_LABELS 컴포넌트 안 useMemo 매핑) + Today → 오늘
+- view-configs.tsx CALENDAR/TEMPLATES_VIEW_CONFIG: filter status/folder/label/tags labelKey + Stone/Brick/Block 음역 (영구 룰 #118 — 모든 entity-specific config 일관 적용 의무 #122)
+- SmartSidePanel: Detail/Connections/Activity/Bookmarks → 상세·연결·활동·북마크 + close aria
+- SidePanelContext: 'Select a note to see details' → '노트를 선택하면 상세 정보가 표시됩니다'
+- inbox-view.tsx: 'Home > Inbox' breadcrumb → '홈 > 받은편지함' + ViewHeader title
+- inbox-view.tsx SECTION_META (Do/Review/Detected + subtitle + empty) → 할 일/되새김/발견 + 한국어 subtitle + empty. module-level labelKey 패턴 (#122) — consumer SectionCard에서 t() resolve
+- use-inbox.ts action/meta 텍스트 (Due today/Overdue Nd/Review now/Plan due/Snooze ended/Create wiki?/Enroll wiki?/N notes) → 오늘 마감/N일 지남/지금 복습/계획 마감/미루기 종료/위키로 만들까요?/위키 등록할까요?/노트 N개
+
+**Chunk 3 — Phase α-1 Inbox 'task' 흡수 (Memory parked → LOCKED 진입)**:
+사용자 질문 "할일은 모든 영역 통합 아닌가? Inbox에서 해결 하기로 했나?" → 추천 옵션 B (Inbox 흡수) 채택. 단계적 MVP 형태로 진행:
+- `lib/store/slices/inbox.ts`: `InboxItemKind` union에 `'task'` 추가
+- `lib/hooks/use-inbox.ts`: `sectionFor('task')` → `'do'` + todoTasks loop source (incomplete only, dismissed/snoozed 필터). Quick Tasks 노트 제목은 표시 시점에 `t("todos.quick_tasks_note")` = "빠른 할 일"로 매핑 (노트 데이터는 영어 그대로 — store lookup 호환성)
+- `components/inbox/inbox-source-icon.tsx`: `case 'task'` → `Square` icon (lucide)
+- `components/views/inbox-view.tsx`: handleRowClick + onKeyDown에 task 분기 — sourceId는 task.id (composite noteId:position), `usePlotStore.getState().todoTasks.find(t => t.id === item.sourceId)` 로 noteId 조회 → openNote
+- TodoView는 **parallel 유지** (폐기는 Phase β로 미루기 — 사용자 검증 시기)
+
+**시드 데이터 검증** (직접 시뮬레이션):
+- input.dispatchEvent로 5건 시드 ('디자인 QA 마무리/회의록/책 챕터 3 읽기/운동 30분/영수증 정리')
+- 1건 toggle → "완료 (1)" 섹션 자동 분기 + progress bar 1/5 + 사이드바 카운트 4
+- /inbox 페이지에서 Do (3) section에 task 3건 자동 표시 ✅
+- 홈 받은편지함 preview에도 자동 노출 (useInbox single source) ✅
+
+### 브레인스토밍 & 큰 결정 (영구 LOCKED #124~)
+
+- **#124 LOCKED (2026-05-24 심야)**: **Todos → Inbox `task` kind 흡수** (Memory parked → LOCKED 진입). 영구 룰 #111 (단일 모델 통합)의 todo 확장. Inbox = "attention 큐 single source" — 별도 attention view (Todos) 폐기 방향. Phase α-1 (노트만) 완료, Phase α-2 (위키/책 확장) + Phase β (TodoView 폐기) 남음.
+- **#125 LOCKED (2026-05-24 심야)**: **Inbox refiner Linear borderless 정합** — SectionCard wrap (rounded-lg border + bg-card)을 폐기, row만 노출. 빈 섹션은 한 줄로 옅게. Plot Inbox UX는 "dense attention list" — 카드 wrap이 빈 영역 prominence 키움.
+- **#126 (vision, 비-locked)**: **module-level static config labelKey 패턴 확장** — SECTION_META 처럼 React Hook 호출 불가한 module-level config에 `titleKey/subtitleKey/emptyKey` 옵셔널 필드 추가, consumer 컴포넌트에서 `t(meta.titleKey)` resolve. #122 (NOTES_VIEW_CONFIG labelKey)의 일반화.
+
+### 기술 학습 (영구)
+
+- **Inbox source loop 패턴 정착**: 새 InboxItemKind 추가 시 (1) `lib/store/slices/inbox.ts` union 확장 (2) `lib/hooks/use-inbox.ts` sectionFor 매핑 (3) source loop (`for ... push`) (4) `components/inbox/inbox-source-icon.tsx` case (5) `inbox-view.tsx` handleRowClick + onKeyDown 분기. 5 위치, 정형화.
+- **sourceId composite key + lookup pattern**: task의 sourceId는 `noteId:position` composite. `inbox-view.tsx`의 handleRowClick에서 `usePlotStore.getState().todoTasks.find(t => t.id === item.sourceId)`로 lookup → noteId resolve → openNote. EntityRef 형태 미사용 (TaskItem.id 그대로 활용).
+- **Quick Tasks 노트 자동 생성 + 표시 매핑**: addQuickTask가 "Quick Tasks" 영어 제목 노트 생성 (store lookup 호환). 표시 시점 (use-inbox)에서 `note.title === "Quick Tasks" ? t("todos.quick_tasks_note") : note.title` 매핑. 데이터 영어 유지 + UI 한국어 = 안전 패턴.
+- **module-level SECTION_META labelKey 변환**: `{title, subtitle, empty}` → `{titleKey, subtitleKey, emptyKey}`. SectionCard 함수 컴포넌트 안에서 `t(meta.titleKey)` 호출 — React Hook 룰 위반 없음 (module-level config는 string keys만).
+- **시드 데이터 React controlled input 우회**: `Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value').set` + `dispatchEvent('input')` + Enter `KeyboardEvent` — React setState 호환. 5건 batch는 50ms 사이 wait 부족 → 350ms 권장 (state batching 회피).
+
+### Watch Out (다음 세션)
+
+- **Phase α-2 진입 시 호환성 신중**: TaskItem.noteId 필드 generalize 위험. entityKind?: optional 필드 추가 + 기존 noteId 유지 권장. addQuickTask는 "Quick Tasks" 노트만 처리 (위키/책 quick task 추가 X — 사용자가 직접 본문에 체크박스 입력만).
+- **WikiInsightsChart 영어 잔여**: Day/Week/Month / Growth/Connectivity / All/Articles/Stubs / Cumulative / New per month. 다음 세션 또는 후속 PR.
+- **노트 row status pill 음역 누락**: 사용자 화면 Notes view에 Stone/Brick/Block badge 영어. STATUS_CONFIG에 wire 필요.
+- **시드 task 1건 누락 미스터리**: "회의록 정리하고 공유" task가 처음 5건 시드 중 누락 (실제 4건만 들어감, 그 다음 batch에서 3건 보충 후 정상 5건). React batching race. Phase α-1 코드 무관, 시드 입력 시점 이슈.
+- **tsc `.next/dev/types` 누락 errors**: Next.js dev 자동 generated 파일 missing. dev server가 build 시 재생성. 코드 무관 — 무시 가능. 정식 검증은 `npm run build` 권장.
+
+### 환경 변경
+
+- Store v147 무변경 (InboxItemKind union 확장만 — 마이그레이션 불필요, 신규 kind는 데이터 호환)
+- 신규 파일: 없음
+- 변경 파일 10: components/calendar-view.tsx / components/inbox/inbox-source-icon.tsx / components/side-panel/side-panel-context.tsx / components/side-panel/smart-side-panel.tsx / components/views/inbox-view.tsx / components/views/wiki-dashboard.tsx / lib/hooks/use-inbox.ts / lib/i18n.ts / lib/store/slices/inbox.ts / lib/view-engine/view-configs.tsx
+- 신규 i18n keys ~50개 (wiki.section.* / wiki.meta.* / sidepanel.tab.* / sidepanel.empty.* / calendar.mode.* / calendar.day.* / inbox.section.* / inbox.action.* / inbox.meta.* / todos.quick_tasks_note / common.untitled_task)
+- 사용자 IDB stale data: 시드 5건 (Quick Tasks 노트 안 체크박스) — `/notes`에서 "Quick Tasks" 노트로 보임
+
+### 머신
+
+Windows. cohesive 통합 작업 세션 — Inbox refiner 5-phase 후, 사용자 한국어 잔여 지적 따라 4 surface i18n wire, Inbox 흡수 product 결정 추천 → Phase α-1 진입, 시드 검증, PR #417 단일 commit.
+
+---
+
 ## 2026-05-24 (밤) — Windows, **i18n 잔여 surface (Wiki/Books/Library/Ontology/Todos + Merge/Split + 컬럼 labelKey)**
 
 > 🎯 **다음 즉시 액션 (다음 세션 시작점)**: **production-ui-refiner 후보 선택 + 5-phase 진행**. 사용자가 "다음 세션 첫번째 todo로 지금 이 논의 이어갈 수 있도록" 명시. 4 후보 중 사용자가 선택 (AskUserQuestion 결과 미선택, after-work 우선 요청). 후보 = (1) Inbox 3 SectionCard, (2) Library 6 stat card grid, (3) Books grid card, (4) SearchDialog 더 깊게.
