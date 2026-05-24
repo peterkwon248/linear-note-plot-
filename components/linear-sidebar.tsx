@@ -49,6 +49,7 @@ import {
   PieChart as ChartPie,
   CheckSquare as CheckSquareIcon,
   Archive as Books,
+  Library as BooksSpaceIcon,
   BookOpen,
   Quote as Quotes,
   Tag as PhTag,
@@ -1676,7 +1677,7 @@ export function LinearSidebar() {
             <div className="space-y-px">
               <NavLink
                 href="/books"
-                icon={<BookOpen size={20} />}
+                icon={<BooksSpaceIcon size={20} />}
                 label={t("books.all_books")}
                 count={books.filter((b) => !b.trashed).length || undefined}
                 active={isActive("/books")}
