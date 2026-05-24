@@ -29,28 +29,30 @@ import {
 // OntologyWide → IconOntology (Network), Bookshelf → LibraryIcon (LibraryBig).
 import { Library as BooksIcon, LibraryBig as LibraryIcon } from "lucide-react"
 import { useSettingsStore } from "@/lib/settings-store"
+import { useT } from "@/lib/i18n"
 import { SPACE_COLORS } from "@/lib/colors"
 
 /* ── Space definitions ──────────────────────────────── */
 
 const SPACES: {
   id: ActivitySpace
-  label: string
+  labelKey: string
   icon: (props: { size?: number }) => React.ReactNode
   shortcut: string
 }[] = [
-  { id: "home",     label: "Home",     icon: IconHome,     shortcut: "G then H" },
-  { id: "notes",    label: "Notes",    icon: IconNotes,    shortcut: "G then N" },
-  { id: "wiki",     label: "Wiki",     icon: IconWiki,     shortcut: "" },
-  { id: "books",    label: "Books",    icon: (p: { size?: number }) => <BooksIcon size={p.size} />, shortcut: "" },
-  { id: "calendar", label: "Calendar", icon: IconCalendar, shortcut: "" },
-  { id: "ontology", label: "Ontology", icon: IconOntology, shortcut: "" },
-  { id: "library",  label: "Library",  icon: (p: { size?: number }) => <LibraryIcon size={p.size} />, shortcut: "" },
+  { id: "home",     labelKey: "nav.space.home",     icon: IconHome,     shortcut: "G then H" },
+  { id: "notes",    labelKey: "nav.space.notes",    icon: IconNotes,    shortcut: "G then N" },
+  { id: "wiki",     labelKey: "nav.space.wiki",     icon: IconWiki,     shortcut: "" },
+  { id: "books",    labelKey: "nav.space.books",    icon: (p: { size?: number }) => <BooksIcon size={p.size} />, shortcut: "" },
+  { id: "calendar", labelKey: "nav.space.calendar", icon: IconCalendar, shortcut: "" },
+  { id: "ontology", labelKey: "nav.space.ontology", icon: IconOntology, shortcut: "" },
+  { id: "library",  labelKey: "nav.space.library",  icon: (p: { size?: number }) => <LibraryIcon size={p.size} />, shortcut: "" },
 ]
 
 /* ── Component ──────────────────────────────────────── */
 
 export function ActivityBar() {
+  const t = useT()
   const router = useRouter()
   const activeSpace = useActiveSpace()
 
@@ -105,7 +107,8 @@ export function ActivityBar() {
       {/* Sidebar toggle removed — PanelsMenu (hamburger) handles all panel toggles. */}
 
       {/* Tier 1 — primary spaces */}
-      {SPACES.map(({ id, label, icon: Icon, shortcut }) => {
+      {SPACES.map(({ id, labelKey, icon: Icon, shortcut }) => {
+        const label = t(labelKey)
         const isActive = activeSpace === id
         const spaceColor = id in SPACE_COLORS ? SPACE_COLORS[id as keyof typeof SPACE_COLORS] : null
         // Plot preserves per-space colors (SPACE_COLORS lib/colors.ts) — v3
@@ -156,14 +159,14 @@ export function ActivityBar() {
           <button
             onClick={toggleTheme}
             className="a-ab"
-            aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+            aria-label={theme === "dark" ? t("nav.theme.toggle_to_light") : t("nav.theme.toggle_to_dark")}
           >
             {theme === "dark" ? <IconSun size={20} /> : <IconMoon size={20} />}
-            <span className="a-ab__label">{theme === "dark" ? "Light" : "Dark"}</span>
+            <span className="a-ab__label">{theme === "dark" ? t("nav.theme.light_label") : t("nav.theme.dark_label")}</span>
           </button>
         </TooltipTrigger>
         <TooltipContent side="right" className="text-2xs">
-          {theme === "dark" ? "Light mode" : "Dark mode"}
+          {theme === "dark" ? t("nav.theme.light_mode") : t("nav.theme.dark_mode")}
         </TooltipContent>
       </Tooltip>
     </aside>

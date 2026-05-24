@@ -47,6 +47,7 @@ import {
   SquarePen as PhNotePencil,
 } from "lucide-react"
 import { groupByInitial } from "@/lib/korean-utils"
+import { useT } from "@/lib/i18n"
 import { StatusShapeIcon } from "@/components/status-icon"
 import { StatusBadge } from "@/components/note-fields"
 import { NoteContextMenuItems } from "@/components/note-context-menu-items"
@@ -131,20 +132,20 @@ const SORT_FIELD_LABELS: Record<SortField, string> = {
   itemCount: "Item count",
 }
 
-const COLUMN_DEFS: { id: string; label: string; width: string; align?: string; sortField?: SortField; minWidth?: number }[] = [
-  { id: "title", label: "Name", width: "flex-1 min-w-0", sortField: "title" },
+const COLUMN_DEFS: { id: string; label: string; labelKey?: string; width: string; align?: string; sortField?: SortField; minWidth?: number }[] = [
+  { id: "title", label: "Name", labelKey: "display.ordering.title", width: "flex-1 min-w-0", sortField: "title" },
   // status: header is left-aligned so the "Status" label sits directly above
   // the status badge in each row (Wiki list pattern). Previously text-right
   // caused header/data misalignment.
-  { id: "status", label: "Status", width: "w-[120px] shrink-0", sortField: "status", minWidth: 400 },
-  { id: "folder", label: "Folder", width: "w-[80px] shrink-0", align: "text-center", sortField: "folder", minWidth: 560 },
-  { id: "parent", label: "Parent", width: "w-[100px] shrink-0", align: "text-center", minWidth: 700 },
-  { id: "children", label: "Children", width: "w-[72px] shrink-0", align: "text-center", minWidth: 700 },
-  { id: "links", label: "Backlinks", width: "w-[72px] shrink-0", align: "text-center", sortField: "links", minWidth: 600 },
+  { id: "status", label: "Status", labelKey: "display.property.status", width: "w-[120px] shrink-0", sortField: "status", minWidth: 400 },
+  { id: "folder", label: "Folder", labelKey: "display.property.folder", width: "w-[80px] shrink-0", align: "text-center", sortField: "folder", minWidth: 560 },
+  { id: "parent", label: "Parent", labelKey: "display.property.parent", width: "w-[100px] shrink-0", align: "text-center", minWidth: 700 },
+  { id: "children", label: "Children", labelKey: "display.property.children", width: "w-[72px] shrink-0", align: "text-center", minWidth: 700 },
+  { id: "links", label: "Backlinks", labelKey: "display.property.backlinks", width: "w-[72px] shrink-0", align: "text-center", sortField: "links", minWidth: 600 },
   { id: "reads", label: "Reads", width: "w-[72px] shrink-0", align: "text-center", sortField: "reads", minWidth: 720 },
-  { id: "wordCount", label: "Words", width: "w-[72px] shrink-0", align: "text-right", sortField: "reads", minWidth: 760 },
-  { id: "updatedAt", label: "Updated", width: "w-[80px] shrink-0", align: "text-right", sortField: "updatedAt", minWidth: 280 },
-  { id: "createdAt", label: "Created", width: "w-[80px] shrink-0", align: "text-right", sortField: "createdAt", minWidth: 800 },
+  { id: "wordCount", label: "Words", labelKey: "display.property.words", width: "w-[72px] shrink-0", align: "text-right", sortField: "reads", minWidth: 760 },
+  { id: "updatedAt", label: "Updated", labelKey: "display.property.updated", width: "w-[80px] shrink-0", align: "text-right", sortField: "updatedAt", minWidth: 280 },
+  { id: "createdAt", label: "Created", labelKey: "display.property.created", width: "w-[80px] shrink-0", align: "text-right", sortField: "createdAt", minWidth: 800 },
 ]
 
 /* ── Virtual item type ─────────────────────────────────── */
@@ -449,6 +450,7 @@ export function NotesTable({
    *  invokes openNote() to escape into the full editor. */
   dualMode?: boolean
 }) {
+  const t = useT()
   const notes = usePlotStore((s) => s.notes)
   const updateNote = usePlotStore((s) => s.updateNote)
   const _storeOpenNote = usePlotStore((s) => s.openNote)
@@ -1400,7 +1402,7 @@ export function NotesTable({
                     >
                       {col.id === "title" ? (
                         <TH
-                          label={col.label}
+                          label={col.labelKey ? t(col.labelKey) : col.label}
                           col={col.sortField}
                           sortCol={viewState.sortField}
                           sortDir={viewState.sortDirection}
@@ -1410,7 +1412,7 @@ export function NotesTable({
                         />
                       ) : (
                         <TH
-                          label={col.label}
+                          label={col.labelKey ? t(col.labelKey) : col.label}
                           col={col.sortField}
                           sortCol={viewState.sortField}
                           sortDir={viewState.sortDirection}

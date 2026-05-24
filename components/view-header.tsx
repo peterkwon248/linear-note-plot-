@@ -26,6 +26,7 @@ import { setSecondarySpace, getSecondarySpace } from "@/lib/table-route"
 import { useActiveSpace } from "@/lib/table-route"
 import { usePane } from "@/components/workspace/pane-context"
 import { usePlotStore } from "@/lib/store"
+import { useT } from "@/lib/i18n"
 import { Save as FloppyDisk } from "lucide-react"
 
 /* ── Header Icon Button ── */
@@ -127,7 +128,9 @@ interface ViewHeaderProps {
    *  same chip works in list, board, grid, timeline. */
   quickFilters?: Array<{
     label: string
+    labelKey?: string
     desc: string
+    descKey?: string
     rules: Array<{ field: string; operator: string; value: string }>
   }>
   /** Current active filter rules. Used to compute each chip's active state. */
@@ -164,6 +167,7 @@ export function ViewHeader({
   activeFilters,
   onFiltersChange,
 }: ViewHeaderProps) {
+  const t = useT()
   const pane = usePane()
 
   // Side panel toggle — auto-wired to the store unless explicitly overridden.
@@ -460,14 +464,14 @@ export function ViewHeader({
                 key={`${qf.label}-${i}`}
                 type="button"
                 onClick={onClick}
-                title={qf.desc}
+                title={qf.descKey ? t(qf.descKey) : qf.desc}
                 className={
                   active
                     ? "shrink-0 rounded-full border border-accent/40 bg-accent/10 px-2.5 py-0.5 text-2xs font-medium text-accent transition-colors"
                     : "shrink-0 rounded-full border border-border/70 bg-secondary/30 px-2.5 py-0.5 text-2xs font-medium text-muted-foreground transition-colors hover:border-border hover:text-foreground"
                 }
               >
-                {qf.label}
+                {qf.labelKey ? t(qf.labelKey) : qf.label}
               </button>
             )
           })}

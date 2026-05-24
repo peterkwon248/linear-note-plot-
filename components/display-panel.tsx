@@ -18,6 +18,7 @@ import {
 } from "lucide-react"
 import { ToggleSwitch } from "@/components/ui/toggle-switch"
 import { ChipDropdown } from "@/components/ui/chip-dropdown"
+import { useT } from "@/lib/i18n"
 // Single source of truth — declared in the view-engine layer, re-exported here
 // for back-compat with any consumer that imports DisplayConfig from this module.
 import type { DisplayConfig, DisplayToggle, DisplayProperty, ModeList, GroupingOption } from "@/lib/view-engine/view-configs"
@@ -84,13 +85,13 @@ export const SortIcon = () => (
 // 2026-05-24: Gallery mode removed from the tab strip (deprecated app-wide
 // in favor of Grid — user feedback: grid reads cleaner). Persisted
 // `viewMode === "gallery"` migrates to "grid" via normalizeViewState.
-const MODE_DEFS: { mode: ViewMode; icon: ReactNode; label: string }[] = [
-  { mode: "list",     icon: <List size={14} strokeWidth={2} />,     label: "List" },
-  { mode: "board",    icon: <Kanban size={14} strokeWidth={2} />,   label: "Board" },
-  { mode: "grid",     icon: <GridFour size={14} strokeWidth={2} />, label: "Grid" },
-  { mode: "graph",    icon: <Graph size={14} strokeWidth={2} />,    label: "Graph" },
-  { mode: "insights",  icon: <ChartLine size={14} strokeWidth={2} />, label: "Insights" },
-  { mode: "timeline",  icon: <ChartBarHorizontal size={14} strokeWidth={2} />, label: "Timeline" },
+const MODE_DEFS: { mode: ViewMode; icon: ReactNode; label: string; labelKey: string }[] = [
+  { mode: "list",     icon: <List size={14} strokeWidth={2} />,     label: "List", labelKey: "display.viewmode.list" },
+  { mode: "board",    icon: <Kanban size={14} strokeWidth={2} />,   label: "Board", labelKey: "display.viewmode.board" },
+  { mode: "grid",     icon: <GridFour size={14} strokeWidth={2} />, label: "Grid", labelKey: "display.viewmode.grid" },
+  { mode: "graph",    icon: <Graph size={14} strokeWidth={2} />,    label: "Graph", labelKey: "display.viewmode.list" /* TODO i18n */ },
+  { mode: "insights",  icon: <ChartLine size={14} strokeWidth={2} />, label: "Insights", labelKey: "sidebar.insights" },
+  { mode: "timeline",  icon: <ChartBarHorizontal size={14} strokeWidth={2} />, label: "Timeline", labelKey: "display.viewmode.timeline" },
 ]
 
 function resolveViewMode(viewMode: ViewMode): ViewMode {
@@ -108,6 +109,7 @@ export function DisplayPanel({
   onToggleChange,
   showViewMode,
 }: DisplayPanelProps) {
+  const t = useT()
   const supportedModes = config.supportedModes ?? (["list", "board"] as ViewMode[])
   const currentMode = resolveViewMode(viewState.viewMode)
   const isBoard = currentMode === "board"
@@ -150,8 +152,8 @@ export function DisplayPanel({
 
   /* ── Mode-specific section label ── */
   const optionsSectionLabel = isBoard
-    ? "Board options"
-    : "List options"
+    ? t("display.board_options")
+    : t("display.list_options")
 
   function handlePropertyToggle(key: string) {
     const current = viewState.visibleColumns
@@ -172,7 +174,7 @@ export function DisplayPanel({
               return (
                 <button
                   key={def.mode}
-                  title={def.label}
+                  title={t(def.labelKey)}
                   onClick={() => {
                     const patch: Partial<ViewState> = { viewMode: def.mode as ViewMode }
                     // Board needs a non-"none" groupBy — fall back to the
@@ -192,7 +194,7 @@ export function DisplayPanel({
                   }`}
                 >
                   {def.icon}
-                  {def.label}
+                  {t(def.labelKey)}
                 </button>
               )
             })}
@@ -247,7 +249,7 @@ export function DisplayPanel({
             /* List: Grouping + optional Sub-grouping */
             <>
               <div className="flex items-center justify-between">
-                <span className="text-note text-muted-foreground">Grouping</span>
+                <span className="text-note text-muted-foreground">{t("display.grouping")}</span>
                 <ChipDropdown<GroupBy>
                   value={viewState.groupBy}
                   options={groupingOptions}
@@ -325,7 +327,7 @@ export function DisplayPanel({
               return (
                 <div key={`${idx}-${rule.field}`} className="flex items-center justify-between">
                   <span className="text-note text-muted-foreground">
-                    {idx === 0 ? "Ordering" : idx === 1 ? "Then by" : "Then by"}
+                    {idx === 0 ? t("display.ordering") : t("display.ordering")}
                   </span>
                   <div className="flex items-center gap-1">
                     <ChipDropdown<SortField>
@@ -360,7 +362,7 @@ export function DisplayPanel({
                 className="self-end inline-flex items-center gap-1 px-2 py-1 rounded-md text-2xs text-muted-foreground hover:text-foreground hover:bg-hover-bg transition-colors"
               >
                 <PhPlus size={11} strokeWidth={2} />
-                Add sort
+                {t("display.ordering.add_sort")}
               </button>
             )}
           </div>
@@ -386,7 +388,7 @@ export function DisplayPanel({
                     </span>
                   )}
                   <ToggleSwitch
-                    label={toggle.label}
+                    label={toggle.labelKey ? t(toggle.labelKey) : toggle.label}
                     checked={
                       toggle.key === "showEmptyGroups"
                         ? !!viewState.showEmptyGroups
@@ -423,7 +425,7 @@ export function DisplayPanel({
           <hr className="border-border-subtle" />
           <div>
             <p className="text-2xs font-semibold uppercase tracking-wider text-accent/80 mb-2.5">
-              Display properties
+              {t("display.properties")}
             </p>
             <div className="flex flex-wrap gap-1.5">
               {visibleProperties.map((prop) => {
@@ -440,7 +442,7 @@ export function DisplayPanel({
                     ].join(" ")}
                   >
                     {prop.icon && <span className="shrink-0">{prop.icon}</span>}
-                    {prop.label}
+                    {prop.labelKey ? t(prop.labelKey) : prop.label}
                   </button>
                 )
               })}

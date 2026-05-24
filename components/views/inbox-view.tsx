@@ -4,7 +4,7 @@ import { useState, useCallback } from "react"
 import { useRouter } from "next/navigation"
 import { usePlotStore } from "@/lib/store"
 import { setActiveRoute } from "@/lib/table-route"
-import { useInbox, type InboxItem } from "@/lib/hooks/use-inbox"
+import { useInboxBySection, type InboxItem, type InboxSection } from "@/lib/hooks/use-inbox"
 import type { InboxItemKind } from "@/lib/store/slices/inbox"
 import { ViewHeader } from "@/components/view-header"
 import { IconInbox, IconChevronRight } from "@/components/plot-icons"
@@ -15,17 +15,6 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { toast } from "sonner"
 import { InboxSourceIcon } from "@/components/inbox/inbox-source-icon"
 import { X as PhX, Clock } from "lucide-react"
-
-/* ── Filter tab types ─────────────────────────────────── */
-
-type FilterTab = "all" | "reminders" | "srs" | "snoozed"
-
-const TABS: { id: FilterTab; label: string }[] = [
-  { id: "all", label: "All" },
-  { id: "reminders", label: "Reminders" },
-  { id: "srs", label: "SRS" },
-  { id: "snoozed", label: "Snoozed" },
-]
 
 /* ── Snooze option helpers ────────────────────────────── */
 
@@ -72,6 +61,8 @@ function InboxRowFull({
     if (target.closest("[data-inbox-action]")) return
     if (item.kind === "wiki-redlink" || item.kind === "auto-enroll") {
       setActiveRoute("/wiki")
+    } else if (item.kind === "plan-due") {
+      setActiveRoute("/wiki")
     } else {
       onOpenNote(item.sourceId)
     }
@@ -104,7 +95,7 @@ function InboxRowFull({
       onClick={handleRowClick}
       onKeyDown={(e) => {
         if (e.key === "Enter" || e.key === " ") {
-          if (item.kind === "wiki-redlink" || item.kind === "auto-enroll") {
+          if (item.kind === "wiki-redlink" || item.kind === "auto-enroll" || item.kind === "plan-due") {
             setActiveRoute("/wiki")
           } else {
             onOpenNote(item.sourceId)
@@ -188,13 +179,76 @@ function InboxRowFull({
   )
 }
 
-/* ── Empty states ─────────────────────────────────────── */
+/* ── Section card ─────────────────────────────────────── */
 
-/**
- * "Next up" — earliest future reminder/SRS/snooze across all sources.
- * Returns null when nothing is scheduled. Plot "gentle by default" — single
- * forward-looking line so empty inbox isn't dead space.
- */
+const SECTION_META: Record<InboxSection, { title: string; subtitle: string; empty: string }> = {
+  do: {
+    title: "Do",
+    subtitle: "Reminders, plans, and snoozes that came back",
+    empty: "All caught up.",
+  },
+  review: {
+    title: "Review",
+    subtitle: "Spaced repetition — meant to keep flowing.",
+    empty: "No reviews due right now.",
+  },
+  detected: {
+    title: "Detected",
+    subtitle: "Things Plot noticed for you — always running.",
+    empty: "Nothing detected.",
+  },
+}
+
+function SectionCard({
+  section,
+  items,
+  onOpenNote,
+  onDismiss,
+  onSnooze,
+}: {
+  section: InboxSection
+  items: InboxItem[]
+  onOpenNote: (id: string) => void
+  onDismiss: (kind: InboxItemKind, sourceId: string) => void
+  onSnooze: (kind: InboxItemKind, sourceId: string, until: Date) => void
+}) {
+  const meta = SECTION_META[section]
+  return (
+    <section className="space-y-2">
+      <header className="flex items-baseline gap-2 px-1">
+        <h2 className="text-note font-medium text-foreground">{meta.title}</h2>
+        <span className="text-2xs text-muted-foreground tabular-nums">
+          {items.length}
+        </span>
+        <span className="ml-1 truncate text-2xs text-muted-foreground/70">
+          {meta.subtitle}
+        </span>
+      </header>
+      <div className="rounded-lg border border-border bg-card">
+        {items.length === 0 ? (
+          <div className="px-3 py-6 text-center text-2xs text-muted-foreground/70">
+            {meta.empty}
+          </div>
+        ) : (
+          <div className="px-1.5 py-1">
+            {items.map((item) => (
+              <InboxRowFull
+                key={`${item.kind}:${item.sourceId}`}
+                item={item}
+                onOpenNote={onOpenNote}
+                onDismiss={onDismiss}
+                onSnooze={onSnooze}
+              />
+            ))}
+          </div>
+        )}
+      </div>
+    </section>
+  )
+}
+
+/* ── "Next up" footer (kept from prior design) ────────── */
+
 function useNextUp(): { ts: string; label: string; kind: "reminder" | "srs" | "snooze" } | null {
   const notes = usePlotStore((s) => s.notes)
   const hooks = usePlotStore((s) => s.hooks)
@@ -205,7 +259,6 @@ function useNextUp(): { ts: string; label: string; kind: "reminder" | "srs" | "s
     const candidates: Array<{ ts: string; label: string; kind: "reminder" | "srs" | "snooze" }> = []
     const noteById = new Map(notes.map((n) => [n.id, n]))
 
-    // Future reminders + future SRS due — both sourced from unified hooks (Phase 1b2).
     for (const h of hooks) {
       if (h.target.kind !== "note") continue
       const note = noteById.get(h.target.id)
@@ -226,7 +279,6 @@ function useNextUp(): { ts: string; label: string; kind: "reminder" | "srs" | "s
       }
     }
 
-    // Snoozed (will reappear at snoozedUntil)
     for (const item of snoozedInboxItems) {
       if (new Date(item.snoozedUntil).getTime() <= now) continue
       candidates.push({ ts: item.snoozedUntil, label: "Snoozed item", kind: "snooze" })
@@ -251,41 +303,17 @@ function relativeFuture(isoTs: string): string {
   return new Date(isoTs).toLocaleDateString("en-US", { month: "short", day: "numeric" })
 }
 
-function EmptyAll() {
-  // Vertical 1/3 point — sits gracefully above center, avoids "lost in void" feel
-  // on tall viewports while keeping Plot's gentle restraint.
+function NextUpStrip() {
   const nextUp = useNextUp()
+  if (!nextUp) return null
   return (
-    <div className="flex flex-col items-center gap-3 px-6 pt-24 pb-12 text-center">
-      <IconInbox size={32} className="text-muted-foreground/25" strokeWidth={1} />
-      <div>
-        <p className="text-sm font-medium text-foreground">Inbox zero</p>
-        <p className="mt-0.5 text-2xs text-muted-foreground">All caught up. Nothing needs attention.</p>
-      </div>
-      {nextUp && (
-        <div className="mt-6 flex max-w-xs items-center gap-2 rounded-md border border-border-subtle/40 bg-card/40 px-3 py-2 text-2xs text-muted-foreground">
-          <Clock size={12} strokeWidth={2} className="shrink-0 opacity-70" />
-          <span className="truncate">
-            <span className="text-muted-foreground/70">Next up · </span>
-            <span className="text-foreground/80 font-medium">{nextUp.label}</span>
-            <span className="text-muted-foreground/70"> · {relativeFuture(nextUp.ts)}</span>
-          </span>
-        </div>
-      )}
-    </div>
-  )
-}
-
-function EmptyFilter({ tab }: { tab: FilterTab }) {
-  const labels: Record<Exclude<FilterTab, "all">, string> = {
-    reminders: "No reminders due",
-    srs:       "No reviews due",
-    snoozed:   "No snoozed items",
-  }
-  const label = tab !== "all" ? labels[tab] : ""
-  return (
-    <div className="flex flex-1 flex-col items-center justify-center px-6 py-16 text-center">
-      <p className="text-2xs text-muted-foreground">{label}</p>
+    <div className="mx-auto mt-6 flex max-w-xs items-center gap-2 rounded-md border border-border-subtle/40 bg-card/40 px-3 py-2 text-2xs text-muted-foreground">
+      <Clock size={12} strokeWidth={2} className="shrink-0 opacity-70" />
+      <span className="truncate">
+        <span className="text-muted-foreground/70">Next up · </span>
+        <span className="text-foreground/80 font-medium">{nextUp.label}</span>
+        <span className="text-muted-foreground/70"> · {relativeFuture(nextUp.ts)}</span>
+      </span>
     </div>
   )
 }
@@ -294,14 +322,15 @@ function EmptyFilter({ tab }: { tab: FilterTab }) {
 
 export function InboxView() {
   const router = useRouter()
-  const [activeTab, setActiveTab] = useState<FilterTab>("all")
   // Path-A-Step-5: local filter state (no IDB persistence — resets on reload, Linear pattern for inbox).
   const [filterRules, setFilterRules] = useState<FilterRule[]>([])
 
-  const allItems = useInbox()
+  const sections = useInboxBySection()
   const dismissInbox = usePlotStore((s) => s.dismissInbox)
   const snoozeInbox = usePlotStore((s) => s.snoozeInbox)
   const openNote = usePlotStore((s) => s.openNote)
+
+  const totalCount = sections.do.length + sections.review.length + sections.detected.length
 
   const navigateToHome = () => {
     setActiveRoute("/home")
@@ -319,9 +348,9 @@ export function InboxView() {
       <IconChevronRight size={16} className="shrink-0 text-muted-foreground/70" />
       <span className="text-note font-medium text-foreground">
         Inbox
-        {allItems.length > 0 && (
+        {totalCount > 0 && (
           <span className="ml-0.5 text-note font-normal text-muted-foreground tabular-nums">
-            {allItems.length}
+            {totalCount}
           </span>
         )}
       </span>
@@ -340,44 +369,33 @@ export function InboxView() {
     })
   }, [])
 
-  /* Source filter (applied first) + tab filter (applied second) compose as AND. */
-  const sourceFiltered = filterRules.length === 0
-    ? allItems
-    : allItems.filter((item) => {
-        const sourceRules = filterRules.filter(f => f.field === "source")
-        if (sourceRules.length === 0) return true
-        return sourceRules.some(r => r.value === item.kind)
-      })
-
-  /* Tab-filtered items */
-  const filtered = sourceFiltered.filter((item) => {
-    if (activeTab === "all") return true
-    if (activeTab === "reminders") return item.kind === "reminder"
-    if (activeTab === "srs") return item.kind === "srs"
-    if (activeTab === "snoozed") return item.kind === "snooze-expired"
-    return true
-  })
-
-  /* Per-tab counts for badges */
-  const counts: Record<FilterTab, number> = {
-    all:       allItems.length,
-    reminders: allItems.filter((i) => i.kind === "reminder").length,
-    srs:       allItems.filter((i) => i.kind === "srs").length,
-    snoozed:   allItems.filter((i) => i.kind === "snooze-expired").length,
+  /* Apply source filter (only "source" field is currently meaningful for Inbox) */
+  function applySourceFilter(items: InboxItem[]): InboxItem[] {
+    if (filterRules.length === 0) return items
+    const sourceRules = filterRules.filter(f => f.field === "source")
+    if (sourceRules.length === 0) return items
+    return items.filter((item) => sourceRules.some(r => r.value === item.kind))
   }
+
+  const doItems = applySourceFilter(sections.do)
+  const reviewItems = applySourceFilter(sections.review)
+  const detectedItems = applySourceFilter(sections.detected)
 
   function handleOpenNote(noteId: string) {
     openNote(noteId)
     setActiveRoute("/notes")
   }
 
+  // Q6 RESOLVED — "Do 비우기 = Inbox-zero". Review/Detected are 영원;
+  // their cards always render, even when empty.
+  const doEmpty = doItems.length === 0
+
   return (
     <div className="flex flex-1 flex-col overflow-hidden">
-      {/* View Header — matches stickers/labels pattern */}
       <ViewHeader
         icon={<IconInbox size={20} strokeWidth={1.5} />}
         title="Inbox"
-        count={allItems.length}
+        count={totalCount}
         titleNode={inboxBreadcrumb}
         showFilter={INBOX_VIEW_CONFIG.showFilter}
         hasActiveFilters={filterRules.length > 0}
@@ -394,61 +412,47 @@ export function InboxView() {
 
       {/* Content area */}
       <div className="flex-1 overflow-y-auto">
-        <div className="mx-auto w-full max-w-2xl px-6 py-6">
-
-          {/* Filter tabs */}
-          <div className="mb-4 flex items-center gap-1">
-            {TABS.map((tab) => {
-              const active = activeTab === tab.id
-              const count = counts[tab.id]
-              return (
-                <button
-                  key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
-                  className={`flex items-center gap-1.5 rounded-md px-2.5 py-1 text-2xs font-medium transition-colors duration-100 ${
-                    active
-                      ? "bg-foreground/10 text-foreground"
-                      : "text-muted-foreground hover:bg-hover-bg hover:text-foreground"
-                  }`}
-                >
-                  {tab.label}
-                  {/* Always-on count chip (B2): 0 = muted, >0 = readable. Lets users
-                      see "what's queued" without clicking each tab first. */}
-                  <span
-                    className={`tabular-nums ${
-                      count === 0
-                        ? "text-muted-foreground/35"
-                        : active
-                          ? "text-foreground/70"
-                          : "text-muted-foreground/60"
-                    }`}
-                  >
-                    {count}
-                  </span>
-                </button>
-              )
-            })}
-          </div>
-
-          {/* Item list */}
-          {allItems.length === 0 ? (
-            <EmptyAll />
-          ) : filtered.length === 0 ? (
-            <EmptyFilter tab={activeTab} />
-          ) : (
-            <div className="rounded-lg border border-border bg-card">
-              <div className="px-1.5 py-1">
-                {filtered.map((item) => (
-                  <InboxRowFull
-                    key={`${item.kind}:${item.sourceId}`}
-                    item={item}
-                    onOpenNote={handleOpenNote}
-                    onDismiss={dismissInbox}
-                    onSnooze={snoozeInbox}
-                  />
-                ))}
+        <div className="mx-auto w-full max-w-2xl space-y-6 px-6 py-6">
+          {doEmpty && reviewItems.length === 0 && detectedItems.length === 0 ? (
+            <div className="flex flex-col items-center gap-3 px-6 pt-24 pb-12 text-center">
+              <IconInbox size={32} className="text-muted-foreground/25" strokeWidth={1} />
+              <div>
+                <p className="text-sm font-medium text-foreground">Inbox zero</p>
+                <p className="mt-0.5 text-2xs text-muted-foreground">
+                  All caught up — Review and Detected are always running.
+                </p>
               </div>
+              <NextUpStrip />
             </div>
+          ) : (
+            <>
+              <SectionCard
+                section="do"
+                items={doItems}
+                onOpenNote={handleOpenNote}
+                onDismiss={dismissInbox}
+                onSnooze={snoozeInbox}
+              />
+              <SectionCard
+                section="review"
+                items={reviewItems}
+                onOpenNote={handleOpenNote}
+                onDismiss={dismissInbox}
+                onSnooze={snoozeInbox}
+              />
+              <SectionCard
+                section="detected"
+                items={detectedItems}
+                onOpenNote={handleOpenNote}
+                onDismiss={dismissInbox}
+                onSnooze={snoozeInbox}
+              />
+              {doEmpty && (
+                <p className="px-1 text-2xs text-muted-foreground/70">
+                  All caught up — Review and Detected are always running.
+                </p>
+              )}
+            </>
           )}
         </div>
       </div>

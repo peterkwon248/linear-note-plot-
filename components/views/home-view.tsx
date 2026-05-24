@@ -2,6 +2,7 @@
 
 import { useMemo } from "react"
 import { usePlotStore } from "@/lib/store"
+import { useT } from "@/lib/i18n"
 import { setActiveRoute } from "@/lib/table-route"
 import { QuickCapture } from "@/components/home/quick-capture"
 import { StatsRow } from "@/components/home/stats-row"
@@ -26,6 +27,7 @@ import type { InboxItemKind } from "@/lib/store/slices/inbox"
  * Home view — clean data dashboard (Wiki Dashboard style).
  */
 export function HomeView() {
+  const t = useT()
   const notes = usePlotStore((s) => s.notes)
   const openNote = usePlotStore((s) => s.openNote)
   const tags = usePlotStore((s) => s.tags)
@@ -75,7 +77,7 @@ export function HomeView() {
     <div className="flex flex-1 flex-col overflow-hidden">
       <ViewHeader
         icon={<IconHome size={20} />}
-        title="Home"
+        title={t("home.title")}
       />
       <div className="flex-1 overflow-y-auto">
       <div className="mx-auto w-full max-w-5xl px-6 py-10">
@@ -88,7 +90,7 @@ export function HomeView() {
         <section className="mb-8">
           <header className="mb-3 px-1">
             <h3 className="text-2xs font-semibold uppercase tracking-wider text-muted-foreground">
-              Knowledge base
+              {t("home.knowledge_base")}
             </h3>
           </header>
           <StatsRow />
@@ -105,7 +107,7 @@ export function HomeView() {
             </div>
             <div className="min-w-0 flex-1">
               <div className="mb-0.5 flex items-center gap-2">
-                <span className="text-2xs font-medium uppercase tracking-wide text-muted-foreground/60">Featured Note</span>
+                <span className="text-2xs font-medium uppercase tracking-wide text-muted-foreground/60">{t("home.featured_note")}</span>
               </div>
               <h3 className="text-note font-semibold text-foreground group-hover:text-accent transition-colors">
                 {insights.featured.title || "Untitled"}
@@ -122,7 +124,7 @@ export function HomeView() {
         {inboxItems.length > 0 && (
           <section className="mb-6">
             <ContentCard
-              title="Inbox"
+              title={t("home.inbox")}
               icon={IconInbox}
               iconColor="text-muted-foreground"
               trailing={
@@ -134,7 +136,7 @@ export function HomeView() {
                     onClick={() => setActiveRoute("/inbox")}
                     className="text-2xs text-muted-foreground transition-colors hover:text-foreground"
                   >
-                    View all <span aria-hidden>→</span>
+                    {t("home.view_all")} <span aria-hidden>→</span>
                   </button>
                 </div>
               }
@@ -167,7 +169,7 @@ export function HomeView() {
         {/* Two-column content */}
         <div className="mb-8 grid grid-cols-1 gap-5 min-[700px]:grid-cols-2">
           {/* Recent Activity */}
-          <ContentCard title="Recent Activity" icon={PhClock}>
+          <ContentCard title={t("home.recent_activity")} icon={PhClock}>
             {insights.recentlyEdited.map((note) => (
               <NoteItem
                 key={note.id}
@@ -180,12 +182,12 @@ export function HomeView() {
 
           {/* Most Connected */}
           {insights.withConnections.length > 0 && (
-            <ContentCard title="Most Connected" icon={TrendUp}>
+            <ContentCard title={t("home.most_connected")} icon={TrendUp}>
               {insights.withConnections.map(({ note, count }) => (
                 <NoteItem
                   key={note.id}
                   title={note.title || "Untitled"}
-                  meta={`${count} links`}
+                  meta={t("home.links").replace("{count}", String(count))}
                   onClick={() => handleOpenNote(note.id)}
                 />
               ))}
@@ -197,7 +199,7 @@ export function HomeView() {
         <section className="mb-8">
           <header className="mb-3 flex items-center justify-between px-1">
             <h3 className="text-2xs font-semibold uppercase tracking-wider text-muted-foreground">
-              Recent
+              {t("home.recent")}
             </h3>
           </header>
           <RecentCards limit={4} />

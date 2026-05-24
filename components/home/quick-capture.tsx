@@ -1,8 +1,9 @@
 "use client"
 
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 import { toast } from "sonner"
 import { usePlotStore } from "@/lib/store"
+import { useT } from "@/lib/i18n"
 
 /**
  * Quick Capture — top-of-Home single-line input.
@@ -22,29 +23,35 @@ import { usePlotStore } from "@/lib/store"
  *     at the kinds of things you can capture: thought / meeting / quote / idea / learning.
  *     Cycle pauses while the user is typing.
  */
-const PLACEHOLDERS = [
-  "Capture a thought…",
-  "Meeting notes…",
-  "A quotation…",
-  "An idea…",
-  "Something learned…",
+const PLACEHOLDER_KEYS = [
+  "home.capture.placeholder.thought",
+  "home.capture.placeholder.meeting",
+  "home.capture.placeholder.quote",
+  "home.capture.placeholder.idea",
+  "home.capture.placeholder.learning",
 ]
 
 export function QuickCapture() {
+  const t = useT()
   const [value, setValue] = useState("")
   const [flashing, setFlashing] = useState(false)
   const [phIndex, setPhIndex] = useState(0)
   const inputRef = useRef<HTMLInputElement>(null)
 
+  // Resolve translated placeholders once per render. Cycling state is a numeric
+  // index so the active language change re-renders with the same slot mapped
+  // to the new locale.
+  const placeholders = useMemo(() => PLACEHOLDER_KEYS.map(t), [t])
+
   // Cycle placeholder while the input is empty. Stops while the user is typing.
   useEffect(() => {
     if (value) return
     const id = window.setInterval(
-      () => setPhIndex((i) => (i + 1) % PLACEHOLDERS.length),
+      () => setPhIndex((i) => (i + 1) % placeholders.length),
       3000,
     )
     return () => window.clearInterval(id)
-  }, [value])
+  }, [value, placeholders.length])
 
   function submit() {
     const trimmed = value.trim()
@@ -64,7 +71,7 @@ export function QuickCapture() {
     setFlashing(true)
     window.setTimeout(() => setFlashing(false), 220)
 
-    toast.success("Added to Stone", {
+    toast.success(t("home.capture.added_toast"), {
       duration: 1500,
       position: "bottom-right",
     })
@@ -94,14 +101,14 @@ export function QuickCapture() {
             inputRef.current?.blur()
           }
         }}
-        placeholder={PLACEHOLDERS[phIndex]}
+        placeholder={placeholders[phIndex]}
         className={
           "h-10 w-full rounded-lg bg-secondary/50 px-4 text-note text-foreground " +
           "border border-border outline-none transition-all " +
           "placeholder:text-muted-foreground " +
           "focus:border-accent/50 focus:ring-2 focus:ring-accent/20 focus:bg-background"
         }
-        aria-label="Quick capture — press Enter to add a note to your Inbox"
+        aria-label={t("home.capture.aria")}
       />
     </div>
   )

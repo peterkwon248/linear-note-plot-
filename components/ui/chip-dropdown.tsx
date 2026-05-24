@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import { ChevronDown, Check } from "lucide-react"
+import { useT } from "@/lib/i18n"
 
 export function ChipDropdown<T extends string>({
   value,
@@ -10,12 +11,16 @@ export function ChipDropdown<T extends string>({
   disabledValues,
 }: {
   value: T
-  options: { value: T; label: string }[]
+  options: { value: T; label: string; labelKey?: string }[]
   onChange: (value: T) => void
   disabledValues?: T[]
 }) {
+  const t = useT()
   const [open, setOpen] = useState(false)
-  const currentLabel = options.find((o) => o.value === value)?.label ?? value
+  const labelOf = (o: { label: string; labelKey?: string }) =>
+    o.labelKey ? t(o.labelKey) : o.label
+  const currentOpt = options.find((o) => o.value === value)
+  const currentLabel = currentOpt ? labelOf(currentOpt) : value
 
   return (
     <div className="relative">
@@ -49,7 +54,7 @@ export function ChipDropdown<T extends string>({
                       : "hover:bg-hover-bg"
                   }`}
                 >
-                  <span>{opt.label}</span>
+                  <span>{labelOf(opt)}</span>
                   {value === opt.value && (
                     <span className="text-accent">
                       <Check size={12} strokeWidth={2.5} />
