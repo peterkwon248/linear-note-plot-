@@ -1267,6 +1267,54 @@ export function LinearSidebar() {
               />
             </div>
 
+            {/* Pinned section (cross-entity) — placed at top per Linear/Notion 표준 (2026-05-24).
+                Calendar는 mixed entity (notes + wiki + books) context — homePinnedItems
+                source 그대로 사용해 cross-entity 일관. */}
+            {homePinnedItems.length > 0 && (
+              <Section title={t("sidebar.section.pinned")}>
+                {homePinnedItems.map((item) => (
+                  <button
+                    key={`${item.kind}:${item.id}`}
+                    draggable={item.kind === "note"}
+                    onDragStart={item.kind === "note" ? (e) => setNoteDragData(e, item.id) : undefined}
+                    onClick={(e) => {
+                      if (item.kind === "note") {
+                        openNote(item.id, { forceNewTab: e.ctrlKey || e.metaKey })
+                      } else if (item.kind === "wiki") {
+                        setActiveRoute("/wiki")
+                        usePlotStore.getState().setSelectedNoteId(null)
+                        navigateToWikiArticle(item.id)
+                      } else {
+                        const href = `/books/${item.id}`
+                        setActiveRoute(href)
+                        setSelectedNoteId(null)
+                        router.push(href)
+                      }
+                    }}
+                    className="a-sb-link"
+                  >
+                    <span className="flex shrink-0 items-center justify-center w-5 h-5">
+                      {item.kind === "note" ? (
+                        <StatusShapeIcon status={item.status} size={14} />
+                      ) : item.kind === "wiki" ? (
+                        item.isStub ? (
+                          <IconWikiStub size={14} style={{ color: WIKI_STATUS_HEX.stub }} />
+                        ) : (
+                          <IconWikiArticle size={14} style={{ color: WIKI_STATUS_HEX.article }} />
+                        )
+                      ) : (
+                        <BookOpen size={14} style={{ color: "var(--space-books)" }} />
+                      )}
+                    </span>
+                    <span className="truncate text-left flex-1">{item.title}</span>
+                    {item.kind === "book" && (
+                      <span className="a-sb-link__count tabular-nums">{item.itemCount}</span>
+                    )}
+                  </button>
+                ))}
+              </Section>
+            )}
+
             {/* Today's Summary */}
             <Section title={t("calendar.today")}>
               {(() => {
