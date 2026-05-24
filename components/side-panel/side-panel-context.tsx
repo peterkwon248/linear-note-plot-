@@ -174,7 +174,13 @@ export function SidePanelContext({ noteId: propNoteId }: { noteId?: string | nul
             : "bg-accent/10 text-accent"
         }`}>
           {note.status === "keystone" && <PhShield size={14} strokeWidth={2} />}
-          {note.status ? note.status.charAt(0).toUpperCase() + note.status.slice(1) : "Stone"}
+          {note.status === "stone"
+            ? t("status.stone")
+            : note.status === "brick"
+            ? t("status.brick")
+            : note.status === "keystone"
+            ? t("status.block")
+            : t("status.stone")}
         </span>
         {note.status === "brick" && isReadyToPromote(note, backlinks) && (
           <span className="flex items-center gap-1 rounded-md bg-chart-5/10 px-2 py-0.5 text-2xs font-medium text-chart-5">
