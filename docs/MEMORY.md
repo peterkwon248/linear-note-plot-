@@ -8,6 +8,22 @@
 
 ---
 
+## 🚀 2026-05-24 (새벽) — **Temporal Hooks PRD v0.2 + Phase 1a foundation (Hook model + slice + v145→v146 migration)** ⭐⭐⭐⭐
+
+**범위**: PR #411 머지. temporal-hooks PRD v0.1 → v0.2 (Q3/Q4/Q6 RESOLVED). Phase 1a foundation — Hook 모델 + slice + 마이그레이션. legacy 필드 Phase 1a keep, Phase 1b에서 wire + 제거.
+
+**핵심 결정 (영구 LOCKED #111~#112)**:
+- **#111 temporal 도구는 단일 `Hook` 모델로 통합** — snooze/plan/srs/staleness/recurring/watch 6 정책, 하나의 Hook 추상. per-entity 필드 (reviewAt/plannedDate/srsStateByNoteId) = 파편화 재발 — 절대 추가 X. EntityRef-keyed store. 신규 temporal 기능은 모두 Hook 위에.
+- **#112 Hook trigger 갈래 둘 (scheduled / event-match), 엔진 하나** — EntityEvent 스트림이 척추. Timeline=시각화 / Hook engine=구독 / Inbox=발화 슬라이스. 세 소비자가 한 스트림 공유.
+
+**완료**: PRD v0.2 + Hook model + slice + v145→v146 migration (3 legacy 흡수).
+
+**미완**: Phase 1b (workflow wire + read-site + legacy 제거) — 다음 P0 #1.
+
+**다음**: Phase 1b → Phase 1c (Inbox Do/Review/Detected 재배선) → Phase 2 (watch + recurring).
+
+---
+
 ## 🚀 2026-05-24 (저녁) — **거대 세션 #2: Notes timeline ViewHeader + File 엔티티 v1 (6 PR) + Notes/Wiki Grid + Display Panel Audit + Q-series Q1~Q5 (11 변경 단위)** ⭐⭐⭐⭐⭐
 
 **범위**: 단일 거대 PR (36 파일 변경 + 5 신규). 30+ round 사용자 대화. 사용자 신호 기반 cleanup + scaling 본질 도구 구축 (group collapse + quick filter chip universal).
