@@ -21,6 +21,7 @@ export type InboxItemKind =
   | "wiki-redlink"    // [[새 wiki]] 작성됐는데 article 미생성
   | "auto-enroll"     // clusterSuggestion (자동 등재 제안)
   | "plan-due"        // wiki article plan hook (scheduled) due — Phase 1c
+  | "task"            // incomplete checkbox in note body — Phase α-1 Inbox 흡수
 
 export interface InboxDismissed {
   kind: InboxItemKind

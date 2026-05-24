@@ -2,6 +2,7 @@
 
 import { cn } from "@/lib/utils"
 import { usePlotStore } from "@/lib/store"
+import { useT } from "@/lib/i18n"
 import { SidePanelDetail } from "./side-panel-detail"
 import { SidePanelConnections } from "./side-panel-connections"
 import { SidePanelActivity } from "./side-panel-activity"
@@ -24,6 +25,7 @@ import type { SidePanelMode } from "@/lib/store/types"
  * so this component just reads sidePanelContext and renders accordingly.
  */
 export function SmartSidePanel() {
+  const t = useT()
   const sidePanelOpen = usePlotStore((s) => s.sidePanelOpen)
   const sidePanelMode = usePlotStore((s) => s.sidePanelMode)
 
@@ -61,34 +63,34 @@ export function SmartSidePanel() {
             className={tabClass(sidePanelMode === 'detail')}
           >
             <SidebarSimple className="inline mr-0.5" size={13} />
-            Detail
+            {t("sidepanel.tab.detail")}
           </button>
           <button
             onClick={() => setMode('connections')}
             className={tabClass(sidePanelMode === 'connections')}
           >
             <Graph className="inline mr-0.5" size={13} />
-            Connections
+            {t("sidepanel.tab.connections")}
           </button>
           <button
             onClick={() => setMode('activity')}
             className={tabClass(sidePanelMode === 'activity')}
           >
             <ClockCounterClockwise className="inline mr-0.5" size={13} />
-            Activity
+            {t("sidepanel.tab.activity")}
           </button>
           <button
             onClick={() => setMode('bookmarks')}
             className={tabClass(sidePanelMode === 'bookmarks')}
           >
             <BookmarkSimple className="inline mr-0.5" size={13} />
-            Bookmarks
+            {t("sidepanel.tab.bookmarks")}
           </button>
         </div>
         <button
           onClick={() => setOpen(false)}
           className="shrink-0 rounded-md p-1 text-muted-foreground transition-colors hover:bg-hover-bg hover:text-foreground"
-          aria-label="Close panel"
+          aria-label={t("sidepanel.close")}
         >
           <PhX size={14} />
         </button>
