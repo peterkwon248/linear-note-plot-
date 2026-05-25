@@ -3,54 +3,97 @@
 > 우선순위 기반 작업 목록. **P0 = 다음 세션 즉시 시작점** (NEXT-ACTION.md 폐지, 2026-05-12).
 > 완료 항목은 즉시 삭제. 자세한 history는 SESSION-LOG.md + MEMORY.md.
 
-**마지막 갱신**: 2026-05-25 (대규모 세션) — 20 PR (#417-#436): Phase α+β LOCKED #124 완성 + i18n 17 surface + 자료실/Books 아이콘 통일 + Pinned 표준화. 다음 P0 #1 = F (WikiInsightsChart i18n) 또는 사용자 신호.
+**마지막 갱신**: 2026-05-25 (대규모 세션 #2) — 20 PR (#438-#457): i18n 마무리 + Custom Quick Filter feature + 디자인 브레인스토밍. 다음 P0 #1 = 'P' brand mark fix + 온톨로지 대시보드 재설계 (사용자 명시).
 
 ---
 
-## 🟣 P0 — 즉시 (cross-machine 진입점, 2026-05-25)
+## 🟣 P0 — 즉시 (cross-machine 진입점, 2026-05-25 대규모 세션 후)
 
-### 1. **🟢 F — WikiInsightsChart i18n (위키 overview chart)**
+### 1. **🔴 'P' brand mark 제거 + GlobalTopBar user avatar 통합 (사용자 명시 1순위)**
 
-**범위**: 위키 페이지의 overview chart 영어 잔여:
-- Day / Week / Month range 토글
-- Growth / Connectivity 탭
-- All / Articles / Stubs filter chip
-- "Cumulative articles, stubs & notes" chart title
-- "New per month" 등 series labels
+**사용자 의도** (그대로):
+> "P가 하드코딩되어서 들어가는데... 시각적으로 별로야. 액티비티 바에서 해당 영역을 없애고, 토글스패널의 버튼 쪽에다 올리긴 해야 될 거 같은데... 위치를 아주 신경써서 조정해야 될 거 같아. 폰트 사이즈 등까지 고려해서."
 
-**파일**: `components/wiki-editor/wiki-insights-chart.tsx`
+**범위**:
+- `components/activity-bar.tsx:103-105`의 `<div className="a-actbar__head">` + `<div className="a-brand__mark">P</div>` 제거
+- `components/global-top-bar.tsx:97` PanelsMenu 자리/옆에 UserAvatar 추가
+- 32px rounded-md, accent gradient, 이니셜 ("P" default 또는 settings.userName 첫 글자)
 
-**첫 스텝**:
-1. wiki-insights-chart.tsx read
-2. lib/i18n.ts에 wiki.chart.* 신규 keys 추가 (이미 일부 있음 — wiki.chart.cumulative)
-3. useT() wire + 영어 string → t() 호출
-4. tsc + viewport (Wiki overview chart 한국어 확인)
+**Chunk 분할 권장**:
+- chunk 1 (작음): 'P' 단순 제거
+- chunk 2 (중): GlobalTopBar 좌측 UserAvatar (이니셜 only)
+- chunk 3 (큰): avatar dropdown — PanelsMenu + Account menu 통합
 
-**작업 크기**: 소 (1 파일 + ~10 신규 keys).
+**위험**: a-brand__mark CSS가 globals.css에 정의됐을 가능성 — 통째 제거 안전.
 
-### 2. **🟢 Misc i18n cleanup**
+**참고 파일**:
+- `components/activity-bar.tsx:103-105`
+- `components/global-top-bar.tsx:35,97`
+- `components/panels-menu.tsx`
+- 영구 룰 #119 (GlobalTopBar = chrome single source) / #120 (PanelsMenu top bar 단일 mount)
 
-- Trash All view 영어 잔여 (Restore / Delete permanently / Empty trash)
-- Toast 메시지 잔여 ("Dismissed" / "Snoozed until X" / sonner toast)
-- Editor toolbar / slash commands (큰 작업 — 별도 PR)
-- SearchDialog 검색 결과 row (Linear 정합 — highlight + breadcrumb, 별도)
-- Note-hover-preview / note-split-page button title attrs (hover tooltips)
+### 2. **🔴 온톨로지 대시보드/인사이트 layout 재설계 (사용자 명시 1순위)**
 
-### 3. **🟢 사용자 viewport 검증 (4건 미완 — 이전 세션 잔여)**
+**사용자 의도** (그대로):
+> "온톨로지의 인사이트와 대시보드는 좌우 여백이 넓지? 너무 문자가 많고 빽빽해서 한 눈에 안 들어오는데. 차트와 그래프가 더 많아질 순 없나?"
+
+**범위**:
+- `components/ontology/ontology-dashboard-panel.tsx` + `ontology-insights-panel.tsx` layout 재설계
+- 좌우 여백 / max-width 제거 → 풀 폭 grid (Plane Analytics 패턴 정합)
+- KPI 4 카드 1줄 (총 노트/위키/책/카테고리)
+- 차트 신규 7-8개:
+  - Stone/Brick/Block donut (status 분포)
+  - 이번 주 활동 line/area chart (entityEvents)
+  - Top 허브 노트 horizontal bar (backlinksMap top 10)
+  - 카테고리 분포 bar (wikiCategories.noteCount)
+  - Stub vs Article donut (isWikiStub)
+  - 고아 vs 임베드 donut (wikiEmbeddedNoteIds vs total)
+
+**작업 크기**: 대 — PRD 작성 권장. critic 검토 가치.
+
+**위험**: recharts ResponsiveContainer 사용 X (React 19/Next 16 width-0 issue). `WikiInsightsChart`의 ResizeObserver + useRef 패턴 채택.
+
+**참고 파일**:
+- `components/views/ontology-view.tsx` — Dashboard/Insights 진입점
+- `components/ontology/ontology-dashboard-panel.tsx` + `ontology-insights-panel.tsx`
+- `components/wiki-editor/wiki-growth-chart.tsx` — recharts ResizeObserver reference
+- `lib/search/use-backlinks-index.ts` — backlinksMap source
+- 후보 영구 룰 #136 — Dashboard = 풀 폭 / Article 본문 = max-width 유지
+
+### 3. **🟢 좌우 여백 정통화 (홈 / 라이브러리 overview / 온톨로지 페이지)**
+
+대시보드 재설계 #2 끝난 후 cohesive 마무리:
+- 홈 / 라이브러리 overview / 온톨로지 = 풀 폭 (Dashboard 성격)
+- 노트 / 위키 article 본문 = max-width 유지 (long-form 가독성)
+
+### 4. **🟢 Quick Filter polish (chip edit / drag-to-reorder)**
+
+PR #452/#454/#456 후 follow-up:
+- chip edit (label/desc 수정) — 현재 삭제 후 재만들기만
+- chip 정렬 / drag-to-reorder
+
+### 5. **🟢 Misc i18n 마지막 잔여 (큰 작업)**
+
+- Editor toolbar / slash menu 30+ 블록 description (별도 chunk 분할: B bubble menu / A slash menu / C placeholder)
+- "ANCHORS IN NOTE" (북마크 탭 local section)
+- "Document-level" (comment scope picker)
+- Discover sub-labels (NOTES/TAGS/WIKI 헤딩)
+
+### 6. **🟢 wiki list 모드 진입 path 명확화**
+
+dashboard에서 list로 진입하는 명시적 nav 없음 (사이드바에 Overview/병합/분리/템플릿만). 사용자가 chip bar / list view 접근 어색. UI 개선 검토.
+
+### 7. **🟢 Phase 2 temporal hooks (PRD §11 Q1 EventPattern + Q5 recurring)**
+
+watch + recurring policies. 우클릭 프리셋 + 타임라인 드래그 hook UI.
+
+### 8. **🟢 사용자 viewport 검증 미완**
 
 - Backup Restore round-trip (Full Backup → Import → reload)
 - GlobalTopBar Hide-all-panels 후 chrome 접근
 - Cmd+K Escape 닫힘
-- Inbox Phase 1c 3 SectionCard 작동 (Phase β 후 영향 검토)
-
-### 4. **🟢 Phase 2 temporal hooks (PRD §11 Q1 EventPattern + Q5 recurring)**
-
-watch + recurring policies. 우클릭 프리셋 + 타임라인 드래그 hook UI.
-
-### 5. **🟢 사용자 시드 검증 (Phase α-2)**
-
-위키 article 본문에 `[ ] 검증 태스크` 추가 → 페이지 reload → Inbox Do section에
-"검증 태스크" + 해당 위키 article 제목 source로 표시 + 클릭 시 article 직접 open.
+- Inbox Phase 1c 3 SectionCard 작동
+- Phase α-2 위키 체크박스 시드 검증
 
 ---
 
@@ -64,6 +107,7 @@ watch + recurring policies. 우클릭 프리셋 + 타임라인 드래그 hook UI
 
 ## ✅ 최근 완료
 
+- **2026-05-25 (대규모 세션 #2)**: **i18n 마무리 + Custom Quick Filter feature + 디자인 브레인스토밍** (PR #438-#457, 20 PR). (a) i18n 마무리 광범위 (#438-#448, #451, #457): WikiInsightsChart / Trash All view / Trash chrome / Notes-Trash empty + tooltip + split toast / notes-table TrashEntityList + context menu / 3 Floating Action Bars / inbox+books / wiki-view / library-view (refs/tags/files+chrome) / SearchView Linear breadcrumb / Side panel 3 탭 + EVENT_CONFIG 44 verbs / 참고문헌→레퍼런스. ~250+ 신규 dict keys. (b) wikiRegistered 정정 (#449/#450): 라벨 "위키 등록"→"위키에 속해있음" + 동작 제목 매칭→실제 임베드 멤버십 (wikiArticles.noteIds 체크). 영구 룰 #132. (c) Custom Quick Filter feature (#452/#453/#454/#455/#456): 사용자 정의 chip bar entries — Zustand slice v148 + Dialog (promote + rule builder popover) + Wiki/Books default 시드 + "Label"→"Name" Plot entity 충돌 회피. 영구 룰 #131/#133/#134/#135. (d) 디자인 브레인스토밍 (다음 세션 P0 #1/#2): 'P' brand mark + 온톨로지 대시보드.
 - **2026-05-24 (심야)**: **Phase α-1 Inbox 'task' 흡수 + 4 surface 한국어 wire + Inbox refiner** (PR #417). (a) Phase α-1 (Memory parked → LOCKED): InboxItemKind 'task' 추가 + use-inbox todoTasks source loop + sectionFor→do + inbox-source-icon Square + inbox-view handleRowClick task→noteId resolve. TodoView parallel 유지. (b) i18n Wave ~50 신규 keys: WikiDashboard 전체 / Calendar (월·주·일정 + 월·화·수·목·금·토·일) / CALENDAR·TEMPLATES filter labelKey (스톤·브릭·블록 음역 #118) / SmartSidePanel 4 tab (상세·연결·활동·북마크) / SidePanel empty / Inbox breadcrumb + SECTION_META + use-inbox action·meta. (c) Inbox refiner 5건 (production-ui-refiner Inbox SectionCard 후보 1 5-phase): A1 space-y-4 / C1 borderless / C3 subtitle /60 / E1 empty 약화 / E2 footer 중복 삭제. 영구 룰 #111 정합 (단일 Hook 모델 통합 → todo도 같은 단일 attention 큐). tsc clean.
 - **2026-05-24 (밤)**: **i18n 잔여 surface + Merge/Split + Books labelKey + Timeline wrap fix** (PR #416). 2 chunk — (1) Todos/Calendar sidebar/Ontology/Library/Wiki/Books 6 view 한국어 wire (~70 i18n keys 신규) + (2) Wiki Merge/Split → 병합/분리, 타임라인 button whitespace-nowrap, BOOKS_VIEW_CONFIG 전체 labelKey (orderingOptions/groupingOptions/properties), book-table BOOK_COLUMNS labelKey wire, Library "Top Tags"/"unused tag"/"unlinked reference" 누락 한국어. 영구 LOCKED #122 (module-level static config labelKey 일관 적용 의무).
 - **2026-05-24 (저녁 후속)**: **GlobalTopBar 신설 + Phase 1c Inbox 3 카드 + i18n 깊은 확장 (필터/디스플레이/cmdk) + production-ui-refine** (PR #414 + 후속 PR). 5 chunk 누적 — Phase 1c (use-inbox section + 3 SectionCard, plan-due source 신규) / i18n main app (Activity Bar/Sidebar/Home/Quick Capture/StatsRow) / i18n 깊은 확장 (Library→자료실 #117, Stone/Brick/Block 음역 #118, Filter+Display Panel labelKey 패턴, Notes column headers) / GlobalTopBar (PanelsMenu + 시계 + < > + 검색 input + 테마/설정/휴지통 — sidebar 헤더/푸터 제거 + activity-bar 테마 제거 + view-header PanelsMenu 제거 #119/#120) / Command palette hybrid mode badge (#121) + i18n + Escape handler + production-ui-refine 5-phase (A spacing+B icon+C search+D right cluster). 영구 LOCKED #117~#121. tsc/build clean.

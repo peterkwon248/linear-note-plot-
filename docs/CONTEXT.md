@@ -51,7 +51,29 @@
 
 ---
 
-## 🚀 2026-05-25 (대규모 세션) — i18n 17 surface + Phase α+β LOCKED #124 완성 + 아이콘 통일 + Pinned 표준화 (20 PR 머지) ⭐⭐⭐⭐⭐
+## 🚀 2026-05-25 (대규모 세션 #2) — i18n 마무리 + Custom Quick Filter feature + 디자인 브레인스토밍 (PR #438-#457, 20 PR) ⭐⭐⭐⭐⭐
+
+**범위**: 단일 세션 누적 20 PR (#438-#457). i18n 마무리 + 사용자 정의 chip bar 시스템 + 디자인 브레인스토밍.
+
+**핵심 결정 (영구 LOCKED #131~#135 + 후보 #136)**:
+- **#131 LOCKED**: SavedView ≠ CustomQuickFilter 의미 분리. 통합 X.
+- **#132 LOCKED**: wikiRegistered = 실제 임베드 멤버십 (제목 매칭 X). filter 라벨/desc가 실제 동작과 정확히 일치 의무.
+- **#133 LOCKED**: module-level static config labelKey 패턴 확장 (EVENT_CONFIG verbKey / SECTION_META / STATUS_CONFIG / view-configs 일관).
+- **#134 LOCKED**: Custom Quick Filter promote-then-save 패턴 (D+A 결합). chip bar "+ 버튼" + Dialog + filterCategories popover.
+- **#135 LOCKED**: Plot UI text는 entity 이름과 generic form field 명명 충돌 회피.
+- **#136 (vision)**: Dashboard / Overview = 풀 폭 / Article 본문 = max-width 유지. 다음 세션 LOCKED 진입 권장.
+
+**완료**:
+- i18n 마무리 광범위 (13 PR, ~250+ 신규 keys): WikiInsightsChart / Trash / Side panel 3 탭 / EVENT_CONFIG 44 verbs / 참고문헌→레퍼런스 등
+- wikiRegistered 정정 (PR #449/#450): 제목 매칭 → 실제 임베드 멤버십
+- Custom Quick Filter feature (PR #452-#456): Zustand slice v148 + Dialog + Wiki/Books seed + "Label"→"Name"
+- 디자인 브레인스토밍 (다음 세션 P0): 'P' brand mark + 온톨로지 대시보드
+
+**다음 P0** (사용자 명시): 'P' brand mark fix + 온톨로지 대시보드 재설계. 좌우 여백 정통화 + Quick filter polish + Editor i18n 후속.
+
+---
+
+## 🚀 2026-05-25 (대규모 세션 #1) — i18n 17 surface + Phase α+β LOCKED #124 완성 + 아이콘 통일 + Pinned 표준화 (20 PR 머지) ⭐⭐⭐⭐⭐
 
 **범위**: 단일 세션 누적 20 PR (#417-#436). i18n + 정체성 정합 + UX 표준화 마무리.
 
