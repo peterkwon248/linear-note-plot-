@@ -40,6 +40,7 @@ import {
 } from "lucide-react"
 import { toast } from "sonner"
 import { CommentEditor, CommentBodyDisplay } from "./comment-editor"
+import { useT } from "@/lib/i18n"
 
 type BlockTargetType =
   | "section"
@@ -190,6 +191,7 @@ export function CommentsByEntity({
 }: {
   entity: { kind: "note"; noteId: string } | { kind: "wiki"; articleId: string }
 }) {
+  const t = useT()
   const comments = usePlotStore((s) => s.comments)
   const addComment = usePlotStore((s) => s.addComment)
   const wikiArticles = usePlotStore((s) => s.wikiArticles)
@@ -420,7 +422,7 @@ export function CommentsByEntity({
     <div className="px-2 py-2">
       <div className="flex items-center gap-2 mb-2 px-2">
         <ChatCircle size={14} strokeWidth={2} className="text-muted-foreground" />
-        <span className="text-2xs font-medium text-muted-foreground uppercase tracking-wider">Comments</span>
+        <span className="text-2xs font-medium text-muted-foreground uppercase tracking-wider">{t("sidepanel.section.comments")}</span>
         <span className="text-2xs text-muted-foreground/70">{tops.length}</span>
       </div>
 
@@ -428,23 +430,23 @@ export function CommentsByEntity({
       {tops.length > 0 && (
         <div className="flex items-center gap-1 px-2 border-b border-border-subtle mb-1">
           <TabButton active={tab === "open"} onClick={() => setTab("open")} count={openCount}>
-            Open
+            {t("sidepanel.comments.tab_open")}
           </TabButton>
           <TabButton active={tab === "resolved"} onClick={() => setTab("resolved")} count={resolvedCount}>
-            Resolved
+            {t("sidepanel.comments.tab_resolved")}
           </TabButton>
         </div>
       )}
 
       {filtered.length === 0 && tops.length > 0 && (
         <p className="px-2 py-3 text-[12px] text-muted-foreground/70 italic">
-          No {tab === "open" ? "open" : "resolved"} comments.
+          {tab === "open" ? t("sidepanel.comments.no_open") : t("sidepanel.comments.no_resolved")}
         </p>
       )}
 
       {tops.length === 0 && (
         <p className="px-2 py-2 text-[12px] text-muted-foreground italic">
-          No comments yet.
+          {t("sidepanel.comments.empty")}
         </p>
       )}
 
@@ -571,7 +573,7 @@ export function CommentsByEntity({
             <CommentEditor
               key={`composer-${draft === "" ? "empty" : "filled"}`}
               initialBody=""
-              placeholder="Add a comment…  (Ctrl+Enter)"
+              placeholder={t("sidepanel.comments.placeholder")}
               onChange={(b) => setDraft(b)}
               onSubmit={(b) => {
                 if (!isBodyEmpty(b)) {

@@ -4,6 +4,7 @@ import { useState, useMemo } from "react"
 import { formatDistanceToNow, parseISO } from "date-fns"
 import { usePlotStore } from "@/lib/store"
 import { useRelativeTime } from "@/lib/i18n-date"
+import { useT } from "@/lib/i18n"
 import { getEventsForEntity } from "@/lib/datalog/helpers"
 import { EVENT_CONFIG } from "@/lib/datalog/event-config"
 import type { EntityEvent, EntityRef } from "@/lib/types"
@@ -25,6 +26,7 @@ export function ActivityTimeline({
   /** @deprecated Use `entity={{ kind: "note", id }}`. */
   noteId?: string
 }) {
+  const t = useT()
   const events = usePlotStore((s) => s.entityEvents)
   const [showAll, setShowAll] = useState(false)
 
@@ -41,13 +43,13 @@ export function ActivityTimeline({
 
   if (!target) {
     return (
-      <p className="text-2xs text-muted-foreground/70">No entity selected</p>
+      <p className="text-2xs text-muted-foreground/70">{t("sidepanel.history.no_entity")}</p>
     )
   }
 
   if (filtered.length === 0) {
     return (
-      <p className="text-2xs text-muted-foreground/70">No activity yet</p>
+      <p className="text-2xs text-muted-foreground/70">{t("sidepanel.history.no_activity")}</p>
     )
   }
 
@@ -61,7 +63,7 @@ export function ActivityTimeline({
           onClick={() => setShowAll(true)}
           className="mt-1 text-2xs text-muted-foreground hover:text-foreground transition-colors"
         >
-          Show all {filtered.length} events
+          {t("sidepanel.history.show_all").replace("{count}", String(filtered.length))}
         </button>
       )}
     </div>
@@ -69,6 +71,7 @@ export function ActivityTimeline({
 }
 
 function TimelineRow({ event }: { event: EntityEvent }) {
+  const t = useT()
   const relative = useRelativeTime()
   const config = EVENT_CONFIG[event.type]
   if (!config) return null
@@ -82,7 +85,7 @@ function TimelineRow({ event }: { event: EntityEvent }) {
         style={{ backgroundColor: config.color }}
       />
       <span className="text-2xs text-muted-foreground">
-        {config.verb}
+        {t(config.verbKey)}
       </span>
       <span className="ml-auto text-2xs text-muted-foreground/70 shrink-0">
         {timeAgo}

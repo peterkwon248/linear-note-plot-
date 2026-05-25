@@ -29,7 +29,10 @@ import { EVENT_HEX } from "@/lib/colors"
 
 interface EventTypeConfig {
   icon: PhIcon
+  /** English verb shown in activity timeline. Kept for legacy / fallback. */
   verb: string
+  /** i18n dictionary key — consumer should prefer this via useT(). */
+  verbKey: string
   color: string
 }
 
@@ -43,53 +46,53 @@ interface EventTypeConfig {
  * gracefully skips unknown types via `if (!config) return null`.
  */
 export const EVENT_CONFIG: Record<EntityEventType, EventTypeConfig> = {
-  created: { icon: FilePlus, verb: "Created", color: EVENT_HEX.created },
-  updated: { icon: PencilSimple, verb: "Edited", color: EVENT_HEX.updated },
-  opened: { icon: PhEye, verb: "Opened", color: EVENT_HEX.opened },
-  promoted: { icon: ArrowCircleUp, verb: "Promoted", color: EVENT_HEX.promoted },
-  trashed: { icon: Trash, verb: "Trashed", color: EVENT_HEX.trashed },
-  untrashed: { icon: Trash, verb: "Restored", color: EVENT_HEX.untrashed },
-  triage_keep: { icon: PhCheck, verb: "Kept", color: EVENT_HEX.triage_keep },
-  triage_snooze: { icon: PhClock, verb: "Snoozed", color: EVENT_HEX.triage_snooze },
-  triage_trash: { icon: Trash, verb: "Triaged to trash", color: EVENT_HEX.triage_trash },
-  link_added: { icon: PhLink, verb: "Linked", color: EVENT_HEX.link_added },
-  link_removed: { icon: PhLink, verb: "Unlinked", color: EVENT_HEX.link_removed },
-  thread_started: { icon: PhBrain, verb: "Started thread", color: EVENT_HEX.thread_started },
-  thread_step_added: { icon: PhBrain, verb: "Added thread step", color: EVENT_HEX.thread_step_added },
-  thread_ended: { icon: PhBrain, verb: "Ended thread", color: EVENT_HEX.thread_ended },
-  thread_deleted: { icon: Trash, verb: "Deleted thread", color: EVENT_HEX.thread_deleted },
-  label_changed: { icon: PhTag, verb: "Label changed", color: EVENT_HEX.label_changed },
-  srs_reviewed: { icon: PhBrain, verb: "Reviewed (SRS)", color: EVENT_HEX.srs_reviewed },
-  autopilot_applied: { icon: Sparkle, verb: "Autopilot applied", color: EVENT_HEX.autopilot_applied },
-  relation_added: { icon: PhLink, verb: "Relation added", color: EVENT_HEX.relation_added },
-  relation_removed: { icon: PhLink, verb: "Relation removed", color: EVENT_HEX.relation_removed },
-  relation_type_changed: { icon: PhLink, verb: "Relation type changed", color: EVENT_HEX.relation_type_changed },
-  alias_changed: { icon: PhTag, verb: "changed aliases", color: EVENT_HEX.alias_changed },
-  wiki_converted: { icon: PhFileText, verb: "converted to wiki", color: EVENT_HEX.wiki_converted },
-  attachment_added: { icon: Paperclip, verb: "attached file", color: EVENT_HEX.attachment_added },
-  attachment_removed: { icon: Paperclip, verb: "removed attachment", color: EVENT_HEX.attachment_removed },
-  reflection_added: { icon: PhBookOpen, verb: "Added reflection", color: EVENT_HEX.reflection_added },
-  split: { icon: PhScissors, verb: "Split into new note", color: EVENT_HEX.split },
+  created: { icon: FilePlus, verb: "Created", verbKey: "event.verb.created", color: EVENT_HEX.created },
+  updated: { icon: PencilSimple, verb: "Edited", verbKey: "event.verb.updated", color: EVENT_HEX.updated },
+  opened: { icon: PhEye, verb: "Opened", verbKey: "event.verb.opened", color: EVENT_HEX.opened },
+  promoted: { icon: ArrowCircleUp, verb: "Promoted", verbKey: "event.verb.promoted", color: EVENT_HEX.promoted },
+  trashed: { icon: Trash, verb: "Trashed", verbKey: "event.verb.trashed", color: EVENT_HEX.trashed },
+  untrashed: { icon: Trash, verb: "Restored", verbKey: "event.verb.untrashed", color: EVENT_HEX.untrashed },
+  triage_keep: { icon: PhCheck, verb: "Kept", verbKey: "event.verb.triage_keep", color: EVENT_HEX.triage_keep },
+  triage_snooze: { icon: PhClock, verb: "Snoozed", verbKey: "event.verb.triage_snooze", color: EVENT_HEX.triage_snooze },
+  triage_trash: { icon: Trash, verb: "Triaged to trash", verbKey: "event.verb.triage_trash", color: EVENT_HEX.triage_trash },
+  link_added: { icon: PhLink, verb: "Linked", verbKey: "event.verb.link_added", color: EVENT_HEX.link_added },
+  link_removed: { icon: PhLink, verb: "Unlinked", verbKey: "event.verb.link_removed", color: EVENT_HEX.link_removed },
+  thread_started: { icon: PhBrain, verb: "Started thread", verbKey: "event.verb.thread_started", color: EVENT_HEX.thread_started },
+  thread_step_added: { icon: PhBrain, verb: "Added thread step", verbKey: "event.verb.thread_step_added", color: EVENT_HEX.thread_step_added },
+  thread_ended: { icon: PhBrain, verb: "Ended thread", verbKey: "event.verb.thread_ended", color: EVENT_HEX.thread_ended },
+  thread_deleted: { icon: Trash, verb: "Deleted thread", verbKey: "event.verb.thread_deleted", color: EVENT_HEX.thread_deleted },
+  label_changed: { icon: PhTag, verb: "Label changed", verbKey: "event.verb.label_changed", color: EVENT_HEX.label_changed },
+  srs_reviewed: { icon: PhBrain, verb: "Reviewed (SRS)", verbKey: "event.verb.srs_reviewed", color: EVENT_HEX.srs_reviewed },
+  autopilot_applied: { icon: Sparkle, verb: "Autopilot applied", verbKey: "event.verb.autopilot_applied", color: EVENT_HEX.autopilot_applied },
+  relation_added: { icon: PhLink, verb: "Relation added", verbKey: "event.verb.relation_added", color: EVENT_HEX.relation_added },
+  relation_removed: { icon: PhLink, verb: "Relation removed", verbKey: "event.verb.relation_removed", color: EVENT_HEX.relation_removed },
+  relation_type_changed: { icon: PhLink, verb: "Relation type changed", verbKey: "event.verb.relation_type_changed", color: EVENT_HEX.relation_type_changed },
+  alias_changed: { icon: PhTag, verb: "changed aliases", verbKey: "event.verb.alias_changed", color: EVENT_HEX.alias_changed },
+  wiki_converted: { icon: PhFileText, verb: "converted to wiki", verbKey: "event.verb.wiki_converted", color: EVENT_HEX.wiki_converted },
+  attachment_added: { icon: Paperclip, verb: "attached file", verbKey: "event.verb.attachment_added", color: EVENT_HEX.attachment_added },
+  attachment_removed: { icon: Paperclip, verb: "removed attachment", verbKey: "event.verb.attachment_removed", color: EVENT_HEX.attachment_removed },
+  reflection_added: { icon: PhBookOpen, verb: "Added reflection", verbKey: "event.verb.reflection_added", color: EVENT_HEX.reflection_added },
+  split: { icon: PhScissors, verb: "Split into new note", verbKey: "event.verb.split", color: EVENT_HEX.split },
   // ── Wiki-specific (PR 5d) ──────────────────────────────
-  block_added: { icon: PhCube, verb: "Added block", color: "#5e6ad2" },
-  block_removed: { icon: Trash, verb: "Removed block", color: "#6b7280" },
-  block_reordered: { icon: ArrowsDownUp, verb: "Reordered blocks", color: "#6b7280" },
-  section_collapsed: { icon: PhCaretRight, verb: "Toggled section", color: "#6b7280" },
-  merged: { icon: ArrowsMerge, verb: "Merged article", color: "#10b981" },
-  unmerged: { icon: ArrowsSplit, verb: "Unmerged article", color: "#f59e0b" },
+  block_added: { icon: PhCube, verb: "Added block", verbKey: "event.verb.block_added", color: "#5e6ad2" },
+  block_removed: { icon: Trash, verb: "Removed block", verbKey: "event.verb.block_removed", color: "#6b7280" },
+  block_reordered: { icon: ArrowsDownUp, verb: "Reordered blocks", verbKey: "event.verb.block_reordered", color: "#6b7280" },
+  section_collapsed: { icon: PhCaretRight, verb: "Toggled section", verbKey: "event.verb.section_collapsed", color: "#6b7280" },
+  merged: { icon: ArrowsMerge, verb: "Merged article", verbKey: "event.verb.merged", color: "#10b981" },
+  unmerged: { icon: ArrowsSplit, verb: "Unmerged article", verbKey: "event.verb.unmerged", color: "#f59e0b" },
   // ── Book-specific (PR 5d) ──────────────────────────────
-  item_added: { icon: ListPlus, verb: "Added item", color: "#5e6ad2" },
-  item_removed: { icon: Trash, verb: "Removed item", color: "#6b7280" },
-  item_reordered: { icon: ArrowsDownUp, verb: "Reordered items", color: "#6b7280" },
-  smart_source_added: { icon: Sparkle, verb: "Added smart source", color: "#8b5cf6" },
-  smart_source_removed: { icon: Trash, verb: "Removed smart source", color: "#6b7280" },
-  converted_to_manual: { icon: PencilSimple, verb: "Converted to manual", color: "#f59e0b" },
-  chapter_added: { icon: PhBookOpen, verb: "Added chapter", color: "#5e6ad2" },
+  item_added: { icon: ListPlus, verb: "Added item", verbKey: "event.verb.item_added", color: "#5e6ad2" },
+  item_removed: { icon: Trash, verb: "Removed item", verbKey: "event.verb.item_removed", color: "#6b7280" },
+  item_reordered: { icon: ArrowsDownUp, verb: "Reordered items", verbKey: "event.verb.item_reordered", color: "#6b7280" },
+  smart_source_added: { icon: Sparkle, verb: "Added smart source", verbKey: "event.verb.smart_source_added", color: "#8b5cf6" },
+  smart_source_removed: { icon: Trash, verb: "Removed smart source", verbKey: "event.verb.smart_source_removed", color: "#6b7280" },
+  converted_to_manual: { icon: PencilSimple, verb: "Converted to manual", verbKey: "event.verb.converted_to_manual", color: "#f59e0b" },
+  chapter_added: { icon: PhBookOpen, verb: "Added chapter", verbKey: "event.verb.chapter_added", color: "#5e6ad2" },
   // ── Cross-entity (PR 5d) — Tag / Sticker / File / Reference ──
-  member_added: { icon: UserPlus, verb: "Added member", color: "#10b981" },
-  member_removed: { icon: UserMinus, verb: "Removed member", color: "#6b7280" },
-  color_changed: { icon: Palette, verb: "Color changed", color: "#a855f7" },
-  renamed: { icon: TextT, verb: "Renamed", color: "#5e6ad2" },
+  member_added: { icon: UserPlus, verb: "Added member", verbKey: "event.verb.member_added", color: "#10b981" },
+  member_removed: { icon: UserMinus, verb: "Removed member", verbKey: "event.verb.member_removed", color: "#6b7280" },
+  color_changed: { icon: Palette, verb: "Color changed", verbKey: "event.verb.color_changed", color: "#a855f7" },
+  renamed: { icon: TextT, verb: "Renamed", verbKey: "event.verb.renamed", color: "#5e6ad2" },
 }
 
 // Human-readable event type labels for filter chips

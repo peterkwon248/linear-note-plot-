@@ -19,6 +19,7 @@ import { Library as BooksIcon } from "lucide-react"
 import type { GlobalBookmark, Book, WikiArticle } from "@/lib/types"
 import { cn } from "@/lib/utils"
 import { SPACE_COLORS } from "@/lib/colors"
+import { useT } from "@/lib/i18n"
 
 type BookmarkFilter = "all" | "note" | "wiki"
 
@@ -27,6 +28,7 @@ type BookmarkFilter = "all" | "note" | "wiki"
  * plus context-specific local sections.
  */
 export function SidePanelBookmarks() {
+  const t = useT()
   const entity = useSidePanelEntity()
 
   const notes = usePlotStore((s) => s.notes)
@@ -156,11 +158,13 @@ export function SidePanelBookmarks() {
 
         {totalCounts.all === 0 ? (
           <p className="text-2xs text-muted-foreground/70 italic px-1">
-            No bookmarks yet
+            {t("sidepanel.bookmarks.empty")}
           </p>
         ) : pinnedList.length === 0 ? (
           <p className="text-2xs text-muted-foreground/70 italic px-1">
-            {query ? `No bookmarks match "${query}"` : "No bookmarks in this filter"}
+            {query
+              ? t("sidepanel.bookmarks.no_match").replace("{query}", query)
+              : t("sidepanel.bookmarks.no_filter")}
           </p>
         ) : (
           <ul className="space-y-0.5">
