@@ -51,6 +51,31 @@
 
 ---
 
+## 🚀 2026-05-25 (대규모 세션 #3) — P0 #1/#2 완성 + 검색 정통화 + Open Design install + Plot v2 통째 재설계 결정 (PR #459-#470, 12 PR) ⭐⭐⭐⭐⭐
+
+**범위**: 단일 세션 누적 12 PR. (a) Chrome architecture 완성, (b) 검색 architecture 정통화 (Path A), (c) Dashboard 풀 폭 + Mosaic 차트 + 색상 token 정합, (d) Insights 손질, (e) Books list 시각 균형, (f) **Plot v2 통째 재설계 결정 (Path A)** + Open Design install.
+
+**핵심 결정 (영구 LOCKED #136 + 후보 #137~#142)**:
+- **#136 LOCKED**: **Two-Layout Rule** — Dashboard/Overview 풀 폭 / Article 본문 max-width / Settings max-width / 차트 ResizeObserver (ResponsiveContainer 금지) / Mosaic 차트 layout.
+- **#137 (vision)**: Plot 통째 재설계 (Path A) — functional/UI layer 분리 워크플로우. lib/* + hooks/* keep, components/* 재설계.
+- **#138 (vision)**: mockup-first 워크플로우 정통화 — Plot v2 디자인의 표준 패턴.
+- **#139 (vision)**: Open Design = prototype generator (HTML output, React X). 매뉴얼 변환 필수.
+- **#140 (vision)**: Insights information architecture — Ontology=전체 / Notes/Wiki/Books=세부.
+- **#141 (vision)**: 검색 진입점 통합 (Path A) — GlobalTopBar 진짜 input. Linear/Notion 정통.
+- **#142 (vision)**: Chrome layout 4-region — identity/tools/navigation/search/right cluster, divider 2개.
+
+**완료**:
+- Chrome architecture (#459/#460/#468/#470): 'P' brand mark → UserAvatar + 분리 복원
+- 검색 architecture (#461/#462): entity TABS 11개 + GlobalTopBar 진짜 input (Path A)
+- Dashboard 풀 폭 + Mosaic 차트 (#463/#464/#465): LOCKED #136 + 4 chart 2x2 + 색상 token 정합 + Books KPI
+- Insights 손질 (#466/#467): Ontology sidebar Stats 제거 + Knowledge WAR → Top Notes + Notes Insights i18n
+- Books list (#469): Title cap + visibleColumns 6개
+- Open Design install: ~/Desktop/open-design + daemon 3844 + web 3845
+
+**다음 P0** (사용자 명시): Phase 0 — Design Language 결정 + Plot v2 통째 재설계 PRD (Open Design + critic, ~17-28시간, 12-20 PR).
+
+---
+
 ## 🚀 2026-05-25 (대규모 세션 #2) — i18n 마무리 + Custom Quick Filter feature + 디자인 브레인스토밍 (PR #438-#457, 20 PR) ⭐⭐⭐⭐⭐
 
 **범위**: 단일 세션 누적 20 PR (#438-#457). i18n 마무리 + 사용자 정의 chip bar 시스템 + 디자인 브레인스토밍.
