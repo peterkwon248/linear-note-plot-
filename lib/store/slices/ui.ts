@@ -181,6 +181,7 @@ export function createUISlice(set: Set, get: Get, appendEvent: AppendEventFn) {
     },
 
     setSearchQuery: (query: string) => set({ searchQuery: query }),
+    setGlobalSearchQuery: (query: string) => set({ globalSearchQuery: query }),
     setSearchOpen: (open: boolean) => set({ searchOpen: open }),
     setShortcutOverlayOpen: (open: boolean) => set({ shortcutOverlayOpen: open }),
     setSidePanelOpen: (open: boolean) => set({ sidePanelOpen: open }),

@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useMemo, useEffect, useRef, type ReactNode } from "react"
+import { useState, useMemo, useEffect, type ReactNode } from "react"
 import { useRouter } from "next/navigation"
 import { usePlotStore } from "@/lib/store"
 import { useSearch } from "@/lib/search/use-search"
@@ -10,14 +10,12 @@ import { useT } from "@/lib/i18n"
 import { setActiveRoute, setActiveFolderId, setActiveTagId, setActiveLabelId } from "@/lib/table-route"
 import { navigateToWikiArticle } from "@/lib/wiki-article-nav"
 import {
-  Search as MagnifyingGlass,
   FileText,
   Pin as PushPin,
   Tag as PhTag,
   Bookmark as BookmarkSimple,
   LayoutGrid as Layout,
   FolderOpen,
-  X as PhX,
   BookOpen,
   AlertCircle as WarningCircle,
   Library as BooksIcon,
@@ -97,16 +95,19 @@ export function SearchView() {
   const setSearchOpen = usePlotStore((s) => s.setSearchOpen)
   const setCommandPaletteMode = usePlotStore((s) => s.setCommandPaletteMode)
   const createWikiArticle = usePlotStore((s) => s.createWikiArticle)
+  const query = usePlotStore((s) => s.globalSearchQuery)
+  const setQuery = usePlotStore((s) => s.setGlobalSearchQuery)
 
   const router = useRouter()
-  const inputRef = useRef<HTMLInputElement>(null)
 
-  const [query, setQuery] = useState("")
   const [activeTab, setActiveTab] = useState<TabKey>("all")
 
-  // Auto-focus input on mount
+  // Focus the global search input on mount — Path A (2026-05-25). The
+  // in-page input has been removed; GlobalTopBar's <input id="global-search-input">
+  // is the only entry. Focus it so the user can start typing immediately.
   useEffect(() => {
-    inputRef.current?.focus()
+    const el = document.getElementById("global-search-input") as HTMLInputElement | null
+    el?.focus()
   }, [])
 
   // Handle [[ prefix to switch to links mode in SearchDialog
@@ -116,7 +117,7 @@ export function SearchView() {
       setCommandPaletteMode("links")
       setSearchOpen(true)
     }
-  }, [query, setCommandPaletteMode, setSearchOpen])
+  }, [query, setQuery, setCommandPaletteMode, setSearchOpen])
 
   // FlexSearch worker for notes
   const { results: workerResults, isIndexing } = useSearch(query, 20)
@@ -384,29 +385,10 @@ export function SearchView() {
 
   return (
     <div className="flex flex-1 flex-col overflow-hidden">
-      {/* Search header */}
-      <div className="shrink-0 border-b border-border px-6 py-5">
-        <div className="relative">
-          <MagnifyingGlass className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground" size={20} strokeWidth={2} />
-          <input
-            ref={inputRef}
-            type="text"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder={t("search.placeholder")}
-            className="h-12 w-full rounded-lg border border-border bg-background pl-12 pr-12 text-ui text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-accent"
-          />
-          {query && (
-            <button
-              onClick={() => setQuery("")}
-              aria-label="Clear search"
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground transition-colors hover:text-foreground"
-            >
-              <PhX size={16} strokeWidth={2} />
-            </button>
-          )}
-        </div>
-      </div>
+      {/* Self-input removed — GlobalTopBar's <input id="global-search-input">
+       *  is now the single source for the search query (Path A, 2026-05-25).
+       *  SearchView reads `globalSearchQuery` from the store and renders
+       *  results only — no redundant in-page input. */}
 
       {/* Filter tabs */}
       <div className="shrink-0 border-b border-border px-6">

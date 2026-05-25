@@ -96,6 +96,13 @@ export interface PlotState {
   activeView: ActiveView
   selectedNoteId: string | null
   searchQuery: string
+  /**
+   * Global search query — populated by GlobalTopBar's real input and consumed
+   * by /search page (SearchView). Session-only (NOT persisted; stripped via
+   * partialize). Decoupled from `searchQuery` which the view-engine uses for
+   * per-view filtering.
+   */
+  globalSearchQuery: string
   searchOpen: boolean
   shortcutOverlayOpen: boolean
   sidePanelOpen: boolean

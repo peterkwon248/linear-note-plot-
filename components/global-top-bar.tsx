@@ -17,6 +17,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react"
 import Link from "next/link"
+import { usePathname } from "next/navigation"
 import {
   ChevronLeft as CaretLeft,
   ChevronRight as CaretRight,
@@ -34,11 +35,14 @@ import { UserAvatar } from "@/components/user-avatar"
 
 export function GlobalTopBar() {
   const t = useT()
+  const pathname = usePathname()
 
   const openNote = usePlotStore((s) => s.openNote)
   const notes = usePlotStore((s) => s.notes)
   const navigationHistory = usePlotStore((s) => s.navigationHistory)
   const navigationIndex = usePlotStore((s) => s.navigationIndex)
+  const globalSearchQuery = usePlotStore((s) => s.globalSearchQuery)
+  const setGlobalSearchQuery = usePlotStore((s) => s.setGlobalSearchQuery)
   const theme = useSettingsStore((s) => s.theme)
   const setTheme = useSettingsStore((s) => s.setTheme)
   const toggleTheme = () => setTheme(theme === "dark" ? "light" : "dark")
@@ -161,22 +165,45 @@ export function GlobalTopBar() {
         <CaretRight size={14} strokeWidth={2} />
       </button>
 
-      {/* ── Center: search trigger — navigates to /search full-page view (Linear/
-       *  Notion pattern). Aligned with ⌘K shortcut (use-global-shortcuts.ts:122
-       *  calls setActiveRoute("/search")) so click and shortcut produce the
-       *  same result — a real search view, not the cmdk command palette. */}
+      {/* ── Center: real search input (Linear/Notion pattern).
+       *  Path A (2026-05-25): Replaces the previous button trigger with a
+       *  real <input>. Focus → auto-navigate to /search (so SearchView mounts
+       *  to consume globalSearchQuery via store). Typing updates the store
+       *  in real time — SearchView reads it as the source of truth, removing
+       *  the redundant in-page input. Esc clears and blurs. The id
+       *  "global-search-input" lets use-global-shortcuts focus this input
+       *  when ⌘K fires. */}
       <div className="mx-4 flex flex-1 justify-center">
-        <button
-          onClick={() => setActiveRoute("/search")}
-          className="group flex w-full max-w-xl items-center gap-2 rounded-md border border-border-subtle bg-secondary/50 px-3 py-2 text-note text-muted-foreground/70 transition-colors hover:border-border hover:bg-secondary/70 hover:text-foreground"
-          aria-label={t("common.search")}
-        >
-          <MagnifyingGlass size={14} strokeWidth={2} className="shrink-0 opacity-70" />
-          <span className="flex-1 text-left">{t("topbar.search.placeholder")}</span>
-          <span className="shrink-0 rounded border border-border-subtle bg-background/60 px-1.5 py-px text-[10px] font-medium tabular-nums text-muted-foreground/70">
+        <div className="relative flex w-full max-w-xl items-center">
+          <MagnifyingGlass
+            size={14}
+            strokeWidth={2}
+            className="pointer-events-none absolute left-3 shrink-0 text-muted-foreground/70"
+          />
+          <input
+            id="global-search-input"
+            type="text"
+            value={globalSearchQuery}
+            onChange={(e) => setGlobalSearchQuery(e.target.value)}
+            onFocus={() => {
+              if (pathname !== "/search") {
+                setActiveRoute("/search")
+              }
+            }}
+            onKeyDown={(e) => {
+              if (e.key === "Escape") {
+                setGlobalSearchQuery("")
+                e.currentTarget.blur()
+              }
+            }}
+            placeholder={t("topbar.search.placeholder")}
+            aria-label={t("common.search")}
+            className="w-full rounded-md border border-border-subtle bg-secondary/50 py-2 pl-9 pr-12 text-note text-foreground outline-none transition-colors placeholder:text-muted-foreground/70 hover:border-border hover:bg-secondary/70 focus:border-border focus:bg-secondary/70"
+          />
+          <span className="pointer-events-none absolute right-3 shrink-0 rounded border border-border-subtle bg-background/60 px-1.5 py-px text-[10px] font-medium tabular-nums text-muted-foreground/70">
             ⌘K
           </span>
-        </button>
+        </div>
       </div>
 
       {/* Group D refine: divider before the right cluster makes the

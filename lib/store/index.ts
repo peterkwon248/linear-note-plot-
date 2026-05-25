@@ -58,6 +58,7 @@ export const usePlotStore = create<PlotState>()(
         activeView: { type: "all" } as const,
         selectedNoteId: null,
         searchQuery: "",
+        globalSearchQuery: "",
         searchOpen: false,
         shortcutOverlayOpen: false,
         sidePanelOpen: true,
@@ -271,7 +272,7 @@ export const usePlotStore = create<PlotState>()(
       storage: createIDBStorage<PlotState>(),
       partialize: (state) => {
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        const { _viewStateHydrated, mergePickerOpen, mergePickerSourceId, linkPickerOpen, linkPickerSourceId, previewNoteId, sidePanelOpen, sidePanelContext, _savedPrimaryContext, todoTasks, secondaryHistory, secondaryHistoryIndex, secondaryEntityContext, bookContext, dualSelection, ...rest } = state
+        const { _viewStateHydrated, mergePickerOpen, mergePickerSourceId, linkPickerOpen, linkPickerSourceId, previewNoteId, sidePanelOpen, sidePanelContext, _savedPrimaryContext, todoTasks, secondaryHistory, secondaryHistoryIndex, secondaryEntityContext, bookContext, dualSelection, globalSearchQuery, ...rest } = state
         return {
           ...rest,
           notes: state.notes.map((n) => ({ ...n, content: "", contentJson: null })),
