@@ -144,6 +144,11 @@ interface ViewHeaderProps {
    *  this context and renders a "+" button + create dialog at the end of
    *  the chip bar. Omit to disable the create UI entirely. */
   viewContext?: string
+  /** Filter categories for the in-dialog rule builder. When supplied, the
+   *  QuickFilterCreateDialog renders a popover-mounted FilterPanel so
+   *  users can build the rule list from scratch instead of being limited
+   *  to promoting an existing active filter set. */
+  filterCategories?: import("@/components/filter-panel").FilterCategory[]
   /** Lookup lists passed through to the chip preview inside the create
    *  dialog so filter values render as human-readable chips. */
   folders?: import("@/lib/types").Folder[]
@@ -179,6 +184,7 @@ export function ViewHeader({
   activeFilters,
   onFiltersChange,
   viewContext,
+  filterCategories,
   folders,
   tags,
   labels,
@@ -599,6 +605,7 @@ export function ViewHeader({
           onOpenChange={setCreateDialogOpen}
           viewContext={viewContext}
           activeFilters={activeFilters ?? []}
+          filterCategories={filterCategories}
           folders={folders}
           tags={tags}
           labels={labels}

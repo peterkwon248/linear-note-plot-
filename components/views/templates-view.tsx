@@ -525,6 +525,7 @@ export function TemplatesView() {
         activeFilters={viewState.filters as any}
         onFiltersChange={(filters) => updateViewState({ filters: filters as any })}
         viewContext="templates"
+        filterCategories={filterCategories}
         showDisplay={TEMPLATES_VIEW_CONFIG.showDisplay}
         displayContent={
           <DisplayPanel

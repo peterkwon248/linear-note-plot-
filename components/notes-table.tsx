@@ -1208,6 +1208,7 @@ export function NotesTable({
         activeFilters={viewState.filters as any}
         onFiltersChange={(filters) => updateViewState({ filters: filters as any })}
         viewContext={effectiveTab}
+        filterCategories={filteredCategories}
         folders={folders}
         tags={tags}
         labels={labels}
