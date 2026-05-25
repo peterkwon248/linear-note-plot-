@@ -28,7 +28,7 @@ interface ViewConfig {
 }
 
 const TABLE_VIEW_MAP: Record<string, ViewConfig> = {
-  "/notes": {},
+  "/notes": { titleKey: "routes.title.notes" },
   "/stone": { context: "stone", titleKey: "status.stone" },
   "/brick": { context: "brick", titleKey: "status.brick" },
   "/keystone": { context: "keystone", titleKey: "status.block" },

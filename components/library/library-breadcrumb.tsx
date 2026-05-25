@@ -20,15 +20,16 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { IconChevronRight } from "@/components/plot-icons"
 import { Tag as PhTag, Folder, Quote as Quotes, Sticker as StickerIcon, Bookmark as PhBookmark } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { useT } from "@/lib/i18n"
 
 type LibraryEntity = "tags" | "files" | "references" | "stickers" | "labels"
 
-const ENTITY_META: Record<LibraryEntity, { label: string; route: string; icon: React.ElementType }> = {
-  tags: { label: "Tags", route: "/library/tags", icon: PhTag },
-  files: { label: "Files", route: "/library/files", icon: Folder },
-  references: { label: "References", route: "/library/references", icon: Quotes },
-  stickers: { label: "Stickers", route: "/stickers", icon: StickerIcon },
-  labels: { label: "Labels", route: "/labels", icon: PhBookmark },
+const ENTITY_META: Record<LibraryEntity, { labelKey: string; route: string; icon: React.ElementType }> = {
+  tags: { labelKey: "library.entity.tags", route: "/library/tags", icon: PhTag },
+  files: { labelKey: "library.entity.files", route: "/library/files", icon: Folder },
+  references: { labelKey: "library.entity.references", route: "/library/references", icon: Quotes },
+  stickers: { labelKey: "library.entity.stickers", route: "/stickers", icon: StickerIcon },
+  labels: { labelKey: "library.entity.labels", route: "/labels", icon: PhBookmark },
 }
 
 const ALL_ENTITIES: LibraryEntity[] = ["tags", "files", "references", "stickers", "labels"]
@@ -41,6 +42,7 @@ export function LibraryBreadcrumb({
   /** Optional entity count rendered next to the current label (e.g. "Tags 5"). */
   count?: number
 }) {
+  const t = useT()
   const router = useRouter()
   const [pickerOpen, setPickerOpen] = useState(false)
 
@@ -64,7 +66,7 @@ export function LibraryBreadcrumb({
         onClick={navigateToLibrary}
         className="shrink-0 text-note font-medium text-muted-foreground transition-colors hover:text-foreground cursor-pointer"
       >
-        Library
+        {t("library.title")}
       </button>
 
       {/* Chevron → entity picker popover */}
@@ -91,7 +93,7 @@ export function LibraryBreadcrumb({
                 )}
               >
                 <Icon size={14} className="shrink-0" />
-                <span className="truncate">{meta.label}</span>
+                <span className="truncate">{t(meta.labelKey)}</span>
               </button>
             )
           })}
@@ -100,7 +102,7 @@ export function LibraryBreadcrumb({
 
       {/* Current entity crumb */}
       <span className="flex items-center gap-1.5 min-w-0 text-note font-medium text-foreground">
-        <span className="truncate">{currentMeta.label}</span>
+        <span className="truncate">{t(currentMeta.labelKey)}</span>
         {count !== undefined && (
           <span className="ml-0.5 text-note font-normal text-muted-foreground tabular-nums">
             {count}
