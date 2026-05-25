@@ -373,6 +373,12 @@ export const WIKI_VIEW_CONFIG: ViewConfig = {
     { label: "Hubs", labelKey: "filter.quick.hubs", desc: "10+ backlinks", descKey: "filter.quick.hubs_desc", rules: [
       { field: "links", operator: "eq", value: "10+" },
     ]},
+    { label: "With aliases", labelKey: "filter.quick.aliased_articles", desc: "articles with aliases", descKey: "filter.quick.aliased_articles_desc", rules: [
+      { field: "title", operator: "eq", value: "_aliased" },
+    ]},
+    { label: "Recent", labelKey: "filter.quick.recent_articles", desc: "created this week", descKey: "filter.quick.recent_articles_desc", rules: [
+      { field: "createdAt", operator: "eq", value: "this-week" },
+    ]},
   ],
   displayConfig: {
     // 2026-05-24: gallery deprecated → grid replaces. See NOTES_VIEW_CONFIG.
@@ -987,7 +993,17 @@ export const BOOKS_VIEW_CONFIG: ViewConfig = {
       { key: "last-30-days", label: "Last 30 days" },
     ]},
   ],
-  quickFilters: [],
+  quickFilters: [
+    { label: "Pinned", labelKey: "filter.quick.pinned_books", desc: "pinned books only", descKey: "filter.quick.pinned_books_desc", rules: [
+      { field: "pinned", operator: "eq", value: "true" },
+    ]},
+    { label: "Active", labelKey: "filter.quick.active_books", desc: "updated this week", descKey: "filter.quick.active_books_desc", rules: [
+      { field: "updatedAt", operator: "eq", value: "this-week" },
+    ]},
+    { label: "Smart", labelKey: "filter.quick.smart_books", desc: "auto-curated books", descKey: "filter.quick.smart_books_desc", rules: [
+      { field: "kind", operator: "eq", value: "smart" },
+    ]},
+  ],
   displayConfig: {
     // books-view-engine-3/4: board mode (entity-agnostic).
     // 2026-05-24: timeline mode added — Book lifespan (createdAt → updatedAt)
