@@ -21,6 +21,7 @@
 
 import { useMemo } from "react"
 import { format, formatDistanceToNow } from "date-fns"
+import { useRelativeTime } from "@/lib/i18n-date"
 import { usePlotStore } from "@/lib/store"
 import {
   Calendar as CalendarBlank,
@@ -70,6 +71,7 @@ function formatBytes(bytes: number): string {
 }
 
 export function FileDetailPanel({ attachment }: { attachment: Attachment }) {
+  const relative = useRelativeTime()
   const notes = usePlotStore((s) => s.notes)
   const wikiArticles = usePlotStore((s) => s.wikiArticles)
   const openNote = usePlotStore((s) => s.openNote)
@@ -162,7 +164,7 @@ export function FileDetailPanel({ attachment }: { attachment: Attachment }) {
           <div className="flex items-center justify-between">
             <span className="text-note text-muted-foreground">Age</span>
             <span className="text-note text-muted-foreground/70">
-              {formatDistanceToNow(new Date(attachment.createdAt), { addSuffix: true })}
+              {relative(attachment.createdAt)}
             </span>
           </div>
         </div>

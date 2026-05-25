@@ -3,6 +3,7 @@
 import { useState, useMemo, useCallback, useEffect } from "react"
 import { usePlotStore } from "@/lib/store"
 import { formatDistanceToNow } from "date-fns"
+import { useRelativeTime } from "@/lib/i18n-date"
 import {
   CommandDialog,
   CommandInput,
@@ -125,6 +126,7 @@ export function NotePickerDialog({
   onSelect,
   onSelectMulti,
 }: NotePickerDialogProps & { multiSelect?: boolean; onSelect?: (noteId: string) => void; onSelectMulti?: (ids: string[]) => void }) {
+  const relative = useRelativeTime()
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
   const notes = usePlotStore((s) => s.notes)
   const tags = usePlotStore((s) => s.tags)
@@ -447,7 +449,7 @@ export function NotePickerDialog({
                 <div className="flex items-center gap-2 shrink-0">
                   <StatusBadge status={note.status} />
                   <span className="text-2xs tabular-nums text-muted-foreground/70">
-                    {formatDistanceToNow(new Date(note.updatedAt), { addSuffix: true })}
+                    {relative(note.updatedAt)}
                   </span>
                 </div>
               </CommandItem>

@@ -3,6 +3,7 @@
 import { useState, useMemo } from "react"
 import { formatDistanceToNow, parseISO } from "date-fns"
 import { usePlotStore } from "@/lib/store"
+import { useRelativeTime } from "@/lib/i18n-date"
 import { getEventsForEntity } from "@/lib/datalog/helpers"
 import { EVENT_CONFIG } from "@/lib/datalog/event-config"
 import type { EntityEvent, EntityRef } from "@/lib/types"
@@ -68,10 +69,11 @@ export function ActivityTimeline({
 }
 
 function TimelineRow({ event }: { event: EntityEvent }) {
+  const relative = useRelativeTime()
   const config = EVENT_CONFIG[event.type]
   if (!config) return null
 
-  const timeAgo = formatDistanceToNow(parseISO(event.at), { addSuffix: true })
+  const timeAgo = relative(parseISO(event.at))
 
   return (
     <div className="flex items-center gap-2 py-1">
