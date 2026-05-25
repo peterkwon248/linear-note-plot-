@@ -160,11 +160,11 @@ function BooksGrid() {
   const [renameDraft, setRenameDraft] = useState("")
 
   const handleCreate = () => {
-    const title = createTitle.trim() || "Untitled book"
+    const title = createTitle.trim() || t("books.untitled")
     const id = createBook(title)
     setCreateTitle("")
     setCreateOpen(false)
-    toast.success(`Created "${title}"`)
+    toast.success(t("books.toast.created").replace("{title}", title))
     setActiveRoute(`/books/${id}`)
     router.push(`/books/${id}`)
   }
@@ -185,22 +185,22 @@ function BooksGrid() {
 
   const handleTogglePin = (id: string, pinned: boolean | undefined) => {
     updateBook(id, { pinned: !pinned })
-    toast.success(pinned ? "Unpinned book" : "Pinned book")
+    toast.success(pinned ? t("books.toast.unpinned") : t("books.toast.pinned"))
   }
 
   const handleDelete = (id: string, title: string) => {
     deleteBook(id)
-    toast.success(`Moved "${title}" to trash`)
+    toast.success(t("books.toast.trashed").replace("{title}", title))
   }
 
   const handleRestore = (id: string, title: string) => {
     restoreBook(id)
-    toast.success(`Restored "${title}"`)
+    toast.success(t("books.toast.restored").replace("{title}", title))
   }
 
   const handlePermanentDelete = (id: string, title: string) => {
     permanentlyDeleteBook(id)
-    toast.success(`Permanently deleted "${title}"`)
+    toast.success(t("books.toast.deleted").replace("{title}", title))
   }
 
   const handleRenameSubmit = () => {

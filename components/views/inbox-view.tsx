@@ -34,10 +34,10 @@ function getSnoozeUntil(option: "1h" | "tomorrow" | "next-week"): Date {
   return d
 }
 
-function snoozeLabel(option: "1h" | "tomorrow" | "next-week"): string {
-  if (option === "1h") return "In 1 hour"
-  if (option === "tomorrow") return "Tomorrow 9 AM"
-  return "Next week"
+function snoozeLabelKey(option: "1h" | "tomorrow" | "next-week"): string {
+  if (option === "1h") return "inbox.snooze.1h"
+  if (option === "tomorrow") return "inbox.snooze.tomorrow"
+  return "inbox.snooze.next_week"
 }
 
 /* ── Row component ────────────────────────────────────── */
@@ -53,6 +53,7 @@ function InboxRowFull({
   onDismiss: (kind: InboxItemKind, sourceId: string) => void
   onSnooze: (kind: InboxItemKind, sourceId: string, until: Date) => void
 }) {
+  const t = useT()
   const [snoozeOpen, setSnoozeOpen] = useState(false)
   const isOverdue =
     item.action?.toLowerCase().includes("overdue") ?? false
@@ -85,9 +86,9 @@ function InboxRowFull({
   function handleDismiss(e: React.MouseEvent) {
     e.stopPropagation()
     onDismiss(item.kind, item.sourceId)
-    toast("Dismissed", {
+    toast(t("inbox.toast.dismissed"), {
       action: {
-        label: "Undo",
+        label: t("common.undo"),
         onClick: () => {
           usePlotStore.getState().undoDismissInbox(item.kind, item.sourceId)
         },
@@ -99,7 +100,7 @@ function InboxRowFull({
     const until = getSnoozeUntil(option)
     onSnooze(item.kind, item.sourceId, until)
     setSnoozeOpen(false)
-    toast(`Snoozed until ${snoozeLabel(option)}`)
+    toast(t("inbox.toast.snoozed_until").replace("{label}", t(snoozeLabelKey(option))))
   }
 
   return (
@@ -186,7 +187,7 @@ function InboxRowFull({
                 onClick={() => handleSnooze(opt)}
                 className="flex w-full items-center rounded px-2.5 py-1.5 text-note text-foreground transition-colors hover:bg-hover-bg"
               >
-                {snoozeLabel(opt)}
+                {t(snoozeLabelKey(opt))}
               </button>
             ))}
           </PopoverContent>
