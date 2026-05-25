@@ -117,14 +117,14 @@ export function FloatingActionBar({
     pushUndo(`Status → ${status}`, () => {
       prevStatuses.forEach(({ id, status: prev }) => batchUpdateNotes([id], { status: prev }))
     }, () => batchUpdateNotes(ids, { status }))
-    toast(`Updated status for ${count} note${count > 1 ? "s" : ""}`)
+    toast(t("floatingbar.toast.status_updated").replace("{count}", String(count)))
   }
 
   const handleKeepAll = () => {
     ids.forEach((id) => triageKeep(id))
     onClearSelection()
     pushUndo(`Triage ${count} to Brick`, () => ids.forEach((id) => moveBackToInbox(id)), () => ids.forEach((id) => triageKeep(id)))
-    toast(`Moved ${count} note${count > 1 ? "s" : ""} to Brick`, {
+    toast(t("floatingbar.toast.moved_to_brick").replace("{count}", String(count)), {
       action: { label: "Undo", onClick: () => ids.forEach((id) => moveBackToInbox(id)) },
       duration: 5000,
     })
@@ -134,7 +134,7 @@ export function FloatingActionBar({
     ids.forEach((id) => triageTrash(id))
     onClearSelection()
     pushUndo(`Trash ${count} note${count > 1 ? "s" : ""}`, () => ids.forEach((id) => toggleTrash(id)), () => ids.forEach((id) => triageTrash(id)))
-    toast(`Trashed ${count} note${count > 1 ? "s" : ""}`, {
+    toast(t("floatingbar.toast.trashed").replace("{count}", String(count)), {
       duration: 5000,
     })
   }
@@ -143,7 +143,7 @@ export function FloatingActionBar({
     ids.forEach((id) => promoteToPermanent(id))
     onClearSelection()
     pushUndo(`Promote ${count} to Keystone`, () => ids.forEach((id) => undoPromote(id)), () => ids.forEach((id) => promoteToPermanent(id)))
-    toast(`Promoted ${count} note${count > 1 ? "s" : ""} to Keystone`, {
+    toast(t("floatingbar.toast.promoted").replace("{count}", String(count)), {
       action: { label: "Undo", onClick: () => ids.forEach((id) => undoPromote(id)) },
       duration: 5000,
     })
@@ -153,7 +153,7 @@ export function FloatingActionBar({
     ids.forEach((id) => undoPromote(id))
     onClearSelection()
     pushUndo(`Demote ${count} to Brick`, () => ids.forEach((id) => promoteToPermanent(id)), () => ids.forEach((id) => undoPromote(id)))
-    toast(`Demoted ${count} note${count > 1 ? "s" : ""} to Brick`, {
+    toast(t("floatingbar.toast.demoted").replace("{count}", String(count)), {
       duration: 5000,
     })
   }
@@ -162,7 +162,7 @@ export function FloatingActionBar({
     ids.forEach((id) => moveBackToInbox(id))
     onClearSelection()
     pushUndo(`Move ${count} back to Stone`, () => ids.forEach((id) => triageKeep(id)), () => ids.forEach((id) => moveBackToInbox(id)))
-    toast(`Moved ${count} note${count > 1 ? "s" : ""} back to Stone`, {
+    toast(t("floatingbar.toast.moved_back_to_stone").replace("{count}", String(count)), {
       duration: 5000,
     })
   }
@@ -170,20 +170,20 @@ export function FloatingActionBar({
   const handleRemind = (isoDate: string) => {
     batchSetReminder(ids, isoDate)
     pushUndo(`Set reminder for ${count} note${count > 1 ? "s" : ""}`, () => batchSetReminder(ids, ""), () => batchSetReminder(ids, isoDate))
-    toast(`Reminder set for ${count} note${count > 1 ? "s" : ""}`)
+    toast(t("floatingbar.toast.reminder_set").replace("{count}", String(count)))
   }
 
   const handleRestoreAll = () => {
     ids.forEach((id) => toggleTrash(id))
     onClearSelection()
     pushUndo(`Restore ${count} note${count > 1 ? "s" : ""}`, () => ids.forEach((id) => toggleTrash(id)), () => ids.forEach((id) => toggleTrash(id)))
-    toast(`Restored ${count} note${count > 1 ? "s" : ""}`, { duration: 5000 })
+    toast(t("notes.toast.bulk_restored").replace("{count}", String(count)), { duration: 5000 })
   }
 
   const handleDeletePermanently = () => {
     ids.forEach((id) => deleteNote(id))
     onClearSelection()
-    toast(`Permanently deleted ${count} note${count > 1 ? "s" : ""}`, { duration: 5000 })
+    toast(t("notes.toast.bulk_deleted").replace("{count}", String(count)), { duration: 5000 })
   }
 
   const handleKeepInboxOnly = () => {
@@ -192,7 +192,7 @@ export function FloatingActionBar({
     inboxIds.forEach((id) => triageKeep(id))
     onClearSelection()
     pushUndo(`Triage ${inboxIds.length} to Brick`, () => inboxIds.forEach((id) => moveBackToInbox(id)), () => inboxIds.forEach((id) => triageKeep(id)))
-    toast(`Moved ${inboxIds.length} note${inboxIds.length > 1 ? "s" : ""} to Brick`)
+    toast(t("floatingbar.toast.moved_to_brick").replace("{count}", String(inboxIds.length)))
   }
 
   const handlePromoteCaptureOnly = () => {
@@ -201,7 +201,7 @@ export function FloatingActionBar({
     captureIds.forEach((id) => promoteToPermanent(id))
     onClearSelection()
     pushUndo(`Promote ${captureIds.length} to Keystone`, () => captureIds.forEach((id) => undoPromote(id)), () => captureIds.forEach((id) => promoteToPermanent(id)))
-    toast(`Promoted ${captureIds.length} note${captureIds.length > 1 ? "s" : ""} to Keystone`)
+    toast(t("floatingbar.toast.promoted").replace("{count}", String(captureIds.length)))
   }
 
   const handleDemotePermanentOnly = () => {
@@ -210,7 +210,7 @@ export function FloatingActionBar({
     permIds.forEach((id) => undoPromote(id))
     onClearSelection()
     pushUndo(`Demote ${permIds.length} to Brick`, () => permIds.forEach((id) => promoteToPermanent(id)), () => permIds.forEach((id) => undoPromote(id)))
-    toast(`Demoted ${permIds.length} note${permIds.length > 1 ? "s" : ""} to Brick`)
+    toast(t("floatingbar.toast.demoted").replace("{count}", String(permIds.length)))
   }
 
   /* ── Workflow buttons (conditional on tab) ───────────── */
@@ -452,7 +452,7 @@ export function FloatingActionBar({
                   if (note) setSplitTargetNoteId(note.id)
                 }}
                 className="inline-flex items-center gap-1 rounded-md bg-secondary/60 px-3 py-2 text-ui font-medium text-muted-foreground hover:bg-hover-bg hover:text-foreground transition-colors"
-                title="Split this note into two"
+                title={t("floatingbar.tooltip.split")}
               >
                 <Scissors size={16} /> {t("floatingbar.split")}
               </button>
@@ -484,7 +484,7 @@ export function FloatingActionBar({
               <PopoverTrigger asChild>
                 <button
                   className="inline-flex items-center gap-1 rounded-md bg-secondary/60 px-3 py-2 text-ui font-medium text-muted-foreground hover:bg-hover-bg hover:text-foreground transition-colors"
-                  title="Move selected notes to a folder (replaces existing memberships)"
+                  title={t("floatingbar.tooltip.move_to_folder_replace")}
                 >
                   <FolderOpen size={16} /> {t("floatingbar.move")}
                 </button>
@@ -524,7 +524,7 @@ export function FloatingActionBar({
               <PopoverTrigger asChild>
                 <button
                   className="inline-flex items-center gap-1 rounded-md bg-secondary/60 px-3 py-2 text-ui font-medium text-muted-foreground hover:bg-hover-bg hover:text-foreground transition-colors"
-                  title="Add selected notes to one or more folders (preserves existing memberships)"
+                  title={t("floatingbar.tooltip.add_to_folders")}
                 >
                   <FolderOpen size={16} /> {t("floatingbar.add_to_folder")}
                 </button>
@@ -577,7 +577,7 @@ export function FloatingActionBar({
       <NotePickerDialog
         open={linkOpen}
         onOpenChange={setLinkOpen}
-        title="Link to..."
+        title={t("floatingbar.tooltip.link")}
         excludeIds={ids}
         onSelect={(targetId) => {
           const targetNote = notes.find((n) => n.id === targetId)

@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react"
 import { toast } from "sonner"
 import { usePlotStore } from "@/lib/store"
+import { useT } from "@/lib/i18n"
 import type { WikiArticle } from "@/lib/types"
 import { pushUndo } from "@/lib/undo-manager"
 import { cn } from "@/lib/utils"
@@ -42,6 +43,7 @@ export function WikiFloatingActionBar({
   onMultiMerge,
   onSplit,
 }: WikiFloatingActionBarProps) {
+  const t = useT()
   const trashWikiArticle = usePlotStore((s) => s.trashWikiArticle)
   const updateWikiArticle = usePlotStore((s) => s.updateWikiArticle)
   const setWikiFolders = usePlotStore((s) => s.setWikiFolders)
@@ -76,13 +78,13 @@ export function WikiFloatingActionBar({
     const trashedIds = [...ids]
     trashedIds.forEach((id) => trashWikiArticle(id))
     onClearSelection()
-    toast.success(`Moved ${count} article${count > 1 ? "s" : ""} to trash`)
+    toast.success(t("wikibar.toast.trashed").replace("{count}", String(count)))
 
     pushUndo(
       `Trash ${count} article${count > 1 ? "s" : ""}`,
       () => {
         trashedIds.forEach((id) => trashWikiArticle(id))
-        toast.success(`Restored ${trashedIds.length} article${trashedIds.length > 1 ? "s" : ""}`)
+        toast.success(t("wikibar.toast.restored").replace("{count}", String(trashedIds.length)))
       }
     )
   }
@@ -107,7 +109,7 @@ export function WikiFloatingActionBar({
           className="mr-1 flex items-center gap-1.5 rounded-md px-2 py-1.5 text-2xs font-medium text-muted-foreground hover:bg-active-bg transition-colors"
         >
           <Lightning size={14} fill="currentColor" className="text-accent" />
-          {count} selected
+          {t("wikibar.selected").replace("{count}", String(count))}
           <PhX size={12} className="ml-0.5 text-muted-foreground/70" />
         </button>
 
@@ -118,12 +120,12 @@ export function WikiFloatingActionBar({
         <button
           onClick={handleTogglePin}
           className="inline-flex items-center gap-1 rounded-md bg-secondary/60 px-3 py-2 text-2xs font-medium text-foreground/80 transition-colors hover:bg-hover-bg hover:text-foreground"
-          title={allPinned ? "Unpin selected articles" : "Pin selected articles"}
+          title={allPinned ? t("wikibar.tooltip.unpin") : t("wikibar.tooltip.pin")}
         >
           {allPinned ? (
-            <><PushPinSlash size={16} /> Unpin</>
+            <><PushPinSlash size={16} /> {t("wikibar.action.unpin")}</>
           ) : (
-            <><PushPin size={16} className="text-amber-500" /> Pin</>
+            <><PushPin size={16} className="text-amber-500" /> {t("wikibar.action.pin")}</>
           )}
         </button>
 
@@ -135,9 +137,9 @@ export function WikiFloatingActionBar({
           <PopoverTrigger asChild>
             <button
               className="inline-flex items-center gap-1 rounded-md bg-secondary/60 px-3 py-2 text-2xs font-medium text-foreground/80 transition-colors hover:bg-hover-bg hover:text-foreground"
-              title="Move selected articles to a folder (replaces existing memberships)"
+              title={t("wikibar.tooltip.move_to_folder")}
             >
-              <FolderOpen size={16} /> Move
+              <FolderOpen size={16} /> {t("wikibar.action.move")}
             </button>
           </PopoverTrigger>
           <PopoverContent align="center" className="w-56 p-1">
@@ -149,8 +151,10 @@ export function WikiFloatingActionBar({
                 const target = folders.find((f) => f.id === folderId)
                 toast.success(
                   folderId
-                    ? `${count} article${count !== 1 ? "s" : ""} moved to ${target?.name ?? "folder"}`
-                    : `${count} article${count !== 1 ? "s" : ""} moved out of folder`,
+                    ? t("wikibar.toast.moved_to_folder")
+                        .replace("{count}", String(count))
+                        .replace("{folder}", target?.name ?? t("floatingbar.add_to_folder"))
+                    : t("wikibar.toast.moved_out_of_folder").replace("{count}", String(count)),
                 )
               }}
             />
@@ -174,7 +178,11 @@ export function WikiFloatingActionBar({
               .map((cid) => wikiCategories.find((c) => c.id === cid)?.name)
               .filter(Boolean)
               .join(", ")
-            toast.success(`Added ${count} article${count !== 1 ? "s" : ""} to ${names}`)
+            toast.success(
+              t("wikibar.toast.added_to_categories")
+                .replace("{count}", String(count))
+                .replace("{names}", names),
+            )
           }}
         />
 
