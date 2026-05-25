@@ -14,7 +14,7 @@ import { isToday, isThisWeek, isThisMonth, isYesterday } from "date-fns"
 export function applyFilters(
   notes: Note[],
   filters: FilterRule[],
-  extras?: Pick<PipelineExtras, "backlinksMap" | "wikiTitles">
+  extras?: Pick<PipelineExtras, "backlinksMap" | "wikiTitles" | "wikiEmbeddedNoteIds">
 ): Note[] {
   if (filters.length === 0) return notes
 
@@ -94,7 +94,7 @@ function matchDateSentinel(date: Date, value: string, operator: string): boolean
   return operator === "neq" ? !result : result
 }
 
-function matchesRule(note: Note, rule: FilterRule, extras?: Pick<PipelineExtras, "backlinksMap" | "wikiTitles">): boolean {
+function matchesRule(note: Note, rule: FilterRule, extras?: Pick<PipelineExtras, "backlinksMap" | "wikiTitles" | "wikiEmbeddedNoteIds">): boolean {
   const { field, operator, value } = rule
 
   switch (field) {
@@ -296,11 +296,12 @@ function matchesRule(note: Note, rule: FilterRule, extras?: Pick<PipelineExtras,
     }
 
     case "wikiRegistered": {
-      const wikiTitles = extras?.wikiTitles
-      const titleLower = (note.title ?? "").toLowerCase()
-      const inWiki = wikiTitles
-        ? (wikiTitles.has(titleLower) || (note.aliases?.some((a) => wikiTitles.has(a.toLowerCase())) ?? false))
-        : false
+      // 2026-05-25 — semantic correction (사용자 신호): "위키에 속해있음" =
+      // 실제로 위키 글에 임베드된 노트만. 이전엔 제목 매칭이라 same-title
+      // 우연 일치까지 잡혀 misleading. 이제 wikiArticle.noteIds (note-ref
+      // block의 referenced noteId 집합)를 통해 *진짜 멤버십*만 판정한다.
+      const embedded = extras?.wikiEmbeddedNoteIds
+      const inWiki = embedded ? embedded.has(note.id) : false
       const target = value === "true"
       return operator === "eq" ? inWiki === target : inWiki !== target
     }

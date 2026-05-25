@@ -63,13 +63,27 @@ export function useNotesView(
     return map
   }, [folders])
 
-  // ── Wiki titles set (for wikiRegistered filter) ────────
+  // ── Wiki titles set (legacy — kept for any title-match callers) ──
   const wikiTitles = useMemo(() => {
     const set = new Set<string>()
     for (const a of wikiArticles) {
       set.add(a.title.toLowerCase())
       for (const alias of a.aliases ?? []) {
         set.add(alias.toLowerCase())
+      }
+    }
+    return set
+  }, [wikiArticles])
+
+  // ── Wiki-embedded note IDs (drives the wikiRegistered filter) ────
+  // Every note ID that appears inside a wiki article's note-ref blocks.
+  // This is the source of truth for "this note belongs to a wiki article".
+  const wikiEmbeddedNoteIds = useMemo(() => {
+    const set = new Set<string>()
+    for (const a of wikiArticles) {
+      const ids = (a as { noteIds?: string[] }).noteIds
+      if (ids) {
+        for (const id of ids) set.add(id)
       }
     }
     return set
@@ -86,8 +100,8 @@ export function useNotesView(
 
   // ── Stage 2: User filters ─────────────────────────────
   const filterExtras = useMemo(
-    () => ({ backlinksMap: extras?.backlinksMap, wikiTitles }),
-    [extras?.backlinksMap, wikiTitles]
+    () => ({ backlinksMap: extras?.backlinksMap, wikiTitles, wikiEmbeddedNoteIds }),
+    [extras?.backlinksMap, wikiTitles, wikiEmbeddedNoteIds]
   )
   const filtered = useMemo(
     () => applyFilters(contextFiltered, viewState.filters, filterExtras),

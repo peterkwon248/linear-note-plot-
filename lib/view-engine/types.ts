@@ -216,8 +216,15 @@ export interface PipelineResult {
 
 export interface PipelineExtras {
   backlinksMap?: Map<string, number>
-  /** Lowercase set of all wiki article titles + aliases for wikiRegistered filter */
+  /** Lowercase set of all wiki article titles + aliases. Retained for any
+   *  legacy callers; the canonical \"belongs to a wiki\" check is via
+   *  `wikiEmbeddedNoteIds` (the article-side note-ref index). */
   wikiTitles?: Set<string>
+  /** Set of note IDs that appear inside any wiki article's `note-ref` block
+   *  (i.e. notes the user explicitly embedded into a wiki). Drives the
+   *  `wikiRegistered` filter — *true* membership rather than title-only
+   *  coincidence. */
+  wikiEmbeddedNoteIds?: Set<string>
   searchQuery?: string
   folderId?: string
   tagId?: string
