@@ -107,8 +107,6 @@ export function GlobalTopBar() {
 
       <PanelsMenu />
 
-      <div className="mx-2 h-5 w-px shrink-0 bg-border" aria-hidden="true" />
-
       {/* Recently viewed (history clock) */}
       <div className="relative" ref={recentlyViewedRef}>
         <button
