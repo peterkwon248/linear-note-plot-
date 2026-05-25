@@ -206,7 +206,17 @@ function TH({
 
 /* ── TrashEntityList ───────────────────────────────────── */
 
+const TRASH_TYPE_TO_KIND_KEY: Record<string, string> = {
+  books: "trash.kind.book",
+  tags: "trash.kind.tag",
+  labels: "trash.kind.label",
+  templates: "trash.kind.template",
+  references: "trash.kind.reference",
+  files: "trash.kind.attachment",
+}
+
 function TrashEntityList({ type }: { type: "books" | "tags" | "labels" | "templates" | "references" | "files" }) {
+  const t = useT()
   const store = usePlotStore()
 
   // Multi-select state — mirrors TrashAllView. Single entity type per list so
@@ -237,9 +247,9 @@ function TrashEntityList({ type }: { type: "books" | "tags" | "labels" | "templa
     : (store.attachments || []).filter((a: Attachment) => a.trashed)
 
   const labelOf = (item: Book | Tag | Label | NoteTemplate | Reference | Attachment): string =>
-    (item as any).title ?? (item as any).name ?? "Untitled"
+    (item as any).title ?? (item as any).name ?? t("common.untitled")
 
-  const singularNoun = type === "files" ? "file" : type === "books" ? "book" : type.slice(0, -1)
+  const kindLabel = t(TRASH_TYPE_TO_KIND_KEY[type] ?? "trash.kind.attachment")
 
   const restoreSilent = (id: string) => {
     if (type === "books") store.restoreBook(id)
@@ -261,13 +271,13 @@ function TrashEntityList({ type }: { type: "books" | "tags" | "labels" | "templa
 
   const handleRestore = (id: string) => {
     restoreSilent(id)
-    toast(`Restored ${singularNoun}`)
+    toast(t("trash.toast.restored_simple").replace("{kind}", kindLabel))
   }
 
   const handleDelete = (id: string, name: string) => {
     // file-entity-prd §5: when deleting a file, surface usage so the user
     // knows which notes/wikis will get dangling references.
-    let message = `Permanently delete "${name}"? This cannot be undone.`
+    let message = t("trash.confirm.delete").replace("{label}", name)
     if (type === "files") {
       const s = usePlotStore.getState()
       const warning = buildAttachmentDeleteWarning(id, name, s.notes, s.wikiArticles)
@@ -275,22 +285,22 @@ function TrashEntityList({ type }: { type: "books" | "tags" | "labels" | "templa
     }
     if (!window.confirm(message)) return
     deleteSilent(id)
-    toast(`Deleted ${singularNoun}`)
+    toast(t("trash.toast.deleted_simple").replace("{kind}", kindLabel))
   }
 
   const handleBulkRestore = () => {
     const ids = Array.from(selectedIds)
     if (ids.length === 0) return
     for (const id of ids) restoreSilent(id)
-    toast.success(`Restored ${ids.length} ${singularNoun}${ids.length === 1 ? "" : "s"}`)
+    toast.success(t("trash.toast.bulk_restored").replace("{count}", String(ids.length)))
     clearSelection()
   }
 
   const handleBulkDelete = () => {
-    if (!window.confirm(`Permanently delete ${selectedIds.size} item(s)? This cannot be undone.`)) return
+    if (!window.confirm(t("trash.confirm.bulk_delete").replace("{count}", String(selectedIds.size)))) return
     const ids = Array.from(selectedIds)
     for (const id of ids) deleteSilent(id)
-    toast.success(`Deleted ${ids.length} ${singularNoun}${ids.length === 1 ? "" : "s"} permanently`)
+    toast.success(t("trash.toast.bulk_deleted").replace("{count}", String(ids.length)))
     clearSelection()
   }
 
@@ -299,7 +309,7 @@ function TrashEntityList({ type }: { type: "books" | "tags" | "labels" | "templa
       <div className="flex flex-1 items-center justify-center text-center">
         <div>
           <Trash className="mx-auto mb-3 text-muted-foreground/70" size={40} strokeWidth={2} />
-          <p className="text-ui text-muted-foreground">No trashed {type}</p>
+          <p className="text-ui text-muted-foreground">{t("trash.entity.empty").replace("{kind}", kindLabel)}</p>
         </div>
       </div>
     )
@@ -310,10 +320,10 @@ function TrashEntityList({ type }: { type: "books" | "tags" | "labels" | "templa
       {/* Header row */}
       <div className="sticky top-0 z-10 flex items-center border-b border-border bg-background px-5 py-2">
         <div className="w-8 shrink-0" />
-        <div className="flex-1 text-note font-medium text-foreground/80">Name</div>
-        <div className="w-16 shrink-0 text-center text-note font-medium text-foreground/80">Color</div>
-        <div className="w-32 shrink-0 text-right text-note font-medium text-foreground/80">Trashed</div>
-        <div className="w-32 shrink-0 text-right text-note font-medium text-foreground/80">Actions</div>
+        <div className="flex-1 text-note font-medium text-foreground/80">{t("trash.header.name")}</div>
+        <div className="w-16 shrink-0 text-center text-note font-medium text-foreground/80">{t("trash.header.color")}</div>
+        <div className="w-32 shrink-0 text-right text-note font-medium text-foreground/80">{t("trash.header.trashed")}</div>
+        <div className="w-32 shrink-0 text-right text-note font-medium text-foreground/80">{t("trash.header.actions")}</div>
       </div>
       {items.map((item) => {
         const color = (item as Tag).color ?? ""
@@ -368,15 +378,15 @@ function TrashEntityList({ type }: { type: "books" | "tags" | "labels" | "templa
               <button
                 onClick={() => handleRestore(item.id)}
                 className="flex items-center gap-1 rounded-md px-2 py-1 text-note text-muted-foreground transition-colors hover:bg-hover-bg hover:text-foreground"
-                title="Restore"
+                title={t("trash.action.restore")}
               >
                 <ArrowCounterClockwise size={14} strokeWidth={2} />
-                Restore
+                {t("trash.action.restore")}
               </button>
               <button
                 onClick={() => handleDelete(item.id, labelOf(item))}
                 className="flex items-center gap-1 rounded-md px-2 py-1 text-note text-destructive transition-colors hover:bg-destructive/10"
-                title="Delete permanently"
+                title={t("trash.action.delete_permanently")}
               >
                 <Trash size={14} strokeWidth={2} />
               </button>
@@ -388,21 +398,21 @@ function TrashEntityList({ type }: { type: "books" | "tags" | "labels" | "templa
       {selectionActive && (
         <div className="sticky bottom-4 z-20 mx-auto mt-4 flex w-fit items-center gap-2 rounded-lg border border-border bg-popover/95 px-3 py-2 shadow-lg backdrop-blur">
           <span className="text-note text-muted-foreground tabular-nums">
-            {selectedIds.size} selected
+            {t("trash.selected_count").replace("{count}", String(selectedIds.size))}
           </span>
           <button
             onClick={handleBulkRestore}
             className="flex items-center gap-1.5 rounded-md px-2.5 py-1 text-note text-foreground transition-colors hover:bg-hover-bg"
           >
             <ArrowCounterClockwise size={14} strokeWidth={2} />
-            Restore
+            {t("trash.action.restore")}
           </button>
           <button
             onClick={handleBulkDelete}
             className="flex items-center gap-1.5 rounded-md px-2.5 py-1 text-note text-destructive transition-colors hover:bg-destructive/10"
           >
             <Trash size={14} strokeWidth={2} />
-            Delete forever
+            {t("trash.action.delete_forever")}
           </button>
           <button
             onClick={clearSelection}
@@ -1557,13 +1567,13 @@ export function NotesTable({
                               onPromote={() => { promoteToPermanent(item.note.id); pushUndo("Promote to Permanent", () => undoPromote(item.note.id), () => promoteToPermanent(item.note.id)) }}
                               onDemote={() => { undoPromote(item.note.id); pushUndo("Demote to Capture", () => promoteToPermanent(item.note.id), () => undoPromote(item.note.id)) }}
                               onMoveBack={() => { moveBackToInbox(item.note.id); pushUndo("Move back to Inbox", () => triageKeep(item.note.id), () => moveBackToInbox(item.note.id)) }}
-                              onRemind={(isoDate) => { setReminder(item.note.id, isoDate); toast("Reminder set") }}
+                              onRemind={(isoDate) => { setReminder(item.note.id, isoDate); toast(t("notes.toast.reminder_set")) }}
                               onMergeWith={() => setMergePickerOpen(true, item.note.id)}
                               onLinkWith={() => setLinkPickerOpen(true, item.note.id)}
                               onTogglePin={() => {
                                 const nextPinned = !item.note.pinned
                                 updateNote(item.note.id, { pinned: nextPinned })
-                                toast.success(nextPinned ? "Pinned note" : "Unpinned note")
+                                toast.success(nextPinned ? t("notes.toast.pinned") : t("notes.toast.unpinned"))
                               }}
                               onShowConnected={(direction) => {
                                 // Replace any existing connectedTo rule (one connection
@@ -1580,10 +1590,14 @@ export function NotesTable({
                                   ],
                                 })
                                 const dirLabel =
-                                  direction === "in" ? "backlinks" :
-                                  direction === "out" ? "links out" :
-                                  "both directions"
-                                toast(`Filtering: connected to "${item.note.title || "Untitled"}" (${dirLabel})`)
+                                  direction === "in" ? t("notes.connection.backlinks") :
+                                  direction === "out" ? t("notes.connection.links_out") :
+                                  t("notes.connection.both_directions")
+                                toast(
+                                  t("notes.toast.filtering_connected")
+                                    .replace("{title}", item.note.title || t("common.untitled"))
+                                    .replace("{dir}", dirLabel),
+                                )
                               }}
                               showCardPreview={false}
                               groupBy={viewState.groupBy}
@@ -1621,27 +1635,27 @@ export function NotesTable({
                     const noteIds = flatNotes.map((n) => n.id)
                     flatNotes.forEach((n) => toggleTrash(n.id))
                     pushUndo(`Restore ${flatNotes.length} note${flatNotes.length !== 1 ? "s" : ""}`, () => noteIds.forEach((id) => toggleTrash(id)), () => noteIds.forEach((id) => toggleTrash(id)))
-                    toast(`Restored ${flatNotes.length} note${flatNotes.length !== 1 ? "s" : ""}`)
+                    toast(t("notes.toast.bulk_restored").replace("{count}", String(flatNotes.length)))
                   }}
                   disabled={flatNotes.length === 0}
                   className="text-note"
                 >
                   <ArrowCounterClockwise className="mr-2 text-muted-foreground" size={16} strokeWidth={2} />
-                  Restore all
+                  {t("notes.menu.restore_all")}
                 </ContextMenuItem>
                 <ContextMenuSeparator />
                 <ContextMenuItem
                   onClick={() => {
-                    if (window.confirm(`Permanently delete ${flatNotes.length} note${flatNotes.length !== 1 ? "s" : ""}? This cannot be undone.`)) {
+                    if (window.confirm(t("notes.confirm.bulk_delete").replace("{count}", String(flatNotes.length)))) {
                       flatNotes.forEach((n) => deleteNote(n.id))
-                      toast(`Permanently deleted ${flatNotes.length} note${flatNotes.length !== 1 ? "s" : ""}`)
+                      toast(t("notes.toast.bulk_deleted").replace("{count}", String(flatNotes.length)))
                     }
                   }}
                   disabled={flatNotes.length === 0}
                   className="text-note text-destructive focus:text-destructive"
                 >
                   <Trash className="mr-2" size={16} strokeWidth={2} />
-                  Empty trash
+                  {t("notes.menu.empty_trash")}
                 </ContextMenuItem>
               </>
             ) : (
@@ -1653,7 +1667,7 @@ export function NotesTable({
                 className="text-note"
               >
                 <PhPlus className="mr-2 text-muted-foreground" size={16} strokeWidth={2} />
-                New note
+                {t("notes.menu.new_note")}
               </ContextMenuItem>
             )}
           </ContextMenuContent>
