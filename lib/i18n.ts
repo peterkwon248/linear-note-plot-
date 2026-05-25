@@ -654,6 +654,13 @@ const EN = {
   "ontology.dashboard.meta.use_plural": "uses",
   "ontology.dashboard.empty.no_connections": "No connections yet.",
   "ontology.dashboard.empty.no_tags": "No tags in use.",
+  "ontology.dashboard.empty.no_notes": "No notes yet.",
+  "ontology.dashboard.empty.no_wikis": "No wiki articles yet.",
+  "ontology.dashboard.empty.no_categories": "No categories yet.",
+  "ontology.dashboard.chart.status_distribution": "Status distribution",
+  "ontology.dashboard.chart.wiki_status": "Wiki status",
+  "ontology.dashboard.chart.top_hubs": "Top hubs",
+  "ontology.dashboard.chart.categories": "Top categories",
   "ontology.dashboard.footer": "More sections (time series, connectivity distribution, cluster analysis, wiki article stats) coming in a follow-up.",
 
   // Floating action bar (multi-select)
@@ -1520,6 +1527,13 @@ const KO: Partial<Record<DictKey, string>> = {
   "ontology.dashboard.meta.use_plural": "사용",
   "ontology.dashboard.empty.no_connections": "아직 연결이 없습니다.",
   "ontology.dashboard.empty.no_tags": "사용 중인 태그가 없습니다.",
+  "ontology.dashboard.empty.no_notes": "아직 노트가 없습니다.",
+  "ontology.dashboard.empty.no_wikis": "아직 위키 글이 없습니다.",
+  "ontology.dashboard.empty.no_categories": "아직 카테고리가 없습니다.",
+  "ontology.dashboard.chart.status_distribution": "상태 분포",
+  "ontology.dashboard.chart.wiki_status": "위키 상태",
+  "ontology.dashboard.chart.top_hubs": "Top 허브",
+  "ontology.dashboard.chart.categories": "Top 카테고리",
   "ontology.dashboard.footer": "더 많은 섹션 (시계열, 연결성 분포, 클러스터 분석, 위키 글 통계) 후속에 추가 예정.",
 
   // Floating action bar
