@@ -20,17 +20,36 @@ import {
   X as PhX,
   BookOpen,
   AlertCircle as WarningCircle,
+  Library as BooksIcon,
+  Network as CategoryIcon,
+  Sticker as StickerIcon,
+  Quote as ReferenceIcon,
 } from "lucide-react"
 // ── Types ───────────────────────────────────────────────────────────────────
 
-type TabKey = "all" | "notes" | "wiki" | "tags" | "labels" | "templates" | "folders"
+type TabKey =
+  | "all"
+  | "notes"
+  | "wiki"
+  | "books"
+  | "categories"
+  | "tags"
+  | "labels"
+  | "stickers"
+  | "references"
+  | "templates"
+  | "folders"
 
 const TABS: { key: TabKey; labelKey: string }[] = [
   { key: "all", labelKey: "search.tab.all" },
   { key: "notes", labelKey: "search.tab.notes" },
   { key: "wiki", labelKey: "search.tab.wiki" },
+  { key: "books", labelKey: "search.tab.books" },
+  { key: "categories", labelKey: "search.tab.categories" },
   { key: "tags", labelKey: "search.tab.tags" },
   { key: "labels", labelKey: "search.tab.labels" },
+  { key: "stickers", labelKey: "search.tab.stickers" },
+  { key: "references", labelKey: "search.tab.references" },
   { key: "templates", labelKey: "search.tab.templates" },
   { key: "folders", labelKey: "search.tab.folders" },
 ]
@@ -70,6 +89,10 @@ export function SearchView() {
   const labels = usePlotStore((s) => s.labels)
   const templates = usePlotStore((s) => s.templates)
   const folders = usePlotStore((s) => s.folders)
+  const books = usePlotStore((s) => s.books)
+  const wikiCategories = usePlotStore((s) => s.wikiCategories)
+  const stickers = usePlotStore((s) => s.stickers)
+  const references = usePlotStore((s) => s.references)
   const setSelectedNoteId = usePlotStore((s) => s.setSelectedNoteId)
   const setSearchOpen = usePlotStore((s) => s.setSearchOpen)
   const setCommandPaletteMode = usePlotStore((s) => s.setCommandPaletteMode)
@@ -162,6 +185,38 @@ export function SearchView() {
     return folders.filter((f) => f.name.toLowerCase().includes(q)).slice(0, 10)
   }, [folders, query, hasFuzzyQuery])
 
+  const matchedBooks = useMemo(() => {
+    if (!hasFuzzyQuery) return []
+    const q = query.toLowerCase().trim()
+    return books
+      .filter((b) => !b.trashed && (b.title.toLowerCase().includes(q) || (b.description ?? "").toLowerCase().includes(q)))
+      .slice(0, 10)
+  }, [books, query, hasFuzzyQuery])
+
+  const matchedCategories = useMemo(() => {
+    if (!hasFuzzyQuery) return []
+    const q = query.toLowerCase().trim()
+    return wikiCategories
+      .filter((c) => c.name.toLowerCase().includes(q) || (c.description ?? "").toLowerCase().includes(q))
+      .slice(0, 10)
+  }, [wikiCategories, query, hasFuzzyQuery])
+
+  const matchedStickers = useMemo(() => {
+    if (!hasFuzzyQuery) return []
+    const q = query.toLowerCase().trim()
+    return stickers
+      .filter((s) => !s.trashed && s.name.toLowerCase().includes(q))
+      .slice(0, 10)
+  }, [stickers, query, hasFuzzyQuery])
+
+  const matchedReferences = useMemo(() => {
+    if (!hasFuzzyQuery) return []
+    const q = query.toLowerCase().trim()
+    return Object.values(references)
+      .filter((r) => r.title.toLowerCase().includes(q) || r.content.toLowerCase().includes(q))
+      .slice(0, 10)
+  }, [references, query, hasFuzzyQuery])
+
   // All non-trashed wiki notes
   const wikiNotes = useMemo(
     () => notes.filter((n) => !n.trashed && n.noteType === "wiki"),
@@ -252,6 +307,26 @@ export function SearchView() {
     router.push("/wiki")
   }
 
+  function handleBookSelect(bookId: string) {
+    setActiveRoute("/books")
+    router.push(`/books/${bookId}`)
+  }
+
+  function handleCategorySelect() {
+    setActiveRoute("/wiki")
+    router.push("/wiki")
+  }
+
+  function handleStickerSelect() {
+    setActiveRoute("/library")
+    router.push("/library?tab=stickers")
+  }
+
+  function handleReferenceSelect() {
+    setActiveRoute("/library")
+    router.push("/library?tab=references")
+  }
+
   function handleCreateWikiFromQuery(title: string) {
     const id = createWikiArticle({ title })
     if (id) {
@@ -299,7 +374,11 @@ export function SearchView() {
     matchedTags.length === 0 &&
     matchedLabels.length === 0 &&
     matchedTemplates.length === 0 &&
-    matchedFolders.length === 0
+    matchedFolders.length === 0 &&
+    matchedBooks.length === 0 &&
+    matchedCategories.length === 0 &&
+    matchedStickers.length === 0 &&
+    matchedReferences.length === 0
 
   // ── Render ─────────────────────────────────────────────────────────────────
 
@@ -597,6 +676,131 @@ export function SearchView() {
                           <span className="text-foreground">
                             {highlightQuery(folder.name, query)}
                           </span>
+                        </button>
+                      ))}
+                    </div>
+                  </section>
+                )}
+
+              {/* Books */}
+              {(activeTab === "all" || activeTab === "books") &&
+                matchedBooks.length > 0 && (
+                  <section>
+                    <h3 className="mb-3 text-2xs font-medium uppercase tracking-wider text-muted-foreground">
+                      {t("search.section.books")}
+                    </h3>
+                    <div className="space-y-0.5">
+                      {matchedBooks.map((book) => (
+                        <button
+                          key={book.id}
+                          onClick={() => handleBookSelect(book.id)}
+                          className="flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-left transition-colors hover:bg-hover-bg"
+                        >
+                          <BooksIcon className="shrink-0 text-muted-foreground" size={16} strokeWidth={2} />
+                          <div className="min-w-0 flex-1">
+                            <div className="truncate text-foreground">
+                              {highlightQuery(book.title, query)}
+                            </div>
+                            {book.description && (
+                              <div className="truncate text-note text-muted-foreground">
+                                {book.description}
+                              </div>
+                            )}
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  </section>
+                )}
+
+              {/* Wiki Categories */}
+              {(activeTab === "all" || activeTab === "categories") &&
+                matchedCategories.length > 0 && (
+                  <section>
+                    <h3 className="mb-3 text-2xs font-medium uppercase tracking-wider text-muted-foreground">
+                      {t("search.section.categories")}
+                    </h3>
+                    <div className="space-y-0.5">
+                      {matchedCategories.map((cat) => (
+                        <button
+                          key={cat.id}
+                          onClick={handleCategorySelect}
+                          className="flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-left transition-colors hover:bg-hover-bg"
+                        >
+                          <CategoryIcon className="shrink-0 text-muted-foreground" size={16} strokeWidth={2} />
+                          <div className="flex min-w-0 flex-1 items-center gap-2">
+                            <span
+                              className="h-2.5 w-2.5 shrink-0 rounded-full"
+                              style={{ backgroundColor: cat.color }}
+                            />
+                            <span className="truncate text-foreground">
+                              {highlightQuery(cat.name, query)}
+                            </span>
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  </section>
+                )}
+
+              {/* Stickers */}
+              {(activeTab === "all" || activeTab === "stickers") &&
+                matchedStickers.length > 0 && (
+                  <section>
+                    <h3 className="mb-3 text-2xs font-medium uppercase tracking-wider text-muted-foreground">
+                      {t("search.section.stickers")}
+                    </h3>
+                    <div className="space-y-0.5">
+                      {matchedStickers.map((sticker) => (
+                        <button
+                          key={sticker.id}
+                          onClick={handleStickerSelect}
+                          className="flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-left transition-colors hover:bg-hover-bg"
+                        >
+                          <StickerIcon className="shrink-0 text-muted-foreground" size={16} strokeWidth={2} />
+                          <div className="flex min-w-0 flex-1 items-center gap-2">
+                            <span
+                              className="h-2.5 w-2.5 shrink-0 rounded-full"
+                              style={{ backgroundColor: sticker.color }}
+                            />
+                            <span className="truncate text-foreground">
+                              {highlightQuery(sticker.name, query)}
+                            </span>
+                          </div>
+                          <span className="text-2xs tabular-nums text-muted-foreground">
+                            {sticker.members.length}
+                          </span>
+                        </button>
+                      ))}
+                    </div>
+                  </section>
+                )}
+
+              {/* References */}
+              {(activeTab === "all" || activeTab === "references") &&
+                matchedReferences.length > 0 && (
+                  <section>
+                    <h3 className="mb-3 text-2xs font-medium uppercase tracking-wider text-muted-foreground">
+                      {t("search.section.references")}
+                    </h3>
+                    <div className="space-y-0.5">
+                      {matchedReferences.map((ref) => (
+                        <button
+                          key={ref.id}
+                          onClick={handleReferenceSelect}
+                          className="flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-left transition-colors hover:bg-hover-bg"
+                        >
+                          <ReferenceIcon className="shrink-0 text-muted-foreground" size={16} strokeWidth={2} />
+                          <div className="min-w-0 flex-1">
+                            <div className="truncate text-foreground">
+                              {highlightQuery(ref.title, query)}
+                            </div>
+                            {ref.content && (
+                              <div className="truncate text-note text-muted-foreground">
+                                {ref.content}
+                              </div>
+                            )}
+                          </div>
                         </button>
                       ))}
                     </div>

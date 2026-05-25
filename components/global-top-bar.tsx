@@ -29,7 +29,7 @@ import {
 import { usePlotStore } from "@/lib/store"
 import { useSettingsStore } from "@/lib/settings-store"
 import { useT } from "@/lib/i18n"
-import { routeGoBack, routeGoForward } from "@/lib/table-route"
+import { routeGoBack, routeGoForward, setActiveRoute } from "@/lib/table-route"
 import { UserAvatar } from "@/components/user-avatar"
 
 export function GlobalTopBar() {
@@ -39,8 +39,6 @@ export function GlobalTopBar() {
   const notes = usePlotStore((s) => s.notes)
   const navigationHistory = usePlotStore((s) => s.navigationHistory)
   const navigationIndex = usePlotStore((s) => s.navigationIndex)
-  const setSearchOpen = usePlotStore((s) => s.setSearchOpen)
-
   const theme = useSettingsStore((s) => s.theme)
   const setTheme = useSettingsStore((s) => s.setTheme)
   const toggleTheme = () => setTheme(theme === "dark" ? "light" : "dark")
@@ -163,12 +161,13 @@ export function GlobalTopBar() {
         <CaretRight size={14} strokeWidth={2} />
       </button>
 
-      {/* ── Center: search input — Group C refine: max-w-xl, py-2, softer
-       *  default border, stronger hover. Linear-grade prominence as the
-       *  primary chrome action of the whole bar. */}
+      {/* ── Center: search trigger — navigates to /search full-page view (Linear/
+       *  Notion pattern). Aligned with ⌘K shortcut (use-global-shortcuts.ts:122
+       *  calls setActiveRoute("/search")) so click and shortcut produce the
+       *  same result — a real search view, not the cmdk command palette. */}
       <div className="mx-4 flex flex-1 justify-center">
         <button
-          onClick={() => setSearchOpen(true)}
+          onClick={() => setActiveRoute("/search")}
           className="group flex w-full max-w-xl items-center gap-2 rounded-md border border-border-subtle bg-secondary/50 px-3 py-2 text-note text-muted-foreground/70 transition-colors hover:border-border hover:bg-secondary/70 hover:text-foreground"
           aria-label={t("common.search")}
         >
