@@ -10,7 +10,7 @@
  * through to the default `MMMM yyyy` / `MMM d, yyyy` patterns until they
  * get their own entries — graceful degradation, never raw lookup keys.
  */
-import { format } from "date-fns"
+import { format, formatDistanceToNow } from "date-fns"
 import { ko, ja, es, fr, de, enUS, type Locale as DateFnsLocale } from "date-fns/locale"
 import { useSettingsStore } from "./settings-store"
 import type { Locale } from "./i18n"
@@ -63,5 +63,22 @@ export function useDateFormat() {
     /** Expose the active date-fns locale for direct callers (e.g.
      *  `formatDistanceToNow(d, { locale })`). */
     locale: DATE_LOCALES[lang] ?? enUS,
+  }
+}
+
+/** Convenience hook for relative time strings ("1 hour ago" / "1시간 전").
+ *  Wraps date-fns `formatDistanceToNow` with the active locale + `addSuffix`.
+ *  Accepts Date or ISO string. Returns "" for invalid inputs (graceful). */
+export function useRelativeTime() {
+  const lang = useSettingsStore((s) => s.language) as Locale
+  const locale = DATE_LOCALES[lang] ?? enUS
+  return (date: Date | string) => {
+    try {
+      const d = typeof date === "string" ? new Date(date) : date
+      if (Number.isNaN(d.getTime())) return ""
+      return formatDistanceToNow(d, { addSuffix: true, locale })
+    } catch {
+      return ""
+    }
   }
 }

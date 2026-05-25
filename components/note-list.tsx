@@ -2,6 +2,7 @@
 
 import { useRef, useMemo, memo } from "react"
 import { isToday, isThisWeek, formatDistanceToNow } from "date-fns"
+import { useRelativeTime } from "@/lib/i18n-date"
 import { useVirtualizer } from "@tanstack/react-virtual"
 import {
   DropdownMenu,
@@ -64,6 +65,7 @@ type FlatItem =
 /* -- NoteRow -------------------------------------------------- */
 
 const NoteRow = memo(function NoteRow({ note }: { note: Note }) {
+  const relative = useRelativeTime()
   const openNote = usePlotStore((s) => s.openNote)
   const tags = usePlotStore((s) => s.tags)
   const updateNote = usePlotStore((s) => s.updateNote)
@@ -133,7 +135,7 @@ const NoteRow = memo(function NoteRow({ note }: { note: Note }) {
 
       {/* Date */}
       <span className="shrink-0 text-2xs text-muted-foreground">
-        {formatDistanceToNow(new Date(note.updatedAt), { addSuffix: true })}
+        {relative(note.updatedAt)}
       </span>
 
       {/* More menu */}
