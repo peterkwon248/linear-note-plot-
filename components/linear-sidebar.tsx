@@ -1454,12 +1454,11 @@ export function LinearSidebar() {
             {/* Ontology Views */}
             {renderViewsSection("ontology", "/ontology")}
 
-            {/* Graph Stats — at-a-glance quantities + actionable rates.
-                Counts (Notes / Wiki) sit at the top, sized large enough to
-                read in one glance. Rates (Orphans / Untagged / Coverage)
-                follow as small rows. Hover any row for a contextual tip
-                (full Dashboard has the deep breakdown). */}
-            <Section title={t("ontology.stats")}>
+            {/* Graph Stats section removed (2026-05-25, chunk 3a).
+                Insights and Dashboard panels are now the single source of
+                truth for ontology stats (sidebar/body redundancy removed).
+                Graph view users can switch tabs for stats. */}
+            {false && <Section title={t("ontology.stats")}>
               {(() => {
                 const m = knowledgeMetrics
                 const orphanCount = Math.round(m.orphanRate * m.totalNotes)
@@ -1568,7 +1567,7 @@ export function LinearSidebar() {
                   </div>
                 )
               })()}
-            </Section>
+            </Section>}
 
             {/* More — Graph/Insights/Dashboard moved to the top-level nav
                 (Wiki/Library pattern), so this section now only houses
