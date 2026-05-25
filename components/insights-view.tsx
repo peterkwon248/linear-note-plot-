@@ -70,14 +70,14 @@ function StatCard({ label, value, icon: Icon, accent }: {
 
 /* ── MiniBarChart (7-day activity) ────────────────────── */
 
-function MiniBarChart({ data }: { data: { date: string; count: number }[] }) {
+function MiniBarChart({ data, t }: { data: { date: string; count: number }[]; t: (k: string) => string }) {
   const max = Math.max(...data.map((d) => d.count), 1)
 
   return (
     <div className="rounded-lg border border-border bg-secondary/30 p-4">
       <div className="flex items-center gap-2 mb-3">
         <TrendUp className="text-muted-foreground" size={14} strokeWidth={2} />
-        <span className="text-2xs font-medium text-muted-foreground">7-Day PhActivity</span>
+        <span className="text-2xs font-medium text-muted-foreground">{t("notes.insights.chart.7day_activity")}</span>
       </div>
       <div className="flex items-end gap-1.5 h-16">
         {data.map((d) => {
@@ -94,7 +94,7 @@ function MiniBarChart({ data }: { data: { date: string; count: number }[] }) {
                     isToday ? "bg-accent" : "bg-muted-foreground/20"
                   }`}
                   style={{ height: `${Math.max(height, 4)}%` }}
-                  title={`${d.count} events`}
+                  title={t("notes.insights.events_count").replace("{count}", String(d.count))}
                 />
               </div>
               <span className={`text-2xs ${isToday ? "text-accent font-medium" : "text-muted-foreground/60"}`}>
@@ -110,7 +110,7 @@ function MiniBarChart({ data }: { data: { date: string; count: number }[] }) {
 
 /* ── MostOpened ───────────────────────────────────────── */
 
-function MostOpenedList({ items }: { items: { noteId: string; title: string; count: number }[] }) {
+function MostOpenedList({ items, t }: { items: { noteId: string; title: string; count: number }[]; t: (k: string) => string }) {
   const openNote = usePlotStore((s) => s.openNote)
 
   if (items.length === 0) return null
@@ -119,7 +119,7 @@ function MostOpenedList({ items }: { items: { noteId: string; title: string; cou
     <div className="rounded-lg border border-border bg-secondary/30 p-4">
       <div className="flex items-center gap-2 mb-2.5">
         <PhEye className="text-muted-foreground" size={14} strokeWidth={2} />
-        <span className="text-2xs font-medium text-muted-foreground">Most Opened</span>
+        <span className="text-2xs font-medium text-muted-foreground">{t("notes.insights.section.most_opened")}</span>
       </div>
       <div className="space-y-0.5">
         {items.map((item, i) => (
@@ -141,7 +141,7 @@ function MostOpenedList({ items }: { items: { noteId: string; title: string; cou
 
 /* ── LifecycleStats ───────────────────────────────────── */
 
-function LifecycleStats({ notes }: { notes: any[] }) {
+function LifecycleStats({ notes, t }: { notes: any[]; t: (k: string) => string }) {
   const active = notes.filter((n) => !n.trashedAt)
   const inbox = active.filter((n) => n.status === "stone").length
   const capture = active.filter((n) => n.status === "brick").length
@@ -152,14 +152,14 @@ function LifecycleStats({ notes }: { notes: any[] }) {
     <div className="rounded-lg border border-border bg-secondary/30 p-4">
       <div className="flex items-center gap-2 mb-3">
         <PhActivity className="text-muted-foreground" size={14} strokeWidth={2} />
-        <span className="text-2xs font-medium text-muted-foreground">Note Lifecycle</span>
+        <span className="text-2xs font-medium text-muted-foreground">{t("notes.insights.section.lifecycle")}</span>
       </div>
       <div className="grid grid-cols-4 gap-2">
         {[
-          { label: "Stone", value: inbox, color: "text-chart-3" },
-          { label: "Brick", value: capture, color: "text-chart-2" },
-          { label: "Block", value: permanent, color: "text-chart-5" },
-          { label: "Wiki", value: wiki, color: "text-accent" },
+          { label: t("status.stone"), value: inbox, color: "text-chart-3" },
+          { label: t("status.brick"), value: capture, color: "text-chart-2" },
+          { label: t("status.block"), value: permanent, color: "text-chart-5" },
+          { label: t("notes.insights.lifecycle.wiki"), value: wiki, color: "text-accent" },
         ].map((s) => (
           <div key={s.label} className="text-center">
             <p className={`text-lg font-semibold ${s.color}`}>{s.value}</p>
@@ -175,7 +175,7 @@ function LifecycleStats({ notes }: { notes: any[] }) {
 
 const INITIAL_SHOW = 5
 
-function InsightCard({ result }: { result: AnalysisResult }) {
+function InsightCard({ result, t }: { result: AnalysisResult; t: (k: string) => string }) {
   const [expanded, setExpanded] = useState(false)
   const notes = usePlotStore((s) => s.notes)
   const openNote = usePlotStore((s) => s.openNote)
@@ -233,7 +233,7 @@ function InsightCard({ result }: { result: AnalysisResult }) {
               onClick={() => setExpanded(true)}
               className="px-2 py-1 text-2xs text-muted-foreground transition-colors hover:text-foreground"
             >
-              Show {remaining} more...
+              {t("notes.insights.show_n_more").replace("{count}", String(remaining))}
             </button>
           )}
         </div>
@@ -247,7 +247,7 @@ function InsightCard({ result }: { result: AnalysisResult }) {
             className="flex items-center gap-1 px-2 py-1 text-2xs text-muted-foreground transition-colors hover:text-foreground"
           >
             <CaretDown size={12} strokeWidth={2} />
-            Show {matchedNotes.length} notes...
+            {t("notes.insights.show_n_notes").replace("{count}", String(matchedNotes.length))}
           </button>
         </div>
       )}
@@ -314,28 +314,28 @@ export function InsightsView() {
 
       {/* Content */}
       <div className="flex-1 overflow-y-auto px-6 py-5 space-y-6">
-        {/* ── PhActivity Dashboard ────────────────────── */}
+        {/* ── Activity Dashboard ──────────────────────── */}
         <section>
           <h3 className="text-2xs font-medium uppercase tracking-wider text-muted-foreground/60 mb-3">
-            PhActivity
+            {t("notes.insights.section.activity")}
           </h3>
 
           {/* Stat cards */}
           <div className="grid grid-cols-3 gap-3 mb-3">
             <StatCard
-              label="Today"
+              label={t("notes.insights.stat.today")}
               value={activityStats.todayCount}
               icon={PhActivity}
               accent="bg-chart-5/15 text-chart-5"
             />
             <StatCard
-              label="This Week"
+              label={t("notes.insights.stat.this_week")}
               value={activityStats.weekCount}
               icon={TrendUp}
               accent="bg-chart-2/15 text-chart-2"
             />
             <StatCard
-              label="This Month"
+              label={t("notes.insights.stat.this_month")}
               value={activityStats.monthCount}
               icon={FileText}
               accent="bg-accent/15 text-accent"
@@ -344,9 +344,9 @@ export function InsightsView() {
 
           {/* 7-day chart + Most Opened + Lifecycle */}
           <div className="grid grid-cols-3 gap-3">
-            <MiniBarChart data={activityStats.dailyActivity} />
-            <MostOpenedList items={activityStats.mostOpened} />
-            <LifecycleStats notes={notes} />
+            <MiniBarChart data={activityStats.dailyActivity} t={t} />
+            <MostOpenedList items={activityStats.mostOpened} t={t} />
+            <LifecycleStats notes={notes} t={t} />
           </div>
         </section>
 
@@ -354,7 +354,7 @@ export function InsightsView() {
         <section>
           <div className="flex items-center gap-2 mb-3">
             <h3 className="text-2xs font-medium uppercase tracking-wider text-muted-foreground/60">
-              Health
+              {t("notes.insights.section.health")}
             </h3>
             {total > 0 && (
               <div className="flex items-center gap-1.5">
@@ -381,15 +381,16 @@ export function InsightsView() {
           </div>
 
           {total === 0 ? (
-            <div className="flex flex-col items-center justify-center rounded-lg border border-border bg-secondary/30 py-10 text-center">
-              <Lightbulb className="mb-3 text-muted-foreground/60" size={32} strokeWidth={2} />
-              <p className="text-note font-medium text-foreground/70">All good!</p>
-              <p className="mt-0.5 text-2xs text-muted-foreground">No issues detected.</p>
+            /* Compact empty state — no oversized empty box (chunk 3a polish). */
+            <div className="flex items-center gap-2 rounded-md border border-border-subtle bg-secondary/20 px-4 py-2.5 text-note">
+              <Lightbulb className="shrink-0 text-muted-foreground/60" size={14} strokeWidth={2} />
+              <span className="font-medium text-foreground/70">{t("notes.insights.empty.all_good")}</span>
+              <span className="text-muted-foreground">{t("notes.insights.empty.no_issues")}</span>
             </div>
           ) : (
             <div className="space-y-3">
               {sorted.map((result) => (
-                <InsightCard key={result.ruleId} result={result} />
+                <InsightCard key={result.ruleId} result={result} t={t} />
               ))}
             </div>
           )}
