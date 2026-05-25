@@ -21,8 +21,11 @@ import {
   CartesianGrid,
   Tooltip,
 } from "recharts"
+import { format } from "date-fns"
 import type { Note, WikiArticle } from "@/lib/types"
 import { computeWikiTimeSeries, type BucketSize } from "@/lib/insights/timeseries"
+import { useT } from "@/lib/i18n"
+import { useDateFormat } from "@/lib/i18n-date"
 
 export type DataFilter = "all" | "articles" | "stubs"
 
@@ -44,6 +47,8 @@ export function WikiGrowthChart({
   bucketSize,
   dataFilter = "all",
 }: WikiGrowthChartProps) {
+  const t = useT()
+  const { locale } = useDateFormat()
   const containerRef = useRef<HTMLDivElement>(null)
   const [width, setWidth] = useState(0)
 
@@ -76,42 +81,53 @@ export function WikiGrowthChart({
   const formatTick = (ts: string) => {
     const d = new Date(ts)
     if (bucketSize === "month") {
-      return d.toLocaleDateString("en-US", { month: "short", year: "2-digit" })
+      return format(d, "MMM yy", { locale })
     }
     return `${d.getMonth() + 1}/${d.getDate()}`
   }
 
   const chartWidth = width > 0 ? width - 32 : 0
 
+  const labelArticles = t("wiki.filter.articles")
+  const labelStubs = t("wiki.filter.stubs")
+  const labelNotes = t("wiki.chart.series_notes")
+  const labelNewArticles = t("wiki.chart.series_new_articles")
+  const labelNewStubs = t("wiki.chart.series_new_stubs")
+
   // Derive cumulative dataKey(s) and bar dataKey(s) by filter
   const cumulativeKeys: { key: string; color: string; dash?: string; name: string }[] =
     dataFilter === "all"
       ? [
-          { key: "totalArticles", color: COLOR_ARTICLE, name: "Articles" },
-          { key: "totalStubs", color: COLOR_STUB, name: "Stubs" },
-          { key: "totalNotes", color: COLOR_NOTES, dash: "3 3", name: "Notes" },
+          { key: "totalArticles", color: COLOR_ARTICLE, name: labelArticles },
+          { key: "totalStubs", color: COLOR_STUB, name: labelStubs },
+          { key: "totalNotes", color: COLOR_NOTES, dash: "3 3", name: labelNotes },
         ]
       : dataFilter === "articles"
-        ? [{ key: "totalArticles", color: COLOR_ARTICLE, name: "Articles" }]
-        : [{ key: "totalStubs", color: COLOR_STUB, name: "Stubs" }]
+        ? [{ key: "totalArticles", color: COLOR_ARTICLE, name: labelArticles }]
+        : [{ key: "totalStubs", color: COLOR_STUB, name: labelStubs }]
 
   const newBarKeys: { key: string; color: string; name: string }[] =
     dataFilter === "all"
       ? [
-          { key: "newArticles", color: COLOR_ARTICLE, name: "New Articles" },
-          { key: "newStubs", color: COLOR_STUB, name: "New Stubs" },
+          { key: "newArticles", color: COLOR_ARTICLE, name: labelNewArticles },
+          { key: "newStubs", color: COLOR_STUB, name: labelNewStubs },
         ]
       : dataFilter === "articles"
-        ? [{ key: "newArticles", color: COLOR_ARTICLE, name: "New Articles" }]
-        : [{ key: "newStubs", color: COLOR_STUB, name: "New Stubs" }]
+        ? [{ key: "newArticles", color: COLOR_ARTICLE, name: labelNewArticles }]
+        : [{ key: "newStubs", color: COLOR_STUB, name: labelNewStubs }]
 
-  const bucketLabel = bucketSize === "day" ? "day" : bucketSize === "week" ? "week" : "month"
+  const newPerLabel =
+    bucketSize === "day"
+      ? t("wiki.chart.new_per_day")
+      : bucketSize === "week"
+        ? t("wiki.chart.new_per_week")
+        : t("wiki.chart.new_per_month")
   const cumulativeLabel =
     dataFilter === "all"
-      ? "Cumulative articles, stubs & notes"
+      ? t("wiki.chart.cumulative")
       : dataFilter === "articles"
-        ? "Cumulative articles"
-        : "Cumulative stubs"
+        ? t("wiki.chart.cumulative_articles")
+        : t("wiki.chart.cumulative_stubs")
 
   return (
     <div ref={containerRef} className="px-4 py-3 space-y-4">
@@ -173,7 +189,7 @@ export function WikiGrowthChart({
 
       {/* New per bucket bar chart */}
       <div>
-        <p className="mb-2 text-2xs text-muted-foreground">New per {bucketLabel}</p>
+        <p className="mb-2 text-2xs text-muted-foreground">{newPerLabel}</p>
         {chartWidth > 0 && (
           <BarChart
             width={chartWidth}

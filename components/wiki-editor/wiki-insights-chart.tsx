@@ -15,6 +15,7 @@ import { cn } from "@/lib/utils"
 import type { Note, WikiArticle } from "@/lib/types"
 import type { BucketSize } from "@/lib/insights/timeseries"
 import { isWikiStub } from "@/lib/wiki-utils"
+import { useT } from "@/lib/i18n"
 import { WikiGrowthChart, type DataFilter } from "./wiki-growth-chart"
 import { WikiConnectivityChart } from "./wiki-connectivity-chart"
 
@@ -25,24 +26,25 @@ interface WikiInsightsChartProps {
   wikiArticles: WikiArticle[]
 }
 
-const CHART_TYPES: { value: ChartType; label: string }[] = [
-  { value: "growth", label: "Growth" },
-  { value: "connectivity", label: "Connectivity" },
+const CHART_TYPES: { value: ChartType; labelKey: string }[] = [
+  { value: "growth", labelKey: "wiki.tab.growth" },
+  { value: "connectivity", labelKey: "wiki.tab.connectivity" },
 ]
 
-const BUCKET_OPTIONS: { value: BucketSize; label: string }[] = [
-  { value: "day", label: "Day" },
-  { value: "week", label: "Week" },
-  { value: "month", label: "Month" },
+const BUCKET_OPTIONS: { value: BucketSize; labelKey: string }[] = [
+  { value: "day", labelKey: "wiki.range.day" },
+  { value: "week", labelKey: "wiki.range.week" },
+  { value: "month", labelKey: "wiki.range.month" },
 ]
 
-const DATA_FILTERS: { value: DataFilter; label: string }[] = [
-  { value: "all", label: "All" },
-  { value: "articles", label: "Articles" },
-  { value: "stubs", label: "Stubs" },
+const DATA_FILTERS: { value: DataFilter; labelKey: string }[] = [
+  { value: "all", labelKey: "wiki.filter.all" },
+  { value: "articles", labelKey: "wiki.filter.articles" },
+  { value: "stubs", labelKey: "wiki.filter.stubs" },
 ]
 
 export function WikiInsightsChart({ notes, wikiArticles }: WikiInsightsChartProps) {
+  const t = useT()
   const [chartType, setChartType] = useState<ChartType>("growth")
   const [bucketSize, setBucketSize] = useState<BucketSize>("month")
   const [dataFilter, setDataFilter] = useState<DataFilter>("all")
@@ -78,7 +80,7 @@ export function WikiInsightsChart({ notes, wikiArticles }: WikiInsightsChartProp
                   : "text-muted-foreground hover:text-foreground",
               )}
             >
-              {ct.label}
+              {t(ct.labelKey)}
             </button>
           ))}
         </div>
@@ -97,7 +99,7 @@ export function WikiInsightsChart({ notes, wikiArticles }: WikiInsightsChartProp
                   : "text-muted-foreground hover:text-foreground",
               )}
             >
-              {opt.label}
+              {t(opt.labelKey)}
             </button>
           ))}
         </div>
@@ -122,7 +124,7 @@ export function WikiInsightsChart({ notes, wikiArticles }: WikiInsightsChartProp
                     : "text-muted-foreground hover:bg-hover-bg hover:text-foreground",
               )}
             >
-              {f.label}
+              {t(f.labelKey)}
               <span className="ml-1 tabular-nums text-muted-foreground/70">
                 {counts[f.value]}
               </span>
