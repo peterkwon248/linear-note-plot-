@@ -26,7 +26,7 @@ export function OntologyInsightsPanel() {
   )
 
   return (
-    <div className="mx-auto w-full max-w-[640px] px-4 py-6">
+    <div className="w-full px-6 py-6">
       {/* ── Overview: dense single-row stats ── */}
       <Section label="Overview">
         <StatLine items={[
