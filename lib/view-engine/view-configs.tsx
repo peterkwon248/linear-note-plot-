@@ -210,8 +210,8 @@ export const NOTES_VIEW_CONFIG: ViewConfig = {
       { key: "_orphan", label: "True orphans (no in/out)" },
     ]},
     { key: "wikiRegistered", label: "Wiki", labelKey: "filter.category.wiki", icon: WikiIcon, values: [
-      { key: "true", label: "In wiki" },
-      { key: "false", label: "Not in wiki" },
+      { key: "true", label: "Has wiki article", labelKey: "filter.value.wiki.in" },
+      { key: "false", label: "No wiki article", labelKey: "filter.value.wiki.not_in" },
     ]},
     { key: "content", label: "Content", labelKey: "filter.category.content", icon: ContentIcon, values: [
       { key: "hasImage", label: "Has images" },
@@ -237,7 +237,7 @@ export const NOTES_VIEW_CONFIG: ViewConfig = {
     { label: "True orphans", labelKey: "filter.quick.true_orphans", desc: "no in/out links", descKey: "filter.quick.true_orphans_desc", rules: [
       { field: "links", operator: "eq", value: "_orphan" },
     ]},
-    { label: "Wiki-registered", labelKey: "filter.quick.wiki_registered", desc: "promoted to wiki", descKey: "filter.quick.wiki_registered_desc", rules: [
+    { label: "Has wiki article", labelKey: "filter.quick.wiki_registered", desc: "same title exists in wiki", descKey: "filter.quick.wiki_registered_desc", rules: [
       { field: "wikiRegistered", operator: "eq", value: "true" },
     ]},
   ],
