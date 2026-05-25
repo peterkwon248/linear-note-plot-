@@ -1207,6 +1207,10 @@ export function NotesTable({
         quickFilters={NOTES_VIEW_CONFIG.quickFilters as any}
         activeFilters={viewState.filters as any}
         onFiltersChange={(filters) => updateViewState({ filters: filters as any })}
+        viewContext={effectiveTab}
+        folders={folders}
+        tags={tags}
+        labels={labels}
         showDisplay
         displayContent={
           <DisplayPanel
