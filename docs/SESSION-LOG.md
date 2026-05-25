@@ -6,6 +6,157 @@
 
 ---
 
+## 2026-05-25 (대규모 세션 #2) — Windows, **거대 세션: i18n 마무리 + Custom Quick Filter feature + 디자인 브레인스토밍 (PR #438-#457, 20 PR 머지)**
+
+> 🎯 **다음 즉시 액션 (다음 세션 시작점)**: **이번 세션 마지막 브레인스토밍 2 의제 구현** — (A) 'P' brand mark 제거 + GlobalTopBar 좌측 user avatar 통합 + (B) 온톨로지 대시보드/인사이트 layout 재설계 (풀 폭 + KPI grid + 차트 7-8개).
+>
+> **사용자 의도** (그대로 인용):
+> - "P가 하드코딩되어서 들어가는데... 시각적으로 별로야. 액티비티 바에서 해당 영역을 없애고, 토글스패널의 버튼 쪽에다 올리긴 해야 될 거 같은데... 위치를 아주 신경써서 조정해야 될 거 같아. 폰트 사이즈 등까지 고려해서."
+> - "온톨로지의 인사이트와 대시보드는 좌우 여백이 넓지? 너무 문자가 많고 빽빽해서 한 눈에 안 들어오는데. 차트와 그래프가 더 많아질 순 없나?"
+>
+> **첫 스텝 A — 'P' brand mark fix (작은 작업, 먼저 권장)**:
+> 1. `components/activity-bar.tsx:103-105` — `<div className="a-brand__mark">P</div>` + `<div className="a-actbar__head">` 영역 제거 (Tier 1 — primary spaces 직전)
+> 2. `components/global-top-bar.tsx:97` — `<PanelsMenu />` 직전 또는 자리에 `UserAvatar` 컴포넌트 추가
+> 3. 신규 `components/user-avatar.tsx` — 32px rounded-md, accent gradient, 이니셜 ("P" default 또는 settings.userName 첫 글자)
+> 4. PanelsMenu 위치 분기 — 옆에 둘지, dropdown 통합할지 결정 (3 chunk 권장):
+>    - chunk 1: 'P' 단순 제거 (작음)
+>    - chunk 2: GlobalTopBar 좌측 UserAvatar (이니셜 only) 추가
+>    - chunk 3: avatar dropdown — PanelsMenu + Account menu 통합 (큰 작업)
+>
+> **첫 스텝 B — 온톨로지 대시보드 재설계 (큰 작업, B chunk 분할)**:
+> 1. `components/views/ontology-view.tsx` read — wikiViewMode "dashboard" 분기
+> 2. `components/ontology/ontology-dashboard-panel.tsx` + `ontology-insights-panel.tsx` 현 layout 검사
+> 3. 좌우 여백 / max-width 제거 → 풀 폭 grid
+> 4. KPI 4 카드 추가 (총 노트/위키/책/카테고리) — 1줄
+> 5. 차트 신규 추가 (recharts 이미 사용 중, WikiInsightsChart 패턴 참조):
+>    - Stone/Brick/Block donut (status 분포)
+>    - 이번 주 활동 line/area chart (entityEvents)
+>    - Top 허브 노트 horizontal bar (backlinksMap sorted top 10)
+>    - 카테고리 분포 bar chart (wikiCategories.noteCount)
+>    - Stub vs Article donut (isWikiStub)
+>    - 고아 vs 임베드 donut (wikiEmbeddedNoteIds vs total)
+> 6. PRD 작성 권장 — 큰 디자인 작업이라 critic 검토 가치
+>
+> **컴포넌트 구조 / 데이터 흐름 (A)**:
+> ```
+> GlobalTopBar [좌측: UserAvatar(이니셜) → click dropdown → PanelsMenu items + Account] [clock][<][>] [search] [theme][settings][trash]
+> ActivityBar [Tier 1 spaces 6종 (홈/노트/위키/책/달력/온톨로지/자료실)] [Tier 2 settings/trash 제거 — GlobalTopBar로 이동 #119/#120 정합]
+> ```
+>
+> **Store action 매핑 (B)**:
+> - `usePlotStore((s) => s.notes)` — Note[]
+> - `usePlotStore((s) => s.wikiArticles)` — WikiArticle[]
+> - `usePlotStore((s) => s.books)` — Book[]
+> - `usePlotStore((s) => s.wikiCategories)` — WikiCategory[]
+> - `usePlotStore((s) => s.entityEvents)` — EntityEvent[] (time series)
+> - `lib/search/use-backlinks-index.ts` (useBacklinksIndex) — backlinksMap
+> - WikiArticle.noteIds (wiki-embedded notes) — 임베드 멤버십
+>
+> **위험 + 회피**:
+> - 'P' brand mark는 a-brand__mark CSS — globals.css에 정의됐을 수 있음. 제거만 하면 layout shift 가능 → activity-bar.tsx의 __head wrapper 통째로 제거하는 게 안전.
+> - GlobalTopBar 좌측에 avatar 추가 시 PanelsMenu 충돌 — clean 분리 (옆에 또는 통합)
+> - 대시보드 차트 추가 시 recharts ResponsiveContainer 사용 X (React 19/Next 16 width-0 issue) — `WikiInsightsChart`의 useRef + ResizeObserver 패턴 그대로 채택
+> - Dashboard layout 풀 폭 시 article 본문은 max-width 유지 (가독성) — 두 layout 정통 룰 LOCKED
+>
+> **참고 파일**:
+> - `components/activity-bar.tsx:103-105` — 'P' brand mark 위치
+> - `components/global-top-bar.tsx:35,97` — PanelsMenu import + mount
+> - `components/views/ontology-view.tsx` — Dashboard/Insights 진입점
+> - `components/ontology/ontology-dashboard-panel.tsx` + `ontology-insights-panel.tsx` — 대시보드/인사이트 패널
+> - `components/wiki-editor/wiki-growth-chart.tsx` — recharts ResizeObserver 패턴 reference
+> - `lib/search/use-backlinks-index.ts` — backlinksMap source
+> - 영구 룰 #119 (GlobalTopBar = chrome single source) / #120 (PanelsMenu top bar 단일 mount)
+>
+> **2번째 P0 후보** (#1 끝나면):
+> - 좌우 여백 정통화 — 홈 / 라이브러리 overview / 온톨로지 페이지 모두 풀 폭 (Dashboard 성격)
+> - 노트/위키 article 본문은 max-width 유지 (long-form 가독성)
+> - chip edit / drag-to-reorder (Quick filter polish)
+> - Misc i18n cleanup (Editor toolbar / slash menu — 마지막 큰 i18n)
+>
+> **머신**: Windows. cross-machine 가능.
+> **현재 main HEAD**: PR #457 머지 후.
+> **branch worktree**: `claude/trusting-sammet-71a453` (대규모 누적 20 PR — cleanup 권장, 새 worktree로).
+
+### 완료 (이번 세션 — 20 PR 머지)
+
+이번 세션은 **i18n 마무리 + Custom Quick Filter feature + 디자인 브레인스토밍** 세션. PR #438-#457:
+
+**i18n 마무리 (PR #438-#448, #451, #457)**:
+- F WikiInsightsChart (PR #438) — Day/Week/Month + Growth/Connectivity + chart axis date-fns ko locale
+- G Trash All view (PR #439) — 8 entity kind labels + 8 section headers + column header + toast + Hook 룰 fix
+- G' Trash chrome (PR #440) — page header + sub-tabs + Stone/Brick/Block/Pinned route titles + ViewComponent title 누락 fix
+- H Notes/Trash empty + hover tooltip + split toast (PR #441) — 22 신규 keys
+- I notes-table TrashEntityList + context menu + inline toast (PR #442) — 16 신규 keys
+- J 3 Floating Action Bars (PR #443) — Notes/Wiki/Templates 31 신규 keys
+- K inbox + books toast (PR #444) — 13 신규 keys
+- L wiki-view toast (PR #445) — Note added / Wiki article created / Filtering connected
+- M library-view (refs/tags/files) (PR #446) — 20 신규 keys
+- N Library chrome + /notes fallback (PR #447) — 12 신규 keys
+- O SearchView Linear refine (PR #448) — **folder breadcrumb path** + 26 신규 keys
+- P Side panel 3 탭 (PR #451) — 연결/활동/북마크 + EVENT_CONFIG 44 verbs i18n (~70 신규 keys)
+- V "참고문헌" → "레퍼런스" 정정 (PR #457) — 3 잔여 keys
+
+**wikiRegistered 정정 (PR #449/#450)** — 사용자 검증으로 발견 misleading label + 동작:
+- 라벨: "Wiki-registered / 위키 등록" → "In a wiki article / 위키에 속해있음"
+- 설명: "promoted to wiki / 위키로 승격됨" → "embedded inside a wiki article / 위키 글에 임베드된 노트"
+- 동작: 제목 매칭 → **실제 임베드 멤버십** (wikiArticles.noteIds 체크) — 영구 룰 #132
+
+**Custom Quick Filter feature (PR #452-#456)** — 사용자 신호 "직접 만들고 쓸 수 있는 빠른 필터":
+- MVP (PR #452) — promote-then-save 패턴: + 버튼 + Dialog + chip bar 자동 노출 + hover × 삭제 + Zustand persist v148
+- 다른 view 확장 (PR #453) — Books/Wiki/Templates viewContext + Wiki/Templates default i18n
+- Dialog rule builder (PR #454) — Dialog 안 + 필터 추가 popover로 FilterPanel 임베드 (사용자 신호 해소)
+- "Label" → "Name" (PR #455) — Plot Label entity 혼동 회피
+- Wiki/Books default 시드 확장 (PR #456) — Wiki 3→5, Books 0→3 chip
+
+**디자인 브레인스토밍 (이 entry hook 1순위)**:
+- 'P' brand mark 제거 + GlobalTopBar user avatar 통합 — 3 chunk 분할 권장
+- 온톨로지 대시보드 layout 재설계 — 풀 폭 + KPI grid + 차트 7-8개
+
+### 브레인스토밍 & 큰 결정 (영구 LOCKED #131~#135 + 후보 #136)
+
+- **#131 LOCKED**: **SavedView ≠ CustomQuickFilter 의미 분리**. SavedView = 장소 (view 전체 교체), CustomQuickFilter = 도구 (현재 view 위 modifier). 통합 X, 두 시스템 병존. (PR #452)
+- **#132 LOCKED**: **wikiRegistered = 실제 임베드 멤버십** (제목 매칭 X). `wikiArticles.noteIds` 배열 체크. 영구 룰 — filter 라벨/desc가 실제 동작과 정확히 일치해야 misleading 회피. (PR #450)
+- **#133 LOCKED**: **module-level static config labelKey 패턴 확장**. EVENT_CONFIG에 verbKey 옵셔널 추가 — module-level pure data에 i18n key 옵셔널 필드 + consumer가 t() resolve. SECTION_META + STATUS_CONFIG + view-configs + EVENT_CONFIG 일관 적용. (#126 일반화 → 영구화)
+- **#134 LOCKED**: **사용자 정의 Quick Filter promote-then-save 패턴 (D+A 결합)**. chip bar 끝 "+" 버튼 + Dialog (현재 active filters 자동 prefill + filterCategories 있으면 popover로 mini FilterPanel 임베드). promote-only fallback이 default. (PR #452/#454)
+- **#135 LOCKED**: **Plot UI text는 entity 이름과 generic form field 명명 충돌 회피**. "Label" form field → "Name" (Plot의 Label entity 충돌). 다른 generic field 명명 시도 같은 룰 적용 (Folder/Tag/Status 등 충돌 시 alternative). (PR #455)
+- **#136 (vision, 비-locked)**: **Dashboard / Overview = 풀 폭, Article 본문 = max-width 유지**. 정통 layout 룰. 다음 세션 대시보드 재설계에서 LOCKED 진입 권장.
+
+### 기술 학습 (영구)
+
+- **Zustand selector 안 .filter() 직접 호출 = referential equality 깨짐**. `useStore((s) => s.arr.filter(...))` 패턴은 매 render마다 새 array 반환 → "getServerSnapshot should be cached" infinite loop. 외부 useMemo로 filter 또는 store에 derived state 빌드. (PR #452 발견 + fix)
+- **Module-level pure function에 i18n 필요할 때 t 옵셔널 인자 패턴**. `formatFilterChip(rule, ..., t?: (k:string)=>string)` — caller가 React 컴포넌트라면 useT() 결과 전달, 아니면 영어 fallback. module-level 함수는 useT 못 호출이라 이 패턴이 정통.
+- **Filter 평가 로직 (filter.ts:35-39)**: **다른 field 간 AND, 같은 field 안 OR**. 즉 `status=stone, status=brick, pinned=true` → `(status=stone OR status=brick) AND (pinned=true)` 자연스러운 SQL 형태. Quick filter도 같은 로직.
+- **EVENT_CONFIG verbKey 패턴**: EntityEvent verb 44종 모두 i18n 가능. module-level Record에 verbKey 옵셔널 추가 + ActivityTimeline의 TimelineRow에서 t(config.verbKey) resolve. React Hook 룰 위반 없이 광범위 i18n.
+- **PreviewCard inner function 패턴 발견**: NoteHoverPreview 안에 PreviewCard 별도 function — useT을 호출하는 위치 잘못하면 "Cannot find name 't'" 에러. inner function이 own state를 가지면 own useT 필요. (PR #441 fix)
+- **wiki list 모드 진입 path 부재 발견**: dashboard에서 list로 진입하는 명시적 nav 없음 (사이드바에 Overview/병합/분리/템플릿만). 사용자가 chip bar 못 봄 → viewContext="wiki" 항상 전달로 dashboard에도 + 버튼 노출 (PR #454).
+
+### Watch Out (다음 세션)
+
+- **'P' brand mark fix**: a-brand__mark CSS가 globals.css에 정의됐을 가능성 — 단순 제거 시 layout shift 회귀. activity-bar.tsx의 `<div className="a-actbar__head">` 통째 제거가 안전. CSS 확인 권장.
+- **대시보드 차트 ResponsiveContainer 사용 X**: React 19/Next 16 width-0 issue. WikiInsightsChart의 ResizeObserver + useRef 패턴 채택.
+- **대시보드 layout 풀 폭화 시 다른 페이지 영향**: 홈/라이브러리/온톨로지 모두 좌우 여백 통일이라면 같이 적용. 노트/위키 본문은 별도.
+- **사용자 IDB stale**: 위키 17개 모두 trashed 되었다가 복원 (검증 중). 사용자가 trashed 상태로 다시 돌리거나 그대로 사용 — 선택.
+- **branch worktree 누적 20 PR**: `claude/trusting-sammet-71a453` cleanup 권장. 다음 세션 새 worktree로 시작.
+- **wikiViewMode list 진입 path 명확화** (별도 작업): dashboard "위키 글" 카드 click이 list로 가는 path이지만 미직관적. 향후 UI 개선 고려.
+
+### 환경 변경
+
+- **Store version**: v147 → **v148** (customQuickFilters slice 신규)
+- **Migration**: v147 → v148 idempotent (빈 array 보장)
+- **신규 파일** (3):
+  - `lib/store/slices/custom-quick-filters.ts` — slice
+  - `components/quick-filter/quick-filter-create-dialog.tsx` — dialog
+  - `components/quick-filter/` 새 디렉터리
+- **신규 dict keys 누적**: ~250+ (sidepanel.* + event.verb.* + trash.* + notes.toast.* + floatingbar.* + wikibar.* + tplbar.* + inbox.* + books.* + wiki.toast.* + library.* + search.* + filter.quick.* 등 광범위)
+- **사용자 IDB stale**: 위키 17개 restore (검증 중)
+- **변경 파일 누적**: 30+ (i18n 마무리 + Custom Quick Filter 신규 시스템)
+
+### 머신
+
+Windows. 단일 worktree (`claude/trusting-sammet-71a453`) 대규모 누적 (20 PR). cleanup 후 새 worktree 권장. cohesive 마무리 세션 — 매 PR 후 즉시 viewport 검증 + 사용자 신호 받아 다음 작업 결정 (사용자가 영어 발견 또는 의문 → 즉시 fix 사이클 + 디자인 브레인스토밍 마무리).
+
+---
+
 ## 2026-05-25 (대규모 세션) — Windows, **i18n 한국어 17 surface + Phase α+β LOCKED #124 완성 + 아이콘 통일 + Pinned 표준화 (PR #417-#436, 20 PR 머지)**
 
 > 🎯 **다음 즉시 액션 (다음 세션 시작점)**: **F — WikiInsightsChart i18n** (`components/wiki-editor/wiki-insights-chart.tsx`). 위키 overview chart 영어 잔여 (Day/Week/Month + Growth/Connectivity + All/Articles/Stubs + chart title + New per month). 작은 mechanical 작업 — 1 파일 + 신규 dict keys ~10개. useT() wire 추가.

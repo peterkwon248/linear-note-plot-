@@ -8,6 +8,41 @@
 
 ---
 
+## 🚀 2026-05-25 (대규모 세션 #2) — i18n 마무리 + Custom Quick Filter feature + 디자인 브레인스토밍 (PR #438-#457, 20 PR) ⭐⭐⭐⭐⭐
+
+**범위**: 단일 세션 누적 20 PR. (a) i18n 마무리 광범위 ~250+ 신규 keys, (b) wikiRegistered 정정 — 제목 매칭→실제 임베드 멤버십, (c) Custom Quick Filter feature MVP, (d) 디자인 브레인스토밍 — 다음 세션 P0.
+
+**핵심 결정 (영구 LOCKED #131~#135 + 후보 #136)**:
+- **#131 LOCKED**: SavedView ≠ CustomQuickFilter 의미 분리. 통합 X.
+- **#132 LOCKED**: wikiRegistered = 실제 임베드 멤버십 (wikiArticles.noteIds 체크, 제목 매칭 X). filter 라벨/desc는 실제 동작과 일치.
+- **#133 LOCKED**: module-level static config labelKey 패턴 확장 (#126 일반화 → 영구). EVENT_CONFIG verbKey / SECTION_META / STATUS_CONFIG / view-configs 일관 적용.
+- **#134 LOCKED**: Custom Quick Filter promote-then-save (D+A 결합). chip bar "+ 버튼" + Dialog (current activeFilters 자동 prefill + filterCategories 있으면 popover로 FilterPanel 임베드).
+- **#135 LOCKED**: Plot UI text는 entity 이름과 generic form field 명명 충돌 회피. "Label" form field → "Name" (Plot Label entity 충돌). 다른 generic field 명명 시 동일 룰.
+- **#136 (vision)**: Dashboard / Overview = 풀 폭 (Linear/Plane 정합) / Article 본문 = max-width 유지 (가독성). 다음 세션 대시보드 재설계에서 LOCKED 진입 권장.
+
+**완료** (20 PR 누적):
+- i18n 마무리 (~250+ 신규 keys, 13 PR): WikiInsightsChart / Trash All view (+ Hook 룰 fix) / Trash chrome / Notes-Trash empty + tooltip + split toast / notes-table TrashEntityList + context menu / 3 Floating Action Bars / inbox+books / wiki-view / library-view (refs/tags/files+chrome) / SearchView Linear breadcrumb + i18n / Side panel 3 탭 + EVENT_CONFIG 44 verbs / 참고문헌→레퍼런스 정정
+- wikiRegistered 정정 (PR #449/#450) — 라벨 misleading 해소 + 동작 실제 멤버십으로
+- Custom Quick Filter feature (PR #452-#456): Zustand slice v148 + Dialog + Wiki/Books seed + "Label"→"Name"
+- 디자인 브레인스토밍 (다음 세션 P0 #1/#2 hook)
+
+**기술 학습 (영구)**:
+- **Zustand selector 안 `.filter()` 직접 = referential equality 깨짐**. "getServerSnapshot should be cached" infinite loop. 외부 useMemo로 filter 또는 store에 derived state.
+- **Module-level pure function (formatFilterChip)에 i18n**: `t?: (k:string)=>string` 옵셔널 인자 패턴. caller가 React면 useT() 결과 전달, 아니면 영어 fallback.
+- **Filter 평가 로직** (filter.ts:35-39): 다른 field 간 AND, 같은 field 안 OR. SQL의 (A=1 OR A=2) AND (B=true) 자연스러운 형태. Quick filter도 같은 로직.
+- **EVENT_CONFIG verbKey 패턴**: module-level Record에 verbKey 옵셔널 — 44 verb 모두 i18n 가능, React Hook 룰 위반 X.
+- **PreviewCard inner function**: outer 컴포넌트의 useT은 inner function에 닿지 않음. inner function이 own state면 own useT 필요.
+- **wiki list 모드 진입 path 부재**: dashboard "위키 글" 카드 click이 list로 가지만 명시적 nav 없음. viewContext="wiki" 항상 전달로 dashboard에도 chip bar + 버튼 노출 가능 (PR #454).
+
+**다음 P0** (사용자 명시):
+1. **🔴 P0 #1**: 'P' brand mark 제거 + GlobalTopBar user avatar 통합 — chunk 분할 (P 제거 / avatar 추가 / dropdown 통합)
+2. **🔴 P0 #2**: 온톨로지 대시보드 layout 재설계 — 풀 폭 + KPI 4 카드 + 차트 7-8개 (PRD 작성 권장)
+3. **🟢 P0 #3**: 좌우 여백 정통화 (홈/라이브러리/온톨로지 풀 폭)
+4. **🟢 P0 #4**: Quick filter polish (chip edit / drag-to-reorder)
+5. **🟢 P0 #5**: Editor toolbar / slash menu i18n (마지막 큰 i18n)
+
+---
+
 ## 🚀 2026-05-24 (밤) — **i18n 잔여 surface 마무리 + Linear 정합 polish** ⭐⭐⭐⭐
 
 **범위**: 한국어 일관성 마무리 chunk. Todos/Calendar/Ontology/Library/Wiki/Books 6 view 한국어 wire + Wiki sidebar Merge/Split 한국어 + 타임라인 button wrap fix + Books 컬럼 + view-configs Books labelKey 모두 적용.
