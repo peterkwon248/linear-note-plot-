@@ -28,6 +28,13 @@ import { usePlotStore } from "@/lib/store"
 import { useKnowledgeMetrics } from "@/hooks/use-knowledge-metrics"
 import { getEntityColor } from "@/lib/colors" // v109: opt-in color fallback
 import { useT } from "@/lib/i18n"
+import { isWikiStub } from "@/lib/wiki-utils"
+import {
+  StatusDonut,
+  WikiStatusDonut,
+  TopHubsBar,
+  CategoriesBar,
+} from "./dashboard-charts"
 
 export function OntologyDashboardPanel() {
   const t = useT()
@@ -77,6 +84,35 @@ export function OntologyDashboardPanel() {
   const avgLinksPerNote =
     m.totalNotes > 0 ? (m.totalEdges / m.totalNotes).toFixed(2) : "0"
 
+  // Wiki status split — Article vs Stub
+  const wikiStatusCounts = useMemo(() => {
+    let articles = 0
+    let stubs = 0
+    for (const w of wikiArticles) {
+      if ((w as { trashed?: boolean }).trashed) continue
+      if (isWikiStub(w)) stubs++
+      else articles++
+    }
+    return { articles, stubs }
+  }, [wikiArticles])
+
+  // Category note counts — count wikiArticles linked to each category
+  const categoryStats = useMemo(() => {
+    const counts = new Map<string, number>()
+    for (const w of wikiArticles) {
+      if ((w as { trashed?: boolean }).trashed) continue
+      for (const cid of w.categoryIds ?? []) {
+        counts.set(cid, (counts.get(cid) ?? 0) + 1)
+      }
+    }
+    return wikiCategories.map((c) => ({
+      id: c.id,
+      name: c.name,
+      color: c.color,
+      noteCount: counts.get(c.id) ?? 0,
+    }))
+  }, [wikiArticles, wikiCategories])
+
   return (
     <div className="flex flex-col gap-6 px-6 py-6">
       <header>
@@ -102,6 +138,16 @@ export function OntologyDashboardPanel() {
           <Stat label={t("ontology.dashboard.stat.folders")} value={folders.length} />
         </Grid>
       </Section>
+
+      {/* ── Charts (chunk 2 — Mosaic 2x2) ──
+       *  Status donut + Wiki status donut on row 1 (distribution),
+       *  Top Hubs bar + Top Categories bar on row 2 (rankings). */}
+      <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+        <StatusDonut stone={statusCounts.stone} brick={statusCounts.brick} keystone={statusCounts.keystone} />
+        <WikiStatusDonut articles={wikiStatusCounts.articles} stubs={wikiStatusCounts.stubs} />
+        <TopHubsBar hubs={topHubs} />
+        <CategoriesBar categories={categoryStats} />
+      </div>
 
       {/* ── Connectivity ── */}
       <Section title={t("ontology.dashboard.section.connectivity")}>
@@ -130,33 +176,7 @@ export function OntologyDashboardPanel() {
         </Grid>
       </Section>
 
-      {/* ── Top Hubs ── */}
-      <Section title={t("ontology.dashboard.section.top_hubs")}>
-        {topHubs.length === 0 ? (
-          <Empty>{t("ontology.dashboard.empty.no_connections")}</Empty>
-        ) : (
-          <ol className="flex flex-col">
-            {topHubs.map((hub, i) => (
-              <li key={hub.id} className="flex items-center justify-between py-2 border-b border-border-subtle last:border-b-0">
-                <div className="flex items-center gap-3 min-w-0">
-                  <span className="text-2xs text-muted-foreground tabular-nums w-5 shrink-0">
-                    {i + 1}
-                  </span>
-                  <span className="text-note truncate">{hub.title}</span>
-                  {hub.isWiki && (
-                    <span className="text-2xs px-1.5 py-0.5 rounded bg-accent text-accent-foreground shrink-0">
-                      {t("nav.space.wiki")}
-                    </span>
-                  )}
-                </div>
-                <span className="text-2xs text-muted-foreground tabular-nums shrink-0">
-                  {hub.backlinks} {hub.backlinks === 1 ? t("ontology.dashboard.meta.link_singular") : t("ontology.dashboard.meta.link_plural")}
-                </span>
-              </li>
-            ))}
-          </ol>
-        )}
-      </Section>
+      {/* Top Hubs section replaced by TopHubsBar chart above (chunk 2). */}
 
       {/* ── Tag frequency ── */}
       <Section title={t("ontology.dashboard.section.tag_frequency")}>
