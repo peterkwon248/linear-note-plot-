@@ -12,6 +12,7 @@ import { NoteEditorAdapter } from "@/components/editor/NoteEditorAdapter"
 import { FixedToolbar } from "@/components/editor/FixedToolbar"
 import { WikiArticleView } from "@/components/wiki-editor/wiki-article-view"
 import { WikiArticleEncyclopedia } from "@/components/wiki-editor/wiki-article-encyclopedia"
+import { useT } from "@/lib/i18n"
 import type { Editor } from "@tiptap/react"
 
 // ── Types ─────────────────────────────────────────────────────────
@@ -169,6 +170,7 @@ let _cardWidth = 640
 let _cardHeight: number | null = null
 
 function PreviewCard({ noteId, noteType, x, y }: PreviewState) {
+  const t = useT()
   const ref = useRef<HTMLDivElement>(null)
   const note = usePlotStore((s) => s.notes.find((n) => n.id === noteId))
   const wikiArticle = usePlotStore((s) => s.wikiArticles.find((a) => a.id === noteId))
@@ -365,7 +367,7 @@ function PreviewCard({ noteId, noteType, x, y }: PreviewState) {
           onMouseDown={(e) => { e.preventDefault(); e.stopPropagation() }}
           onClick={(e) => { e.stopPropagation(); _pinned = false; notifyPin() }}
           className="absolute top-2 right-2 z-10 flex items-center justify-center rounded-full bg-accent/10 p-1 text-accent transition-colors hover:bg-accent/20"
-          title="Unpin"
+          title={t("preview.tooltip.unpin")}
         >
           <PushPin size={10} />
         </button>
@@ -407,7 +409,7 @@ function PreviewCard({ noteId, noteType, x, y }: PreviewState) {
             <button
               onClick={(e) => { e.stopPropagation(); setShowBacklinks((prev) => !prev) }}
               className="inline-flex items-center gap-0.5 hover:text-foreground transition-colors cursor-pointer"
-              title="Show referencing notes"
+              title={t("preview.tooltip.show_references")}
             >
               <Link size={10} />
               <span>{backlinkCount}</span>
@@ -445,7 +447,7 @@ function PreviewCard({ noteId, noteType, x, y }: PreviewState) {
                 <button
                   onClick={(e) => { e.stopPropagation(); setShowBlocks(prev => !prev); setShowCategories(false); setShowBacklinks(false) }}
                   className="inline-flex items-center gap-0.5 hover:text-foreground transition-colors cursor-pointer"
-                  title="Show blocks"
+                  title={t("preview.tooltip.show_blocks")}
                 >
                   <Cube size={10} />
                   <span>{wikiArticle.blocks.length}</span>
@@ -471,7 +473,7 @@ function PreviewCard({ noteId, noteType, x, y }: PreviewState) {
                 <button
                   onClick={(e) => { e.stopPropagation(); setShowCategories(prev => !prev); setShowBlocks(false); setShowBacklinks(false) }}
                   className="inline-flex items-center gap-0.5 hover:text-foreground transition-colors cursor-pointer"
-                  title="Show categories"
+                  title={t("preview.tooltip.show_categories")}
                 >
                   <FolderSimple size={10} />
                   <span>{wikiArticle.categoryIds!.length}</span>
@@ -543,7 +545,7 @@ function PreviewCard({ noteId, noteType, x, y }: PreviewState) {
         <button
           onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); handleOpen() }}
           className="flex items-center gap-1 rounded px-2 py-1 text-2xs text-muted-foreground transition-colors hover:bg-hover-bg hover:text-foreground"
-          title="Open note"
+          title={t("preview.tooltip.open_note")}
         >
           <ArrowSquareOut size={12} />
           <span>Open</span>
@@ -639,7 +641,7 @@ function PreviewCard({ noteId, noteType, x, y }: PreviewState) {
           <button
             onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); setShowMore(!showMore) }}
             className="flex items-center rounded px-1.5 py-1 text-muted-foreground transition-colors hover:bg-hover-bg hover:text-foreground"
-            title="More actions"
+            title={t("preview.tooltip.more_actions")}
           >
             <DotsThree size={14} />
           </button>
@@ -680,7 +682,7 @@ function PreviewCard({ noteId, noteType, x, y }: PreviewState) {
                   const text = editorInstance?.getText() || note?.content || note?.preview || ""
                   if (text.trim()) {
                     navigator.clipboard.writeText(text.trim())
-                    import("sonner").then(({ toast }) => toast.success("Copied as plain text"))
+                    import("sonner").then(({ toast }) => toast.success(t("preview.toast.copied_plain_text")))
                   }
                   setShowMore(false)
                 }}
@@ -709,7 +711,7 @@ function PreviewCard({ noteId, noteType, x, y }: PreviewState) {
                       const { saveBody } = await import("@/lib/note-body-store")
                       await saveBody({ id: newNoteId, content, contentJson: contentJson as unknown as Record<string, unknown> })
                       usePlotStore.getState().openNote(newNoteId)
-                      import("sonner").then(({ toast }) => toast.success(`Copied "${article.title}" to new note`))
+                      import("sonner").then(({ toast }) => toast.success(t("preview.toast.copied_to_new_note").replace("{title}", article.title)))
                     }
                     hideNotePreviewImmediate()
                   }}
@@ -726,7 +728,7 @@ function PreviewCard({ noteId, noteType, x, y }: PreviewState) {
           <button
             onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); setEditing(false); setEditorInstance(null); hideNotePreviewImmediate() }}
             className="flex items-center gap-1 rounded px-2 py-1 text-2xs text-muted-foreground transition-colors hover:bg-hover-bg hover:text-foreground"
-            title="Close"
+            title={t("preview.tooltip.close")}
           >
             <PhX size={12} />
           </button>

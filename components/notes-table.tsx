@@ -1338,14 +1338,14 @@ export function NotesTable({
               <div className="flex flex-1 flex-col items-center justify-center gap-3 text-muted-foreground">
                 <PhNotePencil size={32} strokeWidth={1.5} className="text-muted-foreground/70" />
                 <p className="text-note">
-                  {context === "trash" ? "Trash is empty" : "No notes yet"}
+                  {context === "trash" ? t("trash.empty") : t("notes.empty.title")}
                 </p>
                 <p className="text-2xs text-muted-foreground/60">
                   {context === "trash"
-                    ? "Deleted notes will appear here."
+                    ? t("trash.empty.hint")
                     : viewState.filters.length > 0
-                      ? "Try adjusting your filters."
-                      : "Press + to create your first note"}
+                      ? t("notes.empty.filtered")
+                      : t("notes.empty.hint")}
                 </p>
               </div>
             ) : (

@@ -6,6 +6,7 @@ import { setSplitTargetNoteId } from "@/lib/note-split-mode"
 import { getBody } from "@/lib/note-body-store"
 import { cn } from "@/lib/utils"
 import { toast } from "sonner"
+import { useT } from "@/lib/i18n"
 import {
   Scissors,
   Close as X,
@@ -205,6 +206,7 @@ interface NoteSplitPageProps {
 }
 
 export function NoteSplitPage({ noteId, onClose }: NoteSplitPageProps) {
+  const t = useT()
   const note = usePlotStore((s) => s.notes.find((n) => n.id === noteId)) ?? null
   const notes = usePlotStore((s) => s.notes)
   const wikiArticles = usePlotStore((s) => s.wikiArticles)
@@ -380,7 +382,7 @@ export function NoteSplitPage({ noteId, onClose }: NoteSplitPageProps) {
   const handleSplit = useCallback(() => {
     if (rightIds.length === 0 || !newTitle.trim() || !note) return
     if (leftBlocks.length === 0) {
-      toast.error("Cannot split: at least one block must remain in the original note.")
+      toast.error(t("split.toast.must_remain"))
       return
     }
 
@@ -403,12 +405,16 @@ export function NoteSplitPage({ noteId, onClose }: NoteSplitPageProps) {
     })
 
     if (newId) {
-      toast.success(`Split "${newTitle.trim()}" from "${note.title || "Untitled"}"`)
+      toast.success(
+        t("split.toast.success")
+          .replace("{newTitle}", newTitle.trim())
+          .replace("{originalTitle}", note.title || t("common.untitled")),
+      )
       // Close split mode — store.selectedNoteId is already updated to newId by the slice.
       setSplitTargetNoteId(null)
       onClose?.()
     } else {
-      toast.error("Split failed — both sides need at least one block.")
+      toast.error(t("split.toast.both_sides"))
     }
   }, [rightIds, newTitle, note, leftBlocks.length, topLevel, splitNote, onClose])
 
@@ -603,7 +609,7 @@ export function NoteSplitPage({ noteId, onClose }: NoteSplitPageProps) {
                       <button
                         onClick={() => reorderRight(idx, idx - 1)}
                         className="rounded p-0.5 text-white/15 opacity-0 transition-opacity hover:bg-white/5 hover:text-white/40 group-hover:opacity-100"
-                        title="Move up"
+                        title={t("split.tooltip.move_up")}
                       >
                         <ChevronRight size={10} className="-rotate-90" />
                       </button>
@@ -612,7 +618,7 @@ export function NoteSplitPage({ noteId, onClose }: NoteSplitPageProps) {
                       <button
                         onClick={() => reorderRight(idx, idx + 1)}
                         className="rounded p-0.5 text-white/15 opacity-0 transition-opacity hover:bg-white/5 hover:text-white/40 group-hover:opacity-100"
-                        title="Move down"
+                        title={t("split.tooltip.move_down")}
                       >
                         <ChevronRight size={10} className="rotate-90" />
                       </button>
@@ -621,7 +627,7 @@ export function NoteSplitPage({ noteId, onClose }: NoteSplitPageProps) {
                     <button
                       onClick={() => moveToLeft(b.id)}
                       className="rounded p-0.5 text-white/15 opacity-0 transition-opacity hover:bg-white/5 hover:text-destructive group-hover:opacity-100"
-                      title="Remove"
+                      title={t("split.tooltip.remove")}
                     >
                       <X size={12} />
                     </button>
