@@ -51,6 +51,30 @@
 
 ---
 
+## 🚀 2026-05-25 (대규모 세션) — i18n 17 surface + Phase α+β LOCKED #124 완성 + 아이콘 통일 + Pinned 표준화 (20 PR 머지) ⭐⭐⭐⭐⭐
+
+**범위**: 단일 세션 누적 20 PR (#417-#436). i18n + 정체성 정합 + UX 표준화 마무리.
+
+**핵심 결정 (영구 LOCKED #124~#128)**:
+- **#124 LOCKED**: **Todos → Inbox `task` kind 흡수 완성** (α-1 + α-2 + β 전 단계). 노트/위키 본문 체크박스 → Inbox Do section 단일 source. TodoView 영구 폐기.
+- **#125 LOCKED (PR #417)**: Inbox refiner Linear borderless (SectionCard wrap 폐기).
+- **#126 (vision)**: module-level static config labelKey 패턴 확장 (SECTION_META / STATUS_CONFIG / view-configs). #122 일반화.
+- **#127 LOCKED (PR #421-#423)**: **Pinned/Favorites 사이드바 최상단** (Linear/Notion 표준). 모든 entity sidebar 일관 적용.
+- **#128 후보 (PR #430)**: 자료실 = Archive (상자) / Books = Library (책장) 아이콘 차별.
+
+**완료**:
+- Phase α-1 + α-2 + β (PR #417/#419/#436): Inbox task 흡수 + 위키 확장 + TodoView 폐기
+- i18n 17 surface 한국어 wire (~250+ 신규 dict keys): Wiki/Calendar/Filter/SidePanel/Inbox/Ontology/Status/Dashboard/Floating/ViewHeader/Timestamps 모두
+- 아이콘 통일: 자료실 Archive, Books Library lucide (3 surface 일관)
+- Pinned 최상단 (Notes/Wiki/Books/Calendar)
+- i18n-date locale-aware ("2026년 5월")
+- useRelativeTime hook (14 호출처 wire — formatDistanceToNow 잔여 0)
+- Inbox refiner 5 prescriptions (production-ui-refiner)
+
+**다음 P0** (사용자 명시): F (WikiInsightsChart i18n) — 1 파일 mechanical. 후속 misc i18n + 시드 검증.
+
+---
+
 ## 🚀 2026-05-24 (밤) — i18n 잔여 surface + Merge/Split + Books labelKey + Timeline wrap fix ⭐⭐⭐⭐
 
 **범위**: 한국어 일관성 마무리. 6 view (Todos/Calendar/Ontology/Library/Wiki/Books) 한국어 wire + ~70 i18n keys 신규 + Wiki sidebar Merge/Split / 타임라인 wrap / BOOKS_VIEW_CONFIG labelKey / book-table COLUMN labelKey 모두 정합.

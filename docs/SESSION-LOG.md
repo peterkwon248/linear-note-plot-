@@ -6,6 +6,109 @@
 
 ---
 
+## 2026-05-25 (대규모 세션) — Windows, **i18n 한국어 17 surface + Phase α+β LOCKED #124 완성 + 아이콘 통일 + Pinned 표준화 (PR #417-#436, 20 PR 머지)**
+
+> 🎯 **다음 즉시 액션 (다음 세션 시작점)**: **F — WikiInsightsChart i18n** (`components/wiki-editor/wiki-insights-chart.tsx`). 위키 overview chart 영어 잔여 (Day/Week/Month + Growth/Connectivity + All/Articles/Stubs + chart title + New per month). 작은 mechanical 작업 — 1 파일 + 신규 dict keys ~10개. useT() wire 추가.
+>
+> **사용자 의도**: 이번 세션 사용자 명시 끊임없는 한국어 일관성 + 시각 정합. 모든 visible surface 한국어 wire 거의 완료. 위키 overview chart가 남은 가장 visible 잔여.
+>
+> **첫 스텝** (다른 머신에서 바로):
+> 1. `components/wiki-editor/wiki-insights-chart.tsx` read
+> 2. lib/i18n.ts에 wiki.chart.* 신규 keys 추가 (`wiki.chart.cumulative`는 이미 있음 — 다른 series labels + range/tab/filter 추가)
+> 3. useT() hook wire + 모든 영어 string → t() 호출
+> 4. tsc + viewport (위키 페이지 진입 → chart 영역 한국어 확인)
+> 5. commit + PR + merge
+>
+> **위험 + 회피**:
+> - 1 파일 mechanical — 위험 낮음
+> - chart library 자체의 axis tick / tooltip은 별도 (필요시 chart props로 locale 전달)
+>
+> **참고 파일**:
+> - `components/wiki-editor/wiki-insights-chart.tsx`
+> - `lib/i18n.ts` (wiki.* dictionary)
+>
+> **2번째 P0 후보** (#1 끝나면):
+> - Misc i18n cleanup (Trash All view / Toast 메시지 / Editor toolbar)
+> - 사용자 viewport 검증 4건 (Backup Restore / Hide-all / Cmd+K Escape / Inbox Phase 1c)
+> - Phase 2 temporal hooks (PRD §11 Q1/Q5)
+> - 사용자 시드 검증 (Phase α-2 위키 체크박스)
+>
+> **3번째 P0 후보**: 검색 결과 row Linear 정합 (highlight + breadcrumb) — 별도 PR
+>
+> **머신**: Windows. cross-machine 가능.
+> **현재 main HEAD**: PR #436 머지 후 (30223bf).
+> **branch worktree**: `claude/goofy-lewin-17a40d` (대규모 누적 — cleanup 권장, 새 worktree로).
+
+### 완료 (이번 세션 — 20 PR 머지)
+
+이번 세션은 **i18n + 정체성 정합 마무리 세션**. PR #417-#436 누적:
+
+**Phase α-1 + α-2 + β — Memory LOCKED #124 완성** (PR #417 / #419 / #436):
+- Phase α-1: Inbox 'task' kind 추가 (노트 본문 체크박스 → Inbox Do section)
+- Phase α-2: todo-index 위키 article 확장 (entityKind 분기 + buildFromScratch wikis param)
+- **Phase β**: TodoView 폐기 + Calendar sidebar "할 일" nav 제거 + /todos route 삭제 (5 파일 +2/-206)
+
+**i18n 17 surface 한국어 wire** (~250+ 신규 dict keys):
+- Wiki overview (PR #417): search / stats 3 cards / featured / pinned / categories
+- Calendar (PR #417): Month/Week/Agenda → 월·주·일정 + Mon-Sun → 월·화·수·목·금·토·일
+- Filter dropdown (PR #417): 카테고리 + Stone/Brick/Block 음역 (#118)
+- SidePanel tabs (PR #417): Detail/Connections/Activity/Bookmarks → 상세·연결·활동·북마크
+- Inbox breadcrumb + SECTION_META + action·meta (PR #417 / #424)
+- Ontology sidebar + legend (PR #420): Graph/Dashboard → 그래프/대시보드 + 범례
+- Pinned 표준화 (PR #421/#422/#423): Notes/Wiki/Books/Calendar 최상단
+- Inbox task source 표시 + Light mode (PR #424): 빠른 할 일 source label + meta /50→/70
+- Status pill 음역 (PR #425): Stone/Brick/Block → 스톤/브릭/블록 (STATUS_CONFIG labelKey)
+- SidePanel inspector (PR #426): 날짜/상태/폴더/라벨/태그/카테고리/개요/속성 + workflow (완료/미루기/휴지통/승격/강등) + warnings + 47 keys
+- ViewHeader title (PR #428): Insights/Labels/Categories/Files/References/Stickers/Tags/Templates 8 views + Library sidebar nav
+- Knowledge Dashboard 본문 (PR #429): 분량/연결성/건강도/주요 허브 + stat cards + sub-meta + 30 keys
+- 자료실 아이콘 + 레퍼런스 (PR #430): Archive (상자) + 참고문헌 → 레퍼런스
+- Books 아이콘 (PR #431 → 임시 BookOpen → PR #432 → BooksSpaceIcon=Library lucide 최종): 3 surface 통일
+- 긴급 fix (PR #433): merge conflict marker 제거 (Build Error 복구)
+- Activity timestamps i18n-date (PR #434 + #435): useRelativeTime() hook + 14 파일 wire (formatDistanceToNow 호출처 잔여 0)
+- Inbox refiner (PR #417): production-ui-refiner 5 prescriptions (Linear borderless + 16px spacing + subtitle /60 + empty 약화 + footer 중복 삭제)
+- i18n-date locale-aware (PR #418): "2026년 5월" / "2026년 5월 24일" 한국어 정통 어순
+- Floating action bar (PR #427): selected count + buttons + workflow + toasts 한국어
+
+### 브레인스토밍 & 큰 결정 (영구 LOCKED #124~#127 + 후보)
+
+- **#124 LOCKED (2026-05-25)**: **Todos → Inbox `task` kind 흡수 완성**. α-1 + α-2 + β 전 단계 완료. 노트/위키 본문 체크박스 → Inbox Do section 단일 source. TodoView/Calendar nav 영구 폐기.
+- **#125 LOCKED (2026-05-24 심야, PR #417)**: Inbox refiner Linear borderless 정합 (SectionCard wrap 폐기, row만 노출).
+- **#126 (vision)**: module-level static config labelKey 패턴 확장 (SECTION_META + STATUS_CONFIG + view-configs). #122 일반화.
+- **#127 LOCKED (2026-05-25 PR #421-#423)**: **Pinned/Favorites 사이드바 최상단** (Linear/Notion 표준). 모든 entity sidebar (Notes/Wiki/Books/Calendar cross-entity) 일관 적용. 미래 entity sidebar 추가 시 동일.
+- **#128 후보 (PR #430)**: **자료실 = Archive (상자) / Books = Library (책장) 아이콘 차별**. cross-entity index hub (Archive)와 단일 entity space (Library/책)의 시각 분리.
+
+### 기술 학습 (영구)
+
+- **useRelativeTime hook 패턴 (lib/i18n-date.ts)**: settings store 연동 + opts (addSuffix?) — 14 호출처 단일 wire. 호환성: opts 옵션으로 짧은 format (addSuffix: false) + 기본 long format 모두 지원.
+- **STATUS_CONFIG labelKey 패턴 (#126)**: module-level config에 labelKey 추가, consumer가 t() resolve. React Hook 룰 위반 없음 + 단일 wire가 다수 surface 자동 갱신 (notes-table / board / timeline / side-panel / floating bar 모두).
+- **Phase α-2 entityKind 분기 패턴**: TaskItem에 `entityKind?: "note" | "wiki"` 옵셔널 추가 (default "note" 호환). buildFromScratch + upsertWiki + use-inbox source loop 모두 entityKind 분기. inbox-view handleRowClick wiki entityKind → navigateToWikiArticle (cross-entity click pattern).
+- **Phase β 단순 제거 (Inbox alias X)**: 사용자 의도 "그냥 삭제" — `/todos` route + TodoView 컴포넌트 영구 제거. store actions (addQuickTask 등)은 그대로 유지 — 미래 inbox quick add 흡수 시 재활용.
+- **Conflict resolve 시 git diff --check 의무**: PR #432에서 Edit "modified since read" error 후 commit 진행 → conflict marker가 main에 머지됨 (Build Error). 재발 방지: `git diff --check` 또는 grep으로 conflict marker 검사 의무.
+- **Books vs Library 아이콘 차별 (lucide)**: BooksSpaceIcon = Library (책장) / Library 자료실 = Archive (상자). 두 lucide icon 의미 차이 — 같은 import alias로 묶이면 시각 혼란 (PR #431 임시 BookOpen → PR #432 BooksSpaceIcon 최종).
+
+### Watch Out (다음 세션)
+
+- **F (WikiInsightsChart)**: 다음 P0 #1. 1 파일 mechanical. 다만 chart library의 axis/tooltip locale은 별도 prop으로 전달 필요할 수 있음.
+- **시드 검증 미완 (Phase α-2)**: 위키 article 본문에 `[ ]` 추가 후 Inbox 표시 확인 안 됨. 사용자가 실제 위키에 체크박스 시드 후 검증 권장.
+- **Conflict marker 재발 방지**: git commit 전 `grep -r "<<<<<<\|=======\|>>>>>>" --include="*.ts" --include="*.tsx" .` 의무.
+- **Books quickadd 흡수 미정**: TodoView 폐기 시 quick add UX 흡수 위치 (Inbox vs Home capture) 결정 안 됨 — 사용자 요청 시 진행.
+- **Calendar quickadd 진입점 사라짐**: 사용자가 "할 일 추가…" 어디서? — 노트 본문에 직접 `[ ]` 입력 또는 Inbox 안 quick add (Phase β-2 작업으로 가능).
+
+### 환경 변경
+
+- Store v147 무변경 (모두 코드/UI 변경)
+- 신규 파일: `lib/i18n-date.ts` (PR #418, useDateFormat + useRelativeTime hooks)
+- 변경 파일 누적 30+ (i18n wire + 아이콘 + Pinned + Phase α+β)
+- 신규 i18n keys ~250+ (wiki.* / calendar.* / sidepanel.* / inbox.* / floatingbar.* / ontology.dashboard.* / 기타)
+- 사용자 IDB stale data: Phase β 후 TodoView store 그대로 (호환), Quick Tasks 노트 시드 (이전 세션) — 그대로
+- **삭제 파일** (Phase β): `components/views/todo-view.tsx` + `app/(app)/todos/page.tsx`
+
+### 머신
+
+Windows. 단일 worktree (`claude/goofy-lewin-17a40d`) 대규모 누적 (20 PR). cleanup 후 새 worktree 권장. cohesive i18n + 정체성 정합 마무리 세션 — 매 PR 후 즉시 viewport 검증 + 사용자 신호 받아 다음 작업 결정 (사용자가 영어 발견 → 즉시 fix 사이클).
+
+---
+
 ## 2026-05-24 (심야) — Windows, **Phase α-1 Inbox 'task' 흡수 + 4 surface 한국어 wire + Inbox refiner (PR #417)**
 
 > 🎯 **다음 즉시 액션 (다음 세션 시작점)**: **Phase α-2 — `lib/todo-index.ts` extractTasks를 wiki blocks + book chapters의 체크박스도 walk하도록 확장**. 사용자 직관 "할 일 = 모든 영역 통합"의 완전 해소. 현재는 노트 본문 체크박스만 인덱싱 → Inbox Do section에 표시. wiki article의 todo block / book의 chapter checkbox는 미반영.
