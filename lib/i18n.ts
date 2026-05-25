@@ -431,6 +431,19 @@ const EN = {
   "trash.confirm.delete": "Permanently delete \"{label}\"? This cannot be undone.",
   "trash.confirm.bulk_delete": "Permanently delete {count} items? This cannot be undone.",
   "trash.selected_count": "{count} selected",
+  "trash.tab.all": "All",
+  "trash.tab.notes": "Notes",
+  "trash.tab.wiki": "Wiki",
+  "trash.tab.books": "Books",
+  "trash.tab.tags": "Tags",
+  "trash.tab.labels": "Labels",
+  "trash.tab.templates": "Templates",
+  "trash.tab.references": "References",
+  "trash.tab.files": "Files",
+
+  // Route titles (NotesTableView TABLE_VIEW_MAP)
+  "routes.title.trash": "Trash",
+  "routes.title.view_fallback": "View",
 
   // Inbox sections (Do/Review/Detected) — Phase 1c
   "inbox.section.do.title": "Do",
@@ -1019,6 +1032,19 @@ const KO: Partial<Record<DictKey, string>> = {
   "trash.confirm.delete": "\"{label}\"을(를) 영구 삭제하시겠습니까? 되돌릴 수 없습니다.",
   "trash.confirm.bulk_delete": "{count}개 항목을 영구 삭제하시겠습니까? 되돌릴 수 없습니다.",
   "trash.selected_count": "{count}개 선택",
+  "trash.tab.all": "전체",
+  "trash.tab.notes": "노트",
+  "trash.tab.wiki": "위키",
+  "trash.tab.books": "책",
+  "trash.tab.tags": "태그",
+  "trash.tab.labels": "라벨",
+  "trash.tab.templates": "템플릿",
+  "trash.tab.references": "레퍼런스",
+  "trash.tab.files": "파일",
+
+  // Route titles (NotesTableView TABLE_VIEW_MAP)
+  "routes.title.trash": "휴지통",
+  "routes.title.view_fallback": "보기",
 
   // Inbox sections
   "inbox.section.do.title": "할 일",

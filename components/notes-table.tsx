@@ -93,16 +93,16 @@ function absDate(dateStr: string): string {
 
 type TrashFilter = "all" | "notes" | "wiki" | "books" | "tags" | "labels" | "templates" | "references" | "files"
 
-const TRASH_TABS: { id: TrashFilter; label: string }[] = [
-  { id: "all", label: "All" },
-  { id: "notes", label: "Notes" },
-  { id: "wiki", label: "Wiki" },
-  { id: "books", label: "Books" },
-  { id: "tags", label: "Tags" },
-  { id: "labels", label: "Labels" },
-  { id: "templates", label: "Templates" },
-  { id: "references", label: "References" },
-  { id: "files", label: "Files" },
+const TRASH_TABS: { id: TrashFilter; labelKey: string }[] = [
+  { id: "all", labelKey: "trash.tab.all" },
+  { id: "notes", labelKey: "trash.tab.notes" },
+  { id: "wiki", labelKey: "trash.tab.wiki" },
+  { id: "books", labelKey: "trash.tab.books" },
+  { id: "tags", labelKey: "trash.tab.tags" },
+  { id: "labels", labelKey: "trash.tab.labels" },
+  { id: "templates", labelKey: "trash.tab.templates" },
+  { id: "references", labelKey: "trash.tab.references" },
+  { id: "files", labelKey: "trash.tab.files" },
 ]
 
 /* ── Column + group config ─────────────────────────────── */
@@ -1236,7 +1236,7 @@ export function NotesTable({
                   className="a-tab"
                   data-active={trashFilter === tab.id ? "true" : undefined}
                 >
-                  <span>{tab.label}</span>
+                  <span>{t(tab.labelKey)}</span>
                   <span className="a-tab__count tabular-nums">{trashTabCounts[tab.id]}</span>
                 </button>
               ))}
