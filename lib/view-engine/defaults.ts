@@ -83,7 +83,7 @@ const CONTEXT_DEFAULTS: Partial<Record<ViewContextKey, Partial<ViewState>>> = {
   // books-view-engine-2: visibleColumns expanded to surface list-mode chips
   // (itemCount + kind). Stale rules referencing removed columns fall through
   // to filtered-out via ensureRequiredColumns.
-  "books":        { viewMode: "grid", ...ctx("updatedAt"), groupBy: "none", visibleColumns: ["title", "itemCount", "kind"], toggles: { showTrashed: false } },
+  "books":        { viewMode: "grid", ...ctx("updatedAt"), groupBy: "none", visibleColumns: ["title", "kind", "itemCount", "sources", "pinned", "updatedAt"], toggles: { showTrashed: false } },
 }
 
 /** Build a ViewState for a specific context, merging defaults */
