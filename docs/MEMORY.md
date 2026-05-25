@@ -8,6 +8,51 @@
 
 ---
 
+## 🚀 2026-05-25 (대규모 세션 #3) — P0 #1/#2 완성 + 검색 정통화 + Open Design install + Plot v2 통째 재설계 결정 (PR #459-#470, 12 PR) ⭐⭐⭐⭐⭐
+
+**범위**: 단일 세션 누적 12 PR. (a) Chrome architecture 완성 ('P' brand mark → UserAvatar, chunk 분할 + dropdown revert), (b) 검색 architecture 정통화 (Path A — GlobalTopBar 진짜 input + SearchView input 제거 + entity TABS 7→11), (c) Dashboard 풀 폭 + Mosaic 차트 4개 + 색상 token 정합, (d) Insights 손질 (Ontology + Notes), (e) Books list 시각 균형, (f) **Plot v2 통째 재설계 결정 (Path A)** + Open Design install.
+
+**핵심 결정 (영구 LOCKED #136 + 후보 #137~#142)**:
+- **#136 LOCKED**: **Two-Layout Rule** (Plot 전체 영구 적용):
+  1. Dashboard / Overview = 풀 폭 (px-6, max-width 없음)
+  2. Article 본문 = max-width 유지 (가독성)
+  3. Settings = max-width 유지 (form readability)
+  4. 차트 = ResizeObserver + useRef (ResponsiveContainer 금지 — React 19/Next 16 width-0 issue)
+  5. Dashboard 차트 layout = Mosaic (시각 위계 차등)
+- **#137 (vision, 다음 세션 LOCKED 후보)**: **Plot 통째 재설계 (Path A) — Functional/UI layer 분리 워크플로우**. lib/* + hooks/* 그대로 keep. components/* + app/(app)/*/page.tsx + globals.css 통째 재설계 가능. 사용자 명시 의도.
+- **#138 (vision)**: **mockup-first 워크플로우 정통화**. mockup 생성 → `/plot-frontend:implement` 4-gate → Plot 영구 룰 자동 정합. Plot v2 디자인 작업의 표준 패턴.
+- **#139 (vision)**: **Open Design는 prototype generator지 React component library 아님**. HTML 출력 → 매뉴얼 변환 필수. Plot identity 보존 + 영구 룰 정합 매뉴얼 결정.
+- **#140 (vision)**: **Information architecture — Insights는 entity 별 + 전체 분리**. Ontology Insights = 전체 노드 통합. Notes/Wiki/Books Insights = 세부. 사용자 명시.
+- **#141 (vision)**: **검색 진입점 통합 (Path A)** — GlobalTopBar 진짜 input + SearchView 자체 input 제거 + globalSearchQuery store + ⌘K input focus. Linear/Notion 정통.
+- **#142 (vision)**: **Chrome layout 4-region**: identity (P avatar) | tools (PanelsMenu hamburger) | navigation (clock/back/forward) | search | right cluster (theme/settings/trash). divider 2개 (Avatar 옆 + search↔chrome 사이만).
+
+**완료** (12 PR 누적):
+- Chrome architecture (#459/#460/#468/#470): 'P' brand mark → UserAvatar. chunk 3 dropdown 흡수 후 사용자 viewport 결정으로 분리 복원. 최종 `[P] │ [≡] [⏰] [<] [>] ─ search ─ │ [☀][⚙][🗑]`.
+- 검색 architecture (#461/#462): entity TABS 7→11개 (Books/Categories/Stickers/References). Path A — globalSearchQuery store + ⌘K focus + SearchView input 제거.
+- Dashboard 풀 폭 + Mosaic 차트 (#463/#464/#465): max-width 제거 4 페이지 + LOCKED #136. dashboard-charts.tsx 신규 (4 chart 2x2). 색상 token 정합 (NOTE_STATUS_HEX/WIKI_STATUS_HEX). Books KPI + Wiki stubs 메타.
+- Insights 손질 (#466/#467): Ontology sidebar Stats 제거 + Knowledge WAR → Top Notes + composite score 공식. Notes Insights PhActivity → Activity + i18n + Health compact.
+- Books list (#469): Title flex max-w-[480px] cap + visibleColumns 6개 default.
+- Open Design install: ~/Desktop/open-design (51.7k stars, Apache 2.0, 71 design systems, 19 skills). pnpm 10.29→10.33.2. daemon 3844 + web 3845.
+
+**기술 학습 (영구)**:
+- **React 19 + Radix Popover asChild useId mismatch**: PopoverTrigger의 `asChild + Slot` 패턴이 `aria-controls` ID server/client mismatch 일으킴. `asChild` 제거 + PopoverTrigger 자체 button 렌더로 Slot tree 단축. (#460 fix)
+- **ResponsiveContainer 절대 금지** (React 19/Next 16 width-0 issue): WikiGrowthChart의 `useRef + ResizeObserver` 패턴 정통. dashboard-charts.tsx의 `useChartWidth` hook으로 공통화.
+- **Color token enforcement**: hardcoded RGB 위험 — NOTE_STATUS_HEX/WIKI_STATUS_HEX token import 강제. brick=amber/article=emerald/stub=orange 영구 룰.
+- **Default visibleColumns persist 영향**: default 변경은 새 사용자 또는 persist 안 된 viewState에만. Component-level 변경(Title flex max-w)은 즉시 효과.
+- **Squash merge 후 worktree branch conflict**: `git fetch origin main && git merge origin/main --strategy=ours` + push + retry. 이번 세션 12 PR 모두 안정 적용.
+- **Windows pnpm + better-sqlite3**: corepack EPERM (admin 필요) 우회 → `npm install -g pnpm@<version>`. better-sqlite3는 node-gyp + Visual Studio Build Tools 2022 필요.
+- **Search store state (URL X)**: globalSearchQuery store persist 제외 (partialize strip). App Router useSearchParams Suspense 제약 + Plot offline-first → 가장 단순.
+- **Insights composite score 공식** (영구 reference): `backlinks×2 + linksOut + tags×0.5 + ageDays/30 + (orphan ? -2 : 0)`. "WAR" 명명은 sabermetrics 차용 — Plot identity 어긋남 → "Top Notes" rename.
+- **chunk 결정 사용자 viewport 검증 후 revert 정당**: 디자인 정통성 ≠ 사용자 선호. chunk 3 dropdown 흡수가 시각적으론 정통이지만 사용자 사용 패턴은 분리 선호. revert 정당 (#468).
+
+**다음 P0** (사용자 명시):
+1. **🔴 P0 #1**: **Phase 0 — Design Language 결정 + Plot v2 통째 재설계 PRD 작성**. Open Design web UI 진입 + 71 system 비교 + critic 검토 + Chrome surface 첫 mockup. ~17-28시간 (12-20 PR, 1-2주).
+2. **🟢 P0 #2**: chunk 2b / 3b / Phase A2 / Phase B/C deferred (Phase 0 결정 후).
+3. **🟢 P0 #3**: TABS hardcoded → 동적 entity registry refactor (사용자 비판 잔여).
+4. **🟢 P0 #4**: 사용자 viewport 검증 (Books list 등).
+
+---
+
 ## 🚀 2026-05-25 (대규모 세션 #2) — i18n 마무리 + Custom Quick Filter feature + 디자인 브레인스토밍 (PR #438-#457, 20 PR) ⭐⭐⭐⭐⭐
 
 **범위**: 단일 세션 누적 20 PR. (a) i18n 마무리 광범위 ~250+ 신규 keys, (b) wikiRegistered 정정 — 제목 매칭→실제 임베드 멤버십, (c) Custom Quick Filter feature MVP, (d) 디자인 브레인스토밍 — 다음 세션 P0.

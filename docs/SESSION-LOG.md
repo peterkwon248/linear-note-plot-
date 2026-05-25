@@ -6,6 +6,170 @@
 
 ---
 
+## 2026-05-25 (대규모 세션 #3) — Windows, **거대 세션: P0 #1/#2 완성 + 검색 정통화 + Open Design install + Phase 0 결정 (PR #459-#470, 12 PR 머지)**
+
+> 🎯 **다음 즉시 액션 (다음 세션 시작점)**: **Phase 0 — Design Language 결정 + Plot 통째 재설계 PRD 작성** (사용자 명시 큰 결정).
+>
+> **사용자 의도** (그대로 인용):
+> - "지금 플롯 디자인은 사실 내가 맨처음으로 시작한 프로젝트여서 조잡한 부분들이 많아. 리니어나 플레인에 비해서. 기능은 그들 못지 않고 오히려 앞선다고 보지만 디자인적 아쉬움이 커."
+> - "내가 폴리쉬를 계속해봤는데도 답이 없어서. 오픈 디자인이라는 강수를 도입하려는 거야."
+> - "오픈 디자인으로 목업을 만들고, 그걸 플롯 코드에 입히는 건?"
+> - "통째 재설계 의도 (Path A)."
+>
+> **첫 스텝** (다음 머신에서 바로):
+> 1. **Open Design web UI 진입** — http://127.0.0.1:3845 (데몬 + web 이미 실행 중. 없으면 `cd ~/Desktop/open-design && pnpm tools-dev start web`)
+> 2. **Phase 0 PRD 작성** — `.omc/plans/plot-v2-redesign-prd.md`
+>    - Design language 후보 비교: Linear-inspired / Notion-clean / Plain-style / Anthropic-style / Custom hybrid
+>    - 사용자 결정 + 근거
+>    - Surface 우선순위 (Chrome → Home/Dashboard → List views → Detail views → Insights → Settings)
+>    - 시간 estimate (~17-28시간, 1-2주)
+> 3. **critic 검토** (PRD critic skill) — 큰 결정이라 객관 review 가치 큼
+> 4. **Phase 1: Chrome surface mockup 시도** — Open Design에서 `dashboard` 또는 `web-prototype` skill + 71 system 중 1개 선택 + brief 입력
+> 5. **결과 quality 확인** — 첫 cycle quality 평가. 좋으면 본격 진행, 안 좋으면 brief tuning 또는 다른 path 결정.
+>
+> **컴포넌트 구조 / 데이터 흐름**:
+> ```
+> [Phase 0] Design Language 결정 (대화)
+>    ↓
+> [Phase 1] Surface 우선순위 roadmap
+>    ↓
+> [Phase 2] Surface별 mockup 생성 (Open Design — 같은 design system + token + typography)
+>    Chrome → Home → Notes → Wiki → Books → Editor → Insights → Settings (6-8 surface)
+>    ↓
+> [Phase 3] 각 mockup → /plot-frontend:implement 4-gate 워크플로우로 Plot에 적용
+>    SPEC → APPROVE → BUILD → VERIFY
+>    ↓
+> [Phase 4] 영구 룰 LOCKED 재정의 (#137+) + DESIGN-TOKENS.md 갱신
+>    ↓
+> [Phase 5] 통합 검증 + WCAG + 모션 일관성
+> ```
+>
+> **Open Design 사용법** (정확한 commands):
+> - daemon + web 시작: `cd ~/Desktop/open-design && pnpm tools-dev start web`
+> - 상태 확인: `pnpm tools-dev status`
+> - 정지: `pnpm tools-dev stop`
+> - 데몬: http://127.0.0.1:3844 / 웹 UI: http://127.0.0.1:3845
+> - 환경: pnpm 10.33.2 (10.29.3 → upgrade 완료), Node 24.13, Visual Studio Build Tools 2022 (better-sqlite3 컴파일)
+>
+> **위험 + 회피**:
+> - **Phase 0 결정이 가장 큰 risk** — design language 잘못 고르면 6-8 surface 다 다시. critic 검토 + 사용자 viewport 첫 1-2 mockup 검증 후 본격 진행 권장.
+> - **mockup → Plot 변환 quality** — 첫 cycle 어색할 수 있음. iteration 2-3회 가치.
+> - **영구 룰 #93~#136 정합** — 새 design language 채택 시 기존 17개 LOCKED 룰 중 폐기/유지/변경 결정 필요. critic이 가장 가치 있음.
+> - **Plot identity 보존** — Stone/Brick/Block / 'P' avatar / space colors / NOTE_STATUS_HEX / WIKI_STATUS_HEX 보존 의도. 새 design system이 이걸 침범하면 Plot 정체성 깨짐.
+> - **Open Design 출력 = HTML prototype** — React 컴포넌트 X. `/plot-frontend:implement`의 mockup-faithful skill이 변환 처리. 그러나 store/hook wire는 매뉴얼 명시 필요.
+> - **이번 세션 누적 12 PR** — 다음 세션은 fresh start 권장. Phase 0 PRD 작성에 집중.
+>
+> **참고 파일**:
+> - `~/Desktop/open-design/` — Open Design repo (clone 완료)
+> - `~/Desktop/open-design/AGENTS.md` — Open Design 사용 가이드
+> - `~/Desktop/open-design/skills/` — 19 skills (dashboard / web-prototype 등)
+> - `docs/MEMORY.md` — Plot Source of Truth (영구 룰 #93~#136 모두)
+> - `lib/colors.ts` — NOTE_STATUS_HEX / WIKI_STATUS_HEX / SPACE_COLORS (Plot identity 보존)
+> - `.claude/skills/plot-frontend/mockup-faithful-implementation/` — 4-gate 워크플로우 (SPEC/APPROVE/BUILD/VERIFY)
+> - `.omc/plans/dashboard-fullwidth-prd.md` — 이번 세션 PRD v0.1 (참고 패턴)
+>
+> **2번째 P0 후보** (Phase 0 끝나면, 또는 병행 가능):
+> - chunk 2b — Ontology Dashboard weekly activity area chart (entityEvents 시계열, deferred)
+> - chunk 3b — Ontology Insights body Mosaic (COVERAGE 차트화 + TOP NOTES bar chart)
+> - Phase A2 — Notes Insights 차트화 (StatusDonut 재사용 + MiniBarChart recharts 변환)
+> - Phase B — Wiki Insights 페이지 신설 (정보 architecture 정합)
+> - Phase C — Books Insights 페이지 신설
+> - TABS hardcoded → 동적 entity registry refactor (사용자 비판 잔여)
+> - chunk 4 — Wiki/Library Overview 차트 추가
+>
+> **머신**: Windows. cross-machine 가능 (Open Design 다른 머신 재설치 필요).
+> **현재 main HEAD**: PR #470 머지 후.
+> **branch worktree**: `claude/quirky-wing-aed18b` (이번 세션 누적 12 PR — cleanup 권장, 다음 세션 새 worktree로 시작).
+
+### 완료 (이번 세션 — 12 PR 머지)
+
+이번 세션은 **사용자 명시 P0 #1/#2 완성 + 검색 architecture 정통화 + 디자인 큰 결정 (통째 재설계 path A) + Open Design install** 세션.
+
+**Chrome architecture 완성 (PR #459/#460/#468/#470)**:
+- chunk 1+2 (#459) — 'P' brand mark Activity bar → GlobalTopBar UserAvatar 이전. workspace identity anchor.
+- chunk 3 (#460) — UserAvatar dropdown chrome 단일 진입 흡수 (PanelsMenu + Settings + Trash)
+- chunk 3 revert (#468) — 사용자 viewport 결정. PanelsMenu 시계 왼쪽 + 우측 cluster theme/settings/trash 3-icon 복원
+- divider polish (#470) — PanelsMenu↔시계 사이 divider 제거. 최종 layout: `[P] │ [≡] [⏰] [<] [>] ─ [search] ─ │ [☀] [⚙] [🗑]`
+
+**검색 architecture 정통화 (PR #461/#462)**:
+- entity TABS 7개 → 11개 확장 (#461) — Books/Categories/Stickers/References 추가. 검색 button → /search route navigate.
+- Path A: GlobalTopBar = 진짜 input (#462) — SearchView 자체 input 제거. store globalSearchQuery state + URL X (session only persist 제외). ⌘K → input focus + select. 사용자 보고 redundant 완전 해소.
+
+**Dashboard 풀 폭 + 차트 (PR #463/#464/#465)**:
+- 풀 폭 정통화 (#463) — Ontology Dashboard/Insights + Wiki/Library Overview max-width 제거. 영구 LOCKED #136 Two-Layout Rule.
+- 차트 4개 Mosaic 2x2 (#464) — Status donut / Wiki status donut / Top Hubs bar / Categories bar. ResizeObserver 패턴 (WikiGrowthChart 정합). dashboard-charts.tsx 신규.
+- 사용자 보고 3건 fix (#465) — 색상 hardcoded RGB → NOTE_STATUS_HEX/WIKI_STATUS_HEX token (영구 룰 정합). Books KPI 카드 추가 (entity 8개 완성). Wiki articles stubs sub-line 메타.
+
+**Insights 손질 (PR #466/#467)**:
+- Ontology Insights surgical (#466) — 좌측 sidebar Stats 제거 (본문 OVERVIEW와 redundant). "Knowledge WAR" → "Top Notes" rename (Plot identity). Composite score 공식 sublabel ("Combined value: backlinks ×2 + outgoing + tags ×½ + age bonus − orphan penalty").
+- Notes Insights 디자인 (#467) — "PhActivity" → "Activity" rename. i18n 광범위 적용 (15 신규 keys EN+KO). HEALTH 빈 박스 → compact inline notice. notes.insights.* dict.
+
+**Books list view fix (PR #469)**:
+- Title flex max-w-[480px] cap (시각 균형). visibleColumns default 3개 → 6개 확장 (kind/itemCount/sources/pinned/updatedAt + sources/pinned).
+
+**Plot 통째 재설계 결정 + Open Design install**:
+- 사용자 명시: "polish 한계 + 강수 도입". Open Design 도입.
+- `~/Desktop/open-design` clone 완료 (51.7k stars, Apache 2.0, 71 brand-grade design system, 19 skills).
+- pnpm 10.29.3 → 10.33.2 upgrade (Windows corepack EPERM 우회).
+- better-sqlite3 컴파일 통과 (Visual Studio Build Tools 2022 OK).
+- daemon + web 실행 — http://127.0.0.1:3844 + http://127.0.0.1:3845.
+- 사용자 viewport에서 Welcome → Local coding agent (Claude Code) → 메인 진입까지 완료.
+- 첫 mockup 생성 시도 미완 — 사용자 의도 "통째 재설계 (Path A)" 명확화 후 Phase 0 PRD 작성으로 전환.
+
+### 브레인스토밍 & 큰 결정 (영구 LOCKED #136 + 후보 #137~#142)
+
+- **#136 LOCKED**: **Two-Layout Rule** (Plot 전체 영구 적용):
+  1. Dashboard / Overview = 풀 폭 (px-6, max-width 없음)
+  2. Article 본문 = max-width 유지 (가독성)
+  3. Settings = max-width 유지 (form readability)
+  4. 차트 = ResizeObserver + useRef (ResponsiveContainer 금지 — React 19/Next 16 width-0 issue)
+  5. Dashboard 차트 layout = Mosaic (시각 위계 차등)
+- **#137 (vision, 다음 세션 LOCKED 후보)**: **Plot 통째 재설계 (Path A) — Functional/UI layer 분리 워크플로우**. lib/* + hooks/* 그대로 keep. components/* + app/(app)/*/page.tsx + globals.css 통째 재설계 가능. 사용자 명시 의도.
+- **#138 (vision)**: **mockup-first 워크플로우 정통화**. mockup 생성 → `/plot-frontend:implement` 4-gate → Plot 영구 룰 자동 정합. Plot v2 디자인 작업의 표준 패턴.
+- **#139 (vision)**: **Open Design는 prototype generator지 React component library 아님**. HTML 출력 → 매뉴얼 변환 필수. Plot identity 보존 + 영구 룰 정합 매뉴얼 결정.
+- **#140 (vision)**: **Information architecture — Insights는 entity 별 + 전체 분리**. Ontology Insights = 전체 노드 통합. Notes/Wiki/Books Insights = 세부. 사용자 명시.
+- **#141 (vision)**: **검색 진입점 통합 (Path A)** — GlobalTopBar 진짜 input + SearchView 자체 input 제거 + globalSearchQuery store + ⌘K input focus. Linear/Notion 정통.
+- **#142 (vision)**: **Chrome layout 4-region**: identity (P avatar) | tools (PanelsMenu hamburger) | navigation (clock/back/forward) | search | right cluster (theme/settings/trash). divider 2개 (Avatar 옆 + search↔chrome 사이만).
+
+### 기술 학습 (영구)
+
+- **React 19 + Radix Popover asChild의 useId mismatch**: PopoverTrigger의 asChild + Slot 패턴 사용 시 `aria-controls` ID가 server/client에서 다르게 생성. `asChild` 제거 + PopoverTrigger 자체 button 렌더로 우회 (Slot tree 단축). (#460 hydration mismatch fix)
+- **ResponsiveContainer 절대 금지** (React 19/Next 16): width-0 issue. WikiGrowthChart의 `useRef + ResizeObserver` 패턴 정통. dashboard-charts.tsx의 `useChartWidth` hook으로 공통화.
+- **Color token enforcement**: 차트 색상 hardcoded RGB 위험. `NOTE_STATUS_HEX` / `WIKI_STATUS_HEX` token import 강제. brick=amber (#f59e0b)/article=emerald (#10b981)/stub=orange (#f97316) 영구 룰. (#465 fix)
+- **Default visibleColumns 신규 사용자에만 영향**: 기존 사용자 IDB persist된 viewState는 그대로. Title flex max-width 같은 component-level 변경은 즉시 효과 (#469 books).
+- **Squash merge 후 같은 worktree branch 머지 conflict 패턴**: `git fetch origin main && git merge origin/main --strategy=ours -m "merge: ..."` + push + retry. 이번 세션 12 PR 모두 이 패턴 사용 (안정).
+- **Windows pnpm install + better-sqlite3 컴파일**: corepack EPERM (admin 필요) 우회 → `npm install -g pnpm@10.33.2`. better-sqlite3는 node-gyp 컴파일 (~2분, Visual Studio Build Tools 2022 필요). Plot 환경 OK.
+- **Search via store state (URL X)**: Path A 구현 시 globalSearchQuery을 store에 persist X (partialize strip)로 추가. URL search param 안 쓴 이유 = App Router의 useSearchParams Suspense 제약 + Plot offline-first (URL share 가치 낮음). 가장 단순 path가 가장 robust.
+- **Insights composite score 공식 (영구 reference)**: `score = backlinks×2 + linksOut + tags×0.5 + ageDays/30 + (orphan ? -2 : 0)`. lib/insights/metrics.ts:94. 음수 score = orphan penalty 적용. "WAR"라는 명명은 sabermetrics 차용 — Plot identity와 어긋남 → "Top Notes"로 rename (#466).
+- **chunk 결정 사용자 viewport 검증 후 revert 가능**: chunk 3 (UserAvatar dropdown chrome 단일 진입)는 단일 design language 측면에선 정통하지만 사용자 실제 사용 패턴은 분리된 chrome 선호. viewport 검증 후 revert 결정 정당 (#468). **디자인 결정의 정통성 ≠ 사용자 선호**.
+
+### Watch Out (다음 세션)
+
+- **Phase 0 결정이 가장 큰 risk** — Design language 잘못 고르면 6-8 surface 다 다시. critic 검토 + 첫 1-2 mockup 사용자 viewport 검증 후 본격 진행.
+- **사용자 IDB의 viewState persist**: Books visibleColumns 같은 default 변경은 persist된 사용자에게 효과 X. 새 worktree 또는 reset 필요할 수도.
+- **Open Design dev server 재시작 필요**: 다음 세션 시작 시 데몬 + web이 종료됐을 수 있음 (process kill / 컴퓨터 재부팅). `pnpm tools-dev start web` 재실행.
+- **Open Design dev server 종료 정통 방법**: `pnpm tools-dev stop`. process kill X.
+- **MCP server 등록 미완**: 사용자 viewport에서 Settings → MCP server → Claude Code 등록 필요 (Claude Code가 Open Design 호출 시). 단 web UI에서 직접 mockup 생성은 MCP 무관.
+- **Plot 영구 룰 #93~#136 재평가**: Phase 4에서 17개 LOCKED 룰 폐기/유지/변경 결정 필요. critic 검토 가치.
+- **branch worktree `claude/quirky-wing-aed18b`** 누적 12 PR — cleanup 권장. 다음 세션 새 worktree로 시작.
+
+### 환경 변경
+
+- **Store version**: v148 (변경 X 이번 세션 — store schema 추가 없음). globalSearchQuery는 persist 제외라 migration 없음.
+- **신규 파일** (3 + PRD 1):
+  - `components/ontology/dashboard-charts.tsx` — Mosaic 2x2 차트 4개 (StatusDonut/WikiStatusDonut/TopHubsBar/CategoriesBar)
+  - `.omc/plans/dashboard-fullwidth-prd.md` — PRD v0.1 (chunk 분할 + LOCKED #136 정의)
+- **신규 i18n keys**: ~30 (ontology.dashboard.chart.* + ontology.dashboard.meta.stub_count + notes.insights.* 15개 EN+KO)
+- **Open Design install**: `~/Desktop/open-design` (51.7k stars, Apache 2.0, 1087MB) — Plot worktree와 분리
+- **pnpm upgrade**: 10.29.3 → 10.33.2 (global, Open Design packageManager 정합)
+- **Tests**: 변경 X. tsc clean 모든 12 PR.
+
+### 머신
+
+Windows. 단일 worktree (`claude/quirky-wing-aed18b`) 누적 12 PR. cleanup 권장. Open Design 첫 install이라 다음 머신에서 다시 install 필요. Plot에서 영구 룰 정합 + mockup-first workflow 정통 적용 시작.
+
+---
+
 ## 2026-05-25 (대규모 세션 #2) — Windows, **거대 세션: i18n 마무리 + Custom Quick Filter feature + 디자인 브레인스토밍 (PR #438-#457, 20 PR 머지)**
 
 > 🎯 **다음 즉시 액션 (다음 세션 시작점)**: **이번 세션 마지막 브레인스토밍 2 의제 구현** — (A) 'P' brand mark 제거 + GlobalTopBar 좌측 user avatar 통합 + (B) 온톨로지 대시보드/인사이트 layout 재설계 (풀 폭 + KPI grid + 차트 7-8개).

@@ -3,110 +3,96 @@
 > 우선순위 기반 작업 목록. **P0 = 다음 세션 즉시 시작점** (NEXT-ACTION.md 폐지, 2026-05-12).
 > 완료 항목은 즉시 삭제. 자세한 history는 SESSION-LOG.md + MEMORY.md.
 
-**마지막 갱신**: 2026-05-25 (대규모 세션 #2) — 20 PR (#438-#457): i18n 마무리 + Custom Quick Filter feature + 디자인 브레인스토밍. 다음 P0 #1 = 'P' brand mark fix + 온톨로지 대시보드 재설계 (사용자 명시).
+**마지막 갱신**: 2026-05-25 (대규모 세션 #3) — 12 PR (#459-#470): P0 #1/#2 완성 + 검색 정통화 + Open Design install + Plot v2 통째 재설계 결정 (Path A). 다음 P0 #1 = **Phase 0 Design Language 결정 + Plot v2 redesign PRD 작성**.
 
 ---
 
-## 🟣 P0 — 즉시 (cross-machine 진입점, 2026-05-25 대규모 세션 후)
+## 🟣 P0 — 즉시 (cross-machine 진입점, 2026-05-25 대규모 세션 #3 후)
 
-### 1. **🔴 'P' brand mark 제거 + GlobalTopBar user avatar 통합 (사용자 명시 1순위)**
+### 1. **🔴 Phase 0 — Design Language 결정 + Plot v2 통째 재설계 PRD (사용자 명시 큰 결정)**
 
-**사용자 의도** (그대로):
-> "P가 하드코딩되어서 들어가는데... 시각적으로 별로야. 액티비티 바에서 해당 영역을 없애고, 토글스패널의 버튼 쪽에다 올리긴 해야 될 거 같은데... 위치를 아주 신경써서 조정해야 될 거 같아. 폰트 사이즈 등까지 고려해서."
-
-**범위**:
-- `components/activity-bar.tsx:103-105`의 `<div className="a-actbar__head">` + `<div className="a-brand__mark">P</div>` 제거
-- `components/global-top-bar.tsx:97` PanelsMenu 자리/옆에 UserAvatar 추가
-- 32px rounded-md, accent gradient, 이니셜 ("P" default 또는 settings.userName 첫 글자)
-
-**Chunk 분할 권장**:
-- chunk 1 (작음): 'P' 단순 제거
-- chunk 2 (중): GlobalTopBar 좌측 UserAvatar (이니셜 only)
-- chunk 3 (큰): avatar dropdown — PanelsMenu + Account menu 통합
-
-**위험**: a-brand__mark CSS가 globals.css에 정의됐을 가능성 — 통째 제거 안전.
-
-**참고 파일**:
-- `components/activity-bar.tsx:103-105`
-- `components/global-top-bar.tsx:35,97`
-- `components/panels-menu.tsx`
-- 영구 룰 #119 (GlobalTopBar = chrome single source) / #120 (PanelsMenu top bar 단일 mount)
-
-### 2. **🔴 온톨로지 대시보드/인사이트 layout 재설계 (사용자 명시 1순위)**
-
-**사용자 의도** (그대로):
-> "온톨로지의 인사이트와 대시보드는 좌우 여백이 넓지? 너무 문자가 많고 빽빽해서 한 눈에 안 들어오는데. 차트와 그래프가 더 많아질 순 없나?"
+**사용자 의도** (영구 인용):
+> "지금 플롯 디자인은 사실 내가 맨처음으로 시작한 프로젝트여서 조잡한 부분들이 많아. 리니어나 플레인에 비해서. 기능은 그들 못지 않고 오히려 앞선다고 보지만 디자인적 아쉬움이 커."
+> "내가 폴리쉬를 계속해봤는데도 답이 없어서. 오픈 디자인이라는 강수를 도입하려는 거야."
+> "통째 재설계 의도 (Path A)."
 
 **범위**:
-- `components/ontology/ontology-dashboard-panel.tsx` + `ontology-insights-panel.tsx` layout 재설계
-- 좌우 여백 / max-width 제거 → 풀 폭 grid (Plane Analytics 패턴 정합)
-- KPI 4 카드 1줄 (총 노트/위키/책/카테고리)
-- 차트 신규 7-8개:
-  - Stone/Brick/Block donut (status 분포)
-  - 이번 주 활동 line/area chart (entityEvents)
-  - Top 허브 노트 horizontal bar (backlinksMap top 10)
-  - 카테고리 분포 bar (wikiCategories.noteCount)
-  - Stub vs Article donut (isWikiStub)
-  - 고아 vs 임베드 donut (wikiEmbeddedNoteIds vs total)
+- Plot lib/* + hooks/* 그대로 keep (functional layer 분리)
+- components/* + app/(app)/*/page.tsx + globals.css 통째 재설계
+- 영구 룰 #93~#136 재평가 (폐기/유지/변경)
 
-**작업 크기**: 대 — PRD 작성 권장. critic 검토 가치.
+**첫 스텝** (다음 머신에서 바로):
+1. Open Design web UI 진입 (http://127.0.0.1:3845, 데몬 재시작 필요 시 `cd ~/Desktop/open-design && pnpm tools-dev start web`)
+2. `.omc/plans/plot-v2-redesign-prd.md` 작성:
+   - Design language 후보 비교 (Linear-inspired / Notion-clean / Plain-style / Anthropic-style / Custom hybrid)
+   - 사용자 결정 + 근거
+   - Surface 우선순위 (Chrome → Home/Dashboard → List → Detail → Insights → Settings)
+   - 시간 estimate (~17-28시간, 12-20 PR)
+3. critic 검토 (큰 결정이라 객관 review 가치)
+4. Phase 1: Chrome surface mockup 생성 (Open Design `dashboard` 또는 `web-prototype` skill)
+5. 결과 quality 확인 후 본격 진행 결정
 
-**위험**: recharts ResponsiveContainer 사용 X (React 19/Next 16 width-0 issue). `WikiInsightsChart`의 ResizeObserver + useRef 패턴 채택.
+**시간 estimate**: ~17-28시간 (1-2주 elapsed, 12-20 PR)
+
+**위험**:
+- Design language 잘못 고르면 6-8 surface 다 다시. critic 검토 + 첫 1-2 mockup viewport 검증 후 본격 진행
+- 영구 룰 #93~#136 재평가 결정 (#136 Two-Layout Rule keep 권장)
+- Plot identity 보존 (Stone/Brick/Block, 'P' avatar, space colors, NOTE_STATUS_HEX/WIKI_STATUS_HEX)
 
 **참고 파일**:
-- `components/views/ontology-view.tsx` — Dashboard/Insights 진입점
-- `components/ontology/ontology-dashboard-panel.tsx` + `ontology-insights-panel.tsx`
-- `components/wiki-editor/wiki-growth-chart.tsx` — recharts ResizeObserver reference
-- `lib/search/use-backlinks-index.ts` — backlinksMap source
-- 후보 영구 룰 #136 — Dashboard = 풀 폭 / Article 본문 = max-width 유지
+- `~/Desktop/open-design/` — repo clone (51.7k stars, Apache 2.0, 71 brand systems, 19 skills)
+- `~/Desktop/open-design/AGENTS.md` — Open Design 사용 가이드
+- `docs/MEMORY.md` — Plot Source of Truth (영구 룰 17개)
+- `lib/colors.ts` — Plot identity tokens
+- `.claude/skills/plot-frontend/mockup-faithful-implementation/` — 4-gate 워크플로우
 
-### 3. **🟢 좌우 여백 정통화 (홈 / 라이브러리 overview / 온톨로지 페이지)**
+### 2. **🟢 chunk 2b / 3b / Phase A2 (deferred, Phase 0 결정 후)**
 
-대시보드 재설계 #2 끝난 후 cohesive 마무리:
-- 홈 / 라이브러리 overview / 온톨로지 = 풀 폭 (Dashboard 성격)
-- 노트 / 위키 article 본문 = max-width 유지 (long-form 가독성)
+Phase 0 끝나면 또는 병행 가능 (단 design language 결정이 우선):
+- **chunk 2b**: Ontology Dashboard weekly activity area chart (entityEvents 시계열)
+- **chunk 3b**: Ontology Insights body Mosaic (COVERAGE 차트화 + TOP NOTES bar chart)
+- **Phase A2**: Notes Insights 차트화 (StatusDonut 재사용 + MiniBarChart recharts)
+- **Phase B**: Wiki Insights 페이지 신설 (정보 architecture 정합 — Ontology=전체, 각 entity=세부)
+- **Phase C**: Books Insights 페이지 신설
 
-### 4. **🟢 Quick Filter polish (chip edit / drag-to-reorder)**
+### 3. **🟢 TABS hardcoded → 동적 entity registry refactor (사용자 비판 잔여)**
 
-PR #452/#454/#456 후 follow-up:
-- chip edit (label/desc 수정) — 현재 삭제 후 재만들기만
-- chip 정렬 / drag-to-reorder
+PR #461에서 entity TABS 7→11개 확장했으나 hardcoded 그대로. 동적 registry 시스템 refactor 가치. Plot v2와 별도 작업.
 
-### 5. **🟢 Misc i18n 마지막 잔여 (큰 작업)**
-
-- Editor toolbar / slash menu 30+ 블록 description (별도 chunk 분할: B bubble menu / A slash menu / C placeholder)
-- "ANCHORS IN NOTE" (북마크 탭 local section)
-- "Document-level" (comment scope picker)
-- Discover sub-labels (NOTES/TAGS/WIKI 헤딩)
-
-### 6. **🟢 wiki list 모드 진입 path 명확화**
-
-dashboard에서 list로 진입하는 명시적 nav 없음 (사이드바에 Overview/병합/분리/템플릿만). 사용자가 chip bar / list view 접근 어색. UI 개선 검토.
-
-### 7. **🟢 Phase 2 temporal hooks (PRD §11 Q1 EventPattern + Q5 recurring)**
-
-watch + recurring policies. 우클릭 프리셋 + 타임라인 드래그 hook UI.
-
-### 8. **🟢 사용자 viewport 검증 미완**
+### 4. **🟢 사용자 viewport 검증 미완 (이전 세션 누적)**
 
 - Backup Restore round-trip (Full Backup → Import → reload)
 - GlobalTopBar Hide-all-panels 후 chrome 접근
-- Cmd+K Escape 닫힘
+- Cmd+K Escape 닫힘 (Path A로 검색 통합 후 영향 검토)
 - Inbox Phase 1c 3 SectionCard 작동
 - Phase α-2 위키 체크박스 시드 검증
+- **신규**: Books list 모드 visibleColumns default 확장 효과 (사용자 viewState persist 확인)
 
 ---
 
 ## 🔵 P1
 
+### Editor toolbar / slash menu i18n (큰 작업 분할)
+
+- Bubble menu 30+ 블록 description
+- Slash menu placeholder + descriptions
+- Discover sub-labels (NOTES/TAGS/WIKI 헤딩)
+
+### Quick Filter polish
+
+- chip edit (label/desc 수정)
+- chip 정렬 / drag-to-reorder
+- wiki list 모드 진입 path 명확화
+
 ### temporal-hooks PRD 후속
 
-`.omc/plans/unified-temporal-hooks-prd.md` (DRAFT v0.1) — §11 open questions 6개 + phasing 결정 필요. 정보 아키텍처 재정렬 = 큰 방향 → 사용자 조율 후 진행.
+`.omc/plans/unified-temporal-hooks-prd.md` (DRAFT v0.1) — §11 open questions 6개 + phasing 결정 필요. 정보 아키텍처 재정렬 = 큰 방향 → Plot v2 작업과 어떻게 병렬 진행할지 결정 후 진행.
 
 ---
 
 ## ✅ 최근 완료
 
+- **2026-05-25 (대규모 세션 #3)**: **P0 #1/#2 완성 + 검색 정통화 + Open Design install + Plot v2 통째 재설계 결정** (PR #459-#470, 12 PR). (a) Chrome architecture (#459/#460/#468/#470): 'P' brand mark Activity bar → GlobalTopBar UserAvatar. chunk 3 dropdown 흡수 후 사용자 viewport 결정으로 분리 복원. 최종 layout `[P] │ [≡] [⏰] [<] [>] ─ search ─ │ [☀][⚙][🗑]`. (b) 검색 architecture (#461/#462): entity TABS 7→11개 확장 (Books/Categories/Stickers/References 추가). Path A — GlobalTopBar = 진짜 input + SearchView 자체 input 제거 + globalSearchQuery store + ⌘K input focus. (c) Dashboard 풀 폭 + 차트 (#463/#464/#465): max-width 제거 4 페이지 + 영구 LOCKED #136 Two-Layout Rule. dashboard-charts.tsx 신규 — Status/Wiki status donut + Top Hubs/Categories bar 4 chart Mosaic 2x2. 색상 hardcoded → NOTE_STATUS_HEX/WIKI_STATUS_HEX token. Books KPI + Wiki stubs 메타. (d) Insights 손질 (#466/#467): Ontology Insights sidebar Stats 제거 + Knowledge WAR → Top Notes + composite score 공식 명시. Notes Insights PhActivity → Activity + i18n 광범위 + Health compact. (e) Books list (#469): Title flex max-w-[480px] cap + visibleColumns 6개 default. (f) Open Design install: ~/Desktop/open-design (51.7k stars, Apache 2.0, 71 design systems, 19 skills). pnpm 10.29→10.33.2 upgrade. daemon 3844 + web 3845. (g) Plot v2 통째 재설계 결정 (Path A) — 다음 세션 Phase 0 PRD 작성. 영구 LOCKED #136 + 후보 #137~#142.
 - **2026-05-25 (대규모 세션 #2)**: **i18n 마무리 + Custom Quick Filter feature + 디자인 브레인스토밍** (PR #438-#457, 20 PR). (a) i18n 마무리 광범위 (#438-#448, #451, #457): WikiInsightsChart / Trash All view / Trash chrome / Notes-Trash empty + tooltip + split toast / notes-table TrashEntityList + context menu / 3 Floating Action Bars / inbox+books / wiki-view / library-view (refs/tags/files+chrome) / SearchView Linear breadcrumb / Side panel 3 탭 + EVENT_CONFIG 44 verbs / 참고문헌→레퍼런스. ~250+ 신규 dict keys. (b) wikiRegistered 정정 (#449/#450): 라벨 "위키 등록"→"위키에 속해있음" + 동작 제목 매칭→실제 임베드 멤버십 (wikiArticles.noteIds 체크). 영구 룰 #132. (c) Custom Quick Filter feature (#452/#453/#454/#455/#456): 사용자 정의 chip bar entries — Zustand slice v148 + Dialog (promote + rule builder popover) + Wiki/Books default 시드 + "Label"→"Name" Plot entity 충돌 회피. 영구 룰 #131/#133/#134/#135. (d) 디자인 브레인스토밍 (다음 세션 P0 #1/#2): 'P' brand mark + 온톨로지 대시보드.
 - **2026-05-24 (심야)**: **Phase α-1 Inbox 'task' 흡수 + 4 surface 한국어 wire + Inbox refiner** (PR #417). (a) Phase α-1 (Memory parked → LOCKED): InboxItemKind 'task' 추가 + use-inbox todoTasks source loop + sectionFor→do + inbox-source-icon Square + inbox-view handleRowClick task→noteId resolve. TodoView parallel 유지. (b) i18n Wave ~50 신규 keys: WikiDashboard 전체 / Calendar (월·주·일정 + 월·화·수·목·금·토·일) / CALENDAR·TEMPLATES filter labelKey (스톤·브릭·블록 음역 #118) / SmartSidePanel 4 tab (상세·연결·활동·북마크) / SidePanel empty / Inbox breadcrumb + SECTION_META + use-inbox action·meta. (c) Inbox refiner 5건 (production-ui-refiner Inbox SectionCard 후보 1 5-phase): A1 space-y-4 / C1 borderless / C3 subtitle /60 / E1 empty 약화 / E2 footer 중복 삭제. 영구 룰 #111 정합 (단일 Hook 모델 통합 → todo도 같은 단일 attention 큐). tsc clean.
 - **2026-05-24 (밤)**: **i18n 잔여 surface + Merge/Split + Books labelKey + Timeline wrap fix** (PR #416). 2 chunk — (1) Todos/Calendar sidebar/Ontology/Library/Wiki/Books 6 view 한국어 wire (~70 i18n keys 신규) + (2) Wiki Merge/Split → 병합/분리, 타임라인 button whitespace-nowrap, BOOKS_VIEW_CONFIG 전체 labelKey (orderingOptions/groupingOptions/properties), book-table BOOK_COLUMNS labelKey wire, Library "Top Tags"/"unused tag"/"unlinked reference" 누락 한국어. 영구 LOCKED #122 (module-level static config labelKey 일관 적용 의무).
