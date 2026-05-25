@@ -46,6 +46,7 @@ export function OntologyDashboardPanel() {
   const stickers = usePlotStore((s) => s.stickers)
   const wikiCategories = usePlotStore((s) => s.wikiCategories)
   const folders = usePlotStore((s) => s.folders)
+  const books = usePlotStore((s) => s.books)
 
   // Note status distribution
   const statusCounts = useMemo(() => {
@@ -130,7 +131,14 @@ export function OntologyDashboardPanel() {
               .replace("{stone}", String(statusCounts.stone))
               .replace("{brick}", String(statusCounts.brick))
               .replace("{keystone}", String(statusCounts.keystone))} />
-          <Stat label={t("ontology.dashboard.stat.wiki_articles")} value={m.totalWiki ?? wikiArticles.length} />
+          <Stat
+            label={t("ontology.dashboard.stat.wiki_articles")}
+            value={m.totalWiki ?? wikiArticles.length}
+            sub={wikiStatusCounts.stubs > 0
+              ? t("ontology.dashboard.meta.stub_count").replace("{count}", String(wikiStatusCounts.stubs))
+              : undefined}
+          />
+          <Stat label={t("ontology.dashboard.stat.books")} value={books.filter((b) => !b.trashed).length} />
           <Stat label={t("ontology.dashboard.stat.tags")} value={tags.length} />
           <Stat label={t("ontology.dashboard.stat.labels")} value={labels.length} />
           <Stat label={t("ontology.dashboard.stat.stickers")} value={stickers.length} />

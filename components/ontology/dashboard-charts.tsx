@@ -21,6 +21,7 @@
 import { useEffect, useRef, useState } from "react"
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid } from "recharts"
 import { useT } from "@/lib/i18n"
+import { NOTE_STATUS_HEX, WIKI_STATUS_HEX } from "@/lib/colors"
 
 // ────────────────────────────────────────────────────────────────────────────
 // Shared — useChartWidth hook (ResizeObserver pattern)
@@ -47,19 +48,10 @@ function useChartWidth() {
 }
 
 // ────────────────────────────────────────────────────────────────────────────
-// Color tokens — Plot palette
+// Color tokens — Plot permanent rules (lib/colors.ts)
+// NOTE_STATUS_HEX: stone=slate-400, brick=amber-500, keystone=emerald-400
+// WIKI_STATUS_HEX: stub=orange #f97316, article=emerald #10b981
 // ────────────────────────────────────────────────────────────────────────────
-
-const STATUS_COLORS = {
-  stone: "rgb(148 163 184)",      // slate-400 — Stone (early)
-  brick: "rgb(249 115 22)",       // orange-500 — Brick (developing)
-  keystone: "rgb(16 185 129)",    // emerald-500 — Block (mature)
-}
-
-const WIKI_COLORS = {
-  article: "rgb(99 102 241)",     // indigo-500 — Article
-  stub: "rgb(217 119 6)",         // amber-600 — Stub
-}
 
 const BAR_COLOR = "var(--accent)"
 
@@ -101,9 +93,9 @@ export function StatusDonut({ stone, brick, keystone }: StatusDonutProps) {
   const size = Math.min(width, 220)
 
   const data = [
-    { name: t("status.stone"), value: stone, color: STATUS_COLORS.stone },
-    { name: t("status.brick"), value: brick, color: STATUS_COLORS.brick },
-    { name: t("status.block"), value: keystone, color: STATUS_COLORS.keystone },
+    { name: t("status.stone"), value: stone, color: NOTE_STATUS_HEX.stone },
+    { name: t("status.brick"), value: brick, color: NOTE_STATUS_HEX.brick },
+    { name: t("status.block"), value: keystone, color: NOTE_STATUS_HEX.keystone },
   ].filter((d) => d.value > 0)
 
   const total = stone + brick + keystone
@@ -166,8 +158,8 @@ export function WikiStatusDonut({ articles, stubs }: WikiStatusDonutProps) {
   const size = Math.min(width, 220)
 
   const data = [
-    { name: t("wiki.filter.articles"), value: articles, color: WIKI_COLORS.article },
-    { name: t("wiki.filter.stubs"), value: stubs, color: WIKI_COLORS.stub },
+    { name: t("wiki.filter.articles"), value: articles, color: WIKI_STATUS_HEX.article },
+    { name: t("wiki.filter.stubs"), value: stubs, color: WIKI_STATUS_HEX.stub },
   ].filter((d) => d.value > 0)
 
   const total = articles + stubs
