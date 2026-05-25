@@ -37,6 +37,7 @@ import { StatusBadge } from "@/components/note-fields"
 import type { FilterRule, FilterField, GroupBy } from "@/lib/view-engine/types"
 import type { NoteStatus, NoteSource, Folder, Tag as TagType, Label } from "@/lib/types"
 import { getEntityColor } from "@/lib/colors" // v109: opt-in color fallback
+import { useT } from "@/lib/i18n"
 
 /* ── Helpers ──────────────────────────────────────────── */
 
@@ -146,6 +147,9 @@ export function formatFilterChip(
   folderList?: Folder[],
   tagList?: TagType[],
   labelList?: Label[],
+  /** Optional translator — wire from `useT()` in a React caller so the
+   *  chip respects the active locale. Falls back to English labels. */
+  t?: (key: string) => string,
 ): { icon: React.ReactNode | null; fieldLabel: string; operatorLabel: string; valueLabel: string } {
   const info = FIELD_INFO[rule.field]
   const fieldLabel = info?.label ?? rule.field.charAt(0).toUpperCase() + rule.field.slice(1)
@@ -195,7 +199,9 @@ export function formatFilterChip(
       return rule.value
     }
     if (rule.field === "wikiRegistered") {
-      return rule.value === "true" ? "In wiki" : rule.value === "false" ? "Not in wiki" : rule.value
+      if (rule.value === "true") return t ? t("filter.value.wiki.in") : "Has wiki article"
+      if (rule.value === "false") return t ? t("filter.value.wiki.not_in") : "No wiki article"
+      return rule.value
     }
     if (rule.field === "connectedTo") {
       // value format "<noteId>:<direction>". Show note title + direction badge.
@@ -1160,13 +1166,14 @@ export function FilterChipBar({
   onUpdateFilter,
   ...menuProps
 }: FilterChipBarProps) {
+  const t = useT()
   if (filters.length === 0) return null
 
   return (
     <div className="flex shrink-0 flex-wrap items-center gap-1.5 border-b border-border px-5 py-2">
       {/* Active filter chips — Linear-style 4-part: [icon] field | op | value | × */}
       {filters.map((f, i) => {
-        const parts = formatFilterChip(f, folders, tags, labels)
+        const parts = formatFilterChip(f, folders, tags, labels, t)
         // Inline-editable: connectedTo direction (Both / In / Out).
         // Step A of the broader chip-editing roadmap — same pattern can
         // extend to status/folder/label values in a follow-up.
