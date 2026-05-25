@@ -521,6 +521,10 @@ export function TemplatesView() {
             onQuickFilter={(rules) => updateViewState({ filters: rules })}
           />
         }
+        quickFilters={TEMPLATES_VIEW_CONFIG.quickFilters as any}
+        activeFilters={viewState.filters as any}
+        onFiltersChange={(filters) => updateViewState({ filters: filters as any })}
+        viewContext="templates"
         showDisplay={TEMPLATES_VIEW_CONFIG.showDisplay}
         displayContent={
           <DisplayPanel

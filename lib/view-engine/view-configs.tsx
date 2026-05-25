@@ -364,13 +364,13 @@ export const WIKI_VIEW_CONFIG: ViewConfig = {
     ]},
   ],
   quickFilters: [
-    { label: "Stale articles", desc: "30+ days no update", rules: [
+    { label: "Stale articles", labelKey: "filter.quick.stale_articles", desc: "30+ days no update", descKey: "filter.quick.stale_articles_desc", rules: [
       { field: "updatedAt", operator: "lt", value: "stale" },
     ]},
-    { label: "Orphans", desc: "no backlinks", rules: [
+    { label: "Orphans", labelKey: "filter.quick.orphans", desc: "no backlinks", descKey: "filter.quick.orphans_desc", rules: [
       { field: "links", operator: "eq", value: "_none" },
     ]},
-    { label: "Hubs", desc: "10+ backlinks", rules: [
+    { label: "Hubs", labelKey: "filter.quick.hubs", desc: "10+ backlinks", descKey: "filter.quick.hubs_desc", rules: [
       { field: "links", operator: "eq", value: "10+" },
     ]},
   ],
@@ -711,7 +711,7 @@ export const TEMPLATES_VIEW_CONFIG: ViewConfig = {
     ]},
   ],
   quickFilters: [
-    { label: "Pinned only", desc: "show pinned templates", rules: [
+    { label: "Pinned only", labelKey: "filter.quick.pinned_only", desc: "show pinned templates", descKey: "filter.quick.pinned_only_desc", rules: [
       { field: "pinned", operator: "eq", value: "true" },
     ]},
   ],

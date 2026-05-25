@@ -1037,6 +1037,7 @@ export function WikiView() {
         quickFilters={wikiViewMode !== "dashboard" ? (WIKI_VIEW_CONFIG.quickFilters as any) : undefined}
         activeFilters={wikiFilters as any}
         onFiltersChange={(filters) => updateWikiViewState({ filters: filters as any })}
+        viewContext={wikiViewMode !== "dashboard" ? "wiki" : undefined}
         showDisplay={wikiViewMode !== "dashboard"}
         displayContent={(
           <DisplayPanel
