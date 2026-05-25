@@ -72,11 +72,12 @@ export function useDateFormat() {
 export function useRelativeTime() {
   const lang = useSettingsStore((s) => s.language) as Locale
   const locale = DATE_LOCALES[lang] ?? enUS
-  return (date: Date | string) => {
+  return (date: Date | string, opts?: { addSuffix?: boolean }) => {
+    const addSuffix = opts?.addSuffix ?? true
     try {
       const d = typeof date === "string" ? new Date(date) : date
       if (Number.isNaN(d.getTime())) return ""
-      return formatDistanceToNow(d, { addSuffix: true, locale })
+      return formatDistanceToNow(d, { addSuffix, locale })
     } catch {
       return ""
     }

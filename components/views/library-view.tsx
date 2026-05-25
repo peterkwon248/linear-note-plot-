@@ -7,6 +7,7 @@ import { useT } from "@/lib/i18n"
 import { TagsView } from "@/components/views/tags-view"
 import { LibraryBreadcrumb } from "@/components/library/library-breadcrumb"
 import { formatDistanceToNow } from "date-fns"
+import { useRelativeTime } from "@/lib/i18n-date"
 import { shortRelative } from "@/lib/format-utils"
 import { toast } from "sonner"
 import {
@@ -270,9 +271,10 @@ function ReferenceRow({
    *  Drives an Active highlight that mirrors the editor pane focus. */
   isDualActive?: boolean
 }) {
+  const relative = useRelativeTime()
   const fieldCount = ref_.fields.length
   const timeAgo = ref_.updatedAt
-    ? formatDistanceToNow(new Date(ref_.updatedAt), { addSuffix: false })
+    ? relative(ref_.updatedAt, { addSuffix: false })
     : ""
 
   const handleClick = (e: React.MouseEvent) => {
@@ -1021,6 +1023,7 @@ type FilesSortField = "name" | "size" | "fileType" | "createdAt"
 
 function FilesView() {
   const t = useT()
+  const relative = useRelativeTime()
   const attachments = usePlotStore((s) => s.attachments)
   const addAttachment = usePlotStore((s) => s.addAttachment)
   const removeAttachment = usePlotStore((s) => s.removeAttachment)
@@ -1477,7 +1480,7 @@ function FilesView() {
               const isSelected = selectedIds.has(att.id)
               const isImage = att.type === "image"
               const timeAgo = att.createdAt
-                ? formatDistanceToNow(new Date(att.createdAt), { addSuffix: false })
+                ? relative(att.createdAt, { addSuffix: false })
                 : ""
               return (
                 <ContextMenu key={att.id}>

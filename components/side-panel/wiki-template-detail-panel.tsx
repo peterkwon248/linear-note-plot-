@@ -20,6 +20,7 @@
 import { useMemo, useState } from "react"
 import { useRouter } from "next/navigation"
 import { format, formatDistanceToNow } from "date-fns"
+import { useRelativeTime } from "@/lib/i18n-date"
 import { usePlotStore } from "@/lib/store"
 import {
   Calendar as CalendarBlank,
@@ -121,6 +122,7 @@ function extractOutlineFromBlocks(blocks: WikiBlock[]): OutlineItem[] {
 }
 
 export function WikiTemplateDetailPanel({ template }: { template: WikiTemplate }) {
+  const relative = useRelativeTime()
   const deleteWikiTemplate = usePlotStore((s) => s.deleteWikiTemplate)
   const toggleWikiTemplatePin = usePlotStore((s) => s.toggleWikiTemplatePin)
   const createWikiArticleFromTemplate = usePlotStore((s) => s.createWikiArticleFromTemplate)
@@ -267,7 +269,7 @@ export function WikiTemplateDetailPanel({ template }: { template: WikiTemplate }
           <div className="flex items-center justify-between">
             <span className="text-note text-muted-foreground">Updated</span>
             <span className="text-note text-foreground" title={template.updatedAt}>
-              {formatDistanceToNow(new Date(template.updatedAt), { addSuffix: true })}
+              {relative(template.updatedAt)}
             </span>
           </div>
         </div>

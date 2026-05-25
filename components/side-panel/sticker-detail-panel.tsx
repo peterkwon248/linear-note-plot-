@@ -24,6 +24,7 @@
 
 import { useMemo } from "react"
 import { format, formatDistanceToNow } from "date-fns"
+import { useRelativeTime } from "@/lib/i18n-date"
 import { usePlotStore } from "@/lib/store"
 import {
   Sticker as StickerIcon,
@@ -75,6 +76,7 @@ function InspectorSection({
 }
 
 export function StickerDetailPanel({ sticker }: { sticker: Sticker }) {
+  const relative = useRelativeTime()
   const notes = usePlotStore((s) => s.notes)
   const wikiArticles = usePlotStore((s) => s.wikiArticles)
   const tags = usePlotStore((s) => s.tags)
@@ -189,7 +191,7 @@ export function StickerDetailPanel({ sticker }: { sticker: Sticker }) {
           <div className="flex items-center justify-between">
             <span className="text-note text-muted-foreground">Age</span>
             <span className="text-note text-muted-foreground/70">
-              {formatDistanceToNow(new Date(sticker.createdAt), { addSuffix: true })}
+              {relative(sticker.createdAt)}
             </span>
           </div>
         </div>

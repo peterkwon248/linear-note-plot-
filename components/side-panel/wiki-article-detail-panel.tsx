@@ -4,6 +4,7 @@ import { useMemo, useState } from "react"
 import { usePlotStore } from "@/lib/store"
 import { getPlannedDateForWiki } from "@/lib/store/hook-selectors"
 import { format, formatDistanceToNow } from "date-fns"
+import { useRelativeTime } from "@/lib/i18n-date"
 import {
   Calendar as CalendarBlank,
   FileText,
@@ -55,6 +56,7 @@ function InspectorSection({
 }
 
 export function WikiArticleDetailPanel({ article }: { article: WikiArticle | null }) {
+  const relative = useRelativeTime()
   const wikiCategories = usePlotStore((s) => s.wikiCategories)
   const toggleWikiArticlePin = usePlotStore((s) => s.toggleWikiArticlePin)
   const tags = usePlotStore((s) => s.tags)
@@ -442,7 +444,7 @@ export function WikiArticleDetailPanel({ article }: { article: WikiArticle | nul
           <div className="flex items-center justify-between">
             <span className="text-note text-muted-foreground">Updated</span>
             <span className="text-note text-foreground">
-              {formatDistanceToNow(new Date(article.updatedAt), { addSuffix: true })}
+              {relative(article.updatedAt)}
             </span>
           </div>
         </div>

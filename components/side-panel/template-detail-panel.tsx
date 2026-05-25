@@ -33,6 +33,7 @@
 
 import { useMemo } from "react"
 import { format, formatDistanceToNow } from "date-fns"
+import { useRelativeTime } from "@/lib/i18n-date"
 import { usePlotStore } from "@/lib/store"
 import { countPlaceholders } from "@/lib/store/slices/templates"
 import { extractOutlineFromContentJson, type OutlineResult } from "@/lib/anchor-utils"
@@ -74,6 +75,7 @@ function InspectorSection({
 }
 
 export function TemplateDetailPanel({ template }: { template: NoteTemplate }) {
+  const relative = useRelativeTime()
   const deleteTemplate = usePlotStore((s) => s.deleteTemplate)
   const toggleTemplatePin = usePlotStore((s) => s.toggleTemplatePin)
   const createNoteFromTemplate = usePlotStore((s) => s.createNoteFromTemplate)
@@ -144,7 +146,7 @@ export function TemplateDetailPanel({ template }: { template: NoteTemplate }) {
           <div className="flex items-center justify-between">
             <span className="text-note text-muted-foreground">Updated</span>
             <span className="text-note text-foreground" title={template.updatedAt}>
-              {formatDistanceToNow(new Date(template.updatedAt), { addSuffix: true })}
+              {relative(template.updatedAt)}
             </span>
           </div>
         </div>

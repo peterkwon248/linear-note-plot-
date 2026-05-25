@@ -3,6 +3,7 @@
 import { useState, useCallback, useMemo } from "react"
 import { usePlotStore } from "@/lib/store"
 import { format, formatDistanceToNow } from "date-fns"
+import { useRelativeTime } from "@/lib/i18n-date"
 import {
   Calendar as CalendarBlank,
   FileText,
@@ -50,6 +51,7 @@ function InspectorSection({
 }
 
 export function ReferenceDetailPanel({ referenceId }: { referenceId: string }) {
+  const relative = useRelativeTime()
   const reference = usePlotStore((s) => s.references[referenceId])
   const updateReference = usePlotStore((s) => s.updateReference)
   const deleteReference = usePlotStore((s) => s.deleteReference)
@@ -381,7 +383,7 @@ export function ReferenceDetailPanel({ referenceId }: { referenceId: string }) {
           <div className="flex items-center justify-between">
             <span className="text-note text-muted-foreground">Updated</span>
             <span className="text-note text-foreground">
-              {formatDistanceToNow(new Date(reference.updatedAt), { addSuffix: true })}
+              {relative(reference.updatedAt)}
             </span>
           </div>
         </div>
