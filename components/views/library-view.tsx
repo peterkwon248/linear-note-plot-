@@ -841,7 +841,7 @@ function LibraryOverview() {
         }}
       />
       <div className="flex-1 overflow-y-auto">
-        <div className="mx-auto max-w-5xl px-6 py-6">
+        <div className="px-6 py-6">
           {isEmpty ? (
             <div className="flex flex-col items-center gap-3 py-20 text-center">
               <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-secondary/60">

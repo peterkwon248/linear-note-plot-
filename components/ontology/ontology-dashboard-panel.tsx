@@ -78,7 +78,7 @@ export function OntologyDashboardPanel() {
     m.totalNotes > 0 ? (m.totalEdges / m.totalNotes).toFixed(2) : "0"
 
   return (
-    <div className="flex flex-col gap-6 p-6 max-w-4xl mx-auto">
+    <div className="flex flex-col gap-6 px-6 py-6">
       <header>
         <h2 className="text-xl font-semibold">{t("ontology.dashboard.title")}</h2>
         <p className="text-note text-muted-foreground mt-1">
