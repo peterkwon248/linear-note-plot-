@@ -1,4 +1,4 @@
-import type { Note, NoteBody, Folder, Tag, Label, Sticker, EntityRef, NoteTemplate, WikiTemplate, ActiveView, EntityEvent, Thread, AutopilotRule, AutopilotLogEntry, Relation, RelationType, Attachment, CoOccurrence, RelationSuggestion, WikiClusterSuggestion, WikiInfoboxEntry, WikiCollectionItem, SavedView, WikiArticle, WikiBlock, WikiCategory, Reference, GlobalBookmark, Comment, CommentAnchor, Book, AutoSource, AutoSourceKind, UserInfoboxPreset, Hook, HookPolicy } from "../types"
+import type { Note, NoteBody, Folder, Tag, Label, Sticker, EntityRef, NoteTemplate, WikiTemplate, ActiveView, EntityEvent, Thread, AutopilotRule, AutopilotLogEntry, Relation, RelationType, Attachment, CoOccurrence, RelationSuggestion, WikiClusterSuggestion, WikiInfoboxEntry, WikiCollectionItem, SavedView, CustomQuickFilter, WikiArticle, WikiBlock, WikiCategory, Reference, GlobalBookmark, Comment, CommentAnchor, Book, AutoSource, AutoSourceKind, UserInfoboxPreset, Hook, HookPolicy } from "../types"
 import type { InboxDismissed, InboxSnoozed, InboxItemKind } from "./slices/inbox"
 import type { SRSRating } from "@/lib/srs"
 import type { ViewState, ViewContextKey } from "../view-engine/types"
@@ -189,6 +189,13 @@ export interface PlotState {
 
   // ── Saved Views ──
   savedViews: SavedView[]
+
+  // ── Custom Quick Filters (user-defined chip bar entries) ──
+  // 2026-05-25: Plot quick filter feature — sits next to the hardcoded
+  // `quickFilters` in view-configs.tsx. Default (hardcoded) + custom
+  // (per-view, user-defined) are merged in ViewHeader. Scoped per
+  // ViewContextKey so a Notes-flavored chip never leaks into Books.
+  customQuickFilters: CustomQuickFilter[]
 
   // ── Wiki Categories (DAG) ──
   wikiCategories: WikiCategory[]
@@ -423,6 +430,11 @@ export interface PlotState {
   createSavedView: (name: string, viewState?: Partial<SavedView['viewState']>, space?: SavedView['space']) => string
   updateSavedView: (id: string, updates: Partial<SavedView>) => void
   deleteSavedView: (id: string) => void
+
+  // ── Custom Quick Filters ──
+  addCustomQuickFilter: (input: Omit<CustomQuickFilter, "id" | "createdAt">) => string
+  updateCustomQuickFilter: (id: string, patch: Partial<Omit<CustomQuickFilter, "id" | "createdAt">>) => void
+  removeCustomQuickFilter: (id: string) => void
 
   // ── Wiki Categories (DAG) ──
   createWikiCategory: (name: string, parentIds?: string[]) => string | null

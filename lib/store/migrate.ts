@@ -2403,5 +2403,12 @@ export function migrate(persistedState: unknown): PlotState {
     }
   }
 
+  // v147 → v148: introduce `customQuickFilters` slice (user-defined chip bar
+  // entries). Idempotent — adds an empty array when absent. No data
+  // transformation needed; brand-new feature, no legacy fields to strip.
+  if (!Array.isArray(state.customQuickFilters)) {
+    state.customQuickFilters = []
+  }
+
   return state as unknown as PlotState
 }

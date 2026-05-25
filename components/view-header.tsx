@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, type ReactNode } from "react"
+import { useState, useEffect, useMemo, type ReactNode } from "react"
 import {
   Search as MagnifyingGlass,
   X as PhX,
@@ -28,6 +28,7 @@ import { usePane } from "@/components/workspace/pane-context"
 import { usePlotStore } from "@/lib/store"
 import { useT } from "@/lib/i18n"
 import { Save as FloppyDisk } from "lucide-react"
+import { QuickFilterCreateDialog } from "@/components/quick-filter/quick-filter-create-dialog"
 
 /* ── Header Icon Button ── */
 
@@ -137,6 +138,17 @@ interface ViewHeaderProps {
   activeFilters?: Array<{ field: string; operator: string; value: string }>
   /** Receive the new filter list after a quick-chip toggle. */
   onFiltersChange?: (filters: Array<{ field: string; operator: string; value: string }>) => void
+
+  /** View scope for user-defined custom quick filters. When set, ViewHeader
+   *  merges hardcoded `quickFilters` with `customQuickFilters` filtered to
+   *  this context and renders a "+" button + create dialog at the end of
+   *  the chip bar. Omit to disable the create UI entirely. */
+  viewContext?: string
+  /** Lookup lists passed through to the chip preview inside the create
+   *  dialog so filter values render as human-readable chips. */
+  folders?: import("@/lib/types").Folder[]
+  tags?: import("@/lib/types").Tag[]
+  labels?: import("@/lib/types").Label[]
 }
 
 export function ViewHeader({
@@ -166,9 +178,29 @@ export function ViewHeader({
   quickFilters,
   activeFilters,
   onFiltersChange,
+  viewContext,
+  folders,
+  tags,
+  labels,
 }: ViewHeaderProps) {
   const t = useT()
   const pane = usePane()
+
+  // Custom quick filters (user-defined chip bar entries) — merged in below
+  // the hardcoded `quickFilters` when a `viewContext` is supplied. Pull
+  // the full array from the store and memo-filter outside the selector to
+  // keep referential equality stable (Zustand uses === for selector
+  // results — a new array per render would loop the server snapshot).
+  const allCustomQuickFilters = usePlotStore((s) => s.customQuickFilters)
+  const customQuickFilters = useMemo(
+    () =>
+      viewContext
+        ? allCustomQuickFilters.filter((qf) => qf.viewContext === viewContext)
+        : [],
+    [allCustomQuickFilters, viewContext],
+  )
+  const removeCustomQuickFilter = usePlotStore((s) => s.removeCustomQuickFilter)
+  const [createDialogOpen, setCreateDialogOpen] = useState(false)
 
   // Side panel toggle — auto-wired to the store unless explicitly overridden.
   // Default is ON (showDetailPanel === undefined ↦ true) so every entity
@@ -423,12 +455,13 @@ export function ViewHeader({
       </div>
 
       {/* Quick filter chips (PR-Q3) — 1-click presets from view-configs
-          quickFilters. Mode-agnostic so the same chip surface works in
-          list / board / grid / timeline. Skipped entirely when no presets
-          are defined for this entity (entity caller passes [] or omits). */}
-      {quickFilters && quickFilters.length > 0 && (
+          quickFilters + user-defined customQuickFilters (2026-05-25). Same
+          chip surface works in list / board / grid / timeline. Default
+          chips first, user-defined after, then a trailing "+" button when
+          `viewContext` is supplied. */}
+      {((quickFilters && quickFilters.length > 0) || customQuickFilters.length > 0 || viewContext) && (
         <div className="flex shrink-0 items-center gap-1.5 overflow-x-auto border-b border-border/60 px-4 py-1.5">
-          {quickFilters.map((qf, i) => {
+          {quickFilters?.map((qf, i) => {
             const filters = activeFilters ?? []
             const active = qf.rules.every((r) =>
               filters.some(
@@ -476,11 +509,101 @@ export function ViewHeader({
               </button>
             )
           })}
+
+          {/* User-defined quick filters (scoped to viewContext) */}
+          {customQuickFilters.map((qf) => {
+            const filters = activeFilters ?? []
+            const active = qf.rules.every((r) =>
+              filters.some(
+                (f) => f.field === r.field && f.operator === r.operator && f.value === r.value,
+              ),
+            )
+            const onClick = () => {
+              if (!onFiltersChange) return
+              if (active) {
+                onFiltersChange(
+                  filters.filter(
+                    (f) =>
+                      !qf.rules.some(
+                        (r) => r.field === f.field && r.operator === f.operator && r.value === f.value,
+                      ),
+                  ),
+                )
+              } else {
+                const merged = [...filters]
+                for (const r of qf.rules) {
+                  if (
+                    !merged.some(
+                      (f) => f.field === r.field && f.operator === r.operator && f.value === r.value,
+                    )
+                  ) {
+                    merged.push(r)
+                  }
+                }
+                onFiltersChange(merged)
+              }
+            }
+            return (
+              <span
+                key={qf.id}
+                className={
+                  "group inline-flex shrink-0 items-stretch overflow-hidden rounded-full border text-2xs font-medium transition-colors " +
+                  (active
+                    ? "border-accent/40 bg-accent/10 text-accent"
+                    : "border-border/70 bg-secondary/30 text-muted-foreground hover:border-border hover:text-foreground")
+                }
+              >
+                <button
+                  type="button"
+                  onClick={onClick}
+                  title={qf.desc}
+                  className="px-2.5 py-0.5"
+                >
+                  {qf.label}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => removeCustomQuickFilter(qf.id)}
+                  title={t("filter.quick.delete")}
+                  className="invisible flex w-5 items-center justify-center text-current/70 transition-colors hover:text-destructive group-hover:visible"
+                >
+                  <PhX size={10} strokeWidth={2.5} />
+                </button>
+              </span>
+            )
+          })}
+
+          {/* "+" — open create dialog. Only rendered when a viewContext is
+              passed by the caller (otherwise we have no scope to attach the
+              new chip to). */}
+          {viewContext && (
+            <button
+              type="button"
+              onClick={() => setCreateDialogOpen(true)}
+              title={t("filter.quick.add")}
+              className="flex h-[22px] w-[22px] shrink-0 items-center justify-center rounded-full border border-dashed border-border/70 text-muted-foreground transition-colors hover:border-accent/60 hover:text-accent"
+            >
+              <Plus size={12} strokeWidth={2.5} />
+            </button>
+          )}
         </div>
       )}
 
       {/* Children slot (filter chips, tabs, etc.) */}
       {children}
+
+      {/* Custom quick filter create dialog (promote current filter rules) */}
+      {viewContext && (
+        <QuickFilterCreateDialog
+          open={createDialogOpen}
+          onOpenChange={setCreateDialogOpen}
+          viewContext={viewContext}
+          activeFilters={activeFilters ?? []}
+          folders={folders}
+          tags={tags}
+          labels={labels}
+        />
+      )}
     </>
   )
 }

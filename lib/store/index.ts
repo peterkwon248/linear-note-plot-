@@ -26,6 +26,7 @@ import { createHooksSlice } from "./slices/hooks"
 import { createOntologySlice } from "./slices/ontology"
 import { createWikiCollectionsSlice } from "./slices/wiki-collections"
 import { createSavedViewsSlice } from "./slices/saved-views"
+import { createCustomQuickFiltersSlice } from "./slices/custom-quick-filters"
 import { createWikiArticlesSlice } from "./slices/wiki-articles"
 import { createWikiCategoriesSlice } from "./slices/wiki-categories"
 import { createWikiTemplatesSlice } from "./slices/wiki-templates"
@@ -89,6 +90,7 @@ export const usePlotStore = create<PlotState>()(
         ontologyPositions: {} as Record<string, { x: number; y: number }>,
         wikiCollections: {} as Record<string, import("../types").WikiCollectionItem[]>,
         savedViews: [] as import("../types").SavedView[],
+        customQuickFilters: [] as import("../types").CustomQuickFilter[],
         wikiCategories: SEED_WIKI_CATEGORIES,
         wikiArticles: SEED_WIKI_ARTICLES,
         references: {} as Record<string, import("../types").Reference>,
@@ -136,6 +138,7 @@ export const usePlotStore = create<PlotState>()(
         ...createOntologySlice(set, get, appendEvent),
         ...createWikiCollectionsSlice(set, get),
         ...createSavedViewsSlice(set),
+        ...createCustomQuickFiltersSlice(set),
         ...createWikiCategoriesSlice(set, get),
         ...createWikiArticlesSlice(set, get, appendEvent),
         ...createWikiTemplatesSlice(set, get, appendEvent),
@@ -264,7 +267,7 @@ export const usePlotStore = create<PlotState>()(
     },
     {
       name: "plot-store",
-      version: 147,
+      version: 148,
       storage: createIDBStorage<PlotState>(),
       partialize: (state) => {
         // eslint-disable-next-line @typescript-eslint/no-unused-vars

@@ -520,6 +520,28 @@ export interface WikiArticle {
 }
 
 /** Saved custom view — user-defined filter/sort/grouping combination */
+/**
+ * CustomQuickFilter — user-defined chip rendered alongside hardcoded
+ * `quickFilters` from view-configs.tsx. Scoped per ViewContextKey: a Notes
+ * chip stays in Notes, a Wiki chip stays in Wiki. ViewHeader merges
+ * default + user-defined into one chip bar (default first, user-defined
+ * after). Created via the "+" button at the end of the chip bar — the
+ * dialog pre-fills `rules` from the user's currently active filters.
+ *
+ * 2026-05-25 — added in support of user-driven filter promotion. Lives in
+ * its own slice (no overlap with SavedView, which captures the *entire*
+ * viewState).
+ */
+export interface CustomQuickFilter {
+  id: string
+  /** Which view this chip is scoped to (e.g. "all", "wiki", "books"). */
+  viewContext: string
+  label: string
+  desc?: string
+  rules: Array<{ field: string; operator: string; value: string }>
+  createdAt: string
+}
+
 export interface SavedView {
   id: string
   name: string
