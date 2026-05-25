@@ -117,10 +117,18 @@ export function useGlobalShortcuts() {
       }
 
       // ── 2. Ctrl/Cmd+K ──────────────────────────────────────
+      // Path A (2026-05-25): focus the global search input (GlobalTopBar's
+      // real <input>). The input's onFocus handler auto-navigates to /search
+      // when fired from another page, so we don't need to push the route
+      // explicitly. select() lets the user immediately overwrite any prior
+      // query by typing.
       if (e.key === "k" && (e.metaKey || e.ctrlKey)) {
         e.preventDefault()
-        setActiveRoute("/search")
-        router.push("/search")
+        const input = document.getElementById("global-search-input") as HTMLInputElement | null
+        if (input) {
+          input.focus()
+          input.select()
+        }
         return
       }
 
