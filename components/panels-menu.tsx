@@ -96,7 +96,7 @@ export function PanelsMenu() {
   )
 }
 
-function PanelToggle({
+export function PanelToggle({
   label,
   panel,
   checked,
