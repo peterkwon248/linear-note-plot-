@@ -13,28 +13,33 @@ import { usePane } from "@/components/workspace/pane-context"
 import { useActiveRoute, useActiveFolderId, useActiveTagId, useActiveLabelId, useActiveViewId } from "@/lib/table-route"
 import type { ViewContextKey } from "@/lib/view-engine/types"
 import type { Note } from "@/lib/types"
+import { useT } from "@/lib/i18n"
 
 /* ── Route → View Config map ─────────────────────────── */
 
 interface ViewConfig {
   context?: ViewContextKey
   title?: string
+  /** i18n dictionary key — resolved at render time via useT().
+   *  When present, the consumer should prefer this over `title`. */
+  titleKey?: string
   hideCreateButton?: boolean
   createNoteOverrides?: Partial<Note>
 }
 
 const TABLE_VIEW_MAP: Record<string, ViewConfig> = {
   "/notes": {},
-  "/stone": { context: "stone", title: "Stone" },
-  "/brick": { context: "brick", title: "Brick" },
-  "/keystone": { context: "keystone", title: "Block" },
-  "/pinned": { context: "pinned", title: "Pinned", hideCreateButton: true },
-  "/trash": { context: "trash", title: "Trash", hideCreateButton: true },
+  "/stone": { context: "stone", titleKey: "status.stone" },
+  "/brick": { context: "brick", titleKey: "status.brick" },
+  "/keystone": { context: "keystone", titleKey: "status.block" },
+  "/pinned": { context: "pinned", titleKey: "sidebar.section.pinned", hideCreateButton: true },
+  "/trash": { context: "trash", titleKey: "routes.title.trash", hideCreateButton: true },
 }
 
 /* ── NotesTableView (always mounted in layout) ───────── */
 
 export function NotesTableView() {
+  const t = useT()
   const tableRoute = useActiveRoute()
   const activeFolderId = useActiveFolderId()
   const activeTagId = useActiveTagId()
@@ -58,9 +63,13 @@ export function NotesTableView() {
     if (activeFolderId) return { ...baseConfig, context: "folder" as ViewContextKey }
     if (activeTagId) return { ...baseConfig, context: "tag" as ViewContextKey }
     if (activeLabelId) return { ...baseConfig, context: "label" as ViewContextKey }
-    if (activeViewId) return { ...baseConfig, context: "savedView" as ViewContextKey, title: activeView?.name ?? "View" }
+    if (activeViewId) return { ...baseConfig, context: "savedView" as ViewContextKey, title: activeView?.name ?? t("routes.title.view_fallback") }
     return baseConfig
   })()
+
+  // Resolve titleKey → translated string. Falls back to `config.title` (used
+  // by savedView branch where the user-authored name should be shown as-is).
+  const resolvedTitle = config.titleKey ? t(config.titleKey) : config.title
 
   // Read viewMode: check per-context viewState first, fallback to settings
   const contextKey = (config.context ?? "all") as ViewContextKey
@@ -118,7 +127,7 @@ export function NotesTableView() {
       <div className="flex flex-1 overflow-hidden">
         <NotesTimelineShell
           context={contextKey}
-          title={config.title}
+          title={resolvedTitle}
           hideCreateButton={config.hideCreateButton}
           createNoteOverrides={config.createNoteOverrides}
           folderId={activeFolderId ?? undefined}
@@ -142,7 +151,7 @@ export function NotesTableView() {
       <div className="flex flex-1 overflow-hidden">
         <NotesGridShell
           context={contextKey}
-          title={config.title}
+          title={resolvedTitle}
           hideCreateButton={config.hideCreateButton}
           createNoteOverrides={config.createNoteOverrides}
           folderId={activeFolderId ?? undefined}
@@ -163,7 +172,7 @@ export function NotesTableView() {
     <div className="u-mode flex flex-1 overflow-hidden" data-mode={modeAttr}>
       <ViewComponent
         context={config.context}
-        title={config.title}
+        title={resolvedTitle}
         hideCreateButton={config.hideCreateButton}
         createNoteOverrides={config.createNoteOverrides}
         folderId={activeFolderId ?? undefined}
