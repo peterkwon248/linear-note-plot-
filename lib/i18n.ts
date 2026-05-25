@@ -607,6 +607,9 @@ const EN = {
   "books.toast.pinned": "Pinned book",
   "books.toast.unpinned": "Unpinned book",
   "books.untitled": "Untitled book",
+  "wiki.toast.note_added": "Note added to wiki article",
+  "wiki.toast.article_created": "Wiki article \"{title}\" created",
+  "wiki.toast.trashed": "Moved to trash",
 
   // Side panel inspector sections (Detail tab content)
   "sidepanel.inspector.dates": "Dates",
@@ -1293,6 +1296,9 @@ const KO: Partial<Record<DictKey, string>> = {
   "books.toast.pinned": "책 고정",
   "books.toast.unpinned": "책 고정 해제",
   "books.untitled": "제목 없는 책",
+  "wiki.toast.note_added": "노트를 위키 글에 추가",
+  "wiki.toast.article_created": "\"{title}\" 위키 글 만듦",
+  "wiki.toast.trashed": "휴지통으로 이동",
 
   // Side panel inspector sections
   "sidepanel.inspector.dates": "날짜",

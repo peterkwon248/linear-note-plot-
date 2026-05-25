@@ -543,7 +543,7 @@ export function WikiView() {
   const handleImportIntoExisting = useCallback((targetArticleId: string) => {
     if (!importSelectedNoteId) return
     addWikiBlock(targetArticleId, { type: "note-ref", noteId: importSelectedNoteId })
-    toast.success("Note added to wiki article")
+    toast.success(t("wiki.toast.note_added"))
     resetImport()
     setSelectedWikiArticleId(targetArticleId)
   }, [importSelectedNoteId, addWikiBlock, resetImport])
@@ -557,7 +557,7 @@ export function WikiView() {
       { id: crypto.randomUUID(), type: "section" as const, title: "See Also", level: 2 },
     ]
     const articleId = createWikiArticle({ title, blocks })
-    toast.success(`Wiki article "${title}" created`)
+    toast.success(t("wiki.toast.article_created").replace("{title}", title))
     resetImport()
     if (articleId) setSelectedWikiArticleId(articleId)
   }, [importSelectedNoteId, createWikiArticle, resetImport])
@@ -573,7 +573,7 @@ export function WikiView() {
       { id: crypto.randomUUID(), type: "section" as const, title: "See Also", level: 2 },
     ]
     const articleId = createWikiArticle({ title, blocks })
-    toast.success(`Wiki article "${title}" created`)
+    toast.success(t("wiki.toast.article_created").replace("{title}", title))
     resetImport()
     if (articleId) setSelectedWikiArticleId(articleId)
   }, [importSelectedNoteId, notes, createWikiArticle, resetImport])
@@ -937,7 +937,7 @@ export function WikiView() {
               trashWikiArticle(selectedWikiArticleId)
               setSelectedWikiArticleId(null)
               setIsEditingWikiArticle(false)
-              toast.success("Moved to trash")
+              toast.success(t("wiki.toast.trashed"))
             }}
           />
         )}
@@ -1302,7 +1302,7 @@ export function WikiView() {
               }}
               onDeleteArticle={(id) => {
                 trashWikiArticle(id)
-                toast.success("Moved to trash")
+                toast.success(t("wiki.toast.trashed"))
               }}
               onShowConnectedArticle={(id, direction) => {
                 const existingFilters = wikiViewState.filters ?? []
@@ -1332,7 +1332,7 @@ export function WikiView() {
               }}
               onDeleteArticle={(id) => {
                 trashWikiArticle(id)
-                toast.success("Moved to trash")
+                toast.success(t("wiki.toast.trashed"))
               }}
               onShowConnectedArticle={(id, direction) => {
                 // Same in-place backlink-filter pattern as Notes view.
@@ -1348,10 +1348,14 @@ export function WikiView() {
                 })
                 const article = wikiArticles.find((a) => a.id === id)
                 const dirLabel =
-                  direction === "in" ? "backlinks" :
-                  direction === "out" ? "links out" :
-                  "both directions"
-                toast(`Filtering: connected to "${article?.title ?? "article"}" (${dirLabel})`)
+                  direction === "in" ? t("notes.connection.backlinks") :
+                  direction === "out" ? t("notes.connection.links_out") :
+                  t("notes.connection.both_directions")
+                toast(
+                  t("notes.toast.filtering_connected")
+                    .replace("{title}", article?.title ?? t("common.untitled"))
+                    .replace("{dir}", dirLabel),
+                )
               }}
               redLinks={redLinks}
               onCreateFromRedLink={handleCreateFromRedLink}
