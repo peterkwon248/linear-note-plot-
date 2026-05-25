@@ -99,12 +99,8 @@ export function ActivityBar() {
       style={{ width: "var(--a-actbar-w, 72px)" }}
       data-actbar="open"
     >
-      {/* Brand mark — gradient badge with workspace initial (mockup pattern, plot-v3-a-*.jsx) */}
-      <div className="a-actbar__head">
-        <div className="a-brand__mark">P</div>
-      </div>
-
-      {/* Sidebar toggle removed — PanelsMenu (hamburger) handles all panel toggles. */}
+      {/* Brand mark moved to GlobalTopBar as UserAvatar (chrome single source, #119).
+       * Activity bar is now a pure space switcher — no chrome / no identity marker. */}
 
       {/* Tier 1 — primary spaces */}
       {SPACES.map(({ id, labelKey, icon: Icon, shortcut }) => {

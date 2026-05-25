@@ -33,6 +33,7 @@ import { useSettingsStore } from "@/lib/settings-store"
 import { useT } from "@/lib/i18n"
 import { routeGoBack, routeGoForward } from "@/lib/table-route"
 import { PanelsMenu } from "@/components/panels-menu"
+import { UserAvatar } from "@/components/user-avatar"
 
 export function GlobalTopBar() {
   const t = useT()
@@ -93,7 +94,14 @@ export function GlobalTopBar() {
      * Group D (refine): visual dividers split the bar into three clusters
      * (PanelsMenu | nav+clock | search | right tools). */
     <header className="flex h-12 shrink-0 items-center gap-1.5 border-b border-border bg-background px-4">
-      {/* ── Left cluster: panels menu + clock/back/forward ─────────────── */}
+      {/* ── Left cluster: workspace identity → chrome tools → navigation ─
+       *  Avatar = workspace anchor (chunk 2, moved from activity bar).
+       *  Divider | separates identity from chrome tools (PanelsMenu).
+       *  Divider | again separates chrome tools from navigation cluster. */}
+      <UserAvatar />
+
+      <div className="mx-2 h-5 w-px shrink-0 bg-border" aria-hidden="true" />
+
       <PanelsMenu />
 
       <div className="mx-2 h-5 w-px shrink-0 bg-border" aria-hidden="true" />
