@@ -254,6 +254,7 @@ function BooksGrid() {
         quickFilters={BOOKS_VIEW_CONFIG.quickFilters as any}
         activeFilters={viewState.filters as any}
         onFiltersChange={(filters) => updateViewState({ filters: filters as any })}
+        viewContext="books"
         saveViewMode={saveViewMode}
         onSaveView={onSaveView}
       />
