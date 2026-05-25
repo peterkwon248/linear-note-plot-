@@ -24,6 +24,7 @@
 
 import { useMemo } from "react"
 import { format, formatDistanceToNow } from "date-fns"
+import { useRelativeTime } from "@/lib/i18n-date"
 import { usePlotStore } from "@/lib/store"
 import { resolveBookItems, type ResolvedBookItem } from "@/lib/books/resolver"
 import { getBookKind, type BookKind } from "@/lib/view-engine/use-books-view"
@@ -98,6 +99,7 @@ const SOURCE_KIND_ICON: Record<AutoSourceKind, React.ComponentType<{ size?: numb
 }
 
 export function BookDetailPanel({ book }: { book: Book }) {
+  const relative = useRelativeTime()
   const updateBook = usePlotStore((s) => s.updateBook)
   const deleteBook = usePlotStore((s) => s.deleteBook)
   const notes = usePlotStore((s) => s.notes)
@@ -229,7 +231,7 @@ export function BookDetailPanel({ book }: { book: Book }) {
           <div className="flex items-center justify-between">
             <span className="text-note text-muted-foreground">Updated</span>
             <span className="text-note text-foreground" title={book.updatedAt}>
-              {formatDistanceToNow(new Date(book.updatedAt), { addSuffix: true })}
+              {relative(book.updatedAt)}
             </span>
           </div>
         </div>
@@ -393,7 +395,7 @@ export function BookDetailPanel({ book }: { book: Book }) {
                   className="text-note text-foreground"
                   title={book.lastReadAt ?? undefined}
                 >
-                  {formatDistanceToNow(new Date(book.lastReadAt), { addSuffix: true })}
+                  {relative(book.lastReadAt)}
                 </span>
               </div>
               {/* Resume nudge — actual navigation is handled by the

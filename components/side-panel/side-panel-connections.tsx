@@ -3,6 +3,7 @@
 import { useMemo, useState, useCallback, useEffect, useRef } from "react"
 import { useRouter } from "next/navigation"
 import { formatDistanceToNow } from "date-fns"
+import { useRelativeTime } from "@/lib/i18n-date"
 import { usePlotStore } from "@/lib/store"
 import { setActiveRoute } from "@/lib/table-route"
 import {
@@ -1370,6 +1371,7 @@ function StatusRow({
 // `created` event for entity.kind="note" with `meta.templateId`).
 
 function TemplateConnections() {
+  const relative = useRelativeTime()
   const entity = useSidePanelEntity()
   const template = entity.type === "template" ? entity.template : null
   const notes = usePlotStore((s) => s.notes)
@@ -1434,7 +1436,7 @@ function TemplateConnections() {
                 <FileText size={12} className="shrink-0 text-muted-foreground" strokeWidth={2} />
                 <span className="truncate flex-1">{n.title}</span>
                 <span className="text-2xs text-muted-foreground/70 shrink-0">
-                  {formatDistanceToNow(new Date(n.at), { addSuffix: true })}
+                  {relative(n.at)}
                 </span>
               </button>
             ))}

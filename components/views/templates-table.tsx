@@ -38,6 +38,7 @@ import {
   Minus as PhMinus,
 } from "lucide-react"
 import { format, formatDistanceToNow } from "date-fns"
+import { useRelativeTime } from "@/lib/i18n-date"
 import { cn } from "@/lib/utils"
 import type { TemplateGroup } from "@/lib/view-engine/use-templates-view"
 import type { GroupBy } from "@/lib/view-engine/types"
@@ -338,6 +339,7 @@ function TemplateRow({
   onDelete: (id: string) => void
   onTogglePin: (id: string) => void
 }) {
+  const relative = useRelativeTime()
   const renderCell = (col: ColumnDef): ReactNode => {
     switch (col.id) {
       case "title":
@@ -362,7 +364,7 @@ function TemplateRow({
             className={cn("text-note text-muted-foreground", col.width, col.align)}
             title={tmpl.updatedAt}
           >
-            {formatDistanceToNow(new Date(tmpl.updatedAt), { addSuffix: false })}
+            {relative(tmpl.updatedAt, { addSuffix: false })}
           </span>
         )
 

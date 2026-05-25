@@ -3,6 +3,7 @@
 import { useState, useMemo, useCallback, useEffect } from "react"
 import { usePlotStore } from "@/lib/store"
 import { formatDistanceToNow } from "date-fns"
+import { useRelativeTime } from "@/lib/i18n-date"
 import {
   CommandDialog,
   CommandInput,
@@ -72,6 +73,7 @@ export function WikiPickerDialog({
   onSelect,
   onSelectMulti,
 }: WikiPickerDialogProps & { multiSelect?: boolean; onSelect?: (articleId: string) => void; onSelectMulti?: (ids: string[]) => void }) {
+  const relative = useRelativeTime()
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
   const wikiArticles = usePlotStore((s) => s.wikiArticles)
   const wikiCategories = usePlotStore((s) => s.wikiCategories)
@@ -365,7 +367,7 @@ export function WikiPickerDialog({
                     </span>
                   )}
                   <span className="text-2xs tabular-nums text-muted-foreground/70">
-                    {formatDistanceToNow(new Date(article.updatedAt), { addSuffix: true })}
+                    {relative(article.updatedAt)}
                   </span>
                 </div>
               </CommandItem>
