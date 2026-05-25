@@ -25,12 +25,15 @@ import {
   Search as MagnifyingGlass,
   Moon as IconMoon,
   Sun as IconSun,
+  Settings as IconGear,
+  Trash2 as IconTrash,
   FileText as IconDoc,
 } from "lucide-react"
 import { usePlotStore } from "@/lib/store"
 import { useSettingsStore } from "@/lib/settings-store"
 import { useT } from "@/lib/i18n"
 import { routeGoBack, routeGoForward, setActiveRoute } from "@/lib/table-route"
+import { PanelsMenu } from "@/components/panels-menu"
 import { UserAvatar } from "@/components/user-avatar"
 
 export function GlobalTopBar() {
@@ -93,11 +96,16 @@ export function GlobalTopBar() {
      * Group D (refine): visual dividers split the bar into three clusters
      * (PanelsMenu | nav+clock | search | right tools). */
     <header className="flex h-12 shrink-0 items-center gap-1.5 border-b border-border bg-background px-4">
-      {/* ── Left cluster: workspace identity → navigation ────────────────
-       *  Avatar = workspace anchor + chrome single entry point (chunk 3).
-       *  Click avatar → dropdown with panel toggles + settings + trash.
-       *  Divider | separates identity from navigation (clock/back/forward). */}
+      {/* ── Left cluster: workspace identity → panels menu → navigation ──
+       *  Avatar = workspace identity anchor (visual only, no dropdown).
+       *  PanelsMenu (hamburger) = panel toggles (Activity bar / Sidebar / Detail).
+       *  Sits to the LEFT of the recently-viewed clock (user feedback,
+       *  2026-05-25 — chunk 3 dropdown revert). */}
       <UserAvatar />
+
+      <div className="mx-2 h-5 w-px shrink-0 bg-border" aria-hidden="true" />
+
+      <PanelsMenu />
 
       <div className="mx-2 h-5 w-px shrink-0 bg-border" aria-hidden="true" />
 
@@ -210,10 +218,9 @@ export function GlobalTopBar() {
        *  three-region split (nav | search | tools) explicit. */}
       <div className="mx-2 h-5 w-px shrink-0 bg-border" aria-hidden="true" />
 
-      {/* ── Right cluster: theme only ───────────────────────────────────
-       *  Chunk 3 (2026-05-25): settings + trash moved into UserAvatar
-       *  dropdown. Theme stays in the right cluster — frequent 1-click
-       *  action where dropdown overhead is unwarranted. */}
+      {/* ── Right cluster: theme + settings + trash (user feedback 2026-05-25)
+       *  Chunk 3 revert — settings/trash moved back from UserAvatar dropdown
+       *  to right cluster (user prefers grouped chrome icons over dropdown). */}
       <button
         onClick={toggleTheme}
         className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground/70 transition-colors hover:bg-hover-bg hover:text-foreground"
@@ -222,6 +229,22 @@ export function GlobalTopBar() {
       >
         {theme === "dark" ? <IconSun size={14} strokeWidth={2} /> : <IconMoon size={14} strokeWidth={2} />}
       </button>
+      <Link
+        href="/settings"
+        className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground/70 transition-colors hover:bg-hover-bg hover:text-foreground"
+        aria-label={t("nav.settings")}
+        title={t("nav.settings")}
+      >
+        <IconGear size={14} strokeWidth={2} />
+      </Link>
+      <Link
+        href="/trash"
+        className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground/70 transition-colors hover:bg-hover-bg hover:text-foreground"
+        aria-label={t("nav.trash")}
+        title={t("nav.trash")}
+      >
+        <IconTrash size={14} strokeWidth={2} />
+      </Link>
     </header>
   )
 }
