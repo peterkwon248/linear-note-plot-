@@ -199,8 +199,8 @@ export function formatFilterChip(
       return rule.value
     }
     if (rule.field === "wikiRegistered") {
-      if (rule.value === "true") return t ? t("filter.value.wiki.in") : "Has wiki article"
-      if (rule.value === "false") return t ? t("filter.value.wiki.not_in") : "No wiki article"
+      if (rule.value === "true") return t ? t("filter.value.wiki.in") : "In a wiki article"
+      if (rule.value === "false") return t ? t("filter.value.wiki.not_in") : "Not in any wiki article"
       return rule.value
     }
     if (rule.field === "connectedTo") {
