@@ -438,6 +438,7 @@ function LibraryFloatingActionBar({
   references: Record<string, Reference>
   onClearSelection: () => void
 }) {
+  const t = useT()
   const deleteReference = usePlotStore((s) => s.deleteReference)
   const updateReference = usePlotStore((s) => s.updateReference)
   const [fieldDialog, setFieldDialog] = useState<{ open: boolean; key: string; value: string }>({ open: false, key: "", value: "" })
@@ -448,7 +449,7 @@ function LibraryFloatingActionBar({
   const handleBulkDelete = () => {
     selectedIds.forEach((id) => deleteReference(id))
     onClearSelection()
-    toast.success(`Deleted ${count} reference${count > 1 ? "s" : ""}`)
+    toast.success(t("library.toast.references_deleted").replace("{count}", String(count)))
   }
 
   const handleBulkExport = () => {
@@ -456,14 +457,14 @@ function LibraryFloatingActionBar({
       .map((id) => references[id])
       .filter(Boolean)
       .map((r) => {
-        let s = r.title || "Untitled Reference"
+        let s = r.title || t("library.untitled_reference")
         if (r.content) s += "\n" + r.content
         if (r.fields.length) s += "\n" + r.fields.map((f) => `  ${f.key}: ${f.value}`).join("\n")
         return s
       })
       .join("\n\n---\n\n")
     navigator.clipboard.writeText(text)
-    toast.success(`Copied ${count} reference${count > 1 ? "s" : ""} to clipboard`)
+    toast.success(t("library.toast.references_copied").replace("{count}", String(count)))
   }
 
   const handleBulkAddField = () => {
@@ -480,7 +481,9 @@ function LibraryFloatingActionBar({
         updateReference(id, { fields: [...ref.fields, { key, value }] })
       }
     })
-    toast.success(`Added "${key}" to ${count} reference${count > 1 ? "s" : ""}`)
+    toast.success(
+      t("library.toast.references_field_added").replace("{key}", key).replace("{count}", String(count)),
+    )
     setFieldDialog({ open: false, key: "", value: "" })
   }
 
@@ -797,9 +800,9 @@ function LibraryOverview() {
                     if (!store.tags.some((t) => t.name.toLowerCase() === name.toLowerCase())) {
                       // v109: opt-in color — tag starts uncolored.
                       store.createTag(name)
-                      toast.success(`Tag "${name}" created`)
+                      toast.success(t("library.toast.tag_created").replace("{name}", name))
                     } else {
-                      toast.error(`Tag "${name}" already exists`)
+                      toast.error(t("library.toast.tag_exists").replace("{name}", name))
                     }
                     ;(e.target as HTMLInputElement).value = ""
                     setActiveRoute("/library/tags")
@@ -812,7 +815,7 @@ function LibraryOverview() {
               className="flex w-full items-center gap-2.5 px-3 py-2 text-note text-foreground/80 hover:bg-hover-bg transition-colors"
             >
               <Paperclip size={16} strokeWidth={2} className="text-muted-foreground" />
-              Upload File
+              {t("library.action.upload_file")}
             </button>
           </div>
         }
@@ -833,7 +836,7 @@ function LibraryOverview() {
             originEntity: null,
           })
           setActiveRoute("/library/files")
-          toast.success(`Uploaded ${file.name}`)
+          toast.success(t("library.toast.file_uploaded_one").replace("{name}", file.name))
           e.target.value = ""
         }}
       />
@@ -1051,7 +1054,7 @@ function FilesView() {
       })
       persistAttachmentBlob({ id: attachmentId, data: buffer })
     }
-    toast(`Uploaded ${files.length} file${files.length > 1 ? "s" : ""}`)
+    toast(t("library.toast.files_uploaded").replace("{count}", String(files.length)))
     e.target.value = ""
   }
 
@@ -1140,8 +1143,8 @@ function FilesView() {
     selectedIds.forEach((id) => removeAttachment(id))
     const count = selectedIds.size
     setSelectedIds(new Set())
-    toast.success(`Moved ${count} file${count > 1 ? "s" : ""} to trash`)
-  }, [selectedIds, removeAttachment])
+    toast.success(t("library.toast.files_trashed").replace("{count}", String(count)))
+  }, [selectedIds, removeAttachment, t])
 
   // ── Filter toggle handler for FilterPanel ──
   const handleFilesFilterToggle = useCallback((rule: FilterRule) => {
@@ -1370,22 +1373,22 @@ function FilesView() {
                     <ContextMenuItem
                       onClick={() => {
                         navigator.clipboard.writeText(att.name || "")
-                        toast.success("Copied filename")
+                        toast.success(t("library.toast.copied_filename"))
                       }}
                     >
                       <Copy strokeWidth={2.5} className="mr-2 h-3.5 w-3.5" />
-                      Copy filename
+                      {t("library.action.copy_filename")}
                     </ContextMenuItem>
                     <ContextMenuSeparator />
                     <ContextMenuItem
                       onClick={() => {
                         removeAttachment(att.id)
-                        toast.success("Moved to trash")
+                        toast.success(t("wiki.toast.trashed"))
                       }}
                       className="text-destructive focus:text-destructive"
                     >
                       <Trash strokeWidth={2.5} className="mr-2 h-3.5 w-3.5" />
-                      Delete
+                      {t("library.action.delete")}
                     </ContextMenuItem>
                   </ContextMenuContent>
                 </ContextMenu>
@@ -1421,7 +1424,7 @@ function FilesView() {
                 onClick={() => handleSortToggle("name")}
                 className="flex items-center gap-0.5 hover:text-foreground transition-colors text-left"
               >
-                Name
+                {t("library.header.name")}
                 {sortField === "name" && (
                   sortDirection === "asc"
                     ? <CaretUp size={10} strokeWidth={2.5} className="text-accent" />
@@ -1432,7 +1435,7 @@ function FilesView() {
                 onClick={() => handleSortToggle("size")}
                 className="flex items-center justify-end gap-0.5 hover:text-foreground transition-colors"
               >
-                Size
+                {t("library.header.size")}
                 {sortField === "size" && (
                   sortDirection === "asc"
                     ? <CaretUp size={10} strokeWidth={2.5} className="text-accent" />
@@ -1443,7 +1446,7 @@ function FilesView() {
                 onClick={() => handleSortToggle("fileType")}
                 className="flex items-center justify-end gap-0.5 hover:text-foreground transition-colors"
               >
-                Type
+                {t("library.header.type")}
                 {sortField === "fileType" && (
                   sortDirection === "asc"
                     ? <CaretUp size={10} strokeWidth={2.5} className="text-accent" />
@@ -1454,7 +1457,7 @@ function FilesView() {
                 onClick={() => handleSortToggle("createdAt")}
                 className="flex items-center justify-end gap-0.5 hover:text-foreground transition-colors"
               >
-                Created
+                {t("library.header.created")}
                 {sortField === "createdAt" && (
                   sortDirection === "asc"
                     ? <CaretUp size={10} strokeWidth={2.5} className="text-accent" />
@@ -1526,14 +1529,14 @@ function FilesView() {
                           <FileText strokeWidth={1.5} className="h-4 w-4 shrink-0 text-muted-foreground" />
                         )}
                         <span className="truncate text-note text-foreground" title={att.name}>
-                          {att.name || "Untitled file"}
+                          {att.name || t("library.untitled_file")}
                         </span>
                       </div>
                       <span className="text-2xs text-muted-foreground tabular-nums text-right">
                         {formatFileSize(att.size || 0)}
                       </span>
                       <span className="text-2xs text-muted-foreground capitalize text-right">
-                        {att.type === "image" ? "Image" : att.mimeType?.split("/")[1] || "File"}
+                        {att.type === "image" ? t("library.filetype.image") : att.mimeType?.split("/")[1] || t("library.filetype.file")}
                       </span>
                       <span className="text-2xs text-muted-foreground tabular-nums text-right">
                         {timeAgo}
@@ -1544,22 +1547,22 @@ function FilesView() {
                     <ContextMenuItem
                       onClick={() => {
                         navigator.clipboard.writeText(att.name || "")
-                        toast.success("Copied filename")
+                        toast.success(t("library.toast.copied_filename"))
                       }}
                     >
                       <Copy strokeWidth={2.5} className="mr-2 h-3.5 w-3.5" />
-                      Copy filename
+                      {t("library.action.copy_filename")}
                     </ContextMenuItem>
                     <ContextMenuSeparator />
                     <ContextMenuItem
                       onClick={() => {
                         removeAttachment(att.id)
-                        toast.success("Moved to trash")
+                        toast.success(t("wiki.toast.trashed"))
                       }}
                       className="text-destructive focus:text-destructive"
                     >
                       <Trash strokeWidth={2.5} className="mr-2 h-3.5 w-3.5" />
-                      Delete
+                      {t("library.action.delete")}
                     </ContextMenuItem>
                   </ContextMenuContent>
                 </ContextMenu>
