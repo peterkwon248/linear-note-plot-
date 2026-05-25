@@ -3,54 +3,54 @@
 > 우선순위 기반 작업 목록. **P0 = 다음 세션 즉시 시작점** (NEXT-ACTION.md 폐지, 2026-05-12).
 > 완료 항목은 즉시 삭제. 자세한 history는 SESSION-LOG.md + MEMORY.md.
 
-**마지막 갱신**: 2026-05-24 (심야) — Phase α-1 Inbox 'task' 흡수 + 4 surface 한국어 + Inbox refiner (PR #417). 다음 P0 #1 = Phase α-2 todo-index 위키/책 확장.
+**마지막 갱신**: 2026-05-25 (대규모 세션) — 20 PR (#417-#436): Phase α+β LOCKED #124 완성 + i18n 17 surface + 자료실/Books 아이콘 통일 + Pinned 표준화. 다음 P0 #1 = F (WikiInsightsChart i18n) 또는 사용자 신호.
 
 ---
 
-## 🟣 P0 — 즉시 (cross-machine 진입점, 2026-05-24 심야)
+## 🟣 P0 — 즉시 (cross-machine 진입점, 2026-05-25)
 
-### 1. **🔴 Phase α-2 — todo-index 위키/책 확장**
+### 1. **🟢 F — WikiInsightsChart i18n (위키 overview chart)**
 
-**범위**: `lib/todo-index.ts`의 `extractTasks`를 wiki blocks + book chapters의 체크박스도 walk하도록 확장. Phase α-1 (Inbox task kind 흡수) 후속 작업. 사용자 직관 "할 일 = 모든 영역 통합" 완전 해소.
+**범위**: 위키 페이지의 overview chart 영어 잔여:
+- Day / Week / Month range 토글
+- Growth / Connectivity 탭
+- All / Articles / Stubs filter chip
+- "Cumulative articles, stubs & notes" chart title
+- "New per month" 등 series labels
+
+**파일**: `components/wiki-editor/wiki-insights-chart.tsx`
 
 **첫 스텝**:
-1. `lib/todo-index.ts` + `lib/body-helpers.ts extractTasks` read
-2. WikiArticle.blocks loop 추가 (block.type === "todo" 또는 paragraph 안 체크박스)
-3. Book/Reference 체크박스도 동일 패턴 (Book.contentJson 있으면)
-4. `noteId` 필드를 `entityRef: {kind, id}`로 generalize 또는 task source 분기 (호환성 검토)
-5. tsc + 시드 데이터 (wiki article 안 체크박스 1-2개 추가) + Inbox Do section 확인
+1. wiki-insights-chart.tsx read
+2. lib/i18n.ts에 wiki.chart.* 신규 keys 추가 (이미 일부 있음 — wiki.chart.cumulative)
+3. useT() wire + 영어 string → t() 호출
+4. tsc + viewport (Wiki overview chart 한국어 확인)
 
-**위험**: TaskItem.noteId 필드 generalize 시 `addQuickTask` + `toggleTaskChecked` 다 영향. 호환성 위해 noteId 유지 + 새 optional `entityKind`("note"|"wiki"|"book") 추가 권장.
+**작업 크기**: 소 (1 파일 + ~10 신규 keys).
 
-### 2. **🟢 Phase β — TodoView 폐기 (사용자 검증 OK 후)**
+### 2. **🟢 Misc i18n cleanup**
 
-Phase α-1+α-2 정착 후, `/todos` route + TodoView 컴포넌트 폐기. Sidebar "할 일" navigation은 `/inbox?filter=task` alias 또는 직접 inbox open. Memory parked → LOCKED 완료.
+- Trash All view 영어 잔여 (Restore / Delete permanently / Empty trash)
+- Toast 메시지 잔여 ("Dismissed" / "Snoozed until X" / sonner toast)
+- Editor toolbar / slash commands (큰 작업 — 별도 PR)
+- SearchDialog 검색 결과 row (Linear 정합 — highlight + breadcrumb, 별도)
+- Note-hover-preview / note-split-page button title attrs (hover tooltips)
 
-### 3. **🟢 Inbox 외 영어 잔여 polish**
+### 3. **🟢 사용자 viewport 검증 (4건 미완 — 이전 세션 잔여)**
 
-- WikiInsightsChart (Day/Week/Month / Growth/Connectivity / All/Articles/Stubs / Cumulative / New per month)
-- Notes/Wiki row status pill 음역 — STATUS_CONFIG에서 wire
-- ViewHeader title hardcoded ("Notes" / "Wiki" / "Books")
-- SidePanel inspector sections (Dates/Status/Folders/Label/Tags/Categories/Outline/Properties + Words/Characters/Headings/Source)
-- SidePanel workflow actions (Done/Snooze/Trash/Promote/Demote/GitMerge/Link to)
-- Floating bar (1 selected/GitMerge/Split/Link/Move/Add to)
-- Inbox row hover snooze options (In 1 hour / Tomorrow 9 AM / Next week) + tooltip
-- Toast 메시지 (Dismissed / Snoozed until X)
-
-### 4. **🟢 사용자 viewport 검증 (4건 미완)**
-
-- Phase 1c Inbox 3 SectionCard 작동 (이번 PR로 진행 — 미해결시 확인)
 - Backup Restore round-trip (Full Backup → Import → reload)
 - GlobalTopBar Hide-all-panels 후 chrome 접근
 - Cmd+K Escape 닫힘
+- Inbox Phase 1c 3 SectionCard 작동 (Phase β 후 영향 검토)
 
-### 5. **🟢 Phase 2 temporal hooks**
+### 4. **🟢 Phase 2 temporal hooks (PRD §11 Q1 EventPattern + Q5 recurring)**
 
-watch + recurring (PRD §11 Q1 EventPattern + Q5 recurring 범위). 우클릭 프리셋 + 타임라인 드래그 hook UI.
+watch + recurring policies. 우클릭 프리셋 + 타임라인 드래그 hook UI.
 
-### 6. **🟢 검색 결과 row Linear 정합**
+### 5. **🟢 사용자 시드 검증 (Phase α-2)**
 
-Cmd+K dialog 검색 결과 item plain text → highlight + breadcrumb.
+위키 article 본문에 `[ ] 검증 태스크` 추가 → 페이지 reload → Inbox Do section에
+"검증 태스크" + 해당 위키 article 제목 source로 표시 + 클릭 시 article 직접 open.
 
 ---
 
