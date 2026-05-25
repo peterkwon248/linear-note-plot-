@@ -1281,12 +1281,12 @@ function FilesView() {
             <Folder strokeWidth={2} className="h-12 w-12 text-muted-foreground" />
             <div>
               <p className="text-note font-medium text-foreground">
-                {activeAttachments.length === 0 ? "No files yet" : "No files match this filter"}
+                {activeAttachments.length === 0 ? t("library.empty.no_files") : t("library.empty.no_files_filtered")}
               </p>
               <p className="mt-1 text-2xs text-muted-foreground max-w-[280px]">
                 {activeAttachments.length === 0
-                  ? "Upload files or add attachments to your notes."
-                  : "Try a different filter or upload new files."}
+                  ? t("library.empty.no_files_hint")
+                  : t("library.empty.no_files_filtered_hint")}
               </p>
             </div>
             {activeAttachments.length === 0 && (
@@ -1295,7 +1295,7 @@ function FilesView() {
                 className="mt-2 flex items-center gap-1.5 rounded-lg bg-accent/10 px-3 py-1.5 text-2xs font-medium text-accent hover:bg-accent/20 transition-colors"
               >
                 <UploadSimple strokeWidth={2.5} className="h-3 w-3" />
-                Upload files
+                {t("library.action.upload_files")}
               </button>
             )}
           </div>
