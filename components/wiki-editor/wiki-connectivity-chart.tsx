@@ -11,8 +11,11 @@
 
 import { useEffect, useMemo, useRef, useState } from "react"
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip } from "recharts"
+import { format } from "date-fns"
 import type { Note, WikiArticle } from "@/lib/types"
 import { computeWikiTimeSeries, type BucketSize } from "@/lib/insights/timeseries"
+import { useT } from "@/lib/i18n"
+import { useDateFormat } from "@/lib/i18n-date"
 
 interface WikiConnectivityChartProps {
   notes: Note[]
@@ -25,6 +28,8 @@ export function WikiConnectivityChart({
   wikiArticles,
   bucketSize,
 }: WikiConnectivityChartProps) {
+  const t = useT()
+  const { locale } = useDateFormat()
   const containerRef = useRef<HTMLDivElement>(null)
   const [width, setWidth] = useState(0)
 
@@ -57,7 +62,7 @@ export function WikiConnectivityChart({
   const formatTick = (ts: string) => {
     const d = new Date(ts)
     if (bucketSize === "month") {
-      return d.toLocaleDateString("en-US", { month: "short", year: "2-digit" })
+      return format(d, "MMM yy", { locale })
     }
     return `${d.getMonth() + 1}/${d.getDate()}`
   }
@@ -72,14 +77,14 @@ export function WikiConnectivityChart({
       {!hasEdges ? (
         <div className="flex h-[140px] items-center justify-center">
           <p className="text-2xs text-muted-foreground/60">
-            No wiki-to-wiki links yet. Add{" "}
-            <span className="font-mono">[[Article Title]]</span> links inside wiki articles.
+            {t("wiki.chart.no_edges_prefix")}{" "}
+            <span className="font-mono">[[Article Title]]</span> {t("wiki.chart.no_edges_suffix")}
           </p>
         </div>
       ) : (
         <>
           <p className="mb-2 text-2xs text-muted-foreground">
-            Wiki article links (cumulative) — knowledge graph connectivity
+            {t("wiki.chart.connectivity_label")}
           </p>
           {chartWidth > 0 && (
             <AreaChart
@@ -122,7 +127,7 @@ export function WikiConnectivityChart({
                 stroke="var(--chart-2, #0e7490)"
                 strokeWidth={1.5}
                 fill="url(#connArea)"
-                name="Wiki Links"
+                name={t("wiki.chart.wiki_links")}
               />
             </AreaChart>
           )}
