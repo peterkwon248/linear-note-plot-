@@ -15,6 +15,7 @@
 import { useMemo } from "react"
 import { toast } from "sonner"
 import { usePlotStore } from "@/lib/store"
+import { useT } from "@/lib/i18n"
 import {
   X as PhX,
   Pin as PushPin,
@@ -44,6 +45,7 @@ export function TemplatesFloatingActionBar({
   templates,
   onClearSelection,
 }: TemplatesFloatingActionBarProps) {
+  const t = useT()
   const toggleTemplatePin = usePlotStore((s) => s.toggleTemplatePin) as (id: string) => void
   const deleteTemplate = usePlotStore((s) => s.deleteTemplate) as (id: string) => void
   const restoreTemplate = usePlotStore((s) => s.restoreTemplate) as (id: string) => void
@@ -52,13 +54,13 @@ export function TemplatesFloatingActionBar({
   const count = ids.length
 
   const selectedTemplates = useMemo(
-    () => templates.filter((t) => selectedIds.has(t.id)),
+    () => templates.filter((tpl) => selectedIds.has(tpl.id)),
     [templates, selectedIds],
   )
 
   // Pin state: allPinned → show Unpin, otherwise show Pin
   const allPinned = useMemo(
-    () => selectedTemplates.length > 0 && selectedTemplates.every((t) => t.pinned),
+    () => selectedTemplates.length > 0 && selectedTemplates.every((tpl) => tpl.pinned),
     [selectedTemplates],
   )
 
@@ -68,18 +70,18 @@ export function TemplatesFloatingActionBar({
     if (allPinned) {
       // Unpin all
       ids.forEach((id) => {
-        const t = templates.find((t) => t.id === id)
-        if (t?.pinned) toggleTemplatePin(id)
+        const tpl = templates.find((tp) => tp.id === id)
+        if (tpl?.pinned) toggleTemplatePin(id)
       })
-      toast(`Unpinned ${count} template${count > 1 ? "s" : ""}`)
+      toast(t("tplbar.toast.unpinned").replace("{count}", String(count)))
     } else {
       // Pin all (including already-pinned — toggleTemplatePin flips, so only
       // pin the ones that are currently unpinned)
       ids.forEach((id) => {
-        const t = templates.find((t) => t.id === id)
-        if (!t?.pinned) toggleTemplatePin(id)
+        const tpl = templates.find((tp) => tp.id === id)
+        if (!tpl?.pinned) toggleTemplatePin(id)
       })
-      toast(`Pinned ${count} template${count > 1 ? "s" : ""}`)
+      toast(t("tplbar.toast.pinned").replace("{count}", String(count)))
     }
     onClearSelection()
   }
@@ -87,12 +89,12 @@ export function TemplatesFloatingActionBar({
   const handleDelete = () => {
     ids.forEach((id) => deleteTemplate(id))
     onClearSelection()
-    toast(`Deleted ${count} template${count > 1 ? "s" : ""}`, {
+    toast(t("tplbar.toast.deleted").replace("{count}", String(count)), {
       action: {
-        label: "Undo",
+        label: t("tplbar.action.undo"),
         onClick: () => {
           ids.forEach((id) => restoreTemplate(id))
-          toast(`Restored ${count} template${count > 1 ? "s" : ""}`)
+          toast(t("tplbar.toast.restored").replace("{count}", String(count)))
         },
       },
       duration: 5000,
@@ -105,7 +107,7 @@ export function TemplatesFloatingActionBar({
         {/* Count + clear */}
         <div className="flex items-center gap-1.5 px-1.5">
           <span className="text-ui font-medium text-foreground whitespace-nowrap">
-            {count} template{count > 1 ? "s" : ""} selected
+            {t("tplbar.selected").replace("{count}", String(count))}
           </span>
           <button
             onClick={onClearSelection}
@@ -125,12 +127,12 @@ export function TemplatesFloatingActionBar({
           {allPinned ? (
             <>
               <PushPinSlash size={16} />
-              Unpin
+              {t("tplbar.action.unpin")}
             </>
           ) : (
             <>
               <PushPin size={16} />
-              Pin
+              {t("tplbar.action.pin")}
             </>
           )}
         </button>
@@ -143,7 +145,7 @@ export function TemplatesFloatingActionBar({
           className="inline-flex items-center gap-1 rounded-md bg-destructive/10 px-3 py-2 text-ui font-medium text-destructive hover:bg-destructive/20 transition-colors"
         >
           <Trash size={16} />
-          Delete
+          {t("tplbar.action.delete")}
         </button>
       </div>
     </div>
