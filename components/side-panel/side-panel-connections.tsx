@@ -21,6 +21,7 @@ import { useBacklinksWithContext } from "@/hooks/use-backlinks-with-context"
 import { BacklinkCard } from "./backlink-card"
 import { detectUnlinkedMentions } from "@/lib/unlinked-mentions"
 import { discoverRelated, type DiscoverResult } from "@/lib/search/discover-engine"
+import { useT } from "@/lib/i18n"
 import {
   Link as LinkSimple,
   Compass,
@@ -223,6 +224,7 @@ function DotCount({
 // ── Wiki Article Connections ─────────────────────────────
 
 function WikiArticleConnections() {
+  const t = useT()
   const ctx = usePlotStore((s) => s.sidePanelContext)
   const notes = usePlotStore((s) => s.notes)
   const wikiArticles = usePlotStore((s) => s.wikiArticles)
@@ -325,7 +327,7 @@ function WikiArticleConnections() {
     <div className="flex-1 overflow-y-auto">
       {/* Hierarchy — parent + children */}
       <ConnectionSection
-        title="Hierarchy"
+        title={t("sidepanel.section.hierarchy")}
         icon={<GitBranch size={14} strokeWidth={2} />}
         count={hierarchyCount}
         defaultOpen
@@ -334,7 +336,7 @@ function WikiArticleConnections() {
         <div className="space-y-0.5 mb-2">
           <div className="flex items-center gap-1 px-2 mb-1">
             <ArrowUp size={10} className="text-accent/70" />
-            <SubLabel>Parent</SubLabel>
+            <SubLabel>{t("sidepanel.label.parent")}</SubLabel>
           </div>
           {parentArticle ? (
             <div className="flex items-center gap-1.5 px-2 py-0.5">
@@ -346,7 +348,7 @@ function WikiArticleConnections() {
               </button>
               <button
                 onClick={() => setWikiArticleParent(article.id, null)}
-                title="Remove parent"
+                title={t("sidepanel.action.remove_parent")}
                 className="shrink-0 text-muted-foreground hover:text-red-400 transition-colors duration-100 p-0.5 rounded"
               >
                 <PhX size={12} strokeWidth={2.5} />
@@ -358,7 +360,7 @@ function WikiArticleConnections() {
               className="flex items-center gap-1.5 text-note text-muted-foreground hover:text-foreground transition-colors duration-100 px-2 py-0.5"
             >
               <PhPlus size={12} strokeWidth={2.5} />
-              Set parent
+              {t("sidepanel.action.set_parent")}
             </button>
           )}
         </div>
@@ -367,7 +369,7 @@ function WikiArticleConnections() {
         <div className="space-y-0.5">
           <div className="flex items-center gap-1 px-2 mb-1">
             <ArrowDown size={10} className="text-accent/70" />
-            <SubLabel>Children</SubLabel>
+            <SubLabel>{t("sidepanel.label.children")}</SubLabel>
           </div>
           {childArticles.map((child) => (
             <button
@@ -384,14 +386,14 @@ function WikiArticleConnections() {
             className="flex items-center gap-1.5 text-note text-muted-foreground hover:text-foreground transition-colors duration-100 px-2 py-0.5"
           >
             <PhPlus size={12} strokeWidth={2.5} />
-            Add child
+            {t("sidepanel.action.add_child")}
           </button>
         </div>
       </ConnectionSection>
 
       {/* Connected */}
       <ConnectionSection
-        title="Connected"
+        title={t("sidepanel.section.connected")}
         icon={<LinkSimple size={14} strokeWidth={2} />}
         count={totalCount}
         defaultOpen
@@ -485,7 +487,7 @@ function WikiArticleConnections() {
         <WikiPickerDialog
           open={addChildOpen}
           onOpenChange={setAddChildOpen}
-          title="Add children"
+          title={t("sidepanel.action.add_children")}
           excludeIds={childPickerExcludeIds}
           multiSelect={true}
           onSelectMulti={handleAddChildren}
@@ -1448,6 +1450,7 @@ function TemplateConnections() {
 }
 
 function NoteConnections() {
+  const t = useT()
   // Resolve target note via pane-aware entity hook (follows active pane in split view)
   const entity = useSidePanelEntity()
   const noteId = entity.type === "note" ? entity.noteId : null
@@ -1781,7 +1784,7 @@ function NoteConnections() {
     <div className="flex-1 overflow-y-auto">
       {/* Hierarchy */}
       <ConnectionSection
-        title="Hierarchy"
+        title={t("sidepanel.section.hierarchy")}
         icon={<GitBranch size={14} strokeWidth={2} />}
         count={hierarchyCount}
         defaultOpen
@@ -1790,7 +1793,7 @@ function NoteConnections() {
         <div className="space-y-0.5 mb-2">
           <div className="flex items-center gap-1 px-2 mb-1">
             <ArrowUp size={10} className="text-accent/70" />
-            <SubLabel>Parent</SubLabel>
+            <SubLabel>{t("sidepanel.label.parent")}</SubLabel>
           </div>
           {parentNote ? (
             <div className="flex items-center gap-1.5 px-2 py-0.5">
@@ -1798,11 +1801,11 @@ function NoteConnections() {
                 onClick={() => openNote(parentNote.id)}
                 className="flex-1 min-w-0 text-left text-note text-foreground hover:text-foreground truncate transition-colors duration-100"
               >
-                {parentNote.title || "Untitled"}
+                {parentNote.title || t("common.untitled")}
               </button>
               <button
                 onClick={() => setNoteParent(note.id, null)}
-                title="Remove parent"
+                title={t("sidepanel.action.remove_parent")}
                 className="shrink-0 text-muted-foreground hover:text-red-400 transition-colors duration-100 p-0.5 rounded"
               >
                 <PhX size={12} strokeWidth={2.5} />
@@ -1814,7 +1817,7 @@ function NoteConnections() {
               className="flex items-center gap-1.5 text-note text-muted-foreground hover:text-foreground transition-colors duration-100 px-2 py-0.5"
             >
               <PhPlus size={12} strokeWidth={2.5} />
-              Set parent
+              {t("sidepanel.action.set_parent")}
             </button>
           )}
         </div>
@@ -1823,7 +1826,7 @@ function NoteConnections() {
         <div className="space-y-0.5">
           <div className="flex items-center gap-1 px-2 mb-1">
             <ArrowDown size={10} className="text-accent/70" />
-            <SubLabel>Children</SubLabel>
+            <SubLabel>{t("sidepanel.label.children")}</SubLabel>
           </div>
           {childNotes.map((child) => (
             <button
@@ -1832,7 +1835,7 @@ function NoteConnections() {
               className="flex w-full items-center gap-2 rounded-md px-2 py-0.5 text-left text-note text-foreground hover:bg-hover-bg hover:text-foreground transition-colors duration-100"
             >
               <FileText size={12} className="shrink-0 text-muted-foreground" strokeWidth={2} />
-              <span className="truncate">{child.title || "Untitled"}</span>
+              <span className="truncate">{child.title || t("common.untitled")}</span>
             </button>
           ))}
           <button
@@ -1840,7 +1843,7 @@ function NoteConnections() {
             className="flex items-center gap-1.5 text-note text-muted-foreground hover:text-foreground transition-colors duration-100 px-2 py-0.5"
           >
             <PhPlus size={12} strokeWidth={2.5} />
-            Add child
+            {t("sidepanel.action.add_child")}
           </button>
         </div>
       </ConnectionSection>
@@ -1862,7 +1865,7 @@ function NoteConnections() {
         <NotePickerDialog
           open={addChildOpen}
           onOpenChange={setAddChildOpen}
-          title="Add children"
+          title={t("sidepanel.action.add_children")}
           excludeIds={childPickerExcludeIds}
           multiSelect={true}
           onSelectMulti={handleAddChildren}
@@ -1871,7 +1874,7 @@ function NoteConnections() {
 
       {/* Connected */}
       <ConnectionSection
-        title="Connected"
+        title={t("sidepanel.section.connected")}
         icon={<LinkSimple size={14} strokeWidth={2} />}
         count={connectedCount}
         defaultOpen
@@ -2024,7 +2027,7 @@ function NoteConnections() {
 
       {/* Discover */}
       <ConnectionSection
-        title="Discover"
+        title={t("sidepanel.section.discover")}
         icon={<Compass size={14} strokeWidth={2} />}
         count={discoverCount}
         defaultOpen

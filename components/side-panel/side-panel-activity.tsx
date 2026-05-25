@@ -5,6 +5,7 @@ import { useSidePanelEntity } from "./use-side-panel-entity"
 import { ActivityTimeline } from "@/components/activity/activity-timeline"
 import { CommentsByEntity } from "@/components/comments/comments-by-entity"
 import { History as ClockCounterClockwise } from "lucide-react"
+import { useT } from "@/lib/i18n"
 import type { EntityRef } from "@/lib/types"
 
 /**
@@ -104,11 +105,12 @@ function SoloHistory({ entity }: { entity: EntityRef }) {
  * existed before PR 5 wire-up completed.
  */
 function HistorySection({ entity }: { entity: EntityRef }) {
+  const t = useT()
   return (
     <div className="px-4 py-3">
       <div className="mb-2 flex items-center gap-2">
         <span className="text-muted-foreground"><ClockCounterClockwise size={16} /></span>
-        <span className="text-2xs font-medium text-muted-foreground">History</span>
+        <span className="text-2xs font-medium text-muted-foreground">{t("sidepanel.section.history")}</span>
       </div>
       <ActivityTimeline entity={entity} />
     </div>
