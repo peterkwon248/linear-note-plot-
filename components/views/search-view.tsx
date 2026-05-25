@@ -6,6 +6,7 @@ import { usePlotStore } from "@/lib/store"
 import { useSearch } from "@/lib/search/use-search"
 import { useBacklinksIndex } from "@/lib/search/use-backlinks-index"
 import { shortRelative } from "@/lib/format-utils"
+import { useT } from "@/lib/i18n"
 import { setActiveRoute, setActiveFolderId, setActiveTagId, setActiveLabelId } from "@/lib/table-route"
 import { navigateToWikiArticle } from "@/lib/wiki-article-nav"
 import {
@@ -24,15 +25,21 @@ import {
 
 type TabKey = "all" | "notes" | "wiki" | "tags" | "labels" | "templates" | "folders"
 
-const TABS: { key: TabKey; label: string }[] = [
-  { key: "all", label: "All" },
-  { key: "notes", label: "Notes" },
-  { key: "wiki", label: "Wiki" },
-  { key: "tags", label: "Tags" },
-  { key: "labels", label: "Labels" },
-  { key: "templates", label: "Templates" },
-  { key: "folders", label: "Folders" },
+const TABS: { key: TabKey; labelKey: string }[] = [
+  { key: "all", labelKey: "search.tab.all" },
+  { key: "notes", labelKey: "search.tab.notes" },
+  { key: "wiki", labelKey: "search.tab.wiki" },
+  { key: "tags", labelKey: "search.tab.tags" },
+  { key: "labels", labelKey: "search.tab.labels" },
+  { key: "templates", labelKey: "search.tab.templates" },
+  { key: "folders", labelKey: "search.tab.folders" },
 ]
+
+const STATUS_LABEL_KEY: Record<string, string> = {
+  stone: "status.stone",
+  brick: "status.brick",
+  keystone: "status.block",
+}
 
 // ── Highlight helper ─────────────────────────────────────────────────────────
 
@@ -56,6 +63,7 @@ function highlightQuery(text: string, q: string): ReactNode {
 // ── Main component ───────────────────────────────────────────────────────────
 
 export function SearchView() {
+  const t = useT()
   // Store reads
   const notes = usePlotStore((s) => s.notes)
   const tags = usePlotStore((s) => s.tags)
@@ -260,12 +268,25 @@ export function SearchView() {
     status: string
     updatedAt: string
     createdAt: string
+    folderIds?: string[]
   }): string {
-    const stageLabel = note.status.charAt(0).toUpperCase() + note.status.slice(1)
+    // Linear-style breadcrumb path: folder name first (when present),
+    // then status pill name, then relative time. Backlink count tail
+    // mirrors the original pattern.
+    const folderName = note.folderIds?.[0]
+      ? folders.find((f) => f.id === note.folderIds![0])?.name
+      : null
+    const stageLabel = t(STATUS_LABEL_KEY[note.status] ?? "status.stone")
     const relTime = shortRelative(note.updatedAt || note.createdAt)
     const bl = backlinksMap.get(note.id) ?? 0
-    const blSuffix = bl > 0 ? ` · ${bl} backlink${bl !== 1 ? "s" : ""}` : ""
-    return `${stageLabel} · Updated ${relTime}${blSuffix}`
+    const parts: string[] = []
+    if (folderName) parts.push(folderName)
+    parts.push(stageLabel)
+    parts.push(t("search.sublabel.updated").replace("{time}", relTime))
+    if (bl > 0) {
+      parts.push(t("search.sublabel.backlinks").replace("{count}", String(bl)))
+    }
+    return parts.join(" · ")
   }
 
   // ── No results check ───────────────────────────────────────────────────────
@@ -293,7 +314,7 @@ export function SearchView() {
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search notes, tags, and more..."
+            placeholder={t("search.placeholder")}
             className="h-12 w-full rounded-lg border border-border bg-background pl-12 pr-12 text-ui text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-accent"
           />
           {query && (
@@ -321,7 +342,7 @@ export function SearchView() {
                   : "text-muted-foreground hover:text-foreground"
               }`}
             >
-              {tab.label}
+              {t(tab.labelKey)}
             </button>
           ))}
         </div>
@@ -334,7 +355,7 @@ export function SearchView() {
           {!hasFuzzyQuery && (
             <div>
               <h3 className="mb-3 text-2xs font-medium uppercase tracking-wider text-muted-foreground">
-                Recent Notes
+                {t("search.section.recent_notes")}
               </h3>
               <div className="space-y-0.5">
                 {recentNotes.map((note) => (
@@ -350,7 +371,7 @@ export function SearchView() {
                     )}
                     <div className="min-w-0 flex-1">
                       <div className="truncate text-foreground">
-                        {note.title || "Untitled"}
+                        {note.title || t("common.untitled")}
                       </div>
                       <div className="truncate text-note text-muted-foreground">
                         {noteSublabel(note)}
@@ -375,7 +396,7 @@ export function SearchView() {
                 matchedWikiNotes.length > 0 && (
                   <section>
                     <h3 className="mb-3 text-2xs font-medium uppercase tracking-wider text-muted-foreground">
-                      Wiki Articles
+                      {t("search.section.wiki_articles")}
                     </h3>
                     <div className="space-y-0.5">
                       {matchedWikiNotes.map((note) => (
@@ -388,7 +409,7 @@ export function SearchView() {
                           <div className="min-w-0 flex-1">
                             <div className="flex items-center gap-2">
                               <span className="truncate text-foreground">
-                                {highlightQuery(note.title || "Untitled", query)}
+                                {highlightQuery(note.title || t("common.untitled"), query)}
                               </span>
                               <span className="shrink-0 rounded-sm bg-accent/20 px-1.5 py-0.5 text-2xs font-medium text-accent">
                                 Wiki
@@ -409,7 +430,7 @@ export function SearchView() {
                 matchedRedLinks.length > 0 && (
                   <section>
                     <h3 className="mb-3 text-2xs font-medium uppercase tracking-wider text-muted-foreground">
-                      Unresolved Links
+                      {t("search.section.unresolved_links")}
                     </h3>
                     <div className="space-y-0.5">
                       {matchedRedLinks.map((rl) => (
@@ -443,7 +464,7 @@ export function SearchView() {
                 noteResults.length > 0 && (
                   <section>
                     <h3 className="mb-3 text-2xs font-medium uppercase tracking-wider text-muted-foreground">
-                      Notes
+                      {t("search.section.notes")}
                     </h3>
                     <div className="space-y-0.5">
                       {noteResults.map((note) => (
@@ -459,7 +480,7 @@ export function SearchView() {
                           )}
                           <div className="min-w-0 flex-1">
                             <div className="truncate text-foreground">
-                              {highlightQuery(note.title || "Untitled", query)}
+                              {highlightQuery(note.title || t("common.untitled"), query)}
                             </div>
                             <div className="truncate text-note text-muted-foreground">
                               {noteSublabel(note)}
@@ -476,7 +497,7 @@ export function SearchView() {
                 matchedTags.length > 0 && (
                   <section>
                     <h3 className="mb-3 text-2xs font-medium uppercase tracking-wider text-muted-foreground">
-                      Tags
+                      {t("search.section.tags")}
                     </h3>
                     <div className="space-y-0.5">
                       {matchedTags.map((tag) => (
@@ -492,7 +513,7 @@ export function SearchView() {
                             </span>
                           </div>
                           <span className="text-2xs tabular-nums text-muted-foreground">
-                            {tagNoteCounts.get(tag.name) ?? 0} notes
+                            {t("search.tag.notes_count").replace("{count}", String(tagNoteCounts.get(tag.name) ?? 0))}
                           </span>
                         </button>
                       ))}
@@ -505,7 +526,7 @@ export function SearchView() {
                 matchedLabels.length > 0 && (
                   <section>
                     <h3 className="mb-3 text-2xs font-medium uppercase tracking-wider text-muted-foreground">
-                      Labels
+                      {t("search.section.labels")}
                     </h3>
                     <div className="space-y-0.5">
                       {matchedLabels.map((label) => (
@@ -535,7 +556,7 @@ export function SearchView() {
                 matchedTemplates.length > 0 && (
                   <section>
                     <h3 className="mb-3 text-2xs font-medium uppercase tracking-wider text-muted-foreground">
-                      Templates
+                      {t("search.section.templates")}
                     </h3>
                     <div className="space-y-0.5">
                       {matchedTemplates.map((tmpl) => (
@@ -563,7 +584,7 @@ export function SearchView() {
                 matchedFolders.length > 0 && (
                   <section>
                     <h3 className="mb-3 text-2xs font-medium uppercase tracking-wider text-muted-foreground">
-                      Folders
+                      {t("search.section.folders")}
                     </h3>
                     <div className="space-y-0.5">
                       {matchedFolders.map((folder) => (
@@ -586,8 +607,8 @@ export function SearchView() {
               {hasNoResults && (
                 <div className="py-12 text-center text-note text-muted-foreground">
                   {isIndexing
-                    ? "Building search index..."
-                    : `No results for "${query}"`}
+                    ? t("search.indexing")
+                    : t("search.no_results_for").replace("{query}", query)}
                 </div>
               )}
 
@@ -602,7 +623,7 @@ export function SearchView() {
                       className="flex w-full items-center gap-2 rounded-md px-3 py-2.5 text-note text-muted-foreground transition-colors hover:bg-hover-bg hover:text-foreground"
                     >
                       <BookOpen className="shrink-0" size={16} strokeWidth={2} />
-                      Create &apos;{query.trim()}&apos; as wiki article
+                      {t("search.create_wiki_from_query").replace("{query}", query.trim())}
                     </button>
                   </div>
                 )}
