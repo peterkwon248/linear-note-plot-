@@ -34,7 +34,6 @@ import { SearchView } from "@/components/views/search-view"
 import { GraphInsightsView } from "@/components/views/graph-insights-view"
 import { HomeView } from "@/components/views/home-view"
 import { InboxView } from "@/components/views/inbox-view"
-import { TodoView } from "@/components/views/todo-view"
 import { LibraryView } from "@/components/views/library-view"
 import { LibraryCategoriesView } from "@/components/views/library-categories-view"
 import { BooksView } from "@/components/views/books-view"
@@ -411,12 +410,6 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                 {(mountedViews.has("/graph-insights") || activeRoute === "/graph-insights") && (
                   <div className={activeRoute === "/graph-insights" ? "flex flex-1 overflow-hidden" : "hidden"}>
                     <GraphInsightsView />
-                  </div>
-                )}
-
-                {(mountedViews.has("/todos") || activeRoute === "/todos") && (
-                  <div className={activeRoute === "/todos" ? "flex flex-1 overflow-hidden" : "hidden"}>
-                    <TodoView />
                   </div>
                 )}
 

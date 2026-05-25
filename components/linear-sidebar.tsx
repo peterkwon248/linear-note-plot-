@@ -1259,13 +1259,6 @@ export function LinearSidebar() {
                 label={t("calendar.title")}
                 active={isActive("/calendar")}
               />
-              <NavLink
-                href="/todos"
-                icon={<CheckSquareIcon size={20} />}
-                label={t("todos.title")}
-                count={todoTaskCount > 0 ? todoTaskCount : undefined}
-                active={isActive("/todos")}
-              />
             </div>
 
             {/* Pinned section (cross-entity) — placed at top per Linear/Notion 표준 (2026-05-24).
