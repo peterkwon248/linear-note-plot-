@@ -12,6 +12,7 @@ import { isWikiStub } from "@/lib/wiki-utils"
 import { getBookKind } from "@/lib/view-engine/use-books-view"
 import { shortRelative } from "@/lib/format-utils"
 import { buildAttachmentDeleteWarning } from "@/lib/extract-attachment-refs"
+import { useT } from "@/lib/i18n"
 import type {
   Note,
   WikiArticle,
@@ -39,26 +40,26 @@ import {
 
 type EntityKind = "note" | "wiki" | "book" | "tag" | "label" | "template" | "reference" | "attachment"
 
-const ENTITY_SINGULAR: Record<EntityKind, string> = {
-  note: "Note",
-  wiki: "Wiki",
-  book: "Book",
-  tag: "Tag",
-  label: "Label",
-  template: "Template",
-  reference: "Reference",
-  attachment: "File",
+const ENTITY_KIND_KEY: Record<EntityKind, string> = {
+  note: "trash.kind.note",
+  wiki: "trash.kind.wiki",
+  book: "trash.kind.book",
+  tag: "trash.kind.tag",
+  label: "trash.kind.label",
+  template: "trash.kind.template",
+  reference: "trash.kind.reference",
+  attachment: "trash.kind.attachment",
 }
 
-const SECTION_TITLES: Record<EntityKind, string> = {
-  note: "Notes",
-  wiki: "Wiki Articles",
-  book: "Books",
-  tag: "Tags",
-  label: "Labels",
-  template: "Templates",
-  reference: "References",
-  attachment: "Files",
+const SECTION_TITLE_KEY: Record<EntityKind, string> = {
+  note: "trash.section.notes",
+  wiki: "trash.section.wikis",
+  book: "trash.section.books",
+  tag: "trash.section.tags",
+  label: "trash.section.labels",
+  template: "trash.section.templates",
+  reference: "trash.section.references",
+  attachment: "trash.section.attachments",
 }
 
 function EntityKindIcon({
@@ -137,6 +138,7 @@ function TrashRow({
   onRestore: () => void
   onDelete: () => void
 }) {
+  const t = useT()
   return (
     <div className={cn(
       "group flex items-center border-b border-border px-5 py-2.5 transition-colors",
@@ -172,7 +174,7 @@ function TrashRow({
         />
       </div>
       <div className="w-24 shrink-0 text-2xs uppercase tracking-wide text-muted-foreground">
-        {ENTITY_SINGULAR[kind]}
+        {t(ENTITY_KIND_KEY[kind])}
       </div>
       <div className="flex-1 min-w-0 flex items-center gap-2">
         <span className="text-note font-medium text-foreground truncate">{item.label}</span>
@@ -191,15 +193,15 @@ function TrashRow({
         <button
           onClick={onRestore}
           className="flex items-center gap-1 rounded-md px-2 py-1 text-note text-muted-foreground transition-colors hover:bg-hover-bg hover:text-foreground"
-          title="Restore"
+          title={t("trash.action.restore")}
         >
           <ArrowCounterClockwise size={14} strokeWidth={2} />
-          Restore
+          {t("trash.action.restore")}
         </button>
         <button
           onClick={onDelete}
           className="flex items-center gap-1 rounded-md px-2 py-1 text-note text-destructive transition-colors hover:bg-destructive/10"
-          title="Delete permanently"
+          title={t("trash.action.delete_permanently")}
         >
           <Trash size={14} strokeWidth={2} />
         </button>
@@ -216,6 +218,7 @@ function TrashRow({
  * adds Notes/Wiki coverage (which the older partial branch didn't display).
  */
 export function TrashAllView() {
+  const t = useT()
   // Multi-select state — keyed by `${kind}-${id}` since IDs are scoped per
   // entity kind (e.g. note "tag-1" and tag "tag-1" both can exist).
   const [selectedKeys, setSelectedKeys] = useState<Set<string>>(new Set())
@@ -276,12 +279,13 @@ export function TrashAllView() {
     const trashedRefs = Object.values(storeReferences || {}).filter((r: Reference) => r.trashed)
     const trashedFiles = (storeAttachments || []).filter((a: Attachment) => a.trashed)
 
+    const untitled = t("common.untitled")
     const list: Array<{ kind: EntityKind; items: TrashRowItem[] }> = [
       {
         kind: "note",
         items: trashedNotes.map((n) => ({
           id: n.id,
-          label: n.title || "Untitled",
+          label: n.title || untitled,
           trashedAt: n.trashedAt ?? null,
           noteStatus: n.status,
         })),
@@ -290,7 +294,7 @@ export function TrashAllView() {
         kind: "wiki",
         items: trashedWikis.map((w) => ({
           id: w.id,
-          label: w.title || "Untitled",
+          label: w.title || untitled,
           trashedAt: (w as any).trashedAt ?? null,
           wikiIsStub: isWikiStub(w),
         })),
@@ -299,18 +303,18 @@ export function TrashAllView() {
         kind: "book",
         items: trashedBooks.map((b) => ({
           id: b.id,
-          label: b.title || "Untitled",
+          label: b.title || untitled,
           trashedAt: b.trashedAt ?? null,
           bookKind: getBookKind(b),
         })),
       },
       {
         kind: "tag",
-        items: trashedTags.map((t) => ({
-          id: t.id,
-          label: t.name,
-          color: t.color,
-          trashedAt: t.trashedAt ?? null,
+        items: trashedTags.map((tag) => ({
+          id: tag.id,
+          label: tag.name,
+          color: tag.color,
+          trashedAt: tag.trashedAt ?? null,
         })),
       },
       {
@@ -324,17 +328,17 @@ export function TrashAllView() {
       },
       {
         kind: "template",
-        items: trashedTemplates.map((t) => ({
-          id: t.id,
-          label: t.name || "Untitled",
-          trashedAt: t.trashedAt ?? null,
+        items: trashedTemplates.map((tpl) => ({
+          id: tpl.id,
+          label: tpl.name || untitled,
+          trashedAt: tpl.trashedAt ?? null,
         })),
       },
       {
         kind: "reference",
         items: trashedRefs.map((r) => ({
           id: r.id,
-          label: r.title || "Untitled",
+          label: r.title || untitled,
           trashedAt: r.trashedAt ?? null,
         })),
       },
@@ -342,13 +346,13 @@ export function TrashAllView() {
         kind: "attachment",
         items: trashedFiles.map((a) => ({
           id: a.id,
-          label: a.name || "Untitled",
+          label: a.name || untitled,
           trashedAt: a.trashedAt ?? null,
         })),
       },
     ]
     return list
-  }, [notes, wikiArticles, storeBooks, tags, labels, storeTemplates, storeReferences, storeAttachments])
+  }, [notes, wikiArticles, storeBooks, tags, labels, storeTemplates, storeReferences, storeAttachments, t])
 
   const totalCount = sections.reduce((sum, s) => sum + s.items.length, 0)
 
@@ -381,13 +385,17 @@ export function TrashAllView() {
 
   const handleRestore = (kind: EntityKind, id: string, label: string) => {
     handleRestoreSilent(kind, id)
-    toast(`Restored ${ENTITY_SINGULAR[kind].toLowerCase()}: ${label}`)
+    toast(
+      t("trash.toast.restored")
+        .replace("{kind}", t(ENTITY_KIND_KEY[kind]).toLowerCase())
+        .replace("{label}", label),
+    )
   }
 
   const handleDelete = (kind: EntityKind, id: string, label: string) => {
     // file-entity-prd §5: surface attachment usage in the confirm prompt so
     // the user knows which notes/wikis will get dangling references.
-    let message = `Permanently delete "${label}"? This cannot be undone.`
+    let message = t("trash.confirm.delete").replace("{label}", label)
     if (kind === "attachment") {
       const s = usePlotStore.getState()
       const warning = buildAttachmentDeleteWarning(id, label, s.notes, s.wikiArticles)
@@ -395,22 +403,19 @@ export function TrashAllView() {
     }
     if (!window.confirm(message)) return
     handleDeleteSilent(kind, id)
-    toast(`Deleted ${ENTITY_SINGULAR[kind].toLowerCase()}: ${label}`)
-  }
-
-  if (totalCount === 0) {
-    return (
-      <div className="flex flex-1 items-center justify-center text-center">
-        <div>
-          <Trash className="mx-auto mb-3 text-muted-foreground/70" size={40} strokeWidth={2} />
-          <p className="text-ui text-muted-foreground">Trash is empty</p>
-        </div>
-      </div>
+    toast(
+      t("trash.toast.deleted")
+        .replace("{kind}", t(ENTITY_KIND_KEY[kind]).toLowerCase())
+        .replace("{label}", label),
     )
   }
 
   // Build a quick lookup so the bulk-action bar can resolve a selection
   // back to (kind, id, label) without re-iterating every entity slice.
+  // 2026-05-25 — hooks moved above the empty-state early return so that
+  // toggling totalCount from >0 to 0 (e.g. restoring the last item) does
+  // not change the hook count between renders. React would otherwise
+  // throw "Rendered fewer hooks than expected".
   const keyLookup = useMemo(() => {
     const map = new Map<string, { kind: EntityKind; id: string; label: string }>()
     for (const { kind, items } of sections) {
@@ -429,23 +434,37 @@ export function TrashAllView() {
     setSelectedKeys((prev) => (prev.size === allKeys.length ? new Set() : new Set(allKeys)))
   }, [allKeys])
 
+  if (totalCount === 0) {
+    return (
+      <div className="flex flex-1 items-center justify-center text-center">
+        <div>
+          <Trash className="mx-auto mb-3 text-muted-foreground/70" size={40} strokeWidth={2} />
+          <p className="text-ui text-muted-foreground">{t("trash.empty")}</p>
+        </div>
+      </div>
+    )
+  }
+
   const handleBulkRestore = () => {
     const targets = Array.from(selectedKeys)
       .map((k) => keyLookup.get(k))
-      .filter((t): t is { kind: EntityKind; id: string; label: string } => !!t)
+      .filter((x): x is { kind: EntityKind; id: string; label: string } => !!x)
     if (targets.length === 0) return
-    for (const t of targets) handleRestoreSilent(t.kind, t.id)
-    toast.success(`Restored ${targets.length} item${targets.length === 1 ? "" : "s"}`)
+    for (const target of targets) handleRestoreSilent(target.kind, target.id)
+    toast.success(t("trash.toast.bulk_restored").replace("{count}", String(targets.length)))
     clearSelection()
   }
 
   const handleBulkDelete = () => {
-    if (!window.confirm(`Permanently delete ${selectedKeys.size} item(s)? This cannot be undone.`)) return
+    if (
+      !window.confirm(t("trash.confirm.bulk_delete").replace("{count}", String(selectedKeys.size)))
+    )
+      return
     const targets = Array.from(selectedKeys)
       .map((k) => keyLookup.get(k))
-      .filter((t): t is { kind: EntityKind; id: string; label: string } => !!t)
-    for (const t of targets) handleDeleteSilent(t.kind, t.id)
-    toast.success(`Deleted ${targets.length} item${targets.length === 1 ? "" : "s"} permanently`)
+      .filter((x): x is { kind: EntityKind; id: string; label: string } => !!x)
+    for (const target of targets) handleDeleteSilent(target.kind, target.id)
+    toast.success(t("trash.toast.bulk_deleted").replace("{count}", String(targets.length)))
     clearSelection()
   }
 
@@ -461,7 +480,7 @@ export function TrashAllView() {
             e.stopPropagation()
             toggleAll()
           }}
-          title={isAllSelected ? "Deselect all" : "Select all"}
+          title={isAllSelected ? t("trash.action.deselect_all") : t("trash.action.select_all")}
         >
           <div
             className={cn(
@@ -472,7 +491,11 @@ export function TrashAllView() {
             )}
             role="checkbox"
             aria-checked={isAllSelected ? true : isSomeSelected ? "mixed" : false}
-            aria-label={isAllSelected ? "Deselect all trashed items" : "Select all trashed items"}
+            aria-label={
+              isAllSelected
+                ? t("trash.action.deselect_all_aria")
+                : t("trash.action.select_all_aria")
+            }
           >
             {isAllSelected ? (
               <PhCheck size={10} strokeWidth={2.5} className="text-accent-foreground" />
@@ -483,11 +506,11 @@ export function TrashAllView() {
         </div>
         <div className="w-6 shrink-0" />
         <div className="w-24 shrink-0 text-2xs uppercase tracking-wide font-medium text-foreground/80">
-          Kind
+          {t("trash.header.kind")}
         </div>
-        <div className="flex-1 text-note font-medium text-foreground/80">Name</div>
-        <div className="w-32 shrink-0 text-right text-note font-medium text-foreground/80">Trashed</div>
-        <div className="w-32 shrink-0 text-right text-note font-medium text-foreground/80">Actions</div>
+        <div className="flex-1 text-note font-medium text-foreground/80">{t("trash.header.name")}</div>
+        <div className="w-32 shrink-0 text-right text-note font-medium text-foreground/80">{t("trash.header.trashed")}</div>
+        <div className="w-32 shrink-0 text-right text-note font-medium text-foreground/80">{t("trash.header.actions")}</div>
       </div>
       {/* 2026-05-17 — Display panel grouping 설정 정합 (사용자 시그널 "노
           그룹핑 상태인데 왜 트래쉬에서 카인드별로 리스트업"). trash context
@@ -521,7 +544,7 @@ export function TrashAllView() {
             <React.Fragment key={kind}>
               <div className="sticky top-[33px] z-[9] flex items-center border-b border-border bg-secondary/30 px-5 py-1.5">
                 <span className="text-2xs uppercase tracking-wide font-medium text-muted-foreground">
-                  {SECTION_TITLES[kind]}
+                  {t(SECTION_TITLE_KEY[kind])}
                 </span>
                 <span className="ml-2 tabular-nums text-2xs text-foreground/50">{items.length}</span>
               </div>
@@ -548,26 +571,26 @@ export function TrashAllView() {
       {selectionActive && (
         <div className="sticky bottom-4 z-20 mx-auto mt-4 flex w-fit items-center gap-2 rounded-lg border border-border bg-popover/95 px-3 py-2 shadow-lg backdrop-blur">
           <span className="text-note text-muted-foreground tabular-nums">
-            {selectedKeys.size} selected
+            {t("trash.selected_count").replace("{count}", String(selectedKeys.size))}
           </span>
           <button
             onClick={handleBulkRestore}
             className="flex items-center gap-1.5 rounded-md px-2.5 py-1 text-note text-foreground transition-colors hover:bg-hover-bg"
           >
             <ArrowCounterClockwise size={14} strokeWidth={2} />
-            Restore
+            {t("trash.action.restore")}
           </button>
           <button
             onClick={handleBulkDelete}
             className="flex items-center gap-1.5 rounded-md px-2.5 py-1 text-note text-destructive transition-colors hover:bg-destructive/10"
           >
             <Trash size={14} strokeWidth={2} />
-            Delete forever
+            {t("trash.action.delete_forever")}
           </button>
           <button
             onClick={clearSelection}
             className="flex items-center justify-center rounded-md p-1 text-muted-foreground transition-colors hover:bg-hover-bg hover:text-foreground"
-            title="Clear selection"
+            title={t("trash.action.clear_selection")}
           >
             <PhX size={14} strokeWidth={2} />
           </button>
