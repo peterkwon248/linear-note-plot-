@@ -47,8 +47,14 @@ export function OntologyInsightsPanel() {
       {/* ── Nudge — actionable maintenance ── */}
       <OntologyNudgeSection />
 
-      {/* ── Top by WAR ── */}
-      <Section label="Knowledge WAR" sublabel="Top notes by composite score">
+      {/* ── Top Notes (renamed from Knowledge WAR — chunk 3a) ──
+       *  "WAR" (sabermetrics term — Wins Above Replacement) was opaque
+       *  and at odds with Plot's "Gentle by default" identity. Now uses
+       *  a plain label + explicit formula breakdown in the sublabel. */}
+      <Section
+        label="Top Notes"
+        sublabel="Combined value: backlinks ×2 + outgoing links + tags ×½ + age bonus − orphan penalty"
+      >
         {metrics.topByWAR.length === 0 ? (
           <Empty>No notes yet</Empty>
         ) : (
