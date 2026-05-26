@@ -13,12 +13,12 @@
 **범위**: 단일 세션 누적 12 PR. (a) Chrome architecture 완성 ('P' brand mark → UserAvatar, chunk 분할 + dropdown revert), (b) 검색 architecture 정통화 (Path A — GlobalTopBar 진짜 input + SearchView input 제거 + entity TABS 7→11), (c) Dashboard 풀 폭 + Mosaic 차트 4개 + 색상 token 정합, (d) Insights 손질 (Ontology + Notes), (e) Books list 시각 균형, (f) **Plot v2 통째 재설계 결정 (Path A)** + Open Design install.
 
 **핵심 결정 (영구 LOCKED #136 + 후보 #137~#142)**:
-- **#136 LOCKED**: **Two-Layout Rule** (Plot 전체 영구 적용):
-  1. Dashboard / Overview = 풀 폭 (px-6, max-width 없음)
+- **#136 LOCKED (2026-05-25 v1 → 2026-05-26 v2 viewport revised)**: **Two-Layout Rule** (Plot 전체 영구 적용):
+  1. Overview / Dashboard / Insights = **Home pattern** (max-w-5xl + mx-auto + px-6 py-10, ~1024px) ← **2026-05-26 revised** (이전: 풀 폭. 사용자 viewport 검증 결과 빽빽해서 Home과 같은 max-width 여백이 정합 — #468 chunk 3 패턴 재현. "Gentle by default" Plot 정체성 정합)
   2. Article 본문 = max-width 유지 (가독성)
   3. Settings = max-width 유지 (form readability)
   4. 차트 = ResizeObserver + useRef (ResponsiveContainer 금지 — React 19/Next 16 width-0 issue)
-  5. Dashboard 차트 layout = Mosaic (시각 위계 차등)
+  5. Dashboard 차트 layout = Mosaic (좁아진 컨테이너에서도 ResizeObserver 자동 적응)
 - **#137 (vision, 다음 세션 LOCKED 후보)**: **Plot 통째 재설계 (Path A) — Functional/UI layer 분리 워크플로우**. lib/* + hooks/* 그대로 keep. components/* + app/(app)/*/page.tsx + globals.css 통째 재설계 가능. 사용자 명시 의도.
 - **#138 (vision)**: **mockup-first 워크플로우 정통화**. mockup 생성 → `/plot-frontend:implement` 4-gate → Plot 영구 룰 자동 정합. Plot v2 디자인 작업의 표준 패턴.
 - **#139 (vision)**: **Open Design는 prototype generator지 React component library 아님**. HTML 출력 → 매뉴얼 변환 필수. Plot identity 보존 + 영구 룰 정합 매뉴얼 결정.

@@ -115,7 +115,7 @@ export function OntologyDashboardPanel() {
   }, [wikiArticles, wikiCategories])
 
   return (
-    <div className="flex flex-col gap-6 px-6 py-6">
+    <div className="mx-auto flex w-full max-w-5xl flex-col gap-6 px-6 py-10">
       <header>
         <h2 className="text-xl font-semibold">{t("ontology.dashboard.title")}</h2>
         <p className="text-note text-muted-foreground mt-1">

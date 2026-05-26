@@ -56,7 +56,7 @@
 **범위**: 단일 세션 누적 12 PR. (a) Chrome architecture 완성, (b) 검색 architecture 정통화 (Path A), (c) Dashboard 풀 폭 + Mosaic 차트 + 색상 token 정합, (d) Insights 손질, (e) Books list 시각 균형, (f) **Plot v2 통째 재설계 결정 (Path A)** + Open Design install.
 
 **핵심 결정 (영구 LOCKED #136 + 후보 #137~#142)**:
-- **#136 LOCKED**: **Two-Layout Rule** — Dashboard/Overview 풀 폭 / Article 본문 max-width / Settings max-width / 차트 ResizeObserver (ResponsiveContainer 금지) / Mosaic 차트 layout.
+- **#136 LOCKED (v2 2026-05-26)**: **Two-Layout Rule** — Overview/Dashboard/Insights = Home pattern max-w-5xl + mx-auto + px-6 py-10 (v1 풀 폭 viewport revert, #468 패턴) / Article 본문 max-width / Settings max-width / 차트 ResizeObserver / Mosaic 차트 layout.
 - **#137 (vision)**: Plot 통째 재설계 (Path A) — functional/UI layer 분리 워크플로우. lib/* + hooks/* keep, components/* 재설계.
 - **#138 (vision)**: mockup-first 워크플로우 정통화 — Plot v2 디자인의 표준 패턴.
 - **#139 (vision)**: Open Design = prototype generator (HTML output, React X). 매뉴얼 변환 필수.
