@@ -225,7 +225,7 @@ export function BookTable({
 
       {/* Sticky header — row height matches Notes/Wiki list (px-5 py-2);
           previous h-9 was tighter than the rest of the entity lists. */}
-      <div className="sticky top-0 z-10 flex h-[30px] items-center border-b border-border bg-background px-5">
+      <div className="sticky top-0 z-10 flex h-[30px] items-center gap-2 border-b border-border bg-background px-5">
         {/* Select-all checkbox (notes-table parity) */}
         <div className="flex w-8 shrink-0 items-center justify-center">
           <CheckboxBox
@@ -475,7 +475,7 @@ function BookRow({
             // border between rows. Hover bg still provides row separation.
             // 2026-05-24: h-9 (36px tight) → py-2.5 to match Notes/Wiki row
             // height — Books was visibly tighter than the rest at default zoom.
-            "group flex h-[38px] w-full items-center px-5 text-[13px] text-left transition-colors",
+            "group flex h-[38px] w-full items-center gap-2 px-5 text-[13px] text-left transition-colors",
             book.trashed
               ? "opacity-50 hover:bg-hover-bg cursor-default"
               : "hover:bg-hover-bg cursor-pointer",
