@@ -8,17 +8,59 @@
 
 ---
 
+## 🚀 2026-05-26 (저녁) — viewport polish 세션: LOCKED #136 v2 revised + Book 폴더 Phase 1 + entity list Notes parity 점진 정합 (PR #472, 13 commits) ⭐⭐⭐⭐
+
+**범위**: 단일 PR 누적 13 commits. (a) Layout LOCKED #136 v1→v2 (풀 폭 → max-w-5xl Home pattern, 사용자 viewport revert), (b) Dashboard KPI i18n + 버그 fix + wiki_breakdown, (c) Book 폴더 Phase 1 (schema + migration v149 + dashboard sub-line + 12 cascade fix), (d) Books → Notes parity 점진 정합 8 commits (header layout + Title cap 폐기 + font/height/gap/padding + cover icon naked), (e) Wiki 순서 swap + minimal checkbox + 광범위 fix broken/revert.
+
+**핵심 결정 (영구 LOCKED #136 v2 + 후보 #143~#147)**:
+- **#136 LOCKED v2 (2026-05-26 revised)**: **Two-Layout Rule v2** — Overview/Dashboard/Insights = Home pattern (`mx-auto w-full max-w-5xl px-6 py-10`, ~1024px). v1 (2026-05-25 풀 폭 PR #463) 사용자 viewport revert. Article 본문/Settings max-width / 차트 ResizeObserver / Mosaic layout 모두 keep.
+- **#143 (vision)**: **Notes `.a-th`/`.a-row` CSS system = entity list chrome design system source of truth**. globals.css padding 0 20px + gap 8px + .a-th height 30px + .a-row height 38px font-size 13px + .a-row__icon (no width wrapper, naked SVG) + .a-row__lead (display: flex, gap 8px) + inline grid-template-columns 동적. Plot v2 P0 #1에서 entity list 모두 이 system 사용 결정 가치.
+- **#144 (vision)**: **Plot root font-size = 14px (사용자 customization feature)**. lib/settings-store.ts:83 default "14" + components/settings-sync.tsx:20 html inline style 적용. Tailwind 16px base 가정과 misalignment (rem-based class 모두 ~12% 작음 — px-5 = 17.5px / gap-2 = 7px / w-8 = 28px / text-sm = 12.25px). 근본 fix 3 path 모두 cascade 큼 → Plot v2 P0 #1 일괄 결정.
+- **#145 (vision)**: **Book 폴더 Phase 1 완료, Phase 2 UI 후속**. Phase 1 = schema + migration + dashboard sub-line. Phase 2 = book-folder-picker + linear-sidebar book folder section + smartSources resolver book folder kind + app/(app)/folder/[id]/page.tsx book branch (현재 빈 페이지). Plot v2 P0 #1과 통합 가치.
+- **#146 (vision)**: **entity별 column 구조 다르므로 동일 fix 일괄 적용 X**. Books column wrapper = 자체 padding 없음 → gap-[8px] 안전. Wiki column wrapper = 자체 px-2 padding → gap-[8px] 추가 시 double spacing → broken. 이번 세션 820370b broken case가 교훈.
+- **#147 (vision)**: **Cover icon wrapper (h-5 w-5 20×20 box) anti-pattern**. Notes .a-row__icon는 width 명시 없음 = SVG content 자체 width. icon 14px + wrapper padding 6px → 시각 spacing 과도. naked SVG로 진행. Plot v2에서 모든 entity row icon naked pattern keep.
+
+**완료** (13 commits):
+- Layout (`bcccd3d`): 4 페이지 max-w-5xl revert
+- Dashboard KPI (`2af3b9c`, `616441f`): Wiki/Categories 라벨 단순화 + Block 버그 fix + wiki_breakdown 신규
+- Books list header (`1fce99b`, `4088086`): wrapper padding/gap + Title cap 폐기 + itemCount column width
+- Book 폴더 Phase 1 (`85514b9`): types + migrate v149 + dashboard sub + i18n + 12 cascade fix
+- Books Notes parity (`cea814b`, `a792774`, `b17c6d3`): font/height/gap/padding pixel-perfect (px-[20px] gap-[8px] w-[32px])
+- Wiki Updated/Created order swap (`cea814b`)
+- Wiki list broken + revert (`820370b`, `bd44e43`)
+- Wiki checkbox 32px minimal (`4ff0fb1`)
+- Books cover icon wrapper 제거 naked (`4fa6756`)
+
+**기술 학습 (영구)**:
+- **preview_inspect = pixel 정확 진단**: 시각 추정 (사용자 viewport에서 "더 크다") vs 실제 측정 (14px / 30px / 20px). 정확 fix.
+- **Plot root font-size 14px → Tailwind 단위 misalignment**: rem-based Tailwind class가 14px root에서 ~12% 작음. 절대 px 명시 (`text-[13px]`, `px-[20px]`, `gap-[8px]`, `w-[32px]`) 미세 정합 path.
+- **Notes `.a-th`/`.a-row` = grid + inline style 동적**: globals.css는 chrome only. column system은 inline `style={{ display: 'grid', gridTemplateColumns: '...' }}` 동적 생성.
+- **gap-[8px] cascade**: flex sibling 구조에 entity별 다름. Books column wrapper padding 없어서 안전. Wiki column wrapper px-2 padding 있어서 double spacing → broken.
+- **Cover icon wrapper anti-pattern**: 20×20 box + 14px SVG → 6px 빈 여백. Notes naked SVG 정통.
+- **TypeScript cascade fix**: Folder.kind 확장 + Book.folderIds required → 12 cascade error (seeds.ts 8 + slices/books.ts + test files + setGlobalSearchQuery type 누락 의외 발견).
+- **Book 폴더 migration v148→v149 idempotent**: if(!Array.isArray) folderIds = [].
+
+**다음 P0** (이전 세션 명시 그대로):
+1. **🔴 P0 #1**: **여전히 Phase 0 — Design Language 결정 + Plot v2 통째 재설계 PRD 작성**. 이번 세션 미시작. Open Design web UI + 71 system + critic 검토 + Chrome surface 첫 mockup. ~17-28시간 (12-20 PR, 1-2주).
+2. **🟢 P0 #2**: chunk 2b / 3b / Phase A2 / B/C deferred (Plot v2 결정 후).
+3. **🟢 P0 #3**: TABS hardcoded → 동적 entity registry refactor.
+4. **🟢 P0 #4**: 사용자 viewport 검증 (PR #472 신규 13 변경 모두 + 이전 누적).
+5. **🟡 P0 #5**: Book 폴더 Phase 2 UI (book-folder-picker + sidebar section + folder/[id]/page.tsx book branch).
+6. **🟡 P0 #6**: Wiki list view 정밀 진단 + Notes parity (Plot v2 entity list 통합 가치).
+
+---
+
 ## 🚀 2026-05-25 (대규모 세션 #3) — P0 #1/#2 완성 + 검색 정통화 + Open Design install + Plot v2 통째 재설계 결정 (PR #459-#470, 12 PR) ⭐⭐⭐⭐⭐
 
 **범위**: 단일 세션 누적 12 PR. (a) Chrome architecture 완성 ('P' brand mark → UserAvatar, chunk 분할 + dropdown revert), (b) 검색 architecture 정통화 (Path A — GlobalTopBar 진짜 input + SearchView input 제거 + entity TABS 7→11), (c) Dashboard 풀 폭 + Mosaic 차트 4개 + 색상 token 정합, (d) Insights 손질 (Ontology + Notes), (e) Books list 시각 균형, (f) **Plot v2 통째 재설계 결정 (Path A)** + Open Design install.
 
 **핵심 결정 (영구 LOCKED #136 + 후보 #137~#142)**:
-- **#136 LOCKED**: **Two-Layout Rule** (Plot 전체 영구 적용):
-  1. Dashboard / Overview = 풀 폭 (px-6, max-width 없음)
+- **#136 LOCKED (2026-05-25 v1 → 2026-05-26 v2 viewport revised)**: **Two-Layout Rule** (Plot 전체 영구 적용):
+  1. Overview / Dashboard / Insights = **Home pattern** (max-w-5xl + mx-auto + px-6 py-10, ~1024px) ← **2026-05-26 revised** (이전: 풀 폭. 사용자 viewport 검증 결과 빽빽해서 Home과 같은 max-width 여백이 정합 — #468 chunk 3 패턴 재현. "Gentle by default" Plot 정체성 정합)
   2. Article 본문 = max-width 유지 (가독성)
   3. Settings = max-width 유지 (form readability)
   4. 차트 = ResizeObserver + useRef (ResponsiveContainer 금지 — React 19/Next 16 width-0 issue)
-  5. Dashboard 차트 layout = Mosaic (시각 위계 차등)
+  5. Dashboard 차트 layout = Mosaic (좁아진 컨테이너에서도 ResizeObserver 자동 적응)
 - **#137 (vision, 다음 세션 LOCKED 후보)**: **Plot 통째 재설계 (Path A) — Functional/UI layer 분리 워크플로우**. lib/* + hooks/* 그대로 keep. components/* + app/(app)/*/page.tsx + globals.css 통째 재설계 가능. 사용자 명시 의도.
 - **#138 (vision)**: **mockup-first 워크플로우 정통화**. mockup 생성 → `/plot-frontend:implement` 4-gate → Plot 영구 룰 자동 정합. Plot v2 디자인 작업의 표준 패턴.
 - **#139 (vision)**: **Open Design는 prototype generator지 React component library 아님**. HTML 출력 → 매뉴얼 변환 필수. Plot identity 보존 + 영구 룰 정합 매뉴얼 결정.

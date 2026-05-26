@@ -96,7 +96,7 @@ export function WikiDashboard({
 
   return (
     <div className="flex-1 overflow-y-auto bg-secondary/20">
-      <div className="px-6 py-6">
+      <div className="mx-auto w-full max-w-5xl px-6 py-10">
 
         {/* ── Search ── */}
         <div className="relative mb-6">

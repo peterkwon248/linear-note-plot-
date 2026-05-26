@@ -115,7 +115,7 @@ export function OntologyDashboardPanel() {
   }, [wikiArticles, wikiCategories])
 
   return (
-    <div className="flex flex-col gap-6 px-6 py-6">
+    <div className="mx-auto flex w-full max-w-5xl flex-col gap-6 px-6 py-10">
       <header>
         <h2 className="text-xl font-semibold">{t("ontology.dashboard.title")}</h2>
         <p className="text-note text-muted-foreground mt-1">
@@ -134,16 +134,23 @@ export function OntologyDashboardPanel() {
           <Stat
             label={t("ontology.dashboard.stat.wiki_articles")}
             value={m.totalWiki ?? wikiArticles.length}
-            sub={wikiStatusCounts.stubs > 0
-              ? t("ontology.dashboard.meta.stub_count").replace("{count}", String(wikiStatusCounts.stubs))
-              : undefined}
+            sub={t("ontology.dashboard.meta.wiki_breakdown")
+              .replace("{articles}", String(wikiStatusCounts.articles))
+              .replace("{stubs}", String(wikiStatusCounts.stubs))}
           />
           <Stat label={t("ontology.dashboard.stat.books")} value={books.filter((b) => !b.trashed).length} />
           <Stat label={t("ontology.dashboard.stat.tags")} value={tags.length} />
           <Stat label={t("ontology.dashboard.stat.labels")} value={labels.length} />
           <Stat label={t("ontology.dashboard.stat.stickers")} value={stickers.length} />
           <Stat label={t("ontology.dashboard.stat.wiki_categories")} value={wikiCategories.length} />
-          <Stat label={t("ontology.dashboard.stat.folders")} value={folders.length} />
+          <Stat
+            label={t("ontology.dashboard.stat.folders")}
+            value={folders.length}
+            sub={t("ontology.dashboard.meta.folder_breakdown")
+              .replace("{notes}", String(folders.filter((f) => f.kind === "note").length))
+              .replace("{wikis}", String(folders.filter((f) => f.kind === "wiki").length))
+              .replace("{books}", String(folders.filter((f) => f.kind === "book").length))}
+          />
         </Grid>
       </Section>
 

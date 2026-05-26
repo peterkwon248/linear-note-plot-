@@ -70,9 +70,9 @@ interface BookColumnDef {
 }
 
 const BOOK_COLUMNS: (BookColumnDef & { labelKey?: string })[] = [
-  { id: "title",     label: "Name",     labelKey: "display.ordering.title",   width: "flex-1 min-w-[120px] max-w-[480px]", sortField: "title" },
+  { id: "title",     label: "Name",     labelKey: "display.ordering.title",   width: "flex-1 min-w-[120px]", sortField: "title" },
   { id: "kind",      label: "Kind",     labelKey: "books.prop.kind",          width: "w-[110px] shrink-0", align: "left" },
-  { id: "itemCount", label: "Items",    labelKey: "books.prop.item_count",    width: "w-[72px] shrink-0",  align: "right", sortField: "itemCount" },
+  { id: "itemCount", label: "Items",    labelKey: "books.prop.item_count",    width: "w-[96px] shrink-0",  align: "right", sortField: "itemCount" },
   { id: "sources",   label: "Sources",  labelKey: "books.prop.smart_sources", width: "w-[100px] shrink-0", align: "left" },
   { id: "pinned",    label: "Pin",      labelKey: "books.prop.pin",           width: "w-[48px] shrink-0",  align: "center" },
   { id: "updatedAt", label: "Updated",  labelKey: "display.property.updated", width: "w-[80px] shrink-0",  align: "right", sortField: "updatedAt" },
@@ -102,7 +102,7 @@ function TH({
 
   if (!col) {
     return (
-      <span className={cn("inline-flex items-center text-note font-medium text-foreground/80", alignClass)}>
+      <span className={cn("inline-flex items-center text-note font-normal text-foreground/80", alignClass)}>
         {label}
       </span>
     )
@@ -112,7 +112,7 @@ function TH({
     <button
       type="button"
       className={cn(
-        "group/th inline-flex items-center gap-1 text-note font-medium text-foreground/80 transition-colors hover:text-foreground",
+        "group/th inline-flex items-center gap-1 text-note font-normal text-foreground/80 transition-colors hover:text-foreground",
         alignClass,
       )}
       onClick={() => onSort(col)}
@@ -225,9 +225,9 @@ export function BookTable({
 
       {/* Sticky header — row height matches Notes/Wiki list (px-5 py-2);
           previous h-9 was tighter than the rest of the entity lists. */}
-      <div className="sticky top-0 z-10 flex items-center gap-3 border-b border-border bg-background pl-3 pr-6 py-2">
+      <div className="sticky top-0 z-10 flex h-[30px] items-center gap-[8px] border-b border-border bg-background px-[20px]">
         {/* Select-all checkbox (notes-table parity) */}
-        <div className="flex w-8 shrink-0 items-center justify-center">
+        <div className="flex w-[32px] shrink-0 items-center justify-center">
           <CheckboxBox
             state={allChecked ? "all" : someChecked ? "partial" : "none"}
             onClick={toggleAll}
@@ -475,7 +475,7 @@ function BookRow({
             // border between rows. Hover bg still provides row separation.
             // 2026-05-24: h-9 (36px tight) → py-2.5 to match Notes/Wiki row
             // height — Books was visibly tighter than the rest at default zoom.
-            "group flex w-full items-center gap-3 pl-3 pr-6 py-2.5 text-left transition-colors",
+            "group flex h-[38px] w-full items-center gap-[8px] px-[20px] text-[13px] text-left transition-colors",
             book.trashed
               ? "opacity-50 hover:bg-hover-bg cursor-default"
               : "hover:bg-hover-bg cursor-pointer",
@@ -483,7 +483,7 @@ function BookRow({
         >
           <div
             className={cn(
-              "flex w-8 shrink-0 items-center justify-center",
+              "flex w-[32px] shrink-0 items-center justify-center",
               // Notes/Wiki parity: hide checkbox until row hover unless the
               // row is checked. Avoids the "always-visible empty squares"
               // mismatch the user flagged vs notes/wiki list rows.
@@ -570,10 +570,10 @@ function renderCell(
     case "title":
       return (
         <>
-          <span className="flex h-5 w-5 shrink-0 items-center justify-center text-muted-foreground/70">
+          <span className="shrink-0 text-muted-foreground/70">
             <BookKindIcon kind={kind} size={14} />
           </span>
-          <span className="min-w-0 truncate text-note text-foreground pl-2">
+          <span className="min-w-0 truncate text-foreground pl-2">
             {book.title || "Untitled book"}
           </span>
           {book.pinned && (
