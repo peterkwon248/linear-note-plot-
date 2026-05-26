@@ -51,6 +51,32 @@
 
 ---
 
+## 🚀 2026-05-27 (오전~새벽) — Search entity-aware + Ontology Insights v2 + HoverCard 학습 패턴 (PR #473-#479, 8 PR 23 commits) ⭐⭐⭐⭐⭐
+
+**범위**: 누적 8 PR 머지. Search hardcoded "RECENT NOTES" only 버그 fix → entity-aware. Ontology Insights v2 (옵션 A Power Sabermetrics) 재설계. Tab highlight bug fix. HoverCard 학습 패턴 도입.
+
+**핵심 결정 (영구 LOCKED 후보 #148~#152)**:
+- **#148 (vision)**: Ontology Insights = Power Sabermetrics 정체성. Composite WAR-like score + Coverage Mosaic + NUDGE + visualization. Daily habit 미채택.
+- **#149 (vision)**: Linear/Notion progressive disclosure — 8 limit + Show More button. Recency bias.
+- **#150 (vision)**: HoverCard 학습 패턴 — ⓘ icon + Radix HoverCard. Plot identity "Gentle by default" 정통.
+- **#151 (vision)**: Search section title = entity name만 + entity별 sort.
+- **#152 (vision)**: Coverage entity dropdown (다음 세션 결정).
+
+**완료**:
+- Search entity-aware (#473): 11 entity 분기 (notes/wiki/books/categories/tags/labels/stickers/references/templates/folders)
+- Search section title 통일 + sort (#474)
+- Show More button (#475): Linear/Notion progressive disclosure
+- Ontology Insights v2 (#476): 4 section Power Sabermetrics 재설계
+- Tab highlight bug fix (#477): reactive subscribe
+- HoverCard 학습 (#478/#479): 4 chart + 4 KPI ⓘ icon
+
+**다음 P0**:
+1. **🔴 P0 #1 (사용자 최우선)**: Coverage entity dropdown 논의 + 진행 (옵션 C/B/D).
+2. **🔴 P0 #2**: Phase 0 Plot v2 PRD (2 세션째 deferred).
+3. **🟡 P0 #3-6**: NUDGE Connect / Insights KPI 폐기 / viewport 검증 / Book Phase 2.
+
+---
+
 ## 🚀 2026-05-26 (저녁) — viewport polish 세션: LOCKED #136 v2 revised + Book 폴더 Phase 1 + entity list Notes parity 점진 정합 (PR #472, 13 commits) ⭐⭐⭐⭐
 
 **범위**: 단일 PR 누적 13 commits. (a) Layout LOCKED #136 v1→v2 (풀 폭 → max-w-5xl Home pattern, 사용자 viewport revert), (b) Dashboard KPI 라벨 + 버그 fix + wiki_breakdown, (c) Book 폴더 Phase 1 (schema + migration v149 + sub-line), (d) Books → Notes parity pixel-perfect 점진 정합, (e) Wiki 부분 정합 (broken/revert + minimal).
