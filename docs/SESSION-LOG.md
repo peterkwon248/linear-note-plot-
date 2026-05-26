@@ -6,6 +6,177 @@
 
 ---
 
+## 2026-05-26 (저녁) — Windows, **viewport polish 세션: LOCKED #136 v2 revised + Book 폴더 Phase 1 + entity list Notes parity 점진 정합 (PR #472, 13 commits)**
+
+> 🎯 **다음 즉시 액션 (다음 세션 시작점)**: **Plot v2 P0 #1 — Phase 0 Design Language 결정 + Plot v2 통째 재설계 PRD 작성**. 이번 세션은 사용자 viewport polish 위주로 진행했으나 진짜 큰 의제 = Plot v2 redesign 미시작. 다음 세션 우선.
+>
+> **사용자 의도** (이번 세션 명시):
+> - "지금 플롯 디자인은 사실 내가 맨처음으로 시작한 프로젝트여서 조잡한 부분들이 많아... 리니어나 플레인에 비해서. 기능은 그들 못지 않고 오히려 앞선다고 보지만 디자인적 아쉬움이 커." (이전 세션 인용 유효)
+> - "오버뷰나 대시보드, 인사이트의 경우 이렇게 여백이 있는 게 나은 거 같아" (LOCKED #136 풀 폭 viewport revert → max-w-5xl)
+> - "북 폴더도 신설해야 하지 않나? 노트, 위키, 북으로 표기되어서 각각 폴더가 몇 개인지 표시" (Folder 일관성)
+> - "노트 기준에 완전히 맞춰. 체크박스와 title 사이 간격, 폰트, 아이콘 사이즈 등 아예 노트를 기준으로"
+> - "근본원인을 고쳐야 될 듯??" (Plot root font-size 14px ≠ Tailwind 16px base 발견)
+>
+> **첫 스텝** (다음 머신에서 바로):
+> 1. **Open Design web UI 진입** — http://127.0.0.1:3845 (또는 매 실행 시 변동. `cd ~/Desktop/open-design && pnpm tools-dev start web` 또는 `/open-design` 슬래시 명령)
+> 2. **`.omc/plans/plot-v2-redesign-prd.md` 작성** (이전 세션 P0 #1 그대로):
+>    - Design language 후보 비교 (Linear / Notion / Plain / Anthropic / Custom)
+>    - 사용자 결정 + 근거
+>    - Surface 우선순위 (Chrome → Home/Dashboard → List views → Detail views → Insights → Settings)
+>    - 시간 estimate (~17-28시간, 12-20 PR)
+> 3. **critic 검토** — 큰 결정이라 객관 review 가치
+> 4. **Phase 1: Chrome surface 첫 mockup 생성** (Open Design)
+> 5. **결과 quality 평가** → 본격 진행 또는 brief tuning
+>
+> **사용자 viewport 검증 잔여 (이번 세션 변경)**:
+> - Books cover icon wrapper 제거 → naked SVG (4fa6756) — 시각 확인
+> - Wiki checkbox 32px (4ff0fb1) — wiki list mode 진입 후 확인 (진입 path = sidebar "병합" click → Cancel button)
+> - Book 폴더 Phase 1 — IDB v149 migration 적용 확인 (사용자 시드 데이터)
+> - Folders dashboard sub-line "X 노트 · Y 위키 · Z 책" 표기
+> - Ontology Dashboard "위키 / 책 / 카테고리" KPI 라벨
+> - Ontology Dashboard "Wiki articles" → "Wiki" / "Wiki categories" → "Categories"
+> - Notes/Books status_breakdown "Stone · Brick · Block" EN
+> - Wiki sub-line "{articles} Article · {stubs} Stub" 표기
+> - Books Title cap 폐기 (우측 빈 공간 해소)
+> - Books row Notes parity (h-[38px], 13px font, gap-[8px], px-[20px], w-[32px])
+> - 4 페이지 max-w-5xl 적용 (Ontology Dashboard/Insights + Wiki Dashboard + Library Overview)
+>
+> **컴포넌트 구조 / 데이터 흐름** (Plot v2 PRD 작성용 reference):
+> ```
+> [Phase 0] Design Language 결정 (대화)
+>    ↓
+> [Phase 1] Surface 우선순위 roadmap
+>    ↓
+> [Phase 2] Surface별 mockup 생성 (Open Design — 같은 design system + token + typography)
+>    Chrome → Home → Notes → Wiki → Books → Editor → Insights → Settings (6-8 surface)
+>    ↓
+> [Phase 3] 각 mockup → /plot-frontend:implement 4-gate 워크플로우로 Plot에 적용
+>    SPEC → APPROVE → BUILD → VERIFY
+>    ↓
+> [Phase 4] 영구 룰 LOCKED 재정의 (#137+, #145+) + DESIGN-TOKENS.md 갱신
+>    ↓
+> [Phase 5] 통합 검증 + WCAG + 모션 일관성
+> ```
+>
+> **위험 + 회피**:
+> - **Plot v2 P0 #1 결정이 가장 큰 risk** — Design language 잘못 고르면 6-8 surface 다 다시. critic 검토 + 첫 1-2 mockup viewport 검증 후 본격 진행 필수.
+> - **이번 세션 누적 13 commits** — Wiki list view 정밀 진단 미완. Plot v2 PRD 진행 중에도 발견 가능 (Plot v2 = 통째 재설계라 entity list도 재구성).
+> - **Plot root font-size 14px** — 사용자 customization feature. Tailwind 16px base 가정과 misalignment. 근본 fix path 3개 (default 16px 변경 / fontSize feature 폐기 / Tailwind `@theme --spacing 4px` 절대화) 모두 cascade 큼 → Plot v2 P0 #1과 함께 결정 가치.
+> - **Notes .a-th/.a-row CSS system** = grid + inline px 명시. Books/Wiki는 Tailwind inline class라 14px root에서 단위 misalignment. Plot v2에서 통일 design system 가치.
+> - **사용자 IDB v148 → v149 migration**: Book.folderIds 초기화 [] (자동, idempotent). 사용자 viewport 첫 진입 시 적용.
+> - **이번 세션 1 broken commit (820370b Wiki list 광범위 fix) → revert (bd44e43)**: gap-[8px]가 Wiki flex sibling column 구조에 cascade 영향. Books는 column wrapper가 다른 패턴이라 안전했음. **교훈**: entity별 column 구조 다르므로 동일 fix 일괄 적용 X — entity별 검증 필요.
+>
+> **참고 파일**:
+> - `~/Desktop/open-design/` — Open Design repo
+> - `~/Desktop/open-design/AGENTS.md` — Open Design 사용 가이드
+> - `docs/MEMORY.md` — Plot Source of Truth (영구 룰 #93~#142 누적)
+> - `lib/colors.ts` — NOTE_STATUS_HEX / WIKI_STATUS_HEX / SPACE_COLORS (Plot identity)
+> - `.claude/skills/plot-frontend/mockup-faithful-implementation/` — 4-gate 워크플로우
+> - `.omc/plans/dashboard-fullwidth-prd.md` — PRD v0.1 (참고 패턴)
+> - `app/globals.css:1040-1156` — `.a-th, .a-row, .a-row__lead, .a-row__icon` 정의 (entity list chrome design system source)
+> - `lib/settings-store.ts:83` — `fontSize: "14"` default (root font-size 14px source)
+> - `components/settings-sync.tsx:20` — `document.documentElement.style.fontSize = ${fontSize}px` (적용 site)
+>
+> **2번째 P0 후보** (Plot v2 PRD 작성 중 또는 후속, 또는 사용자 viewport 검증 결과에 따라):
+> - Wiki list view 정밀 진단 + Notes parity fix (이번 세션 minimal checkbox 32px만, 광범위 fix는 revert)
+> - Book 폴더 Phase 2 — UI 작업 (book-folder-picker, side panel, smartSources resolver, folder/[id]/page.tsx book branch)
+> - TABS hardcoded → 동적 entity registry refactor (이전 세션 P0 #3)
+> - Insights Phase A2/B/C (Notes/Wiki/Books 차트화 — 이전 세션 P0 #2)
+>
+> **머신**: Windows. cross-machine 가능.
+> **현재 main HEAD**: PR #472 머지 후 (이번 after-work에서 머지 시도).
+> **branch worktree**: `claude/stoic-mclean-5c1d8a` — 이번 세션 누적 13 commits. PR #472로 통합. 머지 후 새 worktree로 다음 세션 시작.
+
+### 완료 (이번 세션 — PR #472, 13 commits 누적)
+
+이번 세션은 **사용자 viewport polish 위주** — LOCKED #136 v2 revised + Book 폴더 Phase 1 + entity list Notes parity 점진 정합.
+
+**Layout 영역 (영구 LOCKED #136 v2 revised)**:
+- `bcccd3d` refactor(layout): 4 페이지 (Ontology Dashboard/Insights + Wiki Dashboard + Library Overview) 풀 폭 → Home pattern `mx-auto w-full max-w-5xl px-6 py-10`. LOCKED #136 v1 (2026-05-25 풀 폭) → v2 (2026-05-26 max-w-5xl). 사용자 viewport 결정 — #468 chunk 3 패턴 재현 (디자인 정통성 ≠ 사용자 선호).
+
+**Dashboard KPI 영역**:
+- `2af3b9c` fix(i18n): KPI 라벨 일관성 — "Wiki articles" → "Wiki", "Wiki categories" → "Categories". 다른 KPI (Notes/Books/Tags/Labels/Stickers/Folders) 모두 단순 entity 이름과 일관 정합. EN+KO 4 키 동시.
+- `616441f` fix(dashboard): status_breakdown EN 'keystone' → 'Block' 버그 + Wiki sub article 추가. (1) EN "stone · brick · keystone" → "Stone · Brick · Block" (영구 룰 #100 brand identity Cap 정합, KO는 이미 정상). (2) `stub_count` → `wiki_breakdown` 신규 (Notes 패턴 일관). EN "{articles} Article · {stubs} Stub" / KO "{articles} 글 · {stubs} 스텁". 항상 표기.
+
+**Book 폴더 신설 Phase 1 (스키마/마이그레이션)**:
+- `85514b9` feat(folders): Book 폴더 신설 Phase 1. (a) types.ts Folder.kind 확장 "note"|"wiki" → "note"|"wiki"|"book". (b) types.ts Book.folderIds: string[] 추가 (Note/WikiArticle parity). (c) migrate.ts v148→v149 — 기존 Book.folderIds = [] 초기화 idempotent. (d) store/index.ts STORE_VERSION 149. (e) ontology-dashboard-panel.tsx Folders Stat sub-line wire "X 노트 · Y 위키 · Z 책". (f) i18n folder_breakdown 신규 EN+KO. (g) seeds.ts 8 시드 + slices/books.ts addBook + 2 test fixture cascade fix. (h) 별개 fix — store/types.ts setGlobalSearchQuery type 누락 (PR #462 wire 빠진 부분).
+
+**Books → Notes parity 점진 정합 (8 commits 누적)**:
+- `1fce99b` fix(books): list view header layout — wrapper `gap-3 pl-3 pr-6 py-2` → `px-5 py-2`, itemCount column 72px → 96px ("Item count" 한 줄).
+- `4088086` fix(books): Title 컬럼 max-w-[480px] cap 폐기 → flex-1 우측까지 채움 (직전 PR #469 viewport revert).
+- `cea814b` fix(list): Books font-weight 500→400, row text-[13px], h-[30px]/h-[38px] (실측 Notes .a-row CSS parity) + Wiki Updated/Created 순서 swap.
+- `a792774` fix(books): row/header에 gap-2 추가 (Notes gap 8px parity).
+- `b17c6d3` fix(books): pixel-perfect Notes parity — `px-5 gap-2 w-8` (Tailwind, 14px root에서 17.5/7/28px) → `px-[20px] gap-[8px] w-[32px]` (Notes 정확 정합).
+- `4fa6756` fix(books): title cell cover icon wrapper `h-5 w-5` (20px box) 제거 → naked SVG (14px). Notes `.a-row__icon` parity (no width wrapper).
+
+**Wiki 영역**:
+- `820370b` fix(wiki): list view 광범위 Notes parity 시도 (Books 패턴 그대로 적용). **broken** — gap-[8px]가 Wiki flex sibling column 구조에 cascade 영향. Title flex-1 좁아짐.
+- `bd44e43` Revert: 위 commit revert. 깨진 layout 복원.
+- `4ff0fb1` fix(wiki): minimal — checkbox column width만 `w-8` → `w-[32px]` (Notes parity). 다른 변경 X. 위험 낮음.
+
+**최종 실측 (preview_inspect, Notes vs Books)**:
+| 측정점 | Notes | Books (정합 후) |
+|---|---|---|
+| Checkbox right | 344px | 344px ✓ |
+| Icon width | 13px | 14px ≈ |
+| Title text left | 365px | 366px (1px 차이) |
+| Checkbox → Title gap | 21px | 22px |
+| Header height | 30px | 30px ✓ |
+| Row height | 38px | 38px ✓ |
+| Row font-size | 13px | 13px ✓ |
+| Header gap | 8px | 8px ✓ |
+| Row padding-left | 20px | 20px ✓ |
+
+거의 완벽 정합. Notes grid gap이 lead 안 흡수 vs Books flex gap 차이로 1px만 남음.
+
+### 브레인스토밍 & 큰 결정 (영구 LOCKED #136 v2 + 후보 #143~#147)
+
+- **#136 LOCKED v2 (2026-05-26 revised)**: **Two-Layout Rule v2** — Overview/Dashboard/Insights = Home pattern (`mx-auto w-full max-w-5xl px-6 py-10`, ~1024px). v1 (2026-05-25 풀 폭 PR #463) viewport revert. Article 본문 max-width / Settings max-width / 차트 ResizeObserver / Mosaic layout 모두 keep.
+- **#143 (vision)**: **Notes `.a-th`/`.a-row` CSS system = entity list chrome design system source of truth**. globals.css `padding: 0 20px` + `gap: 8px` + `.a-th { height: 30px }` + `.a-row { height: 38px; font-size: 13px }` + `.a-row__icon` (no width wrapper, naked SVG) + `.a-row__lead` (display: flex, gap: 8px) + inline `grid-template-columns` 동적 column 정의. Plot v2 P0 #1에서 entity list 모두 이 system 사용 결정 가치.
+- **#144 (vision)**: **Plot root font-size = 14px (사용자 customization feature)**. `lib/settings-store.ts:83` default "14" + `components/settings-sync.tsx:20`이 `<html>` inline style 적용. Tailwind 16px base 가정과 misalignment (rem-based class 모두 ~12% 작음 — `px-5` = 17.5px / `gap-2` = 7px / `w-8` = 28px / `text-sm` = 12.25px). 근본 fix 3 path (default 16px 변경 / feature 폐기 / `@theme { --spacing: 4px }` 절대화) 모두 cascade 큼 → Plot v2 P0 #1 일괄 결정.
+- **#145 (vision)**: **Book 폴더 Phase 1 완료, Phase 2 UI 후속**. Phase 1 = schema + migration + dashboard sub-line (이번 세션). Phase 2 = book-folder-picker UI + linear-sidebar book folder section + smartSources resolver book folder kind + `app/(app)/folder/[id]/page.tsx` book branch (현재 빈 페이지). Plot v2 P0 #1과 통합 가치.
+- **#146 (vision)**: **entity별 column 구조 다르므로 동일 fix 일괄 적용 X**. Books column wrapper = 자체 padding 없음 → `gap-[8px]` 안전. Wiki column wrapper = 자체 `px-2` padding → `gap-[8px]` 추가 시 double spacing → broken. 이번 세션 820370b broken case가 교훈.
+- **#147 (vision)**: **Cover icon wrapper (h-5 w-5 20×20 box) anti-pattern**. Notes `.a-row__icon`은 width 명시 없음 = SVG content 자체 width. icon (14px) + wrapper padding 6px → 시각 spacing 과도. naked SVG로 진행. Plot v2에서 모든 entity row icon naked pattern keep.
+
+### 기술 학습 (영구)
+
+- **preview_inspect = pixel 정확 진단 도구**: 시각 추정 (사용자 viewport에서 "더 크다/작다") vs 실제 측정 (14px / 30px / 20px) 차이 정확 파악. font-size / padding / gap / element width 측정 → 정확 fix. 이번 세션 다수 fix 모두 inspect 측정 기반.
+- **Plot root font-size 14px → Tailwind 단위 misalignment**: `lib/settings-store.ts` default "14"이 `<html>` inline style 적용. Tailwind 기본 16px 가정의 `rem` 값이 14px root에서 ~12% 작아짐. 절대 px 명시 (`text-[13px]`, `px-[20px]`, `gap-[8px]`, `w-[32px]`) 가 미세 정합 path. 근본 fix는 Plot v2 P0 #1 통합 결정.
+- **Notes `.a-th`/`.a-row` = grid + inline style 동적 column**: `display: grid` CSS class에 정의 X. notes-table.tsx에서 inline `style={{ display: 'grid', gridTemplateColumns: '32px 1fr 120px ...' }}` 동적 생성. globals.css는 chrome only (padding/gap/height). column system은 consumer 책임.
+- **gap-[8px]가 flex sibling 구조에 cascade 영향**: Books column wrapper에 자체 padding 없어서 gap 명시 안전. Wiki column wrapper에 `px-2` padding 있어서 gap 시 double spacing → broken. 동일 entity parity fix를 다른 entity에 그대로 복제 시 위험.
+- **Cover icon wrapper anti-pattern**: `<span class="flex h-5 w-5 items-center justify-center"><Icon size={14} /></span>` 패턴이 6px 빈 여백 양옆에 → 시각 spacing 과도. Notes naked SVG (`<Icon size={14} />` 직접) 정통.
+- **Squash merge 후 worktree branch 같은 의제 PR 시리즈**: 13 commits 단일 PR 누적 OK. 사용자 viewport 검증마다 fix 추가 가능. 명확 commit message로 history 추적.
+- **TypeScript cascade fix (interface 변경)**: `Folder.kind` 확장 + `Book.folderIds: string[]` 신규 (required) → 12 cascade error (seeds.ts 8 + slices/books.ts 1 + 2 test files + setGlobalSearchQuery 누락). tsc clean 후 commit. 의외 fix (setGlobalSearchQuery) 발견.
+- **Book 폴더 migration v148→v149 idempotent**: `if (!Array.isArray(b.folderIds)) b.folderIds = []` 패턴. 재실행 안전.
+
+### Watch Out (다음 세션)
+
+- **Plot v2 P0 #1 결정이 가장 큰 risk** — Design language 잘못 고르면 6-8 surface 다 다시. critic 검토 + 첫 1-2 mockup viewport 검증 후 본격 진행.
+- **Wiki list view 진입 path** = sidebar "병합" click → wiki-merge-page의 Cancel button click → wikiViewMode "list" (외부 store). `setWikiViewMode("list")` 직접 호출 path 미공개 (linear-sidebar.tsx에 button X). dev server에서 inspect 시 이 path 사용.
+- **사용자 viewport 검증 다수 잔여** — Books cover icon wrapper 제거 / Wiki checkbox 32px / Book 폴더 Phase 1 / Folders dashboard sub-line / Ontology Dashboard KPI 라벨 등 13 변경 모두 viewport에서 확인. broken 발견 시 fix.
+- **Wiki list view 정밀 진단 미완** — 이번 세션 minimal fix만 (checkbox 32px). 진정한 Notes parity는 entity별 column 구조 다름 (사용자 시각 차이 더 큼) → Plot v2에서 entity list 통합 design 일괄.
+- **Plot 영구 룰 #93~#142 + #136 v2** Plot v2 PRD 시 재평가. Phase 4에서 LOCKED 룰 폐기/유지/변경 결정 + DESIGN-TOKENS.md 갱신.
+- **branch worktree `claude/stoic-mclean-5c1d8a`** — PR #472 머지 후 cleanup 권장. 다음 세션 새 worktree.
+
+### 환경 변경
+
+- **Store version**: v148 → **v149** (Book.folderIds 추가, idempotent migration).
+- **신규 파일**: 없음 (기존 파일 update만).
+- **신규 i18n keys**: 3 (EN+KO 6 entries):
+  - `ontology.dashboard.meta.wiki_breakdown` (대체 `stub_count`)
+  - `ontology.dashboard.meta.folder_breakdown` (신규)
+  - `ontology.dashboard.stat.wiki_articles` 값 변경 ("Wiki articles" → "Wiki")
+  - `ontology.dashboard.stat.wiki_categories` 값 변경 ("Wiki categories" → "Categories")
+  - `ontology.dashboard.meta.status_breakdown` 값 변경 ("keystone" → "Block" + Cap 통일)
+- **Tailwind class 변경 (Books/Wiki)**: 14px root font-size 정합 — 절대 px 명시 (`px-[20px]`, `gap-[8px]`, `w-[32px]`, `h-[30px]`, `h-[38px]`, `text-[13px]`).
+- **Tests**: 변경 X. tsc clean 모든 13 commits.
+
+### 머신
+
+Windows. 단일 worktree `claude/stoic-mclean-5c1d8a` 누적 13 commits → PR #472. 머지 후 cleanup 권장.
+
+---
+
 ## 2026-05-25 (대규모 세션 #3) — Windows, **거대 세션: P0 #1/#2 완성 + 검색 정통화 + Open Design install + Phase 0 결정 (PR #459-#470, 12 PR 머지)**
 
 > 🎯 **다음 즉시 액션 (다음 세션 시작점)**: **Phase 0 — Design Language 결정 + Plot 통째 재설계 PRD 작성** (사용자 명시 큰 결정).

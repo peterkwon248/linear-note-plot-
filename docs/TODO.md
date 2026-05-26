@@ -3,7 +3,7 @@
 > 우선순위 기반 작업 목록. **P0 = 다음 세션 즉시 시작점** (NEXT-ACTION.md 폐지, 2026-05-12).
 > 완료 항목은 즉시 삭제. 자세한 history는 SESSION-LOG.md + MEMORY.md.
 
-**마지막 갱신**: 2026-05-25 (대규모 세션 #3) — 12 PR (#459-#470): P0 #1/#2 완성 + 검색 정통화 + Open Design install + Plot v2 통째 재설계 결정 (Path A). 다음 P0 #1 = **Phase 0 Design Language 결정 + Plot v2 redesign PRD 작성**.
+**마지막 갱신**: 2026-05-26 (저녁) — PR #472 13 commits: viewport polish 세션. LOCKED #136 v2 revised (Overview/Dashboard/Insights = max-w-5xl Home pattern) + Book 폴더 Phase 1 (store v149) + entity list Notes parity 점진 정합 (Books/Wiki). 다음 P0 #1 = **여전히 Phase 0 Design Language 결정 + Plot v2 PRD 작성** (이번 세션 미시작).
 
 ---
 
@@ -59,14 +59,40 @@ Phase 0 끝나면 또는 병행 가능 (단 design language 결정이 우선):
 
 PR #461에서 entity TABS 7→11개 확장했으나 hardcoded 그대로. 동적 registry 시스템 refactor 가치. Plot v2와 별도 작업.
 
-### 4. **🟢 사용자 viewport 검증 미완 (이전 세션 누적)**
+### 4. **🟢 사용자 viewport 검증 미완 (이전 세션 누적 + 이번 PR #472)**
 
+이전:
 - Backup Restore round-trip (Full Backup → Import → reload)
 - GlobalTopBar Hide-all-panels 후 chrome 접근
 - Cmd+K Escape 닫힘 (Path A로 검색 통합 후 영향 검토)
 - Inbox Phase 1c 3 SectionCard 작동
 - Phase α-2 위키 체크박스 시드 검증
-- **신규**: Books list 모드 visibleColumns default 확장 효과 (사용자 viewState persist 확인)
+- Books list 모드 visibleColumns default 확장 효과
+
+PR #472 신규:
+- 4 페이지 max-w-5xl (Ontology Dashboard/Insights + Wiki Dashboard + Library Overview)
+- Ontology Dashboard KPI 라벨 "Wiki / Categories" 일관
+- status_breakdown EN "Stone · Brick · Block" Cap 정합
+- Wiki sub "{articles} Article · {stubs} Stub" 표기
+- Folders sub-line "X 노트 · Y 위키 · Z 책" (v149 migration 후)
+- Books Title cap 폐기 (우측 빈 공간 해소)
+- Books row Notes parity (h-[38px], 13px font, gap-[8px], px-[20px], w-[32px], cover icon naked)
+- Wiki list checkbox 32px (진입 path = sidebar "병합" → Cancel button)
+
+### 5. **🟡 Book 폴더 Phase 2 (UI 작업)**
+
+Phase 1 완료 (schema + migration v149 + dashboard sub-line). UI 후속:
+- `book-folder-picker` UI (folder-picker 일반화 or 신설)
+- `linear-sidebar` book folder section
+- `smartSources resolver` book folder kind 지원
+- `app/(app)/folder/[id]/page.tsx` book branch (현재 빈 페이지)
+- Folder context menu "Book Folder" 신설 옵션
+
+Plot v2 P0 #1과 통합 가치 (entity-folder 아키텍처 결정).
+
+### 6. **🟡 Wiki list view 정밀 진단 + Notes parity**
+
+이번 세션 broken commit (820370b) revert. minimal fix만 (checkbox 32px). 진정한 Notes parity는 entity별 column 구조 다름이 root cause. Wiki는 column wrapper에 자체 px-2 padding → gap-[8px] 추가 시 double spacing. Plot v2에서 entity list 통합 design 일괄 결정 가치.
 
 ---
 
@@ -92,6 +118,7 @@ PR #461에서 entity TABS 7→11개 확장했으나 hardcoded 그대로. 동적 
 
 ## ✅ 최근 완료
 
+- **2026-05-26 (저녁)**: **viewport polish 세션 — LOCKED #136 v2 revised + Book 폴더 Phase 1 + entity list Notes parity 점진 정합** (PR #472, 13 commits). (a) Layout (`bcccd3d`): 4 페이지 풀 폭 → Home pattern max-w-5xl. LOCKED #136 v1 → v2 (사용자 viewport revert). (b) Dashboard KPI (`2af3b9c`, `616441f`): "Wiki articles"→"Wiki" / "Wiki categories"→"Categories" + EN status_breakdown "keystone"→"Block" 버그 fix + Wiki sub `wiki_breakdown` (article+stub 둘 다 표기). (c) Book 폴더 Phase 1 (`85514b9`): Folder.kind 확장 + Book.folderIds + migrate v148→v149 + Folders sub-line "X 노트 · Y 위키 · Z 책" + folder_breakdown i18n + 12 cascade fix (seeds.ts + slices/books.ts + 2 test files + setGlobalSearchQuery type 누락). (d) Books → Notes parity 점진 정합 (8 commits): header layout / Title cap 폐기 / font-weight 400 + 13px row / gap-2 / pixel-perfect (px-[20px] gap-[8px] w-[32px] — Plot root font-size 14px Tailwind misalignment 정합) / cover icon wrapper 제거 naked SVG. (e) Wiki: Updated/Created 순서 swap + minimal checkbox 32px (광범위 fix는 broken → revert). (f) 영구 LOCKED #136 v2 + 후보 #143~#147 (Notes .a-th/.a-row CSS system / Plot root font-size 14px / Book 폴더 Phase 2 / entity별 column 구조 다름 / cover icon naked SVG).
 - **2026-05-25 (대규모 세션 #3)**: **P0 #1/#2 완성 + 검색 정통화 + Open Design install + Plot v2 통째 재설계 결정** (PR #459-#470, 12 PR). (a) Chrome architecture (#459/#460/#468/#470): 'P' brand mark Activity bar → GlobalTopBar UserAvatar. chunk 3 dropdown 흡수 후 사용자 viewport 결정으로 분리 복원. 최종 layout `[P] │ [≡] [⏰] [<] [>] ─ search ─ │ [☀][⚙][🗑]`. (b) 검색 architecture (#461/#462): entity TABS 7→11개 확장 (Books/Categories/Stickers/References 추가). Path A — GlobalTopBar = 진짜 input + SearchView 자체 input 제거 + globalSearchQuery store + ⌘K input focus. (c) Dashboard 풀 폭 + 차트 (#463/#464/#465): max-width 제거 4 페이지 + 영구 LOCKED #136 Two-Layout Rule. dashboard-charts.tsx 신규 — Status/Wiki status donut + Top Hubs/Categories bar 4 chart Mosaic 2x2. 색상 hardcoded → NOTE_STATUS_HEX/WIKI_STATUS_HEX token. Books KPI + Wiki stubs 메타. (d) Insights 손질 (#466/#467): Ontology Insights sidebar Stats 제거 + Knowledge WAR → Top Notes + composite score 공식 명시. Notes Insights PhActivity → Activity + i18n 광범위 + Health compact. (e) Books list (#469): Title flex max-w-[480px] cap + visibleColumns 6개 default. (f) Open Design install: ~/Desktop/open-design (51.7k stars, Apache 2.0, 71 design systems, 19 skills). pnpm 10.29→10.33.2 upgrade. daemon 3844 + web 3845. (g) Plot v2 통째 재설계 결정 (Path A) — 다음 세션 Phase 0 PRD 작성. 영구 LOCKED #136 + 후보 #137~#142.
 - **2026-05-25 (대규모 세션 #2)**: **i18n 마무리 + Custom Quick Filter feature + 디자인 브레인스토밍** (PR #438-#457, 20 PR). (a) i18n 마무리 광범위 (#438-#448, #451, #457): WikiInsightsChart / Trash All view / Trash chrome / Notes-Trash empty + tooltip + split toast / notes-table TrashEntityList + context menu / 3 Floating Action Bars / inbox+books / wiki-view / library-view (refs/tags/files+chrome) / SearchView Linear breadcrumb / Side panel 3 탭 + EVENT_CONFIG 44 verbs / 참고문헌→레퍼런스. ~250+ 신규 dict keys. (b) wikiRegistered 정정 (#449/#450): 라벨 "위키 등록"→"위키에 속해있음" + 동작 제목 매칭→실제 임베드 멤버십 (wikiArticles.noteIds 체크). 영구 룰 #132. (c) Custom Quick Filter feature (#452/#453/#454/#455/#456): 사용자 정의 chip bar entries — Zustand slice v148 + Dialog (promote + rule builder popover) + Wiki/Books default 시드 + "Label"→"Name" Plot entity 충돌 회피. 영구 룰 #131/#133/#134/#135. (d) 디자인 브레인스토밍 (다음 세션 P0 #1/#2): 'P' brand mark + 온톨로지 대시보드.
 - **2026-05-24 (심야)**: **Phase α-1 Inbox 'task' 흡수 + 4 surface 한국어 wire + Inbox refiner** (PR #417). (a) Phase α-1 (Memory parked → LOCKED): InboxItemKind 'task' 추가 + use-inbox todoTasks source loop + sectionFor→do + inbox-source-icon Square + inbox-view handleRowClick task→noteId resolve. TodoView parallel 유지. (b) i18n Wave ~50 신규 keys: WikiDashboard 전체 / Calendar (월·주·일정 + 월·화·수·목·금·토·일) / CALENDAR·TEMPLATES filter labelKey (스톤·브릭·블록 음역 #118) / SmartSidePanel 4 tab (상세·연결·활동·북마크) / SidePanel empty / Inbox breadcrumb + SECTION_META + use-inbox action·meta. (c) Inbox refiner 5건 (production-ui-refiner Inbox SectionCard 후보 1 5-phase): A1 space-y-4 / C1 borderless / C3 subtitle /60 / E1 empty 약화 / E2 footer 중복 삭제. 영구 룰 #111 정합 (단일 Hook 모델 통합 → todo도 같은 단일 attention 큐). tsc clean.

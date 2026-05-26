@@ -51,6 +51,41 @@
 
 ---
 
+## 🚀 2026-05-26 (저녁) — viewport polish 세션: LOCKED #136 v2 revised + Book 폴더 Phase 1 + entity list Notes parity 점진 정합 (PR #472, 13 commits) ⭐⭐⭐⭐
+
+**범위**: 단일 PR 누적 13 commits. (a) Layout LOCKED #136 v1→v2 (풀 폭 → max-w-5xl Home pattern, 사용자 viewport revert), (b) Dashboard KPI 라벨 + 버그 fix + wiki_breakdown, (c) Book 폴더 Phase 1 (schema + migration v149 + sub-line), (d) Books → Notes parity pixel-perfect 점진 정합, (e) Wiki 부분 정합 (broken/revert + minimal).
+
+**핵심 결정 (영구 LOCKED #136 v2 + 후보 #143~#147)**:
+- **#136 LOCKED v2 (2026-05-26)**: **Two-Layout Rule v2** — Overview/Dashboard/Insights = Home pattern max-w-5xl (v1 풀 폭 viewport revert). Article 본문/Settings max-width / 차트 ResizeObserver / Mosaic keep.
+- **#143 (vision)**: Notes .a-th/.a-row CSS system = entity list chrome design system source of truth.
+- **#144 (vision)**: Plot root font-size 14px (사용자 customization feature) → Tailwind 16px base misalignment. 근본 fix Plot v2와 통합 결정.
+- **#145 (vision)**: Book 폴더 Phase 1 완료 (schema+migration), Phase 2 UI 후속.
+- **#146 (vision)**: entity별 column 구조 다르므로 동일 fix 일괄 적용 X.
+- **#147 (vision)**: Cover icon wrapper anti-pattern (h-5 w-5 box). Notes naked SVG 정통.
+
+**완료** (13 commits):
+- Layout 4 페이지 max-w-5xl revert (`bcccd3d`)
+- KPI 라벨 단순화 + status_breakdown EN 버그 fix + wiki_breakdown 신규
+- Book 폴더 Phase 1 (Folder.kind 확장 + Book.folderIds + v149 + dashboard sub + 12 cascade fix)
+- Books Notes parity pixel-perfect (px-[20px] gap-[8px] w-[32px] + cover icon naked)
+- Wiki Updated/Created swap + checkbox 32px (광범위 fix broken/revert)
+
+**기술 학습 (영구)**:
+- **preview_inspect = pixel 정확 진단**: 시각 추정 vs 실제 측정.
+- **Plot root font-size 14px → Tailwind misalignment**: rem-based class ~12% 작음. 절대 px 명시 path.
+- **Notes .a-th/.a-row = grid + inline style 동적**: globals.css chrome only + consumer inline column.
+- **gap-[8px] cascade**: entity별 column wrapper 구조 다름.
+- **Cover icon wrapper anti-pattern**: 20×20 box vs naked SVG.
+- **Book 폴더 cascade fix**: setGlobalSearchQuery type 누락 의외 발견 (PR #462 wire).
+
+**다음 P0** (이전 세션 그대로):
+1. **🔴 P0 #1**: Phase 0 — Design Language 결정 + Plot v2 PRD (여전히 미시작).
+2. **🟢 P0 #2-4**: chunk/Phase deferred + TABS refactor + viewport 검증.
+3. **🟡 P0 #5**: Book 폴더 Phase 2 UI.
+4. **🟡 P0 #6**: Wiki list 정밀 진단.
+
+---
+
 ## 🚀 2026-05-25 (대규모 세션 #3) — P0 #1/#2 완성 + 검색 정통화 + Open Design install + Plot v2 통째 재설계 결정 (PR #459-#470, 12 PR) ⭐⭐⭐⭐⭐
 
 **범위**: 단일 세션 누적 12 PR. (a) Chrome architecture 완성, (b) 검색 architecture 정통화 (Path A), (c) Dashboard 풀 폭 + Mosaic 차트 + 색상 token 정합, (d) Insights 손질, (e) Books list 시각 균형, (f) **Plot v2 통째 재설계 결정 (Path A)** + Open Design install.
