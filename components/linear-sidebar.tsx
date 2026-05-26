@@ -307,6 +307,13 @@ export function LinearSidebar() {
 
   const activeSpace = useActiveSpace()
   const wikiViewMode = useWikiViewMode()
+  // Reactive subscription: ontology graph view mode (graph/insights/dashboard).
+  // Direct getState() call inside the IIFE below didn't re-render on viewMode
+  // change, so the active-tab highlight got stuck on whichever mode the user
+  // first opened. Subscribing here makes the sidebar re-render on mode flip.
+  const ontologyViewMode = usePlotStore(
+    (s) => (s as unknown as { viewStateByContext?: { graph?: { viewMode?: string } } }).viewStateByContext?.graph?.viewMode,
+  )
 
   // Shared knowledge metrics — same hook drives the Ontology > Insights tab,
   // so the Health numbers stay 1:1 with the panel.
@@ -1394,13 +1401,8 @@ export function LinearSidebar() {
               {(() => {
                 const isOnOntology = pathname?.startsWith("/ontology") ?? false
                 const currentMode = isOnOntology
-                  ? (() => {
-                      try {
-                        const vs = (usePlotStore.getState() as any).viewStateByContext?.graph
-                        return vs?.viewMode === "insights" ? "insights" :
-                               vs?.viewMode === "dashboard" ? "dashboard" : "graph"
-                      } catch { return "graph" }
-                    })()
+                  ? (ontologyViewMode === "insights" ? "insights" :
+                     ontologyViewMode === "dashboard" ? "dashboard" : "graph")
                   : null
                 const switchMode = (tab: "graph" | "insights" | "dashboard") => {
                   if (!isOnOntology) {
