@@ -6,7 +6,7 @@
  * Power Sabermetrics 정체성 — knowledge graph deep dive analytical depth.
  *
  * Sections (Phase 1 MVP):
- *   1. Stats        — Edges / Density (graph-specific KPI, Notes/Wiki Dashboard 중복 폐기)
+ *   1. Stats        — Edges / Density / Notes / Wiki (graph-specific KPI w/ HoverCard help)
  *   2. Coverage     — Mosaic 3 차트 (Tagged donut + Orphan donut + Cohesion radial)
  *   3. Nudge        — Actionable maintenance (keep, dashboard differentiator)
  *   4. Top Notes    — Composite score horizontal bar chart (was sabermetrics list)
@@ -20,9 +20,11 @@
  */
 
 import { useMemo } from "react"
+import { Info } from "lucide-react"
 import { usePlotStore } from "@/lib/store"
 import { useKnowledgeMetrics } from "@/hooks/use-knowledge-metrics"
 import { useT } from "@/lib/i18n"
+import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card"
 import { OntologyNudgeSection } from "./ontology-nudge-section"
 import {
   TaggedDonut,
@@ -54,10 +56,30 @@ export function OntologyInsightsPanel() {
       <Section label={t("ontology.insights.section.health")}>
         <StatLine
           items={[
-            { label: t("ontology.insights.stat.edges"), value: metrics.totalEdges },
-            { label: t("ontology.insights.stat.density"), value: metrics.linkDensity.toFixed(1) },
-            { label: t("ontology.insights.stat.notes"), value: metrics.totalNotes },
-            { label: t("ontology.insights.stat.wiki"), value: metrics.totalWiki },
+            {
+              label: t("ontology.insights.stat.edges"),
+              value: metrics.totalEdges,
+              helpTitle: t("ontology.insights.help.edges_title"),
+              helpBody: t("ontology.insights.help.edges_body"),
+            },
+            {
+              label: t("ontology.insights.stat.density"),
+              value: metrics.linkDensity.toFixed(1),
+              helpTitle: t("ontology.insights.help.density_title"),
+              helpBody: t("ontology.insights.help.density_body"),
+            },
+            {
+              label: t("ontology.insights.stat.notes"),
+              value: metrics.totalNotes,
+              helpTitle: t("ontology.insights.help.notes_title"),
+              helpBody: t("ontology.insights.help.notes_body"),
+            },
+            {
+              label: t("ontology.insights.stat.wiki"),
+              value: metrics.totalWiki,
+              helpTitle: t("ontology.insights.help.wiki_title"),
+              helpBody: t("ontology.insights.help.wiki_body"),
+            },
           ]}
         />
       </Section>
@@ -116,7 +138,12 @@ function Section({
 function StatLine({
   items,
 }: {
-  items: Array<{ label: string; value: number | string }>
+  items: Array<{
+    label: string
+    value: number | string
+    helpTitle?: string
+    helpBody?: string
+  }>
 }) {
   return (
     <div className="flex items-stretch divide-x divide-border/40 px-2">
@@ -125,7 +152,34 @@ function StatLine({
           key={item.label}
           className="flex flex-1 flex-col gap-0.5 px-3 py-1.5 first:pl-0"
         >
-          <span className="text-2xs text-muted-foreground">{item.label}</span>
+          <span className="flex items-center gap-1 text-2xs text-muted-foreground">
+            {item.label}
+            {(item.helpTitle || item.helpBody) && (
+              <HoverCard openDelay={150}>
+                <HoverCardTrigger asChild>
+                  <button
+                    type="button"
+                    aria-label="What does this mean?"
+                    className="text-muted-foreground/50 transition-colors hover:text-foreground"
+                  >
+                    <Info size={11} strokeWidth={2} />
+                  </button>
+                </HoverCardTrigger>
+                <HoverCardContent side="top" align="start" className="w-72">
+                  {item.helpTitle && (
+                    <h4 className="mb-1.5 text-2xs font-semibold uppercase tracking-wider text-muted-foreground">
+                      {item.helpTitle}
+                    </h4>
+                  )}
+                  {item.helpBody && (
+                    <p className="text-note leading-relaxed text-foreground/85">
+                      {item.helpBody}
+                    </p>
+                  )}
+                </HoverCardContent>
+              </HoverCard>
+            )}
+          </span>
           <span className="text-sm font-medium tabular-nums text-foreground">
             {item.value}
           </span>
