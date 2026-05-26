@@ -329,9 +329,9 @@ function ColumnHeaders({
   // undefined visibleColumns => all visible (backwards compat).
   const isVisible = (key: string) => !visibleColumns || visibleColumns.includes(key)
   return (
-    <div className="flex h-[30px] items-center gap-[8px] px-[20px] text-note font-normal text-foreground/80 border-b border-border bg-secondary/30">
+    <div className="flex items-center px-5 py-2 text-note font-medium text-foreground/80 border-b border-border bg-secondary/30">
       {hasSelection && (
-        <div className="w-[32px] shrink-0 flex items-center justify-center">
+        <div className="w-8 shrink-0 flex items-center justify-center">
           {onSelectAll ? (
             <div
               data-checkbox
@@ -424,7 +424,7 @@ function ArticleTableRow({
   const rowContent = (
     <div
       className={cn(
-        "group flex h-[38px] w-full items-center gap-[8px] px-[20px] text-[13px] hover:bg-hover-bg transition-colors duration-100",
+        "group flex w-full items-center px-5 py-2.5 hover:bg-hover-bg transition-colors duration-100",
         isSelected && "bg-accent/5",
         // Phase 3: highlight the row whose article is mirrored in the dual
         // editor pane. Stronger background than `isSelected` so multi-select
@@ -436,7 +436,7 @@ function ArticleTableRow({
       {onSelect && (
         <div
           className={cn(
-            "w-[32px] shrink-0 flex items-center justify-center cursor-pointer",
+            "w-8 shrink-0 flex items-center justify-center cursor-pointer",
             selectionActive || isSelected ? "visible" : "invisible group-hover:visible"
           )}
           onClick={(e) => {
