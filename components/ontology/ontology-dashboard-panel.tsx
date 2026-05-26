@@ -134,9 +134,9 @@ export function OntologyDashboardPanel() {
           <Stat
             label={t("ontology.dashboard.stat.wiki_articles")}
             value={m.totalWiki ?? wikiArticles.length}
-            sub={wikiStatusCounts.stubs > 0
-              ? t("ontology.dashboard.meta.stub_count").replace("{count}", String(wikiStatusCounts.stubs))
-              : undefined}
+            sub={t("ontology.dashboard.meta.wiki_breakdown")
+              .replace("{articles}", String(wikiStatusCounts.articles))
+              .replace("{stubs}", String(wikiStatusCounts.stubs))}
           />
           <Stat label={t("ontology.dashboard.stat.books")} value={books.filter((b) => !b.trashed).length} />
           <Stat label={t("ontology.dashboard.stat.tags")} value={tags.length} />
