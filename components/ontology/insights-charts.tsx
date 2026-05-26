@@ -16,6 +16,7 @@
  */
 
 import { useEffect, useRef, useState } from "react"
+import { Info } from "lucide-react"
 import {
   PieChart,
   Pie,
@@ -31,6 +32,7 @@ import {
   PolarAngleAxis,
 } from "recharts"
 import { useT } from "@/lib/i18n"
+import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card"
 
 // ────────────────────────────────────────────────────────────────────────────
 // Shared — useChartWidth hook (ResizeObserver pattern)
@@ -70,16 +72,49 @@ const BAR_COLOR = "var(--accent)"
 
 interface ChartCardProps {
   title: string
+  /** Optional hover-card help — appears as an info icon next to the title. */
+  helpTitle?: string
+  helpBody?: string
+  helpFormula?: string
   children: React.ReactNode
 }
 
-function ChartCard({ title, children }: ChartCardProps) {
+function ChartCard({ title, helpTitle, helpBody, helpFormula, children }: ChartCardProps) {
+  const hasHelp = Boolean(helpTitle || helpBody)
   return (
     <div className="rounded-lg border border-border bg-card">
-      <div className="border-b border-border-subtle px-4 py-2.5">
+      <div className="flex items-center justify-between border-b border-border-subtle px-4 py-2.5">
         <h3 className="text-2xs font-medium uppercase tracking-wider text-muted-foreground">
           {title}
         </h3>
+        {hasHelp && (
+          <HoverCard openDelay={150}>
+            <HoverCardTrigger asChild>
+              <button
+                type="button"
+                aria-label="What does this mean?"
+                className="text-muted-foreground/50 transition-colors hover:text-foreground"
+              >
+                <Info size={13} strokeWidth={2} />
+              </button>
+            </HoverCardTrigger>
+            <HoverCardContent side="top" align="end" className="w-72">
+              {helpTitle && (
+                <h4 className="mb-1.5 text-2xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  {helpTitle}
+                </h4>
+              )}
+              {helpBody && (
+                <p className="text-note leading-relaxed text-foreground/85">{helpBody}</p>
+              )}
+              {helpFormula && (
+                <p className="mt-2 rounded-md bg-muted/50 px-2 py-1.5 text-2xs font-mono text-muted-foreground">
+                  {helpFormula}
+                </p>
+              )}
+            </HoverCardContent>
+          </HoverCard>
+        )}
       </div>
       <div className="p-4">{children}</div>
     </div>
@@ -109,7 +144,11 @@ export function TaggedDonut({ tagged, untagged }: TaggedDonutProps) {
   const pct = total > 0 ? Math.round((tagged / total) * 100) : 0
 
   return (
-    <ChartCard title={t("ontology.insights.coverage_tagged")}>
+    <ChartCard
+      title={t("ontology.insights.coverage_tagged")}
+      helpTitle={t("ontology.insights.help.tagged_title")}
+      helpBody={t("ontology.insights.help.tagged_body")}
+    >
       <div ref={ref} className="flex flex-col items-center gap-3">
         {total === 0 ? (
           <p className="py-8 text-note text-muted-foreground">
@@ -181,7 +220,11 @@ export function OrphanDonut({ orphans, connected }: OrphanDonutProps) {
   const pct = total > 0 ? Math.round((orphans / total) * 100) : 0
 
   return (
-    <ChartCard title={t("ontology.insights.coverage_orphan")}>
+    <ChartCard
+      title={t("ontology.insights.coverage_orphan")}
+      helpTitle={t("ontology.insights.help.orphan_title")}
+      helpBody={t("ontology.insights.help.orphan_body")}
+    >
       <div ref={ref} className="flex flex-col items-center gap-3">
         {total === 0 ? (
           <p className="py-8 text-note text-muted-foreground">
@@ -248,7 +291,11 @@ export function CohesionRadial({ cohesion }: CohesionRadialProps) {
   const data = [{ name: "cohesion", value: pct, fill: POSITIVE_COLOR }]
 
   return (
-    <ChartCard title={t("ontology.insights.coverage_cohesion")}>
+    <ChartCard
+      title={t("ontology.insights.coverage_cohesion")}
+      helpTitle={t("ontology.insights.help.cohesion_title")}
+      helpBody={t("ontology.insights.help.cohesion_body")}
+    >
       <div ref={ref} className="flex flex-col items-center gap-3">
         <div className="relative">
           <RadialBarChart
@@ -269,9 +316,6 @@ export function CohesionRadial({ cohesion }: CohesionRadialProps) {
             <span className="text-xl font-semibold tabular-nums text-foreground">{pct}%</span>
           </div>
         </div>
-        <p className="text-2xs text-muted-foreground/70">
-          {t("ontology.insights.cohesion_hint")}
-        </p>
       </div>
     </ChartCard>
   )
@@ -306,7 +350,12 @@ export function TopNotesBar({ entries, onClick }: TopNotesBarProps) {
   const chartHeight = Math.max(220, data.length * 32)
 
   return (
-    <ChartCard title={t("ontology.insights.top_notes")}>
+    <ChartCard
+      title={t("ontology.insights.top_notes")}
+      helpTitle={t("ontology.insights.help.composite_title")}
+      helpBody={t("ontology.insights.help.composite_body")}
+      helpFormula={t("ontology.insights.top_notes_formula")}
+    >
       <div ref={ref} className="w-full">
         <p className="mb-3 text-2xs text-muted-foreground/70">
           {t("ontology.insights.top_notes_formula")}
