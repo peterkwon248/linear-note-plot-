@@ -170,6 +170,7 @@ export function createBooksSlice(set: Set, _get: Get, appendEvent: AppendEventFn
         id,
         title,
         items: [],
+        folderIds: [],
         createdAt,
         updatedAt: createdAt,
       }

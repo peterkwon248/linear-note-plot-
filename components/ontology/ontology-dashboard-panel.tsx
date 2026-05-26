@@ -143,7 +143,14 @@ export function OntologyDashboardPanel() {
           <Stat label={t("ontology.dashboard.stat.labels")} value={labels.length} />
           <Stat label={t("ontology.dashboard.stat.stickers")} value={stickers.length} />
           <Stat label={t("ontology.dashboard.stat.wiki_categories")} value={wikiCategories.length} />
-          <Stat label={t("ontology.dashboard.stat.folders")} value={folders.length} />
+          <Stat
+            label={t("ontology.dashboard.stat.folders")}
+            value={folders.length}
+            sub={t("ontology.dashboard.meta.folder_breakdown")
+              .replace("{notes}", String(folders.filter((f) => f.kind === "note").length))
+              .replace("{wikis}", String(folders.filter((f) => f.kind === "wiki").length))
+              .replace("{books}", String(folders.filter((f) => f.kind === "book").length))}
+          />
         </Grid>
       </Section>
 

@@ -97,6 +97,7 @@ function makeBook(overrides: Partial<Book> = {}): Book {
     id: "book-1",
     title: "Test Book",
     items: [],
+    folderIds: [],
     createdAt: "2026-01-01",
     updatedAt: "2026-01-01",
     ...overrides,
