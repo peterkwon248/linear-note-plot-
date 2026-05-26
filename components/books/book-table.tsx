@@ -102,7 +102,7 @@ function TH({
 
   if (!col) {
     return (
-      <span className={cn("inline-flex items-center text-note font-medium text-foreground/80", alignClass)}>
+      <span className={cn("inline-flex items-center text-note font-normal text-foreground/80", alignClass)}>
         {label}
       </span>
     )
@@ -112,7 +112,7 @@ function TH({
     <button
       type="button"
       className={cn(
-        "group/th inline-flex items-center gap-1 text-note font-medium text-foreground/80 transition-colors hover:text-foreground",
+        "group/th inline-flex items-center gap-1 text-note font-normal text-foreground/80 transition-colors hover:text-foreground",
         alignClass,
       )}
       onClick={() => onSort(col)}
@@ -225,7 +225,7 @@ export function BookTable({
 
       {/* Sticky header — row height matches Notes/Wiki list (px-5 py-2);
           previous h-9 was tighter than the rest of the entity lists. */}
-      <div className="sticky top-0 z-10 flex items-center border-b border-border bg-background px-5 py-2">
+      <div className="sticky top-0 z-10 flex h-[30px] items-center border-b border-border bg-background px-5">
         {/* Select-all checkbox (notes-table parity) */}
         <div className="flex w-8 shrink-0 items-center justify-center">
           <CheckboxBox
@@ -475,7 +475,7 @@ function BookRow({
             // border between rows. Hover bg still provides row separation.
             // 2026-05-24: h-9 (36px tight) → py-2.5 to match Notes/Wiki row
             // height — Books was visibly tighter than the rest at default zoom.
-            "group flex w-full items-center px-5 py-2.5 text-left transition-colors",
+            "group flex h-[38px] w-full items-center px-5 text-[13px] text-left transition-colors",
             book.trashed
               ? "opacity-50 hover:bg-hover-bg cursor-default"
               : "hover:bg-hover-bg cursor-pointer",
@@ -573,7 +573,7 @@ function renderCell(
           <span className="flex h-5 w-5 shrink-0 items-center justify-center text-muted-foreground/70">
             <BookKindIcon kind={kind} size={14} />
           </span>
-          <span className="min-w-0 truncate text-note text-foreground pl-2">
+          <span className="min-w-0 truncate text-foreground pl-2">
             {book.title || "Untitled book"}
           </span>
           {book.pinned && (
