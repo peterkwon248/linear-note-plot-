@@ -70,7 +70,7 @@ interface BookColumnDef {
 }
 
 const BOOK_COLUMNS: (BookColumnDef & { labelKey?: string })[] = [
-  { id: "title",     label: "Name",     labelKey: "display.ordering.title",   width: "flex-1 min-w-[120px] max-w-[480px]", sortField: "title" },
+  { id: "title",     label: "Name",     labelKey: "display.ordering.title",   width: "flex-1 min-w-[120px]", sortField: "title" },
   { id: "kind",      label: "Kind",     labelKey: "books.prop.kind",          width: "w-[110px] shrink-0", align: "left" },
   { id: "itemCount", label: "Items",    labelKey: "books.prop.item_count",    width: "w-[96px] shrink-0",  align: "right", sortField: "itemCount" },
   { id: "sources",   label: "Sources",  labelKey: "books.prop.smart_sources", width: "w-[100px] shrink-0", align: "left" },
