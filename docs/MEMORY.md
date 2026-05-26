@@ -8,6 +8,41 @@
 
 ---
 
+## 🚀 2026-05-27 (오전~새벽) — Search entity-aware + Ontology Insights v2 + HoverCard 학습 패턴 (PR #473-#479, 8 PR 23 commits) ⭐⭐⭐⭐⭐
+
+**범위**: 누적 8 PR 머지. (a) Search entity-aware refactor (3 PR): hardcoded "RECENT NOTES" only 버그 fix → 11 entity 분기 + section title 통일 + Linear/Notion progressive disclosure. (b) Ontology Insights v2 재설계 (옵션 A Power Sabermetrics): 4 section + Coverage Mosaic 3 chart + Composite score horizontal bar. (c) Tab highlight bug fix (reactive subscribe). (d) HoverCard 학습 패턴 도입 (4 chart + 4 KPI ⓘ icon).
+
+**핵심 결정 (영구 LOCKED 후보 #148~#152)**:
+- **#148 (vision)**: **Ontology Insights = Power Sabermetrics 정체성**. Composite WAR-like score + Coverage Mosaic (Tagged/Orphan/Cohesion donut+radial) + NUDGE actionable + visualization. Daily habit (streak/heatmap) 미채택. 가끔 deep dive power-tool. knowledge app 중 독특 정체성 (Obsidian = graph view, Linear = BI, Anki = personal stats, Plot = sabermetrics + actionable nudge).
+- **#149 (vision)**: **Linear/Notion progressive disclosure 패턴** — 8 limit + "Show all {count} →" button. Recency bias + cognitive load 감소. Plot search view 적용. 다른 surface (sidebar/inbox)에도 확대 가능.
+- **#150 (vision)**: **HoverCard 학습 패턴 = abstract metric 학습 도구**. ⓘ Info icon + Radix HoverCard. Plot identity ("Gentle by default") 정통 — 강제 노출 X, 학습 의지로 hover. Composite formula + 정의 + 예시. metric/term 추상도 높은 곳 (Cluster Cohesion / Density / WAR-score 등) 적용. 다른 추상 용어 (status pill / kind chip 등)에도 확대 가치.
+- **#151 (vision)**: **Search section title = entity name만 + entity별 sort**. RECENT prefix 제거 (사용자 의도 옵션 1). updatedAt desc / name asc / createdAt desc / lastAccessedAt fallback per entity timestamp 유무. 8 limit + Show More.
+- **#152 (vision, 다음 세션 결정)**: **Coverage entity dropdown** — 옵션 C (Tagged/Orphan dropdown + Cohesion fixed) vs B (Notes/Wiki만) vs D (entity별 별도 page).
+
+**완료** (8 PR 누적):
+- Search entity-aware (#473/#474/#475): !hasFuzzyQuery 11 entity 분기 + section title 통일 + Show More button
+- Ontology Insights v2 (#476): 4 section Power Sabermetrics 재설계. insights-charts.tsx 신규
+- Tab highlight bug (#477): linear-sidebar.tsx reactive subscribe
+- HoverCard 학습 (#478/#479): 4 chart + 4 KPI ⓘ icon + Radix HoverCard
+
+**기술 학습 (영구)**:
+- **`usePlotStore.getState()` static read는 reactive X** — selector hook (`usePlotStore(s => ...)`)으로 subscribe 필요. 사이드바 currentMode 등 store-dependent display value는 반드시 subscriber 패턴.
+- **Radix HoverCard 패턴**: `<HoverCard openDelay={150}><HoverCardTrigger asChild><button/></HoverCardTrigger><HoverCardContent side="top" align="end" className="w-72">...</HoverCardContent></HoverCard>`. asChild로 button을 trigger. side/align prop으로 popup 위치 제어.
+- **Recharts BarChart onClick payload**: `state.activePayload[0].payload` type assertion 필요.
+- **RadialBarChart % indicator pattern**: PolarAngleAxis domain [0,100] + RadialBar value 0-100 + absolute-positioned `<span>` 안 % display + `pointer-events-none` (chart interaction 방해 X).
+- **entity-aware IIFE 분기**: 11 entity 각자 다른 data/handler/icon이라 IIFE 안 helper functions로 단순화. nav() helper로 navigation target wire.
+- **Linear/Notion Show More pattern**: `count > LIMIT && <button onClick={navigate}>전체 {count}개 보기 →</button>`. 8 limit + count badge + entity별 navigation. progressive disclosure 정통.
+
+**다음 P0** (사용자 명시):
+1. **🔴 P0 #1 (사용자 최우선)**: **Coverage entity dropdown 논의 + 진행**. 옵션 C/B/D 결정. Books orphan 정의. Cohesion entity별 vs 그래프 전체.
+2. **🔴 P0 #2**: Phase 0 Design Language + Plot v2 PRD (2 세션째 deferred).
+3. **🟡 P0 #3**: NUDGE Connect 실제 동작 (Link Picker Auto-Open 패턴 A — 답 안 함).
+4. **🟡 P0 #4**: Insights에서 Notes/Wiki KPI 폐기 검토 (Dashboard 중복 정합).
+5. **🟢 P0 #5**: 사용자 viewport 검증 잔여 (PR #473-#479 모두).
+6. **🟢 P0 #6**: Book 폴더 Phase 2 UI.
+
+---
+
 ## 🚀 2026-05-26 (저녁) — viewport polish 세션: LOCKED #136 v2 revised + Book 폴더 Phase 1 + entity list Notes parity 점진 정합 (PR #472, 13 commits) ⭐⭐⭐⭐
 
 **범위**: 단일 PR 누적 13 commits. (a) Layout LOCKED #136 v1→v2 (풀 폭 → max-w-5xl Home pattern, 사용자 viewport revert), (b) Dashboard KPI i18n + 버그 fix + wiki_breakdown, (c) Book 폴더 Phase 1 (schema + migration v149 + dashboard sub-line + 12 cascade fix), (d) Books → Notes parity 점진 정합 8 commits (header layout + Title cap 폐기 + font/height/gap/padding + cover icon naked), (e) Wiki 순서 swap + minimal checkbox + 광범위 fix broken/revert.

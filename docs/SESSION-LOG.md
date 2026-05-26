@@ -6,6 +6,142 @@
 
 ---
 
+## 2026-05-27 (오전~새벽) — Windows, **거대 세션: Search entity-aware + Ontology Insights v2 + HoverCard 학습 패턴 (PR #473-#479, 7 PR 머지)**
+
+> 🎯 **다음 즉시 액션 (사용자 최우선 명시)**: **Coverage entity dropdown 논의 — 옵션 C / B / D 결정 후 진행**. 사용자 의도 = Coverage Mosaic을 Notes/Wiki/Books 기준 dropdown으로 entity 별 다른 통계 표시. 옵션:
+>   - **C (즉시, 작음)**: Tagged/Orphan dropdown + Cohesion fixed (그래프 전체). Books orphan 정의 필요.
+>   - **B (중간)**: Notes/Wiki만 dropdown (Books 제외). Cohesion entity별.
+>   - **D (큰 작업)**: 각 entity별 별도 Insights page (Notes/Wiki/Books). 이전 P0 #2 후보 (Phase A2/B/C). Plot v2 P0 #1 통합 가치.
+> 사용자에게 옵션 + Books orphan 정의 + Cohesion sub-label 추가 결정 받은 후 진행.
+>
+> **사용자 의도** (그대로 인용):
+> - "오버뷰나 대시보드, 인사이트의 경우 이렇게 여백이 있는 게 나은 거 같아" (이전 세션, layout LOCKED #136 v2)
+> - "검색창 all을 눌렀을 때 ... 전부 똑같이 나와. 하드코딩이 되어있단 소리야" (search entity-aware fix)
+> - "왜 리센트 노트스로 나오지?... 실제로 리센트로 보여주는 게 맞을 거 같아. 더 보고 싶으면 more 같은 버튼" (Linear/Notion progressive disclosure)
+> - "온톨로지 인사이트를 재설계하자" → 옵션 A (Power Sabermetrics) → 4 section MVP
+> - "클러스터 응집력 표현이 추상적인데?? 호버로 설명카드가 나오면 좋을 듯" (HoverCard 학습 패턴)
+> - "엣지나 밀도가 그래프 상태에서 뭘 의미하는 거지??" (Graph Health KPI HoverCard)
+> - "커버리지가 단순히 고정이 되어서 나오는 것보다는 드롭다운이 있고 선택해서 노트/위키/북 기준 다르게 보여주는 게 낫지 않나" (Coverage entity dropdown — 다음 세션 P0 #1)
+>
+> **다음 세션 첫 스텝**:
+> 1. **Coverage entity dropdown brainstorm 답** — 옵션 C 또는 B 또는 D 결정
+> 2. **Books orphan 정의** (items 0 = orphan? 또는 wiki link 받지 않은 책?)
+> 3. **Cohesion entity별 vs 그래프 전체** 결정
+> 4. **새 branch + Coverage section dropdown UI** wire
+> 5. **use-knowledge-metrics hook 확장** (entity별 metrics — Wiki orphan: 다른 wiki에서 link 안 받음, Wiki tagged: WikiArticle.tags 비율)
+> 6. **i18n keys 추가** (entity dropdown labels + Books orphan/cohesion sub-labels)
+>
+> **다음 세션 추가 P0** (다음 우선순위 순):
+> - **🔴 P0 #2**: Plot v2 P0 #1 — Phase 0 Design Language 결정 + Plot v2 PRD (여전히 미시작, 2 세션째 deferred). Open Design web UI + 71 system + critic + Chrome surface 첫 mockup.
+> - **🟡 P0 #3**: NUDGE Connect 실제 동작 (Link Picker Auto-Open 패턴 A) — 사용자 명시했으나 결정 답 안 함. brainstorm 진행 중.
+> - **🟡 P0 #4**: Insights에서 Notes/Wiki KPI 폐기 검토 (PRD 의도 = Dashboard 중복 폐기. 현재 keep 됐음).
+> - **🟢 P0 #5**: 사용자 viewport 검증 잔여 (PR #472-#479 모두).
+> - **🟢 P0 #6**: Book 폴더 Phase 2 UI (book-folder-picker / sidebar section / folder/[id]/page.tsx book branch / smartSources resolver book kind).
+>
+> **컴포넌트 구조 / 데이터 흐름** (Coverage dropdown 진행 시 reference):
+> ```
+> Coverage section:
+>   ┌─[Notes ▾]─────────────────────────┐   ← dropdown trigger
+>   ├ TaggedDonut    OrphanDonut    CohesionRadial
+>   │ (entity 별)    (entity 별)    (entity 별 또는 그래프 전체)
+>   └─────────────────────────────────────┘
+>
+> use-knowledge-metrics 확장:
+>   - metrics.byEntity.notes.{tagCoverage, orphanRate, cohesion}
+>   - metrics.byEntity.wiki.{tagCoverage, orphanRate, cohesion}
+>   - metrics.byEntity.books.{tagCoverage, orphanRate, cohesion?}  // cohesion 의미 모호
+> ```
+>
+> **위험 + 회피**:
+> - **Coverage dropdown = entity별 metric 정의 명확화 필요**. Wiki orphan = "다른 wiki에서 link 안 받음" 가장 자연. Books orphan = "items 0개" 가능. Cohesion entity별 = cluster detection 알고리즘 entity별 별도 계산 부담.
+> - **Plot v2 P0 #1 2 세션째 deferred** — 사용자가 viewport polish/feature 작업 우선. 다음 세션도 Coverage dropdown 우선. Plot v2 PRD 시작 더 늦어질 수 있음. 사용자 의도 = 점진 polish + Plot v2는 거대 작업이라 마음 준비 필요.
+> - **NUDGE Connect 진행 결정 미답** — brainstorm 답 줬으나 사용자 다른 의제로 redirect. 다음 세션 별도 진행 가능.
+> - **HoverCard 패턴 = Plot identity 정통**. "Gentle by default" — 추상 용어 학습 hover로 (강제 X). 이번 세션 metric tooltip 8개 + 4 chart tooltip 4개 추가. 다른 추상 용어에도 확대 가치.
+>
+> **참고 파일**:
+> - `components/ontology/insights-charts.tsx` (4 chart + ChartCard helpTitle/helpBody/helpFormula props)
+> - `components/ontology/ontology-insights-panel.tsx` (4 section + StatLine helpTitle/helpBody props)
+> - `hooks/use-knowledge-metrics.ts` (entity별 metrics 확장 필요)
+> - `lib/insights/metrics.ts` (Composite score 공식)
+> - `lib/insights/types.ts` (KnowledgeMetrics interface — entity별 확장 필요)
+> - `components/ui/hover-card.tsx` (Radix HoverCard)
+> - `components/ui/select.tsx` (dropdown — Coverage entity selector에 활용 가능)
+> - `components/views/search-view.tsx` (entity-aware tabs reference 패턴)
+> - `docs/MEMORY.md` (영구 LOCKED + #143~#151 누적)
+>
+> **머신**: Windows. cross-machine 가능.
+> **현재 main HEAD**: PR #479 머지 후 (`f5be74a`).
+> **branch worktree**: `main`. 다음 세션 새 worktree로 시작 권장.
+
+### 완료 (이번 세션 — 8 PR 머지 #472-#479, 23 commits)
+
+이번 세션은 **사용자 viewport polish + Search entity-aware refactor + Ontology Insights v2 재설계 + HoverCard 학습 패턴 도입**.
+
+**Layout (이전 세션 hold-over) — PR #472 (13 commits)**:
+- 4 페이지 max-w-5xl revert (LOCKED #136 v1 → v2). Dashboard KPI 라벨 단순화 + status_breakdown 버그 fix + wiki_breakdown 신규. Book 폴더 Phase 1 (schema + v149 migration). Books → Notes parity 점진 정합 8 commits (header layout + Title cap 폐기 + pixel-perfect px-[20px]/gap-[8px]/w-[32px] + cover icon naked SVG).
+
+**Search Entity-Aware Refactor — PR #473/#474/#475**:
+- PR #473: !hasFuzzyQuery 블록 11 entity 분기 추가 (notes/wiki/books/categories/tags/labels/stickers/references/templates/folders). 이전 hardcoded "RECENT NOTES"만 표시 버그 fix.
+- PR #474: section title 통일 (entity name만, RECENT prefix 제거) + entity별 sort logic (updatedAt desc / createdAt desc / name asc per entity timestamp 유무).
+- PR #475: Linear/Notion progressive disclosure — "전체 {count}개 보기 →" button. count > 8일 때만 render. nav() helper로 11 entity별 navigation target wire.
+
+**Ontology Insights v2 — PR #476**:
+- 사용자 선택 옵션 A (Power Sabermetrics). 4 section 재설계: Graph Health KPI (Edges/Density/Notes/Wiki) / Coverage Mosaic 3 chart (TaggedDonut/OrphanDonut/CohesionRadial) / NUDGE keep / TopNotesBar (composite score horizontal). 신규 컴포넌트 `insights-charts.tsx` (ResizeObserver pattern, dashboard-charts.tsx parity, ChartCard wrapper). i18n 17 keys 신규 EN+KO.
+
+**Tab Highlight Bug Fix — PR #477**:
+- linear-sidebar.tsx의 currentMode = `usePlotStore.getState()` static read → reactive subscribe `usePlotStore(s => viewModeByGraph)`로 변경. ontology graph/insights/dashboard tab 클릭 시 사이드바 highlight 정확 update.
+
+**HoverCard 학습 패턴 도입 — PR #478/#479**:
+- PR #478: 4 chart (Tagged/Orphan/Cohesion/Composite)에 ⓘ icon + HoverCard 설명. ChartCard에 helpTitle/helpBody/helpFormula props. "Cluster Cohesion" 등 추상 용어 hover로 학습. Plot identity ("Gentle by default") 정합.
+- PR #479: Graph Health 4 KPI (Edges/Density/Notes/Wiki)에도 동일 HoverCard 패턴. StatLine 컴포넌트 helpTitle/helpBody props 추가. ⓘ icon size 11 inline.
+
+### 브레인스토밍 & 큰 결정 (영구 LOCKED 후보 #148~#152)
+
+- **#148 (vision)**: **Ontology Insights = Power Sabermetrics 정체성**. Composite score (WAR-like) + Coverage Mosaic + NUDGE actionable + visualization. Daily habit (streak/heatmap) 미채택. 가끔 deep dive power-tool. knowledge app 중 독특 (Obsidian = graph view만, Linear = BI만, Anki = personal stats만).
+- **#149 (vision)**: **Linear/Notion progressive disclosure 패턴** — Recency bias (80% 사용자가 최근 access) + 8 limit + "Show all {count} →" button. cognitive load 감소. Plot search view에 적용. 다른 surface (sidebar / inbox / 등)에도 확대 가능.
+- **#150 (vision)**: **HoverCard 학습 패턴 = abstract metric 학습 도구**. ⓘ icon (Info from lucide) + Radix HoverCard. Plot identity ("Gentle by default") 정통 — 강제 노출 X, 사용자 학습 의지로 hover. composite formula + 정의 + 예시. metric/term 추상도 높은 곳 (Cluster Cohesion / Density / WAR-score 등) 적용. 다른 추상 용어 (status pill, kind chip 등)에도 확대 가치.
+- **#151 (vision)**: **Search section title = entity name만 + entity별 sort**. RECENT prefix 제거. updatedAt desc (notes/wiki/books/categories/references/templates) / name asc (tags/labels — timestamp 없음) / createdAt desc (stickers) / lastAccessedAt fallback createdAt desc (folders). 8 limit + Show More button.
+- **#152 (vision, 다음 세션 결정)**: **Coverage entity dropdown** — 옵션 C (Tagged/Orphan dropdown + Cohesion fixed) vs B (Notes/Wiki만) vs D (entity별 별도 page). 결정 후 진행.
+
+### 기술 학습 (영구)
+
+- **`usePlotStore.getState()` static read는 reactive X**: selector hook (`usePlotStore(s => ...)`)으로 subscribe 필요. 사이드바 currentMode 등 store-dependent display value는 반드시 subscriber 패턴. linear-sidebar.tsx PR #477 fix 사례.
+- **Radix HoverCard 패턴**: `<HoverCard openDelay={150}><HoverCardTrigger asChild><button>...</button></HoverCardTrigger><HoverCardContent side="top" align="end" className="w-72">...</HoverCardContent></HoverCard>`. asChild로 button을 trigger. side/align prop으로 popup 위치 제어.
+- **Recharts BarChart onClick payload**: `onClick={(state) => { if (state?.activePayload?.[0]) { const payload = state.activePayload[0].payload; ... } }}`. payload type assertion 필요.
+- **RadialBarChart % indicator pattern**: PolarAngleAxis domain [0,100] + RadialBar value 0-100 + 별도 absolute-positioned `<div>` 안 `<span>`으로 center에 % display. `pointer-events-none` 필수 (chart interaction 방해 X).
+- **entity-aware 분기 in IIFE**: `{(() => { const helpers...; return <div>...</div> })()}` 패턴으로 inline scope. 11 entity가 각자 다른 data + handler + icon이라 helper functions로 단순화.
+- **Linear/Notion Show More**: `count > LIMIT && <button onClick={navigate}>전체 {count}개 보기 →</button>`. 8 limit + count badge + entity별 navigation target. progressive disclosure.
+- **Plot root font-size 14px discovery는 이전 세션 hold-over**: lib/settings-store.ts default. 이번 세션 영향 없음 — inline px ([20px], [8px], [32px], [13px]) 패턴 정통화. Plot v2에서 spacing scale 절대 px 정의 가치 (이전 세션 #144 vision).
+
+### Watch Out (다음 세션)
+
+- **Coverage entity dropdown 결정이 가장 큰 의제** — 옵션 C/B/D + Books orphan 정의 + Cohesion entity별 vs 그래프 전체. 잘못 고르면 use-knowledge-metrics hook 재작업.
+- **Plot v2 P0 #1 2 세션째 deferred** — 진행 의지 vs 점진 polish 우선. 사용자 결정.
+- **NUDGE Connect 동작 미완** — Link Picker Auto-Open 패턴 A 사용자 답 안 함. brainstorm 답 줬으나 redirect됨. 다음 세션 별도 진행 가능.
+- **Insights Notes/Wiki KPI 폐기 검토 미답** — PRD 의도 = Dashboard 중복 폐기. 현재 keep 됐음. 사용자 의향 확인 필요.
+- **HoverCard 패턴 확대 가치** — 다른 추상 용어 (status pill / kind chip / Density formula / Top Hubs 등)에도 적용 가능. Plot v2에서 정통화.
+
+### 환경 변경
+
+- **Store version**: v149 keep (이번 세션 변경 없음). PR #472에서 v148→v149 완료 (Book 폴더).
+- **신규 파일** (1):
+  - `components/ontology/insights-charts.tsx` (4 charts: TaggedDonut / OrphanDonut / CohesionRadial / TopNotesBar + ChartCard with HoverCard support)
+- **신규 i18n keys** (~50개 EN+KO 누적):
+  - search.section.{notes/wiki/books/categories/tags/labels/stickers/references/templates/folders/view_all}
+  - ontology.insights.section.{health/coverage}
+  - ontology.insights.stat.{edges/density/notes/wiki}
+  - ontology.insights.coverage_{tagged/orphan/cohesion}
+  - ontology.insights.{tagged/untagged/orphans/connected/cohesion_hint/top_notes/top_notes_formula}
+  - ontology.insights.help.{tagged/orphan/cohesion/composite/edges/density/notes/wiki}_{title/body}
+- **Tests**: 변경 X. tsc clean 모든 8 PR.
+- **사용자 IDB stale**: 없음 (schema 변경 X).
+
+### 머신
+
+Windows. main에 8 PR squash merge. worktree branch 모두 deleted. 다음 세션 새 worktree로 시작 권장.
+
+---
+
 ## 2026-05-26 (저녁) — Windows, **viewport polish 세션: LOCKED #136 v2 revised + Book 폴더 Phase 1 + entity list Notes parity 점진 정합 (PR #472, 13 commits)**
 
 > 🎯 **다음 즉시 액션 (다음 세션 시작점)**: **Plot v2 P0 #1 — Phase 0 Design Language 결정 + Plot v2 통째 재설계 PRD 작성**. 이번 세션은 사용자 viewport polish 위주로 진행했으나 진짜 큰 의제 = Plot v2 redesign 미시작. 다음 세션 우선.

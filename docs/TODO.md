@@ -3,13 +3,39 @@
 > 우선순위 기반 작업 목록. **P0 = 다음 세션 즉시 시작점** (NEXT-ACTION.md 폐지, 2026-05-12).
 > 완료 항목은 즉시 삭제. 자세한 history는 SESSION-LOG.md + MEMORY.md.
 
-**마지막 갱신**: 2026-05-26 (저녁) — PR #472 13 commits: viewport polish 세션. LOCKED #136 v2 revised (Overview/Dashboard/Insights = max-w-5xl Home pattern) + Book 폴더 Phase 1 (store v149) + entity list Notes parity 점진 정합 (Books/Wiki). 다음 P0 #1 = **여전히 Phase 0 Design Language 결정 + Plot v2 PRD 작성** (이번 세션 미시작).
+**마지막 갱신**: 2026-05-27 (오전~새벽) — 8 PR 머지 (#473-#479, 23 commits): Search entity-aware refactor + Ontology Insights v2 (Power Sabermetrics) + HoverCard 학습 패턴. 다음 P0 #1 (사용자 최우선 명시) = **Coverage entity dropdown 논의 (옵션 C/B/D 결정)**.
 
 ---
 
-## 🟣 P0 — 즉시 (cross-machine 진입점, 2026-05-25 대규모 세션 #3 후)
+## 🟣 P0 — 즉시 (cross-machine 진입점, 2026-05-27 세션 후 — Coverage dropdown 최우선)
 
-### 1. **🔴 Phase 0 — Design Language 결정 + Plot v2 통째 재설계 PRD (사용자 명시 큰 결정)**
+### 0. **🔴 P0 #1 (사용자 최우선 명시): Coverage entity dropdown 논의 + 진행**
+
+**사용자 의도** (2026-05-27):
+> "커버리지가 단순히 고정이 되어서 나오는 것보다는 드롭다운이 있고 선택해서 노트 기준, 위키 기준, 북 기준, 이렇게 해서 각 섹션별로 다르게 보여주는 게 낫지 않나"
+
+**옵션** (사용자 결정 필요):
+- **C (즉시, 작음)**: Tagged/Orphan dropdown (Notes/Wiki/Books 기준) + Cohesion fixed (그래프 전체). Books orphan 정의 필요.
+- **B (중간)**: Notes/Wiki만 dropdown (Books 제외 — cohesion 의미 모호). Cohesion entity별 cluster detection.
+- **D (큰 작업)**: 각 entity별 별도 Insights page (Notes/Wiki/Books). 이전 P0 #2 후보 (Phase A2/B/C). Plot v2 P0 #1 통합 가치.
+
+**첫 스텝**:
+1. 사용자 옵션 결정 (C/B/D) + Books orphan 정의 + Cohesion sub-label 결정
+2. 새 branch `claude/coverage-entity-dropdown`
+3. `hooks/use-knowledge-metrics.ts` entity별 metrics 확장 (또는 별도 hook)
+4. `components/ontology/ontology-insights-panel.tsx` Coverage section header에 dropdown UI
+5. `components/ontology/insights-charts.tsx` 3 chart entity prop 추가
+6. i18n keys (dropdown labels + entity별 sub-labels)
+
+**파일 reference**:
+- `components/ontology/ontology-insights-panel.tsx` Section 2 Coverage Mosaic
+- `components/ontology/insights-charts.tsx` (TaggedDonut / OrphanDonut / CohesionRadial)
+- `hooks/use-knowledge-metrics.ts` (현재 Note 기준 only)
+- `lib/insights/metrics.ts` (Note graph cluster algorithm)
+- `lib/insights/types.ts` (KnowledgeMetrics interface)
+- `components/ui/select.tsx` (dropdown UI)
+
+### 1. **🔴 P0 #2 — Phase 0 Design Language + Plot v2 통째 재설계 PRD (2 세션째 deferred)**
 
 **사용자 의도** (영구 인용):
 > "지금 플롯 디자인은 사실 내가 맨처음으로 시작한 프로젝트여서 조잡한 부분들이 많아. 리니어나 플레인에 비해서. 기능은 그들 못지 않고 오히려 앞선다고 보지만 디자인적 아쉬움이 커."
@@ -118,6 +144,7 @@ Plot v2 P0 #1과 통합 가치 (entity-folder 아키텍처 결정).
 
 ## ✅ 최근 완료
 
+- **2026-05-27 (오전~새벽)**: **Search entity-aware refactor + Ontology Insights v2 (Power Sabermetrics) + HoverCard 학습 패턴** (PR #473-#479, 8 PR 23 commits). (a) Search entity-aware (#473): !hasFuzzyQuery 블록 11 entity 분기 (notes/wiki/books/categories/tags/labels/stickers/references/templates/folders). (b) Search section title 통일 + sort (#474): entity name만 (RECENT prefix 제거) + entity별 sort logic (updatedAt/name/createdAt/lastAccessedAt). (c) Linear/Notion progressive disclosure (#475): "전체 {count}개 보기 →" button (count > 8). 11 entity별 navigation target. (d) Ontology Insights v2 Power Sabermetrics (#476): 4 section 재설계 — Graph Health KPI / Coverage Mosaic 3 chart (TaggedDonut/OrphanDonut/CohesionRadial) / NUDGE keep / TopNotesBar (composite WAR-like horizontal bar). insights-charts.tsx 신규. (e) Tab highlight bug fix (#477): linear-sidebar.tsx currentMode static getState() → reactive subscribe. (f) HoverCard 학습 패턴 (#478/#479): 4 chart + 4 KPI에 ⓘ icon + HoverCard 설명. ChartCard/StatLine에 helpTitle/helpBody props. "Cluster Cohesion" / "Edges" / "Density" 등 추상 용어 학습. Plot identity ("Gentle by default") 정합. (g) 영구 LOCKED 후보 #148~#152 (Power Sabermetrics 정체성 / progressive disclosure / HoverCard 학습 / search section title 통일 / Coverage entity dropdown — 다음 세션 결정).
 - **2026-05-26 (저녁)**: **viewport polish 세션 — LOCKED #136 v2 revised + Book 폴더 Phase 1 + entity list Notes parity 점진 정합** (PR #472, 13 commits). (a) Layout (`bcccd3d`): 4 페이지 풀 폭 → Home pattern max-w-5xl. LOCKED #136 v1 → v2 (사용자 viewport revert). (b) Dashboard KPI (`2af3b9c`, `616441f`): "Wiki articles"→"Wiki" / "Wiki categories"→"Categories" + EN status_breakdown "keystone"→"Block" 버그 fix + Wiki sub `wiki_breakdown` (article+stub 둘 다 표기). (c) Book 폴더 Phase 1 (`85514b9`): Folder.kind 확장 + Book.folderIds + migrate v148→v149 + Folders sub-line "X 노트 · Y 위키 · Z 책" + folder_breakdown i18n + 12 cascade fix (seeds.ts + slices/books.ts + 2 test files + setGlobalSearchQuery type 누락). (d) Books → Notes parity 점진 정합 (8 commits): header layout / Title cap 폐기 / font-weight 400 + 13px row / gap-2 / pixel-perfect (px-[20px] gap-[8px] w-[32px] — Plot root font-size 14px Tailwind misalignment 정합) / cover icon wrapper 제거 naked SVG. (e) Wiki: Updated/Created 순서 swap + minimal checkbox 32px (광범위 fix는 broken → revert). (f) 영구 LOCKED #136 v2 + 후보 #143~#147 (Notes .a-th/.a-row CSS system / Plot root font-size 14px / Book 폴더 Phase 2 / entity별 column 구조 다름 / cover icon naked SVG).
 - **2026-05-25 (대규모 세션 #3)**: **P0 #1/#2 완성 + 검색 정통화 + Open Design install + Plot v2 통째 재설계 결정** (PR #459-#470, 12 PR). (a) Chrome architecture (#459/#460/#468/#470): 'P' brand mark Activity bar → GlobalTopBar UserAvatar. chunk 3 dropdown 흡수 후 사용자 viewport 결정으로 분리 복원. 최종 layout `[P] │ [≡] [⏰] [<] [>] ─ search ─ │ [☀][⚙][🗑]`. (b) 검색 architecture (#461/#462): entity TABS 7→11개 확장 (Books/Categories/Stickers/References 추가). Path A — GlobalTopBar = 진짜 input + SearchView 자체 input 제거 + globalSearchQuery store + ⌘K input focus. (c) Dashboard 풀 폭 + 차트 (#463/#464/#465): max-width 제거 4 페이지 + 영구 LOCKED #136 Two-Layout Rule. dashboard-charts.tsx 신규 — Status/Wiki status donut + Top Hubs/Categories bar 4 chart Mosaic 2x2. 색상 hardcoded → NOTE_STATUS_HEX/WIKI_STATUS_HEX token. Books KPI + Wiki stubs 메타. (d) Insights 손질 (#466/#467): Ontology Insights sidebar Stats 제거 + Knowledge WAR → Top Notes + composite score 공식 명시. Notes Insights PhActivity → Activity + i18n 광범위 + Health compact. (e) Books list (#469): Title flex max-w-[480px] cap + visibleColumns 6개 default. (f) Open Design install: ~/Desktop/open-design (51.7k stars, Apache 2.0, 71 design systems, 19 skills). pnpm 10.29→10.33.2 upgrade. daemon 3844 + web 3845. (g) Plot v2 통째 재설계 결정 (Path A) — 다음 세션 Phase 0 PRD 작성. 영구 LOCKED #136 + 후보 #137~#142.
 - **2026-05-25 (대규모 세션 #2)**: **i18n 마무리 + Custom Quick Filter feature + 디자인 브레인스토밍** (PR #438-#457, 20 PR). (a) i18n 마무리 광범위 (#438-#448, #451, #457): WikiInsightsChart / Trash All view / Trash chrome / Notes-Trash empty + tooltip + split toast / notes-table TrashEntityList + context menu / 3 Floating Action Bars / inbox+books / wiki-view / library-view (refs/tags/files+chrome) / SearchView Linear breadcrumb / Side panel 3 탭 + EVENT_CONFIG 44 verbs / 참고문헌→레퍼런스. ~250+ 신규 dict keys. (b) wikiRegistered 정정 (#449/#450): 라벨 "위키 등록"→"위키에 속해있음" + 동작 제목 매칭→실제 임베드 멤버십 (wikiArticles.noteIds 체크). 영구 룰 #132. (c) Custom Quick Filter feature (#452/#453/#454/#455/#456): 사용자 정의 chip bar entries — Zustand slice v148 + Dialog (promote + rule builder popover) + Wiki/Books default 시드 + "Label"→"Name" Plot entity 충돌 회피. 영구 룰 #131/#133/#134/#135. (d) 디자인 브레인스토밍 (다음 세션 P0 #1/#2): 'P' brand mark + 온톨로지 대시보드.
