@@ -417,16 +417,29 @@ export function SearchView() {
             const rowBtnCls = "flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-left transition-colors hover:bg-hover-bg"
             const sectionTitleCls = "mb-3 text-2xs font-medium uppercase tracking-wider text-muted-foreground"
             const showAll = activeTab === "all"
-            const activeBooks = books.filter((b) => !b.trashed).slice(0, 8)
-            const activeStickers = stickers.filter((s) => !s.trashed).slice(0, 8)
-            const referencesArr = Object.values(references).slice(0, 8)
-            const recentWikis = wikiNotes.slice(0, 8)
+            const byUpdated = <T extends { updatedAt?: string; createdAt?: string }>(arr: T[]) =>
+              [...arr].sort((a, b) => new Date(b.updatedAt ?? b.createdAt ?? 0).getTime() - new Date(a.updatedAt ?? a.createdAt ?? 0).getTime())
+            const byCreated = <T extends { createdAt?: string }>(arr: T[]) =>
+              [...arr].sort((a, b) => new Date(b.createdAt ?? 0).getTime() - new Date(a.createdAt ?? 0).getTime())
+            const byName = <T extends { name: string }>(arr: T[]) =>
+              [...arr].sort((a, b) => a.name.localeCompare(b.name))
+            const activeBooks = byUpdated(books.filter((b) => !b.trashed)).slice(0, 8)
+            const activeStickers = byCreated(stickers.filter((s) => !s.trashed)).slice(0, 8)
+            const referencesArr = byUpdated(Object.values(references)).slice(0, 8)
+            const recentWikis = byUpdated(wikiNotes).slice(0, 8)
+            const recentCategories = byUpdated(wikiCategories).slice(0, 8)
+            const recentTags = byName(tags.filter((t) => !t.trashed)).slice(0, 8)
+            const recentLabels = byName(labels.filter((l) => !l.trashed)).slice(0, 8)
+            const recentTemplates = byUpdated(templates).slice(0, 8)
+            const recentFolders = [...folders]
+              .sort((a, b) => new Date(b.lastAccessedAt ?? b.createdAt ?? 0).getTime() - new Date(a.lastAccessedAt ?? a.createdAt ?? 0).getTime())
+              .slice(0, 8)
             return (
               <div className="space-y-6">
                 {/* Notes */}
                 {(showAll || activeTab === "notes") && recentNotes.length > 0 && (
                   <section>
-                    <h3 className={sectionTitleCls}>{t("search.section.recent_notes")}</h3>
+                    <h3 className={sectionTitleCls}>{t("search.section.notes")}</h3>
                     <div className="space-y-0.5">
                       {recentNotes.map((note) => (
                         <button key={note.id} onClick={() => handleNoteSelect(note.id)} className={rowBtnCls}>
@@ -448,7 +461,7 @@ export function SearchView() {
                 {/* Wiki */}
                 {(showAll || activeTab === "wiki") && recentWikis.length > 0 && (
                   <section>
-                    <h3 className={sectionTitleCls}>{t("search.section.wiki_articles")}</h3>
+                    <h3 className={sectionTitleCls}>{t("search.section.wiki")}</h3>
                     <div className="space-y-0.5">
                       {recentWikis.map((note) => (
                         <button key={note.id} onClick={() => handleWikiSelect(note.id)} className={rowBtnCls}>
@@ -465,7 +478,7 @@ export function SearchView() {
                 {/* Books */}
                 {(showAll || activeTab === "books") && activeBooks.length > 0 && (
                   <section>
-                    <h3 className={sectionTitleCls}>Books</h3>
+                    <h3 className={sectionTitleCls}>{t("search.section.books")}</h3>
                     <div className="space-y-0.5">
                       {activeBooks.map((book) => (
                         <button key={book.id} onClick={() => handleBookSelect(book.id)} className={rowBtnCls}>
@@ -481,11 +494,11 @@ export function SearchView() {
                 )}
 
                 {/* Categories */}
-                {(showAll || activeTab === "categories") && wikiCategories.length > 0 && (
+                {(showAll || activeTab === "categories") && recentCategories.length > 0 && (
                   <section>
-                    <h3 className={sectionTitleCls}>Categories</h3>
+                    <h3 className={sectionTitleCls}>{t("search.section.categories")}</h3>
                     <div className="space-y-0.5">
-                      {wikiCategories.slice(0, 8).map((c) => (
+                      {recentCategories.map((c) => (
                         <button key={c.id} onClick={handleCategorySelect} className={rowBtnCls}>
                           <CategoryIcon className="shrink-0 text-muted-foreground" size={16} strokeWidth={2} />
                           <div className="min-w-0 flex-1">
@@ -501,11 +514,11 @@ export function SearchView() {
                 )}
 
                 {/* Tags */}
-                {(showAll || activeTab === "tags") && tags.length > 0 && (
+                {(showAll || activeTab === "tags") && recentTags.length > 0 && (
                   <section>
-                    <h3 className={sectionTitleCls}>Tags</h3>
+                    <h3 className={sectionTitleCls}>{t("search.section.tags")}</h3>
                     <div className="space-y-0.5">
-                      {tags.slice(0, 8).map((tag) => (
+                      {recentTags.map((tag) => (
                         <button key={tag.id} onClick={() => handleTagSelect(tag.id)} className={rowBtnCls}>
                           <PhTag
                             className="shrink-0"
@@ -526,11 +539,11 @@ export function SearchView() {
                 )}
 
                 {/* Labels */}
-                {(showAll || activeTab === "labels") && labels.length > 0 && (
+                {(showAll || activeTab === "labels") && recentLabels.length > 0 && (
                   <section>
-                    <h3 className={sectionTitleCls}>Labels</h3>
+                    <h3 className={sectionTitleCls}>{t("search.section.labels")}</h3>
                     <div className="space-y-0.5">
-                      {labels.slice(0, 8).map((label) => (
+                      {recentLabels.map((label) => (
                         <button key={label.id} onClick={() => handleLabelSelect(label.id)} className={rowBtnCls}>
                           <BookmarkSimple
                             className="shrink-0"
@@ -550,7 +563,7 @@ export function SearchView() {
                 {/* Stickers */}
                 {(showAll || activeTab === "stickers") && activeStickers.length > 0 && (
                   <section>
-                    <h3 className={sectionTitleCls}>Stickers</h3>
+                    <h3 className={sectionTitleCls}>{t("search.section.stickers")}</h3>
                     <div className="space-y-0.5">
                       {activeStickers.map((s) => (
                         <button key={s.id} onClick={handleStickerSelect} className={rowBtnCls}>
@@ -567,7 +580,7 @@ export function SearchView() {
                 {/* References */}
                 {(showAll || activeTab === "references") && referencesArr.length > 0 && (
                   <section>
-                    <h3 className={sectionTitleCls}>References</h3>
+                    <h3 className={sectionTitleCls}>{t("search.section.references")}</h3>
                     <div className="space-y-0.5">
                       {referencesArr.map((r) => (
                         <button key={r.id} onClick={handleReferenceSelect} className={rowBtnCls}>
@@ -582,11 +595,11 @@ export function SearchView() {
                 )}
 
                 {/* Templates */}
-                {(showAll || activeTab === "templates") && templates.length > 0 && (
+                {(showAll || activeTab === "templates") && recentTemplates.length > 0 && (
                   <section>
-                    <h3 className={sectionTitleCls}>Templates</h3>
+                    <h3 className={sectionTitleCls}>{t("search.section.templates")}</h3>
                     <div className="space-y-0.5">
-                      {templates.slice(0, 8).map((tmpl) => (
+                      {recentTemplates.map((tmpl) => (
                         <button key={tmpl.id} onClick={handleTemplateSelect} className={rowBtnCls}>
                           <Layout className="shrink-0 text-muted-foreground" size={16} strokeWidth={2} />
                           <div className="min-w-0 flex-1">
@@ -599,11 +612,11 @@ export function SearchView() {
                 )}
 
                 {/* Folders */}
-                {(showAll || activeTab === "folders") && folders.length > 0 && (
+                {(showAll || activeTab === "folders") && recentFolders.length > 0 && (
                   <section>
-                    <h3 className={sectionTitleCls}>Folders</h3>
+                    <h3 className={sectionTitleCls}>{t("search.section.folders")}</h3>
                     <div className="space-y-0.5">
-                      {folders.slice(0, 8).map((folder) => (
+                      {recentFolders.map((folder) => (
                         <button
                           key={folder.id}
                           onClick={() => handleFolderSelect(folder.id)}
