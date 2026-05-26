@@ -417,6 +417,21 @@ export function SearchView() {
             const rowBtnCls = "flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-left transition-colors hover:bg-hover-bg"
             const sectionTitleCls = "mb-3 text-2xs font-medium uppercase tracking-wider text-muted-foreground"
             const showAll = activeTab === "all"
+            // ── Show More button ── (Linear/Notion progressive disclosure pattern)
+            const SHOW_MORE_LIMIT = 8
+            const showMoreBtn = (count: number, navigate: () => void) =>
+              count > SHOW_MORE_LIMIT && (
+                <button
+                  onClick={navigate}
+                  className="mt-2 px-3 text-2xs text-muted-foreground transition-colors hover:text-foreground"
+                >
+                  {t("search.section.view_all").replace("{count}", String(count))}
+                </button>
+              )
+            const nav = (path: string) => () => {
+              setActiveRoute(path.split("?")[0] as Parameters<typeof setActiveRoute>[0])
+              router.push(path)
+            }
             const byUpdated = <T extends { updatedAt?: string; createdAt?: string }>(arr: T[]) =>
               [...arr].sort((a, b) => new Date(b.updatedAt ?? b.createdAt ?? 0).getTime() - new Date(a.updatedAt ?? a.createdAt ?? 0).getTime())
             const byCreated = <T extends { createdAt?: string }>(arr: T[]) =>
@@ -455,6 +470,7 @@ export function SearchView() {
                         </button>
                       ))}
                     </div>
+                    {showMoreBtn(searchableNotes.length, nav("/notes"))}
                   </section>
                 )}
 
@@ -472,6 +488,7 @@ export function SearchView() {
                         </button>
                       ))}
                     </div>
+                    {showMoreBtn(wikiNotes.length, nav("/wiki"))}
                   </section>
                 )}
 
@@ -490,6 +507,7 @@ export function SearchView() {
                         </button>
                       ))}
                     </div>
+                    {showMoreBtn(books.filter((b) => !b.trashed).length, nav("/books"))}
                   </section>
                 )}
 
@@ -510,6 +528,7 @@ export function SearchView() {
                         </button>
                       ))}
                     </div>
+                    {showMoreBtn(wikiCategories.length, nav("/wiki"))}
                   </section>
                 )}
 
@@ -535,6 +554,7 @@ export function SearchView() {
                         </button>
                       ))}
                     </div>
+                    {showMoreBtn(tags.filter((t) => !t.trashed).length, nav("/library?tab=tags"))}
                   </section>
                 )}
 
@@ -557,6 +577,7 @@ export function SearchView() {
                         </button>
                       ))}
                     </div>
+                    {showMoreBtn(labels.filter((l) => !l.trashed).length, nav("/library?tab=labels"))}
                   </section>
                 )}
 
@@ -574,6 +595,7 @@ export function SearchView() {
                         </button>
                       ))}
                     </div>
+                    {showMoreBtn(stickers.filter((s) => !s.trashed).length, nav("/library?tab=stickers"))}
                   </section>
                 )}
 
@@ -591,6 +613,7 @@ export function SearchView() {
                         </button>
                       ))}
                     </div>
+                    {showMoreBtn(Object.values(references).filter((r) => !(r as { trashed?: boolean }).trashed).length, nav("/library?tab=references"))}
                   </section>
                 )}
 
@@ -608,6 +631,7 @@ export function SearchView() {
                         </button>
                       ))}
                     </div>
+                    {showMoreBtn(templates.length, nav("/templates"))}
                   </section>
                 )}
 
@@ -630,6 +654,7 @@ export function SearchView() {
                         </button>
                       ))}
                     </div>
+                    {showMoreBtn(folders.length, nav("/library?tab=folders"))}
                   </section>
                 )}
 
