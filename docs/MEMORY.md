@@ -8,6 +8,63 @@
 
 ---
 
+## 🚀 2026-05-28 (오전) — Chrome icon 굵기/선명 + chip strip 시인성 + Books table notes/wiki parity 부채 정정 (1 통합 PR) ⭐⭐⭐
+
+**범위**: 사용자 시각 polish 세션. 라이트 모드 시인성 강화 + Books entity의 1년 차 parity 부채 정정. 5 파일 +40/-26.
+
+### 머지된 PR (이번 세션, 1 통합)
+- **PR (이)** — Chrome icon + chip strip + Books parity:
+  - `global-top-bar.tsx` (8 곳): chrome icons strokeWidth 2 → 2.25, `text-muted-foreground/70` → `text-muted-foreground`
+  - `panels-menu.tsx` (1 곳): 햄버거 trigger 동일 패턴 + ListIcon에 strokeWidth 2.25 명시
+  - `view-header.tsx` (4 곳): quick filter chip strip border `/60`, chip pill outline `/70` (3개), "+" dashed `/70` → 풀 `border-border`
+  - `wiki-list.tsx` (1 곳): Wiki sub-tabs controls bar `border-subtle` → `border`
+  - `book-table.tsx` (5 곳): cols.map header+body title cell에 `marginLeft: -8` patch + TH `font-normal` → `font-medium` (2개) + body title span에 `font-medium` 추가
+
+### 큰 결정 (영구 LOCKED 후보 #163~#165)
+
+**1. #163 (vision) Chrome icon 굵기/색 표준 (라이트 모드 시인성)**:
+- chrome icon 카테고리 = strokeWidth **2.25**, opacity 70% 금지
+- view-configs.tsx 메인 콘텐츠 SVG (strokeWidth 1.2~1.4)와 별도 카테고리
+- DESIGN-TOKENS.md에 `--stroke-chrome: 2.25` 토큰 등록 가치 (다음 세션 carry)
+- 보조 UI (placeholder, kbd cap)는 `/70` opacity 유지 (자연스러운 hierarchy)
+
+**2. #164 (vision) Wiki `← Overview` 폐기 결정 (1년 차 정합성 부채)**:
+- `library-breadcrumb.tsx:6` 코멘트 명시: "사용자 시그널 **2026-05-14**: Wiki의 `← Overview` 패턴보다 Notes의 breadcrumb 패턴이 더 자연"
+- Library는 그때 마이그됐으나 Wiki만 누락 → 1년 가까이 부채로 남음
+- 다음 세션 P0 #0: 옵션 A (최소 마이그) 진행. Linear/Notion/Plain 모두 breadcrumb 정통.
+
+**3. #165 (vision) Entity table 시각 parity audit 의무화**:
+- Books만 marginLeft -8 + font-medium 둘 다 누락 발견
+- 새 entity table 추가 시 `notes-table.tsx:1890` 코멘트 기준 visual parity audit 의무
+- audit grep 패턴: `cols.map.*c.width` 안 marginLeft 부재 + TH `font-normal` + body title 미 font-medium
+
+**(별도 결정 carry)** border 토큰 swap 의혹:
+- 라이트 모드 `--border: #a8a8ad` < `--border-subtle: #a1a1aa` (subtle이 더 진함) = semantic reverse
+- 옵션 1) subtle 더 옅게 (#d4d4d8 zinc-300), 옵션 2) border 더 진하게 (#71717a zinc-500), 옵션 3) 현행 유지
+- 글로벌 영향이라 사용자 결정 대기
+
+### v3 PRD 영향
+- Plot v2 Linear 재디자인 Path A 부수 작업 (라이트 모드 시인성). 본격 마이그(filter-bar/display-panel)는 Phase 4 carry.
+- Wiki breadcrumb 마이그 = chrome 통일 path와 정합. 다음 entity 추가 시 EntityBreadcrumb 공통 컴포넌트 추출 가치 (옵션 B).
+
+### 다음 우선순위 (P0, 재정렬)
+1. **🔴 P0 #0 (이번 세션 결과)**: Wiki `← Overview` 폐기 → breadcrumb 마이그 (1년 차 정합성 부채, 옵션 A 50-80줄)
+2. **🔴 P0 #1 (carry)**: Phase 3.1 — `/preview/linear` 12장 reference 이미지 1:1 비교 + fine-tune
+3. **🔴 P0 #2 (carry)**: Phase 4 — `components/filter-bar.tsx` + `components/display-panel.tsx` Linear 마이그레이션 (사용자 명시)
+4. **🟡 P0 #3 (carry)**: PR #481 close 결정 (PR #482와 중복)
+5. **🟡 P0 #4 (이번 세션 발견)**: 다른 entity table parity 부채 audit (Calendar/Ontology/Library categories grep)
+6. **🟡 P0 #5 (별도 결정)**: border 토큰 swap 정정 (글로벌 영향)
+7. **🟢 P0 #6**: Coverage entity dropdown / Books 엔티티 방향 / NUDGE / Insights KPI 정합 / Book 폴더 Phase 2 (carry)
+
+### 기술 학습 (영구)
+- **opacity modifier 누적 = 라이트 모드 시인성 위해**: `text-muted-foreground/70` + `border-border/60` 패턴이 muted 토큰 위에 추가 opacity 곱셈 → 라이트 모드 거의 안 보임. chrome 카테고리는 opacity 사용 금지.
+- **notes/wiki 정합 코멘트 = source of truth**: `notes-table.tsx:1890` 같은 코드 내 코멘트가 디자인 의도 source. 새 entity 추가 시 grep 검색으로 발견 가능. 코멘트 부재 = 누락 가능성.
+- **사용자 추정 "잘못된 공간" = 정확한 시그널**: 사용자 시각적 부조화 인식 = 거의 항상 코드 부재/오류. 추측 fix 말고 코드 ground truth로 분석 (이번 books marginLeft case 정확히 적중).
+- **font-weight 누락 패턴**: Plot row chrome 표준 = `font-medium` (Notes/Wiki). 새 컴포넌트가 `font-normal` Tailwind default로 만들어지면 시각적 mismatch. 항상 `.a-row__title` (font-weight 500) 또는 font-medium 명시.
+- **border 토큰 swap 의혹**: `--border` (#a8a8ad RGB 168) < `--border-subtle` (#a1a1aa RGB 161) 진함 — semantic reverse. 라이트 모드 chrome 디자인 결정 시 토큰 정의 의도 검토 필요.
+
+---
+
 ## 🚀 2026-05-27 (저녁) — Plot v2 Linear 재디자인 Phase 1+2+3 — `/preview/linear` 라이브 demo (1 통합 PR) ⭐⭐⭐⭐
 
 **범위**: 사용자 명시 큰 결정 ("Plot v2 통째 재설계 Path A" + 12장 reference 이미지) 본격 진입. globals.css에 Linear 토큰 머지 + preview 라우트 라이브 demo 신규 + Filter/Display/Books 풀 재설계.

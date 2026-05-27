@@ -6,6 +6,144 @@
 
 ---
 
+## 2026-05-28 (오전) — 집 (Windows), **Chrome icon 굵기/선명 + chip strip 시인성 + Books table notes/wiki parity 부채 정정 (1 PR)**
+
+> 🎯 **다음 즉시 액션 hook (우선순위 순)**:
+> 1. **Wiki `← Overview` 버튼 폐기 → breadcrumb 패턴 마이그**. `library-breadcrumb.tsx` 헤더 코멘트 (라인 6) 명시: "사용자 시그널 2026-05-14: Wiki의 `← Overview` 패턴보다 Notes의 breadcrumb (`Notes > Quick Memo`) 패턴이 더 자연. Library도 같은 패턴 적용". → **Wiki만 1년 가까이 누락**된 정합성 부채. 옵션 A (최소 50-80줄, `WikiBreadcrumb` 신규 = `LibraryBreadcrumb` 복제 + Wiki에 적용 + `← Overview` 버튼 제거) 권장. 옵션 B (체계 refactor) = 공통 `EntityBreadcrumb` 컴포넌트 추출. 옵션 C (큰 작업) = Wiki sub-section을 사이드바로 이동 (Library 패턴 풀 적용).
+> 2. **Phase 3.1 (carry)** — `/preview/linear` 12장 reference 이미지 비교 + fine-tune. dev server `http://localhost:3002/preview/linear` (launch.json port 3002 + autoPort). 12장 reference = 채팅 첨부 또는 `~/Desktop/open-design/.od/projects/04375e11-0f45-4428-92df-aeb8faf27039/`.
+> 3. **PR #481 close 결정 (carry)** — PR #482 (`826343a`)와 중복. 사용자가 다른 컴퓨터에서 디자인 확인 후 만족 시 close. `gh pr close 481`.
+> 4. **다른 entity parity 부채 audit** — Books에 marginLeft -8, font-medium 누락 발견 패턴이 다른 entity (Calendar/Ontology table)에도 있을 가능성. `notes-table.tsx:1890` 코멘트 ("위키 wiki-list 정합") 기준으로 grep audit.
+> 5. **(별도 결정)** border 토큰 swap 정정 — globals.css 라이트 `--border: #a8a8ad` vs `--border-subtle: #a1a1aa` (subtle이 더 진함 = 의도 reverse 의혹). 옵션 1) subtle 더 옅게 (#d4d4d8), 옵션 2) border 더 진하게 (#71717a), 옵션 3) 현행 유지 (의도된 swap이면).
+>
+> **사용자 의도** (이번 세션 그대로 인용):
+> - "위키와 라이브러리 모두 오버뷰가 있는데, ←오버뷰 버튼은 위키에만 있거든? 노트나 라이브러리처럼 바꾸는 거에 대해 어떻게 생각해? 브레인스토밍해볼까."
+> - "검색창 쪽 버튼?아이콘들은, 라이트모드에선 전부 굵기가 얇고 색이 흐리다. 더 굵게 선명하게 해줘."
+> - "여기보면 이렇게 선이 흐린 곳들이 있어 노트, 위키, 등에도. 여기도 굵게 해줘."
+> - "books의 체크박스랑 title 사이의 거리가 너무 넓다. 좁혀줘. (내 생각엔 지금 눈에는 안 보이지만 저기에 뭔가 간격이 넓어질 수 밖에 없는 잘못된 공간이 있는 거 같은데? 한 번 코드적으로 분석해서 수정해봐.)"
+> - "북스의 컬럼헤더랑 글자들이 굵기가 얇아. 노트랑 위키는 굵은데. 노트랑 위키처럼 굵게 해줘."
+> - "after-work 완벽하게. 다른 컴퓨터에서도 작업 이어갈 수 있도록."
+>
+> **이번 세션 누적 변경 (1 통합 PR 5 파일 +40/-26)**:
+> 1. **`components/global-top-bar.tsx`** (chrome icons 굵기/색): 시계/뒤로/앞으로/검색 돋보기/테마/설정/휴지통 button — `text-muted-foreground/70` → `text-muted-foreground` (opacity 제거), `strokeWidth={2}` → `strokeWidth={2.25}` (8 곳)
+> 2. **`components/panels-menu.tsx`** (햄버거 trigger): 동일 패턴 + `<ListIcon size={14} />` → `<ListIcon size={14} strokeWidth={2.25} />`
+> 3. **`components/view-header.tsx`** (quick filter chips strip): chip strip border-b `/60` → `border-border`, chip pill outlines `/70` → `border-border` (3 곳), "+" add 버튼 dashed outline `/70` → `border-border` (총 4 곳)
+> 4. **`components/views/wiki-list.tsx`** (Wiki sub-tabs controls bar): `border-border-subtle` → `border-border`
+> 5. **`components/books/book-table.tsx`** (Books notes/wiki parity 부채 정정):
+>    - body row (라인 498-509): cols.map title cell에 `style={c.id === "title" ? { marginLeft: -8 } : undefined}` + 코멘트 근거 추가
+>    - header row (라인 236-249): 동일 patch (header도 body와 정렬)
+>    - TH (라인 105, 115): `font-normal` → `font-medium` (Notes parity)
+>    - body title span (라인 576): `text-foreground pl-2` → `font-medium text-foreground pl-2` (`.a-row__title` font-weight 500 parity)
+>
+> **첫 스텝 (다음 세션 Wiki breadcrumb 마이그)**:
+> 1. `components/library/library-breadcrumb.tsx` read — 패턴 + props 인터페이스 확인
+> 2. `components/wiki/wiki-breadcrumb.tsx` 신규 — LibraryBreadcrumb 복제 + Wiki 도메인으로 변경 (entity = "wiki", sub-views = articles/stubs/stale/orphans/hubs/with-aliases/recent)
+> 3. `components/views/wiki-list.tsx` 라인 794-802: `← Overview` 버튼 + 분리선 제거 → `<WikiBreadcrumb current={wikiViewMode} onNavigate={setWikiViewMode} />` 삽입
+> 4. `components/views/wiki-view.tsx` 또는 `wiki-dashboard.tsx` 등 다른 wiki view 진입점에도 breadcrumb 적용 (검증)
+> 5. 검증: `tsc --noEmit` + 사용자 시각 (Wiki 페이지 nav 확인)
+>
+> **컴포넌트 구조 (WikiBreadcrumb)**:
+> ```tsx
+> // components/wiki/wiki-breadcrumb.tsx (신규, LibraryBreadcrumb 복제)
+> <nav className="flex items-center gap-1.5 text-note">
+>   <Link href="/wiki" className="...">Wiki</Link>
+>   <ChevronRight size={12} className="text-muted-foreground" />
+>   <Popover>  {/* sub-view switcher */}
+>     <PopoverTrigger>{currentSubViewLabel}</PopoverTrigger>
+>     <PopoverContent>{...sub-view list}</PopoverContent>
+>   </Popover>
+> </nav>
+> ```
+>
+> **참고 파일**:
+> - `components/library/library-breadcrumb.tsx` (라인 6 헤더 코멘트 = 사용자 시그널 2026-05-14 source)
+> - `components/views/wiki-list.tsx` (라인 794-802 `← Overview` 버튼 + Filter tabs)
+> - `components/notes-table.tsx` (라인 1890 marginLeft 코멘트 = parity 기준)
+> - `app/globals.css` (라인 108/152/346/388 border 토큰 + 라인 1276/1308 `.a-row__lead/__title` CSS)
+> - `components/books/book-table.tsx` (이번 세션 fix reference)
+>
+> **위험 + 회피**:
+> - Wiki sub-view switcher 모드 enum: 코드에 `wikiViewMode = "dashboard" | "list"` 가 이미 있음 (`wiki-list.tsx` 라인 797 `setWikiViewMode("dashboard")`) — 사용자가 짚은 "stale articles/orphans/hubs/with aliases/recent" 5 quick filter는 별도 enum이 아닌 filter state. breadcrumb의 sub-view는 dashboard/list만 또는 5 quick filter도 포함할지 결정 필요.
+> - LibraryBreadcrumb 패턴이 entity name + popover trigger 였음 — Wiki는 popover에 view mode 전환 + filter chip 분리 (chip은 view-header가 처리)으로 가야 자연.
+> - 다른 entity parity 부채 audit 시 grep 패턴: `font-normal.*text-foreground/80` (TH) + `cols.map.*c.width` 안 marginLeft 부재.
+>
+> **검증**:
+> - `tsc --noEmit` 통과 (exit 0)
+> - 사용자 시각 검증 = "완벽하다" (Books 체크박스↔title 거리 fix 직후)
+> - 라이트 모드 chrome icon + chip strip + Books header/body font-weight 모두 사용자 시각 OK
+>
+> **머신**: 집 (Windows)
+> **현재 main HEAD**: `826343a` (PR #482 머지 후 — 이번 PR이 다음 머지될 예정)
+> **branch worktree**: `claude/condescending-payne-e944d7` (이 worktree에서 진행)
+
+### 완료
+
+**1. Chrome icon 굵기/선명 강화 (라이트 모드 시인성)**
+- 사용자 지적: "검색창 쪽 버튼?아이콘들은, 라이트모드에선 전부 굵기가 얇고 색이 흐리다."
+- 진단: lucide default strokeWidth 2 + `text-muted-foreground/70` (opacity 70%) = 라이트 모드에서 muted 토큰 위에 추가 흐림
+- Fix: opacity 70% 제거 + strokeWidth 2 → 2.25 (Linear 14px 정통)
+- 영향: 시계 / 뒤로 / 앞으로 / 검색 돋보기 / 테마 / 설정 / 휴지통 / 햄버거 trigger (8개 chrome 버튼)
+- placeholder + ⌘K kbd cap은 유지 (보조 UI, 자연스러운 흐림 의도)
+
+**2. Quick filter chips strip 시인성 (모든 entity 영향)**
+- 사용자 지적: "이렇게 선이 흐린 곳들이 있어 노트, 위키, 등에도"
+- 진단: chip strip border-b `/60`, chip pill outline `/70`, wiki sub-tabs `border-subtle` (subtle 토큰이 default보다 더 진한 swap 의혹)
+- Fix: opacity modifier 모두 제거 → 풀 `border-border`
+- 영향: 모든 entity의 quick filter chips strip (Notes/Wiki/Library/Calendar/Ontology/Books 공통) + Wiki sub-tabs row
+- 별도 결정 항목: border 토큰 swap 정정 (사용자 답 대기)
+
+**3. Books table notes/wiki parity 부채 정정**
+- 사용자 지적 (2회): "books의 체크박스랑 title 사이의 거리가 너무 넓다 ... 잘못된 공간이 있는 거 같은데?" + "북스의 컬럼헤더랑 글자들이 굵기가 얇아"
+- 진단: notes-table.tsx:1890 코멘트 명시 ("marginLeft -8: grid gap 상쇄해 체크박스에 가깝게 (위키 wiki-list 정합)") → Books만 누락. TH는 `font-normal`, body title span은 font-weight 미명시 (notes의 `font-medium` + `.a-row__title font-weight: 500`과 mismatch)
+- Fix: header+body cols.map에 `marginLeft: -8` patch 추가 (2곳) + TH `font-normal` → `font-medium` (2곳) + body title span에 `font-medium` 추가 (1곳)
+- 영향: Books table chrome 텍스트가 Notes/Wiki와 정확한 시각적 parity 달성
+
+### 브레인스토밍 & 큰 결정 (영구 LOCKED 후보 #163~#165)
+
+**#163 (vision) Chrome icon 굵기/색 표준 (라이트 모드 시인성)**:
+- chrome icon 카테고리 = strokeWidth 2.25, opacity 70% 금지 (muted-foreground 토큰만 사용)
+- view-configs.tsx 메인 콘텐츠 SVG (1.2~1.4)와 다른 카테고리 — DESIGN-TOKENS.md에 `--stroke-chrome: 2.25` 토큰 등록 가치
+- 보조 UI (placeholder, kbd cap)는 `/70` opacity 유지 (자연스러운 hierarchy)
+
+**#164 (vision) Wiki `← Overview` 폐기 결정 (1년 차 부채)**:
+- `library-breadcrumb.tsx:6` 코멘트 명시: "사용자 시그널 2026-05-14: Wiki의 `← Overview` 패턴보다 Notes의 breadcrumb 패턴이 더 자연"
+- Library는 그때 마이그됐는데 Wiki만 누락 → 정합성 부채로 1년 가까이 머물러 있었음
+- 다음 세션 P0 #1: 옵션 A (최소 마이그) 진행. ← back 버튼은 sub-sub-page 깊이에서만 의미. Overview는 entity entry point라 사이드바 클릭만으로 회귀 가능 → 잉여.
+- Linear/Notion/Plain 모두 breadcrumb 패턴, back arrow 없음 — Plot 정통성 강화
+
+**#165 (vision) Entity table 시각 parity audit 의무화**:
+- Books만 marginLeft -8 + font-medium 둘 다 누락 — Notes/Wiki와 같은 row chrome 구조인데 부채 누적
+- 새 entity table 추가 시 `notes-table.tsx:1890` 코멘트 기준 visual parity audit 의무
+- audit grep 패턴: `cols.map.*c.width` 안에 marginLeft 부재 + TH `font-normal`
+
+### 기술 학습 (영구)
+
+- **opacity modifier 누적 = 라이트 모드 시인성 위해**: `text-muted-foreground/70` + `border-border/60` 같은 패턴이 muted 토큰 위에 추가 opacity 곱셈 → 라이트 모드 (밝은 배경에 옅은 grey)에서는 거의 안 보임. 다크 모드에서는 검정 배경 대비라 OK. **라이트 모드 시인성 = chrome 카테고리는 opacity 사용 금지** 원칙.
+- **notes/wiki 정합 코멘트 = source of truth**: `notes-table.tsx:1890` 같은 코드 내 코멘트가 디자인 의도 source. 새 entity 추가 시 grep 검색으로 발견 가능. 코멘트 부재 = 누락 가능성 높음.
+- **사용자 추정 "잘못된 공간" = 정확한 시그널**: 사용자가 시각적으로 "뭔가 잘못된 공간"을 인식하면 거의 항상 코드 부재/오류. 추측 fix 말고 코드 ground truth로 분석 (이번 books marginLeft case 정확히 맞음).
+- **font-weight 누락 패턴**: Plot의 row chrome 표준 = `font-medium` (Notes/Wiki). 새 컴포넌트가 `font-normal` (Tailwind default = 400)로 만들어지면 시각적 mismatch. 항상 .a-row__title (font-weight 500) 또는 font-medium 명시.
+- **border 토큰 swap 의혹**: `--border` (#a8a8ad RGB 168) < `--border-subtle` (#a1a1aa RGB 161) 진함 — semantic 의미 reverse. 라이트 모드 chrome 디자인 결정 시 토큰 정의 의도 검토 필요.
+
+### Watch Out (다음 세션 주의사항)
+
+- **Wiki ← Overview 마이그 시 wikiViewMode enum 결정**: 현재 `"dashboard" | "list"` 2-mode. breadcrumb sub-view에 5 quick filter (stale/orphans/hubs/with-aliases/recent)까지 포함할지 결정 필요. quick filter는 view-header 영역이라 분리가 자연.
+- **다른 entity table parity audit 미진행**: Calendar table, Ontology graph view, Library categories 등에도 동일 부채 가능. 다음 세션 P0 #4로 명시.
+- **border 토큰 swap 정정 사용자 결정 미답**: globals.css 라이트 모드 토큰 변경은 글로벌 영향 큼 — 별도 결정 항목.
+- **chrome strokeWidth 2.25는 임시값**: DESIGN-TOKENS.md에 정식 토큰 (`--stroke-chrome: 2.25`) 등록 후 inline 값 → 토큰 참조로 promote 가치.
+- **PR #481 carry**: PR #482와 중복. 사용자가 다른 컴퓨터에서 디자인 확인 후 만족 시 close 결정 carry.
+- **`.claude/.active-skill` untracked**: 이번 세션도 untracked 파일 있음. `.gitignore` 추가 후보.
+
+### 환경 변경
+
+- Store version: v149 (변경 없음)
+- Tests: tsc --noEmit pass (exit 0)
+- 신규 파일: 없음 (모두 기존 파일 fix)
+- 사용자 IDB stale data: 없음
+
+### 머신
+집 (Windows)
+
+---
+
 ## 2026-05-27 (저녁) — 집 (Windows), **Plot v2 Linear 재디자인 Phase 1+2+3 — `/preview/linear` 라이브 demo (1 PR 통합)**
 
 > 🎯 **다음 즉시 액션 hook (사용자 우선순위)**:

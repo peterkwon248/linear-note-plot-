@@ -51,6 +51,42 @@
 
 ---
 
+## 🚀 2026-05-28 (오전) — Chrome icon 굵기/선명 + chip strip 시인성 + Books table notes/wiki parity 부채 정정 (1 통합 PR) ⭐⭐⭐
+
+**범위**: 사용자 시각 polish. 라이트 모드 시인성 강화 + Books 1년 차 parity 부채 정정. 5 파일 +40/-26.
+
+### 머지된 PR
+- **PR (이)** — Chrome icon + chip strip + Books parity:
+  - `global-top-bar.tsx` (8 곳): chrome icons strokeWidth 2 → 2.25, opacity /70 제거
+  - `panels-menu.tsx` (1 곳): 햄버거 trigger 동일 패턴
+  - `view-header.tsx` (4 곳): chip strip border + pill outline /60, /70 → 풀 border
+  - `wiki-list.tsx` (1 곳): Wiki sub-tabs border-subtle → border
+  - `book-table.tsx` (5 곳): cols.map title cell marginLeft -8 patch + TH/body title font-medium
+
+### 영구 결정 (LOCKED 후보 #163~#165)
+- **#163** Chrome icon 카테고리 = strokeWidth 2.25, opacity 금지 (라이트 모드 시인성)
+- **#164** Wiki `← Overview` 폐기 결정 (1년 차 부채, `library-breadcrumb.tsx:6` 코멘트 source)
+- **#165** Entity table 시각 parity audit 의무 (`notes-table.tsx:1890` 코멘트 기준)
+- **(별도 carry)** border 토큰 swap 정정 — `--border` < `--border-subtle` 진함 = semantic reverse
+
+### 검증
+- `tsc --noEmit`: exit 0
+- 사용자 시각: Books fix 직후 "완벽하다" 확인
+
+### 다음 P0 (재정렬)
+1. **P0 #0** Wiki `← Overview` → breadcrumb 마이그 (옵션 A 50-80줄) ⭐ 다음 세션 첫 작업
+2. **P0 #1 (carry)** Phase 3.1 reference 이미지 fine-tune
+3. **P0 #2 (carry)** Phase 4 filter-bar + display-panel 마이그
+4. **P0 #4 (이번 세션 발견)** 다른 entity table parity audit (Calendar/Ontology grep)
+5. **P0 #5 (별도)** border 토큰 swap 정정
+
+### Watch Out
+- DESIGN-TOKENS.md `--stroke-chrome: 2.25` 정식 등록 가치
+- 다른 entity table 동일 부채 audit 미진행
+- PR #481 carry (PR #482 중복)
+
+---
+
 ## 🚀 2026-05-27 (저녁) — Plot v2 Linear 재디자인 Phase 1+2+3 — `/preview/linear` 라이브 demo (1 통합 PR) ⭐⭐⭐⭐
 
 **범위**: 사용자 명시 큰 결정 ("Plot v2 통째 재설계 Path A" + 12장 reference 이미지) 본격 진입. `app/globals.css`에 Linear 토큰 머지 + `/preview/linear` 라우트 라이브 demo + Filter/Display/Books 풀 재설계.

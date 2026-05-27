@@ -466,7 +466,7 @@ export function ViewHeader({
           chips first, user-defined after, then a trailing "+" button when
           `viewContext` is supplied. */}
       {((quickFilters && quickFilters.length > 0) || customQuickFilters.length > 0 || viewContext) && (
-        <div className="flex shrink-0 items-center gap-1.5 overflow-x-auto border-b border-border/60 px-4 py-1.5">
+        <div className="flex shrink-0 items-center gap-1.5 overflow-x-auto border-b border-border px-4 py-1.5">
           {quickFilters?.map((qf, i) => {
             const filters = activeFilters ?? []
             const active = qf.rules.every((r) =>
@@ -508,7 +508,7 @@ export function ViewHeader({
                 className={
                   active
                     ? "shrink-0 rounded-full border border-accent/40 bg-accent/10 px-2.5 py-0.5 text-2xs font-medium text-accent transition-colors"
-                    : "shrink-0 rounded-full border border-border/70 bg-secondary/30 px-2.5 py-0.5 text-2xs font-medium text-muted-foreground transition-colors hover:border-border hover:text-foreground"
+                    : "shrink-0 rounded-full border border-border bg-secondary/30 px-2.5 py-0.5 text-2xs font-medium text-muted-foreground transition-colors hover:border-border hover:text-foreground"
                 }
               >
                 {qf.labelKey ? t(qf.labelKey) : qf.label}
@@ -556,7 +556,7 @@ export function ViewHeader({
                   "group inline-flex shrink-0 items-stretch overflow-hidden rounded-full border text-2xs font-medium transition-colors " +
                   (active
                     ? "border-accent/40 bg-accent/10 text-accent"
-                    : "border-border/70 bg-secondary/30 text-muted-foreground hover:border-border hover:text-foreground")
+                    : "border-border bg-secondary/30 text-muted-foreground hover:border-border hover:text-foreground")
                 }
               >
                 <button
@@ -587,7 +587,7 @@ export function ViewHeader({
               type="button"
               onClick={() => setCreateDialogOpen(true)}
               title={t("filter.quick.add")}
-              className="flex h-[22px] w-[22px] shrink-0 items-center justify-center rounded-full border border-dashed border-border/70 text-muted-foreground transition-colors hover:border-accent/60 hover:text-accent"
+              className="flex h-[22px] w-[22px] shrink-0 items-center justify-center rounded-full border border-dashed border-border text-muted-foreground transition-colors hover:border-accent/60 hover:text-accent"
             >
               <Plus size={12} strokeWidth={2.5} />
             </button>

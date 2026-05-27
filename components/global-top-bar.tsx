@@ -114,12 +114,12 @@ export function GlobalTopBar() {
           className={`flex h-7 w-7 items-center justify-center rounded-md transition-colors ${
             recentlyViewedOpen
               ? "bg-hover-bg text-foreground"
-              : "text-muted-foreground/70 hover:bg-hover-bg hover:text-foreground"
+              : "text-muted-foreground hover:bg-hover-bg hover:text-foreground"
           }`}
           aria-label={t("topbar.recently_viewed.aria")}
           title={t("topbar.recently_viewed.aria")}
         >
-          <IconClock size={14} strokeWidth={2} />
+          <IconClock size={14} strokeWidth={2.25} />
         </button>
         {recentlyViewedOpen && (
           <div className="absolute left-0 top-full z-50 mt-1 w-72 rounded-lg border border-border bg-surface-overlay shadow-lg">
@@ -156,19 +156,19 @@ export function GlobalTopBar() {
       {/* Back / Forward */}
       <button
         onClick={handleGoBack}
-        className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground/70 transition-colors hover:bg-hover-bg hover:text-foreground"
+        className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-hover-bg hover:text-foreground"
         title={t("topbar.nav.back")}
         aria-label={t("topbar.nav.back")}
       >
-        <CaretLeft size={14} strokeWidth={2} />
+        <CaretLeft size={14} strokeWidth={2.25} />
       </button>
       <button
         onClick={handleGoForward}
-        className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground/70 transition-colors hover:bg-hover-bg hover:text-foreground"
+        className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-hover-bg hover:text-foreground"
         title={t("topbar.nav.forward")}
         aria-label={t("topbar.nav.forward")}
       >
-        <CaretRight size={14} strokeWidth={2} />
+        <CaretRight size={14} strokeWidth={2.25} />
       </button>
 
       {/* ── Center: real search input (Linear/Notion pattern).
@@ -183,8 +183,8 @@ export function GlobalTopBar() {
         <div className="relative flex w-full max-w-xl items-center">
           <MagnifyingGlass
             size={14}
-            strokeWidth={2}
-            className="pointer-events-none absolute left-3 shrink-0 text-muted-foreground/70"
+            strokeWidth={2.25}
+            className="pointer-events-none absolute left-3 shrink-0 text-muted-foreground"
           />
           <input
             id="global-search-input"
@@ -221,27 +221,27 @@ export function GlobalTopBar() {
        *  to right cluster (user prefers grouped chrome icons over dropdown). */}
       <button
         onClick={toggleTheme}
-        className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground/70 transition-colors hover:bg-hover-bg hover:text-foreground"
+        className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-hover-bg hover:text-foreground"
         aria-label={theme === "dark" ? t("nav.theme.toggle_to_light") : t("nav.theme.toggle_to_dark")}
         title={theme === "dark" ? t("nav.theme.light_mode") : t("nav.theme.dark_mode")}
       >
-        {theme === "dark" ? <IconSun size={14} strokeWidth={2} /> : <IconMoon size={14} strokeWidth={2} />}
+        {theme === "dark" ? <IconSun size={14} strokeWidth={2.25} /> : <IconMoon size={14} strokeWidth={2.25} />}
       </button>
       <Link
         href="/settings"
-        className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground/70 transition-colors hover:bg-hover-bg hover:text-foreground"
+        className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-hover-bg hover:text-foreground"
         aria-label={t("nav.settings")}
         title={t("nav.settings")}
       >
-        <IconGear size={14} strokeWidth={2} />
+        <IconGear size={14} strokeWidth={2.25} />
       </Link>
       <Link
         href="/trash"
-        className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground/70 transition-colors hover:bg-hover-bg hover:text-foreground"
+        className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-hover-bg hover:text-foreground"
         aria-label={t("nav.trash")}
         title={t("nav.trash")}
       >
-        <IconTrash size={14} strokeWidth={2} />
+        <IconTrash size={14} strokeWidth={2.25} />
       </Link>
     </header>
   )

@@ -791,7 +791,7 @@ export function WikiList({
   return (
     <div className="flex-1 flex flex-col overflow-hidden">
       {/* ── Controls Bar ── */}
-      <div className="flex shrink-0 items-center gap-2 border-b border-border-subtle px-5 py-2">
+      <div className="flex shrink-0 items-center gap-2 border-b border-border px-5 py-2">
         {/* Back to Overview */}
         <button
           onClick={() => { setWikiViewMode("dashboard"); onClearCategoryFilter?.() }}
