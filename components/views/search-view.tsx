@@ -412,42 +412,270 @@ export function SearchView() {
       {/* Results */}
       <div className="flex-1 overflow-y-auto px-6 py-4">
         <div>
-          {/* Empty query: recent notes */}
-          {!hasFuzzyQuery && (
-            <div>
-              <h3 className="mb-3 text-2xs font-medium uppercase tracking-wider text-muted-foreground">
-                {t("search.section.recent_notes")}
-              </h3>
-              <div className="space-y-0.5">
-                {recentNotes.map((note) => (
-                  <button
-                    key={note.id}
-                    onClick={() => handleNoteSelect(note.id)}
-                    className="flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-left transition-colors hover:bg-hover-bg"
-                  >
-                    {note.pinned ? (
-                      <PushPin className="shrink-0 text-muted-foreground" size={16} strokeWidth={2} />
-                    ) : (
-                      <FileText className="shrink-0 text-muted-foreground" size={16} strokeWidth={2} />
-                    )}
-                    <div className="min-w-0 flex-1">
-                      <div className="truncate text-foreground">
-                        {note.title || t("common.untitled")}
-                      </div>
-                      <div className="truncate text-note text-muted-foreground">
-                        {noteSublabel(note)}
-                      </div>
+          {/* Empty query: entity-aware sections per activeTab */}
+          {!hasFuzzyQuery && (() => {
+            const rowBtnCls = "flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-left transition-colors hover:bg-hover-bg"
+            const sectionTitleCls = "mb-3 text-2xs font-medium uppercase tracking-wider text-muted-foreground"
+            const showAll = activeTab === "all"
+            // ── Show More button ── (Linear/Notion progressive disclosure pattern)
+            const SHOW_MORE_LIMIT = 8
+            const showMoreBtn = (count: number, navigate: () => void) =>
+              count > SHOW_MORE_LIMIT && (
+                <button
+                  onClick={navigate}
+                  className="mt-2 px-3 text-2xs text-muted-foreground transition-colors hover:text-foreground"
+                >
+                  {t("search.section.view_all").replace("{count}", String(count))}
+                </button>
+              )
+            const nav = (path: string) => () => {
+              setActiveRoute(path.split("?")[0] as Parameters<typeof setActiveRoute>[0])
+              router.push(path)
+            }
+            const byUpdated = <T extends { updatedAt?: string; createdAt?: string }>(arr: T[]) =>
+              [...arr].sort((a, b) => new Date(b.updatedAt ?? b.createdAt ?? 0).getTime() - new Date(a.updatedAt ?? a.createdAt ?? 0).getTime())
+            const byCreated = <T extends { createdAt?: string }>(arr: T[]) =>
+              [...arr].sort((a, b) => new Date(b.createdAt ?? 0).getTime() - new Date(a.createdAt ?? 0).getTime())
+            const byName = <T extends { name: string }>(arr: T[]) =>
+              [...arr].sort((a, b) => a.name.localeCompare(b.name))
+            const activeBooks = byUpdated(books.filter((b) => !b.trashed)).slice(0, 8)
+            const activeStickers = byCreated(stickers.filter((s) => !s.trashed)).slice(0, 8)
+            const referencesArr = byUpdated(Object.values(references)).slice(0, 8)
+            const recentWikis = byUpdated(wikiNotes).slice(0, 8)
+            const recentCategories = byUpdated(wikiCategories).slice(0, 8)
+            const recentTags = byName(tags.filter((t) => !t.trashed)).slice(0, 8)
+            const recentLabels = byName(labels.filter((l) => !l.trashed)).slice(0, 8)
+            const recentTemplates = byUpdated(templates).slice(0, 8)
+            const recentFolders = [...folders]
+              .sort((a, b) => new Date(b.lastAccessedAt ?? b.createdAt ?? 0).getTime() - new Date(a.lastAccessedAt ?? a.createdAt ?? 0).getTime())
+              .slice(0, 8)
+            return (
+              <div className="space-y-6">
+                {/* Notes */}
+                {(showAll || activeTab === "notes") && recentNotes.length > 0 && (
+                  <section>
+                    <h3 className={sectionTitleCls}>{t("search.section.notes")}</h3>
+                    <div className="space-y-0.5">
+                      {recentNotes.map((note) => (
+                        <button key={note.id} onClick={() => handleNoteSelect(note.id)} className={rowBtnCls}>
+                          {note.pinned ? (
+                            <PushPin className="shrink-0 text-muted-foreground" size={16} strokeWidth={2} />
+                          ) : (
+                            <FileText className="shrink-0 text-muted-foreground" size={16} strokeWidth={2} />
+                          )}
+                          <div className="min-w-0 flex-1">
+                            <div className="truncate text-foreground">{note.title || t("common.untitled")}</div>
+                            <div className="truncate text-note text-muted-foreground">{noteSublabel(note)}</div>
+                          </div>
+                        </button>
+                      ))}
                     </div>
-                  </button>
-                ))}
-                {recentNotes.length === 0 && (
+                    {showMoreBtn(searchableNotes.length, nav("/notes"))}
+                  </section>
+                )}
+
+                {/* Wiki */}
+                {(showAll || activeTab === "wiki") && recentWikis.length > 0 && (
+                  <section>
+                    <h3 className={sectionTitleCls}>{t("search.section.wiki")}</h3>
+                    <div className="space-y-0.5">
+                      {recentWikis.map((note) => (
+                        <button key={note.id} onClick={() => handleWikiSelect(note.id)} className={rowBtnCls}>
+                          <BookOpen className="shrink-0 text-accent" size={16} strokeWidth={2} />
+                          <div className="min-w-0 flex-1">
+                            <div className="truncate text-foreground">{note.title || t("common.untitled")}</div>
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                    {showMoreBtn(wikiNotes.length, nav("/wiki"))}
+                  </section>
+                )}
+
+                {/* Books */}
+                {(showAll || activeTab === "books") && activeBooks.length > 0 && (
+                  <section>
+                    <h3 className={sectionTitleCls}>{t("search.section.books")}</h3>
+                    <div className="space-y-0.5">
+                      {activeBooks.map((book) => (
+                        <button key={book.id} onClick={() => handleBookSelect(book.id)} className={rowBtnCls}>
+                          <BooksIcon className="shrink-0 text-muted-foreground" size={16} strokeWidth={2} />
+                          <div className="min-w-0 flex-1">
+                            <div className="truncate text-foreground">{book.title || t("common.untitled")}</div>
+                            <div className="truncate text-note text-muted-foreground">{book.items?.length ?? 0} items</div>
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                    {showMoreBtn(books.filter((b) => !b.trashed).length, nav("/books"))}
+                  </section>
+                )}
+
+                {/* Categories */}
+                {(showAll || activeTab === "categories") && recentCategories.length > 0 && (
+                  <section>
+                    <h3 className={sectionTitleCls}>{t("search.section.categories")}</h3>
+                    <div className="space-y-0.5">
+                      {recentCategories.map((c) => (
+                        <button key={c.id} onClick={handleCategorySelect} className={rowBtnCls}>
+                          <CategoryIcon className="shrink-0 text-muted-foreground" size={16} strokeWidth={2} />
+                          <div className="min-w-0 flex-1">
+                            <div className="truncate text-foreground">{c.name}</div>
+                            {c.description && (
+                              <div className="truncate text-note text-muted-foreground">{c.description}</div>
+                            )}
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                    {showMoreBtn(wikiCategories.length, nav("/wiki"))}
+                  </section>
+                )}
+
+                {/* Tags */}
+                {(showAll || activeTab === "tags") && recentTags.length > 0 && (
+                  <section>
+                    <h3 className={sectionTitleCls}>{t("search.section.tags")}</h3>
+                    <div className="space-y-0.5">
+                      {recentTags.map((tag) => (
+                        <button key={tag.id} onClick={() => handleTagSelect(tag.id)} className={rowBtnCls}>
+                          <PhTag
+                            className="shrink-0"
+                            size={16}
+                            strokeWidth={2}
+                            style={{ color: tag.color ?? undefined }}
+                          />
+                          <div className="min-w-0 flex-1">
+                            <div className="truncate text-foreground">{tag.name}</div>
+                            <div className="truncate text-note text-muted-foreground">
+                              {tagNoteCounts.get(tag.name) ?? 0} notes
+                            </div>
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                    {showMoreBtn(tags.filter((t) => !t.trashed).length, nav("/library?tab=tags"))}
+                  </section>
+                )}
+
+                {/* Labels */}
+                {(showAll || activeTab === "labels") && recentLabels.length > 0 && (
+                  <section>
+                    <h3 className={sectionTitleCls}>{t("search.section.labels")}</h3>
+                    <div className="space-y-0.5">
+                      {recentLabels.map((label) => (
+                        <button key={label.id} onClick={() => handleLabelSelect(label.id)} className={rowBtnCls}>
+                          <BookmarkSimple
+                            className="shrink-0"
+                            size={16}
+                            strokeWidth={2}
+                            style={{ color: label.color }}
+                          />
+                          <div className="min-w-0 flex-1">
+                            <div className="truncate text-foreground">{label.name}</div>
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                    {showMoreBtn(labels.filter((l) => !l.trashed).length, nav("/library?tab=labels"))}
+                  </section>
+                )}
+
+                {/* Stickers */}
+                {(showAll || activeTab === "stickers") && activeStickers.length > 0 && (
+                  <section>
+                    <h3 className={sectionTitleCls}>{t("search.section.stickers")}</h3>
+                    <div className="space-y-0.5">
+                      {activeStickers.map((s) => (
+                        <button key={s.id} onClick={handleStickerSelect} className={rowBtnCls}>
+                          <StickerIcon className="shrink-0 text-muted-foreground" size={16} strokeWidth={2} />
+                          <div className="min-w-0 flex-1">
+                            <div className="truncate text-foreground">{s.name}</div>
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                    {showMoreBtn(stickers.filter((s) => !s.trashed).length, nav("/library?tab=stickers"))}
+                  </section>
+                )}
+
+                {/* References */}
+                {(showAll || activeTab === "references") && referencesArr.length > 0 && (
+                  <section>
+                    <h3 className={sectionTitleCls}>{t("search.section.references")}</h3>
+                    <div className="space-y-0.5">
+                      {referencesArr.map((r) => (
+                        <button key={r.id} onClick={handleReferenceSelect} className={rowBtnCls}>
+                          <ReferenceIcon className="shrink-0 text-muted-foreground" size={16} strokeWidth={2} />
+                          <div className="min-w-0 flex-1">
+                            <div className="truncate text-foreground">{r.title}</div>
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                    {showMoreBtn(Object.values(references).filter((r) => !(r as { trashed?: boolean }).trashed).length, nav("/library?tab=references"))}
+                  </section>
+                )}
+
+                {/* Templates */}
+                {(showAll || activeTab === "templates") && recentTemplates.length > 0 && (
+                  <section>
+                    <h3 className={sectionTitleCls}>{t("search.section.templates")}</h3>
+                    <div className="space-y-0.5">
+                      {recentTemplates.map((tmpl) => (
+                        <button key={tmpl.id} onClick={handleTemplateSelect} className={rowBtnCls}>
+                          <Layout className="shrink-0 text-muted-foreground" size={16} strokeWidth={2} />
+                          <div className="min-w-0 flex-1">
+                            <div className="truncate text-foreground">{tmpl.name}</div>
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                    {showMoreBtn(templates.length, nav("/templates"))}
+                  </section>
+                )}
+
+                {/* Folders */}
+                {(showAll || activeTab === "folders") && recentFolders.length > 0 && (
+                  <section>
+                    <h3 className={sectionTitleCls}>{t("search.section.folders")}</h3>
+                    <div className="space-y-0.5">
+                      {recentFolders.map((folder) => (
+                        <button
+                          key={folder.id}
+                          onClick={() => handleFolderSelect(folder.id)}
+                          className={rowBtnCls}
+                        >
+                          <FolderOpen className="shrink-0 text-muted-foreground" size={16} strokeWidth={2} />
+                          <div className="min-w-0 flex-1">
+                            <div className="truncate text-foreground">{folder.name}</div>
+                            <div className="truncate text-note text-muted-foreground">{folder.kind}</div>
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                    {showMoreBtn(folders.length, nav("/library?tab=folders"))}
+                  </section>
+                )}
+
+                {/* Empty state */}
+                {((activeTab === "notes" && recentNotes.length === 0) ||
+                  (activeTab === "wiki" && recentWikis.length === 0) ||
+                  (activeTab === "books" && activeBooks.length === 0) ||
+                  (activeTab === "categories" && wikiCategories.length === 0) ||
+                  (activeTab === "tags" && tags.length === 0) ||
+                  (activeTab === "labels" && labels.length === 0) ||
+                  (activeTab === "stickers" && activeStickers.length === 0) ||
+                  (activeTab === "references" && referencesArr.length === 0) ||
+                  (activeTab === "templates" && templates.length === 0) ||
+                  (activeTab === "folders" && folders.length === 0)) && (
                   <p className="py-8 text-center text-note text-muted-foreground">
-                    No notes yet
+                    No {activeTab} yet
                   </p>
                 )}
               </div>
-            </div>
-          )}
+            )
+          })()}
 
           {/* With query: filtered results */}
           {hasFuzzyQuery && (

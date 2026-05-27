@@ -189,6 +189,106 @@
   --transition-fast: 120ms ease;
   --transition-default: 160ms ease;
   --transition-slow: 200ms ease;
+
+  /* ──────────────────────────────────────────────────────────
+     Linear v2 Tokens (Plot v2 redesign) — light values.
+     Namespace: `--ln-*` to avoid collision with existing v3/shadcn tokens.
+     Phase 1: tokens only; component classes land in Phase 2.
+     ────────────────────────────────────────────────────────── */
+
+  /* Panel hierarchy (4-level surfaces) */
+  --ln-panel:    #ffffff;
+  --ln-panel-2:  #f7f8f8;
+  --ln-surface:  #ffffff;
+  --ln-elevated: #ffffff;
+
+  /* Foreground tone (Linear naming, aliased to existing) */
+  --ln-fg-2:     var(--soft-fg);
+  --ln-muted:    var(--muted-fg);
+  --ln-meta:     var(--whisper-fg);
+  --ln-disabled: #c2c6cd;
+
+  /* Border hierarchy */
+  --ln-border-soft:   rgba(0, 0, 0, 0.05);
+  --ln-border-strong: rgba(0, 0, 0, 0.14);
+
+  /* Hover / Selected */
+  --ln-hover:           rgba(0, 0, 0, 0.04);
+  --ln-hover-2:         rgba(0, 0, 0, 0.06);
+  --ln-selected:        rgba(94, 106, 210, 0.10);
+  --ln-selected-strong: rgba(94, 106, 210, 0.16);
+
+  /* Accent palette (extends existing --accent / --accent-soft) */
+  --ln-accent-2:      #7170ff;
+  --ln-accent-hover:  #828fff;
+  --ln-accent-active: #4752c4;
+  --ln-accent-on:     #ffffff;
+  --ln-accent-tint:   rgba(94, 106, 210, 0.06);
+  --plot-gradient:    linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+
+  /* Semantic colors (--danger aliases existing --destructive) */
+  --success:      #27a644;
+  --success-soft: rgba(39, 166, 68, 0.16);
+  --warn:         #eab308;
+  --warn-soft:    rgba(234, 179, 8, 0.16);
+  --info:         #3b82f6;
+  --info-soft:    rgba(59, 130, 246, 0.16);
+  --danger:       var(--destructive);
+  --danger-soft:  rgba(220, 38, 38, 0.16);
+
+  /* Linear text scale (existing --font-* preserved alongside) */
+  --text-2xs:  10px;
+  --text-xs:   11px;
+  --text-sm:   12px;
+  --text-md:   13px;
+  --text-base: 14px;
+  --text-lg:   15px;
+  --text-xl:   17px;
+  --text-2xl:  20px;
+  --text-3xl:  24px;
+  --text-4xl:  32px;
+  --text-5xl:  44px;
+
+  /* Tracking / leading */
+  --leading-tight:    1.2;
+  --leading-body:     1.5;
+  --leading-relaxed:  1.65;
+  --tracking-display: -0.022em;
+  --tracking-tight:   -0.012em;
+  --tracking-normal:  -0.005em;
+  --tracking-wide:    0.04em;
+
+  /* Spacing scale (Linear 4-grid; namespace-isolated from Tailwind) */
+  --s-1:  4px;
+  --s-2:  8px;
+  --s-3:  12px;
+  --s-4:  16px;
+  --s-5:  20px;
+  --s-6:  24px;
+  --s-7:  32px;
+  --s-8:  40px;
+  --s-9:  48px;
+  --s-10: 64px;
+
+  /* Radii additions (existing --r-2..--r-12 preserved) */
+  --r-16:   16px;
+  --r-pill: 9999px;
+
+  /* Motion (aliases to existing --transition-* + new --ease) */
+  --ease:   cubic-bezier(0.2, 0, 0, 1);
+  --d-fast: 120ms;
+  --d-base: 180ms;
+  --d-slow: 240ms;
+
+  /* Shadow elevation */
+  --shadow-1:       0 1px 0 rgba(0, 0, 0, 0.04);
+  --shadow-2:       0 1px 2px rgba(0, 0, 0, 0.06), 0 0 0 1px var(--border-subtle);
+  --shadow-3:       0 8px 24px rgba(0, 0, 0, 0.10), 0 0 0 1px var(--border);
+  --shadow-popover: 0 0 0 1px var(--border), 0 4px 8px rgba(0, 0, 0, 0.08), 0 16px 32px rgba(0, 0, 0, 0.10);
+  --focus-ring:     0 0 0 2px color-mix(in oklab, var(--accent) 55%, transparent);
+
+  /* Layout — statusbar only (activity/sidebar/topbar widths preserved) */
+  --statusbar-h: 28px;
 }
 
 .dark {
@@ -298,6 +398,46 @@
   /* Editor Spine (dark) */
   --editor-code-bg: rgba(255,255,255,0.08);
   --editor-inline-code-color: #c4b5fd;
+
+  /* ──────────────────────────────────────────────────────────
+     Linear v2 Tokens — dark variants.
+     Only values that differ from :root light values are redeclared;
+     scales (--s-*, --text-*, --r-*, motion, tracking) inherit.
+     ────────────────────────────────────────────────────────── */
+
+  /* Panel hierarchy (dark) */
+  --ln-panel:    #0f1011;
+  --ln-panel-2:  #141516;
+  --ln-surface:  #191a1b;
+  --ln-elevated: #1f2022;
+
+  /* Border hierarchy (dark) */
+  --ln-border-soft:   rgba(255, 255, 255, 0.05);
+  --ln-border-strong: rgba(255, 255, 255, 0.14);
+
+  /* Hover / Selected (dark) */
+  --ln-hover:           rgba(255, 255, 255, 0.04);
+  --ln-hover-2:         rgba(255, 255, 255, 0.06);
+  --ln-selected:        rgba(94, 106, 210, 0.14);
+  --ln-selected-strong: rgba(94, 106, 210, 0.22);
+
+  /* Accent tint (dark, slightly stronger for contrast) */
+  --ln-accent-tint: rgba(94, 106, 210, 0.08);
+
+  /* Disabled (dark) */
+  --ln-disabled: #4a4f57;
+
+  /* Semantic-soft variants (dark — slightly stronger alpha) */
+  --success-soft: rgba(39, 166, 68, 0.22);
+  --warn-soft:    rgba(234, 179, 8, 0.22);
+  --info-soft:    rgba(59, 130, 246, 0.22);
+  --danger-soft:  rgba(220, 38, 38, 0.22);
+
+  /* Shadow elevation (dark — stronger blacks) */
+  --shadow-1:       0 1px 0 rgba(0, 0, 0, 0.4);
+  --shadow-2:       0 1px 2px rgba(0, 0, 0, 0.4), 0 0 0 1px var(--border-subtle);
+  --shadow-3:       0 8px 24px rgba(0, 0, 0, 0.5), 0 0 0 1px var(--border);
+  --shadow-popover: 0 0 0 1px var(--border), 0 4px 8px rgba(0, 0, 0, 0.4), 0 16px 32px rgba(0, 0, 0, 0.5);
 }
 
 @theme inline {
@@ -396,6 +536,20 @@
 
   /* 에디터 제목 사이즈 토큰 */
   --font-size-title: 1.75rem;
+
+  /* ──────────────────────────────────────────────────────────
+     Linear v2 — selected Tailwind exposures (Phase 1).
+     Only tokens consumed by upcoming Plot v2 chrome are exposed here;
+     extend in Phase 2 as more components migrate.
+     ────────────────────────────────────────────────────────── */
+  --color-panel:        var(--ln-panel);
+  --color-panel-2:      var(--ln-panel-2);
+  --color-surface-elev: var(--ln-surface);
+  --color-elevated:     var(--ln-elevated);
+  --color-accent-2:     var(--ln-accent-2);
+  --color-success:      var(--success);
+  --color-warn:         var(--warn);
+  --color-info:         var(--info);
 }
 
 @layer base {

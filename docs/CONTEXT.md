@@ -51,12 +51,113 @@
 
 ---
 
+## 🚀 2026-05-27 (저녁) — Plot v2 Linear 재디자인 Phase 1+2+3 — `/preview/linear` 라이브 demo (1 통합 PR) ⭐⭐⭐⭐
+
+**범위**: 사용자 명시 큰 결정 ("Plot v2 통째 재설계 Path A" + 12장 reference 이미지) 본격 진입. `app/globals.css`에 Linear 토큰 머지 + `/preview/linear` 라우트 라이브 demo + Filter/Display/Books 풀 재설계.
+
+### 머지된 PR (이번 세션, 1 통합)
+- ✅ **PR (이)** — Plot v2 Linear 재디자인 Phase 1+2+3:
+  - Phase 1: globals.css Linear 토큰 머지 (+154줄, `--ln-*` namespace + un-prefixed scale/semantic/spacing/motion/shadow)
+  - Phase 2: `app/preview/linear-styles.css` (993줄) + `page.tsx` (993줄) 신규 — 5 surface 라이브 demo
+  - Phase 3: Filter popover (10 fields + 4 quick filters) + Display popover (5 mode + 7 group + multi-sort + 12 prop) + Books surface (4번째 탭) — 22 inline SVG 아이콘 통일
+
+### 영구 결정 (이번 세션, LOCKED 후보 #153~#157)
+- **#153 (vision)** Linear 토큰 namespace 전략: `--ln-*` (개념 신규) + un-prefixed (scale/semantic). `.ln-app` scope alias 격리. v3 LOCKED + shadcn + `.a-*` 모두 0 touch.
+- **#154 (vision)** Linear CSS 격리 = preview-only. `app/preview/linear-styles.css`로 격리, globals.css 0 변경. Phase 4 마이그레이션 시 필요 클래스만 promotion.
+- **#155 (vision)** `.ln-*` prefix 일관: shadcn + Phase 3 mockup `.a-*`와 충돌 회피. PowerShell regex로 944줄 자동 prefix 변환.
+- **#156 (vision)** Phase 4 진입점 = filter-bar.tsx + display-panel.tsx (사용자 명시): 아이콘/폰트/옵션까지 전부 재설계 OK.
+- **#157 (vision)** dev server 포트 = 3000 (NOT 3002 — CLAUDE.md 오래된 기록): `next dev --webpack` 포트 인자 없음 → 3000.
+
+### v3 PRD 영향
+- **Plot v2 Linear 재디자인 Path A 본격 진입** — Phase 0 design language = Linear 채택 확정.
+- Phase 4.3 chrome 통일 → Linear 재디자인 path와 합류. filter-bar / display-panel이 chrome 통일 첫 실제 단계.
+
+### 검증 결과
+- `tsc --noEmit`: 에러 0 (Phase 1/2/3 각각)
+- `npm run build`: 성공, `/preview/linear` static prerender 통과
+- 기존 앱 0 regression: `(app)/* + components/* + lib/*` 모두 0 touch, globals.css `:root` append-only
+
+### 다음 P0 (재정렬)
+1. **P0 #0** Phase 3.1 — `/preview/linear` 12장 reference 이미지 1:1 비교 + fine-tune ⭐ 다음 세션 첫 작업
+2. **P0 #1** Phase 4 — filter-bar.tsx + display-panel.tsx Linear 마이그레이션 (사용자 명시)
+3. **P0 #2 (carry)** Coverage entity dropdown 옵션 C/B/D 결정 (별도 진행 가능)
+4. **P0 #3** Books 엔티티 방향 결정 — A) /library 별칭 / B) 7번째 entity (rose space)
+
+### Watch Out
+- **`.ln-app` scope 토큰 alias** — `--panel/--hover/--accent-2`가 `.ln-app` 안에서만 유효. 외부 사용 시 미정의.
+- **`.dark` 토글 + ThemeProvider 공존** — preview 직접 토글이 새로고침 시 ThemeProvider에 덮어쓰임 (demo 한정 OK).
+- **dev server 포트 3000** (CLAUDE.md 3002 stale).
+- **preview는 mock 데이터** — Zustand 미연동. Phase 4에서 실 연동.
+
+---
+
+## 🚀 2026-05-27 (오전~새벽) — Search entity-aware + Ontology Insights v2 + HoverCard 학습 패턴 (PR #473-#479, 8 PR 23 commits) ⭐⭐⭐⭐⭐
+
+**범위**: 누적 8 PR 머지. Search hardcoded "RECENT NOTES" only 버그 fix → entity-aware. Ontology Insights v2 (옵션 A Power Sabermetrics) 재설계. Tab highlight bug fix. HoverCard 학습 패턴 도입.
+
+**핵심 결정 (영구 LOCKED 후보 #148~#152)**:
+- **#148 (vision)**: Ontology Insights = Power Sabermetrics 정체성. Composite WAR-like score + Coverage Mosaic + NUDGE + visualization. Daily habit 미채택.
+- **#149 (vision)**: Linear/Notion progressive disclosure — 8 limit + Show More button. Recency bias.
+- **#150 (vision)**: HoverCard 학습 패턴 — ⓘ icon + Radix HoverCard. Plot identity "Gentle by default" 정통.
+- **#151 (vision)**: Search section title = entity name만 + entity별 sort.
+- **#152 (vision)**: Coverage entity dropdown (다음 세션 결정).
+
+**완료**:
+- Search entity-aware (#473): 11 entity 분기 (notes/wiki/books/categories/tags/labels/stickers/references/templates/folders)
+- Search section title 통일 + sort (#474)
+- Show More button (#475): Linear/Notion progressive disclosure
+- Ontology Insights v2 (#476): 4 section Power Sabermetrics 재설계
+- Tab highlight bug fix (#477): reactive subscribe
+- HoverCard 학습 (#478/#479): 4 chart + 4 KPI ⓘ icon
+
+**다음 P0**:
+1. **🔴 P0 #1 (사용자 최우선)**: Coverage entity dropdown 논의 + 진행 (옵션 C/B/D).
+2. **🔴 P0 #2**: Phase 0 Plot v2 PRD (2 세션째 deferred).
+3. **🟡 P0 #3-6**: NUDGE Connect / Insights KPI 폐기 / viewport 검증 / Book Phase 2.
+
+---
+
+## 🚀 2026-05-26 (저녁) — viewport polish 세션: LOCKED #136 v2 revised + Book 폴더 Phase 1 + entity list Notes parity 점진 정합 (PR #472, 13 commits) ⭐⭐⭐⭐
+
+**범위**: 단일 PR 누적 13 commits. (a) Layout LOCKED #136 v1→v2 (풀 폭 → max-w-5xl Home pattern, 사용자 viewport revert), (b) Dashboard KPI 라벨 + 버그 fix + wiki_breakdown, (c) Book 폴더 Phase 1 (schema + migration v149 + sub-line), (d) Books → Notes parity pixel-perfect 점진 정합, (e) Wiki 부분 정합 (broken/revert + minimal).
+
+**핵심 결정 (영구 LOCKED #136 v2 + 후보 #143~#147)**:
+- **#136 LOCKED v2 (2026-05-26)**: **Two-Layout Rule v2** — Overview/Dashboard/Insights = Home pattern max-w-5xl (v1 풀 폭 viewport revert). Article 본문/Settings max-width / 차트 ResizeObserver / Mosaic keep.
+- **#143 (vision)**: Notes .a-th/.a-row CSS system = entity list chrome design system source of truth.
+- **#144 (vision)**: Plot root font-size 14px (사용자 customization feature) → Tailwind 16px base misalignment. 근본 fix Plot v2와 통합 결정.
+- **#145 (vision)**: Book 폴더 Phase 1 완료 (schema+migration), Phase 2 UI 후속.
+- **#146 (vision)**: entity별 column 구조 다르므로 동일 fix 일괄 적용 X.
+- **#147 (vision)**: Cover icon wrapper anti-pattern (h-5 w-5 box). Notes naked SVG 정통.
+
+**완료** (13 commits):
+- Layout 4 페이지 max-w-5xl revert (`bcccd3d`)
+- KPI 라벨 단순화 + status_breakdown EN 버그 fix + wiki_breakdown 신규
+- Book 폴더 Phase 1 (Folder.kind 확장 + Book.folderIds + v149 + dashboard sub + 12 cascade fix)
+- Books Notes parity pixel-perfect (px-[20px] gap-[8px] w-[32px] + cover icon naked)
+- Wiki Updated/Created swap + checkbox 32px (광범위 fix broken/revert)
+
+**기술 학습 (영구)**:
+- **preview_inspect = pixel 정확 진단**: 시각 추정 vs 실제 측정.
+- **Plot root font-size 14px → Tailwind misalignment**: rem-based class ~12% 작음. 절대 px 명시 path.
+- **Notes .a-th/.a-row = grid + inline style 동적**: globals.css chrome only + consumer inline column.
+- **gap-[8px] cascade**: entity별 column wrapper 구조 다름.
+- **Cover icon wrapper anti-pattern**: 20×20 box vs naked SVG.
+- **Book 폴더 cascade fix**: setGlobalSearchQuery type 누락 의외 발견 (PR #462 wire).
+
+**다음 P0** (이전 세션 그대로):
+1. **🔴 P0 #1**: Phase 0 — Design Language 결정 + Plot v2 PRD (여전히 미시작).
+2. **🟢 P0 #2-4**: chunk/Phase deferred + TABS refactor + viewport 검증.
+3. **🟡 P0 #5**: Book 폴더 Phase 2 UI.
+4. **🟡 P0 #6**: Wiki list 정밀 진단.
+
+---
+
 ## 🚀 2026-05-25 (대규모 세션 #3) — P0 #1/#2 완성 + 검색 정통화 + Open Design install + Plot v2 통째 재설계 결정 (PR #459-#470, 12 PR) ⭐⭐⭐⭐⭐
 
 **범위**: 단일 세션 누적 12 PR. (a) Chrome architecture 완성, (b) 검색 architecture 정통화 (Path A), (c) Dashboard 풀 폭 + Mosaic 차트 + 색상 token 정합, (d) Insights 손질, (e) Books list 시각 균형, (f) **Plot v2 통째 재설계 결정 (Path A)** + Open Design install.
 
 **핵심 결정 (영구 LOCKED #136 + 후보 #137~#142)**:
-- **#136 LOCKED**: **Two-Layout Rule** — Dashboard/Overview 풀 폭 / Article 본문 max-width / Settings max-width / 차트 ResizeObserver (ResponsiveContainer 금지) / Mosaic 차트 layout.
+- **#136 LOCKED (v2 2026-05-26)**: **Two-Layout Rule** — Overview/Dashboard/Insights = Home pattern max-w-5xl + mx-auto + px-6 py-10 (v1 풀 폭 viewport revert, #468 패턴) / Article 본문 max-width / Settings max-width / 차트 ResizeObserver / Mosaic 차트 layout.
 - **#137 (vision)**: Plot 통째 재설계 (Path A) — functional/UI layer 분리 워크플로우. lib/* + hooks/* keep, components/* 재설계.
 - **#138 (vision)**: mockup-first 워크플로우 정통화 — Plot v2 디자인의 표준 패턴.
 - **#139 (vision)**: Open Design = prototype generator (HTML output, React X). 매뉴얼 변환 필수.

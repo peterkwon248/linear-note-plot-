@@ -239,6 +239,13 @@ export interface Book {
    */
   lastReadItemId?: string | null
   lastReadAt?: string | null
+
+  /**
+   * Folder membership — N:M (a book can live in any number of `kind="book"`
+   * folders simultaneously). v149 migration initializes existing books with
+   * an empty array. Empty = no folders. Parallel to Note.folderIds + WikiArticle.folderIds.
+   */
+  folderIds: string[]
 }
 
 /**
@@ -650,13 +657,13 @@ export interface Folder {
   pinnedOrder: number
   createdAt: string
   /**
-   * Folder type discriminator (v107). A folder accepts either notes
-   * (`kind="note"`) or wiki articles (`kind="wiki"`), never both. The
-   * v107 migration infers this from existing membership; new folders
-   * must specify `kind` at creation. Immutable after creation — see
+   * Folder type discriminator (v107). A folder accepts notes (`kind="note"`),
+   * wiki articles (`kind="wiki"`), or books (`kind="book"` — v149, 2026-05-26),
+   * never mixed. The v107 migration infers this from existing membership; new
+   * folders must specify `kind` at creation. Immutable after creation — see
    * `.omc/plans/folder-nm-migration.md` §"Must NOT Have".
    */
-  kind: "note" | "wiki"
+  kind: "note" | "wiki" | "book"
 }
 
 export interface Tag {

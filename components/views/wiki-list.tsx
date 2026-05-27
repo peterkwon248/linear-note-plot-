@@ -331,7 +331,7 @@ function ColumnHeaders({
   return (
     <div className="flex items-center px-5 py-2 text-note font-medium text-foreground/80 border-b border-border bg-secondary/30">
       {hasSelection && (
-        <div className="w-8 shrink-0 flex items-center justify-center">
+        <div className="w-[32px] shrink-0 flex items-center justify-center">
           {onSelectAll ? (
             <div
               data-checkbox
@@ -364,8 +364,8 @@ function ColumnHeaders({
       {isVisible("links") && <span className="w-[60px] shrink-0 text-right">Links</span>}
       {isVisible("reads") && <span className="w-[56px] shrink-0 text-right">Reads</span>}
       <span className="w-[36px] shrink-0" />
-      {isVisible("createdAt") && <span className="w-[70px] shrink-0 text-right">Created</span>}
       {isVisible("updatedAt") && <span className="w-[70px] shrink-0 text-right">Updated</span>}
+      {isVisible("createdAt") && <span className="w-[70px] shrink-0 text-right">Created</span>}
     </div>
   )
 }
@@ -436,7 +436,7 @@ function ArticleTableRow({
       {onSelect && (
         <div
           className={cn(
-            "w-8 shrink-0 flex items-center justify-center cursor-pointer",
+            "w-[32px] shrink-0 flex items-center justify-center cursor-pointer",
             selectionActive || isSelected ? "visible" : "invisible group-hover:visible"
           )}
           onClick={(e) => {
@@ -622,14 +622,14 @@ function ArticleTableRow({
         ) : null}
       </span>
 
-      {isVisible("createdAt") && (
-        <span className="w-[70px] shrink-0 text-right text-2xs tabular-nums text-muted-foreground/60">
-          {shortRelative(note.createdAt)}
-        </span>
-      )}
       {isVisible("updatedAt") && (
         <span className="w-[70px] shrink-0 text-right text-2xs tabular-nums text-muted-foreground/60">
           {shortRelative(note.updatedAt)}
+        </span>
+      )}
+      {isVisible("createdAt") && (
+        <span className="w-[70px] shrink-0 text-right text-2xs tabular-nums text-muted-foreground/60">
+          {shortRelative(note.createdAt)}
         </span>
       )}
     </div>

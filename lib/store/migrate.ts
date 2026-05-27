@@ -2410,5 +2410,16 @@ export function migrate(persistedState: unknown): PlotState {
     state.customQuickFilters = []
   }
 
+  // v148 → v149: Book folder membership (Phase 1). Initialize Book.folderIds
+  // to an empty array for all existing books. Folder.kind already widens to
+  // include "book"; user creates book folders via UI in Phase 2. Idempotent.
+  if (Array.isArray(state.books)) {
+    for (const b of state.books as Array<{ folderIds?: unknown }>) {
+      if (!Array.isArray(b.folderIds)) {
+        b.folderIds = []
+      }
+    }
+  }
+
   return state as unknown as PlotState
 }

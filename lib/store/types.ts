@@ -103,6 +103,7 @@ export interface PlotState {
    * per-view filtering.
    */
   globalSearchQuery: string
+  setGlobalSearchQuery: (query: string) => void
   searchOpen: boolean
   shortcutOverlayOpen: boolean
   sidePanelOpen: boolean

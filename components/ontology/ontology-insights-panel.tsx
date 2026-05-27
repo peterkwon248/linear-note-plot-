@@ -1,108 +1,113 @@
 "use client"
 
+/**
+ * Ontology > Insights panel (v2, 2026-05-27).
+ *
+ * Power Sabermetrics 정체성 — knowledge graph deep dive analytical depth.
+ *
+ * Sections (Phase 1 MVP):
+ *   1. Stats        — Edges / Density / Notes / Wiki (graph-specific KPI w/ HoverCard help)
+ *   2. Coverage     — Mosaic 3 차트 (Tagged donut + Orphan donut + Cohesion radial)
+ *   3. Nudge        — Actionable maintenance (keep, dashboard differentiator)
+ *   4. Top Notes    — Composite score horizontal bar chart (was sabermetrics list)
+ *
+ * Deferred to Phase 2:
+ *   - Growth time series (entityEvents-based area chart)
+ *   - Hub & Orphan deep dive
+ *   - Connectivity distribution histogram
+ *
+ * Layout: max-w-5xl (영구 LOCKED #136 v2) + space-y-6 between sections.
+ */
+
 import { useMemo } from "react"
+import { Info } from "lucide-react"
 import { usePlotStore } from "@/lib/store"
 import { useKnowledgeMetrics } from "@/hooks/use-knowledge-metrics"
-import { MetricRow } from "./metric-row"
+import { useT } from "@/lib/i18n"
+import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card"
 import { OntologyNudgeSection } from "./ontology-nudge-section"
+import {
+  TaggedDonut,
+  OrphanDonut,
+  CohesionRadial,
+  TopNotesBar,
+} from "./insights-charts"
 
-/**
- * Ontology > Insights panel.
- *
- * Sabermetrics-style. Numbers + labels. No charts, no gradients, no cards.
- * Just rows, dividers, and uppercase section captions. Optimised for density:
- * a 1080-tall viewport renders ~30 metrics without scrolling.
- */
 export function OntologyInsightsPanel() {
+  const t = useT()
   const metrics = useKnowledgeMetrics()
   const openNote = usePlotStore((s) => s.openNote)
 
-  /* ── Derived display strings ───────────────── */
-  const orphanPct = useMemo(() => `${Math.round(metrics.orphanRate * 100)}%`, [metrics.orphanRate])
-  const tagPct = useMemo(() => `${Math.round(metrics.tagCoverage * 100)}%`, [metrics.tagCoverage])
-  const cohesionPct = useMemo(
-    () => `${Math.round(metrics.clusterCohesion * 100)}%`,
-    [metrics.clusterCohesion],
+  /* ── Derived display values ────────────────── */
+  const tagged = useMemo(
+    () => Math.round(metrics.tagCoverage * metrics.totalNotes),
+    [metrics.tagCoverage, metrics.totalNotes],
   )
+  const untagged = metrics.totalNotes - tagged
+  const orphans = useMemo(
+    () => Math.round(metrics.orphanRate * metrics.totalNotes),
+    [metrics.orphanRate, metrics.totalNotes],
+  )
+  const connected = metrics.totalNotes - orphans
 
   return (
-    <div className="w-full px-6 py-6">
-      {/* ── Overview: dense single-row stats ── */}
-      <Section label="Overview">
-        <StatLine items={[
-          { label: "Notes", value: metrics.totalNotes },
-          { label: "Wiki", value: metrics.totalWiki },
-          { label: "Edges", value: metrics.totalEdges },
-          { label: "Density", value: metrics.linkDensity.toFixed(1) },
-        ]} />
+    <div className="mx-auto flex w-full max-w-5xl flex-col gap-6 px-6 py-10">
+      {/* ── Section 1: Graph Health Stats ── */}
+      <Section label={t("ontology.insights.section.health")}>
+        <StatLine
+          items={[
+            {
+              label: t("ontology.insights.stat.edges"),
+              value: metrics.totalEdges,
+              helpTitle: t("ontology.insights.help.edges_title"),
+              helpBody: t("ontology.insights.help.edges_body"),
+            },
+            {
+              label: t("ontology.insights.stat.density"),
+              value: metrics.linkDensity.toFixed(1),
+              helpTitle: t("ontology.insights.help.density_title"),
+              helpBody: t("ontology.insights.help.density_body"),
+            },
+            {
+              label: t("ontology.insights.stat.notes"),
+              value: metrics.totalNotes,
+              helpTitle: t("ontology.insights.help.notes_title"),
+              helpBody: t("ontology.insights.help.notes_body"),
+            },
+            {
+              label: t("ontology.insights.stat.wiki"),
+              value: metrics.totalWiki,
+              helpTitle: t("ontology.insights.help.wiki_title"),
+              helpBody: t("ontology.insights.help.wiki_body"),
+            },
+          ]}
+        />
       </Section>
 
-      {/* ── Coverage ── */}
-      <Section label="Coverage">
-        <MetricRow label="Tagged notes" value={tagPct} />
-        <MetricRow label="Orphan rate" value={orphanPct} />
-        <MetricRow label="Cluster cohesion" value={cohesionPct} />
-      </Section>
+      {/* ── Section 2: Coverage Mosaic (3 차트) ── */}
+      <section>
+        <header className="mb-3">
+          <h3 className="text-2xs font-semibold uppercase tracking-wider text-muted-foreground">
+            {t("ontology.insights.section.coverage")}
+          </h3>
+        </header>
+        <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
+          <TaggedDonut tagged={tagged} untagged={untagged} />
+          <OrphanDonut orphans={orphans} connected={connected} />
+          <CohesionRadial cohesion={metrics.clusterCohesion} />
+        </div>
+      </section>
 
-      {/* ── Nudge — actionable maintenance ── */}
+      {/* ── Section 3: Nudge (actionable, keep) ── */}
       <OntologyNudgeSection />
 
-      {/* ── Top Notes (renamed from Knowledge WAR — chunk 3a) ──
-       *  "WAR" (sabermetrics term — Wins Above Replacement) was opaque
-       *  and at odds with Plot's "Gentle by default" identity. Now uses
-       *  a plain label + explicit formula breakdown in the sublabel. */}
-      <Section
-        label="Top Notes"
-        sublabel="Combined value: backlinks ×2 + outgoing links + tags ×½ + age bonus − orphan penalty"
-      >
-        {metrics.topByWAR.length === 0 ? (
-          <Empty>No notes yet</Empty>
-        ) : (
-          metrics.topByWAR.map((entry, i) => (
-            <MetricRow
-              key={entry.id}
-              rank={i + 1}
-              label={entry.title}
-              value={entry.score.toFixed(1)}
-              onClick={() => openNote(entry.id)}
-            />
-          ))
-        )}
-      </Section>
-
-      {/* ── Concept Reach ── */}
-      <Section label="Concept Reach" sublabel="2-hop neighborhood size">
-        {metrics.topByConceptReach.length === 0 ? (
-          <Empty>No links yet</Empty>
-        ) : (
-          metrics.topByConceptReach.map((entry, i) => (
-            <MetricRow
-              key={entry.id}
-              rank={i + 1}
-              label={entry.title}
-              value={entry.reach}
-              onClick={() => openNote(entry.id)}
-            />
-          ))
-        )}
-      </Section>
-
-      {/* ── Hubs ── */}
-      <Section label="Hubs" sublabel="Most backlinked notes">
-        {metrics.topHubs.length === 0 ? (
-          <Empty>No backlinks yet</Empty>
-        ) : (
-          metrics.topHubs.map((entry, i) => (
-            <MetricRow
-              key={entry.id}
-              rank={i + 1}
-              label={entry.title}
-              value={entry.backlinks}
-              onClick={() => openNote(entry.id)}
-            />
-          ))
-        )}
-      </Section>
+      {/* ── Section 4: Top Notes Bar Chart ── */}
+      <section>
+        <TopNotesBar
+          entries={metrics.topByWAR.map((e) => ({ id: e.id, title: e.title, score: e.score }))}
+          onClick={openNote}
+        />
+      </section>
     </div>
   )
 }
@@ -111,34 +116,34 @@ export function OntologyInsightsPanel() {
 
 function Section({
   label,
-  sublabel,
   children,
 }: {
   label: string
-  sublabel?: string
   children: React.ReactNode
 }) {
   return (
-    <section className="mb-6 border-b border-border/40 pb-4 last:border-b-0">
+    <section>
       <header className="mb-2 px-2">
         <h3 className="text-2xs font-semibold uppercase tracking-wider text-muted-foreground">
           {label}
         </h3>
-        {sublabel && (
-          <p className="mt-0.5 text-2xs text-muted-foreground/70">{sublabel}</p>
-        )}
       </header>
       <div className="flex flex-col">{children}</div>
     </section>
   )
 }
 
-/* ── Single-row dense overview strip ──────────────────── */
+/* ── Dense overview strip ──────────────────────────────── */
 
 function StatLine({
   items,
 }: {
-  items: Array<{ label: string; value: number | string }>
+  items: Array<{
+    label: string
+    value: number | string
+    helpTitle?: string
+    helpBody?: string
+  }>
 }) {
   return (
     <div className="flex items-stretch divide-x divide-border/40 px-2">
@@ -147,20 +152,39 @@ function StatLine({
           key={item.label}
           className="flex flex-1 flex-col gap-0.5 px-3 py-1.5 first:pl-0"
         >
-          <span className="text-2xs text-muted-foreground">{item.label}</span>
+          <span className="flex items-center gap-1 text-2xs text-muted-foreground">
+            {item.label}
+            {(item.helpTitle || item.helpBody) && (
+              <HoverCard openDelay={150}>
+                <HoverCardTrigger asChild>
+                  <button
+                    type="button"
+                    aria-label="What does this mean?"
+                    className="text-muted-foreground/50 transition-colors hover:text-foreground"
+                  >
+                    <Info size={11} strokeWidth={2} />
+                  </button>
+                </HoverCardTrigger>
+                <HoverCardContent side="top" align="start" className="w-72">
+                  {item.helpTitle && (
+                    <h4 className="mb-1.5 text-2xs font-semibold uppercase tracking-wider text-muted-foreground">
+                      {item.helpTitle}
+                    </h4>
+                  )}
+                  {item.helpBody && (
+                    <p className="text-note leading-relaxed text-foreground/85">
+                      {item.helpBody}
+                    </p>
+                  )}
+                </HoverCardContent>
+              </HoverCard>
+            )}
+          </span>
           <span className="text-sm font-medium tabular-nums text-foreground">
             {item.value}
           </span>
         </div>
       ))}
     </div>
-  )
-}
-
-/* ── Empty state ──────────────────────────────────────── */
-
-function Empty({ children }: { children: React.ReactNode }) {
-  return (
-    <p className="px-2 py-1.5 text-2xs text-muted-foreground/70">{children}</p>
   )
 }

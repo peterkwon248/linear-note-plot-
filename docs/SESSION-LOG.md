@@ -6,6 +6,431 @@
 
 ---
 
+## 2026-05-27 (저녁) — 집 (Windows), **Plot v2 Linear 재디자인 Phase 1+2+3 — `/preview/linear` 라이브 demo (1 PR 통합)**
+
+> 🎯 **다음 즉시 액션 hook (사용자 우선순위)**:
+> 1. **`http://localhost:3000/preview/linear` 12장 reference 이미지와 1:1 비교** → 어긋난 surface/디테일 짚어서 Phase 3.1 fine-tune.
+> 2. (preview 만족 시) **Phase 4 = 실 컴포넌트 마이그레이션** — 사용자가 명시한 진입점 = `components/filter-bar.tsx` + `components/display-panel.tsx`. ("필터와 디스플레이는 리니어식으로 꾸며졌거든? 아예 그렇게 해야 될 거 같은데"). preview의 Filter popover (10 fields + 4 quick filters) + Display popover (5 mode + 7 group + multi-sort + 12 prop) reference로 사용.
+> 3. **Books 엔티티 방향 결정** — 사용자 지적 ("코드에는 있는데 목업에는 없다"). 옵션 A) `/library` 별칭 탭 / B) 7번째 entity (rose space, Smart Book v2 plan과 연결).
+>
+> **사용자 의도** (그대로 인용):
+> - "Plot v2 Linear 재디자인 스펙이 첨부 이미지들에 있어 (12장) ... 이 디자인을 현재 Next.js 16 + Zustand + Tiptap 프로젝트에 통합하고 싶어. Phase 1: app/globals.css에 Linear 토큰 머지부터 시작"
+> - "다 된 거야?" / "일단 만들어진 것 자체는 아주 마음에 들어!"
+> - "필터와 디스플레이는 리니어식으로 꾸며졌거든? 아예 그렇게 해야 될 거 같은데. 그리고 book도 없다 ... 기왕 만드는 김에 나는 우리 코드가 실제로 쓰는 필터 내의 아이콘들과 폰트, 디스플레이 내의 옵션들과 아이콘들까지 전부 재설계 해도 좋을 거 같아. 리니어 느낌이 나도록."
+> - "혹시 지금 작업한 거 after-work 가능해?"
+>
+> **누적 commits (이번 세션, 1 통합 PR)**:
+> 1. PR (이) — **Plot v2 Linear 재디자인 Phase 1+2+3 — preview live**:
+>    - feat(globals): Linear 토큰 머지 (+154줄, `--ln-*` namespace + un-prefixed scale/semantic/spacing/motion/shadow)
+>    - feat(preview): `/preview/linear` 라이브 demo 신규 (linear-styles.css 993줄 + page.tsx 993줄)
+>    - feat(preview): Filter popover (10 fields + 4 quick filters) + Display popover (5 mode + 7 group + multi-sort + 12 prop) + Books surface (4번째 탭, 5 collections + recent)
+>    - 22개 inline SVG 아이콘 (14px, strokeWidth 1.2~1.4) view-configs.tsx와 동일 시각 어휘
+>    - docs(sync): SESSION-LOG/NEXT-ACTION/MEMORY/TODO/CONTEXT
+>
+> **검증**:
+> - `tsc --noEmit` 에러 0 (Phase 1/2/3 각각)
+> - `npm run build` 성공 — `/preview/linear` static prerender 통과 (Phase 2/3)
+> - 기존 앱 0 regression — globals.css `:root` append-only, `(app)/*` + `components/*` + `lib/*` 모두 0 touch
+
+### 완료
+
+**Phase 1 — `app/globals.css` Linear 토큰 통합 (+154줄)**
+- `:root` 끝에 Linear 토큰 블록 append (라이트):
+  - Panel hierarchy 4단계 (`--ln-panel/-2/surface/elevated`)
+  - Foreground tone alias (`--ln-fg-2/muted/meta/disabled`)
+  - Border hierarchy (`--ln-border-soft/strong`)
+  - Hover/selected (`--ln-hover/-2/selected/-strong`)
+  - Accent palette (`--ln-accent-2/hover/active/on/tint`)
+  - `--plot-gradient` 토큰화 (memory #142)
+  - Semantic colors + soft (`--success/warn/info`)
+  - Linear text scale (`--text-2xs..5xl`, 11→44px)
+  - Tracking + leading
+  - Spacing scale (`--s-1..--s-10`, 4→64px) — Linear 컴포넌트 직접 소비
+  - Radii (`--r-16/--r-pill`)
+  - Motion (`--ease`, `--d-fast/base/slow`)
+  - Shadow elevation (`--shadow-1/2/3/popover`, `--focus-ring`)
+  - `--statusbar-h: 28px`
+- `.dark` 끝에 다크 변형 append
+- `@theme inline`에 Tailwind 노출 8개 (`--color-panel/-2/surface-elev/elevated/accent-2/success/warn/info`)
+- **사용자 결정 (권장 디폴트 3개)**:
+  1. 다크 `--bg: #0f0f11` 유지 (Linear `#08090a` X)
+  2. `--s-1..--s-10` 도입 (Linear 컴포넌트 직접 소비)
+  3. Layout 폭 현재 유지 (44px/220px, Linear 48px/248px X)
+
+**Phase 2 — `/preview/linear` 라이브 demo 신규**
+- `app/preview/linear-styles.css` (993줄) — Linear `assets/app.css` 944줄을 PowerShell regex로 자동 prefix 변환:
+  - 80개 클래스 `.ln-*` namespace (shadcn `.sidebar/.card/.kbd` 충돌 회피)
+  - `.ln-app` / `.ln-launcher` scope 안에서 unprefixed 토큰 alias (`--panel: var(--ln-panel)`)
+  - `--font-mono: var(--font-geist-mono)` alias (Geist Mono → Linear mono 슬롯)
+- `app/preview/linear/page.tsx` 신규 — 5 surface 인터랙티브 demo (List/Editor/Table/Palette/Dialog)
+- 인터랙션: ⌘K/Ctrl+K, Esc, sun/moon 토글, PanelLeft sidebar collapse, PanelRight detail hide
+
+**Phase 3 — Filter + Display + Books 풀 재설계 (page.tsx 547→993줄 재작성)**
+- `linear-styles.css` +233줄 — Filter/Display popover + Books cards 클래스 (`.ln-popover/.ln-segctl/.ln-sort-row/.ln-prop-chip/.ln-book-card`)
+- **22개 inline SVG 아이콘** (14px viewBox, strokeWidth 1.2~1.4) view-configs.tsx와 동일 시각 어휘
+- **Filter popover** — 사용자 실 코드 옵션 100% 반영:
+  - Quick Filters 4개 (Needs attention / Active work / True orphans / Wiki-registered)
+  - 10 fields + sub-menus (Status/Folder/Label/Tags/Source/Dates/Links/Wiki/Content/Pinned)
+  - Active filter chip bar 4-part chip (`[icon] field | op | value | ×`)
+  - 기본 활성 2개로 chip bar 미리 보이게 함
+- **Display popover** — view-configs.tsx NOTES_VIEW_CONFIG 그대로:
+  - 5-segmented view modes (List/Board/Grid/Graph/Insights)
+  - Grouping chip dropdown (7) + 동적 Sub-grouping + 제외값 비활성화
+  - Ordering chain multi-sort (max 3, 방향 토글 + 삭제)
+  - List options 토글 2개 (Show trashed / Filter-aware role)
+  - Display properties chip 12개 (active 시 `--accent-tint` 배경)
+- **Books surface** (4번째 탭):
+  - Collections 5개 카드 (References/Tags/Files/Stickers/Categories, auto-fill 232px)
+  - Recent additions 5줄
+
+### 브레인스토밍 & 큰 결정 (영구)
+
+**1. Linear 토큰 통합 namespace 전략 (영구)**:
+```
+--ln-* prefix  → panel hierarchy / hover-selected / border / accent variants (개념 신규)
+un-prefixed    → semantic / text / spacing / motion / shadow / radii (scale, Linear 호환)
+```
+- Linear 컴포넌트 클래스가 토큰을 un-prefixed로 참조. `.ln-app` scope alias로 격리.
+- v3 LOCKED 토큰 + shadcn 토큰 + Phase 3 mockup `.a-*` 모두 0 touch.
+
+**2. Linear CSS 격리 = preview-only**:
+- `app/preview/linear-styles.css`에 격리 (globals.css 0 변경)
+- Phase 4 마이그레이션 때 필요 클래스만 globals.css로 promotion
+- 이유: 기존 앱 zero regression 보장 + 빠른 실험
+
+**3. Phase 4 진입점 = filter-bar.tsx + display-panel.tsx (사용자 명시)**:
+- 현재 코드도 이미 Linear 4-part chip 패턴 (`[icon] field | op | value | ×`)이라 마이그레이션 용이
+- preview의 Filter/Display popover를 reference로 사용
+- 아이콘/폰트/옵션까지 전부 재설계 OK
+
+**4. Books surface 방향 미결정**:
+- 옵션 A) `/library` 별칭 탭 / B) 7번째 entity (rose space, Smart Book v2 plan과 연결)
+- Phase 4 진입 시 결정
+
+**5. dev server 포트 명확화**:
+- 실제는 3000 (NOT 3002 — CLAUDE.md는 오래된 기록)
+- 기존 dev (PID 11312) 그대로 + HMR로 `app/preview/*` 자동 인식
+
+### Watch Out (다음 세션)
+- **dev server 포트 3000** (NOT 3002 — CLAUDE.md 오래된 기록, 갱신 필요할 수도)
+- **preview는 mock 데이터** — Zustand store 미연동
+- **`.ln-app` scope의 토큰 alias** — `--panel/--hover/--accent-2`가 `.ln-app` 안에서만 유효. 외부 컴포넌트 사용 시 미정의
+- **`.dark` 토글 충돌** — preview의 직접 토글 + ThemeProvider 공존 (새로고침 시 ThemeProvider 우선)
+- **Phase 4 시 globals.css promotion 신중** — Linear 클래스를 globals.css로 옮길 때 shadcn/Phase 3 mockup `.a-*`와 충돌 점검
+- **사용자 직전 세션과 이번 세션 path 다름** — 직전 (오전~새벽 거대 세션) = Coverage entity dropdown 진행 중. 이번 (저녁) = Plot v2 Linear 재디자인. 두 path가 충돌하지 않지만, Coverage dropdown은 별도 진행 가능 (Plot v2 P0 #1과 부분 통합 가치)
+
+### 머신
+집 (Windows)
+
+---
+
+## 2026-05-27 (오전~새벽) — Windows, **거대 세션: Search entity-aware + Ontology Insights v2 + HoverCard 학습 패턴 (PR #473-#479, 7 PR 머지)**
+
+> 🎯 **다음 즉시 액션 (사용자 최우선 명시)**: **Coverage entity dropdown 논의 — 옵션 C / B / D 결정 후 진행**. 사용자 의도 = Coverage Mosaic을 Notes/Wiki/Books 기준 dropdown으로 entity 별 다른 통계 표시. 옵션:
+>   - **C (즉시, 작음)**: Tagged/Orphan dropdown + Cohesion fixed (그래프 전체). Books orphan 정의 필요.
+>   - **B (중간)**: Notes/Wiki만 dropdown (Books 제외). Cohesion entity별.
+>   - **D (큰 작업)**: 각 entity별 별도 Insights page (Notes/Wiki/Books). 이전 P0 #2 후보 (Phase A2/B/C). Plot v2 P0 #1 통합 가치.
+> 사용자에게 옵션 + Books orphan 정의 + Cohesion sub-label 추가 결정 받은 후 진행.
+>
+> **사용자 의도** (그대로 인용):
+> - "오버뷰나 대시보드, 인사이트의 경우 이렇게 여백이 있는 게 나은 거 같아" (이전 세션, layout LOCKED #136 v2)
+> - "검색창 all을 눌렀을 때 ... 전부 똑같이 나와. 하드코딩이 되어있단 소리야" (search entity-aware fix)
+> - "왜 리센트 노트스로 나오지?... 실제로 리센트로 보여주는 게 맞을 거 같아. 더 보고 싶으면 more 같은 버튼" (Linear/Notion progressive disclosure)
+> - "온톨로지 인사이트를 재설계하자" → 옵션 A (Power Sabermetrics) → 4 section MVP
+> - "클러스터 응집력 표현이 추상적인데?? 호버로 설명카드가 나오면 좋을 듯" (HoverCard 학습 패턴)
+> - "엣지나 밀도가 그래프 상태에서 뭘 의미하는 거지??" (Graph Health KPI HoverCard)
+> - "커버리지가 단순히 고정이 되어서 나오는 것보다는 드롭다운이 있고 선택해서 노트/위키/북 기준 다르게 보여주는 게 낫지 않나" (Coverage entity dropdown — 다음 세션 P0 #1)
+>
+> **다음 세션 첫 스텝**:
+> 1. **Coverage entity dropdown brainstorm 답** — 옵션 C 또는 B 또는 D 결정
+> 2. **Books orphan 정의** (items 0 = orphan? 또는 wiki link 받지 않은 책?)
+> 3. **Cohesion entity별 vs 그래프 전체** 결정
+> 4. **새 branch + Coverage section dropdown UI** wire
+> 5. **use-knowledge-metrics hook 확장** (entity별 metrics — Wiki orphan: 다른 wiki에서 link 안 받음, Wiki tagged: WikiArticle.tags 비율)
+> 6. **i18n keys 추가** (entity dropdown labels + Books orphan/cohesion sub-labels)
+>
+> **다음 세션 추가 P0** (다음 우선순위 순):
+> - **🔴 P0 #2**: Plot v2 P0 #1 — Phase 0 Design Language 결정 + Plot v2 PRD (여전히 미시작, 2 세션째 deferred). Open Design web UI + 71 system + critic + Chrome surface 첫 mockup.
+> - **🟡 P0 #3**: NUDGE Connect 실제 동작 (Link Picker Auto-Open 패턴 A) — 사용자 명시했으나 결정 답 안 함. brainstorm 진행 중.
+> - **🟡 P0 #4**: Insights에서 Notes/Wiki KPI 폐기 검토 (PRD 의도 = Dashboard 중복 폐기. 현재 keep 됐음).
+> - **🟢 P0 #5**: 사용자 viewport 검증 잔여 (PR #472-#479 모두).
+> - **🟢 P0 #6**: Book 폴더 Phase 2 UI (book-folder-picker / sidebar section / folder/[id]/page.tsx book branch / smartSources resolver book kind).
+>
+> **컴포넌트 구조 / 데이터 흐름** (Coverage dropdown 진행 시 reference):
+> ```
+> Coverage section:
+>   ┌─[Notes ▾]─────────────────────────┐   ← dropdown trigger
+>   ├ TaggedDonut    OrphanDonut    CohesionRadial
+>   │ (entity 별)    (entity 별)    (entity 별 또는 그래프 전체)
+>   └─────────────────────────────────────┘
+>
+> use-knowledge-metrics 확장:
+>   - metrics.byEntity.notes.{tagCoverage, orphanRate, cohesion}
+>   - metrics.byEntity.wiki.{tagCoverage, orphanRate, cohesion}
+>   - metrics.byEntity.books.{tagCoverage, orphanRate, cohesion?}  // cohesion 의미 모호
+> ```
+>
+> **위험 + 회피**:
+> - **Coverage dropdown = entity별 metric 정의 명확화 필요**. Wiki orphan = "다른 wiki에서 link 안 받음" 가장 자연. Books orphan = "items 0개" 가능. Cohesion entity별 = cluster detection 알고리즘 entity별 별도 계산 부담.
+> - **Plot v2 P0 #1 2 세션째 deferred** — 사용자가 viewport polish/feature 작업 우선. 다음 세션도 Coverage dropdown 우선. Plot v2 PRD 시작 더 늦어질 수 있음. 사용자 의도 = 점진 polish + Plot v2는 거대 작업이라 마음 준비 필요.
+> - **NUDGE Connect 진행 결정 미답** — brainstorm 답 줬으나 사용자 다른 의제로 redirect. 다음 세션 별도 진행 가능.
+> - **HoverCard 패턴 = Plot identity 정통**. "Gentle by default" — 추상 용어 학습 hover로 (강제 X). 이번 세션 metric tooltip 8개 + 4 chart tooltip 4개 추가. 다른 추상 용어에도 확대 가치.
+>
+> **참고 파일**:
+> - `components/ontology/insights-charts.tsx` (4 chart + ChartCard helpTitle/helpBody/helpFormula props)
+> - `components/ontology/ontology-insights-panel.tsx` (4 section + StatLine helpTitle/helpBody props)
+> - `hooks/use-knowledge-metrics.ts` (entity별 metrics 확장 필요)
+> - `lib/insights/metrics.ts` (Composite score 공식)
+> - `lib/insights/types.ts` (KnowledgeMetrics interface — entity별 확장 필요)
+> - `components/ui/hover-card.tsx` (Radix HoverCard)
+> - `components/ui/select.tsx` (dropdown — Coverage entity selector에 활용 가능)
+> - `components/views/search-view.tsx` (entity-aware tabs reference 패턴)
+> - `docs/MEMORY.md` (영구 LOCKED + #143~#151 누적)
+>
+> **머신**: Windows. cross-machine 가능.
+> **현재 main HEAD**: PR #479 머지 후 (`f5be74a`).
+> **branch worktree**: `main`. 다음 세션 새 worktree로 시작 권장.
+
+### 완료 (이번 세션 — 8 PR 머지 #472-#479, 23 commits)
+
+이번 세션은 **사용자 viewport polish + Search entity-aware refactor + Ontology Insights v2 재설계 + HoverCard 학습 패턴 도입**.
+
+**Layout (이전 세션 hold-over) — PR #472 (13 commits)**:
+- 4 페이지 max-w-5xl revert (LOCKED #136 v1 → v2). Dashboard KPI 라벨 단순화 + status_breakdown 버그 fix + wiki_breakdown 신규. Book 폴더 Phase 1 (schema + v149 migration). Books → Notes parity 점진 정합 8 commits (header layout + Title cap 폐기 + pixel-perfect px-[20px]/gap-[8px]/w-[32px] + cover icon naked SVG).
+
+**Search Entity-Aware Refactor — PR #473/#474/#475**:
+- PR #473: !hasFuzzyQuery 블록 11 entity 분기 추가 (notes/wiki/books/categories/tags/labels/stickers/references/templates/folders). 이전 hardcoded "RECENT NOTES"만 표시 버그 fix.
+- PR #474: section title 통일 (entity name만, RECENT prefix 제거) + entity별 sort logic (updatedAt desc / createdAt desc / name asc per entity timestamp 유무).
+- PR #475: Linear/Notion progressive disclosure — "전체 {count}개 보기 →" button. count > 8일 때만 render. nav() helper로 11 entity별 navigation target wire.
+
+**Ontology Insights v2 — PR #476**:
+- 사용자 선택 옵션 A (Power Sabermetrics). 4 section 재설계: Graph Health KPI (Edges/Density/Notes/Wiki) / Coverage Mosaic 3 chart (TaggedDonut/OrphanDonut/CohesionRadial) / NUDGE keep / TopNotesBar (composite score horizontal). 신규 컴포넌트 `insights-charts.tsx` (ResizeObserver pattern, dashboard-charts.tsx parity, ChartCard wrapper). i18n 17 keys 신규 EN+KO.
+
+**Tab Highlight Bug Fix — PR #477**:
+- linear-sidebar.tsx의 currentMode = `usePlotStore.getState()` static read → reactive subscribe `usePlotStore(s => viewModeByGraph)`로 변경. ontology graph/insights/dashboard tab 클릭 시 사이드바 highlight 정확 update.
+
+**HoverCard 학습 패턴 도입 — PR #478/#479**:
+- PR #478: 4 chart (Tagged/Orphan/Cohesion/Composite)에 ⓘ icon + HoverCard 설명. ChartCard에 helpTitle/helpBody/helpFormula props. "Cluster Cohesion" 등 추상 용어 hover로 학습. Plot identity ("Gentle by default") 정합.
+- PR #479: Graph Health 4 KPI (Edges/Density/Notes/Wiki)에도 동일 HoverCard 패턴. StatLine 컴포넌트 helpTitle/helpBody props 추가. ⓘ icon size 11 inline.
+
+### 브레인스토밍 & 큰 결정 (영구 LOCKED 후보 #148~#152)
+
+- **#148 (vision)**: **Ontology Insights = Power Sabermetrics 정체성**. Composite score (WAR-like) + Coverage Mosaic + NUDGE actionable + visualization. Daily habit (streak/heatmap) 미채택. 가끔 deep dive power-tool. knowledge app 중 독특 (Obsidian = graph view만, Linear = BI만, Anki = personal stats만).
+- **#149 (vision)**: **Linear/Notion progressive disclosure 패턴** — Recency bias (80% 사용자가 최근 access) + 8 limit + "Show all {count} →" button. cognitive load 감소. Plot search view에 적용. 다른 surface (sidebar / inbox / 등)에도 확대 가능.
+- **#150 (vision)**: **HoverCard 학습 패턴 = abstract metric 학습 도구**. ⓘ icon (Info from lucide) + Radix HoverCard. Plot identity ("Gentle by default") 정통 — 강제 노출 X, 사용자 학습 의지로 hover. composite formula + 정의 + 예시. metric/term 추상도 높은 곳 (Cluster Cohesion / Density / WAR-score 등) 적용. 다른 추상 용어 (status pill, kind chip 등)에도 확대 가치.
+- **#151 (vision)**: **Search section title = entity name만 + entity별 sort**. RECENT prefix 제거. updatedAt desc (notes/wiki/books/categories/references/templates) / name asc (tags/labels — timestamp 없음) / createdAt desc (stickers) / lastAccessedAt fallback createdAt desc (folders). 8 limit + Show More button.
+- **#152 (vision, 다음 세션 결정)**: **Coverage entity dropdown** — 옵션 C (Tagged/Orphan dropdown + Cohesion fixed) vs B (Notes/Wiki만) vs D (entity별 별도 page). 결정 후 진행.
+
+### 기술 학습 (영구)
+
+- **`usePlotStore.getState()` static read는 reactive X**: selector hook (`usePlotStore(s => ...)`)으로 subscribe 필요. 사이드바 currentMode 등 store-dependent display value는 반드시 subscriber 패턴. linear-sidebar.tsx PR #477 fix 사례.
+- **Radix HoverCard 패턴**: `<HoverCard openDelay={150}><HoverCardTrigger asChild><button>...</button></HoverCardTrigger><HoverCardContent side="top" align="end" className="w-72">...</HoverCardContent></HoverCard>`. asChild로 button을 trigger. side/align prop으로 popup 위치 제어.
+- **Recharts BarChart onClick payload**: `onClick={(state) => { if (state?.activePayload?.[0]) { const payload = state.activePayload[0].payload; ... } }}`. payload type assertion 필요.
+- **RadialBarChart % indicator pattern**: PolarAngleAxis domain [0,100] + RadialBar value 0-100 + 별도 absolute-positioned `<div>` 안 `<span>`으로 center에 % display. `pointer-events-none` 필수 (chart interaction 방해 X).
+- **entity-aware 분기 in IIFE**: `{(() => { const helpers...; return <div>...</div> })()}` 패턴으로 inline scope. 11 entity가 각자 다른 data + handler + icon이라 helper functions로 단순화.
+- **Linear/Notion Show More**: `count > LIMIT && <button onClick={navigate}>전체 {count}개 보기 →</button>`. 8 limit + count badge + entity별 navigation target. progressive disclosure.
+- **Plot root font-size 14px discovery는 이전 세션 hold-over**: lib/settings-store.ts default. 이번 세션 영향 없음 — inline px ([20px], [8px], [32px], [13px]) 패턴 정통화. Plot v2에서 spacing scale 절대 px 정의 가치 (이전 세션 #144 vision).
+
+### Watch Out (다음 세션)
+
+- **Coverage entity dropdown 결정이 가장 큰 의제** — 옵션 C/B/D + Books orphan 정의 + Cohesion entity별 vs 그래프 전체. 잘못 고르면 use-knowledge-metrics hook 재작업.
+- **Plot v2 P0 #1 2 세션째 deferred** — 진행 의지 vs 점진 polish 우선. 사용자 결정.
+- **NUDGE Connect 동작 미완** — Link Picker Auto-Open 패턴 A 사용자 답 안 함. brainstorm 답 줬으나 redirect됨. 다음 세션 별도 진행 가능.
+- **Insights Notes/Wiki KPI 폐기 검토 미답** — PRD 의도 = Dashboard 중복 폐기. 현재 keep 됐음. 사용자 의향 확인 필요.
+- **HoverCard 패턴 확대 가치** — 다른 추상 용어 (status pill / kind chip / Density formula / Top Hubs 등)에도 적용 가능. Plot v2에서 정통화.
+
+### 환경 변경
+
+- **Store version**: v149 keep (이번 세션 변경 없음). PR #472에서 v148→v149 완료 (Book 폴더).
+- **신규 파일** (1):
+  - `components/ontology/insights-charts.tsx` (4 charts: TaggedDonut / OrphanDonut / CohesionRadial / TopNotesBar + ChartCard with HoverCard support)
+- **신규 i18n keys** (~50개 EN+KO 누적):
+  - search.section.{notes/wiki/books/categories/tags/labels/stickers/references/templates/folders/view_all}
+  - ontology.insights.section.{health/coverage}
+  - ontology.insights.stat.{edges/density/notes/wiki}
+  - ontology.insights.coverage_{tagged/orphan/cohesion}
+  - ontology.insights.{tagged/untagged/orphans/connected/cohesion_hint/top_notes/top_notes_formula}
+  - ontology.insights.help.{tagged/orphan/cohesion/composite/edges/density/notes/wiki}_{title/body}
+- **Tests**: 변경 X. tsc clean 모든 8 PR.
+- **사용자 IDB stale**: 없음 (schema 변경 X).
+
+### 머신
+
+Windows. main에 8 PR squash merge. worktree branch 모두 deleted. 다음 세션 새 worktree로 시작 권장.
+
+---
+
+## 2026-05-26 (저녁) — Windows, **viewport polish 세션: LOCKED #136 v2 revised + Book 폴더 Phase 1 + entity list Notes parity 점진 정합 (PR #472, 13 commits)**
+
+> 🎯 **다음 즉시 액션 (다음 세션 시작점)**: **Plot v2 P0 #1 — Phase 0 Design Language 결정 + Plot v2 통째 재설계 PRD 작성**. 이번 세션은 사용자 viewport polish 위주로 진행했으나 진짜 큰 의제 = Plot v2 redesign 미시작. 다음 세션 우선.
+>
+> **사용자 의도** (이번 세션 명시):
+> - "지금 플롯 디자인은 사실 내가 맨처음으로 시작한 프로젝트여서 조잡한 부분들이 많아... 리니어나 플레인에 비해서. 기능은 그들 못지 않고 오히려 앞선다고 보지만 디자인적 아쉬움이 커." (이전 세션 인용 유효)
+> - "오버뷰나 대시보드, 인사이트의 경우 이렇게 여백이 있는 게 나은 거 같아" (LOCKED #136 풀 폭 viewport revert → max-w-5xl)
+> - "북 폴더도 신설해야 하지 않나? 노트, 위키, 북으로 표기되어서 각각 폴더가 몇 개인지 표시" (Folder 일관성)
+> - "노트 기준에 완전히 맞춰. 체크박스와 title 사이 간격, 폰트, 아이콘 사이즈 등 아예 노트를 기준으로"
+> - "근본원인을 고쳐야 될 듯??" (Plot root font-size 14px ≠ Tailwind 16px base 발견)
+>
+> **첫 스텝** (다음 머신에서 바로):
+> 1. **Open Design web UI 진입** — http://127.0.0.1:3845 (또는 매 실행 시 변동. `cd ~/Desktop/open-design && pnpm tools-dev start web` 또는 `/open-design` 슬래시 명령)
+> 2. **`.omc/plans/plot-v2-redesign-prd.md` 작성** (이전 세션 P0 #1 그대로):
+>    - Design language 후보 비교 (Linear / Notion / Plain / Anthropic / Custom)
+>    - 사용자 결정 + 근거
+>    - Surface 우선순위 (Chrome → Home/Dashboard → List views → Detail views → Insights → Settings)
+>    - 시간 estimate (~17-28시간, 12-20 PR)
+> 3. **critic 검토** — 큰 결정이라 객관 review 가치
+> 4. **Phase 1: Chrome surface 첫 mockup 생성** (Open Design)
+> 5. **결과 quality 평가** → 본격 진행 또는 brief tuning
+>
+> **사용자 viewport 검증 잔여 (이번 세션 변경)**:
+> - Books cover icon wrapper 제거 → naked SVG (4fa6756) — 시각 확인
+> - Wiki checkbox 32px (4ff0fb1) — wiki list mode 진입 후 확인 (진입 path = sidebar "병합" click → Cancel button)
+> - Book 폴더 Phase 1 — IDB v149 migration 적용 확인 (사용자 시드 데이터)
+> - Folders dashboard sub-line "X 노트 · Y 위키 · Z 책" 표기
+> - Ontology Dashboard "위키 / 책 / 카테고리" KPI 라벨
+> - Ontology Dashboard "Wiki articles" → "Wiki" / "Wiki categories" → "Categories"
+> - Notes/Books status_breakdown "Stone · Brick · Block" EN
+> - Wiki sub-line "{articles} Article · {stubs} Stub" 표기
+> - Books Title cap 폐기 (우측 빈 공간 해소)
+> - Books row Notes parity (h-[38px], 13px font, gap-[8px], px-[20px], w-[32px])
+> - 4 페이지 max-w-5xl 적용 (Ontology Dashboard/Insights + Wiki Dashboard + Library Overview)
+>
+> **컴포넌트 구조 / 데이터 흐름** (Plot v2 PRD 작성용 reference):
+> ```
+> [Phase 0] Design Language 결정 (대화)
+>    ↓
+> [Phase 1] Surface 우선순위 roadmap
+>    ↓
+> [Phase 2] Surface별 mockup 생성 (Open Design — 같은 design system + token + typography)
+>    Chrome → Home → Notes → Wiki → Books → Editor → Insights → Settings (6-8 surface)
+>    ↓
+> [Phase 3] 각 mockup → /plot-frontend:implement 4-gate 워크플로우로 Plot에 적용
+>    SPEC → APPROVE → BUILD → VERIFY
+>    ↓
+> [Phase 4] 영구 룰 LOCKED 재정의 (#137+, #145+) + DESIGN-TOKENS.md 갱신
+>    ↓
+> [Phase 5] 통합 검증 + WCAG + 모션 일관성
+> ```
+>
+> **위험 + 회피**:
+> - **Plot v2 P0 #1 결정이 가장 큰 risk** — Design language 잘못 고르면 6-8 surface 다 다시. critic 검토 + 첫 1-2 mockup viewport 검증 후 본격 진행 필수.
+> - **이번 세션 누적 13 commits** — Wiki list view 정밀 진단 미완. Plot v2 PRD 진행 중에도 발견 가능 (Plot v2 = 통째 재설계라 entity list도 재구성).
+> - **Plot root font-size 14px** — 사용자 customization feature. Tailwind 16px base 가정과 misalignment. 근본 fix path 3개 (default 16px 변경 / fontSize feature 폐기 / Tailwind `@theme --spacing 4px` 절대화) 모두 cascade 큼 → Plot v2 P0 #1과 함께 결정 가치.
+> - **Notes .a-th/.a-row CSS system** = grid + inline px 명시. Books/Wiki는 Tailwind inline class라 14px root에서 단위 misalignment. Plot v2에서 통일 design system 가치.
+> - **사용자 IDB v148 → v149 migration**: Book.folderIds 초기화 [] (자동, idempotent). 사용자 viewport 첫 진입 시 적용.
+> - **이번 세션 1 broken commit (820370b Wiki list 광범위 fix) → revert (bd44e43)**: gap-[8px]가 Wiki flex sibling column 구조에 cascade 영향. Books는 column wrapper가 다른 패턴이라 안전했음. **교훈**: entity별 column 구조 다르므로 동일 fix 일괄 적용 X — entity별 검증 필요.
+>
+> **참고 파일**:
+> - `~/Desktop/open-design/` — Open Design repo
+> - `~/Desktop/open-design/AGENTS.md` — Open Design 사용 가이드
+> - `docs/MEMORY.md` — Plot Source of Truth (영구 룰 #93~#142 누적)
+> - `lib/colors.ts` — NOTE_STATUS_HEX / WIKI_STATUS_HEX / SPACE_COLORS (Plot identity)
+> - `.claude/skills/plot-frontend/mockup-faithful-implementation/` — 4-gate 워크플로우
+> - `.omc/plans/dashboard-fullwidth-prd.md` — PRD v0.1 (참고 패턴)
+> - `app/globals.css:1040-1156` — `.a-th, .a-row, .a-row__lead, .a-row__icon` 정의 (entity list chrome design system source)
+> - `lib/settings-store.ts:83` — `fontSize: "14"` default (root font-size 14px source)
+> - `components/settings-sync.tsx:20` — `document.documentElement.style.fontSize = ${fontSize}px` (적용 site)
+>
+> **2번째 P0 후보** (Plot v2 PRD 작성 중 또는 후속, 또는 사용자 viewport 검증 결과에 따라):
+> - Wiki list view 정밀 진단 + Notes parity fix (이번 세션 minimal checkbox 32px만, 광범위 fix는 revert)
+> - Book 폴더 Phase 2 — UI 작업 (book-folder-picker, side panel, smartSources resolver, folder/[id]/page.tsx book branch)
+> - TABS hardcoded → 동적 entity registry refactor (이전 세션 P0 #3)
+> - Insights Phase A2/B/C (Notes/Wiki/Books 차트화 — 이전 세션 P0 #2)
+>
+> **머신**: Windows. cross-machine 가능.
+> **현재 main HEAD**: PR #472 머지 후 (이번 after-work에서 머지 시도).
+> **branch worktree**: `claude/stoic-mclean-5c1d8a` — 이번 세션 누적 13 commits. PR #472로 통합. 머지 후 새 worktree로 다음 세션 시작.
+
+### 완료 (이번 세션 — PR #472, 13 commits 누적)
+
+이번 세션은 **사용자 viewport polish 위주** — LOCKED #136 v2 revised + Book 폴더 Phase 1 + entity list Notes parity 점진 정합.
+
+**Layout 영역 (영구 LOCKED #136 v2 revised)**:
+- `bcccd3d` refactor(layout): 4 페이지 (Ontology Dashboard/Insights + Wiki Dashboard + Library Overview) 풀 폭 → Home pattern `mx-auto w-full max-w-5xl px-6 py-10`. LOCKED #136 v1 (2026-05-25 풀 폭) → v2 (2026-05-26 max-w-5xl). 사용자 viewport 결정 — #468 chunk 3 패턴 재현 (디자인 정통성 ≠ 사용자 선호).
+
+**Dashboard KPI 영역**:
+- `2af3b9c` fix(i18n): KPI 라벨 일관성 — "Wiki articles" → "Wiki", "Wiki categories" → "Categories". 다른 KPI (Notes/Books/Tags/Labels/Stickers/Folders) 모두 단순 entity 이름과 일관 정합. EN+KO 4 키 동시.
+- `616441f` fix(dashboard): status_breakdown EN 'keystone' → 'Block' 버그 + Wiki sub article 추가. (1) EN "stone · brick · keystone" → "Stone · Brick · Block" (영구 룰 #100 brand identity Cap 정합, KO는 이미 정상). (2) `stub_count` → `wiki_breakdown` 신규 (Notes 패턴 일관). EN "{articles} Article · {stubs} Stub" / KO "{articles} 글 · {stubs} 스텁". 항상 표기.
+
+**Book 폴더 신설 Phase 1 (스키마/마이그레이션)**:
+- `85514b9` feat(folders): Book 폴더 신설 Phase 1. (a) types.ts Folder.kind 확장 "note"|"wiki" → "note"|"wiki"|"book". (b) types.ts Book.folderIds: string[] 추가 (Note/WikiArticle parity). (c) migrate.ts v148→v149 — 기존 Book.folderIds = [] 초기화 idempotent. (d) store/index.ts STORE_VERSION 149. (e) ontology-dashboard-panel.tsx Folders Stat sub-line wire "X 노트 · Y 위키 · Z 책". (f) i18n folder_breakdown 신규 EN+KO. (g) seeds.ts 8 시드 + slices/books.ts addBook + 2 test fixture cascade fix. (h) 별개 fix — store/types.ts setGlobalSearchQuery type 누락 (PR #462 wire 빠진 부분).
+
+**Books → Notes parity 점진 정합 (8 commits 누적)**:
+- `1fce99b` fix(books): list view header layout — wrapper `gap-3 pl-3 pr-6 py-2` → `px-5 py-2`, itemCount column 72px → 96px ("Item count" 한 줄).
+- `4088086` fix(books): Title 컬럼 max-w-[480px] cap 폐기 → flex-1 우측까지 채움 (직전 PR #469 viewport revert).
+- `cea814b` fix(list): Books font-weight 500→400, row text-[13px], h-[30px]/h-[38px] (실측 Notes .a-row CSS parity) + Wiki Updated/Created 순서 swap.
+- `a792774` fix(books): row/header에 gap-2 추가 (Notes gap 8px parity).
+- `b17c6d3` fix(books): pixel-perfect Notes parity — `px-5 gap-2 w-8` (Tailwind, 14px root에서 17.5/7/28px) → `px-[20px] gap-[8px] w-[32px]` (Notes 정확 정합).
+- `4fa6756` fix(books): title cell cover icon wrapper `h-5 w-5` (20px box) 제거 → naked SVG (14px). Notes `.a-row__icon` parity (no width wrapper).
+
+**Wiki 영역**:
+- `820370b` fix(wiki): list view 광범위 Notes parity 시도 (Books 패턴 그대로 적용). **broken** — gap-[8px]가 Wiki flex sibling column 구조에 cascade 영향. Title flex-1 좁아짐.
+- `bd44e43` Revert: 위 commit revert. 깨진 layout 복원.
+- `4ff0fb1` fix(wiki): minimal — checkbox column width만 `w-8` → `w-[32px]` (Notes parity). 다른 변경 X. 위험 낮음.
+
+**최종 실측 (preview_inspect, Notes vs Books)**:
+| 측정점 | Notes | Books (정합 후) |
+|---|---|---|
+| Checkbox right | 344px | 344px ✓ |
+| Icon width | 13px | 14px ≈ |
+| Title text left | 365px | 366px (1px 차이) |
+| Checkbox → Title gap | 21px | 22px |
+| Header height | 30px | 30px ✓ |
+| Row height | 38px | 38px ✓ |
+| Row font-size | 13px | 13px ✓ |
+| Header gap | 8px | 8px ✓ |
+| Row padding-left | 20px | 20px ✓ |
+
+거의 완벽 정합. Notes grid gap이 lead 안 흡수 vs Books flex gap 차이로 1px만 남음.
+
+### 브레인스토밍 & 큰 결정 (영구 LOCKED #136 v2 + 후보 #143~#147)
+
+- **#136 LOCKED v2 (2026-05-26 revised)**: **Two-Layout Rule v2** — Overview/Dashboard/Insights = Home pattern (`mx-auto w-full max-w-5xl px-6 py-10`, ~1024px). v1 (2026-05-25 풀 폭 PR #463) viewport revert. Article 본문 max-width / Settings max-width / 차트 ResizeObserver / Mosaic layout 모두 keep.
+- **#143 (vision)**: **Notes `.a-th`/`.a-row` CSS system = entity list chrome design system source of truth**. globals.css `padding: 0 20px` + `gap: 8px` + `.a-th { height: 30px }` + `.a-row { height: 38px; font-size: 13px }` + `.a-row__icon` (no width wrapper, naked SVG) + `.a-row__lead` (display: flex, gap: 8px) + inline `grid-template-columns` 동적 column 정의. Plot v2 P0 #1에서 entity list 모두 이 system 사용 결정 가치.
+- **#144 (vision)**: **Plot root font-size = 14px (사용자 customization feature)**. `lib/settings-store.ts:83` default "14" + `components/settings-sync.tsx:20`이 `<html>` inline style 적용. Tailwind 16px base 가정과 misalignment (rem-based class 모두 ~12% 작음 — `px-5` = 17.5px / `gap-2` = 7px / `w-8` = 28px / `text-sm` = 12.25px). 근본 fix 3 path (default 16px 변경 / feature 폐기 / `@theme { --spacing: 4px }` 절대화) 모두 cascade 큼 → Plot v2 P0 #1 일괄 결정.
+- **#145 (vision)**: **Book 폴더 Phase 1 완료, Phase 2 UI 후속**. Phase 1 = schema + migration + dashboard sub-line (이번 세션). Phase 2 = book-folder-picker UI + linear-sidebar book folder section + smartSources resolver book folder kind + `app/(app)/folder/[id]/page.tsx` book branch (현재 빈 페이지). Plot v2 P0 #1과 통합 가치.
+- **#146 (vision)**: **entity별 column 구조 다르므로 동일 fix 일괄 적용 X**. Books column wrapper = 자체 padding 없음 → `gap-[8px]` 안전. Wiki column wrapper = 자체 `px-2` padding → `gap-[8px]` 추가 시 double spacing → broken. 이번 세션 820370b broken case가 교훈.
+- **#147 (vision)**: **Cover icon wrapper (h-5 w-5 20×20 box) anti-pattern**. Notes `.a-row__icon`은 width 명시 없음 = SVG content 자체 width. icon (14px) + wrapper padding 6px → 시각 spacing 과도. naked SVG로 진행. Plot v2에서 모든 entity row icon naked pattern keep.
+
+### 기술 학습 (영구)
+
+- **preview_inspect = pixel 정확 진단 도구**: 시각 추정 (사용자 viewport에서 "더 크다/작다") vs 실제 측정 (14px / 30px / 20px) 차이 정확 파악. font-size / padding / gap / element width 측정 → 정확 fix. 이번 세션 다수 fix 모두 inspect 측정 기반.
+- **Plot root font-size 14px → Tailwind 단위 misalignment**: `lib/settings-store.ts` default "14"이 `<html>` inline style 적용. Tailwind 기본 16px 가정의 `rem` 값이 14px root에서 ~12% 작아짐. 절대 px 명시 (`text-[13px]`, `px-[20px]`, `gap-[8px]`, `w-[32px]`) 가 미세 정합 path. 근본 fix는 Plot v2 P0 #1 통합 결정.
+- **Notes `.a-th`/`.a-row` = grid + inline style 동적 column**: `display: grid` CSS class에 정의 X. notes-table.tsx에서 inline `style={{ display: 'grid', gridTemplateColumns: '32px 1fr 120px ...' }}` 동적 생성. globals.css는 chrome only (padding/gap/height). column system은 consumer 책임.
+- **gap-[8px]가 flex sibling 구조에 cascade 영향**: Books column wrapper에 자체 padding 없어서 gap 명시 안전. Wiki column wrapper에 `px-2` padding 있어서 gap 시 double spacing → broken. 동일 entity parity fix를 다른 entity에 그대로 복제 시 위험.
+- **Cover icon wrapper anti-pattern**: `<span class="flex h-5 w-5 items-center justify-center"><Icon size={14} /></span>` 패턴이 6px 빈 여백 양옆에 → 시각 spacing 과도. Notes naked SVG (`<Icon size={14} />` 직접) 정통.
+- **Squash merge 후 worktree branch 같은 의제 PR 시리즈**: 13 commits 단일 PR 누적 OK. 사용자 viewport 검증마다 fix 추가 가능. 명확 commit message로 history 추적.
+- **TypeScript cascade fix (interface 변경)**: `Folder.kind` 확장 + `Book.folderIds: string[]` 신규 (required) → 12 cascade error (seeds.ts 8 + slices/books.ts 1 + 2 test files + setGlobalSearchQuery 누락). tsc clean 후 commit. 의외 fix (setGlobalSearchQuery) 발견.
+- **Book 폴더 migration v148→v149 idempotent**: `if (!Array.isArray(b.folderIds)) b.folderIds = []` 패턴. 재실행 안전.
+
+### Watch Out (다음 세션)
+
+- **Plot v2 P0 #1 결정이 가장 큰 risk** — Design language 잘못 고르면 6-8 surface 다 다시. critic 검토 + 첫 1-2 mockup viewport 검증 후 본격 진행.
+- **Wiki list view 진입 path** = sidebar "병합" click → wiki-merge-page의 Cancel button click → wikiViewMode "list" (외부 store). `setWikiViewMode("list")` 직접 호출 path 미공개 (linear-sidebar.tsx에 button X). dev server에서 inspect 시 이 path 사용.
+- **사용자 viewport 검증 다수 잔여** — Books cover icon wrapper 제거 / Wiki checkbox 32px / Book 폴더 Phase 1 / Folders dashboard sub-line / Ontology Dashboard KPI 라벨 등 13 변경 모두 viewport에서 확인. broken 발견 시 fix.
+- **Wiki list view 정밀 진단 미완** — 이번 세션 minimal fix만 (checkbox 32px). 진정한 Notes parity는 entity별 column 구조 다름 (사용자 시각 차이 더 큼) → Plot v2에서 entity list 통합 design 일괄.
+- **Plot 영구 룰 #93~#142 + #136 v2** Plot v2 PRD 시 재평가. Phase 4에서 LOCKED 룰 폐기/유지/변경 결정 + DESIGN-TOKENS.md 갱신.
+- **branch worktree `claude/stoic-mclean-5c1d8a`** — PR #472 머지 후 cleanup 권장. 다음 세션 새 worktree.
+
+### 환경 변경
+
+- **Store version**: v148 → **v149** (Book.folderIds 추가, idempotent migration).
+- **신규 파일**: 없음 (기존 파일 update만).
+- **신규 i18n keys**: 3 (EN+KO 6 entries):
+  - `ontology.dashboard.meta.wiki_breakdown` (대체 `stub_count`)
+  - `ontology.dashboard.meta.folder_breakdown` (신규)
+  - `ontology.dashboard.stat.wiki_articles` 값 변경 ("Wiki articles" → "Wiki")
+  - `ontology.dashboard.stat.wiki_categories` 값 변경 ("Wiki categories" → "Categories")
+  - `ontology.dashboard.meta.status_breakdown` 값 변경 ("keystone" → "Block" + Cap 통일)
+- **Tailwind class 변경 (Books/Wiki)**: 14px root font-size 정합 — 절대 px 명시 (`px-[20px]`, `gap-[8px]`, `w-[32px]`, `h-[30px]`, `h-[38px]`, `text-[13px]`).
+- **Tests**: 변경 X. tsc clean 모든 13 commits.
+
+### 머신
+
+Windows. 단일 worktree `claude/stoic-mclean-5c1d8a` 누적 13 commits → PR #472. 머지 후 cleanup 권장.
+
+---
+
 ## 2026-05-25 (대규모 세션 #3) — Windows, **거대 세션: P0 #1/#2 완성 + 검색 정통화 + Open Design install + Phase 0 결정 (PR #459-#470, 12 PR 머지)**
 
 > 🎯 **다음 즉시 액션 (다음 세션 시작점)**: **Phase 0 — Design Language 결정 + Plot 통째 재설계 PRD 작성** (사용자 명시 큰 결정).

@@ -28,6 +28,7 @@ function makeBook(items: BookItem[]): Book {
     id: "book-1",
     title: "Test Book",
     items,
+    folderIds: [],
     createdAt: "2026-05-09T00:00:00Z",
     updatedAt: "2026-05-09T00:00:00Z",
   }
@@ -77,6 +78,7 @@ function makeResolvedBook(overrides: Partial<Book> = {}): Book {
     id: "book-resolved",
     title: "Resolved Book",
     items: [],
+    folderIds: [],
     createdAt: "2026-01-01",
     updatedAt: "2026-01-01",
     ...overrides,
