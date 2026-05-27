@@ -630,7 +630,7 @@ export function WikiArticleView({ articleId, editable = false, preview = false, 
           // selectors so non-themed articles keep their plain h2 layout
           // (영구 룰 #67 "gentle by default").
           article.themeColor &&
-            "[&_[data-h2]]:border-l-[3px] [&_[data-h2]]:pl-3 [&_[data-h2]]:border-l-[color:var(--wiki-theme-color)]",
+            "[&_[data-h2]]:border-l-[3px] [&_[data-h2]]:pl-3 [&_[data-h2]]:[border-left-color:var(--wiki-theme-color)]",
           // PR-E3 — Group header tint cascade. Tints infobox group-headers
           // (marked with `data-group-header`) at 15% themeColor opacity, but
           // only when the user hasn't picked a custom color for that group

@@ -135,7 +135,7 @@ export function FilterPanel({
     : null
 
   return (
-    <div ref={containerRef} className="relative flex">
+    <div ref={containerRef} className="ln-styled relative flex">
       {/* ── Sub Panel (values) — LEFT side, positioned at hovered row's y ── */}
       {activeCategory && activeCategory.values.length > 0 && (
         <div

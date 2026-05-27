@@ -1150,7 +1150,7 @@ export function NotesTable({
   }, []) // stable — reads latest data via refs
 
   return (
-    <main ref={tableContainerRef} onMouseDown={handleDragMouseDown} className="flex h-full flex-1 flex-col overflow-hidden bg-background">
+    <main ref={tableContainerRef} onMouseDown={handleDragMouseDown} className="plot-notes-workspace flex h-full flex-1 flex-col overflow-hidden bg-background">
       {/* ── Page title ─────────────────────────────────── */}
       <ViewHeader
         icon={

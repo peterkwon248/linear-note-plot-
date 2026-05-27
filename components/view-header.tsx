@@ -44,7 +44,7 @@ function HBtn({
   return (
     <button
       onClick={onClick}
-      className={`flex h-7 w-7 items-center justify-center rounded-md border-none transition-all duration-100 ${
+      className={`plot-icon-button flex h-7 w-7 items-center justify-center rounded-md border-none transition-all duration-100 ${
         active
           ? "bg-active-bg text-foreground"
           : "text-foreground/65 hover:bg-hover-bg hover:text-foreground"
@@ -262,7 +262,7 @@ export function ViewHeader({
 
   return (
     <>
-      <div className="flex h-(--header-height) shrink-0 items-center gap-2 border-b border-border px-4">
+      <div className="ln-styled plot-view-header flex h-(--header-height) shrink-0 items-center gap-2 border-b border-border px-4">
         {/* PanelsMenu moved to GlobalTopBar (single source of truth). Keeping
          *  it here too would duplicate the hamburger between the global top
          *  bar and every view's header. */}

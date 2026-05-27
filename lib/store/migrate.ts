@@ -4,7 +4,15 @@ import { extractPreview, extractLinksOut } from "../body-helpers"
 import { buildDefaultViewStates, normalizeViewStatesMap, buildViewStateForContext } from "../view-engine/defaults"
 import type { WorkspaceTab } from "../workspace/types"
 import type { PlotState } from "./types"
-import { SEED_TEMPLATES, SEED_BOOKS } from "./seeds"
+import {
+  SEED_BOOKS,
+  SEED_NOTES,
+  SEED_TAGS,
+  SEED_TEMPLATES,
+  SEED_WIKI_ARTICLES,
+  SEED_WIKI_CATEGORIES,
+  SEED_WIKI_TEMPLATES,
+} from "./seeds"
 
 export function migrate(persistedState: unknown): PlotState {
   const state = persistedState as Record<string, unknown>
@@ -441,7 +449,6 @@ export function migrate(persistedState: unknown): PlotState {
     const notes = state.notes as any[]
     const oldSeedNote = notes?.find((n: any) => n.id === "note-1")
     if (oldSeedNote && oldSeedNote.title === "Welcome to Plot" && !notes.some((n: any) => n.id === "note-wiki-1")) {
-      const { SEED_NOTES, SEED_TAGS } = require("./seeds")
       const oldSeedIds = new Set(["note-1", "note-2", "note-3", "note-4", "note-5", "note-6"])
       state.notes = [
         ...notes.filter((n: any) => !oldSeedIds.has(n.id)),
@@ -459,7 +466,6 @@ export function migrate(persistedState: unknown): PlotState {
   {
     const articles = state.wikiArticles as any[]
     if (!articles.some((a: any) => a.id === "wiki-article-1")) {
-      const { SEED_WIKI_ARTICLES } = require("./seeds")
       state.wikiArticles = [...articles, ...SEED_WIKI_ARTICLES] as any
     }
   }
@@ -665,7 +671,6 @@ export function migrate(persistedState: unknown): PlotState {
     const cats = (state.wikiCategories ?? []) as any[]
     if (!cats.some((c: any) => c.id === "wcat-seed-1")) {
       try {
-        const { SEED_WIKI_CATEGORIES } = require("./seeds")
         state.wikiCategories = [...cats, ...SEED_WIKI_CATEGORIES] as any
         // Also assign seed articles their categoryIds if not already set
         const articles = (state.wikiArticles ?? []) as any[]
@@ -1944,7 +1949,6 @@ export function migrate(persistedState: unknown): PlotState {
   // (우클릭/플로팅바/갤러리) 시각 verify가 어려웠음. id-dedup append 패턴 (Books
   // v127 정합) — 사용자 기존 articles 보존 + 누락 seed만 push.
   if (Array.isArray(state.wikiArticles)) {
-    const { SEED_WIKI_ARTICLES } = require("./seeds")
     const existingIds = new Set((state.wikiArticles as any[]).map((a: any) => a.id))
     for (const seed of SEED_WIKI_ARTICLES) {
       if (!existingIds.has(seed.id)) {
@@ -2078,7 +2082,6 @@ export function migrate(persistedState: unknown): PlotState {
   // pattern: existing user content is preserved, only missing seed ids
   // are pushed. Idempotent.
   if (Array.isArray(state.wikiArticles)) {
-    const { SEED_WIKI_ARTICLES, SEED_WIKI_CATEGORIES } = require("./seeds")
     const existingArticleIds = new Set((state.wikiArticles as any[]).map((a: any) => a.id))
     let addedArticles = 0
     for (const seed of SEED_WIKI_ARTICLES) {
@@ -2112,7 +2115,6 @@ export function migrate(persistedState: unknown): PlotState {
   // 사용자가 명시적으로 tag를 모두 지운 wiki도 영향받지만, 시드는 비어있던
   // tag만 보강하므로 그 경우는 보강 안 됨 (idempotent + 데이터 보존).
   if (Array.isArray(state.wikiArticles)) {
-    const { SEED_WIKI_ARTICLES } = require("./seeds")
     let filledCount = 0
     for (const article of state.wikiArticles as any[]) {
       if (!Array.isArray(article.tags) || article.tags.length > 0) continue
@@ -2133,7 +2135,6 @@ export function migrate(persistedState: unknown): PlotState {
   // 시드 id만 push. 사용자가 명시적으로 삭제한 노트가 있어도 trashed:false로
   // 다시 들어오지 않음 (id가 이미 store에 있으면 skip).
   if (Array.isArray(state.notes)) {
-    const { SEED_NOTES } = require("./seeds")
     const existingIds = new Set((state.notes as any[]).map((n: any) => n.id))
     let addedNotes = 0
     for (const seed of SEED_NOTES) {
@@ -2210,7 +2211,6 @@ export function migrate(persistedState: unknown): PlotState {
   // 사용자가 시드를 삭제했더라도 v139 첫 진입 시 다시 들어옴 (idempotent 후속
   // 동작이 사용자 데이터를 보존하면서 fresh start 보장).
   {
-    const { SEED_WIKI_TEMPLATES } = require("./seeds")
     if (!Array.isArray((state as Record<string, unknown>).wikiTemplates)) {
       ;(state as Record<string, unknown>).wikiTemplates = [...SEED_WIKI_TEMPLATES]
       console.log(`[migrate] v138→v139: initialized wikiTemplates (${SEED_WIKI_TEMPLATES.length} seeds)`)

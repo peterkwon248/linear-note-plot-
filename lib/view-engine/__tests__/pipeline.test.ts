@@ -804,25 +804,15 @@ describe('applyGrouping', () => {
   })
 
   describe('groupBy "date"', () => {
-    it('should return groups for Today, This Week, This Month, Older', () => {
+    it('should hide empty date buckets', () => {
       const groups = applyGrouping([], 'date')
-      expect(groups).toHaveLength(4)
-      expect(groups.map(g => g.key)).toEqual([
-        'Today',
-        'This Week',
-        'This Month',
-        'Older',
-      ])
+      expect(groups).toEqual([])
     })
 
-    it('should have correct labels for date groups', () => {
-      const groups = applyGrouping([], 'date')
-      expect(groups.map(g => g.label)).toEqual([
-        'Today',
-        'This Week',
-        'This Month',
-        'Older',
-      ])
+    it('should label today bucket correctly', () => {
+      const groups = applyGrouping([makeNote({ id: 'today' })], 'date')
+      expect(groups.map(g => g.key)).toEqual(['Today'])
+      expect(groups.map(g => g.label)).toEqual(['Today'])
     })
   })
 

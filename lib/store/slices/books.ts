@@ -226,7 +226,7 @@ export function createBooksSlice(set: Set, _get: Get, appendEvent: AppendEventFn
       set((state: any) => ({
         books: ((state.books ?? []) as Book[]).filter((b) => b.id !== id),
         // Cascade — hard delete의 event도 같이 정리 (Note delete 패턴 정합).
-        entityEvents: state.entityEvents.filter(
+        entityEvents: (state.entityEvents ?? []).filter(
           (e: any) => !(e.entity?.kind === "book" && e.entity?.id === id),
         ),
       }))

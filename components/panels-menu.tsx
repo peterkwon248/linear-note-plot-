@@ -46,7 +46,7 @@ export function PanelsMenu() {
           aria-label="Toggle panels"
           title="Toggle panels"
         >
-          <ListIcon size={14} />
+          <ListIcon size={14} strokeWidth={1.5} />
         </button>
       </PopoverTrigger>
       <PopoverContent
@@ -120,7 +120,7 @@ export function PanelToggle({
       {shortcut && (
         <span className="text-2xs text-muted-foreground/60 tabular-nums">{shortcut}</span>
       )}
-      {checked && <Check size={12} strokeWidth={2.5} className="text-accent" />}
+      {checked && <Check size={12} strokeWidth={1.5} className="text-accent" />}
     </button>
   )
 }

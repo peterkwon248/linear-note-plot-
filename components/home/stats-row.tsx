@@ -104,11 +104,11 @@ export function StatsRow() {
     icon: React.ReactNode
   }> = [
     { label: t("home.tile.notes"),      value: stats.notes,    sub: stats.notesSub,    route: "/notes",              color: KNOWLEDGE_INDEX_COLORS.notes.text,      bgColor: KNOWLEDGE_INDEX_COLORS.notes.bg,      icon: <IconNotes size={12} /> },
-    { label: t("home.tile.wiki"),       value: stats.wiki,     sub: stats.wikiSub,     route: "/wiki",               color: KNOWLEDGE_INDEX_COLORS.wiki.text,       bgColor: KNOWLEDGE_INDEX_COLORS.wiki.bg,       icon: <BookOpen size={12} strokeWidth={2} /> },
-    { label: t("home.tile.tags"),       value: stats.tags,     sub: stats.tagsSub,     route: "/library/tags",       color: KNOWLEDGE_INDEX_COLORS.tags.text,       bgColor: KNOWLEDGE_INDEX_COLORS.tags.bg,       icon: <PhTag size={12} strokeWidth={2} /> },
-    { label: t("home.tile.references"), value: stats.refs,     sub: stats.refsSub,     route: "/library/references", color: KNOWLEDGE_INDEX_COLORS.references.text, bgColor: KNOWLEDGE_INDEX_COLORS.references.bg, icon: <Quotes size={12} strokeWidth={2} /> },
-    { label: t("home.tile.files"),      value: stats.files,    sub: stats.filesSub,    route: "/library/files",      color: KNOWLEDGE_INDEX_COLORS.files.text,      bgColor: KNOWLEDGE_INDEX_COLORS.files.bg,      icon: <Paperclip size={12} strokeWidth={2} /> },
-    { label: t("home.tile.stickers"),   value: stats.stickers, sub: stats.stickersSub, route: "/stickers",           color: KNOWLEDGE_INDEX_COLORS.stickers.text,   bgColor: KNOWLEDGE_INDEX_COLORS.stickers.bg,   icon: <StickerIcon size={12} strokeWidth={2} /> },
+    { label: t("home.tile.wiki"),       value: stats.wiki,     sub: stats.wikiSub,     route: "/wiki",               color: KNOWLEDGE_INDEX_COLORS.wiki.text,       bgColor: KNOWLEDGE_INDEX_COLORS.wiki.bg,       icon: <BookOpen size={12} strokeWidth={1.5} /> },
+    { label: t("home.tile.tags"),       value: stats.tags,     sub: stats.tagsSub,     route: "/library/tags",       color: KNOWLEDGE_INDEX_COLORS.tags.text,       bgColor: KNOWLEDGE_INDEX_COLORS.tags.bg,       icon: <PhTag size={12} strokeWidth={1.5} /> },
+    { label: t("home.tile.references"), value: stats.refs,     sub: stats.refsSub,     route: "/library/references", color: KNOWLEDGE_INDEX_COLORS.references.text, bgColor: KNOWLEDGE_INDEX_COLORS.references.bg, icon: <Quotes size={12} strokeWidth={1.5} /> },
+    { label: t("home.tile.files"),      value: stats.files,    sub: stats.filesSub,    route: "/library/files",      color: KNOWLEDGE_INDEX_COLORS.files.text,      bgColor: KNOWLEDGE_INDEX_COLORS.files.bg,      icon: <Paperclip size={12} strokeWidth={1.5} /> },
+    { label: t("home.tile.stickers"),   value: stats.stickers, sub: stats.stickersSub, route: "/stickers",           color: KNOWLEDGE_INDEX_COLORS.stickers.text,   bgColor: KNOWLEDGE_INDEX_COLORS.stickers.bg,   icon: <StickerIcon size={12} strokeWidth={1.5} /> },
   ]
 
   return (

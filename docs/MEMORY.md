@@ -1029,7 +1029,7 @@ PRD `.omc/plans/wiki-infobox-tier-2-4-prd.md` **Phase 5+ second wave 완료**. B
 ### 기술 학습 (영구, 2026-05-19 저녁)
 
 - **CSS variable cascade vs prop drilling**: 동일 색을 5+ 컴포넌트에 전달 시 CSS variable inject이 prop drilling보다 정직. SSR-safe, 분기 코드 0, 자손 자동 수신.
-- **Tailwind arbitrary selector + CSS variable**: `[&_[data-h2]]:border-l-[3px] [&_[data-h2]]:pl-3 [&_[data-h2]]:border-l-[color:var(--wiki-theme-color)]` 한 줄로 자손 cascade. v3.2+ 작동.
+- **Tailwind arbitrary selector + CSS variable**: `[&_[data-h2]]:border-l-[3px] [&_[data-h2]]:pl-3 [&_[data-h2]]:[border-left-color:var(--wiki-theme-color)]` 한 줄로 자손 cascade. v3.2+ 작동.
 - **useTintedBg hex desaturate 안 함 부채**: `lib/tinted-bg.ts:60-61` regex가 `rgba` 전용. hex 입력은 light/dark 둘 다 unchanged passthrough → light mode contrast 부족 (vivid yellow/lime/amber). `lib/wiki-color-contrast.ts::shouldUseLightText` 통합 follow-up 의무.
 - **Encyclopedia layout = 4 mount 위치**: wiki-view 메인 / split secondary / note-hover-preview / wiki-embed-node. cascade 추가 시 두 root 경로 모두 수정 필수 (architect 검증으로 발견).
 - **Stacked PR + 같은 파일 polish conflict**: 머지된 PR 직후 같은 파일 polish 시 line-level conflict. HEAD 우선 + Edit으로 manual marker 제거 안정 패턴.

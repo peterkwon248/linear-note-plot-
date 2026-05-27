@@ -6,6 +6,48 @@
 
 ---
 
+## 2026-05-27 (밤) — 집 (Windows), **Plot v2 Linear 재디자인 Phase 3.1–5B — fine-tune + 인터랙션 + space-aware sidebar + 아이콘 + CSS 이식 (PR #483)**
+
+> 🎯 **다음 즉시 액션 hook (사용자 우선순위)**:
+> 1. **추가 컴포넌트 `.ln-styled` 이식** — sidebar, notes-table, app-shell 등에 `.ln-styled` 클래스 추가
+> 2. **Preview surface 폴리시** — spacing, hover 상태, 애니메이션, 다크모드 디테일
+> 3. (carry) **Coverage entity dropdown 옵션 C/B/D 결정**
+>
+> **사용자 의도** (그대로 인용):
+> - "Phase 3.1 이어가자"
+> - "버튼들이 실제 작동을 안 하는 경우가 많네. 우선 버튼들이 작동하게 해주고. 그 다음에 컴포넌트 연결해줘."
+> - "실 앱의 코드를 보고 데모에서 구현되지 않은 부분들을 보완하고 신설해야 되지 않나? 가능할까?"
+> - "액티비티 바와 사이드바가 내용이 동일한데, 이건 아직 제대로 페이즈가 진행되지 않아서지??"
+> - "기존 코드의 우측 사이드바는 4가지 영역인데, 지금 구현된 사이드바는 프로퍼티스, 백링크스, 액티비티 3가지야."
+> - 아이콘: "블록의 경우 원래 앱 코드의 블록 아이콘으로 가는 게 좋을 거 같다"
+> - "폴리시를 가다듬을까?" → 아이콘 방향 C (Chrome=Lucide, Domain=Inline SVG) 확정
+> - 우측 사이드패널: 방향 3 (Plot 4탭 구조 유지 + Linear 시각 디자인) 확정
+>
+> **누적 commits (이번 세션, 1 PR)**:
+> - `2dcb547` feat(preview): Phase 3.1–5B — Linear 재디자인 fine-tune + 인터랙션 + space-aware sidebar + 아이콘 통일 + CSS 이식
+>
+> **핵심 변경**:
+> - Phase 3.1: Reference 이미지 비교 fine-tune (Filter search input, Display footer, Ask Plot badge, List row compact, Sidebar caret/More)
+> - Phase 4: Filter two-panel hover 변환 (Linear 정통 side-by-side) + Timeline view mode + Content 서브필터
+> - 인터랙션 8개 연결 (Sidebar nav/Activity bar 동기화, nav-group 토글, detail panel 탭, palette row 클릭, reminder 토글)
+> - View mode 5개 신규 (Board/Grid/Graph/Insights/Timeline) + 페이지별 콘텐츠 5개 (Home/Inbox/Wiki/Ontology/Calendar)
+> - Phase 5A: Activity bar 7-space switcher + Sidebar space-aware (activePage별 다른 콘텐츠)
+> - Phase 5A.1: 우측 사이드패널 4탭 (상세/연결/활동/북마크 — 실 앱 side-panel-*.tsx 반영)
+> - 아이콘 폴리시: Chrome=Lucide(strokeWidth 1.5), Domain=Inline SVG, StatusShape(NOTE_STATUS_HEX), SPACE_COLORS
+> - Phase 5B: `.ln-styled` CSS scope (globals.css) — filter-panel/display-panel/filter-bar/view-header 적용
+> - types.ts setGlobalSearchQuery 중복 선언 수정 (기존 빌드 에러)
+>
+> **검증**: `tsc --noEmit` 에러 0, `npm run build` 성공
+>
+> **핵심 결정 (영구 LOCKED 후보 #158~#162)**:
+> - #158 아이콘 방향 C: Chrome=Lucide, Domain=Inline SVG
+> - #159 우측 사이드패널 4탭 구조 유지 + Linear 시각 디자인
+> - #160 `.ln-styled` CSS scope 전략
+> - #161 Preview 접근: 실 앱 코드 읽고 → 데모 보완 → 실 컴포넌트 이식
+> - #162 Activity bar=Space switcher(7), Sidebar=space별 콘텐츠
+
+---
+
 ## 2026-05-27 (저녁) — 집 (Windows), **Plot v2 Linear 재디자인 Phase 1+2+3 — `/preview/linear` 라이브 demo (1 PR 통합)**
 
 > 🎯 **다음 즉시 액션 hook (사용자 우선순위)**:
@@ -3446,7 +3488,7 @@ Plot 영구 원칙 정합 결론:
 - Root wiki article scroll container 두 경로 (`wiki-article-view` + `wiki-article-encyclopedia`) 에 `--wiki-theme-color` CSS variable inject
 - **Infobox header**: `effectiveHeaderColor = headerColor ?? themeColor ?? null` fallback (개별 지정 우선)
 - **Hatnote**: `border-l-2` + `borderLeftColor: var(--wiki-theme-color, transparent)`
-- **Section h2**: SectionBlock에 `data-h2` attribute + root container의 Tailwind arbitrary selector (`themeColor && "[&_[data-h2]]:border-l-[3px] [&_[data-h2]]:pl-3 [&_[data-h2]]:border-l-[color:var(--wiki-theme-color)]"`)로 **opt-in** 적용. themeColor 없으면 h2 영향 0.
+- **Section h2**: SectionBlock에 `data-h2` attribute + root container의 Tailwind arbitrary selector (`themeColor && "[&_[data-h2]]:border-l-[3px] [&_[data-h2]]:pl-3 [&_[data-h2]]:[border-left-color:var(--wiki-theme-color)]"`)로 **opt-in** 적용. themeColor 없으면 h2 영향 0.
 
 **C. Picker**:
 - 신규 `components/wiki-editor/wiki-theme-color-picker.tsx` Dialog
@@ -3472,7 +3514,7 @@ Plot 영구 원칙 정합 결론:
 ### 기술 학습 (영구)
 
 - **CSS variable cascade vs prop drilling**: 동일 색을 5+ 컴포넌트에 전달해야 하는 cascade 시 prop drilling (React context, Provider, prop chain)보다 CSS variable inject가 훨씬 정직. SSR-safe (style attribute inline), 분기 코드 0, 자손 자동 수신. React context는 reactive update가 필요할 때만.
-- **Tailwind arbitrary selector + CSS variable 조합**: `[&_[data-h2]]:border-l-[3px] [&_[data-h2]]:pl-3 [&_[data-h2]]:border-l-[color:var(--wiki-theme-color)]` 한 줄로 자손에 cascade 적용. width / padding은 arbitrary value, color는 `border-l-[color:var(...)]` shorthand. v3.2+에서 작동.
+- **Tailwind arbitrary selector + CSS variable 조합**: `[&_[data-h2]]:border-l-[3px] [&_[data-h2]]:pl-3 [&_[data-h2]]:[border-left-color:var(--wiki-theme-color)]` 한 줄로 자손에 cascade 적용. width / padding은 arbitrary value, color는 arbitrary property. v3.2+에서 작동.
 - **useTintedBg hex desaturate 안 함 부채**: `lib/tinted-bg.ts:60-61` regex가 `/^rgba?\(.../`만 매치 → hex 입력은 light/dark 둘 다 unchanged passthrough. infoboxHeaderColor가 hex일 때 light mode contrast 부족. PR-E2 themeColor도 동일 부채 노출 증폭. `lib/wiki-color-contrast.ts::shouldUseLightText`가 이미 존재 (perceivedLuminance 헬퍼 있음) — `useTintedText`에 통합 follow-up 의무.
 - **Encyclopedia layout = 4 mount 위치**: `wiki-article-encyclopedia.tsx`는 (1) wiki-view 메인 라우트 (2) split secondary panel (3) note-hover-preview (4) wiki-embed-node 4 곳에서 mount. cascade 추가 시 두 root 경로 (wiki-article-view + encyclopedia) 모두 수정 필수 — architect 검증으로 발견.
 - **Stacked PR + 같은 파일 polish conflict 패턴**: PR-E1 (#368) main 머지 후 같은 파일 (`hatnote-edit-dialog.tsx`) polish (#370) 시 main의 squash commit과 line-level conflict. HEAD 우선 (`git merge origin/main` + Edit으로 conflict marker 제거) 안정 패턴.

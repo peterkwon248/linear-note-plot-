@@ -200,17 +200,17 @@ export function MixedQuicklinks({ limit = 8 }: { limit?: number }) {
 function iconFor(kind: "note" | "wiki" | "folder" | "view" | "bookmark" | "book") {
   switch (kind) {
     case "note":
-      return <FileText size={14} strokeWidth={2} />
+      return <FileText size={14} strokeWidth={1.5} />
     case "wiki":
-      return <BookOpen size={14} strokeWidth={2} />
+      return <BookOpen size={14} strokeWidth={1.5} />
     case "folder":
-      return <PhFolder size={14} strokeWidth={2} />
+      return <PhFolder size={14} strokeWidth={1.5} />
     case "view":
-      return <Funnel size={14} strokeWidth={2} />
+      return <Funnel size={14} strokeWidth={1.5} />
     case "bookmark":
-      return <BookmarkSimple size={14} fill="currentColor" strokeWidth={2} />
+      return <BookmarkSimple size={14} fill="currentColor" strokeWidth={1.5} />
     case "book":
-      return <Books size={14} strokeWidth={2} />
+      return <Books size={14} strokeWidth={1.5} />
   }
 }
 

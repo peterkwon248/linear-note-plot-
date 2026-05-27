@@ -103,7 +103,6 @@ export interface PlotState {
    * per-view filtering.
    */
   globalSearchQuery: string
-  setGlobalSearchQuery: (query: string) => void
   searchOpen: boolean
   shortcutOverlayOpen: boolean
   sidePanelOpen: boolean
@@ -380,6 +379,7 @@ export interface PlotState {
   setSelectedNoteId: (id: string | null) => void
   openNote: (id: string, opts?: { forceNewTab?: boolean; pane?: 'primary' | 'secondary' }) => void
   setSearchQuery: (query: string) => void
+  setGlobalSearchQuery: (query: string) => void
   setSearchOpen: (open: boolean) => void
   setShortcutOverlayOpen: (open: boolean) => void
   setSidePanelOpen: (open: boolean) => void

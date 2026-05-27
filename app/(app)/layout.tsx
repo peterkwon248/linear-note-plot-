@@ -8,9 +8,11 @@ import { cn } from "@/lib/utils"
 import { LinearSidebar } from "@/components/linear-sidebar"
 import { ActivityBar } from "@/components/activity-bar"
 import { GlobalTopBar } from "@/components/global-top-bar"
+import { AppShell, DetailPanelFrame, WorkspaceFrame } from "@/components/shell/app-shell"
 
 import { SearchDialog } from "@/components/search-dialog"
 import { ShortcutOverlay } from "@/components/shortcut-overlay"
+import { ClientOnly } from "@/components/ui/client-only"
 import { TooltipProvider } from "@/components/ui/tooltip"
 import { usePlotStore } from "@/lib/store"
 import { useGlobalShortcuts } from "@/hooks/use-global-shortcuts"
@@ -273,7 +275,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
   return (
     <TooltipProvider>
-      <div className="flex h-screen flex-col overflow-hidden bg-background">
+      <AppShell className="flex h-[100dvh] flex-col overflow-hidden">
         {/* ── Global top bar — workspace chrome, survives all panel collapses ── */}
         <GlobalTopBar />
         {/* ── Body: Activity Bar + Sidebar + Content ── */}
@@ -316,7 +318,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
               minSize={20}
             >
               <PaneProvider pane="primary">
-              <div
+              <WorkspaceFrame
                 className="relative flex h-full overflow-hidden"
                 onPointerDownCapture={() => usePlotStore.getState().setActivePane('primary')}
               >
@@ -444,22 +446,23 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                     {children}
                   </ErrorBoundary>
                 </div>
-              </div>
+              </WorkspaceFrame>
               </PaneProvider>
             </ResizablePanel>
 
             {/* 2. View-mode split secondary content (only when NOT editing a note) */}
             {hasViewSplit && (
               <>
-                <ResizableHandle className="w-px bg-border/50 hover:bg-primary/20 active:bg-primary/30 transition-colors" />
+                <ResizableHandle id="main-view-split-handle" className="w-px bg-border/50 hover:bg-primary/20 active:bg-primary/30 transition-colors" />
                 <ResizablePanel id="main-view-secondary" order={2} defaultSize={showSidePanel ? 35 : 50} minSize={20}>
                   <PaneProvider pane="secondary">
-                  <div
+                  <WorkspaceFrame
+                    tone="secondary"
                     className="flex h-full flex-col overflow-hidden"
                     onPointerDownCapture={() => usePlotStore.getState().setActivePane('secondary')}
                   >
                     <SecondaryPanelContent />
-                  </div>
+                  </WorkspaceFrame>
                   </PaneProvider>
                 </ResizablePanel>
               </>
@@ -468,7 +471,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             {/* 3. Side panel — single source of truth for ALL cases */}
             {showSidePanel && (
               <>
-                <ResizableHandle className="w-px bg-border/50 hover:bg-primary/20 active:bg-primary/30 transition-colors" />
+                <ResizableHandle id="main-side-panel-handle" className="w-px bg-border/50 hover:bg-primary/20 active:bg-primary/30 transition-colors" />
                 <ResizablePanel
                   id="main-sidepanel"
                   order={3}
@@ -479,7 +482,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                   {/* Single SmartSidePanel — content follows activePane via PaneProvider
                       and useSidePanelEntity hook. Works identically in single and split modes. */}
                   <PaneProvider pane={activePane}>
-                    <SmartSidePanel />
+                    <DetailPanelFrame className="h-full">
+                      <SmartSidePanel />
+                    </DetailPanelFrame>
                   </PaneProvider>
                 </ResizablePanel>
               </>
@@ -487,8 +492,10 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           </ResizablePanelGroup>
         </div>
 
-        <SearchDialog />
-        <ShortcutOverlay />
+        <ClientOnly>
+          <SearchDialog />
+          <ShortcutOverlay />
+        </ClientOnly>
         <WikilinkContextMenu />
         <NoteHoverPreview />
         <FootnoteEditModal />
@@ -508,7 +515,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           />
         )}
         <Toaster position="bottom-right" theme={resolvedTheme === "dark" ? "dark" : "light"} />
-      </div>
+      </AppShell>
     </TooltipProvider>
   )
 }

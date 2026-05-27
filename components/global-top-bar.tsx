@@ -28,6 +28,7 @@ import {
   Settings as IconGear,
   Trash2 as IconTrash,
   FileText as IconDoc,
+  List as IconList,
 } from "lucide-react"
 import { usePlotStore } from "@/lib/store"
 import { useSettingsStore } from "@/lib/settings-store"
@@ -35,6 +36,7 @@ import { useT } from "@/lib/i18n"
 import { routeGoBack, routeGoForward, setActiveRoute } from "@/lib/table-route"
 import { PanelsMenu } from "@/components/panels-menu"
 import { UserAvatar } from "@/components/user-avatar"
+import { ClientOnly } from "@/components/ui/client-only"
 
 export function GlobalTopBar() {
   const t = useT()
@@ -95,7 +97,7 @@ export function GlobalTopBar() {
     /* Group A (refine): h-11 → h-12, gap-1 → gap-1.5, px-3 → px-4 — Linear-grade air room.
      * Group D (refine): visual dividers split the bar into three clusters
      * (PanelsMenu | nav+clock | search | right tools). */
-    <header className="flex h-12 shrink-0 items-center gap-1.5 border-b border-border bg-background px-4">
+    <header className="plot-global-topbar flex h-12 shrink-0 items-center gap-1.5 border-b border-border bg-background px-4">
       {/* ── Left cluster: workspace identity → panels menu → navigation ──
        *  Avatar = workspace identity anchor (visual only, no dropdown).
        *  PanelsMenu (hamburger) = panel toggles (Activity bar / Sidebar / Detail).
@@ -105,7 +107,19 @@ export function GlobalTopBar() {
 
       <div className="mx-2 h-5 w-px shrink-0 bg-border" aria-hidden="true" />
 
-      <PanelsMenu />
+      <ClientOnly
+        fallback={
+          <button
+            className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground/70"
+            aria-label="Toggle panels"
+            title="Toggle panels"
+          >
+            <IconList size={14} strokeWidth={1.5} />
+          </button>
+        }
+      >
+        <PanelsMenu />
+      </ClientOnly>
 
       {/* Recently viewed (history clock) */}
       <div className="relative" ref={recentlyViewedRef}>
@@ -119,7 +133,7 @@ export function GlobalTopBar() {
           aria-label={t("topbar.recently_viewed.aria")}
           title={t("topbar.recently_viewed.aria")}
         >
-          <IconClock size={14} strokeWidth={2} />
+          <IconClock size={14} strokeWidth={1.5} />
         </button>
         {recentlyViewedOpen && (
           <div className="absolute left-0 top-full z-50 mt-1 w-72 rounded-lg border border-border bg-surface-overlay shadow-lg">
@@ -143,7 +157,7 @@ export function GlobalTopBar() {
                     }}
                     className="flex w-full items-center gap-2 px-3 py-1.5 text-left transition-colors hover:bg-hover-bg"
                   >
-                    <IconDoc size={14} className="shrink-0 text-muted-foreground" strokeWidth={2} />
+                    <IconDoc size={14} className="shrink-0 text-muted-foreground" strokeWidth={1.5} />
                     <span className="truncate text-note text-foreground">{item.title}</span>
                   </button>
                 ))}
@@ -160,7 +174,7 @@ export function GlobalTopBar() {
         title={t("topbar.nav.back")}
         aria-label={t("topbar.nav.back")}
       >
-        <CaretLeft size={14} strokeWidth={2} />
+        <CaretLeft size={14} strokeWidth={1.5} />
       </button>
       <button
         onClick={handleGoForward}
@@ -168,7 +182,7 @@ export function GlobalTopBar() {
         title={t("topbar.nav.forward")}
         aria-label={t("topbar.nav.forward")}
       >
-        <CaretRight size={14} strokeWidth={2} />
+        <CaretRight size={14} strokeWidth={1.5} />
       </button>
 
       {/* ── Center: real search input (Linear/Notion pattern).
@@ -183,7 +197,7 @@ export function GlobalTopBar() {
         <div className="relative flex w-full max-w-xl items-center">
           <MagnifyingGlass
             size={14}
-            strokeWidth={2}
+            strokeWidth={1.5}
             className="pointer-events-none absolute left-3 shrink-0 text-muted-foreground/70"
           />
           <input
@@ -204,7 +218,7 @@ export function GlobalTopBar() {
             }}
             placeholder={t("topbar.search.placeholder")}
             aria-label={t("common.search")}
-            className="w-full rounded-md border border-border-subtle bg-secondary/50 py-2 pl-9 pr-12 text-note text-foreground outline-none transition-colors placeholder:text-muted-foreground/70 hover:border-border hover:bg-secondary/70 focus:border-border focus:bg-secondary/70"
+            className="plot-global-search w-full rounded-md border border-border-subtle bg-secondary/50 py-2 pl-9 pr-12 text-note text-foreground outline-none transition-colors placeholder:text-muted-foreground/70 hover:border-border hover:bg-secondary/70 focus:border-border focus:bg-secondary/70"
           />
           <span className="pointer-events-none absolute right-3 shrink-0 rounded border border-border-subtle bg-background/60 px-1.5 py-px text-[10px] font-medium tabular-nums text-muted-foreground/70">
             ⌘K
@@ -225,7 +239,7 @@ export function GlobalTopBar() {
         aria-label={theme === "dark" ? t("nav.theme.toggle_to_light") : t("nav.theme.toggle_to_dark")}
         title={theme === "dark" ? t("nav.theme.light_mode") : t("nav.theme.dark_mode")}
       >
-        {theme === "dark" ? <IconSun size={14} strokeWidth={2} /> : <IconMoon size={14} strokeWidth={2} />}
+        {theme === "dark" ? <IconSun size={14} strokeWidth={1.5} /> : <IconMoon size={14} strokeWidth={1.5} />}
       </button>
       <Link
         href="/settings"
@@ -233,7 +247,7 @@ export function GlobalTopBar() {
         aria-label={t("nav.settings")}
         title={t("nav.settings")}
       >
-        <IconGear size={14} strokeWidth={2} />
+        <IconGear size={14} strokeWidth={1.5} />
       </Link>
       <Link
         href="/trash"
@@ -241,7 +255,7 @@ export function GlobalTopBar() {
         aria-label={t("nav.trash")}
         title={t("nav.trash")}
       >
-        <IconTrash size={14} strokeWidth={2} />
+        <IconTrash size={14} strokeWidth={1.5} />
       </Link>
     </header>
   )
