@@ -51,6 +51,46 @@
 
 ---
 
+## 🚀 2026-05-27 (저녁) — Plot v2 Linear 재디자인 Phase 1+2+3 — `/preview/linear` 라이브 demo (1 통합 PR) ⭐⭐⭐⭐
+
+**범위**: 사용자 명시 큰 결정 ("Plot v2 통째 재설계 Path A" + 12장 reference 이미지) 본격 진입. `app/globals.css`에 Linear 토큰 머지 + `/preview/linear` 라우트 라이브 demo + Filter/Display/Books 풀 재설계.
+
+### 머지된 PR (이번 세션, 1 통합)
+- ✅ **PR (이)** — Plot v2 Linear 재디자인 Phase 1+2+3:
+  - Phase 1: globals.css Linear 토큰 머지 (+154줄, `--ln-*` namespace + un-prefixed scale/semantic/spacing/motion/shadow)
+  - Phase 2: `app/preview/linear-styles.css` (993줄) + `page.tsx` (993줄) 신규 — 5 surface 라이브 demo
+  - Phase 3: Filter popover (10 fields + 4 quick filters) + Display popover (5 mode + 7 group + multi-sort + 12 prop) + Books surface (4번째 탭) — 22 inline SVG 아이콘 통일
+
+### 영구 결정 (이번 세션, LOCKED 후보 #153~#157)
+- **#153 (vision)** Linear 토큰 namespace 전략: `--ln-*` (개념 신규) + un-prefixed (scale/semantic). `.ln-app` scope alias 격리. v3 LOCKED + shadcn + `.a-*` 모두 0 touch.
+- **#154 (vision)** Linear CSS 격리 = preview-only. `app/preview/linear-styles.css`로 격리, globals.css 0 변경. Phase 4 마이그레이션 시 필요 클래스만 promotion.
+- **#155 (vision)** `.ln-*` prefix 일관: shadcn + Phase 3 mockup `.a-*`와 충돌 회피. PowerShell regex로 944줄 자동 prefix 변환.
+- **#156 (vision)** Phase 4 진입점 = filter-bar.tsx + display-panel.tsx (사용자 명시): 아이콘/폰트/옵션까지 전부 재설계 OK.
+- **#157 (vision)** dev server 포트 = 3000 (NOT 3002 — CLAUDE.md 오래된 기록): `next dev --webpack` 포트 인자 없음 → 3000.
+
+### v3 PRD 영향
+- **Plot v2 Linear 재디자인 Path A 본격 진입** — Phase 0 design language = Linear 채택 확정.
+- Phase 4.3 chrome 통일 → Linear 재디자인 path와 합류. filter-bar / display-panel이 chrome 통일 첫 실제 단계.
+
+### 검증 결과
+- `tsc --noEmit`: 에러 0 (Phase 1/2/3 각각)
+- `npm run build`: 성공, `/preview/linear` static prerender 통과
+- 기존 앱 0 regression: `(app)/* + components/* + lib/*` 모두 0 touch, globals.css `:root` append-only
+
+### 다음 P0 (재정렬)
+1. **P0 #0** Phase 3.1 — `/preview/linear` 12장 reference 이미지 1:1 비교 + fine-tune ⭐ 다음 세션 첫 작업
+2. **P0 #1** Phase 4 — filter-bar.tsx + display-panel.tsx Linear 마이그레이션 (사용자 명시)
+3. **P0 #2 (carry)** Coverage entity dropdown 옵션 C/B/D 결정 (별도 진행 가능)
+4. **P0 #3** Books 엔티티 방향 결정 — A) /library 별칭 / B) 7번째 entity (rose space)
+
+### Watch Out
+- **`.ln-app` scope 토큰 alias** — `--panel/--hover/--accent-2`가 `.ln-app` 안에서만 유효. 외부 사용 시 미정의.
+- **`.dark` 토글 + ThemeProvider 공존** — preview 직접 토글이 새로고침 시 ThemeProvider에 덮어쓰임 (demo 한정 OK).
+- **dev server 포트 3000** (CLAUDE.md 3002 stale).
+- **preview는 mock 데이터** — Zustand 미연동. Phase 4에서 실 연동.
+
+---
+
 ## 🚀 2026-05-27 (오전~새벽) — Search entity-aware + Ontology Insights v2 + HoverCard 학습 패턴 (PR #473-#479, 8 PR 23 commits) ⭐⭐⭐⭐⭐
 
 **범위**: 누적 8 PR 머지. Search hardcoded "RECENT NOTES" only 버그 fix → entity-aware. Ontology Insights v2 (옵션 A Power Sabermetrics) 재설계. Tab highlight bug fix. HoverCard 학습 패턴 도입.

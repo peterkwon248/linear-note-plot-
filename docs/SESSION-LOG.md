@@ -6,6 +6,124 @@
 
 ---
 
+## 2026-05-27 (저녁) — 집 (Windows), **Plot v2 Linear 재디자인 Phase 1+2+3 — `/preview/linear` 라이브 demo (1 PR 통합)**
+
+> 🎯 **다음 즉시 액션 hook (사용자 우선순위)**:
+> 1. **`http://localhost:3000/preview/linear` 12장 reference 이미지와 1:1 비교** → 어긋난 surface/디테일 짚어서 Phase 3.1 fine-tune.
+> 2. (preview 만족 시) **Phase 4 = 실 컴포넌트 마이그레이션** — 사용자가 명시한 진입점 = `components/filter-bar.tsx` + `components/display-panel.tsx`. ("필터와 디스플레이는 리니어식으로 꾸며졌거든? 아예 그렇게 해야 될 거 같은데"). preview의 Filter popover (10 fields + 4 quick filters) + Display popover (5 mode + 7 group + multi-sort + 12 prop) reference로 사용.
+> 3. **Books 엔티티 방향 결정** — 사용자 지적 ("코드에는 있는데 목업에는 없다"). 옵션 A) `/library` 별칭 탭 / B) 7번째 entity (rose space, Smart Book v2 plan과 연결).
+>
+> **사용자 의도** (그대로 인용):
+> - "Plot v2 Linear 재디자인 스펙이 첨부 이미지들에 있어 (12장) ... 이 디자인을 현재 Next.js 16 + Zustand + Tiptap 프로젝트에 통합하고 싶어. Phase 1: app/globals.css에 Linear 토큰 머지부터 시작"
+> - "다 된 거야?" / "일단 만들어진 것 자체는 아주 마음에 들어!"
+> - "필터와 디스플레이는 리니어식으로 꾸며졌거든? 아예 그렇게 해야 될 거 같은데. 그리고 book도 없다 ... 기왕 만드는 김에 나는 우리 코드가 실제로 쓰는 필터 내의 아이콘들과 폰트, 디스플레이 내의 옵션들과 아이콘들까지 전부 재설계 해도 좋을 거 같아. 리니어 느낌이 나도록."
+> - "혹시 지금 작업한 거 after-work 가능해?"
+>
+> **누적 commits (이번 세션, 1 통합 PR)**:
+> 1. PR (이) — **Plot v2 Linear 재디자인 Phase 1+2+3 — preview live**:
+>    - feat(globals): Linear 토큰 머지 (+154줄, `--ln-*` namespace + un-prefixed scale/semantic/spacing/motion/shadow)
+>    - feat(preview): `/preview/linear` 라이브 demo 신규 (linear-styles.css 993줄 + page.tsx 993줄)
+>    - feat(preview): Filter popover (10 fields + 4 quick filters) + Display popover (5 mode + 7 group + multi-sort + 12 prop) + Books surface (4번째 탭, 5 collections + recent)
+>    - 22개 inline SVG 아이콘 (14px, strokeWidth 1.2~1.4) view-configs.tsx와 동일 시각 어휘
+>    - docs(sync): SESSION-LOG/NEXT-ACTION/MEMORY/TODO/CONTEXT
+>
+> **검증**:
+> - `tsc --noEmit` 에러 0 (Phase 1/2/3 각각)
+> - `npm run build` 성공 — `/preview/linear` static prerender 통과 (Phase 2/3)
+> - 기존 앱 0 regression — globals.css `:root` append-only, `(app)/*` + `components/*` + `lib/*` 모두 0 touch
+
+### 완료
+
+**Phase 1 — `app/globals.css` Linear 토큰 통합 (+154줄)**
+- `:root` 끝에 Linear 토큰 블록 append (라이트):
+  - Panel hierarchy 4단계 (`--ln-panel/-2/surface/elevated`)
+  - Foreground tone alias (`--ln-fg-2/muted/meta/disabled`)
+  - Border hierarchy (`--ln-border-soft/strong`)
+  - Hover/selected (`--ln-hover/-2/selected/-strong`)
+  - Accent palette (`--ln-accent-2/hover/active/on/tint`)
+  - `--plot-gradient` 토큰화 (memory #142)
+  - Semantic colors + soft (`--success/warn/info`)
+  - Linear text scale (`--text-2xs..5xl`, 11→44px)
+  - Tracking + leading
+  - Spacing scale (`--s-1..--s-10`, 4→64px) — Linear 컴포넌트 직접 소비
+  - Radii (`--r-16/--r-pill`)
+  - Motion (`--ease`, `--d-fast/base/slow`)
+  - Shadow elevation (`--shadow-1/2/3/popover`, `--focus-ring`)
+  - `--statusbar-h: 28px`
+- `.dark` 끝에 다크 변형 append
+- `@theme inline`에 Tailwind 노출 8개 (`--color-panel/-2/surface-elev/elevated/accent-2/success/warn/info`)
+- **사용자 결정 (권장 디폴트 3개)**:
+  1. 다크 `--bg: #0f0f11` 유지 (Linear `#08090a` X)
+  2. `--s-1..--s-10` 도입 (Linear 컴포넌트 직접 소비)
+  3. Layout 폭 현재 유지 (44px/220px, Linear 48px/248px X)
+
+**Phase 2 — `/preview/linear` 라이브 demo 신규**
+- `app/preview/linear-styles.css` (993줄) — Linear `assets/app.css` 944줄을 PowerShell regex로 자동 prefix 변환:
+  - 80개 클래스 `.ln-*` namespace (shadcn `.sidebar/.card/.kbd` 충돌 회피)
+  - `.ln-app` / `.ln-launcher` scope 안에서 unprefixed 토큰 alias (`--panel: var(--ln-panel)`)
+  - `--font-mono: var(--font-geist-mono)` alias (Geist Mono → Linear mono 슬롯)
+- `app/preview/linear/page.tsx` 신규 — 5 surface 인터랙티브 demo (List/Editor/Table/Palette/Dialog)
+- 인터랙션: ⌘K/Ctrl+K, Esc, sun/moon 토글, PanelLeft sidebar collapse, PanelRight detail hide
+
+**Phase 3 — Filter + Display + Books 풀 재설계 (page.tsx 547→993줄 재작성)**
+- `linear-styles.css` +233줄 — Filter/Display popover + Books cards 클래스 (`.ln-popover/.ln-segctl/.ln-sort-row/.ln-prop-chip/.ln-book-card`)
+- **22개 inline SVG 아이콘** (14px viewBox, strokeWidth 1.2~1.4) view-configs.tsx와 동일 시각 어휘
+- **Filter popover** — 사용자 실 코드 옵션 100% 반영:
+  - Quick Filters 4개 (Needs attention / Active work / True orphans / Wiki-registered)
+  - 10 fields + sub-menus (Status/Folder/Label/Tags/Source/Dates/Links/Wiki/Content/Pinned)
+  - Active filter chip bar 4-part chip (`[icon] field | op | value | ×`)
+  - 기본 활성 2개로 chip bar 미리 보이게 함
+- **Display popover** — view-configs.tsx NOTES_VIEW_CONFIG 그대로:
+  - 5-segmented view modes (List/Board/Grid/Graph/Insights)
+  - Grouping chip dropdown (7) + 동적 Sub-grouping + 제외값 비활성화
+  - Ordering chain multi-sort (max 3, 방향 토글 + 삭제)
+  - List options 토글 2개 (Show trashed / Filter-aware role)
+  - Display properties chip 12개 (active 시 `--accent-tint` 배경)
+- **Books surface** (4번째 탭):
+  - Collections 5개 카드 (References/Tags/Files/Stickers/Categories, auto-fill 232px)
+  - Recent additions 5줄
+
+### 브레인스토밍 & 큰 결정 (영구)
+
+**1. Linear 토큰 통합 namespace 전략 (영구)**:
+```
+--ln-* prefix  → panel hierarchy / hover-selected / border / accent variants (개념 신규)
+un-prefixed    → semantic / text / spacing / motion / shadow / radii (scale, Linear 호환)
+```
+- Linear 컴포넌트 클래스가 토큰을 un-prefixed로 참조. `.ln-app` scope alias로 격리.
+- v3 LOCKED 토큰 + shadcn 토큰 + Phase 3 mockup `.a-*` 모두 0 touch.
+
+**2. Linear CSS 격리 = preview-only**:
+- `app/preview/linear-styles.css`에 격리 (globals.css 0 변경)
+- Phase 4 마이그레이션 때 필요 클래스만 globals.css로 promotion
+- 이유: 기존 앱 zero regression 보장 + 빠른 실험
+
+**3. Phase 4 진입점 = filter-bar.tsx + display-panel.tsx (사용자 명시)**:
+- 현재 코드도 이미 Linear 4-part chip 패턴 (`[icon] field | op | value | ×`)이라 마이그레이션 용이
+- preview의 Filter/Display popover를 reference로 사용
+- 아이콘/폰트/옵션까지 전부 재설계 OK
+
+**4. Books surface 방향 미결정**:
+- 옵션 A) `/library` 별칭 탭 / B) 7번째 entity (rose space, Smart Book v2 plan과 연결)
+- Phase 4 진입 시 결정
+
+**5. dev server 포트 명확화**:
+- 실제는 3000 (NOT 3002 — CLAUDE.md는 오래된 기록)
+- 기존 dev (PID 11312) 그대로 + HMR로 `app/preview/*` 자동 인식
+
+### Watch Out (다음 세션)
+- **dev server 포트 3000** (NOT 3002 — CLAUDE.md 오래된 기록, 갱신 필요할 수도)
+- **preview는 mock 데이터** — Zustand store 미연동
+- **`.ln-app` scope의 토큰 alias** — `--panel/--hover/--accent-2`가 `.ln-app` 안에서만 유효. 외부 컴포넌트 사용 시 미정의
+- **`.dark` 토글 충돌** — preview의 직접 토글 + ThemeProvider 공존 (새로고침 시 ThemeProvider 우선)
+- **Phase 4 시 globals.css promotion 신중** — Linear 클래스를 globals.css로 옮길 때 shadcn/Phase 3 mockup `.a-*`와 충돌 점검
+- **사용자 직전 세션과 이번 세션 path 다름** — 직전 (오전~새벽 거대 세션) = Coverage entity dropdown 진행 중. 이번 (저녁) = Plot v2 Linear 재디자인. 두 path가 충돌하지 않지만, Coverage dropdown은 별도 진행 가능 (Plot v2 P0 #1과 부분 통합 가치)
+
+### 머신
+집 (Windows)
+
+---
+
 ## 2026-05-27 (오전~새벽) — Windows, **거대 세션: Search entity-aware + Ontology Insights v2 + HoverCard 학습 패턴 (PR #473-#479, 7 PR 머지)**
 
 > 🎯 **다음 즉시 액션 (사용자 최우선 명시)**: **Coverage entity dropdown 논의 — 옵션 C / B / D 결정 후 진행**. 사용자 의도 = Coverage Mosaic을 Notes/Wiki/Books 기준 dropdown으로 entity 별 다른 통계 표시. 옵션:
