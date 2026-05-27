@@ -102,7 +102,7 @@ function TH({
 
   if (!col) {
     return (
-      <span className={cn("inline-flex items-center text-note font-normal text-foreground/80", alignClass)}>
+      <span className={cn("inline-flex items-center text-note font-medium text-foreground/80", alignClass)}>
         {label}
       </span>
     )
@@ -112,7 +112,7 @@ function TH({
     <button
       type="button"
       className={cn(
-        "group/th inline-flex items-center gap-1 text-note font-normal text-foreground/80 transition-colors hover:text-foreground",
+        "group/th inline-flex items-center gap-1 text-note font-medium text-foreground/80 transition-colors hover:text-foreground",
         alignClass,
       )}
       onClick={() => onSort(col)}
@@ -234,7 +234,12 @@ export function BookTable({
           />
         </div>
         {cols.map((c) => (
-          <div key={c.id} className={cn("flex items-center overflow-hidden", c.width)}>
+          <div
+            key={c.id}
+            className={cn("flex items-center overflow-hidden", c.width)}
+            // Notes/Wiki parity: title header also pulls left to align with body row.
+            style={c.id === "title" ? { marginLeft: -8 } : undefined}
+          >
             <TH
               label={c.labelKey ? t(c.labelKey) : c.label}
               col={c.sortField}
@@ -496,7 +501,16 @@ function BookRow({
             />
           </div>
           {cols.map((c) => (
-            <div key={c.id} className={cn("flex items-center overflow-hidden", c.width)}>
+            <div
+              key={c.id}
+              className={cn("flex items-center overflow-hidden", c.width)}
+              // Notes/Wiki list parity (notes-table.tsx:1891 comment):
+              // marginLeft -8 cancels the wrapper gap-[8px] so the title icon
+              // sits visually closer to the checkbox column. Without this,
+              // books rows had ~8px more whitespace between the checkbox and
+              // the kind icon vs. notes/wiki — user-flagged as "too wide".
+              style={c.id === "title" ? { marginLeft: -8 } : undefined}
+            >
               {renderCell(c.id, book, kind, sourceKinds)}
             </div>
           ))}
@@ -573,7 +587,7 @@ function renderCell(
           <span className="shrink-0 text-muted-foreground/70">
             <BookKindIcon kind={kind} size={14} />
           </span>
-          <span className="min-w-0 truncate text-foreground pl-2">
+          <span className="min-w-0 truncate font-medium text-foreground pl-2">
             {book.title || "Untitled book"}
           </span>
           {book.pinned && (

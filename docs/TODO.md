@@ -3,17 +3,46 @@
 > 우선순위 기반 작업 목록. **P0 = 다음 세션 즉시 시작점** (NEXT-ACTION.md 폐지, 2026-05-12).
 > 완료 항목은 즉시 삭제. 자세한 history는 SESSION-LOG.md + MEMORY.md.
 
-**마지막 갱신**: 2026-05-27 (저녁) — Plot v2 Linear 재디자인 Phase 1+2+3 머지 (1 통합 PR). globals.css 토큰 + `/preview/linear` 라이브 demo + Filter/Display/Books 풀 재설계. 다음 P0 #1 = **`/preview/linear` 12장 reference 이미지 비교 + Phase 3.1 fine-tune**.
+**마지막 갱신**: 2026-05-28 (오전) — Chrome icon 굵기/선명 + chip strip 시인성 + Books table notes/wiki parity 부채 정정 (1 통합 PR, 5 파일 +40/-26). 다음 P0 #0 = **Wiki `← Overview` 폐기 → breadcrumb 패턴 마이그 (1년 차 정합성 부채)**.
 
 ---
 
-## 🟣 P0 — 즉시 (cross-machine 진입점, 2026-05-27 저녁 세션 후 — Linear 재디자인 path 최우선)
+## 🟣 P0 — 즉시 (cross-machine 진입점, 2026-05-28 오전 세션 후 — Wiki breadcrumb 마이그 최우선)
 
-### -1. **🔴 P0 #0 (이번 세션 결과): Phase 3.1 — `/preview/linear` 12장 reference 이미지 1:1 비교 + fine-tune** ⭐ 다음 세션 첫 작업
+### -2. **🔴 P0 #0 (이번 세션 결과): Wiki `← Overview` 폐기 → breadcrumb 패턴 마이그** ⭐ 다음 세션 첫 작업 (1년 차 정합성 부채)
+
+**사용자 의도** (2026-05-28 오전):
+> "위키와 라이브러리 모두 오버뷰가 있는데, ←오버뷰 버튼은 위키에만 있거든? 노트나 라이브러리처럼 바꾸는 거에 대해 어떻게 생각해? 브레인스토밍해볼까."
+
+**핵심 근거** — `components/library/library-breadcrumb.tsx` 헤더 코멘트 (라인 6):
+> "사용자 시그널 (**2026-05-14**): Wiki의 `← Overview` 패턴보다 Notes의 breadcrumb 패턴 (`Notes > Quick Memo`)이 더 자연. Library도 같은 패턴 적용."
+→ 1년 전 결정. Library는 그때 마이그됐지만 **Wiki만 누락**된 채 남음 = 정합성 부채.
+
+**다음 세션 첫 스텝** (옵션 A 권장, 최소 ~50-80줄):
+1. `components/library/library-breadcrumb.tsx` read — 패턴 + props 인터페이스 확인
+2. `components/wiki/wiki-breadcrumb.tsx` 신규 — LibraryBreadcrumb 복제 + Wiki 도메인 변환 (entity = "wiki", sub-views = dashboard/list, 또는 5 quick filter 포함 결정 필요)
+3. `components/views/wiki-list.tsx` 라인 794-802 (`← Overview` 버튼 + 분리선) → 제거 후 `<WikiBreadcrumb current={wikiViewMode} onNavigate={setWikiViewMode} />` 삽입
+4. 다른 wiki view 진입점 (`wiki-view.tsx`, `wiki-dashboard.tsx`) breadcrumb 적용 검증
+5. `tsc --noEmit` + 사용자 시각 검증
+
+**옵션 B (체계 refactor, ~100-150줄)**: 공통 `EntityBreadcrumb` 컴포넌트 추출 → Notes/Wiki/Library 모두 동일 사용. 다음 entity 추가 시 부담 0.
+
+**옵션 C (큰 작업, ~200줄+)**: Wiki sub-section을 사이드바로 이동 (Library 패턴 풀 적용). 상단 quick filter chips (`Stale articles / Orphans / Hubs / With aliases / Recent`) → 사이드바 항목으로. UX 결정 多.
+
+**위험 + 회피**:
+- wikiViewMode enum: 현재 `"dashboard" | "list"` 2-mode. breadcrumb sub-view에 5 quick filter 포함할지 결정 필요. quick filter는 view-header 영역이라 분리가 자연.
+- LibraryBreadcrumb 패턴 = entity name + popover trigger. Wiki는 view mode 전환 + filter chip 분리.
+
+**파일 reference**:
+- `components/library/library-breadcrumb.tsx` (사용자 시그널 2026-05-14 source)
+- `components/views/wiki-list.tsx` (라인 794-802 fix 대상)
+- `components/views/wiki-view.tsx`, `wiki-dashboard.tsx` (적용 검증)
+
+### -1. **🔴 P0 #1 (carry): Phase 3.1 — `/preview/linear` 12장 reference 이미지 1:1 비교 + fine-tune**
 
 **다음 세션 첫 스텝**:
-1. dev server 확인 (포트 3000, PID 11312 already running 가능)
-2. 브라우저 `http://localhost:3000/preview/linear`
+1. dev server 확인 (preview MCP `preview_start "dev"`, launch.json port 3002 + autoPort)
+2. 브라우저 `http://localhost:3002/preview/linear`
 3. 12장 reference 이미지 (채팅 첨부 또는 `~/Desktop/open-design/.od/projects/04375e11-0f45-4428-92df-aeb8faf27039/`) 와 surface별 비교
    - Tabs: List / Editor / Table / Books
    - ⌘K command palette

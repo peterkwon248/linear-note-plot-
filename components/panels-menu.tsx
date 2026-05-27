@@ -42,11 +42,11 @@ export function PanelsMenu() {
     <Popover>
       <PopoverTrigger asChild>
         <button
-          className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground/70 transition-colors hover:bg-hover-bg hover:text-foreground"
+          className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-hover-bg hover:text-foreground"
           aria-label="Toggle panels"
           title="Toggle panels"
         >
-          <ListIcon size={14} />
+          <ListIcon size={14} strokeWidth={2.25} />
         </button>
       </PopoverTrigger>
       <PopoverContent
