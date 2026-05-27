@@ -3,13 +3,53 @@
 > 우선순위 기반 작업 목록. **P0 = 다음 세션 즉시 시작점** (NEXT-ACTION.md 폐지, 2026-05-12).
 > 완료 항목은 즉시 삭제. 자세한 history는 SESSION-LOG.md + MEMORY.md.
 
-**마지막 갱신**: 2026-05-27 (오전~새벽) — 8 PR 머지 (#473-#479, 23 commits): Search entity-aware refactor + Ontology Insights v2 (Power Sabermetrics) + HoverCard 학습 패턴. 다음 P0 #1 (사용자 최우선 명시) = **Coverage entity dropdown 논의 (옵션 C/B/D 결정)**.
+**마지막 갱신**: 2026-05-27 (저녁) — Plot v2 Linear 재디자인 Phase 1+2+3 머지 (1 통합 PR). globals.css 토큰 + `/preview/linear` 라이브 demo + Filter/Display/Books 풀 재설계. 다음 P0 #1 = **`/preview/linear` 12장 reference 이미지 비교 + Phase 3.1 fine-tune**.
 
 ---
 
-## 🟣 P0 — 즉시 (cross-machine 진입점, 2026-05-27 세션 후 — Coverage dropdown 최우선)
+## 🟣 P0 — 즉시 (cross-machine 진입점, 2026-05-27 저녁 세션 후 — Linear 재디자인 path 최우선)
 
-### 0. **🔴 P0 #1 (사용자 최우선 명시): Coverage entity dropdown 논의 + 진행**
+### -1. **🔴 P0 #0 (이번 세션 결과): Phase 3.1 — `/preview/linear` 12장 reference 이미지 1:1 비교 + fine-tune** ⭐ 다음 세션 첫 작업
+
+**다음 세션 첫 스텝**:
+1. dev server 확인 (포트 3000, PID 11312 already running 가능)
+2. 브라우저 `http://localhost:3000/preview/linear`
+3. 12장 reference 이미지 (채팅 첨부 또는 `~/Desktop/open-design/.od/projects/04375e11-0f45-4428-92df-aeb8faf27039/`) 와 surface별 비교
+   - Tabs: List / Editor / Table / Books
+   - ⌘K command palette
+   - + New Quick Capture dialog
+   - Filter popover (10 fields + sub-menus + 4 quick filters)
+   - Display popover (5 mode + 7 group + multi-sort + 12 prop)
+   - 라이트/다크 토글 (activity bar sun/moon)
+4. 어긋난 surface/디테일 짚어서 Phase 3.1 fine-tune
+
+**검증 의무** (Phase 3.1 후): `npm run build` + `tsc --noEmit` 통과.
+
+### 0. **🔴 P0 #1 (이번 세션 결과): Phase 4 — 실 컴포넌트 마이그레이션** (사용자 명시 진입점)
+
+**사용자 의도** (2026-05-27 저녁):
+> "필터와 디스플레이는 리니어식으로 꾸며졌거든? 아예 그렇게 해야 될 거 같은데. 그리고 book도 없다. 기왕 만드는 김에 나는 우리 코드가 실제로 쓰는 필터 내의 아이콘들과 폰트, 디스플레이 내의 옵션들과 아이콘들까지 전부 재설계 해도 좋을 거 같아. 리니어 느낌이 나도록."
+
+**진입점 (작은 것부터)**:
+1. **`components/filter-bar.tsx`** → Linear `.ln-popover` 패턴 (10 fields + 4 quick filters + 4-part chip bar)
+2. **`components/display-panel.tsx`** → Linear popover (5 segmented mode + 7 grouping + multi-sort chain + 12 property chip + 2 toggle)
+3. **Inbox 또는 Notes split view 한 페이지** 풀 마이그레이션 (Zustand store 연동)
+4. **Books 엔티티 방향 결정** — A) `/library` 별칭 탭 / B) 7번째 entity (rose space, Smart Book v2 plan과 연결)
+
+**파일 reference**:
+- `app/preview/linear-styles.css` (Linear 컴포넌트 클래스 993줄, `.ln-*` prefix)
+- `app/preview/linear/page.tsx` (5 surface + Filter/Display/Books 인터랙티브 992줄)
+- `app/globals.css` `:root` + `.dark` Linear 토큰 블록 (Phase 1)
+- `components/filter-bar.tsx` (현재 코드, 이미 Linear 4-part chip 패턴)
+- `components/display-panel.tsx` (현재 코드)
+- `lib/view-engine/view-configs.tsx` NOTES_VIEW_CONFIG (사용자 실 옵션 set 100% 반영 source)
+
+**위험 + 회피**:
+- **Linear CSS 격리 위반 위험** — `.ln-app` scope 안에서만 unprefixed 토큰 (`--panel`) 살아있음. 외부 컴포넌트 사용 시 미정의. globals.css promotion 시 토큰 명시 필요.
+- **shadcn `.sidebar/.card/.kbd` 충돌** — Linear `.ln-*` prefix로 회피했지만, globals.css promotion 시 다시 점검.
+- **Phase 3 mockup `.a-*` 클래스와 공존** — 일단 둘 다 살림. Path C (Studio/Editorial cleanup) 시 정리.
+
+### 1. **🔴 P0 #2 (직전 세션 carry): Coverage entity dropdown 논의 + 진행**
 
 **사용자 의도** (2026-05-27):
 > "커버리지가 단순히 고정이 되어서 나오는 것보다는 드롭다운이 있고 선택해서 노트 기준, 위키 기준, 북 기준, 이렇게 해서 각 섹션별로 다르게 보여주는 게 낫지 않나"

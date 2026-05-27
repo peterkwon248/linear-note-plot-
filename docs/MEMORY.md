@@ -8,6 +8,77 @@
 
 ---
 
+## 🚀 2026-05-27 (저녁) — Plot v2 Linear 재디자인 Phase 1+2+3 — `/preview/linear` 라이브 demo (1 통합 PR) ⭐⭐⭐⭐
+
+**범위**: 사용자 명시 큰 결정 ("Plot v2 통째 재설계 Path A" + 12장 reference 이미지) 본격 진입. globals.css에 Linear 토큰 머지 + preview 라우트 라이브 demo 신규 + Filter/Display/Books 풀 재설계.
+
+### 머지된 PRs (이번 세션, 1 통합 PR)
+- **PR (이)** — Plot v2 Linear 재디자인 Phase 1+2+3:
+  - Phase 1: `app/globals.css` Linear 토큰 머지 (+154줄, `--ln-*` namespace + un-prefixed scale/semantic/spacing/motion/shadow)
+  - Phase 2: `app/preview/linear-styles.css` (993줄) + `app/preview/linear/page.tsx` 신규 — 5 surface 라이브 demo (List/Editor/Table/Palette/Dialog)
+  - Phase 3: Filter popover (10 fields + 4 quick filters) + Display popover (5 mode + 7 group + multi-sort + 12 prop) + Books surface (4번째 탭, 5 collections + recent), page.tsx 547→993줄 재작성
+  - 22개 inline SVG 아이콘 (14px, strokeWidth 1.2~1.4) view-configs.tsx와 동일 시각 어휘
+
+### 큰 결정 (영구 LOCKED 후보 #153~#157)
+
+**1. #153 (vision) Linear 토큰 통합 namespace 전략 (영구)**:
+```
+--ln-* prefix  → panel hierarchy / hover-selected / border / accent variants (개념 신규)
+un-prefixed    → semantic (success/warn/info) / text / spacing (--s-1..10) / motion / shadow / radii
+```
+- 이유: Linear 컴포넌트 클래스가 토큰을 un-prefixed로 참조 (`var(--panel)`). `.ln-app` scope에서 alias로 격리.
+- **v3 LOCKED 토큰 + shadcn 토큰 + Phase 3 mockup `.a-*` 클래스 모두 0 touch**.
+
+**2. #154 (vision) Linear CSS 격리 = preview-only**:
+- `app/preview/linear-styles.css`에 격리 (globals.css 0 touch)
+- Phase 4 마이그레이션 때 필요 클래스만 globals.css로 promotion
+- 이유: 기존 앱 zero regression 보장 + 빠른 실험 가능
+
+**3. #155 (vision) `.ln-*` prefix 일관 적용** (충돌 회피):
+- shadcn `.sidebar/.card/.kbd` + Plot 기존 `.a-*` 와 충돌 없음
+- Linear 원본의 unprefixed `.app/.sidebar/.kbd/.card` 80개 → PowerShell regex로 자동 prefix 변환
+
+**4. #156 (vision) Phase 4 진입점 = filter-bar.tsx + display-panel.tsx (사용자 명시)**:
+- 사용자 인용: "필터와 디스플레이는 리니어식으로 꾸며졌거든? 아예 그렇게 해야 될 거 같은데"
+- 현재 코드 이미 Linear 4-part chip 패턴 (`[icon] field | op | value | ×`) — 마이그레이션 용이
+- preview의 Filter/Display popover (사용자 실 코드 옵션 100% 반영)를 reference로 사용
+- 아이콘/폰트/옵션까지 전부 재설계 OK (사용자 명시)
+
+**5. #157 (vision) dev server 포트 = 3000** (NOT 3002):
+- `package.json`의 `dev` script = `next dev --webpack` (포트 인자 없음 → 3000부터 잡힘)
+- CLAUDE.md의 3002는 오래된 기록, 갱신 필요할 수 있음
+
+**Books surface 방향 미결정** (Phase 4 진입 시 결정):
+- 사용자 지적: "book도 없네! 코드에는 있는데, 목업에는 없다"
+- 옵션 A) `/library` 별칭 탭 / B) 7번째 entity (rose space, Smart Book v2 plan과 연결)
+
+### v3 PRD 영향
+- **Plot v2 Linear 재디자인 Path A 본격 진입** — Phase 0 design language 결정 = Linear 채택 (12장 reference 이미지). 사용자 의도 = "오픈 디자인이라는 강수를 도입. 통째 재설계 의도".
+- Phase 4.3 chrome 통일 (기존 north star) → Linear 재디자인 path와 합류. filter-bar / display-panel 마이그레이션이 chrome 통일의 첫 실제 단계.
+
+### 다음 우선순위 (P0, 재정렬)
+1. **🔴 P0 #1 (이번 세션 결과)**: Phase 3.1 — `/preview/linear` 12장 reference 이미지 1:1 비교 → fine-tune ⭐ 추천 (다음 세션 첫 작업)
+2. **🔴 P0 #2**: Phase 4 — `components/filter-bar.tsx` + `components/display-panel.tsx` Linear 마이그레이션 (사용자 명시)
+3. **🔴 P0 #3 (직전 세션 carry)**: Coverage entity dropdown 옵션 C/B/D 결정 (별도 진행 가능)
+4. **🟡 P0 #4**: Books 엔티티 방향 결정 — A) 별칭 / B) 7번째 entity
+5. **🟡 P0 #5 (계속 deferred)**: Plot v2 PRD 작성 — 이제 Phase 1+2+3로 일부 진행됨, PRD는 다음 Phase 4+에서
+6. **🟢 P0 #6**: NUDGE Connect / Insights KPI 정합 / viewport 검증 / Book 폴더 Phase 2 (carry)
+
+### 이번 세션 기술 학습
+- **`.dark` 토글 + ThemeProvider 공존** — preview의 직접 토글이 새로고침 시 ThemeProvider에 의해 덮어쓰임. preview demo 한정이라 OK.
+- **PowerShell regex 자동 변환** — Linear `assets/app.css` 944줄을 한 번에 prefix 변환. double-prefix 0, 미처리 클래스 0. CLI 시간 큰 saving.
+- **Token alias scope 격리** — `.ln-app { --panel: var(--ln-panel) }` 패턴으로 Linear 원본 CSS의 unprefixed 참조를 globals.css 외부에 영향 없이 살림. namespace 격리 모범 사례.
+- **HMR로 빠른 iteration** — 기존 dev server (PID 11312)에 `app/preview/*` 자동 인식. 별도 npm run dev 불필요.
+- **22개 inline SVG 아이콘** 직접 작성 — view-configs.tsx와 동일 시각 어휘 (14px, strokeWidth 1.2~1.4)로 토픽바·필터·디스플레이·detail·Books 카드 통일.
+
+### 아직 PR 안 한 작업물 (이번 세션 untracked, secondary)
+- preview는 mock 데이터 (Zustand 미연동) — Phase 4에서 실 연동
+- 실 `(app)/*` 페이지 마이그레이션 (Phase 4)
+- Books 엔티티 방향 결정
+- mpnsyqu1-image.png + .od-skills/ orphan files (commit 제외)
+
+---
+
 ## 🚀 2026-05-27 (오전~새벽) — Search entity-aware + Ontology Insights v2 + HoverCard 학습 패턴 (PR #473-#479, 8 PR 23 commits) ⭐⭐⭐⭐⭐
 
 **범위**: 누적 8 PR 머지. (a) Search entity-aware refactor (3 PR): hardcoded "RECENT NOTES" only 버그 fix → 11 entity 분기 + section title 통일 + Linear/Notion progressive disclosure. (b) Ontology Insights v2 재설계 (옵션 A Power Sabermetrics): 4 section + Coverage Mosaic 3 chart + Composite score horizontal bar. (c) Tab highlight bug fix (reactive subscribe). (d) HoverCard 학습 패턴 도입 (4 chart + 4 KPI ⓘ icon).
