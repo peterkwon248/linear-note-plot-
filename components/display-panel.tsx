@@ -164,7 +164,7 @@ export function DisplayPanel({
   }
 
   return (
-    <div className="flex flex-col gap-3 p-3">
+    <div className="ln-styled flex flex-col gap-3 p-3">
       {/* ── Section 0: View Mode (List / Board) ── */}
       {showViewMode && (
         <>

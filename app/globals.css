@@ -561,6 +561,52 @@
   }
 }
 
+/* ──────────────────────────────────────────────────────────
+   Linear v2 Migration Scope — Phase 5B
+   Wrap any component container with `.ln-styled` to remap
+   standard Tailwind/Plot tokens to --ln-* Linear values.
+   Components keep their existing classes; only the underlying
+   CSS variables change. Progressively apply to more components.
+   ────────────────────────────────────────────────────────── */
+.ln-styled {
+  /* Surface hierarchy */
+  --background:      var(--ln-panel);
+  --card:            var(--ln-surface);
+  --popover:         var(--ln-elevated);
+  --surface-overlay: var(--ln-elevated);
+
+  /* Foreground */
+  --foreground:         var(--ln-fg-2);
+  --card-foreground:    var(--ln-fg-2);
+  --popover-foreground: var(--ln-fg-2);
+  --muted-foreground:   var(--ln-muted);
+
+  /* Borders */
+  --border:        var(--ln-border-strong);
+  --border-subtle: var(--ln-border-soft);
+  --input:         var(--ln-border-strong);
+
+  /* Interactive states */
+  --hover-bg:        var(--ln-hover);
+  --active-bg:       var(--ln-hover-2);
+  --active-bg-strong: var(--ln-selected);
+
+  /* Accent (already aligned, reinforce) */
+  --accent:            var(--ln-accent-2);
+  --accent-foreground: var(--ln-accent-on);
+  --ring:              var(--ln-accent-2);
+
+  /* Shadows — Linear uses minimal shadows */
+  --shadow-sm: 0 1px 2px rgba(0,0,0,0.03);
+  --shadow-md: 0 4px 12px rgba(0,0,0,0.06);
+}
+
+/* Dark mode override for .ln-styled */
+.dark .ln-styled {
+  --foreground:       #e1e2e5;
+  --muted-foreground: #8a8f98;
+}
+
 /* Density settings */
 [data-density="compact"] {
   --density-py: 4px;
@@ -1863,4 +1909,420 @@
   color: #8a7f6c;
   letter-spacing: 0.04em;
   display: flex; gap: 8px; padding-top: 2px;
+}
+
+/* Plot redesign shell primitives */
+.plot-shell {
+  background:
+    radial-gradient(circle at 24% -12%, color-mix(in srgb, var(--accent) 10%, transparent), transparent 34rem),
+    linear-gradient(180deg, var(--background), var(--bg));
+  color: var(--foreground);
+}
+
+.plot-global-topbar {
+  border-bottom-color: color-mix(in srgb, var(--border) 72%, transparent);
+  background: color-mix(in srgb, var(--bg-elev) 82%, transparent);
+  box-shadow: inset 0 -1px 0 color-mix(in srgb, var(--fg) 4%, transparent);
+}
+
+.plot-global-search {
+  border-color: color-mix(in srgb, var(--border) 70%, transparent);
+  background: color-mix(in srgb, var(--secondary) 72%, transparent);
+}
+
+.plot-global-search:focus {
+  border-color: color-mix(in srgb, var(--accent) 42%, var(--border));
+  background: var(--bg-elev);
+}
+
+.plot-workspace-frame {
+  min-width: 0;
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--bg-elev) 48%, transparent), transparent 120px),
+    var(--bg);
+  box-shadow: inset 1px 0 0 color-mix(in srgb, var(--fg) 3%, transparent);
+}
+
+.plot-workspace-frame--secondary {
+  background: color-mix(in srgb, var(--bg) 88%, var(--bg-elev));
+}
+
+.plot-workspace-frame--detail,
+.plot-detail-frame {
+  min-width: 0;
+  background: color-mix(in srgb, var(--bg-elev) 84%, var(--bg));
+}
+
+.plot-view-header {
+  border-bottom-color: color-mix(in srgb, var(--border) 64%, transparent);
+  background: color-mix(in srgb, var(--bg-elev) 70%, transparent);
+  box-shadow: inset 0 -1px 0 color-mix(in srgb, var(--fg) 3%, transparent);
+}
+
+.plot-icon-button {
+  transition:
+    background var(--t-fast),
+    color var(--t-fast),
+    transform var(--t-fast);
+}
+
+.plot-icon-button:active {
+  transform: scale(0.98);
+}
+
+.plot-card {
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--border) 62%, transparent);
+  border-radius: var(--r-8);
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--bg-elev) 96%, var(--accent-soft)), var(--bg-elev));
+  box-shadow: var(--shadow-sm);
+}
+
+.plot-card[data-accent="cyan"] {
+  border-color: color-mix(in srgb, var(--space-notes) 24%, var(--border));
+}
+
+.plot-card[data-accent="amber"] {
+  border-color: color-mix(in srgb, var(--space-library) 24%, var(--border));
+}
+
+.plot-card[data-accent="emerald"] {
+  border-color: color-mix(in srgb, var(--status-keystone) 24%, var(--border));
+}
+
+.plot-card__header {
+  padding: 14px 16px 12px;
+  border-bottom: 1px solid color-mix(in srgb, var(--border) 56%, transparent);
+}
+
+.plot-card__copy {
+  display: grid;
+  gap: 5px;
+}
+
+.plot-card__eyebrow,
+.plot-home__eyebrow {
+  color: var(--muted-fg);
+  font-size: var(--font-2xs);
+  font-weight: 600;
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+
+.plot-card__title-row,
+.plot-card__title-wrap {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+}
+
+.plot-card__title-row {
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.plot-card__title-wrap {
+  gap: 8px;
+}
+
+.plot-card__icon {
+  display: grid;
+  width: 22px;
+  height: 22px;
+  flex: none;
+  place-items: center;
+  border-radius: var(--r-6);
+  color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+}
+
+.plot-card__title {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--fg);
+  font-size: var(--font-sm);
+  font-weight: 650;
+  line-height: 1.25;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.plot-card__description {
+  color: var(--muted-fg);
+  font-size: var(--font-xs);
+  line-height: 1.45;
+}
+
+.plot-card__action {
+  flex: none;
+}
+
+.plot-card__body {
+  padding: 12px;
+}
+
+.plot-card__body--rows {
+  padding: 6px;
+}
+
+.plot-card--list {
+  min-height: 100%;
+}
+
+.plot-home {
+  background:
+    radial-gradient(circle at 86% 0%, color-mix(in srgb, var(--status-keystone) 8%, transparent), transparent 30rem),
+    var(--bg);
+}
+
+.plot-home__inner {
+  width: 100%;
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 28px 28px 40px;
+}
+
+.plot-home__command {
+  display: grid;
+  grid-template-columns: minmax(0, 0.78fr) minmax(320px, 0.58fr);
+  gap: 24px;
+  align-items: end;
+  margin-bottom: 22px;
+}
+
+.plot-home__intro {
+  display: grid;
+  gap: 6px;
+}
+
+.plot-home__title {
+  color: var(--fg);
+  font-size: var(--font-3xl);
+  font-weight: 660;
+  line-height: 1.08;
+  letter-spacing: 0;
+}
+
+.plot-home__meta {
+  color: var(--muted-fg);
+  font-size: var(--font-xs);
+  font-variant-numeric: tabular-nums;
+}
+
+.plot-home__capture > div {
+  margin-bottom: 0;
+}
+
+.plot-home__capture input {
+  border-color: color-mix(in srgb, var(--border) 70%, transparent);
+  background: color-mix(in srgb, var(--bg-elev) 88%, transparent);
+  box-shadow: inset 0 1px 0 color-mix(in srgb, var(--fg) 4%, transparent);
+}
+
+.plot-home__stats {
+  margin-bottom: 20px;
+}
+
+.plot-home__stats button {
+  border-color: color-mix(in srgb, var(--border) 58%, transparent);
+  background: color-mix(in srgb, var(--bg-elev) 88%, transparent);
+  box-shadow: none;
+}
+
+.plot-home__stats button:hover {
+  border-color: color-mix(in srgb, var(--accent) 28%, var(--border));
+  background: color-mix(in srgb, var(--accent-soft) 45%, var(--bg-elev));
+}
+
+.plot-home__grid,
+.plot-home__columns {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.plot-home__feature {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 14px;
+  align-items: start;
+  min-height: 100%;
+  padding: 16px;
+  text-align: left;
+  border: 1px solid color-mix(in srgb, var(--accent) 22%, var(--border));
+  border-radius: var(--r-8);
+  background:
+    linear-gradient(135deg, color-mix(in srgb, var(--accent-soft) 58%, var(--bg-elev)), var(--bg-elev));
+  box-shadow: var(--shadow-sm);
+  transition:
+    border-color var(--t-fast),
+    background var(--t-fast),
+    transform var(--t-fast);
+}
+
+.plot-home__feature:hover {
+  border-color: color-mix(in srgb, var(--accent) 42%, var(--border));
+  background: color-mix(in srgb, var(--accent-soft) 58%, var(--bg-elev));
+}
+
+.plot-home__feature:active {
+  transform: scale(0.99);
+}
+
+.plot-home__feature-icon {
+  display: grid;
+  width: 34px;
+  height: 34px;
+  place-items: center;
+  border-radius: var(--r-8);
+  color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+}
+
+.plot-home__feature-copy {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.plot-home__feature-title {
+  overflow: hidden;
+  color: var(--fg);
+  font-size: var(--font-md);
+  font-weight: 650;
+  line-height: 1.25;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.plot-home__feature-preview {
+  display: -webkit-box;
+  overflow: hidden;
+  color: var(--muted-fg);
+  font-size: var(--font-xs);
+  line-height: 1.45;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.plot-home__feature-arrow {
+  color: var(--muted-fg);
+  transition:
+    color var(--t-fast),
+    transform var(--t-fast);
+}
+
+.plot-home__feature:hover .plot-home__feature-arrow {
+  color: var(--accent);
+  transform: translate(1px, -1px);
+}
+
+.plot-list-row {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  gap: 8px;
+  border-radius: var(--r-6);
+  padding: 8px 10px;
+  text-align: left;
+  transition:
+    background var(--t-fast),
+    color var(--t-fast);
+}
+
+.plot-list-row:hover {
+  background: var(--hover-bg);
+}
+
+.plot-row-action {
+  width: 100%;
+  border-radius: var(--r-6);
+  padding: 7px 10px;
+  text-align: left;
+  color: color-mix(in srgb, var(--muted-fg) 72%, transparent);
+  font-size: var(--font-2xs);
+  transition:
+    background var(--t-fast),
+    color var(--t-fast);
+}
+
+.plot-row-action:hover {
+  color: var(--fg);
+  background: var(--hover-bg);
+}
+
+.plot-count-pill {
+  display: inline-flex;
+  min-width: 20px;
+  justify-content: center;
+  border-radius: 999px;
+  padding: 2px 7px;
+  background: color-mix(in srgb, var(--muted) 76%, transparent);
+  color: var(--muted-fg);
+  font-size: var(--font-2xs);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.plot-text-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--muted-fg);
+  font-size: var(--font-2xs);
+  transition: color var(--t-fast);
+}
+
+.plot-text-action:hover {
+  color: var(--fg);
+}
+
+.plot-section {
+  margin-top: 22px;
+}
+
+.plot-section__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+  padding: 0 2px;
+}
+
+.plot-section__header h3 {
+  color: var(--muted-fg);
+  font-size: var(--font-2xs);
+  font-weight: 650;
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+
+.plot-home__footer-action {
+  display: flex;
+  justify-content: center;
+  padding: 18px 0 2px;
+}
+
+@media (max-width: 900px) {
+  .plot-home__command,
+  .plot-home__grid,
+  .plot-home__columns {
+    grid-template-columns: 1fr;
+  }
+
+  .plot-home__command {
+    align-items: start;
+  }
+}
+
+@media (max-width: 640px) {
+  .plot-home__inner {
+    padding: 20px 16px 32px;
+  }
+
+  .plot-home__title {
+    font-size: var(--font-2xl);
+  }
 }

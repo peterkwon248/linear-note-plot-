@@ -209,7 +209,7 @@ export function WikiArticleEncyclopedia({ article, isEditing, onBack, collapseAl
         "flex-1 overflow-y-auto",
         // PR-E2 — Same opt-in h2 accent pattern as wiki-article-view.
         article.themeColor &&
-          "[&_[data-h2]]:border-l-[3px] [&_[data-h2]]:pl-3 [&_[data-h2]]:border-l-[color:var(--wiki-theme-color)]",
+          "[&_[data-h2]]:border-l-[3px] [&_[data-h2]]:pl-3 [&_[data-h2]]:[border-left-color:var(--wiki-theme-color)]",
         // PR-E3 — Group header tint cascade. Same opt-in pattern as
         // wiki-article-view. Tints non-custom group-headers at 15% themeColor.
         article.themeColor &&

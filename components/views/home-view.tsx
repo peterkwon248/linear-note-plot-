@@ -1,6 +1,6 @@
 "use client"
 
-import { useMemo } from "react"
+import { useMemo, type ComponentType, type ReactNode } from "react"
 import { usePlotStore } from "@/lib/store"
 import { useT } from "@/lib/i18n"
 import { setActiveRoute } from "@/lib/table-route"
@@ -8,45 +8,52 @@ import { QuickCapture } from "@/components/home/quick-capture"
 import { StatsRow } from "@/components/home/stats-row"
 import { RecentCards } from "@/components/home/recent-cards"
 import { MixedQuicklinks } from "@/components/home/mixed-quicklinks"
+import { DashboardCard } from "@/components/shell/dashboard-card"
 import {
+  ArrowUpRight,
   Clock as PhClock,
+  FileText,
   Sparkles as Sparkle,
   TrendingUp as TrendUp,
-  ArrowRight,
-  FileText,
 } from "lucide-react"
-import { IconInbox, IconHome } from "@/components/plot-icons"
+import { IconHome, IconInbox } from "@/components/plot-icons"
 import { ViewHeader } from "@/components/view-header"
 import { useBacklinksIndex } from "@/lib/search/use-backlinks-index"
 import { useInbox, type InboxItem } from "@/lib/hooks/use-inbox"
 import { InboxSourceIcon } from "@/components/inbox/inbox-source-icon"
 import type { Note } from "@/lib/types"
-import type { InboxItemKind } from "@/lib/store/slices/inbox"
+
+type IconComponent = ComponentType<{
+  className?: string
+  size?: number
+  strokeWidth?: number
+}>
 
 /**
- * Home view — clean data dashboard (Wiki Dashboard style).
+ * Home view: a calm command surface for capture, triage, and recent context.
  */
 export function HomeView() {
   const t = useT()
   const notes = usePlotStore((s) => s.notes)
   const openNote = usePlotStore((s) => s.openNote)
-  const tags = usePlotStore((s) => s.tags)
   const backlinkCounts = useBacklinksIndex()
   const inboxItems = useInbox()
 
-  // Compute insights
+  const liveNoteCount = useMemo(
+    () => notes.filter((n) => !n.trashed).length,
+    [notes],
+  )
+
   const insights = useMemo(() => {
     const liveNotes = notes.filter((n: Note) => !n.trashed)
     const recentlyEdited = [...liveNotes]
       .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
       .slice(0, 5)
 
-    // Featured note: most recently edited non-stone note
     const featured = liveNotes
       .filter((n: Note) => n.status !== "stone")
       .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())[0]
 
-    // Most connected notes — out-degree (linksOut) + in-degree (backlinks via index)
     const withConnections = liveNotes
       .map((n: Note) => ({
         note: n,
@@ -79,184 +86,169 @@ export function HomeView() {
         icon={<IconHome size={20} />}
         title={t("home.title")}
       />
-      <div className="flex-1 overflow-y-auto">
-      <div className="mx-auto w-full max-w-5xl px-6 py-10">
-        {/* Quick Capture (centered, narrow) */}
-        <div className="mx-auto mb-10 max-w-2xl">
-          <QuickCapture />
-        </div>
-
-        {/* Knowledge base (stats) */}
-        <section className="mb-8">
-          <header className="mb-3 px-1">
-            <h3 className="text-2xs font-semibold uppercase tracking-wider text-muted-foreground">
-              {t("home.knowledge_base")}
-            </h3>
-          </header>
-          <StatsRow />
-        </section>
-
-        {/* Featured Note */}
-        {insights.featured && (
-          <button
-            onClick={() => handleOpenNote(insights.featured!.id)}
-            className="group mb-6 flex w-full items-start gap-4 rounded-lg border border-border bg-card p-4 text-left transition-all duration-150 hover:border-accent/30 hover:bg-accent/[0.03] hover:shadow-sm"
-          >
-            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-accent/10">
-              <Sparkle className="text-accent" size={16} strokeWidth={2} />
-            </div>
-            <div className="min-w-0 flex-1">
-              <div className="mb-0.5 flex items-center gap-2">
-                <span className="text-2xs font-medium uppercase tracking-wide text-muted-foreground/60">{t("home.featured_note")}</span>
-              </div>
-              <h3 className="text-note font-semibold text-foreground group-hover:text-accent transition-colors">
-                {insights.featured.title || "Untitled"}
-              </h3>
-              <p className="mt-0.5 text-2xs text-muted-foreground line-clamp-1">
-                {insights.featured.preview || "No preview available"}
+      <div className="plot-home flex-1 overflow-y-auto">
+        <div className="plot-home__inner">
+          <section className="plot-home__command">
+            <div className="plot-home__intro">
+              <span className="plot-home__eyebrow">{t("home.knowledge_base")}</span>
+              <h2 className="plot-home__title">{t("home.title")}</h2>
+              <p className="plot-home__meta">
+                {liveNoteCount} notes / {inboxItems.length} inbox
               </p>
             </div>
-            <ArrowRight className="mt-1 shrink-0 text-muted-foreground/60 transition-colors group-hover:text-accent" size={16} strokeWidth={2} />
-          </button>
-        )}
-
-        {/* Inbox card — action-based notification queue */}
-        {inboxItems.length > 0 && (
-          <section className="mb-6">
-            <ContentCard
-              title={t("home.inbox")}
-              icon={IconInbox}
-              iconColor="text-muted-foreground"
-              trailing={
-                <div className="flex items-center gap-2">
-                  <span className="rounded-full bg-muted px-1.5 py-0.5 text-2xs font-medium tabular-nums text-muted-foreground">
-                    {inboxItems.length}
-                  </span>
-                  <button
-                    onClick={() => setActiveRoute("/inbox")}
-                    className="text-2xs text-muted-foreground transition-colors hover:text-foreground"
-                  >
-                    {t("home.view_all")} <span aria-hidden>→</span>
-                  </button>
-                </div>
-              }
-            >
-              {inboxItems.slice(0, 5).map((item) => (
-                <InboxRow
-                  key={`${item.kind}:${item.sourceId}`}
-                  item={item}
-                  onClick={() => {
-                    if (item.kind === "wiki-redlink" || item.kind === "auto-enroll") {
-                      setActiveRoute("/wiki")
-                    } else {
-                      handleOpenNote(item.sourceId)
-                    }
-                  }}
-                />
-              ))}
-              {inboxItems.length > 5 && (
-                <button
-                  onClick={() => setActiveRoute("/inbox")}
-                  className="w-full px-2.5 py-1.5 text-left text-2xs text-muted-foreground/60 transition-colors hover:text-muted-foreground"
-                >
-                  +{inboxItems.length - 5} more
-                </button>
-              )}
-            </ContentCard>
+            <div className="plot-home__capture">
+              <QuickCapture />
+            </div>
           </section>
-        )}
 
-        {/* Two-column content */}
-        <div className="mb-8 grid grid-cols-1 gap-5 min-[700px]:grid-cols-2">
-          {/* Recent Activity */}
-          <ContentCard title={t("home.recent_activity")} icon={PhClock}>
-            {insights.recentlyEdited.map((note) => (
-              <NoteItem
-                key={note.id}
-                title={note.title || "Untitled"}
-                meta={shortRelative(note.updatedAt)}
-                onClick={() => handleOpenNote(note.id)}
-              />
-            ))}
-          </ContentCard>
+          <section className="plot-home__stats" aria-label={t("home.knowledge_base")}>
+            <StatsRow />
+          </section>
 
-          {/* Most Connected */}
-          {insights.withConnections.length > 0 && (
-            <ContentCard title={t("home.most_connected")} icon={TrendUp}>
-              {insights.withConnections.map(({ note, count }) => (
+          <section className="plot-home__grid">
+            {insights.featured && (
+              <button
+                type="button"
+                onClick={() => handleOpenNote(insights.featured!.id)}
+                className="plot-home__feature group"
+              >
+                <span className="plot-home__feature-icon">
+                  <Sparkle size={16} strokeWidth={1.5} />
+                </span>
+                <span className="plot-home__feature-copy">
+                  <span className="plot-home__eyebrow">{t("home.featured_note")}</span>
+                  <span className="plot-home__feature-title">
+                    {insights.featured.title || "Untitled"}
+                  </span>
+                  <span className="plot-home__feature-preview">
+                    {insights.featured.preview || "No preview available"}
+                  </span>
+                </span>
+                <ArrowUpRight className="plot-home__feature-arrow" size={16} strokeWidth={1.5} />
+              </button>
+            )}
+
+            {inboxItems.length > 0 && (
+              <ContentCard
+                title={t("home.inbox")}
+                icon={IconInbox}
+                trailing={
+                  <div className="flex items-center gap-2">
+                    <span className="plot-count-pill">{inboxItems.length}</span>
+                    <button
+                      type="button"
+                      onClick={() => setActiveRoute("/inbox")}
+                      className="plot-text-action"
+                    >
+                      {t("home.view_all")}
+                      <ArrowUpRight size={12} strokeWidth={1.5} aria-hidden />
+                    </button>
+                  </div>
+                }
+              >
+                {inboxItems.slice(0, 5).map((item) => (
+                  <InboxRow
+                    key={`${item.kind}:${item.sourceId}`}
+                    item={item}
+                    onClick={() => {
+                      if (item.kind === "wiki-redlink" || item.kind === "auto-enroll") {
+                        setActiveRoute("/wiki")
+                      } else {
+                        handleOpenNote(item.sourceId)
+                      }
+                    }}
+                  />
+                ))}
+                {inboxItems.length > 5 && (
+                  <button
+                    type="button"
+                    onClick={() => setActiveRoute("/inbox")}
+                    className="plot-row-action"
+                  >
+                    +{inboxItems.length - 5} more
+                  </button>
+                )}
+              </ContentCard>
+            )}
+          </section>
+
+          <div className="plot-home__columns">
+            <ContentCard title={t("home.recent_activity")} icon={PhClock}>
+              {insights.recentlyEdited.map((note) => (
                 <NoteItem
                   key={note.id}
                   title={note.title || "Untitled"}
-                  meta={t("home.links").replace("{count}", String(count))}
+                  meta={shortRelative(note.updatedAt)}
                   onClick={() => handleOpenNote(note.id)}
                 />
               ))}
             </ContentCard>
-          )}
+
+            {insights.withConnections.length > 0 && (
+              <ContentCard title={t("home.most_connected")} icon={TrendUp}>
+                {insights.withConnections.map(({ note, count }) => (
+                  <NoteItem
+                    key={note.id}
+                    title={note.title || "Untitled"}
+                    meta={t("home.links").replace("{count}", String(count))}
+                    onClick={() => handleOpenNote(note.id)}
+                  />
+                ))}
+              </ContentCard>
+            )}
+          </div>
+
+          <section className="plot-section">
+            <header className="plot-section__header">
+              <h3>{t("home.recent")}</h3>
+            </header>
+            <RecentCards limit={4} />
+          </section>
+
+          <section className="plot-section">
+            <header className="plot-section__header">
+              <h3>Quicklinks</h3>
+            </header>
+            <MixedQuicklinks limit={8} />
+          </section>
+
+          <div className="plot-home__footer-action">
+            <button
+              type="button"
+              onClick={jumpToOntologyInsights}
+              className="plot-text-action"
+            >
+              Improve your knowledge graph
+              <ArrowUpRight size={12} strokeWidth={1.5} aria-hidden />
+            </button>
+          </div>
         </div>
-
-        {/* Recents (horizontal card gallery) */}
-        <section className="mb-8">
-          <header className="mb-3 flex items-center justify-between px-1">
-            <h3 className="text-2xs font-semibold uppercase tracking-wider text-muted-foreground">
-              {t("home.recent")}
-            </h3>
-          </header>
-          <RecentCards limit={4} />
-        </section>
-
-        {/* Quicklinks (unified pinned hub) */}
-        <section className="mb-6">
-          <header className="mb-3 flex items-center justify-between px-1">
-            <h3 className="text-2xs font-semibold uppercase tracking-wider text-muted-foreground">
-              Quicklinks
-            </h3>
-          </header>
-          <MixedQuicklinks limit={8} />
-        </section>
-
-        {/* Subtle CTA into the maintenance hub */}
-        <div className="flex items-center justify-center pt-2 pb-2">
-          <button
-            type="button"
-            onClick={jumpToOntologyInsights}
-            className="text-2xs text-muted-foreground/60 transition-colors duration-100 hover:text-foreground"
-          >
-            Improve your knowledge graph <span aria-hidden>→</span>
-          </button>
-        </div>
-      </div>
       </div>
     </div>
   )
 }
 
-/* Sub-Components */
-
 function ContentCard({
   title,
   icon: Icon,
-  iconColor = "text-muted-foreground",
   trailing,
   children,
 }: {
   title: string
-  icon: React.ComponentType<React.SVGProps<SVGSVGElement> & { strokeWidth?: number }>
-  iconColor?: string
-  trailing?: React.ReactNode
-  children: React.ReactNode
+  icon: IconComponent
+  trailing?: ReactNode
+  children: ReactNode
 }) {
   return (
-    <div className="rounded-lg border border-border bg-card">
-      <div className="flex items-center justify-between gap-2 px-4 py-3 border-b border-border">
-        <div className="flex items-center gap-2">
-          <Icon className={`h-3.5 w-3.5 ${iconColor}`} strokeWidth={1.5} />
-          <h3 className="text-2xs font-medium uppercase tracking-wide text-muted-foreground">{title}</h3>
-        </div>
-        {trailing}
-      </div>
-      <div className="px-1.5 py-1">{children}</div>
-    </div>
+    <DashboardCard
+      title={title}
+      icon={<Icon className="h-3.5 w-3.5" strokeWidth={1.5} />}
+      action={trailing}
+      className="plot-card--list"
+      bodyClassName="plot-card__body--rows"
+    >
+      {children}
+    </DashboardCard>
   )
 }
 
@@ -271,11 +263,12 @@ function NoteItem({
 }) {
   return (
     <button
+      type="button"
       onClick={onClick}
-      className="group flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-left transition-colors duration-100 hover:bg-hover-bg"
+      className="plot-list-row group"
     >
-      <FileText className="shrink-0 text-muted-foreground" size={14} strokeWidth={2.5} />
-      <span className="min-w-0 flex-1 truncate text-note text-foreground group-hover:text-foreground">{title}</span>
+      <FileText className="shrink-0 text-muted-foreground" size={14} strokeWidth={1.5} />
+      <span className="min-w-0 flex-1 truncate text-note text-foreground">{title}</span>
       <span className="shrink-0 text-2xs tabular-nums text-muted-foreground">{meta}</span>
     </button>
   )
@@ -285,8 +278,9 @@ function InboxRow({ item, onClick }: { item: InboxItem; onClick: () => void }) {
   const isOverdue = item.action?.toLowerCase().includes("overdue") ?? false
   return (
     <button
+      type="button"
       onClick={onClick}
-      className="group flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-left transition-colors duration-100 hover:bg-hover-bg"
+      className="plot-list-row group"
     >
       <InboxSourceIcon
         kind={item.kind}

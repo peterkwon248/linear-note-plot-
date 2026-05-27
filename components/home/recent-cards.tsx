@@ -119,9 +119,9 @@ export function RecentCards({ limit = 8 }: { limit?: number }) {
               it.kind === "wiki" ? "bg-violet-500/10 text-violet-600 dark:text-violet-400" : "bg-blue-500/10 text-blue-600 dark:text-blue-400"
             }`}>
               {it.kind === "wiki" ? (
-                <BookOpen size={13} strokeWidth={2} />
+                <BookOpen size={13} strokeWidth={1.5} />
               ) : (
-                <FileText size={13} strokeWidth={2} />
+                <FileText size={13} strokeWidth={1.5} />
               )}
             </span>
             <span className="text-2xs tabular-nums text-muted-foreground">

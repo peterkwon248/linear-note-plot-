@@ -6,6 +6,7 @@ export function DashboardCard({
   eyebrow,
   title,
   description,
+  icon,
   action,
   children,
   className,
@@ -15,6 +16,7 @@ export function DashboardCard({
   eyebrow?: string
   title: string
   description?: string
+  icon?: ReactNode
   action?: ReactNode
   children: ReactNode
   className?: string
@@ -27,7 +29,10 @@ export function DashboardCard({
         <div className="plot-card__copy">
           {eyebrow ? <span className="plot-card__eyebrow">{eyebrow}</span> : null}
           <div className="plot-card__title-row">
-            <h2 className="plot-card__title">{title}</h2>
+            <div className="plot-card__title-wrap">
+              {icon ? <span className="plot-card__icon">{icon}</span> : null}
+              <h2 className="plot-card__title">{title}</h2>
+            </div>
             {action ? <div className="plot-card__action">{action}</div> : null}
           </div>
           {description ? <p className="plot-card__description">{description}</p> : null}

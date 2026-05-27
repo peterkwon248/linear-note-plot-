@@ -21,9 +21,9 @@ import { migrate } from "../migrate"
 
 type AnyState = Record<string, unknown>
 
-// Sentinel id used by migrate.ts v48 to detect "seeded already" state. We
-// pre-populate it so the migration's `require("./seeds")` branch is skipped
-// (the require is CJS-only and breaks in vitest's ESM transform).
+// Sentinel id used by migrate.ts v48 to detect "seeded already" state.
+// Later seed backfills may still append demo records, so assertions below
+// filter to the fixture ids they own.
 const SEEDED_SENTINEL = {
   id: "wiki-article-1",
   title: "Seeded sentinel",
@@ -55,7 +55,11 @@ function baseState(overrides: Partial<AnyState> = {}): AnyState {
 }
 
 function nonSentinelWikis(state: any): Array<any> {
-  return (state.wikiArticles as Array<any>).filter((w) => w.id !== SEEDED_SENTINEL.id)
+  return (state.wikiArticles as Array<any>).filter((w) => /^w\d+$/.test(w.id))
+}
+
+function fixtureNotes(state: any): Array<any> {
+  return (state.notes as Array<any>).filter((n) => /^n\d+$/.test(n.id))
 }
 
 describe("migrate v107: folder kind + N:M", () => {
@@ -78,7 +82,7 @@ describe("migrate v107: folder kind + N:M", () => {
     expect(folders[0].id).toBe("f1")
     expect(folders[0].kind).toBe("note")
 
-    const notes = result.notes as Array<any>
+    const notes = fixtureNotes(result)
     for (const n of notes) {
       expect(n.folderIds).toEqual(["f1"])
       expect(n.folderId).toBeUndefined()
@@ -143,7 +147,7 @@ describe("migrate v107: folder kind + N:M", () => {
     expect(clone.color).toBe("#000")  // inherits color
 
     // Notes still point at the original.
-    const notes = result.notes as Array<any>
+    const notes = fixtureNotes(result)
     for (const n of notes) {
       expect(n.folderIds).toEqual(["f-mixed"])
     }

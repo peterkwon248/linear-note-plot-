@@ -3446,7 +3446,7 @@ Plot 영구 원칙 정합 결론:
 - Root wiki article scroll container 두 경로 (`wiki-article-view` + `wiki-article-encyclopedia`) 에 `--wiki-theme-color` CSS variable inject
 - **Infobox header**: `effectiveHeaderColor = headerColor ?? themeColor ?? null` fallback (개별 지정 우선)
 - **Hatnote**: `border-l-2` + `borderLeftColor: var(--wiki-theme-color, transparent)`
-- **Section h2**: SectionBlock에 `data-h2` attribute + root container의 Tailwind arbitrary selector (`themeColor && "[&_[data-h2]]:border-l-[3px] [&_[data-h2]]:pl-3 [&_[data-h2]]:border-l-[color:var(--wiki-theme-color)]"`)로 **opt-in** 적용. themeColor 없으면 h2 영향 0.
+- **Section h2**: SectionBlock에 `data-h2` attribute + root container의 Tailwind arbitrary selector (`themeColor && "[&_[data-h2]]:border-l-[3px] [&_[data-h2]]:pl-3 [&_[data-h2]]:[border-left-color:var(--wiki-theme-color)]"`)로 **opt-in** 적용. themeColor 없으면 h2 영향 0.
 
 **C. Picker**:
 - 신규 `components/wiki-editor/wiki-theme-color-picker.tsx` Dialog
@@ -3472,7 +3472,7 @@ Plot 영구 원칙 정합 결론:
 ### 기술 학습 (영구)
 
 - **CSS variable cascade vs prop drilling**: 동일 색을 5+ 컴포넌트에 전달해야 하는 cascade 시 prop drilling (React context, Provider, prop chain)보다 CSS variable inject가 훨씬 정직. SSR-safe (style attribute inline), 분기 코드 0, 자손 자동 수신. React context는 reactive update가 필요할 때만.
-- **Tailwind arbitrary selector + CSS variable 조합**: `[&_[data-h2]]:border-l-[3px] [&_[data-h2]]:pl-3 [&_[data-h2]]:border-l-[color:var(--wiki-theme-color)]` 한 줄로 자손에 cascade 적용. width / padding은 arbitrary value, color는 `border-l-[color:var(...)]` shorthand. v3.2+에서 작동.
+- **Tailwind arbitrary selector + CSS variable 조합**: `[&_[data-h2]]:border-l-[3px] [&_[data-h2]]:pl-3 [&_[data-h2]]:[border-left-color:var(--wiki-theme-color)]` 한 줄로 자손에 cascade 적용. width / padding은 arbitrary value, color는 arbitrary property. v3.2+에서 작동.
 - **useTintedBg hex desaturate 안 함 부채**: `lib/tinted-bg.ts:60-61` regex가 `/^rgba?\(.../`만 매치 → hex 입력은 light/dark 둘 다 unchanged passthrough. infoboxHeaderColor가 hex일 때 light mode contrast 부족. PR-E2 themeColor도 동일 부채 노출 증폭. `lib/wiki-color-contrast.ts::shouldUseLightText`가 이미 존재 (perceivedLuminance 헬퍼 있음) — `useTintedText`에 통합 follow-up 의무.
 - **Encyclopedia layout = 4 mount 위치**: `wiki-article-encyclopedia.tsx`는 (1) wiki-view 메인 라우트 (2) split secondary panel (3) note-hover-preview (4) wiki-embed-node 4 곳에서 mount. cascade 추가 시 두 root 경로 (wiki-article-view + encyclopedia) 모두 수정 필수 — architect 검증으로 발견.
 - **Stacked PR + 같은 파일 polish conflict 패턴**: PR-E1 (#368) main 머지 후 같은 파일 (`hatnote-edit-dialog.tsx`) polish (#370) 시 main의 squash commit과 line-level conflict. HEAD 우선 (`git merge origin/main` + Edit으로 conflict marker 제거) 안정 패턴.

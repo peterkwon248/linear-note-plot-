@@ -1138,7 +1138,7 @@ export function FilterButton({ hideLabel, ...props }: FilterButtonProps) {
           )}
         </button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="start" className="w-56">
+      <DropdownMenuContent align="start" className="ln-styled w-56">
         <FilterMenuItems {...props} />
       </DropdownMenuContent>
     </DropdownMenu>
@@ -1170,7 +1170,7 @@ export function FilterChipBar({
   if (filters.length === 0) return null
 
   return (
-    <div className="flex shrink-0 flex-wrap items-center gap-1.5 border-b border-border px-5 py-2">
+    <div className="ln-styled flex shrink-0 flex-wrap items-center gap-1.5 border-b border-border px-5 py-2">
       {/* Active filter chips — Linear-style 4-part: [icon] field | op | value | × */}
       {filters.map((f, i) => {
         const parts = formatFilterChip(f, folders, tags, labels, t)
@@ -1246,7 +1246,7 @@ export function FilterChipBar({
             <PhPlus size={16} />
           </button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="start" className="w-56">
+        <DropdownMenuContent align="start" className="ln-styled w-56">
           <FilterMenuItems filters={filters} folders={folders} tags={tags} labels={labels} {...menuProps} />
         </DropdownMenuContent>
       </DropdownMenu>
