@@ -1,6 +1,6 @@
 {
   "version": "2.0",
-  "lastUpdated": "2026-05-28T03:18:05.202Z",
+  "lastUpdated": "2026-05-28T07:42:54.196Z",
   "activeFeatures": [
     "editor",
     "wizardly-kare",
@@ -561,9 +561,9 @@
       "documents": {},
       "timestamps": {
         "started": "2026-05-28T01:21:03.270Z",
-        "lastUpdated": "2026-05-28T03:18:05.202Z"
+        "lastUpdated": "2026-05-28T07:42:54.196Z"
       },
-      "lastFile": "C:\\Users\\kwonkyunghun\\Desktop\\리니어 노트앱\\.claude\\worktrees\\epic-banzai-6629ac\\components\\linear-sidebar.tsx"
+      "lastFile": "C:\\Users\\kwonkyunghun\\Desktop\\리니어 노트앱\\.claude\\worktrees\\epic-banzai-6629ac\\components\\notes-table.tsx"
     }
   },
   "pipeline": {
@@ -574,7 +574,7 @@
   "session": {
     "startedAt": "2026-03-05T00:16:19.956Z",
     "onboardingCompleted": false,
-    "lastActivity": "2026-05-28T03:18:05.202Z"
+    "lastActivity": "2026-05-28T07:42:54.196Z"
   },
   "history": [
     {
@@ -8289,6 +8289,240 @@
     },
     {
       "timestamp": "2026-05-28T03:18:05.202Z",
+      "feature": "epic-banzai-6629ac",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-28T06:37:02.378Z",
+      "feature": "epic-banzai-6629ac",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-28T06:37:17.527Z",
+      "feature": "epic-banzai-6629ac",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-28T06:37:33.360Z",
+      "feature": "epic-banzai-6629ac",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-28T06:37:39.032Z",
+      "feature": "epic-banzai-6629ac",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-28T07:11:38.822Z",
+      "feature": "epic-banzai-6629ac",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-28T07:11:47.791Z",
+      "feature": "epic-banzai-6629ac",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-28T07:11:57.268Z",
+      "feature": "epic-banzai-6629ac",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-28T07:39:02.215Z",
+      "feature": "epic-banzai-6629ac",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-28T07:39:20.284Z",
+      "feature": "epic-banzai-6629ac",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-28T07:39:26.563Z",
+      "feature": "epic-banzai-6629ac",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-28T07:39:32.899Z",
+      "feature": "epic-banzai-6629ac",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-28T07:39:40.085Z",
+      "feature": "epic-banzai-6629ac",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-28T07:39:41.979Z",
+      "feature": "epic-banzai-6629ac",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-28T07:39:43.363Z",
+      "feature": "epic-banzai-6629ac",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-28T07:39:45.255Z",
+      "feature": "epic-banzai-6629ac",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-28T07:39:46.725Z",
+      "feature": "epic-banzai-6629ac",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-28T07:39:48.595Z",
+      "feature": "epic-banzai-6629ac",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-28T07:39:49.998Z",
+      "feature": "epic-banzai-6629ac",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-28T07:39:56.744Z",
+      "feature": "epic-banzai-6629ac",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-28T07:40:02.410Z",
+      "feature": "epic-banzai-6629ac",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-28T07:40:13.289Z",
+      "feature": "epic-banzai-6629ac",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-28T07:40:20.253Z",
+      "feature": "epic-banzai-6629ac",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-28T07:40:25.886Z",
+      "feature": "epic-banzai-6629ac",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-28T07:40:40.247Z",
+      "feature": "epic-banzai-6629ac",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-28T07:40:42.665Z",
+      "feature": "epic-banzai-6629ac",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-28T07:40:44.508Z",
+      "feature": "epic-banzai-6629ac",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-28T07:40:59.575Z",
+      "feature": "epic-banzai-6629ac",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-28T07:41:01.375Z",
+      "feature": "epic-banzai-6629ac",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-28T07:41:21.437Z",
+      "feature": "epic-banzai-6629ac",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-28T07:41:23.171Z",
+      "feature": "epic-banzai-6629ac",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-28T07:41:25.116Z",
+      "feature": "epic-banzai-6629ac",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-28T07:41:35.478Z",
+      "feature": "epic-banzai-6629ac",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-28T07:41:42.046Z",
+      "feature": "epic-banzai-6629ac",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-28T07:41:46.656Z",
+      "feature": "epic-banzai-6629ac",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-28T07:42:03.592Z",
+      "feature": "epic-banzai-6629ac",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-28T07:42:14.315Z",
+      "feature": "epic-banzai-6629ac",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-28T07:42:31.180Z",
+      "feature": "epic-banzai-6629ac",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-28T07:42:37.048Z",
+      "feature": "epic-banzai-6629ac",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-28T07:42:54.196Z",
       "feature": "epic-banzai-6629ac",
       "phase": "do",
       "action": "updated"

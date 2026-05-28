@@ -6,6 +6,7 @@ import { WikiGroupHeaderIcon } from "@/components/views/wiki-shared"
 import { shortRelative } from "@/lib/format-utils"
 import { setWikiViewMode } from "@/lib/wiki-view-mode"
 import { isWikiStub } from "@/lib/wiki-utils"
+import { useT } from "@/lib/i18n"
 import { usePlotStore } from "@/lib/store"
 import { getPlannedDateForWiki } from "@/lib/store/hook-selectors"
 import { WIKI_STATUS_HEX } from "@/lib/colors"
@@ -326,6 +327,7 @@ function ColumnHeaders({
   isPartiallySelected?: boolean
   visibleColumns?: string[]
 }) {
+  const t = useT()
   // undefined visibleColumns => all visible (backwards compat).
   const isVisible = (key: string) => !visibleColumns || visibleColumns.includes(key)
   return (
@@ -354,18 +356,18 @@ function ColumnHeaders({
         </div>
       )}
       <span className="min-w-0 flex-1 flex items-center gap-2 pr-0">
-        <span>Title</span>
+        <span>{t("display.ordering.title")}</span>
       </span>
-      {isVisible("status") && <span className="w-[72px] shrink-0 px-2">Status</span>}
-      {isVisible("tags") && <span className="w-[140px] shrink-0 px-2">Categories</span>}
-      {isVisible("aliases") && <span className="w-[140px] shrink-0 px-2">Aliases</span>}
-      {isVisible("parent") && <span className="w-[100px] shrink-0 px-1">Parent</span>}
-      {isVisible("children") && <span className="w-[56px] shrink-0 text-center">Children</span>}
-      {isVisible("links") && <span className="w-[60px] shrink-0 text-right">Links</span>}
-      {isVisible("reads") && <span className="w-[56px] shrink-0 text-right">Reads</span>}
+      {isVisible("status") && <span className="w-[72px] shrink-0 px-2">{t("column.status")}</span>}
+      {isVisible("tags") && <span className="w-[140px] shrink-0 px-2">{t("column.categories")}</span>}
+      {isVisible("aliases") && <span className="w-[140px] shrink-0 px-2">{t("column.aliases")}</span>}
+      {isVisible("parent") && <span className="w-[100px] shrink-0 px-1">{t("display.property.parent")}</span>}
+      {isVisible("children") && <span className="w-[56px] shrink-0 text-center">{t("column.children")}</span>}
+      {isVisible("links") && <span className="w-[60px] shrink-0 text-right">{t("column.links")}</span>}
+      {isVisible("reads") && <span className="w-[56px] shrink-0 text-right">{t("column.reads")}</span>}
       <span className="w-[36px] shrink-0" />
-      {isVisible("updatedAt") && <span className="w-[70px] shrink-0 text-right">Updated</span>}
-      {isVisible("createdAt") && <span className="w-[70px] shrink-0 text-right">Created</span>}
+      {isVisible("updatedAt") && <span className="w-[70px] shrink-0 text-right">{t("display.ordering.updated")}</span>}
+      {isVisible("createdAt") && <span className="w-[70px] shrink-0 text-right">{t("display.ordering.created")}</span>}
     </div>
   )
 }
@@ -705,6 +707,7 @@ export function WikiList({
   dualMode = false,
   activeArticleId,
 }: WikiListProps) {
+  const t = useT()
   const selectionActive = selectedIds ? selectedIds.size > 0 : false
 
   // Compute visible notes for the current filter (used for select-all)
@@ -805,7 +808,7 @@ export function WikiList({
 
         {/* Filter Tabs */}
         {(["all", "articles", "stubs"] as const).map((tab) => {
-          const labels: Record<string, string> = { all: "All", articles: "Articles", stubs: "Stubs" }
+          const labels: Record<string, string> = { all: t("filter.tab.all"), articles: t("filter.tab.articles"), stubs: t("filter.tab.stubs") }
           const tabCount = counts[tab as keyof typeof counts]
           return (
             <button

@@ -899,7 +899,7 @@ export function TagsView() {
               {tagNotes.length > 0 && (
                 <div>
                   <div className="flex items-center gap-2 border-b border-border-subtle bg-secondary/30 px-6 py-1.5 text-2xs font-medium uppercase tracking-wide text-muted-foreground">
-                    <span>Notes</span>
+                    <span>{t("column.notes")}</span>
                     <span className="tabular-nums">{tagNotes.length}</span>
                   </div>
                   {tagNotes.map((note) => (
@@ -1116,7 +1116,7 @@ export function TagsView() {
                     className="flex flex-1 items-center gap-1 text-left text-2xs font-medium text-muted-foreground transition-colors hover:text-foreground"
                     onClick={() => handleSortToggle("name")}
                   >
-                    Name
+                    {t("column.name")}
                     {(currentSortField === "name" || currentSortField === "title") && (
                       currentSortDir === "asc"
                         ? <ArrowUp size={12} strokeWidth={2} className="text-accent" />
@@ -1127,7 +1127,7 @@ export function TagsView() {
                     className="flex w-16 items-center justify-end gap-1 text-2xs font-medium text-muted-foreground transition-colors hover:text-foreground"
                     onClick={() => handleSortToggle("noteCount")}
                   >
-                    Notes
+                    {t("column.notes")}
                     {currentSortField === "noteCount" && (
                       currentSortDir === "desc"
                         ? <ArrowDown size={12} strokeWidth={2} className="text-accent" />

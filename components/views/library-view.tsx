@@ -197,28 +197,29 @@ function QuickFilterBar({
   activeFieldKeys: Set<string>
   toggleFieldKey: (key: string) => void
 }) {
+  const t = useT()
   return (
     <div className="flex items-center gap-1.5 px-5 py-1.5 border-b border-border-subtle">
       <QuickFilterButton
-        label="All"
+        label={t("filter.tab.all")}
         active={quickFilter === "all"}
         onClick={() => setQuickFilter("all")}
         count={totalCount}
       />
       <QuickFilterButton
-        label="Linked"
+        label={t("filter.tab.linked")}
         active={quickFilter === "linked"}
         onClick={() => setQuickFilter("linked")}
         count={linkedCount}
       />
       <QuickFilterButton
-        label="Unlinked"
+        label={t("filter.tab.unlinked")}
         active={quickFilter === "unlinked"}
         onClick={() => setQuickFilter("unlinked")}
         count={unlinkedCount}
       />
       <QuickFilterButton
-        label="Links"
+        label={t("filter.tab.links")}
         active={quickFilter === "links"}
         onClick={() => setQuickFilter("links")}
         count={linksCount}

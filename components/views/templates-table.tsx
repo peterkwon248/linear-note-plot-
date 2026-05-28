@@ -39,6 +39,7 @@ import {
 } from "lucide-react"
 import { format, formatDistanceToNow } from "date-fns"
 import { useRelativeTime } from "@/lib/i18n-date"
+import { useT } from "@/lib/i18n"
 import { cn } from "@/lib/utils"
 import type { TemplateGroup } from "@/lib/view-engine/use-templates-view"
 import type { GroupBy } from "@/lib/view-engine/types"
@@ -49,6 +50,8 @@ import type { NoteTemplate } from "@/lib/types"
 interface ColumnDef {
   id: string
   label: string
+  /** i18n key for the header; falls back to `label` when missing. */
+  labelKey?: string
   width: string
   align?: string
   /** When true, this column is always visible (cannot be toggled off). */
@@ -56,9 +59,9 @@ interface ColumnDef {
 }
 
 const COLUMN_DEFS: ColumnDef[] = [
-  { id: "title", label: "Name", width: "flex-1 min-w-0", required: true },
-  { id: "updatedAt", label: "Updated", width: "w-[90px] shrink-0", align: "text-right" },
-  { id: "createdAt", label: "Created", width: "w-[90px] shrink-0", align: "text-right" },
+  { id: "title", label: "Name", labelKey: "display.ordering.title", width: "flex-1 min-w-0", required: true },
+  { id: "updatedAt", label: "Updated", labelKey: "display.property.updated", width: "w-[90px] shrink-0", align: "text-right" },
+  { id: "createdAt", label: "Created", labelKey: "display.property.created", width: "w-[90px] shrink-0", align: "text-right" },
 ]
 
 /* ── TemplatesTable ───────────────────────────────────── */
@@ -93,6 +96,7 @@ export function TemplatesTable({
   selectedIds,
   onSelectionChange,
 }: TemplatesTableProps) {
+  const t = useT()
   const lastClickedIndexRef = useRef<number | null>(null)
 
   // ESC to clear selection
@@ -112,7 +116,7 @@ export function TemplatesTable({
     if (e.shiftKey && lastClickedIndexRef.current !== null) {
       const start = Math.min(lastClickedIndexRef.current, rowIndex)
       const end = Math.max(lastClickedIndexRef.current, rowIndex)
-      const rangeIds = flatTemplates.slice(start, end + 1).map((t) => t.id)
+      const rangeIds = flatTemplates.slice(start, end + 1).map((tmpl) => tmpl.id)
       onSelectionChange(new Set(rangeIds))
       e.preventDefault()
       return
@@ -198,7 +202,7 @@ export function TemplatesTable({
               if (allSelected) {
                 onSelectionChange(new Set())
               } else {
-                onSelectionChange(new Set(flatTemplates.map((t) => t.id)))
+                onSelectionChange(new Set(flatTemplates.map((tmpl) => tmpl.id)))
               }
             }}
           >
@@ -217,9 +221,9 @@ export function TemplatesTable({
             )}
           >
             {c.id === "title" ? (
-              <span>{c.label}</span>
+              <span>{c.labelKey ? t(c.labelKey) : c.label}</span>
             ) : (
-              c.label
+              c.labelKey ? t(c.labelKey) : c.label
             )}
           </span>
         ))}

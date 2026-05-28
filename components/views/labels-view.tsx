@@ -1106,7 +1106,7 @@ export function LabelsView() {
                         className="flex flex-1 items-center gap-1 text-left text-2xs font-medium text-muted-foreground transition-colors hover:text-foreground"
                         onClick={() => handleSortToggle("name")}
                       >
-                        Name
+                        {t("column.name")}
                         {(currentSortField === "name" || currentSortField === "title") && (
                           currentSortDir === "asc"
                             ? <ArrowUp size={12} strokeWidth={2} className="text-accent" />
@@ -1117,7 +1117,7 @@ export function LabelsView() {
                         className="flex w-16 items-center justify-end gap-1 text-2xs font-medium text-muted-foreground transition-colors hover:text-foreground"
                         onClick={() => handleSortToggle("noteCount")}
                       >
-                        Notes
+                        {t("column.notes")}
                         {currentSortField === "noteCount" && (
                           currentSortDir === "desc"
                             ? <ArrowDown size={12} strokeWidth={2} className="text-accent" />

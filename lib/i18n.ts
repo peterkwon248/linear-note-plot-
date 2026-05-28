@@ -375,6 +375,33 @@ const EN = {
   "display.property.updated": "Updated",
   "display.property.created": "Created",
 
+  // Column headers (entity list tables) — generic, shared across views.
+  // Reuse display.ordering.* / display.property.* where an equivalent exists
+  // (created/updated/parent/title); these are the columns without a prior key.
+  "column.name": "Name",
+  "column.notes": "Notes",
+  "column.wiki": "Wiki",
+  "column.books": "Books",
+  "column.items": "Items",
+  "column.fields": "Fields",
+  "column.tier": "Tier",
+  "column.articles": "Articles",
+  "column.sub": "Sub",
+  "column.aliases": "Aliases",
+  "column.status": "Status",
+  "column.links": "Links",
+  "column.reads": "Reads",
+  "column.categories": "Categories",
+  "column.children": "Children",
+
+  // Filter tabs (entity list quick filters)
+  "filter.tab.all": "All",
+  "filter.tab.linked": "Linked",
+  "filter.tab.unlinked": "Unlinked",
+  "filter.tab.links": "Links",
+  "filter.tab.articles": "Articles",
+  "filter.tab.stubs": "Stubs",
+
   // Global top bar
   "topbar.recently_viewed.aria": "Recently viewed",
   "topbar.recently_viewed.title": "Recently viewed",
@@ -1302,6 +1329,31 @@ const KO: Partial<Record<DictKey, string>> = {
   "display.property.words": "단어수",
   "display.property.updated": "수정일",
   "display.property.created": "생성일",
+
+  // Column headers (entity list tables)
+  "column.name": "이름",
+  "column.notes": "노트",
+  "column.wiki": "위키",
+  "column.books": "책",
+  "column.items": "항목",
+  "column.fields": "필드",
+  "column.tier": "단계",
+  "column.articles": "아티클",
+  "column.sub": "하위",
+  "column.aliases": "별칭",
+  "column.status": "상태",
+  "column.links": "링크",
+  "column.reads": "조회",
+  "column.categories": "카테고리",
+  "column.children": "하위",
+
+  // Filter tabs (entity list quick filters)
+  "filter.tab.all": "전체",
+  "filter.tab.linked": "연결됨",
+  "filter.tab.unlinked": "미연결",
+  "filter.tab.links": "링크",
+  "filter.tab.articles": "아티클",
+  "filter.tab.stubs": "스텁",
 
   // Global top bar
   "topbar.recently_viewed.aria": "최근 본 항목",

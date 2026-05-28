@@ -142,7 +142,7 @@ const COLUMN_DEFS: { id: string; label: string; labelKey?: string; width: string
   { id: "parent", label: "Parent", labelKey: "display.property.parent", width: "w-[100px] shrink-0", align: "text-center", minWidth: 700 },
   { id: "children", label: "Children", labelKey: "display.property.children", width: "w-[72px] shrink-0", align: "text-center", minWidth: 700 },
   { id: "links", label: "Backlinks", labelKey: "display.property.backlinks", width: "w-[72px] shrink-0", align: "text-center", sortField: "links", minWidth: 600 },
-  { id: "reads", label: "Reads", width: "w-[72px] shrink-0", align: "text-center", sortField: "reads", minWidth: 720 },
+  { id: "reads", label: "Reads", labelKey: "column.reads", width: "w-[72px] shrink-0", align: "text-center", sortField: "reads", minWidth: 720 },
   { id: "wordCount", label: "Words", labelKey: "display.property.words", width: "w-[72px] shrink-0", align: "text-right", sortField: "reads", minWidth: 760 },
   { id: "updatedAt", label: "Updated", labelKey: "display.property.updated", width: "w-[80px] shrink-0", align: "text-right", sortField: "updatedAt", minWidth: 280 },
   { id: "createdAt", label: "Created", labelKey: "display.property.created", width: "w-[80px] shrink-0", align: "text-right", sortField: "createdAt", minWidth: 800 },
