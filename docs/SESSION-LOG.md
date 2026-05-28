@@ -6,6 +6,92 @@
 
 ---
 
+## 2026-05-28 (오후) — 집 (Windows), **사이드바 책 BookKindIcon 정합 + Wiki More section (1 PR) + entity 정합 brainstorm 대량**
+
+> 🎯 **다음 즉시 액션 hook (우선순위 순)**:
+> 1. **Entity Insights 정보 아키텍처 통일 PRD** ⭐ — 핵심 발견: Insights 위치가 entity마다 제각각. **Notes**=별도 `/insights` 페이지(`insights-view.tsx`, activity stats + analysis orphans/issues + MiniBarChart), **Wiki**=Dashboard 임베드(`wiki-dashboard.tsx:262` `WikiInsightsChart` Growth/Connectivity + Day/Week/Month), **Books**=없음, **Ontology**=top-level 탭(Power Sabermetrics 전체). → **"별도 page vs dashboard 임베드" 위치 통일 결정** 필요 (영구 룰 #140 = Ontology 전체/entity 세부 중복 회피). `bkit:pdca plan` + `oh-my-claudecode:planner`(Opus)로 설계.
+> 2. **Books More section 신설** — Insights(페이지 신설 전제) + **Smart Book Preset**(= Templates의 Books 대응, `smart-book-prd.md:601` v2 미구현, ROI 검토 — book 생성 빈도 낮아 과거 사용자 "확신 안 듦"). 사용자 논리: "다른 애들 템플릿이 북에서는 스마트북". 단 Smart Book은 page 없는 book 속성이라 → Preset 기능(source 조합 청사진)이 진짜 대응.
+> 3. **Book 폴더 Phase 2** — 데이터 Phase 1 완료(`Folder.kind="note"|"wiki"|"book"` types.ts:666 + `Book.folderIds` + v149), **UI 미구현**. `createFolder`가 아직 "book" kind 안 받음(`folders.ts:18` note|wiki만), 사이드바 Books Folders section 없음(`newFolderKind` state도 note|wiki), `folder/[id]/page.tsx` book branch 빈 페이지. #145 carry.
+> 4. **(carry)** Wiki `← Overview` → breadcrumb 마이그(직전 오전 세션 P0 #0, 이번 세션 미진행) + Phase 3.1 `/preview/linear` reference + Phase 4 filter-bar Linear 마이그(여기서 **Note source 필터 정리** 같이 — 이번 세션 defer 결정).
+> 5. **(carry)** Category/Label 필터 노출 비대칭 — 데이터는 글로벌(Note/Wiki/Book 모두 `categoryIds`/`labelId` + Library hub `/library/categories|labels`), UI 필터는 비대칭(Category 필터=Wiki만, Label 필터=Wiki 제외). 의도(gentle by default) vs 부채 결정.
+>
+> **사용자 의도** (이번 세션 인용):
+> - "책의 아이콘은 액티비티 바의 위키 아이콘을 그대로 쓰지? 브레인스토밍해야겠는데?"
+> - "위키는 아티클과 스터브 아이콘으로 핀드... 왜 북스는 카인드로 안 되지?"
+> - "위키랑 북스 모두에 노트처럼 more를 신설하고 템플릿이랑 인사이트 등을"
+> - "북 More에 인사이트랑 스마트북... 다른 애들의 템플릿이 북에서는 스마트북"
+> - "위키의 모어에도 인사이트가 들어가야겠는걸?"
+>
+> **이번 세션 변경 (1 PR, `components/linear-sidebar.tsx` 1 파일, +20/-26 근처)**:
+> 1. **Books 사이드바** pinned/recent 책 = `<BookKindIcon kind={getBookKind(book)} size={14} />` (Smart⚡violet #5E6AD2 / Manual✏️muted / Hybrid✨amber). 이전엔 BookOpen(Wiki와 동일 아이콘) = 부채였음.
+> 2. **Home/Calendar mixed pinned list** 책도 BookKindIcon — `HomePinnedItem` type에 `bookKind: ReturnType<typeof getBookKind>` 추가 + homePinnedItems 생성 시 `getBookKind(b)` 주입 + render 2곳(line 1308/1815).
+> 3. **Wiki More Section 신설** — Templates를 top div(Overview/Merge/Split 묶음)에서 떼서 별도 `<Section title="More">`로 (Notes 정합 Folders→More→Recent).
+> 4. import: +`BookKindIcon`(property-chips) +`getBookKind`(use-books-view), -`Book`(unused). `BookOpen`은 Wiki Overview NavLink(line 1027)만 유지 (펼친책=Wiki metaphor).
+>
+> **첫 스텝 (다음 세션 Entity Insights PRD)**:
+> 1. `components/insights-view.tsx` read — Notes Insights 실제 내용(StatCard + MiniBarChart + runAnalysis)
+> 2. `components/views/wiki-dashboard.tsx` + `wiki-editor/wiki-insights-chart.tsx` read — Wiki insights 재료(Growth/Connectivity 차트, 이미 존재)
+> 3. 정보 아키텍처 결정: entity Insights 위치 통일(별도 page A안 / dashboard 임베드 C안) + Ontology(전체) vs entity(세부) 역할 분리
+> 4. Books Insights 신설 내용 정의 (reading progress? coverage? smart source health?)
+> 5. `.omc/plans/entity-insights-coherence-prd.md` 작성 → critic 검토
+>
+> **검증**: `tsc --noEmit` exit 0 + 라이트모드 preview MCP (Books/Wiki/Home 사이드바 — kind icon + Wiki More section 동작 확인)
+>
+> **머신**: 집 (Windows)
+> **branch worktree**: claude/epic-banzai-6629ac
+
+### 완료
+
+**1. Books 사이드바 책 = BookKindIcon (kind 분기) — 1년 차 부채 정정**
+- 사용자 지적: "책 아이콘이 액티비티 바 위키 아이콘(BookOpen)을 그대로 쓴다" → 정확. linear-sidebar 책 항목이 BookOpen이라 Wiki 정체성과 충돌.
+- 진단: BookKindIcon(`property-chips.tsx:615`)은 모든 Books surface(grid-card/list-row/board/table/breadcrumb/detail-panel)의 시각 정체성인데 **사이드바만 누락**. Book.coverEmoji 폐기 코멘트(types.ts:202)도 "BookKindIcon이 cover 책임" 명시.
+- Fix: Books 사이드바 pinned/recent(2곳) + Home/Calendar mixed list(2곳) 모두 BookKindIcon. Notes(StatusShapeIcon)/Wiki(IconWikiStub/Article) 사이드바 아이콘 패턴 정합. metaphor: 펼친책(BookOpen)=Wiki Overview만 유지.
+
+**2. Wiki More Section 신설 (Templates 이동)**
+- 사용자 지적: "위키랑 북스도 노트처럼 More 신설" → Wiki Templates가 top div(Overview 묶음)에 어색하게 있었음.
+- Fix: 별도 `<Section title="More">`로 분리 (Notes 정합 Folders→More→Recent). Books More는 Templates 폐기로 보류(빈 통 회피).
+
+### 브레인스토밍 & 큰 결정 (영구 LOCKED 후보 #166~#168)
+
+**#166 (vision) 사이드바 entity 항목 = entity 내부 상태/kind icon 의무**:
+- Notes=status(stone/brick/keystone) / Wiki=stub-article / Books=kind(smart/manual/hybrid). `BookKindIcon` = 모든 surface(사이드바 포함) single source. mixed list(Home/Calendar)도 동일 적용.
+
+**#167 (vision) 사이드바 More section 통일**:
+- Notes/Wiki = Pinned→Views→Folders→More→Recent. Books는 Templates 폐기(Smart Book 대체)로 More 보류 — Insights 페이지 신설 시 부활.
+
+**#168 (vision) Entity Insights 정보 아키텍처 비대칭 = 다음 PRD 핵심**:
+- Insights 위치 entity마다 다름(Notes=별도 page / Wiki=dashboard 임베드 / Books=없음 / Ontology=top-level). 위치 통일 필요. 영구 룰 #140(Ontology 전체/entity 세부) 기준.
+- Smart Book = Templates의 Books 대응이지만 형태 다름(page 없는 book 속성) → Smart Book Preset(v2)이 진짜 대응. ROI 검토(book 생성 빈도).
+
+**(조사 결과) Note/Wiki "source" 개념**:
+- `NoteSource`(manual/webclip/import/share/api)는 존재하나 **거의 dead** — helpers.ts default "manual", webclip/import/share/api set 경로 없음(Web Clipper 미구현). 필터 5옵션 중 4개 항상 0건.
+- WikiArticle엔 source 필드 **없음** (사용자가 본 "위키 source"는 착각/다른 필터).
+- Web Clipper = 익스텐션/북마클릿/공유시트/이메일 등 여러 방식, source 필드 **필수 아님**(분류 라벨). Plot은 PWA Share Target으로 익스텐션 없이 가능.
+- 결정: source 필터 정리 = 옵션 1(필터 숨김+필드 keep) 합의했으나 filter-bar.tsx가 Book kind와 group 공유(`kind/sourceType→"source"`) + Phase 4 Linear 마이그 대상 → **Phase 4 defer**.
+
+### 기술 학습 (영구)
+- **BookKindIcon = derived(getBookKind), Book.kind 필드 없음**: smartSources/items 유무로 smart/manual/hybrid 계산. 사이드바도 getBookKind(book) 호출.
+- **HomePinnedItem mixed type에 entity별 메타 주입**: note=status, wiki=isStub, book=bookKind. cross-entity pinned list 패턴.
+- **filter-bar "source" FilterGroup = {Note.source + Book.kind + Book.sourceType}**: group 통째 제거 시 Books 필터 깨짐. group 공유 주의.
+- **Wiki insights 재료 이미 존재**(WikiInsightsChart Growth/Connectivity)지만 wiki-dashboard 임베드 — 별도 page 아님. entity Insights 위치 비대칭 근원.
+
+### Watch Out (다음 세션)
+- **Entity Insights 위치 통일이 PRD 핵심** — 별도 page(Notes) vs dashboard 임베드(Wiki) 중 택1. Wiki를 page로 분리하면 Dashboard 허전 → Dashboard 재구성 동반.
+- **Smart Book Preset ROI 불확실** — book 생성 빈도 낮음. 사용자 과거 "북 템플릿 확신 안 듦".
+- **Book 폴더 Phase 2 = createFolder signature 확장 필요** (note|wiki → +book) + 사이드바 Folders section + folder/[id] page book branch + book-folder-picker.
+- **Category/Label 필터 비대칭** — 데이터 글로벌인데 필터 노출만 entity별. 의도 vs 부채.
+- **source 정리는 Phase 4 filter-bar 마이그에서** — 지금 건드리면 Book kind group 공유 + 재작업.
+
+### 환경 변경
+- Store version: v149 (변경 없음)
+- Tests: tsc --noEmit pass (exit 0)
+- 신규 파일: 없음 (linear-sidebar.tsx 1 파일 수정)
+
+### 머신
+집 (Windows)
+
+---
+
 ## 2026-05-28 (오전) — 집 (Windows), **Chrome icon 굵기/선명 + chip strip 시인성 + Books table notes/wiki parity 부채 정정 (1 PR)**
 
 > 🎯 **다음 즉시 액션 hook (우선순위 순)**:

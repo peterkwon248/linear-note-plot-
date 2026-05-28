@@ -8,6 +8,43 @@
 
 ---
 
+## 🚀 2026-05-28 (오후) — 사이드바 책 BookKindIcon 정합 + Wiki More section (1 PR) + entity 정합 brainstorm ⭐⭐⭐
+
+**범위**: 사이드바 정합 세션. Books 책 아이콘 부채(BookOpen=Wiki와 동일) 정정 + Wiki More section + entity Insights/Smart Book/Book폴더 정합 brainstorm 대량. `components/linear-sidebar.tsx` 1 파일.
+
+### 머지된 PR (이번 세션, 1 통합)
+- **PR (이)** — 사이드바 책 BookKindIcon 정합 + Wiki More:
+  - Books 사이드바 pinned/recent + Home/Calendar mixed list 책 = `BookKindIcon` (Smart⚡violet/Manual✏️muted/Hybrid✨amber) — Notes(status)/Wiki(stub-article) 사이드바 패턴 정합
+  - `HomePinnedItem`에 `bookKind` 필드 추가 (getBookKind 주입)
+  - Wiki More Section 신설 (Templates 이동, Notes 정합 Folders→More→Recent)
+  - `Book` import 제거, `BookOpen`은 Wiki Overview NavLink만 (펼친책=Wiki metaphor)
+
+### 큰 결정 (영구 LOCKED 후보 #166~#168)
+- **#166 (vision)** 사이드바 entity 항목 = 내부 상태/kind icon 의무. `BookKindIcon` = 모든 surface(사이드바 포함) single source. mixed list도 동일.
+- **#167 (vision)** 사이드바 More section 통일 (Notes/Wiki = Pinned→Views→Folders→More→Recent). Books는 Templates 폐기(Smart Book 대체)로 More 보류 — Insights 신설 시 부활.
+- **#168 (vision)** Entity Insights 정보 아키텍처 비대칭 = 다음 PRD 핵심. Notes=별도 `/insights` page / Wiki=dashboard 임베드(WikiInsightsChart) / Books=없음 / Ontology=top-level. 위치 통일 필요 (영구 룰 #140 Ontology 전체/entity 세부).
+
+### 조사 결과
+- **NoteSource**(manual/webclip/import/share/api) 거의 dead (Web Clipper 미구현, helpers.ts default "manual"). WikiArticle엔 source 필드 없음. Web Clipper도 source 필수 아님(분류 라벨). → 옵션 1(필터 숨김) 합의했으나 filter-bar가 Book kind와 group 공유 + Phase 4 마이그 대상 → **Phase 4 defer**.
+- **Smart Book** = Templates의 Books 대응이나 형태 다름(page 없는 book 속성). Smart Book Preset(smart-book-prd.md:601, v2 미구현)이 진짜 대응. ROI 검토(book 생성 빈도 낮음).
+- **Book 폴더**: 데이터 Phase 1 완료(`Folder.kind="book"` + Book.folderIds + v149), UI Phase 2 미구현 (createFolder note|wiki만, 사이드바 section 없음, folder page book branch 빈).
+- **Category/Label**: 데이터 글로벌(Note/Wiki/Book 모두 categoryIds/labelId + Library hub), 필터 UI 비대칭(Category=Wiki만, Label=Wiki 제외).
+
+### 다음 우선순위 (P0, 재정렬)
+1. **🔴 P0 #0**: Entity Insights 정보 아키텍처 통일 PRD (위치 통일 + Books More + Smart Book Preset) ⭐ 다음 세션 첫 작업
+2. **🔴 P0 #1**: Book 폴더 Phase 2 (createFolder +"book" + 사이드바 Folders section + folder/[id] page book branch + book-folder-picker)
+3. **🟡 P0 #2 (carry)**: Wiki `← Overview` → breadcrumb 마이그 (직전 오전 P0 #0, 이번 미진행)
+4. **🟡 P0 #3 (carry)**: Phase 3.1 `/preview/linear` reference + Phase 4 filter-bar Linear 마이그(= source 정리)
+5. **🟢 P0 #4 (carry)**: Category/Label 필터 비대칭 (의도 vs 부채)
+
+### 기술 학습 (영구)
+- **BookKindIcon = derived(getBookKind), Book.kind 필드 없음**: smartSources/items 유무로 smart/manual/hybrid 계산. 사이드바도 getBookKind(book) 호출.
+- **filter-bar "source" FilterGroup = {Note.source + Book.kind + Book.sourceType}** 공유 — group 통째 제거 시 Books 필터 깨짐.
+- **Wiki insights 재료(WikiInsightsChart Growth/Connectivity) 이미 존재**, wiki-dashboard 임베드 — 별도 page 아님. entity Insights 위치 비대칭 근원.
+- **HomePinnedItem mixed type에 entity별 메타 주입**: note=status, wiki=isStub, book=bookKind.
+
+---
+
 ## 🚀 2026-05-28 (오전) — Chrome icon 굵기/선명 + chip strip 시인성 + Books table notes/wiki parity 부채 정정 (1 통합 PR) ⭐⭐⭐
 
 **범위**: 사용자 시각 polish 세션. 라이트 모드 시인성 강화 + Books entity의 1년 차 parity 부채 정정. 5 파일 +40/-26.

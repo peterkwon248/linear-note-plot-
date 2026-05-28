@@ -68,6 +68,8 @@ import { useInbox } from "@/lib/hooks/use-inbox"
 type PanelContent = Record<string, unknown>
 import { setViewDragData, setNoteDragData } from "@/lib/drag-helpers"
 import { StatusShapeIcon } from "@/components/status-icon"
+import { BookKindIcon } from "@/components/property-chips"
+import { getBookKind } from "@/lib/view-engine/use-books-view"
 import { ColorPickerGrid } from "@/components/color-picker-grid"
 import {
   ContextMenu,
@@ -500,7 +502,7 @@ export function LinearSidebar() {
   type HomePinnedItem =
     | { kind: "note"; id: string; title: string; status: NoteStatus }
     | { kind: "wiki"; id: string; title: string; isStub: boolean }
-    | { kind: "book"; id: string; title: string; itemCount: number }
+    | { kind: "book"; id: string; title: string; itemCount: number; bookKind: ReturnType<typeof getBookKind> }
 
   const homePinnedItems = useMemo<HomePinnedItem[]>(() => {
     const noteItems: HomePinnedItem[] = pinnedNotes.map((n) => ({
@@ -522,6 +524,7 @@ export function LinearSidebar() {
         id: b.id,
         title: b.title || "Untitled book",
         itemCount: b.items.length,
+        bookKind: getBookKind(b),
       }))
     return [...noteItems, ...wikiItems, ...bookItems]
   }, [pinnedNotes, pinnedWikiArticles, books])
@@ -1058,23 +1061,6 @@ export function LinearSidebar() {
                 </span>
                 <span className="truncate text-left flex-1">{t("wiki.split")}</span>
               </button>
-              {/* 2026-05-18 — Wiki Templates entry (Notes Templates 정합).
-                  Wiki article recipe — Concept/Person/Place 등 pre-seeded
-                  blocks+infobox. 생성 picker + slash insert 둘 다 지원. */}
-              <NavLink
-                href="/wiki/templates"
-                icon={<IconTemplate size={20} />}
-                label={t("sidebar.templates")}
-                count={wikiTemplates.filter((t) => !t.trashed).length}
-                active={isActive("/wiki/templates")}
-                dragContent={{ type: "wiki-templates" } as any}
-              />
-              {/* 2026-05-17 — Categories는 Library hub로 이동 (cross-entity
-                  분류 메커니즘 정합). 단 Categories 화면 자체는 여전히
-                  Wiki page + categoryView mode (길 A — 본격 분리는 별도 PR).
-                  Library 사이드바의 Categories entry가 이 페이지로 navigate. */}
-              {/* Stickers entry lives only in Library (33 design
-                  decisions #8 — cross-cutting index). */}
             </div>
 
             {/* Pinned wiki articles — placed at top per Linear/Notion 표준 (2026-05-24).
@@ -1230,6 +1216,22 @@ export function LinearSidebar() {
               )}
             </Section>
 
+            {/* More section: Templates (Notes/Books 사이드바 정합 — 2026-05-28).
+                Wiki article recipe — Concept/Person/Place 등 pre-seeded
+                blocks+infobox. Categories/Stickers는 Library hub로 이동
+                (cross-entity 분류 메커니즘 정합). Insights는 Ontology에
+                통합 (영구 룰 #140 — 각 entity 세부 Insights 페이지는 carry). */}
+            <Section title={t("sidebar.section.more")}>
+              <NavLink
+                href="/wiki/templates"
+                icon={<IconTemplate size={20} />}
+                label={t("sidebar.templates")}
+                count={wikiTemplates.filter((t) => !t.trashed).length}
+                active={isActive("/wiki/templates")}
+                dragContent={{ type: "wiki-templates" } as any}
+              />
+            </Section>
+
             {/* Recent wiki articles */}
             {(() => {
               const recentWiki = recentNotes.filter((item) => {
@@ -1304,7 +1306,7 @@ export function LinearSidebar() {
                           <IconWikiArticle size={14} style={{ color: WIKI_STATUS_HEX.article }} />
                         )
                       ) : (
-                        <BookOpen size={14} style={{ color: "var(--space-books)" }} />
+                        <BookKindIcon kind={item.bookKind} size={14} />
                       )}
                     </span>
                     <span className="truncate text-left flex-1">{item.title}</span>
@@ -1700,7 +1702,7 @@ export function LinearSidebar() {
                         data-active={activeRoute === href ? "true" : undefined}
                       >
                         <span className="flex shrink-0 items-center justify-center w-5 h-5">
-                          <BookOpen size={14} />
+                          <BookKindIcon kind={getBookKind(book)} size={14} />
                         </span>
                         <span className="truncate text-left flex-1">{book.title || "Untitled"}</span>
                         <span className="a-sb-link__count tabular-nums">
@@ -1739,7 +1741,7 @@ export function LinearSidebar() {
                         data-active={activeRoute === href ? "true" : undefined}
                       >
                         <span className="flex shrink-0 items-center justify-center w-5 h-5">
-                          <BookOpen size={14} />
+                          <BookKindIcon kind={getBookKind(book)} size={14} />
                         </span>
                         <span className="truncate text-left flex-1">{book.title || "Untitled"}</span>
                         <span className="a-sb-link__count tabular-nums">
@@ -1811,7 +1813,7 @@ export function LinearSidebar() {
                           <IconWikiArticle size={14} style={{ color: WIKI_STATUS_HEX.article }} />
                         )
                       ) : (
-                        <BookOpen size={14} style={{ color: "var(--space-books)" }} />
+                        <BookKindIcon kind={item.bookKind} size={14} />
                       )}
                     </span>
                     <span className="truncate text-left flex-1">{item.title}</span>

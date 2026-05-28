@@ -3,13 +3,48 @@
 > 우선순위 기반 작업 목록. **P0 = 다음 세션 즉시 시작점** (NEXT-ACTION.md 폐지, 2026-05-12).
 > 완료 항목은 즉시 삭제. 자세한 history는 SESSION-LOG.md + MEMORY.md.
 
-**마지막 갱신**: 2026-05-28 (오전) — Chrome icon 굵기/선명 + chip strip 시인성 + Books table notes/wiki parity 부채 정정 (1 통합 PR, 5 파일 +40/-26). 다음 P0 #0 = **Wiki `← Overview` 폐기 → breadcrumb 패턴 마이그 (1년 차 정합성 부채)**.
+**마지막 갱신**: 2026-05-28 (오후) — 사이드바 책 BookKindIcon 정합 + Wiki More section (1 PR, linear-sidebar.tsx). 다음 P0 #0 = **Entity Insights 정보 아키텍처 통일 PRD** (Notes=별도 page / Wiki=dashboard 임베드 / Books=없음 / Ontology=top-level → 위치 통일 + Books More + Smart Book Preset).
 
 ---
 
-## 🟣 P0 — 즉시 (cross-machine 진입점, 2026-05-28 오전 세션 후 — Wiki breadcrumb 마이그 최우선)
+## 🟣 P0 — 즉시 (cross-machine 진입점, 2026-05-28 오후 세션 후 — Entity Insights 통일 PRD 최우선)
 
-### -2. **🔴 P0 #0 (이번 세션 결과): Wiki `← Overview` 폐기 → breadcrumb 패턴 마이그** ⭐ 다음 세션 첫 작업 (1년 차 정합성 부채)
+### -4. **🔴 P0 #0 (이번 세션 결과): Entity Insights 정보 아키텍처 통일 PRD** ⭐ 다음 세션 첫 작업
+
+**사용자 의도** (2026-05-28 오후):
+> "위키랑 북스 모두에 노트처럼 more를 신설하고 템플릿이랑 인사이트 등을" + "북 More에 인사이트랑 스마트북" + "위키의 모어에도 인사이트가 들어가야겠는걸?"
+
+**핵심 발견** — Insights 위치가 entity마다 제각각:
+- **Notes**: 별도 `/insights` 페이지 (`insights-view.tsx` — activity stats + analysis orphans/issues + MiniBarChart)
+- **Wiki**: Dashboard 임베드 (`wiki-dashboard.tsx:262` `WikiInsightsChart` Growth/Connectivity)
+- **Books**: 없음
+- **Ontology**: top-level 탭 (Power Sabermetrics 전체)
+
+**첫 스텝** (`bkit:pdca plan` + `oh-my-claudecode:planner`):
+1. `components/insights-view.tsx` read (Notes Insights 실체)
+2. `components/views/wiki-dashboard.tsx` + `wiki-editor/wiki-insights-chart.tsx` read (Wiki 재료 = Growth/Connectivity, 이미 존재)
+3. 정보 아키텍처 결정: 위치 통일 (별도 page A안 / dashboard 임베드 C안) + Ontology(전체) vs entity(세부) 역할 분리 (#140)
+4. Books Insights 내용 정의 (reading progress / coverage / smart source health?)
+5. Books More section 신설 = Insights + **Smart Book Preset** (= Templates의 Books 대응. `smart-book-prd.md:601` v2 미구현. ROI 검토 — book 생성 빈도 낮음, 사용자 과거 "확신 안 듦")
+6. `.omc/plans/entity-insights-coherence-prd.md` 작성 → critic 검토
+
+**위험**:
+- Wiki를 별도 page로 분리하면 Dashboard 허전해짐 → Dashboard 재구성 동반
+- Smart Book Preset ROI 불확실 (book 적게 생성). preset = source 조합 청사진 ("inbox 노트", "최근 7일 위키")
+- Ontology Insights(전체)와 entity Insights(세부) 중복 회피
+
+### -3. **🔴 P0 #1 (이번 세션 결과): Book 폴더 Phase 2 UI**
+
+**상태**: 데이터 Phase 1 완료(PR #472, v149) — `Folder.kind="note"|"wiki"|"book"`(types.ts:666) + `Book.folderIds`(types.ts:244) + migration. **UI 미구현**.
+
+**미구현 항목** (#145):
+- `createFolder` signature 확장: `folders.ts:18` 현재 `kind: "note" | "wiki"` → +"book"
+- 사이드바 Books Folders section (`newFolderKind` state도 note|wiki → +book)
+- `app/(app)/folder/[id]/page.tsx` book branch (현재 빈 페이지)
+- book-folder-picker 컴포넌트
+- smartSources resolver book folder kind
+
+### -2. **🟡 P0 #2 (carry, 직전 오전 P0 #0 미진행): Wiki `← Overview` 폐기 → breadcrumb 패턴 마이그** (1년 차 정합성 부채)
 
 **사용자 의도** (2026-05-28 오전):
 > "위키와 라이브러리 모두 오버뷰가 있는데, ←오버뷰 버튼은 위키에만 있거든? 노트나 라이브러리처럼 바꾸는 거에 대해 어떻게 생각해? 브레인스토밍해볼까."

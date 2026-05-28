@@ -1,6 +1,6 @@
 {
   "version": "2.0",
-  "lastUpdated": "2026-05-22T08:37:22.047Z",
+  "lastUpdated": "2026-05-28T03:18:05.202Z",
   "activeFeatures": [
     "editor",
     "wizardly-kare",
@@ -40,7 +40,8 @@
     "library",
     "romantic-herschel-103d20",
     "stupefied-rosalind-ee038e",
-    "wiki-timeline"
+    "wiki-timeline",
+    "epic-banzai-6629ac"
   ],
   "primaryFeature": "editor",
   "features": {
@@ -550,6 +551,19 @@
         "lastUpdated": "2026-05-22T08:37:05.759Z"
       },
       "lastFile": "C:\\Users\\kwonkyunghun\\Desktop\\리니어 노트앱\\.claude\\worktrees\\stupefied-rosalind-ee038e\\components\\views\\wiki-timeline\\wiki-timeline-config.ts"
+    },
+    "epic-banzai-6629ac": {
+      "phase": "do",
+      "phaseNumber": 3,
+      "matchRate": null,
+      "iterationCount": 0,
+      "requirements": [],
+      "documents": {},
+      "timestamps": {
+        "started": "2026-05-28T01:21:03.270Z",
+        "lastUpdated": "2026-05-28T03:18:05.202Z"
+      },
+      "lastFile": "C:\\Users\\kwonkyunghun\\Desktop\\리니어 노트앱\\.claude\\worktrees\\epic-banzai-6629ac\\components\\linear-sidebar.tsx"
     }
   },
   "pipeline": {
@@ -560,7 +574,7 @@
   "session": {
     "startedAt": "2026-03-05T00:16:19.956Z",
     "onboardingCompleted": false,
-    "lastActivity": "2026-05-22T08:37:22.047Z"
+    "lastActivity": "2026-05-28T03:18:05.202Z"
   },
   "history": [
     {
@@ -8210,6 +8224,72 @@
     {
       "timestamp": "2026-05-22T08:37:22.047Z",
       "feature": "stupefied-rosalind-ee038e",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-28T01:21:03.270Z",
+      "feature": "epic-banzai-6629ac",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-28T01:21:13.775Z",
+      "feature": "epic-banzai-6629ac",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-28T01:21:16.004Z",
+      "feature": "epic-banzai-6629ac",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-28T02:36:36.982Z",
+      "feature": "epic-banzai-6629ac",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-28T02:36:41.370Z",
+      "feature": "epic-banzai-6629ac",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-28T02:37:05.277Z",
+      "feature": "epic-banzai-6629ac",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-28T02:37:09.054Z",
+      "feature": "epic-banzai-6629ac",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-28T03:17:59.690Z",
+      "feature": "epic-banzai-6629ac",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-28T03:18:02.529Z",
+      "feature": "epic-banzai-6629ac",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-28T03:18:03.939Z",
+      "feature": "epic-banzai-6629ac",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-28T03:18:05.202Z",
+      "feature": "epic-banzai-6629ac",
       "phase": "do",
       "action": "updated"
     }
