@@ -269,6 +269,10 @@ interface WikiListProps {
   categoryFilterLabel?: string | null
   onClearCategoryFilter?: () => void
 
+  // A+ folder filter (sidebar wiki folder → scoped list)
+  folderFilterLabel?: string | null
+  onClearFolderFilter?: () => void
+
   // Red links
   redLinks: { title: string; refCount: number }[]
   onCreateFromRedLink: (title: string) => void
@@ -682,6 +686,8 @@ export function WikiList({
   setDashFilter,
   categoryFilterLabel,
   onClearCategoryFilter,
+  folderFilterLabel,
+  onClearFolderFilter,
   onOpenArticle,
   onMergeArticle,
   onShowConnectedArticle,
@@ -797,7 +803,7 @@ export function WikiList({
       <div className="flex shrink-0 items-center gap-2 border-b border-border px-5 py-2">
         {/* Back to Overview */}
         <button
-          onClick={() => { setWikiViewMode("dashboard"); onClearCategoryFilter?.() }}
+          onClick={() => { setWikiViewMode("dashboard"); onClearCategoryFilter?.(); onClearFolderFilter?.() }}
           className="flex items-center gap-1 text-note text-muted-foreground hover:text-foreground transition-colors duration-100 mr-1"
         >
           <ArrowLeft size={12} strokeWidth={2} />
@@ -834,6 +840,24 @@ export function WikiList({
             </button>
           )
         })}
+
+        {/* A+ folder filter badge — mirrors the category badge, FolderOpen icon
+            distinguishes "where" (folder) from "what" (category). */}
+        {folderFilterLabel && (
+          <>
+            <span className="h-4 w-px bg-border/50" />
+            <span className="flex items-center gap-1 rounded-md bg-accent/10 px-2 py-1 text-2xs font-medium text-accent">
+              <FolderOpen size={11} strokeWidth={2} />
+              {folderFilterLabel}
+              <button
+                onClick={onClearFolderFilter}
+                className="ml-0.5 rounded-sm p-0.5 hover:bg-accent/20 transition-colors duration-100"
+              >
+                <PhX size={10} strokeWidth={2} />
+              </button>
+            </span>
+          </>
+        )}
 
         {/* Category filter badge */}
         {categoryFilterLabel && (

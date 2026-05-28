@@ -278,7 +278,7 @@ function applyBookGrouping(
  * `contextKey` is locked to "books" — passing explicitly keeps the call
  * site consistent with useNotesView/useTemplatesView/useTagsView.
  */
-export function useBooksView(contextKey: ViewContextKey = "books"): UseBooksViewResult {
+export function useBooksView(contextKey: ViewContextKey = "books", folderId?: string): UseBooksViewResult {
   const books = usePlotStore((s) => s.books) as Book[]
   const viewState = usePlotStore((s) => s.viewStateByContext[contextKey]) ?? buildViewStateForContext(contextKey)
   const searchQuery = usePlotStore((s) => s.searchQuery)
@@ -293,12 +293,23 @@ export function useBooksView(contextKey: ViewContextKey = "books"): UseBooksView
     () => (showTrashed ? books : books.filter((b) => !b.trashed)),
     [books, showTrashed],
   )
-  const totalCount = visible.length
+
+  // Stage 0.5: folder scope (A+ folder=filter model). When a book folder is
+  // active in the sidebar, /books renders the full-width table scoped to that
+  // folder's members — mirrors useNotesView extras.folderId. The folder is a
+  // membership context layered on top of the "books" viewState (no context
+  // switch, so the books folder view never collides with the notes "folder"
+  // context's persisted viewState).
+  const scoped = useMemo(
+    () => (folderId ? visible.filter((b) => b.folderIds.includes(folderId)) : visible),
+    [visible, folderId],
+  )
+  const totalCount = scoped.length
 
   // Stage 1: user filters
   const filtered = useMemo(
-    () => applyBookFilters(visible, viewState.filters),
-    [visible, viewState.filters],
+    () => applyBookFilters(scoped, viewState.filters),
+    [scoped, viewState.filters],
   )
 
   // Stage 2: search

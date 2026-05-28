@@ -50,7 +50,7 @@ import {
 } from "@/components/ui/dialog"
 import { cn } from "@/lib/utils"
 import { usePlotStore } from "@/lib/store"
-import { setActiveRoute, getSecondarySpace, setSecondarySpace, getActiveSpace, useActiveViewId } from "@/lib/table-route"
+import { setActiveRoute, setActiveFolderId, useActiveFolderId, getSecondarySpace, setSecondarySpace, getActiveSpace, useActiveViewId } from "@/lib/table-route"
 import { usePane } from "@/components/workspace/pane-context"
 import { useWikiViewMode, setWikiViewMode, setPendingMergeIds } from "@/lib/wiki-view-mode"
 import { ViewHeader } from "@/components/view-header"
@@ -90,6 +90,7 @@ export function WikiView() {
   const createWikiArticle = usePlotStore((s) => s.createWikiArticle)
   const wikiArticles = usePlotStore((s) => s.wikiArticles)
   const wikiCategories = usePlotStore((s) => s.wikiCategories)
+  const folders = usePlotStore((s) => s.folders)
   const toggleTrash = usePlotStore((s) => s.toggleTrash)
   const mergeWikiArticles = usePlotStore((s) => s.mergeWikiArticles)
   const trashWikiArticle = usePlotStore((s) => s.trashWikiArticle)
@@ -129,6 +130,10 @@ export function WikiView() {
 
   // Category filter from sidebar click
   const categoryFilterTagId = useWikiCategoryFilter()
+  // A+ folder=filter: sidebar wiki folder click sets activeFolderId (table-route,
+  // shared with notes/books) → /wiki list scoped to the folder. Mirrors the
+  // sidebar category filter below. The /folder/[id] wiki page stays for direct URLs.
+  const activeFolderId = useActiveFolderId()
 
   // Wiki article selection state (for floating action bar)
   const [selectedArticleIds, setSelectedArticleIds] = useState<Set<string>>(new Set())
@@ -378,6 +383,10 @@ export function WikiView() {
   const showStubs = wikiViewState.toggles?.showStubs !== false  // default: true (show stubs)
   const filteredWikiNotes = useMemo(() => {
     let result = wikiNotes
+    // A+ folder filter (sidebar wiki folder → /wiki scoped to folder members).
+    if (activeFolderId) {
+      result = result.filter(n => n.folderIds.includes(activeFolderId))
+    }
     // Sidebar category filter (separate from filterPanel category filter)
     if (categoryFilterTagId) {
       result = result.filter(n => (n.categoryIds ?? []).includes(categoryFilterTagId))
@@ -397,7 +406,7 @@ export function WikiView() {
       result = result.filter((a) => !isWikiStub(a))
     }
     return result
-  }, [wikiNotes, categoryFilterTagId, wikiFilters, backlinkCounts, hasChildrenSet, showStubs])
+  }, [wikiNotes, activeFolderId, categoryFilterTagId, wikiFilters, backlinkCounts, hasChildrenSet, showStubs])
 
   // Sort filtered articles using wikiViewState.sortFields (Phase 1: dynamic, no hardcoded override)
   const sortedFilteredWikiNotes = useMemo(
@@ -1326,6 +1335,8 @@ export function WikiView() {
               setDashFilter={setDashFilter}
               categoryFilterLabel={categoryFilterTagId ? wikiCategories.find(c => c.id === categoryFilterTagId)?.name ?? null : null}
               onClearCategoryFilter={() => setWikiCategoryFilter(null)}
+              folderFilterLabel={activeFolderId ? folders.find(f => f.id === activeFolderId)?.name ?? null : null}
+              onClearFolderFilter={() => setActiveFolderId(null)}
               onOpenArticle={openArticle}
               onMergeArticle={(sourceId) => setWikiMergeSourceId(sourceId)}
               onSplitArticle={(id) => {
