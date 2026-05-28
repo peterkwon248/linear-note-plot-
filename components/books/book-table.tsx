@@ -42,8 +42,6 @@ import {
   Pin as PushPin,
   PinOff as PushPinSlash,
   Trash2 as Trash,
-  RotateCcw as ArrowCounterClockwise,
-  Pencil as PencilSimple,
   ArrowUp,
   ArrowDown,
   ArrowDownUp as ArrowsDownUp,
@@ -54,10 +52,9 @@ import {
 import {
   ContextMenu,
   ContextMenuContent,
-  ContextMenuItem,
-  ContextMenuSeparator,
   ContextMenuTrigger,
 } from "@/components/ui/context-menu"
+import { BookContextMenuItems } from "@/components/books/book-context-menu-items"
 
 /* ── Column defs ───────────────────────────────────────── */
 
@@ -517,56 +514,17 @@ function BookRow({
         </div>
       </ContextMenuTrigger>
       <ContextMenuContent className="w-44">
-        {book.trashed ? (
-          <>
-            <ContextMenuItem
-              onClick={() => onRestore(book.id, book.title)}
-              className="text-note"
-            >
-              <ArrowCounterClockwise size={14} strokeWidth={2} className="mr-2 text-muted-foreground" />
-              Restore
-            </ContextMenuItem>
-            <ContextMenuSeparator />
-            <ContextMenuItem
-              onClick={() => onPermanentDelete(book.id, book.title)}
-              className="text-note text-destructive focus:text-destructive"
-            >
-              <Trash size={14} strokeWidth={2} className="mr-2" />
-              Delete forever
-            </ContextMenuItem>
-          </>
-        ) : (
-          <>
-            <ContextMenuItem onClick={() => onRename(book.id, book.title)} className="text-note">
-              <PencilSimple size={14} strokeWidth={2} className="mr-2 text-muted-foreground" />
-              Rename
-            </ContextMenuItem>
-            <ContextMenuItem
-              onClick={() => onTogglePin(book.id, book.pinned)}
-              className="text-note"
-            >
-              {book.pinned ? (
-                <>
-                  <PushPinSlash size={14} strokeWidth={2} className="mr-2 text-muted-foreground" />
-                  Unpin
-                </>
-              ) : (
-                <>
-                  <PushPin size={14} strokeWidth={2} className="mr-2 text-muted-foreground" />
-                  Pin to sidebar
-                </>
-              )}
-            </ContextMenuItem>
-            <ContextMenuSeparator />
-            <ContextMenuItem
-              onClick={() => onDelete(book.id, book.title)}
-              className="text-note text-destructive focus:text-destructive"
-            >
-              <Trash size={14} strokeWidth={2} className="mr-2" />
-              Move to trash
-            </ContextMenuItem>
-          </>
-        )}
+        {/* 2026-05-28: DRY refactor — body extracted to BookContextMenuItems so
+            list/grid/board share an identical menu (영구 룰 21 entity-uniformity).
+            v149 Phase 2 added the Move/Add-to-folder submenus there. */}
+        <BookContextMenuItems
+          book={book}
+          onRename={onRename}
+          onTogglePin={onTogglePin}
+          onDelete={onDelete}
+          onRestore={onRestore}
+          onPermanentDelete={onPermanentDelete}
+        />
       </ContextMenuContent>
     </ContextMenu>
   )

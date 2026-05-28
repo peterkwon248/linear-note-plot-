@@ -51,6 +51,30 @@
 
 ---
 
+## 🚀 2026-05-28 (오후 후속) — Library 정합: categories 체크박스 + 헤더 i18n + Book 폴더 Phase 2 + folder space fix ⭐⭐⭐
+
+**범위**: PR #486(categories 체크박스 + 컬럼 헤더 i18n) + 이 PR(Book 폴더 Phase 2 + table-route space fix).
+
+### 머지된 PR
+- **PR #486**: categories list 체크박스(hover-only + 헤더 select-all) + 컬럼 헤더/탭 i18n (`column.*`/`filter.tab.*` 21쌍 + 9 view useT). 한글 헤더 정합.
+- **이 PR**: Book 폴더 Phase 2 (사이드바 Books Folders section + folder page book branch + book context menu 폴더 이동 + createFolder/setBookFolders) + folder space fix (inferSpace /folder cross-kind).
+
+### 영구 결정 (LOCKED 후보 #169~#170)
+- **#169** folder 진입 = entity view + folder filter (note 패턴). note=/notes+filter 풀폭. wiki/book도 동일해야 (비대칭 부채). → 다음 세션 A+ 최우선.
+- **#170** table-route inferSpace /folder cross-kind 한계 → skip inferSpace + spaceHint.
+
+### 다음 P0 (재정렬)
+1. **P0 #0** A+ book/wiki folder = note 패턴 (/books|/wiki + folder filter 풀폭) ⭐ 다음 최우선 (다른 컴퓨터)
+2. **P0 #1 (carry)** Entity Insights 정보 아키텍처 통일 PRD (plan 완료, design)
+3. **P0 #2 (carry)** Wiki ← Overview breadcrumb / Phase 3.1 / Phase 4(source) / Category-Label 비대칭
+
+### Watch Out
+- A+ 시 folder page book/wiki branch는 direct URL용 유지. 사이드바 클릭만 /books|/wiki + filter.
+- books-view/wiki-view folderId filter = notes-view extras.folderId 복제.
+- store v149 (변경 없음). tsc exit 0.
+
+---
+
 ## 🚀 2026-05-28 (오후) — 사이드바 책 BookKindIcon 정합 + Wiki More section (1 PR) ⭐⭐⭐
 
 **범위**: 사이드바 정합. Books 책 아이콘 부채(BookOpen=Wiki와 동일) 정정 + Wiki More section. `components/linear-sidebar.tsx` 1 파일. + entity 정합 brainstorm 대량.

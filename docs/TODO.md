@@ -3,13 +3,35 @@
 > 우선순위 기반 작업 목록. **P0 = 다음 세션 즉시 시작점** (NEXT-ACTION.md 폐지, 2026-05-12).
 > 완료 항목은 즉시 삭제. 자세한 history는 SESSION-LOG.md + MEMORY.md.
 
-**마지막 갱신**: 2026-05-28 (오후) — 사이드바 책 BookKindIcon 정합 + Wiki More section (1 PR, linear-sidebar.tsx). 다음 P0 #0 = **Entity Insights 정보 아키텍처 통일 PRD** (Notes=별도 page / Wiki=dashboard 임베드 / Books=없음 / Ontology=top-level → 위치 통일 + Books More + Smart Book Preset).
+**마지막 갱신**: 2026-05-28 (오후 후속) — categories 체크박스 + 컬럼 헤더 i18n(PR #486) + Book 폴더 Phase 2 + folder space fix. 다음 P0 #0 = **A+ book/wiki folder = note 패턴** (note folder는 /notes+filter 풀폭인데 wiki/book folder는 folder page 좁음 → /books|/wiki + folder filter 풀폭으로 통일). **다른 컴퓨터에서 이어받음**.
 
 ---
 
-## 🟣 P0 — 즉시 (cross-machine 진입점, 2026-05-28 오후 세션 후 — Entity Insights 통일 PRD 최우선)
+## 🟣 P0 — 즉시 (cross-machine 진입점, 2026-05-28 오후 후속 세션 후 — A+ folder note 패턴 최우선)
 
-### -4. **🔴 P0 #0 (이번 세션 결과): Entity Insights 정보 아키텍처 통일 PRD** ⭐ 다음 세션 첫 작업
+### -5. **🔴 P0 #0 (이번 세션 결과, 사용자 명시 최우선): A+ book/wiki folder = note 패턴 전환** ⭐ 다음 세션 첫 작업 (다른 컴퓨터)
+
+**문제**: folder 진입 동작이 entity마다 비대칭.
+- **note folder** 클릭 → `/notes` + folder filter (notes-table **풀폭** + breadcrumb). `linear-sidebar.tsx:905-911`
+- **wiki/book folder** 클릭 → `/folder/[id]` folder page (max-w-3xl **좁음**)
+
+사용자: "북 폴더 잘려서 나온다" + "노트 폴더는 (notes-table 풀폭) 이렇게 나옴" → book/wiki도 note 패턴으로.
+
+**첫 스텝** (다른 컴퓨터에서 바로):
+1. `lib/view-engine/use-notes-view.ts:96` `extras.folderId` filter 패턴 read (notes가 어떻게 folder filter 하는지)
+2. `lib/view-engine/use-books-view.ts` + wiki view hook에 `folderId` filter 추가 (notes 복제). `Book.folderIds`/`WikiArticle.folderIds`.includes(folderId)
+3. `components/linear-sidebar.tsx` book folder 클릭 핸들러(현재 `setActiveRoute('/folder/${id}')`) → `accessFolder(id) + setActiveFolderId(id) + setActiveRoute('/books') + router.push('/books')` (note folder `:905-911` 복제). wiki folder도 → `/wiki` + filter.
+4. books/wiki page에서 `useActiveFolderId` → folder filter 적용 + breadcrumb ("Daily Log ×", notes-table breadcrumb 참조)
+5. 현재 folder page book/wiki branch는 **direct URL용 유지** (note folder도 folder page note branch 있음 — 폐기 X)
+
+**검증**: book folder 클릭 → `/books` 풀폭 books-table + folder filter + 사이드바 Books 유지. `tsc --noEmit` + 사용자 시각.
+
+**위험/메모**:
+- space fix는 이미 적용 (PR 이전 — 사이드바 book folder 클릭 시 Books context 유지. inferSpace /folder skip). A+는 그 위에 books-table 풀폭.
+- folder page book/wiki branch 폐기 금지 (direct URL).
+- preview full-reload는 SPA 검증 불가 — 실제 확인.
+
+### -4. **🔴 P0 #1 (carry): Entity Insights 정보 아키텍처 통일 PRD** ⭐ A+ 다음
 
 **사용자 의도** (2026-05-28 오후):
 > "위키랑 북스 모두에 노트처럼 more를 신설하고 템플릿이랑 인사이트 등을" + "북 More에 인사이트랑 스마트북" + "위키의 모어에도 인사이트가 들어가야겠는걸?"

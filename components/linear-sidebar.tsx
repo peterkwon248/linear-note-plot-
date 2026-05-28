@@ -359,8 +359,8 @@ export function LinearSidebar() {
 
   // Folder creation state. PR (b): captures the kind so submit creates with
   // the right discriminator. `null` = closed, otherwise the section that
-  // opened the input ("note" / "wiki").
-  const [newFolderKind, setNewFolderKind] = useState<"note" | "wiki" | null>(null)
+  // opened the input ("note" / "wiki" / "book" — v149 Phase 2).
+  const [newFolderKind, setNewFolderKind] = useState<"note" | "wiki" | "book" | null>(null)
   const [newFolderName, setNewFolderName] = useState("")
   const newFolderInputRef = useRef<HTMLInputElement>(null)
   const newFolderOpen = newFolderKind !== null
@@ -453,6 +453,10 @@ export function LinearSidebar() {
     () => sortFolders(folders.filter((f) => f.kind === "wiki")),
     [folders],
   )
+  const bookFoldersSorted = useMemo(
+    () => sortFolders(folders.filter((f) => f.kind === "book")),
+    [folders],
+  )
 
   // Auto-collapse: visible = pinned OR accessed within 30 days OR (never
   // accessed AND created within 30 days). Same predicate as before, now
@@ -480,11 +484,14 @@ export function LinearSidebar() {
 
   const noteFolderSplit = useMemo(() => collapseSplit(noteFoldersSorted), [noteFoldersSorted])
   const wikiFolderSplit = useMemo(() => collapseSplit(wikiFoldersSorted), [wikiFoldersSorted])
+  const bookFolderSplit = useMemo(() => collapseSplit(bookFoldersSorted), [bookFoldersSorted])
 
   const displayedNoteFolders = showAllFolders ? noteFoldersSorted : noteFolderSplit.visible
   const displayedWikiFolders = showAllFolders ? wikiFoldersSorted : wikiFolderSplit.visible
+  const displayedBookFolders = showAllFolders ? bookFoldersSorted : bookFolderSplit.visible
   const hiddenNoteFolders = noteFolderSplit.hidden
   const hiddenWikiFolders = wikiFolderSplit.hidden
+  const hiddenBookFolders = bookFolderSplit.hidden
 
   // Pinned notes for sidebar shortcut section
   const pinnedNotes = useMemo(() =>
@@ -780,6 +787,9 @@ export function LinearSidebar() {
     notes.filter((n) => n.folderIds.includes(folderId) && !n.trashed).length
   const wikisInWikiFolder = (folderId: string) =>
     wikiArticles.filter((w) => w.folderIds.includes(folderId)).length
+  // v149 Phase 2 — book folder count (excludes trashed, Notes 정합).
+  const booksInBookFolder = (folderId: string) =>
+    books.filter((b) => b.folderIds.includes(folderId) && !b.trashed).length
 
   return (
     <aside className="a-sidebar h-full w-full shrink-0 select-none" data-active-space={activeSpace}>
@@ -1717,6 +1727,128 @@ export function LinearSidebar() {
 
             {/* Books Views — entity-uniformity (영구 룰 #87: single-entity space는 own Views section 보유) */}
             {renderViewsSection("books", "/books")}
+
+            {/* Folders section — Books context (kind="book" only). v149 Phase 2
+                introduces this analog of the Notes/Wiki Folders sections so
+                books get first-class folder organisation, fully isolated from
+                note/wiki folders by Folder.kind. Order matches Notes
+                (Pinned→Views→Folders→Recent). */}
+            <Section
+              title={t("sidebar.section.folders")}
+              trailing={
+                <button
+                  onClick={() => setNewFolderKind("book")}
+                  className="flex items-center justify-center h-5 w-5 rounded hover:bg-sidebar-hover text-sidebar-muted hover:text-sidebar-foreground transition-colors"
+                  aria-label="New book folder"
+                >
+                  <IconPlus size={14} />
+                </button>
+              }
+            >
+              {newFolderKind === "book" && (
+                <div className="px-2 py-1">
+                  <input
+                    ref={newFolderInputRef}
+                    type="text"
+                    value={newFolderName}
+                    onChange={(e) => setNewFolderName(e.target.value)}
+                    onKeyDown={handleNewFolderKeyDown}
+                    onBlur={handleNewFolderSubmit}
+                    placeholder="Folder name"
+                    className="w-full rounded-md border border-sidebar-border bg-sidebar-bg px-2.5 py-1 text-note text-sidebar-foreground placeholder:text-sidebar-muted focus:outline-none focus:ring-1 focus:ring-accent"
+                  />
+                </div>
+              )}
+              {displayedBookFolders.map((folder) => {
+                const count = booksInBookFolder(folder.id)
+                const active = isFolderActive(folder.id)
+                const isRenaming = renamingItem?.id === folder.id
+                return (
+                  <ContextMenu key={folder.id}>
+                    <ContextMenuTrigger asChild>
+                      <button
+                        onClick={() => {
+                          accessFolder(folder.id)
+                          setActiveFolderId(folder.id)
+                          // Book folder click routes to /folder/[id] which
+                          // renders the book-only folder page (v149 Phase 2).
+                          setActiveRoute(`/folder/${folder.id}`)
+                          setSelectedNoteId(null)
+                          router.push(`/folder/${folder.id}`)
+                        }}
+                        className="a-sb-link"
+                        data-active={active ? "true" : undefined}
+                      >
+                        <span className="flex shrink-0 items-center justify-center w-5 h-5">
+                          <IconFolder size={20} />
+                        </span>
+                        {isRenaming ? (
+                          <input
+                            ref={renameInputRef}
+                            type="text"
+                            value={renameValue}
+                            onChange={(e) => setRenameValue(e.target.value)}
+                            onKeyDown={handleRenameKeyDown}
+                            onBlur={handleRenameSubmit}
+                            className="flex-1 rounded border border-sidebar-border bg-sidebar-bg px-1.5 py-0.5 text-note text-sidebar-foreground focus:outline-none focus:ring-1 focus:ring-accent"
+                            onClick={(e) => e.stopPropagation()}
+                          />
+                        ) : (
+                          <span className="truncate text-left flex-1">{folder.name}</span>
+                        )}
+                        {!isRenaming && count > 0 && (
+                          <span className="a-sb-link__count tabular-nums">{count}</span>
+                        )}
+                      </button>
+                    </ContextMenuTrigger>
+                    <ContextMenuContent className="w-48">
+                      <ContextMenuItem onClick={() => {
+                        setRenamingItem({ id: folder.id })
+                        setRenameValue(folder.name)
+                      }}>
+                        Rename
+                      </ContextMenuItem>
+                      <ContextMenuSub>
+                        <ContextMenuSubTrigger>Change color</ContextMenuSubTrigger>
+                        <ContextMenuSubContent className="p-2">
+                          <ColorPickerGrid
+                            value={getEntityColor(folder.color)}
+                            onChange={(color) => updateFolder(folder.id, { color })}
+                          />
+                        </ContextMenuSubContent>
+                      </ContextMenuSub>
+                      {/* v109: opt-in color — Reset returns the folder to neutral gray. */}
+                      <ContextMenuItem onClick={() => updateFolder(folder.id, { color: null })}>
+                        Reset color
+                      </ContextMenuItem>
+                      <ContextMenuSeparator />
+                      <ContextMenuItem
+                        onClick={() => handleDeleteFolder(folder.id)}
+                        className="text-destructive focus:text-destructive"
+                      >
+                        Delete
+                      </ContextMenuItem>
+                    </ContextMenuContent>
+                  </ContextMenu>
+                )
+              })}
+              {hiddenBookFolders.length > 0 && !showAllFolders && (
+                <button
+                  onClick={() => setShowAllFolders(true)}
+                  className="flex w-full items-center gap-2.5 rounded-md px-2.5 py-1.5 text-note text-sidebar-muted hover:text-sidebar-foreground transition-colors"
+                >
+                  {hiddenBookFolders.length} more
+                </button>
+              )}
+              {showAllFolders && hiddenBookFolders.length > 0 && (
+                <button
+                  onClick={() => setShowAllFolders(false)}
+                  className="flex w-full items-center gap-2.5 rounded-md px-2.5 py-1.5 text-note text-sidebar-muted hover:text-sidebar-foreground transition-colors"
+                >
+                  Show less
+                </button>
+              )}
+            </Section>
 
             {/* Recent books — top 5 by updatedAt (excludes trashed). */}
             {(() => {

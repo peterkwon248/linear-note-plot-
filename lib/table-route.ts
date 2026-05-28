@@ -120,17 +120,26 @@ export function setRouteInterceptForSecondary(enabled: boolean): void {
   _interceptForSecondary = enabled
 }
 
-export function setActiveRoute(route: string | null): void {
+export function setActiveRoute(route: string | null, spaceHint?: ActivitySpace): void {
   // Intercept: if called from secondary pane context, redirect to secondary route
   if (_interceptForSecondary && route) {
     setSecondaryRoute(route)
     return
   }
-  if (_activeRoute === route) return
+  if (_activeRoute === route && (!spaceHint || _activeSpace === spaceHint)) return
   _activeRoute = route
   // Auto-infer space from route (backward compatible)
   if (route) {
-    _activeSpace = inferSpace(route)
+    // `/folder/[id]` is cross-kind (a folder can be note | wiki | book), so
+    // inferSpace() can't tell which space it belongs to and would wrongly fall
+    // back to "notes". Honor an explicit spaceHint (folder page passes
+    // folder.kind); otherwise keep the current space so a sidebar folder click
+    // stays inside its own context (Books folder → stays in Books, etc.).
+    if (spaceHint) {
+      _activeSpace = spaceHint
+    } else if (!route.startsWith("/folder/")) {
+      _activeSpace = inferSpace(route)
+    }
     _pushRouteHistory(route)
   }
   _listeners.forEach((fn) => fn())

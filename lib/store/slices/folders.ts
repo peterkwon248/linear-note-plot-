@@ -1,4 +1,4 @@
-import type { Note, Folder, ActiveView, WikiArticle } from "../../types"
+import type { Note, Folder, ActiveView, WikiArticle, Book } from "../../types"
 import { genId } from "../helpers"
 
 type Set = (fn: ((state: any) => any) | any) => void
@@ -7,15 +7,16 @@ export function createFoldersSlice(set: Set) {
   return {
     /**
      * Create a folder of the given kind. v107: `kind` is required because a
-     * folder accepts only its declared entity type (notes XOR wikis). The
-     * caller (sidebar / picker / dialog) decides based on the active context.
+     * folder accepts only its declared entity type (notes XOR wikis XOR books;
+     * v149 added "book"). The caller (sidebar / picker / dialog) decides based
+     * on the active context.
      *
      * Mutability: kind is intentionally NOT changeable after creation — see
      * `.omc/plans/folder-nm-migration.md` §"Must NOT Have". Use `updateFolder`
      * for cosmetic edits (name/color/parentId/pin); attempting to change
      * `kind` is silently ignored at the action layer (UI should disable it).
      */
-    createFolder: (name: string, kind: "note" | "wiki", color: string | null = null, opts?: Partial<Folder>) => {
+    createFolder: (name: string, kind: "note" | "wiki" | "book", color: string | null = null, opts?: Partial<Folder>) => {
       const now = new Date().toISOString()
       // Generate id outside the set callback so we can return it for
       // immediate use (e.g. inline "+ New folder" → apply to selected note).
@@ -71,6 +72,12 @@ export function createFoldersSlice(set: Set) {
             w.folderIds.includes(id)
               ? { ...w, folderIds: w.folderIds.filter((fid: string) => fid !== id) }
               : w
+          ),
+          // N:M cascade — strip `id` from every book's folderIds (v149).
+          books: (state.books ?? []).map((b: Book) =>
+            b.folderIds.includes(id)
+              ? { ...b, folderIds: b.folderIds.filter((fid: string) => fid !== id) }
+              : b
           ),
           activeView:
             state.activeView.type === "folder" &&
@@ -219,6 +226,52 @@ export function createFoldersSlice(set: Set) {
         return {
           wikiArticles: state.wikiArticles.map((w: WikiArticle) =>
             w.id === articleId ? { ...w, folderIds: dedup } : w
+          ),
+        }
+      })
+    },
+
+    /** Add a book to a folder (idempotent + kind-validated). v149. */
+    addBookToFolder: (bookId: string, folderId: string) => {
+      set((state: any) => {
+        const folder = state.folders.find((f: Folder) => f.id === folderId)
+        if (!folder || folder.kind !== "book") return state
+        let mutated = false
+        const books = (state.books ?? []).map((b: Book) => {
+          if (b.id !== bookId) return b
+          if (b.folderIds.includes(folderId)) return b  // idempotent
+          mutated = true
+          return { ...b, folderIds: [...b.folderIds, folderId] }
+        })
+        return mutated ? { books } : state
+      })
+    },
+
+    /** Remove a book from a single folder (idempotent — no-op if absent). v149. */
+    removeBookFromFolder: (bookId: string, folderId: string) => {
+      set((state: any) => {
+        let mutated = false
+        const books = (state.books ?? []).map((b: Book) => {
+          if (b.id !== bookId) return b
+          if (!b.folderIds.includes(folderId)) return b  // idempotent
+          mutated = true
+          return { ...b, folderIds: b.folderIds.filter((fid: string) => fid !== folderId) }
+        })
+        return mutated ? { books } : state
+      })
+    },
+
+    /** Replace a book's folder set wholesale (kind-filtered). v149. */
+    setBookFolders: (bookId: string, folderIds: string[]) => {
+      set((state: any) => {
+        const validIds = folderIds.filter((fid) => {
+          const f = state.folders.find((x: Folder) => x.id === fid)
+          return f?.kind === "book"
+        })
+        const dedup = Array.from(new Set(validIds))
+        return {
+          books: (state.books ?? []).map((b: Book) =>
+            b.id === bookId ? { ...b, folderIds: dedup } : b
           ),
         }
       })

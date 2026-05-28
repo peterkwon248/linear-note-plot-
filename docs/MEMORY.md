@@ -8,6 +8,31 @@
 
 ---
 
+## 🚀 2026-05-28 (오후 후속) — Library 정합: categories 체크박스 + 컬럼 헤더 i18n + Book 폴더 Phase 2 + folder space fix ⭐⭐⭐
+
+**범위**: Library 정합 연속. PR #486(categories 체크박스 + i18n) + 이 PR(Book 폴더 Phase 2 + space fix).
+
+### 머지된 PR
+- **PR #486**: categories list 체크박스(hover-only + 헤더 select-all all/partial/none, CategoryFullListView row button→div) + 컬럼 헤더/탭 i18n (`column.*`/`filter.tab.*` 21쌍 EN+KO + 9 view useT). 한글 헤더 정합.
+- **이 PR**: Book 폴더 Phase 2 (createFolder +`"book"`, setBookFolders/addBookToFolder/removeBookFromFolder, folder-picker book, 사이드바 Books Folders section, folder page book branch, book context menu "폴더로 이동") + **table-route folder space fix**.
+
+### 큰 결정 (영구 LOCKED 후보 #169~#170)
+- **#169 folder 진입 = entity view + folder filter (note 패턴)**: note folder = `/notes` + folder filter (notes-table 풀폭, linear-sidebar:905-911). wiki/book folder = `/folder/[id]` folder page(max-w-3xl 좁음) = **비대칭 부채**. → **다음 세션 A+ 최우선**: book/wiki도 `/books`|`/wiki` + folder filter 풀폭. folder page는 direct URL용 잔존.
+- **#170 table-route inferSpace /folder cross-kind**: `/folder/[id]`는 note|wiki|book 다 가능 → route만으론 space 추론 불가 (default notes 버그 = "북 폴더 클릭 시 사이드바 Notes"). fix = setActiveRoute `/folder/` skip inferSpace(현재 context 유지) + spaceHint, folder page useEffect folder.kind→space.
+
+### 다음 우선순위 (P0, 재정렬)
+1. **🔴 P0 #0**: **A+ book/wiki folder = note 패턴** (/books|/wiki + folder filter 풀폭 + breadcrumb). books-view/wiki-view folderId filter(notes `extras.folderId` 복제) + 사이드바 클릭 핸들러(905-911 복제) + breadcrumb. ⭐ 다음 세션 최우선 (사용자 명시, 다른 컴퓨터)
+2. **🔴 P0 #1 (carry)**: Entity Insights 정보 아키텍처 통일 PRD (plan 완료, design 남음. 차트=recharts 표준화)
+3. **🟡 P0 #2 (carry)**: Wiki ← Overview breadcrumb / Phase 3.1 / Phase 4 filter-bar(source) / Category-Label 필터 비대칭
+
+### 기술 학습 (영구)
+- **note folder = /notes + activeFolderId filter** (use-notes-view.ts:96 `extras.folderId`). wiki/book folder = folder page (비대칭 부채).
+- **inferSpace(/folder/[id]) cross-kind 한계** — route만으론 note|wiki|book 구분 불가. spaceHint 또는 현재 context 유지.
+- **CategoryFullListView = wiki/library 공통** — categories 체크박스/i18n 변경이 양쪽 영향.
+- **preview full-reload는 SPA folder page 검증 불가** (store 미노출 + activeRoute SPA). 실제 확인 필요.
+
+---
+
 ## 🚀 2026-05-28 (오후) — 사이드바 책 BookKindIcon 정합 + Wiki More section (1 PR) + entity 정합 brainstorm ⭐⭐⭐
 
 **범위**: 사이드바 정합 세션. Books 책 아이콘 부채(BookOpen=Wiki와 동일) 정정 + Wiki More section + entity Insights/Smart Book/Book폴더 정합 brainstorm 대량. `components/linear-sidebar.tsx` 1 파일.
