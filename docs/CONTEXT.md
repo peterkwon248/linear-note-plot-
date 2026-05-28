@@ -51,6 +51,40 @@
 
 ---
 
+## 🚀 2026-05-28 (오후) — 사이드바 책 BookKindIcon 정합 + Wiki More section (1 PR) ⭐⭐⭐
+
+**범위**: 사이드바 정합. Books 책 아이콘 부채(BookOpen=Wiki와 동일) 정정 + Wiki More section. `components/linear-sidebar.tsx` 1 파일. + entity 정합 brainstorm 대량.
+
+### 머지된 PR
+- **PR (이)** — 사이드바 책 BookKindIcon 정합 + Wiki More:
+  - Books 사이드바 + Home/Calendar mixed list 책 = `BookKindIcon` (Smart⚡/Manual✏️/Hybrid✨)
+  - `HomePinnedItem`에 `bookKind` 필드 추가
+  - Wiki More Section 신설 (Templates 이동, Notes 정합)
+  - `Book` import 제거, `BookOpen`은 Wiki Overview만
+
+### 영구 결정 (LOCKED 후보 #166~#168)
+- **#166** 사이드바 entity 항목 = 내부 상태/kind icon 의무 (Notes=status / Wiki=stub-article / Books=kind). BookKindIcon = 모든 surface single source
+- **#167** 사이드바 More section 통일 (Notes/Wiki Folders→More→Recent). Books는 Templates 폐기로 More 보류
+- **#168** Entity Insights 정보 아키텍처 비대칭 = 다음 PRD (Notes=page/Wiki=dashboard임베드/Books=없음/Ontology=top-level → 위치 통일)
+
+### 검증
+- `tsc --noEmit`: exit 0
+- 라이트모드 preview: Books/Wiki/Home 사이드바 시각 확인
+
+### 다음 P0 (재정렬)
+1. **P0 #0** Entity Insights 정보 아키텍처 통일 PRD (위치 통일 + Books More + Smart Book Preset) ⭐
+2. **P0 #1** Book 폴더 Phase 2 (createFolder +book + 사이드바 section + folder page)
+3. **P0 #2 (carry)** Wiki ← Overview → breadcrumb 마이그
+4. **P0 #3 (carry)** Phase 3.1 reference + Phase 4 filter-bar(=source 정리)
+5. **P0 #4 (carry)** Category/Label 필터 비대칭
+
+### Watch Out
+- Entity Insights 위치 통일 = 별도 page vs dashboard 임베드 택1 (Wiki page 분리 시 Dashboard 재구성)
+- Smart Book Preset ROI 불확실 (book 생성 빈도 낮음)
+- source 정리 = Phase 4 filter-bar 마이그에서 (Book kind group 공유)
+
+---
+
 ## 🚀 2026-05-28 (오전) — Chrome icon 굵기/선명 + chip strip 시인성 + Books table notes/wiki parity 부채 정정 (1 통합 PR) ⭐⭐⭐
 
 **범위**: 사용자 시각 polish. 라이트 모드 시인성 강화 + Books 1년 차 parity 부채 정정. 5 파일 +40/-26.
