@@ -158,7 +158,7 @@ export function EditorToolbar({ editor }: EditorToolbarProps) {
     createNote({
       title,
       content: selectedText,
-      status: "stone",
+      status: "backlog",
     })
 
     editor.chain().focus().deleteSelection().insertContent(`[[${title}]]`).run()

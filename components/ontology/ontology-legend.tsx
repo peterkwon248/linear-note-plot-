@@ -18,7 +18,7 @@
  */
 
 import { useState } from "react"
-import { IconStone, IconBrick, IconBlock, IconWikiStub, IconWikiArticle } from "@/components/plot-icons"
+import { IconBacklog, IconTodo, IconInProgress, IconDone, IconWikiStub, IconWikiArticle } from "@/components/plot-icons"
 import { Zap as Lightning, Sparkles as Sparkle, Pencil as PencilSimple, ChevronDown as CaretDown, ChevronRight as CaretRight } from "lucide-react"
 import { NOTE_STATUS_HEX, WIKI_STATUS_HEX, SPACE_COLORS } from "@/lib/colors"
 import { cn } from "@/lib/utils"
@@ -83,19 +83,24 @@ export function OntologyLegend({ className }: { className?: string }) {
           {/* NOTES */}
           <GroupHeader label={t("ontology.legend.notes")} />
           <LegendRow
-            icon={<IconStone size={13} />}
-            label={t("status.stone")}
-            color={NOTE_STATUS_HEX.stone}
+            icon={<IconBacklog size={13} />}
+            label={t("status.backlog")}
+            color={NOTE_STATUS_HEX.backlog}
           />
           <LegendRow
-            icon={<IconBrick size={13} />}
-            label={t("status.brick")}
-            color={NOTE_STATUS_HEX.brick}
+            icon={<IconTodo size={13} />}
+            label={t("status.todo")}
+            color={NOTE_STATUS_HEX.todo}
           />
           <LegendRow
-            icon={<IconBlock size={13} />}
-            label={t("status.block")}
-            color={NOTE_STATUS_HEX.keystone}
+            icon={<IconInProgress size={13} />}
+            label={t("status.in_progress")}
+            color={NOTE_STATUS_HEX.in_progress}
+          />
+          <LegendRow
+            icon={<IconDone size={13} />}
+            label={t("status.done")}
+            color={NOTE_STATUS_HEX.done}
           />
 
           {/* WIKI */}

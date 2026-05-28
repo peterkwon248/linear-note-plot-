@@ -14,7 +14,7 @@ import React, {
   forwardRef,
 } from "react"
 import { FileText, Asterisk, Link as LinkIcon, Hash } from "@/lib/editor/editor-icons"
-import { CircleDashed, Contrast as CircleHalf, CircleCheck as CheckCircle, BookOpen } from "lucide-react"
+import { CircleDashed, Circle, Contrast as CircleHalf, CircleCheck as CheckCircle, BookOpen } from "lucide-react"
 import { IconWikiStub, IconWikiArticle } from "@/components/plot-icons"
 import { NOTE_STATUS_HEX, WIKI_STATUS_HEX } from "@/lib/colors"
 import { usePlotStore } from "@/lib/store"
@@ -298,12 +298,14 @@ const WikilinkList = forwardRef<WikilinkListRef, WikilinkListProps>(
                             ) : (
                               <IconWikiArticle size={14} className="shrink-0" style={{ color: WIKI_STATUS_HEX.article }} />
                             )
-                          ) : item.status === "stone" ? (
-                            <CircleDashed className="shrink-0" size={14} style={{ color: NOTE_STATUS_HEX.stone }} />
-                          ) : item.status === "brick" ? (
-                            <CircleHalf className="shrink-0" size={14} style={{ color: NOTE_STATUS_HEX.brick }} />
-                          ) : item.status === "keystone" ? (
-                            <CheckCircle className="shrink-0" size={14} style={{ color: NOTE_STATUS_HEX.keystone }} />
+                          ) : item.status === "backlog" ? (
+                            <CircleDashed className="shrink-0" size={14} style={{ color: NOTE_STATUS_HEX.backlog }} />
+                          ) : item.status === "todo" ? (
+                            <Circle className="shrink-0" size={14} style={{ color: NOTE_STATUS_HEX.todo }} />
+                          ) : item.status === "in_progress" ? (
+                            <CircleHalf className="shrink-0" size={14} style={{ color: NOTE_STATUS_HEX.in_progress }} />
+                          ) : item.status === "done" ? (
+                            <CheckCircle className="shrink-0" size={14} style={{ color: NOTE_STATUS_HEX.done }} />
                           ) : (
                             <FileText className="shrink-0 text-muted-foreground" size={14} />
                           )}
@@ -517,7 +519,7 @@ export const WikilinkSuggestion = Extension.create({
             finalResults.push({
               id: `__new_note__${q}`,
               title: q,
-              status: "stone",
+              status: "backlog",
               isNewNote: true,
               itemType: "note",
             })

@@ -143,9 +143,10 @@ function MostOpenedList({ items, t }: { items: { noteId: string; title: string; 
 
 function LifecycleStats({ notes, t }: { notes: any[]; t: (k: string) => string }) {
   const active = notes.filter((n) => !n.trashedAt)
-  const inbox = active.filter((n) => n.status === "stone").length
-  const capture = active.filter((n) => n.status === "brick").length
-  const permanent = active.filter((n) => n.status === "keystone").length
+  const backlog = active.filter((n) => n.status === "backlog").length
+  const todo = active.filter((n) => n.status === "todo").length
+  const inProgress = active.filter((n) => n.status === "in_progress").length
+  const done = active.filter((n) => n.status === "done").length
   const wiki = active.filter((n) => n.noteType === "wiki").length
 
   return (
@@ -154,11 +155,12 @@ function LifecycleStats({ notes, t }: { notes: any[]; t: (k: string) => string }
         <PhActivity className="text-muted-foreground" size={14} strokeWidth={2} />
         <span className="text-2xs font-medium text-muted-foreground">{t("notes.insights.section.lifecycle")}</span>
       </div>
-      <div className="grid grid-cols-4 gap-2">
+      <div className="grid grid-cols-5 gap-2">
         {[
-          { label: t("status.stone"), value: inbox, color: "text-chart-3" },
-          { label: t("status.brick"), value: capture, color: "text-chart-2" },
-          { label: t("status.block"), value: permanent, color: "text-chart-5" },
+          { label: t("status.backlog"), value: backlog, color: "text-chart-3" },
+          { label: t("status.todo"), value: todo, color: "text-chart-1" },
+          { label: t("status.in_progress"), value: inProgress, color: "text-chart-2" },
+          { label: t("status.done"), value: done, color: "text-chart-5" },
           { label: t("notes.insights.lifecycle.wiki"), value: wiki, color: "text-accent" },
         ].map((s) => (
           <div key={s.label} className="text-center">

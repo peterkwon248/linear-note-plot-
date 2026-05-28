@@ -23,9 +23,10 @@ import type { ViewContextKey } from "./types"
  *
  * Notes space routes:
  *   /notes              → "all"
- *   /stone              → "stone"
- *   /brick              → "brick"
- *   /keystone           → "keystone"
+ *   /backlog            → "backlog"
+ *   /todo               → "todo"
+ *   /in-progress        → "in_progress"
+ *   /done               → "done"
  *   /pinned             → "pinned"
  *   /trash              → "trash"
  *   /folder/[id]        → "folder"
@@ -51,9 +52,10 @@ export function getCurrentViewContextKey(
 
   // Notes space — route-based
   if (!route) return "all"
-  if (route === "/stone") return "stone"
-  if (route === "/brick") return "brick"
-  if (route === "/keystone") return "keystone"
+  if (route === "/backlog") return "backlog"
+  if (route === "/todo") return "todo"
+  if (route === "/in-progress") return "in_progress"
+  if (route === "/done") return "done"
   if (route === "/pinned") return "pinned"
   if (route === "/trash") return "trash"
   if (route.startsWith("/folder/")) return "folder"
@@ -72,13 +74,13 @@ export function getCurrentViewContextKey(
  * (Tags / Labels / Files / References / Stickers)는 own view 없음 — "all"로
  * fallback (sidebar Views section 없음).
  *
- * SavedView.space is "stone" | "notes" | "wiki" | "calendar" | "ontology"
+ * SavedView.space is "backlog" | "notes" | "wiki" | "calendar" | "ontology"
  * | "books" | "library-categories" | "all".
  */
 export function getSavedViewSpaceForActivity(
   space: ActivitySpace | string,
   route?: string | null,
-): "stone" | "notes" | "wiki" | "calendar" | "ontology" | "books" | "library-categories" | "all" {
+): "backlog" | "notes" | "wiki" | "calendar" | "ontology" | "books" | "library-categories" | "all" {
   // Library sub-route with own view — checked before generic "library" fall-
   // through since activeSpace for /library/categories is "library".
   if (route === "/library/categories") return "library-categories"

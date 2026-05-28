@@ -29,12 +29,12 @@
   --space-books:    #be123c;
 
   /* v3 Note status — 2026-05-13 메타포 재정렬 (사용자 요청):
-     Stone (회색, raw)   → Brick (amber, 정리 중) → Block (emerald, 완성)
-     마지막 단계가 가장 선명한 색으로 끝나는 progression.
-     이전: Stone=sand / Brick=amber / Block=slate(회색) — Block이 가장 옅어 메타포 어색. */
-  --status-stone:    #475569;  /* slate-600 — neutral granite (raw, needs triage). slate-500은 light mode에서 outline-only icon이 옅어 chip과 mismatch 시각 — slate-600으로 진하게 (2026-05-13). */
-  --status-brick:    #D97706;  /* amber-600 — kiln-fired brick (in progress) */
-  --status-keystone: #059669;  /* emerald-600 — finished crystal (settled) */
+     Backlog (slate, raw) → Todo (blue, 준비) → In Progress (amber, 정리 중) → Done (emerald, 완성)
+     slate → blue → amber → emerald ramp (정체 → 계획 → 활성 → 완성). */
+  --status-backlog:     #475569;  /* slate-600 — raw, 미분류. slate-500은 light mode에서 outline-only icon이 옅어 chip과 mismatch 시각 — slate-600으로 진하게 (2026-05-13). */
+  --status-todo:        #2563eb;  /* blue-600 — planned/queued */
+  --status-in_progress: #D97706;  /* amber-600 — 적극 가공 중 */
+  --status-done:        #059669;  /* emerald-600 — 결정화·완성 */
 
   /* v3 Wiki status — mirrors WIKI_STATUS_HEX in lib/colors.ts */
   --wiki-stub:    #f97316;
@@ -309,12 +309,13 @@
   --wiki-stub:    #fb923c;
   --wiki-article: #34d399;
 
-  /* v3 Note status (dark) — 2026-05-13 메타포 재정렬:
-     Stone (slate, raw) → Brick (amber, 정리 중) → Block (emerald, 완성).
-     dark에서는 light 톤보다 한 단계 옅게 (slate-400 / amber-500 / emerald-400). */
-  --status-stone:    #94a3b8;  /* slate-400 — neutral granite (raw) */
-  --status-brick:    #f59e0b;  /* amber-500 — kiln-fired brick */
-  --status-keystone: #34d399;  /* emerald-400 — finished crystal (settled) */
+  /* v3 Note status (dark) — 4단계 완성도 축 (2026-05-29):
+     Backlog (slate, raw) → Todo (blue, 준비) → In Progress (amber) → Done (emerald).
+     dark에서는 light 톤보다 한 단계 옅게 (slate-400 / blue-500 / amber-500 / emerald-400). */
+  --status-backlog:     #94a3b8;  /* slate-400 — raw, 미분류 */
+  --status-todo:        #3b82f6;  /* blue-500 — planned/queued */
+  --status-in_progress: #f59e0b;  /* amber-500 — 적극 가공 중 */
+  --status-done:        #34d399;  /* emerald-400 — 결정화·완성 */
 
   /* v3 Shadow (dark) */
   --shadow-sm: 0 1px 2px rgba(0,0,0,0.30);
@@ -524,9 +525,10 @@
   --color-space-library:  var(--space-library);
   --color-space-books:    var(--space-books);
   /* Status */
-  --color-status-stone:    var(--status-stone);
-  --color-status-brick:    var(--status-brick);
-  --color-status-keystone: var(--status-keystone);
+  --color-status-backlog:     var(--status-backlog);
+  --color-status-todo:        var(--status-todo);
+  --color-status-in_progress: var(--status-in_progress);
+  --color-status-done:        var(--status-done);
   --color-wiki-stub:        var(--wiki-stub);
   --color-wiki-article:     var(--wiki-article);
   /* v3 Priority (namespace-isolated from Plot 5-tier) */
@@ -1293,7 +1295,7 @@
 /* 2026-05-24: list row leading icon — background box removed (user
  *  feedback: the 22×22 tinted square felt like a hover overlay even at
  *  rest, making the row feel busier than Linear/Plain references). Color
- *  tone preserved per status (stone/brick/keystone/wiki) so the entity
+ *  tone preserved per status (backlog/todo/in_progress/done/wiki) so the entity
  *  signal stays without the chrome. */
 .a-row__icon {
   display: grid;
@@ -1301,10 +1303,11 @@
   flex: none;
   color: var(--muted-fg);
 }
-.a-row__icon[data-tone="stone"]    { color: var(--status-stone); }
-.a-row__icon[data-tone="brick"]    { color: var(--status-brick); }
-.a-row__icon[data-tone="keystone"] { color: var(--status-keystone); }
-.a-row__icon[data-tone="wiki"]     { color: var(--space-wiki); }
+.a-row__icon[data-tone="backlog"]     { color: var(--status-backlog); }
+.a-row__icon[data-tone="todo"]        { color: var(--status-todo); }
+.a-row__icon[data-tone="in_progress"] { color: var(--status-in_progress); }
+.a-row__icon[data-tone="done"]        { color: var(--status-done); }
+.a-row__icon[data-tone="wiki"]        { color: var(--space-wiki); }
 .a-row__title {
   font-weight: 500;
   color: var(--fg);
@@ -1367,17 +1370,21 @@
   border-radius: 50%;
   background: currentColor;
 }
-.a-stchip[data-st="stone"] {
-  color: var(--status-stone);
-  background: color-mix(in srgb, var(--status-stone) 24%, transparent);
+.a-stchip[data-st="backlog"] {
+  color: var(--status-backlog);
+  background: color-mix(in srgb, var(--status-backlog) 24%, transparent);
 }
-.a-stchip[data-st="brick"] {
-  color: var(--status-brick);
-  background: color-mix(in srgb, var(--status-brick) 24%, transparent);
+.a-stchip[data-st="todo"] {
+  color: var(--status-todo);
+  background: color-mix(in srgb, var(--status-todo) 24%, transparent);
 }
-.a-stchip[data-st="keystone"] {
-  color: var(--status-keystone);
-  background: color-mix(in srgb, var(--status-keystone) 24%, transparent);
+.a-stchip[data-st="in_progress"] {
+  color: var(--status-in_progress);
+  background: color-mix(in srgb, var(--status-in_progress) 24%, transparent);
+}
+.a-stchip[data-st="done"] {
+  color: var(--status-done);
+  background: color-mix(in srgb, var(--status-done) 24%, transparent);
 }
 
 /* Numeric cells (links / words / updated) */

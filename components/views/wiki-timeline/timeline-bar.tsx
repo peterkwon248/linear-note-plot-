@@ -22,7 +22,7 @@ export interface TimelineBarProps {
   // collapsed-group placeholders. We narrow at the top of the component.
   item: LanedItem<TimelineEntity> | { isCollapsedHeader: true; groupKey: string; label: string; count: number; x: 0; width: 0 }
   /** Bar fill color from the entity adapter (e.g. WIKI_STATUS_HEX.stub for
-   *  wiki stubs, NOTE_STATUS_HEX.stone for notes, etc.). Caller resolves
+   *  wiki stubs, NOTE_STATUS_HEX.backlog for notes, etc.). Caller resolves
    *  the status → color mapping so this component stays entity-agnostic. */
   statusColor: string
   /** When true, render the drag handle that lets the user extend the bar's

@@ -332,24 +332,32 @@ export function SearchDialog() {
               {/* Navigation */}
               <CommandGroup heading={t("cmdk.group.navigation")}>
                 <CommandItem
-                  value="go-to-stone"
-                  onSelect={() => { router.push("/stone"); closePalette() }}
+                  value="go-to-backlog"
+                  onSelect={() => { router.push("/backlog"); closePalette() }}
                 >
                   <Tray size={16} />
                   <span>{t("cmdk.cmd.go_to_stone")}</span>
                   <CommandShortcut>G I</CommandShortcut>
                 </CommandItem>
                 <CommandItem
-                  value="go-to-brick"
-                  onSelect={() => { router.push("/brick"); closePalette() }}
+                  value="go-to-todo"
+                  onSelect={() => { router.push("/todo"); closePalette() }}
+                >
+                  <Stack size={16} />
+                  <span>{t("cmdk.cmd.go_to_todo")}</span>
+                  <CommandShortcut>G T</CommandShortcut>
+                </CommandItem>
+                <CommandItem
+                  value="go-to-in-progress"
+                  onSelect={() => { router.push("/in-progress"); closePalette() }}
                 >
                   <Stack size={16} />
                   <span>{t("cmdk.cmd.go_to_brick")}</span>
                   <CommandShortcut>G C</CommandShortcut>
                 </CommandItem>
                 <CommandItem
-                  value="go-to-keystone"
-                  onSelect={() => { router.push("/keystone"); closePalette() }}
+                  value="go-to-done"
+                  onSelect={() => { router.push("/done"); closePalette() }}
                 >
                   <PhShield size={16} />
                   <span>{t("cmdk.cmd.go_to_keystone")}</span>
@@ -537,14 +545,14 @@ export function SearchDialog() {
                   </CommandGroup>
 
                   {/* Stage-Specific Commands */}
-                  {selectedNote.status === "stone" && (
+                  {selectedNote.status === "backlog" && (
                     <>
                       <CommandSeparator />
-                      <CommandGroup heading="Stone Actions">
+                      <CommandGroup heading="Backlog Actions">
                         <CommandItem
                           value="triage-keep"
                           onSelect={() =>
-                            execCommand(() => triageKeep(selectedNote.id), "Kept - moved to Brick")
+                            execCommand(() => triageKeep(selectedNote.id), "Kept - moved to In Progress")
                           }
                         >
                           <CheckCircle size={16} />
@@ -578,55 +586,55 @@ export function SearchDialog() {
                     </>
                   )}
 
-                  {selectedNote.status === "brick" && (
+                  {selectedNote.status === "in_progress" && (
                     <>
                       <CommandSeparator />
-                      <CommandGroup heading="Brick Actions">
+                      <CommandGroup heading="In Progress Actions">
                         <CommandItem
-                          value="promote-to-keystone"
+                          value="promote-to-done"
                           onSelect={() =>
                             execCommand(
                               () => promoteToPermanent(selectedNote.id),
-                              "Promoted to Keystone"
+                              "Promoted to Done"
                             )
                           }
                         >
                           <ArrowCircleUp size={16} />
-                          <span>Promote to Keystone</span>
+                          <span>Promote to Done</span>
                           <CommandShortcut>P</CommandShortcut>
                         </CommandItem>
                         <CommandItem
-                          value="move-back-to-stone"
+                          value="move-back-to-backlog"
                           onSelect={() =>
                             execCommand(
                               () => moveBackToInbox(selectedNote.id),
-                              "Moved back to Stone"
+                              "Moved back to Backlog"
                             )
                           }
                         >
                           <Tray size={16} />
-                          <span>Back to Stone</span>
+                          <span>Back to Backlog</span>
                           <CommandShortcut>B</CommandShortcut>
                         </CommandItem>
                       </CommandGroup>
                     </>
                   )}
 
-                  {selectedNote.status === "keystone" && (
+                  {selectedNote.status === "done" && (
                     <>
                       <CommandSeparator />
-                      <CommandGroup heading="Keystone Actions">
+                      <CommandGroup heading="Done Actions">
                         <CommandItem
-                          value="demote-to-brick"
+                          value="demote-to-in-progress"
                           onSelect={() =>
                             execCommand(
                               () => undoPromote(selectedNote.id),
-                              "Demoted to Brick"
+                              "Demoted to In Progress"
                             )
                           }
                         >
                           <ArrowCircleDown size={16} />
-                          <span>Demote to Brick</span>
+                          <span>Demote to In Progress</span>
                           <CommandShortcut>D</CommandShortcut>
                         </CommandItem>
                       </CommandGroup>

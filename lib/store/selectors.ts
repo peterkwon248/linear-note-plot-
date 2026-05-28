@@ -11,8 +11,8 @@ export function getFilteredNotes(state: PlotState): Note[] {
   const isActive = (n: Note) => !n.trashed
 
   switch (activeView.type) {
-    case "stone":
-      filtered = filtered.filter((n) => n.status === "stone" && isActive(n))
+    case "backlog":
+      filtered = filtered.filter((n) => n.status === "backlog" && isActive(n))
       break
     case "all":
       filtered = filtered.filter(isActive)
@@ -51,7 +51,7 @@ export function getFilteredNotes(state: PlotState): Note[] {
 /**
  * Route-based filter (used by NoteList via filter prop).
  *
- * Phase 1b2: snoozed-due test on the `status-stone` route reads from the
+ * Phase 1b2: snoozed-due test on the `status-backlog` route reads from the
  * caller-supplied `dueSnoozeNoteIds` set instead of `Note.reviewAt`. Pass an
  * empty set (default) to skip the snoozed-due bucket entirely.
  */
@@ -65,8 +65,8 @@ export function filterNotesByRoute(
   const isActive = (n: Note) => !n.trashed
 
   switch (filter.type) {
-    case "stone":
-      filtered = filtered.filter((n) => n.status === "stone" && isActive(n))
+    case "backlog":
+      filtered = filtered.filter((n) => n.status === "backlog" && isActive(n))
       break
     case "all":
       filtered = filtered.filter(isActive)
@@ -83,19 +83,19 @@ export function filterNotesByRoute(
     case "tag":
       filtered = filtered.filter((n) => n.tags.includes(filter.tagId) && isActive(n))
       break
-    case "status-stone":
+    case "status-backlog":
       filtered = filtered.filter((n) =>
-        n.status === "stone" &&
+        n.status === "backlog" &&
         isActive(n) &&
         n.triageStatus !== "trashed" &&
         (n.triageStatus === "untriaged" || (n.triageStatus === "snoozed" && dueSnoozeNoteIds.has(n.id)))
       )
       break
-    case "status-brick":
-      filtered = filtered.filter((n) => n.status === "brick" && isActive(n) && n.triageStatus !== "trashed")
+    case "status-in_progress":
+      filtered = filtered.filter((n) => n.status === "in_progress" && isActive(n) && n.triageStatus !== "trashed")
       break
-    case "status-keystone":
-      filtered = filtered.filter((n) => n.status === "keystone" && isActive(n) && n.triageStatus !== "trashed")
+    case "status-done":
+      filtered = filtered.filter((n) => n.status === "done" && isActive(n) && n.triageStatus !== "trashed")
       break
     default:
       filtered = filtered.filter(isActive)
@@ -117,20 +117,20 @@ export function filterNotesByRoute(
 
 export function getFilterTitle(filter: NoteFilter, state: Pick<PlotState, "folders" | "tags">): string {
   switch (filter.type) {
-    case "stone":
-      return "Stone"
+    case "backlog":
+      return "Backlog"
     case "all":
       return "All Notes"
     case "trash":
       return "Trash"
     case "pinned":
       return "Pinned"
-    case "status-stone":
-      return "Stone"
-    case "status-brick":
-      return "Brick"
-    case "status-keystone":
-      return "Block"
+    case "status-backlog":
+      return "Backlog"
+    case "status-in_progress":
+      return "In Progress"
+    case "status-done":
+      return "Done"
     case "folder": {
       const folder = state.folders.find((f) => f.id === filter.folderId)
       return folder?.name ?? "Folder"
@@ -146,8 +146,8 @@ export function getFilterTitle(filter: NoteFilter, state: Pick<PlotState, "folde
 
 export function getViewTitle(view: ActiveView, state: PlotState): string {
   switch (view.type) {
-    case "stone":
-      return "Stone"
+    case "backlog":
+      return "Backlog"
     case "all":
       return "All Notes"
     case "folder": {

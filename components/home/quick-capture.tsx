@@ -9,7 +9,7 @@ import { useT } from "@/lib/i18n"
  * Quick Capture — top-of-Home single-line input.
  *
  * Behavior contract (PR 7 spec):
- *   - Enter -> createNote({title, status: "stone"}); stay on Home (selectedNoteId restored to null)
+ *   - Enter -> createNote({title, status: "backlog"}); stay on Home (selectedNoteId restored to null)
  *   - Escape -> blur + clear
  *   - Empty Enter -> ignored (no toast)
  *   - Toast: "Added to Stone" 1.5s
@@ -61,7 +61,7 @@ export function QuickCapture() {
     // createNote sets selectedNoteId = id internally; restore to null so we stay on Home.
     store.createNote({
       title: trimmed,
-      status: "stone",
+      status: "backlog",
       source: "manual",
     })
     store.setSelectedNoteId(null)

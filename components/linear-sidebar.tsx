@@ -4,7 +4,10 @@ import { useState, useMemo, useRef, useEffect } from "react"
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
 import {
-  IconStone,
+  IconBacklog,
+  IconTodo,
+  IconInProgress,
+  IconDone,
   IconHome,
   IconInbox,
   IconNotes,
@@ -15,8 +18,6 @@ import {
   IconLabel,
   IconTemplate,
   IconInsight,
-  IconBrick,
-  IconBlock,
   IconWikiStub,
   IconWikiArticle,
   IconPin,
@@ -155,7 +156,7 @@ function NavLink({
             return
           }
           setNoteId(null)
-          if (href === "/notes" || href === "/stone") {
+          if (href === "/notes" || href === "/backlog") {
             setActiveFolderId(null)
             setActiveTagId(null)
             setActiveLabelId(null)
@@ -353,7 +354,7 @@ export function LinearSidebar() {
 
   // Prefetch routes on mount
   useEffect(() => {
-    const routes = ["/stone", "/notes", "/pinned", "/trash", "/settings"]
+    const routes = ["/backlog", "/notes", "/pinned", "/trash", "/settings"]
     routes.forEach((r) => router.prefetch(r))
   }, [router])
 
@@ -415,12 +416,13 @@ export function LinearSidebar() {
     return () => document.removeEventListener("mousedown", handler)
   }, [categoryMenuId])
 
-  const inboxCount = useMemo(() => notes.filter((n) => n.status === "stone" && !n.trashed && n.triageStatus !== "trashed").length, [notes])
+  const inboxCount = useMemo(() => notes.filter((n) => n.status === "backlog" && !n.trashed && n.triageStatus !== "trashed").length, [notes])
   const inboxItems = useInbox()
   const inboxItemsCount = inboxItems.length
   const allNotesCount = useMemo(() => notes.filter((n) => !n.trashed).length, [notes])
-  const captureCount = useMemo(() => notes.filter((n) => n.status === "brick" && !n.trashed).length, [notes])
-  const permanentCount = useMemo(() => notes.filter((n) => n.status === "keystone" && !n.trashed).length, [notes])
+  const todoCount = useMemo(() => notes.filter((n) => n.status === "todo" && !n.trashed).length, [notes])
+  const captureCount = useMemo(() => notes.filter((n) => n.status === "in_progress" && !n.trashed).length, [notes])
+  const permanentCount = useMemo(() => notes.filter((n) => n.status === "done" && !n.trashed).length, [notes])
   const trashCount = useMemo(() => notes.filter((n) => n.trashed).length, [notes])
   const wikiCount = useMemo(() => notes.filter((n) => n.noteType === "wiki" && !n.trashed).length, [notes])
   const todoTaskCount = usePlotStore((s) => s.todoTasks.filter((t) => !t.checked).length)
@@ -628,7 +630,7 @@ export function LinearSidebar() {
     if (name) {
       // Capture current viewState (snapshot UX) instead of creating an empty
       // default view. Resolves to the active context key by space + route, so
-      // /stone saves "stone" filters, /wiki saves "wiki" state, etc.
+      // /backlog saves "backlog" filters, /wiki saves "wiki" state, etc.
       const contextKey = getCurrentViewContextKey(activeSpace, activeRoute)
       const currentViewState = usePlotStore.getState().viewStateByContext[contextKey]
       const savedSpace = getSavedViewSpaceForActivity(activeSpace, activeRoute)
@@ -811,25 +813,32 @@ export function LinearSidebar() {
                 active={isActive("/notes")}
               />
               <NavLink
-                href="/stone"
-                icon={<IconStone size={20} />}
-                label={t("status.stone")}
+                href="/backlog"
+                icon={<IconBacklog size={20} />}
+                label={t("status.backlog")}
                 count={inboxCount > 0 ? inboxCount : undefined}
-                active={isActive("/stone")}
+                active={isActive("/backlog")}
               />
               <NavLink
-                href="/brick"
-                icon={<IconBrick size={20} />}
-                label={t("status.brick")}
+                href="/todo"
+                icon={<IconTodo size={20} />}
+                label={t("status.todo")}
+                count={todoCount > 0 ? todoCount : undefined}
+                active={isActive("/todo")}
+              />
+              <NavLink
+                href="/in-progress"
+                icon={<IconInProgress size={20} />}
+                label={t("status.in_progress")}
                 count={captureCount > 0 ? captureCount : undefined}
-                active={isActive("/brick")}
+                active={isActive("/in-progress")}
               />
               <NavLink
-                href="/keystone"
-                icon={<IconBlock size={20} />}
-                label={t("status.block")}
+                href="/done"
+                icon={<IconDone size={20} />}
+                label={t("status.done")}
                 count={permanentCount > 0 ? permanentCount : undefined}
-                active={isActive("/keystone")}
+                active={isActive("/done")}
               />
               <NavLink
                 href="/pinned"
@@ -1493,9 +1502,10 @@ export function LinearSidebar() {
 
                 // Status breakdown for tooltips (preview note titles)
                 const liveNotes = notes.filter((n: any) => !n.trashed)
-                const inboxNotes = liveNotes.filter((n: any) => n.status === "stone")
-                const captureNotes = liveNotes.filter((n: any) => n.status === "brick")
-                const permanentNotes = liveNotes.filter((n: any) => n.status === "keystone")
+                const backlogNotes = liveNotes.filter((n: any) => n.status === "backlog")
+                const todoNotes = liveNotes.filter((n: any) => n.status === "todo")
+                const inProgressNotes = liveNotes.filter((n: any) => n.status === "in_progress")
+                const doneNotes = liveNotes.filter((n: any) => n.status === "done")
                 const orphanNotes = liveNotes.filter((n: any) =>
                   !(n.linksOut?.length || 0) && !((n as any).backlinks?.length || 0)
                 )
@@ -1515,7 +1525,7 @@ export function LinearSidebar() {
                     <div className="grid grid-cols-2 gap-2 mb-1">
                       <div
                         className="rounded-md border border-sidebar-border-subtle bg-sidebar-card/30 px-2 py-1.5 cursor-help"
-                        title={`${m.totalNotes} notes total — Inbox ${inboxNotes.length} / Capture ${captureNotes.length} / Permanent ${permanentNotes.length}${previewTitles(liveNotes)}`}
+                        title={`${m.totalNotes} notes total — Backlog ${backlogNotes.length} / Todo ${todoNotes.length} / In Progress ${inProgressNotes.length} / Done ${doneNotes.length}${previewTitles(liveNotes)}`}
                       >
                         <div className="text-[10px] text-sidebar-muted uppercase tracking-wide">{t("ontology.legend.notes")}</div>
                         <div className="text-base font-semibold tabular-nums leading-tight">{m.totalNotes}</div>

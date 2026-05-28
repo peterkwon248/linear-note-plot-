@@ -22,7 +22,7 @@ function makeNote(overrides: Partial<Note> = {}): Note {
     contentJson: null,
     folderIds: [],
     tags: [],
-    status: "stone" as NoteStatus,
+    status: "backlog" as NoteStatus,
     priority: "none" as NotePriority,
     reads: 0,
     pinned: false,
@@ -62,8 +62,8 @@ describe("runAnalysis", () => {
 
   it("skips trashed notes", () => {
     const notes = [
-      makeNote({ id: "t1", trashed: true, status: "brick", lastTouchedAt: daysAgo(10) }),
-      makeNote({ id: "t2", triageStatus: "trashed", status: "stone", createdAt: daysAgo(40) }),
+      makeNote({ id: "t1", trashed: true, status: "in_progress", lastTouchedAt: daysAgo(10) }),
+      makeNote({ id: "t2", triageStatus: "trashed", status: "backlog", createdAt: daysAgo(40) }),
     ]
     const results = runAnalysis(notes, emptySrsMap, emptyBacklinks)
     expect(results).toEqual([])
@@ -100,7 +100,7 @@ describe("runAnalysis", () => {
 describe("stale-notes", () => {
   it("matches capture note untouched 8 days", () => {
     const notes = [
-      makeNote({ id: "s1", status: "brick", lastTouchedAt: daysAgo(8) }),
+      makeNote({ id: "s1", status: "in_progress", lastTouchedAt: daysAgo(8) }),
     ]
     const results = runAnalysis(notes, emptySrsMap, emptyBacklinks)
     const stale = results.find((r) => r.ruleId === "stale-notes")
@@ -110,7 +110,7 @@ describe("stale-notes", () => {
 
   it("matches permanent note untouched 8 days", () => {
     const notes = [
-      makeNote({ id: "s2", status: "keystone", lastTouchedAt: daysAgo(8) }),
+      makeNote({ id: "s2", status: "done", lastTouchedAt: daysAgo(8) }),
     ]
     const results = runAnalysis(notes, emptySrsMap, emptyBacklinks)
     const stale = results.find((r) => r.ruleId === "stale-notes")
@@ -120,7 +120,7 @@ describe("stale-notes", () => {
 
   it("skips note untouched only 6 days", () => {
     const notes = [
-      makeNote({ id: "s3", status: "brick", lastTouchedAt: daysAgo(6) }),
+      makeNote({ id: "s3", status: "in_progress", lastTouchedAt: daysAgo(6) }),
     ]
     const results = runAnalysis(notes, emptySrsMap, emptyBacklinks)
     const stale = results.find((r) => r.ruleId === "stale-notes")
@@ -129,7 +129,7 @@ describe("stale-notes", () => {
 
   it("skips inbox notes", () => {
     const notes = [
-      makeNote({ id: "s4", status: "stone", lastTouchedAt: daysAgo(10) }),
+      makeNote({ id: "s4", status: "backlog", lastTouchedAt: daysAgo(10) }),
     ]
     const results = runAnalysis(notes, emptySrsMap, emptyBacklinks)
     const stale = results.find((r) => r.ruleId === "stale-notes")
@@ -140,7 +140,7 @@ describe("stale-notes", () => {
 describe("orphan-notes", () => {
   it("matches permanent note with 0 backlinks and 0 linksOut", () => {
     const notes = [
-      makeNote({ id: "o1", status: "keystone", linksOut: [] }),
+      makeNote({ id: "o1", status: "done", linksOut: [] }),
     ]
     const results = runAnalysis(notes, emptySrsMap, emptyBacklinks)
     const orphan = results.find((r) => r.ruleId === "orphan-notes")
@@ -150,7 +150,7 @@ describe("orphan-notes", () => {
 
   it("skips note with backlinks", () => {
     const notes = [
-      makeNote({ id: "o2", status: "keystone", linksOut: [] }),
+      makeNote({ id: "o2", status: "done", linksOut: [] }),
     ]
     const bl = new Map([["o2", 1]])
     const results = runAnalysis(notes, emptySrsMap, bl)
@@ -160,7 +160,7 @@ describe("orphan-notes", () => {
 
   it("skips note with outgoing links", () => {
     const notes = [
-      makeNote({ id: "o3", status: "keystone", linksOut: ["other note"] }),
+      makeNote({ id: "o3", status: "done", linksOut: ["other note"] }),
     ]
     const results = runAnalysis(notes, emptySrsMap, emptyBacklinks)
     const orphan = results.find((r) => r.ruleId === "orphan-notes")
@@ -169,7 +169,7 @@ describe("orphan-notes", () => {
 
   it("skips capture notes", () => {
     const notes = [
-      makeNote({ id: "o4", status: "brick", linksOut: [] }),
+      makeNote({ id: "o4", status: "in_progress", linksOut: [] }),
     ]
     const results = runAnalysis(notes, emptySrsMap, emptyBacklinks)
     const orphan = results.find((r) => r.ruleId === "orphan-notes")
@@ -180,7 +180,7 @@ describe("orphan-notes", () => {
 describe("stone-neglect", () => {
   it("matches inbox note created 31 days ago", () => {
     const notes = [
-      makeNote({ id: "i1", status: "stone", createdAt: daysAgo(31) }),
+      makeNote({ id: "i1", status: "backlog", createdAt: daysAgo(31) }),
     ]
     const results = runAnalysis(notes, emptySrsMap, emptyBacklinks)
     const neglect = results.find((r) => r.ruleId === "stone-neglect")
@@ -191,7 +191,7 @@ describe("stone-neglect", () => {
 
   it("skips inbox note created 29 days ago", () => {
     const notes = [
-      makeNote({ id: "i2", status: "stone", createdAt: daysAgo(29) }),
+      makeNote({ id: "i2", status: "backlog", createdAt: daysAgo(29) }),
     ]
     const results = runAnalysis(notes, emptySrsMap, emptyBacklinks)
     const neglect = results.find((r) => r.ruleId === "stone-neglect")
@@ -201,7 +201,7 @@ describe("stone-neglect", () => {
 
 describe("high-lapse-srs", () => {
   it("matches note with 3 lapses", () => {
-    const notes = [makeNote({ id: "h1", status: "keystone" })]
+    const notes = [makeNote({ id: "h1", status: "done" })]
     const srsMap: Record<string, SRSState> = {
       h1: { step: 0, dueAt: new Date().toISOString(), lastReviewedAt: new Date().toISOString(), introducedAt: new Date().toISOString(), lapses: 3 },
     }
@@ -212,7 +212,7 @@ describe("high-lapse-srs", () => {
   })
 
   it("skips note with 2 lapses", () => {
-    const notes = [makeNote({ id: "h2", status: "keystone" })]
+    const notes = [makeNote({ id: "h2", status: "done" })]
     const srsMap: Record<string, SRSState> = {
       h2: { step: 2, dueAt: new Date().toISOString(), lastReviewedAt: new Date().toISOString(), introducedAt: new Date().toISOString(), lapses: 2 },
     }
@@ -225,7 +225,7 @@ describe("high-lapse-srs", () => {
 describe("stuck-brick", () => {
   it("matches capture note 15 days old with no promotedAt", () => {
     const notes = [
-      makeNote({ id: "sc1", status: "brick", promotedAt: null, createdAt: daysAgo(15) }),
+      makeNote({ id: "sc1", status: "in_progress", promotedAt: null, createdAt: daysAgo(15) }),
     ]
     const results = runAnalysis(notes, emptySrsMap, emptyBacklinks)
     const stuck = results.find((r) => r.ruleId === "stuck-brick")
@@ -235,7 +235,7 @@ describe("stuck-brick", () => {
 
   it("skips capture note only 13 days old", () => {
     const notes = [
-      makeNote({ id: "sc2", status: "brick", promotedAt: null, createdAt: daysAgo(13) }),
+      makeNote({ id: "sc2", status: "in_progress", promotedAt: null, createdAt: daysAgo(13) }),
     ]
     const results = runAnalysis(notes, emptySrsMap, emptyBacklinks)
     const stuck = results.find((r) => r.ruleId === "stuck-brick")
@@ -244,7 +244,7 @@ describe("stuck-brick", () => {
 
   it("skips permanent notes", () => {
     const notes = [
-      makeNote({ id: "sc3", status: "keystone", promotedAt: daysAgo(1), createdAt: daysAgo(20) }),
+      makeNote({ id: "sc3", status: "done", promotedAt: daysAgo(1), createdAt: daysAgo(20) }),
     ]
     const results = runAnalysis(notes, emptySrsMap, emptyBacklinks)
     const stuck = results.find((r) => r.ruleId === "stuck-brick")
@@ -278,7 +278,7 @@ describe("empty-notes", () => {
 
 describe("overdue-srs", () => {
   it("matches note 8 days overdue", () => {
-    const notes = [makeNote({ id: "od1", status: "keystone" })]
+    const notes = [makeNote({ id: "od1", status: "done" })]
     const srsMap: Record<string, SRSState> = {
       od1: { step: 1, dueAt: daysAgo(8), lastReviewedAt: daysAgo(10), introducedAt: daysAgo(20), lapses: 0 },
     }
@@ -290,7 +290,7 @@ describe("overdue-srs", () => {
   })
 
   it("skips note only 1 day overdue", () => {
-    const notes = [makeNote({ id: "od2", status: "keystone" })]
+    const notes = [makeNote({ id: "od2", status: "done" })]
     const srsMap: Record<string, SRSState> = {
       od2: { step: 1, dueAt: daysAgo(1), lastReviewedAt: daysAgo(3), introducedAt: daysAgo(10), lapses: 0 },
     }
@@ -300,7 +300,7 @@ describe("overdue-srs", () => {
   })
 
   it("skips note not enrolled in SRS", () => {
-    const notes = [makeNote({ id: "od3", status: "keystone" })]
+    const notes = [makeNote({ id: "od3", status: "done" })]
     const results = runAnalysis(notes, emptySrsMap, emptyBacklinks)
     const overdue = results.find((r) => r.ruleId === "overdue-srs")
     expect(overdue).toBeUndefined()
@@ -312,9 +312,9 @@ describe("overdue-srs", () => {
 describe("integration", () => {
   it("multiple rules can match different notes simultaneously", () => {
     const notes = [
-      makeNote({ id: "n1", status: "stone", createdAt: daysAgo(35) }),       // stone-neglect
-      makeNote({ id: "n2", status: "keystone", linksOut: [] }),              // orphan-notes
-      makeNote({ id: "n3", status: "brick", lastTouchedAt: daysAgo(10) }), // stale-notes + stuck-brick
+      makeNote({ id: "n1", status: "backlog", createdAt: daysAgo(35) }),       // stone-neglect
+      makeNote({ id: "n2", status: "done", linksOut: [] }),              // orphan-notes
+      makeNote({ id: "n3", status: "in_progress", lastTouchedAt: daysAgo(10) }), // stale-notes + stuck-brick
       makeNote({ id: "n4", preview: "" }),                                    // empty-notes
     ]
     // n3 is also 10 days old brick with no promotedAt → stuck-brick won't match (only 10d < 14d threshold)

@@ -715,7 +715,7 @@ function CommentRow({
       const id = createNote({
         title: comment.body.split("\n")[0].slice(0, 80) || "Comment",
         content: comment.body,
-        status: "stone",
+        status: "backlog",
       })
       setStatus(comment.id, "done")
       const openNote = (usePlotStore.getState() as any).openNote

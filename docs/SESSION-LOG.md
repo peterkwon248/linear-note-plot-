@@ -6,6 +6,61 @@
 
 ---
 
+## 2026-05-29 (오후) — 집 (Windows), **NoteStatus 3→4 단계 REPLACE: stone/brick/keystone → backlog/todo/in_progress/done (이 세션 PR, squash merge)**
+
+> 🎯 **다음 즉시 액션 hook (최우선)**:
+> 1. **🔴 4단계 status 시각 검증 + 미해결 판단 콜 3개 결정** ⭐ (이 세션 코드/타입/빌드/테스트/Architect는 통과했으나 **UI 시각 확인 미완** — 이 환경 preview MCP가 node 15개 + IPv6 바인딩 충돌로 안 떴음)
+>    - **첫 스텝**: `npm run dev`(port 3002, autoPort) → 노트 **보드 4컬럼(대기/준비/정리 중/완성)** + 사이드바 status 섹션 4항목 + 색(backlog slate / todo `#3b82f6` blue / in_progress amber / done emerald) + Linear circle 아이콘(CircleDashed/Circle/CircleHalf/CheckCircle) 눈으로 확인. 라우트 `/backlog /todo /in-progress /done` 직접 접속.
+>    - **미해결 판단 콜 (이 세션 reasonable call로 "둠" 처리 — 사용자 최종 결정 필요)**:
+>      a. **settings-store `startView:"stone"` 리터럴** (`lib/settings-store.ts:33`) — 별도 store라 라우트 매핑(`layout.tsx:63-65` `START_VIEW_ROUTE.stone→/backlog`)으로 동작은 함. 완전 정합 원하면 settings-store 2차 마이그레이션 필요(stone→backlog 등 + version bump).
+>      b. **`app/preview/linear/page.tsx` 목업** — 자체 로컬 `type NoteStatus='stone'|'brick'|'keystone'` + Hexagon/Cube/Cuboid 아이콘 그대로 둠 (격리된 데모, preview 작업 트랙 별도). 일관성 위해 바꿀지.
+>      c. **죽은 i18n 키** `sidebar.stone/brick/block` (`i18n.ts:179-181,1136-1138`) — 미참조(grep 0), 값은 새 vocab. 제거할지(cosmetic).
+> 2. (carry) **Entity Insights 정보 아키텍처 통일 PRD** — plan 완료(`docs/01-plan/features/entity-insights-coherence.plan.md` A안), design 남음. recharts 표준화. Notes=별도 `/insights` / Wiki=dashboard 임베드 / Books=없음 / Ontology=top-level → 위치 통일.
+> 3. (carry) Wiki `← Overview`→breadcrumb / Phase 4 filter-bar(source 정리) / Category-Label 필터 비대칭
+> 4. (parked) 넛지(우하단 토스트) 루틴화/설정화 — `hooks/use-autopilot-nudges.ts` 하드코딩 3종(4h 쿨다운, fire-once) → 설정 가능 + `lib/autopilot/*` 룰 엔진(UI 없음) 통합 검토.
+
+> **사용자 의도** (이번 세션 인용):
+> - "노트에 기존 스톤,브릭,블록에서 백로그,투두,인프로그레스,던으로 바꿨거든?? 노트 말고 위키,북에도 추가" → status 4단계 통일 (브레인스토밍 후 확정)
+> - "나는 대체를 생각했거든? ... 대기→준비→정리 중→완성. 이건 완성도에 대한 이야기니까" → **완성도 축 유지하며 3→4 REPLACE** (태스크 관리 피벗 아님 — colors.ts:141 주석이 이미 brick=정리 중·keystone=완성으로 적시)
+> - "필터와 디스플레이에도 ... 신설 ... 기존 3개를 4개로" + "라우트 이름도 다 바꿔줘" → 전 surface + 라우트 rename
+> - "after-work 해줘. 다른 컴퓨터에서도 작업할 수 있게. 나 이제 나가봐야 돼" → 이 after-work
+
+> **이번 세션 핵심 결정 (3→4 매핑)**: stone→backlog · brick→in_progress · keystone→done · **todo=신규 수동 단계**(매핑 소스 없음, 빈 채 시작). autopilot 규칙도 같은 매핑으로 기존 동작 보존(backlog→in_progress, in_progress→done; todo는 default 규칙 미접촉).
+
+> **머신**: 집 (Windows) → 다음 **다른 컴퓨터**
+> **현재 main HEAD**: 이 PR squash merge 후 (직전 `3f02d80` PR #488)
+> **branch**: claude/friendly-roentgen-402e31 (worktree friendly-roentgen-402e31)
+
+### 완료
+- **NoteStatus 3→4 atomic rename (85파일, 이 세션 PR)**: enum `backlog|todo|in_progress|done` (`lib/types.ts:1`) + store **v150** IDB 마이그레이션(6개 영속 surface: notes.status / viewStateByContext keys / savedViews.space+filters / autopilotRules conditions+actions / customQuickFilters, idempotent) + 라우트 rename(`/stone→/backlog`, `/brick→/in-progress`, `/keystone→/done`, `/todo` 신규) + 색 4종(+todo `#3b82f6`) + Linear circle 아이콘 4종 + i18n EN(Backlog/Todo/In Progress/Done)/KO(대기/준비/정리 중/완성) + 보드 4컬럼 + 필터/디스플레이 4옵션 + autopilot 규칙 매핑 + ontology breakdown 3→4 count. executor-high 구현 + Architect APPROVED.
+- 검증: `tsc --noEmit` exit 0 · `npm run build` "Compiled successfully" (4 라우트 emit, 옛 3개 제거) · `npm run test` 282 pass(11 fail = date-grouping + `require("./seeds")` env, **pre-existing/status 무관, HEAD에서도 동일**) · Architect APPROVED (마이그레이션 데이터 안전·idempotent·todo v131 cleanup 방어·rename 완전).
+- (before-work) docs 크로스머신 정정 + 넛지 루틴화 task parked.
+
+### 브레인스토밍 & 큰 결정 (영구 — MEMORY.md에도 push)
+- **🔒 LOCKED #118/#100 폐기**: 스톤/브릭/블록 음역 시그니처(#118) + phosphor 건물 아이콘 3종(#100) → **4단계 완성도 축으로 대체**. 단, **축 의미는 동일**(원석/raw→완성/done progression). 라벨만 Linear 어휘로 교체(의미 재정의 = "완성도", 태스크 관리 아님).
+- **3→4 = 대체(REPLACE), 추가 아님**. 사용자가 "완성도 이야기"로 프레이밍 → Zettelkasten 정체성 배신이 아니라 진화로 판정. Wiki stub/article(완성도 축)과도 정합 ↑.
+- **todo는 수동 단계**: backlog(raw)와 in_progress(가공 중) 사이. 자동 승격 규칙이 todo로 옮기지 않음(경계 모호로 인한 status 썩음 회피 — 객관적 기준은 autopilot reads/links 트리거 유지).
+
+### 기술 학습 (영구 — MEMORY.md에도 push)
+- **3→N cardinality 변경 마이그레이션의 함정**: 신규 단계(todo)는 legacy 매핑 소스가 없어, garbage-cleanup(v131 `VALID_STATUSES`)이 "유효하지 않은 status"로 보고 stone으로 "복구"→v150이 backlog로 재매핑 = **silent 데이터 유실**. 회피 = cleanup allow-list에 신규 enum 값 포함(`migrate.ts:1987-1990`). 단순 rename(1:1)과 달리 cardinality 변경은 이 순서 의존성 주의.
+- **early-bird viewStateByContext rename**이 `normalizeViewStatesMap`(VALID keys만 iterate) **전에** 돌아야 per-status 커스터마이즈 유실 안 됨 (`migrate.ts:96-118`).
+- **route slug ≠ enum 값**: `/in-progress`(kebab) vs `in_progress`(snake) 구분 유지.
+- **이 환경 preview MCP 불가**: node 15개 누적 + Next 16 dev IPv6(`::`) 바인딩 → preview가 IPv4 probe로 "server not found". 시각 검증은 사용자 직접.
+
+### Watch Out (다음 세션 주의사항)
+- **UI 시각 미검증** — 보드 4컬럼/사이드바/색/아이콘 실제 렌더 사용자 확인 필요 (코드/타입/빌드/테스트는 green).
+- **미해결 판단 콜 3개** (hook 1a/b/c) — settings-store 리터럴 / preview 목업 / 죽은 i18n 키. 전부 "둠"으로 머지됨, 사용자 최종 결정 시 후속 PR.
+- **IDB v150 마이그레이션** — 기존 사용자 데이터: stone→backlog, brick→in_progress, keystone→done 자동. todo 빈 상태. **다른 컴퓨터의 IDB는 머신별 분리** → 그 머신에서 첫 실행 시 v150 마이그레이션 돈다(데이터 손실 0 설계).
+- pre-existing 테스트 실패 11개(date-grouping + seeds require) — 이 세션 무관, 별도 정리 대상.
+
+### 환경 변경
+- Store version: **v149 → v150**
+- Tests: 282/293 pass (11 pre-existing fail, status 무관)
+- 신규 파일: `app/(app)/todo/page.tsx`, `docs/01-plan/features/note-status-4stage.plan.md`
+- 사용자 IDB stale data: 없음 (v150 자동 마이그레이션)
+
+---
+
 ## 2026-05-28 (오후 후속) — 집 (Windows), **Library 정합 연속: categories 체크박스 + 컬럼 헤더 i18n + Book 폴더 Phase 2 + folder space fix (PR #486 + 이 PR)**
 
 > 🎯 **다음 즉시 액션 hook (최우선)**:

@@ -63,16 +63,16 @@ export interface NoteContextMenuItemsProps {
   /** Inline folder creation. Caller supplies via useFolderPickerData. */
   createFolderInline: (afterCreate: (newId: string) => void) => void
 
-  /* Status-specific (stone) */
+  /* Status-specific (backlog) */
   onKeep: () => void
   onSnooze: (preset: SnoozePreset) => void
   onTrash: () => void
 
-  /* Status-specific (brick) */
+  /* Status-specific (in_progress) */
   onPromote: () => void
   onMoveBack: () => void
 
-  /* Status-specific (keystone) */
+  /* Status-specific (done) */
   onDemote: () => void
 
   /* Common (every note) */
@@ -107,8 +107,8 @@ export function NoteContextMenuItems({
 }: NoteContextMenuItemsProps): ReactNode {
   return (
     <>
-      {/* Stone actions */}
-      {note.status === "stone" && note.triageStatus !== "trashed" && (
+      {/* Backlog actions */}
+      {note.status === "backlog" && note.triageStatus !== "trashed" && (
         <>
           <ContextMenuItem onClick={onKeep} className="text-note">
             <PhCheck className="mr-2 text-accent" size={16} strokeWidth={2.5} />
@@ -148,25 +148,25 @@ export function NoteContextMenuItems({
         </>
       )}
 
-      {/* Brick actions */}
-      {note.status === "brick" && (
+      {/* In Progress actions */}
+      {note.status === "in_progress" && (
         <>
           <ContextMenuItem onClick={onPromote} className="text-note">
             <ArrowUpRight className="mr-2 text-chart-5" size={16} strokeWidth={2} />
-            Promote to Keystone
+            Promote to Done
             <span className="ml-auto text-2xs text-muted-foreground">P</span>
           </ContextMenuItem>
           <ContextMenuItem onClick={onMoveBack} className="text-note">
             <Tray className="mr-2 text-muted-foreground" size={16} strokeWidth={2} />
-            Back to Stone
+            Back to Backlog
             <span className="ml-auto text-2xs text-muted-foreground">B</span>
           </ContextMenuItem>
           <ContextMenuSeparator />
         </>
       )}
 
-      {/* Keystone actions */}
-      {note.status === "keystone" && (
+      {/* Done actions */}
+      {note.status === "done" && (
         <>
           <ContextMenuItem onClick={onDemote} className="text-note">
             <ArrowDownLeft className="mr-2 text-muted-foreground" size={16} strokeWidth={2} />

@@ -407,7 +407,7 @@ function CommentItem({
       const id = createNote({
         title: comment.body.split("\n")[0].slice(0, 80) || "Comment",
         content: comment.body,
-        status: "stone",
+        status: "backlog",
       })
       // Resolve the comment to show it's been "moved on"
       setStatus(comment.id, "done")

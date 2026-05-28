@@ -104,8 +104,8 @@ export function createAutopilotSlice(set: Set, get: Get, appendEvent: AppendEven
         ),
       }))
 
-      // If promoted to keystone, enroll in SRS
-      if (updates.status === "keystone" && note.status !== "keystone") {
+      // If promoted to done, enroll in SRS
+      if (updates.status === "done" && note.status !== "done") {
         get().enrollSRS(noteId)
       }
 
@@ -151,9 +151,9 @@ export function createAutopilotSlice(set: Set, get: Get, appendEvent: AppendEven
         switch (action.type) {
           case "set_status":
             // We can't know the original status perfectly, but we can infer from the rule
-            // For Stone→Brick, reverse to stone. For Brick→Keystone, reverse to brick.
-            if (action.value === "brick") reverseUpdates.status = "stone"
-            else if (action.value === "keystone") reverseUpdates.status = "brick"
+            // For Backlog→In Progress, reverse to backlog. For In Progress→Done, reverse to in_progress.
+            if (action.value === "in_progress") reverseUpdates.status = "backlog"
+            else if (action.value === "done") reverseUpdates.status = "in_progress"
             break
           case "set_priority":
             reverseUpdates.priority = "none"
@@ -183,8 +183,8 @@ export function createAutopilotSlice(set: Set, get: Get, appendEvent: AppendEven
       reverseUpdates.updatedAt = now()
       reverseUpdates.lastTouchedAt = now()
 
-      // If reverting from keystone, unenroll SRS
-      if (reverseUpdates.status && reverseUpdates.status !== "keystone" && note.status === "keystone") {
+      // If reverting from done, unenroll SRS
+      if (reverseUpdates.status && reverseUpdates.status !== "done" && note.status === "done") {
         get().unenrollSRS(entry.noteId)
       }
 

@@ -93,16 +93,21 @@ export function migrate(persistedState: unknown): PlotState {
   if (state.sidebarLastWidth === undefined) state.sidebarLastWidth = 220
   if (state.sidebarCollapsed === undefined) state.sidebarCollapsed = false
   delete state.sidebarPeek // removed in Split-First migration
-  // v116 (early-bird): rename viewStateByContext keys BEFORE normalizeViewStatesMap.
-  // normalizeViewStatesMap iterates only VALID_VIEW_CONTEXT_KEYS (now stone/brick/keystone),
-  // so without this early rename a v115 user's persisted inbox/capture/permanent customization
-  // would be silently discarded. Idempotent (only renames when target is undefined).
+  // v116 / v150 (early-bird): rename viewStateByContext keys BEFORE normalizeViewStatesMap.
+  // normalizeViewStatesMap iterates only VALID_VIEW_CONTEXT_KEYS (now backlog/todo/in_progress/done),
+  // so without this early rename a legacy user's persisted per-status customization would be
+  // silently discarded. Maps BOTH the pre-v116 (inbox/capture/permanent) and the v116-v149
+  // (stone/brick/keystone) keys straight to the v150 NoteStatus keys so they survive normalization
+  // regardless of the user's starting version. Idempotent (only renames when target is undefined).
   if (state.viewStateByContext) {
     const vsc = state.viewStateByContext as Record<string, unknown>
     const earlyStatusRenames: Record<string, string> = {
-      inbox: "stone",
-      capture: "brick",
-      permanent: "keystone",
+      inbox: "backlog",
+      capture: "in_progress",
+      permanent: "done",
+      stone: "backlog",
+      brick: "in_progress",
+      keystone: "done",
     }
     for (const [oldKey, newKey] of Object.entries(earlyStatusRenames)) {
       if (vsc[oldKey] !== undefined && vsc[newKey] === undefined) {
@@ -1966,12 +1971,23 @@ export function migrate(persistedState: unknown): PlotState {
   //
   // notes-board now strips the "col-" prefix before status update. This
   // migration repairs already-corrupted IDB entries: anything outside the
-  // valid stone/brick/keystone enum is restored. Legacy v116 enums are
-  // re-mapped as a belt-and-suspenders pass; "col-stone" style garbage is
-  // stripped back to the bare key; everything else falls back to "stone"
-  // (the safe inbox-equivalent). Idempotent — valid notes pass through.
+  // valid status enum is restored. Legacy v116 enums are re-mapped as a
+  // belt-and-suspenders pass; "col-stone" style garbage is stripped back to
+  // the bare key; everything else falls back to "stone" (the safe
+  // inbox-equivalent). Idempotent — valid notes pass through.
+  //
+  // v150 NOTE: VALID_STATUSES must also include the v150 NoteStatus keys
+  // (backlog/todo/in_progress/done) so that an already-migrated store (re-run
+  // of migrate) is NOT clobbered here. In particular `todo` is a brand-new
+  // stage with no legacy source — without it in the allow-list, a re-run
+  // would "recover" todo notes to stone and v150 below would then move them to
+  // backlog (silent data loss). Legacy stone/brick/keystone still pass through
+  // here and are forward-mapped to the new enum by the v150 block.
   if (Array.isArray(state.notes)) {
-    const VALID_STATUSES = new Set(["stone", "brick", "keystone"])
+    const VALID_STATUSES = new Set([
+      "stone", "brick", "keystone",
+      "backlog", "todo", "in_progress", "done",
+    ])
     let repairedCount = 0
     state.notes = (state.notes as Record<string, unknown>[]).map((n) => {
       const s = n.status as string
@@ -2418,6 +2434,109 @@ export function migrate(persistedState: unknown): PlotState {
       if (!Array.isArray(b.folderIds)) {
         b.folderIds = []
       }
+    }
+  }
+
+  // v149 → v150: NoteStatus 3→4 단계 REPLACE.
+  //   stone → backlog · brick → in_progress · keystone → done
+  // (todo는 신규 수동 단계라 매핑 소스 없음 — 빈 채 시작.)
+  //
+  // 완성도 축은 그대로 유지하고 라벨/세분화만 바뀐 atomic rename. 모든 영속
+  // status 리터럴을 한 번에 매핑한다:
+  //   1) notes[].status
+  //   2) viewStateByContext 키 (early-bird 블록이 이미 처리하지만, normalize를
+  //      거치지 않은 stray 키 대비 belt-and-suspenders)
+  //   3) savedViews[].space (== "stone"이면 "backlog")
+  //   4) savedViews[].viewState.filters[] 중 field === "status"인 value
+  //   5) autopilotRules[].conditions[] (field === "status") + actions[]
+  //      (type === "set_status")의 value
+  //   6) customQuickFilters[].rules[] 중 field === "status"인 value
+  // STATUS_MAP에 없는 값(이미 backlog/todo/in_progress/done이거나 무관한 값)은
+  // 그대로 통과 → idempotent (데이터 손실 0).
+  {
+    const STATUS_MAP: Record<string, string> = {
+      stone: "backlog",
+      brick: "in_progress",
+      keystone: "done",
+    }
+    const mapStatus = (v: unknown): unknown =>
+      typeof v === "string" && v in STATUS_MAP ? STATUS_MAP[v] : v
+
+    // 1) notes[].status
+    if (Array.isArray(state.notes)) {
+      let renamed = 0
+      state.notes = (state.notes as Record<string, unknown>[]).map((n) => {
+        const next = mapStatus(n.status)
+        if (next !== n.status) renamed++
+        return { ...n, status: next }
+      })
+      if (renamed > 0) {
+        console.log(`[migrate] v149→v150: renamed NoteStatus on ${renamed} notes`)
+      }
+    }
+
+    // 2) viewStateByContext keys (stone/brick/keystone → mapped). Only rename
+    //    when the destination slot is free, to avoid clobbering a user-edited
+    //    target (matches the early-bird block's guard).
+    if (state.viewStateByContext && typeof state.viewStateByContext === "object") {
+      const vsc = state.viewStateByContext as Record<string, unknown>
+      for (const [oldKey, newKey] of Object.entries(STATUS_MAP)) {
+        if (vsc[oldKey] !== undefined && vsc[newKey] === undefined) {
+          vsc[newKey] = vsc[oldKey]
+          delete vsc[oldKey]
+        }
+      }
+    }
+
+    // 3) + 4) savedViews: space + viewState.filters status values
+    if (Array.isArray(state.savedViews)) {
+      state.savedViews = (state.savedViews as Record<string, unknown>[]).map((v) => {
+        const next: Record<string, unknown> = { ...v }
+        if (typeof v.space === "string" && v.space in STATUS_MAP) {
+          next.space = STATUS_MAP[v.space]
+        }
+        const vs = v.viewState as Record<string, unknown> | undefined
+        if (vs && Array.isArray(vs.filters)) {
+          next.viewState = {
+            ...vs,
+            filters: (vs.filters as Array<Record<string, unknown>>).map((f) =>
+              f && f.field === "status" ? { ...f, value: mapStatus(f.value) } : f
+            ),
+          }
+        }
+        return next
+      })
+    }
+
+    // 5) autopilotRules: status conditions + set_status actions
+    if (Array.isArray(state.autopilotRules)) {
+      state.autopilotRules = (state.autopilotRules as Record<string, unknown>[]).map((rule) => {
+        const next: Record<string, unknown> = { ...rule }
+        if (Array.isArray(rule.conditions)) {
+          next.conditions = (rule.conditions as Array<Record<string, unknown>>).map((c) =>
+            c && c.field === "status" ? { ...c, value: mapStatus(c.value) } : c
+          )
+        }
+        if (Array.isArray(rule.actions)) {
+          next.actions = (rule.actions as Array<Record<string, unknown>>).map((a) =>
+            a && a.type === "set_status" ? { ...a, value: mapStatus(a.value) } : a
+          )
+        }
+        return next
+      })
+    }
+
+    // 6) customQuickFilters: status rule values
+    if (Array.isArray(state.customQuickFilters)) {
+      state.customQuickFilters = (state.customQuickFilters as Record<string, unknown>[]).map((cf) => {
+        if (!Array.isArray(cf.rules)) return cf
+        return {
+          ...cf,
+          rules: (cf.rules as Array<Record<string, unknown>>).map((r) =>
+            r && r.field === "status" ? { ...r, value: mapStatus(r.value) } : r
+          ),
+        }
+      })
     }
   }
 

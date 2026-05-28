@@ -70,7 +70,7 @@ export function NotesGridShell({
 
   const { saveViewMode, onSaveView } = useSaveViewProps(context as any, "notes")
 
-  const isSingleStatusTab = ["stone", "brick", "keystone"].includes(context)
+  const isSingleStatusTab = ["backlog", "todo", "in_progress", "done"].includes(context)
 
   const notesFilterCategories = useMemo(() => {
     return NOTES_VIEW_CONFIG.filterCategories.map((cat) => {
@@ -166,7 +166,7 @@ export function NotesGridShell({
     <main className="flex h-full flex-1 flex-col overflow-hidden bg-background">
       <ViewHeader
         icon={
-          context === "stone" || context === "brick" || context === "keystone" ? (
+          context === "backlog" || context === "todo" || context === "in_progress" || context === "done" ? (
             <StatusShapeIcon status={context as NoteStatus} size={20} />
           ) : (
             <FileText size={20} strokeWidth={2} />

@@ -53,9 +53,10 @@ const TABS: { key: TabKey; labelKey: string }[] = [
 ]
 
 const STATUS_LABEL_KEY: Record<string, string> = {
-  stone: "status.stone",
-  brick: "status.brick",
-  keystone: "status.block",
+  backlog: "status.backlog",
+  todo: "status.todo",
+  in_progress: "status.in_progress",
+  done: "status.done",
 }
 
 // ── Highlight helper ─────────────────────────────────────────────────────────
@@ -352,7 +353,7 @@ export function SearchView() {
     const folderName = note.folderIds?.[0]
       ? folders.find((f) => f.id === note.folderIds![0])?.name
       : null
-    const stageLabel = t(STATUS_LABEL_KEY[note.status] ?? "status.stone")
+    const stageLabel = t(STATUS_LABEL_KEY[note.status] ?? "status.backlog")
     const relTime = shortRelative(note.updatedAt || note.createdAt)
     const bl = backlinksMap.get(note.id) ?? 0
     const parts: string[] = []

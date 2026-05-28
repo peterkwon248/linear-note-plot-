@@ -22,11 +22,11 @@ import {
 export interface TimelineLabelColumnProps {
   lanes: Array<LanedItem<TimelineEntity> | LanedCollapsedHeader>
   /** Caller-resolved status color (one per laned entity, keyed by entity id).
-   *  Wiki: stub orange / article emerald. Notes: stone slate / brick amber /
-   *  keystone emerald. Books: smart indigo / hybrid amber / manual muted. */
+   *  Wiki: stub orange / article emerald. Notes: backlog slate / todo blue /
+   *  in_progress amber / done emerald. Books: smart indigo / hybrid amber / manual muted. */
   getStatusColor: (entity: TimelineEntity) => string
   /** Caller-rendered status silhouette (e.g. IconWikiStub for wiki stubs,
-   *  IconStone for note stones). Sized for the label column (13px default
+   *  IconBacklog for note backlog). Sized for the label column (13px default
    *  inside this component). */
   renderStatusIcon: (entity: TimelineEntity, size?: number) => ReactNode
   activeArticleId: string | null

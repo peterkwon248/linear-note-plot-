@@ -62,9 +62,10 @@ import {
   Book,
   BookMarked,
 } from "lucide-react"
-import { Hexagon } from "@phosphor-icons/react/dist/ssr/Hexagon"
-import { Cube } from "@phosphor-icons/react/dist/ssr/Cube"
-import { Cuboid2x2 } from "@/components/icons/Cuboid2x2"
+import { CircleDashed } from "@phosphor-icons/react/dist/ssr/CircleDashed"
+import { Circle } from "@phosphor-icons/react/dist/ssr/Circle"
+import { CircleHalf } from "@phosphor-icons/react/dist/ssr/CircleHalf"
+import { CheckCircle } from "@phosphor-icons/react/dist/ssr/CheckCircle"
 
 type IconProps = SVGProps<SVGSVGElement> & { size?: number }
 
@@ -228,33 +229,31 @@ export function IconWikiArticle({ size = 16, ...props }: IconProps) {
   return <BookMarked size={size} strokeWidth={1.5} {...props} />
 }
 
-/* ── Brand Status (영구 룰 #95 — phosphor + custom retained) ─────────── */
+/* ── Note Status (4단계 완성도 축 — Linear progress circle) ─────────── */
 
-/**
- * Stone — phosphor `Hexagon` (regular weight). Crystalline / mineral feel
- * matching the raw-input architecture metaphor, in the same Linear-style
- * 1.5px stroke language as the rest of the sidebar nav icons.
- */
-export function IconStone({ size = 20, ...rest }: IconProps) {
-  return <Hexagon size={size} weight="regular" {...rest} />
+/** Backlog — phosphor `CircleDashed` (raw, 미분류). */
+export function IconBacklog({ size = 20, ...rest }: IconProps) {
+  return <CircleDashed size={size} weight="regular" {...rest} />
 }
 
-/**
- * Brick — phosphor `Cube` (regular weight). 3D solid block fits the
- * "regular processed unit" metaphor and reads cleanly at 20px.
- */
-export function IconBrick({ size = 20, ...rest }: IconProps) {
-  return <Cube size={size} weight="regular" {...rest} />
+/** Todo — phosphor `Circle` (준비, queued). */
+export function IconTodo({ size = 20, ...rest }: IconProps) {
+  return <Circle size={size} weight="regular" {...rest} />
 }
 
-/**
- * Block — same isometric angle as IconBrick (phosphor Cube), but a 2×2×1
- * cuboid (four cubes in a square plane). Composed from a single SVG
- * (`Cuboid2x2`), NOT four `Cube` silhouettes (divider lines would misalign).
- *
- * Hexagon (raw 2D crystal) → Cube (single processed unit) → Block (four
- * assembled units in 2×2 grid).
- */
-export function IconBlock({ size = 20, ...rest }: IconProps) {
-  return <Cuboid2x2 size={size} weight="regular" {...rest} />
+/** In Progress — phosphor `CircleHalf` (정리 중). */
+export function IconInProgress({ size = 20, ...rest }: IconProps) {
+  return <CircleHalf size={size} weight="regular" {...rest} />
 }
+
+/** Done — phosphor `CheckCircle` (완성). */
+export function IconDone({ size = 20, ...rest }: IconProps) {
+  return <CheckCircle size={size} weight="regular" {...rest} />
+}
+
+/** @deprecated Legacy aliases (stone/brick/block → backlog/in_progress/done).
+ *  Kept so existing call sites compile; new code should use the named exports
+ *  above. The old architecture-metaphor building icons are retired. */
+export const IconStone = IconBacklog
+export const IconBrick = IconInProgress
+export const IconBlock = IconDone

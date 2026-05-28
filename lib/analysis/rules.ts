@@ -5,14 +5,14 @@ const DAY_MS = 24 * 60 * 60 * 1000
 export const PRESET_RULES: AnalysisRule[] = [
   {
     id: "stone-neglect",
-    label: "Stone neglected 30+ days",
-    description: "Notes sitting in stone for over 30 days",
+    label: "Backlog neglected 30+ days",
+    description: "Notes sitting in backlog for over 30 days",
     severity: "critical",
     match: (ctx) =>
       ctx.notes
         .filter(
           (n) =>
-            n.status === "stone" &&
+            n.status === "backlog" &&
             ctx.now - new Date(n.createdAt).getTime() > 30 * DAY_MS,
         )
         .map((n) => n.id),
@@ -36,12 +36,12 @@ export const PRESET_RULES: AnalysisRule[] = [
   {
     id: "stale-notes",
     label: "Stale notes (7+ days)",
-    description: "Brick/keystone notes not touched in over 7 days",
+    description: "In Progress/Done notes not touched in over 7 days",
     severity: "warning",
     match: (ctx) =>
       ctx.notes
         .filter((n) => {
-          if (n.status !== "brick" && n.status !== "keystone") return false
+          if (n.status !== "in_progress" && n.status !== "done") return false
           const touched = new Date(
             n.lastTouchedAt ?? n.updatedAt,
           ).getTime()
@@ -53,13 +53,13 @@ export const PRESET_RULES: AnalysisRule[] = [
   {
     id: "orphan-notes",
     label: "Orphan notes",
-    description: "Keystone notes with no inbound or outbound links",
+    description: "Done notes with no inbound or outbound links",
     severity: "warning",
     match: (ctx) =>
       ctx.notes
         .filter(
           (n) =>
-            n.status === "keystone" &&
+            n.status === "done" &&
             (ctx.backlinks.get(n.id) ?? 0) === 0 &&
             n.linksOut.length === 0,
         )
@@ -82,14 +82,14 @@ export const PRESET_RULES: AnalysisRule[] = [
 
   {
     id: "stuck-brick",
-    label: "Stuck in brick",
-    description: "Notes in brick stage for over 14 days without promotion",
+    label: "Stuck in progress",
+    description: "Notes in In Progress stage for over 14 days without promotion",
     severity: "info",
     match: (ctx) =>
       ctx.notes
         .filter(
           (n) =>
-            n.status === "brick" &&
+            n.status === "in_progress" &&
             n.promotedAt === null &&
             ctx.now - new Date(n.createdAt).getTime() > 14 * DAY_MS,
         )

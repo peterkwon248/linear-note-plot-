@@ -35,7 +35,7 @@ export default function PreferencesPage() {
         .filter((h) => h.target.kind === "note")
         .map((h) => h.target.id),
     )
-    return notes.filter((n) => n.status === "keystone" && !n.trashed && !enrolled.has(n.id)).length
+    return notes.filter((n) => n.status === "done" && !n.trashed && !enrolled.has(n.id)).length
   }, [notes, hooks])
 
   return (
@@ -82,7 +82,7 @@ export default function PreferencesPage() {
       <SettingsCard title={t("settings.preferences.srs.title")}>
         <SettingRow
           label={t("settings.preferences.srs.bulk.label")}
-          description={`${unenrolledCount} keystone note${unenrolledCount === 1 ? "" : "s"} not yet enrolled in SRS`}
+          description={`${unenrolledCount} done note${unenrolledCount === 1 ? "" : "s"} not yet enrolled in SRS`}
         >
           <button
             onClick={() => {
@@ -90,7 +90,7 @@ export default function PreferencesPage() {
               if (count > 0) {
                 toast(`Enrolled ${count} note${count === 1 ? "" : "s"} into SRS`)
               } else {
-                toast("All keystone notes are already enrolled")
+                toast("All done notes are already enrolled")
               }
             }}
             disabled={unenrolledCount === 0}

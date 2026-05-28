@@ -41,9 +41,9 @@ export function HomeView() {
       .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
       .slice(0, 5)
 
-    // Featured note: most recently edited non-stone note
+    // Featured note: most recently edited non-backlog note
     const featured = liveNotes
-      .filter((n: Note) => n.status !== "stone")
+      .filter((n: Note) => n.status !== "backlog")
       .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())[0]
 
     // Most connected notes — out-degree (linksOut) + in-degree (backlinks via index)

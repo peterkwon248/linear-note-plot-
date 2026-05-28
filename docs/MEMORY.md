@@ -8,6 +8,47 @@
 
 ---
 
+## ✅ 2026-05-29 (오후) — NoteStatus 3→4 단계 REPLACE 완료·머지 (store v150) ⭐⭐⭐⭐
+
+**범위**: 노트 status를 3단계(stone/brick/keystone) → 4단계(backlog/todo/in_progress/done)로 **REPLACE**. 85파일 atomic rename + 라우트 rename + store v150 마이그레이션. executor-high 구현 + Architect APPROVED + tsc/build/test green.
+
+### 핵심 결정 (영구)
+- **완성도 축 유지, 3→4 세분화 + 라벨 교체**. Linear 어휘(Backlog/Todo/In Progress/Done)를 빌리되 **의미는 "노트 완성도"로 재정의** — 태스크 관리 피벗 아님. `colors.ts:141` 주석이 이미 brick=정리 중·keystone=완성으로 적시(2026-05-13) → 같은 축의 진화.
+- **3→4 매핑**: stone→backlog · brick→in_progress · keystone→done · **todo=신규 수동 단계**(매핑 소스 없음, 빈 채 시작). KO: 대기/준비/정리 중/완성.
+- **🔒 LOCKED #118 + #100 폐기**: #118(스톤/브릭/블록 음역 시그니처) + #100(phosphor 건물 아이콘 3종) → 4단계 완성도 축 + Linear circle 아이콘(CircleDashed/Circle/CircleHalf/CheckCircle)으로 대체. 축 의미는 동일.
+- **todo는 수동 단계**: 자동 승격 규칙이 todo로 옮기지 않음. autopilot 기존 규칙은 같은 매핑으로 동작 보존(backlog→in_progress, in_progress→done).
+- **색**: backlog `#94a3b8` slate(=옛 stone) / todo `#3b82f6` blue(신규, tweakable) / in_progress `#f59e0b` amber(=옛 brick) / done `#34d399` emerald(=옛 keystone).
+- **라우트**: `/backlog /todo /in-progress /done` (slug `in-progress` kebab ≠ enum `in_progress` snake).
+
+### 기술 학습 (영구)
+- **cardinality 변경(3→N) 마이그레이션 함정**: 신규 단계(todo)는 legacy 소스가 없어, garbage-cleanup(v131 `VALID_STATUSES` allow-list)이 todo를 "무효 status"로 보고 stone "복구"→v150이 backlog 재매핑 = **silent 데이터 유실**. 회피 = cleanup allow-list에 신규 enum 포함(`migrate.ts:1987-1990`). 1:1 rename과 다른 순서 의존성.
+- **early-bird viewStateByContext rename**은 `normalizeViewStatesMap`(VALID keys만 iterate) **전에** 돌아야 per-status 커스터마이즈 유실 안 됨(`migrate.ts:96-118`).
+- v150 = 6개 영속 surface 매핑(notes.status / viewStateByContext keys / savedViews.space+filters / autopilotRules conditions+actions / customQuickFilters), idempotent.
+- **이 환경 preview MCP 불가**: node 누적 + Next 16 dev IPv6(`::`) 바인딩 → IPv4 probe 실패. 시각 검증은 사용자 직접.
+
+### 미해결 (다음 세션 — 전부 "둠"으로 머지)
+- a. settings-store `startView:"stone"` 리터럴(별도 store, 라우트 매핑으로 동작). b. `app/preview/linear` 목업(격리, 자체 타입). c. 죽은 i18n 키 `sidebar.stone/brick/block`(미참조). + **UI 시각 미검증**.
+
+---
+
+## 🔧 2026-05-29 (before-work 크로스머신 정정) — A+ folder + Book 폴더 Phase 2 완료 확인
+
+**상황**: 직전 docs(아래 2026-05-28 오후 후속 entry)는 **A+ book/wiki folder = note 패턴**을 P0 #0 최우선으로, **Book 폴더 Phase 2**를 P0로 남겨뒀음. before-work 시 git HEAD가 `3f02d80`(PR #488)인데, 이 둘이 **다른 컴퓨터에서 이미 완료·머지**됐고 SESSION-LOG에 미기록이라 docs가 stale이었음. 코드로 직접 검증 후 정정.
+
+### 코드 검증 (완료 확정)
+- **A+ book/wiki folder = note 패턴 → PR #488 (`3f02d80`)**: `lib/view-engine/use-books-view.ts:281` `useBooksView(contextKey, folderId?)` + `:304` `folderId ? visible.filter((b) => b.folderIds.includes(folderId)) : visible`. `components/linear-sidebar.tsx:1147-1156`(wiki)/`1774-1782`(book) 핸들러에 `// A+ folder=filter` 주석 + `setActiveFolderId` + `setActiveRoute("/wiki")`|`"/books"` + `router.push`. folder page는 direct URL용 유지(폐기 안 됨). 파일: linear-sidebar/books-view/wiki-list/wiki-view/use-books-view.
+- **Book 폴더 Phase 2 UI → PR #487 (`65efec1`)**: 사이드바 Books Folders section(`linear-sidebar.tsx:1737~` "note/wiki folders by Folder.kind" 주석 + book folder 핸들러) 존재. createFolder/setBookFolders + folder space fix 포함.
+
+### 새 현재 방향 (다음 우선순위, 정정)
+1. **🔴 P0 #0**: **Entity Insights 정보 아키텍처 통일 PRD** (plan 완료 = `docs/01-plan/features/entity-insights-coherence.plan.md` A안 확정, **design 남음**. 차트 = recharts 표준화). Notes=별도 `/insights` page / Wiki=dashboard 임베드 / Books=없음 / Ontology=top-level → 위치 통일.
+2. **🟡 P0 #1 (carry)**: Wiki `← Overview` → breadcrumb 마이그 (LibraryBreadcrumb 패턴, `wiki-list.tsx:794-802`)
+3. **🟡 P0 #2 (carry)**: Phase 3.1 `/preview/linear` reference 비교 + Phase 4 filter-bar Linear 마이그 (source 정리) / Category-Label 필터 비대칭
+
+### 교훈 (영구)
+- **크로스머신 stale docs**: 다른 컴퓨터에서 작업·머지 후 after-work(SESSION-LOG/TODO 갱신)를 안 하면 docs가 코드보다 뒤처짐. before-work는 **git HEAD PR 제목 ↔ TODO P0** 대조로 stale 감지 → 코드 grep 검증 → 정정. 이번엔 PR #487/#488 제목이 P0 항목과 1:1 매칭이라 빠르게 잡힘.
+
+---
+
 ## 🚀 2026-05-28 (오후 후속) — Library 정합: categories 체크박스 + 컬럼 헤더 i18n + Book 폴더 Phase 2 + folder space fix ⭐⭐⭐
 
 **범위**: Library 정합 연속. PR #486(categories 체크박스 + i18n) + 이 PR(Book 폴더 Phase 2 + space fix).

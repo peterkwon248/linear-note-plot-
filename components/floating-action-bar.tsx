@@ -102,16 +102,16 @@ export function FloatingActionBar({
     return map
   }, [selectedNotes])
 
-  const inboxCount = useMemo(() => selectedNotes.filter(n => n.status === 'stone').length, [selectedNotes])
-  const captureCount = useMemo(() => selectedNotes.filter(n => n.status === 'brick').length, [selectedNotes])
-  const permanentCount = useMemo(() => selectedNotes.filter(n => n.status === 'keystone').length, [selectedNotes])
+  const inboxCount = useMemo(() => selectedNotes.filter(n => n.status === 'backlog').length, [selectedNotes])
+  const captureCount = useMemo(() => selectedNotes.filter(n => n.status === 'in_progress').length, [selectedNotes])
+  const permanentCount = useMemo(() => selectedNotes.filter(n => n.status === 'done').length, [selectedNotes])
 
   /* ── Batch handlers ──────────────────────────────────── */
 
   const handleStatusChange = (status: NoteStatus) => {
     const prevStatuses = ids.map((id) => {
       const n = notes.find((n) => n.id === id)
-      return { id, status: n?.status ?? "stone" as NoteStatus }
+      return { id, status: n?.status ?? "backlog" as NoteStatus }
     })
     batchUpdateNotes(ids, { status })
     pushUndo(`Status → ${status}`, () => {
@@ -142,7 +142,7 @@ export function FloatingActionBar({
   const handlePromoteAll = () => {
     ids.forEach((id) => promoteToPermanent(id))
     onClearSelection()
-    pushUndo(`Promote ${count} to Keystone`, () => ids.forEach((id) => undoPromote(id)), () => ids.forEach((id) => promoteToPermanent(id)))
+    pushUndo(`Promote ${count} to Done`, () => ids.forEach((id) => undoPromote(id)), () => ids.forEach((id) => promoteToPermanent(id)))
     toast(t("floatingbar.toast.promoted").replace("{count}", String(count)), {
       action: { label: "Undo", onClick: () => ids.forEach((id) => undoPromote(id)) },
       duration: 5000,
@@ -187,29 +187,29 @@ export function FloatingActionBar({
   }
 
   const handleKeepInboxOnly = () => {
-    const inboxIds = selectedNotes.filter(n => n.status === 'stone').map(n => n.id)
+    const inboxIds = selectedNotes.filter(n => n.status === 'backlog').map(n => n.id)
     if (inboxIds.length === 0) return
     inboxIds.forEach((id) => triageKeep(id))
     onClearSelection()
-    pushUndo(`Triage ${inboxIds.length} to Brick`, () => inboxIds.forEach((id) => moveBackToInbox(id)), () => inboxIds.forEach((id) => triageKeep(id)))
+    pushUndo(`Triage ${inboxIds.length} to In Progress`, () => inboxIds.forEach((id) => moveBackToInbox(id)), () => inboxIds.forEach((id) => triageKeep(id)))
     toast(t("floatingbar.toast.moved_to_brick").replace("{count}", String(inboxIds.length)))
   }
 
   const handlePromoteCaptureOnly = () => {
-    const captureIds = selectedNotes.filter(n => n.status === 'brick').map(n => n.id)
+    const captureIds = selectedNotes.filter(n => n.status === 'in_progress').map(n => n.id)
     if (captureIds.length === 0) return
     captureIds.forEach((id) => promoteToPermanent(id))
     onClearSelection()
-    pushUndo(`Promote ${captureIds.length} to Keystone`, () => captureIds.forEach((id) => undoPromote(id)), () => captureIds.forEach((id) => promoteToPermanent(id)))
+    pushUndo(`Promote ${captureIds.length} to Done`, () => captureIds.forEach((id) => undoPromote(id)), () => captureIds.forEach((id) => promoteToPermanent(id)))
     toast(t("floatingbar.toast.promoted").replace("{count}", String(captureIds.length)))
   }
 
   const handleDemotePermanentOnly = () => {
-    const permIds = selectedNotes.filter(n => n.status === 'keystone').map(n => n.id)
+    const permIds = selectedNotes.filter(n => n.status === 'done').map(n => n.id)
     if (permIds.length === 0) return
     permIds.forEach((id) => undoPromote(id))
     onClearSelection()
-    pushUndo(`Demote ${permIds.length} to Brick`, () => permIds.forEach((id) => promoteToPermanent(id)), () => permIds.forEach((id) => undoPromote(id)))
+    pushUndo(`Demote ${permIds.length} to In Progress`, () => permIds.forEach((id) => promoteToPermanent(id)), () => permIds.forEach((id) => undoPromote(id)))
     toast(t("floatingbar.toast.demoted").replace("{count}", String(permIds.length)))
   }
 
@@ -235,7 +235,7 @@ export function FloatingActionBar({
           </>
         )
 
-      case "stone":
+      case "backlog":
         return (
           <button
             onClick={handleKeepAll}
@@ -245,7 +245,7 @@ export function FloatingActionBar({
           </button>
         )
 
-      case "brick":
+      case "in_progress":
         return (
           <>
             <button
@@ -263,7 +263,7 @@ export function FloatingActionBar({
           </>
         )
 
-      case "keystone":
+      case "done":
         return (
           <button
             onClick={handleDemoteAll}
@@ -343,7 +343,7 @@ export function FloatingActionBar({
             {/* Status badges */}
             {Array.from(statusGroups.entries()).map(([status, groupNotes]) => {
               const cfg = STATUS_CONFIG[status]
-              // 2026-05-12 hotfix: STATUS_CONFIG는 stone/brick/keystone만.
+              // 2026-05-12 hotfix: STATUS_CONFIG는 backlog/todo/in_progress/done만.
               // 노트의 status가 (data corruption / 옛 enum) 그 외 값이면
               // 이 badge skip. crash 대신 silent skip이 안전.
               if (!cfg) return null

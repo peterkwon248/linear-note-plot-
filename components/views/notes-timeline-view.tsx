@@ -48,7 +48,7 @@ import { TimelineBar } from "./wiki-timeline/timeline-bar"
 import { TimelineEventMarkers } from "./wiki-timeline/timeline-event-markers"
 import { TimelineLabelColumn } from "./wiki-timeline/timeline-label-column"
 import { TimelineTooltip } from "./wiki-timeline/timeline-tooltip"
-import { IconStone, IconBrick, IconBlock } from "@/components/plot-icons"
+import { IconBacklog, IconTodo, IconInProgress, IconDone } from "@/components/plot-icons"
 import { NOTE_STATUS_HEX } from "@/lib/colors"
 import type { EntityEvent } from "@/lib/types"
 
@@ -66,21 +66,24 @@ function noteHorizon(n: Note): Date | null {
 }
 
 function noteStatusColor(status: NoteStatus | undefined): string {
-  if (status === "brick") return NOTE_STATUS_HEX.brick
-  if (status === "keystone") return NOTE_STATUS_HEX.keystone
-  return NOTE_STATUS_HEX.stone
+  if (status === "todo") return NOTE_STATUS_HEX.todo
+  if (status === "in_progress") return NOTE_STATUS_HEX.in_progress
+  if (status === "done") return NOTE_STATUS_HEX.done
+  return NOTE_STATUS_HEX.backlog
 }
 
 function NoteStatusIcon({ status, size = 13 }: { status: NoteStatus | undefined; size?: number }) {
-  if (status === "keystone") return <IconBlock size={size} />
-  if (status === "brick") return <IconBrick size={size} />
-  return <IconStone size={size} />
+  if (status === "done") return <IconDone size={size} />
+  if (status === "in_progress") return <IconInProgress size={size} />
+  if (status === "todo") return <IconTodo size={size} />
+  return <IconBacklog size={size} />
 }
 
 function noteStatusLabel(status: NoteStatus | undefined): string {
-  if (status === "keystone") return "Block"
-  if (status === "brick") return "Brick"
-  return "Stone"
+  if (status === "done") return "Done"
+  if (status === "in_progress") return "In Progress"
+  if (status === "todo") return "Todo"
+  return "Backlog"
 }
 
 /* ── Props ──────────────────────────────────────────────────── */

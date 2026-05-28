@@ -1,9 +1,8 @@
 import type { ReactNode } from "react"
 import type { SortField, SortDirection, ViewMode, GroupBy, SortRule, ViewContextKey } from "./types"
-import { Hexagon, Cube, BookOpen, CircleHalf, Sticker as StickerIcon, Lightning, PencilSimple, Sparkle, Globe, DownloadSimple } from "@phosphor-icons/react"
-import { Cuboid2x2 } from "@/components/icons/Cuboid2x2"
+import { CircleDashed, Circle, BookOpen, CircleHalf, CheckCircle, Sticker as StickerIcon, Lightning, PencilSimple, Sparkle, Globe, DownloadSimple } from "@phosphor-icons/react"
 import { IconWikiStub, IconWikiArticle } from "@/components/plot-icons"
-import { WIKI_STATUS_HEX } from "@/lib/colors"
+import { WIKI_STATUS_HEX, NOTE_STATUS_HEX } from "@/lib/colors"
 
 export interface FilterCategory {
   key: string
@@ -182,9 +181,10 @@ export const NOTES_VIEW_CONFIG: ViewConfig = {
   showDetailPanel: true,
   filterCategories: [
     { key: "status", label: "Status", labelKey: "filter.category.status", icon: StatusIcon, values: [
-      { key: "stone", label: "Stone", labelKey: "status.stone", color: "rgba(255,255,255,0.32)", icon: <Hexagon size={14} weight="regular" style={{ color: "var(--chart-2)" }} /> },
-      { key: "brick", label: "Brick", labelKey: "status.brick", color: "#f5a623", icon: <Cube size={14} weight="regular" style={{ color: "var(--chart-3)" }} /> },
-      { key: "keystone", label: "Block", labelKey: "status.block", icon: <Cuboid2x2 size={14} weight="regular" style={{ color: "var(--status-keystone)" }} /> },
+      { key: "backlog", label: "Backlog", labelKey: "status.backlog", color: NOTE_STATUS_HEX.backlog, icon: <CircleDashed size={14} weight="regular" style={{ color: NOTE_STATUS_HEX.backlog }} /> },
+      { key: "todo", label: "Todo", labelKey: "status.todo", color: NOTE_STATUS_HEX.todo, icon: <Circle size={14} weight="regular" style={{ color: NOTE_STATUS_HEX.todo }} /> },
+      { key: "in_progress", label: "In Progress", labelKey: "status.in_progress", color: NOTE_STATUS_HEX.in_progress, icon: <CircleHalf size={14} weight="regular" style={{ color: NOTE_STATUS_HEX.in_progress }} /> },
+      { key: "done", label: "Done", labelKey: "status.done", color: NOTE_STATUS_HEX.done, icon: <CheckCircle size={14} weight="regular" style={{ color: NOTE_STATUS_HEX.done }} /> },
     ]},
     { key: "folder", label: "Folder", labelKey: "filter.category.folder", icon: FolderIcon, values: [] },
     { key: "label", label: "Label", labelKey: "filter.category.label", icon: LabelIcon, values: [] },
@@ -520,7 +520,7 @@ export const GRAPH_VIEW_CONFIG: ViewConfig = {
   showDetailPanel: true,
   filterCategories: [
     // v2 Ontology Hull Phase 1 — Status filter entity별 분리.
-    // Note status (stone/brick/block) + Wiki status (stub/article) +
+    // Note status (backlog/todo/in_progress/done) + Wiki status (stub/article) +
     // Book kind (smart/manual/hybrid)를 flat values로 한 카테고리에
     // 묶음 (LOCKED #7 Option B nested의 일차 구현 — UI nested
     // sub-section은 follow-up, 우선은 flat list로 cross-entity
@@ -529,9 +529,10 @@ export const GRAPH_VIEW_CONFIG: ViewConfig = {
       // Status는 entity별로 의미 다름 → sub-section header(group)로 묶음.
       // FilterPanel이 group 변경 시점에 small label 렌더링 (LOCKED
       // Ontology Hull #7 Option B nested의 본 구현).
-      { key: "stone",       label: "Stone",   icon: <Hexagon size={14} weight="regular" style={{ color: "var(--chart-2)" }} />, group: "Note" },
-      { key: "brick",       label: "Brick",   icon: <Cube size={14} weight="regular" style={{ color: "var(--chart-3)" }} />, group: "Note" },
-      { key: "keystone",    label: "Block",   icon: <Cuboid2x2 size={14} weight="regular" style={{ color: "var(--status-keystone)" }} />, group: "Note" },
+      { key: "backlog",     label: "Backlog", icon: <CircleDashed size={14} weight="regular" style={{ color: NOTE_STATUS_HEX.backlog }} />, group: "Note" },
+      { key: "todo",        label: "Todo",    icon: <Circle size={14} weight="regular" style={{ color: NOTE_STATUS_HEX.todo }} />, group: "Note" },
+      { key: "in_progress", label: "In Progress", icon: <CircleHalf size={14} weight="regular" style={{ color: NOTE_STATUS_HEX.in_progress }} />, group: "Note" },
+      { key: "done",        label: "Done",    icon: <CheckCircle size={14} weight="regular" style={{ color: NOTE_STATUS_HEX.done }} />, group: "Note" },
       { key: "wiki-stub",   label: "Stub",    icon: <IconWikiStub size={14} style={{ color: WIKI_STATUS_HEX.stub }} />, group: "Wiki" },
       { key: "wiki-article", label: "Article", icon: <IconWikiArticle size={14} style={{ color: WIKI_STATUS_HEX.article }} />, group: "Wiki" },
       { key: "book-smart",  label: "Smart",   icon: <Lightning size={14} weight="regular" style={{ color: "#5E6AD2" }} />, group: "Book" },
@@ -663,9 +664,10 @@ export const CALENDAR_VIEW_CONFIG: ViewConfig = {
   showDetailPanel: true,
   filterCategories: [
     { key: "status", label: "Status", labelKey: "filter.category.status", icon: StatusIcon, values: [
-      { key: "stone", label: "Stone", labelKey: "status.stone", color: "rgba(255,255,255,0.32)", icon: <Hexagon size={14} weight="regular" style={{ color: "var(--chart-2)" }} /> },
-      { key: "brick", label: "Brick", labelKey: "status.brick", color: "#f5a623", icon: <Cube size={14} weight="regular" style={{ color: "var(--chart-3)" }} /> },
-      { key: "keystone", label: "Block", labelKey: "status.block", icon: <Cuboid2x2 size={14} weight="regular" style={{ color: "var(--status-keystone)" }} /> },
+      { key: "backlog", label: "Backlog", labelKey: "status.backlog", color: NOTE_STATUS_HEX.backlog, icon: <CircleDashed size={14} weight="regular" style={{ color: NOTE_STATUS_HEX.backlog }} /> },
+      { key: "todo", label: "Todo", labelKey: "status.todo", color: NOTE_STATUS_HEX.todo, icon: <Circle size={14} weight="regular" style={{ color: NOTE_STATUS_HEX.todo }} /> },
+      { key: "in_progress", label: "In Progress", labelKey: "status.in_progress", color: NOTE_STATUS_HEX.in_progress, icon: <CircleHalf size={14} weight="regular" style={{ color: NOTE_STATUS_HEX.in_progress }} /> },
+      { key: "done", label: "Done", labelKey: "status.done", color: NOTE_STATUS_HEX.done, icon: <CheckCircle size={14} weight="regular" style={{ color: NOTE_STATUS_HEX.done }} /> },
     ]},
     { key: "folder", label: "Folder", labelKey: "filter.category.folder", icon: FolderIcon, values: [] },
     { key: "label", label: "Label", labelKey: "filter.category.label", icon: LabelIcon, values: [] },
@@ -697,9 +699,10 @@ export const TEMPLATES_VIEW_CONFIG: ViewConfig = {
   showDetailPanel: true,
   filterCategories: [
     { key: "status", label: "Status", labelKey: "filter.category.status", icon: StatusIcon, values: [
-      { key: "stone", label: "Stone", labelKey: "status.stone", color: "rgba(255,255,255,0.32)", icon: <Hexagon size={14} weight="regular" style={{ color: "var(--chart-2)" }} /> },
-      { key: "brick", label: "Brick", labelKey: "status.brick", color: "#f5a623", icon: <Cube size={14} weight="regular" style={{ color: "var(--chart-3)" }} /> },
-      { key: "keystone", label: "Block", labelKey: "status.block", icon: <Cuboid2x2 size={14} weight="regular" style={{ color: "var(--status-keystone)" }} /> },
+      { key: "backlog", label: "Backlog", labelKey: "status.backlog", color: NOTE_STATUS_HEX.backlog, icon: <CircleDashed size={14} weight="regular" style={{ color: NOTE_STATUS_HEX.backlog }} /> },
+      { key: "todo", label: "Todo", labelKey: "status.todo", color: NOTE_STATUS_HEX.todo, icon: <Circle size={14} weight="regular" style={{ color: NOTE_STATUS_HEX.todo }} /> },
+      { key: "in_progress", label: "In Progress", labelKey: "status.in_progress", color: NOTE_STATUS_HEX.in_progress, icon: <CircleHalf size={14} weight="regular" style={{ color: NOTE_STATUS_HEX.in_progress }} /> },
+      { key: "done", label: "Done", labelKey: "status.done", color: NOTE_STATUS_HEX.done, icon: <CheckCircle size={14} weight="regular" style={{ color: NOTE_STATUS_HEX.done }} /> },
     ]},
     { key: "priority", label: "Priority", icon: PriorityIcon, values: [
       { key: "urgent", label: "Urgent" },
@@ -1063,12 +1066,12 @@ export const VIEW_CONFIGS: Record<string, ViewConfig> = {
   books: BOOKS_VIEW_CONFIG,
 }
 
-/** ctx-keyed view contexts (all, pinned, stone, folder, ...) that share the
+/** ctx-keyed view contexts (all, pinned, backlog, folder, ...) that share the
  *  same Notes pipeline / DisplayConfig. Centralizing this set lets
  *  `getViewConfigForContext` map every Notes-like ctx to NOTES_VIEW_CONFIG
  *  without enumerating each ctx string at every call site. */
 const NOTES_LIKE_CTX_KEYS = new Set<ViewContextKey>([
-  "all", "pinned", "stone", "brick", "keystone", "unlinked", "review",
+  "all", "pinned", "backlog", "todo", "in_progress", "done", "unlinked", "review",
   "folder", "tag", "label", "trash", "savedView",
 ])
 

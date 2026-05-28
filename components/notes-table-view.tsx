@@ -29,9 +29,10 @@ interface ViewConfig {
 
 const TABLE_VIEW_MAP: Record<string, ViewConfig> = {
   "/notes": { titleKey: "routes.title.notes" },
-  "/stone": { context: "stone", titleKey: "status.stone" },
-  "/brick": { context: "brick", titleKey: "status.brick" },
-  "/keystone": { context: "keystone", titleKey: "status.block" },
+  "/backlog": { context: "backlog", titleKey: "status.backlog" },
+  "/todo": { context: "todo", titleKey: "status.todo" },
+  "/in-progress": { context: "in_progress", titleKey: "status.in_progress" },
+  "/done": { context: "done", titleKey: "status.done" },
   "/pinned": { context: "pinned", titleKey: "sidebar.section.pinned", hideCreateButton: true },
   "/trash": { context: "trash", titleKey: "routes.title.trash", hideCreateButton: true },
 }

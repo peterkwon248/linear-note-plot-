@@ -76,17 +76,19 @@ export function TagDetailPanel({ tag }: { tag: Tag }) {
     [books, tag.id],
   )
 
-  // Note status breakdown (stone / brick / keystone — UI 라벨 "Block" for keystone).
+  // Note status breakdown (backlog / todo / in_progress / done).
   const notesByStatus = useMemo(() => {
-    let stone = 0
-    let brick = 0
-    let keystone = 0
+    let backlog = 0
+    let todo = 0
+    let in_progress = 0
+    let done = 0
     for (const n of taggedNotes) {
-      if (n.status === "stone") stone++
-      else if (n.status === "brick") brick++
-      else if (n.status === "keystone") keystone++
+      if (n.status === "backlog") backlog++
+      else if (n.status === "todo") todo++
+      else if (n.status === "in_progress") in_progress++
+      else if (n.status === "done") done++
     }
-    return { stone, brick, keystone }
+    return { backlog, todo, in_progress, done }
   }, [taggedNotes])
 
   const totalCount = taggedNotes.length + taggedWikis.length + taggedBooks.length
@@ -133,19 +135,24 @@ export function TagDetailPanel({ tag }: { tag: Tag }) {
                   <span className="text-note tabular-nums text-foreground">{taggedNotes.length}</span>
                 </div>
                 <div className="flex flex-wrap gap-1 text-2xs">
-                  {notesByStatus.stone > 0 && (
+                  {notesByStatus.backlog > 0 && (
                     <span className="rounded bg-secondary/40 px-1.5 py-0.5 text-muted-foreground tabular-nums">
-                      Stone {notesByStatus.stone}
+                      Backlog {notesByStatus.backlog}
                     </span>
                   )}
-                  {notesByStatus.brick > 0 && (
+                  {notesByStatus.todo > 0 && (
                     <span className="rounded bg-secondary/40 px-1.5 py-0.5 text-muted-foreground tabular-nums">
-                      Brick {notesByStatus.brick}
+                      Todo {notesByStatus.todo}
                     </span>
                   )}
-                  {notesByStatus.keystone > 0 && (
+                  {notesByStatus.in_progress > 0 && (
                     <span className="rounded bg-secondary/40 px-1.5 py-0.5 text-muted-foreground tabular-nums">
-                      Block {notesByStatus.keystone}
+                      In Progress {notesByStatus.in_progress}
+                    </span>
+                  )}
+                  {notesByStatus.done > 0 && (
+                    <span className="rounded bg-secondary/40 px-1.5 py-0.5 text-muted-foreground tabular-nums">
+                      Done {notesByStatus.done}
                     </span>
                   )}
                 </div>

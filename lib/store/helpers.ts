@@ -64,16 +64,16 @@ export const genId = () => crypto.randomUUID()
 export const now = () => new Date().toISOString()
 
 /** Default workflow fields for a note */
-export function workflowDefaults(status: NoteStatus = "stone"): Pick<
+export function workflowDefaults(status: NoteStatus = "backlog"): Pick<
   Note,
   "triageStatus" | "inboxRank" | "summary" | "source" | "promotedAt" | "lastTouchedAt" | "snoozeCount" | "trashedAt" | "parentNoteId"
 > {
   return {
-    triageStatus: status === "stone" ? "untriaged" : "kept",
+    triageStatus: status === "backlog" ? "untriaged" : "kept",
     inboxRank: 0,
     summary: null,
     source: "manual",
-    promotedAt: status === "keystone" ? now() : null,
+    promotedAt: status === "done" ? now() : null,
     lastTouchedAt: now(),
     snoozeCount: 0,
     trashedAt: null,

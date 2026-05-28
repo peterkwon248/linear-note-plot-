@@ -22,7 +22,7 @@ import type {
 } from "@/lib/view-engine/types"
 import type { Note } from "@/lib/types"
 import { shortRelative } from "@/lib/format-utils"
-import { CircleDashed, CircleHalf, CheckCircle, CaretDown, CaretUpDown, Funnel, X as PhX, Table as TableIcon, SortAscending, SortDescending, Tray, PushPin, ListBullets, FolderOpen, Tag, ArrowsIn } from "@/lib/editor/editor-icons"
+import { CircleDashed, Circle, CircleHalf, CheckCircle, CaretDown, CaretUpDown, Funnel, X as PhX, Table as TableIcon, SortAscending, SortDescending, Tray, PushPin, ListBullets, FolderOpen, Tag, ArrowsIn } from "@/lib/editor/editor-icons"
 
 /* ── Constants ────────────────────────────────────────────── */
 
@@ -73,22 +73,28 @@ const FILTER_OPERATOR_OPTIONS: { value: FilterOperator; label: string }[] = [
 
 function StatusBadge({ status }: { status: string }) {
   switch (status) {
-    case "stone":
+    case "backlog":
       return (
         <span className="inline-flex items-center gap-1 text-2xs text-muted-foreground">
-          <CircleDashed size={12} /> Stone
+          <CircleDashed size={12} /> Backlog
         </span>
       )
-    case "brick":
+    case "todo":
       return (
         <span className="inline-flex items-center gap-1 text-2xs text-[var(--accent)]">
-          <CircleHalf size={12} /> Brick
+          <Circle size={12} /> Todo
         </span>
       )
-    case "keystone":
+    case "in_progress":
       return (
         <span className="inline-flex items-center gap-1 text-2xs text-[var(--accent)]">
-          <CheckCircle size={12} /> Keystone
+          <CircleHalf size={12} /> In Progress
+        </span>
+      )
+    case "done":
+      return (
+        <span className="inline-flex items-center gap-1 text-2xs text-[var(--accent)]">
+          <CheckCircle size={12} /> Done
         </span>
       )
     default:
@@ -397,18 +403,23 @@ function QueryPresetPicker({
   const presets: { icon: React.ReactNode; label: string; filters: FilterRule[] }[] = [
     {
       icon: <Tray size={16} className="text-muted-foreground" />,
-      label: "Stone notes",
-      filters: [{ field: "status" as FilterField, operator: "eq" as FilterOperator, value: "stone" }],
+      label: "Backlog notes",
+      filters: [{ field: "status" as FilterField, operator: "eq" as FilterOperator, value: "backlog" }],
     },
     {
-      icon: <CheckCircle size={16} className="text-muted-foreground" />,
-      label: "Keystone notes",
-      filters: [{ field: "status" as FilterField, operator: "eq" as FilterOperator, value: "keystone" }],
+      icon: <Circle size={16} className="text-muted-foreground" />,
+      label: "Todo notes",
+      filters: [{ field: "status" as FilterField, operator: "eq" as FilterOperator, value: "todo" }],
     },
     {
       icon: <CircleHalf size={16} className="text-muted-foreground" />,
-      label: "Brick notes",
-      filters: [{ field: "status" as FilterField, operator: "eq" as FilterOperator, value: "brick" }],
+      label: "In Progress notes",
+      filters: [{ field: "status" as FilterField, operator: "eq" as FilterOperator, value: "in_progress" }],
+    },
+    {
+      icon: <CheckCircle size={16} className="text-muted-foreground" />,
+      label: "Done notes",
+      filters: [{ field: "status" as FilterField, operator: "eq" as FilterOperator, value: "done" }],
     },
     {
       icon: <PushPin size={16} className="text-muted-foreground" />,
