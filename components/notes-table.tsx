@@ -877,7 +877,7 @@ export function NotesTable({
     updateViewState({ filters: viewState.filters.filter((_, i) => i !== idx) })
   }
 
-  const isSingleStatusTab = ["stone", "brick", "keystone"].includes(effectiveTab)
+  const isSingleStatusTab = ["backlog", "todo", "in_progress", "done"].includes(effectiveTab)
 
   // ── Dynamic filter categories (merge static config with store data) ──
   const notesFilterCategories = useMemo(() => {
@@ -1154,7 +1154,7 @@ export function NotesTable({
       {/* ── Page title ─────────────────────────────────── */}
       <ViewHeader
         icon={
-          context === "stone" || context === "brick" || context === "keystone"
+          context === "backlog" || context === "todo" || context === "in_progress" || context === "done"
             ? <StatusShapeIcon status={context as NoteStatus} size={20} />
             : <FileText size={20} strokeWidth={2} />
         }
@@ -1775,7 +1775,7 @@ function GroupHeaderIcon({ groupBy, groupKey, label, folders, labels }: {
 }) {
   switch (groupBy) {
     case "status":
-      // Use groupKey (raw status value: "stone"/"brick"/"keystone") instead
+      // Use groupKey (raw status value: "backlog"/"todo"/"in_progress"/"done") instead
       // of label — labels are display aliases (e.g. "Block" for keystone)
       // and would miss NOTE_STATUS_COLORS, falling back to currentColor.
       return <StatusShapeIcon status={groupKey as NoteStatus} size={16} />

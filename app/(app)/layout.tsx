@@ -60,7 +60,9 @@ const COLLAPSE_THRESHOLD = 80
 const START_VIEW_ROUTE: Record<"home" | "all" | "stone" | "pinned", string> = {
   home: "/home",
   all: "/notes",
-  stone: "/stone",
+  // startView value "stone" is a legacy settings-store key (not a NoteStatus);
+  // it now lands on the renamed Backlog route.
+  stone: "/backlog",
   pinned: "/pinned",
 }
 

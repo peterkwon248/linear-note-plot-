@@ -21,9 +21,10 @@ function inferActiveContextKey(): ViewContextKey {
   if (!route) return "all"
   switch (route) {
     case "/notes": return "all"
-    case "/stone": return "stone"
-    case "/brick": return "brick"
-    case "/keystone": return "keystone"
+    case "/backlog": return "backlog"
+    case "/todo": return "todo"
+    case "/in-progress": return "in_progress"
+    case "/done": return "done"
     case "/pinned": return "pinned"
     case "/trash": return "trash"
     case "/wiki": return "wiki"
@@ -289,9 +290,10 @@ export function useGlobalShortcuts() {
         pendingG.current = false
         if (gTimer.current) clearTimeout(gTimer.current)
         const k = e.key.toLowerCase()
-        if (k === "i") { e.preventDefault(); router.push("/stone"); return }
-        if (k === "c") { e.preventDefault(); router.push("/brick"); return }
-        if (k === "m") { e.preventDefault(); router.push("/keystone"); return }
+        if (k === "i") { e.preventDefault(); router.push("/backlog"); return }
+        if (k === "t") { e.preventDefault(); router.push("/todo"); return }
+        if (k === "c") { e.preventDefault(); router.push("/in-progress"); return }
+        if (k === "m") { e.preventDefault(); router.push("/done"); return }
         if (k === "n") { e.preventDefault(); router.push("/notes"); return }
         return
       }

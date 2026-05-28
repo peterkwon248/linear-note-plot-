@@ -223,7 +223,7 @@ export function buildOntologyGraphData(
         id: tagNodeId,
         label: tag.name,
         connectionCount: noteIds.length,
-        status: "keystone", // tag nodes use a default status
+        status: "done", // tag nodes use a default status
         labelId: null,
         isWiki: false,
         nodeType: "tag",
@@ -250,7 +250,7 @@ export function buildOntologyGraphData(
         id: `wiki:${wa.id}`,
         label: wa.title || "Untitled",
         connectionCount: 0,
-        status: "keystone",
+        status: "done",
         labelId: null,
         isWiki: true,
         nodeType: "wiki",

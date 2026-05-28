@@ -225,7 +225,7 @@ export interface EntityTimelineAdapter<T extends TimelineEntity> {
    *  notes/books, just `new Date(updatedAt)`. Return null to drop the
    *  entity from the timeline (no valid horizon). */
   getHorizon: (entity: T) => Date | null
-  /** Stable status key (e.g. "stub"/"article", "stone"/"brick"/"keystone",
+  /** Stable status key (e.g. "stub"/"article", "backlog"/"todo"/"in_progress"/"done",
    *  "smart"/"hybrid"/"manual"). Used as the React key for status-tinted
    *  styling. */
   getStatusKey: (entity: T) => string

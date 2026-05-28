@@ -37,7 +37,7 @@ import { LOD, VIEWPORT, NODE_THEME, FIT_CONFIG, MAX_VISIBLE_NODES, FORCE_CONFIG,
 export interface OntologyFilters {
   tagIds: string[]
   labelId: string | null
-  status: "stone" | "brick" | "keystone" | "all"
+  status: "backlog" | "todo" | "in_progress" | "done" | "all"
   relationTypes: RelationType[] | "all"
   showWikilinks: boolean
   showTagNodes: boolean
@@ -316,9 +316,10 @@ function computeEdgePath(
 /* ── Node base color (for gradient palette) ──────────── */
 
 const STATUS_COLORS: Record<string, string> = {
-  stone:    GRAPH_NODE_HEX.stone,
-  brick:    GRAPH_NODE_HEX.brick,
-  keystone: GRAPH_NODE_HEX.keystone,
+  backlog:     GRAPH_NODE_HEX.backlog,
+  todo:        GRAPH_NODE_HEX.todo,
+  in_progress: GRAPH_NODE_HEX.in_progress,
+  done:        GRAPH_NODE_HEX.done,
 }
 const DEFAULT_NODE_COLOR = "hsl(var(--muted-foreground))"
 
@@ -2529,7 +2530,7 @@ function LegendOverlay({ svgRef, legendRelationTypes, hasWikilinkEdges, isDarkMo
 
   const rowHeight = 18
   // Node type legend entries (always shown) + edge entries
-  const nodeTypeRows = 4 // Inbox, Capture, Permanent, Wiki (separator uses row 3 space)
+  const nodeTypeRows = 5 // Backlog, Todo, In Progress, Done, Wiki (separator uses next row space)
   const edgeRows = legendRelationTypes.length + (hasWikilinkEdges ? 1 : 0)
   const totalRows = nodeTypeRows + (edgeRows > 0 ? 1 : 0) + edgeRows // +1 for separator
   const legendH = totalRows * rowHeight + 16
@@ -2573,20 +2574,24 @@ function LegendOverlay({ svgRef, legendRelationTypes, hasWikilinkEdges, isDarkMo
            Light-mode swatches use a thicker stroke + denser fill so the
            tiny 8px shapes still read against a white card background. ── */}
       <g transform={`translate(10, ${10 + 0 * rowHeight})`}>
-        <circle cx={6} cy={6} r={4} fill={GRAPH_NODE_HEX.stone + nodeFillAlpha} stroke={GRAPH_NODE_HEX.stone} strokeWidth={isDarkMode ? 1.3 : 1.8} />
-        <text x={26} y={10} fill={labelFill} fontSize={10} fontWeight={isDarkMode ? 500 : 600} fontFamily="-apple-system, system-ui, sans-serif">Stone</text>
+        <circle cx={6} cy={6} r={4} fill={GRAPH_NODE_HEX.backlog + nodeFillAlpha} stroke={GRAPH_NODE_HEX.backlog} strokeWidth={isDarkMode ? 1.3 : 1.8} />
+        <text x={26} y={10} fill={labelFill} fontSize={10} fontWeight={isDarkMode ? 500 : 600} fontFamily="-apple-system, system-ui, sans-serif">Backlog</text>
       </g>
       <g transform={`translate(10, ${10 + 1 * rowHeight})`}>
-        <circle cx={6} cy={6} r={4} fill={GRAPH_NODE_HEX.brick + nodeFillAlpha} stroke={GRAPH_NODE_HEX.brick} strokeWidth={isDarkMode ? 1.3 : 1.8} />
-        <text x={26} y={10} fill={labelFill} fontSize={10} fontWeight={isDarkMode ? 500 : 600} fontFamily="-apple-system, system-ui, sans-serif">Brick</text>
+        <circle cx={6} cy={6} r={4} fill={GRAPH_NODE_HEX.todo + nodeFillAlpha} stroke={GRAPH_NODE_HEX.todo} strokeWidth={isDarkMode ? 1.3 : 1.8} />
+        <text x={26} y={10} fill={labelFill} fontSize={10} fontWeight={isDarkMode ? 500 : 600} fontFamily="-apple-system, system-ui, sans-serif">Todo</text>
       </g>
       <g transform={`translate(10, ${10 + 2 * rowHeight})`}>
-        <circle cx={6} cy={6} r={4} fill={GRAPH_NODE_HEX.keystone + nodeFillAlpha} stroke={GRAPH_NODE_HEX.keystone} strokeWidth={isDarkMode ? 1.3 : 1.8} />
-        <text x={26} y={10} fill={labelFill} fontSize={10} fontWeight={isDarkMode ? 500 : 600} fontFamily="-apple-system, system-ui, sans-serif">Block</text>
+        <circle cx={6} cy={6} r={4} fill={GRAPH_NODE_HEX.in_progress + nodeFillAlpha} stroke={GRAPH_NODE_HEX.in_progress} strokeWidth={isDarkMode ? 1.3 : 1.8} />
+        <text x={26} y={10} fill={labelFill} fontSize={10} fontWeight={isDarkMode ? 500 : 600} fontFamily="-apple-system, system-ui, sans-serif">In Progress</text>
+      </g>
+      <g transform={`translate(10, ${10 + 3 * rowHeight})`}>
+        <circle cx={6} cy={6} r={4} fill={GRAPH_NODE_HEX.done + nodeFillAlpha} stroke={GRAPH_NODE_HEX.done} strokeWidth={isDarkMode ? 1.3 : 1.8} />
+        <text x={26} y={10} fill={labelFill} fontSize={10} fontWeight={isDarkMode ? 500 : 600} fontFamily="-apple-system, system-ui, sans-serif">Done</text>
       </g>
 
       {/* ── Wiki (hexagon — matches actual graph shape) ── */}
-      <g transform={`translate(10, ${10 + 3 * rowHeight})`}>
+      <g transform={`translate(10, ${10 + 4 * rowHeight})`}>
         {(() => {
           const pts = hexagonPoints(6, 6, 4)
           // Legend swatch — match the actual graph wiki node fill (entity violet).

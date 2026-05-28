@@ -1,6 +1,6 @@
-export type NoteStatus = "stone" | "brick" | "keystone"
+export type NoteStatus = "backlog" | "todo" | "in_progress" | "done"
 export type NotePriority = "none" | "urgent" | "high" | "medium" | "low"
-/** Triage status for stone notes */
+/** Triage status for backlog notes */
 export type TriageStatus = "untriaged" | "kept" | "snoozed" | "trashed"
 
 /** Source of note creation */
@@ -555,7 +555,7 @@ export interface SavedView {
   description?: string
   icon?: string
   color: string
-  space: "stone" | "notes" | "wiki" | "calendar" | "ontology" | "books" | "library-categories" | "all"
+  space: "backlog" | "notes" | "wiki" | "calendar" | "ontology" | "books" | "library-categories" | "all"
   viewState: {
     /** @migrated v112 — legacy "table" mapped to "list" */
     viewMode: "list" | "board" | "grid" | "insights" | "calendar" | "graph" | "dashboard"
@@ -916,7 +916,7 @@ export interface NoteTemplate {
   // surfaces; v108 follows up by deleting them from the data model itself.
   // - description: name carries enough; UpNote-style picker no longer shows it
   // - status / priority: too weak as defaults — users override on first edit;
-  //   new notes from a template now start at "stone" / "none" sensibly.
+  //   new notes from a template now start at "backlog" / "none" sensibly.
   // Pre-filled fields
   title: string          // template for title (can contain {date}, {time} placeholders)
   content: string        // markdown body template
@@ -933,7 +933,7 @@ export interface NoteTemplate {
 }
 
 export type ActiveView =
-  | { type: "stone" }
+  | { type: "backlog" }
   | { type: "all" }
   | { type: "folder"; folderId: string }
   | { type: "templates" }
@@ -944,15 +944,15 @@ export type ActiveView =
 
 /** Route-based note filter, used by each page route */
 export type NoteFilter =
-  | { type: "stone" }
+  | { type: "backlog" }
   | { type: "all" }
   | { type: "trash" }
   | { type: "pinned" }
   | { type: "folder"; folderId: string }
   | { type: "tag"; tagId: string }
-  | { type: "status-stone" }
-  | { type: "status-brick" }
-  | { type: "status-keystone" }
+  | { type: "status-backlog" }
+  | { type: "status-in_progress" }
+  | { type: "status-done" }
 
 /* ── Phase 2: Event Log / Timeline ──────────────────── */
 

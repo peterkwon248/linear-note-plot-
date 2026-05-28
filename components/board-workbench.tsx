@@ -202,8 +202,8 @@ export function BoardWorkbench({
             <div className="flex flex-wrap gap-1.5">
               {Array.from(statusGroups.entries()).map(([status, groupNotes]) => {
                 // Null guard — same pattern as floating-action-bar hotfix (#308).
-                // STATUS_CONFIG only has stone/brick/keystone; legacy or dnd-kit
-                // collision residue (e.g. "col-stone") would crash on cfg.bg.
+                // STATUS_CONFIG only has backlog/todo/in_progress/done; legacy or dnd-kit
+                // collision residue (e.g. "col-backlog") would crash on cfg.bg.
                 const cfg = STATUS_CONFIG[status]
                 if (!cfg) return null
                 return (
@@ -239,7 +239,7 @@ export function BoardWorkbench({
               <div className="flex items-center gap-2 pt-1">
                 <span className="text-2xs text-muted-foreground/60">Change all →</span>
                 <StatusDropdown
-                  value={commonStatus ?? "stone"}
+                  value={commonStatus ?? "backlog"}
                   onChange={(s) => batchUpdateNotes(Array.from(selectedIds), { status: s })}
                   variant="inline"
                 />
@@ -260,10 +260,10 @@ export function BoardWorkbench({
         />
 
         {/* Mixed-status workflow for All/Unlinked tabs */}
-        {effectiveTab !== "stone" && effectiveTab !== "brick" && effectiveTab !== "keystone" && effectiveTab !== "trash" && (() => {
-          const inboxNotes = selectedNotes.filter(n => n.status === 'stone')
-          const captureNotes = selectedNotes.filter(n => n.status === 'brick')
-          const permanentNotes = selectedNotes.filter(n => n.status === 'keystone')
+        {effectiveTab !== "backlog" && effectiveTab !== "todo" && effectiveTab !== "in_progress" && effectiveTab !== "done" && effectiveTab !== "trash" && (() => {
+          const inboxNotes = selectedNotes.filter(n => n.status === 'backlog')
+          const captureNotes = selectedNotes.filter(n => n.status === 'in_progress')
+          const permanentNotes = selectedNotes.filter(n => n.status === 'done')
           if (inboxNotes.length === 0 && captureNotes.length === 0 && permanentNotes.length === 0) return null
           return (
             <div className="mt-4 space-y-3">
@@ -274,7 +274,7 @@ export function BoardWorkbench({
                     onClick={() => {
                       inboxNotes.forEach(n => triageKeep(n.id))
                       onClearSelection()
-                      toast(`Moved ${inboxNotes.length} note${inboxNotes.length > 1 ? "s" : ""} to Brick`)
+                      toast(`Moved ${inboxNotes.length} note${inboxNotes.length > 1 ? "s" : ""} to In Progress`)
                     }}
                     className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-note font-medium text-foreground transition-colors hover:bg-hover-bg"
                   >
@@ -286,7 +286,7 @@ export function BoardWorkbench({
                     onClick={() => {
                       captureNotes.forEach(n => promoteToPermanent(n.id))
                       onClearSelection()
-                      toast(`Promoted ${captureNotes.length} note${captureNotes.length > 1 ? "s" : ""} to Keystone`)
+                      toast(`Promoted ${captureNotes.length} note${captureNotes.length > 1 ? "s" : ""} to Done`)
                     }}
                     className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-note font-medium text-foreground transition-colors hover:bg-hover-bg"
                   >
@@ -298,7 +298,7 @@ export function BoardWorkbench({
                     onClick={() => {
                       permanentNotes.forEach(n => undoPromote(n.id))
                       onClearSelection()
-                      toast(`Demoted ${permanentNotes.length} note${permanentNotes.length > 1 ? "s" : ""} to Brick`)
+                      toast(`Demoted ${permanentNotes.length} note${permanentNotes.length > 1 ? "s" : ""} to In Progress`)
                     }}
                     className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-note font-medium text-foreground transition-colors hover:bg-hover-bg"
                   >
@@ -543,20 +543,20 @@ function WorkflowActions({
 }) {
   const actions: { icon: React.ReactNode; label: string; onClick: () => void }[] = []
 
-  if (effectiveTab === "stone") {
+  if (effectiveTab === "backlog") {
     actions.push(
       { icon: <PhCheck className="text-accent" size={16} strokeWidth={2.5} />, label: "Done All", onClick: onKeepAll },
     )
   }
 
-  if (effectiveTab === "brick") {
+  if (effectiveTab === "in_progress") {
     actions.push(
       { icon: <ArrowUpRight className="text-accent" size={16} strokeWidth={2} />, label: "Promote All", onClick: onPromoteAll },
-      { icon: <ArrowDownLeft className="text-accent" size={16} strokeWidth={2} />, label: "Back to Stone", onClick: onMoveBackAll },
+      { icon: <ArrowDownLeft className="text-accent" size={16} strokeWidth={2} />, label: "Back to Backlog", onClick: onMoveBackAll },
     )
   }
 
-  if (effectiveTab === "keystone") {
+  if (effectiveTab === "done") {
     actions.push(
       { icon: <ArrowDownLeft className="text-accent" size={16} strokeWidth={2} />, label: "Demote All", onClick: onDemoteAll },
     )
@@ -605,7 +605,7 @@ function OverviewContent({
   onCardClick?: (noteId: string) => void
 }) {
   switch (effectiveTab) {
-    case "stone":
+    case "backlog":
       return (
         <InboxOverview
           notes={notes}
@@ -613,7 +613,7 @@ function OverviewContent({
           onSelectMany={onSelectMany}
         />
       )
-    case "brick":
+    case "in_progress":
       return (
         <CaptureOverview
           notes={notes}
@@ -622,7 +622,7 @@ function OverviewContent({
           onCardClick={onCardClick}
         />
       )
-    case "keystone":
+    case "done":
       return (
         <KnowledgeOverview
           effectiveTab={effectiveTab}
@@ -809,7 +809,7 @@ function KnowledgeOverview({
   onSelectAll,
   onCardClick,
 }: {
-  effectiveTab: "keystone"
+  effectiveTab: "done"
   notes: Note[]
   backlinksMap: Map<string, number>
   onSelectAll: () => void

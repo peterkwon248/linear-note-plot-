@@ -130,24 +130,25 @@ export type KnowledgeIndexEntity = keyof typeof KNOWLEDGE_INDEX_COLORS
 
 /** CSS-var references (for Tailwind / inline style with var()) */
 export const NOTE_STATUS_COLORS = {
-  stone:    { css: "var(--status-stone)",    tw: "status-stone" },
-  brick:    { css: "var(--status-brick)",    tw: "status-brick" },
-  keystone: { css: "var(--status-keystone)", tw: "status-keystone" },
+  backlog:     { css: "var(--status-backlog)",     tw: "status-backlog" },
+  todo:        { css: "var(--status-todo)",        tw: "status-todo" },
+  in_progress: { css: "var(--status-in_progress)", tw: "status-in_progress" },
+  done:        { css: "var(--status-done)",        tw: "status-done" },
 } as const
 
 /** Resolved hex values for canvas / SVG (dark theme canonical).
  *
- * 2026-05-13 메타포 재정렬 (사용자 요청):
- * Stone (slate, raw) → Brick (amber, 정리 중) → Block (emerald, 완성).
- * 마지막 단계가 가장 선명한 색으로 끝나는 progression.
- * 이전: stone=gray / brick=amber / keystone=slate — keystone이 가장 옅어 메타포 어색.
+ * 4단계 완성도 축 (2026-05-29): Backlog (slate, raw) → Todo (blue, 준비) →
+ * In Progress (amber, 정리 중) → Done (emerald, 완성). slate → blue → amber
+ * → emerald ramp (정체 → 계획 → 활성 → 완성).
  *
- * Mirrors --status-{stone,brick,keystone} CSS vars in app/globals.css (dark 값).
+ * Mirrors --status-{backlog,todo,in_progress,done} CSS vars in app/globals.css (dark 값).
  */
 export const NOTE_STATUS_HEX = {
-  stone:    "#94a3b8",   // slate-400      — neutral granite (raw)
-  brick:    "#f59e0b",   // amber-500      — kiln-fired brick
-  keystone: "#34d399",   // emerald-400    — finished crystal (settled)
+  backlog:     "#94a3b8",   // slate-400      — raw, 미분류
+  todo:        "#3b82f6",   // blue-500       — planned/queued
+  in_progress: "#f59e0b",   // amber-500      — 적극 가공 중
+  done:        "#34d399",   // emerald-400    — 결정화·완성
 } as const
 
 /* ── Wiki Status ─────────────────────────────── */
@@ -207,9 +208,10 @@ export const RELATION_HEX = {
 /* ── Graph (ontology) ────────────────────────── */
 
 export const GRAPH_NODE_HEX = {
-  stone:     NOTE_STATUS_HEX.stone,
-  brick:     NOTE_STATUS_HEX.brick,
-  keystone:  NOTE_STATUS_HEX.keystone,
+  backlog:     NOTE_STATUS_HEX.backlog,
+  todo:        NOTE_STATUS_HEX.todo,
+  in_progress: NOTE_STATUS_HEX.in_progress,
+  done:        NOTE_STATUS_HEX.done,
   // Wiki **entity** color (violet) — NOT WIKI_STATUS_HEX.article (emerald,
   // which is a publication-state color). Graph nodes represent the wiki
   // entity itself regardless of stub/article state, so they inherit the

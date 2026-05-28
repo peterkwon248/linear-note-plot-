@@ -19,10 +19,11 @@ import {
   ChevronDown as CaretDown,
   Check as PhCheck,
 } from "lucide-react"
-// Brand icons (Stone/Brick): phosphor 유지 — 영구 룰 #95
-import { Hexagon } from "@phosphor-icons/react/dist/ssr/Hexagon"
-import { Cube } from "@phosphor-icons/react/dist/ssr/Cube"
-import { Cuboid2x2 } from "@/components/icons/Cuboid2x2"
+// Status icons (Linear progress circle — 4단계 완성도 축)
+import { CircleDashed } from "@phosphor-icons/react/dist/ssr/CircleDashed"
+import { Circle } from "@phosphor-icons/react/dist/ssr/Circle"
+import { CircleHalf } from "@phosphor-icons/react/dist/ssr/CircleHalf"
+import { CheckCircle } from "@phosphor-icons/react/dist/ssr/CheckCircle"
 import { Tag as PhTag, Plus as PhPlus, X as PhX } from "lucide-react"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { cn } from "@/lib/utils"
@@ -42,38 +43,42 @@ export const STATUS_CONFIG: Record<
   NoteStatus,
   { label: string; labelKey: string; color: string; bg: string; border: string; icon: React.ReactNode }
 > = {
-  stone: {
-    label: "Stone",
-    labelKey: "status.stone",
-    // 2026-05-13: var(--chart-2)는 chart 시각화 전용 — status 색과 unrelated.
-    // var(--status-stone)으로 통일 → row icon(NOTE_STATUS_COLORS)과 정확
-    // 동일 색. (이전 PR #319에서 keystone만 fix되고 stone/brick은 lazy
-    // 남았던 follow-up.)
-    color: "var(--status-stone)",
-    bg: "color-mix(in srgb, var(--status-stone) 18%, transparent)",
-    border: "color-mix(in srgb, var(--status-stone) 35%, transparent)",
-    icon: <Hexagon size={14} weight="bold" />,
+  backlog: {
+    label: "Backlog",
+    labelKey: "status.backlog",
+    // var(--status-backlog)으로 통일 → row icon(NOTE_STATUS_COLORS)과 정확 동일 색.
+    color: "var(--status-backlog)",
+    bg: "color-mix(in srgb, var(--status-backlog) 18%, transparent)",
+    border: "color-mix(in srgb, var(--status-backlog) 35%, transparent)",
+    icon: <CircleDashed size={14} weight="bold" />,
   },
-  brick: {
-    label: "Brick",
-    labelKey: "status.brick",
-    // 2026-05-13: var(--chart-3) → var(--status-brick) 통일 (위 stone 동일 이유).
-    color: "var(--status-brick)",
-    bg: "color-mix(in srgb, var(--status-brick) 18%, transparent)",
-    border: "color-mix(in srgb, var(--status-brick) 35%, transparent)",
-    icon: <Cube size={14} weight="bold" />,
+  todo: {
+    label: "Todo",
+    labelKey: "status.todo",
+    color: "var(--status-todo)",
+    bg: "color-mix(in srgb, var(--status-todo) 18%, transparent)",
+    border: "color-mix(in srgb, var(--status-todo) 35%, transparent)",
+    icon: <Circle size={14} weight="bold" />,
   },
-  keystone: {
-    label: "Block",
-    labelKey: "status.block",
-    color: "var(--status-keystone)",
-    bg: "color-mix(in srgb, var(--status-keystone) 18%, transparent)",
-    border: "color-mix(in srgb, var(--status-keystone) 35%, transparent)",
-    icon: <Cuboid2x2 size={14} weight="bold" />,
+  in_progress: {
+    label: "In Progress",
+    labelKey: "status.in_progress",
+    color: "var(--status-in_progress)",
+    bg: "color-mix(in srgb, var(--status-in_progress) 18%, transparent)",
+    border: "color-mix(in srgb, var(--status-in_progress) 35%, transparent)",
+    icon: <CircleHalf size={14} weight="bold" />,
+  },
+  done: {
+    label: "Done",
+    labelKey: "status.done",
+    color: "var(--status-done)",
+    bg: "color-mix(in srgb, var(--status-done) 18%, transparent)",
+    border: "color-mix(in srgb, var(--status-done) 35%, transparent)",
+    icon: <CheckCircle size={14} weight="bold" />,
   },
 }
 
-const STATUS_OPTIONS: NoteStatus[] = ["stone", "brick", "keystone"]
+const STATUS_OPTIONS: NoteStatus[] = ["backlog", "todo", "in_progress", "done"]
 
 /* ── Priority config ──────────────────────────────────── */
 
@@ -114,7 +119,7 @@ const PRIORITY_OPTIONS: NotePriority[] = ["none", "urgent", "high", "medium", "l
 
 export function StatusBadge({ status }: { status: NoteStatus }) {
   const t = useT()
-  const cfg = STATUS_CONFIG[status] ?? STATUS_CONFIG.brick
+  const cfg = STATUS_CONFIG[status] ?? STATUS_CONFIG.in_progress
   return (
     <span
       className="inline-flex items-center gap-1 rounded-md border px-1.5 py-0.5 text-2xs font-medium leading-none"
@@ -156,7 +161,7 @@ export function StatusDropdown({
   variant?: "button" | "inline"
 }) {
   const t = useT()
-  const current = STATUS_CONFIG[value] ?? STATUS_CONFIG.brick
+  const current = STATUS_CONFIG[value] ?? STATUS_CONFIG.in_progress
 
   return (
     <DropdownMenu>

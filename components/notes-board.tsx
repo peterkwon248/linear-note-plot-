@@ -150,13 +150,14 @@ const COLUMN_CARD_LIMIT = 10
 
 /** Default groupBy per context tab for board mode */
 const BOARD_DEFAULT_GROUP: Partial<Record<ViewContextKey, GroupBy>> = {
-  stone: "triage",
-  brick: "linkCount",
-  keystone: "linkCount",
+  backlog: "triage",
+  todo: "linkCount",
+  in_progress: "linkCount",
+  done: "linkCount",
 }
 
 /** Tabs that filter to a single status — status grouping produces only 1 column */
-const SINGLE_STATUS_TABS: ViewContextKey[] = ["stone", "brick", "keystone"]
+const SINGLE_STATUS_TABS: ViewContextKey[] = ["backlog", "todo", "in_progress", "done"]
 
 const GROUP_OPTIONS: { value: GroupBy; label: string }[] = [
   { value: "none", label: "No grouping" },
@@ -228,11 +229,11 @@ function BoardColumn({
   }
 
   // Group header icon — mirrors list/gallery iconography. Status keys use
-  // Plot's stone/brick/keystone shapes; folder/tag/family use Phosphor
+  // Plot's backlog/todo/in_progress/done circles; folder/tag/family use Phosphor
   // line icons; everything else falls back to the colored dot below.
   const headerIcon = useMemo(() => {
     if (groupBy === "status") {
-      const statusKeys: NoteStatus[] = ["stone", "brick", "keystone"]
+      const statusKeys: NoteStatus[] = ["backlog", "todo", "in_progress", "done"]
       if (statusKeys.includes(group.key as NoteStatus)) {
         return <StatusShapeIcon status={group.key as NoteStatus} size={14} />
       }

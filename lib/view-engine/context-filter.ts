@@ -20,19 +20,24 @@ export function applyContext(
     case "pinned":
       return notes.filter((n) => n.pinned && (showTrashed || !n.trashed))
 
-    case "stone":
+    case "backlog":
       return notes.filter(
-        (n) => n.status === "stone" && n.triageStatus !== "trashed" && (showTrashed || !n.trashed)
+        (n) => n.status === "backlog" && n.triageStatus !== "trashed" && (showTrashed || !n.trashed)
       )
 
-    case "brick":
+    case "todo":
       return notes.filter(
-        (n) => n.status === "brick" && n.triageStatus !== "trashed" && (showTrashed || !n.trashed)
+        (n) => n.status === "todo" && n.triageStatus !== "trashed" && (showTrashed || !n.trashed)
       )
 
-    case "keystone":
+    case "in_progress":
       return notes.filter(
-        (n) => n.status === "keystone" && n.triageStatus !== "trashed" && (showTrashed || !n.trashed)
+        (n) => n.status === "in_progress" && n.triageStatus !== "trashed" && (showTrashed || !n.trashed)
+      )
+
+    case "done":
+      return notes.filter(
+        (n) => n.status === "done" && n.triageStatus !== "trashed" && (showTrashed || !n.trashed)
       )
 
     case "unlinked": {

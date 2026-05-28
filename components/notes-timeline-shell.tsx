@@ -69,7 +69,7 @@ export function NotesTimelineShell({
 
   const { saveViewMode, onSaveView } = useSaveViewProps(context as any, "notes")
 
-  const isSingleStatusTab = ["stone", "brick", "keystone"].includes(context)
+  const isSingleStatusTab = ["backlog", "todo", "in_progress", "done"].includes(context)
 
   // Dynamic filter categories — inject folder/label/tag counts so the
   // FilterPanel inside ViewHeader matches NotesTable's shape exactly.
@@ -123,7 +123,7 @@ export function NotesTimelineShell({
     })
   }, [folders, labels, tags, notes])
 
-  // Single-status tabs (stone/brick/keystone) hide the Status category — the
+  // Single-status tabs (backlog/todo/in_progress/done) hide the Status category — the
   // context already pre-filters to a single status.
   const filteredCategories = useMemo(() => {
     if (isSingleStatusTab) {
@@ -197,7 +197,7 @@ export function NotesTimelineShell({
     <main className="flex h-full flex-1 flex-col overflow-hidden bg-background">
       <ViewHeader
         icon={
-          context === "stone" || context === "brick" || context === "keystone" ? (
+          context === "backlog" || context === "todo" || context === "in_progress" || context === "done" ? (
             <StatusShapeIcon status={context as NoteStatus} size={20} />
           ) : (
             <FileText size={20} strokeWidth={2} />

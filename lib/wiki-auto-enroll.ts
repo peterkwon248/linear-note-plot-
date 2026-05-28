@@ -81,7 +81,7 @@ export function detectEnrollmentCandidates(notes: Note[]): EnrollmentCandidate[]
   for (const [noteId, count] of backlinkCounts) {
     if (count < 3) continue
     const note = activeNotes.find(n => n.id === noteId)
-    if (!note || note.noteType === "wiki" || note.status === "stone") continue
+    if (!note || note.noteType === "wiki" || note.status === "backlog") continue
     candidates.push({
       type: "backlink",
       title: note.title,

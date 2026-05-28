@@ -376,7 +376,7 @@ export function FilterMenuItems({
                 onKeyDown={(e) => e.stopPropagation()}
               />
             </div>
-            {(["stone", "brick", "keystone"] as NoteStatus[]).filter((s) =>
+            {(["backlog", "todo", "in_progress", "done"] as NoteStatus[]).filter((s) =>
               !statusSearch || s.toLowerCase().includes(statusSearch.toLowerCase())
             ).map((s) => (
               <DropdownMenuItem key={s} onSelect={(e) => { e.preventDefault(); onToggleFilter("status", s) }}>
@@ -873,7 +873,7 @@ export function FilterFieldContent({ groupKey, filters, folders, tags, labels = 
       return (
         <>
           {searchInput(statusSearch, setStatusSearch)}
-          {(["stone", "brick", "keystone"] as NoteStatus[]).filter((s) =>
+          {(["backlog", "todo", "in_progress", "done"] as NoteStatus[]).filter((s) =>
             !statusSearch || s.toLowerCase().includes(statusSearch.toLowerCase())
           ).map((s) => (
             <DropdownMenuItem key={s} onSelect={(e) => { e.preventDefault(); onToggleFilter("status", s) }}>

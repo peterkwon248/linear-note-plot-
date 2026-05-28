@@ -11,7 +11,7 @@ import {
   forwardRef,
 } from "react"
 import { Tag, CalendarBlank, Asterisk } from "@/lib/editor/editor-icons"
-import { CircleDashed, Contrast as CircleHalf, CircleCheck as CheckCircle } from "lucide-react"
+import { CircleDashed, Circle, Contrast as CircleHalf, CircleCheck as CheckCircle } from "lucide-react"
 import { IconWikiStub, IconWikiArticle } from "@/components/plot-icons"
 import { usePlotStore } from "@/lib/store"
 import { parseMentionDate } from "@/lib/mention-date-parser"
@@ -197,12 +197,15 @@ function ItemIcon({ item }: { item: MentionItem }) {
         <IconWikiArticle size={14} className="shrink-0" style={{ color: WIKI_STATUS_HEX.article }} />
       )
     case "note": {
-      const status = item.noteStatus ?? "brick"
+      const status = item.noteStatus ?? "in_progress"
       const color = NOTE_STATUS_HEX[status]
-      if (status === "stone") {
+      if (status === "backlog") {
         return <CircleDashed className="shrink-0" size={14} style={{ color }} />
       }
-      if (status === "brick") {
+      if (status === "todo") {
+        return <Circle className="shrink-0" size={14} style={{ color }} />
+      }
+      if (status === "in_progress") {
         return <CircleHalf className="shrink-0" size={14} style={{ color }} />
       }
       return <CheckCircle className="shrink-0" size={14} style={{ color }} />

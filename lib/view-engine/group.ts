@@ -97,12 +97,13 @@ export function applyGrouping(notes: Note[], groupBy: GroupBy, extras?: { backli
 /* ── Status grouping ──────────────────────────────────── */
 
 const STATUS_LABELS: Record<NoteStatus, string> = {
-  stone: "Stone",
-  brick: "Brick",
-  keystone: "Block",
+  backlog: "Backlog",
+  todo: "Todo",
+  in_progress: "In Progress",
+  done: "Done",
 }
 
-const STATUS_KEYS: NoteStatus[] = ["stone", "brick", "keystone"]
+const STATUS_KEYS: NoteStatus[] = ["backlog", "todo", "in_progress", "done"]
 
 function groupByStatus(notes: Note[]): NoteGroup[] {
   const buckets = new Map<NoteStatus, Note[]>()

@@ -49,7 +49,7 @@ function useChartWidth() {
 
 // ────────────────────────────────────────────────────────────────────────────
 // Color tokens — Plot permanent rules (lib/colors.ts)
-// NOTE_STATUS_HEX: stone=slate-400, brick=amber-500, keystone=emerald-400
+// NOTE_STATUS_HEX: backlog=slate-400, todo=blue-500, in_progress=amber-500, done=emerald-400
 // WIKI_STATUS_HEX: stub=orange #f97316, article=emerald #10b981
 // ────────────────────────────────────────────────────────────────────────────
 
@@ -78,27 +78,29 @@ function ChartCard({ title, children }: ChartCardProps) {
 }
 
 // ────────────────────────────────────────────────────────────────────────────
-// 1. StatusDonut — Stone / Brick / Block distribution
+// 1. StatusDonut — Backlog / Todo / In Progress / Done distribution
 // ────────────────────────────────────────────────────────────────────────────
 
 interface StatusDonutProps {
-  stone: number
-  brick: number
-  keystone: number
+  backlog: number
+  todo: number
+  in_progress: number
+  done: number
 }
 
-export function StatusDonut({ stone, brick, keystone }: StatusDonutProps) {
+export function StatusDonut({ backlog, todo, in_progress, done }: StatusDonutProps) {
   const t = useT()
   const { ref, width } = useChartWidth()
   const size = Math.min(width, 220)
 
   const data = [
-    { name: t("status.stone"), value: stone, color: NOTE_STATUS_HEX.stone },
-    { name: t("status.brick"), value: brick, color: NOTE_STATUS_HEX.brick },
-    { name: t("status.block"), value: keystone, color: NOTE_STATUS_HEX.keystone },
+    { name: t("status.backlog"), value: backlog, color: NOTE_STATUS_HEX.backlog },
+    { name: t("status.todo"), value: todo, color: NOTE_STATUS_HEX.todo },
+    { name: t("status.in_progress"), value: in_progress, color: NOTE_STATUS_HEX.in_progress },
+    { name: t("status.done"), value: done, color: NOTE_STATUS_HEX.done },
   ].filter((d) => d.value > 0)
 
-  const total = stone + brick + keystone
+  const total = backlog + todo + in_progress + done
 
   return (
     <ChartCard title={t("ontology.dashboard.chart.status_distribution")}>

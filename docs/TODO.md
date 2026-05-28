@@ -3,35 +3,29 @@
 > 우선순위 기반 작업 목록. **P0 = 다음 세션 즉시 시작점** (NEXT-ACTION.md 폐지, 2026-05-12).
 > 완료 항목은 즉시 삭제. 자세한 history는 SESSION-LOG.md + MEMORY.md.
 
-**마지막 갱신**: 2026-05-28 (오후 후속) — categories 체크박스 + 컬럼 헤더 i18n(PR #486) + Book 폴더 Phase 2 + folder space fix. 다음 P0 #0 = **A+ book/wiki folder = note 패턴** (note folder는 /notes+filter 풀폭인데 wiki/book folder는 folder page 좁음 → /books|/wiki + folder filter 풀폭으로 통일). **다른 컴퓨터에서 이어받음**.
+**마지막 갱신**: 2026-05-29 (after-work, 집/Windows) — **NoteStatus 3→4 단계 REPLACE** 완료·머지 (stone/brick/keystone → backlog/todo/in_progress/done, store v150, 85파일, Architect APPROVED). 다음 P0 #0 = **4단계 status UI 시각 검증 + 미해결 판단 콜 3개 결정** (코드/빌드/테스트 green이나 시각 미확인 — preview MCP 환경 불가). 그 다음 carry = Entity Insights PRD.
 
 ---
 
-## 🟣 P0 — 즉시 (cross-machine 진입점, 2026-05-28 오후 후속 세션 후 — A+ folder note 패턴 최우선)
+## 🟣 P0 — 즉시 (cross-machine 진입점, 2026-05-29 after-work — NoteStatus 3→4 단계 REPLACE 머지)
 
-### -5. **🔴 P0 #0 (이번 세션 결과, 사용자 명시 최우선): A+ book/wiki folder = note 패턴 전환** ⭐ 다음 세션 첫 작업 (다른 컴퓨터)
+> ✅ **2026-05-29 NoteStatus 3→4 단계 REPLACE 완료·머지** (이 세션): stone/brick/keystone → backlog/todo/in_progress/done. store v150, 85파일, 라우트 rename, Architect APPROVED. **단 UI 시각 미검증** (preview MCP 이 환경 불가 — node 15개 + IPv6 충돌).
 
-**문제**: folder 진입 동작이 entity마다 비대칭.
-- **note folder** 클릭 → `/notes` + folder filter (notes-table **풀폭** + breadcrumb). `linear-sidebar.tsx:905-911`
-- **wiki/book folder** 클릭 → `/folder/[id]` folder page (max-w-3xl **좁음**)
+### 0. **🔴 P0 #0 (새 최우선): 4단계 status UI 시각 검증 + 미해결 판단 콜 3개** ⭐ 다음 세션 첫 작업
 
-사용자: "북 폴더 잘려서 나온다" + "노트 폴더는 (notes-table 풀폭) 이렇게 나옴" → book/wiki도 note 패턴으로.
+**왜**: 코드/타입/빌드/테스트/Architect 다 green이나 **렌더 시각 확인 미완**. + executor가 "둠"으로 처리한 판단 콜 3개 사용자 최종 결정 필요.
 
-**첫 스텝** (다른 컴퓨터에서 바로):
-1. `lib/view-engine/use-notes-view.ts:96` `extras.folderId` filter 패턴 read (notes가 어떻게 folder filter 하는지)
-2. `lib/view-engine/use-books-view.ts` + wiki view hook에 `folderId` filter 추가 (notes 복제). `Book.folderIds`/`WikiArticle.folderIds`.includes(folderId)
-3. `components/linear-sidebar.tsx` book folder 클릭 핸들러(현재 `setActiveRoute('/folder/${id}')`) → `accessFolder(id) + setActiveFolderId(id) + setActiveRoute('/books') + router.push('/books')` (note folder `:905-911` 복제). wiki folder도 → `/wiki` + filter.
-4. books/wiki page에서 `useActiveFolderId` → folder filter 적용 + breadcrumb ("Daily Log ×", notes-table breadcrumb 참조)
-5. 현재 folder page book/wiki branch는 **direct URL용 유지** (note folder도 folder page note branch 있음 — 폐기 X)
+**첫 스텝**:
+1. `npm run dev` → 노트 **보드 4컬럼(대기/준비/정리 중/완성)** + 사이드바 status 4항목 + 색(backlog slate / todo `#3b82f6` blue / in_progress amber / done emerald) + Linear circle 아이콘(CircleDashed/Circle/CircleHalf/CheckCircle) 확인. `/backlog /todo /in-progress /done` 직접 접속.
+2. **판단 콜 결정** (전부 현재 "둠"):
+   - a. settings-store `startView:"stone"` 리터럴 (`lib/settings-store.ts:33`) — 라우트 매핑(`layout.tsx:63-65`)으로 동작은 함. 완전 rename 원하면 settings-store 2차 마이그레이션.
+   - b. `app/preview/linear/page.tsx` 목업 — 자체 로컬 타입 stone/brick/keystone 그대로. 일관성 위해 바꿀지.
+   - c. 죽은 i18n 키 `sidebar.stone/brick/block` (`i18n.ts:179-181,1136-1138`) — 미참조, 제거할지.
+3. 색/아이콘 tweak: `lib/colors.ts:147`(todo hex) + `components/status-icon.tsx`/`plot-icons.tsx`(아이콘) 1~2줄.
 
-**검증**: book folder 클릭 → `/books` 풀폭 books-table + folder filter + 사이드바 Books 유지. `tsc --noEmit` + 사용자 시각.
+**참고**: `docs/01-plan/features/note-status-4stage.plan.md`(전체 spec), `lib/store/migrate.ts:2440`(v150), `:1987`(v131 cleanup allow-list 방어).
 
-**위험/메모**:
-- space fix는 이미 적용 (PR 이전 — 사이드바 book folder 클릭 시 Books context 유지. inferSpace /folder skip). A+는 그 위에 books-table 풀폭.
-- folder page book/wiki branch 폐기 금지 (direct URL).
-- preview full-reload는 SPA 검증 불가 — 실제 확인.
-
-### -4. **🔴 P0 #1 (carry): Entity Insights 정보 아키텍처 통일 PRD** ⭐ A+ 다음
+### -4. **🔴 P0 #1 (carry): Entity Insights 정보 아키텍처 통일 PRD** ⭐ verify 후 작업
 
 **사용자 의도** (2026-05-28 오후):
 > "위키랑 북스 모두에 노트처럼 more를 신설하고 템플릿이랑 인사이트 등을" + "북 More에 인사이트랑 스마트북" + "위키의 모어에도 인사이트가 들어가야겠는걸?"
@@ -55,18 +49,7 @@
 - Smart Book Preset ROI 불확실 (book 적게 생성). preset = source 조합 청사진 ("inbox 노트", "최근 7일 위키")
 - Ontology Insights(전체)와 entity Insights(세부) 중복 회피
 
-### -3. **🔴 P0 #1 (이번 세션 결과): Book 폴더 Phase 2 UI**
-
-**상태**: 데이터 Phase 1 완료(PR #472, v149) — `Folder.kind="note"|"wiki"|"book"`(types.ts:666) + `Book.folderIds`(types.ts:244) + migration. **UI 미구현**.
-
-**미구현 항목** (#145):
-- `createFolder` signature 확장: `folders.ts:18` 현재 `kind: "note" | "wiki"` → +"book"
-- 사이드바 Books Folders section (`newFolderKind` state도 note|wiki → +book)
-- `app/(app)/folder/[id]/page.tsx` book branch (현재 빈 페이지)
-- book-folder-picker 컴포넌트
-- smartSources resolver book folder kind
-
-### -2. **🟡 P0 #2 (carry, 직전 오전 P0 #0 미진행): Wiki `← Overview` 폐기 → breadcrumb 패턴 마이그** (1년 차 정합성 부채)
+### -2. **🟡 P0 #1 (carry, 직전 오전 P0 #0 미진행): Wiki `← Overview` 폐기 → breadcrumb 패턴 마이그** (1년 차 정합성 부채)
 
 **사용자 의도** (2026-05-28 오전):
 > "위키와 라이브러리 모두 오버뷰가 있는데, ←오버뷰 버튼은 위키에만 있거든? 노트나 라이브러리처럼 바꾸는 거에 대해 어떻게 생각해? 브레인스토밍해볼까."
@@ -298,6 +281,7 @@ Plot v2 P0 #1과 통합 가치 (entity-folder 아키텍처 결정).
 
 ## Parked / Brainstorm
 
+- **넛지(우하단 토스트) 루틴화/설정화** (2026-05-29 parked) — 현재 `hooks/use-autopilot-nudges.ts`에 **하드코딩**: 3종(Stone triage / SRS due / Wiki cluster), 4h 쿨다운(`plot-nudge-cooldowns`), mount 시 fire-once. 목표 = 어떤 넛지를·어떤 임계값/주기로·어떤 문구로 띄울지 **설정 가능**하게. 기존 `lib/autopilot/*` 룰 엔진(store CRUD 있으나 settings UI 없음)과 통합 검토 + settings UI 신설. 넛지 ↔ 룰 엔진 = 현재 완전 분리된 두 시스템.
 - ~~기존 체크박스-todo → Inbox kind 이전 검토~~ — **2026-05-24 심야 LOCKED 진입** (PR #417 Phase α-1). InboxItemKind 'task' 추가 완료. Phase α-2 (위키/책 확장) + Phase β (TodoView 폐기) 남음 → P0로 promote.
 
 ---

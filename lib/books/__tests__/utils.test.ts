@@ -58,7 +58,7 @@ function makeNoteEntity(
     id,
     title: `Note ${id}`,
     content: "",
-    status: "stone",
+    status: "backlog",
     folderIds,
     tags: [],
     labelId: null,

@@ -46,6 +46,7 @@ import {
   RiChat3Line,
   RiCheckLine,
   RiCheckboxCircleLine,
+  RiCheckboxBlankCircleLine,
   RiCheckboxLine,
   RiLoader4Line,
   RiContrastLine,
@@ -185,6 +186,7 @@ export { RiCheckLine as Check }
 export { RiCheckboxCircleLine as CheckCircle }
 export { RiCheckboxLine as CheckSquare }
 export { RiLoader4Line as CircleDashed }
+export { RiCheckboxBlankCircleLine as Circle }
 export { RiContrastLine as CircleHalf }
 
 // Clipboard & Copy

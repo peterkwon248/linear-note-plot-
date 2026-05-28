@@ -50,11 +50,12 @@ export function OntologyDashboardPanel() {
 
   // Note status distribution
   const statusCounts = useMemo(() => {
-    const c = { stone: 0, brick: 0, keystone: 0 }
+    const c = { backlog: 0, todo: 0, in_progress: 0, done: 0 }
     for (const n of notes) {
-      if (n.status === "stone") c.stone++
-      else if (n.status === "brick") c.brick++
-      else if (n.status === "keystone") c.keystone++
+      if (n.status === "backlog") c.backlog++
+      else if (n.status === "todo") c.todo++
+      else if (n.status === "in_progress") c.in_progress++
+      else if (n.status === "done") c.done++
     }
     return c
   }, [notes])
@@ -128,9 +129,10 @@ export function OntologyDashboardPanel() {
         <Grid>
           <Stat label={t("ontology.dashboard.stat.notes")} value={m.totalNotes}
             sub={t("ontology.dashboard.meta.status_breakdown")
-              .replace("{stone}", String(statusCounts.stone))
-              .replace("{brick}", String(statusCounts.brick))
-              .replace("{keystone}", String(statusCounts.keystone))} />
+              .replace("{backlog}", String(statusCounts.backlog))
+              .replace("{todo}", String(statusCounts.todo))
+              .replace("{in_progress}", String(statusCounts.in_progress))
+              .replace("{done}", String(statusCounts.done))} />
           <Stat
             label={t("ontology.dashboard.stat.wiki_articles")}
             value={m.totalWiki ?? wikiArticles.length}
@@ -158,7 +160,7 @@ export function OntologyDashboardPanel() {
        *  Status donut + Wiki status donut on row 1 (distribution),
        *  Top Hubs bar + Top Categories bar on row 2 (rankings). */}
       <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-        <StatusDonut stone={statusCounts.stone} brick={statusCounts.brick} keystone={statusCounts.keystone} />
+        <StatusDonut backlog={statusCounts.backlog} todo={statusCounts.todo} in_progress={statusCounts.in_progress} done={statusCounts.done} />
         <WikiStatusDonut articles={wikiStatusCounts.articles} stubs={wikiStatusCounts.stubs} />
         <TopHubsBar hubs={topHubs} />
         <CategoriesBar categories={categoryStats} />

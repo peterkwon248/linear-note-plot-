@@ -58,9 +58,10 @@ const STATUS_GROUP: PickerFilterGroup = {
   icon: CircleDashed,
   field: "status" as FilterField,
   values: [
-    { value: "stone", label: "Stone" },
-    { value: "brick", label: "Brick" },
-    { value: "keystone", label: "Block" },
+    { value: "backlog", label: "Backlog" },
+    { value: "todo", label: "Todo" },
+    { value: "in_progress", label: "In Progress" },
+    { value: "done", label: "Done" },
   ],
 }
 

@@ -120,7 +120,7 @@ export function SidePanelContext({ noteId: propNoteId }: { noteId?: string | nul
   // Phase 1b2: snoozed-due notes are resolved from the unified hooks slice.
   const hooks = usePlotStore((s) => s.hooks)
   const advanceToNextInbox = useCallback(() => {
-    if (!note || note.status !== "stone") return
+    if (!note || note.status !== "backlog") return
     const inbox = getInboxNotes(notes, backlinks, buildDueSnoozeSet(hooks))
     const next = inbox.find((n) => n.id !== note.id)
     setSelectedNoteId(next?.id ?? null)
@@ -165,24 +165,28 @@ export function SidePanelContext({ noteId: propNoteId }: { noteId?: string | nul
         )}
         {/* Stage badge */}
         <span className={`flex items-center gap-1 rounded-md px-2 py-0.5 text-2xs font-medium ${
-          note.status === "stone"
+          note.status === "backlog"
             ? "bg-accent/10 text-accent"
-            : note.status === "brick"
+            : note.status === "todo"
+            ? "bg-chart-1/10 text-chart-1"
+            : note.status === "in_progress"
             ? "bg-chart-2/10 text-chart-2"
-            : note.status === "keystone"
+            : note.status === "done"
             ? "bg-chart-5/10 text-chart-5"
             : "bg-accent/10 text-accent"
         }`}>
-          {note.status === "keystone" && <PhShield size={14} strokeWidth={2} />}
-          {note.status === "stone"
-            ? t("status.stone")
-            : note.status === "brick"
-            ? t("status.brick")
-            : note.status === "keystone"
-            ? t("status.block")
-            : t("status.stone")}
+          {note.status === "done" && <PhShield size={14} strokeWidth={2} />}
+          {note.status === "backlog"
+            ? t("status.backlog")
+            : note.status === "todo"
+            ? t("status.todo")
+            : note.status === "in_progress"
+            ? t("status.in_progress")
+            : note.status === "done"
+            ? t("status.done")
+            : t("status.backlog")}
         </span>
-        {note.status === "brick" && isReadyToPromote(note, backlinks) && (
+        {note.status === "in_progress" && isReadyToPromote(note, backlinks) && (
           <span className="flex items-center gap-1 rounded-md bg-chart-5/10 px-2 py-0.5 text-2xs font-medium text-chart-5">
             <Sparkle size={14} strokeWidth={2} />
             {t("sidepanel.workflow.ready_to_promote")}
@@ -191,7 +195,7 @@ export function SidePanelContext({ noteId: propNoteId }: { noteId?: string | nul
       </div>
 
       {/* Workflow Actions */}
-      {note.status === "stone" && note.triageStatus !== "trashed" && (
+      {note.status === "backlog" && note.triageStatus !== "trashed" && (
         <div className="flex items-center gap-1.5 px-4 py-2.5 border-b border-border bg-secondary/10">
           <button
             onClick={() => { triageKeep(note.id); toast(t("sidepanel.workflow.done_toast")); advanceToNextInbox() }}
@@ -230,7 +234,7 @@ export function SidePanelContext({ noteId: propNoteId }: { noteId?: string | nul
         </div>
       )}
 
-      {note.status === "brick" && (
+      {note.status === "in_progress" && (
         <div className="border-b border-border">
           <div className="flex items-center gap-1.5 px-4 py-2.5 bg-secondary/10">
             <button
@@ -273,7 +277,7 @@ export function SidePanelContext({ noteId: propNoteId }: { noteId?: string | nul
         </div>
       )}
 
-      {note.status === "keystone" && (
+      {note.status === "done" && (
         <div className="border-b border-border">
           <div className="flex items-center gap-1.5 px-4 py-2.5 bg-secondary/10">
             <button

@@ -33,7 +33,7 @@ export function createNotesSlice(set: Set, get: Get, appendEvent: AppendEventFn)
         contentJson: partial?.contentJson ?? null,
         folderIds,
         tags: partial?.tags ?? [],
-        status: partial?.status ?? "stone",
+        status: partial?.status ?? "backlog",
         priority: partial?.priority ?? "none",
         reads: 0,
         pinned: partial?.pinned ?? false,
@@ -47,7 +47,7 @@ export function createNotesSlice(set: Set, get: Get, appendEvent: AppendEventFn)
         aliases: partial?.aliases ?? [],
         wikiInfobox: partial?.wikiInfobox ?? [],
         referenceIds: partial?.referenceIds ?? [],
-        ...workflowDefaults(partial?.status ?? "stone"),
+        ...workflowDefaults(partial?.status ?? "backlog"),
         ...(partial?.source != null ? { source: partial.source } : {}),
       }
       set((state: any) => ({
@@ -316,7 +316,7 @@ export function createNotesSlice(set: Set, get: Get, appendEvent: AppendEventFn)
       const titleForNew = newTitle.trim() || "Untitled"
 
       // New note inherits metadata (tags, label, folder, type) from source.
-      // Status defaults to "stone" — a freshly split-off note belongs in triage.
+      // Status defaults to "backlog" — a freshly split-off note belongs in triage.
       const newNote: Note = {
         id: newId,
         title: titleForNew,
@@ -324,7 +324,7 @@ export function createNotesSlice(set: Set, get: Get, appendEvent: AppendEventFn)
         contentJson: extractedJson,
         folderIds: [...source.folderIds],
         tags: [...source.tags],
-        status: "stone",
+        status: "backlog",
         priority: "none",
         reads: 0,
         pinned: false,
@@ -338,7 +338,7 @@ export function createNotesSlice(set: Set, get: Get, appendEvent: AppendEventFn)
         aliases: [],
         wikiInfobox: [],
         referenceIds: [],
-        ...workflowDefaults("stone"),
+        ...workflowDefaults("backlog"),
       }
 
       set((s: any) => ({
@@ -391,7 +391,7 @@ export function createNotesSlice(set: Set, get: Get, appendEvent: AppendEventFn)
                 trashed: !n.trashed,
                 trashedAt: wasTrashed ? null : now(),
                 // When restoring from trash, clear triageStatus="trashed" so note
-                // returns to its original stone/brick/keystone bucket
+                // returns to its original backlog/todo/in_progress/done bucket
                 ...(wasTrashed && n.triageStatus === "trashed" ? { triageStatus: "kept" as const } : {}),
                 updatedAt: now(),
                 lastTouchedAt: now(),
@@ -505,7 +505,7 @@ export function createNotesSlice(set: Set, get: Get, appendEvent: AppendEventFn)
         contentJson: null,
         folderIds: [],
         tags: [],
-        status: "stone",
+        status: "backlog",
         priority: "none",
         reads: 0,
         pinned: false,
@@ -519,7 +519,7 @@ export function createNotesSlice(set: Set, get: Get, appendEvent: AppendEventFn)
         aliases: aliases ?? [],
         wikiInfobox: [],
         referenceIds: [],
-        ...workflowDefaults("stone"),
+        ...workflowDefaults("backlog"),
       }
       set((state: any) => ({
         notes: [newNote, ...state.notes],

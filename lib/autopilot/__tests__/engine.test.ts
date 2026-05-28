@@ -15,7 +15,7 @@ function makeNote(overrides: Partial<Note> = {}): Note {
     folderIds: [],
     tags: [],
     labelId: null,
-    status: "stone",
+    status: "backlog",
     priority: "none",
     reads: 0,
     pinned: false,
@@ -64,14 +64,14 @@ function makeCtx(note: Note, backlinksCount = 0): AutopilotContext {
 
 describe("matchesCondition", () => {
   it("matches status eq", () => {
-    const note = makeNote({ status: "stone" })
-    const cond: AutopilotCondition = { field: "status", operator: "eq", value: "stone" }
+    const note = makeNote({ status: "backlog" })
+    const cond: AutopilotCondition = { field: "status", operator: "eq", value: "backlog" }
     expect(matchesCondition(makeCtx(note), cond)).toBe(true)
   })
 
   it("rejects status neq when equal", () => {
-    const note = makeNote({ status: "stone" })
-    const cond: AutopilotCondition = { field: "status", operator: "neq", value: "stone" }
+    const note = makeNote({ status: "backlog" })
+    const cond: AutopilotCondition = { field: "status", operator: "neq", value: "backlog" }
     expect(matchesCondition(makeCtx(note), cond)).toBe(false)
   })
 
@@ -128,18 +128,18 @@ describe("matchesAllConditions", () => {
   })
 
   it("returns true when all conditions match (AND)", () => {
-    const note = makeNote({ status: "stone", reads: 5 })
+    const note = makeNote({ status: "backlog", reads: 5 })
     const conditions: AutopilotCondition[] = [
-      { field: "status", operator: "eq", value: "stone" },
+      { field: "status", operator: "eq", value: "backlog" },
       { field: "reads", operator: "gte", value: 3 },
     ]
     expect(matchesAllConditions(makeCtx(note), conditions)).toBe(true)
   })
 
   it("returns false when one condition fails (AND)", () => {
-    const note = makeNote({ status: "stone", reads: 1 })
+    const note = makeNote({ status: "backlog", reads: 1 })
     const conditions: AutopilotCondition[] = [
-      { field: "status", operator: "eq", value: "stone" },
+      { field: "status", operator: "eq", value: "backlog" },
       { field: "reads", operator: "gte", value: 3 },
     ]
     expect(matchesAllConditions(makeCtx(note), conditions)).toBe(false)
@@ -150,13 +150,13 @@ describe("matchesAllConditions", () => {
 
 describe("evaluateRule", () => {
   it("returns matched=true when conditions match", () => {
-    const note = makeNote({ status: "stone", reads: 5 })
+    const note = makeNote({ status: "backlog", reads: 5 })
     const rule = makeRule({
       conditions: [
-        { field: "status", operator: "eq", value: "stone" },
+        { field: "status", operator: "eq", value: "backlog" },
         { field: "reads", operator: "gte", value: 3 },
       ],
-      actions: [{ type: "set_status", value: "brick" }],
+      actions: [{ type: "set_status", value: "in_progress" }],
     })
     const result = evaluateRule(makeCtx(note), rule)
     expect(result.matched).toBe(true)
@@ -164,11 +164,11 @@ describe("evaluateRule", () => {
   })
 
   it("returns matched=false when disabled", () => {
-    const note = makeNote({ status: "stone" })
+    const note = makeNote({ status: "backlog" })
     const rule = makeRule({
       enabled: false,
-      conditions: [{ field: "status", operator: "eq", value: "stone" }],
-      actions: [{ type: "set_status", value: "brick" }],
+      conditions: [{ field: "status", operator: "eq", value: "backlog" }],
+      actions: [{ type: "set_status", value: "in_progress" }],
     })
     const result = evaluateRule(makeCtx(note), rule)
     expect(result.matched).toBe(false)
@@ -177,12 +177,12 @@ describe("evaluateRule", () => {
 
 describe("runAutopilot", () => {
   it("returns empty applied when no rules match", () => {
-    const note = makeNote({ status: "keystone" })
+    const note = makeNote({ status: "done" })
     const rules = [
       makeRule({
         id: "r1",
-        conditions: [{ field: "status", operator: "eq", value: "stone" }],
-        actions: [{ type: "set_status", value: "brick" }],
+        conditions: [{ field: "status", operator: "eq", value: "backlog" }],
+        actions: [{ type: "set_status", value: "in_progress" }],
       }),
     ]
     const result = runAutopilot(note, rules, "on_save")
@@ -191,7 +191,7 @@ describe("runAutopilot", () => {
 
   it("applies matching rules", () => {
     const note = makeNote({
-      status: "stone",
+      status: "backlog",
       preview: "word ".repeat(25).trim(),
       tags: ["tag-1"],
     })
@@ -200,11 +200,11 @@ describe("runAutopilot", () => {
         id: "r1",
         name: "Inbox to Capture",
         conditions: [
-          { field: "status", operator: "eq", value: "stone" },
+          { field: "status", operator: "eq", value: "backlog" },
           { field: "word_count", operator: "gte", value: 20 },
           { field: "has_tags", operator: "eq", value: true },
         ],
-        actions: [{ type: "set_status", value: "brick" }],
+        actions: [{ type: "set_status", value: "in_progress" }],
       }),
     ]
     const result = runAutopilot(note, rules, "on_save")
@@ -213,19 +213,19 @@ describe("runAutopilot", () => {
   })
 
   it("first-match-wins for conflicting action types", () => {
-    const note = makeNote({ status: "stone", reads: 5, tags: ["t1"] })
+    const note = makeNote({ status: "backlog", reads: 5, tags: ["t1"] })
     const rules = [
       makeRule({
         id: "r1",
         name: "Rule 1",
-        conditions: [{ field: "status", operator: "eq", value: "stone" }],
-        actions: [{ type: "set_status", value: "brick" }],
+        conditions: [{ field: "status", operator: "eq", value: "backlog" }],
+        actions: [{ type: "set_status", value: "in_progress" }],
       }),
       makeRule({
         id: "r2",
         name: "Rule 2",
-        conditions: [{ field: "status", operator: "eq", value: "stone" }],
-        actions: [{ type: "set_status", value: "keystone" }], // conflicts with r1
+        conditions: [{ field: "status", operator: "eq", value: "backlog" }],
+        actions: [{ type: "set_status", value: "done" }], // conflicts with r1
       }),
     ]
     const result = runAutopilot(note, rules, "on_save")
@@ -235,12 +235,12 @@ describe("runAutopilot", () => {
   })
 
   it("filters by trigger type", () => {
-    const note = makeNote({ status: "stone" })
+    const note = makeNote({ status: "backlog" })
     const rules = [
       makeRule({
         id: "r1",
         trigger: "on_open",
-        conditions: [{ field: "status", operator: "eq", value: "stone" }],
+        conditions: [{ field: "status", operator: "eq", value: "backlog" }],
         actions: [{ type: "set_priority", value: "high" }],
       }),
     ]
@@ -249,13 +249,13 @@ describe("runAutopilot", () => {
   })
 
   it("skips disabled rules", () => {
-    const note = makeNote({ status: "stone" })
+    const note = makeNote({ status: "backlog" })
     const rules = [
       makeRule({
         id: "r1",
         enabled: false,
-        conditions: [{ field: "status", operator: "eq", value: "stone" }],
-        actions: [{ type: "set_status", value: "brick" }],
+        conditions: [{ field: "status", operator: "eq", value: "backlog" }],
+        actions: [{ type: "set_status", value: "in_progress" }],
       }),
     ]
     const result = runAutopilot(note, rules, "on_save")

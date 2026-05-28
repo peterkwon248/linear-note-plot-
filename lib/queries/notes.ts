@@ -60,7 +60,7 @@ export function computeReadyScore(note: Note, backlinks: Map<string, number>): n
 
 /** Whether a brick note is ready for promotion */
 export function isReadyToPromote(note: Note, backlinks: Map<string, number>): boolean {
-  if (note.status !== "brick") return false
+  if (note.status !== "in_progress") return false
   const score = computeReadyScore(note, backlinks)
   if (score >= 5) return true
   // Alternative: links >= 2 AND summary exists
@@ -74,14 +74,14 @@ const DAY_MS = 24 * 60 * 60 * 1000
 
 /** Check if a brick note needs review (7+ days untouched) */
 export function needsReview(note: Note): boolean {
-  if (note.status !== "brick") return false
+  if (note.status !== "in_progress") return false
   const touched = new Date(note.lastTouchedAt ?? note.updatedAt).getTime()
   return Date.now() - touched > 7 * DAY_MS
 }
 
 /** Check if a brick note is stale enough to suggest moving back to stone (14+ days) */
 export function isStaleSuggest(note: Note): boolean {
-  if (note.status !== "brick") return false
+  if (note.status !== "in_progress") return false
   const touched = new Date(note.lastTouchedAt ?? note.updatedAt).getTime()
   return Date.now() - touched > 14 * DAY_MS
 }
@@ -103,7 +103,7 @@ export function getInboxNotes(
 ): Note[] {
   return allNotes
     .filter((n) => {
-      if (n.status !== "stone") return false
+      if (n.status !== "backlog") return false
       if (n.triageStatus === "trashed") return false
       if (n.triageStatus === "untriaged") return true
       if (n.triageStatus === "snoozed" && dueSnoozeNoteIds.has(n.id)) return true
@@ -132,7 +132,7 @@ export function buildDueSnoozeSet(hooks: Hook[], nowMs: number = Date.now()): Se
 
 export function getCaptureNotes(allNotes: Note[]): Note[] {
   return allNotes
-    .filter((n) => n.status === "brick" && n.triageStatus !== "trashed")
+    .filter((n) => n.status === "in_progress" && n.triageStatus !== "trashed")
     .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
 }
 
@@ -140,7 +140,7 @@ export function getCaptureNotes(allNotes: Note[]): Note[] {
 
 export function getPermanentNotes(allNotes: Note[]): Note[] {
   return allNotes
-    .filter((n) => n.status === "keystone" && n.triageStatus !== "trashed")
+    .filter((n) => n.status === "done" && n.triageStatus !== "trashed")
     .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
 }
 
@@ -154,13 +154,13 @@ export function getPermanentNotes(allNotes: Note[]): Note[] {
  */
 export function getUnlinkedNotes(allNotes: Note[], backlinks: Map<string, number>): Note[] {
   const permanentUnlinked = allNotes.filter(
-    (n) => n.status === "keystone" && (backlinks.get(n.id) ?? 0) === 0 && n.triageStatus !== "trashed"
+    (n) => n.status === "done" && (backlinks.get(n.id) ?? 0) === 0 && n.triageStatus !== "trashed"
   )
   const captureUnlinked = allNotes.filter(
-    (n) => n.status === "brick" && (backlinks.get(n.id) ?? 0) === 0 && n.triageStatus !== "trashed"
+    (n) => n.status === "in_progress" && (backlinks.get(n.id) ?? 0) === 0 && n.triageStatus !== "trashed"
   )
   const inboxUntriaged = allNotes.filter(
-    (n) => n.status === "stone" && n.triageStatus === "untriaged"
+    (n) => n.status === "backlog" && n.triageStatus === "untriaged"
   )
   return [...permanentUnlinked, ...captureUnlinked, ...inboxUntriaged]
 }
@@ -195,7 +195,7 @@ export function getReviewQueue(
 
   // 1. Stone untriaged
   allNotes
-    .filter((n) => n.status === "stone" && n.triageStatus === "untriaged")
+    .filter((n) => n.status === "backlog" && n.triageStatus === "untriaged")
     .forEach((note) => items.push({ note, reason: "stone-untriaged" }))
 
   // 2. Snoozed due — note has triageStatus="snoozed" AND a snooze hook due now.
@@ -203,7 +203,7 @@ export function getReviewQueue(
   allNotes
     .filter(
       (n) =>
-        n.status === "stone" &&
+        n.status === "backlog" &&
         n.triageStatus === "snoozed" &&
         dueSnoozeIds.has(n.id),
     )
@@ -211,14 +211,14 @@ export function getReviewQueue(
 
   // 3. Stale brick (7+ days)
   allNotes
-    .filter((n) => n.status === "brick" && n.triageStatus !== "trashed" && needsReview(n))
+    .filter((n) => n.status === "in_progress" && n.triageStatus !== "trashed" && needsReview(n))
     .forEach((note) => items.push({ note, reason: "stale-brick" }))
 
   // 4. Unlinked keystone
   allNotes
     .filter(
       (n) =>
-        n.status === "keystone" &&
+        n.status === "done" &&
         n.triageStatus !== "trashed" &&
         (backlinks.get(n.id) ?? 0) === 0
     )
@@ -229,7 +229,7 @@ export function getReviewQueue(
     const nowISO = new Date(nowMs).toISOString()
     const seen = new Set(items.map((i) => i.note.id))
     for (const note of allNotes) {
-      if (note.status !== "keystone") continue
+      if (note.status !== "done") continue
       if (note.triageStatus === "trashed") continue
       if (seen.has(note.id)) continue
       const srs: SRSState | null = getSRSStateForNote(hooks, note.id)
@@ -243,7 +243,7 @@ export function getReviewQueue(
   {
     const seen = new Set(items.map((i) => i.note.id))
     for (const note of allNotes) {
-      if (note.status === "stone") continue
+      if (note.status === "backlog") continue
       if (note.triageStatus === "trashed") continue
       if (seen.has(note.id)) continue
       const at = getReminderForNote(hooks, note.id)

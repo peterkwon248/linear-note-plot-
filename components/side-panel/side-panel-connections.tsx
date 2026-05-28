@@ -159,24 +159,27 @@ function NoteStatusBreakdown({
   notes: { status?: NoteStatus | null }[]
 }) {
   const counts = useMemo(() => {
-    let stone = 0,
-      brick = 0,
-      keystone = 0
+    let backlog = 0,
+      todo = 0,
+      in_progress = 0,
+      done = 0
     for (const n of notes) {
-      const s = (n.status ?? "stone") as NoteStatus
-      if (s === "stone") stone++
-      else if (s === "brick") brick++
-      else if (s === "keystone") keystone++
+      const s = (n.status ?? "backlog") as NoteStatus
+      if (s === "backlog") backlog++
+      else if (s === "todo") todo++
+      else if (s === "in_progress") in_progress++
+      else if (s === "done") done++
     }
-    return { stone, brick, keystone }
+    return { backlog, todo, in_progress, done }
   }, [notes])
-  const total = counts.stone + counts.brick + counts.keystone
+  const total = counts.backlog + counts.todo + counts.in_progress + counts.done
   if (total === 0) return null
   return (
     <div className="flex items-center gap-2.5 px-2 pb-1 text-2xs text-muted-foreground/70">
-      {counts.stone > 0 && <DotCount color="var(--status-stone)" label="Stone" count={counts.stone} />}
-      {counts.brick > 0 && <DotCount color="var(--status-brick)" label="Brick" count={counts.brick} />}
-      {counts.keystone > 0 && <DotCount color="var(--status-keystone)" label="Block" count={counts.keystone} />}
+      {counts.backlog > 0 && <DotCount color="var(--status-backlog)" label="Backlog" count={counts.backlog} />}
+      {counts.todo > 0 && <DotCount color="var(--status-todo)" label="Todo" count={counts.todo} />}
+      {counts.in_progress > 0 && <DotCount color="var(--status-in_progress)" label="In Progress" count={counts.in_progress} />}
+      {counts.done > 0 && <DotCount color="var(--status-done)" label="Done" count={counts.done} />}
     </div>
   )
 }
@@ -706,11 +709,11 @@ function LabelConnections() {
   const openInSecondary = usePlotStore((s) => s.openInSecondary)
 
   const labeled = useMemo(() => {
-    if (!label) return { byStatus: { stone: 0, brick: 0, keystone: 0 } as Record<string, number>, all: [] as typeof notes }
+    if (!label) return { byStatus: { backlog: 0, todo: 0, in_progress: 0, done: 0 } as Record<string, number>, all: [] as typeof notes }
     const matching = notes.filter((n) => !n.trashed && n.labelId === label.id)
-    const byStatus = { stone: 0, brick: 0, keystone: 0 } as Record<string, number>
+    const byStatus = { backlog: 0, todo: 0, in_progress: 0, done: 0 } as Record<string, number>
     for (const n of matching) {
-      const s = (n.status ?? "stone") as string
+      const s = (n.status ?? "backlog") as string
       byStatus[s] = (byStatus[s] ?? 0) + 1
     }
     return { byStatus, all: matching }
@@ -742,9 +745,10 @@ function LabelConnections() {
           <div className="space-y-3">
             <div className="space-y-0.5">
               <KindHeader label="By status" count={total} />
-              <StatusRow label="Stone" count={labeled.byStatus.stone} colorVar="var(--status-stone)" />
-              <StatusRow label="Brick" count={labeled.byStatus.brick} colorVar="var(--status-brick)" />
-              <StatusRow label="Block" count={labeled.byStatus.keystone} colorVar="var(--status-keystone)" />
+              <StatusRow label="Backlog" count={labeled.byStatus.backlog} colorVar="var(--status-backlog)" />
+              <StatusRow label="Todo" count={labeled.byStatus.todo} colorVar="var(--status-todo)" />
+              <StatusRow label="In Progress" count={labeled.byStatus.in_progress} colorVar="var(--status-in_progress)" />
+              <StatusRow label="Done" count={labeled.byStatus.done} colorVar="var(--status-done)" />
             </div>
             <div className="space-y-0.5">
               <SubLabel>Recent</SubLabel>
@@ -782,11 +786,11 @@ function TagConnections() {
   const openInSecondary = usePlotStore((s) => s.openInSecondary)
 
   const tagged = useMemo(() => {
-    if (!tag) return { byStatus: { stone: 0, brick: 0, keystone: 0 } as Record<string, number>, all: [] as typeof notes }
+    if (!tag) return { byStatus: { backlog: 0, todo: 0, in_progress: 0, done: 0 } as Record<string, number>, all: [] as typeof notes }
     const matching = notes.filter((n) => !n.trashed && n.tags.includes(tag.id))
-    const byStatus = { stone: 0, brick: 0, keystone: 0 } as Record<string, number>
+    const byStatus = { backlog: 0, todo: 0, in_progress: 0, done: 0 } as Record<string, number>
     for (const n of matching) {
-      const s = (n.status ?? "stone") as string
+      const s = (n.status ?? "backlog") as string
       byStatus[s] = (byStatus[s] ?? 0) + 1
     }
     return { byStatus, all: matching }
@@ -819,9 +823,10 @@ function TagConnections() {
             {/* Status breakdown */}
             <div className="space-y-0.5">
               <KindHeader label="By status" count={total} />
-              <StatusRow label="Stone" count={tagged.byStatus.stone} colorVar="var(--status-stone)" />
-              <StatusRow label="Brick" count={tagged.byStatus.brick} colorVar="var(--status-brick)" />
-              <StatusRow label="Block" count={tagged.byStatus.keystone} colorVar="var(--status-keystone)" />
+              <StatusRow label="Backlog" count={tagged.byStatus.backlog} colorVar="var(--status-backlog)" />
+              <StatusRow label="Todo" count={tagged.byStatus.todo} colorVar="var(--status-todo)" />
+              <StatusRow label="In Progress" count={tagged.byStatus.in_progress} colorVar="var(--status-in_progress)" />
+              <StatusRow label="Done" count={tagged.byStatus.done} colorVar="var(--status-done)" />
             </div>
             {/* Recent notes list */}
             <div className="space-y-0.5">
@@ -862,7 +867,7 @@ function StickerConnections() {
 
   const breakdown = useMemo(() => {
     const result = {
-      noteStatus: { stone: 0, brick: 0, keystone: 0 } as Record<string, number>,
+      noteStatus: { backlog: 0, todo: 0, in_progress: 0, done: 0 } as Record<string, number>,
       wikiStatus: { stub: 0, article: 0 },
       otherCounts: { tag: 0, label: 0, category: 0, file: 0, reference: 0 } as Record<string, number>,
       noteRefs: [] as { id: string; title: string }[],
@@ -872,7 +877,7 @@ function StickerConnections() {
       if (m.kind === "note") {
         const n = notes.find((x) => x.id === m.id)
         if (!n || n.trashed) continue
-        result.noteStatus[(n.status ?? "stone")] = (result.noteStatus[(n.status ?? "stone")] ?? 0) + 1
+        result.noteStatus[(n.status ?? "backlog")] = (result.noteStatus[(n.status ?? "backlog")] ?? 0) + 1
         result.noteRefs.push({ id: n.id, title: n.title || "Untitled" })
       } else if (m.kind === "wiki") {
         const a = wikiArticles.find((x) => x.id === m.id)
@@ -894,7 +899,7 @@ function StickerConnections() {
     )
   }
 
-  const totalNotes = breakdown.noteStatus.stone + breakdown.noteStatus.brick + breakdown.noteStatus.keystone
+  const totalNotes = breakdown.noteStatus.backlog + breakdown.noteStatus.todo + breakdown.noteStatus.in_progress + breakdown.noteStatus.done
   const totalWikis = breakdown.wikiStatus.stub + breakdown.wikiStatus.article
   const totalOther = Object.values(breakdown.otherCounts).reduce((a, b) => a + b, 0)
   const total = totalNotes + totalWikis + totalOther
@@ -914,9 +919,10 @@ function StickerConnections() {
             {totalNotes > 0 && (
               <div className="space-y-0.5">
                 <KindHeader label="Notes" count={totalNotes} />
-                <StatusRow label="Stone" count={breakdown.noteStatus.stone} colorVar="var(--status-stone)" />
-                <StatusRow label="Brick" count={breakdown.noteStatus.brick} colorVar="var(--status-brick)" />
-                <StatusRow label="Block" count={breakdown.noteStatus.keystone} colorVar="var(--status-keystone)" />
+                <StatusRow label="Backlog" count={breakdown.noteStatus.backlog} colorVar="var(--status-backlog)" />
+                <StatusRow label="Todo" count={breakdown.noteStatus.todo} colorVar="var(--status-todo)" />
+                <StatusRow label="In Progress" count={breakdown.noteStatus.in_progress} colorVar="var(--status-in_progress)" />
+                <StatusRow label="Done" count={breakdown.noteStatus.done} colorVar="var(--status-done)" />
               </div>
             )}
             {totalWikis > 0 && (
@@ -1196,7 +1202,7 @@ function BookConnections() {
   // wikis we derive Stub vs Article via `isWikiStub`. Resolver items
   // already filter trashed entities, so the counts are accurate.
   const breakdown = useMemo(() => {
-    const noteStatus = { stone: 0, brick: 0, keystone: 0 } as Record<string, number>
+    const noteStatus = { backlog: 0, todo: 0, in_progress: 0, done: 0 } as Record<string, number>
     const wikiStatus = { stub: 0, article: 0 }
     let chaptersCount = 0
     const noteIds: string[] = []
@@ -1206,7 +1212,7 @@ function BookConnections() {
         const n = notes.find((x) => x.id === r.refId)
         if (!n) continue
         noteIds.push(n.id)
-        const s = n.status ?? "stone"
+        const s = n.status ?? "backlog"
         noteStatus[s] = (noteStatus[s] ?? 0) + 1
       } else if (r.kind === "wiki") {
         const a = wikiArticles.find((x) => x.id === r.refId)
@@ -1256,7 +1262,7 @@ function BookConnections() {
     )
   }
 
-  const totalNotes = breakdown.noteStatus.stone + breakdown.noteStatus.brick + breakdown.noteStatus.keystone
+  const totalNotes = breakdown.noteStatus.backlog + breakdown.noteStatus.todo + breakdown.noteStatus.in_progress + breakdown.noteStatus.done
   const totalWikis = breakdown.wikiStatus.stub + breakdown.wikiStatus.article
   const itemsCount = totalNotes + totalWikis + breakdown.chaptersCount
 
@@ -1279,9 +1285,10 @@ function BookConnections() {
             {totalNotes > 0 && (
               <div className="space-y-0.5">
                 <KindHeader label="Notes" count={totalNotes} />
-                <StatusRow label="Stone" count={breakdown.noteStatus.stone} colorVar="var(--status-stone)" />
-                <StatusRow label="Brick" count={breakdown.noteStatus.brick} colorVar="var(--status-brick)" />
-                <StatusRow label="Block" count={breakdown.noteStatus.keystone} colorVar="var(--status-keystone)" />
+                <StatusRow label="Backlog" count={breakdown.noteStatus.backlog} colorVar="var(--status-backlog)" />
+                <StatusRow label="Todo" count={breakdown.noteStatus.todo} colorVar="var(--status-todo)" />
+                <StatusRow label="In Progress" count={breakdown.noteStatus.in_progress} colorVar="var(--status-in_progress)" />
+                <StatusRow label="Done" count={breakdown.noteStatus.done} colorVar="var(--status-done)" />
               </div>
             )}
             {/* Wikis by stub/article */}
