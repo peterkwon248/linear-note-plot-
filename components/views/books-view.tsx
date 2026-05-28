@@ -35,7 +35,7 @@ import { BookGridCard } from "@/components/books/book-grid-card"
 import { BooksBoard } from "@/components/books/books-board"
 import { BooksTimelineView } from "@/components/views/books-timeline-view"
 // 2026-05-24: BooksGalleryAdapter import removed — gallery mode deprecated
-import { setActiveRoute, useActiveRoute, useSecondaryRoute, getBookIdFromRoute } from "@/lib/table-route"
+import { setActiveRoute, setActiveFolderId, useActiveRoute, useActiveFolderId, useSecondaryRoute, getBookIdFromRoute } from "@/lib/table-route"
 import { usePane } from "@/components/workspace/pane-context"
 import { shortRelative } from "@/lib/format-utils"
 import { toast } from "sonner"
@@ -48,6 +48,8 @@ import {
   Trash as TrashSimple,
   RotateCcw as ArrowCounterClockwise,
   Pencil as PencilSimple,
+  FolderOpen,
+  X,
 } from "lucide-react"
 import {
   ContextMenu,
@@ -84,17 +86,25 @@ function BooksGrid() {
   const t = useT()
   const router = useRouter()
   const books = usePlotStore((s) => s.books)
+  const folders = usePlotStore((s) => s.folders)
   const createBook = usePlotStore((s) => s.createBook)
   const updateBook = usePlotStore((s) => s.updateBook)
   const deleteBook = usePlotStore((s) => s.deleteBook)
   const restoreBook = usePlotStore((s) => s.restoreBook)
   const permanentlyDeleteBook = usePlotStore((s) => s.permanentlyDeleteBook)
+  const setBookFolders = usePlotStore((s) => s.setBookFolders)
+
+  // A+ folder=filter: a book folder click in the sidebar lands on /books with
+  // activeFolderId set, scoping the full-width table to that folder (mirrors
+  // the note folder pattern). The /folder/[id] book page stays for direct URLs.
+  const activeFolderId = useActiveFolderId()
+  const activeFolder = activeFolderId ? folders.find((f) => f.id === activeFolderId) ?? null : null
 
   // books-view-engine-1/2/3: filter/search/sort/group via view-engine pipeline.
   // `flatBooks` already respects showTrashed toggle + pinned-first sort.
   // showTrashed lives in viewState.toggles (persists across reload).
   // `groups` is the grouped view used by board mode (kind/pinned/none).
-  const { flatBooks: visibleBooks, groups, viewState, updateViewState } = useBooksView()
+  const { flatBooks: visibleBooks, groups, viewState, updateViewState } = useBooksView("books", activeFolderId ?? undefined)
   const showTrashed = Boolean(viewState.toggles?.showTrashed)
   const setShowTrashed = (next: boolean) =>
     updateViewState({ toggles: { ...viewState.toggles, showTrashed: next } })
@@ -162,6 +172,8 @@ function BooksGrid() {
   const handleCreate = () => {
     const title = createTitle.trim() || t("books.untitled")
     const id = createBook(title)
+    // Folder-scoped create parity: when viewing a folder, the new book joins it.
+    if (activeFolderId) setBookFolders(id, [activeFolderId])
     setCreateTitle("")
     setCreateOpen(false)
     toast.success(t("books.toast.created").replace("{title}", title))
@@ -221,7 +233,7 @@ function BooksGrid() {
       <ViewHeader
         icon={<Books size={20} strokeWidth={2} />}
         title={t("books.title")}
-        count={liveCount > 0 ? liveCount : undefined}
+        count={activeFolderId ? visibleBooks.length : liveCount > 0 ? liveCount : undefined}
         searchPlaceholder={t("books.search_books")}
         onCreateNew={() => {
           setCreateTitle("")
@@ -259,6 +271,20 @@ function BooksGrid() {
         saveViewMode={saveViewMode}
         onSaveView={onSaveView}
       />
+
+      {/* ── Folder indicator (A+ folder=filter) — mirrors notes-table ── */}
+      {activeFolder && (
+        <div className="flex shrink-0 items-center gap-1.5 border-b border-border px-5 py-1.5">
+          <FolderOpen className="text-muted-foreground" size={14} strokeWidth={2} />
+          <span className="text-note text-foreground">{activeFolder.name}</span>
+          <button
+            onClick={() => setActiveFolderId(null)}
+            className="ml-1 rounded-sm p-0.5 text-muted-foreground hover:text-foreground hover:bg-hover-bg transition-colors"
+          >
+            <X size={12} strokeWidth={2} />
+          </button>
+        </div>
+      )}
 
       <div className="flex-1 overflow-y-auto">
         {liveCount === 0 ? (

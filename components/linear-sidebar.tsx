@@ -1146,11 +1146,14 @@ export function LinearSidebar() {
                         onClick={() => {
                           accessFolder(folder.id)
                           setActiveFolderId(folder.id)
-                          // Wiki folder click routes to /folder/[id] which
-                          // (Commit C) renders the wiki-only folder page.
-                          setActiveRoute(`/folder/${folder.id}`)
+                          // A+ folder=filter: wiki folder opens /wiki in list mode
+                          // scoped to the folder (filter + badge), mirroring the
+                          // note folder pattern. The /folder/[id] wiki page remains
+                          // for direct URLs.
+                          setActiveRoute("/wiki")
+                          setWikiViewMode("list")
                           setSelectedNoteId(null)
-                          router.push(`/folder/${folder.id}`)
+                          router.push("/wiki")
                         }}
                         className="a-sb-link"
                         data-active={active ? "true" : undefined}
@@ -1770,11 +1773,13 @@ export function LinearSidebar() {
                         onClick={() => {
                           accessFolder(folder.id)
                           setActiveFolderId(folder.id)
-                          // Book folder click routes to /folder/[id] which
-                          // renders the book-only folder page (v149 Phase 2).
-                          setActiveRoute(`/folder/${folder.id}`)
+                          // A+ folder=filter: book folder opens /books scoped to
+                          // the folder (full-width table + indicator strip),
+                          // mirroring the note folder pattern (:905). The
+                          // /folder/[id] book page remains for direct URLs.
+                          setActiveRoute("/books")
                           setSelectedNoteId(null)
-                          router.push(`/folder/${folder.id}`)
+                          router.push("/books")
                         }}
                         className="a-sb-link"
                         data-active={active ? "true" : undefined}
