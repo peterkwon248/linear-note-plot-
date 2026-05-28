@@ -2,6 +2,7 @@
 
 import { useState, useRef, useMemo, useEffect, useCallback, Fragment } from "react"
 import { usePlotStore } from "@/lib/store"
+import { useT } from "@/lib/i18n"
 import type { WikiCategory, WikiArticle } from "@/lib/types"
 import { shortRelative } from "@/lib/format-utils"
 import {
@@ -27,6 +28,7 @@ import {
   Check as PhCheck,
   ChevronRight as CaretRight,
   Plus as PhPlus,
+  Minus,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { toast } from "sonner"
@@ -616,10 +618,25 @@ function CategoryFullListView({
   onSortDirectionChange?: (dir: "asc" | "desc") => void
   onDoubleClick?: (id: string) => void
 }) {
+  const t = useT()
   const showCol = (key: string) => !displayProps || displayProps.includes(key)
   const updateWikiCategory = usePlotStore((s) => s.updateWikiCategory)
   const deleteWikiCategory = usePlotStore((s) => s.deleteWikiCategory)
   const catMap = useMemo(() => new Map(categories.map((c) => [c.id, c])), [categories])
+
+  // Multi-select checkboxes — notes/tags 사이드바·리스트 정합 (2026-05-28).
+  // Categories list만 체크박스가 누락돼 있던 부채 정정. bulk action bar는
+  // categories hierarchy cascade(parent/child) 복잡성으로 후속; 삭제는 기존
+  // 우클릭 ContextMenu 유지.
+  const [checkedIds, setCheckedIds] = useState<Set<string>>(new Set())
+  const toggleCheck = useCallback((id: string) => {
+    setCheckedIds((prev) => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+  }, [])
 
   const getDepthLocal = useCallback(
     (catId: string, visited = new Set<string>()): number => {
@@ -688,6 +705,15 @@ function CategoryFullListView({
 
     return filtered
   }, [categories, articles, getDepthLocal, catMap, tierFilter, statusFilter, ordering, sortDirection, showEmpty])
+
+  // Select-all (header checkbox) — visible(filtered) categories 전체 토글.
+  // notes/tags 헤더 정합: all(✓) / partial(−) / none.
+  const allVisibleIds = useMemo(() => categoryData.map((d) => d.cat.id), [categoryData])
+  const allChecked = allVisibleIds.length > 0 && allVisibleIds.every((id) => checkedIds.has(id))
+  const someChecked = allVisibleIds.some((id) => checkedIds.has(id))
+  const toggleSelectAll = useCallback(() => {
+    setCheckedIds(allChecked ? new Set() : new Set(allVisibleIds))
+  }, [allChecked, allVisibleIds])
 
   const grouped = useMemo(() => {
     if (!grouping || grouping === "none") return [{ key: "_all", label: "", items: categoryData }]
@@ -895,12 +921,31 @@ function CategoryFullListView({
     <div className="flex-1 overflow-y-auto">
       {/* Header row */}
       <div className="sticky top-0 z-10 flex items-center border-b border-border-subtle bg-background px-5 py-2.5">
-        <div className="flex-1">
+        <div className="flex-1 flex items-center gap-3">
+          {/* Select-all checkbox — notes/tags 헤더 정합 (all ✓ / partial − / none) */}
+          <div
+            data-checkbox
+            onClick={(e) => { e.stopPropagation(); toggleSelectAll() }}
+            className={cn(
+              "h-4 w-4 shrink-0 rounded-[4px] border flex items-center justify-center cursor-pointer transition-colors shadow-sm",
+              allChecked
+                ? "bg-accent border-accent"
+                : someChecked
+                  ? "bg-accent/50 border-accent"
+                  : "bg-card border-zinc-400 dark:border-zinc-600 hover:border-zinc-500 dark:hover:border-zinc-500",
+            )}
+          >
+            {allChecked
+              ? <PhCheck size={10} strokeWidth={2.5} className="text-accent-foreground" />
+              : someChecked
+                ? <Minus size={10} strokeWidth={2} className="text-accent-foreground" />
+                : null}
+          </div>
           <button
             onClick={() => handleSortClick("title")}
             className="group/th inline-flex items-center gap-1 text-note font-medium text-muted-foreground transition-colors hover:text-foreground"
           >
-            Name
+            {t("column.name")}
             <SortIcon col="title" />
           </button>
         </div>
@@ -910,7 +955,7 @@ function CategoryFullListView({
               onClick={() => handleSortClick("parent")}
               className="group/th inline-flex items-center gap-1 text-note font-medium text-muted-foreground transition-colors hover:text-foreground"
             >
-              Parent
+              {t("display.property.parent")}
               <SortIcon col="parent" />
             </button>
           </div>
@@ -921,7 +966,7 @@ function CategoryFullListView({
               onClick={() => handleSortClick("tier")}
               className="group/th inline-flex items-center gap-1 text-note font-medium text-muted-foreground transition-colors hover:text-foreground"
             >
-              Tier
+              {t("column.tier")}
               <SortIcon col="tier" />
             </button>
           </div>
@@ -932,7 +977,7 @@ function CategoryFullListView({
               onClick={() => handleSortClick("articles")}
               className="group/th inline-flex items-center gap-1 text-note font-medium text-muted-foreground transition-colors hover:text-foreground"
             >
-              Articles
+              {t("column.articles")}
               <SortIcon col="articles" />
             </button>
           </div>
@@ -943,7 +988,7 @@ function CategoryFullListView({
               onClick={() => handleSortClick("sub")}
               className="group/th inline-flex items-center gap-1 text-note font-medium text-muted-foreground transition-colors hover:text-foreground"
             >
-              Sub
+              {t("column.sub")}
               <SortIcon col="sub" />
             </button>
           </div>
@@ -954,7 +999,7 @@ function CategoryFullListView({
               onClick={() => handleSortClick("createdAt")}
               className="group/th inline-flex items-center gap-1 text-note font-medium text-muted-foreground transition-colors hover:text-foreground"
             >
-              Created
+              {t("display.ordering.created")}
               <SortIcon col="createdAt" />
             </button>
           </div>
@@ -965,7 +1010,7 @@ function CategoryFullListView({
               onClick={() => handleSortClick("updatedAt")}
               className="group/th inline-flex items-center gap-1 text-note font-medium text-muted-foreground transition-colors hover:text-foreground"
             >
-              Updated
+              {t("display.ordering.updated")}
               <SortIcon col="updatedAt" />
             </button>
           </div>
@@ -988,8 +1033,12 @@ function CategoryFullListView({
               <div key={cat.id} style={grouping === "family" ? { paddingLeft: `${familyDepth * 24}px` } : undefined}>
                 <ContextMenu>
                   <ContextMenuTrigger asChild>
-                <button
+                <div
+                  role="button"
+                  tabIndex={0}
                   onClick={(e) => {
+                    // 체크박스 클릭은 row select로 흡수하지 않음
+                    if ((e.target as HTMLElement).closest("[data-checkbox]")) return
                     e.stopPropagation()
                     onSelect(cat.id, e)
                     setExpandedCatId((prev) =>
@@ -997,11 +1046,35 @@ function CategoryFullListView({
                     )
                   }}
                   onDoubleClick={() => onDoubleClick?.(cat.id)}
-                  className={`flex w-full items-center px-5 py-3 text-left transition-colors hover:bg-hover-bg ${
-                    selectedId === cat.id ? "bg-secondary/40" : ""
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") { e.preventDefault(); onDoubleClick?.(cat.id) }
+                    else if (e.key === " ") { e.preventDefault(); toggleCheck(cat.id) }
+                  }}
+                  className={`group flex w-full cursor-pointer items-center px-5 py-3 text-left transition-colors ${
+                    checkedIds.has(cat.id)
+                      ? "bg-accent/8"
+                      : selectedId === cat.id
+                        ? "bg-secondary/40"
+                        : "hover:bg-hover-bg"
                   }`}
                 >
-                  <div className="flex flex-1 items-center gap-2.5 min-w-0">
+                  <div className="flex flex-1 items-center gap-3 min-w-0">
+                    {/* Hover-only checkbox — notes/tags 패턴 정합 (h-4 w-4) */}
+                    <div
+                      data-checkbox
+                      onClick={(e) => { e.stopPropagation(); toggleCheck(cat.id) }}
+                      className={cn(
+                        "h-4 w-4 shrink-0 rounded-[4px] border flex items-center justify-center cursor-pointer transition-colors shadow-sm",
+                        checkedIds.has(cat.id)
+                          ? "bg-accent border-accent"
+                          : "bg-card border-zinc-400 dark:border-zinc-600 hover:border-zinc-500 dark:hover:border-zinc-500",
+                        checkedIds.size > 0 || checkedIds.has(cat.id)
+                          ? "visible"
+                          : "invisible group-hover:visible",
+                      )}
+                    >
+                      {checkedIds.has(cat.id) && <PhCheck size={10} strokeWidth={2.5} className="text-accent-foreground" />}
+                    </div>
                     <span
                       className="h-2 w-2 shrink-0 rounded-full"
                       style={{ backgroundColor: cat.color ?? "#6b7280" }}
@@ -1058,7 +1131,7 @@ function CategoryFullListView({
                       {cat.updatedAt ? shortRelative(cat.updatedAt) : "\u2014"}
                     </span>
                   )}
-                </button>
+                </div>
                   </ContextMenuTrigger>
                   <ContextMenuContent className="w-48">
                     <ContextMenuItem

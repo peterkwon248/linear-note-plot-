@@ -525,7 +525,7 @@ export function StickersView() {
                 <div>
                   <div className="sticky top-0 z-10 flex items-center gap-2 border-b border-border-subtle bg-background px-6 py-2">
                     <PhNote size={14} strokeWidth={2} className="text-muted-foreground" />
-                    <span className="text-note font-medium text-muted-foreground">Notes</span>
+                    <span className="text-note font-medium text-muted-foreground">{t("column.notes")}</span>
                     <span className="text-note text-muted-foreground tabular-nums">
                       {selectedStickerNotes.length}
                     </span>
@@ -943,7 +943,7 @@ export function StickersView() {
                     className="flex flex-1 items-center gap-1 text-left text-note font-medium text-muted-foreground transition-colors hover:text-foreground"
                     onClick={() => handleSortToggle("name")}
                   >
-                    Name
+                    {t("column.name")}
                     {sortField === "name" && (
                       sortDirection === "asc"
                         ? <ArrowUp size={12} strokeWidth={2.5} className="text-muted-foreground" />
@@ -954,7 +954,7 @@ export function StickersView() {
                     className="flex w-16 items-center justify-end gap-1 text-note font-medium text-muted-foreground transition-colors hover:text-foreground"
                     onClick={() => handleSortToggle("memberCount")}
                   >
-                    Items
+                    {t("column.items")}
                     {sortField === "memberCount" && (
                       sortDirection === "desc"
                         ? <ArrowDown size={12} strokeWidth={2.5} className="text-muted-foreground" />
