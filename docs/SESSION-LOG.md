@@ -6,6 +6,60 @@
 
 ---
 
+## 2026-05-28 (오후 후속) — 집 (Windows), **Library 정합 연속: categories 체크박스 + 컬럼 헤더 i18n + Book 폴더 Phase 2 + folder space fix (PR #486 + 이 PR)**
+
+> 🎯 **다음 즉시 액션 hook (최우선)**:
+> 1. **🔴 A+ book/wiki folder = note 패턴 전환** ⭐⭐⭐⭐⭐ (사용자 명시 최우선, 다른 컴퓨터에서 이어받음)
+>    - **문제**: note folder 클릭 → `/notes` + folder filter (notes-table 풀폭, `linear-sidebar.tsx:905-911`). 근데 wiki/book folder 클릭 → `/folder/[id]` folder page (max-w-3xl 좁음) = **비대칭**. 사용자: "북 폴더 잘려서 나온다" + "노트 폴더는 (notes-table 풀폭) 이렇게 나옴".
+>    - **목표**: book + wiki folder도 note 패턴 (`/books`|`/wiki` + folder filter 풀폭 table + breadcrumb)
+>    - **첫 스텝**:
+>      1. `lib/view-engine/use-notes-view.ts:96` `extras.folderId` filter 패턴 참조 (notes는 useActiveFolderId → folder filter)
+>      2. `lib/view-engine/use-books-view.ts` + wiki view hook에 `folderId` filter 추가 (notes 복제). `Book.folderIds`/`WikiArticle.folderIds`.includes(folderId)
+>      3. `components/linear-sidebar.tsx` book folder 클릭 핸들러: 현재 `setActiveRoute('/folder/${id}')` → `accessFolder(id) + setActiveFolderId(id) + setActiveRoute('/books') + router.push('/books')` (note folder 패턴 `:905-911` 복제). wiki folder도 → `/wiki` + filter.
+>      4. books/wiki page에서 `useActiveFolderId` → folder filter + breadcrumb ("Daily Log ×", notes-table breadcrumb 참조)
+>      5. 현재 folder page book/wiki branch는 **direct URL용 유지** (note folder도 folder page note branch 있음 — 공존 OK)
+>    - **검증**: book folder 클릭 → `/books` 풀폭 books-table + folder filter + 사이드바 Books 유지. tsc + 사용자 시각.
+> 2. (carry) **Entity Insights 정보 아키텍처 통일 PRD** — plan 작성됨(`docs/01-plan/features/entity-insights-coherence.plan.md` A안 확정), design 남음. 차트 인프라 = recharts 표준화(chartDB 패스, Tremor 패스).
+> 3. (carry) Wiki ← Overview breadcrumb / Phase 3.1 reference / Phase 4 filter-bar(source 정리) / Category-Label 필터 비대칭
+
+> **사용자 의도** (이번 세션 인용):
+> - "라이브러리 특정 섹터 list 모드 체크박스 없다 ... 노트 정합" → categories 체크박스
+> - "컬럼 헤더 한글인데 영어 name ... 전수조사 언어 설정별로" → i18n
+> - "왜 북 폴더 눌렀는데 사이드바 노트로?" → space fix
+> - "북 폴더 잘려서" + "노트 폴더는 (notes-table 풀폭) 이렇게" → A+ (다음 최우선)
+> - "A+ 하고싶은데 우선 after-work하고 다음 세션 최우선 todo로. 다른 컴퓨터에서 로그인."
+
+> **이번 세션 누적 (PR #486 머지 + 이 PR)**:
+> - **PR #486 (머지됨)**: categories list 체크박스(hover-only + 헤더 select-all all/partial/none, `CategoryFullListView` row `<button>`→`<div>`) + 컬럼 헤더/탭 i18n (`lib/i18n.ts` `column.*`/`filter.tab.*` 21쌍 키 + 9 view useT). 한글 모드 헤더 한글(이름/상위/단계/아티클...).
+> - **이 PR (Book 폴더 Phase 2 + space fix)**: createFolder kind +`"book"` + `setBookFolders`/`addBookToFolder`/`removeBookFromFolder` (folders.ts) + folder-picker `"book"` 지원 + 사이드바 Books Folders section(Wiki 복제) + folder page book branch(BookKindIcon row) + book context menu "폴더로 이동" (book-table 공유) + **table-route space fix**.
+
+> **첫 스텝 (다음 세션 A+)**: `lib/view-engine/use-notes-view.ts:96` (folderId filter) → `use-books-view.ts` 동일 추가 → `linear-sidebar.tsx:905-911`(note) 복제해 book/wiki folder 클릭 핸들러 변경 → books/wiki page breadcrumb.
+
+> **머신**: 집 (Windows) → 다음 **다른 컴퓨터**
+> **branch**: claude/epic-banzai-6629ac
+
+### 완료
+- **categories 체크박스 (PR #486)**: list 모드만 체크박스 누락 부채. hover-only 체크박스 + 헤더 select-all(all✓/partial−/none) + 다중선택 checkedIds. CategoryFullListView (wiki/library 공통).
+- **컬럼 헤더 i18n (PR #486)**: explore 전수조사 → executor-high 적용. column.*/filter.tab.* 21쌍 EN+KO + 9 view useT. notes-table reads 포함. book-table 참고 패턴.
+- **Book 폴더 Phase 2 (이 PR)**: 데이터 Phase 1(v149) 위에 UI. createFolder +book, setBookFolders, folder-picker book, 사이드바 Books Folders section, folder page book branch, book context menu 폴더 이동. executor-high.
+- **folder space fix (이 PR)**: 사용자 "북 폴더 클릭 시 사이드바 Notes로" 버그. 원인 = `inferSpace`가 `/folder/[id]`(cross-kind)를 default notes로 매핑. fix = setActiveRoute `/folder/` skip inferSpace(현재 context 유지) + spaceHint, folder page useEffect folder.kind→space.
+
+### 큰 결정 (영구 LOCKED 후보 #169~#170)
+- **#169 folder 진입 = entity view + folder filter (note 패턴)**: note folder = `/notes` + folder filter (notes-table 풀폭). wiki/book도 동일해야 (현재 folder page 비대칭 = 부채). 다음 세션 A+ 전환. folder page는 direct URL용 잔존.
+- **#170 table-route inferSpace /folder cross-kind**: `/folder/[id]`는 note|wiki|book 다 가능 → route만으론 space 추론 불가. setActiveRoute `/folder/` skip inferSpace(현재 _activeSpace 유지) + optional spaceHint. folder page useEffect가 folder.kind→space 보정 (direct URL/reload).
+
+### Watch Out (다음 세션)
+- **A+ 전환 시 folder page book/wiki branch 폐기 X** — direct URL용 유지 (note folder도 folder page note branch 있음). 사이드바 클릭만 `/books`|`/wiki` + filter로.
+- **books-view/wiki-view folderId filter = notes-view `extras.folderId` 패턴 복제** (use-notes-view.ts:96).
+- **space fix는 이미 적용** (사이드바 book folder 클릭 → Books context 유지). A+는 그 위에 books-table 풀폭 + folder filter.
+- preview full-reload는 SPA folder page 검증 불가 (store 미노출 + activeRoute SPA). 사용자 실제 확인 필요.
+- store version v149 (변경 없음). tsc --noEmit exit 0.
+
+### 머신
+집 (Windows)
+
+---
+
 ## 2026-05-28 (오후) — 집 (Windows), **사이드바 책 BookKindIcon 정합 + Wiki More section (1 PR) + entity 정합 brainstorm 대량**
 
 > 🎯 **다음 즉시 액션 hook (우선순위 순)**:

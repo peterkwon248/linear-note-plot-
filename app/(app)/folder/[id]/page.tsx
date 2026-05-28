@@ -46,6 +46,8 @@ import { CaretDown } from "@phosphor-icons/react/dist/ssr/CaretDown"
 import { ArrowSquareOut } from "@phosphor-icons/react/dist/ssr/ArrowSquareOut"
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover"
 import { getEntityColor } from "@/lib/colors" // v109: opt-in color fallback
+import { BookKindIcon } from "@/components/property-chips"
+import { getBookKind } from "@/lib/view-engine/use-books-view"
 
 export default function FolderPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params)
@@ -56,15 +58,23 @@ export default function FolderPage({ params }: { params: Promise<{ id: string }>
   // VIEW_ROUTES so layout falls through to render `children` (this page).
   // Setting it to the actual /folder/<id> path is unique enough.
   useEffect(() => {
-    setActiveRoute(`/folder/${id}`)
+    // folder.kind → activity space (note|wiki|book). Direct URL / reload 시
+    // 사이드바 context가 folder 종류와 정합하도록 spaceHint 전달.
+    // (/folder/[id]는 cross-kind라 table-route inferSpace가 구분 못 함)
+    const f = usePlotStore.getState().folders.find((x) => x.id === id)
+    const space = f?.kind === "book" ? "books" : f?.kind === "wiki" ? "wiki" : "notes"
+    setActiveRoute(`/folder/${id}`, space)
     setActiveFolderId(id)
   }, [id])
 
   const folders = usePlotStore((s) => s.folders)
   const notes = usePlotStore((s) => s.notes)
   const wikiArticles = usePlotStore((s) => s.wikiArticles)
+  const books = usePlotStore((s) => s.books)
   const createNote = usePlotStore((s) => s.createNote)
   const createWikiArticle = usePlotStore((s) => s.createWikiArticle)
+  const createBook = usePlotStore((s) => s.createBook)
+  const setBookFolders = usePlotStore((s) => s.setBookFolders)
   const openNote = usePlotStore((s) => s.openNote)
 
   const folder = folders.find((f) => f.id === id)
@@ -82,6 +92,12 @@ export default function FolderPage({ params }: { params: Promise<{ id: string }>
     () => wikiArticles.filter((w) => w.folderIds.includes(id)),
     [wikiArticles, id],
   )
+  // Book folder membership (v149 Phase 2). Mirror of folderNotes — exclude
+  // trashed books (Book has a `trashed` boolean unlike WikiArticle).
+  const folderBooks = useMemo(
+    () => books.filter((b) => !b.trashed && b.folderIds.includes(id)),
+    [books, id],
+  )
 
   if (!folder) {
     return (
@@ -92,10 +108,18 @@ export default function FolderPage({ params }: { params: Promise<{ id: string }>
   }
 
   const isNoteFolder = folder.kind === "note"
-  const subtitleCount = isNoteFolder ? folderNotes.length : folderWikis.length
+  const isWikiFolder = folder.kind === "wiki"
+  const isBookFolder = folder.kind === "book"
+  const subtitleCount = isNoteFolder
+    ? folderNotes.length
+    : isBookFolder
+      ? folderBooks.length
+      : folderWikis.length
   const subtitleLabel = isNoteFolder
     ? subtitleCount === 1 ? "note" : "notes"
-    : subtitleCount === 1 ? "wiki" : "wikis"
+    : isBookFolder
+      ? subtitleCount === 1 ? "book" : "books"
+      : subtitleCount === 1 ? "wiki" : "wikis"
 
   return (
     <main className="flex h-full flex-col overflow-hidden bg-background">
@@ -129,7 +153,7 @@ export default function FolderPage({ params }: { params: Promise<{ id: string }>
               {/* PR (b): kind-aware Add popover. Only the option matching
                   this folder's kind is offered — adding a wiki to a note
                   folder (or vice versa) would violate the type-strict
-                  invariant that PR (a) put in place. */}
+                  invariant that PR (a) put in place. v149 adds the book case. */}
               {isNoteFolder ? (
                 <button
                   type="button"
@@ -140,6 +164,21 @@ export default function FolderPage({ params }: { params: Promise<{ id: string }>
                   className="flex w-full items-center gap-2 rounded-md px-2.5 py-1.5 text-note text-left hover:bg-accent"
                 >
                   <span className="h-2 w-2 rounded-full bg-chart-2" /> New note
+                </button>
+              ) : isBookFolder ? (
+                <button
+                  type="button"
+                  onClick={() => {
+                    // createBook takes title only; assign the folder via the
+                    // N:M setter right after (kind="book" enforced there).
+                    const bookId = createBook("Untitled book")
+                    setBookFolders(bookId, [id])
+                    setActiveRoute(`/books/${bookId}`)
+                    router.push(`/books/${bookId}`)
+                  }}
+                  className="flex w-full items-center gap-2 rounded-md px-2.5 py-1.5 text-note text-left hover:bg-accent"
+                >
+                  <span className="h-2 w-2 rounded-full bg-[#5E6AD2]" /> New book
                 </button>
               ) : (
                 <button
@@ -180,7 +219,7 @@ export default function FolderPage({ params }: { params: Promise<{ id: string }>
       {/* ── Content ── */}
       <div className="flex-1 overflow-y-auto">
         <div className="max-w-3xl mx-auto px-6 py-6 flex flex-col gap-8">
-          {!isNoteFolder && (
+          {isWikiFolder && (
             /* Wiki folder — show only wiki articles. */
             <section>
               <div className="flex items-center justify-between mb-3">
@@ -213,6 +252,53 @@ export default function FolderPage({ params }: { params: Promise<{ id: string }>
                         <span className="text-note truncate flex-1">{w.title || "Untitled"}</span>
                         <span className="text-2xs text-muted-foreground tabular-nums shrink-0">
                           {(w.blocks?.length ?? 0)} blocks
+                        </span>
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </section>
+          )}
+
+          {isBookFolder && (
+            /* Book folder — show only books (v149 Phase 2). Row mirrors the
+               Notes/Wiki row pattern; BookKindIcon replaces the status dot. */
+            <section>
+              <div className="flex items-center justify-between mb-3">
+                <h2 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                  Books
+                </h2>
+                <span className="text-2xs text-muted-foreground tabular-nums">
+                  {folderBooks.length}
+                </span>
+              </div>
+              {folderBooks.length === 0 ? (
+                <EmptyHint
+                  label="No books in this folder yet."
+                  actionLabel="Create one"
+                  onAction={() => {
+                    const bookId = createBook("Untitled book")
+                    setBookFolders(bookId, [id])
+                    setActiveRoute(`/books/${bookId}`)
+                    router.push(`/books/${bookId}`)
+                  }}
+                />
+              ) : (
+                <ul className="flex flex-col gap-px rounded-md border border-border-subtle overflow-hidden">
+                  {folderBooks.map((b) => (
+                    <li key={b.id}>
+                      <button
+                        type="button"
+                        onClick={() => { setActiveRoute(`/books/${b.id}`); router.push(`/books/${b.id}`) }}
+                        className="flex w-full items-center gap-3 px-3 py-2 text-left bg-card hover:bg-hover-bg"
+                      >
+                        <span className="flex shrink-0 items-center justify-center w-4">
+                          <BookKindIcon kind={getBookKind(b)} size={14} />
+                        </span>
+                        <span className="text-note truncate flex-1">{b.title || "Untitled book"}</span>
+                        <span className="text-2xs text-muted-foreground tabular-nums shrink-0">
+                          {b.items.length} {b.items.length === 1 ? "item" : "items"}
                         </span>
                       </button>
                     </li>

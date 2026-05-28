@@ -318,13 +318,13 @@ export interface PlotState {
 
   // ── Folders ──
   /**
-   * v107: `kind` is required. Folders are type-strict — they accept either
-   * notes (`kind="note"`) or wiki articles (`kind="wiki"`), never both.
-   * Caller decides based on the active context (sidebar section, picker
-   * source). Kind is immutable after creation.
+   * v107: `kind` is required. Folders are type-strict — they accept notes
+   * (`kind="note"`), wiki articles (`kind="wiki"`), or books (`kind="book"` —
+   * v149), never mixed. Caller decides based on the active context (sidebar
+   * section, picker source). Kind is immutable after creation.
    */
   // v109: `color` is optional (opt-in). Slice defaults to null when omitted.
-  createFolder: (name: string, kind: "note" | "wiki", color?: string | null, opts?: Partial<Folder>) => string
+  createFolder: (name: string, kind: "note" | "wiki" | "book", color?: string | null, opts?: Partial<Folder>) => string
   /** Cosmetic edits only — `kind` is silently dropped from `updates`. */
   updateFolder: (id: string, updates: Partial<Folder>) => void
   deleteFolder: (id: string) => void
@@ -343,6 +343,12 @@ export interface PlotState {
   removeWikiFromFolder: (articleId: string, folderId: string) => void
   /** Replace a wiki article's folder set wholesale (auto-filters wrong-kind ids). */
   setWikiFolders: (articleId: string, folderIds: string[]) => void
+  /** Add a book to a folder (kind-validated, idempotent). v149. */
+  addBookToFolder: (bookId: string, folderId: string) => void
+  /** Remove a book from a folder (idempotent). v149. */
+  removeBookFromFolder: (bookId: string, folderId: string) => void
+  /** Replace a book's folder set wholesale (auto-filters wrong-kind ids). v149. */
+  setBookFolders: (bookId: string, folderIds: string[]) => void
 
   // ── Tags ──
   // v109: `color` is optional (opt-in). Slice defaults to null when omitted.

@@ -47,9 +47,22 @@ import { cn } from "@/lib/utils"
 import { usePlotStore } from "@/lib/store"
 import { PRESET_COLORS, getEntityColor } from "@/lib/colors" // v109: opt-in color fallback
 
-export type FolderPickerKind = "note" | "wiki"
+export type FolderPickerKind = "note" | "wiki" | "book"
 export type FolderPickerSelectMode = "single" | "multi"
 export type FolderPickerVariant = "popover" | "submenu"
+
+/** Kind word used in the "New {kind} folder…" create row. */
+function kindWord(kind: FolderPickerKind): string {
+  return kind === "wiki" ? "wiki" : kind === "book" ? "book" : "note"
+}
+/** Empty-state label shown when no folders of this kind exist. */
+function emptyKindLabel(kind: FolderPickerKind): string {
+  return kind === "wiki"
+    ? "No wiki folders yet"
+    : kind === "book"
+      ? "No book folders yet"
+      : "No note folders yet"
+}
 
 export interface FolderPickerProps {
   /** Filter: folders with this kind are the only ones shown / creatable. */
@@ -150,7 +163,7 @@ export function FolderPicker({
             "flex w-full items-center gap-2 text-muted-foreground/70 italic",
             sizeRow
           )}>
-            {kind === "wiki" ? "No wiki folders yet" : "No note folders yet"}
+            {emptyKindLabel(kind)}
           </div>
         )}
         {matching.map((f) => {
@@ -188,7 +201,7 @@ export function FolderPicker({
               )}
             >
               <PhPlus size={12} strokeWidth={2.5} />
-              <span>New {kind === "wiki" ? "wiki" : "note"} folder…</span>
+              <span>New {kindWord(kind)} folder…</span>
             </button>
           </>
         )}
@@ -302,7 +315,7 @@ function FolderPickerMulti({
           "flex w-full items-center gap-2 text-muted-foreground/70 italic",
           sizeRow
         )}>
-          {kind === "wiki" ? "No wiki folders yet" : "No note folders yet"}
+          {emptyKindLabel(kind)}
         </div>
       )}
       {matching.map((f) => {
@@ -351,7 +364,7 @@ function FolderPickerMulti({
             )}
           >
             <PhPlus size={12} strokeWidth={2.5} />
-            <span>New {kind === "wiki" ? "wiki" : "note"} folder…</span>
+            <span>New {kindWord(kind)} folder…</span>
           </button>
         </>
       )}

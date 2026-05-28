@@ -1,6 +1,6 @@
 {
   "version": "2.0",
-  "lastUpdated": "2026-05-28T07:42:54.196Z",
+  "lastUpdated": "2026-05-28T08:29:56.529Z",
   "activeFeatures": [
     "editor",
     "wizardly-kare",
@@ -41,7 +41,8 @@
     "romantic-herschel-103d20",
     "stupefied-rosalind-ee038e",
     "wiki-timeline",
-    "epic-banzai-6629ac"
+    "epic-banzai-6629ac",
+    "[id]"
   ],
   "primaryFeature": "editor",
   "features": {
@@ -210,9 +211,9 @@
       "documents": {},
       "timestamps": {
         "started": "2026-03-11T04:44:25.454Z",
-        "lastUpdated": "2026-05-15T03:18:08.641Z"
+        "lastUpdated": "2026-05-28T08:08:43.082Z"
       },
-      "lastFile": "C:\\Users\\kwonkyunghun\\Desktop\\리니어 노트앱\\.claude\\worktrees\\xenodochial-wing-654662\\lib\\store\\slices\\wiki-categories.ts"
+      "lastFile": "C:\\Users\\kwonkyunghun\\Desktop\\리니어 노트앱\\.claude\\worktrees\\epic-banzai-6629ac\\lib\\store\\slices\\folders.ts"
     },
     "store": {
       "phase": "do",
@@ -223,9 +224,9 @@
       "documents": {},
       "timestamps": {
         "started": "2026-03-11T04:44:34.388Z",
-        "lastUpdated": "2026-05-15T07:28:28.078Z"
+        "lastUpdated": "2026-05-28T08:09:01.987Z"
       },
-      "lastFile": "C:\\Users\\kwonkyunghun\\Desktop\\리니어 노트앱\\.claude\\worktrees\\xenodochial-wing-654662\\lib\\store\\seeds.ts"
+      "lastFile": "C:\\Users\\kwonkyunghun\\Desktop\\리니어 노트앱\\.claude\\worktrees\\epic-banzai-6629ac\\lib\\store\\types.ts"
     },
     "__tests__": {
       "phase": "do",
@@ -444,9 +445,9 @@
       "documents": {},
       "timestamps": {
         "started": "2026-05-12T00:30:50.080Z",
-        "lastUpdated": "2026-05-20T05:56:00.633Z"
+        "lastUpdated": "2026-05-28T08:10:56.301Z"
       },
-      "lastFile": "C:\\Users\\kwonkyunghun\\Desktop\\리니어 노트앱\\.claude\\worktrees\\eloquent-wilbur-832887\\components\\books\\book-breadcrumb.tsx"
+      "lastFile": "C:\\Users\\kwonkyunghun\\Desktop\\리니어 노트앱\\.claude\\worktrees\\epic-banzai-6629ac\\components\\books\\book-table.tsx"
     },
     "crazy-raman-838a0c": {
       "phase": "do",
@@ -561,9 +562,22 @@
       "documents": {},
       "timestamps": {
         "started": "2026-05-28T01:21:03.270Z",
-        "lastUpdated": "2026-05-28T07:42:54.196Z"
+        "lastUpdated": "2026-05-28T08:28:27.673Z"
       },
-      "lastFile": "C:\\Users\\kwonkyunghun\\Desktop\\리니어 노트앱\\.claude\\worktrees\\epic-banzai-6629ac\\components\\notes-table.tsx"
+      "lastFile": "C:\\Users\\kwonkyunghun\\Desktop\\리니어 노트앱\\.claude\\worktrees\\epic-banzai-6629ac\\lib\\table-route.ts"
+    },
+    "[id]": {
+      "phase": "do",
+      "phaseNumber": 3,
+      "matchRate": null,
+      "iterationCount": 0,
+      "requirements": [],
+      "documents": {},
+      "timestamps": {
+        "started": "2026-05-28T08:11:09.293Z",
+        "lastUpdated": "2026-05-28T08:29:56.529Z"
+      },
+      "lastFile": "C:\\Users\\kwonkyunghun\\Desktop\\리니어 노트앱\\.claude\\worktrees\\epic-banzai-6629ac\\app\\(app)\\folder\\[id]\\page.tsx"
     }
   },
   "pipeline": {
@@ -574,7 +588,7 @@
   "session": {
     "startedAt": "2026-03-05T00:16:19.956Z",
     "onboardingCompleted": false,
-    "lastActivity": "2026-05-28T07:42:54.196Z"
+    "lastActivity": "2026-05-28T08:29:56.529Z"
   },
   "history": [
     {
@@ -8524,6 +8538,198 @@
     {
       "timestamp": "2026-05-28T07:42:54.196Z",
       "feature": "epic-banzai-6629ac",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-28T08:08:13.337Z",
+      "feature": "slices",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-28T08:08:22.161Z",
+      "feature": "slices",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-28T08:08:29.408Z",
+      "feature": "slices",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-28T08:08:43.082Z",
+      "feature": "slices",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-28T08:08:52.777Z",
+      "feature": "store",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-28T08:09:01.987Z",
+      "feature": "store",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-28T08:09:13.706Z",
+      "feature": "epic-banzai-6629ac",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-28T08:09:24.310Z",
+      "feature": "epic-banzai-6629ac",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-28T08:09:30.594Z",
+      "feature": "epic-banzai-6629ac",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-28T08:09:35.782Z",
+      "feature": "epic-banzai-6629ac",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-28T08:09:41.673Z",
+      "feature": "epic-banzai-6629ac",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-28T08:09:47.267Z",
+      "feature": "epic-banzai-6629ac",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-28T08:09:57.455Z",
+      "feature": "books",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-28T08:10:07.191Z",
+      "feature": "books",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-28T08:10:23.766Z",
+      "feature": "books",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-28T08:10:31.176Z",
+      "feature": "books",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-28T08:10:42.960Z",
+      "feature": "books",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-28T08:10:56.301Z",
+      "feature": "books",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-28T08:11:09.293Z",
+      "feature": "[id]",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-28T08:11:16.621Z",
+      "feature": "[id]",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-28T08:11:24.471Z",
+      "feature": "[id]",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-28T08:11:31.736Z",
+      "feature": "[id]",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-28T08:11:46.459Z",
+      "feature": "[id]",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-28T08:11:54.109Z",
+      "feature": "[id]",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-28T08:12:10.430Z",
+      "feature": "[id]",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-28T08:12:19.732Z",
+      "feature": "epic-banzai-6629ac",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-28T08:12:27.008Z",
+      "feature": "epic-banzai-6629ac",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-28T08:12:35.333Z",
+      "feature": "epic-banzai-6629ac",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-28T08:12:42.829Z",
+      "feature": "epic-banzai-6629ac",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-28T08:13:15.126Z",
+      "feature": "epic-banzai-6629ac",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-28T08:28:27.673Z",
+      "feature": "epic-banzai-6629ac",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-05-28T08:29:56.529Z",
+      "feature": "[id]",
       "phase": "do",
       "action": "updated"
     }
