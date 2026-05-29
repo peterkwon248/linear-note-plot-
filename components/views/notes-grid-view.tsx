@@ -4,32 +4,50 @@
  * NotesGridView — Books-grid-parity card grid for Notes.
  *
  * Before this view existed, Notes grid mode fell through to NotesTable's
- * default list rendering (rows with columns). User signal (2026-05-24):
- * "북스의 그리드 디스플레이처럼 해야지" — true card grid like
- * `components/books/book-grid-card.tsx` + the books-view `grid` branch
- * (`grid grid-cols-[repeat(auto-fill,minmax(220px,1fr))]`).
+ * default list rendering. User signal (2026-05-24): "북스의 그리드처럼".
  *
- * Surface here is a pure presentational grid. The Shell wrapper
- * (NotesGridShell) owns ViewHeader, FilterChipBar, and `useNotesView`
- * data hookup — same split as NotesTimelineView / NotesTimelineShell.
+ * Surface here is presentational. The Shell wrapper (NotesGridShell) owns
+ * ViewHeader, FilterChipBar, `useNotesView`, and selection state.
+ *
+ * Interaction (board/table parity): single click toggles selection (hover
+ * checkbox top-right), double click opens the editor (list-nav).
+ *
+ * Grouping (2026-05-29): when `groups` is supplied and groupBy ≠ "none", cards
+ * render as vertical sections (group-label header + card grid) — board is
+ * columns (horizontal), grid groups are sections (vertical). Otherwise a flat
+ * grid. The list-nav capture uses the flattened group order so prev/next walks
+ * the on-screen order.
  */
 
-import { Pin as PushPin } from "lucide-react"
+import { Pin as PushPin, Check as PhCheck } from "lucide-react"
 import { StatusShapeIcon } from "@/components/status-icon"
 import { shortRelative } from "@/lib/format-utils"
 import { cn } from "@/lib/utils"
+import { useListNavCapture } from "@/hooks/use-list-nav-capture"
+import { flattenNoteGroupIds } from "@/lib/list-nav/flatten"
 import type { Note } from "@/lib/types"
+import type { NoteGroup, GroupBy } from "@/lib/view-engine/types"
 
 interface NotesGridViewProps {
   notes: Note[]
-  /** Single-click → side-panel preview (Notes parity). */
+  /** Grouped sections (from useNotesView). When set + groupBy≠none → sectioned. */
+  groups?: NoteGroup[]
+  groupBy?: GroupBy
+  /** Single-click → side-panel preview (when no selection handler is wired). */
   onRowClick?: (noteId: string) => void
+  /** Double-click → open editor (parity with notes-table/notes-board). */
+  onOpenEditor?: (noteId: string) => void
+  /** Screen label for the editor's list-nav bar ("Notes" / folder / view…). */
+  label?: string
   activePreviewId?: string | null
+  /** Selected note ids (board/table-parity multi-select). */
+  selectedIds?: Set<string>
+  /** Toggle a card's selection (hover checkbox / single click). */
+  onSelect?: (noteId: string) => void
 }
 
 function plaintextPreview(content: string | undefined, limit = 120): string {
   if (!content) return ""
-  // Strip wiki link syntax + heading hashes for a cleaner preview.
   return content
     .replace(/\[\[wiki:([^\]]+)\]\]/g, "$1")
     .replace(/\[\[([^\]]+)\]\]/g, "$1")
@@ -49,45 +67,77 @@ function wordCount(content: string | undefined): number {
 function NoteGridCard({
   note,
   isActive,
+  isSelected,
   onOpen,
+  onDoubleClick,
+  onSelect,
 }: {
   note: Note
   isActive: boolean
+  isSelected: boolean
   onOpen: () => void
+  onDoubleClick?: () => void
+  onSelect?: () => void
 }) {
   const preview = plaintextPreview(note.content)
   const words = wordCount(note.content)
   return (
-    <button
-      type="button"
-      onClick={onOpen}
+    <div
+      data-note-id={note.id}
+      onClick={(e) => {
+        if (onSelect) {
+          e.stopPropagation()
+          onSelect()
+        } else {
+          onOpen()
+        }
+      }}
+      onDoubleClick={onDoubleClick}
       className={cn(
-        "group relative flex flex-col items-start gap-2 rounded-lg border bg-card p-4 text-left transition-all",
+        "group relative flex cursor-pointer flex-col items-start gap-2 rounded-lg border bg-card p-4 text-left transition-all",
         note.trashed
-          ? "border-border/60 opacity-50 cursor-default"
+          ? "border-border/60 opacity-50"
           : "border-border/60 hover:bg-hover-bg hover:border-border hover:shadow-sm",
-        isActive && "border-accent/60 bg-accent/[0.04]",
+        isSelected
+          ? "border-accent/60 bg-accent/[0.04] ring-1 ring-accent/20"
+          : isActive && "border-accent/60 bg-accent/[0.04]",
       )}
     >
-      {/* Pin indicator (top-right) */}
+      {/* Selection checkbox — hover or selected (board/table parity). */}
+      <div
+        className={cn(
+          "absolute right-2 top-2 z-10 flex h-4 w-4 items-center justify-center rounded border transition-all",
+          isSelected
+            ? "border-accent bg-accent opacity-100"
+            : "border-border bg-card opacity-0 group-hover:opacity-100 hover:border-foreground/50",
+        )}
+        onClick={(e) => {
+          e.stopPropagation()
+          onSelect?.()
+        }}
+      >
+        {isSelected && <PhCheck className="text-accent-foreground" size={10} strokeWidth={2.5} />}
+      </div>
+
+      {/* Pin — yields its slot to the checkbox on hover/select. */}
       {note.pinned && (
         <PushPin
           size={11}
           fill="currentColor"
           strokeWidth={2}
-          className="absolute right-2 top-2 text-amber-500"
+          className={cn(
+            "absolute top-2 text-amber-500 transition-all",
+            isSelected ? "right-8" : "right-2 group-hover:right-8",
+          )}
         />
       )}
 
-      {/* Status icon — LOCKED #103: no tinted box, color tone only. */}
       <StatusShapeIcon status={note.status} size={22} />
 
-      {/* Title */}
       <h3 className="text-note font-medium text-foreground line-clamp-2 leading-snug">
         {note.title || "Untitled"}
       </h3>
 
-      {/* Content preview (optional) */}
       {preview && (
         <p className="text-2xs text-muted-foreground line-clamp-3 leading-snug">
           {preview}
@@ -96,7 +146,6 @@ function NoteGridCard({
 
       <div className="flex-1" />
 
-      {/* Footer — word count + relative time (mirrors Books "N items · updatedAt"). */}
       <div className="mt-1 flex items-center gap-2 text-2xs text-muted-foreground/70">
         {words > 0 && (
           <>
@@ -108,11 +157,30 @@ function NoteGridCard({
         )}
         <span>{shortRelative(note.updatedAt)}</span>
       </div>
-    </button>
+    </div>
   )
 }
 
-export function NotesGridView({ notes, onRowClick, activePreviewId }: NotesGridViewProps) {
+const GRID_COLS = "grid grid-cols-[repeat(auto-fill,minmax(220px,1fr))] gap-3"
+
+export function NotesGridView({
+  notes,
+  groups,
+  groupBy,
+  onRowClick,
+  onOpenEditor,
+  label,
+  activePreviewId,
+  selectedIds,
+  onSelect,
+}: NotesGridViewProps) {
+  // list-context-navigation: freeze the on-screen order into listNavContext
+  // right before opening the editor (double-click → "← N/M →"). When grouped,
+  // freeze the flattened group order so prev/next matches what's rendered.
+  const captureListNav = useListNavCapture("notes")
+  const grouped = !!groups && groupBy !== undefined && groupBy !== "none" && groups.length > 0
+  const orderedIds = grouped ? flattenNoteGroupIds(groups!) : notes.map((n) => n.id)
+
   if (notes.length === 0) {
     return (
       <div className="flex flex-1 items-center justify-center p-8 text-center">
@@ -121,18 +189,44 @@ export function NotesGridView({ notes, onRowClick, activePreviewId }: NotesGridV
     )
   }
 
+  const renderCard = (note: Note) => (
+    <NoteGridCard
+      key={note.id}
+      note={note}
+      isActive={activePreviewId === note.id}
+      isSelected={selectedIds?.has(note.id) ?? false}
+      onSelect={onSelect ? () => onSelect(note.id) : undefined}
+      onOpen={() => onRowClick?.(note.id)}
+      onDoubleClick={
+        onOpenEditor
+          ? () => {
+              captureListNav(orderedIds, note.id, label ?? "Notes")
+              onOpenEditor(note.id)
+            }
+          : undefined
+      }
+    />
+  )
+
   return (
     <div className="flex-1 overflow-y-auto">
-      <div className="grid grid-cols-[repeat(auto-fill,minmax(220px,1fr))] gap-3 p-6">
-        {notes.map((note) => (
-          <NoteGridCard
-            key={note.id}
-            note={note}
-            isActive={activePreviewId === note.id}
-            onOpen={() => onRowClick?.(note.id)}
-          />
-        ))}
-      </div>
+      {grouped ? (
+        <div className="space-y-6 p-6">
+          {groups!.map((g) => (
+            <section key={g.key}>
+              <div className="mb-2 flex items-center gap-2 px-0.5">
+                <h3 className="text-2xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  {g.label}
+                </h3>
+                <span className="text-2xs tabular-nums text-muted-foreground/60">{g.notes.length}</span>
+              </div>
+              <div className={GRID_COLS}>{g.notes.map(renderCard)}</div>
+            </section>
+          ))}
+        </div>
+      ) : (
+        <div className={cn(GRID_COLS, "p-6")}>{notes.map(renderCard)}</div>
+      )}
     </div>
   )
 }

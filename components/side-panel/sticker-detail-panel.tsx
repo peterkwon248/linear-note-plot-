@@ -32,6 +32,7 @@ import {
   FileText,
   Link as PhLink,
   Tag as PhTag,
+  Library as BookIcon,
 } from "lucide-react"
 import { IconWiki } from "@/components/plot-icons"
 import { navigateToWikiArticle } from "@/lib/wiki-article-nav"
@@ -84,6 +85,7 @@ export function StickerDetailPanel({ sticker }: { sticker: Sticker }) {
   const wikiCategories = usePlotStore((s) => s.wikiCategories)
   const attachments = usePlotStore((s) => s.attachments ?? [])
   const references = usePlotStore((s) => s.references)
+  const books = usePlotStore((s) => s.books)
   const openNote = usePlotStore((s) => s.openNote)
 
   // Active members only — skip refs pointing at trashed/missing entities.
@@ -129,11 +131,16 @@ export function StickerDetailPanel({ sticker }: { sticker: Sticker }) {
             if (r) { title = r.title; trashed = !!r.trashed }
             break
           }
+          case "book": {
+            const b = books.find((x) => x.id === ref.id)
+            if (b) { title = b.title || "Untitled"; trashed = !!(b as { trashed?: boolean }).trashed }
+            break
+          }
         }
         return { kind: ref.kind, id: ref.id, title, trashed }
       })
       .filter((m) => m.title !== null && !m.trashed) as { kind: EntityKind; id: string; title: string; trashed: false }[]
-  }, [sticker.members, notes, wikiArticles, tags, labels, wikiCategories, attachments, references])
+  }, [sticker.members, notes, wikiArticles, tags, labels, wikiCategories, attachments, references, books])
 
   // kind별 breakdown — keep only kinds that exist on this sticker.
   const breakdown = useMemo(() => {
@@ -291,6 +298,7 @@ function MemberRow({
       case "category": return IconWiki
       case "file": return FileText
       case "reference": return FileText
+      case "book": return BookIcon
       default: return FileText
     }
   })()

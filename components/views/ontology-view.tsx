@@ -258,6 +258,8 @@ export function OntologyView() {
       tags: a.tags,
       categoryIds: a.categoryIds,
       folderIds: a.folderIds ?? [],
+      // 색=status (2026-05-29): graph 노드 색을 위키 4단계 status로 칠하기 위해 전달.
+      status: a.status,
     })),
     [wikiArticles],
   )

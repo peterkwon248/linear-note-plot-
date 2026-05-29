@@ -8,6 +8,41 @@
 
 ---
 
+## ✅ 2026-05-30 — 통합 정합성 플랜: 네비 골격 통일 + 온톨로지 재설계 + grid selection/그룹 + Q1 dropdown 그룹 ⭐⭐⭐⭐⭐
+
+**범위**: 직전 P0 #0(notes-grid 비대칭)을 **옵션 B**로 해결 → "즉흥 말고 규칙성 제대로" 사용자 요청 → **통합 정합성 플랜**(네비게이션 + 온톨로지 + 오버뷰) 승인·실행. 8 커밋, branch claude/interesting-varahamihira-eeeaef → main squash. tsc 0 / store-eval 검증(위키·온톨로지 화면은 SPA route 환경상 사용자 직접). v152 유지(전부 UI / 세션 한정).
+
+### 완료 (8 커밋)
+- 북스 breadcrumb 버그(book 컨텍스트 note picker → 정적 separator) + list-nav 진행바 + 위키 공간 breadcrumb(ViewHeader titleNode) + grid 카드 selection(board parity) + **preview IPv4 fix**(launch.json -H 127.0.0.1).
+- **Phase A** list-nav book TOC dropdown 통일 (note picker 흡수).
+- **Phase B** 온톨로지 색=status/모양=공간 + LEGEND 재구조(STATUS/TYPE/BOOKS) + Wiki hexagon glyph + BOOKS BookKindIcon 색.
+- sticker member book resolve 누락 수정.
+- grid 그룹 섹션 (No grouping만 → status/folder 세로 섹션).
+- **Q1** list-nav dropdown 그룹 (인프라 + notes-table; 나머지 site 헬퍼 재사용 남음).
+
+### 핵심 결정 (영구)
+- **네비게이션 골격 통일**: book/note/wiki = "공간 › [컨텍스트 dropdown ⌄] › 제목 · N/M · 진행바 · ‹ ›". list-nav = book TOC dropdown 패턴. note picker는 book/list-nav active일 때 숨김(suppressNotePicker).
+- **온톨로지 색=status / 모양=공간**: 위키도 status 색(violet 폐기). 공간=모양(note circle/wiki hexagon). LEGEND 축 분리(STATUS 색-dot/TYPE 모양/BOOKS kind). **근본원인 = graph.ts 위키 노드 status "done" 하드코딩**.
+- **grid도 그룹 섹션** (board=컬럼 가로 ↔ grid=세로 섹션). view-configs groupingOptions modes에 grid 추가.
+- **list-nav dropdown 그룹**: 캡처가 groups(label+ids)도 freeze → dropdown 섹션(≥2그룹). 그룹 label은 view-engine이 이미 resolve(NoteGroup.label).
+- **book = graph에서 hull(영역)**, 노드 아님 → LEGEND TYPE은 note/wiki만. **Manual book kind = 무채색**(BookKindIcon: Smart violet/Hybrid amber/Manual neutral).
+- **notes-grid 비대칭 해결 = 옵션 B**(더블클릭 open+capture + board parity selection).
+
+### 기술 학습 (영구)
+- **preview MCP IPv4 fix**: Next 16 IPv6(::) 바인딩 → preview MCP IPv4 probe 실패. launch.json dev `-H 127.0.0.1`로 근본 해결(이 환경 고질). screenshot은 이 환경서 타임아웃(eval/snapshot/console만).
+- **자동검증 한계**: `window.__plotStore` store-eval로 노트·book·온톨로지 노드·dropdown 검증. 위키/온톨로지 **화면 전환은 activeRoute module state라 eval/click 불가** → 사용자 직접 시각.
+- **eval 함정**: `const st=getState()` 후 setViewState → `st.*`는 stale. fresh `getState()` 재호출 필요.
+- **graph wiki node status 하드코딩** → wa.status + buildOntologyGraphData param·ontology-view 매핑 추가.
+- **radix dropdown = pointer 이벤트**: `.click()` 안 됨 → `dispatchEvent(PointerEvent pointerdown/up)`.
+- **setViewState = raw merge**(normalizeViewState/applyModeAwareGroupBy 안 거침). grid grouping 노출 = display-panel isGroupingModeAllowed + view-configs modes.
+
+### Watch Out
+- Q1 미완(notes-table만). notes-grid/board + wiki list/board 캡처 헬퍼 재사용 마무리.
+- 사용자 시각 확인 누적(온톨로지/위키 breadcrumb/grid/sticker book/dropdown/Wiki hexagon).
+- grid 빈 섹션(Todo 0) 표시 미결. Phase B 라이트 노드 대비는 사용자 "만족"이라 미터치.
+
+---
+
 ## ✅ 2026-05-29 (심야) — list-context-navigation 구현 (Linear 리스트 peek 네비) ⭐⭐⭐⭐
 
 **범위**: 리스트/보드/그리드에서 노트·위키 열면 그 화면 visible-ordered ids를 freeze 캡처 → 에디터 "← {label} N/M →" prev/next + 복귀. bookContext/BookContextNav 일반화한 **형제**. branch claude/hardcore-gauss-c01d27 → main squash. tsc 0 / build / test 282 / Architect APPROVED / preview 런타임 검증.

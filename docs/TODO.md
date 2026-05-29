@@ -3,31 +3,39 @@
 > 우선순위 기반 작업 목록. **P0 = 다음 세션 즉시 시작점** (NEXT-ACTION.md 폐지, 2026-05-12).
 > 완료 항목은 즉시 삭제. 자세한 history는 SESSION-LOG.md + MEMORY.md.
 
-**마지막 갱신**: 2026-05-29 (after-work 심야, 집/Windows) — **list-context-navigation 구현** 완료·머지 (branch claude/hardcore-gauss-c01d27 → main squash). 노트 list/board + 위키 list/board/grid 5뷰 freeze 캡처 + 에디터 네비 바. 다음 P0 #0 = **notes-grid list-nav 비대칭 브레인스토밍** (사용자 명시 지정), P0 #1 = **Books kind nav** (설계 LOCKED), carry P0 #2 = Entity Insights (대부분 진행).
+**마지막 갱신**: 2026-05-30 (after-work, 집/Windows) — **통합 정합성 플랜 Phase A/B + grid selection·그룹 + Q1 dropdown 그룹** (8 커밋, branch claude/interesting-varahamihira-eeeaef → main squash). 다음 P0 #0 = **Q1 나머지 캡처 site**(헬퍼 재사용), P0 #1 = **Phase C 오버뷰 StatsCard**, carry = Books kind nav / Entity Insights / Wiki breadcrumb 마이그.
 
 ---
 
-## 🟣 P0 — 즉시 (cross-machine 진입점, 2026-05-29 after-work — Wiki status v151 + Smart Book Preset v152 머지)
+## 🟣 P0 — 즉시 (cross-machine 진입점, 2026-05-30 after-work — 통합 정합성 플랜 Phase A/B 머지)
 
-> ✅ **2026-05-29 (심야) 완료·머지** (이 세션): **list-context-navigation** — 노트 list/board + 위키 list/board/grid **5뷰** freeze 캡처 + 에디터 "← {label} N/M →" prev/next + 복귀 (bookContext 일반화 형제). tsc 0 / build / test 282 / Architect APPROVED / preview 런타임 검증. **store version 무관(v152 유지, 세션 한정)**. notes-grid만 보류 → P0 #0.
-> ✅ **2026-05-29 (밤) 완료·머지**: (1) Wiki status 4단계(store v151, 자동→수동 + onRehydrate 시딩, Architect HIGH 버그 2개 수정) (2) Wiki 사이드바 정합(More/Insights/status nav) (3) 노트 standalone merge/split (4) Smart Book Preset 시스템(store v152) + Books More/Insights. 전부 build/tsc/test green + Architect APPROVED + preview runtime 검증.
-> ✅ **(직전 오후) NoteStatus 3→4 REPLACE 머지** (PR #489, store v150) — 시각 검증 완료(이번 세션 preview에서 확인).
+> ✅ **2026-05-30 완료·머지** (이 세션, 8 커밋): **통합 정합성 플랜** — (1) **네비게이션 골격 통일**: 북스 breadcrumb 버그(book 컨텍스트 note picker 숨김)·list-nav book TOC dropdown·진행바·위키 공간 breadcrumb·**Q1 dropdown 그룹**(notes-table) (2) **온톨로지 색=status/모양=공간** + LEGEND 재구조·Wiki hexagon (3) **grid 카드 selection** + **grid 그룹 섹션** (4) sticker book resolve + **preview IPv4 fix**(launch.json -H 127.0.0.1). tsc 0 / store-eval 검증(위키·온톨로지 화면은 SPA route 환경상 사용자 직접 시각). **직전 P0 #0(notes-grid 비대칭) = 옵션 B(더블클릭 open+capture+selection)로 해결.**
+> ✅ **2026-05-29 (심야)**: list-context-navigation 5뷰. **(밤)**: Wiki status v151 + Smart Book Preset v152.
 
-### 0. **🔴 P0 #0 (새 최우선): notes-grid list-nav 비대칭 브레인스토밍** ⭐ 다음 세션 첫 작업 (사용자 명시 지정)
+### 0. **🔴 P0 #0 (새 최우선): Q1 나머지 캡처 site — list-nav dropdown 그룹 완성** ⭐ 다음 세션 첫 작업
 
-**배경**: ✅ **list-context-navigation 구현 완료·머지** (2026-05-29 심야, branch claude/hardcore-gauss-c01d27). 노트 list/board + 위키 list/board/grid **5뷰**에 freeze 캡처 + 에디터 "← {label} N/M →" 적용. tsc 0 / build / test 282 / Architect APPROVED / preview 런타임 검증(1/9→2/9→back 복귀, 콘솔 0).
+**배경**: ✅ Q1 인프라(`ListNavContext.groups` + `useListContextNav` groups resolve + `ListContextNav` 그룹 헤더 섹션) **완성** + **notes-table(list)만** 캡처에 groups 전달. dropdown "‹ 라벨 ⌄"가 list groupBy=status에서 Backlog/Todo/Done 섹션으로 뜸(store-eval 검증).
 
-**미해결 (사용자가 다음 세션 최우선으로 지정)**: **notes-grid만 list-nav 제외**됨. notes-grid는 구조상 단일클릭=preview only로 **에디터 직접 진입 경로가 없어서**(기존 동작). 반면 wiki-grid는 `onOpen=editor`라 적용됨 → **grid 비대칭**.
+**남은 작업**: notes-grid/board + wiki list/board 캡처도 groups 전달 (헬퍼 재사용, 빠름).
+**첫 스텝**:
+1. **패턴** = `components/notes-table.tsx:1568,1575` (import `noteGroupsToListNav` from `@/lib/list-nav/flatten`, captureListNav 4번째 인자 `noteGroupsToListNav(groups)`).
+2. notes-grid(`components/views/notes-grid-view.tsx`): `NotesGridView`가 groups prop 있음 → grouped면 `noteGroupsToListNav(groups)`.
+3. notes-board: resolvedGroups → `noteGroupsToListNav(resolvedGroups)`.
+4. wiki-list/board: WikiGroup → `wikiGroupsToListNav(wikiGroups)`.
+5. `tsc --noEmit` + 사용자 시각.
 
-**브레인스토밍 포인트** (다음 세션 첫 작업):
-1. notes-grid가 preview-only인 게 **의도된 디자인**인지부터 점검 (왜 grid만 에디터 직접 진입이 없나 — 기존 코드 ground truth로 확인)
-2. **옵션 A**: 현행 유지 (notes-grid preview-only, list-nav 없음 — 기존 동작 보존, 최소 변경)
-3. **옵션 B**: notes-grid 카드에 더블클릭 에디터 진입 신설 + list-nav 캡처 (wiki-grid와 대칭, 단 기존 grid 클릭 UX 변경)
-4. 결정 후 대상: `components/views/notes-grid-view.tsx` + `components/notes-grid-shell.tsx` (참고: 캡처 헬퍼 `useListNavCapture("notes")` + `flatNotes` 이미 존재 — 통합만)
+**Watch Out**: capture 헬퍼는 ≥2그룹만 groups 부착(1그룹=평면). grid 빈 섹션(Todo 0) 표시 여부 미결. eval로 위키 화면 전환 불가(activeRoute module state) → 위키 검증은 사용자 직접.
 
-**참고**: 구현 = `hooks/use-list-context-nav.ts` + `hooks/use-list-nav-capture.ts` + `lib/list-nav/flatten.ts` + `components/list-context-nav.tsx`. 설계 = `docs/01-plan/features/list-context-navigation.plan.md`.
+### 0.5. **🔴 P0 #1: Phase C — 오버뷰 StatsCard 통일** (미시작, 통합 플랜 마지막 Phase)
 
-**Watch Out (구현 시 발견, 후속 polish)**: board capture = logical superset(50카드 limit·collapsed 컬럼도 캡처) / prev·next가 hard-deleted id skip 안 함(plan §6.1) / 키보드 네비 없음(buttons만) / 위키 secondary pane 네비 unmount(book nav 동일 한계).
+**왜**: 홈/위키/라이브러리 KPI 박스 py(4 vs 2.5)·숫자(text-2xl vs text-xl)·아이콘(12 vs 18px) 제각각, 공통 컴포넌트 없음.
+**첫 스텝**:
+1. 공통 `components/stats-card.tsx` 신규 (value/label/sub/icon/color/size) — `rounded-lg border px-3 py-3` + `text-xl` + 아이콘 14.
+2. 적용: `components/home/stats-row.tsx`(L118 StatsRow) / `components/views/wiki-dashboard.tsx` MiniStat(L395) / `components/views/library-view.tsx` LibraryStatCard(L606).
+3. StatusCard(4단계 breakdown) 추출: `wiki-insights-view.tsx` WikiStatusBreakdown(L24) + wiki-dashboard 인라인(L150) 통합.
+4. recharts 표준화 (Notes insights MiniBarChart → recharts).
+
+**플랜 문서**: `C:\Users\user\.claude\plans\playful-honking-octopus.md` (Phase A·B 완료, Phase C 남음).
 
 ### -5. **🔴 P0 #1 (설계 LOCKED): Books kind nav** (All Books 아래 Smart/Manual/Hybrid) ⭐ 다음 세션
 

@@ -266,20 +266,21 @@ export const NOTES_VIEW_CONFIG: ViewConfig = {
     defaultSortByMode: { timeline: { field: "createdAt", direction: "asc" } },
     groupingOptions: [
       { value: "none", label: "No grouping", labelKey: "display.grouping.none" },
-      // 2026-05-24 — explicit modes for every grouping (Linear-style L1 "UI
-      // 노출 = 100% 동작"). Grid is a flat card grid → no grouping options
-      // outside "none". List/board keep the full axis set.
-      { value: "status", label: "Status", labelKey: "display.property.status", modes: ["list", "board"] },
-      { value: "folder", label: "Folder", labelKey: "display.property.folder", modes: ["list", "board"] },
-      { value: "label", label: "Label", labelKey: "filter.category.label", modes: ["list", "board"] },
-      { value: "parent", label: "Parent", labelKey: "display.property.parent", modes: ["list", "board"] },
-      { value: "role", label: "Role", modes: ["list", "board"] },
+      // 2026-05-24 — explicit modes per grouping (Linear-style L1 "UI 노출 =
+      // 100% 동작"). 2026-05-29: grid도 그룹 섹션(세로 헤더 + 카드 묶음)을
+      // 지원 → status/folder/label/parent/role/date에 grid 추가. family/
+      // firstLetter는 list 전용(indent/alpha 헤더가 카드 grid와 충돌).
+      { value: "status", label: "Status", labelKey: "display.property.status", modes: ["list", "board", "grid"] },
+      { value: "folder", label: "Folder", labelKey: "display.property.folder", modes: ["list", "board", "grid"] },
+      { value: "label", label: "Label", labelKey: "filter.category.label", modes: ["list", "board", "grid"] },
+      { value: "parent", label: "Parent", labelKey: "display.property.parent", modes: ["list", "board", "grid"] },
+      { value: "role", label: "Role", modes: ["list", "board", "grid"] },
       // family tree only makes sense in list (indent column). Board would
       // need allowFamilyOnBoard override (categories case).
       { value: "family", label: "Family", modes: ["list"] },
       // updatedAt time-bucket grouping. Timeline X-axis already encodes
       // time, so date grouping would duplicate the axis — hide in timeline.
-      { value: "date", label: "Updated", labelKey: "display.ordering.updated", modes: ["list", "board"] },
+      { value: "date", label: "Updated", labelKey: "display.ordering.updated", modes: ["list", "board", "grid"] },
       // Plot-consistent UX: alphabetical "Index" grouping moved from a
       // properties-chip toggle (legacy showAlphaIndex) into the grouping
       // dropdown alongside other grouping axes. Wired in lib/view-engine/group.ts.

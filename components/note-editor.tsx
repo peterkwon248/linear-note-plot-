@@ -498,7 +498,7 @@ export function NoteEditor({ noteId: propNoteId, onClose, pane = 'primary', defa
               </button>
             </div>
           )}
-          <EditorBreadcrumb note={note} onClose={pane === 'secondary' ? () => closeSecondary() : onClose} pane={pane} />
+          <EditorBreadcrumb note={note} onClose={pane === 'secondary' ? () => closeSecondary() : onClose} pane={pane} suppressNotePicker={!!bookNav.active || !!listNav.active} />
           {bookNav.active && (
             <div className="hidden md:flex shrink-0">
               <BookContextNav
@@ -519,6 +519,9 @@ export function NoteEditor({ noteId: propNoteId, onClose, pane = 'primary', defa
                 label={listNav.active.label}
                 index={listNav.active.index}
                 total={listNav.active.total}
+                items={listNav.items}
+                groups={listNav.groups}
+                onJumpTo={listNav.jumpTo}
                 onPrev={listNav.goPrev}
                 onNext={listNav.goNext}
                 onBack={listNav.goBack}

@@ -51,6 +51,23 @@
 
 ---
 
+## 🚀 2026-05-30 — 통합 정합성 플랜: 네비 골격 + 온톨로지 + grid/dropdown 그룹 ⭐⭐⭐⭐⭐
+
+**범위**: notes-grid 비대칭(옵션 B로 해결) → "즉흥 말고 규칙성 제대로" → **통합 정합성 플랜**(네비게이션 골격 통일 + 온톨로지 재설계 + 오버뷰 StatsCard). 8 커밋 → main squash. tsc 0 / store-eval 검증(위키·온톨로지 화면은 SPA route 환경상 사용자 직접).
+
+### 핵심 결정 (영구)
+- **네비 골격 통일**: book/note/wiki = "공간 › [컨텍스트 dropdown ⌄] › 제목 · N/M · 진행바 · ‹ ›". list-nav = book TOC dropdown 패턴. note picker(전체검색)는 book/list active일 때 숨김(suppressNotePicker).
+- **온톨로지 색=status / 모양=공간**(note=circle / wiki=hexagon). LEGEND STATUS/TYPE/BOOKS 축 분리. book = graph hull(영역) ≠ 노드. 근본원인=graph.ts 위키 노드 status "done" 하드코딩.
+- **grid도 그룹 섹션**(board=컬럼 가로 ↔ grid=세로 섹션). list-nav dropdown도 그룹(≥2그룹).
+- **preview MCP IPv4 fix**(launch.json -H 127.0.0.1 — Next 16 IPv6 바인딩 근본 해결).
+
+### 다음 우선순위 (P0)
+1. **Q1 나머지 캡처 site** (notes-grid/board + wiki list/board — `noteGroupsToListNav`/`wikiGroupsToListNav` 헬퍼 재사용).
+2. **Phase C** 오버뷰 StatsCard 통일.
+3. (carry) Books kind nav / Entity Insights recharts / Wiki breadcrumb 마이그.
+
+---
+
 ## 🚀 2026-05-29 (심야) — list-context-navigation 구현 (Linear 리스트 peek 네비) ⭐⭐⭐⭐
 
 **범위**: 리스트/보드/그리드에서 노트·위키 열면 visible-ordered ids freeze 캡처 → 에디터 "← {label} N/M →" prev/next + 복귀. bookContext 일반화 형제. branch claude/hardcore-gauss-c01d27 → main squash. tsc 0 / build / test 282 / Architect APPROVED / preview 검증.

@@ -803,6 +803,21 @@ export function WikiView() {
         <ViewHeader
           icon={<StatusShapeIcon status={selectedWikiArticle.status} size={20} />}
           title={selectedWikiArticle.title || "Untitled"}
+          titleNode={
+            <nav className="flex items-center gap-1 min-w-0">
+              <button
+                onClick={() => setSelectedWikiArticleId(null)}
+                className="shrink-0 text-note text-muted-foreground transition-colors hover:text-foreground cursor-pointer"
+              >
+                Wiki
+              </button>
+              <IconChevronRight size={16} className="shrink-0 text-muted-foreground/70" />
+              <StatusShapeIcon status={selectedWikiArticle.status} size={16} />
+              <span className="min-w-0 truncate text-note font-medium text-foreground">
+                {selectedWikiArticle.title || "Untitled"}
+              </span>
+            </nav>
+          }
           actions={
             <div className="flex items-center gap-2">
               {wikiBookNav.active && (
@@ -825,6 +840,9 @@ export function WikiView() {
                     label={wikiListNav.active.label}
                     index={wikiListNav.active.index}
                     total={wikiListNav.active.total}
+                    items={wikiListNav.items}
+                    groups={wikiListNav.groups}
+                    onJumpTo={wikiListNav.jumpTo}
                     onPrev={wikiListNav.goPrev}
                     onNext={wikiListNav.goNext}
                     onBack={() => { setSelectedWikiArticleId(null); wikiListNav.goBack() }}

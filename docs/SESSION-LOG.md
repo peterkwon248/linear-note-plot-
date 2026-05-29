@@ -6,6 +6,61 @@
 
 ---
 
+## 2026-05-30 (집, Windows) — **통합 정합성 플랜: 네비게이션 골격 통일 + 온톨로지 재설계 + grid selection/그룹 + Q1 dropdown 그룹 (8 커밋)**
+
+> 🎯 **다음 즉시 액션 hook**:
+> 1. **Q1 나머지 캡처 site** — list-nav dropdown 그룹 섹션을 **notes-grid/board + wiki list/board**에도 적용. 인프라(`ListNavContext.groups` + `useListContextNav` groups resolve + `ListContextNav` 그룹 헤더 섹션 렌더)는 **완성**됐고 지금은 **notes-table(list)만** 캡처에 groups 전달. 나머지 site는 `noteGroupsToListNav(groups)` / `wikiGroupsToListNav(wikiGroups)` 헬퍼(`lib/list-nav/flatten.ts`) 재사용 — 각 site의 `captureListNav(orderedIds, id, label)` 호출에 4번째 인자 groups 추가만 하면 됨. **패턴 참고**: `components/notes-table.tsx:1568,1575`(import `noteGroupsToListNav`, `noteGroupsToListNav(groups)` 전달). notes-grid: `NotesGridView`가 groups prop 있으니 grouped면 noteGroupsToListNav(groups). notes-board: resolvedGroups → noteGroupsToListNav. wiki-list/board: WikiGroup → wikiGroupsToListNav.
+> 2. **Phase C — 오버뷰 StatsCard 통일** (미시작). 홈/위키/라이브러리 KPI 박스 py(4 vs 2.5)·숫자(text-2xl vs text-xl)·아이콘(12 vs 18px) 제각각. 공통 `components/stats-card.tsx` 신규 추출(rounded-lg border px-3 py-3 + text-xl + 아이콘 14) → stats-row(홈)/wiki-dashboard MiniStat(L395)/library-view LibraryStatCard(L606) 교체. + StatusCard(4단계 breakdown) 추출.
+> 3. (carry) Books kind nav(bookKindFilter) / Entity Insights recharts 표준화 / Wiki breadcrumb category·parent 깊이 / grid 빈 섹션(Todo 0) 표시 여부.
+>
+> **통합 정합성 플랜 문서**: `C:\Users\user\.claude\plans\playful-honking-octopus.md` (Phase A·B 완료, Phase C 남음).
+
+> **사용자 의도** (이번 세션): P0 #0(notes-grid 비대칭)으로 시작 → "그리드도 board처럼 우측 상단 호버 체크박스" → **옵션 B**(더블클릭 open + list-nav + board parity selection) 결정. 이후 "즉흥 패치 말고 규칙성 제대로" → **통합 정합성 플랜 승인**(네비게이션 골격 통일 + 온톨로지 재설계 + 오버뷰 StatsCard). 디테일 피드백 다수(LEGEND BOOKS 색, sticker book 아이콘, TYPE glyph를 graph처럼, dropdown "왜 10 items").
+
+> **이번 세션 핵심 결정 (영구 — MEMORY.md push)**:
+> - **네비게이션 골격 통일**: book/note/wiki 전부 `공간 › [컨텍스트 dropdown ⌄] › 제목 · N/M · 진행바 · ‹ ›`. list-nav를 book TOC dropdown 패턴으로(‹ {label} ⌄ → 현재 리스트 항목 목록 + jump). note picker(전체 노트 검색)는 book/list-nav active일 때 숨김(`suppressNotePicker`).
+> - **온톨로지 색=status / 모양=공간**: 위키 노드도 4단계 status 색(violet 폐기). **근본원인 = lib/graph.ts 위키 노드 status "done" 하드코딩**. 공간 구분은 모양(note=circle, wiki=hexagon). LEGEND 축 분리(STATUS 색-dot / TYPE 모양 ○⬡ / BOOKS kind = BookKindIcon).
+> - **grid도 그룹 섹션**: 기존 grid는 No grouping만(평면 카드). view-configs groupingOptions modes에 grid 추가 + NotesGridView 세로 섹션 렌더. board=컬럼(가로) ↔ grid=세로 섹션.
+> - **list-nav dropdown 그룹**: 캡처가 화면 전체 flat ids만 freeze해 "N items" 평면이던 것(사용자 지적). groups(label+ids)도 freeze → dropdown을 status/folder 섹션으로(≥2그룹만 부착). 그룹 label은 view-engine이 이미 resolve(NoteGroup.label).
+> - **book = graph에서 노드 아니라 hull(영역)** — group-by book일 때만. LEGEND TYPE은 노드(note/wiki)만, BOOKS는 별도 섹션.
+> - **Manual book kind = 무채색** (BookKindIcon: Smart violet/Hybrid amber/Manual neutral, 의도된 디자인).
+
+> **머신**: 집 (Windows). cross-machine 활성.
+> **현재 main HEAD**: 이 PR squash merge 후 (직전 `e305d48` PR #492)
+> **branch**: claude/interesting-varahamihira-eeeaef → main squash merge
+> **Store version**: v152 (변경 없음 — 전부 UI / 세션 한정 listNavContext.groups)
+
+### 완료 (8 커밋, 전부 tsc 0; 노트·온톨로지 노드·dropdown은 store-eval 검증 — 위키/온톨로지 화면은 SPA route 환경상 사용자 직접 시각)
+- `2c432bf` 북스 breadcrumb 버그(book 컨텍스트 note picker chevron → 정적 separator) + list-nav 진행바 + 위키 공간 breadcrumb(ViewHeader titleNode "Wiki ›") + grid 카드 selection(호버 체크박스 + FloatingActionBar, board parity) + **preview IPv4 fix**(launch.json `-H 127.0.0.1`).
+- `44dbf9b` Phase A — list-nav를 book TOC dropdown으로 통일 (useListContextNav items+jumpTo, ListContextNav dropdown, note picker 흡수).
+- `4f23242` Phase B — 온톨로지 색=status/모양=공간 + LEGEND 재구조 (STATUS/TYPE/BOOKS).
+- `b496e9b` LEGEND BOOKS = BookKindIcon 색.
+- `bf4f0a0` sticker member book resolve 누락 수정.
+- `7f71f36` grid 그룹 섹션 (NotesGridView 세로 섹션 + view-configs grid modes).
+- `ac30c47` LEGEND TYPE Wiki = graph 노드 모양 (hexagon + cube wireframe).
+- `6d60df9` Q1 list-nav dropdown 그룹 (인프라 + notes-table 캡처).
+
+### 기술 학습 (영구 — MEMORY.md push)
+- **preview MCP IPv4 fix**: Next 16이 IPv6(`::`)로만 바인딩 → preview MCP IPv4 probe 실패로 안 떴음. **launch.json dev에 `-H 127.0.0.1` 추가로 근본 해결** (이 환경 고질 문제). preview_eval/snapshot/console은 동작하나 screenshot은 이 환경에서 타임아웃(렌더러).
+- **이 환경 자동검증 한계**: `window.__plotStore` store 조작 + preview_eval로 노트·book·온톨로지 노드·dropdown 검증 가능. 단 **위키/온톨로지 화면 전환은 activeRoute가 module state라 eval/nav click으로 안 됨** → 사용자 직접 시각 필수.
+- **eval 함정**: `const st=getState()` 후 setViewState → `st.viewStateByContext`는 stale(set 전). fresh `getState()` 재호출 필요. ("10 items" 디버깅 시 stale 읽어 오판한 사례.)
+- **graph wiki node status 하드코딩 함정**: lib/graph.ts:253 위키 노드 status "done" 고정이라 status가 graph에 안 실림. wa.status로 + buildOntologyGraphData param·ontology-view 매핑에 status 추가.
+- **radix dropdown은 pointer 이벤트**: eval `.click()`으로 안 열림 → `dispatchEvent(new PointerEvent('pointerdown'/'pointerup'))`.
+- **setViewState는 raw merge**(normalizeViewState/applyModeAwareGroupBy 안 거침). grid grouping 노출은 display-panel isGroupingModeAllowed + view-configs modes. applyModeAwareGroupBy(defaults.ts:137)는 mode 전환 시 groupBy 검증.
+
+### Watch Out (다음 세션)
+- **Q1 미완**: dropdown 그룹이 notes-table(list)만. notes-grid/board + wiki list/board 캡처는 아직 평면 — 헬퍼 재사용으로 마무리(위 hook #1).
+- **사용자 시각 확인 누적**: 온톨로지(노드 status색/LEGEND/라이트 대비)·위키 breadcrumb·grid 체크박스·grid 그룹·sticker book·Q1 dropdown·LEGEND Wiki hexagon — 코드/tsc/store-eval은 통과, 일부 사용자 실제 화면 미확인. before-work 시 피드백 반영.
+- **grid 빈 섹션**: groupBy status grid에서 0개 섹션(Todo)도 헤더 표시(board parity). 숨길지 미결.
+- **Phase B 라이트 대비**: 사용자 "그 외 만족"이라 추가 미세조정 안 함(노드 채움 alpha / svg LegendOverlay node swatch는 미터치).
+
+### 환경 변경
+- Store version: v152 (변경 없음 — listNavContext.groups는 세션 한정)
+- 주요 변경 파일: lib/store/types.ts·ui.ts / hooks/use-list-context-nav.ts·use-list-nav-capture.ts / components/list-context-nav.tsx / lib/list-nav/flatten.ts(헬퍼) / lib/graph.ts / components/ontology/ontology-graph-canvas.tsx·ontology-legend.tsx / lib/view-engine/view-configs.tsx / components/views/notes-grid-view.tsx·wiki-view.tsx / components/notes-grid-shell.tsx·notes-table.tsx·note-editor.tsx·editor-breadcrumb.tsx / components/side-panel/sticker-detail-panel.tsx / lib/i18n.ts / .claude/launch.json
+- Tests: 미실행(전부 UI 변경, tsc 0으로 게이트). preview: localhost:3002
+
+---
+
 ## 2026-05-29 (심야) — 집 (Windows), **list-context-navigation 구현 (Linear 리스트 peek 네비 — bookContext 일반화)**
 
 > 🎯 **다음 즉시 액션 hook (최우선 — 사용자 지정)**:
