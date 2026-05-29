@@ -289,6 +289,34 @@ export type BookItem =
   | { kind: "wiki"; id: string; refId: string; order: string; userOrder?: string }
   | { kind: "chapter-heading"; id: string; title: string; order: string; userOrder?: string }
 
+/**
+ * SmartBookPreset — a reusable blueprint of AutoSource combinations
+ * ("Smart Book" = the Books-space analog of NoteTemplate / WikiTemplate).
+ *
+ * A preset is NOT a book. It is a saved set of smart sources that, when
+ * "applied", spawns a brand-new Smart Book seeded with `[...sources]`
+ * (see `applySmartBookPreset` in the smart-book-presets slice). This mirrors
+ * "Use template" → "create note" for the Books world.
+ *
+ * Model intentionally parallels NoteTemplate (id / name / description /
+ * pinned / soft-delete / timestamps); the payload is `sources` (AutoSource[])
+ * instead of title/content because a Smart Book's identity IS its sources.
+ *
+ * Spec: `docs/01-plan/features/smart-book-preset.plan.md` §2.
+ */
+export interface SmartBookPreset {
+  id: string
+  name: string
+  description?: string
+  /** Blueprint — the AutoSource set copied verbatim into the new book. */
+  sources: AutoSource[]
+  pinned: boolean
+  trashed?: boolean
+  trashedAt?: string | null
+  createdAt: string
+  updatedAt: string
+}
+
 /* ── Wiki Article (Assembly Model) ────────────────── */
 
 /** Wiki block types — building blocks of a wiki article */

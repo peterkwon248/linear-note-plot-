@@ -16,7 +16,7 @@ export const TABLE_VIEW_ROUTES = ["/notes", "/backlog", "/todo", "/in-progress",
 export const WORKFLOW_ROUTES = ["/backlog", "/todo", "/in-progress", "/done"]
 
 /** Routes handled by individual always-mounted view components */
-export const VIEW_ROUTES = ["/home", "/inbox", "/labels", "/library/labels", "/library/categories", "/stickers", "/templates", "/ontology", "/insights", "/wiki", "/wiki/insights", "/search", "/calendar", "/graph-insights", "/library", "/library/references", "/library/tags", "/library/files", "/books"]
+export const VIEW_ROUTES = ["/home", "/inbox", "/labels", "/library/labels", "/library/categories", "/stickers", "/templates", "/ontology", "/insights", "/wiki", "/wiki/insights", "/search", "/calendar", "/graph-insights", "/library", "/library/references", "/library/tags", "/library/files", "/books", "/books/smart-books", "/books/insights"]
 
 /** All routes that use instant switching (always-mounted in layout) */
 export const ALL_SIDEBAR_ROUTES = [...TABLE_VIEW_ROUTES, ...VIEW_ROUTES]

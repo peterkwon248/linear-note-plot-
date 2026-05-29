@@ -2645,5 +2645,31 @@ export function migrate(persistedState: unknown): PlotState {
     }
   }
 
+  // v151 → v152: SmartBookPreset 시스템 신설.
+  //   state.smartBookPresets 신규 슬라이스 + SEED_SMART_BOOK_PRESETS inject.
+  //   Smart Book = Templates의 Books판 — 재사용 가능한 AutoSource 조합 청사진.
+  //   wikiTemplates(v139) 패턴 정합: array 보장(직렬화 round-trip 방어) +
+  //   id-dedup append(사용자 데이터 보존하며 fresh seed 보장). Idempotent.
+  {
+    const { SEED_SMART_BOOK_PRESETS } = require("./seeds")
+    if (!Array.isArray((state as Record<string, unknown>).smartBookPresets)) {
+      ;(state as Record<string, unknown>).smartBookPresets = [...SEED_SMART_BOOK_PRESETS]
+      console.log(`[migrate] v151→v152: initialized smartBookPresets (${SEED_SMART_BOOK_PRESETS.length} seeds)`)
+    } else {
+      const sbps = (state as Record<string, unknown>).smartBookPresets as any[]
+      const existingIds = new Set(sbps.map((p: any) => p.id))
+      let added = 0
+      for (const seed of SEED_SMART_BOOK_PRESETS) {
+        if (!existingIds.has(seed.id)) {
+          sbps.push(seed)
+          added += 1
+        }
+      }
+      if (added > 0) {
+        console.log(`[migrate] v151→v152: re-seeded smartBookPresets (${added} added)`)
+      }
+    }
+  }
+
   return state as unknown as PlotState
 }

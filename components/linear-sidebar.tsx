@@ -18,6 +18,7 @@ import {
   IconLabel,
   IconTemplate,
   IconInsight,
+  IconSmartBook,
   IconWiki,
   IconPin,
   IconTrash,
@@ -304,6 +305,7 @@ export function LinearSidebar() {
   const templates = usePlotStore((s) => s.templates)
   const wikiTemplates = usePlotStore((s) => Array.isArray(s.wikiTemplates) ? s.wikiTemplates : [])
   const books = usePlotStore((s) => s.books)
+  const smartBookPresets = usePlotStore((s) => Array.isArray(s.smartBookPresets) ? s.smartBookPresets : [])
 
   const wikiCategories = usePlotStore((s) => s.wikiCategories)
   const createWikiCategory = usePlotStore((s) => s.createWikiCategory)
@@ -1970,6 +1972,27 @@ export function LinearSidebar() {
                   Show less
                 </button>
               )}
+            </Section>
+
+            {/* More section: Smart Book + Insights. Mirrors the Notes/Wiki More
+                sections so Books = Pinned → Views → Folders → More → Recent.
+                Smart Book = the Books analog of Templates (SmartBookPreset
+                gallery — saved AutoSource blueprints). Insights = entity 세부
+                page (영구 룰 #140/#168 — Ontology=전체 / entity=세부). */}
+            <Section title={t("sidebar.section.more")}>
+              <NavLink
+                href="/books/smart-books"
+                icon={<IconSmartBook size={20} />}
+                label={t("sidebar.smartBook")}
+                count={smartBookPresets.filter((p) => !p.trashed).length || undefined}
+                active={isActive("/books/smart-books")}
+              />
+              <NavLink
+                href="/books/insights"
+                icon={<IconInsight size={20} />}
+                label={t("sidebar.insights")}
+                active={isActive("/books/insights")}
+              />
             </Section>
 
             {/* Recent books — top 5 by updatedAt (excludes trashed). */}

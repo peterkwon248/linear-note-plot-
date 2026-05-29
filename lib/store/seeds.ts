@@ -1,4 +1,4 @@
-import type { Note, Folder, Tag, Label, NoteTemplate, WikiArticle, WikiBlock, WikiCategory, WikiTemplate, Book } from "../types"
+import type { Note, Folder, Tag, Label, NoteTemplate, WikiArticle, WikiBlock, WikiCategory, WikiTemplate, Book, SmartBookPreset } from "../types"
 import { workflowDefaults } from "./helpers"
 import { buildSectionIndex } from "../wiki-section-index"
 
@@ -1155,6 +1155,57 @@ export const SEED_BOOKS: Book[] = [
     trashedAt: daysAgo(1),
     createdAt: daysAgo(20),
     updatedAt: daysAgo(1),
+  },
+]
+
+/* ── Smart Book Presets (Templates의 Books판) ────────────────────
+ * 재사용 가능한 AutoSource 조합 청사진. "적용" 시 그 소스들로 새 smart
+ * book 생성 (applySmartBookPreset). refId는 전부 위 SEED_FOLDERS /
+ * SEED_TAGS / SEED_WIKI_CATEGORIES의 유효 id를 가리킨다:
+ *   - folder-1   = "Projects"  (SEED_FOLDERS)
+ *   - tag-1      = "Knowledge Management" (SEED_TAGS)
+ *   - tag-2      = "Zettelkasten"         (SEED_TAGS)
+ *   - wcat-seed-1                          (SEED_WIKI_CATEGORIES)
+ * 사용자가 자유 추가/편집/삭제 가능 (seed는 idempotent push만).
+ */
+const sbpNow = new Date().toISOString()
+
+export const SEED_SMART_BOOK_PRESETS: SmartBookPreset[] = [
+  {
+    id: "sbp-projects",
+    name: "Project Workspace",
+    description: "Auto-collects every note in the Projects folder.",
+    sources: [{ kind: "folder", refId: "folder-1" }],
+    pinned: true,
+    trashed: false,
+    trashedAt: null,
+    createdAt: sbpNow,
+    updatedAt: sbpNow,
+  },
+  {
+    id: "sbp-zettelkasten",
+    name: "Zettelkasten Reader",
+    description: "Pulls in notes + wikis tagged Zettelkasten.",
+    sources: [{ kind: "tag", refId: "tag-2" }],
+    pinned: false,
+    trashed: false,
+    trashedAt: null,
+    createdAt: sbpNow,
+    updatedAt: sbpNow,
+  },
+  {
+    id: "sbp-knowledge-base",
+    name: "Knowledge Base",
+    description: "Knowledge-management notes blended with the Note-taking wiki category.",
+    sources: [
+      { kind: "tag", refId: "tag-1" },
+      { kind: "category", refId: "wcat-seed-1" },
+    ],
+    pinned: false,
+    trashed: false,
+    trashedAt: null,
+    createdAt: sbpNow,
+    updatedAt: sbpNow,
   },
 ]
 

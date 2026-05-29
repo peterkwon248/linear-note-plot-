@@ -41,6 +41,7 @@ import {
   Bookmark,
   LayoutTemplate,
   Sparkles,
+  Zap,
   Pin,
   // Action icons
   Search,
@@ -142,6 +143,13 @@ export function IconTemplate({ size = 16, ...props }: IconProps) {
 /** Insight — lucide Sparkles (Linear/Notion-style "AI / insight" affordance). */
 export function IconInsight({ size = 16, ...props }: IconProps) {
   return <Sparkles size={size} strokeWidth={1.5} {...props} />
+}
+
+/** Smart Book — lucide Zap (lightning = "auto / smart" affordance). The
+ *  Books-space analog of IconTemplate; Books' "More" Smart Book nav + the
+ *  preset gallery use this single canonical glyph. */
+export function IconSmartBook({ size = 16, ...props }: IconProps) {
+  return <Zap size={size} strokeWidth={1.5} {...props} />
 }
 
 export function IconPin({ size = 14, ...props }: IconProps) {

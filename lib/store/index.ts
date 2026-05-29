@@ -5,7 +5,7 @@ import type { Attachment, CoOccurrence, RelationSuggestion } from "../types"
 import { buildDefaultViewStates } from "../view-engine/defaults"
 import { createIDBStorage } from "../idb-storage"
 import { createAppendEvent } from "./helpers"
-import { SEED_NOTES, SEED_FOLDERS, SEED_TAGS, SEED_LABELS, SEED_TEMPLATES, SEED_WIKI_ARTICLES, SEED_WIKI_CATEGORIES, SEED_WIKI_TEMPLATES, SEED_BOOKS } from "./seeds"
+import { SEED_NOTES, SEED_FOLDERS, SEED_TAGS, SEED_LABELS, SEED_TEMPLATES, SEED_WIKI_ARTICLES, SEED_WIKI_CATEGORIES, SEED_WIKI_TEMPLATES, SEED_BOOKS, SEED_SMART_BOOK_PRESETS } from "./seeds"
 import { persistBody, persistBlockBody } from "./helpers"
 import { isWikiStub } from "../wiki-utils"
 import { createNotesSlice } from "./slices/notes"
@@ -37,6 +37,7 @@ import { createGlobalBookmarksSlice } from "./slices/global-bookmarks"
 import { createCommentsSlice } from "./slices/comments"
 import { createInboxSlice } from "./slices/inbox"
 import { createBooksSlice } from "./slices/books"
+import { createSmartBookPresetsSlice } from "./slices/smart-book-presets"
 import { DEFAULT_AUTOPILOT_RULES } from "../autopilot/defaults"
 import { migrate } from "./migrate"
 import type { PlotState } from "./types"
@@ -99,6 +100,7 @@ export const usePlotStore = create<PlotState>()(
         globalBookmarks: {} as Record<string, import("../types").GlobalBookmark>,
         comments: {} as Record<string, import("../types").Comment>,
         books: SEED_BOOKS,
+        smartBookPresets: SEED_SMART_BOOK_PRESETS,
         bookContext: { primary: null, secondary: null } as { primary: import("./types").BookContextState | null; secondary: import("./types").BookContextState | null },
         // Dual mode (split-mode-prd) — list+editor split-of-main, distinct from NoteSplitOverlay
         dualSelection: null as import("./types").DualSelection | null,
@@ -150,6 +152,7 @@ export const usePlotStore = create<PlotState>()(
         ...createCommentsSlice(set),
         ...createInboxSlice(set),
         ...createBooksSlice(set, get, appendEvent),
+        ...createSmartBookPresetsSlice(set, get),
 
         // ── Todo Index ──
         rebuildTodoIndex: async () => {
@@ -269,7 +272,7 @@ export const usePlotStore = create<PlotState>()(
     },
     {
       name: "plot-store",
-      version: 151,
+      version: 152,
       storage: createIDBStorage<PlotState>(),
       partialize: (state) => {
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -320,6 +323,8 @@ export const usePlotStore = create<PlotState>()(
             state.templates = SEED_TEMPLATES
             // books seed shipped 2026-05-12 (books-view-engine demo set)
             state.books = SEED_BOOKS
+            // smart book presets seed shipped v152 (Smart Book gallery demo set)
+            state.smartBookPresets = SEED_SMART_BOOK_PRESETS
           }
 
           // Independent books backfill — existing users (notes already seeded)
@@ -328,6 +333,17 @@ export const usePlotStore = create<PlotState>()(
           // hand-creating books. Idempotent: only seeds when array is empty.
           if (!Array.isArray(state.books) || state.books.length === 0) {
             state.books = SEED_BOOKS
+          }
+
+          // v152: smartBookPresets onRehydrate defense + independent backfill.
+          // Mirrors the books backfill above + the wikiTemplates array defense
+          // below: guards (a) the array-shape invariant (serialize round-trip
+          // can turn an array into an object) and (b) the empty-pool case so
+          // existing users (who never created a preset) still get the demo set,
+          // making the Smart Book gallery exercise-able without hand-seeding.
+          // Idempotent: only seeds when not a populated array.
+          if (!Array.isArray(state.smartBookPresets) || state.smartBookPresets.length === 0) {
+            state.smartBookPresets = SEED_SMART_BOOK_PRESETS
           }
 
           // 2026-05-18: wikiTemplates onRehydrate defense. v139 migration이

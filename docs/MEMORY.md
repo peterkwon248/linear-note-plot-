@@ -8,6 +8,36 @@
 
 ---
 
+## ✅ 2026-05-29 (밤) — Wiki status v151 + 사이드바 정합 + 노트 merge/split + Smart Book Preset (store v152) ⭐⭐⭐⭐
+
+**범위**: NoteStatus 4단계를 Wiki로 확장(v151) + 위키/노트 사이드바·merge/split 정합 + Smart Book Preset 시스템 신설(v152). branch claude/smart-book-preset(a259061 위키 기반) → main squash merge (PR #490 supersede). build/tsc/test green + Architect APPROVED + preview runtime 검증.
+
+### 완료 (5건, 전부 검증)
+1. **Wiki status 4단계 (v150→v151)**: `WikiArticle.status`(= NoteStatus) 신규. 자동 stub/article → 수동 backlog/todo/in_progress/done. **시딩 = onRehydrateStorage**(content→done / empty-template→backlog) — partialize가 blocks strip하므로. 색/아이콘/i18n Notes 공유. 보드 2→4 컬럼. Architect HIGH 버그 2개 수정.
+2. **Wiki 사이드바 정합**: Merge/Split→More, `/wiki/insights` 신설, Overview 아래 status nav(`wikiStatusFilter`), Recent legacy-filter 버그 수정.
+3. **노트 standalone merge/split**: `note-view-mode` store + NoteMergePage + NoteSplitPage + Notes More. overlay route-gated(isTableView) + leaving reset.
+4. **Smart Book Preset (v151→v152)**: `SmartBookPreset` 모델 + `lib/store/slices/smart-book-presets.ts` + 3 seed + `/books/smart-books` 갤러리 + Books More(Smart Book + Insights) + `/books/insights`(kind breakdown). 기존 resolver/createBook 재사용.
+5. **Wiki 데이터 복원** (런타임/IDB only): trashed 위키 17개 복원.
+
+### 핵심 결정 (영구)
+- **Full editor 경계 = Notes/Wiki only** (authored content). 분류/기록 entity(Tags/Labels/Categories/References/Stickers/Files)는 inline + member-list page. **References만 미래 *구조화 상세 폼*(full editor 아님) 후보**.
+- **Books 축 = kind**(smart/manual/hybrid), status 아님. **Books Overview 보류**(Insights + 사이드바 Pinned/Recent 중복, continue-reading 빈 상태).
+- **list-context-navigation 설계 확정**(plan doc): 진입 화면의 필터+그룹 적용된 *visible ordered set* freeze 캡처 → 에디터 "← {라벨} N/M →" prev/next + 복귀. `bookContext` 일반화, pane별·세션 한정. list/grid/board(timeline 보류), All/status/folder/saved-view 진입. **다음 세션 P0 #0 구현**.
+- **Books kind nav 설계 LOCKED**: wiki `wikiStatusFilter` 패턴 1:1 미러 — `bookKindFilter` external store + 사이드바 + getBookKind 필터. (P0 #1)
+
+### 기술 학습 (영구)
+- **partialize가 blocks strip → content 기반 시딩은 onRehydrateStorage에서**: WikiArticle status를 content로 매기려면 migrate-time(blocks 부재) 아니라 rehydrate 후 판정. migrate-time이면 all-backlog 버그(Architect 발견).
+- **노트 overlay cross-route 누수**: merge/split overlay를 route-gate(isTableView) + leaving reset 안 하면 다른 라우트로 leak(Architect 발견).
+- **Wiki Recent legacy-filter**: wikiArticles store 읽기 + trashed 제외 — 옛 필터가 잘못된 소스 읽던 버그.
+- v152 = SmartBookPreset 슬라이스 추가(엔진 신규 아님 — 기존 AutoSource/resolver/getBookKind 재사용, Preset 청사진 레이어만).
+- **다른 컴퓨터 IDB 머신별 분리** → 첫 실행 시 v150→v151→v152 순차 마이그(데이터 손실 0).
+
+### Watch Out (다음 세션)
+- **list-nav freeze 타이밍**: "그 순간 보이던 순서 있는 집합" 캡처. 필터/그룹 변경 후 재진입 시 재캡처. pane별 세션 한정(영속 X).
+- **Books kind nav = wikiStatusFilter 1:1**. Books Overview 만들지 말 것.
+
+---
+
 ## ✅ 2026-05-29 (오후) — NoteStatus 3→4 단계 REPLACE 완료·머지 (store v150) ⭐⭐⭐⭐
 
 **범위**: 노트 status를 3단계(stone/brick/keystone) → 4단계(backlog/todo/in_progress/done)로 **REPLACE**. 85파일 atomic rename + 라우트 rename + store v150 마이그레이션. executor-high 구현 + Architect APPROVED + tsc/build/test green.

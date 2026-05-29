@@ -1,4 +1,4 @@
-import type { Note, NoteBody, Folder, Tag, Label, Sticker, EntityRef, NoteTemplate, WikiTemplate, ActiveView, EntityEvent, Thread, AutopilotRule, AutopilotLogEntry, Relation, RelationType, Attachment, CoOccurrence, RelationSuggestion, WikiClusterSuggestion, WikiInfoboxEntry, WikiCollectionItem, SavedView, CustomQuickFilter, WikiArticle, WikiBlock, WikiCategory, Reference, GlobalBookmark, Comment, CommentAnchor, Book, AutoSource, AutoSourceKind, UserInfoboxPreset, Hook, HookPolicy } from "../types"
+import type { Note, NoteBody, Folder, Tag, Label, Sticker, EntityRef, NoteTemplate, WikiTemplate, ActiveView, EntityEvent, Thread, AutopilotRule, AutopilotLogEntry, Relation, RelationType, Attachment, CoOccurrence, RelationSuggestion, WikiClusterSuggestion, WikiInfoboxEntry, WikiCollectionItem, SavedView, CustomQuickFilter, WikiArticle, WikiBlock, WikiCategory, Reference, GlobalBookmark, Comment, CommentAnchor, Book, AutoSource, AutoSourceKind, SmartBookPreset, UserInfoboxPreset, Hook, HookPolicy } from "../types"
 import type { InboxDismissed, InboxSnoozed, InboxItemKind } from "./slices/inbox"
 import type { SRSRating } from "@/lib/srs"
 import type { ViewState, ViewContextKey } from "../view-engine/types"
@@ -219,6 +219,9 @@ export interface PlotState {
 
   // ── Books (Cross-entity Ordered Sequences) ──
   books: Book[]
+
+  // ── Smart Book Presets (reusable AutoSource blueprints — "Smart Book") ──
+  smartBookPresets: SmartBookPreset[]
 
   /**
    * In-book navigation context per editor pane (Phase 4 — session only).
@@ -551,6 +554,17 @@ export interface PlotState {
    * counter + ↑↓ chrome on that pane only).
    */
   setBookContext: (pane: "primary" | "secondary", ctx: BookContextState | null) => void
+
+  // ── Smart Book Presets (reusable source blueprints — "Smart Book") ──
+  createSmartBookPreset: (
+    partial: Partial<Omit<SmartBookPreset, "id" | "createdAt" | "updatedAt">> & { name: string },
+  ) => string
+  updateSmartBookPreset: (id: string, patch: Partial<SmartBookPreset>) => void
+  deleteSmartBookPreset: (id: string) => void
+  restoreSmartBookPreset: (id: string) => void
+  toggleSmartBookPresetPin: (id: string) => void
+  /** Apply a preset → spawn a new Smart Book (reuses createBook/updateBook). Returns the new book id. */
+  applySmartBookPreset: (presetId: string) => string
 
   // Ontology
   ontologyPositions: Record<string, { x: number; y: number }>

@@ -3,51 +3,56 @@
 > 우선순위 기반 작업 목록. **P0 = 다음 세션 즉시 시작점** (NEXT-ACTION.md 폐지, 2026-05-12).
 > 완료 항목은 즉시 삭제. 자세한 history는 SESSION-LOG.md + MEMORY.md.
 
-**마지막 갱신**: 2026-05-29 (after-work, 집/Windows) — **NoteStatus 3→4 단계 REPLACE** 완료·머지 (stone/brick/keystone → backlog/todo/in_progress/done, store v150, 85파일, Architect APPROVED). 다음 P0 #0 = **4단계 status UI 시각 검증 + 미해결 판단 콜 3개 결정** (코드/빌드/테스트 green이나 시각 미확인 — preview MCP 환경 불가). 그 다음 carry = Entity Insights PRD.
+**마지막 갱신**: 2026-05-29 (after-work, 집/Windows) — **Wiki status v151 + 사이드바 정합 + 노트 merge/split + Smart Book Preset (store v152)** 완료·머지 (branch claude/smart-book-preset → main squash, PR #490 supersede). 다음 P0 #0 = **list-context-navigation 구현** (설계 확정 = plan doc), P0 #1 = **Books kind nav** (설계 LOCKED), carry P0 #2 = Entity Insights PRD (대부분 진행).
 
 ---
 
-## 🟣 P0 — 즉시 (cross-machine 진입점, 2026-05-29 after-work — NoteStatus 3→4 단계 REPLACE 머지)
+## 🟣 P0 — 즉시 (cross-machine 진입점, 2026-05-29 after-work — Wiki status v151 + Smart Book Preset v152 머지)
 
-> ✅ **2026-05-29 NoteStatus 3→4 단계 REPLACE 완료·머지** (이 세션): stone/brick/keystone → backlog/todo/in_progress/done. store v150, 85파일, 라우트 rename, Architect APPROVED. **단 UI 시각 미검증** (preview MCP 이 환경 불가 — node 15개 + IPv6 충돌).
+> ✅ **2026-05-29 (밤) 완료·머지** (이 세션): (1) Wiki status 4단계(store v151, 자동→수동 + onRehydrate 시딩, Architect HIGH 버그 2개 수정) (2) Wiki 사이드바 정합(More/Insights/status nav) (3) 노트 standalone merge/split (4) Smart Book Preset 시스템(store v152) + Books More/Insights. 전부 build/tsc/test green + Architect APPROVED + preview runtime 검증.
+> ✅ **(직전 오후) NoteStatus 3→4 REPLACE 머지** (PR #489, store v150) — 시각 검증 완료(이번 세션 preview에서 확인).
 
-### 0. **🔴 P0 #0 (새 최우선): 4단계 status UI 시각 검증 + 미해결 판단 콜 3개** ⭐ 다음 세션 첫 작업
+### 0. **🔴 P0 #0 (새 최우선): list-context-navigation 구현** ⭐⭐⭐⭐⭐ 다음 세션 첫 작업
 
-**왜**: 코드/타입/빌드/테스트/Architect 다 green이나 **렌더 시각 확인 미완**. + executor가 "둠"으로 처리한 판단 콜 3개 사용자 최종 결정 필요.
+**왜**: Linear의 "리스트 peek 네비" 패턴. 리스트/보드/그리드에서 노트·위키를 열면 **그 화면에 보이던 (필터+그룹 적용된) 순서 있는 집합을 freeze 캡처** → 에디터에서 ←/→ 순회 + "← {화면}" 복귀. 북의 `BookContextNav`(`bookContext`)를 일반화하는 작업. **이번 세션 설계만 확정**(컨텍스트 한계), 다음 세션 구현.
 
 **첫 스텝**:
-1. `npm run dev` → 노트 **보드 4컬럼(대기/준비/정리 중/완성)** + 사이드바 status 4항목 + 색(backlog slate / todo `#3b82f6` blue / in_progress amber / done emerald) + Linear circle 아이콘(CircleDashed/Circle/CircleHalf/CheckCircle) 확인. `/backlog /todo /in-progress /done` 직접 접속.
-2. **판단 콜 결정** (전부 현재 "둠"):
-   - a. settings-store `startView:"stone"` 리터럴 (`lib/settings-store.ts:33`) — 라우트 매핑(`layout.tsx:63-65`)으로 동작은 함. 완전 rename 원하면 settings-store 2차 마이그레이션.
-   - b. `app/preview/linear/page.tsx` 목업 — 자체 로컬 타입 stone/brick/keystone 그대로. 일관성 위해 바꿀지.
-   - c. 죽은 i18n 키 `sidebar.stone/brick/block` (`i18n.ts:179-181,1136-1138`) — 미참조, 제거할지.
-3. 색/아이콘 tweak: `lib/colors.ts:147`(todo hex) + `components/status-icon.tsx`/`plot-icons.tsx`(아이콘) 1~2줄.
+1. 기존 `bookContext`/`BookContextNav` 패턴 read (북은 영속 ordered entity라 쉬웠음 — 일반화 시작점)
+2. `listNavContext`(pane별, **세션 한정**/영속 X) 추가 — list/grid/board view에서 노트·위키 **열기 시점**에 visible ordered IDs 캡처(freeze 스냅샷)
+3. 에디터 상단 네비 바: "← {라벨} N/M →" (prev/next + 복귀)
+4. 진입 화면 지원: All / status(`/backlog` 등) / folder / saved-view. **timeline 보류**.
+5. `tsc --noEmit` + 사용자 시각 검증
 
-**참고**: `docs/01-plan/features/note-status-4stage.plan.md`(전체 spec), `lib/store/migrate.ts:2440`(v150), `:1987`(v131 cleanup allow-list 방어).
+**참고**: `docs/01-plan/features/list-context-navigation.plan.md` (전체 설계 = freeze 스냅샷 + pane별 + board/grid 포함 + timeline 보류, 사용자 승인 2026-05-29).
 
-### -4. **🔴 P0 #1 (carry): Entity Insights 정보 아키텍처 통일 PRD** ⭐ verify 후 작업
+### -5. **🔴 P0 #1 (설계 LOCKED): Books kind nav** (All Books 아래 Smart/Manual/Hybrid) ⭐ 다음 세션
 
-**사용자 의도** (2026-05-28 오후):
-> "위키랑 북스 모두에 노트처럼 more를 신설하고 템플릿이랑 인사이트 등을" + "북 More에 인사이트랑 스마트북" + "위키의 모어에도 인사이트가 들어가야겠는걸?"
+**왜**: Books는 status가 아니라 **kind 축**(smart/manual/hybrid). All Books 아래 kind별 nav. **설계 = wiki `wikiStatusFilter` 패턴 1:1 미러**.
 
-**핵심 발견** — Insights 위치가 entity마다 제각각:
-- **Notes**: 별도 `/insights` 페이지 (`insights-view.tsx` — activity stats + analysis orphans/issues + MiniBarChart)
-- **Wiki**: Dashboard 임베드 (`wiki-dashboard.tsx:262` `WikiInsightsChart` Growth/Connectivity)
-- **Books**: 없음
-- **Ontology**: top-level 탭 (Power Sabermetrics 전체)
+**첫 스텝**:
+1. wiki `wikiStatusFilter` external store + 사이드바 status nav 링크 패턴 read (미러 소스)
+2. `bookKindFilter` external store 신설 (wikiStatusFilter 복제)
+3. 사이드바 Books "All Books" 아래 Smart/Manual/Hybrid 링크 + 카운트 (Smart 3 / Manual 2 / Hybrid 2)
+4. books-view 필터: `getBookKind`로 분기 (이미 존재하는 헬퍼)
+5. `tsc --noEmit` + 사용자 시각
 
-**첫 스텝** (`bkit:pdca plan` + `oh-my-claudecode:planner`):
-1. `components/insights-view.tsx` read (Notes Insights 실체)
-2. `components/views/wiki-dashboard.tsx` + `wiki-editor/wiki-insights-chart.tsx` read (Wiki 재료 = Growth/Connectivity, 이미 존재)
-3. 정보 아키텍처 결정: 위치 통일 (별도 page A안 / dashboard 임베드 C안) + Ontology(전체) vs entity(세부) 역할 분리 (#140)
-4. Books Insights 내용 정의 (reading progress / coverage / smart source health?)
-5. Books More section 신설 = Insights + **Smart Book Preset** (= Templates의 Books 대응. `smart-book-prd.md:601` v2 미구현. ROI 검토 — book 생성 빈도 낮음, 사용자 과거 "확신 안 듦")
-6. `.omc/plans/entity-insights-coherence-prd.md` 작성 → critic 검토
+**⛔ Books Overview = 보류 (만들지 말 것)**: Insights + 사이드바 Pinned/Recent와 중복, continue-reading 빈 상태. 이번 세션 결정.
+
+### -4. **🔴 P0 #2 (carry, 대부분 진행됨): Entity Insights 정보 아키텍처 통일 PRD**
+
+**진행 상황** (2026-05-29 밤): **`/wiki/insights` + `/books/insights` 신설 완료** (이번 세션). Notes=별도 `/insights` / Wiki=신설 `/wiki/insights` / Books=신설 `/books/insights`(kind breakdown) / Ontology=top-level. 위치 통일 거의 됨 — 나머지 = recharts 표준화 + Ontology(전체) vs entity(세부) 역할 분리(#140) 마무리.
+
+**남은 첫 스텝**:
+1. `components/insights-view.tsx`(Notes) + `components/views/books-insights-view.tsx`(신규) + Wiki insights 비교 → 일관 레이아웃 확정
+2. recharts 차트 표준화 (Notes Insights MiniBarChart → recharts)
+3. Ontology Insights(전체) vs entity Insights(세부) 중복 회피 역할 분리 (#140)
+4. `docs/01-plan/features/entity-insights-coherence.plan.md`(A안 확정) 나머지 design
+
+**References = 분류/기록 entity지만 유일하게 미래 *구조화 상세 폼*(full editor 아님) 후보. 후속 고려.**
 
 **위험**:
-- Wiki를 별도 page로 분리하면 Dashboard 허전해짐 → Dashboard 재구성 동반
-- Smart Book Preset ROI 불확실 (book 적게 생성). preset = source 조합 청사진 ("inbox 노트", "최근 7일 위키")
 - Ontology Insights(전체)와 entity Insights(세부) 중복 회피
+- Wiki를 별도 page로 분리했으면 Dashboard 재구성 동반 검토
 
 ### -2. **🟡 P0 #1 (carry, 직전 오전 P0 #0 미진행): Wiki `← Overview` 폐기 → breadcrumb 패턴 마이그** (1년 차 정합성 부채)
 

@@ -38,6 +38,8 @@ import { InboxView } from "@/components/views/inbox-view"
 import { LibraryView } from "@/components/views/library-view"
 import { LibraryCategoriesView } from "@/components/views/library-categories-view"
 import { BooksView } from "@/components/views/books-view"
+import { SmartBookPresetsView } from "@/components/views/smart-book-presets-view"
+import { BooksInsightsView } from "@/components/views/books-insights-view"
 import { MergeDialogGlobal } from "@/components/merge-dialog-global"
 import { LinkDialogGlobal } from "@/components/link-dialog-global"
 import { WikiAssemblyDialog } from "@/components/wiki-assembly-dialog"
@@ -461,9 +463,31 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                   </div>
                 )}
 
+                {/* Books root + /books/{id} detail. The Smart Book + Insights
+                    sub-routes are their own always-mounted views (below), so
+                    exclude them here — otherwise getBookIdFromRoute would treat
+                    "smart-books" / "insights" as a (nonexistent) book id. */}
                 {(mountedViews.has("/books") || activeRoute?.startsWith("/books")) && (
-                  <div className={activeRoute?.startsWith("/books") ? "flex flex-1 overflow-hidden" : "hidden"}>
+                  <div className={
+                    activeRoute?.startsWith("/books") &&
+                    activeRoute !== "/books/smart-books" &&
+                    activeRoute !== "/books/insights"
+                      ? "flex flex-1 overflow-hidden"
+                      : "hidden"
+                  }>
                     <BooksView />
+                  </div>
+                )}
+
+                {(mountedViews.has("/books/smart-books") || activeRoute === "/books/smart-books") && (
+                  <div className={activeRoute === "/books/smart-books" ? "flex flex-1 overflow-hidden" : "hidden"}>
+                    <SmartBookPresetsView />
+                  </div>
+                )}
+
+                {(mountedViews.has("/books/insights") || activeRoute === "/books/insights") && (
+                  <div className={activeRoute === "/books/insights" ? "flex flex-1 overflow-hidden" : "hidden"}>
+                    <BooksInsightsView />
                   </div>
                 )}
 

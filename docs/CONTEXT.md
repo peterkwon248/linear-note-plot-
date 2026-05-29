@@ -51,6 +51,35 @@
 
 ---
 
+## 🚀 2026-05-29 (밤) — Wiki status v151 + 사이드바 정합 + 노트 merge/split + Smart Book Preset (store v152) ⭐⭐⭐⭐
+
+**범위**: NoteStatus 4단계를 Wiki로 확장(v151) + 위키/노트 사이드바·merge/split 정합 + Smart Book Preset 신설(v152). branch claude/smart-book-preset → main squash merge (PR #490 supersede). build/tsc/test green + Architect APPROVED + preview 검증.
+
+### 완료 (5건)
+1. **Wiki status 4단계 (v150→v151)**: `WikiArticle.status`(= NoteStatus). 자동 stub/article → 수동 backlog/todo/in_progress/done. 시딩 = onRehydrateStorage(content→done/empty→backlog, partialize가 blocks strip하므로). 색/아이콘/i18n Notes 공유. 보드 2→4 컬럼. Architect HIGH 버그 2개 수정.
+2. **Wiki 사이드바 정합**: Merge/Split→More, `/wiki/insights`, Overview 아래 status nav(`wikiStatusFilter`), Recent 버그 수정.
+3. **노트 standalone merge/split**: `note-view-mode` store + NoteMergePage/NoteSplitPage + Notes More. overlay route-gated.
+4. **Smart Book Preset (v151→v152)**: `SmartBookPreset` 모델 + 슬라이스 + 3 seed + `/books/smart-books` 갤러리 + Books More(Smart Book + Insights) + `/books/insights`. 기존 resolver/createBook 재사용.
+5. **Wiki 17개 복원** (런타임/IDB only).
+
+### 핵심 결정 (영구)
+- **Full editor = Notes/Wiki only**. 분류/기록 entity(Tags/Labels/Categories/References/Stickers/Files)는 inline + member-list page. References만 미래 *구조화 상세 폼* 후보.
+- **Books 축 = kind**(smart/manual/hybrid). **Books Overview 보류**(중복).
+- **list-context-navigation 설계 확정**: 진입 화면 visible ordered set freeze → 에디터 ←/→ 순회 + 복귀. bookContext 일반화. → **다음 세션 P0 #0**.
+- **Books kind nav 설계 LOCKED**: wikiStatusFilter 패턴 미러 (`bookKindFilter`). → P0 #1.
+
+### 다음 우선순위 (P0)
+1. **🔴 P0 #0**: list-context-navigation 구현 (`docs/01-plan/features/list-context-navigation.plan.md` 전체 설계). bookContext 일반화 → listNavContext(pane별 세션한정) + visible IDs freeze + 에디터 네비 바.
+2. **🔴 P0 #1**: Books kind nav (Smart/Manual/Hybrid). bookKindFilter external store + 사이드바 + getBookKind 필터. Books Overview는 만들지 말 것.
+3. **🟡 P0 #2 (carry, 대부분 진행)**: Entity Insights 통일 PRD (`/wiki/insights` + `/books/insights` 완료, recharts 표준화 + Ontology/entity 역할 분리 남음).
+
+### 기술 학습 (영구)
+- partialize가 blocks strip → content 기반 시딩은 onRehydrateStorage에서 (migrate-time은 all-backlog 버그).
+- 노트 overlay cross-route 누수 → route-gate(isTableView) + leaving reset.
+- store v150→v151→v152 머신별 IDB 순차 마이그(데이터 손실 0).
+
+---
+
 ## 🚀 2026-05-29 (오후) — NoteStatus 3→4 단계 REPLACE: stone/brick/keystone → backlog/todo/in_progress/done (PR #489, store v150) ⭐⭐⭐⭐
 
 **범위**: 노트 status를 3단계(stone/brick/keystone) → 4단계(backlog/todo/in_progress/done)로 **REPLACE**. 85파일 atomic rename + 라우트 rename + store v150 IDB 마이그. executor-high 구현 + Architect APPROVED + tsc/build/test green.
