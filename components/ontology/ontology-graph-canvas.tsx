@@ -328,10 +328,10 @@ function getNodeBaseColor(node: OntologyNode, labels: Label[]): string {
     const label = labels.find((l) => l.id === node.labelId)
     if (label?.color) return label.color
   }
-  // Wiki nodes use the wiki entity color (violet) — NOT a status color. The
-  // graph node represents the wiki entity regardless of its 4-stage status, so
-  // it inherits the entity color used by the sidebar/activity-bar/Home StatsRow.
-  if (node.isWiki || node.nodeType === "wiki") return GRAPH_NODE_HEX.wiki    // violet (#8b5cf6)
+  // 색=status / 모양=공간 (2026-05-29): wiki 노드도 노트와 동일한 4단계 status
+  // 색을 쓴다. 공간 구분(note vs wiki)은 노드 모양(circle vs hexagon)이 담당하므로
+  // 색 축은 status 전용. status가 비면 wiki entity 색(violet)으로 폴백.
+  if (node.isWiki || node.nodeType === "wiki") return STATUS_COLORS[node.status] ?? GRAPH_NODE_HEX.wiki
   return STATUS_COLORS[node.status] ?? DEFAULT_NODE_COLOR
 }
 

@@ -106,6 +106,7 @@ export function buildOntologyGraphData(
     tags?: string[]
     categoryIds?: string[]
     folderIds?: string[]
+    status?: NoteStatus
   }>,
   stickers?: Sticker[],
 ): OntologyGraphData {
@@ -250,7 +251,9 @@ export function buildOntologyGraphData(
         id: `wiki:${wa.id}`,
         label: wa.title || "Untitled",
         connectionCount: 0,
-        status: "done",
+        // 색=status (2026-05-29): wiki도 노트와 동일한 4단계 status 축을 graph에
+        // 반영. 예전엔 "done" 하드코딩이라 wiki 노드가 항상 같은 색이었음.
+        status: wa.status ?? "backlog",
         labelId: null,
         isWiki: true,
         nodeType: "wiki",
