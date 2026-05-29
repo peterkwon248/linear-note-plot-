@@ -240,6 +240,21 @@ export function createUISlice(set: Set, get: Get, appendEvent: AppendEventFn) {
     },
 
     /**
+     * List context navigation — pane-scoped, session-only sibling of
+     * setBookContext. Captures a frozen visible-ordered ID snapshot when a
+     * note/wiki is opened from a list/board/grid screen. Same independent-
+     * pane merge: updating one pane preserves the other's snapshot.
+     */
+    setListNavContext: (pane: "primary" | "secondary", ctx: import("../types").ListNavContext | null) => {
+      set((state: any) => ({
+        listNavContext: {
+          ...((state.listNavContext ?? { primary: null, secondary: null })),
+          [pane]: ctx,
+        },
+      }))
+    },
+
+    /**
      * Dual mode (split-mode-prd) — set the entity displayed in the editor pane.
      * Pass null to clear (returns to DefaultEmptyState placeholder).
      * Session-only (NOT persisted across reload per LOCKED #5/#9).

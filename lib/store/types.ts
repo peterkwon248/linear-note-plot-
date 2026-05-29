@@ -68,6 +68,40 @@ export interface BookContextState {
 }
 
 /**
+ * List context navigation ("Linear peek nav") — session-only, per pane.
+ *
+ * Sibling to BookContextState. When a note/wiki is opened from an entity
+ * LIST screen (list/board/grid; All / status / folder / saved-view), that
+ * screen's visible-ordered IDs are FROZEN here so the editor can offer
+ * "← {label}  N / M  →" prev/next + return.
+ *
+ * Key difference from BookContextState: `ids` is a frozen snapshot captured
+ * at open time — it is NOT re-derived from the live store. Filter/group
+ * changes after opening don't mutate the snapshot (mirrors Linear's stable
+ * list peek). BookContextState, by contrast, re-resolves the book's items
+ * every render because a book is a persistent ordered entity.
+ *
+ * Spec: docs/01-plan/features/list-context-navigation.plan.md
+ */
+export interface ListNavContext {
+  /** Which entity space the list belonged to. A list is single-space. */
+  space: "notes" | "wiki"
+  /** Frozen visible-ordered entity IDs captured at open time. */
+  ids: string[]
+  /** 0-based index of the opened entity within `ids`. */
+  index: number
+  /** Screen name shown in the nav bar ("All Notes" / "Backlog" / folder / view). */
+  label: string
+  /** Route to return to ("/notes" / "/backlog" / "/wiki" …). */
+  backRoute: string
+  /** Optional active filters to restore on return. */
+  backFolderId?: string | null
+  backViewId?: string | null
+  backTagId?: string | null
+  backLabelId?: string | null
+}
+
+/**
  * Dual mode selection (split-mode-prd LOCKED #9 — flat shape, primary-pane MVP).
  *
  * When viewMode === "dual", the editor pane displays the entity referenced
@@ -232,6 +266,17 @@ export interface PlotState {
   bookContext: {
     primary: BookContextState | null
     secondary: BookContextState | null
+  }
+
+  /**
+   * List context navigation per editor pane (session only — stripped from
+   * persistence, reset on rehydrate). Set by list/board/grid views when an
+   * entity is opened; drives the editor's "← {label} N/M →" nav bar.
+   * Lower priority than bookContext (book anchor wins when both present).
+   */
+  listNavContext: {
+    primary: ListNavContext | null
+    secondary: ListNavContext | null
   }
 
   // ── Comments (block/node-anchored annotations) ──
@@ -554,6 +599,8 @@ export interface PlotState {
    * counter + ↑↓ chrome on that pane only).
    */
   setBookContext: (pane: "primary" | "secondary", ctx: BookContextState | null) => void
+  /** Set/clear the list-nav context for one pane (session only). */
+  setListNavContext: (pane: "primary" | "secondary", ctx: ListNavContext | null) => void
 
   // ── Smart Book Presets (reusable source blueprints — "Smart Book") ──
   createSmartBookPreset: (

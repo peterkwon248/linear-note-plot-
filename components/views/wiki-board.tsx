@@ -35,6 +35,8 @@ import {
 } from "@/components/property-chips"
 import { WikiBoardWorkbench } from "@/components/wiki-board-workbench"
 import { WikiArticleMenuItems } from "@/components/views/wiki-list"
+import { useListNavCapture } from "@/hooks/use-list-nav-capture"
+import { flattenWikiGroupIds } from "@/lib/list-nav/flatten"
 import {
   ContextMenu,
   ContextMenuContent,
@@ -518,6 +520,9 @@ export function WikiBoard({
 }: WikiBoardProps) {
   const updateWikiArticle = usePlotStore((s) => s.updateWikiArticle)
   const setWikiArticleParent = usePlotStore((s) => s.setWikiArticleParent)
+  // list-context-navigation: freeze board column order (L→R, cards top→bottom)
+  // into listNavContext right before opening (editor "← N/M →").
+  const captureListNav = useListNavCapture("wiki")
   // PR e: subscribe to wiki articles only when we need parent/children
   // resolution for chips. Reading from `groups` would miss articles outside
   // the current view.
@@ -742,8 +747,8 @@ export function WikiBoard({
                             : undefined
                         }
                         childrenCount={childrenCountByParent?.get(article.id) ?? 0}
-                        onClick={() => onOpenArticle(article.id)}
-                        onDoubleClick={() => onOpenArticle(article.id)}
+                        onClick={() => { captureListNav(flattenWikiGroupIds(groups), article.id, "Wiki"); onOpenArticle(article.id) }}
+                        onDoubleClick={() => { captureListNav(flattenWikiGroupIds(groups), article.id, "Wiki"); onOpenArticle(article.id) }}
                         onSelect={(id, e) => onSelect?.(id, { multi: e.metaKey || e.ctrlKey, shift: e.shiftKey })}
                         onMergeArticle={onMerge}
                         onSplitArticle={onSplit}

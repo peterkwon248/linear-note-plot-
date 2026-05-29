@@ -6,6 +6,51 @@
 
 ---
 
+## 2026-05-29 (심야) — 집 (Windows), **list-context-navigation 구현 (Linear 리스트 peek 네비 — bookContext 일반화)**
+
+> 🎯 **다음 즉시 액션 hook (최우선 — 사용자 지정)**:
+> 1. **🔴 P0 #0 — notes-grid list-nav 비대칭 브레인스토밍** ⭐ (사용자가 이번 세션 끝에 "다음 세션 최우선"으로 명시 지정). list-context-nav가 노트 list/board + 위키 list/board/grid **5뷰**에 적용됐으나 **notes-grid만 제외**됨 — notes-grid는 구조상 단일클릭=preview only로 **에디터 직접 진입 경로가 없어서**(기존 동작). 반면 wiki-grid는 `onOpen=editor`라 적용됨 → **grid 비대칭**. 결정 필요: notes-grid에 더블클릭 에디터 진입을 신설해 list-nav 지원할지 vs 현행 preview-only 유지할지. (먼저 notes-grid가 preview-only인 게 의도된 디자인인지 점검.)
+> 2. (carry) **P0 #1 — Books kind nav** (설계 LOCKED, `bookKindFilter` external store = wikiStatusFilter 미러).
+> 3. (carry) **P0 #2 — Entity Insights 통일** (recharts 표준화 + Ontology/entity 역할 분리 #140).
+
+> **사용자 의도** (이번 세션): "ㅇㅇ 시작하자" → 직전 세션 설계 확정한 list-context-navigation 구현. 끝에 notes-grid 비대칭 발견 → "애프터워크하고 이 논의(브레인스토밍)를 다음 세션 최우선 과제로."
+
+> **이번 세션 핵심 결정 (영구 — MEMORY.md push)**:
+> - **freeze 스냅샷**: list-nav는 클릭 시점 visible-ordered ids를 고정 저장(book은 영속 ordered entity라 매 렌더 재계산하지만, list는 freeze). 필터/그룹 변경 후에도 "그때 그 리스트" 안정 유지.
+> - **세션 한정 = store version 무관**: listNavContext는 partialize strip + onRehydrate reset (bookContext 동일). persist 안 하므로 IDB 무영향 → **migration/version bump 불필요** (v152 유지).
+> - **클릭 동작 차이 보존**: 노트=더블클릭으로 에디터 진입(단일클릭=preview, 기존 동작) → 더블클릭에 캡처 / 위키=단일클릭=에디터 → onClick에 캡처. notes/wiki 비대칭은 기존 UX 그대로.
+> - **우선순위**: bookContext > listNavContext (에디터 `!bookNav.active && listNav.active` 가드).
+
+> **머신**: 집 (Windows) → 다음 **다른 컴퓨터** 가능
+> **현재 main HEAD**: 이 PR squash merge 후 (직전 `d7b2cf4` PR #491)
+> **branch**: claude/hardcore-gauss-c01d27 → main squash merge
+> **Store version**: **v152 (변경 없음 — list-nav는 세션 한정)**
+
+### 완료 (전부 검증 — tsc 0 / build success / test 282 pass / Architect APPROVED / preview 런타임)
+- **list-context-navigation** (Linear 리스트 peek 네비): 리스트/보드/그리드에서 노트·위키 열면 그 화면 visible-ordered ids를 freeze 캡처 → 에디터 "← {label} N/M →" prev/next + 복귀. bookContext/BookContextNav 일반화한 **형제** 기능.
+- **인프라 (직접 구현)**: `ListNavContext` 타입 + `listNavContext:{primary,secondary}` state + `setListNavContext` (lib/store/types.ts·ui.ts·index.ts, 세션 한정 strip/reset) · `lib/list-nav/flatten.ts`(flattenNote/WikiGroupIds) · `hooks/use-list-context-nav.ts`(freeze ids 기준 prev/next/back, pane-aware) · `components/list-context-nav.tsx`(UI 바) · `hooks/use-list-nav-capture.ts`(route/filter 자동 수집 캡처 헬퍼).
+- **mount (직접)**: note-editor.tsx + wiki-view.tsx (우선순위 bookContext > listNavContext).
+- **capture 통합 (executor-high 위임 + Architect 검증)**: notes-table / notes-board + wiki-list / wiki-board / wiki-grid-view **5뷰**. notes-grid는 preview-only로 보류(→ P0 #0).
+- **preview 런타임 검증**: /notes 더블클릭 → "← Notes 1/9"(prev 비활성) → next "2/9"(prev 활성) → "← Notes" back → 리스트 복귀(에디터·네비 바 닫힘). 콘솔 에러 0.
+
+### 기술 학습 (영구 — MEMORY.md push)
+- **freeze vs 재계산**: bookContext는 resolvedContentItems를 매 렌더 재계산(영속 ordered entity), list-nav는 `ctx.ids` 스냅샷 고정 — `liveIndex = ctx.ids.indexOf(refId)`. 필터 풀어도 스냅샷 유지.
+- **세션 한정 = store version 무관**: persist partialize에서 strip하면 IDB 스키마 무영향 → migration/version bump 불필요(bookContext 동일 패턴).
+- **table-route setter 상호배타**: setActiveFolderId/TagId/LabelId/ViewId는 하나 set 시 나머지 자동 null → goBack 복원은 if/else-if 분기로 정확히 하나만 복원.
+- **위키 secondary pane 한계**(book nav와 동일 seam): secondary wiki는 SecondaryWikiArticle 렌더(WikiView 아님) → navigateTo가 openInSecondary → 네비 바 unmount. 기존 아키텍처 한계(수용).
+
+### Watch Out (다음 세션)
+- **P0 #0 = notes-grid 비대칭** (위 hook). 사용자 최우선 지정.
+- **board capture = logical superset**: 보드는 컬럼당 50카드 limit + collapsed 컬럼 0렌더지만 캡처는 full group flatten → off-screen 카드 포함 가능(50+ 컬럼에서만 현실적). Architect "arguably acceptable"(논리적 컬럼 순서). 엄격 visible-only 원하면 sliced/non-collapsed set 전달.
+- **LOW(미구현, plan 대비)**: prev/next가 hard-deleted id skip 안 함(plan §6.1) / 키보드 네비 없음(buttons만, plan §4) / `ListNavContext.index` vestigial(liveIndex가 refId로 재계산, 표시엔 미사용 — book nav symmetry로 유지).
+
+### 환경 변경
+- 신규 파일: `lib/list-nav/flatten.ts`, `hooks/use-list-context-nav.ts`, `hooks/use-list-nav-capture.ts`, `components/list-context-nav.tsx`
+- Store version: v152 (변경 없음)
+- Tests: 282 pass / 11 pre-existing fail (date-grouping + seeds, 무관)
+
+---
+
 ## 2026-05-29 (밤) — 집 (Windows), **Wiki status v151 + 사이드바 정합 + 노트 merge/split + Smart Book Preset (store v152) + 설계(kind nav·list-nav)**
 
 > 🎯 **다음 즉시 액션 hook (최우선)**:

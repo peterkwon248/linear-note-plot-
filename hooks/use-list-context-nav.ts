@@ -1,0 +1,123 @@
+"use client"
+
+/**
+ * useListContextNav — pane-aware "list peek" navigation (sibling of
+ * useBookContextNav).
+ *
+ * Reads the current pane's FROZEN `listNavContext` snapshot and exposes
+ * prev / next / back handlers for the editor's "← {label} N/M →" bar.
+ *
+ * Difference from useBookContextNav: a book is a persistent ordered entity,
+ * so that hook re-resolves its items every render. A list snapshot, by
+ * contrast, is frozen at open time — we navigate `ctx.ids` directly and never
+ * re-derive it. Filter/group changes after opening don't disturb the peek
+ * (Linear's stable list navigation).
+ *
+ * Priority: if both bookContext and listNavContext exist for a pane, the
+ * editor renders BookContextNav (book anchor wins). The mount site checks
+ * `bookNav.active` first, then `listNav.active`.
+ *
+ * Spec: docs/01-plan/features/list-context-navigation.plan.md §4–§6.
+ */
+
+import { useCallback, useMemo } from "react"
+import { useRouter } from "next/navigation"
+import { usePlotStore } from "@/lib/store"
+import { usePane } from "@/components/workspace/pane-context"
+import {
+  setActiveRoute,
+  setActiveFolderId,
+  setActiveTagId,
+  setActiveLabelId,
+  setActiveViewId,
+} from "@/lib/table-route"
+import { navigateToWikiArticle } from "@/lib/wiki-article-nav"
+
+export interface UseListContextNavReturn {
+  /** Resolved active context for this pane, or null when none / entity not in snapshot. */
+  active: { index: number; total: number; label: string } | null
+  /** Open the previous entity in the frozen list. No-op at the first item. */
+  goPrev: () => void
+  /** Open the next entity in the frozen list. No-op at the last item. */
+  goNext: () => void
+  /**
+   * Return to the originating list screen: restore route + active filter and
+   * close this pane's editor. Wiki articles live in WikiView's local state,
+   * so the mount site clears its own `selectedWikiArticleId` before calling.
+   */
+  goBack: () => void
+}
+
+export function useListContextNav(
+  kind: "note" | "wiki",
+  refId: string | null | undefined,
+): UseListContextNavReturn {
+  const router = useRouter()
+  const pane = usePane()
+  const ctx = usePlotStore((s) => s.listNavContext?.[pane] ?? null)
+  const setListNavContext = usePlotStore((s) => s.setListNavContext)
+  const openNote = usePlotStore((s) => s.openNote)
+
+  // Frozen snapshot: locate the mounted entity by refId. The snapshot's space
+  // must match the entity kind — a notes list never navigates wiki articles
+  // and vice versa.
+  const liveIndex = useMemo(() => {
+    if (!ctx || !refId) return -1
+    if (ctx.space !== (kind === "note" ? "notes" : "wiki")) return -1
+    return ctx.ids.indexOf(refId)
+  }, [ctx, refId, kind])
+
+  const navigateTo = useCallback(
+    (targetId: string, newIndex: number) => {
+      if (!ctx) return
+      // Update the stored index first so the destination editor reads the
+      // anchor immediately. `ids` stays frozen.
+      setListNavContext(pane, { ...ctx, index: newIndex })
+      if (ctx.space === "notes") {
+        openNote(targetId, { pane })
+      } else if (pane === "secondary") {
+        usePlotStore.getState().openInSecondary(targetId)
+      } else {
+        navigateToWikiArticle(targetId)
+      }
+    },
+    [ctx, pane, openNote, setListNavContext],
+  )
+
+  const goPrev = useCallback(() => {
+    if (!ctx || liveIndex <= 0) return
+    navigateTo(ctx.ids[liveIndex - 1], liveIndex - 1)
+  }, [ctx, liveIndex, navigateTo])
+
+  const goNext = useCallback(() => {
+    if (!ctx || liveIndex < 0 || liveIndex >= ctx.ids.length - 1) return
+    navigateTo(ctx.ids[liveIndex + 1], liveIndex + 1)
+  }, [ctx, liveIndex, navigateTo])
+
+  const goBack = useCallback(() => {
+    if (!ctx) return
+    const space = ctx.space === "wiki" ? "wiki" : "notes"
+    setActiveRoute(ctx.backRoute, space)
+    // folder / view / tag / label are mutually exclusive in table-route —
+    // restore exactly one (or clear all).
+    if (ctx.backFolderId) setActiveFolderId(ctx.backFolderId)
+    else if (ctx.backViewId) setActiveViewId(ctx.backViewId)
+    else if (ctx.backTagId) setActiveTagId(ctx.backTagId)
+    else if (ctx.backLabelId) setActiveLabelId(ctx.backLabelId)
+    else setActiveFolderId(null)
+    // Close this pane's editor so the list shows again. Notes use the store;
+    // wiki selection is local to WikiView (cleared by the mount site).
+    if (ctx.space === "notes") {
+      if (pane === "secondary") usePlotStore.getState().closeSecondary()
+      else usePlotStore.getState().setSelectedNoteId(null)
+    }
+    router.push(ctx.backRoute)
+  }, [ctx, pane, router])
+
+  const active =
+    ctx && liveIndex >= 0
+      ? { index: liveIndex, total: ctx.ids.length, label: ctx.label }
+      : null
+
+  return { active, goPrev, goNext, goBack }
+}

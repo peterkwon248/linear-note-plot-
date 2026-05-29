@@ -43,6 +43,8 @@ import { getSecondarySpace, setSecondarySpace, getActiveSpace } from "@/lib/tabl
 import { useIsActivePane } from "@/components/workspace/pane-context"
 import { useBookContextNav } from "@/hooks/use-book-context-nav"
 import { BookContextNav } from "@/components/books/book-context-nav"
+import { useListContextNav } from "@/hooks/use-list-context-nav"
+import { ListContextNav } from "@/components/list-context-nav"
 import type { Editor } from "@tiptap/react"
 
 /**
@@ -138,6 +140,10 @@ export function NoteEditor({ noteId: propNoteId, onClose, pane = 'primary', defa
   // books across two panes. The hook auto-clears bookContext when the
   // current note isn't in the recorded book (mid-session removal etc.).
   const bookNav = useBookContextNav("note", note?.id ?? null)
+
+  // List peek navigation — frozen snapshot from the list/board/grid the note
+  // was opened from. Lower priority than bookContext (book anchor wins).
+  const listNav = useListContextNav("note", note?.id ?? null)
 
   // v2 Phase H: persist last-read position whenever a note mounts in a
   // book-anchored context. Resolves the book's "Resume from {chapter}"
@@ -504,6 +510,18 @@ export function NoteEditor({ noteId: propNoteId, onClose, pane = 'primary', defa
                 onJumpTo={bookNav.jumpTo}
                 items={bookNav.items}
                 currentChapter={bookNav.currentChapter}
+              />
+            </div>
+          )}
+          {!bookNav.active && listNav.active && (
+            <div className="hidden md:flex shrink-0">
+              <ListContextNav
+                label={listNav.active.label}
+                index={listNav.active.index}
+                total={listNav.active.total}
+                onPrev={listNav.goPrev}
+                onNext={listNav.goNext}
+                onBack={listNav.goBack}
               />
             </div>
           )}

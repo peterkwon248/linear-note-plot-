@@ -16,6 +16,7 @@ import { Pin as PushPin } from "lucide-react"
 import { StatusShapeIcon } from "@/components/status-icon"
 import { shortRelative } from "@/lib/format-utils"
 import { cn } from "@/lib/utils"
+import { useListNavCapture } from "@/hooks/use-list-nav-capture"
 import type { WikiArticle } from "@/lib/types"
 
 interface WikiGridViewProps {
@@ -80,6 +81,9 @@ function WikiGridCard({
 }
 
 export function WikiGridView({ articles, onOpen, activeArticleId }: WikiGridViewProps) {
+  // list-context-navigation: freeze the grid's row-major article order into
+  // listNavContext right before opening (editor "← N/M →").
+  const captureListNav = useListNavCapture("wiki")
   if (articles.length === 0) {
     return (
       <div className="flex flex-1 items-center justify-center p-8 text-center">
@@ -95,7 +99,7 @@ export function WikiGridView({ articles, onOpen, activeArticleId }: WikiGridView
             key={a.id}
             article={a}
             isActive={activeArticleId === a.id}
-            onOpen={() => onOpen(a.id)}
+            onOpen={() => { captureListNav(articles.map((x) => x.id), a.id, "Wiki"); onOpen(a.id) }}
           />
         ))}
       </div>

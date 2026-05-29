@@ -102,6 +102,7 @@ export const usePlotStore = create<PlotState>()(
         books: SEED_BOOKS,
         smartBookPresets: SEED_SMART_BOOK_PRESETS,
         bookContext: { primary: null, secondary: null } as { primary: import("./types").BookContextState | null; secondary: import("./types").BookContextState | null },
+        listNavContext: { primary: null, secondary: null } as { primary: import("./types").ListNavContext | null; secondary: import("./types").ListNavContext | null },
         // Dual mode (split-mode-prd) — list+editor split-of-main, distinct from NoteSplitOverlay
         dualSelection: null as import("./types").DualSelection | null,
         dualRatio: 0.4,
@@ -276,7 +277,7 @@ export const usePlotStore = create<PlotState>()(
       storage: createIDBStorage<PlotState>(),
       partialize: (state) => {
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        const { _viewStateHydrated, mergePickerOpen, mergePickerSourceId, linkPickerOpen, linkPickerSourceId, previewNoteId, sidePanelOpen, sidePanelContext, _savedPrimaryContext, todoTasks, secondaryHistory, secondaryHistoryIndex, secondaryEntityContext, bookContext, dualSelection, globalSearchQuery, ...rest } = state
+        const { _viewStateHydrated, mergePickerOpen, mergePickerSourceId, linkPickerOpen, linkPickerSourceId, previewNoteId, sidePanelOpen, sidePanelContext, _savedPrimaryContext, todoTasks, secondaryHistory, secondaryHistoryIndex, secondaryEntityContext, bookContext, listNavContext, dualSelection, globalSearchQuery, ...rest } = state
         return {
           ...rest,
           notes: state.notes.map((n) => ({ ...n, content: "", contentJson: null })),
@@ -301,6 +302,9 @@ export const usePlotStore = create<PlotState>()(
           // Phase 4: in-book navigation context is session-only — reload
           // returns to plain note/wiki view (mirrors Linear's "1/5" UX).
           state.bookContext = { primary: null, secondary: null }
+          // List-nav context is session-only too — a frozen list snapshot
+          // doesn't survive reload (same rationale as bookContext).
+          state.listNavContext = { primary: null, secondary: null }
           // Dual mode (split-mode-prd LOCKED #5/#9) — selection is session-only,
           // dualRatio persists. Reset selection to null on reload so editor pane
           // shows DefaultEmptyState until user selects.

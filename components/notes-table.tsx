@@ -59,6 +59,7 @@ import {
 } from "@/components/ui/tooltip"
 import { usePlotStore } from "@/lib/store"
 import { usePaneOpenNote } from "@/components/workspace/pane-context"
+import { useListNavCapture } from "@/hooks/use-list-nav-capture"
 import { useBacklinksIndex } from "@/lib/search/use-backlinks-index"
 import { getSnoozeTime, type SnoozePreset } from "@/lib/queries/notes"
 import { useNotesView } from "@/lib/view-engine/use-notes-view"
@@ -467,6 +468,9 @@ export function NotesTable({
   const _paneOpenNote = usePaneOpenNote()
   // Use pane-aware openNote if inside a PaneProvider, otherwise use store directly
   const openNote = _paneOpenNote
+  // list-context-navigation: freeze the screen's visible-ordered note IDs into
+  // the current pane's listNavContext right before opening (editor "← N/M →").
+  const captureListNav = useListNavCapture("notes")
   const createNote = usePlotStore((s) => s.createNote)
   const toggleTrash = usePlotStore((s) => s.toggleTrash)
   const deleteNote = usePlotStore((s) => s.deleteNote)
@@ -1041,6 +1045,13 @@ export function NotesTable({
     return items
   }, [flatNotes, groups, viewState.groupBy, viewState.subGroupBy, viewState.showEmptyGroups, collapsedGroups, showAlphaIndex])
 
+  // list-context-navigation: render-ordered note IDs (grouped + flat both
+  // covered — virtualItems IS the visible order). Frozen at click time.
+  const orderedNoteIds = useMemo(
+    () => virtualItems.flatMap((it) => (it.type === "note" ? [it.note.id] : [])),
+    [virtualItems],
+  )
+
   const scrollContainerRef = useRef<HTMLDivElement>(null)
 
   const rowVirtualizer = useVirtualizer({
@@ -1552,12 +1563,16 @@ export function NotesTable({
                               gridTemplate={gridTemplate}
                               isCompact={isCompact}
                               viewMode={viewState.viewMode}
-                              onOpen={() => onRowClick ? onRowClick(item.note.id) : openNote(item.note.id)}
+                              onOpen={() => {
+                                if (onRowClick) { onRowClick(item.note.id); return }
+                                captureListNav(orderedNoteIds, item.note.id, title ?? "Notes")
+                                openNote(item.note.id)
+                              }}
                               onClick={(e: React.MouseEvent) => {
                                 const flatIndex = flatNotes.findIndex((n) => n.id === item.note.id)
                                 handleRowClick(item.note.id, flatIndex, e)
                               }}
-                              onDoubleClick={() => openNote(item.note.id)}
+                              onDoubleClick={() => { captureListNav(orderedNoteIds, item.note.id, title ?? "Notes"); openNote(item.note.id) }}
                               onStatus={(s) => updateNote(item.note.id, { status: s })}
                               onSetFolder={(folderId) => updateNote(item.note.id, { folderIds: folderId ? [folderId] : [] })}
                               onRemoveFolder={() => updateNote(item.note.id, { folderIds: [] })}

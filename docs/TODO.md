@@ -3,27 +3,31 @@
 > 우선순위 기반 작업 목록. **P0 = 다음 세션 즉시 시작점** (NEXT-ACTION.md 폐지, 2026-05-12).
 > 완료 항목은 즉시 삭제. 자세한 history는 SESSION-LOG.md + MEMORY.md.
 
-**마지막 갱신**: 2026-05-29 (after-work, 집/Windows) — **Wiki status v151 + 사이드바 정합 + 노트 merge/split + Smart Book Preset (store v152)** 완료·머지 (branch claude/smart-book-preset → main squash, PR #490 supersede). 다음 P0 #0 = **list-context-navigation 구현** (설계 확정 = plan doc), P0 #1 = **Books kind nav** (설계 LOCKED), carry P0 #2 = Entity Insights PRD (대부분 진행).
+**마지막 갱신**: 2026-05-29 (after-work 심야, 집/Windows) — **list-context-navigation 구현** 완료·머지 (branch claude/hardcore-gauss-c01d27 → main squash). 노트 list/board + 위키 list/board/grid 5뷰 freeze 캡처 + 에디터 네비 바. 다음 P0 #0 = **notes-grid list-nav 비대칭 브레인스토밍** (사용자 명시 지정), P0 #1 = **Books kind nav** (설계 LOCKED), carry P0 #2 = Entity Insights (대부분 진행).
 
 ---
 
 ## 🟣 P0 — 즉시 (cross-machine 진입점, 2026-05-29 after-work — Wiki status v151 + Smart Book Preset v152 머지)
 
-> ✅ **2026-05-29 (밤) 완료·머지** (이 세션): (1) Wiki status 4단계(store v151, 자동→수동 + onRehydrate 시딩, Architect HIGH 버그 2개 수정) (2) Wiki 사이드바 정합(More/Insights/status nav) (3) 노트 standalone merge/split (4) Smart Book Preset 시스템(store v152) + Books More/Insights. 전부 build/tsc/test green + Architect APPROVED + preview runtime 검증.
+> ✅ **2026-05-29 (심야) 완료·머지** (이 세션): **list-context-navigation** — 노트 list/board + 위키 list/board/grid **5뷰** freeze 캡처 + 에디터 "← {label} N/M →" prev/next + 복귀 (bookContext 일반화 형제). tsc 0 / build / test 282 / Architect APPROVED / preview 런타임 검증. **store version 무관(v152 유지, 세션 한정)**. notes-grid만 보류 → P0 #0.
+> ✅ **2026-05-29 (밤) 완료·머지**: (1) Wiki status 4단계(store v151, 자동→수동 + onRehydrate 시딩, Architect HIGH 버그 2개 수정) (2) Wiki 사이드바 정합(More/Insights/status nav) (3) 노트 standalone merge/split (4) Smart Book Preset 시스템(store v152) + Books More/Insights. 전부 build/tsc/test green + Architect APPROVED + preview runtime 검증.
 > ✅ **(직전 오후) NoteStatus 3→4 REPLACE 머지** (PR #489, store v150) — 시각 검증 완료(이번 세션 preview에서 확인).
 
-### 0. **🔴 P0 #0 (새 최우선): list-context-navigation 구현** ⭐⭐⭐⭐⭐ 다음 세션 첫 작업
+### 0. **🔴 P0 #0 (새 최우선): notes-grid list-nav 비대칭 브레인스토밍** ⭐ 다음 세션 첫 작업 (사용자 명시 지정)
 
-**왜**: Linear의 "리스트 peek 네비" 패턴. 리스트/보드/그리드에서 노트·위키를 열면 **그 화면에 보이던 (필터+그룹 적용된) 순서 있는 집합을 freeze 캡처** → 에디터에서 ←/→ 순회 + "← {화면}" 복귀. 북의 `BookContextNav`(`bookContext`)를 일반화하는 작업. **이번 세션 설계만 확정**(컨텍스트 한계), 다음 세션 구현.
+**배경**: ✅ **list-context-navigation 구현 완료·머지** (2026-05-29 심야, branch claude/hardcore-gauss-c01d27). 노트 list/board + 위키 list/board/grid **5뷰**에 freeze 캡처 + 에디터 "← {label} N/M →" 적용. tsc 0 / build / test 282 / Architect APPROVED / preview 런타임 검증(1/9→2/9→back 복귀, 콘솔 0).
 
-**첫 스텝**:
-1. 기존 `bookContext`/`BookContextNav` 패턴 read (북은 영속 ordered entity라 쉬웠음 — 일반화 시작점)
-2. `listNavContext`(pane별, **세션 한정**/영속 X) 추가 — list/grid/board view에서 노트·위키 **열기 시점**에 visible ordered IDs 캡처(freeze 스냅샷)
-3. 에디터 상단 네비 바: "← {라벨} N/M →" (prev/next + 복귀)
-4. 진입 화면 지원: All / status(`/backlog` 등) / folder / saved-view. **timeline 보류**.
-5. `tsc --noEmit` + 사용자 시각 검증
+**미해결 (사용자가 다음 세션 최우선으로 지정)**: **notes-grid만 list-nav 제외**됨. notes-grid는 구조상 단일클릭=preview only로 **에디터 직접 진입 경로가 없어서**(기존 동작). 반면 wiki-grid는 `onOpen=editor`라 적용됨 → **grid 비대칭**.
 
-**참고**: `docs/01-plan/features/list-context-navigation.plan.md` (전체 설계 = freeze 스냅샷 + pane별 + board/grid 포함 + timeline 보류, 사용자 승인 2026-05-29).
+**브레인스토밍 포인트** (다음 세션 첫 작업):
+1. notes-grid가 preview-only인 게 **의도된 디자인**인지부터 점검 (왜 grid만 에디터 직접 진입이 없나 — 기존 코드 ground truth로 확인)
+2. **옵션 A**: 현행 유지 (notes-grid preview-only, list-nav 없음 — 기존 동작 보존, 최소 변경)
+3. **옵션 B**: notes-grid 카드에 더블클릭 에디터 진입 신설 + list-nav 캡처 (wiki-grid와 대칭, 단 기존 grid 클릭 UX 변경)
+4. 결정 후 대상: `components/views/notes-grid-view.tsx` + `components/notes-grid-shell.tsx` (참고: 캡처 헬퍼 `useListNavCapture("notes")` + `flatNotes` 이미 존재 — 통합만)
+
+**참고**: 구현 = `hooks/use-list-context-nav.ts` + `hooks/use-list-nav-capture.ts` + `lib/list-nav/flatten.ts` + `components/list-context-nav.tsx`. 설계 = `docs/01-plan/features/list-context-navigation.plan.md`.
+
+**Watch Out (구현 시 발견, 후속 polish)**: board capture = logical superset(50카드 limit·collapsed 컬럼도 캡처) / prev·next가 hard-deleted id skip 안 함(plan §6.1) / 키보드 네비 없음(buttons만) / 위키 secondary pane 네비 unmount(book nav 동일 한계).
 
 ### -5. **🔴 P0 #1 (설계 LOCKED): Books kind nav** (All Books 아래 Smart/Manual/Hybrid) ⭐ 다음 세션
 
