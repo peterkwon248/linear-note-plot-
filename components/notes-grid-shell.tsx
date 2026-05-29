@@ -13,7 +13,7 @@
  * — keeping it inline for v1 to bound the diff.
  */
 
-import { useCallback, useMemo } from "react"
+import { useCallback, useMemo, useState, useEffect } from "react"
 import { FileText } from "lucide-react"
 import type { ViewContextKey, FilterRule } from "@/lib/view-engine/types"
 import type { Note, NoteStatus } from "@/lib/types"
@@ -22,6 +22,7 @@ import { useBacklinksIndex } from "@/lib/search/use-backlinks-index"
 import { useNotesView } from "@/lib/view-engine/use-notes-view"
 import { useSaveViewProps } from "@/lib/view-engine/use-save-view-props"
 import { NotesGridView } from "@/components/views/notes-grid-view"
+import { FloatingActionBar } from "@/components/floating-action-bar"
 import { ViewHeader } from "@/components/view-header"
 import { StatusShapeIcon } from "@/components/status-icon"
 import { FilterPanel } from "@/components/filter-panel"
@@ -69,6 +70,39 @@ export function NotesGridShell({
   })
 
   const { saveViewMode, onSaveView } = useSaveViewProps(context as any, "notes")
+
+  // Multi-select (board/table parity). Hover checkbox toggles membership;
+  // the FloatingActionBar surfaces bulk actions while a selection is active.
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
+  const selectionActive = selectedIds.size > 0
+
+  const handleCardSelect = useCallback((noteId: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev)
+      if (next.has(noteId)) next.delete(noteId)
+      else next.add(noteId)
+      return next
+    })
+  }, [])
+
+  // Single selection → side-panel preview (board/table parity).
+  useEffect(() => {
+    if (selectedIds.size === 1) onRowClick?.(Array.from(selectedIds)[0])
+  }, [selectedIds]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // ESC clears the selection.
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && selectedIds.size > 0) setSelectedIds(new Set())
+    }
+    window.addEventListener("keydown", onKey)
+    return () => window.removeEventListener("keydown", onKey)
+  }, [selectedIds.size])
+
+  // Clear selection when the view context changes (route / folder / tab switch).
+  useEffect(() => {
+    setSelectedIds(new Set())
+  }, [context])
 
   const isSingleStatusTab = ["backlog", "todo", "in_progress", "done"].includes(context)
 
@@ -247,8 +281,21 @@ export function NotesGridShell({
       <NotesGridView
         notes={flatNotes}
         onRowClick={onRowClick}
+        onOpenEditor={(id) => openNote(id)}
+        label={title ?? "Notes"}
         activePreviewId={activePreviewId}
+        selectedIds={selectedIds}
+        onSelect={handleCardSelect}
       />
+
+      {selectionActive && (
+        <FloatingActionBar
+          selectedIds={selectedIds}
+          effectiveTab={context}
+          notes={flatNotes}
+          onClearSelection={() => setSelectedIds(new Set())}
+        />
+      )}
     </main>
   )
 }

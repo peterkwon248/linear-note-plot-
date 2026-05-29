@@ -4,7 +4,7 @@
     {
       "name": "dev",
       "runtimeExecutable": "npx",
-      "runtimeArgs": ["next", "dev", "--webpack"],
+      "runtimeArgs": ["next", "dev", "--webpack", "-H", "127.0.0.1"],
       "port": 3002,
       "autoPort": true
     },

@@ -10,21 +10,34 @@
  * (`grid grid-cols-[repeat(auto-fill,minmax(220px,1fr))]`).
  *
  * Surface here is a pure presentational grid. The Shell wrapper
- * (NotesGridShell) owns ViewHeader, FilterChipBar, and `useNotesView`
- * data hookup — same split as NotesTimelineView / NotesTimelineShell.
+ * (NotesGridShell) owns ViewHeader, FilterChipBar, `useNotesView`, and the
+ * selection state (selectedIds + FloatingActionBar) — same split as
+ * NotesTimelineView / NotesTimelineShell.
+ *
+ * Interaction (board/table parity): single click toggles selection (a hover
+ * checkbox surfaces top-right), double click opens the editor (list-nav).
  */
 
-import { Pin as PushPin } from "lucide-react"
+import { Pin as PushPin, Check as PhCheck } from "lucide-react"
 import { StatusShapeIcon } from "@/components/status-icon"
 import { shortRelative } from "@/lib/format-utils"
 import { cn } from "@/lib/utils"
+import { useListNavCapture } from "@/hooks/use-list-nav-capture"
 import type { Note } from "@/lib/types"
 
 interface NotesGridViewProps {
   notes: Note[]
-  /** Single-click → side-panel preview (Notes parity). */
+  /** Single-click → side-panel preview (when no selection handler is wired). */
   onRowClick?: (noteId: string) => void
+  /** Double-click → open editor (parity with notes-table/notes-board). */
+  onOpenEditor?: (noteId: string) => void
+  /** Screen label for the editor's list-nav bar ("Notes" / folder / view…). */
+  label?: string
   activePreviewId?: string | null
+  /** Selected note ids (board/table-parity multi-select). */
+  selectedIds?: Set<string>
+  /** Toggle a card's selection (hover checkbox / single click). */
+  onSelect?: (noteId: string) => void
 }
 
 function plaintextPreview(content: string | undefined, limit = 120): string {
@@ -49,33 +62,71 @@ function wordCount(content: string | undefined): number {
 function NoteGridCard({
   note,
   isActive,
+  isSelected,
   onOpen,
+  onDoubleClick,
+  onSelect,
 }: {
   note: Note
   isActive: boolean
+  isSelected: boolean
   onOpen: () => void
+  onDoubleClick?: () => void
+  onSelect?: () => void
 }) {
   const preview = plaintextPreview(note.content)
   const words = wordCount(note.content)
   return (
-    <button
-      type="button"
-      onClick={onOpen}
+    <div
+      data-note-id={note.id}
+      onClick={(e) => {
+        if (onSelect) {
+          e.stopPropagation()
+          onSelect()
+        } else {
+          onOpen()
+        }
+      }}
+      onDoubleClick={onDoubleClick}
       className={cn(
-        "group relative flex flex-col items-start gap-2 rounded-lg border bg-card p-4 text-left transition-all",
+        "group relative flex cursor-pointer flex-col items-start gap-2 rounded-lg border bg-card p-4 text-left transition-all",
         note.trashed
-          ? "border-border/60 opacity-50 cursor-default"
+          ? "border-border/60 opacity-50"
           : "border-border/60 hover:bg-hover-bg hover:border-border hover:shadow-sm",
-        isActive && "border-accent/60 bg-accent/[0.04]",
+        isSelected
+          ? "border-accent/60 bg-accent/[0.04] ring-1 ring-accent/20"
+          : isActive && "border-accent/60 bg-accent/[0.04]",
       )}
     >
-      {/* Pin indicator (top-right) */}
+      {/* Selection checkbox — surfaces on hover or when selected (board/table
+          parity). Stops propagation so the card's single-click toggle and the
+          checkbox toggle don't double-fire. */}
+      <div
+        className={cn(
+          "absolute right-2 top-2 z-10 flex h-4 w-4 items-center justify-center rounded border transition-all",
+          isSelected
+            ? "border-accent bg-accent opacity-100"
+            : "border-border bg-card opacity-0 group-hover:opacity-100 hover:border-foreground/50",
+        )}
+        onClick={(e) => {
+          e.stopPropagation()
+          onSelect?.()
+        }}
+      >
+        {isSelected && <PhCheck className="text-accent-foreground" size={10} strokeWidth={2.5} />}
+      </div>
+
+      {/* Pin indicator — yields its slot to the checkbox on hover/select so
+          the two don't overlap in the top-right corner. */}
       {note.pinned && (
         <PushPin
           size={11}
           fill="currentColor"
           strokeWidth={2}
-          className="absolute right-2 top-2 text-amber-500"
+          className={cn(
+            "absolute top-2 text-amber-500 transition-all",
+            isSelected ? "right-8" : "right-2 group-hover:right-8",
+          )}
         />
       )}
 
@@ -108,11 +159,22 @@ function NoteGridCard({
         )}
         <span>{shortRelative(note.updatedAt)}</span>
       </div>
-    </button>
+    </div>
   )
 }
 
-export function NotesGridView({ notes, onRowClick, activePreviewId }: NotesGridViewProps) {
+export function NotesGridView({
+  notes,
+  onRowClick,
+  onOpenEditor,
+  label,
+  activePreviewId,
+  selectedIds,
+  onSelect,
+}: NotesGridViewProps) {
+  // list-context-navigation: freeze the grid's row-major note order into
+  // listNavContext right before opening the editor (double-click → "← N/M →").
+  const captureListNav = useListNavCapture("notes")
   if (notes.length === 0) {
     return (
       <div className="flex flex-1 items-center justify-center p-8 text-center">
@@ -129,7 +191,17 @@ export function NotesGridView({ notes, onRowClick, activePreviewId }: NotesGridV
             key={note.id}
             note={note}
             isActive={activePreviewId === note.id}
+            isSelected={selectedIds?.has(note.id) ?? false}
+            onSelect={onSelect ? () => onSelect(note.id) : undefined}
             onOpen={() => onRowClick?.(note.id)}
+            onDoubleClick={
+              onOpenEditor
+                ? () => {
+                    captureListNav(notes.map((n) => n.id), note.id, label ?? "Notes")
+                    onOpenEditor(note.id)
+                  }
+                : undefined
+            }
           />
         ))}
       </div>

@@ -498,7 +498,7 @@ export function NoteEditor({ noteId: propNoteId, onClose, pane = 'primary', defa
               </button>
             </div>
           )}
-          <EditorBreadcrumb note={note} onClose={pane === 'secondary' ? () => closeSecondary() : onClose} pane={pane} />
+          <EditorBreadcrumb note={note} onClose={pane === 'secondary' ? () => closeSecondary() : onClose} pane={pane} suppressNotePicker={!!bookNav.active} />
           {bookNav.active && (
             <div className="hidden md:flex shrink-0">
               <BookContextNav

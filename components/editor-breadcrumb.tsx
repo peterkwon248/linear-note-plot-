@@ -33,6 +33,12 @@ interface EditorBreadcrumbProps {
   note: Note
   onClose?: () => void
   pane?: 'primary' | 'secondary'
+  /**
+   * Hide the note-picker chevron (sibling-note quick switch). Set when a
+   * BookContextNav owns page navigation — the all-notes picker is redundant
+   * there and, sitting right after "Books ›", reads as a (wrong) book list.
+   */
+  suppressNotePicker?: boolean
 }
 
 const SPACE_LABELS: Record<ActivitySpace, string> = {
@@ -58,7 +64,7 @@ const SPACE_ICONS: Record<ActivitySpace, any> = {
 
 const ALL_SPACES: ActivitySpace[] = ["home", "notes", "wiki", "calendar", "ontology", "library", "books"]
 
-export function EditorBreadcrumb({ note, onClose, pane = 'primary' }: EditorBreadcrumbProps) {
+export function EditorBreadcrumb({ note, onClose, pane = 'primary', suppressNotePicker = false }: EditorBreadcrumbProps) {
   const router = useRouter()
   const activeSpace = useActiveSpace()
   const secondarySpace = useSecondarySpace()
@@ -225,8 +231,14 @@ export function EditorBreadcrumb({ note, onClose, pane = 'primary' }: EditorBrea
         )
       })()}
 
-      {/* Separator before note title — clickable note picker */}
-      <NotePickerChevron pane={pane} currentNoteId={note.id} />
+      {/* Separator before note title — clickable note picker.
+          In book context the picker is suppressed (BookContextNav TOC owns
+          page nav); render a plain chevron so the crumb chain stays intact. */}
+      {suppressNotePicker ? (
+        <IconChevronRight size={16} className="shrink-0 text-muted-foreground/70" />
+      ) : (
+        <NotePickerChevron pane={pane} currentNoteId={note.id} />
+      )}
 
       {/* Note title crumb */}
       <span className="min-w-0 truncate text-lg font-medium text-foreground">
