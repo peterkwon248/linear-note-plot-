@@ -65,14 +65,32 @@ function CircleGlyph() {
   )
 }
 
-/** Wiki shape — hexagon outline (mirrors the graph wiki node). */
+/** Wiki shape — hexagon + cube wireframe, mirroring the graph wiki node
+ *  (pointy-top hexagon + center→{top, bottom-right, bottom-left} lines). */
 function HexGlyph() {
-  const pts = [[6.5, 1.4], [11.1, 4], [11.1, 9], [6.5, 11.6], [1.9, 9], [1.9, 4]]
-    .map((p) => p.join(","))
-    .join(" ")
+  const cx = 6.5
+  const cy = 6.5
+  const s = 4.7
+  const pts: Array<[number, number]> = [
+    [cx, cy - s], // 0 top
+    [cx + s * 0.87, cy - s * 0.5], // 1 top-right
+    [cx + s * 0.87, cy + s * 0.5], // 2 bottom-right
+    [cx, cy + s], // 3 bottom
+    [cx - s * 0.87, cy + s * 0.5], // 4 bottom-left
+    [cx - s * 0.87, cy - s * 0.5], // 5 top-left
+  ]
   return (
     <svg width="13" height="13" viewBox="0 0 13 13" aria-hidden>
-      <polygon points={pts} fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" />
+      <polygon
+        points={pts.map((p) => `${p[0]},${p[1]}`).join(" ")}
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.3"
+        strokeLinejoin="round"
+      />
+      <line x1={cx} y1={cy} x2={pts[0][0]} y2={pts[0][1]} stroke="currentColor" strokeWidth="0.85" opacity={0.55} />
+      <line x1={cx} y1={cy} x2={pts[2][0]} y2={pts[2][1]} stroke="currentColor" strokeWidth="0.85" opacity={0.55} />
+      <line x1={cx} y1={cy} x2={pts[4][0]} y2={pts[4][1]} stroke="currentColor" strokeWidth="0.85" opacity={0.55} />
     </svg>
   )
 }
