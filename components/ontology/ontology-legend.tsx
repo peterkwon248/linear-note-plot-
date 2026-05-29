@@ -15,14 +15,9 @@
  */
 
 import { useState } from "react"
-import {
-  Zap as Lightning,
-  Sparkles as Sparkle,
-  Pencil as PencilSimple,
-  ChevronDown as CaretDown,
-  ChevronRight as CaretRight,
-} from "lucide-react"
+import { ChevronDown as CaretDown, ChevronRight as CaretRight } from "lucide-react"
 import { NOTE_STATUS_HEX } from "@/lib/colors"
+import { BookKindIcon } from "@/components/property-chips"
 import { cn } from "@/lib/utils"
 import { useT } from "@/lib/i18n"
 
@@ -119,11 +114,13 @@ export function OntologyLegend({ className }: { className?: string }) {
           <LegendRow glyph={<CircleGlyph />} label={t("ontology.legend.notes")} />
           <LegendRow glyph={<HexGlyph />} label={t("ontology.legend.wiki")} />
 
-          {/* BOOKS — kind icons (Smart/Hybrid/Manual). Color is per-book on the canvas. */}
+          {/* BOOKS — kind icons via BookKindIcon (parity with book cards/rows):
+              Smart=violet, Hybrid=amber, Manual=neutral(의도적 무채색). Book은
+              graph에서 노드가 아니라 hull(영역)이라 TYPE이 아닌 별도 섹션. */}
           <GroupHeader label={t("ontology.legend.books")} />
-          <LegendRow glyph={<Lightning size={13} strokeWidth={2} />} label={t("ontology.legend.smart")} />
-          <LegendRow glyph={<Sparkle size={13} strokeWidth={2} />} label={t("ontology.legend.hybrid")} />
-          <LegendRow glyph={<PencilSimple size={13} strokeWidth={2} />} label={t("ontology.legend.manual")} />
+          <LegendRow glyph={<BookKindIcon kind="smart" size={13} />} label={t("ontology.legend.smart")} />
+          <LegendRow glyph={<BookKindIcon kind="hybrid" size={13} />} label={t("ontology.legend.hybrid")} />
+          <LegendRow glyph={<BookKindIcon kind="manual" size={13} />} label={t("ontology.legend.manual")} />
         </div>
       )}
     </div>
