@@ -29,6 +29,7 @@ import { TemplatesView } from "@/components/views/templates-view"
 import { WikiTemplatesView } from "@/components/views/wiki-templates-view"
 import { InsightsView } from "@/components/insights-view"
 import { WikiView } from "@/components/views/wiki-view"
+import { WikiInsightsView } from "@/components/views/wiki-insights-view"
 import { CalendarView } from "@/components/calendar-view"
 import { SearchView } from "@/components/views/search-view"
 import { GraphInsightsView } from "@/components/views/graph-insights-view"
@@ -50,6 +51,9 @@ import { PaneProvider } from "@/components/workspace/pane-context"
 import { useSecondarySpace } from "@/lib/table-route"
 import { useSplitTargetNoteId, setSplitTargetNoteId } from "@/lib/note-split-mode"
 import { NoteSplitPage } from "@/components/views/note-split-page"
+import { useNoteViewMode, setNoteViewMode } from "@/lib/note-view-mode"
+import { NoteMergePage } from "@/components/views/note-merge-page"
+import { NoteSplitPicker } from "@/components/views/note-split-picker"
 
 const MIN_WIDTH = 200
 const MAX_WIDTH = 320
@@ -227,6 +231,16 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     }
   }, [pathname, setSelectedNoteId])
 
+  // Reset standalone note Merge/Split mode when leaving the notes table area.
+  // NoteStandaloneOverlay renders at layout level; without this the overlay
+  // would leak onto other spaces (Home/Wiki/Calendar/…) and re-appear on
+  // return. Mirrors how wiki merge/split is structurally scoped inside WikiView.
+  // Keyed on isTableView (activeRoute) — entering merge from another route sets
+  // activeRoute to a table view first, so this does not self-cancel.
+  useEffect(() => {
+    if (!isTableView) setNoteViewMode("default")
+  }, [isTableView])
+
   // Single consolidated global shortcut handler
   useGlobalShortcuts()
   // Autopilot nudges: inbox triage + SRS review reminders
@@ -322,6 +336,13 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                 className="relative flex h-full overflow-hidden"
                 onPointerDownCapture={() => usePlotStore.getState().setActivePane('primary')}
               >
+                {/* Standalone Note Merge/Split mode overlay (sidebar "More" →
+                    Merge/Split). Rendered BELOW NoteSplitOverlay (z-30 < z-40)
+                    so that when the split picker hands off via
+                    setSplitTargetNoteId, the contextual NoteSplitPage overlay
+                    cleanly covers the picker. Route-gated to the notes table
+                    area (isTableView) so it never leaks onto other spaces. */}
+                {isTableView && <NoteStandaloneOverlay />}
                 {/* Global Note Split overlay — covers entire primary panel when active */}
                 <NoteSplitOverlay />
 
@@ -384,6 +405,12 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                 {(mountedViews.has("/wiki") || activeRoute === "/wiki") && (
                   <div className={activeRoute === "/wiki" ? "flex flex-1 overflow-hidden" : "hidden"}>
                     <WikiView />
+                  </div>
+                )}
+
+                {(mountedViews.has("/wiki/insights") || activeRoute === "/wiki/insights") && (
+                  <div className={activeRoute === "/wiki/insights" ? "flex flex-1 overflow-hidden" : "hidden"}>
+                    <WikiInsightsView />
                   </div>
                 )}
 
@@ -529,6 +556,28 @@ function NoteSplitOverlay() {
         noteId={splitTargetNoteId}
         onClose={() => setSplitTargetNoteId(null)}
       />
+    </div>
+  )
+}
+
+/**
+ * Renders the standalone Note Merge/Split modes (sidebar Notes "More" →
+ * Merge/Split, driven by `note-view-mode.ts`) as an absolute overlay over the
+ * primary panel. Mirrors NoteSplitOverlay's mount but gated on `noteViewMode`.
+ *
+ * - "merge" → NoteMergePage (multi-select merge, like WikiMergePage).
+ * - "split" → NoteSplitPicker (note picker → setSplitTargetNoteId, which then
+ *   surfaces the existing NoteSplitPage via NoteSplitOverlay above).
+ *
+ * z-30 keeps it BELOW NoteSplitOverlay (z-40) so the picker→split-editor
+ * hand-off doesn't stack two overlays.
+ */
+function NoteStandaloneOverlay() {
+  const mode = useNoteViewMode()
+  if (mode === "default") return null
+  return (
+    <div className="absolute inset-0 z-30 flex flex-col bg-background">
+      {mode === "merge" ? <NoteMergePage /> : <NoteSplitPicker />}
     </div>
   )
 }

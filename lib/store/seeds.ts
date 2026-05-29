@@ -634,7 +634,8 @@ export const SEED_WIKI_CATEGORIES: WikiCategory[] = [
 const ts = () => new Date().toISOString()
 const bid = () => crypto.randomUUID()
 
-const _SEED_WIKI_ARTICLES_RAW: Omit<WikiArticle, "sectionIndex">[] = [
+// `status` is omitted here and assigned in the final .map() below (v151).
+const _SEED_WIKI_ARTICLES_RAW: Omit<WikiArticle, "sectionIndex" | "status">[] = [
   {
     id: "wiki-1",
     title: "Zettelkasten",
@@ -765,7 +766,8 @@ const _SEED_WIKI_ARTICLES_RAW: Omit<WikiArticle, "sectionIndex">[] = [
     aliases: ["Short-term memory"],
     infobox: [],
     // Default-template stub: 3 section + 1 empty text = 4 blocks, all text empty.
-    // Surfaces in wiki-list with IconWikiStub badge.
+    // v151: seeded with status="backlog" (the only stub seed — see
+    // SEED_WIKI_STUB_IDS). Surfaces in wiki-list with the Backlog status icon.
     blocks: [
       { id: bid(), type: "section", title: "Overview", level: 2 },
       { id: bid(), type: "section", title: "Capacity", level: 2 },
@@ -986,9 +988,17 @@ const _SEED_WIKI_ARTICLES_RAW: Omit<WikiArticle, "sectionIndex">[] = [
   },
 ]
 
-// Compute sectionIndex from blocks for each seed article
+// Seed wiki status (v151 — manual 4-stage, unified with Notes). Mirrors the
+// migration mapping (stub→backlog, article→done): wiki-6 is the only
+// default-template stub (empty text blocks, see above) → "backlog"; every other
+// seed has real content → "done". Set explicitly (not via isWikiStub, which is
+// migration-seed-only) so seeds stay self-documenting.
+const SEED_WIKI_STUB_IDS = new Set<string>(["wiki-6"])
+
+// Compute sectionIndex from blocks for each seed article + assign status.
 export const SEED_WIKI_ARTICLES: WikiArticle[] = _SEED_WIKI_ARTICLES_RAW.map((a) => ({
   ...a,
+  status: SEED_WIKI_STUB_IDS.has(a.id) ? "backlog" : "done",
   sectionIndex: buildSectionIndex(a.blocks),
 }))
 

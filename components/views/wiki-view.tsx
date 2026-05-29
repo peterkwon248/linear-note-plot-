@@ -9,7 +9,9 @@ import type { WikiGroup } from "@/lib/view-engine/wiki-list-pipeline"
 import { FilterPanel } from "@/components/filter-panel"
 import { DisplayPanel } from "@/components/display-panel"
 import { WIKI_VIEW_CONFIG } from "@/lib/view-engine/view-configs"
-import { WIKI_STATUS_HEX, SPACE_COLORS } from "@/lib/colors"
+import { SPACE_COLORS } from "@/lib/colors"
+import { StatusShapeIcon } from "@/components/status-icon"
+import { STATUS_CONFIG } from "@/components/note-fields"
 import { shortRelative } from "@/lib/format-utils"
 import { useRouter } from "next/navigation"
 import {
@@ -18,7 +20,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover"
 import { BookOpen } from "lucide-react"
-import { IconWiki, IconChevronRight, IconWikiStub, IconWikiArticle } from "@/components/plot-icons"
+import { IconWiki, IconChevronRight } from "@/components/plot-icons"
 import {
   Plus as PhPlus,
   Search as MagnifyingGlass,
@@ -52,7 +54,7 @@ import { cn } from "@/lib/utils"
 import { usePlotStore } from "@/lib/store"
 import { setActiveRoute, setActiveFolderId, useActiveFolderId, getSecondarySpace, setSecondarySpace, getActiveSpace, useActiveViewId } from "@/lib/table-route"
 import { usePane } from "@/components/workspace/pane-context"
-import { useWikiViewMode, setWikiViewMode, setPendingMergeIds } from "@/lib/wiki-view-mode"
+import { useWikiViewMode, setWikiViewMode, setPendingMergeIds, useWikiStatusFilter, setWikiStatusFilter } from "@/lib/wiki-view-mode"
 import { ViewHeader } from "@/components/view-header"
 import { useBacklinksIndex } from "@/lib/search/use-backlinks-index"
 import { toast } from "sonner"
@@ -74,14 +76,13 @@ import { usePendingWikiArticle, consumePendingWikiArticle } from "@/lib/wiki-art
 import { WikiMergePreview } from "@/components/wiki-merge-preview"
 import { WikiMergePage } from "./wiki-merge-page"
 import { WikiSplitPage } from "./wiki-split-page"
-import { isWikiStub } from "@/lib/wiki-utils"
 import { useSaveViewProps } from "@/lib/view-engine/use-save-view-props"
 import { useBookContextNav } from "@/hooks/use-book-context-nav"
 import { BookContextNav } from "@/components/books/book-context-nav"
 // 2026-05-24: GalleryView import removed — gallery mode deprecated
 import { WikiTimelineView } from "@/components/views/wiki-timeline-view"
 import { WikiGridView } from "@/components/views/wiki-grid-view"
-import type { WikiArticle, WikiCategory } from "@/lib/types"
+import type { WikiArticle, WikiCategory, WikiStatus } from "@/lib/types"
 
 export function WikiView() {
   const t = useT()
@@ -126,7 +127,17 @@ export function WikiView() {
   const [wikiMergeSourceId, setWikiMergeSourceId] = useState<string | null>(null)
 
   // Dashboard filter
-  const [dashFilter, setDashFilter] = useState<"all" | "articles" | "stubs">("all")
+  // v151: 4-stage status quick-filter (was "all"|"articles"|"stubs").
+  // Source of truth lifted to the `wikiStatusFilter` external store so the
+  // sidebar status nav links + the in-list status tabs share one value
+  // (null = "all"). Local `dashFilter`/`setDashFilter` are thin adapters that
+  // map null ↔ "all" at the edge; all call sites below keep working unchanged.
+  const wikiStatusFilter = useWikiStatusFilter()
+  const dashFilter: "all" | WikiStatus = wikiStatusFilter ?? "all"
+  const setDashFilter = useCallback(
+    (f: "all" | WikiStatus) => setWikiStatusFilter(f === "all" ? null : f),
+    [],
+  )
 
   // Category filter from sidebar click
   const categoryFilterTagId = useWikiCategoryFilter()
@@ -379,8 +390,9 @@ export function WikiView() {
     return set
   }, [wikiArticles])
 
-  // Filter wiki notes — applies sidebar category filter + viewState.filters + showStubs toggle
-  const showStubs = wikiViewState.toggles?.showStubs !== false  // default: true (show stubs)
+  // Filter wiki notes — applies sidebar category filter + viewState.filters.
+  // v151: the legacy `showStubs` toggle was removed — status is now a real
+  // 4-stage field exposed via the Status filter category (FilterPanel).
   const filteredWikiNotes = useMemo(() => {
     let result = wikiNotes
     // A+ folder filter (sidebar wiki folder → /wiki scoped to folder members).
@@ -401,12 +413,8 @@ export function WikiView() {
         allArticles: wikiArticles,
       })
     }
-    // showStubs toggle (display config) — default true. When false, hide stubs globally.
-    if (!showStubs) {
-      result = result.filter((a) => !isWikiStub(a))
-    }
     return result
-  }, [wikiNotes, activeFolderId, categoryFilterTagId, wikiFilters, backlinkCounts, hasChildrenSet, showStubs])
+  }, [wikiNotes, activeFolderId, categoryFilterTagId, wikiFilters, backlinkCounts, hasChildrenSet, wikiArticles])
 
   // Sort filtered articles using wikiViewState.sortFields (Phase 1: dynamic, no hardcoded override)
   const sortedFilteredWikiNotes = useMemo(
@@ -674,20 +682,13 @@ export function WikiView() {
     }
   }, [wikiNotes, wikiArticles, notes])
 
-  // Stub count: wiki articles with minimal content.
-  // Use wikiNotes (trashed-filtered) — not raw wikiArticles — so trashed
-  // stubs don't inflate the count and push articleCount negative.
-  const stubCount = useMemo(
-    () => wikiNotes.filter(isWikiStub).length,
-    [wikiNotes]
-  )
-
-  // Article count: total active wiki articles minus stubs. Always ≥ 0
-  // because both terms are derived from the same wikiNotes slice.
-  const articleCount = useMemo(
-    () => wikiNotes.length - stubCount,
-    [wikiNotes, stubCount]
-  )
+  // v151: 4-stage status breakdown (manual, unified with Notes). Computed from
+  // wikiNotes (trashed-filtered) so trashed articles don't inflate counts.
+  const statusCounts = useMemo(() => {
+    const counts = { backlog: 0, todo: 0, in_progress: 0, done: 0 }
+    for (const a of wikiNotes) counts[a.status]++
+    return counts
+  }, [wikiNotes])
 
 
   // Search results (simple title/alias filter)
@@ -794,11 +795,7 @@ export function WikiView() {
     return (
       <div className="flex flex-1 flex-col overflow-hidden">
         <ViewHeader
-          icon={
-            isWikiStub(selectedWikiArticle)
-              ? <IconWikiStub size={20} style={{ color: WIKI_STATUS_HEX.stub }} />
-              : <IconWikiArticle size={20} style={{ color: WIKI_STATUS_HEX.article }} />
-          }
+          icon={<StatusShapeIcon status={selectedWikiArticle.status} size={20} />}
           title={selectedWikiArticle.title || "Untitled"}
           actions={
             <div className="flex items-center gap-2">
@@ -1230,8 +1227,7 @@ export function WikiView() {
             wikiArticles={wikiNotes}
             notes={notes}
             stats={stats}
-            articleCount={articleCount}
-            stubCount={stubCount}
+            statusCounts={statusCounts}
             redLinks={redLinks}
             recentChanges={recentChanges}
             mostConnected={mostConnected}
@@ -1247,7 +1243,7 @@ export function WikiView() {
             onOpenWikiArticle={setSelectedWikiArticleId}
             onCreateFromRedLink={handleCreateFromRedLink}
             onViewAll={() => { setWikiViewMode("list"); setDashFilter("all") }}
-            onViewStubs={() => { setWikiViewMode("list"); setDashFilter("stubs") }}
+            onViewStatus={(status) => { setWikiViewMode("list"); setDashFilter(status) }}
             onCategoryClick={(categoryId) => {
               setWikiCategoryFilter(categoryId)
               setWikiViewMode("list")
@@ -1375,7 +1371,7 @@ export function WikiView() {
               selectedIds={selectedArticleIds}
               onSelect={(id, opts) => handleArticleSelect(id, opts)}
               onSelectAll={handleArticleSelectAll}
-              stubCount={stubCount}
+              statusCounts={statusCounts}
               wikiArticles={wikiArticles}
               visibleColumns={wikiViewState.visibleColumns}
               wikiCategories={wikiCategories}
@@ -1430,6 +1426,7 @@ export function WikiView() {
 }
 
 function WikiPickerChevron({ currentArticleId, onSelect }: { currentArticleId: string; onSelect: (articleId: string) => void }) {
+  const t = useT()
   const [open, setOpen] = useState(false)
   const [query, setQuery] = useState("")
   const inputRef = useRef<HTMLInputElement>(null)
@@ -1464,7 +1461,7 @@ function WikiPickerChevron({ currentArticleId, onSelect }: { currentArticleId: s
         />
         <div className="max-h-[360px] overflow-y-auto py-1">
           {filtered.map((a) => {
-            const stub = isWikiStub(a)
+            const cfg = STATUS_CONFIG[a.status] ?? STATUS_CONFIG.backlog
             return (
               <button
                 key={a.id}
@@ -1477,14 +1474,9 @@ function WikiPickerChevron({ currentArticleId, onSelect }: { currentArticleId: s
               >
                 <IconWiki size={16} className="shrink-0 text-muted-foreground" />
                 <span className="truncate text-note font-medium flex-1">{a.title || "Untitled"}</span>
-                <span
-                  className="shrink-0 rounded px-1.5 py-0.5 text-[10px] font-medium"
-                  style={{
-                    color: stub ? WIKI_STATUS_HEX.stub : WIKI_STATUS_HEX.article,
-                    backgroundColor: `${stub ? WIKI_STATUS_HEX.stub : WIKI_STATUS_HEX.article}33`,
-                  }}
-                >
-                  {stub ? 'stub' : 'article'}
+                <span className="shrink-0 flex items-center gap-1 text-[10px] font-medium text-muted-foreground">
+                  <StatusShapeIcon status={a.status} size={12} />
+                  {t(cfg.labelKey)}
                 </span>
               </button>
             )

@@ -1,4 +1,14 @@
 export type NoteStatus = "backlog" | "todo" | "in_progress" | "done"
+/**
+ * WikiStatus — manual 4-stage completeness for wiki articles. Self-documenting
+ * alias of NoteStatus (= "backlog"|"todo"|"in_progress"|"done") — wiki status is
+ * fully unified with Notes (shared colors NOTE_STATUS_HEX, shared 4-circle
+ * StatusIcon, shared status.* i18n keys). "status는 어디서나 status" 원칙.
+ *
+ * Replaces the legacy automatic stub/article (`isWikiStub()`) split — v151
+ * migration seeds stub→backlog, article→done.
+ */
+export type WikiStatus = NoteStatus
 export type NotePriority = "none" | "urgent" | "high" | "medium" | "low"
 /** Triage status for backlog notes */
 export type TriageStatus = "untriaged" | "kept" | "snoozed" | "trashed"
@@ -465,6 +475,13 @@ export interface WikiSectionIndex {
 export interface WikiArticle {
   id: string
   title: string
+  /**
+   * Manual 4-stage completeness status (unified with Note.status). v151
+   * migration introduced this field — seeds stub→backlog, article→done (the
+   * legacy automatic `isWikiStub()` split is retired). todo/in_progress start
+   * empty (manual stages).
+   */
+  status: WikiStatus
   aliases: string[]
   infobox: WikiInfoboxEntry[]
   /** Tier 1-2: Infobox header background color (null/undefined = default bg-secondary/30). Raw CSS color (rgba/hex). */

@@ -14,7 +14,6 @@ import { useMemo, useState } from "react"
 import { cn } from "@/lib/utils"
 import type { Note, WikiArticle } from "@/lib/types"
 import type { BucketSize } from "@/lib/insights/timeseries"
-import { isWikiStub } from "@/lib/wiki-utils"
 import { useT } from "@/lib/i18n"
 import { WikiGrowthChart, type DataFilter } from "./wiki-growth-chart"
 import { WikiConnectivityChart } from "./wiki-connectivity-chart"
@@ -49,15 +48,15 @@ export function WikiInsightsChart({ notes, wikiArticles }: WikiInsightsChartProp
   const [bucketSize, setBucketSize] = useState<BucketSize>("month")
   const [dataFilter, setDataFilter] = useState<DataFilter>("all")
 
-  // Count articles vs stubs for sub-tab labels (mirrors wiki-list pattern).
-  // Excludes trashed.
+  // Count "complete" (done) vs "incomplete" (not-yet-done) for sub-tab labels.
+  // v151: based on the manual 4-stage status. Excludes trashed.
   const counts = useMemo(() => {
     const live = wikiArticles.filter((w) => !(w as { trashed?: boolean }).trashed)
     let stubs = 0
     let articles = 0
     for (const w of live) {
-      if (isWikiStub(w)) stubs++
-      else articles++
+      if (w.status === "done") articles++
+      else stubs++
     }
     return { all: live.length, articles, stubs }
   }, [wikiArticles])

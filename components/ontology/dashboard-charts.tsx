@@ -5,8 +5,8 @@
  *
  * Chunk 2 of dashboard fullwidth PRD (2026-05-25). Four charts in a single
  * file (small functions, shared ResizeObserver pattern):
- *   1. StatusDonut       — Stone / Brick / Block distribution
- *   2. WikiStatusDonut   — Article / Stub split (isWikiStub)
+ *   1. StatusDonut       — backlog/todo/in_progress/done distribution
+ *   2. WikiStatusDonut   — complete (done) vs incomplete split (article.status)
  *   3. TopHubsBar        — top-N notes by backlinks (horizontal bar)
  *   4. CategoriesBar     — wiki category note counts (horizontal bar)
  *
@@ -21,7 +21,7 @@
 import { useEffect, useRef, useState } from "react"
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid } from "recharts"
 import { useT } from "@/lib/i18n"
-import { NOTE_STATUS_HEX, WIKI_STATUS_HEX } from "@/lib/colors"
+import { NOTE_STATUS_HEX } from "@/lib/colors"
 
 // ────────────────────────────────────────────────────────────────────────────
 // Shared — useChartWidth hook (ResizeObserver pattern)
@@ -50,7 +50,7 @@ function useChartWidth() {
 // ────────────────────────────────────────────────────────────────────────────
 // Color tokens — Plot permanent rules (lib/colors.ts)
 // NOTE_STATUS_HEX: backlog=slate-400, todo=blue-500, in_progress=amber-500, done=emerald-400
-// WIKI_STATUS_HEX: stub=orange #f97316, article=emerald #10b981
+// Wiki status is unified with Notes (v151) — use NOTE_STATUS_HEX everywhere.
 // ────────────────────────────────────────────────────────────────────────────
 
 const BAR_COLOR = "var(--accent)"
@@ -160,8 +160,10 @@ export function WikiStatusDonut({ articles, stubs }: WikiStatusDonutProps) {
   const size = Math.min(width, 220)
 
   const data = [
-    { name: t("wiki.filter.articles"), value: articles, color: WIKI_STATUS_HEX.article },
-    { name: t("wiki.filter.stubs"), value: stubs, color: WIKI_STATUS_HEX.stub },
+    // v151: "complete" (done = emerald) vs "incomplete" (in-progress = amber),
+    // unified with the Notes status palette.
+    { name: t("wiki.filter.articles"), value: articles, color: NOTE_STATUS_HEX.done },
+    { name: t("wiki.filter.stubs"), value: stubs, color: NOTE_STATUS_HEX.in_progress },
   ].filter((d) => d.value > 0)
 
   const total = articles + stubs

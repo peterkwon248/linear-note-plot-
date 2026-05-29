@@ -1,12 +1,13 @@
 import { create } from "zustand"
 import { persist } from "zustand/middleware"
-import type { EntityEvent, AutopilotLogEntry, Relation } from "../types"
+import type { EntityEvent, AutopilotLogEntry, Relation, WikiStatus } from "../types"
 import type { Attachment, CoOccurrence, RelationSuggestion } from "../types"
 import { buildDefaultViewStates } from "../view-engine/defaults"
 import { createIDBStorage } from "../idb-storage"
 import { createAppendEvent } from "./helpers"
 import { SEED_NOTES, SEED_FOLDERS, SEED_TAGS, SEED_LABELS, SEED_TEMPLATES, SEED_WIKI_ARTICLES, SEED_WIKI_CATEGORIES, SEED_WIKI_TEMPLATES, SEED_BOOKS } from "./seeds"
 import { persistBody, persistBlockBody } from "./helpers"
+import { isWikiStub } from "../wiki-utils"
 import { createNotesSlice } from "./slices/notes"
 import { createWorkflowSlice } from "./slices/workflow"
 import { createFoldersSlice } from "./slices/folders"
@@ -268,7 +269,7 @@ export const usePlotStore = create<PlotState>()(
     },
     {
       name: "plot-store",
-      version: 150,
+      version: 151,
       storage: createIDBStorage<PlotState>(),
       partialize: (state) => {
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -440,28 +441,55 @@ export const usePlotStore = create<PlotState>()(
                 })
                 usePlotStore.setState({ wikiArticles: updatedArticles })
 
-                // Now load text block bodies from wiki-block-body-store
+                // Now load text block bodies from wiki-block-body-store, THEN
+                // seed wiki status (v151) — seeding must run AFTER blocks + text
+                // content are loaded because isWikiStub() inspects text content.
                 const textBlockIds = updatedArticles
                   .flatMap((a) => a.blocks)
                   .filter((b) => b.type === "text" && !b.content)
                   .map((b) => b.id)
 
-                if (textBlockIds.length > 0) {
-                  import("@/lib/wiki-block-body-store").then(({ getBlockBodies }) => {
-                    getBlockBodies(textBlockIds).then((bodies) => {
-                      if (bodies.size === 0) return
-                      usePlotStore.setState((s) => ({
-                        wikiArticles: s.wikiArticles.map((a) => ({
-                          ...a,
-                          blocks: a.blocks.map((b) => {
-                            const content = bodies.get(b.id)
-                            return content !== undefined ? { ...b, content } : b
-                          }),
-                        })),
-                      }))
+                const loadBodies =
+                  textBlockIds.length > 0
+                    ? import("@/lib/wiki-block-body-store").then(({ getBlockBodies }) =>
+                        getBlockBodies(textBlockIds).then((bodies) => {
+                          if (bodies.size === 0) return
+                          usePlotStore.setState((s) => ({
+                            wikiArticles: s.wikiArticles.map((a) => ({
+                              ...a,
+                              blocks: a.blocks.map((b) => {
+                                const content = bodies.get(b.id)
+                                return content !== undefined ? { ...b, content } : b
+                              }),
+                            })),
+                          }))
+                        })
+                      )
+                    : Promise.resolve()
+
+                // v151: seed WikiStatus once blocks + content are fully loaded.
+                // migrate() CANNOT do this — partialize strips wiki blocks from
+                // the persisted snapshot, so isWikiStub() is only meaningful here
+                // (post-rehydration). Idempotent backfill: only articles still
+                // missing a status (new articles get one at creation).
+                // stub→backlog, article→done. Persists automatically (`status`
+                // is not stripped by partialize), so this is a one-time seed.
+                loadBodies.then(() => {
+                  usePlotStore.setState((s) => {
+                    let seeded = 0
+                    const seededArticles = s.wikiArticles.map((a) => {
+                      if (a.status) return a
+                      seeded++
+                      const isStub = a.blocks.length === 0 ? true : isWikiStub(a)
+                      const newStatus: WikiStatus = isStub ? "backlog" : "done"
+                      return { ...a, status: newStatus }
                     })
+                    if (seeded > 0) {
+                      console.log(`[rehydrate] v151: seeded WikiStatus on ${seeded} articles (stub→backlog, article→done)`)
+                    }
+                    return seeded > 0 ? { wikiArticles: seededArticles } : {}
                   })
-                }
+                })
               })
             })
           }

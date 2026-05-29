@@ -58,9 +58,8 @@ import { EntityNoteListRow } from "@/components/views/entity-note-list-row"
 import { setActiveRoute } from "@/lib/table-route"
 import { useRouter } from "next/navigation"
 import { shortRelative } from "@/lib/format-utils"
-import { isWikiStub } from "@/lib/wiki-utils"
-import { IconWikiStub, IconWikiArticle } from "@/components/plot-icons"
-import { WIKI_STATUS_HEX } from "@/lib/colors"
+import { StatusShapeIcon } from "@/components/status-icon"
+import { STATUS_CONFIG } from "@/components/note-fields"
 import { BookKindIcon } from "@/components/property-chips"
 import { getBookKind } from "@/lib/view-engine/use-books-view"
 
@@ -928,7 +927,7 @@ export function TagsView() {
                     <span className="tabular-nums">{tagWikis.length}</span>
                   </div>
                   {tagWikis.map((wiki) => {
-                    const stub = isWikiStub(wiki)
+                    const statusCfg = STATUS_CONFIG[wiki.status] ?? STATUS_CONFIG.backlog
                     return (
                       <div
                         key={wiki.id}
@@ -938,16 +937,12 @@ export function TagsView() {
                         onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); navigateToWiki() } }}
                         className="group flex w-full cursor-pointer items-center gap-3 px-6 py-3 text-left transition-colors hover:bg-hover-bg"
                       >
-                        {stub ? (
-                          <IconWikiStub size={12} style={{ color: WIKI_STATUS_HEX.stub }} className="shrink-0" />
-                        ) : (
-                          <IconWikiArticle size={12} style={{ color: WIKI_STATUS_HEX.article }} className="shrink-0" />
-                        )}
+                        <StatusShapeIcon status={wiki.status} size={12} />
                         <span className="flex-1 truncate text-ui text-foreground">
                           {wiki.title || "Untitled"}
                         </span>
                         <span className="text-note text-muted-foreground">
-                          {stub ? "Stub" : "Article"}
+                          {t(statusCfg.labelKey)}
                         </span>
                         <span className="text-note tabular-nums text-muted-foreground">
                           {shortRelative(wiki.updatedAt)}

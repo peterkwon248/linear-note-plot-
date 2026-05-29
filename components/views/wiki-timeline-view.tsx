@@ -9,14 +9,16 @@
  */
 
 import { useState, useMemo, useCallback, useRef, useEffect } from "react"
-import { isWikiStub, safeDate, getHorizon } from "@/lib/wiki-utils"
+import { safeDate, getHorizon } from "@/lib/wiki-utils"
 import { usePlotStore } from "@/lib/store"
 import { getPlannedDateForWiki } from "@/lib/store/hook-selectors"
+import { useT } from "@/lib/i18n"
 import type { WikiArticle, EntityEvent } from "@/lib/types"
 import type { ViewState } from "@/lib/view-engine/types"
 import type { WikiGroup } from "@/lib/view-engine/wiki-list-pipeline"
-import { WIKI_STATUS_HEX } from "@/lib/colors"
-import { IconWikiStub, IconWikiArticle } from "@/components/plot-icons"
+import { NOTE_STATUS_HEX } from "@/lib/colors"
+import { StatusShapeIcon } from "@/components/status-icon"
+import { STATUS_CONFIG } from "@/components/note-fields"
 import { getEventsForEntity } from "@/lib/datalog/helpers"
 import {
   AXIS_HEIGHT,
@@ -78,6 +80,7 @@ export function WikiTimelineView({
   onSelect,
   onUpdateViewState,
 }: WikiTimelineViewProps) {
+  const t = useT()
   // PR-Q4: store-backed group collapse (viewState.collapsedGroups from PR-Q2).
   // Clicking a group header in the label column toggles the group's key in
   // this set; collapsed groups drop out of visibleLanes entirely (cascading
@@ -442,17 +445,15 @@ export function WikiTimelineView({
             className="flex"
             style={{ position: "relative", minHeight: svgHeight }}
           >
-            {/* Left label column — sticky left:0. Wiki adapter inline: stub →
-                IconWikiStub + stub orange, article → IconWikiArticle + emerald. */}
+            {/* Left label column — sticky left:0. v151: shared 4-circle status
+                icon + NOTE_STATUS_HEX color (article.status, unified w/ Notes). */}
             <TimelineLabelColumn
               lanes={lanes}
               getStatusColor={(article) =>
-                isWikiStub(article as WikiArticle) ? WIKI_STATUS_HEX.stub : WIKI_STATUS_HEX.article
+                NOTE_STATUS_HEX[(article as WikiArticle).status] ?? NOTE_STATUS_HEX.backlog
               }
               renderStatusIcon={(article, size) =>
-                isWikiStub(article as WikiArticle)
-                  ? <IconWikiStub size={size ?? 13} />
-                  : <IconWikiArticle size={size ?? 13} />
+                <StatusShapeIcon status={(article as WikiArticle).status} size={size ?? 13} />
               }
               activeArticleId={activeArticleId}
               selectedIds={selectedIds}
@@ -495,7 +496,7 @@ export function WikiTimelineView({
                   groupBoundaries={groupBoundaries}
                 />
 
-                {/* Article bars — wiki adapter resolves stub/article color.
+                {/* Article bars — v151: bar fill = NOTE_STATUS_HEX[status].
                     PR-Q4 v2: ghost lanes (collapsed-group headers) are
                     skipped in the bar layer; label column owns their UI. */}
                 {lanes.map((item, laneIndex) => {
@@ -504,7 +505,7 @@ export function WikiTimelineView({
                     <TimelineBar
                       key={item.article.id}
                       item={item}
-                      statusColor={isWikiStub(item.article) ? WIKI_STATUS_HEX.stub : WIKI_STATUS_HEX.article}
+                      statusColor={NOTE_STATUS_HEX[item.article.status] ?? NOTE_STATUS_HEX.backlog}
                       canEditHorizon
                       laneIndex={laneIndex}
                       activeArticleId={activeArticleId}
@@ -546,15 +547,13 @@ export function WikiTimelineView({
                 tooltip={tooltip}
                 tooltipArticle={tooltipArticle}
                 getStatusColor={(article) =>
-                  isWikiStub(article as WikiArticle) ? WIKI_STATUS_HEX.stub : WIKI_STATUS_HEX.article
+                  NOTE_STATUS_HEX[(article as WikiArticle).status] ?? NOTE_STATUS_HEX.backlog
                 }
                 renderStatusIcon={(article, size) =>
-                  isWikiStub(article as WikiArticle)
-                    ? <IconWikiStub size={size ?? 12} />
-                    : <IconWikiArticle size={size ?? 12} />
+                  <StatusShapeIcon status={(article as WikiArticle).status} size={size ?? 12} />
                 }
                 getStatusLabel={(article) =>
-                  isWikiStub(article as WikiArticle) ? "Stub" : "Article"
+                  t((STATUS_CONFIG[(article as WikiArticle).status] ?? STATUS_CONFIG.backlog).labelKey)
                 }
                 renderHorizonLine={(article, drag) => {
                   const a = article as WikiArticle
@@ -567,7 +566,7 @@ export function WikiTimelineView({
                     const rel = relativeDateLabel(liveDragDate, now)
                     return (
                       <span className="text-muted-foreground">
-                        <span style={{ color: WIKI_STATUS_HEX.stub, fontWeight: 500 }}>Planning</span>{" "}
+                        <span style={{ color: NOTE_STATUS_HEX.in_progress, fontWeight: 500 }}>Planning</span>{" "}
                         {fmt(liveDragDate)}
                         <span className="opacity-60"> ({rel})</span>
                       </span>
@@ -579,7 +578,7 @@ export function WikiTimelineView({
                     const rel = relativeDateLabel(planned, now)
                     return (
                       <span className="text-muted-foreground">
-                        <span style={{ color: WIKI_STATUS_HEX.stub }}>Planned</span>
+                        <span style={{ color: NOTE_STATUS_HEX.in_progress }}>Planned</span>
                         {" "}
                         {fmt(planned)}
                         <span className="opacity-60"> ({rel})</span>

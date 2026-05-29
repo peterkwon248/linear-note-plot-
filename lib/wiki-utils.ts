@@ -4,6 +4,12 @@ import type { WikiArticle } from "./types"
  * A WikiArticle is a "stub" if the user hasn't modified it from the default template.
  * Default template = 3 section blocks + 1 empty text block = 4 blocks total.
  * Stub if: block count <= 4 AND all text blocks have empty content.
+ *
+ * ⚠️ MIGRATION-SEED ONLY (2026-05-29, v151). Wiki articles now carry an
+ * explicit manual `status` field (WikiStatus, unified with Note.status). This
+ * helper is retained solely as the v151 migration seed (stub→backlog,
+ * article→done) — all runtime/view code must read `article.status` instead.
+ * Do NOT reintroduce isWikiStub calls into views or business logic.
  */
 const DEFAULT_BLOCK_COUNT = 4
 

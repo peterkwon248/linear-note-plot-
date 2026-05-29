@@ -4,14 +4,14 @@ import { useMemo, useState, useEffect } from "react"
 import { cn } from "@/lib/utils"
 import { WikiGroupHeaderIcon } from "@/components/views/wiki-shared"
 import { shortRelative } from "@/lib/format-utils"
-import { setWikiViewMode } from "@/lib/wiki-view-mode"
-import { isWikiStub } from "@/lib/wiki-utils"
+import { setWikiViewMode, useWikiStatusFilter, setWikiStatusFilter } from "@/lib/wiki-view-mode"
 import { useT } from "@/lib/i18n"
 import { usePlotStore } from "@/lib/store"
 import { getPlannedDateForWiki } from "@/lib/store/hook-selectors"
-import { WIKI_STATUS_HEX } from "@/lib/colors"
-import { IconWikiStub, IconWikiArticle } from "@/components/plot-icons"
-import type { WikiArticle, WikiCategory } from "@/lib/types"
+import { StatusShapeIcon } from "@/components/status-icon"
+import { STATUS_CONFIG } from "@/components/note-fields"
+import { WIKI_STATUS_ORDER } from "@/lib/view-engine/wiki-list-pipeline"
+import type { WikiArticle, WikiCategory, WikiStatus } from "@/lib/types"
 import type { GroupBy } from "@/lib/view-engine/types"
 import type { WikiGroup } from "@/lib/view-engine/wiki-list-pipeline"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
@@ -261,9 +261,13 @@ interface WikiListProps {
   sortedFilteredWikiNotes: WikiArticle[]
   backlinkCounts: Map<string, number>
 
-  // Filter state
-  dashFilter: "all" | "articles" | "stubs"
-  setDashFilter: (f: "all" | "articles" | "stubs") => void
+  // Filter state — v151: 4-stage status quick-filter (was all/articles/stubs).
+  // Source of truth lifted to the `wikiStatusFilter` external store so the
+  // sidebar status nav links and these in-list tabs stay in sync. These props
+  // are no longer the source of truth; the component reads/writes the store
+  // directly. Kept optional for back-compat with any other caller.
+  dashFilter?: "all" | WikiStatus
+  setDashFilter?: (f: "all" | WikiStatus) => void
 
   // Category filter
   categoryFilterLabel?: string | null
@@ -286,8 +290,8 @@ interface WikiListProps {
    *  Direction: both / in (backlinks) / out (links from this article). */
   onShowConnectedArticle?: (id: string, direction: "both" | "in" | "out") => void
 
-  // Stub support
-  stubCount?: number
+  // v151: 4-stage status breakdown (for the quick-filter tab counts).
+  statusCounts?: Record<WikiStatus, number>
   wikiArticles?: WikiArticle[]
 
   // Selection
@@ -362,7 +366,7 @@ function ColumnHeaders({
       <span className="min-w-0 flex-1 flex items-center gap-2 pr-0">
         <span>{t("display.ordering.title")}</span>
       </span>
-      {isVisible("status") && <span className="w-[72px] shrink-0 px-2">{t("column.status")}</span>}
+      {isVisible("status") && <span className="w-[110px] shrink-0 px-2">{t("column.status")}</span>}
       {isVisible("tags") && <span className="w-[140px] shrink-0 px-2">{t("column.categories")}</span>}
       {isVisible("aliases") && <span className="w-[140px] shrink-0 px-2">{t("column.aliases")}</span>}
       {isVisible("parent") && <span className="w-[100px] shrink-0 px-1">{t("display.property.parent")}</span>}
@@ -415,6 +419,7 @@ function ArticleTableRow({
   wikiArticles?: WikiArticle[]
   childrenCount?: number
 }) {
+  const t = useT()
   const isVisible = (key: string) => !visibleColumns || visibleColumns.includes(key)
   const categoryNames = (note.categoryIds ?? [])
     .map((id) => wikiCategories?.find((c) => c.id === id)?.name)
@@ -470,25 +475,12 @@ function ArticleTableRow({
         }}
         className="flex flex-1 items-center gap-2 text-left min-w-0"
       >
-        {/* Always-on leading status icon — gives a stub/article hint at the
-            title row even when the optional Status column is hidden. Mirrors
-            Notes' StatusShapeIcon pattern (inline color from WIKI_STATUS_HEX
-            — stub=orange, article=emerald). */}
-        {(() => {
-          const isStub = isWikiStub(note)
-          const color = isStub ? WIKI_STATUS_HEX.stub : WIKI_STATUS_HEX.article
-          return (
-            <span
-              className="a-row__icon shrink-0"
-              style={{
-                color,
-                background: `color-mix(in srgb, ${color} 24%, transparent)`,
-              }}
-            >
-              {isStub ? <IconWikiStub size={13} /> : <IconWikiArticle size={13} />}
-            </span>
-          )
-        })()}
+        {/* Always-on leading status icon — gives the 4-stage status at a glance
+            even when the optional Status column is hidden. Shared 4-circle
+            StatusShapeIcon, unified with Notes (v151). */}
+        <span className="a-row__icon shrink-0 flex items-center">
+          <StatusShapeIcon status={note.status} size={13} />
+        </span>
         {/* Title + pin: pin sits immediately to the right of the title text
             (영구 결정 — Books book-table.tsx:497-502 pattern). Removing
             `flex-1` from the title span prevents the title from stretching
@@ -506,28 +498,13 @@ function ArticleTableRow({
         )}
       </button>
       {isVisible("status") && (
-        <div className="w-[72px] shrink-0 flex items-center px-2">
-          {/* Status badges use the dedicated IconWikiStub / IconWikiArticle
-              icons (defined in components/plot-icons.tsx) — distinct from
-              the BookOpen used for the wiki ENTITY in the activity bar /
-              sidebar. Color from WIKI_STATUS_HEX (orange/emerald). */}
-          {isWikiStub(note) ? (
-            <span
-              className="inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-2xs font-medium"
-              style={{ color: WIKI_STATUS_HEX.stub, backgroundColor: `${WIKI_STATUS_HEX.stub}3D` }}
-            >
-              <IconWikiStub size={11} />
-              Stub
-            </span>
-          ) : (
-            <span
-              className="inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-2xs font-medium"
-              style={{ color: WIKI_STATUS_HEX.article, backgroundColor: `${WIKI_STATUS_HEX.article}3D` }}
-            >
-              <IconWikiArticle size={11} />
-              Article
-            </span>
-          )}
+        <div className="w-[110px] shrink-0 flex items-center px-2">
+          {/* 4-stage status (manual, unified with Notes — v151). Shared
+              4-circle StatusShapeIcon + STATUS_CONFIG i18n label. */}
+          <span className="inline-flex items-center gap-1.5 text-2xs font-medium text-foreground/80">
+            <StatusShapeIcon status={note.status} size={12} />
+            {t((STATUS_CONFIG[note.status] ?? STATUS_CONFIG.backlog).labelKey)}
+          </span>
         </div>
       )}
       {isVisible("tags") && (
@@ -682,8 +659,6 @@ export function WikiList({
   filteredWikiNotes,
   sortedFilteredWikiNotes,
   backlinkCounts,
-  dashFilter,
-  setDashFilter,
   categoryFilterLabel,
   onClearCategoryFilter,
   folderFilterLabel,
@@ -695,11 +670,11 @@ export function WikiList({
   onDeleteArticle,
   redLinks,
   onCreateFromRedLink,
-  stubCount,
   wikiArticles,
   selectedIds,
   onSelect,
   onSelectAll,
+  statusCounts,
   visibleColumns,
   wikiCategories,
   wikiGroups,
@@ -714,20 +689,22 @@ export function WikiList({
   activeArticleId,
 }: WikiListProps) {
   const t = useT()
+
+  // v151 + sidebar sync: the 4-stage status quick-filter source of truth is the
+  // `wikiStatusFilter` external store (null = "all"), so the sidebar status nav
+  // links and these tabs control the same value. Map null ↔ "all" at the edge.
+  const statusFilter = useWikiStatusFilter()
+  const dashFilter: "all" | WikiStatus = statusFilter ?? "all"
+  const setDashFilter = (f: "all" | WikiStatus) =>
+    setWikiStatusFilter(f === "all" ? null : f)
+
   const selectionActive = selectedIds ? selectedIds.size > 0 : false
 
-  // Compute visible notes for the current filter (used for select-all)
-  const visibleNotes = sortedFilteredWikiNotes.filter((note) => {
-    if (dashFilter === "stubs") {
-      const article = wikiArticles?.find((a) => a.id === note.id)
-      return article ? isWikiStub(article) : false
-    }
-    if (dashFilter === "articles") {
-      const article = wikiArticles?.find((a) => a.id === note.id)
-      return article ? !isWikiStub(article) : true
-    }
-    return true
-  })
+  // Compute visible notes for the current filter (used for select-all).
+  // v151: dashFilter is "all" | WikiStatus — match on note.status directly.
+  const matchesDashFilter = (note: WikiArticle) =>
+    dashFilter === "all" || note.status === dashFilter
+  const visibleNotes = sortedFilteredWikiNotes.filter(matchesDashFilter)
 
   const isAllSelected = visibleNotes.length > 0 && selectedIds ? selectedIds.size >= visibleNotes.length && visibleNotes.every((n) => selectedIds.has(n.id)) : false
   const isPartiallySelected = selectedIds ? selectedIds.size > 0 && !isAllSelected : false
@@ -742,11 +719,14 @@ export function WikiList({
       }
     : undefined
 
-  const counts = {
+  // v151: tab counts per 4-stage status (+ all). statusCounts is computed
+  // from the trashed-filtered article set by the parent (wiki-view).
+  const counts: Record<"all" | WikiStatus, number> = {
     all: sortedFilteredWikiNotes.length,
-    articles: sortedFilteredWikiNotes.length - (stubCount ?? 0),
-    stubs: stubCount ?? 0,
-    redlinks: redLinks.length,
+    backlog: statusCounts?.backlog ?? 0,
+    todo: statusCounts?.todo ?? 0,
+    in_progress: statusCounts?.in_progress ?? 0,
+    done: statusCounts?.done ?? 0,
   }
 
   // Children count map: articleId → number of articles whose parentArticleId === id
@@ -803,7 +783,7 @@ export function WikiList({
       <div className="flex shrink-0 items-center gap-2 border-b border-border px-5 py-2">
         {/* Back to Overview */}
         <button
-          onClick={() => { setWikiViewMode("dashboard"); onClearCategoryFilter?.(); onClearFolderFilter?.() }}
+          onClick={() => { setWikiViewMode("dashboard"); setWikiStatusFilter(null); onClearCategoryFilter?.(); onClearFolderFilter?.() }}
           className="flex items-center gap-1 text-note text-muted-foreground hover:text-foreground transition-colors duration-100 mr-1"
         >
           <ArrowLeft size={12} strokeWidth={2} />
@@ -812,30 +792,28 @@ export function WikiList({
 
         <span className="h-4 w-px bg-border/50" />
 
-        {/* Filter Tabs */}
-        {(["all", "articles", "stubs"] as const).map((tab) => {
-          const labels: Record<string, string> = { all: t("filter.tab.all"), articles: t("filter.tab.articles"), stubs: t("filter.tab.stubs") }
-          const tabCount = counts[tab as keyof typeof counts]
+        {/* Filter Tabs — v151: All + 4-stage status (backlog/todo/in_progress/
+            done), unified with Notes. Active status tab shows its colored
+            4-circle icon; "All" stays neutral. */}
+        {(["all", ...WIKI_STATUS_ORDER] as const).map((tab) => {
+          const tabCount = counts[tab]
+          const label = tab === "all" ? t("filter.tab.all") : t(STATUS_CONFIG[tab].labelKey)
+          const active = dashFilter === tab
           return (
             <button
               key={tab}
-              onClick={() => {
-                setDashFilter(tab)
-              }}
+              onClick={() => setDashFilter(tab)}
               className={cn(
-                "rounded-md px-2.5 py-1.5 text-2xs font-medium transition-all duration-100",
-                dashFilter === tab
-                  ? tab === "stubs" ? "bg-amber-500/15 text-amber-600 dark:text-amber-400"
-                    : "bg-foreground/10 text-foreground"
-                  : tab === "stubs" ? "text-amber-600/80 dark:text-amber-400/80 hover:bg-hover-bg hover:text-amber-600 dark:hover:text-amber-400"
-                    : "text-muted-foreground hover:bg-hover-bg hover:text-foreground"
+                "flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-2xs font-medium transition-all duration-100",
+                active
+                  ? "bg-foreground/10 text-foreground"
+                  : "text-muted-foreground hover:bg-hover-bg hover:text-foreground",
               )}
             >
-              {labels[tab]}
-              {tabCount !== undefined && tabCount > 0 && (
-                <span className="ml-1 tabular-nums text-muted-foreground">
-                  {tabCount}
-                </span>
+              {tab !== "all" && <StatusShapeIcon status={tab} size={12} />}
+              {label}
+              {tabCount > 0 && (
+                <span className="tabular-nums text-muted-foreground">{tabCount}</span>
               )}
             </button>
           )
@@ -896,17 +874,7 @@ export function WikiList({
             /* ── Grouped view ── */
             <div>
               {wikiGroups.map((group) => {
-                const groupArticles = group.articles.filter((note) => {
-                  if (dashFilter === "stubs") {
-                    const article = wikiArticles?.find((a) => a.id === note.id)
-                    return article ? isWikiStub(article) : false
-                  }
-                  if (dashFilter === "articles") {
-                    const article = wikiArticles?.find((a) => a.id === note.id)
-                    return article ? !isWikiStub(article) : true
-                  }
-                  return true
-                })
+                const groupArticles = group.articles.filter(matchesDashFilter)
                 if (groupArticles.length === 0) return null
                 return (
                   <div key={group.key}>
@@ -951,24 +919,14 @@ export function WikiList({
                   </div>
                 )
               })}
-              {dashFilter === "stubs" && (stubCount ?? 0) === 0 && <EmptyState />}
+              {dashFilter !== "all" && visibleNotes.length === 0 && <EmptyState />}
             </div>
           ) : (
             /* ── Flat view (no grouping) ── */
             <div>
-              {/* Article/Stub rows */}
+              {/* Article rows (4-stage status filter via matchesDashFilter) */}
               {sortedFilteredWikiNotes
-                .filter((note) => {
-                  if (dashFilter === "stubs") {
-                    const article = wikiArticles?.find((a) => a.id === note.id)
-                    return article ? isWikiStub(article) : false
-                  }
-                  if (dashFilter === "articles") {
-                    const article = wikiArticles?.find((a) => a.id === note.id)
-                    return article ? !isWikiStub(article) : true
-                  }
-                  return true // "all"
-                })
+                .filter(matchesDashFilter)
                 .map((note, idx) => (
                 <ArticleTableRow
                   key={note.id}
@@ -989,8 +947,8 @@ export function WikiList({
                   childrenCount={childrenCounts.get(note.id) ?? 0}
                 />
               ))}
-              {/* Empty state for stubs filter with no stubs */}
-              {dashFilter === "stubs" && (stubCount ?? 0) === 0 && <EmptyState />}
+              {/* Empty state when a status filter matches nothing */}
+              {dashFilter !== "all" && visibleNotes.length === 0 && <EmptyState />}
             </div>
           )}
       </div>

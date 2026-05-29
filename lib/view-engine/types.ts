@@ -100,10 +100,10 @@ export type GroupBy =
   // Currently used by Wiki Categories; can be wired into the Notes pipeline
   // by adding a `groupByCreatedAt` helper to group.ts.
   | "createdAt"
-  // Wiki article maturity (Stub / Article) — derived from block count via
-  // isWikiStub(). Mirrors the Notes Stone/Brick/Block fixed-column pattern
-  // so Wiki board gets the same "always N columns" visual without depending
-  // on parent-chain depth (which collapses to 1 column for flat content).
+  // Wiki article completeness status (manual 4-stage: backlog / todo /
+  // in_progress / done) — reads `article.status`, fully unified with Notes
+  // (v151). Replaces the legacy automatic stub/article (isWikiStub) split.
+  // Mirrors the Notes status fixed-column board pattern (always 4 columns).
   | "wikiStatus"
   // References-specific grouping (B11 — viewState single-source-of-truth):
   //   "type"     = link vs citation (derived from url field presence)

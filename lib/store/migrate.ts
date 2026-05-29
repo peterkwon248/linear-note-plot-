@@ -2540,5 +2540,110 @@ export function migrate(persistedState: unknown): PlotState {
     }
   }
 
+  // v150 → v151: Wiki status 신규 도입 (자동 stub/article → 수동 4단계 persisted).
+  //   stub (빈 템플릿)  → backlog
+  //   article (내용 有) → done
+  // (todo/in_progress는 신규 수동 단계라 매핑 소스 없음 — 빈 채 시작.)
+  //
+  // 노트 v150과 결이 다름: 노트는 persisted enum *rename*이었으나, 위키는
+  // persisted `status` 필드 *신규 도입*. 영속 위키 표면을 처리한다:
+  //   1) wikiArticles[].status — ⚠️ 여기서 시드하지 않음. partialize가 wiki
+  //      blocks를 []로 strip(별도 IDB store)해 migrate 시점 blocks가 항상 []
+  //      → isWikiStub 분류 불가. 시딩은 onRehydrateStorage(블록+텍스트 콘텐츠
+  //      로드 후, lib/store/index.ts)에서 1회 backfill.
+  //   2) viewStateByContext["wiki"] group/collapsedGroups/filters 중 stub/article
+  //      리터럴 → 매핑 (blocks 불필요 → 여기서 처리 OK)
+  //   3) savedViews(space === "wiki") filters[] (field === "status") value 매핑
+  //   4) customQuickFilters(viewContext === "wiki") rules[] (field === "status") 매핑
+  {
+    // 위키 board/필터에 잔존할 수 있는 stub/article 리터럴 → 4단계 매핑.
+    // backlog=stub, done=article (todo/in_progress 무관 — 그대로 통과).
+    const WIKI_STATUS_LITERAL_MAP: Record<string, string> = {
+      stub: "backlog",
+      article: "done",
+    }
+    const mapWikiStatusLiteral = (v: unknown): unknown =>
+      typeof v === "string" && v in WIKI_STATUS_LITERAL_MAP ? WIKI_STATUS_LITERAL_MAP[v] : v
+
+    // 1) wikiArticles[].status — NOT seeded here. `partialize` strips wiki
+    //    `blocks` to [] before persist (block data lives in the separate
+    //    `plot-wiki-block-meta` IDB store), so at migrate time every
+    //    article.blocks is [] and isWikiStub() can't classify. The one-time
+    //    seed (stub→backlog, article→done) runs in onRehydrateStorage AFTER
+    //    blocks + text content load (lib/store/index.ts). New articles get a
+    //    status at creation; pre-v151 articles are backfilled there.
+    //    Already-set `status` is never overwritten (idempotent).
+
+    // 2) viewStateByContext["wiki"]: groupBy/collapsedGroups/filters stub/article literals.
+    if (state.viewStateByContext && typeof state.viewStateByContext === "object") {
+      const vsc = state.viewStateByContext as Record<string, Record<string, unknown>>
+      const wikiVs = vsc["wiki"]
+      if (wikiVs && typeof wikiVs === "object") {
+        // collapsedGroups keys (e.g. board column keys "stub"/"article")
+        if (wikiVs.collapsedGroups && typeof wikiVs.collapsedGroups === "object") {
+          const cg = wikiVs.collapsedGroups as Record<string, unknown>
+          for (const [oldKey, newKey] of Object.entries(WIKI_STATUS_LITERAL_MAP)) {
+            if (cg[oldKey] !== undefined && cg[newKey] === undefined) {
+              cg[newKey] = cg[oldKey]
+              delete cg[oldKey]
+            }
+          }
+        }
+        // groupOrder for the wikiStatus axis — rewrite stub/article entries.
+        if (wikiVs.groupOrder && typeof wikiVs.groupOrder === "object") {
+          const go = wikiVs.groupOrder as Record<string, unknown>
+          for (const axis of Object.keys(go)) {
+            if (Array.isArray(go[axis])) {
+              go[axis] = (go[axis] as unknown[]).map(mapWikiStatusLiteral)
+            }
+          }
+        }
+        // filters with field === "status" (or "wikiStatus") — map values.
+        if (Array.isArray(wikiVs.filters)) {
+          wikiVs.filters = (wikiVs.filters as Array<Record<string, unknown>>).map((f) =>
+            f && (f.field === "status" || f.field === "wikiStatus")
+              ? { ...f, value: mapWikiStatusLiteral(f.value) }
+              : f
+          )
+        }
+      }
+    }
+
+    // 3) savedViews(space === "wiki"): viewState.filters status values.
+    if (Array.isArray(state.savedViews)) {
+      state.savedViews = (state.savedViews as Record<string, unknown>[]).map((v) => {
+        if (v.space !== "wiki") return v
+        const vs = v.viewState as Record<string, unknown> | undefined
+        if (!vs || !Array.isArray(vs.filters)) return v
+        return {
+          ...v,
+          viewState: {
+            ...vs,
+            filters: (vs.filters as Array<Record<string, unknown>>).map((f) =>
+              f && (f.field === "status" || f.field === "wikiStatus")
+                ? { ...f, value: mapWikiStatusLiteral(f.value) }
+                : f
+            ),
+          },
+        }
+      })
+    }
+
+    // 4) customQuickFilters(viewContext === "wiki"): rules status values.
+    if (Array.isArray(state.customQuickFilters)) {
+      state.customQuickFilters = (state.customQuickFilters as Record<string, unknown>[]).map((cf) => {
+        if (cf.viewContext !== "wiki" || !Array.isArray(cf.rules)) return cf
+        return {
+          ...cf,
+          rules: (cf.rules as Array<Record<string, unknown>>).map((r) =>
+            r && (r.field === "status" || r.field === "wikiStatus")
+              ? { ...r, value: mapWikiStatusLiteral(r.value) }
+              : r
+          ),
+        }
+      })
+    }
+  }
+
   return state as unknown as PlotState
 }

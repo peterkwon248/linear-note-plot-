@@ -35,11 +35,10 @@ import {
 } from "lucide-react"
 import { usePlotStore } from "@/lib/store"
 import { setActiveRoute } from "@/lib/table-route"
-import { KNOWLEDGE_INDEX_COLORS, WIKI_STATUS_HEX } from "@/lib/colors"
+import { KNOWLEDGE_INDEX_COLORS, SPACE_COLORS } from "@/lib/colors"
 import { cn } from "@/lib/utils"
 import { StatusShapeIcon } from "@/components/status-icon"
-import { IconWikiStub, IconWikiArticle } from "@/components/plot-icons"
-import { isWikiStub } from "@/lib/wiki-utils"
+import { IconWiki } from "@/components/plot-icons"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -194,21 +193,13 @@ export function BookContextNav({
                     {note ? (
                       <StatusShapeIcon status={note.status} size={13} />
                     ) : article ? (
-                      isWikiStub(article) ? (
-                        <IconWikiStub
-                          size={13}
-                          aria-label="Stub"
-                          style={{ color: WIKI_STATUS_HEX.stub }}
-                          className="shrink-0"
-                        />
-                      ) : (
-                        <IconWikiArticle
-                          size={13}
-                          aria-label="Article"
-                          style={{ color: WIKI_STATUS_HEX.article }}
-                          className="shrink-0"
-                        />
-                      )
+                      // v151: single canonical wiki entity glyph (mixed book nav).
+                      <IconWiki
+                        size={13}
+                        aria-label="Wiki"
+                        style={{ color: SPACE_COLORS.wiki }}
+                        className="shrink-0"
+                      />
                     ) : null}
                     <span className={cn("flex-1 truncate", isAuto && "text-foreground/70")}>
                       {title}

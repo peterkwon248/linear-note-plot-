@@ -25,9 +25,8 @@ import type { ResolvedBookItem } from "@/lib/books/resolver"
 import { Folder as PhFolder, BookOpen as PhBookOpen, Hash as PhHash, Sticker as PhSticker } from "lucide-react"
 import { toast } from "sonner"
 import { StatusShapeIcon } from "@/components/status-icon"
-import { IconWikiStub, IconWikiArticle } from "@/components/plot-icons"
-import { isWikiStub } from "@/lib/wiki-utils"
-import { WIKI_STATUS_HEX } from "@/lib/colors"
+import { IconWiki } from "@/components/plot-icons"
+import { SPACE_COLORS } from "@/lib/colors"
 import { GripVertical as DotsSixVertical, ChevronUp as CaretUp, ChevronDown as CaretDown, X as PhX, TriangleAlert as Warning } from "lucide-react"
 import { cn } from "@/lib/utils"
 
@@ -157,11 +156,8 @@ export function BookItemRow({
     const wiki = wikiArticles.find((w) => w.id === item.refId)
     if (wiki) {
       title = wiki.title || "Untitled"
-      icon = isWikiStub(wiki) ? (
-        <IconWikiStub size={14} style={{ color: WIKI_STATUS_HEX.stub }} />
-      ) : (
-        <IconWikiArticle size={14} style={{ color: WIKI_STATUS_HEX.article }} />
-      )
+      // v151: single canonical wiki entity glyph (mixed book-item context).
+      icon = <IconWiki size={14} style={{ color: SPACE_COLORS.wiki }} />
     } else {
       isStale = true
     }

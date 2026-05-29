@@ -47,7 +47,7 @@ import {
   FoldVertical as ArrowsInLineVertical,
   Circle as DotOutline,
 } from "lucide-react"
-import { WIKI_STATUS_HEX } from "@/lib/colors"
+import { NOTE_STATUS_HEX } from "@/lib/colors"
 import type { WikiArticle, EntityEventType } from "@/lib/types"
 import type { LucideIcon as Icon } from "lucide-react"
 
@@ -150,7 +150,7 @@ export interface MarkerConfig {
 
 export const EVENT_MARKER_CONFIG: Partial<Record<EntityEventType, MarkerConfig>> = {
   // Lifecycle
-  created:    { icon: Plus,                  color: WIKI_STATUS_HEX.article,   label: "Created" },
+  created:    { icon: Plus,                  color: NOTE_STATUS_HEX.done,      label: "Created" },
   updated:    { icon: PencilSimple,          color: "#3b82f6",                  label: "Updated" },
   opened:     { icon: Eye,                   color: "var(--muted-foreground)",  label: "Opened" },
   trashed:    { icon: Trash,                 color: "#ef4444",                  label: "Trashed" },
