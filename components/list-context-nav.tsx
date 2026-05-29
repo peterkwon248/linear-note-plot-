@@ -5,19 +5,37 @@
  * BookContextNav). Rendered in the editor header when the current entity was
  * opened from a list/board/grid screen and no book context is active.
  *
- *   ← {label}   N / M   ← →
+ *   ‹ {label} ⌄   N / M   [progress]   ‹ ›
+ *
+ * The label is a dropdown trigger (TOC parity with BookContextNav): it opens
+ * the frozen list's items so the user can jump to any of them, with a
+ * "Back to {label}" footer to return to the list screen. When no items are
+ * supplied it degrades to a plain back link.
  *
  * Pane-aware via the parent: the mount site (note-editor / WikiView) reads
  * its pane's listNavContext through useListContextNav and supplies the
- * prev/next/back handlers. This component is presentational only.
- *
- * Styling mirrors BookContextNav for visual parity in the header.
+ * items + prev/next/back/jump handlers. This component is presentational only.
  *
  * Spec: docs/01-plan/features/list-context-navigation.plan.md §4.
  */
 
-import { ChevronLeft as CaretLeft, ChevronRight as CaretRight } from "lucide-react"
+import {
+  ChevronLeft as CaretLeft,
+  ChevronRight as CaretRight,
+  ChevronDown as CaretDown,
+  Check,
+} from "lucide-react"
 import { cn } from "@/lib/utils"
+import { StatusShapeIcon } from "@/components/status-icon"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import type { ListNavItem } from "@/hooks/use-list-context-nav"
 
 interface ListContextNavProps {
   /** Screen label ("All Notes" / "Backlog" / folder name / view name …). */
@@ -26,30 +44,95 @@ interface ListContextNavProps {
   index: number
   /** Total entities in the frozen list. */
   total: number
+  /** Frozen-order items for the TOC dropdown. When omitted, label is a plain back link. */
+  items?: ListNavItem[] | null
   onPrev: () => void
   onNext: () => void
   /** Return to the originating list screen. */
   onBack: () => void
+  /** Jump to a specific index (TOC dropdown). Required for the dropdown to render. */
+  onJumpTo?: (index: number) => void
 }
 
-export function ListContextNav({ label, index, total, onPrev, onNext, onBack }: ListContextNavProps) {
+export function ListContextNav({
+  label,
+  index,
+  total,
+  items,
+  onPrev,
+  onNext,
+  onBack,
+  onJumpTo,
+}: ListContextNavProps) {
   // Render-time guard (caller also gates on active !== null).
   if (total === 0 || index < 0) return null
 
   const canPrev = index > 0
   const canNext = index < total - 1
+  const tocAvailable = !!items && items.length > 0 && !!onJumpTo
 
   return (
     <div className="flex items-center gap-1.5">
-      <button
-        type="button"
-        onClick={onBack}
-        className="group flex items-center gap-1 rounded-md px-1 py-0.5 text-2xs text-muted-foreground transition-colors hover:bg-hover-bg hover:text-foreground"
-        title={`Back to ${label}`}
-      >
-        <CaretLeft size={12} strokeWidth={2} className="text-muted-foreground/70 group-hover:text-foreground" />
-        <span className="max-w-[160px] truncate font-medium">{label}</span>
-      </button>
+      {tocAvailable ? (
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button
+              type="button"
+              className="group flex items-center gap-1 rounded-md px-1 py-0.5 text-2xs text-muted-foreground transition-colors hover:bg-hover-bg hover:text-foreground"
+              title={`${label} — open list`}
+              aria-label="Open list"
+            >
+              <CaretLeft size={12} strokeWidth={2} className="text-muted-foreground/70 group-hover:text-foreground" />
+              <span className="max-w-[160px] truncate font-medium">{label}</span>
+              <CaretDown size={10} strokeWidth={2.5} className="text-muted-foreground/50 group-hover:text-foreground/70" />
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="start" className="w-72 max-h-[60vh] overflow-y-auto">
+            <DropdownMenuLabel className="text-2xs text-muted-foreground">
+              {label}
+              <span className="ml-1 text-muted-foreground/60">· {total} {total === 1 ? "item" : "items"}</span>
+            </DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            {items!.map((item, idx) => {
+              const isActive = idx === index
+              return (
+                <DropdownMenuItem
+                  key={item.id}
+                  onClick={() => onJumpTo!(idx)}
+                  className={cn(
+                    "flex items-center gap-2 px-2 py-1.5 text-note cursor-pointer",
+                    isActive && "bg-accent/10 text-accent",
+                  )}
+                >
+                  <span className="flex h-4 w-5 shrink-0 items-center justify-center text-2xs tabular-nums text-muted-foreground/60">
+                    {isActive ? <Check size={11} strokeWidth={2.5} className="text-accent" /> : idx + 1}
+                  </span>
+                  {item.status && <StatusShapeIcon status={item.status} size={13} />}
+                  <span className="flex-1 truncate">{item.title}</span>
+                </DropdownMenuItem>
+              )
+            })}
+            <DropdownMenuSeparator />
+            <DropdownMenuItem
+              onClick={onBack}
+              className="flex items-center gap-2 px-2 py-1.5 text-2xs text-muted-foreground cursor-pointer"
+            >
+              <CaretLeft size={11} strokeWidth={2} />
+              Back to {label}
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      ) : (
+        <button
+          type="button"
+          onClick={onBack}
+          className="group flex items-center gap-1 rounded-md px-1 py-0.5 text-2xs text-muted-foreground transition-colors hover:bg-hover-bg hover:text-foreground"
+          title={`Back to ${label}`}
+        >
+          <CaretLeft size={12} strokeWidth={2} className="text-muted-foreground/70 group-hover:text-foreground" />
+          <span className="max-w-[160px] truncate font-medium">{label}</span>
+        </button>
+      )}
       <span
         className="select-none text-2xs tabular-nums text-muted-foreground/70"
         title={`Item ${index + 1} of ${total} in this list`}

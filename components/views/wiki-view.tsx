@@ -840,6 +840,8 @@ export function WikiView() {
                     label={wikiListNav.active.label}
                     index={wikiListNav.active.index}
                     total={wikiListNav.active.total}
+                    items={wikiListNav.items}
+                    onJumpTo={wikiListNav.jumpTo}
                     onPrev={wikiListNav.goPrev}
                     onNext={wikiListNav.goNext}
                     onBack={() => { setSelectedWikiArticleId(null); wikiListNav.goBack() }}

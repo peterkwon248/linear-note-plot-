@@ -5,13 +5,15 @@
  * useBookContextNav).
  *
  * Reads the current pane's FROZEN `listNavContext` snapshot and exposes
- * prev / next / back handlers for the editor's "← {label} N/M →" bar.
+ * prev / next / jumpTo / back handlers for the editor's
+ * "‹ {label} ⌄  N / M  ‹ ›" bar (TOC dropdown parity with BookContextNav).
  *
  * Difference from useBookContextNav: a book is a persistent ordered entity,
  * so that hook re-resolves its items every render. A list snapshot, by
  * contrast, is frozen at open time — we navigate `ctx.ids` directly and never
  * re-derive it. Filter/group changes after opening don't disturb the peek
- * (Linear's stable list navigation).
+ * (Linear's stable list navigation). `items` resolves each frozen id to its
+ * current title + status (for the dropdown) but the id ORDER stays frozen.
  *
  * Priority: if both bookContext and listNavContext exist for a pane, the
  * editor renders BookContextNav (book anchor wins). The mount site checks
@@ -32,10 +34,20 @@ import {
   setActiveViewId,
 } from "@/lib/table-route"
 import { navigateToWikiArticle } from "@/lib/wiki-article-nav"
+import type { NoteStatus } from "@/lib/types"
+
+/** A frozen-list entry resolved for the TOC dropdown. */
+export interface ListNavItem {
+  id: string
+  title: string
+  status?: NoteStatus
+}
 
 export interface UseListContextNavReturn {
   /** Resolved active context for this pane, or null when none / entity not in snapshot. */
   active: { index: number; total: number; label: string } | null
+  /** Frozen-order items (title + status) for the dropdown, or null when no context. */
+  items: ListNavItem[] | null
   /** Open the previous entity in the frozen list. No-op at the first item. */
   goPrev: () => void
   /** Open the next entity in the frozen list. No-op at the last item. */
@@ -46,6 +58,8 @@ export interface UseListContextNavReturn {
    * so the mount site clears its own `selectedWikiArticleId` before calling.
    */
   goBack: () => void
+  /** Jump to a specific index in the frozen list (TOC dropdown). */
+  jumpTo: (index: number) => void
 }
 
 export function useListContextNav(
@@ -57,6 +71,8 @@ export function useListContextNav(
   const ctx = usePlotStore((s) => s.listNavContext?.[pane] ?? null)
   const setListNavContext = usePlotStore((s) => s.setListNavContext)
   const openNote = usePlotStore((s) => s.openNote)
+  const notes = usePlotStore((s) => s.notes)
+  const wikiArticles = usePlotStore((s) => s.wikiArticles)
 
   // Frozen snapshot: locate the mounted entity by refId. The snapshot's space
   // must match the entity kind — a notes list never navigates wiki articles
@@ -66,6 +82,18 @@ export function useListContextNav(
     if (ctx.space !== (kind === "note" ? "notes" : "wiki")) return -1
     return ctx.ids.indexOf(refId)
   }, [ctx, refId, kind])
+
+  // Dropdown items: resolve each FROZEN id → current title + status. The id
+  // order stays frozen; only the displayed title/status reflect live data.
+  const items = useMemo<ListNavItem[] | null>(() => {
+    if (!ctx) return null
+    const src = ctx.space === "notes" ? notes : wikiArticles
+    const byId = new Map(src.map((x) => [x.id, x]))
+    return ctx.ids.map((id) => {
+      const e = byId.get(id) as { title?: string; status?: NoteStatus } | undefined
+      return { id, title: e?.title || "Untitled", status: e?.status }
+    })
+  }, [ctx, notes, wikiArticles])
 
   const navigateTo = useCallback(
     (targetId: string, newIndex: number) => {
@@ -94,6 +122,14 @@ export function useListContextNav(
     navigateTo(ctx.ids[liveIndex + 1], liveIndex + 1)
   }, [ctx, liveIndex, navigateTo])
 
+  const jumpTo = useCallback(
+    (index: number) => {
+      if (!ctx || index < 0 || index >= ctx.ids.length || index === liveIndex) return
+      navigateTo(ctx.ids[index], index)
+    },
+    [ctx, liveIndex, navigateTo],
+  )
+
   const goBack = useCallback(() => {
     if (!ctx) return
     const space = ctx.space === "wiki" ? "wiki" : "notes"
@@ -119,5 +155,5 @@ export function useListContextNav(
       ? { index: liveIndex, total: ctx.ids.length, label: ctx.label }
       : null
 
-  return { active, goPrev, goNext, goBack }
+  return { active, items, goPrev, goNext, goBack, jumpTo }
 }
