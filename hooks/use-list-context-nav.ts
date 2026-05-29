@@ -11,13 +11,13 @@
  * Difference from useBookContextNav: a book is a persistent ordered entity,
  * so that hook re-resolves its items every render. A list snapshot, by
  * contrast, is frozen at open time — we navigate `ctx.ids` directly and never
- * re-derive it. Filter/group changes after opening don't disturb the peek
- * (Linear's stable list navigation). `items` resolves each frozen id to its
- * current title + status (for the dropdown) but the id ORDER stays frozen.
+ * re-derive it. `items`/`groups` resolve each frozen id to its current title +
+ * status (for the dropdown) but the id ORDER stays frozen. When the list was
+ * grouped (status/folder/…) `groups` carries section labels; otherwise it's
+ * null and the dropdown renders the flat `items`.
  *
  * Priority: if both bookContext and listNavContext exist for a pane, the
- * editor renders BookContextNav (book anchor wins). The mount site checks
- * `bookNav.active` first, then `listNav.active`.
+ * editor renders BookContextNav (book anchor wins).
  *
  * Spec: docs/01-plan/features/list-context-navigation.plan.md §4–§6.
  */
@@ -41,13 +41,23 @@ export interface ListNavItem {
   id: string
   title: string
   status?: NoteStatus
+  /** Position within the frozen `ids` (jumpTo target). */
+  index: number
+}
+
+/** A resolved group section for the TOC dropdown (status/folder/…). */
+export interface ListNavGroup {
+  label: string
+  items: ListNavItem[]
 }
 
 export interface UseListContextNavReturn {
   /** Resolved active context for this pane, or null when none / entity not in snapshot. */
   active: { index: number; total: number; label: string } | null
-  /** Frozen-order items (title + status) for the dropdown, or null when no context. */
+  /** Frozen-order items (flat) for the dropdown, or null when no context. */
   items: ListNavItem[] | null
+  /** Grouped sections for the dropdown (when opened from a grouped list), or null. */
+  groups: ListNavGroup[] | null
   /** Open the previous entity in the frozen list. No-op at the first item. */
   goPrev: () => void
   /** Open the next entity in the frozen list. No-op at the last item. */
@@ -83,17 +93,35 @@ export function useListContextNav(
     return ctx.ids.indexOf(refId)
   }, [ctx, refId, kind])
 
-  // Dropdown items: resolve each FROZEN id → current title + status. The id
-  // order stays frozen; only the displayed title/status reflect live data.
+  // Resolve a frozen id → current title + status (+ its index in `ids`).
+  const resolve = useCallback(
+    (byId: Map<string, { title?: string; status?: NoteStatus }>, id: string, index: number): ListNavItem => {
+      const e = byId.get(id)
+      return { id, title: e?.title || "Untitled", status: e?.status, index }
+    },
+    [],
+  )
+
+  // Flat dropdown items (always available). Order stays frozen.
   const items = useMemo<ListNavItem[] | null>(() => {
     if (!ctx) return null
     const src = ctx.space === "notes" ? notes : wikiArticles
-    const byId = new Map(src.map((x) => [x.id, x]))
-    return ctx.ids.map((id) => {
-      const e = byId.get(id) as { title?: string; status?: NoteStatus } | undefined
-      return { id, title: e?.title || "Untitled", status: e?.status }
-    })
-  }, [ctx, notes, wikiArticles])
+    const byId = new Map(src.map((x) => [x.id, x])) as Map<string, { title?: string; status?: NoteStatus }>
+    return ctx.ids.map((id, idx) => resolve(byId, id, idx))
+  }, [ctx, notes, wikiArticles, resolve])
+
+  // Grouped sections (status/folder/…) — only when the list was grouped at
+  // capture time. Each item's `index` points back into the flat frozen `ids`.
+  const groups = useMemo<ListNavGroup[] | null>(() => {
+    if (!ctx?.groups) return null
+    const src = ctx.space === "notes" ? notes : wikiArticles
+    const byId = new Map(src.map((x) => [x.id, x])) as Map<string, { title?: string; status?: NoteStatus }>
+    const idIndex = new Map(ctx.ids.map((id, idx) => [id, idx]))
+    return ctx.groups.map((g) => ({
+      label: g.label,
+      items: g.ids.map((id) => resolve(byId, id, idIndex.get(id) ?? -1)),
+    }))
+  }, [ctx, notes, wikiArticles, resolve])
 
   const navigateTo = useCallback(
     (targetId: string, newIndex: number) => {
@@ -155,5 +183,5 @@ export function useListContextNav(
       ? { index: liveIndex, total: ctx.ids.length, label: ctx.label }
       : null
 
-  return { active, items, goPrev, goNext, goBack, jumpTo }
+  return { active, items, groups, goPrev, goNext, goBack, jumpTo }
 }

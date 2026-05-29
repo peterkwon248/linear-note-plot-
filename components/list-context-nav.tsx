@@ -9,12 +9,13 @@
  *
  * The label is a dropdown trigger (TOC parity with BookContextNav): it opens
  * the frozen list's items so the user can jump to any of them, with a
- * "Back to {label}" footer to return to the list screen. When no items are
- * supplied it degrades to a plain back link.
+ * "Back to {label}" footer to return to the list screen. When the list was
+ * grouped (status/folder/…) the dropdown renders section headers per group;
+ * otherwise a flat list. With no items it degrades to a plain back link.
  *
- * Pane-aware via the parent: the mount site (note-editor / WikiView) reads
- * its pane's listNavContext through useListContextNav and supplies the
- * items + prev/next/back/jump handlers. This component is presentational only.
+ * Pane-aware via the parent: the mount site (note-editor / WikiView) reads its
+ * pane's listNavContext through useListContextNav and supplies items + groups
+ * + prev/next/back/jump handlers. Presentational only.
  *
  * Spec: docs/01-plan/features/list-context-navigation.plan.md §4.
  */
@@ -35,7 +36,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import type { ListNavItem } from "@/hooks/use-list-context-nav"
+import type { ListNavItem, ListNavGroup } from "@/hooks/use-list-context-nav"
 
 interface ListContextNavProps {
   /** Screen label ("All Notes" / "Backlog" / folder name / view name …). */
@@ -44,13 +45,15 @@ interface ListContextNavProps {
   index: number
   /** Total entities in the frozen list. */
   total: number
-  /** Frozen-order items for the TOC dropdown. When omitted, label is a plain back link. */
+  /** Frozen-order items for the TOC dropdown (flat). */
   items?: ListNavItem[] | null
+  /** Grouped sections for the dropdown (when opened from a grouped list). */
+  groups?: ListNavGroup[] | null
   onPrev: () => void
   onNext: () => void
   /** Return to the originating list screen. */
   onBack: () => void
-  /** Jump to a specific index (TOC dropdown). Required for the dropdown to render. */
+  /** Jump to a specific frozen index (TOC dropdown). Required for the dropdown to render. */
   onJumpTo?: (index: number) => void
 }
 
@@ -59,6 +62,7 @@ export function ListContextNav({
   index,
   total,
   items,
+  groups,
   onPrev,
   onNext,
   onBack,
@@ -69,7 +73,28 @@ export function ListContextNav({
 
   const canPrev = index > 0
   const canNext = index < total - 1
-  const tocAvailable = !!items && items.length > 0 && !!onJumpTo
+  const grouped = !!groups && groups.length > 0
+  const tocAvailable = !!onJumpTo && (grouped || (!!items && items.length > 0))
+
+  const renderItem = (item: ListNavItem) => {
+    const isActive = item.index === index
+    return (
+      <DropdownMenuItem
+        key={item.id}
+        onClick={() => onJumpTo!(item.index)}
+        className={cn(
+          "flex items-center gap-2 px-2 py-1.5 text-note cursor-pointer",
+          isActive && "bg-accent/10 text-accent",
+        )}
+      >
+        <span className="flex h-4 w-5 shrink-0 items-center justify-center text-2xs tabular-nums text-muted-foreground/60">
+          {isActive ? <Check size={11} strokeWidth={2.5} className="text-accent" /> : item.index + 1}
+        </span>
+        {item.status && <StatusShapeIcon status={item.status} size={13} />}
+        <span className="flex-1 truncate">{item.title}</span>
+      </DropdownMenuItem>
+    )
+  }
 
   return (
     <div className="flex items-center gap-1.5">
@@ -88,30 +113,27 @@ export function ListContextNav({
             </button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="start" className="w-72 max-h-[60vh] overflow-y-auto">
-            <DropdownMenuLabel className="text-2xs text-muted-foreground">
-              {label}
-              <span className="ml-1 text-muted-foreground/60">· {total} {total === 1 ? "item" : "items"}</span>
-            </DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            {items!.map((item, idx) => {
-              const isActive = idx === index
-              return (
-                <DropdownMenuItem
-                  key={item.id}
-                  onClick={() => onJumpTo!(idx)}
-                  className={cn(
-                    "flex items-center gap-2 px-2 py-1.5 text-note cursor-pointer",
-                    isActive && "bg-accent/10 text-accent",
-                  )}
-                >
-                  <span className="flex h-4 w-5 shrink-0 items-center justify-center text-2xs tabular-nums text-muted-foreground/60">
-                    {isActive ? <Check size={11} strokeWidth={2.5} className="text-accent" /> : idx + 1}
-                  </span>
-                  {item.status && <StatusShapeIcon status={item.status} size={13} />}
-                  <span className="flex-1 truncate">{item.title}</span>
-                </DropdownMenuItem>
-              )
-            })}
+            {grouped ? (
+              groups!.map((g, gi) => (
+                <div key={`${g.label}-${gi}`}>
+                  {gi > 0 && <DropdownMenuSeparator />}
+                  <DropdownMenuLabel className="text-2xs text-muted-foreground">
+                    {g.label}
+                    <span className="ml-1 text-muted-foreground/60">· {g.items.length}</span>
+                  </DropdownMenuLabel>
+                  {g.items.map(renderItem)}
+                </div>
+              ))
+            ) : (
+              <>
+                <DropdownMenuLabel className="text-2xs text-muted-foreground">
+                  {label}
+                  <span className="ml-1 text-muted-foreground/60">· {total} {total === 1 ? "item" : "items"}</span>
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                {items!.map(renderItem)}
+              </>
+            )}
             <DropdownMenuSeparator />
             <DropdownMenuItem
               onClick={onBack}
@@ -139,8 +161,7 @@ export function ListContextNav({
       >
         {index + 1} <span className="text-muted-foreground/40">/</span> {total}
       </span>
-      {/* Mini progress bar — parity with BookContextNav. Inline ~36px track,
-          2px accent fill. Hidden on mobile to spare header width. */}
+      {/* Mini progress bar — parity with BookContextNav. */}
       {total > 0 && (
         <div
           className="hidden h-1 w-9 shrink-0 overflow-hidden rounded-full bg-muted-foreground/15 md:block"

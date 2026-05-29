@@ -520,6 +520,7 @@ export function NoteEditor({ noteId: propNoteId, onClose, pane = 'primary', defa
                 index={listNav.active.index}
                 total={listNav.active.total}
                 items={listNav.items}
+                groups={listNav.groups}
                 onJumpTo={listNav.jumpTo}
                 onPrev={listNav.goPrev}
                 onNext={listNav.goNext}

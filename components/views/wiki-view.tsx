@@ -841,6 +841,7 @@ export function WikiView() {
                     index={wikiListNav.active.index}
                     total={wikiListNav.active.total}
                     items={wikiListNav.items}
+                    groups={wikiListNav.groups}
                     onJumpTo={wikiListNav.jumpTo}
                     onPrev={wikiListNav.goPrev}
                     onNext={wikiListNav.goNext}

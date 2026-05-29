@@ -33,3 +33,24 @@ export function flattenNoteGroupIds(groups: NoteGroup[]): string[] {
 export function flattenWikiGroupIds(groups: WikiGroup[]): string[] {
   return groups.flatMap((g) => g.articles.map((a) => a.id))
 }
+
+/** A group section for the editor's list-nav dropdown — resolved label + ids. */
+export interface ListNavGroupSnapshot {
+  label: string
+  ids: string[]
+}
+
+/** Note groups → list-nav group snapshot (label already resolved by the
+ *  view-engine: status명 / folder명 / …). Sub-grouped groups flatten to their
+ *  leaf ids under the top-level label. */
+export function noteGroupsToListNav(groups: NoteGroup[]): ListNavGroupSnapshot[] {
+  return groups.map((g) => ({
+    label: g.label,
+    ids: g.subGroups && g.subGroups.length > 0 ? flattenNoteGroupIds(g.subGroups) : g.notes.map((n) => n.id),
+  }))
+}
+
+/** Wiki groups → list-nav group snapshot. */
+export function wikiGroupsToListNav(groups: WikiGroup[]): ListNavGroupSnapshot[] {
+  return groups.map((g) => ({ label: g.label, ids: g.articles.map((a) => a.id) }))
+}

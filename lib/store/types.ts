@@ -99,6 +99,12 @@ export interface ListNavContext {
   backViewId?: string | null
   backTagId?: string | null
   backLabelId?: string | null
+  /** Optional grouping snapshot — each group's label (already resolved by the
+   *  view-engine: status명 / folder명 / …) + its frozen ids. Present when the
+   *  entity was opened from a grouped list → the editor dropdown renders
+   *  sectioned (Backlog / Todo / …). Absent (flat list / grid no-group) → the
+   *  dropdown falls back to a flat list from `ids`. Session-only. */
+  groups?: { label: string; ids: string[] }[]
 }
 
 /**

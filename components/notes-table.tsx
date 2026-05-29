@@ -60,6 +60,7 @@ import {
 import { usePlotStore } from "@/lib/store"
 import { usePaneOpenNote } from "@/components/workspace/pane-context"
 import { useListNavCapture } from "@/hooks/use-list-nav-capture"
+import { noteGroupsToListNav } from "@/lib/list-nav/flatten"
 import { useBacklinksIndex } from "@/lib/search/use-backlinks-index"
 import { getSnoozeTime, type SnoozePreset } from "@/lib/queries/notes"
 import { useNotesView } from "@/lib/view-engine/use-notes-view"
@@ -1565,14 +1566,14 @@ export function NotesTable({
                               viewMode={viewState.viewMode}
                               onOpen={() => {
                                 if (onRowClick) { onRowClick(item.note.id); return }
-                                captureListNav(orderedNoteIds, item.note.id, title ?? "Notes")
+                                captureListNav(orderedNoteIds, item.note.id, title ?? "Notes", noteGroupsToListNav(groups))
                                 openNote(item.note.id)
                               }}
                               onClick={(e: React.MouseEvent) => {
                                 const flatIndex = flatNotes.findIndex((n) => n.id === item.note.id)
                                 handleRowClick(item.note.id, flatIndex, e)
                               }}
-                              onDoubleClick={() => { captureListNav(orderedNoteIds, item.note.id, title ?? "Notes"); openNote(item.note.id) }}
+                              onDoubleClick={() => { captureListNav(orderedNoteIds, item.note.id, title ?? "Notes", noteGroupsToListNav(groups)); openNote(item.note.id) }}
                               onStatus={(s) => updateNote(item.note.id, { status: s })}
                               onSetFolder={(folderId) => updateNote(item.note.id, { folderIds: folderId ? [folderId] : [] })}
                               onRemoveFolder={() => updateNote(item.note.id, { folderIds: [] })}

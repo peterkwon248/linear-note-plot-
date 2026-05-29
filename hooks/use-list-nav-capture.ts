@@ -47,7 +47,14 @@ export function useListNavCapture(space: "notes" | "wiki") {
   const fallbackRoute = space === "wiki" ? "/wiki" : "/notes"
 
   return useCallback(
-    (orderedIds: string[], openedId: string, label: string) => {
+    (
+      orderedIds: string[],
+      openedId: string,
+      label: string,
+      /** Optional grouping snapshot (status/folder/…) for the editor dropdown.
+       *  Omit for flat lists / grid no-group. */
+      groups?: { label: string; ids: string[] }[],
+    ) => {
       const index = orderedIds.indexOf(openedId)
       if (index < 0 || orderedIds.length === 0) {
         // Opened entity isn't in the visible set (shouldn't happen) — clear so
@@ -65,6 +72,9 @@ export function useListNavCapture(space: "notes" | "wiki") {
         backTagId: tagId,
         backLabelId: labelId,
         backViewId: viewId,
+        // Only attach when there are ≥2 groups — a single group is just a flat
+        // list, no need for section headers.
+        groups: groups && groups.length > 1 ? groups : undefined,
       })
     },
     [pane, setListNavContext, space, route, fallbackRoute, folderId, tagId, labelId, viewId],
