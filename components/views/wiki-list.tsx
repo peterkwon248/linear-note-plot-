@@ -11,6 +11,8 @@ import { getPlannedDateForWiki } from "@/lib/store/hook-selectors"
 import { StatusShapeIcon } from "@/components/status-icon"
 import { STATUS_CONFIG } from "@/components/note-fields"
 import { WIKI_STATUS_ORDER } from "@/lib/view-engine/wiki-list-pipeline"
+import { useListNavCapture } from "@/hooks/use-list-nav-capture"
+import { flattenWikiGroupIds } from "@/lib/list-nav/flatten"
 import type { WikiArticle, WikiCategory, WikiStatus } from "@/lib/types"
 import type { GroupBy } from "@/lib/view-engine/types"
 import type { WikiGroup } from "@/lib/view-engine/wiki-list-pipeline"
@@ -706,6 +708,27 @@ export function WikiList({
     dashFilter === "all" || note.status === dashFilter
   const visibleNotes = sortedFilteredWikiNotes.filter(matchesDashFilter)
 
+  // list-context-navigation: freeze the screen's visible-ordered article IDs.
+  // Mirror the render branches below — grouped uses wikiGroups (status-filtered
+  // per group, matching the grouped map), flat uses visibleNotes. Frozen at
+  // click time; passed to captureListNav before onOpenArticle.
+  const captureListNav = useListNavCapture("wiki")
+  const isGroupedRender =
+    !!groupBy &&
+    groupBy !== "none" &&
+    !!wikiGroups &&
+    wikiGroups.length > 0 &&
+    !(wikiGroups.length === 1 && wikiGroups[0].key === "_all")
+  const orderedArticleIds = useMemo(
+    () =>
+      isGroupedRender && wikiGroups
+        ? flattenWikiGroupIds(
+            wikiGroups.map((g) => ({ ...g, articles: g.articles.filter(matchesDashFilter) })),
+          )
+        : visibleNotes.map((n) => n.id),
+    [isGroupedRender, wikiGroups, visibleNotes, dashFilter],
+  )
+
   const isAllSelected = visibleNotes.length > 0 && selectedIds ? selectedIds.size >= visibleNotes.length && visibleNotes.every((n) => selectedIds.has(n.id)) : false
   const isPartiallySelected = selectedIds ? selectedIds.size > 0 && !isAllSelected : false
 
@@ -899,7 +922,7 @@ export function WikiList({
                             note={note}
                             backlinkCount={backlinkCounts.get(note.id) ?? 0}
                             index={idx}
-                            onClick={() => onOpenArticle(note.id)}
+                            onClick={() => { captureListNav(orderedArticleIds, note.id, "Wiki"); onOpenArticle(note.id) }}
                             onMerge={onMergeArticle ? () => onMergeArticle(note.id) : undefined}
                             onSplit={onSplitArticle ? () => onSplitArticle(note.id) : undefined}
                             onDelete={onDeleteArticle ? () => onDeleteArticle(note.id) : undefined}
@@ -933,7 +956,7 @@ export function WikiList({
                   note={note}
                   backlinkCount={backlinkCounts.get(note.id) ?? 0}
                   index={idx}
-                  onClick={() => onOpenArticle(note.id)}
+                  onClick={() => { captureListNav(orderedArticleIds, note.id, "Wiki"); onOpenArticle(note.id) }}
                   onMerge={onMergeArticle ? () => onMergeArticle(note.id) : undefined}
                   onSplit={onSplitArticle ? () => onSplitArticle(note.id) : undefined}
                   onDelete={onDeleteArticle ? () => onDeleteArticle(note.id) : undefined}

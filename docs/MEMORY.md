@@ -8,6 +8,29 @@
 
 ---
 
+## ✅ 2026-05-29 (심야) — list-context-navigation 구현 (Linear 리스트 peek 네비) ⭐⭐⭐⭐
+
+**범위**: 리스트/보드/그리드에서 노트·위키 열면 그 화면 visible-ordered ids를 freeze 캡처 → 에디터 "← {label} N/M →" prev/next + 복귀. bookContext/BookContextNav 일반화한 **형제**. branch claude/hardcore-gauss-c01d27 → main squash. tsc 0 / build / test 282 / Architect APPROVED / preview 런타임 검증.
+
+### 완료
+- **인프라**(직접): `ListNavContext` + `listNavContext:{primary,secondary}` + `setListNavContext` (세션 한정 strip/reset) · `lib/list-nav/flatten.ts` · `hooks/use-list-context-nav.ts`(freeze ids prev/next/back, pane-aware) · `components/list-context-nav.tsx` · `hooks/use-list-nav-capture.ts`(route/filter 자동 캡처 헬퍼).
+- **mount**: note-editor + wiki-view (우선순위 bookContext > listNavContext).
+- **capture**(executor-high + Architect): notes-table/board + wiki-list/board/grid **5뷰**. notes-grid 보류.
+
+### 핵심 결정 (영구)
+- **freeze 스냅샷**: list-nav는 클릭 시점 ids 고정(book은 영속이라 매 렌더 재계산). 필터 변경 후에도 "그때 그 리스트" 안정.
+- **세션 한정 = store version 무관**: partialize strip → IDB 무영향, **v152 유지**(bump 불필요).
+- **클릭 동작 보존**: 노트=더블클릭(단일=preview 기존동작), 위키=단일클릭 → 캡처 지점 다름.
+- **notes-grid 비대칭 = 다음 세션 P0 (사용자 지정)**: notes-grid는 preview-only(에디터 직접진입 없음)라 보류, wiki-grid는 적용됨.
+
+### 기술 학습 (영구)
+- freeze vs 재계산: `liveIndex = ctx.ids.indexOf(refId)` (book nav는 resolvedContentItems 재계산).
+- 세션 한정 store 필드는 version bump 불필요(partialize strip).
+- `setActiveFolderId/TagId/LabelId/ViewId` 상호배타 → goBack if/else-if 분기 복원.
+- 위키 secondary pane 네비 unmount 한계(book nav와 동일 seam, 수용).
+
+---
+
 ## ✅ 2026-05-29 (밤) — Wiki status v151 + 사이드바 정합 + 노트 merge/split + Smart Book Preset (store v152) ⭐⭐⭐⭐
 
 **범위**: NoteStatus 4단계를 Wiki로 확장(v151) + 위키/노트 사이드바·merge/split 정합 + Smart Book Preset 시스템 신설(v152). branch claude/smart-book-preset(a259061 위키 기반) → main squash merge (PR #490 supersede). build/tsc/test green + Architect APPROVED + preview runtime 검증.

@@ -79,6 +79,8 @@ import { WikiSplitPage } from "./wiki-split-page"
 import { useSaveViewProps } from "@/lib/view-engine/use-save-view-props"
 import { useBookContextNav } from "@/hooks/use-book-context-nav"
 import { BookContextNav } from "@/components/books/book-context-nav"
+import { useListContextNav } from "@/hooks/use-list-context-nav"
+import { ListContextNav } from "@/components/list-context-nav"
 // 2026-05-24: GalleryView import removed — gallery mode deprecated
 import { WikiTimelineView } from "@/components/views/wiki-timeline-view"
 import { WikiGridView } from "@/components/views/wiki-grid-view"
@@ -200,6 +202,10 @@ export function WikiView() {
   // books across two panes. Auto-clears when this article is no longer
   // in the recorded book (mid-session removal etc.).
   const wikiBookNav = useBookContextNav("wiki", selectedWikiArticleId)
+
+  // List peek navigation — frozen snapshot from the wiki list/board/grid the
+  // article was opened from. Lower priority than bookContext.
+  const wikiListNav = useListContextNav("wiki", selectedWikiArticleId)
 
   // Phase 4: ⌘[ / ⌘] — in-book navigation (only active when this wiki
   // article is anchored to a book context). Skips chapter-headings.
@@ -810,6 +816,18 @@ export function WikiView() {
                     onJumpTo={wikiBookNav.jumpTo}
                     items={wikiBookNav.items}
                     currentChapter={wikiBookNav.currentChapter}
+                  />
+                </div>
+              )}
+              {!wikiBookNav.active && wikiListNav.active && (
+                <div className="hidden md:flex">
+                  <ListContextNav
+                    label={wikiListNav.active.label}
+                    index={wikiListNav.active.index}
+                    total={wikiListNav.active.total}
+                    onPrev={wikiListNav.goPrev}
+                    onNext={wikiListNav.goNext}
+                    onBack={() => { setSelectedWikiArticleId(null); wikiListNav.goBack() }}
                   />
                 </div>
               )}

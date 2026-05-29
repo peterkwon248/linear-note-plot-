@@ -51,6 +51,25 @@
 
 ---
 
+## 🚀 2026-05-29 (심야) — list-context-navigation 구현 (Linear 리스트 peek 네비) ⭐⭐⭐⭐
+
+**범위**: 리스트/보드/그리드에서 노트·위키 열면 visible-ordered ids freeze 캡처 → 에디터 "← {label} N/M →" prev/next + 복귀. bookContext 일반화 형제. branch claude/hardcore-gauss-c01d27 → main squash. tsc 0 / build / test 282 / Architect APPROVED / preview 검증.
+
+### 완료
+- 인프라: `ListNavContext` + `setListNavContext`(세션 한정) + `lib/list-nav/flatten.ts` + `hooks/use-list-context-nav.ts` + `components/list-context-nav.tsx` + `hooks/use-list-nav-capture.ts`.
+- mount: note-editor + wiki-view (bookContext > listNavContext 우선순위).
+- capture: notes-table/board + wiki-list/board/grid **5뷰**. notes-grid 보류.
+
+### 핵심 결정 (영구)
+- freeze 스냅샷(클릭 시점 ids 고정, book은 재계산) · 세션 한정 → store version 무관(v152) · 노트=더블클릭/위키=단일클릭 캡처 · **notes-grid 비대칭 = 다음 세션 P0**(사용자 지정).
+
+### 다음 우선순위 (P0)
+1. **P0 #0**: notes-grid list-nav 비대칭 브레인스토밍 (사용자 최우선 지정).
+2. **P0 #1** (carry): Books kind nav (`bookKindFilter` external store).
+3. **P0 #2** (carry): Entity Insights 통일 (recharts 표준화 + Ontology/entity 역할 분리).
+
+---
+
 ## 🚀 2026-05-29 (밤) — Wiki status v151 + 사이드바 정합 + 노트 merge/split + Smart Book Preset (store v152) ⭐⭐⭐⭐
 
 **범위**: NoteStatus 4단계를 Wiki로 확장(v151) + 위키/노트 사이드바·merge/split 정합 + Smart Book Preset 신설(v152). branch claude/smart-book-preset → main squash merge (PR #490 supersede). build/tsc/test green + Architect APPROVED + preview 검증.

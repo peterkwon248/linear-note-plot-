@@ -76,6 +76,8 @@ import { BoardWorkbench } from "@/components/board-workbench"
 import { useFolderPickerData } from "@/components/folder-picker"
 import { NoteContextMenuItems } from "@/components/note-context-menu-items"
 import { usePane } from "@/components/workspace/pane-context"
+import { useListNavCapture } from "@/hooks/use-list-nav-capture"
+import { flattenNoteGroupIds } from "@/lib/list-nav/flatten"
 import type { Note, NoteStatus, NotePriority, TriageStatus, Folder, Tag, Label } from "@/lib/types"
 import { FilterChipBar } from "@/components/filter-bar"
 import { ViewHeader } from "@/components/view-header"
@@ -790,6 +792,9 @@ export function NotesBoard({
   const updateNote = usePlotStore((s) => s.updateNote)
   const batchUpdateNotes = usePlotStore((s) => s.batchUpdateNotes)
   const openNote = usePlotStore((s) => s.openNote)
+  // list-context-navigation: freeze board column order (L→R, cards top→bottom)
+  // into listNavContext right before opening (editor "← N/M →").
+  const captureListNav = useListNavCapture("notes")
   const createNote = usePlotStore((s) => s.createNote)
   const triageKeep = usePlotStore((s) => s.triageKeep)
   const triageSnooze = usePlotStore((s) => s.triageSnooze)
@@ -1366,6 +1371,7 @@ export function NotesBoard({
                       onRowClick?.(note.id)
                     }}
                     onDoubleClick={() => {
+                      captureListNav(flattenNoteGroupIds(resolvedGroups), note.id, title ?? "Notes")
                       openNote(note.id)
                     }}
                     onSelect={handleCardSelect}
@@ -1383,7 +1389,7 @@ export function NotesBoard({
                       updateNote(note.id, { pinned: nextPinned })
                       toast.success(nextPinned ? "Pinned note" : "Unpinned note")
                     }}
-                    onOpen={() => openNote(note.id)}
+                    onOpen={() => { captureListNav(flattenNoteGroupIds(resolvedGroups), note.id, title ?? "Notes"); openNote(note.id) }}
                     onMergeWith={() => setMergePickerOpen(true, note.id)}
                     onLinkWith={() => setLinkPickerOpen(true, note.id)}
                     onShowConnected={(direction) => {
