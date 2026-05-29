@@ -62,7 +62,7 @@ export function NotesGridShell({
   const openNote = usePlotStore((s) => s.openNote)
   const sidePanelOpen = usePlotStore((s) => s.sidePanelOpen)
 
-  const { flatNotes, viewState, updateViewState } = useNotesView(context, {
+  const { flatNotes, groups, viewState, updateViewState } = useNotesView(context, {
     backlinksMap,
     folderId,
     tagId,
@@ -280,6 +280,8 @@ export function NotesGridShell({
 
       <NotesGridView
         notes={flatNotes}
+        groups={groups}
+        groupBy={viewState.groupBy}
         onRowClick={onRowClick}
         onOpenEditor={(id) => openNote(id)}
         label={title ?? "Notes"}
