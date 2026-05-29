@@ -4,7 +4,6 @@ import { useMemo } from "react"
 import { usePlotStore } from "@/lib/store"
 import { useT } from "@/lib/i18n"
 import { setActiveRoute } from "@/lib/table-route"
-import { isWikiStub } from "@/lib/wiki-utils"
 import type { Note, WikiArticle } from "@/lib/types"
 import { KNOWLEDGE_INDEX_COLORS } from "@/lib/colors"
 import { IconNotes } from "@/components/plot-icons"
@@ -41,7 +40,9 @@ export function StatsRow() {
     const liveWiki = (wikiArticles as WikiArticle[]).filter(
       (w) => !(w as { trashed?: boolean }).trashed,
     )
-    const stubCount = liveWiki.filter((w) => isWikiStub(w)).length
+    // v151: "incomplete" wiki articles (status !== "done", i.e. still being
+    // worked) — the "needs work" signal for the Home tile sub-line.
+    const stubCount = liveWiki.filter((w) => w.status !== "done").length
 
     const liveTags = tags.filter((t: { trashed?: boolean }) => !t.trashed)
     const activeTagIds = new Set<string>()

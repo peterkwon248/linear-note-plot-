@@ -65,13 +65,15 @@ export interface TimeSeriesPoint {
   newWiki: number
   /** Cumulative internal edges (linksOut count) approximated by source createdAt. */
   totalEdges: number
-  /** Cumulative wiki articles (isWikiStub === false) at end of bucket. */
+  /** Cumulative "complete" wiki articles (status === "done") at end of bucket.
+   *  (v151 — was isWikiStub === false; field name kept for chart back-compat.) */
   totalArticles: number
-  /** Cumulative wiki stubs (isWikiStub === true) at end of bucket. */
+  /** Cumulative "incomplete" wiki articles (status !== "done", i.e. still being
+   *  worked) at end of bucket. (v151 — was isWikiStub === true.) */
   totalStubs: number
-  /** New articles (non-stub) created within the bucket. */
+  /** New "complete" (done) articles created within the bucket. */
   newArticles: number
-  /** New stubs created within the bucket. */
+  /** New "incomplete" (not-yet-done) articles created within the bucket. */
   newStubs: number
   /** Cumulative wiki-to-wiki link edges (linksOut on WikiArticle) approximated by source createdAt. */
   totalWikiEdges: number

@@ -27,7 +27,7 @@ import { computeForceConfig } from "@/lib/graph"
 import { RELATION_TYPE_CONFIG } from "@/lib/relation-helpers"
 import type { RelationType, Label, WikiCategory, Folder, Sticker, Book } from "@/lib/types"
 import type { GroupBy } from "@/lib/view-engine/types"
-import { GRAPH_NODE_HEX, GRAPH_CLUSTER_PALETTE, WIKI_STATUS_HEX, NOTE_STATUS_HEX } from "@/lib/colors"
+import { GRAPH_NODE_HEX, GRAPH_CLUSTER_PALETTE, NOTE_STATUS_HEX } from "@/lib/colors"
 import { NodeContextMenu } from "@/components/ontology/node-context-menu"
 import { useTheme } from "next-themes"
 import { LOD, VIEWPORT, NODE_THEME, FIT_CONFIG, MAX_VISIBLE_NODES, FORCE_CONFIG, SIM_CONFIG, NODE_SIZE, EDGE_STYLE, HULL, MINIMAP, LABEL_CONFIG, TOOLTIP_CONFIG, SELECTION, classifyTier, nodeRadius as configNodeRadius, getNodeRenderProps, getHullRenderProps, fadeOpacity } from "@/lib/graph/ontology-graph-config"
@@ -328,10 +328,9 @@ function getNodeBaseColor(node: OntologyNode, labels: Label[]): string {
     const label = labels.find((l) => l.id === node.labelId)
     if (label?.color) return label.color
   }
-  // Wiki nodes use the wiki entity color (violet) — NOT WIKI_STATUS_HEX.article
-  // (which is article-state emerald). The graph node represents the wiki entity
-  // regardless of stub/article state, so it inherits the entity color used by
-  // the sidebar/activity-bar/Home StatsRow.
+  // Wiki nodes use the wiki entity color (violet) — NOT a status color. The
+  // graph node represents the wiki entity regardless of its 4-stage status, so
+  // it inherits the entity color used by the sidebar/activity-bar/Home StatsRow.
   if (node.isWiki || node.nodeType === "wiki") return GRAPH_NODE_HEX.wiki    // violet (#8b5cf6)
   return STATUS_COLORS[node.status] ?? DEFAULT_NODE_COLOR
 }

@@ -51,6 +51,60 @@
 
 ---
 
+## 🚀 2026-05-29 (밤) — Wiki status v151 + 사이드바 정합 + 노트 merge/split + Smart Book Preset (store v152) ⭐⭐⭐⭐
+
+**범위**: NoteStatus 4단계를 Wiki로 확장(v151) + 위키/노트 사이드바·merge/split 정합 + Smart Book Preset 신설(v152). branch claude/smart-book-preset → main squash merge (PR #490 supersede). build/tsc/test green + Architect APPROVED + preview 검증.
+
+### 완료 (5건)
+1. **Wiki status 4단계 (v150→v151)**: `WikiArticle.status`(= NoteStatus). 자동 stub/article → 수동 backlog/todo/in_progress/done. 시딩 = onRehydrateStorage(content→done/empty→backlog, partialize가 blocks strip하므로). 색/아이콘/i18n Notes 공유. 보드 2→4 컬럼. Architect HIGH 버그 2개 수정.
+2. **Wiki 사이드바 정합**: Merge/Split→More, `/wiki/insights`, Overview 아래 status nav(`wikiStatusFilter`), Recent 버그 수정.
+3. **노트 standalone merge/split**: `note-view-mode` store + NoteMergePage/NoteSplitPage + Notes More. overlay route-gated.
+4. **Smart Book Preset (v151→v152)**: `SmartBookPreset` 모델 + 슬라이스 + 3 seed + `/books/smart-books` 갤러리 + Books More(Smart Book + Insights) + `/books/insights`. 기존 resolver/createBook 재사용.
+5. **Wiki 17개 복원** (런타임/IDB only).
+
+### 핵심 결정 (영구)
+- **Full editor = Notes/Wiki only**. 분류/기록 entity(Tags/Labels/Categories/References/Stickers/Files)는 inline + member-list page. References만 미래 *구조화 상세 폼* 후보.
+- **Books 축 = kind**(smart/manual/hybrid). **Books Overview 보류**(중복).
+- **list-context-navigation 설계 확정**: 진입 화면 visible ordered set freeze → 에디터 ←/→ 순회 + 복귀. bookContext 일반화. → **다음 세션 P0 #0**.
+- **Books kind nav 설계 LOCKED**: wikiStatusFilter 패턴 미러 (`bookKindFilter`). → P0 #1.
+
+### 다음 우선순위 (P0)
+1. **🔴 P0 #0**: list-context-navigation 구현 (`docs/01-plan/features/list-context-navigation.plan.md` 전체 설계). bookContext 일반화 → listNavContext(pane별 세션한정) + visible IDs freeze + 에디터 네비 바.
+2. **🔴 P0 #1**: Books kind nav (Smart/Manual/Hybrid). bookKindFilter external store + 사이드바 + getBookKind 필터. Books Overview는 만들지 말 것.
+3. **🟡 P0 #2 (carry, 대부분 진행)**: Entity Insights 통일 PRD (`/wiki/insights` + `/books/insights` 완료, recharts 표준화 + Ontology/entity 역할 분리 남음).
+
+### 기술 학습 (영구)
+- partialize가 blocks strip → content 기반 시딩은 onRehydrateStorage에서 (migrate-time은 all-backlog 버그).
+- 노트 overlay cross-route 누수 → route-gate(isTableView) + leaving reset.
+- store v150→v151→v152 머신별 IDB 순차 마이그(데이터 손실 0).
+
+---
+
+## 🚀 2026-05-29 (오후) — NoteStatus 3→4 단계 REPLACE: stone/brick/keystone → backlog/todo/in_progress/done (PR #489, store v150) ⭐⭐⭐⭐
+
+**범위**: 노트 status를 3단계(stone/brick/keystone) → 4단계(backlog/todo/in_progress/done)로 **REPLACE**. 85파일 atomic rename + 라우트 rename + store v150 IDB 마이그. executor-high 구현 + Architect APPROVED + tsc/build/test green.
+
+### 핵심 결정 (영구)
+- **완성도 축 유지, 3→4 세분화 + 라벨 교체**. Linear 어휘를 빌리되 의미는 "노트 완성도"로 재정의 — 태스크 관리 피벗 아님 (`colors.ts:141` 주석이 이미 같은 축 적시).
+- **3→4 매핑**: stone→backlog · brick→in_progress · keystone→done · **todo=신규 수동 단계**(매핑 소스 없음, 빈 시작). KO: 대기/준비/정리 중/완성.
+- **🔒 LOCKED #118 + #100 폐기**: 스톤/브릭/블록 음역 시그니처 + phosphor 건물 아이콘 3종 → 4단계 완성도 축 + Linear circle 아이콘(CircleDashed/Circle/CircleHalf/CheckCircle). 축 의미는 동일.
+- **색**: backlog `#94a3b8` slate / todo `#3b82f6` blue(신규, tweakable) / in_progress `#f59e0b` amber / done `#34d399` emerald.
+- **라우트**: `/backlog /todo /in-progress /done` (slug `in-progress` kebab ≠ enum `in_progress` snake).
+
+### 기술 학습 (영구)
+- **cardinality 변경(3→N) 마이그레이션 함정**: 신규 단계(todo)는 legacy 소스가 없어, garbage-cleanup(v131 `VALID_STATUSES`)이 todo를 "무효"로 보고 stone "복구"→v150 backlog 재매핑 = silent 유실. 회피 = cleanup allow-list에 신규 enum 포함(`migrate.ts:1987-1990`).
+- v150 = 6 영속 surface 매핑(notes.status / viewStateByContext keys / savedViews / autopilotRules / customQuickFilters), idempotent.
+
+### 미해결 (다음 세션 — 전부 "둠"으로 머지, 사용자 최종 결정)
+- a. settings-store `startView:"stone"` 리터럴(`lib/settings-store.ts:33`, 라우트 매핑으로 동작). b. `app/preview/linear` 목업(격리, 자체 타입). c. 죽은 i18n 키 `sidebar.stone/brick/block`(미참조). + **UI 시각 미검증** (이 환경 preview MCP 불가).
+
+### 다음 P0
+1. **🔴 P0 #0**: 4단계 status UI 시각 검증 + 미해결 판단 콜 3개 결정 (`npm run dev` 3002 → 보드 4컬럼/사이드바/색/아이콘).
+2. **🔴 P0 #1 (carry)**: Entity Insights 정보 아키텍처 통일 PRD (plan 완료, design 남음).
+3. **🟡 P0 #2 (carry)**: Wiki ← Overview breadcrumb / Phase 4 filter-bar(source) / Category-Label 비대칭.
+
+---
+
 ## 🚀 2026-05-28 (오후 후속) — Library 정합: categories 체크박스 + 헤더 i18n + Book 폴더 Phase 2 + folder space fix ⭐⭐⭐
 
 **범위**: PR #486(categories 체크박스 + 컬럼 헤더 i18n) + 이 PR(Book 폴더 Phase 2 + table-route space fix).

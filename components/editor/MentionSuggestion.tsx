@@ -11,12 +11,10 @@ import {
   forwardRef,
 } from "react"
 import { Tag, CalendarBlank, Asterisk } from "@/lib/editor/editor-icons"
-import { CircleDashed, Circle, Contrast as CircleHalf, CircleCheck as CheckCircle } from "lucide-react"
-import { IconWikiStub, IconWikiArticle } from "@/components/plot-icons"
+import { CircleDashed, Circle, Contrast as CircleHalf, CircleCheck as CheckCircle, BookOpen } from "lucide-react"
 import { usePlotStore } from "@/lib/store"
 import { parseMentionDate } from "@/lib/mention-date-parser"
-import { NOTE_STATUS_HEX, SPACE_COLORS, ENTITY_COLORS, WIKI_STATUS_HEX } from "@/lib/colors"
-import { isWikiStub } from "@/lib/wiki-utils"
+import { NOTE_STATUS_HEX, SPACE_COLORS, ENTITY_COLORS } from "@/lib/colors"
 import type { SuggestionOptions, SuggestionProps, SuggestionKeyDownProps } from "@tiptap/suggestion"
 import type { MentionNodeAttrs } from "@tiptap/extension-mention"
 import type { NoteStatus } from "@/lib/types"
@@ -31,7 +29,6 @@ interface MentionItem {
   referenceContent?: string // Reference.content
   referenceUrl?: string // URL field value (for auto-branching)
   noteStatus?: NoteStatus // for notes — drives workflow status icon
-  isStub?: boolean // for wiki items — stub vs article
 }
 
 interface MentionListProps {
@@ -189,13 +186,10 @@ function ItemIcon({ item }: { item: MentionItem }) {
         />
       )
     case "wiki":
-      // Status-specific icons (stub vs article) — distinct from the BookOpen
-      // used for the wiki entity in the activity bar / sidebar.
-      return item.isStub ? (
-        <IconWikiStub size={14} className="shrink-0" style={{ color: WIKI_STATUS_HEX.stub }} />
-      ) : (
-        <IconWikiArticle size={14} className="shrink-0" style={{ color: WIKI_STATUS_HEX.article }} />
-      )
+      // v151: single canonical wiki entity glyph (mixed picker context). The
+      // stub/article distinction was dropped — status is a manual field shown
+      // on the wiki's own surfaces (list/board/detail).
+      return <BookOpen size={14} className="shrink-0" style={{ color: SPACE_COLORS.wiki }} />
     case "note": {
       const status = item.noteStatus ?? "in_progress"
       const color = NOTE_STATUS_HEX[status]
@@ -276,14 +270,14 @@ export const mentionSuggestionConfig: Omit<SuggestionOptions<MentionItem, Mentio
         .sort((a: any, b: any) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
         .slice(0, 3)
       for (const w of recentWiki) {
-        results.push({ id: w.id, label: w.title, mentionType: "wiki", isStub: isWikiStub(w) })
+        results.push({ id: w.id, label: w.title, mentionType: "wiki" })
       }
     } else {
       const matchedWiki = wikiArticles
         .filter((w: any) => w.title?.trim() && w.title.toLowerCase().includes(q))
         .slice(0, 3)
       for (const w of matchedWiki) {
-        results.push({ id: w.id, label: w.title, mentionType: "wiki", isStub: isWikiStub(w) })
+        results.push({ id: w.id, label: w.title, mentionType: "wiki" })
       }
     }
 

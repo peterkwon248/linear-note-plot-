@@ -152,21 +152,13 @@ export const NOTE_STATUS_HEX = {
 } as const
 
 /* ── Wiki Status ─────────────────────────────── */
-
-export const WIKI_STATUS_COLORS = {
-  stub:    { css: "var(--chart-3)", tw: "chart-3" },
-  article: { css: "var(--wiki-complete)", tw: "wiki-complete" },
-} as const
-
-/** Wiki status hex — article (= "complete") uses emerald to distinguish
- *  from the wiki **entity** color (violet, `SPACE_COLORS.wiki`). Earlier
- *  the article hex was `#7c3aed` violet and indistinguishable from the
- *  entity color. Mirrors the Notes-permanent green semantic: stub=in-
- *  progress (orange), article=complete (emerald), wiki entity=violet. */
-export const WIKI_STATUS_HEX = {
-  stub:    "#f97316",   // orange — in-progress (same hue as Notes capture)
-  article: "#10b981",   // emerald — complete (same hue as Notes permanent)
-} as const
+//
+// Wiki status is fully unified with Notes (2026-05-29, v151). Use the shared
+// `NOTE_STATUS_HEX` / `NOTE_STATUS_COLORS` (4-stage backlog/todo/in_progress/
+// done) for wiki status surfaces too — there is no separate wiki status palette.
+// The legacy `WIKI_STATUS_HEX`/`WIKI_STATUS_COLORS` (stub/article 2색) were
+// removed. The wiki **entity** color (violet) is separate and lives in
+// `SPACE_COLORS.wiki` / `GRAPH_NODE_HEX.wiki`.
 
 /* ── Priority ────────────────────────────────── */
 
@@ -212,10 +204,9 @@ export const GRAPH_NODE_HEX = {
   todo:        NOTE_STATUS_HEX.todo,
   in_progress: NOTE_STATUS_HEX.in_progress,
   done:        NOTE_STATUS_HEX.done,
-  // Wiki **entity** color (violet) — NOT WIKI_STATUS_HEX.article (emerald,
-  // which is a publication-state color). Graph nodes represent the wiki
-  // entity itself regardless of stub/article state, so they inherit the
-  // entity color used by the sidebar/activity-bar/Home StatsRow.
+  // Wiki **entity** color (violet) — NOT a status color. Graph nodes represent
+  // the wiki entity itself regardless of its 4-stage status, so they inherit
+  // the entity color used by the sidebar/activity-bar/Home StatsRow.
   wiki:      SPACE_COLORS.wiki,
   tag:       "#6b7280",
   default:   "#6b7280",

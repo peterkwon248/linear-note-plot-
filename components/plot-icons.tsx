@@ -41,6 +41,7 @@ import {
   Bookmark,
   LayoutTemplate,
   Sparkles,
+  Zap,
   Pin,
   // Action icons
   Search,
@@ -58,9 +59,6 @@ import {
   BellOff,
   ArrowLeft,
   Columns2,
-  // Wiki status (mockup parity: Book = stub, BookMarked = article)
-  Book,
-  BookMarked,
 } from "lucide-react"
 import { CircleDashed } from "@phosphor-icons/react/dist/ssr/CircleDashed"
 import { Circle } from "@phosphor-icons/react/dist/ssr/Circle"
@@ -85,11 +83,14 @@ export function IconNotes({ size = 20, ...props }: IconProps) {
 
 /**
  * Wiki ENTITY icon. Used in the activity bar, sidebar Overview, ViewHeader,
- * side-panel connections, mention/wikilink picker, etc. — single source of
- * truth so swapping the underlying icon takes one edit.
+ * side-panel connections, mention/wikilink picker, book item rows, etc. —
+ * single canonical wiki glyph so swapping the underlying icon takes one edit.
  *
- * For wiki STATUS icons (stub vs article maturity) see IconWikiStub /
- * IconWikiArticle below.
+ * Wiki STATUS (manual 4-stage) is shown via the shared 4-circle `StatusIcon`
+ * (components/status-icon.tsx) on status-bearing surfaces (wiki list/board/grid
+ * /detail). In mixed contexts that only need "this is a wiki entity", use this
+ * `IconWiki` — the legacy IconWikiStub/IconWikiArticle (which encoded both
+ * entity + stub/article) were removed in the v151 wiki-status unification.
  */
 export function IconWiki({ size = 20, ...props }: IconProps) {
   return <BookOpen size={size} strokeWidth={1.5} {...props} />
@@ -142,6 +143,13 @@ export function IconTemplate({ size = 16, ...props }: IconProps) {
 /** Insight — lucide Sparkles (Linear/Notion-style "AI / insight" affordance). */
 export function IconInsight({ size = 16, ...props }: IconProps) {
   return <Sparkles size={size} strokeWidth={1.5} {...props} />
+}
+
+/** Smart Book — lucide Zap (lightning = "auto / smart" affordance). The
+ *  Books-space analog of IconTemplate; Books' "More" Smart Book nav + the
+ *  preset gallery use this single canonical glyph. */
+export function IconSmartBook({ size = 16, ...props }: IconProps) {
+  return <Zap size={size} strokeWidth={1.5} {...props} />
 }
 
 export function IconPin({ size = 14, ...props }: IconProps) {
@@ -217,17 +225,12 @@ export function IconSplitView({ size = 16, className, ...props }: { size?: numbe
   return <Columns2 size={size} strokeWidth={1.5} className={className} {...props} />
 }
 
-/* ── Wiki Status Icons ───────────────────────────────────────────────── */
-
-/** Stub — lucide Book (closed, simple) = "placeholder, not yet polished". */
-export function IconWikiStub({ size = 16, ...props }: IconProps) {
-  return <Book size={size} strokeWidth={1.5} {...props} />
-}
-
-/** Article — lucide BookMarked (bookmark ribbon) = "polished, published". */
-export function IconWikiArticle({ size = 16, ...props }: IconProps) {
-  return <BookMarked size={size} strokeWidth={1.5} {...props} />
-}
+/* ── Wiki Status ─────────────────────────────────────────────────────── */
+// Wiki status (manual 4-stage backlog/todo/in_progress/done) uses the shared
+// 4-circle `StatusIcon` / `StatusShapeIcon` (components/status-icon.tsx),
+// unified with Notes (v151). The legacy IconWikiStub/IconWikiArticle (stub vs
+// article maturity) were removed — mixed-context entity identification uses
+// `IconWiki` (BookOpen) above.
 
 /* ── Note Status (4단계 완성도 축 — Linear progress circle) ─────────── */
 

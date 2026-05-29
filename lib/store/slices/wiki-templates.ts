@@ -119,6 +119,9 @@ export function createWikiTemplatesSlice(set: Set, get: Get, appendEvent: Append
       const article: WikiArticle = {
         id: articleId,
         title: expandPlaceholders(template.title),
+        // Freshly created from a template — starts at "backlog" (manual
+        // 4-stage status, v151). User advances as the article fills out.
+        status: "backlog",
         aliases: (template.aliases ?? []).map(expandPlaceholders),
         infobox: cloneAndExpandInfobox(template.infobox),
         infoboxPreset: template.infoboxPreset,

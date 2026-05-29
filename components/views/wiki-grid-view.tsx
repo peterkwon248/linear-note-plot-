@@ -13,9 +13,7 @@
  */
 
 import { Pin as PushPin } from "lucide-react"
-import { IconWikiStub, IconWikiArticle } from "@/components/plot-icons"
-import { WIKI_STATUS_HEX } from "@/lib/colors"
-import { isWikiStub } from "@/lib/wiki-utils"
+import { StatusShapeIcon } from "@/components/status-icon"
 import { shortRelative } from "@/lib/format-utils"
 import { cn } from "@/lib/utils"
 import type { WikiArticle } from "@/lib/types"
@@ -35,7 +33,6 @@ function WikiGridCard({
   isActive: boolean
   onOpen: () => void
 }) {
-  const stub = isWikiStub(article)
   const blockCount = article.blocks?.length ?? 0
   return (
     <button
@@ -59,12 +56,9 @@ function WikiGridCard({
         />
       )}
 
-      {/* Status icon — LOCKED #103: no tinted box, color tone only. */}
-      {stub ? (
-        <IconWikiStub size={22} style={{ color: WIKI_STATUS_HEX.stub }} />
-      ) : (
-        <IconWikiArticle size={22} style={{ color: WIKI_STATUS_HEX.article }} />
-      )}
+      {/* Status icon — shared 4-circle StatusShapeIcon (manual 4-stage status,
+          unified with Notes — v151). LOCKED #103: color tone only, no box. */}
+      <StatusShapeIcon status={article.status} size={22} />
 
       {/* Title */}
       <h3 className="text-note font-medium text-foreground line-clamp-2 leading-snug">

@@ -21,8 +21,8 @@ export interface TimelineBarProps {
   // PR-Q4 v2: accept ghost lanes too so wiki-timeline-view can inject
   // collapsed-group placeholders. We narrow at the top of the component.
   item: LanedItem<TimelineEntity> | { isCollapsedHeader: true; groupKey: string; label: string; count: number; x: 0; width: 0 }
-  /** Bar fill color from the entity adapter (e.g. WIKI_STATUS_HEX.stub for
-   *  wiki stubs, NOTE_STATUS_HEX.backlog for notes, etc.). Caller resolves
+  /** Bar fill color from the entity adapter (e.g. NOTE_STATUS_HEX.backlog for
+   *  notes/wiki — both share the 4-stage status, v151). Caller resolves
    *  the status → color mapping so this component stays entity-agnostic. */
   statusColor: string
   /** When true, render the drag handle that lets the user extend the bar's

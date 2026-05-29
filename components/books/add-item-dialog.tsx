@@ -27,9 +27,8 @@ import {
 } from "@/components/ui/dialog"
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command"
 import { StatusShapeIcon } from "@/components/status-icon"
-import { IconWikiStub, IconWikiArticle } from "@/components/plot-icons"
-import { isWikiStub } from "@/lib/wiki-utils"
-import { WIKI_STATUS_HEX } from "@/lib/colors"
+import { IconWiki } from "@/components/plot-icons"
+import { SPACE_COLORS } from "@/lib/colors"
 import { shortRelative } from "@/lib/format-utils"
 import { cn } from "@/lib/utils"
 import { FileText, BookOpen, Folder as PhFolder, Sparkles as Sparkle } from "lucide-react"
@@ -275,7 +274,6 @@ export function AddItemDialog({
                 </CommandEmpty>
                 <CommandGroup>
                   {wikiCandidates.map((article) => {
-                    const stub = isWikiStub(article)
                     return (
                       <CommandItem
                         key={article.id}
@@ -283,11 +281,8 @@ export function AddItemDialog({
                         onSelect={() => handleAddWiki(article.id, article.title)}
                         className="flex items-center gap-3 px-3 py-2.5"
                       >
-                        {stub ? (
-                          <IconWikiStub size={14} style={{ color: WIKI_STATUS_HEX.stub }} />
-                        ) : (
-                          <IconWikiArticle size={14} style={{ color: WIKI_STATUS_HEX.article }} />
-                        )}
+                        {/* v151: single canonical wiki entity glyph (mixed picker). */}
+                        <IconWiki size={14} style={{ color: SPACE_COLORS.wiki }} />
                         <div className="flex-1 min-w-0">
                           <span className="truncate text-note font-medium text-foreground block">
                             {article.title || "Untitled"}

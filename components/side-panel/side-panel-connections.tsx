@@ -11,7 +11,8 @@ import {
   extractAttachmentRefsFromWikiBlocks,
 } from "@/lib/extract-attachment-refs"
 import { resolveBookItems } from "@/lib/books/resolver"
-import { isWikiStub } from "@/lib/wiki-utils"
+import { STATUS_CONFIG } from "@/components/note-fields"
+import { WIKI_STATUS_ORDER } from "@/lib/view-engine/wiki-list-pipeline"
 import { getBody, getAllBodies } from "@/lib/note-body-store"
 import { extractMentionTargets } from "@/lib/body-helpers"
 import { ensureMentionIndexBuilt, getMentionSources } from "@/lib/mention-index-store"
@@ -150,7 +151,7 @@ function SubLabel({ children }: { children: React.ReactNode }) {
 // inline beneath SubLabel headers, mirroring the Book Connections pattern.
 // Inline dot-count format keeps the visual weight low (one row, no grid).
 
-import type { NoteStatus } from "@/lib/types"
+import type { NoteStatus, WikiStatus } from "@/lib/types"
 import type { WikiArticle as WikiArticleType } from "@/lib/types"
 
 function NoteStatusBreakdown({
@@ -185,21 +186,27 @@ function NoteStatusBreakdown({
 }
 
 function WikiStatusBreakdown({ articles }: { articles: WikiArticleType[] }) {
+  const t = useT()
+  // v151: 4-stage status breakdown (manual, unified with Notes).
   const counts = useMemo(() => {
-    let stub = 0,
-      article = 0
-    for (const a of articles) {
-      if (isWikiStub(a)) stub++
-      else article++
-    }
-    return { stub, article }
+    const c: Record<WikiStatus, number> = { backlog: 0, todo: 0, in_progress: 0, done: 0 }
+    for (const a of articles) c[a.status]++
+    return c
   }, [articles])
-  const total = counts.stub + counts.article
+  const total = counts.backlog + counts.todo + counts.in_progress + counts.done
   if (total === 0) return null
   return (
     <div className="flex items-center gap-2.5 px-2 pb-1 text-2xs text-muted-foreground/70">
-      {counts.stub > 0 && <DotCount color="var(--muted-foreground)" label="Stub" count={counts.stub} />}
-      {counts.article > 0 && <DotCount color="var(--chart-1)" label="Article" count={counts.article} />}
+      {WIKI_STATUS_ORDER.map((s) =>
+        counts[s] > 0 ? (
+          <DotCount
+            key={s}
+            color={STATUS_CONFIG[s].color}
+            label={t(STATUS_CONFIG[s].labelKey)}
+            count={counts[s]}
+          />
+        ) : null,
+      )}
     </div>
   )
 }
@@ -868,7 +875,7 @@ function StickerConnections() {
   const breakdown = useMemo(() => {
     const result = {
       noteStatus: { backlog: 0, todo: 0, in_progress: 0, done: 0 } as Record<string, number>,
-      wikiStatus: { stub: 0, article: 0 },
+      wikiStatus: { backlog: 0, todo: 0, in_progress: 0, done: 0 } as Record<WikiStatus, number>,
       otherCounts: { tag: 0, label: 0, category: 0, file: 0, reference: 0 } as Record<string, number>,
       noteRefs: [] as { id: string; title: string }[],
     }
@@ -882,8 +889,8 @@ function StickerConnections() {
       } else if (m.kind === "wiki") {
         const a = wikiArticles.find((x) => x.id === m.id)
         if (!a || a.trashed) continue
-        if (isWikiStub(a)) result.wikiStatus.stub++
-        else result.wikiStatus.article++
+        // v151: manual 4-stage status, unified with Notes.
+        result.wikiStatus[a.status]++
       } else if (m.kind in result.otherCounts) {
         result.otherCounts[m.kind] = (result.otherCounts[m.kind] ?? 0) + 1
       }
@@ -900,7 +907,7 @@ function StickerConnections() {
   }
 
   const totalNotes = breakdown.noteStatus.backlog + breakdown.noteStatus.todo + breakdown.noteStatus.in_progress + breakdown.noteStatus.done
-  const totalWikis = breakdown.wikiStatus.stub + breakdown.wikiStatus.article
+  const totalWikis = breakdown.wikiStatus.backlog + breakdown.wikiStatus.todo + breakdown.wikiStatus.in_progress + breakdown.wikiStatus.done
   const totalOther = Object.values(breakdown.otherCounts).reduce((a, b) => a + b, 0)
   const total = totalNotes + totalWikis + totalOther
 
@@ -928,8 +935,10 @@ function StickerConnections() {
             {totalWikis > 0 && (
               <div className="space-y-0.5">
                 <KindHeader label="Wikis" count={totalWikis} />
-                <StatusRow label="Stub" count={breakdown.wikiStatus.stub} colorVar="var(--muted-foreground)" />
-                <StatusRow label="Article" count={breakdown.wikiStatus.article} colorVar="var(--chart-1)" />
+                <StatusRow label="Backlog" count={breakdown.wikiStatus.backlog} colorVar="var(--status-backlog)" />
+                <StatusRow label="Todo" count={breakdown.wikiStatus.todo} colorVar="var(--status-todo)" />
+                <StatusRow label="In Progress" count={breakdown.wikiStatus.in_progress} colorVar="var(--status-in_progress)" />
+                <StatusRow label="Done" count={breakdown.wikiStatus.done} colorVar="var(--status-done)" />
               </div>
             )}
             {(["tag", "label", "category", "file", "reference"] as const).map((k) => {
@@ -1167,8 +1176,8 @@ function ReferenceConnections() {
 
 // ── Book Connections ─────────────────────────────────────
 // "Items by kind & status" — the primary connection surface for a book.
-// Notes are grouped by NoteStatus (Stone/Brick/Block); wiki articles by
-// Stub vs Article (computed via `isWikiStub`); chapters split out as
+// Notes and wiki articles are both grouped by the shared 4-stage status
+// (backlog/todo/in_progress/done, v151); chapters split out as
 // their own count. Smart sources (Smart/Hybrid kind) show beneath as a
 // derived list — the resolver already feeds the count, this just maps
 // it back to the source-kind labels for context.
@@ -1198,12 +1207,13 @@ function BookConnections() {
     })
   }, [book, notes, folders, wikiArticles, wikiCategories, tags, labels, stickers])
 
-  // Group by kind → status. For notes, status is from Note.status; for
-  // wikis we derive Stub vs Article via `isWikiStub`. Resolver items
+  // Group by kind → status. Both notes and wikis use their `status` field
+  // (shared 4-stage status, v151). Resolver items
   // already filter trashed entities, so the counts are accurate.
   const breakdown = useMemo(() => {
     const noteStatus = { backlog: 0, todo: 0, in_progress: 0, done: 0 } as Record<string, number>
-    const wikiStatus = { stub: 0, article: 0 }
+    // v151: wiki uses the same manual 4-stage status as Notes.
+    const wikiStatus = { backlog: 0, todo: 0, in_progress: 0, done: 0 } as Record<WikiStatus, number>
     let chaptersCount = 0
     const noteIds: string[] = []
     const wikiIds: string[] = []
@@ -1218,8 +1228,7 @@ function BookConnections() {
         const a = wikiArticles.find((x) => x.id === r.refId)
         if (!a) continue
         wikiIds.push(a.id)
-        if (isWikiStub(a)) wikiStatus.stub++
-        else wikiStatus.article++
+        wikiStatus[a.status]++
       } else if (r.kind === "chapter-heading") {
         chaptersCount++
       }
@@ -1263,7 +1272,7 @@ function BookConnections() {
   }
 
   const totalNotes = breakdown.noteStatus.backlog + breakdown.noteStatus.todo + breakdown.noteStatus.in_progress + breakdown.noteStatus.done
-  const totalWikis = breakdown.wikiStatus.stub + breakdown.wikiStatus.article
+  const totalWikis = breakdown.wikiStatus.backlog + breakdown.wikiStatus.todo + breakdown.wikiStatus.in_progress + breakdown.wikiStatus.done
   const itemsCount = totalNotes + totalWikis + breakdown.chaptersCount
 
   return (
@@ -1291,12 +1300,14 @@ function BookConnections() {
                 <StatusRow label="Done" count={breakdown.noteStatus.done} colorVar="var(--status-done)" />
               </div>
             )}
-            {/* Wikis by stub/article */}
+            {/* Wikis by 4-stage status (v151, unified with Notes) */}
             {totalWikis > 0 && (
               <div className="space-y-0.5">
                 <KindHeader label="Wikis" count={totalWikis} />
-                <StatusRow label="Stub" count={breakdown.wikiStatus.stub} colorVar="var(--muted-foreground)" />
-                <StatusRow label="Article" count={breakdown.wikiStatus.article} colorVar="var(--chart-1)" />
+                <StatusRow label="Backlog" count={breakdown.wikiStatus.backlog} colorVar="var(--status-backlog)" />
+                <StatusRow label="Todo" count={breakdown.wikiStatus.todo} colorVar="var(--status-todo)" />
+                <StatusRow label="In Progress" count={breakdown.wikiStatus.in_progress} colorVar="var(--status-in_progress)" />
+                <StatusRow label="Done" count={breakdown.wikiStatus.done} colorVar="var(--status-done)" />
               </div>
             )}
             {/* Chapters */}

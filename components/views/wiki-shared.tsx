@@ -8,7 +8,8 @@ import {
   Link as PhLink,
 } from "lucide-react"
 import type { GroupBy } from "@/lib/view-engine/types"
-import type { WikiCategory } from "@/lib/types"
+import type { WikiCategory, WikiStatus } from "@/lib/types"
+import { StatusShapeIcon } from "@/components/status-icon"
 
 /* ── Stat Card ── */
 
@@ -108,6 +109,7 @@ export function ArticleRow({ note, onOpen, backlinkCount }: {
  *   - family / parent / role  → Tree icon (계층)
  *   - tier                    → Stack icon (depth)
  *   - linkCount               → Link icon
+ *   - wikiStatus              → shared 4-circle StatusShapeIcon (Notes 정합)
  *   - label                   → wiki-category color dot
  *   - none / default          → null (text-only header)
  *
@@ -133,6 +135,15 @@ export function WikiGroupHeaderIcon({
       return <PhStack className="text-muted-foreground shrink-0" size={14} strokeWidth={2} />
     case "linkCount":
       return <PhLink className="text-muted-foreground shrink-0" size={14} strokeWidth={2} />
+    case "wikiStatus": {
+      // 4-stage status (backlog/todo/in_progress/done) — shared 4-circle icon,
+      // unified with Notes. groupKey is the bare status literal.
+      const STATUS_KEYS: WikiStatus[] = ["backlog", "todo", "in_progress", "done"]
+      if (STATUS_KEYS.includes(groupKey as WikiStatus)) {
+        return <StatusShapeIcon status={groupKey as WikiStatus} size={14} />
+      }
+      return null
+    }
     case "label": {
       const catId = groupKey.startsWith("label-") ? groupKey.slice("label-".length) : null
       const color = catId ? wikiCategories?.find((c) => c.id === catId)?.color : null

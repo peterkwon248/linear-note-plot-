@@ -1,8 +1,7 @@
 import type { ReactNode } from "react"
 import type { SortField, SortDirection, ViewMode, GroupBy, SortRule, ViewContextKey } from "./types"
 import { CircleDashed, Circle, BookOpen, CircleHalf, CheckCircle, Sticker as StickerIcon, Lightning, PencilSimple, Sparkle, Globe, DownloadSimple } from "@phosphor-icons/react"
-import { IconWikiStub, IconWikiArticle } from "@/components/plot-icons"
-import { WIKI_STATUS_HEX, NOTE_STATUS_HEX } from "@/lib/colors"
+import { NOTE_STATUS_HEX } from "@/lib/colors"
 
 export interface FilterCategory {
   key: string
@@ -320,14 +319,22 @@ export const NOTES_VIEW_CONFIG: ViewConfig = {
 // Wiki-specific filter/display options.
 // 의도된 차이 (Notes 대비):
 //   - priority sort 제외: wiki에 priority 개념 없음
-//   - status filter 제외: stub/article은 런타임 파생 (isWikiStub) → toggle로 처리
 //   - groupingOptions: tier(depth)/linkCount/parent/category — wiki 위계 반영
-//   - filterCategories: category(WikiCategory)/links/dates/aliases/parent
+//   - filterCategories: status(4-stage)/category(WikiCategory)/links/dates/aliases/parent
+// v151: status는 manual 4-stage (Notes와 통일) — 실제 filterable 필드.
 export const WIKI_VIEW_CONFIG: ViewConfig = {
   showFilter: true,
   showDisplay: true,
   showDetailPanel: true,
   filterCategories: [
+    // status: manual 4-stage (backlog/todo/in_progress/done), Notes와 공유
+    // (NOTE_STATUS_HEX + status.* i18n 키). v151 도입.
+    { key: "status", label: "Status", labelKey: "filter.category.status", icon: StatusIcon, values: [
+      { key: "backlog", label: "Backlog", labelKey: "status.backlog", color: NOTE_STATUS_HEX.backlog, icon: <CircleDashed size={14} weight="regular" style={{ color: NOTE_STATUS_HEX.backlog }} /> },
+      { key: "todo", label: "Todo", labelKey: "status.todo", color: NOTE_STATUS_HEX.todo, icon: <Circle size={14} weight="regular" style={{ color: NOTE_STATUS_HEX.todo }} /> },
+      { key: "in_progress", label: "In Progress", labelKey: "status.in_progress", color: NOTE_STATUS_HEX.in_progress, icon: <CircleHalf size={14} weight="regular" style={{ color: NOTE_STATUS_HEX.in_progress }} /> },
+      { key: "done", label: "Done", labelKey: "status.done", color: NOTE_STATUS_HEX.done, icon: <CheckCircle size={14} weight="regular" style={{ color: NOTE_STATUS_HEX.done }} /> },
+    ]},
     // category: WikiCategory entity. values는 런타임 hydrate (wiki-view.tsx)
     { key: "category", label: "Category", icon: TagIcon, values: [] },
     { key: "links", label: "Backlinks", icon: LinkIcon, values: [
@@ -383,15 +390,13 @@ export const WIKI_VIEW_CONFIG: ViewConfig = {
   displayConfig: {
     // 2026-05-24: gallery deprecated → grid replaces. See NOTES_VIEW_CONFIG.
     supportedModes: ["list", "board", "grid", "timeline"],
-    // Wiki board default = "wikiStatus" (Stub / Article) — **2 column 고정
-    // 보장**. Notes의 Stone/Brick/Block 패턴 정확 mirror (영구 룰 21 정합).
-    // Status는 isWikiStub 기반 derived (block count >= 3 = article) →
-    // drag-to-change는 무의미하지만 시각 분류로는 entity-uniformity 본질을
-    // 가장 잘 표현. tier는 부차 axis로 dropdown에서 선택 가능 (parentArticleId
-    // chain 풍부할 때 유용).
+    // Wiki board default = "wikiStatus" — **4 column 고정 보장** (backlog/todo/
+    // in_progress/done), Notes status board 패턴 정확 mirror (영구 룰 21 정합).
+    // v151: status는 manual 4-stage (article.status) → drag-to-change IS
+    // meaningful (wiki-board.tsx). tier는 부차 axis로 dropdown에서 선택 가능.
     boardDefaultGroupBy: "wikiStatus",
-    // L4: per-mode default groupBy. Timeline default = wikiStatus (Stub vs
-    // Article lane on time axis — the most useful "wiki at a glance" view).
+    // L4: per-mode default groupBy. Timeline default = wikiStatus (4-stage
+    // status lanes on time axis — the most useful "wiki at a glance" view).
     defaultGroupByByMode: { board: "wikiStatus", timeline: "wikiStatus", grid: "none" },
     // L4: timeline Y-axis encodes time → sort by createdAt asc is canonical.
     defaultSortByMode: { timeline: { field: "createdAt", direction: "asc" } },
@@ -405,7 +410,7 @@ export const WIKI_VIEW_CONFIG: ViewConfig = {
       { value: "status", label: "Status" },
     ],
     // tier(depth) / linkCount(bucket) / parent — wiki 고유 위계 +
-    // wikiStatus (Stub / Article) — Notes Stone/Brick/Block 정합 axis.
+    // wikiStatus (4-stage backlog/todo/in_progress/done) — Notes status 정합 axis.
     groupingOptions: [
       { value: "none", label: "No grouping" },
       // 2026-05-24 — explicit modes for every grouping (Linear-style L1).
@@ -425,7 +430,8 @@ export const WIKI_VIEW_CONFIG: ViewConfig = {
       { value: "firstLetter", label: "Index", modes: ["list"] },
     ],
     toggles: [
-      { key: "showStubs", label: "Show stubs", icon: ContentIcon },
+      // v151: the legacy "Show stubs" toggle was removed — status is now a
+      // real 4-stage field exposed via the Status filter category.
       // Visible only when groupBy === "role" (display-panel.tsx guard).
       // ON: classify roles within the filtered slice. OFF (default):
       // classify against full store — a filter doesn't lie about
@@ -520,21 +526,18 @@ export const GRAPH_VIEW_CONFIG: ViewConfig = {
   showDetailPanel: true,
   filterCategories: [
     // v2 Ontology Hull Phase 1 — Status filter entity별 분리.
-    // Note status (backlog/todo/in_progress/done) + Wiki status (stub/article) +
-    // Book kind (smart/manual/hybrid)를 flat values로 한 카테고리에
-    // 묶음 (LOCKED #7 Option B nested의 일차 구현 — UI nested
-    // sub-section은 follow-up, 우선은 flat list로 cross-entity
-    // 필터링 활성).
+    // v151: Note + Wiki share the SAME manual 4-stage status (backlog/todo/
+    // in_progress/done) — one "Note & Wiki" sub-group covers both (graph
+    // filters uniformly by node.status). Book kind (smart/manual/hybrid)
+    // stays its own sub-group.
     { key: "status", label: "Status", icon: StatusIcon, values: [
       // Status는 entity별로 의미 다름 → sub-section header(group)로 묶음.
       // FilterPanel이 group 변경 시점에 small label 렌더링 (LOCKED
       // Ontology Hull #7 Option B nested의 본 구현).
-      { key: "backlog",     label: "Backlog", icon: <CircleDashed size={14} weight="regular" style={{ color: NOTE_STATUS_HEX.backlog }} />, group: "Note" },
-      { key: "todo",        label: "Todo",    icon: <Circle size={14} weight="regular" style={{ color: NOTE_STATUS_HEX.todo }} />, group: "Note" },
-      { key: "in_progress", label: "In Progress", icon: <CircleHalf size={14} weight="regular" style={{ color: NOTE_STATUS_HEX.in_progress }} />, group: "Note" },
-      { key: "done",        label: "Done",    icon: <CheckCircle size={14} weight="regular" style={{ color: NOTE_STATUS_HEX.done }} />, group: "Note" },
-      { key: "wiki-stub",   label: "Stub",    icon: <IconWikiStub size={14} style={{ color: WIKI_STATUS_HEX.stub }} />, group: "Wiki" },
-      { key: "wiki-article", label: "Article", icon: <IconWikiArticle size={14} style={{ color: WIKI_STATUS_HEX.article }} />, group: "Wiki" },
+      { key: "backlog",     label: "Backlog", icon: <CircleDashed size={14} weight="regular" style={{ color: NOTE_STATUS_HEX.backlog }} />, group: "Note & Wiki" },
+      { key: "todo",        label: "Todo",    icon: <Circle size={14} weight="regular" style={{ color: NOTE_STATUS_HEX.todo }} />, group: "Note & Wiki" },
+      { key: "in_progress", label: "In Progress", icon: <CircleHalf size={14} weight="regular" style={{ color: NOTE_STATUS_HEX.in_progress }} />, group: "Note & Wiki" },
+      { key: "done",        label: "Done",    icon: <CheckCircle size={14} weight="regular" style={{ color: NOTE_STATUS_HEX.done }} />, group: "Note & Wiki" },
       { key: "book-smart",  label: "Smart",   icon: <Lightning size={14} weight="regular" style={{ color: "#5E6AD2" }} />, group: "Book" },
       { key: "book-manual", label: "Manual",  icon: <PencilSimple size={14} weight="regular" style={{ color: "#6b7280" }} />, group: "Book" },
       { key: "book-hybrid", label: "Hybrid",  icon: <Sparkle size={14} weight="regular" style={{ color: "#D97706" }} />, group: "Book" },

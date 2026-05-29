@@ -16,10 +16,10 @@ import { SortableContext, horizontalListSortingStrategy, arrayMove, useSortable 
 import { CSS } from "@dnd-kit/utilities"
 import { FileText, Check as PhCheck, ChevronDown as CaretDown } from "lucide-react"
 import { cn } from "@/lib/utils"
-import { isWikiStub } from "@/lib/wiki-utils"
 import { usePlotStore } from "@/lib/store"
-import { WIKI_STATUS_HEX } from "@/lib/colors"
-import { IconWikiStub, IconWikiArticle } from "@/components/plot-icons"
+import { StatusShapeIcon } from "@/components/status-icon"
+import { STATUS_CONFIG } from "@/components/note-fields"
+import { useT } from "@/lib/i18n"
 import { WikiGroupHeaderIcon } from "@/components/views/wiki-shared"
 import {
   LinksChip,
@@ -40,7 +40,7 @@ import {
   ContextMenuContent,
   ContextMenuTrigger,
 } from "@/components/ui/context-menu"
-import type { WikiArticle, WikiCategory } from "@/lib/types"
+import type { WikiArticle, WikiCategory, WikiStatus } from "@/lib/types"
 import type { GroupBy, ViewState } from "@/lib/view-engine/types"
 import type { WikiGroup } from "@/lib/view-engine/wiki-list-pipeline"
 
@@ -52,12 +52,12 @@ import type { WikiGroup } from "@/lib/view-engine/wiki-list-pipeline"
  *   - Multi-membership for "label" (Category) groupBy: an article with
  *     N categoryIds appears as N distinct cards keyed `${id}::${groupKey}`.
  *   - Drag semantics depend on groupBy:
- *       label   → categoryIds add (drop column added; source column removed)
- *       parent  → setWikiArticleParent
+ *       wikiStatus → updateWikiArticle({ status }) — manual 4-stage status
+ *                    (v151, unified with Notes). Drag-to-change IS meaningful.
+ *       label      → categoryIds add (drop column added; source column removed)
+ *       parent     → setWikiArticleParent
  *       tier/role/linkCount/family/none → drag disabled (derived dimensions)
- *   - No status field on article (isWikiStub is runtime-derived) → drag for
- *     status grouping is not exposed; wiki uses "label/parent/tier/linkCount/role/family".
- *   - Compact Linear-style cards: title + stub badge + backlinks + reads + relative date.
+ *   - Compact Linear-style cards: title + status badge + backlinks + reads + relative date.
  * ───────────────────────────────────────────────────────── */
 
 const COLUMN_CARD_LIMIT = 50
@@ -219,7 +219,6 @@ interface CardProps {
   article: WikiArticle
   cardKey: string
   backlinks: number
-  isStub: boolean
   isActive: boolean
   isSelected: boolean
   isDragOverlay?: boolean
@@ -246,7 +245,6 @@ function CardInner({
   article,
   cardKey,
   backlinks,
-  isStub,
   isActive,
   isSelected,
   isDragOverlay,
@@ -264,6 +262,8 @@ function CardInner({
   onDeleteArticle,
   onShowConnectedArticle,
 }: CardProps) {
+  const t = useT()
+  const statusCfg = STATUS_CONFIG[article.status] ?? STATUS_CONFIG.backlog
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
     id: cardKey,
     disabled: isDragDisabled || isDragOverlay,
@@ -388,17 +388,15 @@ function CardInner({
         {isSelected && <PhCheck className="text-accent-foreground" size={10} strokeWidth={2.5} />}
       </div>
 
-      {/* Title row — uses IconWikiStub / IconWikiArticle (status-specific
-          icons defined in components/plot-icons.tsx). Pinned shows on the
-          right (Linear identity pattern). The status chip lives below in
-          the property row so the title gets full width. */}
+      {/* Title row — shared 4-circle StatusShapeIcon (manual 4-stage status,
+          unified with Notes — v151). Pinned shows on the right (Linear
+          identity pattern). The status chip lives below in the property row
+          so the title gets full width. */}
       <div className="flex items-start gap-2">
         {showStatus && (
-          isStub ? (
-            <IconWikiStub className="shrink-0 mt-0.5" size={12} style={{ color: WIKI_STATUS_HEX.stub }} />
-          ) : (
-            <IconWikiArticle className="shrink-0 mt-0.5" size={12} style={{ color: WIKI_STATUS_HEX.article }} />
-          )
+          <span className="shrink-0 mt-0.5 flex items-center">
+            <StatusShapeIcon status={article.status} size={12} />
+          </span>
         )}
         <span className="flex-1 truncate text-ui font-medium text-foreground leading-snug">
           {article.title || "Untitled"}
@@ -412,13 +410,14 @@ function CardInner({
         <div className="mt-2 flex items-center gap-1 min-w-0">
           {showStatus && (
             <span
-              className="inline-flex items-center h-5 rounded-sm px-1.5 text-2xs font-medium leading-none whitespace-nowrap shrink-0"
+              className="inline-flex items-center gap-1 h-5 rounded-sm px-1.5 text-2xs font-medium leading-none whitespace-nowrap shrink-0"
               style={{
-                color: isStub ? WIKI_STATUS_HEX.stub : WIKI_STATUS_HEX.article,
-                backgroundColor: `${isStub ? WIKI_STATUS_HEX.stub : WIKI_STATUS_HEX.article}1a`,
+                color: statusCfg.color,
+                backgroundColor: statusCfg.bg,
               }}
             >
-              {isStub ? "Stub" : "Article"}
+              <StatusShapeIcon status={article.status} size={10} />
+              {t(statusCfg.labelKey)}
             </span>
           )}
           {propertyChips.length > 0 && (
@@ -472,9 +471,9 @@ const Card = memo(CardInner, (prev, next) =>
   prev.article.categoryIds === next.article.categoryIds &&
   prev.article.parentArticleId === next.article.parentArticleId &&
   prev.article.pinned === next.article.pinned &&
+  prev.article.status === next.article.status &&
   prev.cardKey === next.cardKey &&
   prev.backlinks === next.backlinks &&
-  prev.isStub === next.isStub &&
   prev.isActive === next.isActive &&
   prev.isSelected === next.isSelected &&
   prev.groupBy === next.groupBy &&
@@ -489,9 +488,10 @@ const Card = memo(CardInner, (prev, next) =>
 
 /** Whether drag-to-reassign is enabled for this groupBy. */
 function isGroupDragDisabled(groupBy: GroupBy): boolean {
-  // Only "label" (Category) and "parent" can be reassigned via drag.
-  // Other groupings are derived (tier/linkCount/role/family) or trivial (none).
-  return groupBy !== "label" && groupBy !== "parent"
+  // "wikiStatus" (manual 4-stage, v151), "label" (Category), and "parent" can
+  // be reassigned via drag. Other groupings are derived (tier/linkCount/role/
+  // family) or trivial (none).
+  return groupBy !== "wikiStatus" && groupBy !== "label" && groupBy !== "parent"
 }
 
 /* ── WikiBoard ───────────────────────────────────────── */
@@ -627,7 +627,14 @@ export function WikiBoard({
         return
       }
 
-      if (groupBy === "label") {
+      if (groupBy === "wikiStatus") {
+        // wikiStatus group keys are bare status literals (backlog/todo/
+        // in_progress/done) — drop = set article.status directly (v151).
+        const STATUS_KEYS: WikiStatus[] = ["backlog", "todo", "in_progress", "done"]
+        if (STATUS_KEYS.includes(targetGroupKey as WikiStatus)) {
+          updateWikiArticle(articleId, { status: targetGroupKey as WikiStatus })
+        }
+      } else if (groupBy === "label") {
         // label group key format: `label-${categoryId}` or `_no_label`
         const targetCatId = targetGroupKey.startsWith("label-")
           ? targetGroupKey.slice("label-".length)
@@ -723,7 +730,6 @@ export function WikiBoard({
                         article={article}
                         cardKey={cardKey}
                         backlinks={backlinkCounts.get(article.id) ?? 0}
-                        isStub={isWikiStub(article)}
                         isActive={activeArticleId === article.id}
                         isSelected={selectedIds.has(article.id)}
                         isDragDisabled={isDragDisabled}
@@ -778,7 +784,6 @@ export function WikiBoard({
                 article={activeArticleFromDrag}
                 cardKey={`overlay-${activeArticleFromDrag.id}`}
                 backlinks={backlinkCounts.get(activeArticleFromDrag.id) ?? 0}
-                isStub={isWikiStub(activeArticleFromDrag)}
                 isActive={false}
                 isSelected={false}
                 isDragOverlay

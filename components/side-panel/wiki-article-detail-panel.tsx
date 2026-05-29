@@ -23,11 +23,11 @@ import {
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Calendar as CalendarUI } from "@/components/ui/calendar"
 import { FolderPicker } from "@/components/folder-picker"
-import { IconWikiStub, IconWikiArticle } from "@/components/plot-icons"
+import { StatusShapeIcon } from "@/components/status-icon"
 import { setActiveRoute } from "@/lib/table-route"
 import { InBooksSection } from "@/components/books/in-books-section"
-import { isWikiStub } from "@/lib/wiki-utils"
-import { TagPicker, LabelPicker } from "@/components/note-fields"
+import { useT } from "@/lib/i18n"
+import { TagPicker, LabelPicker, STATUS_CONFIG } from "@/components/note-fields"
 import { CategoryPicker } from "@/components/category-picker"
 import { pickColor } from "@/components/note-fields"
 import type { WikiArticle } from "@/lib/types"
@@ -56,6 +56,7 @@ function InspectorSection({
 }
 
 export function WikiArticleDetailPanel({ article }: { article: WikiArticle | null }) {
+  const t = useT()
   const relative = useRelativeTime()
   const wikiCategories = usePlotStore((s) => s.wikiCategories)
   const toggleWikiArticlePin = usePlotStore((s) => s.toggleWikiArticlePin)
@@ -154,22 +155,22 @@ export function WikiArticleDetailPanel({ article }: { article: WikiArticle | nul
 
   return (
     <div className="flex-1 overflow-y-auto">
-      {/* Title & Type Badge — Stub vs Article reflects publication state
-          (computed via `isWikiStub`: empty text blocks or default-shell
-          article = stub). Stub gets a muted treatment so users see at a
-          glance that the article hasn't been fleshed out yet. */}
+      {/* Status badge — manual 4-stage completeness (backlog/todo/in_progress/
+          done), unified with Notes (v151). Shared 4-circle icon + i18n label +
+          status color tint. */}
       <div className="flex flex-wrap items-center gap-2 px-4 py-3 border-b border-border">
-        {isWikiStub(article) ? (
-          <span className="flex items-center gap-1 rounded-md bg-muted/40 px-2 py-0.5 text-2xs font-medium text-muted-foreground">
-            <IconWikiStub size={14} />
-            Wiki Stub
-          </span>
-        ) : (
-          <span className="flex items-center gap-1 rounded-md bg-chart-1/10 px-2 py-0.5 text-2xs font-medium text-chart-1">
-            <IconWikiArticle size={14} />
-            Wiki Article
-          </span>
-        )}
+        {(() => {
+          const cfg = STATUS_CONFIG[article.status] ?? STATUS_CONFIG.backlog
+          return (
+            <span
+              className="flex items-center gap-1 rounded-md px-2 py-0.5 text-2xs font-medium"
+              style={{ color: cfg.color, backgroundColor: cfg.bg }}
+            >
+              <StatusShapeIcon status={article.status} size={14} />
+              {t(cfg.labelKey)}
+            </span>
+          )
+        })()}
         {typeof article.layout === "string" && article.layout && article.layout !== "default" && (
           <span className="flex items-center gap-1 rounded-md bg-chart-2/10 px-2 py-0.5 text-2xs font-medium text-chart-2">
             <Layout size={14} strokeWidth={2} />

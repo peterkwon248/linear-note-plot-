@@ -10,16 +10,34 @@
  *
  * 의도된 차이 (vs Notes):
  *   - priority sort 제외: wiki에 priority 개념 없음
- *   - status filter 제외: stub/article은 런타임 파생 (isWikiStub) → showStubs 토글
  *   - tier/parent grouping은 위계 (parentArticleId) 기반
  *   - links sort/filter: backlink count 기반 (Notes는 outbound counts)
+ *
+ * v151 — wiki status는 manual 4-stage (article.status, Notes와 통일). 기존
+ * 자동 stub/article (isWikiStub)은 폐기 — status grouping/sort/filter 모두
+ * article.status 읽기로 전환.
  */
 
-import type { WikiArticle } from "../types"
-import { isWikiStub } from "../wiki-utils"
+import type { WikiArticle, WikiStatus } from "../types"
 import type { FilterRule, GroupBy, SortRule } from "./types"
 import { isToday, isThisWeek, isThisMonth, isYesterday } from "date-fns"
 import { classifyWikiArticleRole, type WikiArticleRole } from "../wiki-hierarchy"
+
+/* ── Wiki status (manual 4-stage, unified with Notes — v151) ──────────── */
+
+/** Fixed column/sort order: backlog → todo → in_progress → done. */
+export const WIKI_STATUS_ORDER: WikiStatus[] = ["backlog", "todo", "in_progress", "done"]
+
+/** Sort rank (asc = backlog first). */
+const WIKI_STATUS_RANK: Record<WikiStatus, number> = {
+  backlog: 0, todo: 1, in_progress: 2, done: 3,
+}
+
+/** English labels (i18n via status.* keys at the view layer; these are the
+ *  raw fallbacks used for group labels in the pure data pipeline). */
+const WIKI_STATUS_LABELS: Record<WikiStatus, string> = {
+  backlog: "Backlog", todo: "Todo", in_progress: "In Progress", done: "Done",
+}
 
 /* ── Wiki Group type ─────────────────────────────────────── */
 
@@ -84,6 +102,13 @@ function matchWikiRule(article: WikiArticle, rule: FilterRule, extras?: WikiFilt
   const { field, operator, value } = rule
 
   switch (field) {
+    // v151: manual 4-stage status filter (backlog/todo/in_progress/done),
+    // unified with Notes. The Status filter category emits field="status".
+    case "status": {
+      const match = article.status === value
+      return operator === "eq" ? match : !match
+    }
+
     case "category": {
       // Filter by WikiCategory id. _none = no categories assigned.
       const cats = article.categoryIds ?? []
@@ -309,10 +334,11 @@ function compareSingleWiki(
     }
 
     case "status": {
-      // Wiki status: Article (false = not stub) sorts before Stub (true). article first.
-      const aStub = isWikiStub(a) ? 1 : 0
-      const bStub = isWikiStub(b) ? 1 : 0
-      return dir * (aStub - bStub)
+      // Wiki status: manual 4-stage (backlog < todo < in_progress < done),
+      // unified with Notes. asc = backlog→done.
+      const ar = WIKI_STATUS_RANK[a.status] ?? 0
+      const br = WIKI_STATUS_RANK[b.status] ?? 0
+      return dir * (ar - br)
     }
 
     case "reads": {
@@ -666,22 +692,23 @@ export function applyWikiGrouping(
       return groups
     }
 
-    // 2026-05-15 wikiStatus grouping: 2-column fixed (Stub / Article) — mirrors
-    // Notes Stone/Brick/Block kanban pattern. Both columns always emitted so
-    // the board renders as a stable 2-axis even when one bucket is empty
-    // (Notes-style "always N columns"). Status is derived (isWikiStub) so
-    // drag-to-change isn't meaningful — see wiki-board.tsx for drag guards.
+    // wikiStatus grouping: 4-column fixed (Backlog / Todo / In Progress / Done)
+    // — reads `article.status`, fully unified with Notes (v151). All four
+    // columns always emitted so the board renders as a stable 4-axis even when
+    // a bucket is empty (Notes-style "always N columns"). Manual status →
+    // drag-to-change IS meaningful (see wiki-board.tsx).
     case "wikiStatus": {
-      const stubs: WikiArticle[] = []
-      const articles_: WikiArticle[] = []
-      for (const a of articles) {
-        if (isWikiStub(a)) stubs.push(a)
-        else articles_.push(a)
+      const buckets: Record<WikiStatus, WikiArticle[]> = {
+        backlog: [], todo: [], in_progress: [], done: [],
       }
-      return [
-        { key: "wiki-status-stub",    label: "Stub",    articles: stubs },
-        { key: "wiki-status-article", label: "Article", articles: articles_ },
-      ]
+      for (const a of articles) {
+        (buckets[a.status] ?? buckets.backlog).push(a)
+      }
+      return WIKI_STATUS_ORDER.map((key) => ({
+        key,
+        label: WIKI_STATUS_LABELS[key],
+        articles: buckets[key],
+      }))
     }
 
     // Alphabetical Index grouping — first letter of title. Non-letter starts

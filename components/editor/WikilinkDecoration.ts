@@ -7,7 +7,6 @@ import { usePlotStore } from "@/lib/store"
 import { handleWikilinkClick } from "@/lib/note-reference-actions"
 import { showNotePreview, showNotePreviewByTitle, hideNotePreview, togglePreviewPin, isPreviewShowing, isPreviewPinned } from "@/components/editor/note-hover-preview"
 import { resolveNoteByTitle } from "@/lib/note-reference-actions"
-import { isWikiStub } from "@/lib/wiki-utils"
 
 const wikilinkDecoKey = new PluginKey("wikilinkDecoration")
 
@@ -194,15 +193,17 @@ function computeWikilinkDecorations(state: EditorState): DecorationSet {
       const bracketClass = "wikilink-bracket"
       let linkClass: string
       if (isExplicitWiki) {
-        // Explicit wiki link via [[wiki:Title]]
+        // Explicit wiki link via [[wiki:Title]]. v151: single wiki entity
+        // style — the stub/article distinction was dropped (status is now a
+        // manual field, not encoded in the link decoration).
         if (wikiArticle) {
-          linkClass = isWikiStub(wikiArticle) ? "wikilink wikilink-stub" : "wikilink wikilink-wiki"
+          linkClass = "wikilink wikilink-wiki"
         } else {
           linkClass = "wikilink wikilink-dangling"
         }
       } else if (wikiArticle && !noteExists) {
         // Implicit wiki-only link
-        linkClass = isWikiStub(wikiArticle) ? "wikilink wikilink-stub" : "wikilink wikilink-wiki"
+        linkClass = "wikilink wikilink-wiki"
       } else if (noteExists) {
         linkClass = "wikilink wikilink-exists"
       } else {

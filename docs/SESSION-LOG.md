@@ -6,6 +6,63 @@
 
 ---
 
+## 2026-05-29 (밤) — 집 (Windows), **Wiki status v151 + 사이드바 정합 + 노트 merge/split + Smart Book Preset (store v152) + 설계(kind nav·list-nav)**
+
+> 🎯 **다음 즉시 액션 hook (최우선)**:
+> 1. **🔴 P0 #0 — list-context-navigation 구현** ⭐⭐⭐⭐⭐ (이번 세션 설계 확정, 다음 세션 구현). 전체 설계 = `docs/01-plan/features/list-context-navigation.plan.md`.
+>    - **개념**: 리스트/보드/그리드에서 노트·위키를 열 때 **그 순간 보이던 (필터+그룹 적용된) 순서 있는 집합을 freeze 캡처** → 에디터 상단에 "← {라벨} N/M →" 네비 바 (prev/next + 복귀). 북의 `bookContext`/`BookContextNav` 일반화.
+>    - **첫 스텝**: `bookContext`/`BookContextNav` 패턴 일반화 → `listNavContext`(pane별, 세션 한정) 추가 + list/grid/board view 열기 시 visible ordered IDs 캡처 + 에디터 네비 바. All/status/folder/saved-view 진입 모두 지원 (timeline 보류).
+> 2. **🔴 P0 #1 — Books kind nav** (All Books 아래 Smart/Manual/Hybrid). **설계 LOCKED** — wiki `wikiStatusFilter` 패턴 미러: `bookKindFilter` external store + 사이드바 링크 + books-view 필터(getBookKind). 카운트 Smart 3 / Manual 2 / Hybrid 2. **Books Overview = 보류**(Insights + 사이드바 Pinned/Recent와 중복, continue-reading 비어 있음 — 만들지 말 것).
+> 3. (carry) **P0 #2 — Entity Insights 통일 PRD** — 대부분 진행됨(`/wiki/insights` + `/books/insights` 신설 완료). 나머지 = `docs/01-plan/features/entity-insights-coherence.plan.md`.
+> 4. References = 분류/기록 entity지만 **유일하게 미래 *구조화 상세 폼*(full editor 아님) 후보**. 후속 고려.
+
+> **사용자 의도** (이번 세션):
+> - "노트에 했던 status 4단계를 위키에도" → Wiki status 4단계 통일 (자동 stub/article → 수동 backlog/todo/in_progress/done)
+> - "위키 사이드바도 노트처럼 More/Insights/status nav" + "노트도 위키처럼 merge/split 독립 페이지" → 사이드바 정합 + 노트 standalone merge/split
+> - "스마트 북도 본격적으로 구축" + "북 More에 인사이트랑 스마트북" → Smart Book Preset 시스템 + Books More/Insights
+> - "after-work 해줘. 다른 컴퓨터에서도 작업할 수 있게" → 이 after-work (branch claude/smart-book-preset → main squash merge)
+
+> **이번 세션 핵심 결정 (영구 — MEMORY.md push)**:
+> - **Full editor = Notes/Wiki only** (authored content). Tags/Labels/Categories/References/Stickers/Files = 분류/기록 → inline + member-list page 유지. References만 미래 *구조화 상세 폼* 후보(full editor 아님).
+> - **Books 축 = kind** (smart/manual/hybrid), status 아님. **Books Overview = 보류** (Insights + 사이드바 Pinned/Recent 중복, continue-reading 비어 있음).
+> - **list-context-navigation** 설계 확정(plan doc): 진입 화면의 *필터+그룹 적용된 visible set* freeze → 에디터 "← {라벨} N/M →" → prev/next + 복귀. bookContext 일반화. list/grid/board (timeline 보류), All/status/folder/saved-view 진입.
+
+> **머신**: 집 (Windows) → 다음 **다른 컴퓨터**
+> **현재 main HEAD**: 이 세션 combined PR squash merge 후 (직전 `c4ee673` PR #489)
+> **branch**: claude/smart-book-preset (a259061 = 위키 작업 기반) → main squash merge (PR #490 supersede)
+> **Store version**: v150 → **v151**(wiki status) → **v152**(smart book presets)
+
+### 완료 (전부 검증 — npm run build green, tsc 0, test 282 pass/11 pre-existing fail, Architect APPROVED, preview runtime 확인)
+1. **Wiki status 4단계 (store v150→v151)** [= 커밋 `a259061`, PR #490 wiki work]: `WikiArticle.status`(= NoteStatus) 신규 필드. 자동 stub/article → 수동 backlog/todo/in_progress/done. **시딩을 onRehydrateStorage로 이동**(content→done / empty-template→backlog) — partialize가 blocks를 strip하기 때문. 색/아이콘/i18n은 Notes와 공유. Wiki 보드 2→4 컬럼. **Architect가 HIGH 버그 2개 발견·수정**(마이그레이션 타임 all-backlog 버그 / 노트 overlay cross-route 누수). preview 검증: 위키 17개 복원, 16 done / 1 stub 시딩.
+2. **Wiki 사이드바 정합** [PR #490]: Merge/Split→More, `/wiki/insights` 신설, Overview 아래 status nav(`wikiStatusFilter`), Recent legacy-filter 버그 수정(wikiArticles store 읽기 + trashed 제외).
+3. **노트 wiki-level standalone merge/split** [PR #490]: `note-view-mode` store + NoteMergePage + split picker→기존 NoteSplitPage + Notes More 항목. overlay route-gated(isTableView) + leaving 시 reset.
+4. **Smart Book Preset 시스템 (store v151→v152)** [이 branch UNCOMMITTED → 이 커밋]: `SmartBookPreset` 모델 + `lib/store/slices/smart-book-presets.ts` + 3 seed presets + `/books/smart-books` 갤러리 + Books "More" 섹션(Smart Book + Insights) + `/books/insights`(kind breakdown). 기존 resolver/createBook 재사용. preview 검증(3 presets 렌더, insights kind breakdown Smart 3/Hybrid 2/Manual 2).
+5. **Wiki 데이터 복원** (런타임/IDB only, 코드 아님): 사용자의 trashed 위키 17개 복원.
+
+### 큰 결정 (영구 — MEMORY.md에도 push)
+- **Full editor 경계**: Notes/Wiki만 full editor (authored content). 분류/기록 entity(Tags/Labels/Categories/References/Stickers/Files)는 inline + member-list page. References만 미래 *구조화 상세 폼* 후보.
+- **Books 축 = kind**(smart/manual/hybrid). status 축 아님. **Books Overview 보류**(Insights + 사이드바 Pinned/Recent 중복, continue-reading 빈 상태).
+- **list-context-navigation 설계 확정** — bookContext 일반화, freeze 스냅샷 패턴. 다음 세션 구현 (P0 #0).
+
+### 기술 학습 (영구 — MEMORY.md에도 push)
+- **partialize가 blocks를 strip → 시딩은 onRehydrateStorage에서**: WikiArticle 시드 status를 content 기반(content→done / empty-template→backlog)으로 매기려면 persist partialize가 blocks를 떼기 전이 아니라 rehydrate 후에 판정해야 정확. migrate-time에 하면 blocks 부재로 all-backlog 버그 (Architect 발견).
+- **노트 overlay cross-route 누수**: merge/split overlay를 route-gate(isTableView) + leaving 시 reset 안 하면 다른 라우트로 leak (Architect 발견).
+- **Wiki Recent legacy-filter**: Recent는 wikiArticles store를 읽고 trashed 제외해야 — 옛 필터가 잘못된 소스 읽던 버그.
+- store v152 = SmartBookPreset 슬라이스 추가, 기존 AutoSource/resolver/getBookKind 재사용(엔진 신규 아님, Preset 청사진 레이어만).
+
+### Watch Out (다음 세션 주의사항)
+- **list-context-navigation = freeze 타이밍**: "그 순간 보이던 순서 있는 집합" 캡처가 핵심. 필터/그룹 변경 후 재진입 시 재캡처. pane별 + 세션 한정(영속 X). bookContext는 영속 ordered entity라 쉬웠지만 list는 캡처 단계 추가.
+- **Books kind nav = wikiStatusFilter 패턴 1:1 미러**: external store(`bookKindFilter`) + 사이드바 + books-view 필터(getBookKind). Books Overview는 만들지 말 것(중복).
+- **pre-existing 테스트 실패 11개** (date-grouping + seeds require) — 이 세션 무관.
+- **다른 컴퓨터 IDB는 머신별 분리** → 그 머신 첫 실행 시 v150→v151→v152 마이그레이션 순차 실행(데이터 손실 0 설계).
+
+### 환경 변경
+- Store version: **v150 → v151 → v152**
+- 신규 파일: `lib/store/slices/smart-book-presets.ts`, `components/views/smart-book-presets-view.tsx`, `components/views/books-insights-view.tsx`, `app/(app)/books/smart-books/`, `app/(app)/books/insights/`, plan docs 3개(`wiki-status-4stage`/`smart-book-preset`/`list-context-navigation`)
+- branch claude/smart-book-preset → main squash merge (PR #490 supersede·close)
+
+---
+
 ## 2026-05-29 (오후) — 집 (Windows), **NoteStatus 3→4 단계 REPLACE: stone/brick/keystone → backlog/todo/in_progress/done (이 세션 PR, squash merge)**
 
 > 🎯 **다음 즉시 액션 hook (최우선)**:

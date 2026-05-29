@@ -18,8 +18,8 @@ import {
   IconLabel,
   IconTemplate,
   IconInsight,
-  IconWikiStub,
-  IconWikiArticle,
+  IconSmartBook,
+  IconWiki,
   IconPin,
   IconTrash,
   IconClock,
@@ -36,9 +36,9 @@ import {
 import { usePlotStore } from "@/lib/store"
 import { useT } from "@/lib/i18n"
 import { getSnoozeHooks } from "@/lib/store/hook-selectors"
-import { PRESET_COLORS, getEntityColor, WIKI_STATUS_HEX } from "@/lib/colors" // v109: opt-in color fallback
-import { isWikiStub } from "@/lib/wiki-utils"
-import { setWikiViewMode, useWikiViewMode, setCategoryOverview } from "@/lib/wiki-view-mode"
+import { PRESET_COLORS, getEntityColor, SPACE_COLORS } from "@/lib/colors" // v109: opt-in color fallback
+import { setWikiViewMode, useWikiViewMode, setCategoryOverview, useWikiStatusFilter, setWikiStatusFilter } from "@/lib/wiki-view-mode"
+import { setNoteViewMode, useNoteViewMode } from "@/lib/note-view-mode"
 import {
   GitMerge,
   Scissors,
@@ -162,7 +162,10 @@ function NavLink({
             setActiveLabelId(null)
           }
           if (href === "/wiki") {
+            // Overview = dashboard, no status filter. Reset both so the
+            // sidebar status links + in-list tabs return to "all".
             setWikiViewMode("dashboard")
+            setWikiStatusFilter(null)
           }
           const currentRoute = getActiveRoute()
           setActiveRoute(href)
@@ -302,6 +305,7 @@ export function LinearSidebar() {
   const templates = usePlotStore((s) => s.templates)
   const wikiTemplates = usePlotStore((s) => Array.isArray(s.wikiTemplates) ? s.wikiTemplates : [])
   const books = usePlotStore((s) => s.books)
+  const smartBookPresets = usePlotStore((s) => Array.isArray(s.smartBookPresets) ? s.smartBookPresets : [])
 
   const wikiCategories = usePlotStore((s) => s.wikiCategories)
   const createWikiCategory = usePlotStore((s) => s.createWikiCategory)
@@ -310,6 +314,14 @@ export function LinearSidebar() {
 
   const activeSpace = useActiveSpace()
   const wikiViewMode = useWikiViewMode()
+  // Note standalone view mode (default / merge / split) — drives the
+  // active-state of the Notes "More" → Merge/Split entries, mirroring
+  // wikiViewMode for the wiki More section.
+  const noteViewMode = useNoteViewMode()
+  // Wiki status quick-filter (null = "all"). Drives the active-state of the
+  // wiki status nav links — they share this external store with the in-list
+  // status tabs so sidebar + list stay in sync.
+  const wikiStatusFilter = useWikiStatusFilter()
   // Reactive subscription: ontology graph view mode (graph/insights/dashboard).
   // Direct getState() call inside the IIFE below didn't re-render on viewMode
   // change, so the active-tab highlight got stuck on whichever mode the user
@@ -425,6 +437,16 @@ export function LinearSidebar() {
   const permanentCount = useMemo(() => notes.filter((n) => n.status === "done" && !n.trashed).length, [notes])
   const trashCount = useMemo(() => notes.filter((n) => n.trashed).length, [notes])
   const wikiCount = useMemo(() => notes.filter((n) => n.noteType === "wiki" && !n.trashed).length, [notes])
+  // Wiki status counts — computed from the wikiArticles store (the real wiki
+  // entity source), matching wiki-view's `statusCounts`. Excludes trashed.
+  const wikiStatusCounts = useMemo(() => {
+    const counts = { backlog: 0, todo: 0, in_progress: 0, done: 0 }
+    for (const a of wikiArticles) {
+      if ((a as { trashed?: boolean }).trashed) continue
+      counts[a.status]++
+    }
+    return counts
+  }, [wikiArticles])
   const todoTaskCount = usePlotStore((s) => s.todoTasks.filter((t) => !t.checked).length)
   const references = usePlotStore((s) => s.references)
   const attachments = usePlotStore((s) => s.attachments)
@@ -501,16 +523,30 @@ export function LinearSidebar() {
     [notes]
   )
 
-  // Pinned wiki articles for home sidebar (WikiArticle has no trashed field)
+  // Pinned wiki articles for the sidebar. WikiArticle DOES carry a `trashed`
+  // flag (added 2026-05-18; the old "no trashed field" note was stale) —
+  // exclude trashed so the sidebar matches the dashboard's live-article view.
   const pinnedWikiArticles = useMemo(() =>
-    wikiArticles.filter((w) => w.pinned),
+    wikiArticles.filter((w) => w.pinned && !w.trashed),
+    [wikiArticles],
+  )
+
+  // Recent wiki articles — recently-updated LIVE articles from the wikiArticles
+  // store. (The old wiki Recent used recentNotes.filter(noteType==="wiki"),
+  //  legacy/dead: wiki lives in its own store, not in `notes`. Must also exclude
+  //  trashed — otherwise trashed articles surface in the sidebar.)
+  const recentWikiArticles = useMemo(() =>
+    [...wikiArticles]
+      .filter((w) => !w.trashed)
+      .sort((a, b) => (b.updatedAt || "").localeCompare(a.updatedAt || ""))
+      .slice(0, 5),
     [wikiArticles],
   )
 
   // Combined pinned items (note + wiki + book) for the Home block only
   type HomePinnedItem =
     | { kind: "note"; id: string; title: string; status: NoteStatus }
-    | { kind: "wiki"; id: string; title: string; isStub: boolean }
+    | { kind: "wiki"; id: string; title: string }
     | { kind: "book"; id: string; title: string; itemCount: number; bookKind: ReturnType<typeof getBookKind> }
 
   const homePinnedItems = useMemo<HomePinnedItem[]>(() => {
@@ -524,7 +560,6 @@ export function LinearSidebar() {
       kind: "wiki" as const,
       id: w.id,
       title: w.title || "Untitled",
-      isStub: isWikiStub(w),
     }))
     const bookItems: HomePinnedItem[] = books
       .filter((b) => b.pinned && !b.trashed)
@@ -992,11 +1027,44 @@ export function LinearSidebar() {
               )}
             </Section>
 
-            {/* More section: Templates, Insights.
+            {/* More section: Merge, Split, Templates, Insights.
+                Merge/Split = standalone note actions (wiki-parity, 2026-05-29):
+                set noteViewMode → layout renders NoteMergePage / NoteSplitPicker
+                overlay over the notes area. Mirrors the wiki More section order.
                 2026-05-17 — Labels는 Library hub로 이동 (cross-entity 분류
                 메커니즘은 Library에 모이는 영구 룰). Templates는 Note-recipe
                 이므로 Notes 사이드바에 유지. */}
             <Section title={t("sidebar.section.more")}>
+              <button
+                onClick={() => {
+                  setSelectedNoteId(null)
+                  setNoteViewMode("merge")
+                  setActiveRoute("/notes")
+                  router.push("/notes")
+                }}
+                className="a-sb-link"
+                data-active={noteViewMode === "merge" ? "true" : undefined}
+              >
+                <span className="flex shrink-0 items-center justify-center w-5 h-5">
+                  <GitMerge size={16} />
+                </span>
+                <span className="truncate text-left flex-1">{t("wiki.merge")}</span>
+              </button>
+              <button
+                onClick={() => {
+                  setSelectedNoteId(null)
+                  setNoteViewMode("split")
+                  setActiveRoute("/notes")
+                  router.push("/notes")
+                }}
+                className="a-sb-link"
+                data-active={noteViewMode === "split" ? "true" : undefined}
+              >
+                <span className="flex shrink-0 items-center justify-center w-5 h-5">
+                  <Scissors size={16} />
+                </span>
+                <span className="truncate text-left flex-1">{t("wiki.split")}</span>
+              </button>
               {/* Stickers entry intentionally lives only in Library
                   (33 design decisions #8 — Sticker = cross-everything,
                   belongs with cross-cutting library indices). */}
@@ -1048,38 +1116,45 @@ export function LinearSidebar() {
                 icon={<BookOpen size={20} />}
                 label={t("sidebar.overview")}
                 count={wikiCount > 0 ? wikiCount : undefined}
-                active={isActive("/wiki") && wikiViewMode !== "merge" && wikiViewMode !== "split"}
+                active={
+                  isActive("/wiki") &&
+                  wikiViewMode !== "merge" &&
+                  wikiViewMode !== "split" &&
+                  wikiStatusFilter === null
+                }
               />
-              <button
-                onClick={() => {
-                  setSelectedNoteId(null)
-                  setActiveRoute("/wiki")
-                  setWikiViewMode("merge")
-                  router.push("/wiki")
-                }}
-                className="a-sb-link"
-                data-active={wikiViewMode === "merge" ? "true" : undefined}
-              >
-                <span className="flex shrink-0 items-center justify-center w-5 h-5">
-                  <GitMerge size={16} />
-                </span>
-                <span className="truncate text-left flex-1">{t("wiki.merge")}</span>
-              </button>
-              <button
-                onClick={() => {
-                  setSelectedNoteId(null)
-                  setActiveRoute("/wiki")
-                  setWikiViewMode("split")
-                  router.push("/wiki")
-                }}
-                className="a-sb-link"
-                data-active={wikiViewMode === "split" ? "true" : undefined}
-              >
-                <span className="flex shrink-0 items-center justify-center w-5 h-5">
-                  <Scissors size={16} />
-                </span>
-                <span className="truncate text-left flex-1">{t("wiki.split")}</span>
-              </button>
+              {/* Wiki status nav links — Notes sidebar parity (~/notes status
+                  links). Wiki has no per-status routes (status surfaces via
+                  filter, not URL), so these drive the `wikiStatusFilter`
+                  external store + switch to list mode. Shared status icons +
+                  status.* labels (fully unified with Notes, v151). */}
+              {([
+                { status: "backlog" as const, icon: <IconBacklog size={20} />, count: wikiStatusCounts.backlog },
+                { status: "todo" as const, icon: <IconTodo size={20} />, count: wikiStatusCounts.todo },
+                { status: "in_progress" as const, icon: <IconInProgress size={20} />, count: wikiStatusCounts.in_progress },
+                { status: "done" as const, icon: <IconDone size={20} />, count: wikiStatusCounts.done },
+              ]).map(({ status, icon, count }) => (
+                <button
+                  key={status}
+                  onClick={() => {
+                    setSelectedNoteId(null)
+                    setWikiStatusFilter(status)
+                    setWikiViewMode("list")
+                    setActiveRoute("/wiki")
+                    router.push("/wiki")
+                  }}
+                  className="a-sb-link"
+                  data-active={wikiViewMode === "list" && wikiStatusFilter === status ? "true" : undefined}
+                >
+                  <span className="flex shrink-0 items-center justify-center w-5 h-5">
+                    {icon}
+                  </span>
+                  <span className="truncate text-left flex-1">{t(`status.${status}`)}</span>
+                  {count > 0 && (
+                    <span className="a-sb-link__count tabular-nums">{count}</span>
+                  )}
+                </button>
+              ))}
             </div>
 
             {/* Pinned wiki articles — placed at top per Linear/Notion 표준 (2026-05-24).
@@ -1099,11 +1174,8 @@ export function LinearSidebar() {
                     className="a-sb-link"
                   >
                     <span className="flex shrink-0 items-center justify-center w-5 h-5">
-                      {isWikiStub(article) ? (
-                        <IconWikiStub size={14} style={{ color: WIKI_STATUS_HEX.stub }} />
-                      ) : (
-                        <IconWikiArticle size={14} style={{ color: WIKI_STATUS_HEX.article }} />
-                      )}
+                      {/* v151: single canonical wiki entity glyph (mixed sidebar row). */}
+                      <IconWiki size={14} style={{ color: SPACE_COLORS.wiki }} />
                     </span>
                     <span className="truncate text-left flex-1">{article.title || "Untitled"}</span>
                   </button>
@@ -1238,12 +1310,45 @@ export function LinearSidebar() {
               )}
             </Section>
 
-            {/* More section: Templates (Notes/Books 사이드바 정합 — 2026-05-28).
-                Wiki article recipe — Concept/Person/Place 등 pre-seeded
-                blocks+infobox. Categories/Stickers는 Library hub로 이동
-                (cross-entity 분류 메커니즘 정합). Insights는 Ontology에
-                통합 (영구 룰 #140 — 각 entity 세부 Insights 페이지는 carry). */}
+            {/* More section: Merge, Split, Templates, Insights.
+                Merge/Split moved here from the top-nav block so the top nav
+                mirrors Notes (Overview + status links), and the secondary
+                wiki actions live together under More (2026-05-29). Templates
+                = wiki article recipe. Insights = entity 세부 page (영구 룰
+                #140/#168 — Ontology=전체 / entity=세부, /wiki/insights). */}
             <Section title={t("sidebar.section.more")}>
+              <button
+                onClick={() => {
+                  setSelectedNoteId(null)
+                  setActiveRoute("/wiki")
+                  setWikiStatusFilter(null)
+                  setWikiViewMode("merge")
+                  router.push("/wiki")
+                }}
+                className="a-sb-link"
+                data-active={wikiViewMode === "merge" ? "true" : undefined}
+              >
+                <span className="flex shrink-0 items-center justify-center w-5 h-5">
+                  <GitMerge size={16} />
+                </span>
+                <span className="truncate text-left flex-1">{t("wiki.merge")}</span>
+              </button>
+              <button
+                onClick={() => {
+                  setSelectedNoteId(null)
+                  setActiveRoute("/wiki")
+                  setWikiStatusFilter(null)
+                  setWikiViewMode("split")
+                  router.push("/wiki")
+                }}
+                className="a-sb-link"
+                data-active={wikiViewMode === "split" ? "true" : undefined}
+              >
+                <span className="flex shrink-0 items-center justify-center w-5 h-5">
+                  <Scissors size={16} />
+                </span>
+                <span className="truncate text-left flex-1">{t("wiki.split")}</span>
+              </button>
               <NavLink
                 href="/wiki/templates"
                 icon={<IconTemplate size={20} />}
@@ -1252,31 +1357,38 @@ export function LinearSidebar() {
                 active={isActive("/wiki/templates")}
                 dragContent={{ type: "wiki-templates" } as any}
               />
+              <NavLink
+                href="/wiki/insights"
+                icon={<IconInsight size={20} />}
+                label={t("sidebar.insights")}
+                active={isActive("/wiki/insights")}
+                dragContent={{ type: "wiki-insights" } as any}
+              />
             </Section>
 
-            {/* Recent wiki articles */}
-            {(() => {
-              const recentWiki = recentNotes.filter((item) => {
-                const note = notes.find((n) => n.id === item.id)
-                return note?.noteType === "wiki"
-              })
-              return recentWiki.length > 0 ? (
-                <Section title={t("sidebar.section.recent")}>
-                  {recentWiki.map((item) => (
-                    <button
-                      key={item.id}
-                      onClick={(e) => openNote(item.id, { forceNewTab: e.ctrlKey || e.metaKey })}
-                      className="a-sb-link"
-                    >
-                      <span className="flex shrink-0 items-center justify-center w-5 h-5">
-                        <IconDoc size={14} />
-                      </span>
-                      <span className="truncate text-left flex-1">{item.title}</span>
-                    </button>
-                  ))}
-                </Section>
-              ) : null
-            })()}
+            {/* Recent wiki articles — wikiArticles store (updatedAt desc), 별도
+                entity. Mirrors the Pinned wiki section (navigateToWikiArticle +
+                IconWiki). The old recentNotes.filter(noteType==="wiki") was dead. */}
+            {recentWikiArticles.length > 0 && (
+              <Section title={t("sidebar.section.recent")}>
+                {recentWikiArticles.map((article) => (
+                  <button
+                    key={article.id}
+                    onClick={() => {
+                      setActiveRoute("/wiki")
+                      usePlotStore.getState().setSelectedNoteId(null)
+                      navigateToWikiArticle(article.id)
+                    }}
+                    className="a-sb-link"
+                  >
+                    <span className="flex shrink-0 items-center justify-center w-5 h-5">
+                      <IconWiki size={14} style={{ color: SPACE_COLORS.wiki }} />
+                    </span>
+                    <span className="truncate text-left flex-1">{article.title || "Untitled"}</span>
+                  </button>
+                ))}
+              </Section>
+            )}
           </>
         )}
 
@@ -1322,11 +1434,8 @@ export function LinearSidebar() {
                       {item.kind === "note" ? (
                         <StatusShapeIcon status={item.status} size={14} />
                       ) : item.kind === "wiki" ? (
-                        item.isStub ? (
-                          <IconWikiStub size={14} style={{ color: WIKI_STATUS_HEX.stub }} />
-                        ) : (
-                          <IconWikiArticle size={14} style={{ color: WIKI_STATUS_HEX.article }} />
-                        )
+                        // v151: single canonical wiki entity glyph (mixed sidebar row).
+                        <IconWiki size={14} style={{ color: SPACE_COLORS.wiki }} />
                       ) : (
                         <BookKindIcon kind={item.bookKind} size={14} />
                       )}
@@ -1865,6 +1974,27 @@ export function LinearSidebar() {
               )}
             </Section>
 
+            {/* More section: Smart Book + Insights. Mirrors the Notes/Wiki More
+                sections so Books = Pinned → Views → Folders → More → Recent.
+                Smart Book = the Books analog of Templates (SmartBookPreset
+                gallery — saved AutoSource blueprints). Insights = entity 세부
+                page (영구 룰 #140/#168 — Ontology=전체 / entity=세부). */}
+            <Section title={t("sidebar.section.more")}>
+              <NavLink
+                href="/books/smart-books"
+                icon={<IconSmartBook size={20} />}
+                label={t("sidebar.smartBook")}
+                count={smartBookPresets.filter((p) => !p.trashed).length || undefined}
+                active={isActive("/books/smart-books")}
+              />
+              <NavLink
+                href="/books/insights"
+                icon={<IconInsight size={20} />}
+                label={t("sidebar.insights")}
+                active={isActive("/books/insights")}
+              />
+            </Section>
+
             {/* Recent books — top 5 by updatedAt (excludes trashed). */}
             {(() => {
               const recentBooks = books
@@ -1954,11 +2084,8 @@ export function LinearSidebar() {
                       {item.kind === "note" ? (
                         <StatusShapeIcon status={item.status} size={14} />
                       ) : item.kind === "wiki" ? (
-                        item.isStub ? (
-                          <IconWikiStub size={14} style={{ color: WIKI_STATUS_HEX.stub }} />
-                        ) : (
-                          <IconWikiArticle size={14} style={{ color: WIKI_STATUS_HEX.article }} />
-                        )
+                        // v151: single canonical wiki entity glyph (mixed sidebar row).
+                        <IconWiki size={14} style={{ color: SPACE_COLORS.wiki }} />
                       ) : (
                         <BookKindIcon kind={item.bookKind} size={14} />
                       )}

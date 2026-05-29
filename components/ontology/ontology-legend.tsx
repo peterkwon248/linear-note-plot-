@@ -9,18 +9,19 @@
  * 의미 차이 명확히.
  *
  * 영구 LOCKED:
- *   - 색: WIKI_STATUS_HEX + NOTE_STATUS_HEX (변경 X — chart-N 금지 룰 유지)
- *   - icons: Plot이 정의한 entity icon system 그대로 (IconStone / IconBrick /
- *     IconBlock / IconWikiStub / IconWikiArticle / Lightning / Sparkle /
+ *   - 색: NOTE_STATUS_HEX (변경 X — chart-N 금지 룰 유지). v151: wiki status도
+ *     Notes와 통일되어 NOTE_STATUS_HEX 공유 (WIKI_STATUS_HEX 폐기).
+ *   - icons: Plot이 정의한 entity icon system 그대로 (IconBacklog/Todo/
+ *     InProgress/Done / IconWiki(entity glyph) / Lightning / Sparkle /
  *     PencilSimple)
  *
  * EDGES section은 별도 PR (scope ↓). 이번 PR은 node legend만.
  */
 
 import { useState } from "react"
-import { IconBacklog, IconTodo, IconInProgress, IconDone, IconWikiStub, IconWikiArticle } from "@/components/plot-icons"
+import { IconBacklog, IconTodo, IconInProgress, IconDone, IconWiki } from "@/components/plot-icons"
 import { Zap as Lightning, Sparkles as Sparkle, Pencil as PencilSimple, ChevronDown as CaretDown, ChevronRight as CaretRight } from "lucide-react"
-import { NOTE_STATUS_HEX, WIKI_STATUS_HEX, SPACE_COLORS } from "@/lib/colors"
+import { NOTE_STATUS_HEX, SPACE_COLORS } from "@/lib/colors"
 import { cn } from "@/lib/utils"
 import { useT } from "@/lib/i18n"
 
@@ -103,17 +104,15 @@ export function OntologyLegend({ className }: { className?: string }) {
             color={NOTE_STATUS_HEX.done}
           />
 
-          {/* WIKI */}
+          {/* WIKI — v151: wiki articles share the SAME 4-stage status as Notes
+              (above). Graph wiki NODES are colored by the wiki entity color
+              (violet), so the legend shows a single Wiki entity glyph here
+              rather than a separate status sub-list. */}
           <GroupHeader label={t("ontology.legend.wiki")} />
           <LegendRow
-            icon={<IconWikiStub size={13} />}
-            label={t("ontology.legend.stub")}
-            color={WIKI_STATUS_HEX.stub}
-          />
-          <LegendRow
-            icon={<IconWikiArticle size={13} />}
-            label={t("ontology.legend.article")}
-            color={WIKI_STATUS_HEX.article}
+            icon={<IconWiki size={13} />}
+            label={t("ontology.legend.wiki")}
+            color={SPACE_COLORS.wiki}
           />
 
           {/* BOOKS — kind icons (Smart/Hybrid/Manual). Color is per-book

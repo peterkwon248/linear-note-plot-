@@ -28,7 +28,6 @@ import { usePlotStore } from "@/lib/store"
 import { useKnowledgeMetrics } from "@/hooks/use-knowledge-metrics"
 import { getEntityColor } from "@/lib/colors" // v109: opt-in color fallback
 import { useT } from "@/lib/i18n"
-import { isWikiStub } from "@/lib/wiki-utils"
 import {
   StatusDonut,
   WikiStatusDonut,
@@ -86,14 +85,16 @@ export function OntologyDashboardPanel() {
   const avgLinksPerNote =
     m.totalNotes > 0 ? (m.totalEdges / m.totalNotes).toFixed(2) : "0"
 
-  // Wiki status split — Article vs Stub
+  // Wiki status split — v151: "complete" (done) vs "incomplete" (not-yet-done),
+  // based on the manual 4-stage status. (Donut field names kept for back-compat:
+  // articles = done, stubs = backlog/todo/in_progress.)
   const wikiStatusCounts = useMemo(() => {
     let articles = 0
     let stubs = 0
     for (const w of wikiArticles) {
       if ((w as { trashed?: boolean }).trashed) continue
-      if (isWikiStub(w)) stubs++
-      else articles++
+      if (w.status === "done") articles++
+      else stubs++
     }
     return { articles, stubs }
   }, [wikiArticles])

@@ -25,8 +25,8 @@ export interface TimelineLabelColumnProps {
    *  Wiki: stub orange / article emerald. Notes: backlog slate / todo blue /
    *  in_progress amber / done emerald. Books: smart indigo / hybrid amber / manual muted. */
   getStatusColor: (entity: TimelineEntity) => string
-  /** Caller-rendered status silhouette (e.g. IconWikiStub for wiki stubs,
-   *  IconBacklog for note backlog). Sized for the label column (13px default
+  /** Caller-rendered status silhouette (shared 4-circle StatusShapeIcon for
+   *  notes/wiki — both share the 4-stage status, v151). Sized for the label column (13px default
    *  inside this component). */
   renderStatusIcon: (entity: TimelineEntity, size?: number) => ReactNode
   activeArticleId: string | null

@@ -15,10 +15,8 @@ import React, {
 } from "react"
 import { FileText, Asterisk, Link as LinkIcon, Hash } from "@/lib/editor/editor-icons"
 import { CircleDashed, Circle, Contrast as CircleHalf, CircleCheck as CheckCircle, BookOpen } from "lucide-react"
-import { IconWikiStub, IconWikiArticle } from "@/components/plot-icons"
-import { NOTE_STATUS_HEX, WIKI_STATUS_HEX } from "@/lib/colors"
+import { NOTE_STATUS_HEX, SPACE_COLORS } from "@/lib/colors"
 import { usePlotStore } from "@/lib/store"
-import { isWikiStub } from "@/lib/wiki-utils"
 import { getBody } from "@/lib/note-body-store"
 import { extractAnchorsFromContentJson, AnchorItem } from "@/lib/anchor-utils"
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -29,7 +27,6 @@ interface WikilinkItem {
   status: string
   isAlias?: boolean
   isWiki?: boolean
-  isStub?: boolean // for wiki items — stub vs article
   isNewNote?: boolean
   isNewWiki?: boolean
   isReference?: boolean
@@ -292,12 +289,9 @@ const WikilinkList = forwardRef<WikilinkListRef, WikilinkListProps>(
                       ) : (
                         <>
                           {item.isWiki ? (
-                            // Existing wiki — split by status: stub vs article icon.
-                            item.isStub ? (
-                              <IconWikiStub size={14} className="shrink-0" style={{ color: WIKI_STATUS_HEX.stub }} />
-                            ) : (
-                              <IconWikiArticle size={14} className="shrink-0" style={{ color: WIKI_STATUS_HEX.article }} />
-                            )
+                            // Existing wiki — single canonical entity glyph
+                            // (mixed picker context, v151). Status not encoded here.
+                            <BookOpen size={14} className="shrink-0" style={{ color: SPACE_COLORS.wiki }} />
                           ) : item.status === "backlog" ? (
                             <CircleDashed className="shrink-0" size={14} style={{ color: NOTE_STATUS_HEX.backlog }} />
                           ) : item.status === "todo" ? (
@@ -403,7 +397,7 @@ export const WikilinkSuggestion = Extension.create({
               .filter((w: any) => w.title?.trim())
               .sort((a: any, b: any) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
               .slice(0, 3)
-              .map((w: any) => ({ id: w.id, title: w.title, status: isWikiStub(w) ? "stub" : "article", isWiki: true, isStub: isWikiStub(w), itemType: "wiki" as const }))
+              .map((w: any) => ({ id: w.id, title: w.title, status: w.status, isWiki: true, itemType: "wiki" as const }))
 
             // Recent References
             const references = (store as any).references ?? {}
@@ -483,7 +477,7 @@ export const WikilinkSuggestion = Extension.create({
               return a.title.length - b.title.length
             })
             .slice(0, 4)
-            .map((w: any) => ({ id: w.id, title: w.title, status: isWikiStub(w) ? "stub" : "article", isWiki: true, isStub: isWikiStub(w), itemType: "wiki" as const }))
+            .map((w: any) => ({ id: w.id, title: w.title, status: w.status, isWiki: true, itemType: "wiki" as const }))
 
           // Search References
           const references = (store as any).references ?? {}
@@ -523,11 +517,11 @@ export const WikilinkSuggestion = Extension.create({
               isNewNote: true,
               itemType: "note",
             })
-            // "Create as Wiki" option
+            // "Create as Wiki" option (new article starts at backlog)
             finalResults.push({
               id: `__new_wiki__${q}`,
               title: q,
-              status: "article",
+              status: "backlog",
               isNewWiki: true,
               isWiki: true,
               itemType: "wiki",

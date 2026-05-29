@@ -11,7 +11,6 @@
 
 import type { Note, WikiArticle } from "@/lib/types"
 import type { TimeSeriesPoint } from "./types"
-import { isWikiStub } from "@/lib/wiki-utils"
 
 export type BucketSize = "day" | "week" | "month"
 
@@ -151,15 +150,18 @@ export function computeWikiTimeSeries(
       const w = sortedWiki[wikiIdx].wiki
       cumWiki++
       newWiki++
-      // Article/stub split — current store state at compute time
-      if (isWikiStub(w)) {
-        cumStubs++
-        newStubs++
-      } else {
+      // v151: "complete" (done) vs "incomplete" (not-yet-done) split, based on
+      // the manual 4-stage status. Field names (totalArticles/totalStubs) are
+      // kept for chart back-compat: Articles = done, Stubs = backlog/todo/
+      // in_progress (still being worked).
+      if (w.status === "done") {
         cumArticles++
         newArticles++
         // Count wiki-to-wiki links (linksOut on WikiArticle)
         cumWikiEdges += w.linksOut?.length ?? 0
+      } else {
+        cumStubs++
+        newStubs++
       }
       wikiIdx++
     }

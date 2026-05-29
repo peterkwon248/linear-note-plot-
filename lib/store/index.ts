@@ -1,12 +1,13 @@
 import { create } from "zustand"
 import { persist } from "zustand/middleware"
-import type { EntityEvent, AutopilotLogEntry, Relation } from "../types"
+import type { EntityEvent, AutopilotLogEntry, Relation, WikiStatus } from "../types"
 import type { Attachment, CoOccurrence, RelationSuggestion } from "../types"
 import { buildDefaultViewStates } from "../view-engine/defaults"
 import { createIDBStorage } from "../idb-storage"
 import { createAppendEvent } from "./helpers"
-import { SEED_NOTES, SEED_FOLDERS, SEED_TAGS, SEED_LABELS, SEED_TEMPLATES, SEED_WIKI_ARTICLES, SEED_WIKI_CATEGORIES, SEED_WIKI_TEMPLATES, SEED_BOOKS } from "./seeds"
+import { SEED_NOTES, SEED_FOLDERS, SEED_TAGS, SEED_LABELS, SEED_TEMPLATES, SEED_WIKI_ARTICLES, SEED_WIKI_CATEGORIES, SEED_WIKI_TEMPLATES, SEED_BOOKS, SEED_SMART_BOOK_PRESETS } from "./seeds"
 import { persistBody, persistBlockBody } from "./helpers"
+import { isWikiStub } from "../wiki-utils"
 import { createNotesSlice } from "./slices/notes"
 import { createWorkflowSlice } from "./slices/workflow"
 import { createFoldersSlice } from "./slices/folders"
@@ -36,6 +37,7 @@ import { createGlobalBookmarksSlice } from "./slices/global-bookmarks"
 import { createCommentsSlice } from "./slices/comments"
 import { createInboxSlice } from "./slices/inbox"
 import { createBooksSlice } from "./slices/books"
+import { createSmartBookPresetsSlice } from "./slices/smart-book-presets"
 import { DEFAULT_AUTOPILOT_RULES } from "../autopilot/defaults"
 import { migrate } from "./migrate"
 import type { PlotState } from "./types"
@@ -98,6 +100,7 @@ export const usePlotStore = create<PlotState>()(
         globalBookmarks: {} as Record<string, import("../types").GlobalBookmark>,
         comments: {} as Record<string, import("../types").Comment>,
         books: SEED_BOOKS,
+        smartBookPresets: SEED_SMART_BOOK_PRESETS,
         bookContext: { primary: null, secondary: null } as { primary: import("./types").BookContextState | null; secondary: import("./types").BookContextState | null },
         // Dual mode (split-mode-prd) — list+editor split-of-main, distinct from NoteSplitOverlay
         dualSelection: null as import("./types").DualSelection | null,
@@ -149,6 +152,7 @@ export const usePlotStore = create<PlotState>()(
         ...createCommentsSlice(set),
         ...createInboxSlice(set),
         ...createBooksSlice(set, get, appendEvent),
+        ...createSmartBookPresetsSlice(set, get),
 
         // ── Todo Index ──
         rebuildTodoIndex: async () => {
@@ -268,7 +272,7 @@ export const usePlotStore = create<PlotState>()(
     },
     {
       name: "plot-store",
-      version: 150,
+      version: 152,
       storage: createIDBStorage<PlotState>(),
       partialize: (state) => {
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -319,6 +323,8 @@ export const usePlotStore = create<PlotState>()(
             state.templates = SEED_TEMPLATES
             // books seed shipped 2026-05-12 (books-view-engine demo set)
             state.books = SEED_BOOKS
+            // smart book presets seed shipped v152 (Smart Book gallery demo set)
+            state.smartBookPresets = SEED_SMART_BOOK_PRESETS
           }
 
           // Independent books backfill — existing users (notes already seeded)
@@ -327,6 +333,17 @@ export const usePlotStore = create<PlotState>()(
           // hand-creating books. Idempotent: only seeds when array is empty.
           if (!Array.isArray(state.books) || state.books.length === 0) {
             state.books = SEED_BOOKS
+          }
+
+          // v152: smartBookPresets onRehydrate defense + independent backfill.
+          // Mirrors the books backfill above + the wikiTemplates array defense
+          // below: guards (a) the array-shape invariant (serialize round-trip
+          // can turn an array into an object) and (b) the empty-pool case so
+          // existing users (who never created a preset) still get the demo set,
+          // making the Smart Book gallery exercise-able without hand-seeding.
+          // Idempotent: only seeds when not a populated array.
+          if (!Array.isArray(state.smartBookPresets) || state.smartBookPresets.length === 0) {
+            state.smartBookPresets = SEED_SMART_BOOK_PRESETS
           }
 
           // 2026-05-18: wikiTemplates onRehydrate defense. v139 migration이
@@ -440,28 +457,55 @@ export const usePlotStore = create<PlotState>()(
                 })
                 usePlotStore.setState({ wikiArticles: updatedArticles })
 
-                // Now load text block bodies from wiki-block-body-store
+                // Now load text block bodies from wiki-block-body-store, THEN
+                // seed wiki status (v151) — seeding must run AFTER blocks + text
+                // content are loaded because isWikiStub() inspects text content.
                 const textBlockIds = updatedArticles
                   .flatMap((a) => a.blocks)
                   .filter((b) => b.type === "text" && !b.content)
                   .map((b) => b.id)
 
-                if (textBlockIds.length > 0) {
-                  import("@/lib/wiki-block-body-store").then(({ getBlockBodies }) => {
-                    getBlockBodies(textBlockIds).then((bodies) => {
-                      if (bodies.size === 0) return
-                      usePlotStore.setState((s) => ({
-                        wikiArticles: s.wikiArticles.map((a) => ({
-                          ...a,
-                          blocks: a.blocks.map((b) => {
-                            const content = bodies.get(b.id)
-                            return content !== undefined ? { ...b, content } : b
-                          }),
-                        })),
-                      }))
+                const loadBodies =
+                  textBlockIds.length > 0
+                    ? import("@/lib/wiki-block-body-store").then(({ getBlockBodies }) =>
+                        getBlockBodies(textBlockIds).then((bodies) => {
+                          if (bodies.size === 0) return
+                          usePlotStore.setState((s) => ({
+                            wikiArticles: s.wikiArticles.map((a) => ({
+                              ...a,
+                              blocks: a.blocks.map((b) => {
+                                const content = bodies.get(b.id)
+                                return content !== undefined ? { ...b, content } : b
+                              }),
+                            })),
+                          }))
+                        })
+                      )
+                    : Promise.resolve()
+
+                // v151: seed WikiStatus once blocks + content are fully loaded.
+                // migrate() CANNOT do this — partialize strips wiki blocks from
+                // the persisted snapshot, so isWikiStub() is only meaningful here
+                // (post-rehydration). Idempotent backfill: only articles still
+                // missing a status (new articles get one at creation).
+                // stub→backlog, article→done. Persists automatically (`status`
+                // is not stripped by partialize), so this is a one-time seed.
+                loadBodies.then(() => {
+                  usePlotStore.setState((s) => {
+                    let seeded = 0
+                    const seededArticles = s.wikiArticles.map((a) => {
+                      if (a.status) return a
+                      seeded++
+                      const isStub = a.blocks.length === 0 ? true : isWikiStub(a)
+                      const newStatus: WikiStatus = isStub ? "backlog" : "done"
+                      return { ...a, status: newStatus }
                     })
+                    if (seeded > 0) {
+                      console.log(`[rehydrate] v151: seeded WikiStatus on ${seeded} articles (stub→backlog, article→done)`)
+                    }
+                    return seeded > 0 ? { wikiArticles: seededArticles } : {}
                   })
-                }
+                })
               })
             })
           }

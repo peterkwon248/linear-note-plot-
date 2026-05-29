@@ -26,6 +26,7 @@ function makeWikiArticle(
   return {
     id,
     title: `Wiki ${id}`,
+    status: "backlog",
     categoryIds,
     tags,
     updatedAt,

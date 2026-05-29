@@ -4,7 +4,10 @@ import { useMemo } from "react"
 import { cn } from "@/lib/utils"
 import { shortRelative } from "@/lib/format-utils"
 import { useT } from "@/lib/i18n"
-import type { Note, WikiArticle } from "@/lib/types"
+import type { Note, WikiArticle, WikiStatus } from "@/lib/types"
+import { STATUS_CONFIG } from "@/components/note-fields"
+import { StatusShapeIcon } from "@/components/status-icon"
+import { WIKI_STATUS_ORDER } from "@/lib/view-engine/wiki-list-pipeline"
 import { WikiInsightsChart } from "@/components/wiki-editor/wiki-insights-chart"
 import {
   BookOpen,
@@ -31,8 +34,8 @@ interface WikiDashboardProps {
     internalLinks: number
     connectedNotes: number
   }
-  articleCount: number
-  stubCount: number
+  /** v151: 4-stage status breakdown (manual, unified with Notes). */
+  statusCounts: Record<WikiStatus, number>
   redLinks: { title: string; refCount: number }[]
   recentChanges: WikiArticle[]
   mostConnected: { note: WikiArticle; count: number }[]
@@ -52,7 +55,8 @@ interface WikiDashboardProps {
   onOpenWikiArticle?: (id: string) => void
   onCreateFromRedLink: (title: string) => void
   onViewAll: () => void
-  onViewStubs?: () => void
+  /** v151: drill into the list filtered to a specific 4-stage status. */
+  onViewStatus?: (status: WikiStatus) => void
   onViewRedLinks?: () => void
   onCategoryClick?: (categoryId: string) => void
 }
@@ -64,8 +68,7 @@ export function WikiDashboard({
   wikiArticles,
   notes,
   stats,
-  articleCount,
-  stubCount,
+  statusCounts,
   redLinks,
   recentChanges,
   mostConnected,
@@ -81,7 +84,7 @@ export function WikiDashboard({
   onOpenWikiArticle,
   onCreateFromRedLink,
   onViewAll,
-  onViewStubs,
+  onViewStatus,
   onViewRedLinks,
   onCategoryClick,
 }: WikiDashboardProps) {
@@ -140,25 +143,42 @@ export function WikiDashboard({
           )}
         </div>
 
-        {/* ── Top Stats Row ── */}
-        {/* Tailwind colors mirror lib/colors.ts WIKI_STATUS_HEX semantic:
-            article = emerald (complete), stub = orange (in-progress).
-            Uncategorized uses amber as a neutral "needs attention" hue
-            distinct from the orange already taken by stub. */}
+        {/* ── Status Breakdown Row ── */}
+        {/* v151: 4-stage status breakdown (Backlog / Todo / In Progress / Done),
+            unified with Notes. Each card shows the shared 4-circle icon + count;
+            clicking a status drills into the list filtered to it. */}
+        <div className="mb-3 grid grid-cols-2 gap-3 min-[800px]:grid-cols-4">
+          {WIKI_STATUS_ORDER.map((status) => {
+            const cfg = STATUS_CONFIG[status]
+            return (
+              <button
+                key={status}
+                onClick={() => onViewStatus?.(status)}
+                className={cn(
+                  "rounded-lg border border-border bg-card px-3 py-2.5 text-left shadow-sm",
+                  "transition-all duration-150 hover:border-accent/30 hover:bg-accent/[0.03] hover:shadow",
+                )}
+              >
+                <p className="text-xl font-semibold tabular-nums" style={{ color: cfg.color }}>
+                  {statusCounts[status]}
+                </p>
+                <p className="flex items-center gap-1 text-2xs font-medium text-foreground">
+                  <StatusShapeIcon status={status} size={11} />
+                  {t(cfg.labelKey)}
+                </p>
+              </button>
+            )
+          })}
+        </div>
+
+        {/* Uncategorized — amber "needs attention" hue. */}
         <div className="mb-6 grid grid-cols-2 gap-3 min-[800px]:grid-cols-3">
           <MiniStat
             label={t("wiki.stats.articles")}
-            value={articleCount}
+            value={stats.total}
             sub={t("wiki.stats.articles_total").replace("{count}", String(stats.total))}
             color="text-emerald-600 dark:text-emerald-400"
             onClick={onViewAll}
-          />
-          <MiniStat
-            label={t("wiki.stats.stubs")}
-            value={stubCount}
-            sub={t("wiki.stats.stubs_need_content")}
-            color="text-orange-600 dark:text-orange-400"
-            onClick={onViewStubs}
           />
           <MiniStat
             label={t("wiki.stats.uncategorized")}

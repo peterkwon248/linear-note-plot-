@@ -1,4 +1,4 @@
-import type { WikiArticle, WikiBlock, WikiMergeSnapshot } from "../../types"
+import type { WikiArticle, WikiBlock, WikiMergeSnapshot, WikiStatus } from "../../types"
 import { genId, now, persistBlockBody, removeBlockBody, persistArticleBlocks, removeArticleBlocks, type AppendEventFn } from "../helpers"
 import { buildSectionIndex } from "../../wiki-section-index"
 import { extractLinksFromWikiBlocks } from "../../body-helpers"
@@ -16,6 +16,8 @@ export function createWikiArticlesSlice(set: Set, get: Get, appendEvent: AppendE
       aliases?: string[]
       tags?: string[]
       blocks?: WikiBlock[]
+      /** Optional initial manual status (v151). Defaults to "backlog". */
+      status?: WikiStatus
       /**
        * Optional folder containment (v107 N:M). Set when created from inside
        * a folder page so the new article is automatically a member of that
@@ -35,6 +37,10 @@ export function createWikiArticlesSlice(set: Set, get: Get, appendEvent: AppendE
       const article: WikiArticle = {
         id,
         title: partial.title,
+        // New articles start at "backlog" (empty default-template shell) —
+        // the manual 4-stage status (v151, unified with Notes). User advances
+        // it as the article fills out. Honors partial.status when provided.
+        status: partial.status ?? "backlog",
         aliases: partial.aliases ?? [],
         infobox: [],
         blocks,
@@ -457,6 +463,9 @@ export function createWikiArticlesSlice(set: Set, get: Get, appendEvent: AppendE
       const newArticle: WikiArticle = {
         id: newId,
         title: newTitle,
+        // Split-off article carries real content (extracted blocks) — inherit
+        // the source's status rather than resetting to backlog.
+        status: source.status,
         aliases: [],
         infobox: [],
         blocks: extractedBlocks,
@@ -519,6 +528,9 @@ export function createWikiArticlesSlice(set: Set, get: Get, appendEvent: AppendE
       const newArticle: WikiArticle = {
         id: newId,
         title: newTitle,
+        // Copied article carries the same content as the source — inherit its
+        // status rather than resetting to backlog.
+        status: source.status,
         aliases: [],
         infobox: [],
         blocks: clonedBlocks,
@@ -570,6 +582,10 @@ export function createWikiArticlesSlice(set: Set, get: Get, appendEvent: AppendE
       const restoredArticle: WikiArticle = {
         id: restoredId,
         title: snapshot.title,
+        // Restored from a merge snapshot — it was a full article before the
+        // merge, and WikiMergeSnapshot predates the status field, so default
+        // to "done" (had real content). User can demote if needed.
+        status: "done",
         aliases: snapshot.aliases,
         infobox: snapshot.infobox,
         blocks: extractedBlocks,
@@ -727,10 +743,18 @@ export function createWikiArticlesSlice(set: Set, get: Get, appendEvent: AppendE
         const folderIdsUnion = Array.from(
           new Set(sources.flatMap((s) => s.folderIds ?? [])),
         )
+        // Merged article inherits the most-complete status among its sources
+        // (merge combines real content — never downgrade to backlog).
+        const STATUS_RANK: Record<WikiStatus, number> = { backlog: 0, todo: 1, in_progress: 2, done: 3 }
+        const mergedStatus: WikiStatus = sources.reduce<WikiStatus>(
+          (best, s) => (STATUS_RANK[s.status] > STATUS_RANK[best] ? s.status : best),
+          "backlog",
+        )
         const newId = genId()
         const newArticle: WikiArticle = {
           id: newId,
           title: options.title,
+          status: mergedStatus,
           aliases: Array.from(allAliases),
           infobox: mergedInfobox,
           blocks,
@@ -797,6 +821,9 @@ export function createWikiArticlesSlice(set: Set, get: Get, appendEvent: AppendE
       const restoredArticle: WikiArticle = {
         id: restoredId,
         title: snapshot.title,
+        // Restored from a merge snapshot — was a full article before merge;
+        // WikiMergeSnapshot predates the status field, so default to "done".
+        status: "done",
         aliases: [...snapshot.aliases],
         infobox: [...snapshot.infobox],
         blocks: restorationBlocks,

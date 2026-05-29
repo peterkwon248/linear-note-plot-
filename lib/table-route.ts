@@ -16,7 +16,7 @@ export const TABLE_VIEW_ROUTES = ["/notes", "/backlog", "/todo", "/in-progress",
 export const WORKFLOW_ROUTES = ["/backlog", "/todo", "/in-progress", "/done"]
 
 /** Routes handled by individual always-mounted view components */
-export const VIEW_ROUTES = ["/home", "/inbox", "/labels", "/library/labels", "/library/categories", "/stickers", "/templates", "/ontology", "/insights", "/wiki", "/search", "/calendar", "/graph-insights", "/library", "/library/references", "/library/tags", "/library/files", "/books"]
+export const VIEW_ROUTES = ["/home", "/inbox", "/labels", "/library/labels", "/library/categories", "/stickers", "/templates", "/ontology", "/insights", "/wiki", "/wiki/insights", "/search", "/calendar", "/graph-insights", "/library", "/library/references", "/library/tags", "/library/files", "/books", "/books/smart-books", "/books/insights"]
 
 /** All routes that use instant switching (always-mounted in layout) */
 export const ALL_SIDEBAR_ROUTES = [...TABLE_VIEW_ROUTES, ...VIEW_ROUTES]
@@ -94,7 +94,7 @@ export function routeGoForward(): boolean {
 /** Infer which activity space a route belongs to */
 export function inferSpace(route: string): ActivitySpace {
   if (route === "/home" || route === "/inbox") return "home"
-  if (route === "/wiki" || route === "/wiki/templates") return "wiki"
+  if (route === "/wiki" || route === "/wiki/templates" || route === "/wiki/insights") return "wiki"
   if (route.startsWith("/calendar")) return "calendar"
   if (route === "/ontology" || route === "/graph-insights") return "ontology"
   if (route.startsWith("/library")) return "library"

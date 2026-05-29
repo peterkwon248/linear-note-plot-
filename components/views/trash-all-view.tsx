@@ -5,10 +5,7 @@ import { toast } from "sonner"
 import { cn } from "@/lib/utils"
 import { usePlotStore } from "@/lib/store"
 import { StatusShapeIcon } from "@/components/status-icon"
-import { IconWikiStub, IconWikiArticle } from "@/components/plot-icons"
 import { BookKindIcon } from "@/components/property-chips"
-import { WIKI_STATUS_HEX } from "@/lib/colors"
-import { isWikiStub } from "@/lib/wiki-utils"
 import { getBookKind } from "@/lib/view-engine/use-books-view"
 import { shortRelative } from "@/lib/format-utils"
 import { buildAttachmentDeleteWarning } from "@/lib/extract-attachment-refs"
@@ -23,6 +20,7 @@ import type {
   Reference,
   Attachment,
   NoteStatus,
+  WikiStatus,
 } from "@/lib/types"
 import {
   RotateCcw as ArrowCounterClockwise,
@@ -65,27 +63,24 @@ const SECTION_TITLE_KEY: Record<EntityKind, string> = {
 function EntityKindIcon({
   kind,
   noteStatus,
-  wikiIsStub,
+  wikiStatus,
   bookKind,
   color,
 }: {
   kind: EntityKind
   noteStatus?: NoteStatus
-  wikiIsStub?: boolean
+  wikiStatus?: WikiStatus
   bookKind?: "manual" | "smart" | "hybrid"
   color?: string | null
 }) {
   // 2026-05-17 — entity-native icon (사용자 시그널 "엔티티와 그 내부 아이콘
   // 까지 고려해서 표시"). 영구 룰: Plot 어디서나 entity 본질 icon 일관.
+  // v151: wiki uses the shared 4-stage StatusShapeIcon, same as notes.
   if (kind === "note" && noteStatus) {
     return <StatusShapeIcon status={noteStatus} size={14} />
   }
-  if (kind === "wiki") {
-    return wikiIsStub ? (
-      <IconWikiStub size={14} style={{ color: WIKI_STATUS_HEX.stub }} className="shrink-0" />
-    ) : (
-      <IconWikiArticle size={14} style={{ color: WIKI_STATUS_HEX.article }} className="shrink-0" />
-    )
+  if (kind === "wiki" && wikiStatus) {
+    return <StatusShapeIcon status={wikiStatus} size={14} />
   }
   if (kind === "book") {
     return <BookKindIcon kind={bookKind ?? "manual"} size={14} />
@@ -114,10 +109,9 @@ interface TrashRowItem {
   color?: string | null
   trashedAt?: string | null
   noteStatus?: NoteStatus
-  /** 2026-05-17 — entity-native icon 분기용. wiki는 stub/article 구분,
-   *  book은 manual/smart/hybrid kind 표시 (영구 룰 Wiki Stub vs Article badge
-   *  / Book Kind Icon). */
-  wikiIsStub?: boolean
+  /** entity-native icon 분기용. v151: wiki는 note와 동일한 4-stage status,
+   *  book은 manual/smart/hybrid kind 표시. */
+  wikiStatus?: WikiStatus
   bookKind?: "manual" | "smart" | "hybrid"
 }
 
@@ -168,7 +162,7 @@ function TrashRow({
         <EntityKindIcon
           kind={kind}
           noteStatus={item.noteStatus}
-          wikiIsStub={item.wikiIsStub}
+          wikiStatus={item.wikiStatus}
           bookKind={item.bookKind}
           color={item.color}
         />
@@ -296,7 +290,7 @@ export function TrashAllView() {
           id: w.id,
           label: w.title || untitled,
           trashedAt: (w as any).trashedAt ?? null,
-          wikiIsStub: isWikiStub(w),
+          wikiStatus: w.status,
         })),
       },
       {

@@ -5,6 +5,7 @@
  */
 
 import { useSyncExternalStore } from "react"
+import type { WikiStatus } from "./types"
 
 export type WikiViewMode = "dashboard" | "list" | "merge" | "split"
 
@@ -35,6 +36,43 @@ function subscribe(fn: () => void): () => void {
 /** React hook to subscribe to wiki view mode changes. */
 export function useWikiViewMode(): WikiViewMode {
   return useSyncExternalStore(subscribe, getWikiViewMode, () => "dashboard" as const)
+}
+
+/* ── Wiki Status Filter ───────────────────────────────────────
+ * Wiki has no per-status routes (status surfaces via filter, not URL).
+ * This external store is the single source of truth for the list's
+ * 4-stage status quick-filter, so the sidebar status nav links and the
+ * in-list status tabs stay in sync. `null` = "all" (no status filter).
+ * Mirrors the `wikiViewMode` getter/setter/notify/useSyncExternalStore
+ * pattern above. */
+
+let _statusFilter: WikiStatus | null = null
+let _statusListeners: Array<() => void> = []
+
+function notifyStatus() {
+  _statusListeners.forEach((fn) => fn())
+}
+
+export function getWikiStatusFilter(): WikiStatus | null {
+  return _statusFilter
+}
+
+export function setWikiStatusFilter(status: WikiStatus | null): void {
+  if (_statusFilter === status) return
+  _statusFilter = status
+  notifyStatus()
+}
+
+function subscribeStatus(fn: () => void): () => void {
+  _statusListeners.push(fn)
+  return () => {
+    _statusListeners = _statusListeners.filter((f) => f !== fn)
+  }
+}
+
+/** React hook to subscribe to the wiki status filter. `null` = all. */
+export function useWikiStatusFilter(): WikiStatus | null {
+  return useSyncExternalStore(subscribeStatus, getWikiStatusFilter, () => null)
 }
 
 /* ── Pending Merge IDs (for multi-select merge from floating action bar) ── */
