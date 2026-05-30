@@ -1,0 +1,369 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Plot Shell — Linear Mirror (Lock Target)</title>
+<!--
+  셸 락 목업 — "레일 유지 + 리니어 톤 재단장" (2026-05-30 결정)
+  레퍼런스: linear-ref/Inbox 메인화면.png, My issues 내부.png
+           + skills/linear-design-mirror/references/surfaces/sidebar.md (실측값)
+  매핑:
+   - 상단바(full)        ← Linear 상단 (🕐 ‹ › + 브라우저탭 + +). Plot=워크스페이스 메뉴 좌측.
+   - 레일 56px (Plot 고유) ← EXTRAPOLATE. 7 space. 2026 톤다운(어둡게/muted/active=space색 subtle).
+   - 사이드바 240px       ← Linear MIRROR. Inbox 최상단 고정 → space 콘텐츠 → 하단 ? / Trash.
+   - 메인                 ← Linear 절제(여백·muted·구분선 최소).
+  토큰(sidebar.md): nav 15px, 보조 12px, 행 ~28px, px-2.5, strokeWidth 1.5,
+   inactive txt .65 / icon .45 / hover txt .85 / active txt .93 / active bg .08 / hover bg .05 / meta .35
+-->
+<style>
+  :root {
+    /* ── Linear 2026 다크 베이스 (사이드바가 메인보다 몇 노치 어둡게) ── */
+    --bg-main:    #101011;   /* 메인 콘텐츠 (시각적 우선) */
+    --bg-side:    #0c0c0d;   /* 사이드바 (더 어둡게) */
+    --bg-rail:    #090909;   /* 레일 (가장 어둡게) */
+    --bg-topbar:  #0c0c0d;
+    --border:     rgba(255,255,255,.07);
+    --border-soft:rgba(255,255,255,.045);
+
+    /* 텍스트/아이콘 위계 (sidebar.md 실측) */
+    --txt:        rgba(255,255,255,.93);
+    --txt-nav:    rgba(255,255,255,.70);
+    --txt-hover:  rgba(255,255,255,.88);
+    --icon:       rgba(255,255,255,.48);
+    --icon-hover: rgba(255,255,255,.72);
+    --meta:       rgba(255,255,255,.36);
+    --section:    rgba(255,255,255,.40);
+
+    --active-bg:  rgba(255,255,255,.075);
+    --hover-bg:   rgba(255,255,255,.05);
+
+    /* Plot space 색 (lib/colors.ts) */
+    --sp-home:#5e6ad2; --sp-notes:#06b6d4; --sp-wiki:#8b5cf6; --sp-books:#be123c;
+    --sp-cal:#ec4899; --sp-onto:#0f766e; --sp-lib:#b45309;
+    /* status (4단계) */
+    --st-backlog:#94a3b8; --st-todo:#3b82f6; --st-prog:#f59e0b; --st-done:#34d399;
+
+    --r: 6px;
+    --row-h: 28px;
+    --dur: 120ms;
+    --ease: cubic-bezier(.4,0,.2,1);
+    --font: "Pretendard", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; }
+  body {
+    font-family: var(--font);
+    background: var(--bg-main);
+    color: var(--txt);
+    font-size: 13px;
+    -webkit-font-smoothing: antialiased;
+    overflow: hidden;
+  }
+  .icon { width: 16px; height: 16px; display: inline-flex; flex-shrink: 0; }
+  .icon svg { width: 100%; height: 100%; stroke-width: 1.5; }
+
+  /* ══════════ 셸 그리드 ══════════ */
+  .shell {
+    display: grid;
+    grid-template-columns: 56px 240px 1fr;
+    grid-template-rows: 40px 1fr;
+    grid-template-areas:
+      "topbar topbar topbar"
+      "rail   side    main";
+    height: 100vh;
+  }
+
+  /* ══════════ 상단바 (Linear: 🕐 ‹ › + 탭 + ) ══════════ */
+  .topbar {
+    grid-area: topbar;
+    background: var(--bg-topbar);
+    border-bottom: 1px solid var(--border-soft);
+    display: flex; align-items: center; gap: 4px;
+    padding: 0 8px; -webkit-app-region: drag;
+  }
+  .tb-ws { /* 워크스페이스 식별/메뉴 (Plot UserAvatar) */
+    display: flex; align-items: center; gap: 7px; padding: 4px 8px 4px 4px;
+    border-radius: var(--r); cursor: pointer; -webkit-app-region: no-drag;
+  }
+  .tb-ws:hover { background: var(--hover-bg); }
+  .ws-badge {
+    width: 22px; height: 22px; border-radius: 6px; flex-shrink: 0;
+    background: linear-gradient(135deg, var(--sp-home), var(--sp-wiki));
+    display: grid; place-items: center; color: #fff; font-weight: 600; font-size: 12px;
+  }
+  .ws-name { font-size: 13px; font-weight: 500; color: var(--txt); }
+  .tb-btn {
+    width: 26px; height: 26px; border-radius: 6px; display: grid; place-items: center;
+    color: var(--icon); cursor: pointer; -webkit-app-region: no-drag;
+    transition: background var(--dur) var(--ease), color var(--dur) var(--ease);
+  }
+  .tb-btn:hover { background: var(--hover-bg); color: var(--icon-hover); }
+  .tb-tabs { display: flex; align-items: center; gap: 2px; margin-left: 6px; -webkit-app-region: no-drag; }
+  .tb-tab {
+    display: flex; align-items: center; gap: 7px; height: 28px; padding: 0 10px;
+    border-radius: 6px; color: var(--txt-nav); font-size: 13px; cursor: pointer; max-width: 160px;
+    transition: background var(--dur) var(--ease), color var(--dur) var(--ease);
+  }
+  .tb-tab .icon { width: 14px; height: 14px; color: var(--icon); }
+  .tb-tab:hover { background: var(--hover-bg); }
+  .tb-tab.active { background: var(--active-bg); color: var(--txt); }
+  .tb-tab.active .icon { color: var(--sp-notes); }
+  .tb-spacer { flex: 1; }
+
+  /* ══════════ 레일 (Plot 7-space, 톤다운) ══════════ */
+  .rail {
+    grid-area: rail;
+    background: var(--bg-rail);
+    border-right: 1px solid var(--border-soft);
+    display: flex; flex-direction: column; align-items: center;
+    padding: 8px 0; gap: 2px;
+  }
+  .rail-item {
+    width: 44px; height: 44px; border-radius: 8px;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px;
+    color: var(--icon); cursor: pointer; position: relative;
+    transition: background var(--dur) var(--ease), color var(--dur) var(--ease);
+  }
+  .rail-item .icon { width: 19px; height: 19px; }
+  .rail-item .rail-lbl { font-size: 9px; letter-spacing: .01em; color: var(--meta); transition: color var(--dur) var(--ease); }
+  /* Q2 락: 아이콘만 + 툴팁. active 스페이스만 라벨 (절제 + 7개 발견성) */
+  .rail-item:not(.active) .rail-lbl { display: none; }
+  .rail-item:not(.active) { height: 40px; }
+  .rail-item:hover { background: var(--hover-bg); color: var(--icon-hover); }
+  .rail-item:hover .rail-lbl { color: var(--txt-nav); }
+  .rail-item.active { color: var(--sp-color, #fff); background: color-mix(in srgb, var(--sp-color) 14%, transparent); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--sp-color) 22%, transparent); }
+  .rail-item.active .rail-lbl { color: var(--sp-color); }
+  .rail-spacer { flex: 1; }
+
+  /* ══════════ 사이드바 (Linear MIRROR) ══════════ */
+  .side {
+    grid-area: side;
+    background: var(--bg-side);
+    border-right: 1px solid var(--border-soft);
+    display: flex; flex-direction: column;
+  }
+  .side-scroll { flex: 1; overflow-y: auto; padding: 10px; display: flex; flex-direction: column; }
+  .nav-group { display: flex; flex-direction: column; gap: 1px; }
+  .nav-group + .nav-group { margin-top: 14px; }
+
+  .navlink {
+    display: flex; align-items: center; gap: 9px; height: var(--row-h);
+    padding: 0 8px; border-radius: var(--r);
+    color: var(--txt-nav); font-size: 14px; cursor: pointer; text-decoration: none;
+    transition: background var(--dur) var(--ease), color var(--dur) var(--ease);
+  }
+  .navlink .icon { color: var(--icon); transition: color var(--dur) var(--ease); }
+  .navlink:hover { background: var(--hover-bg); color: var(--txt-hover); }
+  .navlink:hover .icon { color: var(--icon-hover); }
+  .navlink.active { background: var(--active-bg); color: var(--txt); }
+  .navlink.active .icon { color: var(--txt); }
+  .navlink .lbl { flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .navlink .count { font-size: 12px; color: var(--meta); font-variant-numeric: tabular-nums; }
+
+  .sec-head {
+    display: flex; align-items: center; gap: 4px; height: 24px; padding: 0 8px;
+    color: var(--section); font-size: 12px; font-weight: 500; cursor: pointer; user-select: none;
+  }
+  .sec-head .caret { width: 12px; height: 12px; color: var(--meta); transition: transform var(--dur) var(--ease); }
+  .sec-head .add { margin-left: auto; opacity: 0; color: var(--icon); transition: opacity var(--dur) var(--ease); }
+  .sec-head:hover .add { opacity: 1; }
+
+  /* status dot */
+  .dot { width: 13px; height: 13px; border-radius: 50%; border: 1.6px solid currentColor; display: inline-flex; }
+  .dot.fill { background: currentColor; }
+
+  /* 사이드바 하단 footer (Linear: ? 좌하단 / Trash 강등) */
+  .side-foot {
+    border-top: 1px solid var(--border-soft);
+    padding: 6px 10px; display: flex; align-items: center; gap: 2px;
+  }
+  .foot-btn {
+    display: flex; align-items: center; gap: 8px; height: 28px; padding: 0 8px; border-radius: var(--r);
+    color: var(--txt-nav); font-size: 13px; cursor: pointer; flex: 1;
+    transition: background var(--dur) var(--ease), color var(--dur) var(--ease);
+  }
+  .foot-btn .icon { color: var(--icon); }
+  .foot-btn:hover { background: var(--hover-bg); color: var(--txt-hover); }
+  .foot-icon { width: 28px; height: 28px; border-radius: var(--r); display: grid; place-items: center; color: var(--icon); cursor: pointer; transition: background var(--dur) var(--ease), color var(--dur) var(--ease); flex: 0 0 auto; }
+  .foot-icon:hover { background: var(--hover-bg); color: var(--icon-hover); }
+
+  /* ══════════ 메인 ══════════ */
+  .main { grid-area: main; background: var(--bg-main); display: flex; flex-direction: column; overflow: hidden; }
+  .main-head { display: flex; align-items: center; height: 48px; padding: 0 20px; gap: 12px; }
+  .main-title { font-size: 16px; font-weight: 600; color: var(--txt); }
+  .main-head .sub { color: var(--meta); font-weight: 400; }
+  .main-actions { margin-left: auto; display: flex; gap: 2px; }
+  .ma-btn { width: 28px; height: 28px; border-radius: 6px; display: grid; place-items: center; color: var(--icon); cursor: pointer; transition: background var(--dur) var(--ease), color var(--dur) var(--ease); }
+  .ma-btn:hover { background: var(--hover-bg); color: var(--icon-hover); }
+
+  .list { padding: 0 8px; }
+  .grp-head { display: flex; align-items: center; gap: 8px; height: 34px; padding: 0 12px; color: var(--txt-nav); font-size: 13px; font-weight: 500; }
+  .grp-head .gcount { color: var(--meta); font-size: 12px; }
+  .row {
+    display: flex; align-items: center; gap: 10px; height: 36px; padding: 0 12px; border-radius: 6px; cursor: pointer;
+    transition: background var(--dur) var(--ease);
+  }
+  .row:hover { background: var(--hover-bg); }
+  .row .rid { color: var(--meta); font-size: 12px; font-variant-numeric: tabular-nums; width: 56px; }
+  .row .rtitle { flex: 1; color: var(--txt); font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .row .rmeta { color: var(--meta); font-size: 12px; }
+  .pill { font-size: 11px; padding: 2px 7px; border-radius: 999px; color: #000; font-weight: 500; }
+
+  .legend { position: fixed; bottom: 12px; right: 16px; font-size: 11px; color: var(--meta); }
+
+  /* scrollbar */
+  ::-webkit-scrollbar { width: 8px; }
+  ::-webkit-scrollbar-thumb { background: rgba(255,255,255,.08); border-radius: 4px; }
+  ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,.14); }
+</style>
+</head>
+<body>
+<div class="shell">
+
+  <!-- ════ 상단바 ════ -->
+  <header class="topbar">
+    <div class="tb-ws" title="워크스페이스 메뉴 (설정·테마·휴지통은 여기 or 하단)">
+      <span class="ws-badge">P</span>
+      <span class="ws-name">Plot</span>
+      <span class="icon" style="width:12px;height:12px;color:var(--meta)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M6 9l6 6 6-6"/></svg></span>
+    </div>
+    <div class="tb-btn" title="뒤로"><span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M15 18l-6-6 6-6"/></svg></span></div>
+    <div class="tb-btn" title="앞으로"><span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M9 18l6-6-6-6"/></svg></span></div>
+
+    <!-- 브라우저식 탭 (Linear 시그니처 — 열린 뷰들) -->
+    <div class="tb-tabs">
+      <div class="tb-tab active">
+        <span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M4 4h16v16H4z"/><path d="M8 9h8M8 13h5"/></svg></span>
+        All notes
+      </div>
+      <div class="tb-tab">
+        <span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 7l9 6 9-6"/><path d="M3 7v10l9 6 9-6V7"/></svg></span>
+        Inbox
+      </div>
+      <div class="tb-btn" title="새 탭"><span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 5v14M5 12h14"/></svg></span></div>
+    </div>
+
+    <div class="tb-spacer"></div>
+    <!-- 패널 클러스터 제거 (Q1): 상단엔 검색만. 패널 토글은 콘텐츠 우상단/엣지핸들/⌘K로 분산 -->
+    <div class="tb-btn" title="검색 ⌘K"><span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/></svg></span></div>
+  </header>
+
+  <!-- ════ 레일 (7-space, 톤다운) ════ -->
+  <nav class="rail">
+    <div class="rail-item" style="--sp-color:var(--sp-home)" title="Home">
+      <span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 10l9-7 9 7"/><path d="M5 9v11h14V9"/></svg></span>
+      <span class="rail-lbl">Home</span>
+    </div>
+    <div class="rail-item active" style="--sp-color:var(--sp-notes)" title="Notes">
+      <span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M5 3h14v18l-7-4-7 4z"/></svg></span>
+      <span class="rail-lbl">Notes</span>
+    </div>
+    <div class="rail-item" style="--sp-color:var(--sp-wiki)" title="Wiki">
+      <span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M4 4h11a3 3 0 013 3v13H7a3 3 0 01-3-3z"/><path d="M8 8h7M8 12h7"/></svg></span>
+      <span class="rail-lbl">Wiki</span>
+    </div>
+    <div class="rail-item" style="--sp-color:var(--sp-books)" title="Books">
+      <span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M5 4h14v16H7a2 2 0 01-2-2z"/><path d="M9 4v14"/></svg></span>
+      <span class="rail-lbl">Books</span>
+    </div>
+    <div class="rail-item" style="--sp-color:var(--sp-cal)" title="Calendar">
+      <span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 9h18M8 3v4M16 3v4"/></svg></span>
+      <span class="rail-lbl">Cal</span>
+    </div>
+    <div class="rail-item" style="--sp-color:var(--sp-onto)" title="Ontology">
+      <span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="6" cy="6" r="2.5"/><circle cx="18" cy="7" r="2.5"/><circle cx="12" cy="18" r="2.5"/><path d="M8 7l8 1M7 8l4 8M16 9l-3 7"/></svg></span>
+      <span class="rail-lbl">Graph</span>
+    </div>
+    <div class="rail-item" style="--sp-color:var(--sp-lib)" title="Library">
+      <span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 9v12"/></svg></span>
+      <span class="rail-lbl">Library</span>
+    </div>
+    <div class="rail-spacer"></div>
+  </nav>
+
+  <!-- ════ 사이드바 (Linear MIRROR) ════ -->
+  <aside class="side">
+    <div class="side-scroll">
+
+      <!-- Inbox 전역 고정 (a 완료, 리니어 미러) -->
+      <div class="nav-group">
+        <a class="navlink">
+          <span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 7l9 6 9-6"/><path d="M3 7v10l9 6 9-6V7"/></svg></span>
+          <span class="lbl">Inbox</span>
+          <span class="count">3</span>
+        </a>
+      </div>
+
+      <!-- Notes space 콘텐츠 -->
+      <div class="nav-group">
+        <a class="navlink active">
+          <span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M5 3h14v18l-7-4-7 4z"/></svg></span>
+          <span class="lbl">All notes</span>
+          <span class="count">128</span>
+        </a>
+        <a class="navlink"><span class="dot" style="color:var(--st-backlog)"></span><span class="lbl">Backlog</span><span class="count">12</span></a>
+        <a class="navlink"><span class="dot" style="color:var(--st-todo)"></span><span class="lbl">Todo</span><span class="count">8</span></a>
+        <a class="navlink"><span class="dot fill" style="color:var(--st-prog)"></span><span class="lbl">In Progress</span><span class="count">5</span></a>
+        <a class="navlink"><span class="dot fill" style="color:var(--st-done)"></span><span class="lbl">Done</span></a>
+      </div>
+
+      <!-- Favorites 섹션 (Linear: 접기/펼치기) -->
+      <div class="nav-group">
+        <div class="sec-head">
+          <span class="caret"><span class="icon" style="width:12px;height:12px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M6 9l6 6 6-6"/></svg></span></span>
+          Favorites
+          <span class="add icon" style="width:14px;height:14px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 5v14M5 12h14"/></svg></span>
+        </div>
+        <a class="navlink"><span class="icon" style="color:var(--st-prog)"><svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M12 2l2.9 6.3 6.9.6-5.2 4.6 1.6 6.8L12 17.3 5.8 20.9l1.6-6.8L2.2 8.9l6.9-.6z"/></svg></span><span class="lbl">Reading list</span></a>
+        <a class="navlink"><span class="icon" style="color:var(--sp-wiki)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M4 4h11a3 3 0 013 3v13H7a3 3 0 01-3-3z"/></svg></span><span class="lbl">Project Atlas</span></a>
+      </div>
+
+      <!-- Recent 섹션 -->
+      <div class="nav-group">
+        <div class="sec-head">
+          <span class="caret"><span class="icon" style="width:12px;height:12px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M6 9l6 6 6-6"/></svg></span></span>
+          Recent
+        </div>
+        <a class="navlink"><span class="dot fill" style="color:var(--st-prog)"></span><span class="lbl">Q2 retrospective notes</span></a>
+        <a class="navlink"><span class="dot" style="color:var(--st-todo)"></span><span class="lbl">API redesign draft</span></a>
+        <a class="navlink"><span class="dot fill" style="color:var(--st-done)"></span><span class="lbl">Onboarding checklist</span></a>
+      </div>
+    </div>
+
+    <!-- 하단 footer: Help ? (Linear 좌하단) + Trash (강등) -->
+    <div class="side-foot">
+      <div class="foot-btn" title="단축키 / 도움말 (?)">
+        <span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="9"/><path d="M9.5 9a2.5 2.5 0 015 0c0 1.5-2.5 2-2.5 4"/><circle cx="12" cy="17" r=".6" fill="currentColor"/></svg></span>
+        <span class="lbl">Help</span>
+      </div>
+      <div class="foot-icon" title="휴지통 (Trash — 계정메뉴에서 강등)">
+        <span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M4 7h16M9 7V5h6v2M6 7l1 13h10l1-13"/></svg></span>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ════ 메인 ════ -->
+  <section class="main">
+    <div class="main-head">
+      <span class="main-title">All notes</span>
+      <div class="main-actions">
+        <div class="ma-btn" title="필터"><span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 5h18l-7 8v5l-4 2v-7z"/></svg></span></div>
+        <div class="ma-btn" title="디스플레이"><span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M4 6h16M7 12h10M10 18h4"/></svg></span></div>
+        <div class="ma-btn" title="디테일 패널 (컨텍스트 — 엔티티 열렸을 때)"><span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M15 4v16"/></svg></span></div>
+      </div>
+    </div>
+    <div class="list">
+      <div class="grp-head"><span class="dot fill" style="color:var(--st-prog)"></span> In Progress <span class="gcount">5</span></div>
+      <div class="row"><span class="rid">NOTE-128</span><span class="dot fill" style="color:var(--st-prog)"></span><span class="rtitle">Linear 셸 미러 — 레일 톤다운 + 사이드바 정리</span><span class="pill" style="background:var(--st-prog)">High</span><span class="rmeta">2d</span></div>
+      <div class="row"><span class="rid">NOTE-126</span><span class="dot fill" style="color:var(--st-prog)"></span><span class="rtitle">A3.1 LCH 토큰 전역화 설계</span><span class="rmeta">Wiki</span><span class="rmeta">5d</span></div>
+      <div class="grp-head" style="margin-top:8px"><span class="dot" style="color:var(--st-todo)"></span> Todo <span class="gcount">8</span></div>
+      <div class="row"><span class="rid">NOTE-131</span><span class="dot" style="color:var(--st-todo)"></span><span class="rtitle">필터/디스플레이 순수 MIRROR 패스</span><span class="rmeta">3d</span></div>
+      <div class="row"><span class="rid">NOTE-130</span><span class="dot" style="color:var(--st-todo)"></span><span class="rtitle">priority 3-막대 SVG 교체</span><span class="rmeta">1w</span></div>
+    </div>
+  </section>
+</div>
+<div class="legend">Plot Shell — Linear Mirror 목업 (락 후보) · 레일 유지 + 리니어 톤 · 2026-05-30</div>
+</body>
+</html>
