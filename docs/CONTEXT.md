@@ -51,6 +51,31 @@
 
 ---
 
+## 📜 2026-05-31 (심야) — IA 헌법 수립 (리니어 관점 정보구조 전면 재설계) + Inbox 전역 승격 ⭐⭐⭐⭐⭐
+
+**범위**: 코드 거의 안 짠 순수 브레인스토밍 세션. 사용자 "느낌" IA 결정을 코드 전수조사+리니어 109캡처 실측으로 검증 → git-tracked 헌법. **SOT = `docs/01-plan/features/linear-ia-constitution.spec.md`(14챕터).** PR #497.
+
+### 핵심 결정 (영구, IA 헌법)
+- **트리코토미**(Destination/Display-mode/Facet) = 배치의 법. **렌즈 모델**(7 space=atom 6렌즈+진입). **MIRROR/ADAPT/SKIP** 리니어 흡수 분류.
+- **atom-home = multi-lens by reference**(코드 검증). **noteType==="wiki"=레거시 데드**(사용자 적발) → Notes/Wiki=2 destination.
+- **Calendar/Graph→display mode**, **Tags/Labels/Stickers→facet**. Ontology/Library/References/Files=destination 유지.
+- **Book vs Sticker 중복 아님**(Sticker=facet 강등). **3-entity 워크플로 통일**: Notes/Wiki/Books status(4)+priority(5).
+- **공통자산 커스텀**: Status/Priority 고정 / Label(N:1 종류)·Tag·Category 커스텀. **크롬 일관성=A3.2 스키마엔진이 이미 강제.**
+- **Book kind**: Smart/Manual/Hybrid → Auto/Manual/Mixed(코드 키 불변). **Smart Book ≠ Template**(본질 반대).
+
+### 완료
+- IA 헌법 spec(14챕터) + Inbox 전역 승격(셸 2차 a, `<nav>` 최상단, tsc 0) + 셸 목업(`shell-linear-mirror.html`). PR #497.
+
+### 기술 학습
+- **IA 결정=코드 전수조사 필수** ("코드 봐라"가 2번 내 추측 정정: Ontology/Library 강등 과잉, noteType 데드). 명칭 통일=본질 같을 때만. 리니어 Project(=Book)=status+priority 둘 다(캡처).
+
+### 다음 우선순위 (P0)
+1. 셸 목업 락→포팅(§10): Trash 강등/Help/레일 톤다운.
+2. Book 워크플로(§11, ~25줄+version bump): status+priority, kind→classification, Wiki priority.
+3. Book kind 라벨(§13): Auto/Manual/Mixed.
+
+---
+
 ## 🌙 2026-05-30 (밤) — A3.2 스키마 엔진 머지 + A3.3 필터 크롬 + 노트행 모션 + 셸 1차 (레이아웃 모방 전환) ⭐⭐⭐⭐⭐
 
 **범위**: A3.2(스키마 엔진 M0~M4)+폰트 Pretendard PR #495 머지. A3.3 필터 크롬. 노트행 모션 슬라이스. 사용자 "레이아웃 골격도 완벽 모방" 방향 전환 → 셸 보조UI 진단 + 1차 정리.

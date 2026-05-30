@@ -6,6 +6,76 @@
 
 ---
 
+## 2026-05-30 (심야, 집/Windows) — **IA 헌법 수립 (리니어 관점 정보구조 전면 재설계) + Inbox 전역 승격 (PR #497)**
+
+> 🎯 **다음 즉시 액션 hook**:
+> 1. **헌법 §10 적용 = 셸 목업 최종 락 → 실앱 포팅 (P0 #0)**. 목업 = `docs/v3-mockup/shell-linear-mirror.html`(완성, dev서버 `public/shell-mock.html` 복사해 봄). 1차 완료 = (a)Inbox 전역 승격(이번 PR #497). 남은 셸 2차 = **(b) Trash 사이드바 하단 footer 강등**(현 `components/user-avatar.tsx` 드롭다운에서 빼서 `linear-sidebar.tsx` `</nav>` 다음 footer로) + **(c) Help `?` 버튼**(사이드바 하단, `setShortcutOverlayOpen(true)` 호출 — user-avatar.tsx:119 패턴 재활용) + **(d) 레일 톤다운**(activity-bar.tsx: 더 어둡게/muted/아이콘만+active만 라벨) + 패널 토글 분산(상단 클러스터 제거, 디테일토글=콘텐츠 우상단). **순서: 목업 사용자 최종 승인 먼저 → 포팅.**
+> 2. **Book 워크플로 축 (P0 #1, 헌법 §11, ~25줄+version bump)** — Notes/Wiki/Books 3-entity 워크플로 통일. Books에 **status(노트 4단계 재사용)+priority(노트 5단계)** 추가, **manual·hybrid만**(smart=N/A), **kind→classification 이동**. 동시에 **Wiki priority 추가**(현재 없음). 파일: `lib/types.ts`(Book.status?/priority? + WikiArticle.priority?), `lib/view-engine/schema/entities/books.schema.tsx`(status+priority PropertyDef 추가, kind category→classification) + `wiki.schema.tsx`(priority 추가), `lib/view-engine/use-books-view.ts`(bookMatchesRule status/priority case), store version bump(기존 manual/hybrid book status 기본값 backlog 마이그). 크롬은 스키마엔진이 자동(무변경).
+> 3. **Book kind 라벨 변경 (헌법 §13, 가벼움)** — Smart/Manual/Hybrid → **Auto/Manual/Mixed**(자동/수동/혼합). **코드 키(`smart`/`manual`/`hybrid`)는 불변**, 라벨+i18n만: `books.schema.tsx` values 라벨 + `lib/i18n.ts`(en Auto/Manual/Mixed + ko 자동/수동/혼합). "스마트북" 단어 소멸.
+>
+> **세션 성격**: 코드 거의 안 짬 = **순수 브레인스토밍 + 헌법 문서화**. 사용자가 "느낌"으로 쌓아온 IA 결정(섹터/status/라벨/북/스티커)을 **코드 전수조사 + 리니어 109캡처 실측으로 검증**해 git-tracked 헌법으로 박음. **SOT = `docs/01-plan/features/linear-ia-constitution.spec.md`(14챕터)**. 다음 세션은 이 헌법을 *적용*(구현)하는 단계.
+>
+> **사용자 의도** (이 세션, 인용): "개념과 기능을 우선 리니어 수준, 리니어 관점(시각), 리니어 해석으로 깎아보자" + "리니어 팀이 만들었다면" + "이미 구현된 기능/개념/명칭 재논의·재설계, 필요하면 과감히 제거". → 디자인뿐 아니라 **정보구조(IA) 자체를 리니어 정신으로 재정의**.
+>
+> **위험 + 회피 (이 세션 핵심 교훈)**:
+> - **"코드 봐라"가 2번 내 추측을 바로잡음**: ① Ontology/Library를 개념만으로 "강등/해체"하려다 코드 보니 진짜 서브시스템(metrics/relation engine/재사용 메커니즘)이라 KEEP. ② `noteType==="wiki"`를 "활성 시스템"으로 오판 → 사용자가 "데드코드 아니냐" 적발, 실제 레거시 확인. **→ IA 결정은 반드시 코드 전수조사 후.**
+> - **Explore 에이전트가 과장**: 데드코드(`createWikiNote`/`noteType`)를 "활성"인 것처럼 보고. 에이전트 보고는 grep 호출처 0 확인으로 교차검증.
+> - **명칭: "이름 같아야 일관"이 아니라 "본질 같아야 통일"**: 스마트북을 템플릿으로 통일하려다 기각(생성틀 vs 라이브쿼리=정반대). type은 Label 전용(Book kind에 쓰면 충돌).
+> - **PowerShell here-string `@`가 git 커밋 메시지 첫 줄에 샘** → PR #497 제목 `@ (#497)`로 머지됨(본문 멀쩡, 히스토리라 복구 안 함). **다음부터 commit -F 파일 사용 or `@` 누수 주의.**
+> - 이 환경 tool 출력 버퍼링/Read 아티팩트(가짜 라인/중복) 산발 → 편집 전 git blob/sed(cat -A) ground truth, 편집 후 git diff 검증.
+>
+> **참고 파일**:
+> - **`docs/01-plan/features/linear-ia-constitution.spec.md`** (헌법 14챕터, 최우선 read)
+> - `docs/v3-mockup/shell-linear-mirror.html` (셸 목업 락 후보)
+> - `components/linear-sidebar.tsx`(Inbox 전역 `<nav>` 최상단 786~, Library/Ontology space 블록, footer 영역 `</nav>` 2071 근처), `components/user-avatar.tsx`(Trash/Help/theme 드롭다운 — Trash 강등 대상), `components/activity-bar.tsx`(레일 톤다운 대상), `app/(app)/layout.tsx`(셸 조립)
+> - `lib/view-engine/schema/entities/{books,wiki,notes}.schema.tsx`(Book 워크플로 추가), `lib/view-engine/use-books-view.ts`(getBookKind/bookMatchesRule), `lib/types.ts`(Book 202~/WikiArticle 503~)
+> - 리니어 캡처: `%TEMP%\linear-ref\`(109장, 레포 외 — Project status/priority 증거 = `Filter-Project properties-Project status.png`)
+>
+> **머신**: 집(Windows).
+> **현재 main HEAD**: `729f3aa` (PR #497 머지 — 제목에 `@` 누수). 직전 `b5edf28`(#496).
+> **branch worktree**: `claude/quirky-williams-7c00a9` (머지 후 main 동기 `37000ed`). 다음 = main 기준 fresh.
+
+### 완료 (이 세션)
+- **IA 헌법 spec 신규** (PR #497) — `linear-ia-constitution.spec.md` 14챕터. 트리코토미/렌즈모델/MIRROR-ADAPT-SKIP/atom-home/noteVS위키/개념별분류/Book-vs-Sticker/공통자산정책/3-entity워크플로/Book네이밍.
+- **Inbox 전역 승격** (PR #497) — `linear-sidebar.tsx` Home 종속 → `<nav>` 최상단 전역. tsc 0. (셸 2차 (a) 완료.)
+- **셸 목업** (PR #497) — `shell-linear-mirror.html` 레일유지+톤다운 락 후보.
+- **noteType 데드코드 정리** = spawn_task chip 띄움 (별도 작업).
+
+### 브레인스토밍 & 큰 결정 (영구 — MEMORY.md push)
+- **트리코토미 (배치의 법)**: 모든 개념 = Destination / Display-mode / Facet. 리니어 Label=facet("눈에 안 보이게"의 정체).
+- **렌즈 모델**: 7 space = atom(Note)의 6렌즈 + 진입점. "자유도 최대"의 메커니즘.
+- **MIRROR/ADAPT/SKIP**: 리니어 흡수 분류 (탭=MIRROR 도입 확정 / Linear Diffs·Cycles=SKIP).
+- **atom-home = multi-lens by reference** (코드 검증). 비대칭 C노선(Calendar 위키 누락만 메움, Folder 타입감옥=의도).
+- **noteType==="wiki" = 레거시 데드**(사용자 적발). 진짜 위키 = WikiArticle. Notes/Wiki = 2 destination 유지.
+- **Calendar/Graph → display mode**, **Tags/Labels/Stickers → facet**. Ontology/Library/References/Files = destination 유지.
+- **Book vs Sticker = 중복 아님**: Book=순서O 컬렉션(Project), Sticker=순서X 그래프 마커(Label). Sticker=facet 강등.
+- **공통자산 커스텀**: Status/Priority=고정 / Label(N:1 종류)·Tag(N:M)·Category(N:M DAG)=커스텀. 리니어=진척축 고정·분류축 자유.
+- **3-entity 워크플로 통일**: Notes/Wiki/Books 모두 status(4)+priority(5). Book=manual·hybrid만, smart=N/A, kind→classification.
+- **Book kind**: Smart/Manual/Hybrid → Auto/Manual/Mixed(코드 키 불변). Smart Book ≠ Template.
+- **셸**: 레일 유지+리니어 톤다운(절제). Inbox 최상단/Trash 하단/Help 하단/설정=워크스페이스메뉴. 탭=실기능 도입(다음 마일스톤). 아이콘=Lucide 문법+도메인 글리프만 정밀.
+
+### 기술 학습 (영구 — MEMORY.md push)
+- **IA 결정 = 코드 전수조사 필수**(개념·기억만으로 강등/통합 판단 금지). Explore 에이전트 보고도 grep 호출처 0으로 교차검증.
+- **명칭 통일 = 본질 같을 때만**(이름 같다고 합치면 혼란). type은 Label 전용.
+- **리니어 status 2층**(고정 type + 커스텀 값) — 우리는 type층(4단계)만 = 노트앱 충분, 2층 커스텀=SKIP. **리니어 Project(=Book)는 status+priority 둘 다 보유**(캡처 실측).
+- **크롬 일관성은 A3.2 스키마엔진이 이미 강제**(FilterPanel/DisplayPanel 공유, PropertyDef만 다름) → "필터/디스플레이 일관성"=엔티티에 PropertyDef 추가로 환원.
+- PowerShell here-string `@` 누수 → commit -F 파일 권장.
+
+### Watch Out (다음 세션)
+- 헌법은 **결정**이지 **구현**이 아님 — 다음 세션은 적용 단계. 셸 포팅은 사용자 실화면 의존(preview eval 불가).
+- Book 워크플로 추가 = **store version bump 필수**(기존 manual/hybrid에 status 기본값). 마이그레이션 신중(작업원칙 #5).
+- Book kind 라벨 변경 시 **코드 키 불변**(smart/manual/hybrid) — 라벨/i18n만. 블라인드 replace 금지.
+- noteType 데드코드 정리(chip) = `wiki-auto-enroll.ts` 실동작 여부 먼저 확인(convertToWiki 살아있음).
+- §14 미결: Ontology·Book 엔티티명 / Book status·priority 구현순서 / Calendar 위키 포함 시점.
+- pre-existing 테스트 실패 11개(date-grouping+seeds, 무관) 누적.
+
+### 환경 변경
+- Store version: **v152 (변경 없음)** — 이 세션 = 문서+UI 1파일(Inbox). Book 워크플로 구현 시 bump 예정.
+- 신규 파일: `docs/01-plan/features/linear-ia-constitution.spec.md`, `docs/v3-mockup/shell-linear-mirror.html`, `public/shell-mock.html`(untracked 임시).
+- Tests: 미실행(문서 위주 + Inbox는 tsc 0 게이트).
+
+---
+
 ## 2026-05-30 (밤, 집/Windows) — **A3.2 스키마 엔진 머지(PR #495) + A3.3 필터 크롬 + 노트행 모션 + 셸 1차 정리 (폰트 Pretendard, 레이아웃 모방 전환)**
 
 > 🎯 **다음 즉시 액션 hook**:
