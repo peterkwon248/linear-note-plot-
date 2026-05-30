@@ -77,7 +77,7 @@ import { useFolderPickerData } from "@/components/folder-picker"
 import { NoteContextMenuItems } from "@/components/note-context-menu-items"
 import { usePane } from "@/components/workspace/pane-context"
 import { useListNavCapture } from "@/hooks/use-list-nav-capture"
-import { flattenNoteGroupIds } from "@/lib/list-nav/flatten"
+import { flattenNoteGroupIds, noteGroupsToListNav } from "@/lib/list-nav/flatten"
 import type { Note, NoteStatus, NotePriority, TriageStatus, Folder, Tag, Label } from "@/lib/types"
 import { FilterChipBar } from "@/components/filter-bar"
 import { ViewHeader } from "@/components/view-header"
@@ -1371,7 +1371,7 @@ export function NotesBoard({
                       onRowClick?.(note.id)
                     }}
                     onDoubleClick={() => {
-                      captureListNav(flattenNoteGroupIds(resolvedGroups), note.id, title ?? "Notes")
+                      captureListNav(flattenNoteGroupIds(resolvedGroups), note.id, title ?? "Notes", noteGroupsToListNav(resolvedGroups))
                       openNote(note.id)
                     }}
                     onSelect={handleCardSelect}
@@ -1389,7 +1389,7 @@ export function NotesBoard({
                       updateNote(note.id, { pinned: nextPinned })
                       toast.success(nextPinned ? "Pinned note" : "Unpinned note")
                     }}
-                    onOpen={() => { captureListNav(flattenNoteGroupIds(resolvedGroups), note.id, title ?? "Notes"); openNote(note.id) }}
+                    onOpen={() => { captureListNav(flattenNoteGroupIds(resolvedGroups), note.id, title ?? "Notes", noteGroupsToListNav(resolvedGroups)); openNote(note.id) }}
                     onMergeWith={() => setMergePickerOpen(true, note.id)}
                     onLinkWith={() => setLinkPickerOpen(true, note.id)}
                     onShowConnected={(direction) => {

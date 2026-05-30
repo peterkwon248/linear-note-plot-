@@ -1,0 +1,199 @@
+<!doctype html>
+<html lang="ko" class="dark">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Grid 그룹핑 + Display Properties 제안</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;450;500;600;700&family=Geist+Mono:wght@400;500&display=swap" />
+<style>
+  :root {
+    --bg: #0E0E10; --bg-elev: #18181B; --fg: #FAFAFA; --soft-fg: #D4D4D8;
+    --muted-fg: #A1A1AA; --whisper-fg: #71717A; --muted: #27272A;
+    --border: #27272A; --border-strong: #3F3F46; --hover-bg: #1C1C1F;
+    --accent: #7C8AE7; --accent-soft: rgba(94,106,210,0.16);
+    --st-backlog: #94A3B8; --st-todo: #3B82F6; --st-prog: #F59E0B; --st-done: #34D399;
+    --font-sans: 'Geist', -apple-system, BlinkMacSystemFont, sans-serif;
+    --font-mono: 'Geist Mono', monospace;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--fg); font-family: var(--font-sans);
+    font-size: 14px; line-height: 1.5; -webkit-font-smoothing: antialiased; padding: 28px 36px 80px; }
+  .tabular { font-variant-numeric: tabular-nums; }
+  svg { display: block; }
+
+  .topbar { display: flex; align-items: center; gap: 10px; margin-bottom: 18px; color: var(--muted-fg); font-size: 13px; }
+  .topbar .crumb { color: var(--fg); font-weight: 500; }
+  .topbar .sep { color: var(--whisper-fg); }
+  .chips { display: flex; gap: 4px; margin-left: 8px; }
+  .chip { padding: 3px 9px; border-radius: 6px; font-size: 12px; color: var(--muted-fg); border: 1px solid transparent; }
+  .chip.active { background: var(--muted); color: var(--fg); border-color: var(--border-strong); }
+  .sub { color: var(--whisper-fg); font-size: 12px; margin-left: auto; }
+
+  /* ── Display properties bar (interactive) ── */
+  .dpbar { display: flex; align-items: center; gap: 8px; margin-bottom: 26px; padding: 10px 14px;
+    border: 1px solid var(--border); border-radius: 10px; background: #121214; flex-wrap: wrap; }
+  .dpbar .lbl { font-size: 11px; text-transform: uppercase; letter-spacing: .08em; color: var(--whisper-fg); font-weight: 600; margin-right: 4px; }
+  .dptoggle { padding: 4px 10px; border-radius: 6px; font-size: 12px; cursor: pointer; user-select: none;
+    border: 1px solid var(--border); color: var(--muted-fg); background: transparent; transition: all 120ms ease; }
+  .dptoggle.on { background: var(--accent-soft); border-color: rgba(124,138,231,.45); color: #C7CDF5; }
+  .dptoggle:hover { border-color: var(--border-strong); }
+  .dphint { margin-left: auto; font-size: 11.5px; color: var(--whisper-fg); }
+
+  /* ── section ── */
+  .section { margin-bottom: 26px; }
+  .a-tg { display: grid; grid-template-columns: 18px 18px auto auto 1fr; align-items: center; gap: 8px;
+    padding: 6px 2px; cursor: pointer; user-select: none; }
+  .a-tg:hover .chev { color: var(--soft-fg); }
+  .chev { color: var(--whisper-fg); transition: transform 140ms ease; }
+  .section.collapsed .chev { transform: rotate(-90deg); }
+  .a-tg__label { font-weight: 600; color: var(--fg); font-size: 13px; }
+  .a-tg__count { color: var(--muted-fg); font-size: 12px; }
+  .a-tg__line { height: 1px; background: var(--border); }
+
+  .cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 12px; padding: 12px 2px 0; }
+  .section.collapsed .cards { display: none; }
+
+  .card { background: var(--bg-elev); border: 1px solid var(--border); border-radius: 8px;
+    padding: 12px 13px; min-height: 92px; display: flex; flex-direction: column; gap: 7px;
+    transition: border-color 140ms ease, background 140ms ease; }
+  .card:hover { border-color: var(--border-strong); background: #1b1b1f; }
+  .card .titlerow { display: flex; align-items: flex-start; gap: 7px; }
+  .card .title { font-weight: 500; color: var(--fg); font-size: 13.5px; line-height: 1.35;
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .card .preview { color: var(--muted-fg); font-size: 12px; line-height: 1.4;
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+
+  /* property chips (shared w/ board) */
+  .chiprow { margin-top: auto; display: flex; flex-wrap: wrap; gap: 5px; padding-top: 3px; }
+  .pchip { display: inline-flex; align-items: center; gap: 4px; padding: 2px 7px; border-radius: 5px;
+    background: var(--muted); color: var(--soft-fg); font-size: 11px; line-height: 1.45; white-space: nowrap; }
+  .pchip svg { opacity: .8; }
+  .pchip .cdot { width: 7px; height: 7px; border-radius: 2px; flex: none; }
+  .pchip.more { color: var(--whisper-fg); background: transparent; }
+
+  .note { margin-top: 40px; padding: 14px 16px; border-left: 2px solid var(--accent); background: #121214;
+    border-radius: 0 8px 8px 0; color: var(--soft-fg); font-size: 13px; max-width: 760px; }
+  .note b { color: var(--fg); } .note + .note { margin-top: 10px; }
+</style>
+</head>
+<body>
+
+  <div class="topbar">
+    <span class="crumb">Notes</span><span class="sep">›</span><span>Grid</span>
+    <div class="chips"><span class="chip">List</span><span class="chip">Board</span><span class="chip active">Grid</span></div>
+    <span class="sub">Group by · Status</span>
+  </div>
+
+  <!-- Display properties — 토글하면 카드 칩이 바뀜 (board와 동일) -->
+  <div class="dpbar" id="dpbar">
+    <span class="lbl">Display properties</span>
+    <!-- toggles injected -->
+    <span class="dphint">↓ 토글해봐 — list면 컬럼, board·grid면 칩으로 켜짐</span>
+  </div>
+
+  <div id="grid"></div>
+
+  <div class="note">
+    <b>Display properties = 뷰마다 표현이 다름.</b> <b>List</b>는 프로퍼티 = <b>컬럼</b>, <b>Board</b>는 카드 위 <b>칩</b>. <b>Grid</b>도 board와 같은 카드 표면이니까 <b>같은 칩 시스템 공유</b> — 위에서 Priority/Label/Tags/Links/Updated 토글하면 grid 카드에 board와 똑같은 칩이 떠.
+  </div>
+  <div class="note">
+    카드가 좁으니 칩은 <b>최대 4개 + "+N"</b>로 캡 (board의 PropertyChipRow와 동일). 섹션 헤더 <b>chevron 클릭 = collapse</b> (확정).
+  </div>
+
+<script>
+  const RAW = { backlog:'#94A3B8', todo:'#3B82F6', prog:'#F59E0B', done:'#34D399' };
+  function statusIcon(kind, color, size) {
+    size = size || 16; const r = 7, c = 8;
+    if (kind === 'backlog') return `<svg width="${size}" height="${size}" viewBox="0 0 16 16"><circle cx="${c}" cy="${c}" r="${r}" fill="none" stroke="${color}" stroke-width="1.6" stroke-dasharray="2.2 2.2"/></svg>`;
+    if (kind === 'todo') return `<svg width="${size}" height="${size}" viewBox="0 0 16 16"><circle cx="${c}" cy="${c}" r="${r}" fill="none" stroke="${color}" stroke-width="1.6"/></svg>`;
+    if (kind === 'prog') return `<svg width="${size}" height="${size}" viewBox="0 0 16 16"><circle cx="${c}" cy="${c}" r="${r}" fill="none" stroke="${color}" stroke-width="1.6"/><path d="M8 ${c-r} A${r} ${r} 0 0 1 8 ${c+r} Z" fill="${color}"/></svg>`;
+    return `<svg width="${size}" height="${size}" viewBox="0 0 16 16"><circle cx="${c}" cy="${c}" r="${r}" fill="${color}"/><path d="M4.8 8.2 L7 10.3 L11.2 5.8" fill="none" stroke="#0E0E10" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+  }
+  const linkSvg = `<svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6.5 9.5 L9.5 6.5"/><path d="M7 4.5 L8.5 3 a2.1 2.1 0 0 1 3 3 L10 7.5"/><path d="M9 11.5 L7.5 13 a2.1 2.1 0 0 1-3-3 L6 8.5"/></svg>`;
+  const calSvg = `<svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><rect x="2.5" y="3" width="11" height="11" rx="1.5"/><path d="M2.5 6 H13.5 M5.5 1.5 V4 M10.5 1.5 V4"/></svg>`;
+
+  // toggle state — Priority OFF by default so toggling it ON visibly adds chips
+  const props = { priority:false, label:true, tags:true, links:true, updated:true, preview:true };
+  const PRIO_COLOR = { high:'#FB923C', medium:'#818CF8' };
+  const PRIO_LABEL = { high:'High', medium:'Med' };
+
+  const groups = [
+    { key:'backlog', label:'Backlog', collapsed:false, notes:[
+      { t:'주간 회고 메모', pv:'이번 주 한 일과 막힌 지점 정리…', prio:'none', label:null, tags:[], links:2, upd:'5월 28일' },
+      { t:'읽을 아티클 모음', pv:'나중에 읽을 링크 스크랩…', prio:'medium', label:{n:'Reading',c:'#22C55E'}, tags:['inbox'], links:1, upd:'5월 27일' },
+    ]},
+    { key:'todo', label:'Todo', collapsed:false, notes:[
+      { t:'Grid 그룹핑 설계 정리', pv:'list 헤더 + grid 카드 융합안…', prio:'high', label:{n:'Design',c:'#A855F7'}, tags:['ui','grid'], links:4, upd:'5월 28일' },
+      { t:'온톨로지 색 규칙 문서화', pv:'색=status / 모양=공간 규칙…', prio:'medium', label:{n:'Docs',c:'#3B82F6'}, tags:['ontology'], links:3, upd:'5월 27일' },
+      { t:'사이드바 카운트 버그', pv:'legacy filter 합산 누락…', prio:'high', label:{n:'Bug',c:'#EF4444'}, tags:['sidebar'], links:5, upd:'5월 26일' },
+    ]},
+    { key:'prog', label:'In Progress', collapsed:true, notes:[
+      { t:'list-nav dropdown 그룹 캡처', pv:'캡처 site에 groups 전달…', prio:'medium', label:{n:'Feature',c:'#06B6D4'}, tags:['nav'], links:6, upd:'5월 30일' },
+    ]},
+    { key:'done', label:'Done', collapsed:false, notes:[
+      { t:'Wiki status 4단계', pv:'자동 stub → 수동 4단계…', prio:'none', label:{n:'Feature',c:'#06B6D4'}, tags:['wiki'], links:2, upd:'5월 28일' },
+      { t:'Smart Book Preset', pv:'프리셋 기반 스마트북…', prio:'none', label:{n:'Feature',c:'#06B6D4'}, tags:['books'], links:3, upd:'5월 27일' },
+      { t:'preview IPv4 fix', pv:'launch.json -H 127.0.0.1…', prio:'none', label:null, tags:['infra'], links:1, upd:'5월 26일' },
+      { t:'네비 골격 통일', pv:'공간 › 컨텍스트 › 제목…', prio:'medium', label:{n:'Design',c:'#A855F7'}, tags:['nav','ui'], links:8, upd:'5월 25일' },
+    ]},
+  ];
+
+  function buildChips(n) {
+    const out = [];
+    if (props.priority && n.prio !== 'none')
+      out.push(`<span class="pchip"><span class="cdot" style="background:${PRIO_COLOR[n.prio]}"></span>${PRIO_LABEL[n.prio]}</span>`);
+    if (props.label && n.label)
+      out.push(`<span class="pchip"><span class="cdot" style="background:${n.label.c}"></span>${n.label.n}</span>`);
+    if (props.tags) n.tags.forEach(t => out.push(`<span class="pchip">#${t}</span>`));
+    if (props.links && n.links > 0)
+      out.push(`<span class="pchip">${linkSvg}${n.links}</span>`);
+    if (props.updated)
+      out.push(`<span class="pchip">${calSvg}${n.upd}</span>`);
+    // cap 4 + overflow (board parity)
+    if (out.length > 4) { const extra = out.length - 4; return out.slice(0,4).join('') + `<span class="pchip more">+${extra}</span>`; }
+    return out.join('');
+  }
+
+  function render() {
+    const root = document.getElementById('grid');
+    root.innerHTML = '';
+    groups.forEach((g, gi) => {
+      const sec = document.createElement('div');
+      sec.className = 'section' + (g.collapsed ? ' collapsed' : '');
+      const cards = g.notes.map(n => `
+        <div class="card">
+          <div class="titlerow">${statusIcon(g.key, RAW[g.key], 18)}<div class="title">${n.t}</div></div>
+          ${props.preview ? `<div class="preview">${n.pv}</div>` : ''}
+          <div class="chiprow">${buildChips(n)}</div>
+        </div>`).join('');
+      sec.innerHTML = `
+        <div class="a-tg" data-gi="${gi}">
+          <span class="chev"><svg width="12" height="12" viewBox="0 0 16 16"><path d="M4 6 L8 10 L12 6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+          <span>${statusIcon(g.key, RAW[g.key])}</span>
+          <span class="a-tg__label">${g.label}</span>
+          <span class="a-tg__count tabular">· ${g.notes.length}</span>
+          <span class="a-tg__line"></span>
+        </div>
+        <div class="cards">${cards}</div>`;
+      sec.querySelector('.a-tg').addEventListener('click', () => { g.collapsed = !g.collapsed; render(); });
+      root.appendChild(sec);
+    });
+  }
+
+  // Display-properties toggle bar
+  const dpbar = document.getElementById('dpbar');
+  const hint = dpbar.querySelector('.dphint');
+  [['priority','Priority'],['label','Label'],['tags','Tags'],['links','Links'],['updated','Updated'],['preview','Preview']].forEach(([key,lbl]) => {
+    const el = document.createElement('span');
+    el.className = 'dptoggle' + (props[key] ? ' on' : '');
+    el.textContent = lbl;
+    el.addEventListener('click', () => { props[key] = !props[key]; el.classList.toggle('on'); render(); });
+    dpbar.insertBefore(el, hint);
+  });
+
+  render();
+</script>
+</body>
+</html>

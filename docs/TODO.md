@@ -3,28 +3,30 @@
 > 우선순위 기반 작업 목록. **P0 = 다음 세션 즉시 시작점** (NEXT-ACTION.md 폐지, 2026-05-12).
 > 완료 항목은 즉시 삭제. 자세한 history는 SESSION-LOG.md + MEMORY.md.
 
-**마지막 갱신**: 2026-05-30 (after-work, 집/Windows) — **통합 정합성 플랜 Phase A/B + grid selection·그룹 + Q1 dropdown 그룹** (8 커밋, branch claude/interesting-varahamihira-eeeaef → main squash). 다음 P0 #0 = **Q1 나머지 캡처 site**(헬퍼 재사용), P0 #1 = **Phase C 오버뷰 StatsCard**, carry = Books kind nav / Entity Insights / Wiki breadcrumb 마이그.
+**마지막 갱신**: 2026-05-30 (저녁 after-work, 집/Windows) — **Track A 전략 플랜 착수**: A0(Q1 캡처 완성 + notes-grid 헤더/collapse + group-header 공유, `3f7e22e`) + A1(리니어 ~100장 분석 → spec) + **A2 LOCKED**. 다음 P0 #0 = **A3 리니어 필터/디스플레이 미러(스키마 엔진부터)**. spec = `docs/01-plan/features/linear-filter-display-mirror.spec.md`.
 
 ---
 
-## 🟣 P0 — 즉시 (cross-machine 진입점, 2026-05-30 after-work — 통합 정합성 플랜 Phase A/B 머지)
+## 🟣 P0 — 즉시 (cross-machine 진입점, 2026-05-30 저녁 — Track A 전략 플랜 착수)
 
-> ✅ **2026-05-30 완료·머지** (이 세션, 8 커밋): **통합 정합성 플랜** — (1) **네비게이션 골격 통일**: 북스 breadcrumb 버그(book 컨텍스트 note picker 숨김)·list-nav book TOC dropdown·진행바·위키 공간 breadcrumb·**Q1 dropdown 그룹**(notes-table) (2) **온톨로지 색=status/모양=공간** + LEGEND 재구조·Wiki hexagon (3) **grid 카드 selection** + **grid 그룹 섹션** (4) sticker book resolve + **preview IPv4 fix**(launch.json -H 127.0.0.1). tsc 0 / store-eval 검증(위키·온톨로지 화면은 SPA route 환경상 사용자 직접 시각). **직전 P0 #0(notes-grid 비대칭) = 옵션 B(더블클릭 open+capture+selection)로 해결.**
-> ✅ **2026-05-29 (심야)**: list-context-navigation 5뷰. **(밤)**: Wiki status v151 + Smart Book Preset v152.
+> ✅ **2026-05-30 저녁 완료** (전략 세션): **Track A 착수** — A0(Q1 나머지 캡처 site 완성 + notes-grid `.a-tg` 헤더/collapse + group-header.tsx 공유 추출, 커밋 `3f7e22e`) + A1(리니어 ~100장 분석 → spec 문서) + **A2 LOCKED**(tier·priority·6-카테고리 스키마·L3 커스텀·schema-driven 엔진·FlowBase 차용). spec: `docs/01-plan/features/linear-filter-display-mirror.spec.md`.
+> ✅ **2026-05-30 (낮)**: 통합 정합성 플랜 8커밋(PR #493). **2026-05-29**: list-context-nav 5뷰 / Wiki status v151 / Smart Book Preset v152.
 
-### 0. **🔴 P0 #0 (새 최우선): Q1 나머지 캡처 site — list-nav dropdown 그룹 완성** ⭐ 다음 세션 첫 작업
+### 0. **🔴 P0 #0 (최우선): A3 — 리니어 필터/디스플레이 미러 (스키마 엔진부터)** ⭐ 다음 세션 첫 작업
 
-**배경**: ✅ Q1 인프라(`ListNavContext.groups` + `useListContextNav` groups resolve + `ListContextNav` 그룹 헤더 섹션) **완성** + **notes-table(list)만** 캡처에 groups 전달. dropdown "‹ 라벨 ⌄"가 list groupBy=status에서 Backlog/Todo/Done 섹션으로 뜸(store-eval 검증).
+**spec 먼저 read**: `docs/01-plan/features/linear-filter-display-mirror.spec.md` (A2 LOCKED + 6-카테고리 스키마 + FlowBase 차용 + priority 막대 SVG geometry + Linear 5규칙).
 
-**남은 작업**: notes-grid/board + wiki list/board 캡처도 groups 전달 (헬퍼 재사용, 빠름).
-**첫 스텝**:
-1. **패턴** = `components/notes-table.tsx:1568,1575` (import `noteGroupsToListNav` from `@/lib/list-nav/flatten`, captureListNav 4번째 인자 `noteGroupsToListNav(groups)`).
-2. notes-grid(`components/views/notes-grid-view.tsx`): `NotesGridView`가 groups prop 있음 → grouped면 `noteGroupsToListNav(groups)`.
-3. notes-board: resolvedGroups → `noteGroupsToListNav(resolvedGroups)`.
-4. wiki-list/board: WikiGroup → `wikiGroupsToListNav(wikiGroups)`.
-5. `tsc --noEmit` + 사용자 시각.
+**A3 3다리 (시작 = ①)**:
+- **① 스키마 엔진 (keystone)** — 엔티티별 `PropertyDef[]`(Workflow/Classification/Relations/Metrics/Time/Content) 정의 + filter/display/group/sort 자동 생성 인프라(FlowBase `isFilterable`+타입별 위젯 이식). 현 `lib/view-engine/view-configs.tsx`(1105) per-context config → **schema refactor**(리빌드 아님). → 일관성 코드 강제(뒤죽박죽 해결).
+- **② 공유 크롬** — `filter-bar.tsx`(1265)/`filter-panel.tsx`/`display-panel.tsx`를 스키마 생성 + **Linear 5규칙**(균일행높이·아이콘16정렬·의미divider·좌우역할·opacity 0.9/0.7/0.5)으로 재구축. → 드롭다운 폴리시 불균형 해결.
+- **③ LCH 색 토큰** (병렬 가능, var() 독립) — `lib/colors.ts` flat hex → OKLCH/LCH + paired `-bg/-fg` + `toneClassDual`.
 
-**Watch Out**: capture 헬퍼는 ≥2그룹만 groups 부착(1그룹=평면). grid 빈 섹션(Todo 0) 표시 여부 미결. eval로 위키 화면 전환 불가(activeRoute module state) → 위키 검증은 사용자 직접.
+**시작 전 미결정 2개**: (a) **폰트 Geist vs Inter**(100% 미러=Inter), (b) 선택: 사용자 **리니어 DevTools 캡처**(드롭다운 요소 CSS) → ②크롬 1px 정합.
+
+**Watch Out**: 스키마 = **L3 커스텀 상한**(L4 사용자 필드타입 생성 X = FlowBase 몫). priority 막대 = **기억으로 그리지 말 것**(실측). LCH 마이그 = 별도 패스.
+
+### 0.3. **🟡 P0 (병행 hygiene): 옛 status 코드명 정리 (stone/brick/keystone)**
+잔재 **119곳/26파일**. ⚠️ `migrate.ts`(26)·seeds·`__tests__`의 옛 enum 문자열 = 마이그 backward-compat **유지**. 나머지(변수명/CSS클래스/주석/dnd id `col-stone`)만 backlog/todo/in_progress/done로. **블라인드 find-replace 금지** — 파일별 검증 후 최소 diff.
 
 ### 0.5. **🔴 P0 #1: Phase C — 오버뷰 StatsCard 통일** (미시작, 통합 플랜 마지막 Phase)
 

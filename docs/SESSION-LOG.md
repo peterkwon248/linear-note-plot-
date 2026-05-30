@@ -6,6 +6,77 @@
 
 ---
 
+## 2026-05-30 (저녁, 집/Windows) — **Track A 착수: 리니어 필터/디스플레이 "200% 미러" 전략 플랜 (A0~A2 완료, A3 다음)**
+
+> 🎯 **다음 즉시 액션 hook**:
+> 1. **A3-① 스키마 엔진 (keystone)** — 엔티티별 `PropertyDef[]`(6-카테고리: Workflow/Classification/Relations/Metrics/Time/Content)를 정의하고 filter/display/group/sort를 거기서 **자동 생성**하는 인프라 구축. FlowBase 패턴 이식(`isFilterable` + 타입별 위젯 switch). **현 수작업 per-context config(`lib/view-engine/view-configs.tsx` 1105줄)를 schema로 refactor** → 일관성 코드 강제(뒤죽박죽 해결). 적용 표면 = `components/filter-bar.tsx`(1265)/`filter-panel.tsx`(283)/`display-panel.tsx`(456).
+> 2. **시작 전 미결정 2개 (사용자 확인 필수)**: (a) **폰트 Geist 유지 vs Inter 교체** — 100% 미러면 Inter. ②크롬/③토큰 전에 결정. (b) **선택: 사용자 리니어 DevTools 캡처**(filter/display 드롭다운 요소 CSS rgba/px) → ②크롬 1px 정합. 없어도 ①스키마는 진행 가능.
+> 3. **A3-② 공유 크롬**(①후): filter 드롭다운 + display 패널을 스키마에서 생성 + **Linear 5규칙**(균일행높이·아이콘16정렬·divider는의미경계만·좌우역할고정·opacity위계 0.9/0.7/0.5). **A3-③ LCH 색 토큰**(병렬 가능): `lib/colors.ts` flat hex → OKLCH/LCH + paired `-bg/-fg` + `toneClassDual` (FlowBase 패턴, 리니어도 LCH). var() 쓰는 컴포넌트는 rework 없음.
+>
+> **전체 spec(드롭다운/패널 spec + 컨텍스트 매트릭스 + priority 막대 SVG geometry + A2 LOCKED)**: `docs/01-plan/features/linear-filter-display-mirror.spec.md` ← A3~A5 reference, **먼저 read**.
+>
+> **사용자 의도** (이 세션, 인용): "리니어를 200% 모방... 폴리시를 장인정신으로 깎아서... 리니어 제작진이 만든 노트앱이라고 사람들이 속아넘어갈 만큼." 현재 앱 = 기대치 **70%**, 비는 30% = 디자인 정합성·일관성·기능과 디자인의 자연스러운 fit.
+>
+> **첫 스텝** (다른 머신 cold start):
+> 1. spec 문서 read (A2 LOCKED + 6-카테고리 스키마 + FlowBase 차용 패턴).
+> 2. 폰트 결정 사용자 확인.
+> 3. `lib/view-engine/view-configs.tsx`(현 per-context 구조) + FlowBase `components/board/{filter,display}-menu.tsx`(gh `peterkwon248/FlowBase`) 패턴 read.
+> 4. `PropertyDef` 타입 + 엔티티별 스키마 정의 → 자동 생성 인프라.
+>
+> **위험 + 회피**:
+> - LCH 토큰 마이그(③) = app-wide 큰 변경 → **별도 careful 패스**(컴포넌트 var() 사용 → ①②와 독립, rework 없음). UI변경 ↔ 토큰변경 분리 PR.
+> - 스키마 = **개발자 큐레이션, 커스텀 상한 L3**(표시토글+SavedViews+값/옵션). **L4(사용자 필드타입 생성) 절대 X** = FlowBase 몫, Plot 정체성 보존.
+> - priority 막대 아이콘 = **기억으로 그리지 말 것**(이번에 가짜 그려서 사용자 지적당함) — 리니어 캡처/실측 기반 SVG.
+> - 옛 status 코드명(stone/brick/keystone) 119곳/26파일 정리 시 **migrate.ts(26)/seeds/__tests__ 옛 enum 문자열 = backward-compat 유지**, 블라인드 find-replace 금지.
+> - **mockup 가짜 아이콘 교훈**: 디자인 미러는 *창작*이 아니라 *모방* → 정확한 레퍼런스(실제 SVG/CSS) 없이 추측 X.
+>
+> **참고 파일**:
+> - `docs/01-plan/features/linear-filter-display-mirror.spec.md` (전체 spec, 최우선)
+> - `lib/view-engine/view-configs.tsx`(per-context config), `components/filter-bar.tsx`/`filter-panel.tsx`/`display-panel.tsx`
+> - `components/property-chips.tsx`(칩 — PropertyChipRow), `components/note-fields.tsx`(PRIORITY_CONFIG L85/STATUS_CONFIG — priority 아이콘 교체 지점), `components/group-header.tsx`(이 세션 신규 공유 group 아이콘)
+> - 리니어 캡처: `C:\Users\user\AppData\Local\Temp\linear-ref\` (~100장, **레포 외** — 사라졌으면 사용자 `리니어 참고자료.zip` 재추출)
+> - FlowBase `peterkwon248/FlowBase`(gh): `lib/tokens.ts`/`app/globals.css`/`DESIGN-TOKENS.md`/`components/board/{filter,display,panels}-menu.tsx`/`lib/flowbase-store.ts`
+> - mockup(레퍼런스): `docs/v3-mockup/{grid-grouping-proposal,card-hover-properties}.html`
+>
+> **머신**: 집(Windows).
+> **현재 main HEAD**: `a3d5945`(PR #493). 이 세션 A0 = 커밋 `3f7e22e` (이 after-work에서 PR/머지).
+> **branch worktree**: `claude/hopeful-jemison-865fea`
+
+### 완료 (이 세션 = 전략 플랜 수립 + A0~A2)
+- **A0**: P0 #0(Q1 list-nav dropdown 그룹 캡처 notes-board/wiki-board/wiki-list, wiki-list는 dash-filter 정합 listNavGroups memo) + **notes-grid `.a-tg` 리치 헤더 + chevron collapse**(store-backed `viewState.collapsedGroups`, list와 공유) + **`components/group-header.tsx` 공유 추출**(GroupHeaderIcon/resolveGroupLabel, notes-table → import). 커밋 `3f7e22e`. tsc 0 / store-eval(notes-grid 4섹션 + collapse 실동작) 검증.
+- **A1**: 리니어 캡처 ~100장 `linear-design-mirror` 분석 → spec 문서 신규 (드롭다운/패널 spec·컨텍스트 매트릭스·priority 막대 SVG).
+- **A2 LOCKED**: 전략 방향 전면 확정 (아래).
+
+### 브레인스토밍 & 큰 결정 (영구 — MEMORY.md push)
+- **Track A/B 분리**: A=필터/디스플레이 리니어 미러(지금). B=`layout.tsx`(607)+`linear-sidebar.tsx`(2129 god) 분해(나중, 셸 리디자인 시). ChatGPT의 "분해 먼저"는 풀-셸 리디자인 전제 → 우리 목표(필터/디스플레이)엔 detour, **안 함**.
+- **리니어 "딱 맞는 옷" 비결 = 크롬(structure) 통일 + 콘텐츠(options) 컨텍스트별.** ground truth: Issues/Projects/Inbox가 완전히 다른 필터 택소노미(Inbox=Notification type/From 5개, Projects=Lead/Health/Milestones, Assignee 없음).
+- **Tier 모델**: Tier1 풀=Notes/Wiki, Tier2 중간=Books, **Library=유지하되 엔티티별 비례 컨트롤**(평면 목록 Tags/Labels/Stickers/Templates=경량 검색+정렬, Categories/Files=중간). "걷어냄"=heavy 패널 제거지 surface 삭제/settings 이동 아님.
+- **Priority**: Notes/Wiki ✅(둘 다 status축), **Books=Kind+Priority**(status 없음, Workflow 슬롯을 Kind로). priority 아이콘=**리니어 3-막대**(현 화살표 폐기).
+- **6-카테고리 공유 축 스키마**(Workflow/Classification/Relations/Metrics/Time/Content) — 엔티티가 네이티브 축으로 슬롯 채움. Books 빈약 문제 = 6슬롯 매핑으로 해결.
+- **schema-driven 엔진 차용(FlowBase)**: PropertyDef[]→filter/display/group/sort 자동 생성 = 일관성 코드 강제. **커스텀 상한 L3**(Linear식). **L4(사용자 필드타입 생성)=안 함**(FlowBase 몫). 두 앱 DNA 구분(FlowBase=유연 스키마 / Plot=큐레이션).
+- **FlowBase 우위 확인 → A3 흡수**: OKLCH/LCH 토큰(리니어도 LCH), paired -bg/-fg + toneClassDual, 제네릭 setViewOption.
+- **"100% 리니어 내재화" 가능 판정**: MIRROR(리니어 있는 것)+EXTRAPOLATE(온톨로지/그래프/인사이트 = 리니어 7원칙 적용). 단 조건 = 공유 디자인시스템(A3) 락 + 모든 표면에 法으로 강제(novel 표면 drift 위험 1위).
+
+### 기술 학습 (영구)
+- **디자인 미러 ≠ 창작**: 정확한 레퍼런스(실제 SVG/CSS) 없이 기억으로 아이콘 그리면 가짜(이번에 priority/tag/folder 가짜 그려 지적당함). Lucide로 ~80% + 리니어 고유는 DevTools/캡처로 실측.
+- **컨텍스트별 ≠ 비일관**: 리니어는 표면마다 다른 옵션 + 동일 크롬 → "정합". 일관성은 *틀*에서 나옴(콘텐츠 차이는 정당).
+- **dev 서버 screenshot 타임아웃** 지속(Next16 렌더러) — 정적 mockup(serve)은 screenshot 됨. store-eval은 notes 경로만(route module state).
+- **schema-driven = 일관성 엔진**(사용자 커스텀과 무관한 아키텍처 가치): 한 PropertyDef[]에서 전 표면 생성 → 코드 레벨 정합.
+
+### Watch Out
+- A3-① 스키마 = 큰 아키텍처 작업. 기존 view-configs(per-context) 구조 위에 schema 레이어 — **리빌드 아님, refactor**.
+- LCH 토큰 마이그(③)는 app-wide → 신중 분리 패스.
+- 옛 status 코드명 119곳 정리 시 backward-compat(migrate/seeds/tests) 유지 필수.
+- 사용자 미결정: 폰트 Geist/Inter. (A3 ②③ 전 확인)
+- A0 커밋 `3f7e22e`는 이 after-work에서 PR·머지됨.
+
+### 환경 변경
+- Store version: **v152 (변경 없음)** — A0는 UI/세션 한정.
+- 신규 파일: `docs/01-plan/features/linear-filter-display-mirror.spec.md`, `components/group-header.tsx`, `docs/v3-mockup/{grid-grouping-proposal,card-hover-properties}.html`
+- Tests: 변경 없음 (A0 = tsc 0 + store-eval).
+
+---
+
 ## 2026-05-30 (집, Windows) — **통합 정합성 플랜: 네비게이션 골격 통일 + 온톨로지 재설계 + grid selection/그룹 + Q1 dropdown 그룹 (8 커밋)**
 
 > 🎯 **다음 즉시 액션 hook**:

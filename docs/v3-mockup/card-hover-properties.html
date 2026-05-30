@@ -1,0 +1,175 @@
+<!doctype html>
+<html lang="ko" class="dark">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>카드 호버 → 세로 프로퍼티 패널</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;450;500;600;700&family=Geist+Mono:wght@400;500&display=swap" />
+<style>
+  :root {
+    --bg:#0E0E10; --bg-elev:#18181B; --fg:#FAFAFA; --soft-fg:#D4D4D8; --muted-fg:#A1A1AA;
+    --whisper-fg:#71717A; --muted:#27272A; --border:#27272A; --border-strong:#3F3F46;
+    --hover-bg:#1C1C1F; --accent:#7C8AE7; --accent-soft:rgba(94,106,210,0.16);
+    --st-backlog:#94A3B8; --st-todo:#3B82F6; --st-prog:#F59E0B; --st-done:#34D399;
+    --font-sans:'Geist',-apple-system,sans-serif; --font-mono:'Geist Mono',monospace;
+  }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  body { background:var(--bg); color:var(--fg); font-family:var(--font-sans); font-size:14px;
+    -webkit-font-smoothing:antialiased; padding:28px 36px 120px; }
+  .tabular { font-variant-numeric:tabular-nums; }
+  svg { display:block; }
+  h2 { font-size:15px; font-weight:600; margin-bottom:4px; }
+  .lead { color:var(--muted-fg); font-size:13px; margin-bottom:20px; }
+
+  /* Display properties toggle bar */
+  .dpbar { display:flex; align-items:center; gap:8px; margin-bottom:28px; padding:10px 14px;
+    border:1px solid var(--border); border-radius:10px; background:#121214; flex-wrap:wrap; }
+  .dpbar .lbl { font-size:11px; text-transform:uppercase; letter-spacing:.08em; color:var(--whisper-fg); font-weight:600; margin-right:4px; }
+  .dptoggle { padding:4px 10px; border-radius:6px; font-size:12px; cursor:pointer; user-select:none;
+    border:1px solid var(--border); color:var(--muted-fg); background:transparent; transition:all 120ms ease; }
+  .dptoggle.on { background:var(--accent-soft); border-color:rgba(124,138,231,.45); color:#C7CDF5; }
+
+  /* board column */
+  .col { width:300px; }
+  .col-head { display:flex; align-items:center; gap:8px; padding:6px 2px 12px; }
+  .col-head .nm { font-weight:600; font-size:13px; }
+  .col-head .ct { color:var(--muted-fg); font-size:12px; }
+
+  /* compact card */
+  .card { position:relative; background:var(--bg-elev); border:1px solid var(--border); border-radius:8px;
+    padding:11px 12px; margin-bottom:10px; cursor:pointer; transition:border-color 140ms, background 140ms; }
+  .card:hover { border-color:var(--accent); background:#1b1b1f; }
+  .card .titlerow { display:flex; align-items:flex-start; gap:7px; margin-bottom:7px; }
+  .card .title { font-weight:500; font-size:13.5px; line-height:1.35; }
+  .chiprow { display:flex; align-items:center; gap:5px; flex-wrap:nowrap; overflow:hidden; }
+  .pchip { display:inline-flex; align-items:center; gap:4px; padding:2px 7px; border-radius:5px;
+    background:var(--muted); color:var(--soft-fg); font-size:11px; line-height:1.45; white-space:nowrap; flex:none; }
+  .pchip .cdot { width:7px; height:7px; border-radius:2px; }
+  .pchip.more { color:var(--whisper-fg); background:transparent; }
+
+  /* hover panel — card-shaped, vertical property list */
+  .hover-panel { position:absolute; left:calc(100% + 10px); top:0; width:248px; z-index:20;
+    background:var(--bg-elev); border:1px solid var(--border-strong); border-radius:10px;
+    box-shadow:0 8px 28px rgba(0,0,0,.45); padding:12px 13px; display:none; }
+  .card:hover .hover-panel { display:block; }
+  .hover-panel .hp-title { display:flex; align-items:center; gap:7px; font-weight:600; font-size:13px; padding-bottom:9px; margin-bottom:9px; border-bottom:1px solid var(--border); }
+  .prow { display:grid; grid-template-columns:18px 1fr; align-items:center; gap:9px; padding:4px 0; font-size:13px; }
+  .prow .pi { display:flex; align-items:center; }       /* color set inline = entity color */
+  .prow .pv { color:var(--fg); display:flex; align-items:center; gap:6px; flex-wrap:wrap; }
+  .mini-dot { width:8px; height:8px; border-radius:2px; flex:none; display:inline-block; }
+  .tag-inline { color:var(--soft-fg); }
+
+  .note { margin-top:36px; padding:14px 16px; border-left:2px solid var(--accent); background:#121214;
+    border-radius:0 8px 8px 0; color:var(--soft-fg); font-size:13px; max-width:760px; }
+  .note b { color:var(--fg); }
+</style>
+</head>
+<body>
+  <h2>카드 호버 → 세로 프로퍼티 패널</h2>
+  <p class="lead">카드에 마우스 올리면 → 선택된 Display Properties가 <b>위에서 아래로 (속성명 · 값)</b> 카드 형태 패널로 펼쳐짐. (compact 카드는 그대로, 호버 때만 전체 readout)</p>
+
+  <div class="dpbar" id="dpbar">
+    <span class="lbl">Display properties</span>
+    <span class="dphint" style="margin-left:auto; color:var(--whisper-fg); font-size:11.5px;">↓ 토글 → 호버 패널 내용 바뀜</span>
+  </div>
+
+  <div class="col">
+    <div class="col-head"><span id="colIcon"></span><span class="nm">Backlog</span><span class="ct">2</span></div>
+    <div id="cards"></div>
+  </div>
+
+  <div class="note">
+    <b>이게 맞아?</b> compact 카드는 <b>title + 3칩 + "+N"</b> 그대로 두고, <b>호버하면</b> 오른쪽에 카드 패널이 떠서 <b>선택된 프로퍼티 전부를 세로로</b> 보여줌. board·grid 공통. (트리거를 "카드 전체 호버" vs "+N만 호버"로 할지, 패널 위치 오른쪽/아래는 조정 가능)
+  </div>
+
+<script>
+  const RAW={backlog:'#94A3B8',todo:'#3B82F6',prog:'#F59E0B',done:'#34D399'};
+  function statusIcon(kind,color,size){size=size||16;const r=7,c=8;
+    if(kind==='backlog')return `<svg width="${size}" height="${size}" viewBox="0 0 16 16"><circle cx="${c}" cy="${c}" r="${r}" fill="none" stroke="${color}" stroke-width="1.6" stroke-dasharray="2.2 2.2"/></svg>`;
+    if(kind==='todo')return `<svg width="${size}" height="${size}" viewBox="0 0 16 16"><circle cx="${c}" cy="${c}" r="${r}" fill="none" stroke="${color}" stroke-width="1.6"/></svg>`;
+    if(kind==='prog')return `<svg width="${size}" height="${size}" viewBox="0 0 16 16"><circle cx="${c}" cy="${c}" r="${r}" fill="none" stroke="${color}" stroke-width="1.6"/><path d="M8 ${c-r} A${r} ${r} 0 0 1 8 ${c+r} Z" fill="${color}"/></svg>`;
+    return `<svg width="${size}" height="${size}" viewBox="0 0 16 16"><circle cx="${c}" cy="${c}" r="${r}" fill="${color}"/><path d="M4.8 8.2 L7 10.3 L11.2 5.8" fill="none" stroke="#0E0E10" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>`;}
+  const ic={
+    priority:`<svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 13V4"/><path d="M3 4 L11 4 L9 7 L11 10 L3 10"/></svg>`,
+    label:`<svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2.5 6.5 L8 2 L13.5 6.5 V13 a1 1 0 0 1-1 1 H3.5 a1 1 0 0 1-1-1 Z"/></svg>`,
+    tags:`<svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 5 H12 M3.5 8 H11.5 M5 2 L4 14 M11 2 L10 14"/></svg>`,
+    folder:`<svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M2 4 a1 1 0 0 1 1-1 H6 l1.5 1.5 H13 a1 1 0 0 1 1 1 V12 a1 1 0 0 1-1 1 H3 a1 1 0 0 1-1-1 Z"/></svg>`,
+    backlinks:`<svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6.5 9.5 L9.5 6.5"/><path d="M7 4.5 L8.5 3 a2.1 2.1 0 0 1 3 3 L10 7.5"/><path d="M9 11.5 L7.5 13 a2.1 2.1 0 0 1-3-3 L6 8.5"/></svg>`,
+    words:`<svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><rect x="3" y="2" width="10" height="12" rx="1.5"/><path d="M5.5 5.5 H10.5 M5.5 8 H10.5 M5.5 10.5 H8.5"/></svg>`,
+    updated:`<svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><circle cx="8" cy="8" r="6"/><path d="M8 5 V8 L10 9.5"/></svg>`,
+    created:`<svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><rect x="2.5" y="3" width="11" height="11" rx="1.5"/><path d="M2.5 6 H13.5 M5.5 1.5 V4 M10.5 1.5 V4"/></svg>`,
+  };
+  const PRIO={high:{c:'#FB923C',t:'High'},medium:{c:'#818CF8',t:'Medium'}};
+
+  const props={priority:true,label:true,tags:true,folder:true,backlinks:true,words:true,updated:true,created:true};
+
+  const notes=[
+    { t:'Weekly Review 2026-W14', status:'backlog', prio:'medium', label:{n:'Diary',c:'#EF4444'},
+      tags:['memo','weekly'], folder:{n:'Daily Log',c:'#22C55E'}, backlinks:2, words:212, updated:'2시간 전', created:'16일 전' },
+    { t:'Compound Interest of Knowledge', status:'backlog', prio:'high', label:{n:'Idea',c:'#A855F7'},
+      tags:['zettel','growth'], folder:{n:'Projects',c:'#3B82F6'}, backlinks:5, words:540, updated:'17주 전', created:'15주 전' },
+  ];
+
+  // compact card chips (cap 3 + "+N") — order: priority, label, tags, folder, backlinks, words, updated, created
+  function compactChips(n){
+    const all=[];
+    if(props.priority&&n.prio!=='none') all.push(`<span class="pchip"><span class="cdot" style="background:${PRIO[n.prio].c}"></span>${PRIO[n.prio].t}</span>`);
+    if(props.label&&n.label) all.push(`<span class="pchip"><span class="cdot" style="background:${n.label.c}"></span>${n.label.n}</span>`);
+    if(props.tags) n.tags.forEach(t=>all.push(`<span class="pchip">#${t}</span>`));
+    if(props.folder&&n.folder) all.push(`<span class="pchip"><span class="cdot" style="background:${n.folder.c}"></span>${n.folder.n}</span>`);
+    if(props.backlinks) all.push(`<span class="pchip">↩ ${n.backlinks}</span>`);
+    if(props.words) all.push(`<span class="pchip">${n.words}w</span>`);
+    const vis=all.slice(0,3); const extra=all.length-3;
+    return vis.join('')+(extra>0?`<span class="pchip more">+${extra}</span>`:'');
+  }
+
+  // hover panel — vertical property rows for ALL selected props
+  function panelRows(n){
+    const rows=[];
+    rows.push(prow(statusIcon(n.status,RAW[n.status],15), null, cap(n.status)));
+    if(props.priority) rows.push(prow(ic.priority, n.prio==='none'?'var(--whisper-fg)':PRIO[n.prio].c, n.prio==='none'?'—':PRIO[n.prio].t));
+    if(props.label) rows.push(prow(ic.label, n.label?n.label.c:'var(--whisper-fg)', n.label?n.label.n:'—'));
+    if(props.tags) rows.push(prow(ic.tags,'var(--whisper-fg)', n.tags.length?n.tags.map(t=>`#${t}`).join('   '):'—'));
+    if(props.folder) rows.push(prow(ic.folder, n.folder?n.folder.c:'var(--whisper-fg)', n.folder?n.folder.n:'—'));
+    if(props.backlinks) rows.push(prow(ic.backlinks,'var(--whisper-fg)', String(n.backlinks)));
+    if(props.words) rows.push(prow(ic.words,'var(--whisper-fg)', String(n.words)));
+    if(props.updated) rows.push(prow(ic.updated,'var(--whisper-fg)', n.updated));
+    if(props.created) rows.push(prow(ic.created,'var(--whisper-fg)', n.created));
+    return rows.join('');
+  }
+  // row = [color icon] + value. 속성명 텍스트 없음 — 아이콘(색)이 속성을 말함.
+  function prow(svg,color,v){
+    const style = color ? ` style="color:${color}"` : '';
+    return `<div class="prow"><span class="pi"${style}>${svg}</span><span class="pv">${v}</span></div>`;
+  }
+  function cap(s){return ({backlog:'Backlog',todo:'Todo',prog:'In Progress',done:'Done'})[s]||s;}
+
+  document.getElementById('colIcon').innerHTML=statusIcon('backlog',RAW.backlog,16);
+
+  function render(){
+    const root=document.getElementById('cards'); root.innerHTML='';
+    notes.forEach(n=>{
+      const card=document.createElement('div'); card.className='card';
+      card.innerHTML=`
+        <div class="titlerow">${statusIcon(n.status,RAW[n.status],16)}<div class="title">${n.t}</div></div>
+        <div class="chiprow">${compactChips(n)}</div>
+        <div class="hover-panel">
+          <div class="hp-title">${statusIcon(n.status,RAW[n.status],14)}${n.t}</div>
+          ${panelRows(n)}
+        </div>`;
+      root.appendChild(card);
+    });
+  }
+
+  const dpbar=document.getElementById('dpbar'); const hint=dpbar.querySelector('.dphint');
+  [['priority','Priority'],['label','Label'],['tags','Tags'],['folder','Folder'],['backlinks','Backlinks'],['words','Words'],['updated','Updated'],['created','Created']].forEach(([k,l])=>{
+    const el=document.createElement('span'); el.className='dptoggle'+(props[k]?' on':''); el.textContent=l;
+    el.addEventListener('click',()=>{props[k]=!props[k]; el.classList.toggle('on'); render();});
+    dpbar.insertBefore(el,hint);
+  });
+  render();
+</script>
+</body>
+</html>

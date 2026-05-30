@@ -36,7 +36,7 @@ import {
 import { WikiBoardWorkbench } from "@/components/wiki-board-workbench"
 import { WikiArticleMenuItems } from "@/components/views/wiki-list"
 import { useListNavCapture } from "@/hooks/use-list-nav-capture"
-import { flattenWikiGroupIds } from "@/lib/list-nav/flatten"
+import { flattenWikiGroupIds, wikiGroupsToListNav } from "@/lib/list-nav/flatten"
 import {
   ContextMenu,
   ContextMenuContent,
@@ -747,8 +747,8 @@ export function WikiBoard({
                             : undefined
                         }
                         childrenCount={childrenCountByParent?.get(article.id) ?? 0}
-                        onClick={() => { captureListNav(flattenWikiGroupIds(groups), article.id, "Wiki"); onOpenArticle(article.id) }}
-                        onDoubleClick={() => { captureListNav(flattenWikiGroupIds(groups), article.id, "Wiki"); onOpenArticle(article.id) }}
+                        onClick={() => { captureListNav(flattenWikiGroupIds(groups), article.id, "Wiki", wikiGroupsToListNav(groups)); onOpenArticle(article.id) }}
+                        onDoubleClick={() => { captureListNav(flattenWikiGroupIds(groups), article.id, "Wiki", wikiGroupsToListNav(groups)); onOpenArticle(article.id) }}
                         onSelect={(id, e) => onSelect?.(id, { multi: e.metaKey || e.ctrlKey, shift: e.shiftKey })}
                         onMergeArticle={onMerge}
                         onSplitArticle={onSplit}
