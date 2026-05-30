@@ -15,7 +15,7 @@ import React, {
 } from "react"
 import { FileText, Asterisk, Link as LinkIcon, Hash } from "@/lib/editor/editor-icons"
 import { CircleDashed, Circle, Contrast as CircleHalf, CircleCheck as CheckCircle, BookOpen } from "lucide-react"
-import { NOTE_STATUS_HEX, SPACE_COLORS } from "@/lib/colors"
+import { NOTE_STATUS_COLORS, SPACE_COLORS } from "@/lib/colors"
 import { usePlotStore } from "@/lib/store"
 import { getBody } from "@/lib/note-body-store"
 import { extractAnchorsFromContentJson, AnchorItem } from "@/lib/anchor-utils"
@@ -293,13 +293,13 @@ const WikilinkList = forwardRef<WikilinkListRef, WikilinkListProps>(
                             // (mixed picker context, v151). Status not encoded here.
                             <BookOpen size={14} className="shrink-0" style={{ color: SPACE_COLORS.wiki }} />
                           ) : item.status === "backlog" ? (
-                            <CircleDashed className="shrink-0" size={14} style={{ color: NOTE_STATUS_HEX.backlog }} />
+                            <CircleDashed className="shrink-0" size={14} style={{ color: NOTE_STATUS_COLORS.backlog.css }} />
                           ) : item.status === "todo" ? (
-                            <Circle className="shrink-0" size={14} style={{ color: NOTE_STATUS_HEX.todo }} />
+                            <Circle className="shrink-0" size={14} style={{ color: NOTE_STATUS_COLORS.todo.css }} />
                           ) : item.status === "in_progress" ? (
-                            <CircleHalf className="shrink-0" size={14} style={{ color: NOTE_STATUS_HEX.in_progress }} />
+                            <CircleHalf className="shrink-0" size={14} style={{ color: NOTE_STATUS_COLORS.in_progress.css }} />
                           ) : item.status === "done" ? (
-                            <CheckCircle className="shrink-0" size={14} style={{ color: NOTE_STATUS_HEX.done }} />
+                            <CheckCircle className="shrink-0" size={14} style={{ color: NOTE_STATUS_COLORS.done.css }} />
                           ) : (
                             <FileText className="shrink-0 text-muted-foreground" size={14} />
                           )}

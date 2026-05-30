@@ -14,7 +14,7 @@ import { Tag, CalendarBlank, Asterisk } from "@/lib/editor/editor-icons"
 import { CircleDashed, Circle, Contrast as CircleHalf, CircleCheck as CheckCircle, BookOpen } from "lucide-react"
 import { usePlotStore } from "@/lib/store"
 import { parseMentionDate } from "@/lib/mention-date-parser"
-import { NOTE_STATUS_HEX, SPACE_COLORS, ENTITY_COLORS } from "@/lib/colors"
+import { NOTE_STATUS_COLORS, SPACE_COLORS, ENTITY_COLORS } from "@/lib/colors"
 import type { SuggestionOptions, SuggestionProps, SuggestionKeyDownProps } from "@tiptap/suggestion"
 import type { MentionNodeAttrs } from "@tiptap/extension-mention"
 import type { NoteStatus } from "@/lib/types"
@@ -192,7 +192,7 @@ function ItemIcon({ item }: { item: MentionItem }) {
       return <BookOpen size={14} className="shrink-0" style={{ color: SPACE_COLORS.wiki }} />
     case "note": {
       const status = item.noteStatus ?? "in_progress"
-      const color = NOTE_STATUS_HEX[status]
+      const color = NOTE_STATUS_COLORS[status].css
       if (status === "backlog") {
         return <CircleDashed className="shrink-0" size={14} style={{ color }} />
       }

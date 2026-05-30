@@ -59,7 +59,7 @@ export const ENTITY_COLORS = {
   label:     "#64748b",   // Slate  — neutral type (individual labels override)
   folder:    "#f97316",   // Orange — file folder
   bookmark:  "#fbbf24",   // Amber  — pin
-  reference: "#3b82f6",   // Blue   — citation / link
+  reference: "#4f46e5",   // Indigo — citation / link (KNOWLEDGE_INDEX.references와 통일, todo blue와 분리)
   note:      SPACE_COLORS.notes,
   wiki:      SPACE_COLORS.wiki,
 } as const
@@ -92,9 +92,11 @@ export const KNOWLEDGE_INDEX_COLORS = {
     hex:  "#8b5cf6",            // matches SPACE_COLORS.wiki
   },
   tags: {
-    text: "text-amber-600 dark:text-amber-400",
-    bg:   "bg-amber-500/10",
-    hex:  "#f59e0b",
+    // 2026-05-31 충돌 정합: amber(#f59e0b)는 status.in_progress + priority.medium과
+    // 겹쳐 "작업 중"과 혼동 → lime으로 분리. text class는 모드별(light 600 / dark 400).
+    text: "text-lime-600 dark:text-lime-400",
+    bg:   "bg-lime-500/10",
+    hex:  "#84cc16",
   },
   references: {
     text: "text-accent",

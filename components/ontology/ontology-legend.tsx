@@ -16,7 +16,7 @@
 
 import { useState } from "react"
 import { ChevronDown as CaretDown, ChevronRight as CaretRight } from "lucide-react"
-import { NOTE_STATUS_HEX } from "@/lib/colors"
+import { NOTE_STATUS_COLORS } from "@/lib/colors"
 import { BookKindIcon } from "@/components/property-chips"
 import { cn } from "@/lib/utils"
 import { useT } from "@/lib/i18n"
@@ -122,10 +122,10 @@ export function OntologyLegend({ className }: { className?: string }) {
         <div className="border-t border-border-subtle pb-1.5">
           {/* STATUS — color axis (notes + wiki share the same 4-stage colors). */}
           <GroupHeader label={t("ontology.legend.status")} />
-          <LegendRow glyph={<StatusDot color={NOTE_STATUS_HEX.backlog} />} label={t("status.backlog")} />
-          <LegendRow glyph={<StatusDot color={NOTE_STATUS_HEX.todo} />} label={t("status.todo")} />
-          <LegendRow glyph={<StatusDot color={NOTE_STATUS_HEX.in_progress} />} label={t("status.in_progress")} />
-          <LegendRow glyph={<StatusDot color={NOTE_STATUS_HEX.done} />} label={t("status.done")} />
+          <LegendRow glyph={<StatusDot color={NOTE_STATUS_COLORS.backlog.css} />} label={t("status.backlog")} />
+          <LegendRow glyph={<StatusDot color={NOTE_STATUS_COLORS.todo.css} />} label={t("status.todo")} />
+          <LegendRow glyph={<StatusDot color={NOTE_STATUS_COLORS.in_progress.css} />} label={t("status.in_progress")} />
+          <LegendRow glyph={<StatusDot color={NOTE_STATUS_COLORS.done.css} />} label={t("status.done")} />
 
           {/* TYPE — shape axis (note=circle, wiki=hexagon). Neutral tone. */}
           <GroupHeader label={t("ontology.legend.type")} />
