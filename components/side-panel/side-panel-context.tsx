@@ -10,11 +10,9 @@ import {
 import {
   Calendar as CalendarBlank,
   FolderOpen,
-  Tag as PhTag,
   X as PhX,
   Plus as PhPlus,
   ChevronDown as CaretDown,
-  Hash as PhHash,
   FileText,
   Pin as PushPin,
   AlignLeft as TextAlignLeft,
@@ -33,6 +31,7 @@ import {
   CircleDashed,
   Info as PhInfo,
 } from "lucide-react"
+import { ENTITY_ICONS } from "@/lib/entity-icons"
 import { cn } from "@/lib/utils"
 import { format, formatDistanceToNow } from "date-fns"
 import { usePlotStore } from "@/lib/store"
@@ -386,7 +385,7 @@ export function SidePanelContext({ noteId: propNoteId }: { noteId?: string | nul
       <div className="mx-4 border-b border-border" />
 
       {/* Label */}
-      <InspectorSection title={t("sidepanel.inspector.label")} icon={<PhTag size={16} strokeWidth={2} />}>
+      <InspectorSection title={t("sidepanel.inspector.label")} icon={<ENTITY_ICONS.labels size={16} strokeWidth={2} />}>
         <LabelDropdown
           value={note.labelId}
           labels={labels.filter((l) => !l.trashed)}
@@ -398,7 +397,7 @@ export function SidePanelContext({ noteId: propNoteId }: { noteId?: string | nul
       <div className="mx-4 border-b border-border" />
 
       {/* Tags */}
-      <InspectorSection title={t("sidepanel.inspector.tags")} icon={<PhHash size={16} strokeWidth={2} />}>
+      <InspectorSection title={t("sidepanel.inspector.tags")} icon={<ENTITY_ICONS.tags size={16} strokeWidth={2} />}>
         <div className="flex flex-wrap items-center gap-1.5">
           {noteTags.map((tag) => (
             <span
@@ -456,7 +455,7 @@ export function SidePanelContext({ noteId: propNoteId }: { noteId?: string | nul
 
       {/* Categories — 2026-05-17 cross-entity 확장. WikiCategory 풀 공유.
           inline Create 자동 포함. labelId null + categoryIds 빈 array도 자유. */}
-      <InspectorSection title={t("sidepanel.inspector.categories")} icon={<PhTag size={16} strokeWidth={2} />}>
+      <InspectorSection title={t("sidepanel.inspector.categories")} icon={<ENTITY_ICONS.categories size={16} strokeWidth={2} />}>
         <CategoryPicker
           entityId={note.id}
           selectedCategoryIds={note.categoryIds ?? []}

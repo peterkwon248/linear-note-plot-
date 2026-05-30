@@ -38,13 +38,13 @@ import {
   FileText,
   Sparkles as Sparkle,
   Folder as PhFolder,
-  Tag as PhTag,
   Hash as PhHash,
   Layers as Stack,
   Sticker as PhSticker,
   Play,
   BookOpen,
 } from "lucide-react"
+import { ENTITY_ICONS } from "@/lib/entity-icons"
 import { cn } from "@/lib/utils"
 import { SPACE_COLORS } from "@/lib/colors"
 import type { Book, AutoSourceKind } from "@/lib/types"
@@ -94,7 +94,7 @@ const SOURCE_KIND_ICON: Record<AutoSourceKind, React.ComponentType<{ size?: numb
   folder: PhFolder,
   category: Stack,
   tag: PhHash,
-  label: PhTag,
+  label: ENTITY_ICONS.labels,
   sticker: PhSticker,
 }
 
@@ -293,7 +293,7 @@ export function BookDetailPanel({ book }: { book: Book }) {
       )}
 
       {/* ── 2026-05-17 cross-entity Label / Category / Tag ── */}
-      <InspectorSection title="Label" icon={<PhTag size={16} strokeWidth={2} />}>
+      <InspectorSection title="Label" icon={<ENTITY_ICONS.labels size={16} strokeWidth={2} />}>
         <LabelPicker
           noteId={book.id}
           currentLabelId={book.labelId ?? null}
@@ -312,7 +312,7 @@ export function BookDetailPanel({ book }: { book: Book }) {
       </InspectorSection>
       <div className="mx-4 border-b border-border" />
 
-      <InspectorSection title="Categories" icon={<PhTag size={16} strokeWidth={2} />}>
+      <InspectorSection title="Categories" icon={<ENTITY_ICONS.categories size={16} strokeWidth={2} />}>
         <CategoryPicker
           entityId={book.id}
           selectedCategoryIds={book.categoryIds ?? []}
@@ -344,7 +344,7 @@ export function BookDetailPanel({ book }: { book: Book }) {
       </InspectorSection>
       <div className="mx-4 border-b border-border" />
 
-      <InspectorSection title="Tags" icon={<PhTag size={16} strokeWidth={2} />}>
+      <InspectorSection title="Tags" icon={<ENTITY_ICONS.tags size={16} strokeWidth={2} />}>
         <TagPicker
           noteId={book.id}
           selectedTagIds={book.tags ?? []}

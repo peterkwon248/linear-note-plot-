@@ -124,6 +124,14 @@ export const KNOWLEDGE_INDEX_COLORS = {
     bg:   "bg-emerald-500/10",
     hex:  "#10b981",
   },
+  // 2026-05-31 지식베이스 9 entity (IA 헌법 §13): books 추가. burgundy =
+  // SPACE_COLORS.books. ⚠️ labels(rose)와 같은 rose hue — 명도(700/500 vs
+  // 600/400)로 구분. 스샷 검증 필요.
+  books: {
+    text: "text-rose-700 dark:text-rose-500",
+    bg:   "bg-rose-700/10",
+    hex:  "#be123c",
+  },
 } as const
 
 export type KnowledgeIndexEntity = keyof typeof KNOWLEDGE_INDEX_COLORS

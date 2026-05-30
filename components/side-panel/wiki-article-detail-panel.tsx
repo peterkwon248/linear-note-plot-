@@ -9,7 +9,6 @@ import {
   Calendar as CalendarBlank,
   FileText,
   AlignLeft as TextAlignLeft,
-  Tag as PhTag,
   Info as PhInfo,
   LayoutGrid as Layout,
   Trash2 as Trash,
@@ -20,6 +19,7 @@ import {
   Plus as PhPlus,
   Target,
 } from "lucide-react"
+import { ENTITY_ICONS } from "@/lib/entity-icons"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Calendar as CalendarUI } from "@/components/ui/calendar"
 import { FolderPicker } from "@/components/folder-picker"
@@ -213,7 +213,7 @@ export function WikiArticleDetailPanel({ article }: { article: WikiArticle | nul
 
       {/* Label — 2026-05-17 cross-entity 확장. labelId 없으면 "Add label"
           placeholder만 표시 (chip hide 패턴, 영구 룰). */}
-      <InspectorSection title="Label" icon={<PhTag size={16} strokeWidth={2} />}>
+      <InspectorSection title="Label" icon={<ENTITY_ICONS.labels size={16} strokeWidth={2} />}>
         <LabelPicker
           noteId={article.id}
           currentLabelId={article.labelId ?? null}
@@ -234,7 +234,7 @@ export function WikiArticleDetailPanel({ article }: { article: WikiArticle | nul
 
       {/* Categories — 2026-05-17 read-only chip strip → CategoryPicker (편집
           가능). WikiCategory 풀 공유. inline Create 자동 포함. */}
-      <InspectorSection title="Categories" icon={<PhTag size={16} strokeWidth={2} />}>
+      <InspectorSection title="Categories" icon={<ENTITY_ICONS.categories size={16} strokeWidth={2} />}>
         <CategoryPicker
           entityId={article.id}
           selectedCategoryIds={article.categoryIds ?? []}
@@ -321,7 +321,7 @@ export function WikiArticleDetailPanel({ article }: { article: WikiArticle | nul
       {/* Tags — 2026-05-16 read-only chip 표시에서 TagPicker로 업그레이드.
           Note Detail panel과 동일 패턴 (영구 룰 21 entity-uniformity).
           inline Create 기능 자동 포함 (검색 input → "Create '...'" 옵션). */}
-      <InspectorSection title="Tags" icon={<PhTag size={16} strokeWidth={2} />}>
+      <InspectorSection title="Tags" icon={<ENTITY_ICONS.tags size={16} strokeWidth={2} />}>
         <TagPicker
           noteId={article.id}
           selectedTagIds={article.tags ?? []}

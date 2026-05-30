@@ -250,50 +250,43 @@ status=진척 도입 → Book이 **"결과물(원고)" 쪽으로 기움** (smart
 
 ---
 
-## 13. Home 해체 + 액션 단일화 (LOCKED 2026-05-31)
+## 13. Home 슬림화 + 액션 단일화 (LOCKED 2026-05-31, 초안 A→C 정정)
 
-**결정**: Home space **폐지**, 앱 진입 = **Inbox**. "지금 할 일"은 Inbox의 역할이고, Home은 그것을 중복 미리보기한 **역할 없는 집합소**였음. (사용자: "지금 내가 할 일은 INBOX의 역할 아닌가? 리니어라면 애초에 HOME을 안 만들까?")
+**결정**: Home space **유지하되 슬림화** — 중복 미리보기는 제거하고 **고유 위젯(퀵링크스 통합 허브 + 지식베이스 개요 + QuickCapture)만 남긴다**. 진입 = Home(노트앱 위젯 대시보드식).
 
-### 근거 — Home 8섹션이 전부 본진이 따로 있음 (explore 전수조사)
-| Home 섹션 | 본진(행선지) |
+### 정정 이력 (A → C)
+초안은 "Home 폐지 + Inbox 진입(A안)"이었으나, **리니어·Plane이 둘 다 PM툴(이슈트래커)**이고 우리는 **노트앱**임을 간과한 편향. 노트앱은 위젯 진입이 정당(Notion=Home 위젯 / Anytype=사이드바 위젯 / Logseq·Capacities·Roam=Daily Note / Obsidian=마지막 노트+플러그인). 우리 퀵링크스(`MixedQuicklinks` = note/wiki/book/folder/saved-view/**block-bookmark** 통합 핀 허브, 사이드바 Pinned보다 포괄)와 지식베이스(개요 ≠ Library 관리)는 **고유 가치** → 폐지(A)가 아니라 슬림화(C).
+
+### Home 8섹션 처리 (C안)
+| Home 섹션 | 처리 |
 |---|---|
-| QuickCapture | 글로벌 ⌘N / 사이드바 `+` |
-| Stats 6카드 | Library (이미 공유) |
-| Inbox 미리보기 | Inbox (중복) |
-| 추천(Promote/Connect) | Inbox `detected` (이미 중복) |
-| 최근 활동 | 상단바 recently-viewed (이미 있음) |
-| 가장 많이 연결 | 온톨로지 그래프/인사이트 |
-| 최근 카드 | 사이드바 Recent (이미 있음) |
-| Quicklinks | 사이드바 Pinned (이미 있음) |
+| QuickCapture | **유지** (캡처 진입) |
+| 지식베이스 stats | **유지·강화** → 9 entity (아래) |
+| 퀵링크스(MixedQuicklinks) | **유지** (통합 즐겨찾기 허브 = 고유) |
+| Inbox 미리보기 | **제거** (Inbox 본진) |
+| 추천(Promote/Connect) | **제거 → Inbox `detected`** |
+| 최근 활동 / 최근 카드 | **제거** (상단바 recently-viewed + 사이드바 Recent 중복) |
+| 가장 많이 연결 | **제거** (온톨로지로) |
 
-→ 고유 콘텐츠 0. 삭제해도 손실 없음.
+→ Home = 고유 위젯 3개(캡처 + 지식베이스 + 퀵링크스). "중복 집합소"가 문제였지 Home 자체가 아님.
 
-### 리니어 vs Plane (반례 검증)
-- **리니어**: Home 대시보드 없음. 진입 = Inbox / 마지막 뷰. 짜깁기 홈을 의도적으로 거부.
-- **Plane**: Home 있음 — 단 **Stickies(고유 메모) + 커스텀 위젯**으로 "개인 작업공간"이라 정당. 우리 Home은 고유 콘텐츠가 없어 정당성 결여.
-- **판정**: **A안(리니어식 폐지)** 채택. Plane식 B(Stickies 개인보드)는 보류 — 사이드바 Pinned/Recent + 상단바 recently-viewed가 이미 Recents/Quicklinks를 커버, 신규 가치 = Stickies 하나뿐이라 별도 욕구 확인 후로.
+### 지식베이스 확장 (사용자 요구 2026-05-31)
+현재 6 entity(notes/wiki/tags/references/files/stickers) → **9 entity**: **books·categories·labels 추가**. `KNOWLEDGE_INDEX_COLORS`에 books 추가, StatsRow 9-card. (books는 핵심 destination 엔티티인데 빠져 있던 게 버그성 누락.) ⚠️ books(burgundy)와 labels(rose) 동일 hue — 명도로 구분.
 
 ### 관통 원칙: 액션은 Inbox로 단일화
-- Home Inbox 미리보기 → 제거. 온톨로지 **NUDGE → Inbox `detected`**(이미 중복). 흩어진 "할 일" 진입을 Inbox 하나로.
+- Home 추천·Inbox 미리보기 → Inbox. 온톨로지 **NUDGE → Inbox `detected`**.
 
 ### 함께 가는 온톨로지 정리
-- **dashboard → insights 흡수** (Health/Coverage 섹션 중복) → 단일 "인사이트"
-- `notes-insights`(InsightsView) / `ontology-insights`(OntologyInsightsPanel) / `graph-insights-view` = 3개 분산 → 역할 명문화·통합
-- **그래프 = display mode(렌즈)** (§1 트리코토미 정합)
+- **dashboard → insights 흡수** (Health/Coverage 중복) / `notes`·`ontology`·`graph` insights 3개 분산 통합 / **그래프 = display mode(렌즈)**.
 
-### 구현 비용 (별도 패스, fresh 세션)
-1. QuickCapture 글로벌화 (⌘N / 사이드바 `+`)
-2. `/home` → `/inbox` 리다이렉트 + 앱 진입 `/` → `/inbox`
-3. 액티비티바 Home 슬롯 제거 (7→6 space)
-4. `components/views/home-view.tsx` + `components/home/` 삭제
-5. 사이드바 Home space 콘텐츠 제거 (`linear-sidebar.tsx` Home 블록)
-6. 온톨로지 NUDGE/dashboard 정리 (sub-패스)
-- ⚠️ `lib/table-route` DEFAULT_ROUTES / store / 진입 라우팅 신중
+### 구현 (일부 지금 / 나머지 fresh 세션)
+- **지금**: 지식베이스 9 entity 확장 (작음, 독립)
+- **fresh**: Home 중복 섹션 제거(Inbox미리보기/추천/최근/연결) + 온톨로지 정리. ⚠️ Home space·진입은 **유지**(폐지 아님). `home-view.tsx`/`home/`는 삭제가 아니라 슬림화.
 
-### 미결 (구현 시 결정)
-- 액티비티바 Home 슬롯: 완전 제거(6-space) vs Inbox 전용 슬롯
-- QuickCapture 최종 위치 (⌘N vs 사이드바 `+` vs 둘 다)
-- 빈 Inbox "All caught up" 상태 디자인 (신규 유저 진입)
+### 미결 (구현 시)
+- 지식베이스 9-card 그리드 레이아웃 (3×3 vs 반응형)
+- QuickCapture 위치 (Home 내 vs 글로벌 ⌘N 병행)
+- books vs labels rose hue 구분 충분한지 (스샷 검증)
 
 ---
 

@@ -27,7 +27,8 @@ import {
 // 2026-05-24: imperial-extras (WikiBook/OntologyWide/Bookshelf) replaced with
 // lucide for activity-bar consistency. WikiBook → IconWiki (BookOpen),
 // OntologyWide → IconOntology (Network), Bookshelf → LibraryIcon (LibraryBig).
-import { Library as BooksIcon, Archive as LibraryIcon } from "lucide-react"
+import { Archive as LibraryIcon } from "lucide-react"
+import { ENTITY_ICONS } from "@/lib/entity-icons"
 import { useSettingsStore } from "@/lib/settings-store"
 import { useT } from "@/lib/i18n"
 import { SPACE_COLORS } from "@/lib/colors"
@@ -43,7 +44,7 @@ const SPACES: {
   { id: "home",     labelKey: "nav.space.home",     icon: IconHome,     shortcut: "G then H" },
   { id: "notes",    labelKey: "nav.space.notes",    icon: IconNotes,    shortcut: "G then N" },
   { id: "wiki",     labelKey: "nav.space.wiki",     icon: IconWiki,     shortcut: "" },
-  { id: "books",    labelKey: "nav.space.books",    icon: (p: { size?: number }) => <BooksIcon size={p.size} />, shortcut: "" },
+  { id: "books",    labelKey: "nav.space.books",    icon: (p: { size?: number }) => <ENTITY_ICONS.books size={p.size} />, shortcut: "" },
   { id: "calendar", labelKey: "nav.space.calendar", icon: IconCalendar, shortcut: "" },
   { id: "ontology", labelKey: "nav.space.ontology", icon: IconOntology, shortcut: "" },
   { id: "library",  labelKey: "nav.space.library",  icon: (p: { size?: number }) => <LibraryIcon size={p.size} />, shortcut: "" },
