@@ -1,5 +1,6 @@
 import type { ReactNode } from "react"
 import type { SortField, SortDirection, ViewMode, GroupBy, SortRule, ViewContextKey } from "./types"
+import type { PropertyCategory } from "./schema/property-def"
 import { CircleDashed, Circle, BookOpen, CircleHalf, CheckCircle, Lightning, PencilSimple, Sparkle, Globe, DownloadSimple } from "@phosphor-icons/react"
 import { NOTE_STATUS_HEX } from "@/lib/colors"
 // A3.2 / M2 — Notes view-config is now GENERATED from the schema engine
@@ -25,6 +26,13 @@ export interface FilterCategory {
   labelKey?: string
   icon: ReactNode
   values: FilterValue[]
+  /** 6-category cluster this category belongs to (workflow / classification /
+   *  relations / metrics / time / content). Emitted by the schema adapter from
+   *  `PropertyDef.category`; drives the upcoming filter-panel category dividers
+   *  (A3.3 E2). Optional so the remaining hand-written Tier-3 configs
+   *  (Library / Graph / Calendar / …) compile unchanged — those omit it and the
+   *  divider layer treats an absent category as "uncategorized". */
+  category?: PropertyCategory
 }
 
 export interface FilterValue {

@@ -35,17 +35,19 @@ import {
  * board/grouping spine (boardDefaultGroupBy = "kind", entity-uniformity rule 21).
  *
  * Ordering is load-bearing — ONE property list drives four differently-ordered
- * surfaces. The single declaration order below
- * (kind → sourceType → pinned → updatedAt → createdAt → title → itemCount)
- * was chosen so the per-facet `.filter()` projections reproduce the legacy order
- * on every surface:
- *   - filter order  (isFilterable): kind, sourceType, pinned, updatedAt
+ * surfaces. A3.3-E1: the declaration order is now the 6-CATEGORY CLUSTER order
+ * (workflow → classification → relations → metrics → time → content), which is
+ * the FILTER order; the other surfaces are pinned against it:
+ *   - filter order  (isFilterable, = cluster/declaration order):
+ *     kind, pinned, sourceType, updatedAt  (pinned moved up into the workflow
+ *     cluster ahead of sourceType — the one visible change)
  *   - sort order    (isSortable):   updatedAt, createdAt, title, itemCount
- *   - group order   (isGroupable):  kind, pinned  (+ extraGroupings date,
- *     firstLetter appended)
- *   - display order (isDisplayable): itemCount, kind, sources, pinned — this one
- *     diverges from declaration order, reproduced via explicit `displayOrder`
- *     (itemCount 0, kind 1, sources-extra 2, pinned 3).
+ *     (diverges from the cluster order → pinned via `sortOrder`)
+ *   - group order   (isGroupable):  kind, pinned (natural cluster order, already
+ *     monotonic, so no `groupOrder` needed) + extraGroupings date, firstLetter
+ *   - display order (isDisplayable): itemCount, kind, sources, pinned —
+ *     reproduced via explicit `displayOrder` (itemCount 0, kind 1,
+ *     sources-extra 2, pinned 3).
  *
  * "sources" is a display-only column whose key is NOT a FilterField/GroupBy/
  * SortField member, so per plan D-final it lives in
@@ -53,7 +55,9 @@ import {
  */
 
 const PROPERTIES: PropertyDef[] = [
-  /* 1. kind — filter / display / group. Smart / Manual / Hybrid. The Books
+  /* ── workflow cluster (kind, pinned) ───────────────────────── */
+
+  /* kind — filter / display / group. Smart / Manual / Hybrid. The Books
    *    board + grouping spine (no status axis on Books). */
   {
     key: "kind",
@@ -80,29 +84,7 @@ const PROPERTIES: PropertyDef[] = [
     },
   },
 
-  /* 2. sourceType — filter only. Which smart source(s) are configured;
-   *    "_none" surfaces pure-manual books. */
-  {
-    key: "sourceType",
-    category: "classification",
-    label: "Smart source",
-    icon: SourceIcon,
-    valueType: "enum",
-    isFilterable: true,
-    options: {
-      kind: "static",
-      values: [
-        { key: "folder", label: "Folder", icon: FolderIcon },
-        { key: "category", label: "Wiki Category", icon: TagIcon },
-        { key: "tag", label: "Tag", icon: TagIcon },
-        { key: "label", label: "Label", icon: LabelIcon },
-        { key: "sticker", label: "Sticker", icon: SourceStickerIcon },
-        { key: "_none", label: "No smart source" },
-      ],
-    },
-  },
-
-  /* 3. pinned — filter / display / group. */
+  /* pinned — filter / display / group. */
   {
     key: "pinned",
     category: "workflow",
@@ -126,52 +108,35 @@ const PROPERTIES: PropertyDef[] = [
     },
   },
 
-  /* 4. updatedAt — filter ("Updated") / sort ("Updated") / group (via "date").
-   *    The grouping facet is provided by the group-only "date" axis in
-   *    extraGroupings (GroupBy has no "updatedAt" member), so this prop is not
-   *    marked isGroupable. */
+  /* ── classification cluster (sourceType) ───────────────────── */
+
+  /* sourceType — filter only. Which smart source(s) are configured;
+   *    "_none" surfaces pure-manual books. */
   {
-    key: "updatedAt",
-    category: "time",
-    label: "Updated",
-    icon: CalendarIcon,
-    valueType: "dateBucket",
+    key: "sourceType",
+    category: "classification",
+    label: "Smart source",
+    icon: SourceIcon,
+    valueType: "enum",
     isFilterable: true,
-    isSortable: true,
-    sortLabelKey: "display.ordering.updated",
-    buckets: [
-      { key: "today", label: "Today", operator: "eq", value: "today" },
-      { key: "yesterday", label: "Yesterday", operator: "eq", value: "yesterday" },
-      { key: "this-week", label: "This week", operator: "eq", value: "this-week" },
-      { key: "last-7-days", label: "Last 7 days", operator: "eq", value: "last-7-days" },
-      { key: "this-month", label: "This month", operator: "eq", value: "this-month" },
-      { key: "last-30-days", label: "Last 30 days", operator: "eq", value: "last-30-days" },
-    ],
+    options: {
+      kind: "static",
+      values: [
+        { key: "folder", label: "Folder", icon: FolderIcon },
+        { key: "category", label: "Wiki Category", icon: TagIcon },
+        { key: "tag", label: "Tag", icon: TagIcon },
+        { key: "label", label: "Label", icon: LabelIcon },
+        { key: "sticker", label: "Sticker", icon: SourceStickerIcon },
+        { key: "_none", label: "No smart source" },
+      ],
+    },
   },
 
-  /* 5. createdAt — sort ("Created") only. */
-  {
-    key: "createdAt",
-    category: "time",
-    label: "Created",
-    icon: CalendarIcon,
-    valueType: "dateBucket",
-    isSortable: true,
-    sortLabelKey: "display.ordering.created",
-  },
+  /* ── metrics cluster (itemCount) ───────────────────────────── */
 
-  /* 6. title — sort ("Title") only. */
-  {
-    key: "title",
-    category: "content",
-    label: "Title",
-    labelKey: "display.ordering.title",
-    icon: SortIcon,
-    valueType: "special",
-    isSortable: true,
-  },
-
-  /* 7. itemCount — sort ("Item count") / display ("Item count"). Book.items.length. */
+  /* itemCount — sort ("Item count") / display ("Item count"). Book.items.length.
+   *    sortOrder 3 = last in the sort dropdown (unchanged) despite itemCount now
+   *    preceding the time props in the array. */
   {
     key: "itemCount",
     category: "metrics",
@@ -182,6 +147,59 @@ const PROPERTIES: PropertyDef[] = [
     isSortable: true,
     isDisplayable: true,
     displayOrder: 0,
+    sortOrder: 3,
+  },
+
+  /* ── time cluster (updatedAt, createdAt) ───────────────────── */
+
+  /* updatedAt — filter ("Updated") / sort ("Updated") / group (via "date").
+   *    The grouping facet is provided by the group-only "date" axis in
+   *    extraGroupings (GroupBy has no "updatedAt" member), so this prop is not
+   *    marked isGroupable. sortOrder 0 = first in the sort dropdown. */
+  {
+    key: "updatedAt",
+    category: "time",
+    label: "Updated",
+    icon: CalendarIcon,
+    valueType: "dateBucket",
+    isFilterable: true,
+    isSortable: true,
+    sortLabelKey: "display.ordering.updated",
+    sortOrder: 0,
+    buckets: [
+      { key: "today", label: "Today", operator: "eq", value: "today" },
+      { key: "yesterday", label: "Yesterday", operator: "eq", value: "yesterday" },
+      { key: "this-week", label: "This week", operator: "eq", value: "this-week" },
+      { key: "last-7-days", label: "Last 7 days", operator: "eq", value: "last-7-days" },
+      { key: "this-month", label: "This month", operator: "eq", value: "this-month" },
+      { key: "last-30-days", label: "Last 30 days", operator: "eq", value: "last-30-days" },
+    ],
+  },
+
+  /* createdAt — sort ("Created") only. sortOrder 1. */
+  {
+    key: "createdAt",
+    category: "time",
+    label: "Created",
+    icon: CalendarIcon,
+    valueType: "dateBucket",
+    isSortable: true,
+    sortLabelKey: "display.ordering.created",
+    sortOrder: 1,
+  },
+
+  /* ── content cluster (title) ───────────────────────────────── */
+
+  /* title — sort ("Title") only. sortOrder 2. */
+  {
+    key: "title",
+    category: "content",
+    label: "Title",
+    labelKey: "display.ordering.title",
+    icon: SortIcon,
+    valueType: "special",
+    isSortable: true,
+    sortOrder: 2,
   },
 ]
 

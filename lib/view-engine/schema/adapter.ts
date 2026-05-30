@@ -84,6 +84,11 @@ export function toFilterCategories(
       label: prop.filterLabel ?? prop.label,
       icon: prop.icon,
       values: resolveFilterValues(prop, hydrators),
+      // Carry the 6-category cluster through to the consumer so the filter
+      // panel can group categories under dividers (A3.3). The schema's
+      // declaration order is already the cluster order (workflow → … →
+      // content), so same-category entries are contiguous.
+      category: prop.category,
     }
     if (labelKey !== undefined) cat.labelKey = labelKey
     out.push(cat)
