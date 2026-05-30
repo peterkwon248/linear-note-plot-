@@ -1255,26 +1255,15 @@ export function NotesBoard({
       >
         <FilterChipBar
           filters={viewState.filters}
-          groupBy={viewState.groupBy}
-          isSingleStatusTab={isSingleStatusTab}
           folders={folders}
           tags={tags}
           labels={labels}
-          onToggleFilter={(field, value, op) => {
-            const exists = viewState.filters.some(
-              (f) => f.field === field && f.operator === (op ?? "eq") && f.value === value
-            )
-            if (exists) {
-              updateViewState({
-                filters: viewState.filters.filter((f) => !(f.field === field && f.operator === (op ?? "eq") && f.value === value)),
-              })
-            } else {
-              updateViewState({ filters: [...viewState.filters, { field, operator: op ?? "eq", value }] })
-            }
-          }}
           onRemoveFilter={(idx) => updateViewState({ filters: viewState.filters.filter((_, i) => i !== idx) })}
           onClearAll={() => updateViewState({ filters: [] })}
-          onSetFilters={(filters) => updateViewState({ filters })}
+          filterCategories={notesFilterCategories}
+          onToggleRule={handleFilterToggle}
+          quickFilters={NOTES_VIEW_CONFIG.quickFilters as any}
+          onQuickFilter={(rules) => updateViewState({ filters: rules })}
           onUpdateFilter={(idx, rule) => {
             const next = [...(viewState.filters ?? [])]
             next[idx] = rule

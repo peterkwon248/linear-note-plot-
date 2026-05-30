@@ -32,7 +32,7 @@ import { ColorPickerGrid } from "@/components/color-picker-grid"
 import { PRESET_COLORS } from "@/lib/colors"
 import { useNotesView } from "@/lib/view-engine/use-notes-view"
 import { useLabelsView, type LabelWithCount } from "@/lib/view-engine/use-labels-view"
-import { FilterButton, FilterChipBar } from "@/components/filter-bar"
+import { FilterChipBar } from "@/components/filter-bar"
 import { FilterPanel } from "@/components/filter-panel"
 import { DisplayPanel } from "@/components/display-panel"
 import { LABELS_LIST_VIEW_CONFIG, NOTES_VIEW_CONFIG } from "@/lib/view-engine/view-configs"
@@ -667,15 +667,15 @@ export function LabelsView() {
         {/* Filter chips */}
         <FilterChipBar
           filters={labelViewState.filters}
-          groupBy={labelViewState.groupBy}
-          isSingleStatusTab={false}
           folders={folders}
           tags={tags}
           labels={labels}
-          onToggleFilter={toggleFilter}
           onRemoveFilter={removeFilter}
           onClearAll={() => updateLabelView({ filters: [] })}
-          onSetFilters={(f) => updateLabelView({ filters: f })}
+          filterCategories={NOTES_VIEW_CONFIG.filterCategories}
+          onToggleRule={(rule) => toggleFilter(rule.field, String(rule.value), rule.operator)}
+          quickFilters={NOTES_VIEW_CONFIG.quickFilters as any}
+          onQuickFilter={(rules) => updateLabelView({ filters: rules })}
         />
 
         {/* Selection bar — N selected + Clear (정합: Notes/Wiki floating bar
