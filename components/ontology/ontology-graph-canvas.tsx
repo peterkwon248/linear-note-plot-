@@ -27,7 +27,7 @@ import { computeForceConfig } from "@/lib/graph"
 import { RELATION_TYPE_CONFIG } from "@/lib/relation-helpers"
 import type { RelationType, Label, WikiCategory, Folder, Sticker, Book } from "@/lib/types"
 import type { GroupBy } from "@/lib/view-engine/types"
-import { GRAPH_NODE_HEX, GRAPH_CLUSTER_PALETTE, NOTE_STATUS_HEX } from "@/lib/colors"
+import { GRAPH_NODE_HEX, GRAPH_CLUSTER_PALETTE } from "@/lib/colors"
 import { NodeContextMenu } from "@/components/ontology/node-context-menu"
 import { useTheme } from "next-themes"
 import { LOD, VIEWPORT, NODE_THEME, FIT_CONFIG, MAX_VISIBLE_NODES, FORCE_CONFIG, SIM_CONFIG, NODE_SIZE, EDGE_STYLE, HULL, MINIMAP, LABEL_CONFIG, TOOLTIP_CONFIG, SELECTION, classifyTier, nodeRadius as configNodeRadius, getNodeRenderProps, getHullRenderProps, fadeOpacity } from "@/lib/graph/ontology-graph-config"
@@ -315,7 +315,8 @@ function computeEdgePath(
 
 /* ── Node base color (for gradient palette) ──────────── */
 
-const STATUS_COLORS: Record<string, string> = {
+// Fallback hex values for SSR / pre-hydration (dark-mode values from NOTE_STATUS_HEX).
+const STATUS_COLOR_FALLBACK: Record<string, string> = {
   backlog:     GRAPH_NODE_HEX.backlog,
   todo:        GRAPH_NODE_HEX.todo,
   in_progress: GRAPH_NODE_HEX.in_progress,
@@ -323,7 +324,9 @@ const STATUS_COLORS: Record<string, string> = {
 }
 const DEFAULT_NODE_COLOR = "hsl(var(--muted-foreground))"
 
-function getNodeBaseColor(node: OntologyNode, labels: Label[]): string {
+type StatusColorCache = Record<string, string>
+
+function getNodeBaseColor(node: OntologyNode, labels: Label[], statusColors: StatusColorCache): string {
   if (node.labelId) {
     const label = labels.find((l) => l.id === node.labelId)
     if (label?.color) return label.color
@@ -331,8 +334,8 @@ function getNodeBaseColor(node: OntologyNode, labels: Label[]): string {
   // 색=status / 모양=공간 (2026-05-29): wiki 노드도 노트와 동일한 4단계 status
   // 색을 쓴다. 공간 구분(note vs wiki)은 노드 모양(circle vs hexagon)이 담당하므로
   // 색 축은 status 전용. status가 비면 wiki entity 색(violet)으로 폴백.
-  if (node.isWiki || node.nodeType === "wiki") return STATUS_COLORS[node.status] ?? GRAPH_NODE_HEX.wiki
-  return STATUS_COLORS[node.status] ?? DEFAULT_NODE_COLOR
+  if (node.isWiki || node.nodeType === "wiki") return statusColors[node.status] ?? GRAPH_NODE_HEX.wiki
+  return statusColors[node.status] ?? DEFAULT_NODE_COLOR
 }
 
 /* ── Component ─────────────────────────────────────────── */
@@ -375,6 +378,24 @@ export function OntologyGraphCanvas({
   const [renderTick, forceRender] = useReducer((c: number) => c + 1, 0)
   const { resolvedTheme } = useTheme()
   const isDarkMode = resolvedTheme !== "light"
+
+  /* ── Status color cache — reads CSS vars so dark/light mode resolves correctly.
+   * Canvas 2D context cannot read var() directly; we resolve once per theme
+   * change and pass the resolved hex values into all draw callsites.
+   * Falls back to dark-mode hex constants for SSR / pre-hydration.        ── */
+  const statusColorCache = useMemo<StatusColorCache>(() => {
+    if (typeof document === "undefined") return { ...STATUS_COLOR_FALLBACK }
+    const style = getComputedStyle(document.documentElement)
+    const read = (name: string, fallback: string) =>
+      style.getPropertyValue(name).trim() || fallback
+    return {
+      backlog:     read("--status-backlog",     STATUS_COLOR_FALLBACK.backlog),
+      todo:        read("--status-todo",         STATUS_COLOR_FALLBACK.todo),
+      in_progress: read("--status-in_progress", STATUS_COLOR_FALLBACK.in_progress),
+      done:        read("--status-done",         STATUS_COLOR_FALLBACK.done),
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isDarkMode])
 
   /* ── State ─────────────────────────────────────────── */
   const [transform, setTransform] = useState<Transform>({ x: 0, y: 0, scale: 1 })
@@ -679,7 +700,7 @@ export function OntologyGraphCanvas({
   const gradientPalette = useMemo(() => {
     const allColors = new Set<string>()
     for (const n of graph.nodes) {
-      allColors.add(getNodeBaseColor(n, labels))
+      allColors.add(getNodeBaseColor(n, labels, statusColorCache))
     }
     const colorArr = Array.from(allColors)
     const palette: { id: string; from: string; to: string }[] = []
@@ -927,7 +948,7 @@ export function OntologyGraphCanvas({
         case "tag":      return tags?.find((t) => t.id === key)?.color ?? fallback
         case "folder":   return folders?.find((f) => f.id === key)?.color ?? fallback
         case "category": return wikiCategories?.find((c) => c.id === key)?.color ?? fallback
-        case "status":   return NOTE_STATUS_HEX[key as keyof typeof NOTE_STATUS_HEX] ?? fallback
+        case "status":   return statusColorCache[key] ?? fallback
         default:         return fallback
       }
     }
@@ -1731,8 +1752,8 @@ export function OntologyGraphCanvas({
             // Relation edges — thickest, gradient stroke preserved for non-highlighted
             const edgeColor = RELATION_TYPE_CONFIG[edge.kind as RelationType]?.color ?? "#6b7280"
             const srcNode = nodeMap.get(edge.source)
-            const srcColor = srcNode ? getNodeBaseColor(srcNode, labels) : edgeColor
-            const tgtColor = getNodeBaseColor(targetNode, labels)
+            const srcColor = srcNode ? getNodeBaseColor(srcNode, labels, statusColorCache) : edgeColor
+            const tgtColor = getNodeBaseColor(targetNode, labels, statusColorCache)
             const gradId = gradientLookup.get(`${srcColor}||${tgtColor}`)
             const strokeRef = isHighlightedEdge
               ? `${ACCENT_COLOR}${EDGE_STYLE.highlightAlphaHex}`
@@ -1781,7 +1802,7 @@ export function OntologyGraphCanvas({
             const dimmed = searchMatchIds !== null && !searchMatchIds.has(node.id)
 
             const r = nodeRadius(node.connectionCount)
-            const fill = getNodeBaseColor(node, labels)
+            const fill = getNodeBaseColor(node, labels, statusColorCache)
             const isDragging = dragNodeIdRef.current === node.id
             const nodeType = getNodeType(node)
 
@@ -1986,6 +2007,7 @@ export function OntologyGraphCanvas({
         labels={labels}
         selectedNodeId={selectedNodeId}
         onNavigate={(t) => setTransform(t)}
+        statusColorCache={statusColorCache}
       />
 
       {/* ── Controls overlay ────────────────────────── */}
@@ -2196,9 +2218,10 @@ interface MiniMapProps {
   labels: Label[]
   selectedNodeId: string | null
   onNavigate: (t: Transform) => void
+  statusColorCache: StatusColorCache
 }
 
-function MiniMap({ positions, transform, svgRef, nodes, edges, labels, selectedNodeId, onNavigate }: MiniMapProps) {
+function MiniMap({ positions, transform, svgRef, nodes, edges, labels, selectedNodeId, onNavigate, statusColorCache }: MiniMapProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const isDraggingRef = useRef(false)
 
@@ -2332,7 +2355,7 @@ function MiniMap({ positions, transform, svgRef, nodes, edges, labels, selectedN
         ctx.fillStyle = MINIMAP.selectedColor
         ctx.strokeStyle = MINIMAP.selectedColor
       } else {
-        const color = getNodeBaseColor(node, labels)
+        const color = getNodeBaseColor(node, labels, statusColorCache)
         ctx.fillStyle = color
         ctx.strokeStyle = color
         ctx.globalAlpha = 0.75
@@ -2562,7 +2585,9 @@ function LegendOverlay({ svgRef, legendRelationTypes, hasWikilinkEdges, isDarkMo
   // because per-status colors (cyan/orange/green/violet) all get washed out
   // on white at lower densities, especially the violet wiki hexagon which
   // is the largest swatch in the legend.
-  const nodeFillAlpha   = isDarkMode ? "55" : "B0"  // 0x55=33%, 0xB0=69%
+  // nodeFillAlpha as numeric opacity for SVG fillOpacity (var() can't be suffixed).
+  // 0x55=33% dark, 0xB0=69% light.
+  const nodeFillOpacity = isDarkMode ? 0.333 : 0.690
 
   return (
     <g transform={`translate(${tx},${ty})`} style={{ pointerEvents: "none" }}>
@@ -2571,21 +2596,22 @@ function LegendOverlay({ svgRef, legendRelationTypes, hasWikilinkEdges, isDarkMo
 
       {/* ── Notes (circle, by status) — text uses unified slate, swatch carries the color.
            Light-mode swatches use a thicker stroke + denser fill so the
-           tiny 8px shapes still read against a white card background. ── */}
+           tiny 8px shapes still read against a white card background.
+           fill="var(--status-*)" resolves via globals.css light/dark overrides. ── */}
       <g transform={`translate(10, ${10 + 0 * rowHeight})`}>
-        <circle cx={6} cy={6} r={4} fill={GRAPH_NODE_HEX.backlog + nodeFillAlpha} stroke={GRAPH_NODE_HEX.backlog} strokeWidth={isDarkMode ? 1.3 : 1.8} />
+        <circle cx={6} cy={6} r={4} fill="var(--status-backlog)" fillOpacity={nodeFillOpacity} stroke="var(--status-backlog)" strokeWidth={isDarkMode ? 1.3 : 1.8} />
         <text x={26} y={10} fill={labelFill} fontSize={10} fontWeight={isDarkMode ? 500 : 600} fontFamily="-apple-system, system-ui, sans-serif">Backlog</text>
       </g>
       <g transform={`translate(10, ${10 + 1 * rowHeight})`}>
-        <circle cx={6} cy={6} r={4} fill={GRAPH_NODE_HEX.todo + nodeFillAlpha} stroke={GRAPH_NODE_HEX.todo} strokeWidth={isDarkMode ? 1.3 : 1.8} />
+        <circle cx={6} cy={6} r={4} fill="var(--status-todo)" fillOpacity={nodeFillOpacity} stroke="var(--status-todo)" strokeWidth={isDarkMode ? 1.3 : 1.8} />
         <text x={26} y={10} fill={labelFill} fontSize={10} fontWeight={isDarkMode ? 500 : 600} fontFamily="-apple-system, system-ui, sans-serif">Todo</text>
       </g>
       <g transform={`translate(10, ${10 + 2 * rowHeight})`}>
-        <circle cx={6} cy={6} r={4} fill={GRAPH_NODE_HEX.in_progress + nodeFillAlpha} stroke={GRAPH_NODE_HEX.in_progress} strokeWidth={isDarkMode ? 1.3 : 1.8} />
+        <circle cx={6} cy={6} r={4} fill="var(--status-in_progress)" fillOpacity={nodeFillOpacity} stroke="var(--status-in_progress)" strokeWidth={isDarkMode ? 1.3 : 1.8} />
         <text x={26} y={10} fill={labelFill} fontSize={10} fontWeight={isDarkMode ? 500 : 600} fontFamily="-apple-system, system-ui, sans-serif">In Progress</text>
       </g>
       <g transform={`translate(10, ${10 + 3 * rowHeight})`}>
-        <circle cx={6} cy={6} r={4} fill={GRAPH_NODE_HEX.done + nodeFillAlpha} stroke={GRAPH_NODE_HEX.done} strokeWidth={isDarkMode ? 1.3 : 1.8} />
+        <circle cx={6} cy={6} r={4} fill="var(--status-done)" fillOpacity={nodeFillOpacity} stroke="var(--status-done)" strokeWidth={isDarkMode ? 1.3 : 1.8} />
         <text x={26} y={10} fill={labelFill} fontSize={10} fontWeight={isDarkMode ? 500 : 600} fontFamily="-apple-system, system-ui, sans-serif">Done</text>
       </g>
 
@@ -2594,7 +2620,7 @@ function LegendOverlay({ svgRef, legendRelationTypes, hasWikilinkEdges, isDarkMo
         {(() => {
           const pts = hexagonPoints(6, 6, 4)
           // Legend swatch — match the actual graph wiki node fill (entity violet).
-          return <polygon points={pts.map(p => `${p[0]},${p[1]}`).join(" ")} fill={GRAPH_NODE_HEX.wiki + nodeFillAlpha} stroke={GRAPH_NODE_HEX.wiki} strokeWidth={isDarkMode ? 1.5 : 2.0} strokeLinejoin="round" />
+          return <polygon points={pts.map(p => `${p[0]},${p[1]}`).join(" ")} fill={GRAPH_NODE_HEX.wiki} fillOpacity={nodeFillOpacity} stroke={GRAPH_NODE_HEX.wiki} strokeWidth={isDarkMode ? 1.5 : 2.0} strokeLinejoin="round" />
         })()}
         <text x={26} y={10} fill={labelFill} fontSize={10} fontWeight={isDarkMode ? 500 : 600} fontFamily="-apple-system, system-ui, sans-serif">Wiki</text>
       </g>

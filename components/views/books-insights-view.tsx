@@ -28,11 +28,16 @@ import { BookKindIcon } from "@/components/property-chips"
 import { getBookKind, type BookKind } from "@/lib/view-engine/use-books-view"
 import type { Book } from "@/lib/types"
 
-/* ── Kind colors (mirror BookKindIcon: Smart violet / Hybrid amber / Manual neutral) ── */
+/* ── Kind colors — achromatic luminance tiers (classification axis ≠ entity) ──
+ *  smart  = zinc-600 (#52525b, darkest — most prominent)
+ *  hybrid = zinc-400 (#a1a1aa, mid)
+ *  manual = zinc-300 (#d4d4d8, lightest)
+ *  Avoids collisions with home-space indigo (#5E6AD2) and in_progress amber (#f59e0b).
+ * ── */
 const KIND_COLOR: Record<BookKind, string> = {
-  smart: "#5E6AD2",
-  hybrid: "#d97706",
-  manual: "var(--muted-foreground)",
+  smart: "#52525b",
+  hybrid: "#a1a1aa",
+  manual: "#d4d4d8",
 }
 const KIND_ORDER: BookKind[] = ["smart", "hybrid", "manual"]
 

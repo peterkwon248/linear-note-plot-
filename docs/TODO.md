@@ -3,29 +3,32 @@
 > 우선순위 기반 작업 목록. **P0 = 다음 세션 즉시 시작점** (NEXT-ACTION.md 폐지, 2026-05-12).
 > 완료 항목은 즉시 삭제. 자세한 history는 SESSION-LOG.md + MEMORY.md.
 
-**마지막 갱신**: 2026-05-31 (심야 after-work, 집/Windows) — **IA 헌법 수립(PR #497) + Inbox 전역 승격**. 다음 P0 #0 = **헌법 적용**: 셸 목업 최종 락→포팅 / Book 워크플로(status+priority) / Book kind 라벨 변경.
+**마지막 갱신**: 2026-05-31 (낮~저녁 after-work, 집/Windows) — 셸 §10 footer/레일 + 색·아이콘 정합 + IA 헌법 §13(Home 종합대시보드 A→C) + 지식베이스 9-entity + 엔티티 아이콘 SOT (8커밋). 다음 P0 #0 = **스티커 커스텀 SVG**(사용자 명시) → Home 종합 대시보드 구현 → 온톨로지 정리.
 
 ---
 
 ## 🟣 P0 — 즉시 (cross-machine 진입점, 2026-05-31 — IA 헌법 적용 단계)
 
-> ✅ **2026-05-30 심야 완료** (PR #497): **IA 헌법 수립** — `docs/01-plan/features/linear-ia-constitution.spec.md`(14챕터). 리니어 관점 정보구조 전면 재설계(트리코토미/렌즈/MIRROR-ADAPT-SKIP/atom-home/noteVS위키/Book-vs-Sticker/공통자산정책/3-entity워크플로/Book네이밍). + **Inbox 전역 승격**(셸 2차 a) + 셸 목업. **헌법 = 결정, 다음 세션 = 적용(구현).**
+> ✅ **2026-05-31 낮~저녁** (이 세션 8커밋): 셸 §10 footer/레일(Trash 강등·Help·레일 절제) + 색·아이콘 시스템 정합 + IA 헌법 §13(Home 종합대시보드 A→C) + 지식베이스 9-entity + 엔티티 아이콘 SOT(`lib/entity-icons.tsx`).
+> ✅ **2026-05-30 심야 완료** (PR #497): **IA 헌법 수립**(14챕터) + **Inbox 전역 승격**.
 > ✅ **2026-05-30 밤** (PR #495+#496): A3.2 스키마 엔진 + 폰트 Pretendard + A3.3 필터 크롬 + 노트행 모션 + 셸 1차.
 > ✅ **2026-05-30 저녁/낮**: Track A 착수(A0~A2) PR #494 / 통합 정합성 8커밋 PR #493.
 
-### 0. **🔴 P0 #0 (최우선): 헌법 §10 적용 = 셸 목업 최종 락 → 실앱 포팅** ⭐ 다음 세션 첫 작업
+### 0. **🔴 P0 #0 (최우선): 스티커 접힌-모서리 커스텀 SVG** ⭐ 다음 세션 첫 작업 (사용자 명시)
 
-**헌법 SOT**: `docs/01-plan/features/linear-ia-constitution.spec.md` §10(셸). 목업 = `docs/v3-mockup/shell-linear-mirror.html`(완성, `public/shell-mock.html` 복사해 dev서버로 봄).
+lucide `Sticker`(둥근사각+우상단 접힌 모서리)는 **웃는 표정**이 들어가 잡다함. 사용자 = 형태는 좋고 **표정만 싫음** → **커스텀 인라인 SVG**(둥근사각 + 우상단 dog-ear + 표정 없음). 위치 = `lib/entity-icons.tsx`의 `stickers`(현재 `StickyNote` 임시). 인라인 SVG 컴포넌트로 만들어 `ENTITY_ICONS.stickers` 교체 → SOT 한 곳이라 Home/자료실/detail panel/그래프 전 표면 자동 반영. lucide Sticker SVG path 참고하되 가운데 표정 곡선 제거.
 
-**1차 완료**: (a) Inbox 전역 승격(PR #497, `linear-sidebar.tsx` `<nav>` 최상단).
+### 0.02. **🔴 P0 #1: Home 종합 대시보드 구현 (IA 헌법 §13 C안)**
 
-**남은 셸 2차 (순서, 목업 사용자 최종 승인 먼저)**:
-- **(b) Trash 사이드바 하단 footer 강등** — `components/user-avatar.tsx` 드롭다운에서 Trash 빼서 `linear-sidebar.tsx` `</nav>`(2071 근처) 다음 footer로.
-- **(c) Help `?` 버튼** — 사이드바 하단, `setShortcutOverlayOpen(true)` (user-avatar.tsx:119 패턴 재활용).
-- **(d) 레일 톤다운** — `activity-bar.tsx`: 더 어둡게/muted/아이콘만+active만 라벨(리니어 절제). 7-space 유지 결정됨.
-- 패널 토글 분산 — 상단 클러스터 제거, 디테일토글=콘텐츠 우상단, 사이드바접기=⌘\, focus=⌘.
+Home = **"개인 활동 종합 대시보드"**(폐지/슬림화 아님 — A→C 정정). **자산**(본체: 노트/위키/북 · 분류: 태그/카테고리/라벨/스티커 · 출처: 레퍼런스/파일) + **활동**(코멘트/북마크/링크 — **신규 위젯**), 2단(자산=정적 카운트 / 활동=시간성 "이번 주 +N"). 원칙 = **cross-cutting only** → Inbox미리보기/추천/최근활동 **제거**(본진 = Inbox / 상단바 recently-viewed). 지식베이스 9-card는 완료(StatsRow). 파일: `components/views/home-view.tsx`(재구성), 활동 위젯 신규.
 
-**Watch Out**: preview eval로 route/키 검증 불가 → **사용자 실화면 필수**.
+### 0.03. **🟡 P0 #2: 온톨로지 정리 (§13)**
+
+dashboard→insights 흡수(Health/Coverage 중복), NUDGE→Inbox `detected`, insights 3개 분산(notes/ontology/graph) 통합, 그래프=display mode(렌즈).
+
+### 0.04. **🟡 P0 (carry): 셸 §10 패널토글 분산** (Track B 셸 리팩터)
+
+footer/레일(b/c/d)은 이 세션 완료. 남은 = 상단 `PanelsMenu` 완전제거 + 디테일토글=콘텐츠 우상단 + 엣지핸들 + `⌘\`(현 split view) 충돌 정리. `linear-sidebar.tsx`(2082줄) 분해와 함께 = 큰 리팩터.
 
 ### 0.05. **🔴 P0 #1: Book 워크플로 축 (헌법 §11, ~25줄+version bump)**
 

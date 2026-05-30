@@ -24,7 +24,6 @@ import { useFilesView } from "@/lib/view-engine/use-files-view"
 import { REFERENCES_VIEW_CONFIG, FILES_VIEW_CONFIG } from "@/lib/view-engine/view-configs"
 import type { FilterRule } from "@/lib/view-engine/types"
 import { RefTypeChip, RefFieldCountChip, RefImageChip, FileTypeChip, FileSizeChip } from "@/components/property-chips"
-import { IconLabel } from "@/components/plot-icons"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -49,13 +48,12 @@ import {
   ChevronDown as CaretDown,
   AlertTriangle as Warning,
   Paperclip,
-  Folders,
 } from "lucide-react"
+import { ENTITY_ICONS } from "@/lib/entity-icons"
 import { setCategoryOverview } from "@/lib/wiki-view-mode"
 import {
   BookOpenText,
   Quote as Quotes,
-  Sticker as StickerIcon,
   Upload as UploadSimple,
   Image as PhImage,
 } from "lucide-react"
@@ -872,7 +870,7 @@ function LibraryOverview() {
                   value={refTotal}
                   sub={t("library.stat.references_linked").replace("{count}", String(linkedRefCount))}
                   color={KNOWLEDGE_INDEX_COLORS.references.text}
-                  icon={<Quotes size={24} strokeWidth={2} />}
+                  icon={<ENTITY_ICONS.references size={24} strokeWidth={2} />}
                   onClick={() => setActiveRoute("/library/references")}
                 />
                 <LibMiniStat
@@ -880,7 +878,7 @@ function LibraryOverview() {
                   value={tagTotal}
                   sub={t("library.stat.tags_used_across").replace("{count}", String(tagUsedCount))}
                   color={KNOWLEDGE_INDEX_COLORS.tags.text}
-                  icon={<Tag size={24} strokeWidth={2} />}
+                  icon={<ENTITY_ICONS.tags size={24} strokeWidth={2} />}
                   onClick={() => setActiveRoute("/library/tags")}
                 />
                 <LibMiniStat
@@ -888,9 +886,7 @@ function LibraryOverview() {
                   value={labelTotal}
                   sub={t("library.stat.labels_in_use").replace("{count}", String(labelUsedCount))}
                   color={KNOWLEDGE_INDEX_COLORS.labels.text}
-                  // 2026-05-24 — sidebar parity (linear-sidebar IconLabel).
-                  // Was Tag (collided with Tags card). IconLabel = Bookmark.
-                  icon={<IconLabel size={24} />}
+                  icon={<ENTITY_ICONS.labels size={24} strokeWidth={2} />}
                   onClick={() => setActiveRoute("/library/labels")}
                 />
                 <LibMiniStat
@@ -898,7 +894,7 @@ function LibraryOverview() {
                   value={categoryTotal}
                   sub={t("library.stat.categories_in_use").replace("{count}", String(categoryUsedCount))}
                   color={KNOWLEDGE_INDEX_COLORS.categories.text}
-                  icon={<Folders size={24} strokeWidth={2} />}
+                  icon={<ENTITY_ICONS.categories size={24} strokeWidth={2} />}
                   onClick={() => {
                     setCategoryOverview()
                     setActiveRoute("/library/categories")
@@ -909,7 +905,7 @@ function LibraryOverview() {
                   value={fileTotal}
                   sub={t("library.stat.files_images_docs").replace("{images}", String(imageCount)).replace("{docs}", String(docCount))}
                   color={KNOWLEDGE_INDEX_COLORS.files.text}
-                  icon={<Paperclip size={24} strokeWidth={2} />}
+                  icon={<ENTITY_ICONS.files size={24} strokeWidth={2} />}
                   onClick={() => setActiveRoute("/library/files")}
                 />
                 <LibMiniStat
@@ -917,7 +913,7 @@ function LibraryOverview() {
                   value={stickerTotal}
                   sub={t("library.stat.stickers_in_use").replace("{count}", String(stickerUsedCount))}
                   color={KNOWLEDGE_INDEX_COLORS.stickers.text}
-                  icon={<StickerIcon size={24} strokeWidth={2} />}
+                  icon={<ENTITY_ICONS.stickers size={24} strokeWidth={2} />}
                   onClick={() => setActiveRoute("/stickers")}
                 />
               </div>

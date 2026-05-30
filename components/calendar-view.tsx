@@ -19,7 +19,7 @@ import {
 } from "date-fns"
 import { ChevronLeft as CaretLeft, ChevronRight as CaretRight, CalendarDays as CalendarDots, FileText, Plus as PhPlus, X as PhX } from "lucide-react"
 import { cn } from "@/lib/utils"
-import { NOTE_STATUS_HEX, STATUS_DOT_FALLBACK } from "@/lib/colors"
+import { NOTE_STATUS_COLORS } from "@/lib/colors"
 import { STATUS_CONFIG } from "@/components/note-fields"
 import type { NoteStatus } from "@/lib/types"
 import { usePlotStore } from "@/lib/store"
@@ -112,7 +112,7 @@ interface NotePillProps {
 }
 
 function NotePill({ note, labelColor, labelName, isActive, onClick }: NotePillProps) {
-  const dot = NOTE_STATUS_HEX[note.status as keyof typeof NOTE_STATUS_HEX] ?? STATUS_DOT_FALLBACK
+  const dot = NOTE_STATUS_COLORS[note.status as keyof typeof NOTE_STATUS_COLORS]?.css ?? "var(--muted-foreground)"
 
   return (
     <button
@@ -378,7 +378,7 @@ function DayDashboard({
           <div className="flex flex-col gap-1.5">
             {sortedNotes.map((note) => {
               const label = getLabelForNote(note)
-              const dot = NOTE_STATUS_HEX[note.status as keyof typeof NOTE_STATUS_HEX] ?? STATUS_DOT_FALLBACK
+              const dot = NOTE_STATUS_COLORS[note.status as keyof typeof NOTE_STATUS_COLORS]?.css ?? "var(--muted-foreground)"
               const statusInfo = STATUS_CONFIG[note.status as NoteStatus]
               const isActive = activePreviewId === note.id
 

@@ -58,8 +58,8 @@ export const ENTITY_COLORS = {
   tag:       "#6b7280",   // Gray   — neutral metadata
   label:     "#64748b",   // Slate  — neutral type (individual labels override)
   folder:    "#f97316",   // Orange — file folder
-  bookmark:  "#fbbf24",   // Amber  — pin
-  reference: "#3b82f6",   // Blue   — citation / link
+  bookmark:  "#eab308",   // Yellow — pin (status.in_progress amber와 hue 분리)
+  reference: "#4f46e5",   // Indigo — citation / link (KNOWLEDGE_INDEX.references와 통일, todo blue와 분리)
   note:      SPACE_COLORS.notes,
   wiki:      SPACE_COLORS.wiki,
 } as const
@@ -92,9 +92,11 @@ export const KNOWLEDGE_INDEX_COLORS = {
     hex:  "#8b5cf6",            // matches SPACE_COLORS.wiki
   },
   tags: {
-    text: "text-amber-600 dark:text-amber-400",
-    bg:   "bg-amber-500/10",
-    hex:  "#f59e0b",
+    // 2026-05-31 충돌 정합: amber(#f59e0b)는 status.in_progress + priority.medium과
+    // 겹쳐 "작업 중"과 혼동 → lime으로 분리. text class는 모드별(light 600 / dark 400).
+    text: "text-lime-600 dark:text-lime-400",
+    bg:   "bg-lime-500/10",
+    hex:  "#84cc16",
   },
   references: {
     text: "text-accent",
@@ -121,6 +123,14 @@ export const KNOWLEDGE_INDEX_COLORS = {
     text: "text-emerald-600 dark:text-emerald-400",
     bg:   "bg-emerald-500/10",
     hex:  "#10b981",
+  },
+  // 2026-05-31 지식베이스 9 entity (IA 헌법 §13): books 추가. burgundy =
+  // SPACE_COLORS.books. ⚠️ labels(rose)와 같은 rose hue — 명도(700/500 vs
+  // 600/400)로 구분. 스샷 검증 필요.
+  books: {
+    text: "text-rose-700 dark:text-rose-500",
+    bg:   "bg-rose-700/10",
+    hex:  "#be123c",
   },
 } as const
 
@@ -208,7 +218,9 @@ export const GRAPH_NODE_HEX = {
   // the wiki entity itself regardless of its 4-stage status, so they inherit
   // the entity color used by the sidebar/activity-bar/Home StatsRow.
   wiki:      SPACE_COLORS.wiki,
-  tag:       "#6b7280",
+  // 색정합(2026-05-31): tag 노드 = 홈 카드 tags(lime #84cc16)와 통일.
+  // 회색 fallback은 default(분류 안 된 노드)만.
+  tag:       "#84cc16",
   default:   "#6b7280",
 } as const
 

@@ -27,7 +27,8 @@ import {
 // 2026-05-24: imperial-extras (WikiBook/OntologyWide/Bookshelf) replaced with
 // lucide for activity-bar consistency. WikiBook → IconWiki (BookOpen),
 // OntologyWide → IconOntology (Network), Bookshelf → LibraryIcon (LibraryBig).
-import { Library as BooksIcon, Archive as LibraryIcon } from "lucide-react"
+import { Archive as LibraryIcon } from "lucide-react"
+import { ENTITY_ICONS } from "@/lib/entity-icons"
 import { useSettingsStore } from "@/lib/settings-store"
 import { useT } from "@/lib/i18n"
 import { SPACE_COLORS } from "@/lib/colors"
@@ -43,7 +44,7 @@ const SPACES: {
   { id: "home",     labelKey: "nav.space.home",     icon: IconHome,     shortcut: "G then H" },
   { id: "notes",    labelKey: "nav.space.notes",    icon: IconNotes,    shortcut: "G then N" },
   { id: "wiki",     labelKey: "nav.space.wiki",     icon: IconWiki,     shortcut: "" },
-  { id: "books",    labelKey: "nav.space.books",    icon: (p: { size?: number }) => <BooksIcon size={p.size} />, shortcut: "" },
+  { id: "books",    labelKey: "nav.space.books",    icon: (p: { size?: number }) => <ENTITY_ICONS.books size={p.size} />, shortcut: "" },
   { id: "calendar", labelKey: "nav.space.calendar", icon: IconCalendar, shortcut: "" },
   { id: "ontology", labelKey: "nav.space.ontology", icon: IconOntology, shortcut: "" },
   { id: "library",  labelKey: "nav.space.library",  icon: (p: { size?: number }) => <LibraryIcon size={p.size} />, shortcut: "" },
@@ -110,11 +111,13 @@ export function ActivityBar() {
         // Plot preserves per-space colors (SPACE_COLORS lib/colors.ts) — v3
         // mockup uses single --space-notes for all active states; we override
         // via inline style to keep 6 distinct space colors.
+        // §10 레일 톤다운 — active 톤 14%/22% (목업 shell-linear-mirror 정합,
+        // 기존 16%/24%에서 살짝 절제).
         const activeStyle = isActive && spaceColor
           ? {
-              background: `color-mix(in srgb, ${spaceColor} 16%, transparent)`,
+              background: `color-mix(in srgb, ${spaceColor} 14%, transparent)`,
               color: spaceColor,
-              boxShadow: `inset 0 0 0 1px color-mix(in srgb, ${spaceColor} 24%, transparent)`,
+              boxShadow: `inset 0 0 0 1px color-mix(in srgb, ${spaceColor} 22%, transparent)`,
             }
           : undefined
         return (

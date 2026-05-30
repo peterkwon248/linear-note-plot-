@@ -57,12 +57,16 @@ function bookHorizon(b: Book): Date | null {
   return safeDate(b.updatedAt)
 }
 
-/** Book kind → tint. Mirrors BOOKS_VIEW_CONFIG filter colors:
- *  smart = indigo, hybrid = amber, manual = muted. */
+/** Book kind → achromatic luminance tiers (classification axis ≠ entity).
+ *  smart  = zinc-600 (#52525b, darkest — most prominent)
+ *  hybrid = zinc-400 (#a1a1aa, mid)
+ *  manual = zinc-300 (#d4d4d8, lightest)
+ *  Avoids collisions with home-space indigo (#5E6AD2 / #7C8AE7) and
+ *  in_progress amber (#f59e0b). Matches BookKindChip achromatic palette. */
 function bookKindColor(kind: ReturnType<typeof getBookKind>): string {
-  if (kind === "smart") return "#7C8AE7"   // indigo (BookKindChip "smart")
-  if (kind === "hybrid") return "#f59e0b"  // amber (BookKindChip "hybrid")
-  return "#94a3b8"                          // slate (BookKindChip "manual")
+  if (kind === "smart") return "#52525b"   // zinc-600
+  if (kind === "hybrid") return "#a1a1aa"  // zinc-400
+  return "#d4d4d8"                          // zinc-300
 }
 
 function BookKindIcon({ kind, size = 13 }: { kind: ReturnType<typeof getBookKind>; size?: number }) {

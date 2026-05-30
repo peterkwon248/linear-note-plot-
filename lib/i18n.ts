@@ -174,6 +174,7 @@ const EN = {
   "nav.trash": "Trash",
   "nav.workspace.menu": "Workspace menu",
   "nav.theme.toggle": "Toggle theme",
+  "nav.help": "Help",
   "nav.help.shortcuts": "Keyboard shortcuts",
 
   // Linear sidebar (per-space nav)
@@ -209,6 +210,9 @@ const EN = {
   "home.tile.references": "References",
   "home.tile.files": "Files",
   "home.tile.stickers": "Stickers",
+  "home.tile.books": "Books",
+  "home.tile.categories": "Categories",
+  "home.tile.labels": "Labels",
   "home.tile.notes.sub": "{percent}% linked",
   "home.tile.wiki.sub": "{count} stub",
   "home.tile.tags.sub": "{count} active",
@@ -1187,6 +1191,7 @@ const KO: Partial<Record<DictKey, string>> = {
   "nav.trash": "휴지통",
   "nav.workspace.menu": "워크스페이스 메뉴",
   "nav.theme.toggle": "테마 전환",
+  "nav.help": "도움말",
   "nav.help.shortcuts": "키보드 단축키",
 
   // Linear sidebar
@@ -1222,6 +1227,9 @@ const KO: Partial<Record<DictKey, string>> = {
   "home.tile.references": "레퍼런스",
   "home.tile.files": "파일",
   "home.tile.stickers": "스티커",
+  "home.tile.books": "책",
+  "home.tile.categories": "카테고리",
+  "home.tile.labels": "라벨",
   "home.tile.notes.sub": "{percent}% 연결됨",
   "home.tile.wiki.sub": "스텁 {count}개",
   "home.tile.tags.sub": "활성 {count}개",

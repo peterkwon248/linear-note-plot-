@@ -7,33 +7,30 @@
  * as workspace identity anchor. `.a-brand__mark` className preserves the gradient
  * badge visual (28×28 rounded-7px, space-home→space-wiki gradient, white "P").
  *
- * Shell pass B (2026-05-30): the badge is no longer a dead anchor — it now opens
- * a Linear-style workspace menu (top-left workspace dropdown pattern). The right
- * cluster's three chrome icons (theme · settings · trash) fold into this one menu
- * so the right side stays clean. Items: Settings · Theme toggle · Trash ·
- * Keyboard shortcuts. Hover reuses the note-row motion tokens
- * (`--row-hover-bg` / `--duration-fast` / `--ease-out`, commit 295be0a) so the
- * dropdown feels native to the rest of the surface.
+ * Shell pass B (2026-05-30): the badge opens a Linear-style workspace menu
+ * (top-left workspace dropdown pattern). Hover reuses the note-row motion tokens
+ * (`--row-hover-bg` / `--duration-fast` / `--ease-out`, commit 295be0a).
+ *
+ * Shell §10 (2026-05-31): Trash + Keyboard shortcuts demoted OUT of this menu to
+ * the sidebar footer (Linear keeps the workspace menu to account/workspace
+ * concerns; Help "?" and Trash live bottom-left). The menu now holds only
+ * Settings + Theme toggle.
  */
 
 import Link from "next/link"
 import {
   Settings as IconGear,
-  Trash2 as IconTrash,
   Moon as IconMoon,
   Sun as IconSun,
-  Keyboard as IconKeyboard,
 } from "lucide-react"
 import {
   DropdownMenu,
   DropdownMenuTrigger,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuSeparator,
   DropdownMenuShortcut,
 } from "@/components/ui/dropdown-menu"
 import { useSettingsStore } from "@/lib/settings-store"
-import { usePlotStore } from "@/lib/store"
 import { useT } from "@/lib/i18n"
 
 /** Derive up to 2-char initials from a display name.
@@ -68,8 +65,6 @@ export function UserAvatar() {
   const isDark = theme === "dark"
   const toggleTheme = () => setTheme(isDark ? "light" : "dark")
 
-  const setShortcutOverlayOpen = usePlotStore((s) => s.setShortcutOverlayOpen)
-
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -100,8 +95,7 @@ export function UserAvatar() {
         <DropdownMenuItem
           className={ITEM_CLASS}
           onSelect={(e) => {
-            // Keep the menu open is not desired here — toggling theme then
-            // closing matches Linear (action item, not a sticky toggle).
+            // Toggle theme then close (action item, not a sticky toggle) — Linear.
             e.preventDefault()
             toggleTheme()
           }}
@@ -110,28 +104,6 @@ export function UserAvatar() {
           <span className="flex-1">
             {isDark ? t("nav.theme.light_mode") : t("nav.theme.dark_mode")}
           </span>
-        </DropdownMenuItem>
-
-        <DropdownMenuSeparator className="bg-border-subtle" />
-
-        <DropdownMenuItem
-          className={ITEM_CLASS}
-          onSelect={() => setShortcutOverlayOpen(true)}
-        >
-          <IconKeyboard strokeWidth={2} />
-          <span className="flex-1">{t("nav.help.shortcuts")}</span>
-          <DropdownMenuShortcut className="text-2xs tracking-normal text-muted-foreground/60">
-            ?
-          </DropdownMenuShortcut>
-        </DropdownMenuItem>
-
-        <DropdownMenuSeparator className="bg-border-subtle" />
-
-        <DropdownMenuItem asChild className={ITEM_CLASS}>
-          <Link href="/trash">
-            <IconTrash strokeWidth={2} />
-            <span className="flex-1">{t("nav.trash")}</span>
-          </Link>
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

@@ -9,10 +9,6 @@ import {
 } from "@/components/ui/dropdown-menu"
 import {
   TriangleAlert as Warning,
-  ArrowUp,
-  ArrowRight,
-  ArrowDown,
-  Minus as PhMinus,
   Zap as Lightning,
   BookOpen,
   Archive as ArchiveIcon,
@@ -82,6 +78,38 @@ const STATUS_OPTIONS: NoteStatus[] = ["backlog", "todo", "in_progress", "done"]
 
 /* ── Priority config ──────────────────────────────────── */
 
+/**
+ * Linear-style priority bars (spec §3): 3 ascending bars sharing a baseline,
+ * heights 6/9.5/13 · width 3 · radius 1 in a 16×16 box. Active bars =
+ * currentColor, inactive = 0.35 opacity. Priority is read by *bar count*, not
+ * hue — so it no longer collides with status colors (the old medium=amber that
+ * clashed with in_progress is gone). level 0=none(all dim) · 1=low · 2=medium ·
+ * 3=high. Urgent is the one exception (a colored "!" glyph — urgency must pop).
+ */
+function PriorityBars({ level }: { level: 0 | 1 | 2 | 3 }) {
+  const bars = [
+    { x: 1.5, h: 6 },
+    { x: 6.5, h: 9.5 },
+    { x: 11.5, h: 13 },
+  ]
+  return (
+    <svg width={14} height={14} viewBox="0 0 16 16" fill="none" className="shrink-0" aria-hidden="true">
+      {bars.map((b, i) => (
+        <rect
+          key={i}
+          x={b.x}
+          y={14 - b.h}
+          width={3}
+          height={b.h}
+          rx={1}
+          fill="currentColor"
+          opacity={i < level ? 1 : 0.35}
+        />
+      ))}
+    </svg>
+  )
+}
+
 export const PRIORITY_CONFIG: Record<
   NotePriority,
   { label: string; color: string; icon: React.ReactNode }
@@ -89,27 +117,29 @@ export const PRIORITY_CONFIG: Record<
   none: {
     label: "No priority",
     color: "var(--muted-foreground)",
-    icon: <PhMinus size={14} strokeWidth={2} />,
+    icon: <PriorityBars level={0} />,
   },
   urgent: {
+    // Urgent stays hue-coded — Linear keeps it as a colored "!" since urgency
+    // must pop. The one exception to the bars-not-color rule.
     label: "Urgent",
     color: "var(--chart-4)",
     icon: <Warning size={14} strokeWidth={2} />,
   },
   high: {
     label: "High",
-    color: "var(--chart-3)",
-    icon: <ArrowUp size={14} strokeWidth={2} />,
+    color: "var(--foreground)",
+    icon: <PriorityBars level={3} />,
   },
   medium: {
     label: "Medium",
-    color: "var(--chart-3)",
-    icon: <ArrowRight size={14} strokeWidth={2} />,
+    color: "var(--foreground)",
+    icon: <PriorityBars level={2} />,
   },
   low: {
     label: "Low",
-    color: "var(--accent)",
-    icon: <ArrowDown size={14} strokeWidth={2} />,
+    color: "var(--foreground)",
+    icon: <PriorityBars level={1} />,
   },
 }
 

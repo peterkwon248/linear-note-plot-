@@ -250,7 +250,47 @@ status=진척 도입 → Book이 **"결과물(원고)" 쪽으로 기움** (smart
 
 ---
 
-## 13. 미결 (다음 논의)
+## 13. Home 슬림화 + 액션 단일화 (LOCKED 2026-05-31, 초안 A→C 정정)
+
+**결정**: Home space **유지하되 슬림화** — 중복 미리보기는 제거하고 **고유 위젯(퀵링크스 통합 허브 + 지식베이스 개요 + QuickCapture)만 남긴다**. 진입 = Home(노트앱 위젯 대시보드식).
+
+### 정정 이력 (A → C)
+초안은 "Home 폐지 + Inbox 진입(A안)"이었으나, **리니어·Plane이 둘 다 PM툴(이슈트래커)**이고 우리는 **노트앱**임을 간과한 편향. 노트앱은 위젯 진입이 정당(Notion=Home 위젯 / Anytype=사이드바 위젯 / Logseq·Capacities·Roam=Daily Note / Obsidian=마지막 노트+플러그인). 우리 퀵링크스(`MixedQuicklinks` = note/wiki/book/folder/saved-view/**block-bookmark** 통합 핀 허브, 사이드바 Pinned보다 포괄)와 지식베이스(개요 ≠ Library 관리)는 **고유 가치** → 폐지(A)가 아니라 슬림화(C).
+
+### Home 8섹션 처리 (C안)
+| Home 섹션 | 처리 |
+|---|---|
+| QuickCapture | **유지** (캡처 진입) |
+| 지식베이스 stats | **유지·강화** → 9 entity (아래) |
+| 퀵링크스(MixedQuicklinks) | **유지** (통합 즐겨찾기 허브 = 고유) |
+| Inbox 미리보기 | **제거** (Inbox 본진) |
+| 추천(Promote/Connect) | **제거 → Inbox `detected`** |
+| 최근 활동 / 최근 카드 | **제거** (상단바 recently-viewed + 사이드바 Recent 중복) |
+| 가장 많이 연결 | **제거** (온톨로지로) |
+
+→ Home = 고유 위젯 3개(캡처 + 지식베이스 + 퀵링크스). "중복 집합소"가 문제였지 Home 자체가 아님.
+
+### 지식베이스 확장 (사용자 요구 2026-05-31)
+현재 6 entity(notes/wiki/tags/references/files/stickers) → **9 entity**: **books·categories·labels 추가**. `KNOWLEDGE_INDEX_COLORS`에 books 추가, StatsRow 9-card. (books는 핵심 destination 엔티티인데 빠져 있던 게 버그성 누락.) ⚠️ books(burgundy)와 labels(rose) 동일 hue — 명도로 구분.
+
+### 관통 원칙: 액션은 Inbox로 단일화
+- Home 추천·Inbox 미리보기 → Inbox. 온톨로지 **NUDGE → Inbox `detected`**.
+
+### 함께 가는 온톨로지 정리
+- **dashboard → insights 흡수** (Health/Coverage 중복) / `notes`·`ontology`·`graph` insights 3개 분산 통합 / **그래프 = display mode(렌즈)**.
+
+### 구현 (일부 지금 / 나머지 fresh 세션)
+- **지금**: 지식베이스 9 entity 확장 (작음, 독립)
+- **fresh**: Home 중복 섹션 제거(Inbox미리보기/추천/최근/연결) + 온톨로지 정리. ⚠️ Home space·진입은 **유지**(폐지 아님). `home-view.tsx`/`home/`는 삭제가 아니라 슬림화.
+
+### 미결 (구현 시)
+- 지식베이스 9-card 그리드 레이아웃 (3×3 vs 반응형)
+- QuickCapture 위치 (Home 내 vs 글로벌 ⌘N 병행)
+- books vs labels rose hue 구분 충분한지 (스샷 검증)
+
+---
+
+## 14. 미결 (다음 논의)
 
 - **네이밍 재검토**: Ontology·Book 이름 유지? / Smart Book ↔ SavedView 통합 가능성(§12).
 - **Book status/priority 구현 순서**: status 먼저 안정화 후 priority?

@@ -51,6 +51,25 @@
 
 ---
 
+## 📜 2026-05-31 (낮~저녁) — 셸 §10 footer/레일 + 색·아이콘 시스템 정합 + IA 헌법 §13(Home 종합대시보드) + 지식베이스 9-entity + 엔티티 아이콘 SOT ⭐⭐⭐⭐⭐
+
+**범위**: 셸 footer/레일 → 색·아이콘 전면 정합(사용자 "뒤죽박죽" 적발) → IA 재논의(Home/Inbox/온톨로지) → §13 Home 슬림화 A→C(Plane 반례·노트앱 진입 검증) → 지식베이스 9-entity + 엔티티 아이콘 SOT. 8커밋.
+
+### 핵심 결정 (영구)
+- **§13 Home = 개인 활동 종합 대시보드** (폐지 A → 종합 C 정정). 리니어/Plane=PM툴 vs 우리=노트앱 구분. **자산**(본체/분류/출처) + **활동**(코멘트/북마크/링크) 2단, **cross-cutting only**(본진 미리보기 제거).
+- **색·아이콘 SOT**: `KNOWLEDGE_INDEX_COLORS`(색) + `lib/entity-icons.tsx`(아이콘). 표면별 하드코딩 금지 — 라벨=Badge/카테고리=Layers/태그=Tag 갈라짐.
+- **액션은 Inbox로 단일화** / priority=3-막대(색 제거) / book kind=무채 / status=모드별 var.
+
+### 완료
+- 셸 §10 footer/레일 / 색·아이콘 정합(tags lime·priority막대·Hybrid Blend·status모드·book kind무채·그래프tag·bookmark·아이콘SOT) / IA §13 정정 / 지식베이스 9-entity. 8커밋.
+
+### 다음 우선순위 (P0)
+1. 스티커 접힌-모서리 커스텀 SVG (사용자 명시, `lib/entity-icons.tsx`).
+2. Home 종합 대시보드 구현 (자산/활동 2단, 활동 위젯 신규).
+3. 온톨로지 정리 (dashboard→insights, NUDGE→Inbox).
+
+---
+
 ## 📜 2026-05-31 (심야) — IA 헌법 수립 (리니어 관점 정보구조 전면 재설계) + Inbox 전역 승격 ⭐⭐⭐⭐⭐
 
 **범위**: 코드 거의 안 짠 순수 브레인스토밍 세션. 사용자 "느낌" IA 결정을 코드 전수조사+리니어 109캡처 실측으로 검증 → git-tracked 헌법. **SOT = `docs/01-plan/features/linear-ia-constitution.spec.md`(14챕터).** PR #497.

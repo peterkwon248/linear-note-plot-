@@ -23,6 +23,7 @@ import {
   IconPin,
   IconPlus,
   IconDoc,
+  IconTrash,
 } from "@/components/plot-icons"
 import {
   ChevronDown as CaretDown,
@@ -51,6 +52,7 @@ import {
   Tag as PhTag,
   Paperclip,
   Sticker as StickerPhosphor,
+  CircleHelp,
 } from "lucide-react"
 import { setWikiCategoryFilter } from "@/lib/wiki-category-filter"
 import { getCurrentViewContextKey, getSavedViewSpaceForActivity } from "@/lib/view-engine/saved-view-context"
@@ -276,6 +278,9 @@ export function LinearSidebar() {
   const activeViewId = useActiveViewId()
 
   const setSidebarCollapsed = usePlotStore((s) => s.setSidebarCollapsed)
+  // §10 shell footer — Help "?" opens the shortcut overlay (demoted here from
+  // the workspace menu, alongside Trash).
+  const setShortcutOverlayOpen = usePlotStore((s) => s.setShortcutOverlayOpen)
 
   const tags = usePlotStore((s) => s.tags)
   const labels = usePlotStore((s) => s.labels)
@@ -2075,8 +2080,29 @@ export function LinearSidebar() {
         )}
       </nav>
 
-      {/* Footer (settings/trash) moved to GlobalTopBar right cluster — same
-       *  reasoning as the header: those shortcuts must survive Hide-all-panels. */}
+      {/* Footer — Help "?" + Trash. §10 shell: Help bottom-left (Linear),
+       *  Trash demoted here from the workspace menu. Inbox is pinned to the
+       *  sidebar top, so this footer anchors the secondary chrome at the bottom. */}
+      <div className="a-sb-foot">
+        <button
+          type="button"
+          onClick={() => setShortcutOverlayOpen(true)}
+          className="a-sb-foot__btn"
+          title={t("nav.help.shortcuts")}
+        >
+          <CircleHelp size={16} strokeWidth={1.5} />
+          <span className="flex-1 text-left">{t("nav.help")}</span>
+          <span className="a-sb-foot__hint">?</span>
+        </button>
+        <Link
+          href="/trash"
+          className="a-sb-foot__icon"
+          title={t("nav.trash")}
+          aria-label={t("nav.trash")}
+        >
+          <IconTrash size={16} />
+        </Link>
+      </div>
     </aside>
   )
 }
