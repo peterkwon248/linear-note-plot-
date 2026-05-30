@@ -3,27 +3,34 @@
 > 우선순위 기반 작업 목록. **P0 = 다음 세션 즉시 시작점** (NEXT-ACTION.md 폐지, 2026-05-12).
 > 완료 항목은 즉시 삭제. 자세한 history는 SESSION-LOG.md + MEMORY.md.
 
-**마지막 갱신**: 2026-05-30 (저녁 after-work, 집/Windows) — **Track A 전략 플랜 착수**: A0(Q1 캡처 완성 + notes-grid 헤더/collapse + group-header 공유, `3f7e22e`) + A1(리니어 ~100장 분석 → spec) + **A2 LOCKED**. 다음 P0 #0 = **A3 리니어 필터/디스플레이 미러(스키마 엔진부터)**. spec = `docs/01-plan/features/linear-filter-display-mirror.spec.md`.
+**마지막 갱신**: 2026-05-30 (밤 after-work, 집/Windows) — **A3.2 스키마 엔진+폰트 Pretendard 머지(PR #495) + A3.3 필터 크롬 + 노트행 모션 + 셸 1차 정리**. 다음 P0 #0 = **셸 2차**(Inbox 승격/Trash 강등/Help 진입점/액티비티바) + 모션 전파/A3.1 LCH.
 
 ---
 
 ## 🟣 P0 — 즉시 (cross-machine 진입점, 2026-05-30 저녁 — Track A 전략 플랜 착수)
 
+> ✅ **2026-05-30 밤 완료** (PR #495 + 이 PR): **A3.2 스키마 엔진**(M0~M4 PropertyDef→어댑터) + **폰트 Pretendard** + **A3.3 필터 크롬**(category 6-클러스터/divider/16px/칩바 일원화/-965줄) + **노트행 모션 슬라이스**(oklch 토큰) + **셸 1차 정리**(⌘K 팔레트 복구/죽은코드-127/avatar 드롭다운/이니셜).
 > ✅ **2026-05-30 저녁 완료** (전략 세션): **Track A 착수** — A0(Q1 나머지 캡처 site 완성 + notes-grid `.a-tg` 헤더/collapse + group-header.tsx 공유 추출, 커밋 `3f7e22e`) + A1(리니어 ~100장 분석 → spec 문서) + **A2 LOCKED**(tier·priority·6-카테고리 스키마·L3 커스텀·schema-driven 엔진·FlowBase 차용). spec: `docs/01-plan/features/linear-filter-display-mirror.spec.md`.
 > ✅ **2026-05-30 (낮)**: 통합 정합성 플랜 8커밋(PR #493). **2026-05-29**: list-context-nav 5뷰 / Wiki status v151 / Smart Book Preset v152.
 
-### 0. **🔴 P0 #0 (최우선): A3 — 리니어 필터/디스플레이 미러 (스키마 엔진부터)** ⭐ 다음 세션 첫 작업
+### 0. **🔴 P0 #0 (최우선): 셸 2차 정리 (레이아웃 리니어 모방)** ⭐ 다음 세션 첫 작업
 
-**spec 먼저 read**: `docs/01-plan/features/linear-filter-display-mirror.spec.md` (A2 LOCKED + 6-카테고리 스키마 + FlowBase 차용 + priority 막대 SVG geometry + Linear 5규칙).
+**1차 완료**(이 세션): ⌘K 팔레트 복구(3-way) / 죽은코드 -127줄 / avatar 드롭다운(우측 크롬 접기) / userName 이니셜. **+ A3.2 스키마 엔진(PR #495) + A3.3 필터 크롬 + 노트행 모션 슬라이스도 완료.**
 
-**A3 3다리 (시작 = ①)**:
-- **① 스키마 엔진 (keystone)** — 엔티티별 `PropertyDef[]`(Workflow/Classification/Relations/Metrics/Time/Content) 정의 + filter/display/group/sort 자동 생성 인프라(FlowBase `isFilterable`+타입별 위젯 이식). 현 `lib/view-engine/view-configs.tsx`(1105) per-context config → **schema refactor**(리빌드 아님). → 일관성 코드 강제(뒤죽박죽 해결).
-- **② 공유 크롬** — `filter-bar.tsx`(1265)/`filter-panel.tsx`/`display-panel.tsx`를 스키마 생성 + **Linear 5규칙**(균일행높이·아이콘16정렬·의미divider·좌우역할·opacity 0.9/0.7/0.5)으로 재구축. → 드롭다운 폴리시 불균형 해결.
-- **③ LCH 색 토큰** (병렬 가능, var() 독립) — `lib/colors.ts` flat hex → OKLCH/LCH + paired `-bg/-fg` + `toneClassDual`.
+**사용자 의도**: "레이아웃 골격/디테일도 리니어 완벽 모방" + "세팅/휴지통/설정 배치의 부자연스러움이 가장 아쉽다". → **MIRROR+EXTRAPOLATE 셸 레벨, 핵심=절제**.
 
-**시작 전 미결정 2개**: (a) **폰트 Geist vs Inter**(100% 미러=Inter), (b) 선택: 사용자 **리니어 DevTools 캡처**(드롭다운 요소 CSS) → ②크롬 1px 정합.
+**2차 (순서)**:
+- **(a) Inbox 전역 승격** — Home space 종속(`linear-sidebar.tsx:2049`) → 액티비티바 8번째 or 전 space 사이드바 상단 고정 (리니어 Inbox=최상단 고정).
+- **(b) Trash 사이드바 하단 강등** — 현 avatar 드롭다운에서 빼서 사이드바 footer로 (리니어는 계정메뉴에 trash 안 둠 → 워크스페이스 메뉴=순수 계정/설정).
+- **(c) Help/단축키 시각 진입점** — `?` 키만 있고 버튼 0 → 사이드바 하단 `?` 버튼(ShortcutOverlay).
+- **(d) 액티비티바 7-space 존치 여부** (대형, 사용자 결정).
 
-**Watch Out**: 스키마 = **L3 커스텀 상한**(L4 사용자 필드타입 생성 X = FlowBase 몫). priority 막대 = **기억으로 그리지 말 것**(실측). LCH 마이그 = 별도 패스.
+**Watch Out**: preview eval로 route/키(⌘K) 검증 불가 → **사용자 실화면 필수**. 진단 상세 = SESSION-LOG 최신 entry "셸 보조 UI 진단". follow-up: toggleFilter 死코드 3곳 / ⌘F 뷰내검색 / setSidebarCollapsed.
+
+### 0.1. **🔴 P0 #1: 모션/색 전파 + A3.1 LCH 토큰**
+- 노트행 시드 토큰(`--row-hover-bg` oklch / `--duration-fast` / `--ease-out`, 커밋 `295be0a`)을 **사이드바 항목·버튼·드롭다운**에 전파(avatar 드롭다운은 이미 재활용).
+- **A3.1 LCH 토큰 전역화** — 노트행 oklch가 씨앗 → `lib/colors.ts` flat hex → OKLCH/LCH + paired `-bg/-fg` + `toneClassDual` (app-wide careful 패스).
+- **A4 priority 막대** (carry) — `note-fields.tsx` 화살표 → 리니어 3-막대 SVG (spec §3 geometry, `schema/icons.tsx`). A3.3 opacity 위계 클래스 뼈대의 0.9/0.7/0.5 최종값도 여기서.
 
 ### 0.3. **🟡 P0 (병행 hygiene): 옛 status 코드명 정리 (stone/brick/keystone)**
 잔재 **119곳/26파일**. ⚠️ `migrate.ts`(26)·seeds·`__tests__`의 옛 enum 문자열 = 마이그 backward-compat **유지**. 나머지(변수명/CSS클래스/주석/dnd id `col-stone`)만 backlog/todo/in_progress/done로. **블라인드 find-replace 금지** — 파일별 검증 후 최소 diff.
