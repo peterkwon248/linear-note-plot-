@@ -58,7 +58,7 @@ export const ENTITY_COLORS = {
   tag:       "#6b7280",   // Gray   — neutral metadata
   label:     "#64748b",   // Slate  — neutral type (individual labels override)
   folder:    "#f97316",   // Orange — file folder
-  bookmark:  "#fbbf24",   // Amber  — pin
+  bookmark:  "#eab308",   // Yellow — pin (status.in_progress amber와 hue 분리)
   reference: "#4f46e5",   // Indigo — citation / link (KNOWLEDGE_INDEX.references와 통일, todo blue와 분리)
   note:      SPACE_COLORS.notes,
   wiki:      SPACE_COLORS.wiki,
