@@ -37,7 +37,7 @@ import {
   List as PhList,
   Zap as PhLightning,
   Pencil as PhPencilSimple,
-  Sparkles as PhSparkle,
+  Blend as PhBlend,
   BookOpen as PhBookOpen,
   Sticker as PhSticker,
 } from "lucide-react"
@@ -581,7 +581,7 @@ const BOOK_KIND_CONFIG: Record<
     color: "#D97706",
     bg: "color-mix(in srgb, #f59e0b 18%, transparent)",
     border: "color-mix(in srgb, #f59e0b 35%, transparent)",
-    Icon: PhSparkle,
+    Icon: PhBlend,
   },
 }
 
@@ -623,7 +623,7 @@ export function BookKindIcon({
     return <PhLightning size={size} strokeWidth={2} className="text-[#5E6AD2] dark:text-[#7C8AE7]" />
   }
   if (kind === "hybrid") {
-    return <PhSparkle size={size} strokeWidth={2} className="text-amber-600 dark:text-amber-400" />
+    return <PhBlend size={size} strokeWidth={2} className="text-amber-600 dark:text-amber-400" />
   }
   return <PhPencilSimple size={size} strokeWidth={2} className="text-muted-foreground" />
 }
