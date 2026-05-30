@@ -21,17 +21,12 @@ import {
   IconSmartBook,
   IconWiki,
   IconPin,
-  IconTrash,
-  IconClock,
   IconPlus,
   IconDoc,
-  IconGear,
 } from "@/components/plot-icons"
 import {
   ChevronDown as CaretDown,
   ChevronRight as CaretRight,
-  ChevronLeft as CaretLeft,
-  Search as MagnifyingGlass,
 } from "lucide-react"
 import { usePlotStore } from "@/lib/store"
 import { useT } from "@/lib/i18n"
@@ -60,7 +55,7 @@ import {
 import { setWikiCategoryFilter } from "@/lib/wiki-category-filter"
 import { getCurrentViewContextKey, getSavedViewSpaceForActivity } from "@/lib/view-engine/saved-view-context"
 import type { ViewContextKey } from "@/lib/view-engine/types"
-import { ALL_SIDEBAR_ROUTES, setActiveRoute, getActiveRoute, setActiveFolderId, setActiveTagId, setActiveLabelId, useActiveRoute, useActiveFolderId, useActiveTagId, useActiveLabelId, useActiveSpace, setActiveViewId, useActiveViewId, routeGoBack, routeGoForward } from "@/lib/table-route"
+import { ALL_SIDEBAR_ROUTES, setActiveRoute, getActiveRoute, setActiveFolderId, setActiveTagId, setActiveLabelId, useActiveRoute, useActiveFolderId, useActiveTagId, useActiveLabelId, useActiveSpace, setActiveViewId, useActiveViewId } from "@/lib/table-route"
 import { navigateToWikiArticle } from "@/lib/wiki-article-nav"
 import type { Note, NoteStatus, ActivitySpace } from "@/lib/types"
 import { cn } from "@/lib/utils"
@@ -281,23 +276,6 @@ export function LinearSidebar() {
   const activeViewId = useActiveViewId()
 
   const setSidebarCollapsed = usePlotStore((s) => s.setSidebarCollapsed)
-  const setSearchOpen = usePlotStore((s) => s.setSearchOpen)
-
-  const handleGoBack = () => {
-    // Close editor first if open, then navigate route history
-    const s = usePlotStore.getState()
-    if (s.selectedNoteId) {
-      s.setSelectedNoteId(null)
-    }
-    routeGoBack()
-  }
-  const handleGoForward = () => {
-    const s = usePlotStore.getState()
-    if (s.selectedNoteId) {
-      s.setSelectedNoteId(null)
-    }
-    routeGoForward()
-  }
 
   const tags = usePlotStore((s) => s.tags)
   const labels = usePlotStore((s) => s.labels)
@@ -333,36 +311,6 @@ export function LinearSidebar() {
   // Shared knowledge metrics — same hook drives the Ontology > Insights tab,
   // so the Health numbers stay 1:1 with the panel.
   const knowledgeMetrics = useKnowledgeMetrics()
-
-  const [recentlyViewedOpen, setRecentlyViewedOpen] = useState(false)
-  const recentlyViewedRef = useRef<HTMLDivElement>(null)
-
-  // Close recently viewed on outside click
-  useEffect(() => {
-    if (!recentlyViewedOpen) return
-    const handler = (e: MouseEvent) => {
-      if (recentlyViewedRef.current && !recentlyViewedRef.current.contains(e.target as Node)) {
-        setRecentlyViewedOpen(false)
-      }
-    }
-    document.addEventListener("mousedown", handler)
-    return () => document.removeEventListener("mousedown", handler)
-  }, [recentlyViewedOpen])
-
-  // Recently viewed: walk backwards, dedup, take 10
-  const recentlyViewed = useMemo(() => {
-    const seen = new Set<string>()
-    const result: { id: string; title: string }[] = []
-    for (let i = navigationIndex; i >= 0 && result.length < 10; i--) {
-      const noteId = navigationHistory[i]
-      if (!seen.has(noteId)) {
-        seen.add(noteId)
-        const note = notes.find((n) => n.id === noteId && !n.trashed)
-        if (note) result.push({ id: note.id, title: note.title || "Untitled" })
-      }
-    }
-    return result
-  }, [navigationHistory, navigationIndex, notes])
 
   // Prefetch routes on mount
   useEffect(() => {

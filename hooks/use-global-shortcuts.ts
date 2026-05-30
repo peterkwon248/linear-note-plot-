@@ -47,11 +47,11 @@ function inferActiveContextKey(): ViewContextKey {
  *
  * Processing order (intentional):
  *   1. Esc          — clear selection (always, even in editable)
- *   2. Ctrl/Cmd+K   — toggle command palette (always)
+ *   2. Ctrl/Cmd+K   — open command palette (SearchDialog), always
  *   3. ?            — toggle shortcut overlay (BEFORE isEditableTarget guard
  *                     so "?" can close the overlay when it is already open)
  *   4. ── isEditableTarget guard ── (block remaining keys when typing)
- *   5. /            — open search
+ *   5. /            — open quick global search (/search)
  *   6. G-sequence   — navigation (G+I, G+C, G+M, G+N)
  *   7. C            — create new note
  */
@@ -118,18 +118,17 @@ export function useGlobalShortcuts() {
       }
 
       // ── 2. Ctrl/Cmd+K ──────────────────────────────────────
-      // Path A (2026-05-25): focus the global search input (GlobalTopBar's
-      // real <input>). The input's onFocus handler auto-navigates to /search
-      // when fired from another page, so we don't need to push the route
-      // explicitly. select() lets the user immediately overwrite any prior
-      // query by typing.
+      // Linear 3-way 정리 (2026-05-30): ⌘K = command palette (SearchDialog).
+      // 액션(Navigation/Creation/System/Graph) + 노트 링크가 통합된 팔레트를
+      // 연다. 빠른 전역 검색은 `/` 키 + GlobalTopBar 검색 input(→ /search)이
+      // 담당하므로 역할이 분리됨. (이전 Path A는 ⌘K도 input 포커스로 보내
+      // 팔레트를 고아로 만들었음.) `commands` 모드로 리셋해 직전 links 모드가
+      // 남아있지 않도록 한다.
       if (e.key === "k" && (e.metaKey || e.ctrlKey)) {
         e.preventDefault()
-        const input = document.getElementById("global-search-input") as HTMLInputElement | null
-        if (input) {
-          input.focus()
-          input.select()
-        }
+        const s = usePlotStore.getState()
+        s.setCommandPaletteMode("commands")
+        s.setSearchOpen(true)
         return
       }
 
@@ -269,7 +268,10 @@ export function useGlobalShortcuts() {
         return
       }
 
-      // ── 5. / — open search ─────────────────────────────────
+      // ── 5. / — open quick global search ────────────────────
+      // Linear의 quick search 역할: 전역 검색 풀페이지(/search, SearchView)로
+      // 이동. ⌘K(팔레트)와 분리된 별도 진입점. GlobalTopBar의 검색 input/버튼
+      // 도 동일하게 /search로 보낸다.
       if (e.key === "/" && !e.ctrlKey && !e.metaKey) {
         e.preventDefault()
         setActiveRoute("/search")

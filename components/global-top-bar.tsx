@@ -171,14 +171,13 @@ export function GlobalTopBar() {
         <CaretRight size={14} strokeWidth={2.25} />
       </button>
 
-      {/* ── Center: real search input (Linear/Notion pattern).
-       *  Path A (2026-05-25): Replaces the previous button trigger with a
-       *  real <input>. Focus → auto-navigate to /search (so SearchView mounts
-       *  to consume globalSearchQuery via store). Typing updates the store
-       *  in real time — SearchView reads it as the source of truth, removing
-       *  the redundant in-page input. Esc clears and blurs. The id
-       *  "global-search-input" lets use-global-shortcuts focus this input
-       *  when ⌘K fires. */}
+      {/* ── Center: real search input = quick global search (Linear/Notion).
+       *  Linear 3-way 정리 (2026-05-30): 이 input은 "빠른 전역 검색" 진입점
+       *  (Linear의 `/` · 검색 버튼 역할). Focus → /search 자동 이동(SearchView가
+       *  globalSearchQuery store를 소비). 타이핑은 store를 실시간 갱신 — SearchView가
+       *  단일 진실로 읽음. Esc clears + blur. ⌘K는 더 이상 이 input을 포커스하지
+       *  않고 command palette(SearchDialog)를 연다 — 역할 분리. 단축키 힌트도
+       *  ⌘K → `/`로 교체. */}
       <div className="mx-4 flex flex-1 justify-center">
         <div className="relative flex w-full max-w-xl items-center">
           <MagnifyingGlass
@@ -207,7 +206,7 @@ export function GlobalTopBar() {
             className="w-full rounded-md border border-border-subtle bg-secondary/50 py-2 pl-9 pr-12 text-note text-foreground outline-none transition-colors placeholder:text-muted-foreground/70 hover:border-border hover:bg-secondary/70 focus:border-border focus:bg-secondary/70"
           />
           <span className="pointer-events-none absolute right-3 shrink-0 rounded border border-border-subtle bg-background/60 px-1.5 py-px text-[10px] font-medium tabular-nums text-muted-foreground/70">
-            ⌘K
+            /
           </span>
         </div>
       </div>
