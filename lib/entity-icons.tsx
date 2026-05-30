@@ -22,7 +22,7 @@ import {
   Badge,
   Quote,
   Paperclip,
-  Sticker,
+  Squircle,
 } from "lucide-react"
 
 export const ENTITY_ICONS = {
@@ -34,7 +34,7 @@ export const ENTITY_ICONS = {
   labels:     Badge,
   references: Quote,
   files:      Paperclip,
-  stickers:   Sticker,
+  stickers:   Squircle,
 } as const
 
 export type EntityIconKey = keyof typeof ENTITY_ICONS
