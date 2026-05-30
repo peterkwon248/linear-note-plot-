@@ -6,6 +6,65 @@
 
 ---
 
+## 2026-05-31 (낮~저녁, 집/Windows) — **셸 §10 footer/레일 + 색·아이콘 시스템 정합 + IA 헌법 §13(Home 슬림화→종합 대시보드) + 지식베이스 9-entity + 엔티티 아이콘 SOT (8커밋)**
+
+> 🎯 **다음 즉시 액션 hook**:
+> 1. **스티커 접힌-모서리 커스텀 SVG 완벽 제작 (P0 #0, 사용자 명시)**. 사용자 의도: lucide `Sticker`(둥근사각+우상단 접힌 모서리)는 **형태가 마음에 들었고 웃는 표정만 싫음**. Squircle(접힌모서리X)도 StickyNote(현 임시)도 "완벽" 아님 → **커스텀 인라인 SVG**: 둥근사각 + 우상단 접힌 모서리(dog-ear) + 표정 없음. 위치 = `lib/entity-icons.tsx`의 `stickers`(현재 `StickyNote` 임시). 인라인 SVG 컴포넌트로 만들어 `ENTITY_ICONS.stickers` 교체 (SOT 한 곳 → Home/자료실/detail/그래프 전 표면 반영). lucide Sticker SVG path 참고하되 표정(가운데 곡선) 제거.
+> 2. **Home 종합 대시보드 구현 (IA 헌법 §13 C안)** — Home = **"개인 활동 종합 대시보드"**(폐지/슬림화 아님). 구조 = **자산(본체:노트/위키/북 · 분류:태그/카테고리/라벨/스티커 · 출처:레퍼런스/파일) + 활동(연결: 코멘트/북마크/링크)** 2단(자산=정적 카운트 / 활동=시간성 "이번 주 +N"). 지식베이스 9-card는 완료(StatsRow), **활동 위젯(코멘트/북마크/링크) 신규**. 원칙 = **cross-cutting(본진 없는 것)만 종합** — Inbox미리보기/추천/최근활동은 **제거**(본진=Inbox/상단바recently-viewed).
+> 3. **온톨로지 정리** (§13): dashboard→insights 흡수(Health/Coverage 중복), NUDGE→Inbox `detected`, insights 3개 분산(notes/ontology/graph) 통합, 그래프=display mode(렌즈).
+>
+> **사용자 의도** (인용): "스티커는 꼭 표정 들어간 스티커여야 하나? 우측 상단 살짝 접힌 스티커 모양"(SVG) / "홈이 정말 모든 정보를 망라한 종합 데이터 대시보드이면 좋겠다(온톨로지 대시보드랑은 다르게)" / "지금 내가 할 일은 INBOX의 역할 아닌가? 리니어라면 애초에 HOME을 안 만들까?"(→ Plane 반례 검증 → Home 종합 대시보드로 안착).
+>
+> **위험 + 회피**:
+> - **이 환경 dev screenshot = Next16 컴파일 느림/검은화면 지속**. 화면 검증 = 사용자 실화면 우선. 코드(tsc)+부분 스샷 보강.
+> - **아이콘/색은 SOT로** — `KNOWLEDGE_INDEX_COLORS`(색) + `lib/entity-icons.tsx` `ENTITY_ICONS`(아이콘). 표면별 하드코딩 금지(Label/Categories/Tags가 detail panel서 전부 PhTag였던 게 SOT 부재 증거).
+> - **리니어/Plane=PM툴, 우리=노트앱** — IA 판단 시 비교 대상 편향 주의(Home 폐지 A안이 이 편향).
+>
+> **참고 파일**:
+> - `lib/entity-icons.tsx`(ENTITY_ICONS SOT — 스티커 SVG 교체 지점), `lib/colors.ts`(KNOWLEDGE_INDEX_COLORS 색 SOT)
+> - `components/home/stats-row.tsx`(지식베이스 9-card), `components/home/mixed-quicklinks.tsx`(퀵링크스 통합 허브), `components/views/home-view.tsx`(Home 레이아웃 — 종합 대시보드 재구성/중복 제거)
+> - `docs/01-plan/features/linear-ia-constitution.spec.md` §13(Home 슬림화 A→C)
+> - `lib/hooks/use-inbox.ts`(Inbox action queue — NUDGE 통합 대상), `components/ontology/ontology-{insights,dashboard}-panel.tsx`(통합 대상)
+>
+> **머신**: 집(Windows).
+> **현재 main HEAD**: `159ee1e`(PR #499). 이 세션 8커밋 = 이 after-work에서 PR/머지.
+> **branch worktree**: `claude/loving-yalow-ebc0d3` → 머지 후 main 기준 fresh.
+
+### 완료 (이 세션, 8커밋)
+- **셸 §10 footer/레일** (`75605d5`): Trash 드롭다운→사이드바 하단 footer 강등 / Help `?` 버튼(`.a-sb-foot`) / 레일 절제(active만 라벨, inactive=아이콘+툴팁)+톤다운(active 14/22, dark 레일 배경 어둡게).
+- **색 정합** (`cdd2180`·`053b361`·`a689104`·`9483b94`): tags amber→lime / references→indigo / status hex→var(모드 명도, canvas=getComputedStyle 캐시) / priority 색→3-막대(status 충돌 해소, spec §3) / Hybrid 아이콘 Sparkles→Blend(Insight 겹침) / book kind 무채 / 그래프 tag lime / IconSparkle 제거 / bookmark amber→yellow.
+- **IA 헌법 §13** (`3d3fe7e`→`f56561f` C 정정): Home 폐지(A) → **종합 대시보드(C)**. Plane 반례(Stickies 고유)+노트앱 진입 문화 검증. 지식베이스 = 자산/활동 2단.
+- **지식베이스 9-entity** (`f56561f`): StatsRow 6→9 (books·categories·labels 추가, KNOWLEDGE_INDEX.books burgundy + i18n).
+- **엔티티 아이콘 SOT** (`f56561f`): `lib/entity-icons.tsx` 신설 — 라벨=Badge/카테고리=Layers/태그=Tag 갈라짐, books=BookMarked(자료실 Archive 분리). detail panel(book/wiki/note)+StatsRow+library+activity-bar 6파일 마이그.
+- **스티커 아이콘** (`92e9ac1`→임시 StickyNote): Sticker(표정)→Squircle→StickyNote. **다음=커스텀 SVG(P0 #0).**
+
+### 브레인스토밍 & 큰 결정 (영구 — MEMORY.md push)
+- **IA 헌법 §13 = Home 종합 대시보드 (A→C 정정)**: Home 폐지(A)는 리니어/Plane=PM툴 편향. 노트앱(Notion/Anytype)은 위젯 Home 정당. 퀵링크스(`MixedQuicklinks`=통합 핀 허브, 사이드바 Pinned보다 포괄: folder/saved-view/block-bookmark)·지식베이스(개요≠Library 관리)는 고유 가치. → **Home = 개인 활동 종합 대시보드 (cross-cutting only)**.
+- **지식베이스 = 자산/활동 2단**: 자산(본체/분류/출처)=셀 수 있는 사물(카운트) / 활동(연결: 코멘트/북마크/링크)=노트에 부착되는 관계(시간성). 균형 강박 X (3/4/2/3).
+- **"액션은 Inbox로 단일화"**: Home 미리보기·온톨로지 NUDGE → Inbox detected.
+- **아이콘 SOT = 색 SOT처럼**(ENTITY_ICONS). 표면별 하드코딩 금지.
+
+### 기술 학습 (영구 — MEMORY.md push)
+- **리니어/Plane=PM툴 vs 우리=노트앱**: IA 판단 시 비교 대상 편향 주의. 노트앱 진입 = Daily Note(Logseq/Capacities) / 위젯(Notion/Anytype) / 마지막노트(Obsidian).
+- **SOT 부재 = 표면별 drift**: Label/Categories/Tags가 detail panel서 전부 PhTag였던 게 증거. 색·아이콘 둘 다 SOT 필요.
+- **9 entity에 distinct hue = 색공간 포화**: books(burgundy)/labels(rose) 인접, categories(emerald)/tags(lime) 인접. 명도/의미그룹으로.
+- **이 환경 dev screenshot Next16 컴파일 느림/검은화면** 지속 — 사용자 실화면 우선.
+- **lucide 아이콘 = 표정/디자인 포함**(Sticker=웃는 표정) — "무지" 원하면 커스텀 SVG.
+
+### Watch Out (다음 세션)
+- **스티커 = 임시 StickyNote**(접힌모서리 무지). **다음 P0 #0 = 커스텀 SVG**(접힌모서리+표정X).
+- **books/labels rose 인접 / categories/tags green 인접** — 거슬리면 명도 조정. **라벨=Badge** 임시(사용자 미확정).
+- **셸 §10 패널토글 분산 미완**(Track B 셸 리팩터). **§13 구현 미완**(Home 종합 대시보드 활동위젯·중복제거·온톨로지 정리 = 결정만, 구현 다음).
+- pre-existing radix hydration mismatch console 경고(무관).
+
+### 환경 변경
+- Store version: 변경 없음(UI/아이콘만).
+- 신규 파일: `lib/entity-icons.tsx`(엔티티 아이콘 SOT).
+- i18n: home.tile.books/categories/labels, nav.help 추가.
+- Tests: 미실행(tsc 0 게이트).
+
+---
+
 ## 2026-05-30 (심야, 집/Windows) — **IA 헌법 수립 (리니어 관점 정보구조 전면 재설계) + Inbox 전역 승격 (PR #497)**
 
 > 🎯 **다음 즉시 액션 hook**:
