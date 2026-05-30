@@ -784,6 +784,18 @@ export function LinearSidebar() {
 
       {/* Navigation */}
       <nav className="flex-1 overflow-y-auto px-2.5 pt-2.5 pb-2">
+        {/* ── Inbox (global) — pinned to sidebar top across all spaces (Linear
+            mirrors this; Inbox is always the first sidebar item). Promoted from
+            Home-only; count is global (useInbox, no space gate). */}
+        <div className="space-y-px mb-2">
+          <NavLink
+            href="/inbox"
+            icon={<IconInbox size={20} />}
+            label={t("sidebar.inbox")}
+            count={inboxItemsCount > 0 ? inboxItemsCount : undefined}
+            active={isActive("/inbox")}
+          />
+        </div>
         {/* ── Notes Context ─────────────────────────── */}
         {activeSpace === "notes" && (
           <>
@@ -1993,13 +2005,6 @@ export function LinearSidebar() {
                 icon={<IconHome size={20} />}
                 label={t("sidebar.overview")}
                 active={isActive("/home")}
-              />
-              <NavLink
-                href="/inbox"
-                icon={<IconInbox size={20} />}
-                label={t("sidebar.inbox")}
-                count={inboxItemsCount > 0 ? inboxItemsCount : undefined}
-                active={isActive("/inbox")}
               />
             </div>
 
