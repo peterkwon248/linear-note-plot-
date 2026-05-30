@@ -8,6 +8,40 @@
 
 ---
 
+## ✅ 2026-05-31 (심야) — IA 헌법 수립 (리니어 관점 정보구조 전면 재설계) + Inbox 전역 승격 (PR #497/#498) ⭐⭐⭐⭐⭐
+
+**범위**: 코드 거의 안 짠 순수 브레인스토밍 세션. 사용자 "느낌" IA 결정(섹터/status/라벨/북/스티커)을 코드 전수조사 + 리니어 109캡처 실측으로 검증 → git-tracked 헌법. **SOT = `docs/01-plan/features/linear-ia-constitution.spec.md`(14챕터).** PR #497(헌법+Inbox 승격+목업), #498(after-work docs). 이번 세션=결정, 다음=적용(구현).
+
+**사용자 의도** (인용): "개념과 기능을 우선 리니어 수준, 리니어 관점(시각), 리니어 해석으로 깎아보자" + "리니어 팀이 만들었다면" + "이미 구현된 기능/개념/명칭 재논의·재설계, 필요하면 과감히 제거".
+
+### 핵심 결정 (영구, IA 헌법)
+- **트리코토미** = 모든 개념 Destination/Display-mode/Facet 중 하나 (배치의 법). 리니어 Label=facet("눈에 안 보이게"의 정체).
+- **렌즈 모델** = 7 space는 atom(Note)의 6렌즈 + 진입점. "자유도 최대"의 메커니즘.
+- **MIRROR/ADAPT/SKIP** = 리니어 흡수 분류 (탭=도입 확정 / Cycles·Linear Diffs=SKIP).
+- **atom-home = multi-lens by reference** (코드 검증, 2 에이전트 교차). 비대칭 C노선(Calendar 위키 누락만 메움, Folder 타입감옥=의도).
+- **noteType==="wiki" = 레거시 데드**(사용자 적발). 진짜 위키 = WikiArticle. **Notes/Wiki = 2 destination 유지**.
+- **Calendar/Graph → display mode**, **Tags/Labels/Stickers → facet**. Ontology(graph+dashboard+insights)/Library/References/Files = destination 유지.
+- **Book vs Sticker = 중복 아님**(Sticker=facet 강등). **3-entity 워크플로 통일**: Notes/Wiki/Books 모두 status(4단계)+priority(5단계). Book=manual·hybrid만(smart=N/A), kind→classification 이동.
+- **공통자산 커스텀**: Status/Priority 고정 / Label(N:1 종류)·Tag·Category 커스텀. **크롬 일관성은 A3.2 스키마엔진이 이미 강제.**
+- **Book kind 라벨**: Smart/Manual/Hybrid → Auto/Manual/Mixed(코드 키 불변). **Smart Book ≠ Template**(생성틀 vs 라이브쿼리).
+- **셸**: 레일 유지+리니어 톤다운(절제). Inbox 최상단(완료)/Trash 하단/Help 하단/설정=워크스페이스메뉴. 아이콘=Lucide 문법+도메인 글리프만 정밀.
+
+### 기술 학습 (영구)
+- **IA 결정 = 코드 전수조사 필수**("코드 봐라"가 2번 내 추측 정정: Ontology/Library 강등 과잉, noteType 데드). Explore 에이전트 보고도 grep 호출처 0으로 교차검증.
+- **명칭 통일 = 본질 같을 때만**(이름 같다고 합치면 혼란). type은 Label 전용.
+- **리니어 Project(=Book)는 status+priority 둘 다 보유**(캡처 실측 `Filter-Project properties-Project status.png`). 리니어 status 2층(고정 type+커스텀 값) — 우리는 type층(4단계)만=노트앱 충분, 2층 커스텀=SKIP.
+- PowerShell here-string `@` 누수 → 커밋 메시지 첫 줄 오염(PR #497 제목 `@`). commit -F 파일/here-doc 권장.
+
+### 다음 우선순위 (P0, 헌법 적용 단계)
+1. **셸 목업 락 → 포팅** (§10): 목업 `docs/v3-mockup/shell-linear-mirror.html` 사용자 승인 → Trash 하단 강등 / Help `?` 버튼 / 레일 톤다운 / 패널 토글 분산.
+2. **Book 워크플로 축** (§11, ~25줄+store version bump): status(노트 4단계)+priority(노트 5단계) 추가, kind→classification, Wiki priority 추가. 크롬은 스키마엔진 자동.
+3. **Book kind 라벨** (§13): Auto/Manual/Mixed (코드 키 불변, 라벨+i18n만). + noteType 데드코드 정리(chip, wiki-auto-enroll 실동작 확인 먼저).
+
+### Current main HEAD / worktree
+PR #497/#498 머지 후 main (직전 `b5edf28` #496). worktree `claude/quirky-williams-7c00a9`. 다음 = main 기준 fresh. **머신**: 집/Windows.
+
+---
+
 ## ✅ 2026-05-30 (밤) — A3.2 스키마 엔진 머지 + A3.3 필터 크롬 + 노트행 모션 + 셸 1차 정리 (레이아웃 모방 전환) ⭐⭐⭐⭐⭐
 
 **범위**: A3.2(스키마 엔진 M0~M4)+폰트 Pretendard PR #495 머지. A3.3(필터 크롬 divider/16px/칩바). 노트행 모션 슬라이스(토큰 시드). 사용자 "레이아웃 골격도 완벽 모방" 방향 전환 → 셸 보조UI 진단 + 1차 정리(⌘K 팔레트/죽은코드/avatar 드롭다운/이니셜). worktree 7커밋 → 이 PR 머지.
