@@ -4,14 +4,26 @@ import type { ViewConfig } from "../../view-configs"
 import { NOTES_SCHEMA } from "../entities/notes.schema"
 import { BOOKS_SCHEMA } from "../entities/books.schema"
 import { WIKI_SCHEMA } from "../entities/wiki.schema"
-import { toViewConfig } from "../adapter"
+import { toViewConfig, toFilterCategories } from "../adapter"
+import type { PropertyCategory } from "../property-def"
 
 /**
  * A3.2 / M1 — adapter equivalence safety net (plan §3, D4).
  *
- * Proves `toViewConfig(NOTES_SCHEMA)` is structurally equivalent to the live,
- * hand-written `NOTES_VIEW_CONFIG`. Once green, M2 can swap the export
- * (`NOTES_VIEW_CONFIG = toViewConfig(NOTES_SCHEMA, hydrators)`) with confidence.
+ * Originally proved `toViewConfig(NOTES_SCHEMA)` ≈ the live hand-written
+ * `NOTES_VIEW_CONFIG`. Post-M2/M3/M4 the `*_VIEW_CONFIG` exports are THEMSELVES
+ * `toViewConfig(*_SCHEMA)`, so the structural `toEqual` checks below are now a
+ * self-consistency guard (they re-run the adapter and confirm the export is a
+ * pure projection — catching accidental post-hoc mutation of the exported
+ * object). The load-bearing ORDER assertions (`filterCategories`/`orderingOptions`/
+ * `groupingOptions`/`properties` key+value lists) double as a regression lock on
+ * the per-surface ordering the schema hints encode.
+ *
+ * A3.3-E1 adds a dedicated "filter category 6-cluster order" block: it asserts
+ * `toFilterCategories(SCHEMA)` emits categories grouped by `PropertyCategory`
+ * (workflow → classification → relations → metrics → time → content) with each
+ * category contiguous — the data-layer contract the upcoming filter dividers
+ * (E2) consume.
  *
  * `icon` is a React element (ReactNode) — it can't survive `toEqual` (element
  * identity / Symbol internals differ). So we compare two ways:
@@ -211,5 +223,88 @@ describe("A3.2 schema adapter — Wiki equivalence (M3)", () => {
     // Wiki has icons on every filter category, the 4 status values, and the
     // display props — ensure the walk actually exercised them.
     expect(checked).toBeGreaterThan(15)
+  })
+})
+
+describe("A3.3-E1 — filter categories carry the 6-cluster `category`", () => {
+  // Canonical cluster order (PropertyCategory union order). Every emitted
+  // category must equal one of these, and same-category entries must be
+  // contiguous in this order (no cluster appears twice non-adjacently).
+  const CLUSTER_ORDER: PropertyCategory[] = [
+    "workflow",
+    "classification",
+    "relations",
+    "metrics",
+    "time",
+    "content",
+  ]
+
+  /** Assert the category sequence is a non-decreasing walk over CLUSTER_ORDER —
+   *  i.e. clusters appear in canonical order and each cluster's entries are
+   *  contiguous (the divider-grouping contract for E2). */
+  function expectClustered(categories: (PropertyCategory | undefined)[]) {
+    // No category may be undefined for a schema-generated filter list.
+    for (const c of categories) expect(c).toBeDefined()
+    const rank = (c: PropertyCategory | undefined) => CLUSTER_ORDER.indexOf(c as PropertyCategory)
+    for (let i = 1; i < categories.length; i++) {
+      expect(
+        rank(categories[i]),
+        `category cluster regressed at index ${i}: ${String(categories[i - 1])} → ${String(categories[i])}`,
+      ).toBeGreaterThanOrEqual(rank(categories[i - 1]))
+    }
+    // Contiguity: the set of distinct clusters, in first-appearance order, must
+    // be strictly increasing in rank (a cluster never recurs after a later one).
+    const seen: PropertyCategory[] = []
+    for (const c of categories) {
+      if (c !== undefined && (seen.length === 0 || seen[seen.length - 1] !== c)) {
+        expect(seen).not.toContain(c) // would mean a cluster split into two runs
+        seen.push(c)
+      }
+    }
+  }
+
+  it("Notes: workflow → classification → relations → time → content", () => {
+    const cats = toFilterCategories(NOTES_SCHEMA).map((c) => c.category)
+    expect(cats).toEqual([
+      "workflow", "workflow",                                  // status, pinned
+      "classification", "classification", "classification", "classification", // folder, label, tags, source
+      "relations", "relations",                                // links, wikiRegistered
+      "time",                                                  // updatedAt (Dates)
+      "content",                                               // content
+    ])
+    expectClustered(cats)
+    // Key order pairs 1:1 with the category order above.
+    expect(toFilterCategories(NOTES_SCHEMA).map((c) => c.key)).toEqual([
+      "status", "pinned", "folder", "label", "tags", "source",
+      "links", "wikiRegistered", "updatedAt", "content",
+    ])
+  })
+
+  it("Wiki: workflow → classification → relations → time → content (wikiTier in relations)", () => {
+    const cats = toFilterCategories(WIKI_SCHEMA).map((c) => c.category)
+    expect(cats).toEqual([
+      "workflow",                       // status
+      "classification",                 // category
+      "relations", "relations",         // links, wikiTier
+      "time", "time",                   // updatedAt, createdAt
+      "content",                        // title (Aliases)
+    ])
+    expectClustered(cats)
+    expect(toFilterCategories(WIKI_SCHEMA).map((c) => c.key)).toEqual([
+      "status", "category", "links", "wikiTier", "updatedAt", "createdAt", "title",
+    ])
+  })
+
+  it("Books: workflow → classification → time (pinned in workflow ahead of sourceType)", () => {
+    const cats = toFilterCategories(BOOKS_SCHEMA).map((c) => c.category)
+    expect(cats).toEqual([
+      "workflow", "workflow",   // kind, pinned
+      "classification",         // sourceType
+      "time",                   // updatedAt
+    ])
+    expectClustered(cats)
+    expect(toFilterCategories(BOOKS_SCHEMA).map((c) => c.key)).toEqual([
+      "kind", "pinned", "sourceType", "updatedAt",
+    ])
   })
 })

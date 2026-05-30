@@ -66,6 +66,17 @@
   --t-mid:  200ms cubic-bezier(0.2, 0, 0.2, 1);
   --t-slow: 320ms cubic-bezier(0.2, 0, 0.2, 1);
 
+  /* ── Motion primitives (Linear-mirror, decomposed) ──
+     The --t-* tokens above are full `transition` shorthands. These split
+     duration from easing so individual properties can be composed (e.g.
+     `transition: background var(--duration-fast) var(--ease-out)`).
+     150ms / ease-out = Linear's row hover + element fade-in feel:
+     quick, decelerating, no overshoot. Seeded by the notes-row slice;
+     intended to become the app-wide motion vocabulary. */
+  --duration-fast: 150ms;
+  --duration-mid:  200ms;
+  --ease-out: cubic-bezier(0.2, 0, 0, 1);  /* decelerate-to-rest (Linear/Material) */
+
   /* v3 Shadow */
   --shadow-sm: 0 1px 2px rgba(0,0,0,0.04);
   --shadow-md: 0 4px 12px rgba(0,0,0,0.06), 0 1px 3px rgba(0,0,0,0.04);
@@ -154,6 +165,18 @@
   --active-bg: rgba(0,0,0, 0.06);
   --active-bg-strong: rgba(0,0,0, 0.08);
   --toolbar-active: rgba(94,106,210, 0.12);
+
+  /* ── List row interaction (Linear issue-row mirror, A-row slice) ──
+     Row-scoped hover/selection tints. Separate from the global
+     --hover-bg (shared by sidebar/buttons) so the list row can be tuned
+     to Linear's slightly firmer row feedback without touching chrome.
+     Defined in oklch (L C H / alpha) so the planned app-wide LCH
+     migration absorbs them verbatim. Light: near-black neutral tints.
+     --row-hover-bg  ≈ rgba(0,0,0,0.045)  — soft fade on hover
+     --row-selected-bg ≈ accent-tinted     — clear "this row is selected" */
+  --row-hover-bg:    oklch(0% 0 0 / 0.045);
+  --row-selected-bg: oklch(54% 0.13 277 / 0.10);  /* accent #5E6AD2 hue, low alpha */
+  --row-selected-hover-bg: oklch(54% 0.13 277 / 0.14);
 
   /* Editor Spine */
   --editor-font-size: 15px;
@@ -393,6 +416,13 @@
   --active-bg: rgba(255,255,255, 0.07);
   --active-bg-strong: rgba(255,255,255, 0.10);
 
+  /* ── List row interaction (dark) — see light theme for rationale.
+     Dark: white overlay for hover, brighter accent tint for selection
+     (dark surfaces need a touch more lift to read as "selected"). */
+  --row-hover-bg:    oklch(100% 0 0 / 0.05);
+  --row-selected-bg: oklch(64% 0.12 274 / 0.16);  /* accent #7C8AE7 hue */
+  --row-selected-hover-bg: oklch(64% 0.12 274 / 0.22);
+
   /* 에디터 툴바 */
   --toolbar-active: rgba(124,138,231, 0.2);
 
@@ -506,6 +536,11 @@
   --color-active-bg: var(--active-bg);
   --color-active-bg-strong: var(--active-bg-strong);
   --color-toolbar-active: var(--toolbar-active);
+  /* List row interaction tints (A-row slice) — exposes bg-row-hover-bg /
+     bg-row-selected-bg utilities for any surface adopting the row pattern. */
+  --color-row-hover-bg: var(--row-hover-bg);
+  --color-row-selected-bg: var(--row-selected-bg);
+  --color-row-selected-hover-bg: var(--row-selected-hover-bg);
 
   /* === v3 Token Tailwind exposure (Phase 1) === */
   /* Surface */
@@ -1251,17 +1286,46 @@
   background: var(--border);
 }
 
-/* Row */
+/* Row — Linear issue-row mirror (A-row vertical slice).
+   Hover = soft background fade (150ms ease-out, zero layout shift).
+   Selection = accent-tinted background that survives hover.
+   Reveal-on-hover elements (checkbox / actions) fade via opacity only —
+   their box is reserved in the grid at all times, so nothing reflows. */
 .a-row {
   height: 38px;
   font-size: 13px;
   cursor: pointer;
-  transition: background var(--t-fast);
+  background: transparent;
+  transition: background var(--duration-fast) var(--ease-out);
   position: relative;
 }
-.a-row:hover { background: var(--hover-bg); }
+.a-row:hover { background: var(--row-hover-bg); }
+
 .a-row[data-active="true"] {
   background: var(--active-bg);
+}
+
+/* Selection — base + hover (slightly stronger) so a selected row still
+   gives hover feedback. Class form ('is-selected') replaces the previous
+   inline `bg-accent/5` Tailwind utility so all row state lives in one
+   place and reads from the LCH-ready tokens. Placed after [data-active]
+   so an explicitly checkbox-selected row wins over the preview-active
+   tint — selection (accent) is the stronger intent than "previewing". */
+.a-row.is-selected { background: var(--row-selected-bg); }
+.a-row.is-selected:hover { background: var(--row-selected-hover-bg); }
+
+/* Reveal-on-hover wrapper (checkbox column, trailing actions).
+   Space is always allocated by the grid; only opacity animates, so the
+   element appears/disappears without shifting siblings. Keyboard focus
+   inside the wrapper forces it visible for accessibility. */
+.a-row__reveal {
+  opacity: 0;
+  transition: opacity var(--duration-fast) var(--ease-out);
+}
+.a-row:hover .a-row__reveal,
+.a-row__reveal:focus-within,
+.a-row__reveal[data-show="true"] {
+  opacity: 1;
 }
 .a-row[data-active="true"]::before {
   content: '';

@@ -5,6 +5,21 @@ import type { ReactNode } from "react"
 import type { FilterRule, FilterField } from "@/lib/view-engine/types"
 import { useT } from "@/lib/i18n"
 
+/* ── Linear 5규칙 — opacity 위계 클래스 레이어 (A3.3-E2 S5) ───────────
+ * 라벨 > 아이콘 > 힌트·카운트 의 3-단 명도 사다리를 *구조적으로* 고정한다.
+ * 정확한 0.9 / 0.7 / 0.5 LCH 값은 A3.1(LCH paired 토큰)의 몫 — 여기서는
+ * 기존 text-foreground / text-muted-foreground 이산색을 유지하되, 세 tier가
+ * 별도 클래스로 분리돼 존재하도록만 한다. 하드 opacity(/50)는 잠정값이며
+ * A3.1에서 토큰으로 치환된다 (각 사용처에 주석 표기). */
+// tier 1 — 라벨 (활성 행의 최상위 명도). A3.1: LCH 0.9 token 예정.
+const TONE_LABEL_ACTIVE = "text-foreground font-medium"
+const TONE_LABEL_IDLE = "text-muted-foreground"
+// tier 2 — 아이콘 (라벨보다 한 단 흐림). A3.1: LCH 0.7 token 예정.
+const TONE_ICON_ACTIVE = "text-foreground"
+const TONE_ICON_IDLE = "text-muted-foreground"
+// tier 3 — 힌트·카운트·chevron (최하 명도). A3.1: LCH 0.5 token 예정.
+const TONE_HINT = "text-muted-foreground/50" /* A3.1: LCH token 예정 */
+
 /* ── Inline SVG Icons ───────────────────────────────────── */
 
 const SparkleIcon = () => (
@@ -51,6 +66,14 @@ export interface FilterCategory {
   labelKey?: string
   icon: ReactNode
   values: FilterValue[]
+  /** 6-category cluster (workflow / classification / relations / metrics /
+   *  time / content). Emitted by the schema adapter (view-configs.tsx
+   *  FilterCategory.category, A3.3-E1). Drives the category dividers below
+   *  (A3.3-E2 S3): a divider is rendered whenever this changes between two
+   *  consecutive visible rows. Optional + loosely typed (string) since the
+   *  remaining hand-written Tier-3 configs omit it — those render with no
+   *  dividers (treated as one uncategorized run). */
+  category?: string
 }
 
 export interface QuickFilter {
@@ -184,19 +207,23 @@ export function FilterPanel({
                     }
                   >
                     <Checkbox checked={isActive} />
+                    {/* tier-2 icon slot — fixed 16px box so every value row's
+                        glyph shares one left x (Linear rule ①). */}
                     {val.icon ? (
-                      <span className="shrink-0 flex items-center">{val.icon}</span>
+                      <span className={`w-4 h-4 shrink-0 flex items-center justify-center ${TONE_ICON_IDLE}`}>{val.icon}</span>
                     ) : val.color ? (
-                      <span
-                        className="w-2 h-2 rounded-full shrink-0"
-                        style={{ backgroundColor: val.color }}
-                      />
+                      <span className="w-4 h-4 shrink-0 flex items-center justify-center">
+                        <span
+                          className="w-2 h-2 rounded-full"
+                          style={{ backgroundColor: val.color }}
+                        />
+                      </span>
                     ) : null}
-                    <span className={`flex-1 text-left text-note ${isActive ? "text-foreground font-medium" : "text-foreground"}`}>
+                    <span className={`flex-1 text-left text-note ${isActive ? TONE_LABEL_ACTIVE : "text-foreground"}`}>
                       {val.labelKey ? t(val.labelKey) : val.label}
                     </span>
                     {val.count !== undefined && (
-                      <span className="text-2xs text-muted-foreground/70 tabular-nums">{val.count}</span>
+                      <span className={`text-2xs tabular-nums ${TONE_HINT}`}>{val.count}</span>
                     )}
                   </button>
                 </React.Fragment>
@@ -240,41 +267,59 @@ export function FilterPanel({
           </div>
         )}
 
-        {/* Categories */}
-        {filteredCategories.map((cat) => {
+        {/* Categories — grouped by 6-category cluster with dividers (Linear
+            rule ②: divider = 의미 그룹 경계만). A divider is inserted whenever
+            `category` changes between two consecutive VISIBLE rows; same-cluster
+            rows are contiguous (locked by the schema, A3.3-E1), so this yields
+            the workflow → classification → relations → metrics → time → content
+            sections. Hand-written configs without `category` render as one run
+            (no dividers). Mirrors the sub-panel `showGroupHeader` pattern. */}
+        {filteredCategories.map((cat, idx) => {
           const activeCount = activeFilters.filter((f) => f.field === cat.key).length
           const isOpen = openCat === cat.key
+          const isHot = activeCount > 0 || isOpen
+          const prevCategory = idx > 0 ? filteredCategories[idx - 1].category : undefined
+          const showDivider = idx > 0 && cat.category !== undefined && cat.category !== prevCategory
           return (
-            <button
-              key={cat.key}
-              className={`w-full flex items-center gap-2 px-3 py-2 transition-colors cursor-default ${
-                isOpen ? "bg-active-bg" : "hover:bg-hover-bg"
-              }`}
-              onMouseEnter={(e) => handleCatHover(cat.key, e)}
-              onClick={() => setOpenCat(isOpen ? null : cat.key)}
-            >
-              <span
-                className={`text-note leading-none flex ${activeCount > 0 || isOpen ? "text-foreground" : "text-muted-foreground"}`}
-              >
-                {cat.icon}
-              </span>
-              <span
-                className={[
-                  "flex-1 text-left text-note",
-                  activeCount > 0 || isOpen ? "text-foreground font-medium" : "text-muted-foreground",
-                ].join(" ")}
-              >
-                {cat.labelKey ? t(cat.labelKey) : cat.label}
-              </span>
-              {activeCount > 0 && (
-                <span className="rounded-full bg-accent/20 px-1.5 text-2xs text-accent font-medium tabular-nums">
-                  {activeCount}
-                </span>
+            <React.Fragment key={cat.key}>
+              {showDivider && (
+                <div role="separator" className="my-1 mx-3 border-t border-border-subtle" />
               )}
-              <span className={`flex transition-opacity ${isOpen ? "opacity-60" : "opacity-30"}`}>
-                <ChevronRightSmall />
-              </span>
-            </button>
+              <button
+                className={`w-full flex items-center gap-2.5 px-3 py-2 transition-colors cursor-default ${
+                  isOpen ? "bg-active-bg" : "hover:bg-hover-bg"
+                }`}
+                onMouseEnter={(e) => handleCatHover(cat.key, e)}
+                onClick={() => setOpenCat(isOpen ? null : cat.key)}
+              >
+                {/* tier-2 icon — fixed 16px box so every category row's icon
+                    shares one left x (= the value-row checkbox column). */}
+                <span
+                  className={`w-4 h-4 shrink-0 flex items-center justify-center ${isHot ? TONE_ICON_ACTIVE : TONE_ICON_IDLE}`}
+                >
+                  {cat.icon}
+                </span>
+                {/* tier-1 label */}
+                <span
+                  className={[
+                    "flex-1 text-left text-note",
+                    isHot ? TONE_LABEL_ACTIVE : TONE_LABEL_IDLE,
+                  ].join(" ")}
+                >
+                  {cat.labelKey ? t(cat.labelKey) : cat.label}
+                </span>
+                {activeCount > 0 && (
+                  <span className="rounded-full bg-accent/20 px-1.5 text-2xs text-accent font-medium tabular-nums">
+                    {activeCount}
+                  </span>
+                )}
+                {/* tier-3 hint (chevron). Tone = hint tier; open state nudges
+                    it a touch brighter for affordance. A3.1: LCH token 예정. */}
+                <span className={`flex transition-colors ${isOpen ? "text-muted-foreground/70" : TONE_HINT}`}>
+                  <ChevronRightSmall />
+                </span>
+              </button>
+            </React.Fragment>
           )
         })}
       </div>

@@ -6,6 +6,72 @@
 
 ---
 
+## 2026-05-30 (밤, 집/Windows) — **A3.2 스키마 엔진 머지(PR #495) + A3.3 필터 크롬 + 노트행 모션 + 셸 1차 정리 (폰트 Pretendard, 레이아웃 모방 전환)**
+
+> 🎯 **다음 즉시 액션 hook**:
+> 1. **셸 2차 정리 (P0 #0)** — 1차(⌘K 팔레트 복구·죽은코드·avatar 드롭다운·이니셜) 완료. 2차 = (a) **Inbox 전역 승격**(현재 Home space 종속 `linear-sidebar.tsx:2049` → 액티비티바 8번째 or 전 space 사이드바 상단 고정. 리니어 Inbox=사이드바 최상단 고정), (b) **Trash 사이드바 하단 강등**(현재 avatar 드롭다운에 있으나 리니어는 계정메뉴에 trash 안 둠 → 사이드바 footer로. 그럼 워크스페이스 메뉴=순수 계정/설정), (c) **Help/단축키 시각 진입점**(현재 `?` 키만, 버튼 0 → 사이드바 하단 `?` 버튼), (d) **(대형) 액티비티바 7-space 존치 여부** 사용자 결정.
+> 2. **모션/디테일 전파 (P0 #1)** — 노트행에서 시드한 토큰(`--row-hover-bg` oklch / `--duration-fast` / `--ease-out`, 커밋 295be0a)을 **사이드바 항목·버튼·드롭다운**에 전파(avatar 드롭다운은 이미 재활용). 그 다음 **A3.1 LCH 토큰 전역화**(노트행 oklch가 씨앗 → `lib/colors.ts` flat hex 마이그).
+> 3. **A4 priority 막대 SVG** (carry) — `note-fields.tsx` 화살표 → 리니어 3-막대(spec §3 geometry, `schema/icons.tsx`).
+>
+> **사용자 의도** (이번 세션 핵심, 인용): "디자인 레이아웃의 디테일이나 골격도 리니어를 완벽하게 모방" + "세팅/휴지통/설정 버튼 배치와 담는 레이아웃의 부자연스러움이 가장 아쉽다" + "리니어 완벽 모방 → 리니어에 없는 영역(액티비티바/디테일바/스플릿뷰) 리니어스럽게 배치 재설계". → **MIRROR+EXTRAPOLATE를 셸 레벨로**. 핵심 미덕 = **절제**(안 보여줄 건 ⌘K/풀페이지로 숨김).
+>
+> **첫 스텝** (다른 머신 cold start):
+> 1. 셸 진단(이 entry "셸 보조 UI 진단" 참고) — Inbox/Trash/Help/avatar/액티비티바 인벤토리 + 리니어 원칙 + 재배치 플랜.
+> 2. `components/linear-sidebar.tsx`(Inbox `:2049`, footer 영역), `components/user-avatar.tsx`(드롭다운 — trash 제거 대상), `app/(app)/layout.tsx`(셸 조립).
+> 3. Inbox 승격 → Trash 강등 → Help 진입점 순.
+>
+> **위험 + 회피**:
+> - **이 환경 preview eval = route 전환 + 키 이벤트(⌘K) dispatch 안 됨**(activeRoute module state). visible 검증 = **사용자 실화면 필수**. 이번 세션 ⌘K/divider/모션/이니셜 다 사용자 직접 확인("괜찮다").
+> - **동등성 테스트 tautology 함정**: swap 후 `*_VIEW_CONFIG = toViewConfig(*_SCHEMA)`라 generated-generated 자기비교. 진짜 동등성 = **원본(직전 커밋) 스냅샷 vs 어댑터 출력** 직접 비교(이번 git show 5e25721 스냅샷으로 검증).
+> - **리니어 동작 = 기억으로 단정 X, 실측**: ⌘K를 "팔레트 vs input 양자택일"로 오진 → 사용자 지적 → 조사하니 **리니어 검색 3-way 공존**(⌘K 팔레트 / `/` 전역검색 / ⌘F 뷰내).
+> - **메모리 정정**: 셸 크롬이 이미 `components/global-top-bar.tsx`로 hoist됨 (메모리 "layout.tsx 607 / linear-sidebar.tsx 2129 god"는 부분 stale — 실제 셸 호스트 = `app/(app)/layout.tsx`).
+>
+> **참고 파일**: `components/linear-sidebar.tsx`(Inbox 2049/footer), `user-avatar.tsx`(드롭다운), `global-top-bar.tsx`(크롬), `app/(app)/layout.tsx`(셸), `search-dialog.tsx`(⌘K 팔레트), `hooks/use-global-shortcuts.ts`(⌘K/`/`/`?`), `app/globals.css`(모션 토큰 시드 `:66`/`:166`), `lib/view-engine/schema/`(스키마 엔진), `docs/01-plan/features/{linear-filter-display-schema-engine,linear-filter-display-A3.3-chrome}.plan.md`.
+>
+> **머신**: 집(Windows).
+> **현재 main HEAD**: 이 세션 PR 머지 후 (직전 `693a31b` = PR #495 폰트+A3.2).
+> **branch worktree**: `claude/happy-leavitt-1fb897` → 이 after-work에서 PR·머지. 다음 = main 기준 fresh.
+
+### 완료 (이번 세션)
+- **폰트 Pretendard** (Geist→, `next/font/local` self-host woff2, weight 45 920. Inter 메트릭 복제+한글 네이티브 = Linear 라틴 룩+다국어 일관. 일본어 fallback stack). — PR #495
+- **A3.2 스키마 엔진 M0~M4** (PR #495): 엔티티별 `PropertyDef[]`(6-카테고리)→어댑터→filter/display/group/sort 자동생성. Notes/Wiki/Books 전부 `toViewConfig(SCHEMA)` 1줄. 출력 계약 불변=소비 컴포넌트 0수정. 진짜 동등성(원본 스냅샷 비교) 검증.
+- **A3.3 필터 크롬**: E1(category 6-클러스터 재배열 `f221f82`) / E2(filter-panel divider+아이콘16px+opacity뼈대 `5d7e00e`) / E3(칩바 스키마 일원화+레거시 -965줄 `4c0ad22`).
+- **노트행 모션 슬라이스** (`295be0a`): `--row-hover-bg`(oklch)/`--duration-fast`/`--ease-out` 시드 + 호버 페이드 + 체크박스 opacity fade(zero layout shift) + 선택 토큰화.
+- **셸 1차 정리**: A(`fbde340`) 죽은코드 -127줄(top-utility-bar 삭제+sidebar 데드블록)+⌘K 팔레트 복구(3-way) / B(`8b286cc`) avatar 드롭다운(우측 theme/settings/trash 접기+가짜버튼 해결) / 이니셜(`9a51e18`) `userName` 필드+`getInitials`.
+
+### 셸 보조 UI 진단 (architect, 2차 reference)
+- **secondary 액션 인벤토리**: 워크스페이스스위칭=액티비티바 / 패널토글=GlobalTopBar PanelsMenu / 검색=⌘K팔레트(복구됨)+`/`전역+input / 설정=풀페이지(/settings ✅) / Trash=/trash 인앱뷰 / Inbox=Home종속(`linear-sidebar:2049`) / Help=`?`키만.
+- **리니어 원칙**: 크롬=네비만 / ⌘K=액션 / 풀페이지=설정 / secondary=하단·⋯·컨텍스트메뉴. 상시노출 최소(절제).
+- **남은 결정(2차)**: Q5 Inbox 승격 범위, Q3 Trash 강등 위치(사이드바 하단 권장), Help 진입점, Q6 액티비티바 존치(대형).
+
+### 브레인스토밍 & 큰 결정 (영구 — MEMORY.md push)
+- **레이아웃도 리니어 완벽 모방** (사용자 방향 전환): 3-zone 골격 유지, 그 안 디테일(모션/호버/색/보조액션 배치)은 리니어 문법 재정리. MIRROR+EXTRAPOLATE. 핵심=절제.
+- **폰트 = Pretendard**. **수직 슬라이스 전략**(넓게 깔면 체감0 → 한 표면 깊게 → 토큰 확립 → 전파).
+- **리니어 검색 = 3-way 공존**(⌘K팔레트/`/`전역/⌘F뷰내, 양자택일 X).
+- **"뒤죽박죽"=미완성 리팩터**(셸 크롬 GlobalTopBar 이사 절반 → ⌘K 팔레트 고아+죽은코드+과노출).
+- **Trash**: 리니어는 계정메뉴에 trash 안 둠 → 사이드바 하단 강등(2차).
+
+### 기술 학습 (영구 — MEMORY.md push)
+- **이 환경 preview eval 한계**: route 전환 + 키 이벤트(⌘K) dispatch가 module state라 안 됨 → visible 검증 = 사용자 실화면.
+- **동등성 tautology**: swap 후 자기비교 → 원본 스냅샷(git show 직전커밋) vs 어댑터 출력 직접 비교.
+- **모션 zero-shift**: 호버 등장 요소는 opacity/visibility(공간 미리 확보), display/width 변동 X.
+- **모델 ID**: `/model` 메뉴로 선택(괄호 타이핑 `claude-opus-4-8(1M)` = may not exist 에러 + background agent Bash 막힘).
+- **subagent 보고 깨짐**(designer 출력 잘림) → git diff로 결과 복원.
+
+### Watch Out (다음 세션)
+- **toggleFilter(field-based) 死코드 3곳**(notes-table:869/grid-shell:185/timeline-shell:154) — E3 minimal-diff로 남김, follow-up.
+- **⌘F 뷰내검색 미구현**(net-new, 미바인딩). **setSidebarCollapsed**(linear-sidebar:276) 미사용 — follow-up.
+- **A3.3 opacity 위계 = 클래스 뼈대만**(0.9/0.7/0.5 최종값은 A3.1 LCH 대기).
+- 사용자 실화면 OK("괜찮다" 2회) — ⌘K/avatar/이니셜/노트행/필터 divider 확인됨.
+
+### 환경 변경
+- Store version: `settings-store`에 `userName` 추가(persist). 메인 store v152 유지(settings-store 별도).
+- 신규 파일: `lib/view-engine/schema/**`, `docs/01-plan/features/{linear-filter-display-schema-engine,linear-filter-display-A3.3-chrome}.plan.md`, `public/fonts/PretendardVariable.woff2`.
+- 삭제: `components/top-utility-bar.tsx`.
+- Tests: 306 pass / 11 fail (pre-existing date-grouping/seeds).
+
+---
+
 ## 2026-05-30 (저녁, 집/Windows) — **Track A 착수: 리니어 필터/디스플레이 "200% 미러" 전략 플랜 (A0~A2 완료, A3 다음)**
 
 > 🎯 **다음 즉시 액션 hook**:

@@ -47,7 +47,7 @@ import { useT } from "@/lib/i18n"
 import { LibraryBreadcrumb } from "@/components/library/library-breadcrumb"
 import { useNotesView } from "@/lib/view-engine/use-notes-view"
 import { useTagsView, type TagWithCount } from "@/lib/view-engine/use-tags-view"
-import { FilterButton, FilterChipBar } from "@/components/filter-bar"
+import { FilterChipBar } from "@/components/filter-bar"
 import { FilterPanel } from "@/components/filter-panel"
 import { DisplayPanel } from "@/components/display-panel"
 import { TAGS_LIST_VIEW_CONFIG, NOTES_VIEW_CONFIG } from "@/lib/view-engine/view-configs"
@@ -860,15 +860,15 @@ export function TagsView() {
         {/* Filter chips */}
         <FilterChipBar
           filters={tagViewState.filters}
-          groupBy={tagViewState.groupBy}
-          isSingleStatusTab={false}
           folders={folders}
           tags={tags}
           labels={labels}
-          onToggleFilter={toggleFilter}
           onRemoveFilter={removeFilter}
           onClearAll={() => updateTagView({ filters: [] })}
-          onSetFilters={(f) => updateTagView({ filters: f })}
+          filterCategories={NOTES_VIEW_CONFIG.filterCategories}
+          onToggleRule={(rule) => toggleFilter(rule.field, String(rule.value), rule.operator)}
+          quickFilters={NOTES_VIEW_CONFIG.quickFilters as any}
+          onQuickFilter={(rules) => updateTagView({ filters: rules })}
         />
 
         {/* Selection bar — Labels sub-page 정합 (Notes/Wiki floating bar

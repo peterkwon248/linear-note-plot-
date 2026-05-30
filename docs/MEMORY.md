@@ -8,6 +8,33 @@
 
 ---
 
+## ✅ 2026-05-30 (밤) — A3.2 스키마 엔진 머지 + A3.3 필터 크롬 + 노트행 모션 + 셸 1차 정리 (레이아웃 모방 전환) ⭐⭐⭐⭐⭐
+
+**범위**: A3.2(스키마 엔진 M0~M4)+폰트 Pretendard PR #495 머지. A3.3(필터 크롬 divider/16px/칩바). 노트행 모션 슬라이스(토큰 시드). 사용자 "레이아웃 골격도 완벽 모방" 방향 전환 → 셸 보조UI 진단 + 1차 정리(⌘K 팔레트/죽은코드/avatar 드롭다운/이니셜). worktree 7커밋 → 이 PR 머지.
+
+### 핵심 결정 (영구)
+- **레이아웃도 리니어 완벽 모방** (사용자 전환): 3-zone 골격 유지 + 그 안 디테일(모션/호버/색/보조액션 배치)을 리니어 문법으로. **MIRROR**(리니어 푼 것)+**EXTRAPOLATE**(우리 고유 zone=액티비티바/디테일바/스플릿뷰). 핵심 미덕=**절제**(안 보여줄 건 ⌘K/풀페이지로 숨김).
+- **폰트 Pretendard** (Inter 메트릭 복제+한글 네이티브, 다국어). **수직 슬라이스 전략**(넓게=체감0 → 한 표면 깊게 → 토큰 확립 → 전파).
+- **A3.2 스키마 엔진**: `PropertyDef[]`(6-카테고리)→어댑터→4표면 자동생성 = config 역전. 출력 계약 불변=소비 0수정. 진짜 동등성=원본 스냅샷 비교(swap 후 테스트는 tautology).
+- **리니어 검색 = 3-way 공존**(⌘K 팔레트 / `/` 전역검색 / ⌘F 뷰내. 양자택일 X — 기억 단정 말고 실측).
+- **"뒤죽박죽"=미완성 리팩터**(셸 크롬 GlobalTopBar 이사 절반→⌘K 팔레트 고아+죽은코드+과노출). **Trash**=리니어 계정메뉴에 안 둠→사이드바 하단 강등(2차).
+- **메모리 정정**: 셸 크롬 이미 `global-top-bar.tsx`로 hoist. 실제 셸 호스트=`app/(app)/layout.tsx`(메모리 "layout.tsx 607/sidebar 2129 god" 부분 stale).
+
+### 기술 학습 (영구)
+- **이 환경 preview eval 한계**: route 전환+키 이벤트(⌘K) dispatch가 module state라 안 됨 → visible=사용자 실화면.
+- **모션 zero-shift**: 호버 등장은 opacity/visibility(공간 미리 확보), display/width 변동 X.
+- **모델 ID**: `/model` 메뉴 선택(괄호 타이핑=may not exist + agent Bash 막힘).
+
+### 다음 우선순위 (P0)
+1. **셸 2차**: Inbox 전역 승격 / Trash 사이드바 강등 / Help 시각 진입점 / 액티비티바 존치 결정(대형).
+2. **모션 전파**(노트행 토큰→사이드바/버튼) + **A3.1 LCH 토큰 전역화**(oklch 씨앗→colors.ts flat hex 마이그).
+3. **A4 priority 막대 SVG**(carry). + follow-up: toggleFilter 死코드 3곳/⌘F 뷰내검색/setSidebarCollapsed.
+
+### Current main HEAD / worktree
+이 PR 머지 후 (직전 `693a31b` PR #495). worktree `claude/happy-leavitt-1fb897` → 머지 후 main 기준 fresh.
+
+---
+
 ## ✅ 2026-05-30 (저녁) — Track A 착수: 리니어 필터/디스플레이 "200% 미러" 전략 플랜 ⭐⭐⭐⭐⭐
 
 **범위**: 전략 세션. 필터/디스플레이를 리니어 수준으로 미러링하는 대형 initiative 착수. A0(구현)+A1(리니어 분석)+A2(전략 락). spec = `docs/01-plan/features/linear-filter-display-mirror.spec.md`. 커밋 `3f7e22e`(A0).

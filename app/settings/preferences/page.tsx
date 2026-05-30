@@ -17,6 +17,8 @@ import {
 
 export default function PreferencesPage() {
   const t = useT()
+  const userName = useSettingsStore((s) => s.userName)
+  const setUserName = useSettingsStore((s) => s.setUserName)
   const language = useSettingsStore((s) => s.language)
   const setLanguage = useSettingsStore((s) => s.setLanguage)
   const startView = useSettingsStore((s) => s.startView)
@@ -41,6 +43,18 @@ export default function PreferencesPage() {
   return (
     <>
       <SettingsPageTitle>{t("settings.preferences.title")}</SettingsPageTitle>
+
+      <SettingsCard title={t("settings.profile.title")}>
+        <SettingRow label={t("settings.profile.userName.label")} description={t("settings.profile.userName.description")}>
+          <input
+            type="text"
+            value={userName}
+            onChange={(e) => setUserName(e.target.value)}
+            placeholder={t("settings.profile.userName.placeholder")}
+            className="rounded-md border border-border bg-secondary px-3 py-1.5 text-ui text-foreground outline-none transition-colors placeholder:text-muted-foreground/50 hover:border-muted-foreground/30 focus:border-accent"
+          />
+        </SettingRow>
+      </SettingsCard>
 
       <SettingsCard title={t("settings.preferences.general")}>
         <SettingRow label={t("settings.preferences.language.label")} description={t("settings.preferences.language.description")}>

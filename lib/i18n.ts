@@ -43,6 +43,12 @@ const EN = {
   "settings.nav.backup": "Backup & Export",
   "settings.nav.about": "About",
 
+  // Settings — Profile
+  "settings.profile.title": "Profile",
+  "settings.profile.userName.label": "Name",
+  "settings.profile.userName.description": "Displayed as your workspace initial",
+  "settings.profile.userName.placeholder": "Your name",
+
   // Settings — Preferences page
   "settings.preferences.title": "Preferences",
   "settings.preferences.general": "General",
@@ -166,6 +172,9 @@ const EN = {
   "nav.theme.dark_mode": "Dark mode",
   "nav.settings": "Settings",
   "nav.trash": "Trash",
+  "nav.workspace.menu": "Workspace menu",
+  "nav.theme.toggle": "Toggle theme",
+  "nav.help.shortcuts": "Keyboard shortcuts",
 
   // Linear sidebar (per-space nav)
   "sidebar.section.pinned": "Pinned",
@@ -1054,6 +1063,11 @@ const KO: Partial<Record<DictKey, string>> = {
   "settings.nav.backup": "백업 및 내보내기",
   "settings.nav.about": "정보",
 
+  "settings.profile.title": "프로필",
+  "settings.profile.userName.label": "이름",
+  "settings.profile.userName.description": "워크스페이스 이니셜로 표시됩니다",
+  "settings.profile.userName.placeholder": "이름을 입력하세요",
+
   "settings.preferences.title": "환경설정",
   "settings.preferences.general": "일반",
   "settings.preferences.language.label": "언어",
@@ -1171,6 +1185,9 @@ const KO: Partial<Record<DictKey, string>> = {
   "nav.theme.dark_mode": "어두운 모드",
   "nav.settings": "설정",
   "nav.trash": "휴지통",
+  "nav.workspace.menu": "워크스페이스 메뉴",
+  "nav.theme.toggle": "테마 전환",
+  "nav.help.shortcuts": "키보드 단축키",
 
   // Linear sidebar
   "sidebar.section.pinned": "고정됨",

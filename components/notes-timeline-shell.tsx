@@ -258,15 +258,15 @@ export function NotesTimelineShell({
       >
         <FilterChipBar
           filters={viewState.filters}
-          groupBy={viewState.groupBy}
-          isSingleStatusTab={isSingleStatusTab}
           folders={folders}
           tags={tags.filter((t) => !t.trashed)}
           labels={labels.filter((l) => !l.trashed)}
-          onToggleFilter={toggleFilter}
           onRemoveFilter={removeFilter}
           onClearAll={() => updateViewState({ filters: [] })}
-          onSetFilters={(filters) => updateViewState({ filters })}
+          filterCategories={filteredCategories}
+          onToggleRule={handleFilterToggle}
+          quickFilters={NOTES_VIEW_CONFIG.quickFilters as any}
+          onQuickFilter={(rules) => updateViewState({ filters: rules })}
           onUpdateFilter={(idx, rule) => {
             const next = [...(viewState.filters ?? [])]
             next[idx] = rule

@@ -42,13 +42,16 @@ import { NOTE_STATUS_HEX } from "@/lib/colors"
  * `status` property's `groupBy` is overridden to `wikiStatus`.
  *
  * Ordering is load-bearing — ONE property list drives four differently-ordered
- * surfaces, and unlike Notes/Books all four orders diverge from the filter
- * (declaration) order. The declaration order below = the FILTER order
- * (status → category → links → updatedAt → createdAt → title → wikiTier, then
- * the two non-filterable props parent + reads), and the divergent surfaces are
- * reproduced with the explicit ordering hints:
- *   - filter order  (isFilterable):  status, category, links, updatedAt,
- *     createdAt, title, wikiTier            (= declaration order)
+ * surfaces, and all four orders diverge from each other. A3.3-E1: the
+ * declaration order is now the 6-CATEGORY CLUSTER order (workflow →
+ * classification → relations → metrics → time → content), which is the FILTER
+ * order; because EVERY sortable/groupable/displayable prop already carries an
+ * explicit `sortOrder`/`groupOrder`/`displayOrder`, the other three surfaces are
+ * unaffected by this re-clustering (the declaration-index fallback is never used
+ * for them):
+ *   - filter order  (isFilterable, = cluster/declaration order):
+ *     status, category, links, wikiTier, updatedAt, createdAt, title
+ *     (wikiTier moved up into the relations cluster — the one visible change)
  *   - sort order    (isSortable):    updatedAt, createdAt, title, links, reads,
  *     status                                (via `sortOrder`)
  *   - group order   (isGroupable):   wikiStatus, tier, linkCount, parent
@@ -147,7 +150,65 @@ const PROPERTIES: PropertyDef[] = [
     ],
   },
 
-  /* 4. updatedAt — filter ("Updated") / sort ("Updated") / display ("Updated").
+  /* 4. wikiTier — filter ("Hierarchy", 4-stage role) / group (→tier, "Tier").
+   *    classifyWikiArticleRole-consistent. Clustered into relations (was last in
+   *    the legacy filter order); the explicit groupOrder 1 preserves its grouping
+   *    slot regardless of array position. */
+  {
+    key: "wikiTier",
+    category: "relations",
+    label: "Hierarchy",
+    icon: GraphIcon,
+    valueType: "enum",
+    isFilterable: true,
+    isGroupable: true,
+    groupBy: "tier",
+    groupLabel: "Tier",
+    groupOrder: 1,
+    groupModes: ["list", "board"],
+    options: {
+      kind: "static",
+      values: [
+        { key: "_root", label: "Root (has children)" },
+        { key: "_parent", label: "Parent (both)" },
+        { key: "_child", label: "Child (no children)" },
+        { key: "_solo", label: "Solo (isolated)" },
+      ],
+    },
+  },
+
+  /* 5. parent — display ("Parent") / group ("Parent article"). Non-filterable
+   *    family-distinct relation (key is a GroupBy/SortField member). */
+  {
+    key: "parent",
+    category: "relations",
+    label: "Parent",
+    icon: ParentIcon,
+    valueType: "special",
+    isDisplayable: true,
+    isGroupable: true,
+    groupLabel: "Parent article",
+    displayOrder: 5,
+    groupOrder: 3,
+    groupModes: ["list", "board"],
+  },
+
+  /* 6. reads — sort ("Most read") / display ("Reads"). Non-filterable
+   *    (metrics cluster). */
+  {
+    key: "reads",
+    category: "metrics",
+    label: "Reads",
+    icon: EyeIcon,
+    valueType: "numberBucket",
+    isSortable: true,
+    isDisplayable: true,
+    sortLabel: "Most read",
+    displayOrder: 2,
+    sortOrder: 4,
+  },
+
+  /* 7. updatedAt — filter ("Updated") / sort ("Updated") / display ("Updated").
    *    Grouping is the group-only "date" axis (extraGroupings) since GroupBy has
    *    no "updatedAt" member, so this prop is not isGroupable. */
   {
@@ -173,7 +234,7 @@ const PROPERTIES: PropertyDef[] = [
     ],
   },
 
-  /* 5. createdAt — filter ("Created", 3 buckets) / sort ("Created") / display
+  /* 8. createdAt — filter ("Created", 3 buckets) / sort ("Created") / display
    *    ("Created"). */
   {
     key: "createdAt",
@@ -194,7 +255,7 @@ const PROPERTIES: PropertyDef[] = [
     ],
   },
 
-  /* 6. title — filter ("Aliases", aliased/unaliased) / sort ("Name"). */
+  /* 9. title — filter ("Aliases", aliased/unaliased) / sort ("Name"). */
   {
     key: "title",
     category: "content",
@@ -212,61 +273,6 @@ const PROPERTIES: PropertyDef[] = [
         { key: "_unaliased", label: "No aliases" },
       ],
     },
-  },
-
-  /* 7. wikiTier — filter ("Hierarchy", 4-stage role) / group (→tier, "Tier").
-   *    classifyWikiArticleRole-consistent. */
-  {
-    key: "wikiTier",
-    category: "relations",
-    label: "Hierarchy",
-    icon: GraphIcon,
-    valueType: "enum",
-    isFilterable: true,
-    isGroupable: true,
-    groupBy: "tier",
-    groupLabel: "Tier",
-    groupOrder: 1,
-    groupModes: ["list", "board"],
-    options: {
-      kind: "static",
-      values: [
-        { key: "_root", label: "Root (has children)" },
-        { key: "_parent", label: "Parent (both)" },
-        { key: "_child", label: "Child (no children)" },
-        { key: "_solo", label: "Solo (isolated)" },
-      ],
-    },
-  },
-
-  /* 8. parent — display ("Parent") / group ("Parent article"). Non-filterable
-   *    family-distinct relation (key is a GroupBy/SortField member). */
-  {
-    key: "parent",
-    category: "relations",
-    label: "Parent",
-    icon: ParentIcon,
-    valueType: "special",
-    isDisplayable: true,
-    isGroupable: true,
-    groupLabel: "Parent article",
-    displayOrder: 5,
-    groupOrder: 3,
-    groupModes: ["list", "board"],
-  },
-
-  /* 9. reads — sort ("Most read") / display ("Reads"). Non-filterable. */
-  {
-    key: "reads",
-    category: "metrics",
-    label: "Reads",
-    icon: EyeIcon,
-    valueType: "numberBucket",
-    isSortable: true,
-    isDisplayable: true,
-    sortLabel: "Most read",
-    displayOrder: 2,
-    sortOrder: 4,
   },
 ]
 
