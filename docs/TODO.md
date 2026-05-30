@@ -3,31 +3,45 @@
 > 우선순위 기반 작업 목록. **P0 = 다음 세션 즉시 시작점** (NEXT-ACTION.md 폐지, 2026-05-12).
 > 완료 항목은 즉시 삭제. 자세한 history는 SESSION-LOG.md + MEMORY.md.
 
-**마지막 갱신**: 2026-05-30 (밤 after-work, 집/Windows) — **A3.2 스키마 엔진+폰트 Pretendard 머지(PR #495) + A3.3 필터 크롬 + 노트행 모션 + 셸 1차 정리**. 다음 P0 #0 = **셸 2차**(Inbox 승격/Trash 강등/Help 진입점/액티비티바) + 모션 전파/A3.1 LCH.
+**마지막 갱신**: 2026-05-31 (심야 after-work, 집/Windows) — **IA 헌법 수립(PR #497) + Inbox 전역 승격**. 다음 P0 #0 = **헌법 적용**: 셸 목업 최종 락→포팅 / Book 워크플로(status+priority) / Book kind 라벨 변경.
 
 ---
 
-## 🟣 P0 — 즉시 (cross-machine 진입점, 2026-05-30 저녁 — Track A 전략 플랜 착수)
+## 🟣 P0 — 즉시 (cross-machine 진입점, 2026-05-31 — IA 헌법 적용 단계)
 
-> ✅ **2026-05-30 밤 완료** (PR #495 + 이 PR): **A3.2 스키마 엔진**(M0~M4 PropertyDef→어댑터) + **폰트 Pretendard** + **A3.3 필터 크롬**(category 6-클러스터/divider/16px/칩바 일원화/-965줄) + **노트행 모션 슬라이스**(oklch 토큰) + **셸 1차 정리**(⌘K 팔레트 복구/죽은코드-127/avatar 드롭다운/이니셜).
-> ✅ **2026-05-30 저녁 완료** (전략 세션): **Track A 착수** — A0(Q1 나머지 캡처 site 완성 + notes-grid `.a-tg` 헤더/collapse + group-header.tsx 공유 추출, 커밋 `3f7e22e`) + A1(리니어 ~100장 분석 → spec 문서) + **A2 LOCKED**(tier·priority·6-카테고리 스키마·L3 커스텀·schema-driven 엔진·FlowBase 차용). spec: `docs/01-plan/features/linear-filter-display-mirror.spec.md`.
-> ✅ **2026-05-30 (낮)**: 통합 정합성 플랜 8커밋(PR #493). **2026-05-29**: list-context-nav 5뷰 / Wiki status v151 / Smart Book Preset v152.
+> ✅ **2026-05-30 심야 완료** (PR #497): **IA 헌법 수립** — `docs/01-plan/features/linear-ia-constitution.spec.md`(14챕터). 리니어 관점 정보구조 전면 재설계(트리코토미/렌즈/MIRROR-ADAPT-SKIP/atom-home/noteVS위키/Book-vs-Sticker/공통자산정책/3-entity워크플로/Book네이밍). + **Inbox 전역 승격**(셸 2차 a) + 셸 목업. **헌법 = 결정, 다음 세션 = 적용(구현).**
+> ✅ **2026-05-30 밤** (PR #495+#496): A3.2 스키마 엔진 + 폰트 Pretendard + A3.3 필터 크롬 + 노트행 모션 + 셸 1차.
+> ✅ **2026-05-30 저녁/낮**: Track A 착수(A0~A2) PR #494 / 통합 정합성 8커밋 PR #493.
 
-### 0. **🔴 P0 #0 (최우선): 셸 2차 정리 (레이아웃 리니어 모방)** ⭐ 다음 세션 첫 작업
+### 0. **🔴 P0 #0 (최우선): 헌법 §10 적용 = 셸 목업 최종 락 → 실앱 포팅** ⭐ 다음 세션 첫 작업
 
-**1차 완료**(이 세션): ⌘K 팔레트 복구(3-way) / 죽은코드 -127줄 / avatar 드롭다운(우측 크롬 접기) / userName 이니셜. **+ A3.2 스키마 엔진(PR #495) + A3.3 필터 크롬 + 노트행 모션 슬라이스도 완료.**
+**헌법 SOT**: `docs/01-plan/features/linear-ia-constitution.spec.md` §10(셸). 목업 = `docs/v3-mockup/shell-linear-mirror.html`(완성, `public/shell-mock.html` 복사해 dev서버로 봄).
 
-**사용자 의도**: "레이아웃 골격/디테일도 리니어 완벽 모방" + "세팅/휴지통/설정 배치의 부자연스러움이 가장 아쉽다". → **MIRROR+EXTRAPOLATE 셸 레벨, 핵심=절제**.
+**1차 완료**: (a) Inbox 전역 승격(PR #497, `linear-sidebar.tsx` `<nav>` 최상단).
 
-**2차 (순서)**:
-- **(a) Inbox 전역 승격** — Home space 종속(`linear-sidebar.tsx:2049`) → 액티비티바 8번째 or 전 space 사이드바 상단 고정 (리니어 Inbox=최상단 고정).
-- **(b) Trash 사이드바 하단 강등** — 현 avatar 드롭다운에서 빼서 사이드바 footer로 (리니어는 계정메뉴에 trash 안 둠 → 워크스페이스 메뉴=순수 계정/설정).
-- **(c) Help/단축키 시각 진입점** — `?` 키만 있고 버튼 0 → 사이드바 하단 `?` 버튼(ShortcutOverlay).
-- **(d) 액티비티바 7-space 존치 여부** (대형, 사용자 결정).
+**남은 셸 2차 (순서, 목업 사용자 최종 승인 먼저)**:
+- **(b) Trash 사이드바 하단 footer 강등** — `components/user-avatar.tsx` 드롭다운에서 Trash 빼서 `linear-sidebar.tsx` `</nav>`(2071 근처) 다음 footer로.
+- **(c) Help `?` 버튼** — 사이드바 하단, `setShortcutOverlayOpen(true)` (user-avatar.tsx:119 패턴 재활용).
+- **(d) 레일 톤다운** — `activity-bar.tsx`: 더 어둡게/muted/아이콘만+active만 라벨(리니어 절제). 7-space 유지 결정됨.
+- 패널 토글 분산 — 상단 클러스터 제거, 디테일토글=콘텐츠 우상단, 사이드바접기=⌘\, focus=⌘.
 
-**Watch Out**: preview eval로 route/키(⌘K) 검증 불가 → **사용자 실화면 필수**. 진단 상세 = SESSION-LOG 최신 entry "셸 보조 UI 진단". follow-up: toggleFilter 死코드 3곳 / ⌘F 뷰내검색 / setSidebarCollapsed.
+**Watch Out**: preview eval로 route/키 검증 불가 → **사용자 실화면 필수**.
 
-### 0.1. **🔴 P0 #1: 모션/색 전파 + A3.1 LCH 토큰**
+### 0.05. **🔴 P0 #1: Book 워크플로 축 (헌법 §11, ~25줄+version bump)**
+
+3-entity 워크플로 통일. Books에 **status(노트 4단계 재사용)+priority(노트 5단계)** 추가(**manual·hybrid만**, smart=N/A), **kind→classification 이동**. + **Wiki priority 추가**(현재 없음).
+- 파일: `lib/types.ts`(Book.status?/priority? + WikiArticle.priority?) / `lib/view-engine/schema/entities/books.schema.tsx`(status+priority PropertyDef, kind category→classification) + `wiki.schema.tsx`(priority) / `use-books-view.ts`(bookMatchesRule status/priority case) / **store version bump**(기존 manual/hybrid book status 기본값 backlog 마이그).
+- 크롬은 스키마엔진 자동(무변경). smart 가드: status/priority는 manual·hybrid에만.
+
+### 0.06. **🟡 P0 #2: Book kind 라벨 변경 (헌법 §13, 가벼움)**
+
+Smart/Manual/Hybrid → **Auto/Manual/Mixed**(자동/수동/혼합). **코드 키(`smart`/`manual`/`hybrid`) 불변**, 라벨+i18n만: `books.schema.tsx` values + `lib/i18n.ts`(en Auto/Manual/Mixed + ko 자동/수동/혼합). "스마트북" 단어 소멸.
+
+### 0.07. **🟡 P0 (hygiene): noteType==="wiki" 데드코드 정리** (chip 띄움)
+
+레거시 잔재 107곳/39파일. ⚠️ 보존: migrate.ts/seeds/types 필드. ⚠️ 확인: `wiki-auto-enroll.ts`(convertToWiki 살아있음 — 실동작 여부 먼저). 블라인드 replace 금지.
+
+### 0.1. **🟡 P0: 모션/색 전파 + A3.1 LCH 토큰** (carry)
 - 노트행 시드 토큰(`--row-hover-bg` oklch / `--duration-fast` / `--ease-out`, 커밋 `295be0a`)을 **사이드바 항목·버튼·드롭다운**에 전파(avatar 드롭다운은 이미 재활용).
 - **A3.1 LCH 토큰 전역화** — 노트행 oklch가 씨앗 → `lib/colors.ts` flat hex → OKLCH/LCH + paired `-bg/-fg` + `toneClassDual` (app-wide careful 패스).
 - **A4 priority 막대** (carry) — `note-fields.tsx` 화살표 → 리니어 3-막대 SVG (spec §3 geometry, `schema/icons.tsx`). A3.3 opacity 위계 클래스 뼈대의 0.9/0.7/0.5 최종값도 여기서.
