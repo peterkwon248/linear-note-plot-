@@ -1,7 +1,9 @@
 import { describe, it, expect } from "vitest"
-import { NOTES_VIEW_CONFIG } from "../../view-configs"
+import { NOTES_VIEW_CONFIG, BOOKS_VIEW_CONFIG, WIKI_VIEW_CONFIG } from "../../view-configs"
 import type { ViewConfig } from "../../view-configs"
 import { NOTES_SCHEMA } from "../entities/notes.schema"
+import { BOOKS_SCHEMA } from "../entities/books.schema"
+import { WIKI_SCHEMA } from "../entities/wiki.schema"
 import { toViewConfig } from "../adapter"
 
 /**
@@ -118,5 +120,96 @@ describe("A3.2 schema adapter — Notes equivalence", () => {
     // Sanity: the Notes config has many icons (categories, status/source values,
     // display props, toggle) — make sure the walk actually exercised them.
     expect(checked).toBeGreaterThan(20)
+  })
+})
+
+describe("A3.2 schema adapter — Books equivalence (M4)", () => {
+  const generated: ViewConfig = toViewConfig(BOOKS_SCHEMA)
+
+  it("structurally equals BOOKS_VIEW_CONFIG (icons excluded)", () => {
+    expect(stripIcons(generated)).toEqual(stripIcons(BOOKS_VIEW_CONFIG))
+  })
+
+  it("matches the top-level view flags (incl. showDetailPanel:false)", () => {
+    expect(generated.showFilter).toBe(BOOKS_VIEW_CONFIG.showFilter)
+    expect(generated.showDisplay).toBe(BOOKS_VIEW_CONFIG.showDisplay)
+    expect(generated.showDetailPanel).toBe(BOOKS_VIEW_CONFIG.showDetailPanel)
+    expect(generated.showDetailPanel).toBe(false)
+  })
+
+  it("preserves filterCategories order and keys", () => {
+    expect(generated.filterCategories.map((c) => c.key)).toEqual(
+      BOOKS_VIEW_CONFIG.filterCategories.map((c) => c.key),
+    )
+  })
+
+  it("preserves orderingOptions order and values", () => {
+    expect(generated.displayConfig.orderingOptions.map((o) => o.value)).toEqual(
+      BOOKS_VIEW_CONFIG.displayConfig.orderingOptions.map((o) => o.value),
+    )
+  })
+
+  it("preserves groupingOptions order and values", () => {
+    expect(generated.displayConfig.groupingOptions.map((g) => g.value)).toEqual(
+      BOOKS_VIEW_CONFIG.displayConfig.groupingOptions.map((g) => g.value),
+    )
+  })
+
+  it("preserves display properties order and keys", () => {
+    expect(generated.displayConfig.properties.map((p) => p.key)).toEqual(
+      BOOKS_VIEW_CONFIG.displayConfig.properties.map((p) => p.key),
+    )
+  })
+
+  it("keeps icon presence parity across the whole tree (D4)", () => {
+    const checked = assertIconParity(BOOKS_VIEW_CONFIG, generated)
+    // Books has icons on every filter category, the kind/sourceType values, and
+    // the display props — ensure the walk actually exercised them.
+    expect(checked).toBeGreaterThan(10)
+  })
+})
+
+describe("A3.2 schema adapter — Wiki equivalence (M3)", () => {
+  const generated: ViewConfig = toViewConfig(WIKI_SCHEMA)
+
+  it("structurally equals WIKI_VIEW_CONFIG (icons excluded)", () => {
+    expect(stripIcons(generated)).toEqual(stripIcons(WIKI_VIEW_CONFIG))
+  })
+
+  it("matches the top-level view flags", () => {
+    expect(generated.showFilter).toBe(WIKI_VIEW_CONFIG.showFilter)
+    expect(generated.showDisplay).toBe(WIKI_VIEW_CONFIG.showDisplay)
+    expect(generated.showDetailPanel).toBe(WIKI_VIEW_CONFIG.showDetailPanel)
+  })
+
+  it("preserves filterCategories order and keys", () => {
+    expect(generated.filterCategories.map((c) => c.key)).toEqual(
+      WIKI_VIEW_CONFIG.filterCategories.map((c) => c.key),
+    )
+  })
+
+  it("preserves orderingOptions order and values (diverges from filter order via sortOrder)", () => {
+    expect(generated.displayConfig.orderingOptions.map((o) => o.value)).toEqual(
+      WIKI_VIEW_CONFIG.displayConfig.orderingOptions.map((o) => o.value),
+    )
+  })
+
+  it("preserves groupingOptions order and values (property groupings + extras interleave)", () => {
+    expect(generated.displayConfig.groupingOptions.map((g) => g.value)).toEqual(
+      WIKI_VIEW_CONFIG.displayConfig.groupingOptions.map((g) => g.value),
+    )
+  })
+
+  it("preserves display properties order and keys (diverges from filter order via displayOrder)", () => {
+    expect(generated.displayConfig.properties.map((p) => p.key)).toEqual(
+      WIKI_VIEW_CONFIG.displayConfig.properties.map((p) => p.key),
+    )
+  })
+
+  it("keeps icon presence parity across the whole tree (D4)", () => {
+    const checked = assertIconParity(WIKI_VIEW_CONFIG, generated)
+    // Wiki has icons on every filter category, the 4 status values, and the
+    // display props — ensure the walk actually exercised them.
+    expect(checked).toBeGreaterThan(15)
   })
 })

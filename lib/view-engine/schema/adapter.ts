@@ -94,9 +94,20 @@ export function toFilterCategories(
 export function toDisplayConfig(schema: EntitySchema): DisplayConfig {
   const { properties, viewDefaults } = schema
 
-  const orderingOptions: OrderingOption[] = properties
-    .filter((p) => p.isSortable)
-    .map((p) => {
+  // Ordering / grouping can each diverge from the filter (declaration) order —
+  // e.g. Wiki's sort order is updated/created/name/links/reads/status while its
+  // filter order is status/category/links/updated/created/title/wikiTier. Like
+  // the display block below, collect with an order key (explicit
+  // `sortOrder`/`groupOrder` when set, else a stable declaration index) and
+  // sort. Notes set neither, so every property falls back to its declaration
+  // index and the emitted order is identical to before (equivalence preserved).
+  type OrderedSort = { o: OrderingOption; order: number; seq: number }
+  const sortCollected: OrderedSort[] = []
+  type OrderedGroup = { g: GroupingOption; order: number; seq: number }
+  const groupCollected: OrderedGroup[] = []
+
+  properties.forEach((p, i) => {
+    if (p.isSortable) {
       const labelKey = p.sortLabelKey ?? p.labelKey
       const o: OrderingOption = {
         value: (p.sortField ?? (p.key as unknown as SortField)),
@@ -104,12 +115,9 @@ export function toDisplayConfig(schema: EntitySchema): DisplayConfig {
       }
       if (labelKey !== undefined) o.labelKey = labelKey
       if (p.sortModes !== undefined) o.modes = p.sortModes
-      return o
-    })
-
-  const propertyGroupings: GroupingOption[] = properties
-    .filter((p) => p.isGroupable)
-    .map((p) => {
+      sortCollected.push({ o, order: p.sortOrder ?? i, seq: i })
+    }
+    if (p.isGroupable) {
       const labelKey = p.groupLabelKey ?? p.labelKey
       const g: GroupingOption = {
         value: (p.groupBy ?? (p.key as unknown as GroupBy)),
@@ -117,11 +125,28 @@ export function toDisplayConfig(schema: EntitySchema): DisplayConfig {
       }
       if (labelKey !== undefined) g.labelKey = labelKey
       if (p.groupModes !== undefined) g.modes = p.groupModes
-      return g
-    })
+      groupCollected.push({ g, order: p.groupOrder ?? i, seq: i })
+    }
+  })
+
+  sortCollected.sort((a, b) => (a.order !== b.order ? a.order - b.order : a.seq - b.seq))
+  const orderingOptions: OrderingOption[] = sortCollected.map((c) => c.o)
+
+  groupCollected.sort((a, b) => (a.order !== b.order ? a.order - b.order : a.seq - b.seq))
+  const propertyGroupings: GroupingOption[] = groupCollected.map((c) => c.g)
+
+  // The always-present "No grouping" head. Its labelKey defaults to
+  // "display.grouping.none" (Notes/Books) but can be suppressed with `null`
+  // (Wiki's legacy config omitted it; emitting it would translate the label
+  // under non-English locales — see ViewDefaults.noneGroupingLabelKey).
+  const noneOption: GroupingOption = { value: "none" as GroupBy, label: "No grouping" }
+  const noneLabelKey = viewDefaults.noneGroupingLabelKey === undefined
+    ? "display.grouping.none"
+    : viewDefaults.noneGroupingLabelKey
+  if (noneLabelKey !== null) noneOption.labelKey = noneLabelKey
 
   const groupingOptions: GroupingOption[] = [
-    { value: "none" as GroupBy, label: "No grouping", labelKey: "display.grouping.none" },
+    noneOption,
     ...propertyGroupings,
     ...(viewDefaults.extraGroupings ?? []),
   ]
@@ -143,7 +168,10 @@ export function toDisplayConfig(schema: EntitySchema): DisplayConfig {
       label: p.displayLabel ?? p.label,
     }
     if (labelKey !== undefined) d.labelKey = labelKey
-    if (p.icon !== undefined) d.icon = p.icon
+    // Prefer a per-surface display icon (e.g. Books `kind` = SourceIcon column /
+    // SortIcon filter row); fall back to the chrome `icon`.
+    const displayIcon = p.displayIcon ?? p.icon
+    if (displayIcon !== undefined) d.icon = displayIcon
     if (p.displayModes !== undefined) d.modes = p.displayModes
     collected.push({ d, order: p.displayOrder ?? i, seq: seq++ })
   })
@@ -178,7 +206,8 @@ export function toViewConfig(
   return {
     showFilter: true,
     showDisplay: true,
-    showDetailPanel: true,
+    // Notes/Wiki expose the detail panel (default true); Books opts out.
+    showDetailPanel: schema.viewDefaults.showDetailPanel ?? true,
     filterCategories: toFilterCategories(schema, hydrators),
     quickFilters: schema.quickFilters,
     displayConfig: toDisplayConfig(schema),

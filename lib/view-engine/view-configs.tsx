@@ -1,15 +1,19 @@
 import type { ReactNode } from "react"
 import type { SortField, SortDirection, ViewMode, GroupBy, SortRule, ViewContextKey } from "./types"
-import { CircleDashed, Circle, BookOpen, CircleHalf, CheckCircle, Sticker as StickerIcon, Lightning, PencilSimple, Sparkle, Globe, DownloadSimple } from "@phosphor-icons/react"
+import { CircleDashed, Circle, BookOpen, CircleHalf, CheckCircle, Lightning, PencilSimple, Sparkle, Globe, DownloadSimple } from "@phosphor-icons/react"
 import { NOTE_STATUS_HEX } from "@/lib/colors"
 // A3.2 / M2 — Notes view-config is now GENERATED from the schema engine
 // (single source = NOTES_SCHEMA, PropertyDef[]). The adapter emits the exact
 // same ViewConfig shape, so every consumer (FilterPanel / DisplayPanel /
 // notes-table / notes-board / *-shell / labels-view / tags-view) is unchanged.
 // Equivalence is locked by lib/view-engine/schema/__tests__/adapter-equivalence.test.ts.
-// Other contexts (Wiki / Books / Library / Graph / …) stay hand-written below
-// pending M3/M4.
+// A3.2 / M4 — Books view-config is likewise GENERATED from BOOKS_SCHEMA.
+// A3.2 / M3 — Wiki view-config is likewise GENERATED from WIKI_SCHEMA.
+// Remaining hand-written contexts (Library / Graph / Calendar / …) stay below
+// (Tier3 lightweight — kept hand-written).
 import { NOTES_SCHEMA } from "./schema/entities/notes.schema"
+import { BOOKS_SCHEMA } from "./schema/entities/books.schema"
+import { WIKI_SCHEMA } from "./schema/entities/wiki.schema"
 import { toViewConfig } from "./schema/adapter"
 
 export interface FilterCategory {
@@ -172,14 +176,10 @@ const ArchiveIcon = <svg width={14} height={14} viewBox="0 0 16 16" fill="none" 
 const SortIcon = <svg width={14} height={14} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"><line x1="2.5" y1="4" x2="10" y2="4"/><line x1="2.5" y1="8" x2="7.5" y2="8"/><line x1="2.5" y1="12" x2="5" y2="12"/></svg>
 // Color dot: filled circle suggesting "color swatch"
 const ColorDotIcon = <svg width={14} height={14} viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="4.5" fill="currentColor"/></svg>
-const GraphIcon = <svg width={14} height={14} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"><circle cx="8" cy="3.3" r="1.7"/><circle cx="3.3" cy="12.7" r="1.7"/><circle cx="12.7" cy="12.7" r="1.7"/><line x1="8" y1="5" x2="3.3" y2="11"/><line x1="8" y1="5" x2="12.7" y2="11"/><line x1="5" y1="12.7" x2="11" y2="12.7"/></svg>
-// Parent: 위쪽 부모 노드 + 아래 self (selfd) — "내 위에 부모"
-const ParentIcon = <svg width={14} height={14} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"><circle cx="8" cy="3.3" r="1.7"/><line x1="8" y1="5" x2="8" y2="11"/><circle cx="8" cy="12.7" r="1.5" fill="currentColor" stroke="none"/></svg>
-
-// Children: 위 self + 아래 두 자식 분기 — "내 아래 자식들"
-const ChildrenIcon = <svg width={14} height={14} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"><circle cx="8" cy="3.3" r="1.5" fill="currentColor" stroke="none"/><line x1="8" y1="5" x2="3.3" y2="11"/><line x1="8" y1="5" x2="12.7" y2="11"/><circle cx="3.3" cy="12.7" r="1.7"/><circle cx="12.7" cy="12.7" r="1.7"/></svg>
+// (GraphIcon / ParentIcon / ChildrenIcon / CircleHalfIcon moved to
+//  schema/icons.tsx — Wiki config is now generated from WIKI_SCHEMA (M3) and
+//  they had no other consumer in this file.)
 const EyeIcon = <svg width={14} height={14} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 8s2.7-5 7-5 7 5 7 5-2.7 5-7 5-7-5-7-5z"/><circle cx="8" cy="8" r="2"/></svg>
-const CircleHalfIcon = <svg width={14} height={14} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.2"><circle cx="8" cy="8" r="5.5"/><path d="M8 2.5a5.5 5.5 0 010 11" fill="currentColor" opacity="0.5" stroke="none"/></svg>
 
 /**
  * Notes view-config — GENERATED from `NOTES_SCHEMA` (A3.2 / M2).
@@ -202,146 +202,30 @@ const CircleHalfIcon = <svg width={14} height={14} viewBox="0 0 16 16" fill="non
  */
 export const NOTES_VIEW_CONFIG: ViewConfig = toViewConfig(NOTES_SCHEMA)
 
-// Wiki-specific filter/display options.
-// 의도된 차이 (Notes 대비):
-//   - priority sort 제외: wiki에 priority 개념 없음
-//   - groupingOptions: tier(depth)/linkCount/parent/category — wiki 위계 반영
-//   - filterCategories: status(4-stage)/category(WikiCategory)/links/dates/aliases/parent
-// v151: status는 manual 4-stage (Notes와 통일) — 실제 filterable 필드.
-export const WIKI_VIEW_CONFIG: ViewConfig = {
-  showFilter: true,
-  showDisplay: true,
-  showDetailPanel: true,
-  filterCategories: [
-    // status: manual 4-stage (backlog/todo/in_progress/done), Notes와 공유
-    // (NOTE_STATUS_HEX + status.* i18n 키). v151 도입.
-    { key: "status", label: "Status", labelKey: "filter.category.status", icon: StatusIcon, values: [
-      { key: "backlog", label: "Backlog", labelKey: "status.backlog", color: NOTE_STATUS_HEX.backlog, icon: <CircleDashed size={14} weight="regular" style={{ color: NOTE_STATUS_HEX.backlog }} /> },
-      { key: "todo", label: "Todo", labelKey: "status.todo", color: NOTE_STATUS_HEX.todo, icon: <Circle size={14} weight="regular" style={{ color: NOTE_STATUS_HEX.todo }} /> },
-      { key: "in_progress", label: "In Progress", labelKey: "status.in_progress", color: NOTE_STATUS_HEX.in_progress, icon: <CircleHalf size={14} weight="regular" style={{ color: NOTE_STATUS_HEX.in_progress }} /> },
-      { key: "done", label: "Done", labelKey: "status.done", color: NOTE_STATUS_HEX.done, icon: <CheckCircle size={14} weight="regular" style={{ color: NOTE_STATUS_HEX.done }} /> },
-    ]},
-    // category: WikiCategory entity. values는 런타임 hydrate (wiki-view.tsx)
-    { key: "category", label: "Category", icon: TagIcon, values: [] },
-    { key: "links", label: "Backlinks", icon: LinkIcon, values: [
-      { key: "_any", label: "Has backlinks" },
-      { key: "5+", label: "5+ backlinks" },
-      { key: "10+", label: "10+ backlinks" },
-      { key: "_none", label: "No backlinks" },
-      { key: "_orphan", label: "True orphans (no in/out)" },
-    ]},
-    { key: "updatedAt", label: "Updated", icon: CalendarIcon, values: [
-      { key: "today", label: "Today" },
-      { key: "yesterday", label: "Yesterday" },
-      { key: "this-week", label: "This week" },
-      { key: "last-7-days", label: "Last 7 days" },
-      { key: "this-month", label: "This month" },
-      { key: "last-30-days", label: "Last 30 days" },
-      { key: "stale", label: "Stale (30+ days)" },
-    ]},
-    { key: "createdAt", label: "Created", icon: CalendarIcon, values: [
-      { key: "today", label: "Today" },
-      { key: "this-week", label: "This week" },
-      { key: "this-month", label: "This month" },
-    ]},
-    { key: "title", label: "Aliases", icon: ContentIcon, values: [
-      { key: "_aliased", label: "Has aliases" },
-      { key: "_unaliased", label: "No aliases" },
-    ]},
-    // 4 카테고리 hierarchy filter (classifyWikiArticleRole과 일관)
-    { key: "wikiTier", label: "Hierarchy", icon: GraphIcon, values: [
-      { key: "_root", label: "Root (has children)" },
-      { key: "_parent", label: "Parent (both)" },
-      { key: "_child", label: "Child (no children)" },
-      { key: "_solo", label: "Solo (isolated)" },
-    ]},
-  ],
-  quickFilters: [
-    { label: "Stale articles", labelKey: "filter.quick.stale_articles", desc: "30+ days no update", descKey: "filter.quick.stale_articles_desc", rules: [
-      { field: "updatedAt", operator: "lt", value: "stale" },
-    ]},
-    { label: "Orphans", labelKey: "filter.quick.orphans", desc: "no backlinks", descKey: "filter.quick.orphans_desc", rules: [
-      { field: "links", operator: "eq", value: "_none" },
-    ]},
-    { label: "Hubs", labelKey: "filter.quick.hubs", desc: "10+ backlinks", descKey: "filter.quick.hubs_desc", rules: [
-      { field: "links", operator: "eq", value: "10+" },
-    ]},
-    { label: "With aliases", labelKey: "filter.quick.aliased_articles", desc: "articles with aliases", descKey: "filter.quick.aliased_articles_desc", rules: [
-      { field: "title", operator: "eq", value: "_aliased" },
-    ]},
-    { label: "Recent", labelKey: "filter.quick.recent_articles", desc: "created this week", descKey: "filter.quick.recent_articles_desc", rules: [
-      { field: "createdAt", operator: "eq", value: "this-week" },
-    ]},
-  ],
-  displayConfig: {
-    // 2026-05-24: gallery deprecated → grid replaces. See NOTES_VIEW_CONFIG.
-    supportedModes: ["list", "board", "grid", "timeline"],
-    // Wiki board default = "wikiStatus" — **4 column 고정 보장** (backlog/todo/
-    // in_progress/done), Notes status board 패턴 정확 mirror (영구 룰 21 정합).
-    // v151: status는 manual 4-stage (article.status) → drag-to-change IS
-    // meaningful (wiki-board.tsx). tier는 부차 axis로 dropdown에서 선택 가능.
-    boardDefaultGroupBy: "wikiStatus",
-    // L4: per-mode default groupBy. Timeline default = wikiStatus (4-stage
-    // status lanes on time axis — the most useful "wiki at a glance" view).
-    defaultGroupByByMode: { board: "wikiStatus", timeline: "wikiStatus", grid: "none" },
-    // L4: timeline Y-axis encodes time → sort by createdAt asc is canonical.
-    defaultSortByMode: { timeline: { field: "createdAt", direction: "asc" } },
-    // priority 제외 (wiki에 의미 없음)
-    orderingOptions: [
-      { value: "updatedAt", label: "Updated" },
-      { value: "createdAt", label: "Created" },
-      { value: "title", label: "Name" },
-      { value: "links", label: "Most linked" },
-      { value: "reads", label: "Most read" },
-      { value: "status", label: "Status" },
-    ],
-    // tier(depth) / linkCount(bucket) / parent — wiki 고유 위계 +
-    // wikiStatus (4-stage backlog/todo/in_progress/done) — Notes status 정합 axis.
-    groupingOptions: [
-      { value: "none", label: "No grouping" },
-      // 2026-05-24 — explicit modes for every grouping (Linear-style L1).
-      // Grid = flat card grid → no grouping options outside "none".
-      { value: "wikiStatus", label: "Status", modes: ["list", "board"] },
-      { value: "tier", label: "Tier", modes: ["list", "board"] },
-      { value: "linkCount", label: "Link count", modes: ["list", "board"] },
-      { value: "parent", label: "Parent article", modes: ["list", "board"] },
-      { value: "role", label: "Role", modes: ["list", "board"] },
-      { value: "label", label: "Category", modes: ["list", "board"] },
-      // family tree only makes sense in list (indent column).
-      { value: "family", label: "Family", modes: ["list"] },
-      // updatedAt grouping in timeline would duplicate the time axis.
-      { value: "date", label: "Updated", modes: ["list", "board"] },
-      // firstLetter alphabetical index — list-only (board has fixed cols,
-      // gallery has card layout, timeline has time axis).
-      { value: "firstLetter", label: "Index", modes: ["list"] },
-    ],
-    toggles: [
-      // v151: the legacy "Show stubs" toggle was removed — status is now a
-      // real 4-stage field exposed via the Status filter category.
-      // Visible only when groupBy === "role" (display-panel.tsx guard).
-      // ON: classify roles within the filtered slice. OFF (default):
-      // classify against full store — a filter doesn't lie about
-      // "this article is a hub" vs "in this view it's a hub".
-      { key: "filterAwareRole", label: "Role from filtered view" },
-    ],
-    properties: [
-      // Title intentionally omitted — it's a required column, not toggleable.
-      // Index moved to the grouping dropdown (firstLetter, label "Index") —
-      // Plot-consistent UX: every display-properties chip = a real 1:1 column.
-      { key: "status", label: "Status", icon: CircleHalfIcon },
-      { key: "links", label: "Backlinks", icon: LinkIcon },
-      { key: "reads", label: "Reads", icon: EyeIcon },
-      { key: "tags", label: "Categories", icon: TagIcon },
-      { key: "aliases", label: "Aliases", icon: ContentIcon },
-      { key: "parent", label: "Parent", icon: ParentIcon },
-      { key: "children", label: "Children", icon: ChildrenIcon },
-      // B6: createdAt/updatedAt are also meaningful for the timeline label
-      // column (date row). Most other properties don't fit the narrow column.
-      { key: "createdAt", label: "Created", icon: CalendarIcon, modes: ["list", "board", "timeline"] },
-      { key: "updatedAt", label: "Updated", icon: CalendarIcon, modes: ["list", "board", "timeline"] },
-    ],
-  },
-}
+/**
+ * Wiki view-config — GENERATED from `WIKI_SCHEMA` (A3.2 / M3).
+ *
+ * Was a ~130-line hand-written `ViewConfig`; the single source of truth is now
+ * the `PropertyDef[]` in `schema/entities/wiki.schema.tsx`, and `toViewConfig`
+ * derives the identical `filterCategories` / `quickFilters` / `displayConfig`.
+ * Unlike Notes/Books, all four Wiki surfaces (filter, sort, group, display)
+ * diverge from each other's order — reproduced via the schema's explicit
+ * `sortOrder` / `groupOrder` / `displayOrder` hints.
+ *
+ * No hydrators are passed here, so the dynamic `category` filter comes out with
+ * `values: []` — exactly as the old static export did. Runtime values + counts
+ * are still filled by the existing consumer hydration
+ * (`components/views/wiki-view.tsx` `wikiFilterCategories` useMemo, which maps
+ * `WIKI_VIEW_CONFIG.filterCategories` and replaces the `category` entry).
+ *
+ * 의도된 차이 (Notes 대비): priority 제외 / status는 manual 4-stage(v151) /
+ * groupingOptions에 tier·linkCount·parent·wikiStatus(wiki 위계).
+ *
+ * Equivalence with the previous hand-written config is locked by
+ * `schema/__tests__/adapter-equivalence.test.ts`. To change Wiki filter/display
+ * options, edit `wiki.schema.tsx` — NOT this line.
+ */
+export const WIKI_VIEW_CONFIG: ViewConfig = toViewConfig(WIKI_SCHEMA)
 
 export const WIKI_CATEGORY_VIEW_CONFIG: ViewConfig = {
   showFilter: true,
@@ -846,96 +730,22 @@ export const STICKERS_LIST_VIEW_CONFIG: ViewConfig = {
   },
 }
 
-// books-view-engine-2: Books list/grid config. Filter on Smart vs Manual,
-// which smart sources are configured, pinned state, and date.
-// supportedModes = grid + list now; PR 3 will add "board" + groupBy kind/pinned,
-// PR 4 will add "gallery". groupingOptions/toggles intentionally minimal until then.
-export const BOOKS_VIEW_CONFIG: ViewConfig = {
-  showFilter: true,
-  showDisplay: true,
-  showDetailPanel: false,
-  filterCategories: [
-    // Notes filter status sub-menu 정합 — 각 value에 icon + color.
-    // BookKindIcon (cover/leading) + BookKindChip (column chip) 패턴과 동일.
-    { key: "kind", label: "Kind", icon: SortIcon, values: [
-      { key: "smart",  label: "Smart",  icon: <Lightning     size={14} weight="regular" className="text-[#5E6AD2] dark:text-[#7C8AE7]" /> },
-      { key: "manual", label: "Manual", icon: <PencilSimple  size={14} weight="regular" className="text-muted-foreground" /> },
-      { key: "hybrid", label: "Hybrid", icon: <Sparkle       size={14} weight="regular" className="text-amber-600 dark:text-amber-400" /> },
-    ]},
-    // Which smart source(s) are configured. "_none" surfaces pure-manual books
-    // for users converging on a tidier collection (mirrors Files _none pattern).
-    { key: "sourceType", label: "Smart source", icon: SourceIcon, values: [
-      { key: "folder",   label: "Folder",       icon: FolderIcon },
-      { key: "category", label: "Wiki Category", icon: TagIcon },
-      { key: "tag",      label: "Tag",          icon: TagIcon },
-      { key: "label",    label: "Label",        icon: LabelIcon },
-      { key: "sticker",  label: "Sticker",      icon: <StickerIcon size={14} weight="regular" /> },
-      { key: "_none",    label: "No smart source" },
-    ]},
-    { key: "pinned", label: "Pin", icon: PinIcon, values: [
-      { key: "true",  label: "Pinned" },
-      { key: "false", label: "Not pinned" },
-    ]},
-    { key: "updatedAt", label: "Updated", icon: CalendarIcon, values: [
-      { key: "today",        label: "Today" },
-      { key: "yesterday",    label: "Yesterday" },
-      { key: "this-week",    label: "This week" },
-      { key: "last-7-days",  label: "Last 7 days" },
-      { key: "this-month",   label: "This month" },
-      { key: "last-30-days", label: "Last 30 days" },
-    ]},
-  ],
-  quickFilters: [
-    { label: "Pinned", labelKey: "filter.quick.pinned_books", desc: "pinned books only", descKey: "filter.quick.pinned_books_desc", rules: [
-      { field: "pinned", operator: "eq", value: "true" },
-    ]},
-    { label: "Active", labelKey: "filter.quick.active_books", desc: "updated this week", descKey: "filter.quick.active_books_desc", rules: [
-      { field: "updatedAt", operator: "eq", value: "this-week" },
-    ]},
-    { label: "Smart", labelKey: "filter.quick.smart_books", desc: "auto-curated books", descKey: "filter.quick.smart_books_desc", rules: [
-      { field: "kind", operator: "eq", value: "smart" },
-    ]},
-  ],
-  displayConfig: {
-    // books-view-engine-3/4: board mode (entity-agnostic).
-    // 2026-05-24: timeline mode added — Book lifespan (createdAt → updatedAt)
-    // on the time axis, grouped by kind (Smart/Hybrid/Manual) by default.
-    // Gallery mode deprecated (replaced by Grid) — see NOTES_VIEW_CONFIG note.
-    supportedModes: ["grid", "list", "board", "timeline"],
-    // Books board default = "kind" (Smart / Hybrid / Manual) — **3 column 고정
-    // 보장**. Notes status / Wiki wikiStatus 패턴 정합 (영구 룰 21 — entity-
-    // uniformity). 모든 board 진입 시 entity-native enum axis로 자동 분류.
-    boardDefaultGroupBy: "kind",
-    // L4: per-mode default groupBy. Timeline mirrors board's "kind" axis so
-    // smart/manual lifespans separate visually on the time axis.
-    defaultGroupByByMode: { board: "kind", timeline: "kind" },
-    // Timeline Y-axis encodes time → sort by createdAt asc is canonical.
-    defaultSortByMode: { timeline: { field: "createdAt", direction: "asc" } },
-    orderingOptions: [
-      { value: "updatedAt", label: "Updated",    labelKey: "display.ordering.updated" },
-      { value: "createdAt", label: "Created",    labelKey: "display.ordering.created" },
-      { value: "title",     label: "Title",      labelKey: "display.ordering.title" },
-      { value: "itemCount", label: "Item count", labelKey: "books.prop.item_count" },
-    ],
-    groupingOptions: [
-      { value: "none",   label: "No grouping", labelKey: "display.grouping.none" },
-      { value: "kind",   label: "Kind",        labelKey: "books.prop.kind" },
-      { value: "pinned", label: "Pin status",  labelKey: "books.group.pin_status" },
-      // updatedAt time-bucket — timeline already encodes time; hide there.
-      { value: "date",   label: "Updated", labelKey: "display.ordering.updated", modes: ["list", "board"] },
-      // firstLetter alphabetical index — list-only.
-      { value: "firstLetter", label: "Index", modes: ["list"] },
-    ],
-    // showTrashed toggle is handled in books-view.tsx ViewHeader actions.
-    toggles: [],
-    properties: [
-      { key: "itemCount", label: "Item count",    labelKey: "books.prop.item_count",   icon: SortIcon },
-      { key: "kind",      label: "Kind",          labelKey: "books.prop.kind",         icon: SourceIcon },
-      { key: "sources",   label: "Smart sources", labelKey: "books.prop.smart_sources", icon: SourceIcon },
-      { key: "pinned",    label: "Pin",           labelKey: "books.prop.pin",          icon: PinIcon },
-    ],
-  },
-}
+/**
+ * Books view-config — GENERATED from `BOOKS_SCHEMA` (A3.2 / M4).
+ *
+ * Was a ~85-line hand-written `ViewConfig`; the single source of truth is now
+ * the `PropertyDef[]` in `schema/entities/books.schema.tsx`, and `toViewConfig`
+ * derives the identical `filterCategories` (kind/sourceType/pinned/updatedAt),
+ * `quickFilters`, and `displayConfig` (ordering updated/created/title/itemCount,
+ * grouping none/kind/pinned/date/firstLetter, the itemCount/kind/sources/pinned
+ * display props, board/timeline kind defaults, and showDetailPanel:false).
+ *
+ * Books takes no hydrators (no entity-ref filter categories), so the call is a
+ * bare `toViewConfig(BOOKS_SCHEMA)`. Equivalence with the previous hand-written
+ * config is locked by `schema/__tests__/adapter-equivalence.test.ts`. To change
+ * Books filter/display options, edit `books.schema.tsx` — NOT this line.
+ */
+export const BOOKS_VIEW_CONFIG: ViewConfig = toViewConfig(BOOKS_SCHEMA)
 
 export const VIEW_CONFIGS: Record<string, ViewConfig> = {
   notes: NOTES_VIEW_CONFIG,

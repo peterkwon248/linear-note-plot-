@@ -1,5 +1,5 @@
 import type { ReactNode } from "react"
-import { CircleDashed, Circle, CircleHalf, CheckCircle, BookOpen, PencilSimple, Globe, DownloadSimple } from "@phosphor-icons/react"
+import { CircleDashed, Circle, CircleHalf, CheckCircle, BookOpen, PencilSimple, Globe, DownloadSimple, Lightning, Sparkle, Sticker as StickerIcon } from "@phosphor-icons/react"
 import { NOTE_STATUS_HEX } from "@/lib/colors"
 
 /**
@@ -35,6 +35,19 @@ export const ChildrenIcon: ReactNode = <svg width={14} height={14} viewBox="0 0 
 // Wiki: same as the activity-bar BookOpen — consistency
 export const WikiIcon: ReactNode = <BookOpen size={14} weight="regular" />
 
+/* ── Wiki-specific chrome icons (copied from view-configs.tsx for M3) ───── */
+// Hierarchy (wikiTier filter category): three-node mini graph. Copied verbatim
+// from the GraphIcon in view-configs.tsx (Wiki "Hierarchy" filter).
+export const GraphIcon: ReactNode = <svg width={14} height={14} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"><circle cx="8" cy="3.3" r="1.7"/><circle cx="3.3" cy="12.7" r="1.7"/><circle cx="12.7" cy="12.7" r="1.7"/><line x1="8" y1="5" x2="3.3" y2="11"/><line x1="8" y1="5" x2="12.7" y2="11"/><line x1="5" y1="12.7" x2="11" y2="12.7"/></svg>
+// Reads (display column): eye glyph. Copied verbatim from the EyeIcon in
+// view-configs.tsx (Wiki "Reads" display property).
+export const EyeIcon: ReactNode = <svg width={14} height={14} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 8s2.7-5 7-5 7 5 7 5-2.7 5-7 5-7-5-7-5z"/><circle cx="8" cy="8" r="2"/></svg>
+// Status (display column only): half-filled circle. The Wiki Status filter row
+// uses the StatusIcon chrome glyph, but the display chip uses this CircleHalf
+// variant — supplied via PropertyDef.displayIcon. Copied verbatim from the
+// CircleHalfIcon in view-configs.tsx.
+export const CircleHalfIcon: ReactNode = <svg width={14} height={14} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.2"><circle cx="8" cy="8" r="5.5"/><path d="M8 2.5a5.5 5.5 0 010 11" fill="currentColor" opacity="0.5" stroke="none"/></svg>
+
 /* ── Status option icons (Notes + Wiki shared 4-stage) ───── */
 export const StatusBacklogIcon: ReactNode = <CircleDashed size={14} weight="regular" style={{ color: NOTE_STATUS_HEX.backlog }} />
 export const StatusTodoIcon: ReactNode = <Circle size={14} weight="regular" style={{ color: NOTE_STATUS_HEX.todo }} />
@@ -45,3 +58,19 @@ export const StatusDoneIcon: ReactNode = <CheckCircle size={14} weight="regular"
 export const SourceManualIcon: ReactNode = <PencilSimple size={14} weight="regular" className="text-muted-foreground" />
 export const SourceWebclipIcon: ReactNode = <Globe size={14} weight="regular" className="text-muted-foreground" />
 export const SourceImportIcon: ReactNode = <DownloadSimple size={14} weight="regular" className="text-muted-foreground" />
+
+/* ── Books chrome icon ───────────────────────────────────── */
+// "Sort"/count glyph (descending bars) — Books reuses it for the Kind filter
+// category and the Item-count display property. Copied verbatim from the
+// SortIcon in view-configs.tsx so the equivalence net (icon-presence only)
+// and the visual identity both hold.
+export const SortIcon: ReactNode = <svg width={14} height={14} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"><line x1="2.5" y1="4" x2="10" y2="4"/><line x1="2.5" y1="8" x2="7.5" y2="8"/><line x1="2.5" y1="12" x2="5" y2="12"/></svg>
+
+/* ── Books "kind" option icons (Smart / Manual / Hybrid) ──── */
+// Mirror BOOKS_VIEW_CONFIG.filterCategories[kind] value icons exactly.
+export const BookKindSmartIcon: ReactNode = <Lightning size={14} weight="regular" className="text-[#5E6AD2] dark:text-[#7C8AE7]" />
+export const BookKindManualIcon: ReactNode = <PencilSimple size={14} weight="regular" className="text-muted-foreground" />
+export const BookKindHybridIcon: ReactNode = <Sparkle size={14} weight="regular" className="text-amber-600 dark:text-amber-400" />
+
+/* ── Books "smart source" sticker option icon ────────────── */
+export const SourceStickerIcon: ReactNode = <StickerIcon size={14} weight="regular" />

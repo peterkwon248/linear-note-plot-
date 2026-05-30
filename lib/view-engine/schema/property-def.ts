@@ -72,6 +72,12 @@ export interface PropertyDef {
   label: string             // default label for every surface (override per-surface below)
   labelKey?: string         // default i18n key for every surface
   icon: ReactNode           // chrome icon (filter row, leading 16px, strokeWidth 1.5)
+  /** Per-surface icon override for the display-property column. Some concepts
+   *  legitimately use a different glyph in the Display popover than in the
+   *  filter row (e.g. Books `kind` → SortIcon in the filter category but
+   *  SourceIcon in the display column). When unset, the display column reuses
+   *  `icon`. */
+  displayIcon?: ReactNode
   valueType: PropertyValueType
 
   isFilterable?: boolean
@@ -111,6 +117,22 @@ export interface PropertyDef {
    *  `displayOrder` ascending, falling back to declaration index for ties /
    *  unset — so only the diverging entries need a number. */
   displayOrder?: number
+
+  /** Explicit sort (ordering-option) ordering. Like `displayOrder`, but for the
+   *  DisplayPanel ordering dropdown. Notes happen to declare properties in sort
+   *  order so they omit this; Wiki's sort order (updated/created/name/links/
+   *  reads/status) diverges from its filter order, so it sets it. Sortables are
+   *  emitted sorted by `sortOrder` ascending, falling back to declaration index
+   *  for ties / unset. */
+  sortOrder?: number
+
+  /** Explicit grouping-option ordering. Like `displayOrder`, but for the
+   *  property-derived grouping options (the `none` row and `extraGroupings`
+   *  bracket this sorted block). Wiki's group order (status/tier/linkCount/
+   *  parent) diverges from its filter order; Notes omits it. Groupables are
+   *  emitted sorted by `groupOrder` ascending, falling back to declaration
+   *  index for ties / unset. */
+  groupOrder?: number
 }
 
 /** A display-only column with no executable filter/group/sort axis (e.g. the
@@ -124,10 +146,22 @@ export interface ExtraDisplayProperty extends DisplayProperty {
  *  from the existing `DisplayConfig` residual fields (plan §1, D1/D3). */
 export interface ViewDefaults {
   supportedModes?: ViewMode[]
+  /** Whether the entity exposes the right-hand detail panel. Maps to
+   *  `ViewConfig.showDetailPanel`. Notes/Wiki = true (the default the adapter
+   *  applies when this is unset); Books ships it `false`. */
+  showDetailPanel?: boolean
   toggles: DisplayToggle[]
   /** group-only axes (family / role / firstLetter) that have no filter/display
    *  counterpart — appended after the property-derived grouping options. */
   extraGroupings?: GroupingOption[]
+  /** i18n key for the always-present "No grouping" option the adapter prepends.
+   *  Defaults to `"display.grouping.none"` (Notes/Books) when unset. Set to
+   *  `null` to emit the bare `label: "No grouping"` with NO labelKey — Wiki's
+   *  legacy hand-written config omitted it, so adding the key would change the
+   *  rendered text under a non-English locale (ChipDropdown renders
+   *  `labelKey ? t(labelKey) : label`). Preserving the omission keeps runtime
+   *  output byte-identical. */
+  noneGroupingLabelKey?: string | null
   /** display-only columns with no filter/group/sort axis (e.g. "children").
    *  Merged into the display-properties list and sorted by `displayOrder`
    *  alongside the property-derived columns. */
