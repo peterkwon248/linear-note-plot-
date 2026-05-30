@@ -19,13 +19,14 @@
  * the on-screen order.
  */
 
-import { Pin as PushPin, Check as PhCheck } from "lucide-react"
+import { Pin as PushPin, Check as PhCheck, ChevronDown } from "lucide-react"
 import { StatusShapeIcon } from "@/components/status-icon"
+import { GroupHeaderIcon, resolveGroupLabel } from "@/components/group-header"
 import { shortRelative } from "@/lib/format-utils"
 import { cn } from "@/lib/utils"
 import { useListNavCapture } from "@/hooks/use-list-nav-capture"
-import { flattenNoteGroupIds } from "@/lib/list-nav/flatten"
-import type { Note } from "@/lib/types"
+import { flattenNoteGroupIds, noteGroupsToListNav } from "@/lib/list-nav/flatten"
+import type { Note, Folder, Label } from "@/lib/types"
 import type { NoteGroup, GroupBy } from "@/lib/view-engine/types"
 
 interface NotesGridViewProps {
@@ -44,6 +45,12 @@ interface NotesGridViewProps {
   selectedIds?: Set<string>
   /** Toggle a card's selection (hover checkbox / single click). */
   onSelect?: (noteId: string) => void
+  /** Entity arrays for group-header identity (icon/label). */
+  folders?: Folder[]
+  labels?: Label[]
+  /** Store-backed group fold state (viewState.collapsedGroups) — shared w/ list. */
+  collapsedGroups?: Set<string>
+  onToggleGroup?: (groupKey: string) => void
 }
 
 function plaintextPreview(content: string | undefined, limit = 120): string {
@@ -173,6 +180,10 @@ export function NotesGridView({
   activePreviewId,
   selectedIds,
   onSelect,
+  folders,
+  labels,
+  collapsedGroups,
+  onToggleGroup,
 }: NotesGridViewProps) {
   // list-context-navigation: freeze the on-screen order into listNavContext
   // right before opening the editor (double-click → "← N/M →"). When grouped,
@@ -200,7 +211,7 @@ export function NotesGridView({
       onDoubleClick={
         onOpenEditor
           ? () => {
-              captureListNav(orderedIds, note.id, label ?? "Notes")
+              captureListNav(orderedIds, note.id, label ?? "Notes", grouped ? noteGroupsToListNav(groups!) : undefined)
               onOpenEditor(note.id)
             }
           : undefined
@@ -212,17 +223,30 @@ export function NotesGridView({
     <div className="flex-1 overflow-y-auto">
       {grouped ? (
         <div className="space-y-6 p-6">
-          {groups!.map((g) => (
-            <section key={g.key}>
-              <div className="mb-2 flex items-center gap-2 px-0.5">
-                <h3 className="text-2xs font-semibold uppercase tracking-wider text-muted-foreground">
-                  {g.label}
-                </h3>
-                <span className="text-2xs tabular-nums text-muted-foreground/60">{g.notes.length}</span>
-              </div>
-              <div className={GRID_COLS}>{g.notes.map(renderCard)}</div>
-            </section>
-          ))}
+          {groups!.map((g) => {
+            const isCollapsed = collapsedGroups?.has(g.key) ?? false
+            return (
+              <section key={g.key}>
+                <div
+                  className="flex items-center gap-2 px-0.5 py-1 cursor-pointer select-none"
+                  onClick={() => onToggleGroup?.(g.key)}
+                >
+                  <ChevronDown
+                    className={cn("text-muted-foreground transition-transform", isCollapsed && "-rotate-90")}
+                    size={12}
+                    strokeWidth={2}
+                  />
+                  <GroupHeaderIcon groupBy={groupBy!} groupKey={g.key} folders={folders} labels={labels ?? []} />
+                  <span className="a-tg__label">
+                    {resolveGroupLabel(groupBy!, g.key, g.label, folders ?? [], labels ?? [])}
+                  </span>
+                  <span className="a-tg__count tabular-nums">{g.notes.length}</span>
+                  <div className="a-tg__line flex-1" />
+                </div>
+                {!isCollapsed && <div className={cn(GRID_COLS, "mt-3")}>{g.notes.map(renderCard)}</div>}
+              </section>
+            )
+          })}
         </div>
       ) : (
         <div className={cn(GRID_COLS, "p-6")}>{notes.map(renderCard)}</div>

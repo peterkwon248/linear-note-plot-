@@ -196,6 +196,21 @@ export function NotesGridShell({
     [viewState.filters, updateViewState],
   )
 
+  // Store-backed group fold state (shared with list via viewState.collapsedGroups).
+  const collapsedGroups = useMemo(
+    () => new Set(viewState.collapsedGroups ?? []),
+    [viewState.collapsedGroups],
+  )
+  const handleToggleGroup = useCallback(
+    (key: string) => {
+      const next = new Set(collapsedGroups)
+      if (next.has(key)) next.delete(key)
+      else next.add(key)
+      updateViewState({ collapsedGroups: Array.from(next) })
+    },
+    [collapsedGroups, updateViewState],
+  )
+
   return (
     <main className="flex h-full flex-1 flex-col overflow-hidden bg-background">
       <ViewHeader
@@ -288,6 +303,10 @@ export function NotesGridShell({
         activePreviewId={activePreviewId}
         selectedIds={selectedIds}
         onSelect={handleCardSelect}
+        folders={folders}
+        labels={labels}
+        collapsedGroups={collapsedGroups}
+        onToggleGroup={handleToggleGroup}
       />
 
       {selectionActive && (

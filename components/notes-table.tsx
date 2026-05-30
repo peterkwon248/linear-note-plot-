@@ -49,6 +49,7 @@ import {
 import { groupByInitial } from "@/lib/korean-utils"
 import { useT } from "@/lib/i18n"
 import { StatusShapeIcon } from "@/components/status-icon"
+import { GroupHeaderIcon, resolveGroupLabel } from "@/components/group-header"
 import { StatusBadge } from "@/components/note-fields"
 import { NoteContextMenuItems } from "@/components/note-context-menu-items"
 import { setSplitTargetNoteId } from "@/lib/note-split-mode"
@@ -1771,45 +1772,8 @@ function SourceIcon({ source }: { source: NoteSource }) {
 
 
 /** Resolve display label for group headers (folder/label use IDs as keys) */
-function resolveGroupLabel(groupBy: GroupBy, groupKey: string, fallback: string, folders: Folder[], labels: Label[]): string {
-  if (groupBy === "folder" && groupKey !== "_no_folder") {
-    return folders.find((f) => f.id === groupKey)?.name ?? fallback
-  }
-  if (groupBy === "label" && groupKey !== "_no_label") {
-    return labels.find((l) => l.id === groupKey)?.name ?? fallback
-  }
-  return fallback
-}
-
-/** Dynamic group header icon based on groupBy type */
-function GroupHeaderIcon({ groupBy, groupKey, label, folders, labels }: {
-  groupBy: GroupBy
-  groupKey: string
-  label: string
-  folders: Folder[]
-  labels: Label[]
-}) {
-  switch (groupBy) {
-    case "status":
-      // Use groupKey (raw status value: "backlog"/"todo"/"in_progress"/"done") instead
-      // of label — labels are display aliases (e.g. "Block" for keystone)
-      // and would miss NOTE_STATUS_COLORS, falling back to currentColor.
-      return <StatusShapeIcon status={groupKey as NoteStatus} size={16} />
-    case "folder":
-      return <FolderOpen className="text-muted-foreground" size={16} strokeWidth={2} />
-    case "label": {
-      const labelColor = labels.find((l) => l.id === groupKey)?.color
-      return labelColor ? (
-        <span className="h-2.5 w-2.5 rounded-full shrink-0" style={{ backgroundColor: labelColor }} />
-      ) : (
-        <span className="h-2.5 w-2.5 rounded-full shrink-0 bg-muted-foreground" />
-      )
-    }
-    default:
-      // priority, date, triage, linkCount — text-only, no special icon
-      return null
-  }
-}
+// GroupHeaderIcon + resolveGroupLabel moved to @/components/group-header
+// (shared with notes-grid-view so list/grid render identical group identity).
 
 // PR (b): notes-table rows always operate on a Note → kind="note" picker.
 // Hook lives at module level (not inside ContextMenu, which only renders on
