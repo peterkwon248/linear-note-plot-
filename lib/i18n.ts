@@ -174,6 +174,7 @@ const EN = {
   "nav.trash": "Trash",
   "nav.workspace.menu": "Workspace menu",
   "nav.theme.toggle": "Toggle theme",
+  "nav.help": "Help",
   "nav.help.shortcuts": "Keyboard shortcuts",
 
   // Linear sidebar (per-space nav)
@@ -1187,6 +1188,7 @@ const KO: Partial<Record<DictKey, string>> = {
   "nav.trash": "휴지통",
   "nav.workspace.menu": "워크스페이스 메뉴",
   "nav.theme.toggle": "테마 전환",
+  "nav.help": "도움말",
   "nav.help.shortcuts": "키보드 단축키",
 
   // Linear sidebar

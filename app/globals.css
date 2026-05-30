@@ -707,9 +707,14 @@
   padding: 8px 6px;
   gap: 1px;
   border-right: 1px solid var(--sidebar-border);
-  background: var(--sidebar-bg);
+  /* §10 레일 톤다운 — 레일은 사이드바보다 한 노치 어둡게(깊이감, 목업 정합).
+     사이드바 명도는 그대로라 그 위 hover/border/active 대비는 불변. */
+  background: color-mix(in srgb, var(--sidebar-bg) 96%, #000);
   overflow: hidden;
   min-width: 0;
+}
+.dark .a-actbar {
+  background: color-mix(in srgb, var(--sidebar-bg) 78%, #000);
 }
 /* .a-actbar__head removed — brand mark moved to GlobalTopBar (chunk 1, 'P' brand mark fix). */
 .a-actbar__toggle {
@@ -776,6 +781,10 @@
   max-width: 100%;
   color: var(--sidebar-muted);
 }
+/* §10 레일 절제 — active space만 라벨 노출. inactive = 아이콘 + 툴팁(hover). */
+.a-ab--space:not([data-active="true"]) .a-ab__label {
+  display: none;
+}
 .a-ab:hover {
   background: var(--sidebar-hover);
   color: var(--sidebar-fg);
@@ -810,6 +819,47 @@
 .a-sidebar--nav    { background: var(--sidebar-bg); }
 .a-sidebar--browse { background: var(--bg-elev); }
 .dark .a-sidebar--browse { background: var(--bg); }
+
+/* ─── Sidebar footer (Help "?" + Trash) — §10 shell. Linear keeps help
+   bottom-left; Trash demoted here from the workspace menu. ─── */
+.a-sb-foot {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 6px 10px;
+  border-top: 1px solid var(--sidebar-border);
+}
+.a-sb-foot__btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 28px;
+  padding: 0 8px;
+  border-radius: 6px;
+  color: var(--sidebar-fg);
+  font-size: 13px;
+  transition: background var(--t-fast), color var(--t-fast);
+}
+.a-sb-foot__btn > svg { color: var(--sidebar-icon); transition: color var(--t-fast); }
+.a-sb-foot__btn:hover { background: var(--sidebar-hover); color: var(--sidebar-hover-text); }
+.a-sb-foot__btn:hover > svg { color: var(--sidebar-fg); }
+.a-sb-foot__hint {
+  font-size: 11px;
+  color: var(--sidebar-count);
+  font-variant-numeric: tabular-nums;
+}
+.a-sb-foot__icon {
+  flex: 0 0 auto;
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  display: grid;
+  place-items: center;
+  color: var(--sidebar-icon);
+  transition: background var(--t-fast), color var(--t-fast);
+}
+.a-sb-foot__icon:hover { background: var(--sidebar-hover); color: var(--sidebar-fg); }
 
 /* ─── Detail Panel (Phase 6에서 본격 사용) ─── */
 .a-detail {

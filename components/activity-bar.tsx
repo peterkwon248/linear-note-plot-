@@ -110,11 +110,13 @@ export function ActivityBar() {
         // Plot preserves per-space colors (SPACE_COLORS lib/colors.ts) — v3
         // mockup uses single --space-notes for all active states; we override
         // via inline style to keep 6 distinct space colors.
+        // §10 레일 톤다운 — active 톤 14%/22% (목업 shell-linear-mirror 정합,
+        // 기존 16%/24%에서 살짝 절제).
         const activeStyle = isActive && spaceColor
           ? {
-              background: `color-mix(in srgb, ${spaceColor} 16%, transparent)`,
+              background: `color-mix(in srgb, ${spaceColor} 14%, transparent)`,
               color: spaceColor,
-              boxShadow: `inset 0 0 0 1px color-mix(in srgb, ${spaceColor} 24%, transparent)`,
+              boxShadow: `inset 0 0 0 1px color-mix(in srgb, ${spaceColor} 22%, transparent)`,
             }
           : undefined
         return (
