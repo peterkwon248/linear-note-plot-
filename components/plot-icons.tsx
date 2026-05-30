@@ -198,11 +198,6 @@ export function IconMore({ size = 16, ...props }: IconProps) {
   return <MoreHorizontal size={size} strokeWidth={1.5} {...props} />
 }
 
-/** Sparkle (single starburst) — re-uses Sparkles as a smaller affordance. */
-export function IconSparkle({ size = 14, ...props }: IconProps) {
-  return <Sparkles size={size} strokeWidth={1.5} {...props} />
-}
-
 export function IconPanelLeftClose({ size = 16, ...props }: IconProps) {
   return <PanelLeftClose size={size} strokeWidth={1.5} {...props} />
 }

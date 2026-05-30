@@ -21,7 +21,7 @@
 import { useEffect, useRef, useState } from "react"
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid } from "recharts"
 import { useT } from "@/lib/i18n"
-import { NOTE_STATUS_HEX } from "@/lib/colors"
+import { NOTE_STATUS_COLORS } from "@/lib/colors"
 
 // ────────────────────────────────────────────────────────────────────────────
 // Shared — useChartWidth hook (ResizeObserver pattern)
@@ -49,8 +49,8 @@ function useChartWidth() {
 
 // ────────────────────────────────────────────────────────────────────────────
 // Color tokens — Plot permanent rules (lib/colors.ts)
-// NOTE_STATUS_HEX: backlog=slate-400, todo=blue-500, in_progress=amber-500, done=emerald-400
-// Wiki status is unified with Notes (v151) — use NOTE_STATUS_HEX everywhere.
+// NOTE_STATUS_COLORS: CSS var references that resolve light/dark via globals.css.
+// recharts renders as SVG so fill="var(--status-*)" works directly.
 // ────────────────────────────────────────────────────────────────────────────
 
 const BAR_COLOR = "var(--accent)"
@@ -94,10 +94,10 @@ export function StatusDonut({ backlog, todo, in_progress, done }: StatusDonutPro
   const size = Math.min(width, 220)
 
   const data = [
-    { name: t("status.backlog"), value: backlog, color: NOTE_STATUS_HEX.backlog },
-    { name: t("status.todo"), value: todo, color: NOTE_STATUS_HEX.todo },
-    { name: t("status.in_progress"), value: in_progress, color: NOTE_STATUS_HEX.in_progress },
-    { name: t("status.done"), value: done, color: NOTE_STATUS_HEX.done },
+    { name: t("status.backlog"), value: backlog, color: NOTE_STATUS_COLORS.backlog.css },
+    { name: t("status.todo"), value: todo, color: NOTE_STATUS_COLORS.todo.css },
+    { name: t("status.in_progress"), value: in_progress, color: NOTE_STATUS_COLORS.in_progress.css },
+    { name: t("status.done"), value: done, color: NOTE_STATUS_COLORS.done.css },
   ].filter((d) => d.value > 0)
 
   const total = backlog + todo + in_progress + done
@@ -162,8 +162,8 @@ export function WikiStatusDonut({ articles, stubs }: WikiStatusDonutProps) {
   const data = [
     // v151: "complete" (done = emerald) vs "incomplete" (in-progress = amber),
     // unified with the Notes status palette.
-    { name: t("wiki.filter.articles"), value: articles, color: NOTE_STATUS_HEX.done },
-    { name: t("wiki.filter.stubs"), value: stubs, color: NOTE_STATUS_HEX.in_progress },
+    { name: t("wiki.filter.articles"), value: articles, color: NOTE_STATUS_COLORS.done.css },
+    { name: t("wiki.filter.stubs"), value: stubs, color: NOTE_STATUS_COLORS.in_progress.css },
   ].filter((d) => d.value > 0)
 
   const total = articles + stubs

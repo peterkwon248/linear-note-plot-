@@ -210,7 +210,9 @@ export const GRAPH_NODE_HEX = {
   // the wiki entity itself regardless of its 4-stage status, so they inherit
   // the entity color used by the sidebar/activity-bar/Home StatsRow.
   wiki:      SPACE_COLORS.wiki,
-  tag:       "#6b7280",
+  // 색정합(2026-05-31): tag 노드 = 홈 카드 tags(lime #84cc16)와 통일.
+  // 회색 fallback은 default(분류 안 된 노드)만.
+  tag:       "#84cc16",
   default:   "#6b7280",
 } as const
 

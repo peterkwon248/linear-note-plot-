@@ -561,10 +561,11 @@ const BOOK_KIND_CONFIG: Record<
 > = {
   smart: {
     label: "Smart",
-    // violet — Plot v3 accent
-    color: "#5E6AD2",
-    bg: "color-mix(in srgb, #7C8AE7 18%, transparent)",
-    border: "color-mix(in srgb, #7C8AE7 35%, transparent)",
+    // 색정합(2026-05-31): kind=분류축 → 무채 통일(형태로 구분). violet은 home
+    // space 색(#5E6AD2)과 충돌이라 제거. 종류는 Zap 아이콘 + 라벨로 식별.
+    color: "var(--muted-foreground)",
+    bg: "color-mix(in srgb, var(--muted-foreground) 14%, transparent)",
+    border: "color-mix(in srgb, var(--muted-foreground) 28%, transparent)",
     Icon: PhLightning,
   },
   manual: {
@@ -577,10 +578,11 @@ const BOOK_KIND_CONFIG: Record<
   },
   hybrid: {
     label: "Hybrid",
-    // amber — mix signal
-    color: "#D97706",
-    bg: "color-mix(in srgb, #f59e0b 18%, transparent)",
-    border: "color-mix(in srgb, #f59e0b 35%, transparent)",
+    // 색정합(2026-05-31): 무채 통일. amber(#D97706)는 status.in_progress와
+    // 충돌이라 제거. 종류는 Blend 아이콘 + 라벨로 식별.
+    color: "var(--muted-foreground)",
+    bg: "color-mix(in srgb, var(--muted-foreground) 14%, transparent)",
+    border: "color-mix(in srgb, var(--muted-foreground) 28%, transparent)",
     Icon: PhBlend,
   },
 }
@@ -620,10 +622,10 @@ export function BookKindIcon({
   size?: number
 }) {
   if (kind === "smart") {
-    return <PhLightning size={size} strokeWidth={2} className="text-[#5E6AD2] dark:text-[#7C8AE7]" />
+    return <PhLightning size={size} strokeWidth={2} className="text-muted-foreground" />
   }
   if (kind === "hybrid") {
-    return <PhBlend size={size} strokeWidth={2} className="text-amber-600 dark:text-amber-400" />
+    return <PhBlend size={size} strokeWidth={2} className="text-muted-foreground" />
   }
   return <PhPencilSimple size={size} strokeWidth={2} className="text-muted-foreground" />
 }
