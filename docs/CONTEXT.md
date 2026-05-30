@@ -51,6 +51,27 @@
 
 ---
 
+## 🚀 2026-05-30 (저녁) — Track A: 리니어 필터/디스플레이 "200% 미러" 전략 플랜 ⭐⭐⭐⭐⭐
+
+**범위**: 필터/디스플레이를 리니어 수준으로 미러링하는 대형 initiative 착수. A0(구현)+A1(리니어 ~100장 분석)+A2(전략 락). **spec = `docs/01-plan/features/linear-filter-display-mirror.spec.md`** (전체 reference).
+
+### 핵심 결정 (영구)
+- **크롬(structure) 통일 + 콘텐츠(options) 컨텍스트별** = 리니어 "딱 맞는 옷" 비결. 표면마다 다른 옵션 + 동일 크롬·폰트·아이콘·모션.
+- **Track A/B 분리**: A=필터/디스플레이 미러(지금). B=layout/sidebar(2129 god) 분해(나중, 셸 리디자인 시).
+- **Tier**: T1 Notes/Wiki(풀) / T2 Books(중간) / **Library 유지 + 엔티티별 비례 컨트롤**(평면 Tags/Labels/Templates=경량). heavy 패널 제거 ≠ surface 삭제.
+- **Priority**: Notes/Wiki ✅(status축), Books=Kind+Priority. 아이콘=**리니어 3-막대**(화살표 폐기).
+- **6-카테고리 공유 축 스키마**(Workflow/Classification/Relations/Metrics/Time/Content) + **schema-driven 엔진**(FlowBase 차용, PropertyDef[]→filter/display/group/sort 자동 생성). 커스텀 상한 **L3**(L4 사용자 필드타입=FlowBase 몫, Plot 정체성 보존).
+- **A3 디자인시스템**: OKLCH/LCH 토큰(리니어도 LCH) + paired `-bg/-fg` + `toneClassDual`(FlowBase 패턴, Plot flat hex 마이그).
+- 현 앱 = 기대치 **70%**(비는 30% = 정합성·일관성·fit). 목표 = "리니어 제작진이 만든 노트앱"(MIRROR + EXTRAPOLATE).
+
+### Linear 5규칙 (드롭다운 폴리시 — 사용자 "불균형" 지적 해법)
+균일 행높이 + 아이콘 16px 정렬 / divider는 의미 그룹 경계만 / 좌(아이콘+라벨)·우(chevron·컨트롤) 역할 고정 / 검색 input 최상단 / opacity 위계(라벨0.9·아이콘0.7·힌트0.5).
+
+### 다음 (P0)
+A3 ①스키마 엔진(keystone) → ②공유 크롬(Linear 5규칙) → ③LCH 토큰(병렬). **미결정 = 폰트 Geist/Inter.** (+ 병행: 옛 status 코드명 stone/brick/keystone 119곳 정리, migrate/seeds/tests backward-compat 유지.)
+
+---
+
 ## 🚀 2026-05-30 — 통합 정합성 플랜: 네비 골격 + 온톨로지 + grid/dropdown 그룹 ⭐⭐⭐⭐⭐
 
 **범위**: notes-grid 비대칭(옵션 B로 해결) → "즉흥 말고 규칙성 제대로" → **통합 정합성 플랜**(네비게이션 골격 통일 + 온톨로지 재설계 + 오버뷰 StatsCard). 8 커밋 → main squash. tsc 0 / store-eval 검증(위키·온톨로지 화면은 SPA route 환경상 사용자 직접).

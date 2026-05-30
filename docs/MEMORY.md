@@ -8,6 +8,37 @@
 
 ---
 
+## ✅ 2026-05-30 (저녁) — Track A 착수: 리니어 필터/디스플레이 "200% 미러" 전략 플랜 ⭐⭐⭐⭐⭐
+
+**범위**: 전략 세션. 필터/디스플레이를 리니어 수준으로 미러링하는 대형 initiative 착수. A0(구현)+A1(리니어 분석)+A2(전략 락). spec = `docs/01-plan/features/linear-filter-display-mirror.spec.md`. 커밋 `3f7e22e`(A0).
+
+### 완료
+- **A0**: Q1 list-nav dropdown 그룹 캡처 마무리(notes-board/wiki-board/wiki-list) + notes-grid `.a-tg` 헤더+collapse(store-backed `viewState.collapsedGroups`) + `components/group-header.tsx` 공유 추출(GroupHeaderIcon/resolveGroupLabel). tsc 0 / store-eval.
+- **A1**: 리니어 캡처 ~100장 `linear-design-mirror` 분석 → spec 문서(드롭다운/패널 spec·컨텍스트 매트릭스·priority 막대 SVG).
+- **A2 LOCKED**: 전략 전면 확정.
+
+### 핵심 결정 (영구)
+- **Track A/B 분리**: A=필터/디스플레이 리니어 미러(지금). B=`layout.tsx`(607)+`linear-sidebar.tsx`(2129 god) 분해(나중, 셸 리디자인 시). "분해 먼저"는 풀-셸 전제 → 우리 목표엔 detour.
+- **리니어 "딱 맞는 옷" = 크롬(structure) 통일 + 콘텐츠(options) 컨텍스트별.** ground truth: Issues/Projects/Inbox 완전히 다른 필터 택소노미(Inbox 5개 알림중심, Projects=Lead/Health/Milestones).
+- **Tier**: T1 풀=Notes/Wiki / T2 중간=Books / **Library 유지 + 엔티티별 비례 컨트롤**(평면 Tags/Labels/Templates=경량). "걷어냄"=heavy 패널 제거지 surface 삭제·settings 이동 아님.
+- **Priority**: Notes/Wiki(둘 다 status축)✅, **Books=Kind+Priority**(status 없음). 아이콘 = **리니어 3-막대**(화살표 폐기).
+- **6-카테고리 공유 축 스키마**(Workflow/Classification/Relations/Metrics/Time/Content) — 엔티티 네이티브 축으로 슬롯 채움(Books 빈약 해결).
+- **schema-driven 엔진(FlowBase 차용)**: PropertyDef[]→filter/display/group/sort 자동 생성 = 일관성 코드 강제. **커스텀 상한 L3**(표시토글+SavedViews+값/옵션). **L4(사용자 필드타입 생성)=안 함**(FlowBase 몫, Plot 정체성). 두 앱 DNA 구분.
+- **FlowBase 우위 → A3 흡수**: OKLCH/LCH 토큰(리니어도 LCH, Plot flat hex 마이그), paired `-bg/-fg`+`toneClassDual`, 제네릭 `setViewOption`.
+- **현 앱 = 기대치 70%** (비는 30% = 정합성·일관성·fit). "리니어 제작진 노트앱" 컨셉 = MIRROR(리니어 있는 것)+EXTRAPOLATE(온톨로지/그래프/인사이트=리니어 7원칙 적용)로 달성 가능. 조건 = 공유 디자인시스템(A3) 락 + 모든 표면 法으로 강제.
+
+### 기술 학습 (영구)
+- **디자인 미러 ≠ 창작**: 정확 레퍼런스(실 SVG/CSS) 없이 기억으로 아이콘 그리면 가짜(이번에 priority/tag 가짜 그려 지적). Lucide ~80% + 리니어 고유 DevTools 실측.
+- **컨텍스트별 ≠ 비일관**: 일관성은 *틀*(크롬)에서 나옴. schema-driven = 일관성 엔진(사용자 커스텀 무관, 코드 강제).
+- dev 서버 screenshot 타임아웃 지속(Next16) — 정적 mockup(serve)은 됨.
+
+### 다음 우선순위 (P0)
+1. **A3** 리니어 필터/디스플레이 미러: ①스키마 엔진(keystone) → ②공유 크롬(Linear 5규칙) → ③LCH 토큰(병렬). **미결정: 폰트 Geist/Inter.** spec 먼저 read.
+2. (병행 hygiene) 옛 status 코드명(stone/brick/keystone) **119곳/26파일** 정리 (migrate/seeds/tests 옛 enum = backward-compat 유지, 나머지만).
+3. (carry) Phase C StatsCard / Books kind nav / Entity Insights recharts / Wiki breadcrumb 마이그.
+
+---
+
 ## ✅ 2026-05-30 — 통합 정합성 플랜: 네비 골격 통일 + 온톨로지 재설계 + grid selection/그룹 + Q1 dropdown 그룹 ⭐⭐⭐⭐⭐
 
 **범위**: 직전 P0 #0(notes-grid 비대칭)을 **옵션 B**로 해결 → "즉흥 말고 규칙성 제대로" 사용자 요청 → **통합 정합성 플랜**(네비게이션 + 온톨로지 + 오버뷰) 승인·실행. 8 커밋, branch claude/interesting-varahamihira-eeeaef → main squash. tsc 0 / store-eval 검증(위키·온톨로지 화면은 SPA route 환경상 사용자 직접). v152 유지(전부 UI / 세션 한정).
