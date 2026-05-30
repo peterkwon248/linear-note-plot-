@@ -4,33 +4,29 @@
  * GlobalTopBar — workspace-wide chrome that stays visible regardless of which
  * panels (activity bar / sidebar / detail) are collapsed. Houses the controls
  * that used to live inside `linear-sidebar.tsx` (recently viewed clock, back/
- * forward, search) and `activity-bar.tsx` (theme toggle), plus the footer
- * shortcuts (settings, trash) so the user can reach them even with "Hide all
- * panels" mode active.
+ * forward, search).
  *
  * Reference: 2026-05-24 brainstorm (single header + workspace identity).
- * Plot has no multi-workspace concept yet, so the brand mark and back/forward
- * cluster sits on the left, search lives in the middle, and chrome shortcuts
- * sit on the right. Width spans the full viewport so it survives every
- * panel-toggle state.
+ * Plot has no multi-workspace concept yet, so the workspace badge + back/
+ * forward cluster sits on the left and search lives in the middle. Width spans
+ * the full viewport so it survives every panel-toggle state.
+ *
+ * Shell pass B (2026-05-30): theme · settings · trash were folded out of the
+ * right cluster into the workspace menu (UserAvatar 'P' badge dropdown), so
+ * the right side is now empty — those shortcuts (plus keyboard shortcuts) are
+ * still reachable in every panel-toggle state via the badge.
  */
 
 import { useEffect, useMemo, useRef, useState } from "react"
-import Link from "next/link"
 import { usePathname } from "next/navigation"
 import {
   ChevronLeft as CaretLeft,
   ChevronRight as CaretRight,
   Clock as IconClock,
   Search as MagnifyingGlass,
-  Moon as IconMoon,
-  Sun as IconSun,
-  Settings as IconGear,
-  Trash2 as IconTrash,
   FileText as IconDoc,
 } from "lucide-react"
 import { usePlotStore } from "@/lib/store"
-import { useSettingsStore } from "@/lib/settings-store"
 import { useT } from "@/lib/i18n"
 import { routeGoBack, routeGoForward, setActiveRoute } from "@/lib/table-route"
 import { PanelsMenu } from "@/components/panels-menu"
@@ -46,9 +42,6 @@ export function GlobalTopBar() {
   const navigationIndex = usePlotStore((s) => s.navigationIndex)
   const globalSearchQuery = usePlotStore((s) => s.globalSearchQuery)
   const setGlobalSearchQuery = usePlotStore((s) => s.setGlobalSearchQuery)
-  const theme = useSettingsStore((s) => s.theme)
-  const setTheme = useSettingsStore((s) => s.setTheme)
-  const toggleTheme = () => setTheme(theme === "dark" ? "light" : "dark")
 
   const [recentlyViewedOpen, setRecentlyViewedOpen] = useState(false)
   const recentlyViewedRef = useRef<HTMLDivElement>(null)
@@ -211,37 +204,10 @@ export function GlobalTopBar() {
         </div>
       </div>
 
-      {/* Group D refine: divider before the right cluster makes the
-       *  three-region split (nav | search | tools) explicit. */}
-      <div className="mx-2 h-5 w-px shrink-0 bg-border" aria-hidden="true" />
-
-      {/* ── Right cluster: theme + settings + trash (user feedback 2026-05-25)
-       *  Chunk 3 revert — settings/trash moved back from UserAvatar dropdown
-       *  to right cluster (user prefers grouped chrome icons over dropdown). */}
-      <button
-        onClick={toggleTheme}
-        className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-hover-bg hover:text-foreground"
-        aria-label={theme === "dark" ? t("nav.theme.toggle_to_light") : t("nav.theme.toggle_to_dark")}
-        title={theme === "dark" ? t("nav.theme.light_mode") : t("nav.theme.dark_mode")}
-      >
-        {theme === "dark" ? <IconSun size={14} strokeWidth={2.25} /> : <IconMoon size={14} strokeWidth={2.25} />}
-      </button>
-      <Link
-        href="/settings"
-        className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-hover-bg hover:text-foreground"
-        aria-label={t("nav.settings")}
-        title={t("nav.settings")}
-      >
-        <IconGear size={14} strokeWidth={2.25} />
-      </Link>
-      <Link
-        href="/trash"
-        className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-hover-bg hover:text-foreground"
-        aria-label={t("nav.trash")}
-        title={t("nav.trash")}
-      >
-        <IconTrash size={14} strokeWidth={2.25} />
-      </Link>
+      {/* ── Right cluster folded into the workspace menu (UserAvatar, left).
+       *  Shell pass B (2026-05-30): theme · settings · trash moved out of the
+       *  top bar into the 'P' badge dropdown (Linear workspace-menu pattern),
+       *  so the right side stays empty and the search input can breathe. */}
     </header>
   )
 }
