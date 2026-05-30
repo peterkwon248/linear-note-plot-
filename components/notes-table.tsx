@@ -1836,18 +1836,20 @@ function NoteRowInner({
           style={{ display: "grid", gridTemplateColumns: gridTemplate, paddingLeft: isCompact ? 12 : 20, paddingRight: isCompact ? 12 : 20 }}
           data-active={isActive ? "true" : undefined}
           className={`a-row group items-center cursor-pointer ${
-            isSelected ? "bg-accent/5" : ""
+            isSelected ? "is-selected" : ""
           }`}
           onClick={onClick ?? onOpen}
           onDoubleClick={onDoubleClick}
         >
-      {/* Checkbox */}
+      {/* Checkbox — reveal-on-hover via opacity (a-row__reveal). The grid
+          column reserves the box at all times, so the fade-in causes zero
+          layout shift. When a selection is active (or this row is selected)
+          the checkbox stays visible (data-show). */}
       <div
         data-checkbox
-        className={`flex items-center justify-center cursor-pointer rounded ${
+        data-show={selectionActive || isSelected ? "true" : undefined}
+        className={`a-row__reveal flex items-center justify-center cursor-pointer rounded ${
           isCompact ? "h-6" : "h-8"
-        } ${
-          selectionActive || isSelected ? "visible" : "invisible group-hover:visible"
         }`}
         onClick={(e) => {
           e.stopPropagation()
