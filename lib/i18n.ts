@@ -43,6 +43,12 @@ const EN = {
   "settings.nav.backup": "Backup & Export",
   "settings.nav.about": "About",
 
+  // Settings — Profile
+  "settings.profile.title": "Profile",
+  "settings.profile.userName.label": "Name",
+  "settings.profile.userName.description": "Displayed as your workspace initial",
+  "settings.profile.userName.placeholder": "Your name",
+
   // Settings — Preferences page
   "settings.preferences.title": "Preferences",
   "settings.preferences.general": "General",
@@ -1056,6 +1062,11 @@ const KO: Partial<Record<DictKey, string>> = {
   "settings.nav.sync": "동기화 및 저장",
   "settings.nav.backup": "백업 및 내보내기",
   "settings.nav.about": "정보",
+
+  "settings.profile.title": "프로필",
+  "settings.profile.userName.label": "이름",
+  "settings.profile.userName.description": "워크스페이스 이니셜로 표시됩니다",
+  "settings.profile.userName.placeholder": "이름을 입력하세요",
 
   "settings.preferences.title": "환경설정",
   "settings.preferences.general": "일반",

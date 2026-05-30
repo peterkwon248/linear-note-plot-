@@ -17,6 +17,9 @@ export const useUIStore = create<UIState>()((set) => ({
 /* ── Persisted settings ── */
 
 export interface SettingsState {
+  // Profile
+  userName: string
+
   // Editor
   lineNumbers: boolean
   wordWrap: boolean
@@ -67,11 +70,15 @@ export interface SettingsState {
   setStartView: (v: "home" | "all" | "stone" | "pinned") => void
   setConfirmDelete: (v: boolean) => void
   setViewMode: (v: "list" | "board") => void
+  setUserName: (v: string) => void
 }
 
 export const useSettingsStore = create<SettingsState>()(
   persist(
     (set) => ({
+      // Profile defaults
+      userName: "",
+
       // Editor defaults
       lineNumbers: false,
       wordWrap: true,
@@ -118,6 +125,7 @@ export const useSettingsStore = create<SettingsState>()(
       setStartView: (v) => set({ startView: v }),
       setConfirmDelete: (v) => set({ confirmDelete: v }),
       setViewMode: (v) => set({ viewMode: v }),
+      setUserName: (v) => set({ userName: v }),
       setBackupReminder: (v) => set({ backupReminder: v }),
       setBackupReminderDays: (v) => set({ backupReminderDays: Math.max(1, Math.min(90, Math.round(v))) }),
       markBackupTaken: (atIso) => set({ lastBackupAt: atIso ?? new Date().toISOString() }),

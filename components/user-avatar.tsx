@@ -36,6 +36,21 @@ import { useSettingsStore } from "@/lib/settings-store"
 import { usePlotStore } from "@/lib/store"
 import { useT } from "@/lib/i18n"
 
+/** Derive up to 2-char initials from a display name.
+ * - Multi-word (space-separated): first letter of each word, max 2, uppercased.
+ * - Single word (CJK / no spaces): first character only (preserves CJK glyph).
+ * - Empty / whitespace-only: returns fallback "P" to preserve brand identity. */
+function getInitials(name: string): string {
+  const trimmed = name.trim()
+  if (!trimmed) return "P"
+  const words = trimmed.split(/\s+/)
+  if (words.length === 1) return [...trimmed][0] // spread handles multi-byte chars
+  return words
+    .slice(0, 2)
+    .map((w) => [...w][0].toUpperCase())
+    .join("")
+}
+
 /* Shared row recipe: note-row hover token (`--row-hover-bg` via `bg-hover-bg`)
  * + fast decelerate transition, overriding the default `focus:bg-accent`.
  * 16px icon · label · dimmed shortcut hint = Linear workspace-menu row. */
@@ -45,10 +60,8 @@ const ITEM_CLASS =
 export function UserAvatar() {
   const t = useT()
 
-  // settings.userName will populate this once a userName field is added
-  // (separate chunk). For now, the workspace initial is hardcoded "P" to
-  // preserve the existing identity users are familiar with.
-  const initial = "P"
+  const userName = useSettingsStore((s) => s.userName)
+  const initial = getInitials(userName)
 
   const theme = useSettingsStore((s) => s.theme)
   const setTheme = useSettingsStore((s) => s.setTheme)
