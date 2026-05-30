@@ -72,7 +72,7 @@
 - Notes 필터축: Status, **Priority**, Labels, Folder, Tags, Dates, Content, Links (≈ Issues)
 - Wiki 필터축: Status, Categories, Links, Reads, Aliases, Parent, Dates (priority 제외 — 지식 엔티티)
 - Books 필터축: Kind, Pinned, Dates (+ Smart sources)
-- **Priority 배치 결론**: Notes ✅ / Wiki ✖(status만) / Books ✖(kind) — Issues=priority, Projects=priority지만 Plot의 wiki/book은 작업 엔티티가 아니므로 entity-fit 우선. (A2에서 사용자 최종 확인)
+- **Priority 배치 결론** (A2 최종 확정, 2026-05-30 사용자 승인): Notes ✅ / **Wiki ✅** (둘 다 status축 보유 → priority 정당) / **Books = Kind + Priority** (status 없이 Kind가 board축, priority 보조 슬롯). ⚠️ A1 잠정안이던 "Wiki✖/Books✖(라인 아래 표)"는 **폐기** — 아래 §2 매트릭스/표가 옛 표기면 이 결론 우선.
 
 ---
 

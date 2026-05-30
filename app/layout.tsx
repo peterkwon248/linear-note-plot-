@@ -1,12 +1,20 @@
 import type { Metadata } from 'next'
-import { Geist, Geist_Mono, Source_Serif_4 } from 'next/font/google'
+import localFont from 'next/font/local'
+import { Geist_Mono, Source_Serif_4 } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
 import { ThemeProvider } from '@/components/theme-provider'
 import { SettingsSync } from '@/components/settings-sync'
 import { BodyProvider } from '@/components/providers/body-provider'
 import './globals.css'
 
-const geistSans = Geist({ subsets: ["latin"], variable: "--font-geist-sans" });
+// Pretendard Variable — Inter-metric Korean/multilingual sans-serif.
+// Self-hosted from public/fonts to avoid Google Fonts network dependency.
+const pretendard = localFont({
+  src: '../public/fonts/PretendardVariable.woff2',
+  display: 'swap',
+  weight: '45 920',
+  variable: '--font-pretendard',
+})
 const geistMono = Geist_Mono({ subsets: ["latin"], variable: "--font-geist-mono" });
 // Source Serif 4 — used for Editorial mode + editor-spine serif fallback.
 // Exposed as --font-serif via @theme inline alias (app/globals.css).
@@ -42,7 +50,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`${geistSans.variable} ${geistMono.variable} ${sourceSerif.variable} font-sans antialiased`}>
+      <body className={`${pretendard.variable} ${geistMono.variable} ${sourceSerif.variable} font-sans antialiased`}>
         <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
           <SettingsSync />
           <BodyProvider>
