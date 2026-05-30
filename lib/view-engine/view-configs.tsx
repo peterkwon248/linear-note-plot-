@@ -2,6 +2,15 @@ import type { ReactNode } from "react"
 import type { SortField, SortDirection, ViewMode, GroupBy, SortRule, ViewContextKey } from "./types"
 import { CircleDashed, Circle, BookOpen, CircleHalf, CheckCircle, Sticker as StickerIcon, Lightning, PencilSimple, Sparkle, Globe, DownloadSimple } from "@phosphor-icons/react"
 import { NOTE_STATUS_HEX } from "@/lib/colors"
+// A3.2 / M2 — Notes view-config is now GENERATED from the schema engine
+// (single source = NOTES_SCHEMA, PropertyDef[]). The adapter emits the exact
+// same ViewConfig shape, so every consumer (FilterPanel / DisplayPanel /
+// notes-table / notes-board / *-shell / labels-view / tags-view) is unchanged.
+// Equivalence is locked by lib/view-engine/schema/__tests__/adapter-equivalence.test.ts.
+// Other contexts (Wiki / Books / Library / Graph / …) stay hand-written below
+// pending M3/M4.
+import { NOTES_SCHEMA } from "./schema/entities/notes.schema"
+import { toViewConfig } from "./schema/adapter"
 
 export interface FilterCategory {
   key: string
@@ -158,14 +167,12 @@ const LinkIcon = <svg width={14} height={14} viewBox="0 0 16 16" fill="none" str
 const ContentIcon = <svg width={14} height={14} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"><line x1="2.5" y1="4" x2="13.5" y2="4"/><line x1="2.5" y1="8" x2="10" y2="8"/><line x1="2.5" y1="12" x2="7" y2="12"/></svg>
 const PinIcon = <svg width={14} height={14} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"><line x1="8" y1="11" x2="8" y2="15"/><path d="M3.5 11h9V9.8a1.3 1.3 0 00-.7-1.2L10.5 8A1.3 1.3 0 0110 7V4h.5a1.3 1.3 0 000-2.7h-5a1.3 1.3 0 100 2.7H6v3a1.3 1.3 0 01-.5 1l-1.3.6a1.3 1.3 0 00-.7 1.2z"/></svg>
 const ArchiveIcon = <svg width={14} height={14} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"><rect x="1.5" y="2" width="13" height="3" rx="1"/><path d="M2.5 5v8a1.3 1.3 0 001.3 1.3h8.4A1.3 1.3 0 0013.5 13V5"/><line x1="6" y1="8.5" x2="10" y2="8.5"/></svg>
-const TrashIcon = <svg width={14} height={14} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"><polyline points="2 4 3.3 4 14 4"/><path d="M12.7 4v9a1.3 1.3 0 01-1.4 1.3H4.7A1.3 1.3 0 013.3 13V4m2 0V2.7a1.3 1.3 0 011.4-1.4h2.6a1.3 1.3 0 011.4 1.4V4"/></svg>
+// (TrashIcon / WikiIcon moved to schema/icons.tsx — Notes config is now
+//  generated from NOTES_SCHEMA; they had no other consumer in this file.)
 const SortIcon = <svg width={14} height={14} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"><line x1="2.5" y1="4" x2="10" y2="4"/><line x1="2.5" y1="8" x2="7.5" y2="8"/><line x1="2.5" y1="12" x2="5" y2="12"/></svg>
 // Color dot: filled circle suggesting "color swatch"
 const ColorDotIcon = <svg width={14} height={14} viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="4.5" fill="currentColor"/></svg>
 const GraphIcon = <svg width={14} height={14} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"><circle cx="8" cy="3.3" r="1.7"/><circle cx="3.3" cy="12.7" r="1.7"/><circle cx="12.7" cy="12.7" r="1.7"/><line x1="8" y1="5" x2="3.3" y2="11"/><line x1="8" y1="5" x2="12.7" y2="11"/><line x1="5" y1="12.7" x2="11" y2="12.7"/></svg>
-// Wiki: 활동바 BookOpen과 동일 — 일관성
-const WikiIcon = <BookOpen size={14} weight="regular" />
-
 // Parent: 위쪽 부모 노드 + 아래 self (selfd) — "내 위에 부모"
 const ParentIcon = <svg width={14} height={14} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"><circle cx="8" cy="3.3" r="1.7"/><line x1="8" y1="5" x2="8" y2="11"/><circle cx="8" cy="12.7" r="1.5" fill="currentColor" stroke="none"/></svg>
 
@@ -174,148 +181,26 @@ const ChildrenIcon = <svg width={14} height={14} viewBox="0 0 16 16" fill="none"
 const EyeIcon = <svg width={14} height={14} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 8s2.7-5 7-5 7 5 7 5-2.7 5-7 5-7-5-7-5z"/><circle cx="8" cy="8" r="2"/></svg>
 const CircleHalfIcon = <svg width={14} height={14} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.2"><circle cx="8" cy="8" r="5.5"/><path d="M8 2.5a5.5 5.5 0 010 11" fill="currentColor" opacity="0.5" stroke="none"/></svg>
 
-export const NOTES_VIEW_CONFIG: ViewConfig = {
-  showFilter: true,
-  showDisplay: true,
-  showDetailPanel: true,
-  filterCategories: [
-    { key: "status", label: "Status", labelKey: "filter.category.status", icon: StatusIcon, values: [
-      { key: "backlog", label: "Backlog", labelKey: "status.backlog", color: NOTE_STATUS_HEX.backlog, icon: <CircleDashed size={14} weight="regular" style={{ color: NOTE_STATUS_HEX.backlog }} /> },
-      { key: "todo", label: "Todo", labelKey: "status.todo", color: NOTE_STATUS_HEX.todo, icon: <Circle size={14} weight="regular" style={{ color: NOTE_STATUS_HEX.todo }} /> },
-      { key: "in_progress", label: "In Progress", labelKey: "status.in_progress", color: NOTE_STATUS_HEX.in_progress, icon: <CircleHalf size={14} weight="regular" style={{ color: NOTE_STATUS_HEX.in_progress }} /> },
-      { key: "done", label: "Done", labelKey: "status.done", color: NOTE_STATUS_HEX.done, icon: <CheckCircle size={14} weight="regular" style={{ color: NOTE_STATUS_HEX.done }} /> },
-    ]},
-    { key: "folder", label: "Folder", labelKey: "filter.category.folder", icon: FolderIcon, values: [] },
-    { key: "label", label: "Label", labelKey: "filter.category.label", icon: LabelIcon, values: [] },
-    { key: "tags", label: "Tags", labelKey: "filter.category.tags", icon: TagIcon, values: [] },
-    { key: "source", label: "Source", labelKey: "filter.category.source", icon: SourceIcon, values: [
-      { key: "manual", label: "Manual", icon: <PencilSimple size={14} weight="regular" className="text-muted-foreground" /> },
-      { key: "webclip", label: "Web Clip", icon: <Globe size={14} weight="regular" className="text-muted-foreground" /> },
-      { key: "import", label: "Import", icon: <DownloadSimple size={14} weight="regular" className="text-muted-foreground" /> },
-    ]},
-    { key: "updatedAt", label: "Dates", labelKey: "filter.category.dates", icon: CalendarIcon, values: [
-      { key: "today", label: "Today" },
-      { key: "yesterday", label: "Yesterday" },
-      { key: "this-week", label: "This week" },
-      { key: "last-7-days", label: "Last 7 days" },
-      { key: "this-month", label: "This month" },
-      { key: "last-30-days", label: "Last 30 days" },
-      { key: "stale", label: "Stale (30+ days)" },
-    ]},
-    { key: "links", label: "Links", labelKey: "filter.category.links", icon: LinkIcon, values: [
-      { key: "_any", label: "Has links" },
-      { key: "backlinks", label: "Has backlinks" },
-      { key: "_none", label: "No outbound" },
-      { key: "_orphan", label: "True orphans (no in/out)" },
-    ]},
-    { key: "wikiRegistered", label: "Wiki", labelKey: "filter.category.wiki", icon: WikiIcon, values: [
-      { key: "true", label: "In a wiki article", labelKey: "filter.value.wiki.in" },
-      { key: "false", label: "Not in any wiki article", labelKey: "filter.value.wiki.not_in" },
-    ]},
-    { key: "content", label: "Content", labelKey: "filter.category.content", icon: ContentIcon, values: [
-      { key: "hasImage", label: "Has images" },
-      { key: "hasCode", label: "Has code blocks" },
-      { key: "hasTable", label: "Has tables" },
-    ]},
-    { key: "pinned", label: "Pinned", labelKey: "filter.category.pinned", icon: PinIcon, values: [
-      { key: "true", label: "Pinned" },
-      { key: "false", label: "Not pinned" },
-    ]},
-  ],
-  quickFilters: [
-    { label: "Needs attention", labelKey: "filter.quick.needs_attention", desc: "stale + unlinked", descKey: "filter.quick.needs_attention_desc", rules: [
-      { field: "updatedAt", operator: "lt", value: "stale" },
-      { field: "links", operator: "eq", value: "_none" },
-    ]},
-    { label: "Active work", labelKey: "filter.quick.active_work", desc: "updated < 7d", descKey: "filter.quick.active_work_desc", rules: [
-      { field: "updatedAt", operator: "eq", value: "this-week" },
-    ]},
-    { label: "Unlinked", labelKey: "filter.quick.unlinked", desc: "no outbound links", descKey: "filter.quick.unlinked_desc", rules: [
-      { field: "links", operator: "eq", value: "_none" },
-    ]},
-    { label: "True orphans", labelKey: "filter.quick.true_orphans", desc: "no in/out links", descKey: "filter.quick.true_orphans_desc", rules: [
-      { field: "links", operator: "eq", value: "_orphan" },
-    ]},
-    { label: "In a wiki article", labelKey: "filter.quick.wiki_registered", desc: "embedded inside a wiki article", descKey: "filter.quick.wiki_registered_desc", rules: [
-      { field: "wikiRegistered", operator: "eq", value: "true" },
-    ]},
-  ],
-  displayConfig: {
-    // 2026-05-24: gallery mode deprecated app-wide — Grid view replaces it
-    // (user feedback: grid layout reads cleaner than the gallery card stack).
-    // Persisted viewMode === "gallery" auto-migrates to "grid" in
-    // normalizeViewState. supportedModes order matches the DisplayPanel tab strip.
-    supportedModes: ["list", "board", "grid", "timeline"],
-    supportsSubGrouping: true,
-    orderingOptions: [
-      { value: "updatedAt", label: "Updated", labelKey: "display.ordering.updated" },
-      { value: "createdAt", label: "Created", labelKey: "display.ordering.created" },
-      { value: "title", label: "Name", labelKey: "display.ordering.title" },
-      { value: "links", label: "Links", labelKey: "filter.category.links" },
-      { value: "reads", label: "Word count", labelKey: "display.property.words" },
-    ],
-    // L4: per-mode default groupBy. Timeline default = "status" mirrors
-    // the Wiki timeline default ("wikiStatus") — Stone/Brick/Block lanes
-    // give a "notes maturity over time" view that's the most useful
-    // glance for the Notes timeline.
-    // 2026-05-24 — grid mode = Books-parity flat card grid (no grouping
-    // semantics). normalizeViewState reads this and resets invalid groupBy
-    // on mode switch.
-    defaultGroupByByMode: { board: "status", timeline: "status", grid: "none" },
-    // Timeline Y-axis encodes time → sort by createdAt asc is canonical.
-    defaultSortByMode: { timeline: { field: "createdAt", direction: "asc" } },
-    groupingOptions: [
-      { value: "none", label: "No grouping", labelKey: "display.grouping.none" },
-      // 2026-05-24 — explicit modes per grouping (Linear-style L1 "UI 노출 =
-      // 100% 동작"). 2026-05-29: grid도 그룹 섹션(세로 헤더 + 카드 묶음)을
-      // 지원 → status/folder/label/parent/role/date에 grid 추가. family/
-      // firstLetter는 list 전용(indent/alpha 헤더가 카드 grid와 충돌).
-      { value: "status", label: "Status", labelKey: "display.property.status", modes: ["list", "board", "grid"] },
-      { value: "folder", label: "Folder", labelKey: "display.property.folder", modes: ["list", "board", "grid"] },
-      { value: "label", label: "Label", labelKey: "filter.category.label", modes: ["list", "board", "grid"] },
-      { value: "parent", label: "Parent", labelKey: "display.property.parent", modes: ["list", "board", "grid"] },
-      { value: "role", label: "Role", modes: ["list", "board", "grid"] },
-      // family tree only makes sense in list (indent column). Board would
-      // need allowFamilyOnBoard override (categories case).
-      { value: "family", label: "Family", modes: ["list"] },
-      // updatedAt time-bucket grouping. Timeline X-axis already encodes
-      // time, so date grouping would duplicate the axis — hide in timeline.
-      { value: "date", label: "Updated", labelKey: "display.ordering.updated", modes: ["list", "board", "grid"] },
-      // Plot-consistent UX: alphabetical "Index" grouping moved from a
-      // properties-chip toggle (legacy showAlphaIndex) into the grouping
-      // dropdown alongside other grouping axes. Wired in lib/view-engine/group.ts.
-      // L1: firstLetter only meaningful in list mode (board/gallery have
-      // their own card/column language; alphabetical headers fight with them).
-      { value: "firstLetter", label: "Index", modes: ["list"] },
-    ],
-    toggles: [
-      { key: "showTrashed", label: "Show trashed", labelKey: "display.show_trashed", icon: TrashIcon },
-      // Visible only when groupBy === "role" (display-panel.tsx guard).
-      // ON: classify roles within the filtered slice. OFF (default):
-      // classify against the full store so a filter doesn't lie about
-      // "this note is a hub" vs "in this view it's a hub".
-      { key: "filterAwareRole", label: "Role from filtered view" },
-    ],
-    properties: [
-      { key: "status", label: "Status", labelKey: "display.property.status", icon: StatusIcon },
-      // priority/label/tags surface only on the Board card (no equivalent
-      // list column). modes: ["board"] hides them in non-board view modes —
-      // prevents "chip toggles nothing" bug in list/gallery.
-      { key: "priority", label: "Priority", icon: PriorityIcon, modes: ["board"] },
-      { key: "label", label: "Label", labelKey: "filter.category.label", icon: LabelIcon, modes: ["board"] },
-      { key: "tags", label: "Tags", labelKey: "filter.category.tags", icon: TagIcon, modes: ["board"] },
-      { key: "folder", label: "Folder", labelKey: "display.property.folder", icon: FolderIcon },
-      { key: "parent", label: "Parent", labelKey: "display.property.parent", icon: ParentIcon },
-      { key: "children", label: "Children", labelKey: "display.property.children", icon: ChildrenIcon },
-      { key: "links", label: "Backlinks", labelKey: "display.property.backlinks", icon: LinkIcon },
-      { key: "wordCount", label: "Words", labelKey: "display.property.words", icon: ContentIcon },
-      // createdAt/updatedAt are also meaningful for the timeline label
-      // column (date row). Most other properties don't fit the narrow column.
-      { key: "updatedAt", label: "Updated", labelKey: "display.property.updated", icon: CalendarIcon, modes: ["list", "board", "timeline"] },
-      { key: "createdAt", label: "Created", labelKey: "display.property.created", icon: CalendarIcon, modes: ["list", "board", "timeline"] },
-    ],
-  },
-}
+/**
+ * Notes view-config — GENERATED from `NOTES_SCHEMA` (A3.2 / M2).
+ *
+ * Was a ~140-line hand-written `ViewConfig`; now the single source of truth is
+ * the `PropertyDef[]` in `schema/entities/notes.schema.tsx`, and `toViewConfig`
+ * derives the identical `filterCategories` / `quickFilters` / `displayConfig`
+ * (filter category order, ordering, grouping incl. the group-only role/family/
+ * date/firstLetter axes, display-property order, toggles, per-mode defaults).
+ *
+ * No hydrators are passed here, so the dynamic folder/label/tags categories come
+ * out with `values: []` — exactly as the old static export did. Runtime values +
+ * counts are still filled by the existing consumer hydration
+ * (`components/notes-table.tsx` `notesFilterCategories` useMemo, and the parallel
+ * useMemos in notes-board / notes-grid-shell / notes-timeline-shell).
+ *
+ * Equivalence with the previous hand-written config is locked by
+ * `schema/__tests__/adapter-equivalence.test.ts`. To change Notes filter/display
+ * options, edit `notes.schema.tsx` — NOT this line.
+ */
+export const NOTES_VIEW_CONFIG: ViewConfig = toViewConfig(NOTES_SCHEMA)
 
 // Wiki-specific filter/display options.
 // 의도된 차이 (Notes 대비):
