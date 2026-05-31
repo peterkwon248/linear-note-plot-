@@ -73,6 +73,10 @@ function bookMatchesRule(b: Book, rule: FilterRule): boolean {
     case "status": {
       return eq(b.status ?? "backlog", value)
     }
+    // §11 — priority filter (manual·hybrid). undefined → "none".
+    case "priority": {
+      return eq(b.priority ?? "none", value)
+    }
     // books-view-engine-2: which smart-source kinds are configured for this
     // book. value ∈ folder/category/tag/label/sticker. "_none" = manual-only
     // books (no smart sources).
@@ -190,6 +194,29 @@ function applyBookGrouping(
   }
 
   const showEmpty = opts?.showEmptyGroups ?? false
+
+  // §11 — status board (Notes 4-stage). Fixed column order backlog → todo →
+  // in_progress → done. smart books (status N/A) land in backlog via the
+  // `?? "backlog"` default. Mirrors the Notes/Wiki status board.
+  if (groupBy === "status") {
+    const backlog: Book[] = []
+    const todo: Book[] = []
+    const inProgress: Book[] = []
+    const done: Book[] = []
+    for (const b of books) {
+      const s = b.status ?? "backlog"
+      if (s === "todo") todo.push(b)
+      else if (s === "in_progress") inProgress.push(b)
+      else if (s === "done") done.push(b)
+      else backlog.push(b)
+    }
+    const out: BookGroup[] = []
+    if (showEmpty || backlog.length > 0) out.push({ key: "backlog", label: "Backlog", books: backlog })
+    if (showEmpty || todo.length > 0) out.push({ key: "todo", label: "Todo", books: todo })
+    if (showEmpty || inProgress.length > 0) out.push({ key: "in_progress", label: "In Progress", books: inProgress })
+    if (showEmpty || done.length > 0) out.push({ key: "done", label: "Done", books: done })
+    return reorderGroups(out, opts?.groupOrder)
+  }
 
   // books-view-engine-3: kind = Smart / Manual / Hybrid. Fixed column order
   // mirrors the user mental model (Smart first → Hybrid → Manual gradient).

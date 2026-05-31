@@ -26,6 +26,7 @@ import { useBooksView } from "@/lib/view-engine/use-books-view"
 import { useSaveViewProps } from "@/lib/view-engine/use-save-view-props"
 import { BOOKS_VIEW_CONFIG } from "@/lib/view-engine/view-configs"
 import type { FilterRule, SortField } from "@/lib/view-engine/types"
+import type { NoteStatus } from "@/lib/types"
 import { ViewHeader } from "@/components/view-header"
 import { DisplayPanel } from "@/components/display-panel"
 import { FilterPanel } from "@/components/filter-panel"
@@ -120,6 +121,11 @@ function BooksGrid() {
   // a Smart → Manual conversion. Strips smartSources; Book.items preserved.
   const handleConvertToManual = useCallback((id: string, _title: string) => {
     updateBook(id, { smartSources: [] })
+  }, [updateBook])
+
+  // §11 — board status-column drag (and inline picker) → set book.status.
+  const handleSetStatus = useCallback((id: string, status: NoteStatus) => {
+    updateBook(id, { status })
   }, [updateBook])
 
   // books-view-engine-5 (fix): column header sort toggle (NotesTable pattern).
@@ -324,6 +330,7 @@ function BooksGrid() {
             onOpen={openBook}
             onTogglePin={handleTogglePin}
             onConvertToManual={handleConvertToManual}
+            onSetStatus={handleSetStatus}
             onRename={startRename}
             onDelete={handleDelete}
             onRestore={handleRestore}

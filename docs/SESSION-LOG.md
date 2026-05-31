@@ -6,6 +6,55 @@
 
 ---
 
+## 2026-05-31 (낮~오후, 집/Windows — 직전 밤 #501에 이어) — **§11 북·위키 status/priority 워크플로 완성 + 코멘트→Inbox + 북마크 capped 버그 + 셸 PanelsMenu 중복제거/§10 Phase1 (4 P0, 1 PR)**
+
+> 🎯 **다음 즉시 액션 hook**: **셸 §10 Phase 2 — 사이드바 토글 분산**(리니어식). 이번에 Phase 1(디테일 토글=콘텐츠 우상단)까지 완료. 다음 = 사이드바 collapse 토글을 중앙 햄버거에서 빼서 (a) 사이드바 우경계 **엣지핸들**(hover-reveal ‹/›) + (b) 사이드바 헤더 토글 아이콘(`PanelLeft`)으로 분산. wire = `sidebarCollapsed`/`setSidebarCollapsed`. `⌘⇧F` 유지. **이후 Phase 3** = 중앙 `PanelsMenu` 햄버거 완전 제거(`global-top-bar.tsx:101`) + `⌘\`(split) 충돌 점검 + `ListIcon`→`PanelLeft/Right`. ⚠️ `linear-sidebar.tsx`(2082줄) 분해와 묶이면 큰 작업 — Phase 2만 먼저 떼도 OK.
+>
+> **사용자 의도** (인용): "노트 에디터 들어가면 패널스 관리 버튼이 나오는 버그" + "패널스 햄버거 버튼도 리니어 식 디자인이랑은 달라" → Notion식 중앙 햄버거를 리니어식 개별 토글로 분산.
+>
+> **첫 스텝** (다른 머신 바로): 1) `components/linear-sidebar.tsx` 우경계 엣지핸들 + 헤더 토글. 2) `components/panels-menu.tsx` "Sidebar" row 제거(Phase 2 후). 3) `components/global-top-bar.tsx:101` `<PanelsMenu />` 제거(Phase 3).
+>
+> **위험 + 회피**:
+> - **Books `showDetailPanel:false`** = list view 한정 → 그리드/리스트 view-header엔 디테일 토글 없음(gate). 디테일 패널은 북 선택 시 자동 open + 패널 자체 close 버튼. Phase 3 중앙 햄버거 제거 시 이 경로 확인.
+> - **preview route 전환 = module state** → 노트 에디터/위키 mount가 eval 불가(고질). 셸 시각 검증 = 사용자 실화면.
+> - **adapter-equivalence.test.ts** = books/wiki 필터 카테고리 **하드코딩 assertion** 있음. 필터 prop 추가/이동 시 cluster/key 배열 갱신 필수.
+>
+> **참고 파일**: `panels-menu.tsx`(중앙 햄버거), `view-header.tsx:428`(디테일 토글), `note-editor.tsx:642`(에디터 디테일 토글), `linear-sidebar.tsx`(사이드바), `global-top-bar.tsx:101`(PanelsMenu mount), `docs/TODO.md` 0.04(§10 phased).
+>
+> **머신**: 집(Windows). **현재 main HEAD**: 이 PR 머지 후(직전 `e9a1e09` #502). **branch worktree**: `claude/gracious-mclean-5045c6` → 머지 후 main 기준 fresh.
+
+### 완료 (이 세션, 4 P0 — 1 PR)
+- **P0 #0 코멘트 → Inbox 통합**: `CommentStatus` todo/blocker 코멘트를 Inbox `comment` kind로 승격(→ `do` 섹션). backlog/done 제외. 클릭=anchor(note/wiki) 원문 네비. `inbox.ts`(InboxItemKind)·`use-inbox.ts`(소스 루프+sectionFor+comments 구독)·`inbox-view.tsx`(네비 2곳)·`inbox-source-icon.tsx`(MessageSquare)·`view-configs.tsx`(source 필터)·i18n.
+- **P0 #0b 북마크 퀵링크스 capped 버그**: `mixed-quicklinks.tsx` — 핀+북마크 병합 후 단일 `slice(limit 8)`로 핀 8개↑면 북마크 증발 → pinItems/bookmarkItems **partition + 전용 `bookmarkLimit`**.
+- **P0 #1 §11 북·위키 status/priority** (헤드라인): Books status 세터 = **detail panel(BookDetailPanel)** + **보드 status 4컬럼 드래그** + **list 인라인 StatusDropdown 컬럼** + 그리드/보드 **배지**. Book·Wiki **priority 필터+배지+세터**(wiki는 패널 세터). status·priority = **manual·hybrid만**(smart N/A gate). books.schema/wiki.schema priority PropertyDef + status groupable, `bookMatchesRule`/`matchWikiRule` priority case, applyBookGrouping status 4컬럼, `icons.tsx` priority 바 아이콘, defaults visibleColumns, adapter test 갱신.
+- **셸 PanelsMenu 중복 제거 + §10 Phase 1**: `note-editor.tsx:470`·`book-detail-page.tsx:792`가 자기 헤더에 PanelsMenu 또 mount(#120 위반)하던 것 제거(에디터 햄버거 중복 버그). §10 Phase1 = 디테일 토글=콘텐츠 우상단(이미 있었음 — view-header 아이콘 `PanelLeft→PanelRight` 정합) + 중앙 햄버거 "Detail" row 제거.
+
+### 브레인스토밍 & 큰 결정 (영구 — MEMORY push)
+- **Books도 detail panel 있음** (사용자 적발): `showDetailPanel:false`는 *list view* 한정. 실제 = `sidePanelContext{type:"book"}` → `BookDetailPanel` + `/books/{id}` `BookDetailPage`. status 세터의 proper home.
+- **§11 status·priority = manual·hybrid만, smart=N/A**: smart=자동 큐레이션이라 워크플로 무의미 → 세터/배지 전부 `kind!=='smart'` gate. 보드 status 그룹핑선 smart=backlog(`?? "backlog"`).
+- **HTML 중첩 제약**: 그리드/보드 카드=`<button>` → 인라인 피커(button) 중첩 불가 → 카드=배지(읽기전용), **인라인 피커는 BookTable 행(`<div>`)**.
+- **§10 패널토글 = 리니어식 분산** (중앙 햄버거 폐기): 디테일=우상단(P1✅), 사이드바=엣지핸들(P2), 중앙 햄버거 제거(P3). Notion식 중앙 체크리스트 ≠ Linear.
+
+### 기술 학습 (영구 — MEMORY push)
+- **adapter-equivalence.test.ts = 하드코딩 필터 카테고리 assertion**: `*_SCHEMA` 필터 prop 추가/이동 시 cluster/key 배열 갱신 필수. PR #501이 books status 필터 추가하며 미갱신 → 1건 pre-existing 실패였음(이번 정정 + wiki도 갱신).
+- **displayOrder tie-break = 선언 인덱스**: 기존 값 안 건드리고 status·priority 둘 다 `0`으로 두면 선언순(status→priority→itemCount) 정렬.
+- **PanelsMenu 단일 mount(#120) drift**: view-header는 GlobalTopBar로 이관됐는데 note-editor/book-detail-page 헤더만 옛 패턴 잔존(주석 "Mirrors view-header" stale) → 에디터 햄버거 중복 버그.
+- **preview**: store-eval로 데이터/배지/보드컬럼/패널 검증 OK. route 전환(에디터 mount) = module state라 eval 불가 → 사용자 실화면.
+
+### Watch Out (다음 세션)
+- **§10 Phase 2/3 미완**: 사이드바 토글 분산 + 중앙 햄버거 제거 남음(디테일만 우상단).
+- **persisted visibleColumns**: 기존 사용자 books/wiki viewState엔 status/priority 컬럼 없음(새 default만) → Display 패널서 토글해야 list 컬럼 보임. 그리드/보드 배지는 무관.
+- **pre-existing 테스트 2건**: `pipeline.test.ts applyGrouping([],'date')` — 무관, 기존.
+- **wiki status 세터는 여전히 read-only 배지**(보드 드래그로만). priority만 패널 세터 추가 — 약간 비대칭(다음에 wiki status 세터화 검토).
+
+### 환경 변경
+- **Store version: 무변경**(status/priority/reads는 v153 기존, 이번 전부 UI).
+- i18n: `filter.category.priority`(en/ko) + inbox `comment_blocker`/`comment_todo`(en/ko).
+- 신규: `icons.tsx` Priority{None,Low,Medium,High,Urgent}Icon.
+- Tests: adapter-equivalence **24/24**, view-engine 83/85(2 pre-existing date-grouping fail). **tsc 0**.
+
+---
+
 ## 2026-05-31 (밤, 집/Windows) — **아이콘 리니어화 + SPACE_ICONS SOT + Item C 인기순위/§11 북 status·reads + Home §13 슬림화 (PR #501, 2커밋)**
 
 > 🎯 **다음 즉시 액션 hook** (사용자 명시 — 다음 세션 **첫 작업 2개**):

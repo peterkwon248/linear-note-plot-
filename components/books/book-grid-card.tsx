@@ -11,7 +11,8 @@
 
 import type { Book } from "@/lib/types"
 import { getBookKind } from "@/lib/view-engine/use-books-view"
-import { BookKindIcon } from "@/components/property-chips"
+import { BookKindIcon, PriorityChip } from "@/components/property-chips"
+import { StatusBadge } from "@/components/note-fields"
 import { shortRelative } from "@/lib/format-utils"
 import { cn } from "@/lib/utils"
 import { Pin as PushPin } from "lucide-react"
@@ -41,6 +42,7 @@ export function BookGridCard({
   onRestore,
   onPermanentDelete,
 }: BookGridCardProps) {
+  const kind = getBookKind(book)
   return (
     <ContextMenu>
       <ContextMenuTrigger asChild>
@@ -66,7 +68,7 @@ export function BookGridCard({
           {/* Cover icon — BookKindIcon (kind-shape carries meaning).
               emoji 영구 폐기 (2026-05-12 결정): Plot phosphor 시스템 정합.
               LOCKED #103 (2026-05-24): no tinted box wrapper, color tone only. */}
-          <BookKindIcon kind={getBookKind(book)} size={22} />
+          <BookKindIcon kind={kind} size={22} />
 
           {/* Title */}
           <h3 className="text-note font-medium text-foreground line-clamp-2 leading-snug">
@@ -81,6 +83,14 @@ export function BookGridCard({
           )}
 
           <div className="flex-1" />
+
+          {/* Status / priority badges (§11 — manual·hybrid only; smart = N/A) */}
+          {kind !== "smart" && (
+            <div className="flex flex-wrap items-center gap-1.5">
+              <StatusBadge status={book.status ?? "backlog"} />
+              {book.priority && book.priority !== "none" && <PriorityChip priority={book.priority} />}
+            </div>
+          )}
 
           {/* Footer */}
           <div className="mt-1 flex items-center gap-2 text-2xs text-muted-foreground/70">

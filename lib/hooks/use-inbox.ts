@@ -5,6 +5,7 @@ import type { InboxItemKind } from "@/lib/store/slices/inbox"
 import { getSnoozeHooks, getSRSHooks, getPlanHooks } from "@/lib/store/hook-selectors"
 import { useT } from "@/lib/i18n"
 import type { SRSState } from "@/lib/srs"
+import type { Comment } from "@/lib/types"
 
 /**
  * Action-based inbox notification queue (Linear 정합).
@@ -56,6 +57,7 @@ function sectionFor(kind: InboxItemKind): InboxSection {
     case "plan-due":
     case "snooze-expired":
     case "task":
+    case "comment":
       return "do"
     case "srs":
       return "review"
@@ -73,6 +75,7 @@ export function useInbox(): InboxItem[] {
   const wikiArticles = usePlotStore((s) => s.wikiArticles)
   const clusterSuggestions = usePlotStore((s) => s.clusterSuggestions)
   const todoTasks = usePlotStore((s) => s.todoTasks)
+  const comments = usePlotStore((s) => s.comments)
   const t = useT()
 
   return useMemo(() => {
@@ -289,6 +292,37 @@ export function useInbox(): InboxItem[] {
       })
     }
 
+    // Source: comment — open comment (status todo/blocker) anywhere. Comments
+    // carry a Linear-style CommentStatus; only actionable ones surface as a
+    // global "내 미해결 코멘트" queue (§13 "액션은 Inbox로 단일화"). backlog =
+    // parked (아직 triage 안 함), done = resolved → 둘 다 제외. sourceId =
+    // comment.id (unique); 클릭 네비게이션은 anchor(note/wiki)로 inbox-view에서 해소.
+    for (const comment of Object.values(comments) as Comment[]) {
+      if (comment.status !== "todo" && comment.status !== "blocker") continue
+      if (!isVisible("comment", comment.id)) continue
+
+      // Resolve source entity from polymorphic anchor → meta title + trashed guard.
+      let sourceTitle: string
+      if (comment.anchor.kind === "note" || comment.anchor.kind === "note-block") {
+        const note = noteById.get(comment.anchor.noteId)
+        if (!note || note.trashed) continue
+        sourceTitle = note.title || t("common.untitled")
+      } else {
+        const article = wikiById.get(comment.anchor.articleId)
+        if (!article || article.trashed) continue
+        sourceTitle = article.title || t("common.untitled")
+      }
+
+      push({
+        kind: "comment",
+        sourceId: comment.id,
+        title: comment.body.trim() || t("common.untitled"),
+        ts: comment.createdAt,
+        action: t(comment.status === "blocker" ? "inbox.action.comment_blocker" : "inbox.action.comment_todo"),
+        meta: sourceTitle,
+      })
+    }
+
     // Source: auto-enroll — clusterSuggestions with status === "pending"
     for (const suggestion of (clusterSuggestions ?? [])) {
       if (suggestion.status !== "pending") continue
@@ -311,7 +345,7 @@ export function useInbox(): InboxItem[] {
     items.sort((a, b) => (a.ts < b.ts ? -1 : a.ts > b.ts ? 1 : 0))
 
     return items
-  }, [notes, dismissedInboxItems, snoozedInboxItems, hooks, wikiArticles, clusterSuggestions, todoTasks, t])
+  }, [notes, dismissedInboxItems, snoozedInboxItems, hooks, wikiArticles, clusterSuggestions, todoTasks, comments, t])
 }
 
 /**

@@ -15,6 +15,12 @@ import {
   StatusTodoIcon,
   StatusInProgressIcon,
   StatusDoneIcon,
+  PriorityIcon,
+  PriorityUrgentIcon,
+  PriorityHighIcon,
+  PriorityMediumIcon,
+  PriorityLowIcon,
+  PriorityNoneIcon,
 } from "../icons"
 import { NOTE_STATUS_HEX } from "@/lib/colors"
 
@@ -106,6 +112,32 @@ const PROPERTIES: PropertyDef[] = [
         { key: "todo", label: "Todo", labelKey: "status.todo", color: NOTE_STATUS_HEX.todo, icon: StatusTodoIcon },
         { key: "in_progress", label: "In Progress", labelKey: "status.in_progress", color: NOTE_STATUS_HEX.in_progress, icon: StatusInProgressIcon },
         { key: "done", label: "Done", labelKey: "status.done", color: NOTE_STATUS_HEX.done, icon: StatusDoneIcon },
+      ],
+    },
+  },
+
+  /* 1b. priority — filter ("Priority") / board-display (§11). Wiki shares the
+   *    Notes 5-stage priority; filterable + board badge. bars-not-hue (urgent =
+   *    colored glyph). displayOrder 0 ties with status → status, priority first. */
+  {
+    key: "priority",
+    category: "workflow",
+    label: "Priority",
+    icon: PriorityIcon,
+    valueType: "enum",
+    isFilterable: true,
+    isDisplayable: true,
+    filterLabelKey: "filter.category.priority",
+    displayOrder: 0,
+    displayModes: ["board"],
+    options: {
+      kind: "static",
+      values: [
+        { key: "urgent", label: "Urgent", color: "var(--chart-4)", icon: PriorityUrgentIcon },
+        { key: "high", label: "High", icon: PriorityHighIcon },
+        { key: "medium", label: "Medium", icon: PriorityMediumIcon },
+        { key: "low", label: "Low", icon: PriorityLowIcon },
+        { key: "none", label: "No priority", icon: PriorityNoneIcon },
       ],
     },
   },

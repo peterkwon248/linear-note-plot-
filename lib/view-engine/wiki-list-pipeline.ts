@@ -109,6 +109,12 @@ function matchWikiRule(article: WikiArticle, rule: FilterRule, extras?: WikiFilt
       return operator === "eq" ? match : !match
     }
 
+    // §11 — priority filter (mirrors status). undefined → "none".
+    case "priority": {
+      const match = (article.priority ?? "none") === value
+      return operator === "eq" ? match : !match
+    }
+
     case "category": {
       // Filter by WikiCategory id. _none = no categories assigned.
       const cats = article.categoryIds ?? []

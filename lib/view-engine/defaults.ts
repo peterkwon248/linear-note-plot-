@@ -43,7 +43,7 @@ const CONTEXT_DEFAULTS: Partial<Record<ViewContextKey, Partial<ViewState>>> = {
   tag:       { viewMode: "list", ...ctx("updatedAt") },
   label:     { viewMode: "list", ...ctx("updatedAt") },
   savedView: { viewMode: "list", ...ctx("updatedAt"), groupBy: "none" },
-  wiki:           { viewMode: "list", ...ctx("updatedAt"), groupBy: "none", visibleColumns: ["title", "links", "tags", "updatedAt"], toggles: { showStubs: true } },
+  wiki:           { viewMode: "list", ...ctx("updatedAt"), groupBy: "none", visibleColumns: ["title", "priority", "links", "tags", "updatedAt"], toggles: { showStubs: true } },
   "wiki-category": { viewMode: "list", ...ctx("title", "asc"), groupBy: "family", visibleColumns: ["parent", "tier", "articles", "stubs", "sub", "updatedAt"] },
   // Plan A++ Phase 1 — Library Categories own view (separate context from
   // legacy "wiki-category" so saved views with space "library-categories"
@@ -84,7 +84,7 @@ const CONTEXT_DEFAULTS: Partial<Record<ViewContextKey, Partial<ViewState>>> = {
   // books-view-engine-2: visibleColumns expanded to surface list-mode chips
   // (itemCount + kind). Stale rules referencing removed columns fall through
   // to filtered-out via ensureRequiredColumns.
-  "books":        { viewMode: "grid", ...ctx("updatedAt"), groupBy: "none", visibleColumns: ["title", "kind", "itemCount", "sources", "pinned", "updatedAt"], toggles: { showTrashed: false } },
+  "books":        { viewMode: "grid", ...ctx("updatedAt"), groupBy: "none", visibleColumns: ["title", "status", "priority", "kind", "itemCount", "sources", "pinned", "updatedAt"], toggles: { showTrashed: false } },
 }
 
 /** Build a ViewState for a specific context, merging defaults */

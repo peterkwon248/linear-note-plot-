@@ -20,10 +20,12 @@ import type { Book, Folder, GlobalBookmark, Note, SavedView, WikiArticle } from 
  *   - global Bookmarks (block-level — note section anchors / wiki block pins)
  *
  * Sort: pinnedOrder (asc, where present) → updatedAt/createdAt (desc).
+ * Bookmarks render after pins but carry a dedicated `bookmarkLimit` so a long
+ * pin list never truncates them away (capped-bug fix).
  *
  * Card visual = same vocabulary as RecentCards for tonal consistency.
  */
-export function MixedQuicklinks({ limit = 8 }: { limit?: number }) {
+export function MixedQuicklinks({ limit = 8, bookmarkLimit = 8 }: { limit?: number; bookmarkLimit?: number }) {
   const router = useRouter()
   const notes = usePlotStore((s) => s.notes)
   const wikiArticles = usePlotStore((s) => s.wikiArticles)
@@ -167,10 +169,18 @@ export function MixedQuicklinks({ limit = 8 }: { limit?: number }) {
       }
     }
 
-    // Sort: groups in priority order, within group by pinnedOrder/createdAt.
-    result.sort((a, b) => a.sortKey.localeCompare(b.sortKey))
-    return result.slice(0, limit)
-  }, [notes, wikiArticles, folders, savedViews, books, globalBookmarks, openNote, router, limit])
+    // Partition pins (whole-entity) from bookmarks (block-level), then cap each
+    // independently. Bookmarks get a DEDICATED limit so a long pin list never
+    // starves them — previously a single `slice(0, limit)` over the merged list
+    // dropped all bookmarks (sortKey group "5") once 8+ pins existed (capped bug).
+    const pinItems = result
+      .filter((it) => it.kind !== "bookmark")
+      .sort((a, b) => a.sortKey.localeCompare(b.sortKey))
+    const bookmarkItems = result
+      .filter((it) => it.kind === "bookmark")
+      .sort((a, b) => a.sortKey.localeCompare(b.sortKey))
+    return [...pinItems.slice(0, limit), ...bookmarkItems.slice(0, bookmarkLimit)]
+  }, [notes, wikiArticles, folders, savedViews, books, globalBookmarks, openNote, router, limit, bookmarkLimit])
 
   if (items.length === 0) return null
 

@@ -51,6 +51,26 @@
 
 ---
 
+## 📜 2026-05-31 (낮~오후) — §11 북·위키 status/priority 워크플로 완성 + 코멘트→Inbox + 북마크 capped + 셸 PanelsMenu/§10 Phase1 (4 P0, 1 PR) ⭐⭐⭐⭐⭐
+
+**범위**: PR #501 이어받아 P0 4건 한꺼번에. §11 북·위키 status/priority 3-entity 워크플로 완성 + 코멘트→Inbox 통합 + 북마크 퀵링크스 capped 버그 + 사용자 적발 셸 PanelsMenu 중복 버그 픽스(§10 Phase1).
+
+### 핵심 결정 (영구)
+- **§11 status·priority = manual·hybrid만**(smart=N/A gate). Books status 세터 = detail panel(BookDetailPanel) + 보드 status 4컬럼 드래그 + list 인라인 피커 + 그리드/보드 배지. Book·Wiki priority 필터·배지·세터.
+- **Books도 detail panel 있음**(사용자 적발): `showDetailPanel:false`는 list view 한정. 실제 = `sidePanelContext{type:"book"}`→`BookDetailPanel`.
+- **HTML 중첩**: 카드(`<button>`)=배지, 인라인 피커는 BookTable 행(`<div>`).
+- **§10 패널토글 리니어식 분산**: 디테일=콘텐츠 우상단(Phase1✅), 사이드바=엣지핸들(Phase2), 중앙 PanelsMenu 제거(Phase3). 에디터 헤더 PanelsMenu 중복(#120 위반) 제거.
+- **코멘트=task급 → Inbox `comment` kind**(todo/blocker→do).
+
+### 완료
+- §11 북·위키 status/priority(detail panel·보드·인라인·배지·필터) / 코멘트→Inbox / 북마크 capped 픽스 / 셸 PanelsMenu 중복 제거 + §10 Phase1. tsc 0, adapter 24/24. Store version 무변경(전부 UI).
+
+### 다음 우선순위 (P0)
+1. 셸 §10 Phase 2(사이드바 토글 분산) → Phase 3(중앙 햄버거 제거).
+2. 온톨로지 정리(§13). 3. carry: Book kind 라벨·noteType·wiki status 세터화.
+
+---
+
 ## 📜 2026-05-31 (낮~저녁) — 셸 §10 footer/레일 + 색·아이콘 시스템 정합 + IA 헌법 §13(Home 종합대시보드) + 지식베이스 9-entity + 엔티티 아이콘 SOT ⭐⭐⭐⭐⭐
 
 **범위**: 셸 footer/레일 → 색·아이콘 전면 정합(사용자 "뒤죽박죽" 적발) → IA 재논의(Home/Inbox/온톨로지) → §13 Home 슬림화 A→C(Plane 반례·노트앱 진입 검증) → 지식베이스 9-entity + 엔티티 아이콘 SOT. 8커밋.

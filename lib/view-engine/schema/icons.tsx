@@ -56,6 +56,25 @@ export const StatusTodoIcon: ReactNode = <Circle size={16} weight="regular" styl
 export const StatusInProgressIcon: ReactNode = <CircleHalf size={16} weight="regular" style={{ color: NOTE_STATUS_HEX.in_progress }} />
 export const StatusDoneIcon: ReactNode = <CheckCircle size={16} weight="regular" style={{ color: NOTE_STATUS_HEX.done }} />
 
+/* ── Priority option icons (Linear 3-bar — mirrors note-fields PriorityBars,
+   bars-not-hue; urgent stays a colored glyph). Shared by Books / Wiki priority
+   filters. ─────────────────────────────────────────────── */
+function priorityBars(level: 0 | 1 | 2 | 3, color: string): ReactNode {
+  const bars = [{ x: 1.5, h: 6 }, { x: 6.5, h: 9.5 }, { x: 11.5, h: 13 }]
+  return (
+    <svg width={16} height={16} viewBox="0 0 16 16" fill="none" style={{ color }}>
+      {bars.map((b, i) => (
+        <rect key={i} x={b.x} y={14 - b.h} width={3} height={b.h} rx={1} fill="currentColor" opacity={i < level ? 1 : 0.35} />
+      ))}
+    </svg>
+  )
+}
+export const PriorityNoneIcon: ReactNode = priorityBars(0, "var(--muted-foreground)")
+export const PriorityLowIcon: ReactNode = priorityBars(1, "var(--foreground)")
+export const PriorityMediumIcon: ReactNode = priorityBars(2, "var(--foreground)")
+export const PriorityHighIcon: ReactNode = priorityBars(3, "var(--foreground)")
+export const PriorityUrgentIcon: ReactNode = <svg width={16} height={16} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ color: "var(--chart-4)" }}><path d="M8 2 14.5 13.5H1.5z"/><line x1="8" y1="6.5" x2="8" y2="9.5"/><circle cx="8" cy="11.6" r="0.6" fill="currentColor" stroke="none"/></svg>
+
 /* ── Source option icons ─────────────────────────────────── */
 export const SourceManualIcon: ReactNode = <PencilSimple size={16} weight="regular" className="text-muted-foreground" />
 export const SourceWebclipIcon: ReactNode = <Globe size={16} weight="regular" className="text-muted-foreground" />

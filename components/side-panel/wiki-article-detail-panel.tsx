@@ -18,6 +18,7 @@ import {
   X as PhX,
   Plus as PhPlus,
   Target,
+  Flag,
 } from "lucide-react"
 import { ENTITY_ICONS } from "@/lib/entity-icons"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
@@ -27,7 +28,7 @@ import { StatusShapeIcon } from "@/components/status-icon"
 import { setActiveRoute } from "@/lib/table-route"
 import { InBooksSection } from "@/components/books/in-books-section"
 import { useT } from "@/lib/i18n"
-import { TagPicker, LabelPicker, STATUS_CONFIG } from "@/components/note-fields"
+import { TagPicker, LabelPicker, STATUS_CONFIG, PriorityDropdown } from "@/components/note-fields"
 import { CategoryPicker } from "@/components/category-picker"
 import { pickColor } from "@/components/note-fields"
 import type { WikiArticle } from "@/lib/types"
@@ -191,6 +192,17 @@ export function WikiArticleDetailPanel({ article }: { article: WikiArticle | nul
           {article.pinned ? "Pinned" : "Pin"}
         </button>
       </div>
+
+      {/* ── Priority (§11 — settable workflow attr; Notes 5-stage). The status
+          above is a read-only badge (set via the Wiki board); priority is
+          settable here. ── */}
+      <InspectorSection title="Priority" icon={<Flag size={16} strokeWidth={2} />}>
+        <PriorityDropdown
+          value={article.priority ?? "none"}
+          onChange={(priority) => updateWikiArticle(article.id, { priority })}
+        />
+      </InspectorSection>
+      <div className="mx-4 border-b border-border" />
 
       {/* Aliases */}
       {article.aliases.length > 0 && (

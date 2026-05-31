@@ -384,15 +384,16 @@ export const INBOX_VIEW_CONFIG: ViewConfig = {
   showDisplay: true,
   showDetailPanel: false,
   filterCategories: [
-    // Path-A-Step-5: source filter — 5 InboxItemKind values.
+    // Path-A-Step-5: source filter — InboxItemKind values.
     // Quick tabs cover 4 popular ones (All/Reminders/SRS/Snoozed); this filter
-    // adds wiki-redlink + auto-enroll + multi-select.
+    // adds wiki-redlink + auto-enroll + comment + multi-select.
     { key: "source", label: "Source", icon: SourceIcon, values: [
       { key: "reminder", label: "Reminder" },
       { key: "srs", label: "SRS due" },
       { key: "snooze-expired", label: "Snooze expired" },
       { key: "wiki-redlink", label: "Wiki red links" },
       { key: "auto-enroll", label: "Auto-enroll suggestions" },
+      { key: "comment", label: "Comments" },
     ]},
   ],
   quickFilters: [],

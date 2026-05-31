@@ -78,6 +78,18 @@ function InboxRowFull({
       } else if (task) {
         onOpenNote(task.noteId)
       }
+    } else if (item.kind === "comment") {
+      // 코멘트는 sourceId=comment.id → anchor(note/wiki)로 원문 출처 navigate.
+      const comment = usePlotStore.getState().comments[item.sourceId]
+      if (comment) {
+        if (comment.anchor.kind === "wiki" || comment.anchor.kind === "wiki-block") {
+          setActiveRoute("/wiki")
+          usePlotStore.getState().setSelectedNoteId(null)
+          navigateToWikiArticle(comment.anchor.articleId)
+        } else {
+          onOpenNote(comment.anchor.noteId)
+        }
+      }
     } else {
       onOpenNote(item.sourceId)
     }
@@ -120,6 +132,17 @@ function InboxRowFull({
               navigateToWikiArticle(task.noteId)
             } else if (task) {
               onOpenNote(task.noteId)
+            }
+          } else if (item.kind === "comment") {
+            const comment = usePlotStore.getState().comments[item.sourceId]
+            if (comment) {
+              if (comment.anchor.kind === "wiki" || comment.anchor.kind === "wiki-block") {
+                setActiveRoute("/wiki")
+                usePlotStore.getState().setSelectedNoteId(null)
+                navigateToWikiArticle(comment.anchor.articleId)
+              } else {
+                onOpenNote(comment.anchor.noteId)
+              }
             }
           } else {
             onOpenNote(item.sourceId)

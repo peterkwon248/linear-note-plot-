@@ -41,7 +41,7 @@ import {
   useSortable,
 } from "@dnd-kit/sortable"
 import { CSS } from "@dnd-kit/utilities"
-import type { Book } from "@/lib/types"
+import type { Book, NoteStatus } from "@/lib/types"
 import type { BookGroup, BookKind } from "@/lib/view-engine/use-books-view"
 import { getBookKind } from "@/lib/view-engine/use-books-view"
 import type { GroupBy, ViewState } from "@/lib/view-engine/types"
@@ -50,8 +50,11 @@ import {
   BookKindChip,
   BookKindIcon,
   BookSourceKindChip,
+  PriorityChip,
 } from "@/components/property-chips"
 import { shortRelative } from "@/lib/format-utils"
+import { StatusShapeIcon } from "@/components/status-icon"
+import { STATUS_CONFIG, StatusBadge } from "@/components/note-fields"
 import { cn } from "@/lib/utils"
 import { toast } from "sonner"
 import { Pin as PushPin, Zap as Lightning, Pencil as PencilSimple, Sparkles as Sparkle, Pin as PushPinSimple } from "lucide-react"
@@ -70,6 +73,7 @@ interface BooksBoardProps {
   onOpen: (id: string) => void
   onTogglePin: (id: string, pinned: boolean | undefined) => void
   onConvertToManual: (id: string, title: string) => void
+  onSetStatus: (id: string, status: NoteStatus) => void
   // Right-click context menu — same actions as the grid card / list row.
   onRename: (id: string, currentTitle: string) => void
   onDelete: (id: string, title: string) => void
@@ -85,6 +89,7 @@ export function BooksBoard({
   onOpen,
   onTogglePin,
   onConvertToManual,
+  onSetStatus,
   onRename,
   onDelete,
   onRestore,
@@ -202,12 +207,18 @@ export function BooksBoard({
           })
         }
         // smart → hybrid / manual → smart etc. fall through (no-op + hint).
+      } else if (groupBy === "status") {
+        // §11 — status column drag sets book.status (Notes board parity).
+        // smart books carry status too (harmless; kind is derived, not status).
+        const nextStatus = targetKey as NoteStatus
+        onSetStatus(book.id, nextStatus)
+        toast.success(`Moved to ${STATUS_CONFIG[nextStatus]?.label ?? nextStatus}`)
       }
       // groupBy === "none" → no card drop targets (single column).
 
       setActiveDragId(null)
     },
-    [resolvedGroups, groupBy, viewState.groupOrder, updateViewState, onTogglePin, onConvertToManual],
+    [resolvedGroups, groupBy, viewState.groupOrder, updateViewState, onTogglePin, onConvertToManual, onSetStatus],
   )
 
   const isDragDisabled = false
@@ -301,6 +312,9 @@ function BookBoardColumn({
     if (groupBy === "pinned") {
       if (group.key === "pinned") return <PushPin size={14} fill="currentColor" strokeWidth={2} className="text-amber-500" />
       return <PushPinSimple size={14} strokeWidth={2} className="text-muted-foreground" />
+    }
+    if (groupBy === "status") {
+      return <StatusShapeIcon status={group.key as NoteStatus} size={14} />
     }
     return null
   }, [groupBy, group.key])
@@ -430,6 +444,11 @@ function BookBoardCardInner({
       </div>
 
       <div className="flex flex-wrap items-center gap-1">
+        {/* §11 — status/priority badges (manual·hybrid; smart = N/A) */}
+        {kind !== "smart" && <StatusBadge status={book.status ?? "backlog"} />}
+        {kind !== "smart" && book.priority && book.priority !== "none" && (
+          <PriorityChip priority={book.priority} />
+        )}
         <BookKindChip kind={kind} />
         <BookItemCountChip count={book.items?.length ?? 0} />
         <BookSourceKindChip kinds={sourceKinds} />
