@@ -21,9 +21,10 @@
 ### 기술 학습 (영구)
 - **delegated executor 산출물 = tsc 직접 검증 필수**("completed"인데 깨진 채 보고 사례 — JSX 안 지우고 데이터/import만 지움). 
 - **큰 정렬/nbsp 블록 = Edit보다 Write 전체교체**. **파일 겹침 = 비대화형 hunk 분리 불가**(2커밋 타협).
+- **메모리가 spec과 drift할 수 있음 — spec/코드 실측 우선** (세션 끝 토론 발견): §13 "활동 위젯(코멘트/북마크/링크)"은 메모리 elaboration이고 spec(§13 Home=3위젯)엔 없었음. 코드 실측 = 북마크는 퀵링크스 **capped 버그**(sortKey5+limit8로 핀 많으면 증발), 링크는 온톨로지, **코멘트만 task급(blocker) 고아 → Inbox**. 코멘트 `CommentStatus`=backlog/todo/done/blocker(거의 이슈급).
 
 ### 다음 우선순위 (P0, 사용자 명시 — 다음 세션 첫 작업)
-1. **§13 Home 활동 위젯**(코멘트/북마크/링크) — 슬림화로 비운 자리. 데이터 소스 확인 먼저.
+1. **코멘트 → Inbox 통합** (정정 — "활동 위젯" 폐기, 메모리 drift였음). 코멘트=task급(`CommentStatus` blocker)인데 글로벌 액션 뷰 없음 → Inbox `comment` kind(todo/blocker=do). + **북마크 퀵링크스 capped 버그 승급**(mixed-quicklinks sortKey5+limit8 증발).
 2. **§11 북 status 세터 UX**(보드 드래그 vs 인라인 피커 설계) + priority 표시.
 3. carry: 온톨로지 정리·셸 §10·Book kind 라벨·noteType·**6-item Claude Design 사전정지 트랙**.
 

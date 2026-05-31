@@ -9,7 +9,7 @@
 ## 2026-05-31 (밤, 집/Windows) — **아이콘 리니어화 + SPACE_ICONS SOT + Item C 인기순위/§11 북 status·reads + Home §13 슬림화 (PR #501, 2커밋)**
 
 > 🎯 **다음 즉시 액션 hook** (사용자 명시 — 다음 세션 **첫 작업 2개**):
-> 1. **§13 Home 활동 위젯 신규 (코멘트/북마크/링크)** — Home 슬림화로 비운 자리를 cross-cutting "활동"(시간성, "이번 주 +N")으로 채움. 자산(지식베이스 3그룹=본체/분류/출처)은 완료, **활동 2단이 남음**. 파일 = `components/views/home-view.tsx` + 위젯 신규. **데이터 소스(코멘트/북마크/링크 store) 확인 먼저.**
+> 1. **코멘트 → Inbox 통합** (정정 — "활동 위젯" 폐기). 세션 끝 토론으로 발견: §13 "활동 위젯(코멘트/북마크/링크)"은 메모리 drift(spec §13 Home=3위젯). 코드 실측 = 북마크는 퀵링크스(capped 버그, 0b), 링크는 온톨로지, **코멘트만 고아**. 코멘트=task급(`CommentStatus` backlog/todo/done/**blocker**) → Inbox `comment` kind(todo/blocker=do). 파일: `inbox.ts`/`use-inbox.ts`/`comments.ts`. **(+P0 #0b: 북마크 퀵링크스 capped 버그 — mixed-quicklinks sortKey5+limit8로 핀 많으면 증발. 전용 limit 승급.)**
 > 2. **§11 북 status 세터 UX + priority 표시** — 데이터모델(status/priority/reads)·필터·v153 마이그는 됐고, status를 *설정*하는 UI가 없음. **Books는 detail panel 없음(showDetailPanel:false) → 보드 status 컬럼 드래그 vs 카드 인라인 피커 = 설계 결정 필요.** + 북/위키 priority 필터·배지 표시(notes priority=board badge 패턴 미러).
 >
 > **세션 성격**: before-work 시작 → P0 #0(스티커)부터 했는데 사용자가 연쇄로 §13 Home 정합을 지적(아이콘 drift→KB 3그룹화→inbox 중복) → 아이콘 전면 SOT화 + Item C(인기순위 신규) + Home §13 슬림화로 확장. PR #501(2커밋) 머지.
