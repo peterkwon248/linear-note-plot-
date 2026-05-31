@@ -6,6 +6,41 @@
 
 ---
 
+## 2026-05-31 (밤 늦게, 집/Windows) — **데이터 라이프사이클 감사 발견: re-seed 부활 버그 + 위키 blocks IDB orphan (전수 감사는 다음 세션, 앱 코드 무변경)**
+
+> 🎯 **다음 즉시 액션 hook**: **데이터 라이프사이클 전수 감사 + 수정** (출시 전 필수). 모든 엔티티(notes/wiki/books/tags/labels/stickers/folders/references/attachments/comments) × [시드/re-seed · soft-trash · 영구삭제 완전성 · **별도 IDB store 정리** · cascade · cross-entity] 매트릭스로 점검 → 구멍 목록 → 수정. **엔티티 多 × store 多라 병렬 멀티에이전트 sweep(workflow) 권장.** SOT=`docs/01-plan/features/data-lifecycle-audit.spec.md`.
+>
+> **사용자 의도** (인용): "노트뿐 아니라 위키랑 북도 그 부분 정말 굉장히 많이 신경써야 해. 시드데이터와 삭제 문제." / "다음 세션에서 전수 감사 들어가야 해."
+>
+> **이번에 확정된 버그 2개** (다음 세션 수정 대상):
+> 1. 🔴 **re-seed 부활**: `lib/store/index.ts:319` — notes 비면 전 엔티티(notes/wiki/folders/tags/labels/templates/books/presets) 부활 + 북 독립 backfill(`:338`). 신규 유저 데모 노출 + 삭제 데이터 부활(빈 앱 불가).
+> 2. 🔴 **위키 blocks IDB orphan**: `wiki-articles.ts:188 deleteWikiArticle`가 `deleteArticleBlocks` 미호출 → 영구삭제해도 blocks가 `wiki-block-meta-store`(IDB)에 잔존. (노트는 `deleteNote:176 removeBody`로 정리하는데 위키는 누락.)
+>
+> **핵심 점검축 = "별도 IDB store"**: 노트 본문(`note-body-store`)·위키 blocks(`wiki-block-meta-store`)·mention 인덱스(`mention-index-store`)·첨부. Zustand persist 상태만 지우고 이 store들 안 지우면 "완전 삭제"가 거짓. **정리함수 존재 ≠ 호출** — grep으로 삭제 액션이 실제 호출하는지 확인 필수.
+>
+> **첫 스텝** (다음 세션): spec read → 매트릭스로 전수 감사(workflow 권장) → 수정 ① re-seed 1회성/dev-게이트 ② 영구삭제 시 별도 IDB store 정리 wire(위키 blocks 우선) ③ cascade 통일 ④ 회귀 테스트(삭제 후 array+IDB 둘 다 비고 부활 안 하는지).
+>
+> **참고**: spec에 file:line 박힘. `lib/store/index.ts:319,338` · `slices/notes.ts:133,176` · `wiki-articles.ts:170,188` · `books.ts:228` · `helpers.ts` · `lib/{note-body,wiki-block-meta,mention-index}-store.ts`.
+>
+> **다음 P0 #2** = 데스크톱 캐치올 라우팅(ⓑ, `desktop-local-first.spec.md`) — 감사 후/병행.
+>
+> **머신**: 집(Windows). **현재 main HEAD**: 이 PR 머지 후(직전 `fb1c682` #506). **branch worktree**: `claude/data-lifecycle-audit` → 머지 후 main fresh.
+
+### 완료 (이 세션 — 계획만, 앱 코드 무변경)
+- 상용화 데이터 질문 3개(시드 / trash 영구삭제 / OS 휴지통) 실측 답변 → re-seed 버그 + 위키 blocks orphan 발견.
+- **데이터 라이프사이클 감사 spec 작성**: 확정 버그 + 엔티티별 현황 + 별도 IDB store 인벤토리 + 감사 매트릭스 + 수정 계획 + file:line.
+
+### 브레인스토밍 & 큰 결정 (영구)
+- **삭제 정확성 = 상용화 핵심**(신뢰/저장/GDPR 잊혀질 권리): 데이터 부활 0 · orphan 0 · 완전 삭제.
+- **"별도 IDB store" 엔티티가 위험지대**: persist와 별개로 IDB에 본문/blocks 저장 → 영구삭제 시 둘 다 지워야. 노트=됨(removeBody), 위키=누락(deleteArticleBlocks).
+- **시드 = 1회성이어야**: re-seed "비면 부활"은 버그. 신규 유저=빈 상태(or 웰컴 노트 1개).
+- **Q3 OS 휴지통**: 지금/IDB ❌(브라우저가 OS 휴지통 접근 불가), P2(.md 파일) ✅(Tauri `trash`/Electron `shell.trashItem` = 옵시디언 방식, 설정으로 앱휴지통/시스템휴지통/완전삭제 택1).
+
+### 환경 변경
+- **앱 코드/Store 무변경.** 신규 문서: `docs/01-plan/features/data-lifecycle-audit.spec.md`.
+
+---
+
 ## 2026-05-31 (밤, 집/Windows) — **상용화 전략 수립: 무료 로컬-퍼스트 데스크톱 앱 → 로드맵 spec (계획 세션, 앱 코드 무변경)**
 
 > 🎯 **다음 즉시 액션 hook**: **데스크톱 P0 — 정적 SPA 캐치올 라우팅(ⓑ)**. 동적 라우트를 `[[...slug]]` 클라 라우트로 통합 + `output:'export'` → `out/` 생성. **★ `/inbox` refresh→home anomaly와 같은 뿌리라 동시 해결됨**(직전 §13 entry의 "/inbox anomaly" 액션은 이걸로 흡수). 코어 라우팅이라 fresh 집중 세션 권장.
