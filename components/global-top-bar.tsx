@@ -25,11 +25,12 @@ import {
   Clock as IconClock,
   Search as MagnifyingGlass,
   FileText as IconDoc,
+  PanelLeftClose,
+  PanelLeftOpen,
 } from "lucide-react"
 import { usePlotStore } from "@/lib/store"
 import { useT } from "@/lib/i18n"
 import { routeGoBack, routeGoForward, setActiveRoute } from "@/lib/table-route"
-import { PanelsMenu } from "@/components/panels-menu"
 import { UserAvatar } from "@/components/user-avatar"
 
 export function GlobalTopBar() {
@@ -42,6 +43,8 @@ export function GlobalTopBar() {
   const navigationIndex = usePlotStore((s) => s.navigationIndex)
   const globalSearchQuery = usePlotStore((s) => s.globalSearchQuery)
   const setGlobalSearchQuery = usePlotStore((s) => s.setGlobalSearchQuery)
+  const activitybarCollapsed = usePlotStore((s) => s.activitybarCollapsed)
+  const setActivitybarCollapsed = usePlotStore((s) => s.setActivitybarCollapsed)
 
   const [recentlyViewedOpen, setRecentlyViewedOpen] = useState(false)
   const recentlyViewedRef = useRef<HTMLDivElement>(null)
@@ -86,19 +89,34 @@ export function GlobalTopBar() {
 
   return (
     /* Group A (refine): h-11 → h-12, gap-1 → gap-1.5, px-3 → px-4 — Linear-grade air room.
-     * Group D (refine): visual dividers split the bar into three clusters
-     * (PanelsMenu | nav+clock | search | right tools). */
+     * Group D (refine): visual dividers split the bar into clusters
+     * (identity | nav+clock | search | right tools). */
     <header className="flex h-12 shrink-0 items-center gap-1.5 border-b border-border bg-background px-4">
-      {/* ── Left cluster: workspace identity → panels menu → navigation ──
+      {/* ── Left cluster: workspace identity → navigation ──
        *  Avatar = workspace identity anchor (visual only, no dropdown).
-       *  PanelsMenu (hamburger) = panel toggles (Activity bar / Sidebar / Detail).
-       *  Sits to the LEFT of the recently-viewed clock (user feedback,
-       *  2026-05-25 — chunk 3 dropdown revert). */}
+       *  §10 Phase 3: the central PanelsMenu hamburger was removed — panel
+       *  toggles now live on the panels themselves (activity bar + sidebar
+       *  hover-reveal collapse/expand; detail at the content top-right). */}
       <UserAvatar />
 
       <div className="mx-2 h-5 w-px shrink-0 bg-border" aria-hidden="true" />
 
-      <PanelsMenu />
+      {/* §10 Phase 3 — Activity bar toggle. Moved here from the activity bar
+          itself (a narrow icon rail has no good in-panel home for it); sits left
+          of the recently-viewed clock, where the old PanelsMenu hamburger was.
+          Directional icon shows the action; ⌘⇧A toggles too. */}
+      <button
+        onClick={() => setActivitybarCollapsed(!activitybarCollapsed)}
+        className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-hover-bg hover:text-foreground"
+        aria-label={activitybarCollapsed ? "Show activity bar" : "Hide activity bar"}
+        title={`${activitybarCollapsed ? "Show" : "Hide"} activity bar  ⌘⇧A`}
+      >
+        {activitybarCollapsed ? (
+          <PanelLeftOpen size={14} strokeWidth={2.25} />
+        ) : (
+          <PanelLeftClose size={14} strokeWidth={2.25} />
+        )}
+      </button>
 
       {/* Recently viewed (history clock) */}
       <div className="relative" ref={recentlyViewedRef}>

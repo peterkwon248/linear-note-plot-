@@ -88,7 +88,9 @@ export function ActivityBar() {
     setTheme(theme === "dark" ? "light" : "dark")
   }
 
-  // Collapsed state: render nothing (PanelsMenu hamburger handles re-open)
+  // Collapsed state: render nothing. Re-open via the GlobalTopBar activity-bar
+  // toggle (left of the recently-viewed clock) or ⌘⇧A. (§10 Phase 3: the old
+  // PanelsMenu hamburger was removed; its activity-bar toggle moved to the top bar.)
   if (activitybarCollapsed) {
     return null
   }

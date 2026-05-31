@@ -19,6 +19,7 @@ import { useCoOccurrences } from "@/hooks/use-co-occurrences"
 import { useRelationSuggestions } from "@/hooks/use-relation-suggestions"
 import { useClusterSuggestions } from "@/hooks/use-cluster-suggestions"
 import { Toaster, toast } from "sonner"
+import { ChevronRight } from "lucide-react"
 import { ErrorBoundary } from "@/components/error-boundary"
 import { NotesTableView } from "@/components/notes-table-view"
 import { useActiveRoute, syncFromPathname, TABLE_VIEW_ROUTES, VIEW_ROUTES } from "@/lib/table-route"
@@ -300,13 +301,16 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           <ActivityBar />
 
           {/* ── Sidebar (collapsible) ── */}
-          {!sidebarCollapsed && (
+          {!sidebarCollapsed ? (
             <div
               className="relative shrink-0 h-full"
               style={{ width: sidebarWidth }}
             >
               <LinearSidebar />
-              {/* Resize handle */}
+              {/* Resize handle — drag to resize (past the collapse threshold it
+                  collapses). §10 Phase 2 keeps this seam resize-only; the collapse
+                  *click* affordance lives on the sidebar's hover-reveal top-right
+                  toggle, and the expand affordance is the collapsed rail below. */}
               <div
                 onPointerDown={handlePointerDown}
                 className="absolute right-0 top-0 z-10 h-full w-[4px] cursor-col-resize transition-colors hover:bg-primary/20 active:bg-primary/30"
@@ -314,6 +318,22 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                 aria-orientation="vertical"
               />
             </div>
+          ) : (
+            /* §10 Phase 2 — Collapsed state: a thin expand rail at the left edge
+               of the content (right of the activity bar). Faint chevron at rest,
+               brightens on hover; click re-opens the sidebar. ⌘⇧F also toggles. */
+            <button
+              onClick={() => setSidebarCollapsed(false)}
+              className="group/expand relative flex h-full w-3.5 shrink-0 items-center justify-center border-r border-border bg-[var(--sidebar-bg)] transition duration-[var(--duration-fast)] ease-[var(--ease-out)] hover:bg-hover-bg"
+              aria-label="Expand sidebar"
+              title="Expand sidebar  ⌘⇧F"
+            >
+              <ChevronRight
+                size={13}
+                strokeWidth={2}
+                className="text-muted-foreground/40 transition duration-[var(--duration-fast)] ease-[var(--ease-out)] group-hover/expand:text-foreground"
+              />
+            </button>
           )}
 
           {/* ── Main content layout ──

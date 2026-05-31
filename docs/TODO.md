@@ -3,7 +3,7 @@
 > 우선순위 기반 작업 목록. **P0 = 다음 세션 즉시 시작점** (NEXT-ACTION.md 폐지, 2026-05-12).
 > 완료 항목은 즉시 삭제. 자세한 history는 SESSION-LOG.md + MEMORY.md.
 
-**마지막 갱신**: 2026-05-31 (낮~오후 after-work, 집/Windows) — §11 북·위키 status/priority 워크플로 완성(detail panel·보드·인라인·배지·필터) + 코멘트→Inbox + 북마크 capped 버그 + 셸 PanelsMenu 중복제거/§10 Phase1 (4 P0, 1 PR). 다음 P0 = **셸 §10 Phase 2**(사이드바 토글 분산) + 온톨로지 정리·carries.
+**마지막 갱신**: 2026-05-31 (오후 after-work, 집/Windows) — 셸 §10 Phase 2(사이드바 hover 토글 + expand rail) + Phase 3(햄버거 완전 제거 + 액티비티 바 토글→상단바). 다음 P0 = **온톨로지 정리 (§13)**.
 
 ---
 
@@ -16,17 +16,18 @@
 > ✅ **2026-05-30 밤** (PR #495+#496): A3.2 스키마 엔진 + 폰트 Pretendard + A3.3 필터 크롬 + 노트행 모션 + 셸 1차.
 > ✅ **2026-05-30 저녁/낮**: Track A 착수(A0~A2) PR #494 / 통합 정합성 8커밋 PR #493.
 
-### 0.03. **🟡 P0 #2: 온톨로지 정리 (§13)**
+### 0.03. **🔴 P0 #1: 온톨로지 정리 (§13)** ← 다음 시작점
 
 dashboard→insights 흡수(Health/Coverage 중복), NUDGE→Inbox `detected`, insights 3개 분산(notes/ontology/graph) 통합, 그래프=display mode(렌즈).
+- **첫 스텝**: `ontology-view.tsx:82-95` 탭 구조 + `ontology-dashboard-panel.tsx` read → dashboard 콘텐츠 insights 흡수 설계 → `dashboard` viewMode 제거(persisted state fallback 처리).
+- **NUDGE 이관**: `lib/hooks/use-inbox.ts` detected 배열에 ontology nudge 추가.
+- ⚠️ `graphViewState.viewMode:"dashboard"` persisted 사용자 → migrate/런타임 guard 필요.
 
-### 0.04. **🟡 P0 (carry): 셸 §10 패널토글 분산** (Track B 셸 리팩터)
+### 0.04. **✅ 셸 §10 패널토글 분산 완료** (Track B 셸 리팩터)
 
-리니어 문법 = 중앙 햄버거 폐기 + 패널별 개별 토글 분산.
-- ✅ **에디터/북리더 PanelsMenu 중복 제거** — `note-editor.tsx`·`book-detail-page.tsx`가 자기 헤더에 PanelsMenu를 또 mount(#120 단일 mount 위반)하던 것 제거. GlobalTopBar 단일 source만 남김.
-- ✅ **Phase 1: 디테일 토글 = 콘텐츠 우상단** — view-header(`428`)·editor(`649`)에 이미 구현돼 있었음. view-header 아이콘 `PanelLeft`→`PanelRight` 정합(디테일=우측) + 중앙 햄버거 "Detail" 중복 row 제거.
-- 🟡 **Phase 2: 사이드바 토글** — 엣지핸들(사이드바 우경계 hover-reveal) + 헤더 토글(`PanelLeft`). `linear-sidebar.tsx`(2082줄) 분해와 묶임 = 큰 작업.
-- 🟡 **Phase 3: 중앙 `PanelsMenu` 햄버거 완전 제거** (Phase 2 후) + `⌘\`(현 split view) 충돌 + 단축키(⌘B/⌘⇧F/⌘⇧A) 개별 토글 매핑 정리. 아이콘 `ListIcon`→리니어 `PanelLeft/Right`.
+- ✅ Phase 1: 디테일 토글 = 콘텐츠 우상단
+- ✅ Phase 2: 사이드바 hover-reveal 접기(우상단) + expand rail(좌측 `w-3.5`)
+- ✅ Phase 3: PanelsMenu 햄버거 완전 제거 + 액티비티 바 토글 → 상단바(시계 왼쪽) 이전
 
 ### 0.06. **🟡 P0 #2: Book kind 라벨 변경 (헌법 §13, 가벼움)**
 

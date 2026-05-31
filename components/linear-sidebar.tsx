@@ -775,10 +775,24 @@ export function LinearSidebar() {
     books.filter((b) => b.folderIds.includes(folderId) && !b.trashed).length
 
   return (
-    <aside className="a-sidebar h-full w-full shrink-0 select-none" data-active-space={activeSpace}>
+    <aside className="a-sidebar group/sidebar relative h-full w-full shrink-0 select-none" data-active-space={activeSpace}>
       {/* Header (clock/back/forward/search) moved to GlobalTopBar.
        *  Sidebar now starts directly with navigation — workspace chrome lives
        *  in the top bar so "Hide all panels" leaves those controls reachable. */}
+
+      {/* §10 Phase 2 — Collapse toggle (hover-reveal, top-right corner). The
+       *  sidebar has no header row, so the collapse affordance floats over the
+       *  top-right and only appears on sidebar hover (Notion/Linear pattern).
+       *  Pairs with the right-edge seam chevron + the collapsed expand rail in
+       *  the layout host. ⌘⇧F still toggles globally. */}
+      <button
+        onClick={() => setSidebarCollapsed(true)}
+        className="absolute right-2.5 top-2.5 z-20 flex h-6 w-6 items-center justify-center rounded-md bg-[var(--sidebar-bg)] text-muted-foreground opacity-0 transition duration-[var(--duration-fast)] ease-[var(--ease-out)] hover:bg-hover-bg hover:text-foreground group-hover/sidebar:opacity-100"
+        aria-label="Collapse sidebar"
+        title="Collapse sidebar  ⌘⇧F"
+      >
+        <SidebarSimple size={16} strokeWidth={1.75} />
+      </button>
 
       {/* Navigation */}
       <nav className="flex-1 overflow-y-auto px-2.5 pt-2.5 pb-2">

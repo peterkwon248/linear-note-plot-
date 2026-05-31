@@ -51,6 +51,23 @@
 
 ---
 
+## 📜 2026-05-31 (오후) — 셸 §10 Phase 2·3 완성 — 사이드바 hover 토글 + 햄버거 완전 제거 + 액티비티 바 토글 → 상단바 ⭐⭐⭐⭐⭐
+
+**범위**: §10 Phase 2(사이드바 hover-reveal 접기 + expand rail) + Phase 3(PanelsMenu 완전 제거 + 액티비티 바 토글 상단바 이전). tsc 0 / build 0. Store 무변경.
+
+### 핵심 결정 (영구)
+- **패널 토글 분산 완성**: 디테일=우상단 / 사이드바=인-패널 hover / 액티비티 바=상단바 영속. **비대칭 의도적** — 크롬→상단바, 콘텐츠→인-패널. 대칭(상단바 2개)=햄버거 재현 → 기각.
+- **PanelsMenu 완전 삭제** (`git rm`). GlobalTopBar `<PanelsMenu />` 제거. ⌘⇧F/⌘⇧A 단축키 유지.
+- **사이드바 collapse = expand rail** / **액티비티 바 collapse = `return null`** (상단바 토글로 복귀).
+
+### 완료
+- Phase 2: `linear-sidebar.tsx` hover-reveal 접기 + `layout.tsx` expand rail / Phase 3: `panels-menu.tsx` 삭제 + `global-top-bar.tsx` 액티비티 바 토글(PanelLeftClose/Open) / 4가지 polish(중복 정리·rail 슬림·아이콘 리니어 톤·모션 토큰).
+
+### 다음 우선순위 (P0)
+1. 온톨로지 정리(§13). 2. carries.
+
+---
+
 ## 📜 2026-05-31 (낮~오후) — §11 북·위키 status/priority 워크플로 완성 + 코멘트→Inbox + 북마크 capped + 셸 PanelsMenu/§10 Phase1 (4 P0, 1 PR) ⭐⭐⭐⭐⭐
 
 **범위**: PR #501 이어받아 P0 4건 한꺼번에. §11 북·위키 status/priority 3-entity 워크플로 완성 + 코멘트→Inbox 통합 + 북마크 퀵링크스 capped 버그 + 사용자 적발 셸 PanelsMenu 중복 버그 픽스(§10 Phase1).
