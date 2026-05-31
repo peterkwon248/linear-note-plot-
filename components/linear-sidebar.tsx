@@ -15,7 +15,6 @@ import {
   IconOntology,
   IconFolder,
   IconTag,
-  IconLabel,
   IconTemplate,
   IconInsight,
   IconSmartBook,
@@ -25,6 +24,7 @@ import {
   IconDoc,
   IconTrash,
 } from "@/components/plot-icons"
+
 import {
   ChevronDown as CaretDown,
   ChevronRight as CaretRight,
@@ -39,21 +39,14 @@ import {
   GitMerge,
   Scissors,
   ArrowRight,
-  Folders,
   PanelLeft as SidebarSimple,
   BarChart3 as ChartBar,
   Network as Graph,
   PieChart as ChartPie,
   CheckSquare as CheckSquareIcon,
-  Archive as Books,
-  Library as BooksSpaceIcon,
-  BookOpen,
-  Quote as Quotes,
-  Tag as PhTag,
-  Paperclip,
-  Sticker as StickerPhosphor,
   CircleHelp,
 } from "lucide-react"
+import { ENTITY_ICONS, SPACE_ICONS } from "@/lib/entity-icons"
 import { setWikiCategoryFilter } from "@/lib/wiki-category-filter"
 import { getCurrentViewContextKey, getSavedViewSpaceForActivity } from "@/lib/view-engine/saved-view-context"
 import type { ViewContextKey } from "@/lib/view-engine/types"
@@ -1078,7 +1071,7 @@ export function LinearSidebar() {
             <div className="space-y-px">
               <NavLink
                 href="/wiki"
-                icon={<BookOpen size={20} />}
+                icon={<ENTITY_ICONS.wiki size={20} />}
                 label={t("sidebar.overview")}
                 count={wikiCount > 0 ? wikiCount : undefined}
                 active={
@@ -1682,20 +1675,20 @@ export function LinearSidebar() {
             <div className="space-y-px">
               <NavLink
                 href="/library"
-                icon={<Books size={20} />}
+                icon={<SPACE_ICONS.library size={20} />}
                 label={t("sidebar.overview")}
                 active={isActive("/library")}
               />
               <NavLink
                 href="/library/references"
-                icon={<Quotes size={20} />}
+                icon={<ENTITY_ICONS.references size={20} />}
                 label={t("library.tab.references")}
                 count={Object.keys(references).length > 0 ? Object.keys(references).length : undefined}
                 active={isActive("/library/references")}
               />
               <NavLink
                 href="/library/tags"
-                icon={<PhTag size={20} strokeWidth={1.5} />}
+                icon={<ENTITY_ICONS.tags size={20} strokeWidth={1.5} />}
                 label={t("library.tab.tags")}
                 count={tags.filter(t => !t.trashed).length > 0 ? tags.filter(t => !t.trashed).length : undefined}
                 active={isActive("/library/tags")}
@@ -1705,7 +1698,7 @@ export function LinearSidebar() {
                   제거됨. */}
               <NavLink
                 href="/library/labels"
-                icon={<IconLabel size={20} />}
+                icon={<ENTITY_ICONS.labels size={20} />}
                 label={t("library.tab.labels")}
                 count={labels.filter((l) => !(l as { trashed?: boolean }).trashed).length || undefined}
                 active={isActive("/library/labels")}
@@ -1727,7 +1720,7 @@ export function LinearSidebar() {
                 data-active={activeRoute === "/library/categories" ? "true" : undefined}
               >
                 <span className="flex shrink-0 items-center justify-center w-5 h-5">
-                  <Folders size={20} />
+                  <ENTITY_ICONS.categories size={20} />
                 </span>
                 <span className="truncate text-left flex-1">{t("library.tab.categories")}</span>
                 {wikiCategories.length > 0 && (
@@ -1738,7 +1731,7 @@ export function LinearSidebar() {
               </button>
               <NavLink
                 href="/library/files"
-                icon={<Paperclip size={20} strokeWidth={1.5} />}
+                icon={<ENTITY_ICONS.files size={20} strokeWidth={1.5} />}
                 label={t("library.tab.files")}
                 count={attachments.length > 0 ? attachments.length : undefined}
                 active={isActive("/library/files")}
@@ -1747,7 +1740,7 @@ export function LinearSidebar() {
                   cross-cutting library indices (References / Tags / Files). */}
               <NavLink
                 href="/stickers"
-                icon={<StickerPhosphor size={20} />}
+                icon={<ENTITY_ICONS.stickers size={20} />}
                 label={t("library.tab.stickers")}
                 count={stickers.filter((s) => !s.trashed).length}
                 active={isActive("/stickers")}
@@ -1770,7 +1763,7 @@ export function LinearSidebar() {
             <div className="space-y-px">
               <NavLink
                 href="/books"
-                icon={<BooksSpaceIcon size={20} />}
+                icon={<SPACE_ICONS.books size={20} />}
                 label={t("books.all_books")}
                 count={books.filter((b) => !b.trashed).length || undefined}
                 active={isActive("/books")}

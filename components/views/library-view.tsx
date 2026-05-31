@@ -31,7 +31,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import {
-  Archive as Books,
   Plus,
   FileText,
   Tag,
@@ -49,7 +48,7 @@ import {
   AlertTriangle as Warning,
   Paperclip,
 } from "lucide-react"
-import { ENTITY_ICONS } from "@/lib/entity-icons"
+import { ENTITY_ICONS, SPACE_ICONS } from "@/lib/entity-icons"
 import { setCategoryOverview } from "@/lib/wiki-view-mode"
 import {
   BookOpenText,
@@ -769,7 +768,7 @@ function LibraryOverview() {
   return (
     <div className="flex-1 flex flex-col overflow-hidden">
       <ViewHeader
-        icon={<Books strokeWidth={2} className="h-4 w-4" />}
+        icon={<SPACE_ICONS.library strokeWidth={2} className="h-4 w-4" />}
         title={t("library.title")}
         showDetailPanel
         detailPanelOpen={usePlotStore.getState().sidePanelOpen}
@@ -844,7 +843,7 @@ function LibraryOverview() {
           {isEmpty ? (
             <div className="flex flex-col items-center gap-3 py-20 text-center">
               <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-secondary/60">
-                <Books className="text-muted-foreground" size={20} strokeWidth={2} />
+                <SPACE_ICONS.library className="text-muted-foreground" size={20} strokeWidth={2} />
               </div>
               <p className="text-note font-medium text-muted-foreground">Library is empty</p>
               <p className="text-2xs text-muted-foreground/60">Create references, add tags, or attach files to your notes</p>

@@ -5,7 +5,8 @@ import { useRouter } from "next/navigation"
 import { usePlotStore } from "@/lib/store"
 import { setActiveRoute } from "@/lib/table-route"
 import { navigateToWikiArticle } from "@/lib/wiki-article-nav"
-import { FileText, BookOpen, Library as Books, Folder as PhFolder, Filter as Funnel, Bookmark as BookmarkSimple } from "lucide-react"
+import { FileText, BookOpen, Folder as PhFolder, Filter as Funnel, Bookmark as BookmarkSimple } from "lucide-react"
+import { SPACE_ICONS } from "@/lib/entity-icons"
 import type { Book, Folder, GlobalBookmark, Note, SavedView, WikiArticle } from "@/lib/types"
 
 /**
@@ -210,7 +211,7 @@ function iconFor(kind: "note" | "wiki" | "folder" | "view" | "bookmark" | "book"
     case "bookmark":
       return <BookmarkSimple size={14} fill="currentColor" strokeWidth={2} />
     case "book":
-      return <Books size={14} strokeWidth={2} />
+      return <SPACE_ICONS.books size={14} strokeWidth={2} />
   }
 }
 

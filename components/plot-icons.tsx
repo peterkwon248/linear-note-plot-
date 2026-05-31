@@ -23,14 +23,9 @@
  */
 
 import { type SVGProps } from "react"
+import { SPACE_ICONS } from "@/lib/entity-icons"
 import {
   // Activity bar
-  House,
-  Inbox,
-  FileText,
-  BookOpen,
-  Network,
-  Calendar,
   Sun,
   Moon,
   Settings,
@@ -70,15 +65,15 @@ type IconProps = SVGProps<SVGSVGElement> & { size?: number }
 /* ── Activity Bar (Tier 1, 20px) ─────────────────────────────────────── */
 
 export function IconHome({ size = 20, ...props }: IconProps) {
-  return <House size={size} strokeWidth={1.5} {...props} />
+  return <SPACE_ICONS.home size={size} strokeWidth={1.5} {...props} />
 }
 
 export function IconInbox({ size = 20, ...props }: IconProps) {
-  return <Inbox size={size} strokeWidth={1.5} {...props} />
+  return <SPACE_ICONS.inbox size={size} strokeWidth={1.5} {...props} />
 }
 
 export function IconNotes({ size = 20, ...props }: IconProps) {
-  return <FileText size={size} strokeWidth={1.5} {...props} />
+  return <SPACE_ICONS.notes size={size} strokeWidth={1.5} {...props} />
 }
 
 /**
@@ -93,15 +88,15 @@ export function IconNotes({ size = 20, ...props }: IconProps) {
  * entity + stub/article) were removed in the v151 wiki-status unification.
  */
 export function IconWiki({ size = 20, ...props }: IconProps) {
-  return <BookOpen size={size} strokeWidth={1.5} {...props} />
+  return <SPACE_ICONS.wiki size={size} strokeWidth={1.5} {...props} />
 }
 
 export function IconOntology({ size = 20, ...props }: IconProps) {
-  return <Network size={size} strokeWidth={1.5} {...props} />
+  return <SPACE_ICONS.ontology size={size} strokeWidth={1.5} {...props} />
 }
 
 export function IconCalendar({ size = 20, ...props }: IconProps) {
-  return <Calendar size={size} strokeWidth={1.5} {...props} />
+  return <SPACE_ICONS.calendar size={size} strokeWidth={1.5} {...props} />
 }
 
 export function IconSun({ size = 18, ...props }: IconProps) {

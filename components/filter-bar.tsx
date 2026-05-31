@@ -9,15 +9,14 @@ import {
   Link as PhLink,
   Eye as PhEye,
   FolderOpen,
-  Tag as PhTag,
   Pin as PushPin,
   CircleDashed,
   BookOpen,
   FileText,
   Type as TextT,
   CaseSensitive as TextAa,
-  Hash as PhHash,
 } from "lucide-react"
+import { ENTITY_ICONS } from "@/lib/entity-icons"
 import type { FilterRule } from "@/lib/view-engine/types"
 import type { Folder, Tag as TagType, Label } from "@/lib/types"
 import { useT } from "@/lib/i18n"
@@ -97,8 +96,8 @@ export function formatFilterLabel(rule: FilterRule, folderList?: Folder[], tagLi
 const FIELD_INFO: Record<string, { label: string; icon: React.ReactNode }> = {
   status:         { label: "Status",    icon: <CircleDashed size={11} /> },
   folder:         { label: "Folder",    icon: <FolderOpen size={11} /> },
-  label:          { label: "Label",     icon: <PhTag size={11} /> },
-  tags:           { label: "Tags",      icon: <PhHash size={11} /> },
+  label:          { label: "Label",     icon: <ENTITY_ICONS.labels size={11} /> },
+  tags:           { label: "Tags",      icon: <ENTITY_ICONS.tags size={11} /> },
   source:         { label: "Source",    icon: <FileText size={11} /> },
   updatedAt:      { label: "Updated",   icon: <PhClock size={11} /> },
   createdAt:      { label: "Created",   icon: <PhClock size={11} /> },
@@ -109,7 +108,7 @@ const FIELD_INFO: Record<string, { label: string; icon: React.ReactNode }> = {
   content:        { label: "Content",   icon: <FileText size={11} /> },
   title:          { label: "Title",     icon: <TextT size={11} /> },
   wordCount:      { label: "Words",     icon: <TextAa size={11} /> },
-  category:       { label: "Category",  icon: <PhTag size={11} /> },
+  category:       { label: "Category",  icon: <ENTITY_ICONS.categories size={11} /> },
   wikiTier:       { label: "Hierarchy", icon: <PhLink size={11} /> },
   connectedTo:    { label: "Connected", icon: <PhLink size={11} /> },
 }
