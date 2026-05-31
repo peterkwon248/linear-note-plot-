@@ -3,12 +3,13 @@
 > 우선순위 기반 작업 목록. **P0 = 다음 세션 즉시 시작점** (NEXT-ACTION.md 폐지, 2026-05-12).
 > 완료 항목은 즉시 삭제. 자세한 history는 SESSION-LOG.md + MEMORY.md.
 
-**마지막 갱신**: 2026-05-31 (저녁 after-work, 집/Windows) — 온톨로지 정리 §13(insights 해체→Dashboard+Inbox+그래프 rings) + 사이드바 헤더 행(닫힘 B) + /graph-insights 폐기. 다음 P0 = **(검증) /inbox refresh anomaly + §13 남음(notes /insights 통합 · 그래프=display mode)**.
+**마지막 갱신**: 2026-05-31 (밤 after-work, 집/Windows) — 상용화 전략 수립: 무료 로컬-퍼스트 데스크톱 로드맵 spec(`desktop-local-first.spec.md`, 계획 세션). 다음 P0 = **데스크톱 P0: 정적 SPA 캐치올 라우팅(ⓑ) — `/inbox` anomaly 동시 해결 + `output:export` 정적화**.
 
 ---
 
 ## 🟣 P0 — 즉시 (cross-machine 진입점, 2026-05-31 — IA 헌법 적용 단계)
 
+> ✅ **2026-05-31 밤** (이 PR, 계획 세션): **상용화 전략 + 데스크톱 로드맵 spec** (`desktop-local-first.spec.md`) — 무료 로컬-퍼스트 데스크톱 먼저(A) / 하이브리드 저장(B: .md+.plot 사이드카) / Tauri / 캐치올 라우팅(ⓑ). 앱 코드 무변경.
 > ✅ **2026-05-31 저녁** (이 PR): **온톨로지 정리 §13** — insights(발견) 탭 해체 → 분석=Dashboard 통합(Cohesion/Top Notes/Density) · 발견(Nudge)=Inbox `detected`(ontology-nudge) · 그래프 고아 ring · 사이드바 Insights nav 제거 + Home→Inbox. + **사이드바 헤더 행**(닫힘 버튼 B, Inbox 카운트 겹침 해소) + **/graph-insights 폐기**(고아·Dashboard 중복·stale). 19파일 +135/−758.
 > ✅ **2026-05-31 낮~오후** (이 PR): §11 북·위키 status/priority 워크플로 완성 — Books status 세터 = **detail panel + 보드 status 4컬럼 드래그 + list 인라인 피커 + 그리드/보드 배지**, Book·Wiki **priority 필터·배지·세터**(manual·hybrid만). + **코멘트→Inbox**(`comment` kind, todo/blocker→do) + **북마크 퀵링크스 capped 버그** + **셸 PanelsMenu 중복 제거/§10 Phase1**(디테일 토글 우상단 정합 + 에디터 햄버거 중복 제거).
 > ✅ **2026-05-31 밤** (PR #501, 2커밋): 아이콘 리니어화(스티커 SVG·온톨로지 Waypoints·라벨 Ribbon) + **SPACE_ICONS SOT** + Item C 인기순위(Home·Wiki) + §11 북 status필터·reads(v153) + Home §13 슬림화(KB 3그룹 + 중복 4섹션 제거).
@@ -17,11 +18,13 @@
 > ✅ **2026-05-30 밤** (PR #495+#496): A3.2 스키마 엔진 + 폰트 Pretendard + A3.3 필터 크롬 + 노트행 모션 + 셸 1차.
 > ✅ **2026-05-30 저녁/낮**: Track A 착수(A0~A2) PR #494 / 통합 정합성 8커밋 PR #493.
 
-### 0.03. **🔴 P0 #1: `/inbox` refresh→home anomaly 검증** ← 다음 시작점
+### 0.02. **🔴 P0 #1: 데스크톱 P0 — 정적 SPA 캐치올 라우팅 (ⓑ)** ← 다음 시작점
 
-`/inbox` 진입 후 새로고침/URL 직접 진입 시 home으로 튕기는지 실화면 검증. **인앱 클릭은 정상**(받은편지함 뷰 뜸, data-active 확인). preview 아티팩트 가능성 vs 진짜 refresh 버그.
-- **첫 스텝**: 실화면 `/inbox`에서 F5 → home 뜨면 진짜 버그. `app/(app)/layout.tsx:96-98`(syncFromPathname, [pathname] deps) vs `:105-115`(start-view redirect, pathname==="/"에서만 fire). hard-load가 "/" 거쳐 /home redirect되는 경로 추적.
-- ⚠️ 이번 §13 변경과 무관(글로벌 Inbox 라우팅 미변경) — pre-existing.
+> SOT: `docs/01-plan/features/desktop-local-first.spec.md` (Risk #6 + "다음 액션"). 무료 데스크톱 출시의 첫 코드 작업.
+
+동적 라우트(`books/folder/tag/label [id]`)를 `[[...slug]]` 캐치올 **클라이언트** 라우트로 통합 + `next.config.mjs` `output:'export'` → `out/` 생성. **★ `/inbox` refresh→home anomaly와 같은 뿌리(activeRoute 모듈상태 hard-load 복원 실패)라 동시 해결.**
+- **첫 스텝**: 4개 `[id]/page.tsx` → `[[...slug]]` 캐치올. 로드 시 `window.location.pathname`→`syncFromPathname`(lib/table-route)→activeRoute 복원. build→`out/` 확인 + 실화면 `/inbox`·`/folder/{id}` F5 정상 복원 검증.
+- ⚠️ **코어 라우팅 = blast radius 큼 + 이 env preview route 검증 약함(module-state) → 사용자 실화면 검증 필수. fresh 집중 세션 권장.**
 
 ### 0.035. **🔴 P0 #2: §13 남음 — insights 분산 통합 + 그래프=display mode(렌즈)**
 
