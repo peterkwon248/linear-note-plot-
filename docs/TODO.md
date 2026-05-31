@@ -15,9 +15,15 @@
 > ✅ **2026-05-30 밤** (PR #495+#496): A3.2 스키마 엔진 + 폰트 Pretendard + A3.3 필터 크롬 + 노트행 모션 + 셸 1차.
 > ✅ **2026-05-30 저녁/낮**: Track A 착수(A0~A2) PR #494 / 통합 정합성 8커밋 PR #493.
 
-### 0. **🔴 P0 #0 (최우선): §13 Home 활동 위젯 신규 (코멘트/북마크/링크)** ⭐ 다음 세션 첫 작업 (사용자 명시)
+### 0. **🔴 P0 #0 (최우선): 코멘트 → Inbox 통합** ⭐ 다음 세션 첫 작업 (정정 — "활동 위젯" 폐기)
 
-Home §13 슬림화(받은편지함·Featured·최근활동·Recents 제거 = PR #501 완료)로 비운 자리를 **활동 위젯**으로 채움 → §13 종합 대시보드 완성. 자산(지식베이스 3그룹=본체/분류/출처)은 완료(StatsRow), **활동 2단(시간성, "이번 주 +N")이 남음**. **데이터 소스(코멘트/북마크/링크 store) 확인 먼저** → `components/views/home-view.tsx`에 기존 ContentCard 패턴(Most Connected/Most Visited 재사용)으로 추가. cross-cutting only 원칙 유지.
+**파보니 §13 "활동 위젯(코멘트/북마크/링크)"은 메모리 drift였다** — spec(`linear-ia-constitution.spec.md:271`) §13 Home = 캡처+지식베이스+퀵링크스 **3위젯**, 활동위젯 없음. 코드 실측 결과: 북마크=퀵링크스(아래 0b), 링크=온톨로지, **코멘트만 진짜 고아**.
+
+코멘트는 `CommentStatus = backlog|todo|done|`**`blocker`** (Linear 스타일, `lib/types.ts:1194`) = **task급**인데 per-entity detail panel에만 있고 "내 미해결 코멘트 전부" 글로벌 뷰가 없음 → §13 "액션은 Inbox 단일화"의 정확한 적용 = **Inbox에 `comment` kind 추가** (미해결 todo/blocker → `do` 섹션, done → 사라짐). 파일: `lib/store/slices/inbox.ts`(InboxItemKind + "comment"), `lib/hooks/use-inbox.ts`(sectionFor case + open-comment 수집), `comments.ts`(getOpenComments selector), spec §Inbox에 comment source 추가.
+
+### 0.01. **🟡 P0 #0b: 북마크 퀵링크스 승급 (capped 버그)**
+
+`components/home/mixed-quicklinks.tsx`가 글로벌 북마크를 **sortKey 그룹 `5`(최하, :146/161) + 전체 `slice(0, limit)` limit 8(:172)** 으로 처리 → 핀(노트/위키/북/폴더/뷰)이 8개↑면 북마크 **0개 표시(증발)**. 북마크는 즐겨찾기 성격이라 집은 퀵링크스가 맞음 → **북마크 전용 limit/섹션**으로 안 잘리게 승급(별도 뷰는 과함).
 
 ### 0.02. **🔴 P0 #1: §11 북 status 세터 UX + priority 표시** ⭐ 다음 세션 첫 작업 (사용자 명시)
 
