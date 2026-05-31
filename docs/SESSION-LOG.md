@@ -6,6 +6,59 @@
 
 ---
 
+## 2026-05-31 (저녁, 집/Windows) — **온톨로지 정리 §13 (insights 해체→Dashboard+Inbox+그래프 rings) + 사이드바 헤더 행(닫힘 버튼 B) + /graph-insights 폐기 (1 PR, 19파일 +135/−758)**
+
+> 🎯 **다음 즉시 액션 hook**: **(검증 먼저) `/inbox` refresh→home anomaly** + **(메인) §13 남음 = `/insights`(notes) 통합 + 그래프=display mode(렌즈)**.
+>
+> **사용자 의도**: before-work로 §13 온톨로지 정리 진입 → 사용자가 **"insights와 dashboard는 다른 거(발견 vs 분석)"**라며 spec의 "dashboard→insights 흡수"를 뒤집음 → C안 합성(분석=Dashboard 통합 / 발견=Inbox / 그래프 시각 잔존)으로 구현. 이어서 사이드바 닫힘 버튼 위치 브레인스토밍(Inbox 카운트와 겹침 실측) → B안(헤더 행). 마지막 /graph-insights(3번째 분석면) 폐기.
+>
+> **첫 스텝** (다른 머신 바로):
+> 1. **`/inbox` anomaly 검증**: 실화면에서 `/inbox` 진입 후 F5 → home 뜨는지. **인앱 클릭은 정상**(받은편지함 뷰=할일/되새김/발견 뜸, data-active 확인됨). 의심 = `app/(app)/layout.tsx:96-98`(syncFromPathname effect) vs `:105-115`(start-view redirect, pathname==="/"에서만 fire). hard-load가 "/"로 갔다 /home redirect되는지. preview 아티팩트 가능성도.
+> 2. **§13 남음 — notes `/insights` 통합**: `components/insights-view.tsx`(Notes)가 ontology Dashboard와 역할 겹치는지 비교 → 통합/역할분리. + **그래프 = display mode(렌즈)** = `ontology-graph-canvas`를 list/board처럼 어느 컬렉션서도 띄우는 큰 리팩터(scope 먼저 확인).
+>
+> **컴포넌트 구조 / 데이터 흐름** (이번에 만든 것):
+> - **Nudge→Inbox**: `useKnowledgeNudges()`(hooks/use-knowledge-nudges, onClick 무시) → `lib/hooks/use-inbox.ts`가 `ontology-nudge` kind로 detected push (ts=대상노트 updatedAt via `noteById.get(nudge.id.split(":")[1])`, sourceId=nudge.id "orphan:noteId" 등). 클릭 네비 = `inbox-view.tsx` handleRowClick/onKeyDown의 `ontology-nudge` 분기(split→onOpenNote(primaryId), orphan은 연결패널).
+> - **Dashboard 흡수**: `ontology-dashboard-panel.tsx`에 `CohesionRadial`+`TopNotesBar`(insights-charts import)+Density stat. 중복 donut(Tagged/Orphan)은 버림.
+> - **그래프 ring**: `ontology-graph-canvas.tsx` 노드 `<g>` 안 `node.connectionCount===0 && nodeType!=="tag"` faint dashed ring(~line 1882).
+> - **insights 탭 해체**: `ontology-view.tsx` graph/dashboard 2-way(persisted "insights"→dashboard 런타임 가드), `linear-sidebar.tsx` Insights NavLink 제거, `home-view.tsx` jumpToInbox(→/inbox).
+> - **사이드바 헤더**: `linear-sidebar.tsx` aside 최상단 `<header>`(좌 `t(\`nav.space.${activeSpace}\`)` 공간명, 우 닫힘 hover). 기존 absolute top-right 버튼 제거(Inbox 카운트와 겹쳤음).
+>
+> **위험 + 회피 (이번 교훈)**:
+> - **preview route-gated 화면 오독 주의**: `/inbox` hard-nav가 /home 떨어진 걸 "버그 확정"이라 성급 단정 → 실은 사이드바(공간 콘텐츠)를 메인으로 오독했던 것. **data-active + visible heading(h1/h2/header)으로 메인 뷰 정체 확정** 후 판단. 사이드바는 route-gated 아니라 실측 가능.
+> - design-sensitive(발견/분석 구분)라 executor 안 쓰고 직접 구현. 각 phase 후 tsc, 끝에 build.
+>
+> **참고 파일**: `lib/hooks/use-inbox.ts`, `components/views/inbox-view.tsx`, `components/ontology/ontology-dashboard-panel.tsx`, `ontology-graph-canvas.tsx`(~1882), `components/views/ontology-view.tsx`, `components/linear-sidebar.tsx`(~783 헤더 / ~1497 ontology nav), `app/(app)/layout.tsx:96`(/inbox anomaly), `docs/01-plan/features/linear-ia-constitution.spec.md` §13.
+>
+> **머신**: 집(Windows). **현재 main HEAD**: 이 PR 머지 후(직전 `fbc7b7e` #504). **branch worktree**: `claude/loving-perlman-14676f` → 머지 후 main fresh.
+
+### 완료 (이 세션 — 1 PR)
+- **§13 온톨로지 정리** (4 phase): ① Dashboard에 Cohesion radial + 복합 Top Notes(WAR) + Density 흡수(중복 donut 버림) ② Nudge 4종 → Inbox `detected`(`ontology-nudge` kind, Lightbulb, source 필터) ③ 고아 노드 faint dashed ring ④ insights 탭 해체(graph/dashboard 2-way, 사이드바 Insights nav 제거, Home "improve graph"→Inbox, persisted 가드). spec §13 방향 정정.
+- **사이드바 헤더 행** (닫힘 버튼 B): aside 최상단 헤더(좌 공간명/우 닫힘 hover). 기존 absolute 닫힘이 Inbox 카운트 "18"과 겹치던 것(실측 x261 vs x260) 해소.
+- **/graph-insights 폐기**: GraphInsightsView(343줄)+라우트 shell+layout/table-route/secondary-panel 참조 삭제. 고아·Dashboard 중복·stale noteType.
+
+### 브레인스토밍 & 큰 결정 (영구)
+- **insights(발견) ≠ dashboard(분석)**: spec "dashboard→insights 흡수"를 사용자가 뒤집음. 분석 차트=Dashboard 한 곳, 발견(Nudge)=Inbox `detected`(헌법 "액션은 Inbox 단일화"), 그래프는 고아 ring으로 발견 시각 잔존, insights 탭 해체. → C안 합성.
+- **사이드바 닫힘 = 헤더 행(B)**: 리니어 방식(헤더에 닫힘/콘텐츠는 아래). 우리 사이드바는 공간전환을 액티비티바로 빼서 헤더가 없어 닫힘이 Inbox 위에 떠 겹쳤음. §10 "사이드바=인-패널" 유지. 좌측=현재 공간명.
+- **/graph-insights = 폐기**: "insights 3개 분산(notes/ontology/graph) 통합"의 graph 조각. 고유 콘텐츠 없음(Dashboard 상위집합) → 삭제.
+
+### 기술 학습 (영구)
+- **preview route-gated 화면 오독**: hard-nav /inbox→home을 "버그"로 성급 단정했으나 사이드바를 메인으로 오독. data-active + visible heading으로 메인 뷰 확정 필수. 사이드바는 route-gated 아니라 rect 실측 가능(닫힘 vs Inbox 카운트 겹침 측정으로 B 검증).
+- **nudge ts = noteById 계산**: useKnowledgeNudges 안 건드리고 use-inbox에서 `noteById.get(nudge.id.split(":")[1])?.updatedAt`. nudge.id primary 토큰이 항상 note id(orphan/promote=noteId, unlinked=sourceId, linked=targetId).
+- **sidebar 헤더 placement**: `.a-sidebar` flex-col이라 shrink-0 헤더 + flex-1 nav 자연 배치. nav pt-2.5→pt-1.
+
+### Watch Out (다음 세션)
+- **`/inbox` refresh→home anomaly 미해결**(검증 필요, hook 참고). 인앱 클릭은 정상.
+- **사이드바 헤더 좌측=공간명**: 글로벌 Inbox 볼 때 헤더는 직전 공간명("홈") 표시(메인=Inbox). 사용자 "괜찮아"였으나 살짝 비대칭.
+- **nudge 텍스트 영문**: useKnowledgeNudges 영문 하드코딩(기존부터). KO 모드서 detected nudge만 영문 — i18n 별도 정리 항목.
+
+### 환경 변경
+- **Store version: 무변경** (전부 UI/IA. inbox `ontology-nudge` kind는 string union 추가라 마이그 불요).
+- 삭제: `graph-insights-view.tsx`, `ontology-insights-panel.tsx`, `ontology-nudge-section.tsx`, `app/(app)/graph-insights/page.tsx`.
+- i18n: 무변경(nav.space.* 재사용, inbox source 필터 라벨 영문 리터럴).
+- Tests: build 0 / tsc 0. nudge 데이터 실측(고아 15→detected 9). 신규 테스트 미작성.
+
+---
+
 ## 2026-05-31 (오후, 집/Windows) — **셸 §10 Phase 2·3 완성 — 사이드바 hover 토글 + 햄버거 완전 제거 + 액티비티 바 토글 → 상단바 이전**
 
 > 🎯 **다음 즉시 액션 hook**: **온톨로지 정리 (§13)** — `dashboard` 탭 → `insights`로 흡수(Health/Coverage 중복 제거), NUDGE → Inbox `detected` 이관, 그래프 = display mode 전환.

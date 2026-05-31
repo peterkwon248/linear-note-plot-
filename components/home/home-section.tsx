@@ -5,7 +5,7 @@ import type { ReactNode } from "react"
 /**
  * Home > Section wrapper.
  *
- * Sabermetrics-discipline (mirrors `components/ontology/ontology-insights-panel.tsx`):
+ * Sabermetrics-discipline (mirrors `components/ontology/ontology-dashboard-panel.tsx` styling):
  *   - Uppercase 11px tracking-wider muted label
  *   - Optional small tabular-nums count beside label
  *   - Optional "View all →" trailing link

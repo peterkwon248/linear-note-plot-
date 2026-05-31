@@ -277,8 +277,13 @@ status=진척 도입 → Book이 **"결과물(원고)" 쪽으로 기움** (smart
 - Home 추천·Inbox 미리보기 → Inbox. 온톨로지 **NUDGE → Inbox `detected`**.
 - **코멘트(todo/blocker) → Inbox `comment` kind → `do` 섹션** (2026-05-31 구현). `CommentStatus`(backlog/todo/done/blocker) 중 actionable(todo/blocker)만 "내 미해결 코멘트 전부" 글로벌 큐로 승격 — backlog=parked·done=resolved는 제외. sourceId=comment.id, 클릭=anchor(note/wiki) 원문 네비. per-entity detail panel 코멘트는 유지(Inbox는 cross-cutting 뷰).
 
-### 함께 가는 온톨로지 정리
-- **dashboard → insights 흡수** (Health/Coverage 중복) / `notes`·`ontology`·`graph` insights 3개 분산 통합 / **그래프 = display mode(렌즈)**.
+### 함께 가는 온톨로지 정리 (2026-05-31 구현 — 방향 정정)
+- **정정**: 초안의 "dashboard → insights 흡수"는 **반대로** 적용. insights(발견)와 dashboard(분석)는 *별개 목적*(발견 vs 분석)이라 합치는 게 아니라, **insights(발견) 탭을 해체**한다 →
+  - ① 분석 차트(Cohesion radial · 복합 Top Notes(WAR) · link Density)는 **dashboard로 통합** ("분석은 한 곳"). 중복(orphan/tagged 카운트 등)은 버림.
+  - ② 발견(Nudge: orphan/promote/unlinked/linked)은 **Inbox `detected`로 단일화** (`ontology-nudge` kind). 클릭=원문 노트 네비(orphan은 연결 패널 동반).
+  - ③ 그래프 캔버스는 고아 노드(`connectionCount===0`)를 **faint dashed ring**으로 가볍게 표시 (발견이 그래프에 시각적으로 잔존).
+  - 결과: 온톨로지 뷰 = **graph + dashboard 2-way** (insights 탭/사이드바 nav 제거, 레거시 persisted "insights"→dashboard 런타임 가드).
+- **남음 (후속)**: `notes`(`/insights`) 별도 insights 라우트 통합 / **그래프 = display mode(렌즈)**. (`graph`/`/graph-insights`=`GraphInsightsView`는 2026-05-31 **폐기 완료** — Dashboard 중복 + 고아 라우트(사이드바 링크 기제거) + stale noteType.)
 
 ### 구현 (일부 지금 / 나머지 fresh 세션)
 - **지금**: 지식베이스 9 entity 확장 (작음, 독립)

@@ -780,22 +780,28 @@ export function LinearSidebar() {
        *  Sidebar now starts directly with navigation — workspace chrome lives
        *  in the top bar so "Hide all panels" leaves those controls reachable. */}
 
-      {/* §10 Phase 2 — Collapse toggle (hover-reveal, top-right corner). The
-       *  sidebar has no header row, so the collapse affordance floats over the
-       *  top-right and only appears on sidebar hover (Notion/Linear pattern).
-       *  Pairs with the right-edge seam chevron + the collapsed expand rail in
-       *  the layout host. ⌘⇧F still toggles globally. */}
-      <button
-        onClick={() => setSidebarCollapsed(true)}
-        className="absolute right-2.5 top-2.5 z-20 flex h-6 w-6 items-center justify-center rounded-md bg-[var(--sidebar-bg)] text-muted-foreground opacity-0 transition duration-[var(--duration-fast)] ease-[var(--ease-out)] hover:bg-hover-bg hover:text-foreground group-hover/sidebar:opacity-100"
-        aria-label="Collapse sidebar"
-        title="Collapse sidebar  ⌘⇧F"
-      >
-        <SidebarSimple size={16} strokeWidth={1.75} />
-      </button>
+      {/* §10 — Sidebar header row. Current space name (left, context anchor) +
+       *  collapse toggle (right, hover-reveal). Giving the collapse a dedicated
+       *  home stops it floating over the top Inbox item — the §10 Phase-2
+       *  hover-corner button overlapped Inbox's count badge. Mirrors Linear's
+       *  sidebar header (content starts below the header, never under it).
+       *  ⌘⇧F still toggles globally. */}
+      <header className="flex h-9 shrink-0 items-center justify-between gap-2 px-2.5 pt-0.5">
+        <span className="truncate text-xs font-medium text-muted-foreground/80">
+          {t(`nav.space.${activeSpace}`)}
+        </span>
+        <button
+          onClick={() => setSidebarCollapsed(true)}
+          className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md text-muted-foreground/70 opacity-0 transition duration-[var(--duration-fast)] ease-[var(--ease-out)] hover:bg-hover-bg hover:text-foreground group-hover/sidebar:opacity-100"
+          aria-label="Collapse sidebar"
+          title="Collapse sidebar  ⌘⇧F"
+        >
+          <SidebarSimple size={16} strokeWidth={1.75} />
+        </button>
+      </header>
 
       {/* Navigation */}
-      <nav className="flex-1 overflow-y-auto px-2.5 pt-2.5 pb-2">
+      <nav className="flex-1 overflow-y-auto px-2.5 pt-1 pb-2">
         {/* ── Inbox (global) — pinned to sidebar top across all spaces (Linear
             mirrors this; Inbox is always the first sidebar item). Promoted from
             Home-only; count is global (useInbox, no space gate). */}
@@ -1496,20 +1502,18 @@ export function LinearSidebar() {
         {/* ── Ontology (Graph) Context ──────────────── */}
         {activeSpace === "ontology" && (
           <>
-            {/* Ontology has 3 modes — Graph (default visual), Insights
-                (action prompts), Dashboard (raw stats). All three live at
-                /ontology and switch via `plot:set-ontology-tab` event so
-                the graph layout/positions are preserved across mode flips.
-                Following Wiki/Library pattern: each mode is a top-level
-                NavLink, none buried in More. */}
+            {/* Ontology has 2 modes — Graph (default visual) and Dashboard
+                (analysis). §13: Insights(발견) 해체 — 분석은 Dashboard로, 발견
+                (nudge)은 Inbox로. Both live at /ontology and switch via
+                `plot:set-ontology-tab` so graph layout/positions persist.
+                Wiki/Library pattern: each mode a top-level NavLink. */}
             <div className="space-y-px">
               {(() => {
                 const isOnOntology = pathname?.startsWith("/ontology") ?? false
                 const currentMode = isOnOntology
-                  ? (ontologyViewMode === "insights" ? "insights" :
-                     ontologyViewMode === "dashboard" ? "dashboard" : "graph")
+                  ? (ontologyViewMode === "dashboard" || ontologyViewMode === "insights" ? "dashboard" : "graph")
                   : null
-                const switchMode = (tab: "graph" | "insights" | "dashboard") => {
+                const switchMode = (tab: "graph" | "dashboard") => {
                   if (!isOnOntology) {
                     router.push("/ontology")
                     // Defer the tab event — page mounts then handler will pick it up.
@@ -1534,13 +1538,6 @@ export function LinearSidebar() {
                       active={isOnOntology && currentMode === "graph"}
                       dragContent={{ type: "ontology" }}
                       onClickOverride={() => switchMode("graph")}
-                    />
-                    <NavLink
-                      href="/ontology"
-                      icon={<IconInsight size={20} />}
-                      label={t("sidebar.insights")}
-                      active={isOnOntology && currentMode === "insights"}
-                      onClickOverride={() => switchMode("insights")}
                     />
                     <NavLink
                       href="/ontology"

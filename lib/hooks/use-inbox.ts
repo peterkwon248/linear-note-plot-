@@ -6,6 +6,7 @@ import { getSnoozeHooks, getSRSHooks, getPlanHooks } from "@/lib/store/hook-sele
 import { useT } from "@/lib/i18n"
 import type { SRSState } from "@/lib/srs"
 import type { Comment } from "@/lib/types"
+import { useKnowledgeNudges } from "@/hooks/use-knowledge-nudges"
 
 /**
  * Action-based inbox notification queue (Linear 정합).
@@ -63,6 +64,7 @@ function sectionFor(kind: InboxItemKind): InboxSection {
       return "review"
     case "wiki-redlink":
     case "auto-enroll":
+    case "ontology-nudge":
       return "detected"
   }
 }
@@ -76,6 +78,7 @@ export function useInbox(): InboxItem[] {
   const clusterSuggestions = usePlotStore((s) => s.clusterSuggestions)
   const todoTasks = usePlotStore((s) => s.todoTasks)
   const comments = usePlotStore((s) => s.comments)
+  const nudges = useKnowledgeNudges()
   const t = useT()
 
   return useMemo(() => {
@@ -341,11 +344,29 @@ export function useInbox(): InboxItem[] {
       })
     }
 
+    // Source: ontology-nudge — graph maintenance suggestions (orphan/promote/
+    // unlinked/linked) from useKnowledgeNudges. §13: 발견은 Inbox detected로
+    // 단일화 (온톨로지 인사이트 탭 해체). 클릭 네비는 inbox-view가 sourceId의
+    // nudge-kind prefix로 해소. ts = 대상 노트 updatedAt (id 첫 토큰 = note id).
+    for (const nudge of nudges) {
+      if (!isVisible("ontology-nudge", nudge.id)) continue
+      const primaryId = nudge.id.split(":")[1]
+      const target = primaryId ? noteById.get(primaryId) : undefined
+      push({
+        kind: "ontology-nudge",
+        sourceId: nudge.id,
+        title: nudge.message,
+        ts: target?.updatedAt ?? new Date().toISOString(),
+        action: nudge.cta,
+        meta: nudge.detail,
+      })
+    }
+
     // 정렬: oldest ts first (overdue 먼저)
     items.sort((a, b) => (a.ts < b.ts ? -1 : a.ts > b.ts ? 1 : 0))
 
     return items
-  }, [notes, dismissedInboxItems, snoozedInboxItems, hooks, wikiArticles, clusterSuggestions, todoTasks, comments, t])
+  }, [notes, dismissedInboxItems, snoozedInboxItems, hooks, wikiArticles, clusterSuggestions, todoTasks, comments, nudges, t])
 }
 
 /**

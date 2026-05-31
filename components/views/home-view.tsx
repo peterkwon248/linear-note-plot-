@@ -66,13 +66,12 @@ export function HomeView() {
     return items.sort((a, b) => b.reads - a.reads).slice(0, 5)
   }, [notes, books])
 
-  function jumpToOntologyInsights() {
-    setActiveRoute("/ontology")
-    requestAnimationFrame(() => {
-      window.dispatchEvent(
-        new CustomEvent("plot:set-ontology-tab", { detail: { tab: "insights" } }),
-      )
-    })
+  function jumpToInbox() {
+    // §13: graph maintenance nudges moved to Inbox `detected` (발견 단일화).
+    // "Improve your knowledge graph" CTA now routes to the Inbox where those
+    // suggestions live (the ontology Insights tab was removed).
+    setActiveRoute("/inbox")
+    router.push("/inbox")
   }
 
   function handleOpenNote(noteId: string) {
@@ -158,7 +157,7 @@ export function HomeView() {
         <div className="flex items-center justify-center pt-2 pb-2">
           <button
             type="button"
-            onClick={jumpToOntologyInsights}
+            onClick={jumpToInbox}
             className="text-2xs text-muted-foreground/60 transition-colors duration-100 hover:text-foreground"
           >
             Improve your knowledge graph <span aria-hidden>→</span>

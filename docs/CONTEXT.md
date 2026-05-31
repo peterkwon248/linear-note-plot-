@@ -51,6 +51,23 @@
 
 ---
 
+## 📜 2026-05-31 (저녁) — 온톨로지 정리 §13 (insights 해체→Dashboard+Inbox+rings) + 사이드바 헤더(닫힘 B) + /graph-insights 폐기 ⭐⭐⭐⭐⭐
+
+**범위**: §13 = insights(발견)≠dashboard(분석) → 분석=Dashboard 통합 / 발견(Nudge)=Inbox detected / 그래프 고아 ring / insights 탭 해체. + 사이드바 닫힘 버튼 헤더화(Inbox 겹침 해소). + /graph-insights 폐기. build 0/tsc 0, Store 무변경.
+
+### 핵심 결정 (영구)
+- **insights(발견) ≠ dashboard(분석)**: 분석은 Dashboard 한 곳, 발견(Nudge)은 Inbox `detected`(ontology-nudge), 그래프는 고아 ring. spec §13 "흡수" → "해체"로 정정.
+- **사이드바 닫힘 = 헤더 행(B)**: aside 최상단 헤더(좌 공간명/우 닫힘 hover). §10 인-패널 유지.
+- **/graph-insights 폐기**: 고아·Dashboard 중복·stale noteType.
+
+### 완료
+- §13 4-phase + 사이드바 헤더 + /graph-insights 삭제. 19파일 +135/−758.
+
+### 다음 우선순위 (P0)
+1. /inbox refresh anomaly 검증. 2. §13 남음(notes /insights·그래프=lens). 3. carry.
+
+---
+
 ## 📜 2026-05-31 (오후) — 셸 §10 Phase 2·3 완성 — 사이드바 hover 토글 + 햄버거 완전 제거 + 액티비티 바 토글 → 상단바 ⭐⭐⭐⭐⭐
 
 **범위**: §10 Phase 2(사이드바 hover-reveal 접기 + expand rail) + Phase 3(PanelsMenu 완전 제거 + 액티비티 바 토글 상단바 이전). tsc 0 / build 0. Store 무변경.

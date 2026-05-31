@@ -8,6 +8,30 @@
 
 ---
 
+## ✅ 2026-05-31 (저녁) — 온톨로지 정리 §13 (insights 해체→Dashboard+Inbox+그래프 rings) + 사이드바 헤더(닫힘 B) + /graph-insights 폐기 ⭐⭐⭐⭐⭐
+
+**범위**: before-work로 §13 진입 → 사용자가 **"insights(발견)≠dashboard(분석)"**이라 spec "dashboard→insights 흡수"를 뒤집음 → C안 합성. + 사이드바 닫힘 버튼 헤더화(B). + /graph-insights 폐기. build 0/tsc 0. **Store 무변경**. 1 PR(19파일 +135/−758).
+
+### 핵심 결정 (영구)
+- **insights(발견) ≠ dashboard(분석)**: 분석 차트=Dashboard 한 곳(Cohesion radial/복합 Top Notes(WAR)/Density 흡수, 중복 donut 버림), 발견(Nudge orphan/promote/unlinked/linked)=Inbox `detected`(`ontology-nudge` kind, Lightbulb 아이콘), 그래프는 `connectionCount===0` 고아 ring으로 발견 시각 잔존, insights 탭 해체(graph/dashboard 2-way + persisted 가드). 헌법 "액션은 Inbox 단일화" 실현. **spec §13 "흡수" → "해체"로 정정**.
+- **사이드바 닫힘 = 헤더 행(B)**: 리니어 방식(헤더에 닫힘/콘텐츠 아래). 우리 사이드바는 공간전환을 액티비티바로 빼서 헤더 없어 닫힘이 Inbox 카운트 위에 떠 겹쳤음(실측 x261 vs x260) → aside 최상단 `<header>`(좌 공간명 `t(\`nav.space.${activeSpace}\`)`/우 닫힘 hover). §10 "사이드바=인-패널" 유지.
+- **/graph-insights 폐기**: GraphInsightsView(343줄, 고아 라우트·Dashboard 중복·stale noteType) 삭제. "insights 3개 분산(notes/ontology/graph) 통합"의 graph 조각 = 폐기.
+
+### 기술 학습 (영구)
+- **preview route-gated 화면 오독 주의**: hard-nav /inbox→home을 "버그 확정"이라 성급 단정 → 실은 사이드바(공간 콘텐츠)를 메인으로 오독. **data-active + visible heading(h1/h2/header)으로 메인 뷰 정체 확정** 후 판단. 사이드바는 route-gated 아니라 rect 실측 가능.
+- **nudge ts = noteById 계산**: useKnowledgeNudges 안 건드리고 use-inbox에서 `noteById.get(nudge.id.split(":")[1])?.updatedAt`. nudge.id primary 토큰=항상 note id.
+- **사이드바 헤더 placement**: `.a-sidebar` flex-col이라 shrink-0 헤더 + flex-1 nav 자연 배치(nav pt-2.5→pt-1).
+
+### 다음 우선순위 (P0)
+1. **(검증) `/inbox` refresh→home anomaly** — 인앱 클릭 정상, F5/직접URL만 의심. `layout.tsx:96` syncFromPathname vs `:105` start-view redirect.
+2. **§13 남음** — notes `/insights` 통합 + 그래프=display mode(렌즈, 큰 리팩터 scope 먼저).
+3. carry: Book kind 라벨(Auto/Manual/Mixed)·noteType 데드코드·모션/A3.1 LCH.
+
+### Store version / HEAD
+**무변경**. main HEAD = 이 PR 머지 후(직전 `fbc7b7e` #504). worktree `claude/loving-perlman-14676f` → 머지 후 fresh. 머신=집/Windows.
+
+---
+
 ## ✅ 2026-05-31 (오후) — 셸 §10 Phase 2·3 완성 — 사이드바 hover 토글 + 햄버거 완전 제거 + 액티비티 바 토글 → 상단바 ⭐⭐⭐⭐⭐
 
 **범위**: before-work로 §10 Phase 2 시작 → Phase 3(햄버거 제거+액티비티 바 토글) + 사용자 요청으로 액티비티 바 토글 위치를 인-패널→상단바로 이전. tsc 0 / build 0. **Store version 무변경(전부 UI/shell).**
