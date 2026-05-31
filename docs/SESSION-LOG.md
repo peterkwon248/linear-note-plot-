@@ -6,6 +6,47 @@
 
 ---
 
+## 2026-05-31 (밤, 집/Windows) — **상용화 전략 수립: 무료 로컬-퍼스트 데스크톱 앱 → 로드맵 spec (계획 세션, 앱 코드 무변경)**
+
+> 🎯 **다음 즉시 액션 hook**: **데스크톱 P0 — 정적 SPA 캐치올 라우팅(ⓑ)**. 동적 라우트를 `[[...slug]]` 클라 라우트로 통합 + `output:'export'` → `out/` 생성. **★ `/inbox` refresh→home anomaly와 같은 뿌리라 동시 해결됨**(직전 §13 entry의 "/inbox anomaly" 액션은 이걸로 흡수). 코어 라우팅이라 fresh 집중 세션 권장.
+>
+> **사용자 의도**: "우리 앱 상용화 가능?" → 실측(백엔드 0/인증·결제 0/데이터 IDB 로컬/테스트 ~12/version 0.1.0) = **디자인은 상용급이나 제품 인프라 0.1단계** → "무료 데스크톱 먼저(나중 유료 싱크)" → "옵시디언급 데이터 소유 원함" → **하이브리드(B) 합의**.
+>
+> **SOT = `docs/01-plan/features/desktop-local-first.spec.md`** (이번 작성. 비전/Locked Decisions/데이터분할/Yjs싱크/5-Phase 로드맵/Risk #1-6).
+>
+> **첫 스텝** (다음 세션):
+> 1. spec read (특히 **Risk #6 라우팅 모델** + "다음 액션" 섹션).
+> 2. 동적 라우트 4개(`app/(app)/{books,folder,tag,label}/[id]/page.tsx`)를 `[[...slug]]` 캐치올 **클라이언트** 라우트로 통합. 로드 시 `window.location.pathname` → `syncFromPathname`(lib/table-route.ts) → activeRoute 복원 → layout이 뷰 렌더.
+> 3. `next.config.mjs`에 `output:'export'` 추가(`images.unoptimized` 이미 됨).
+> 4. `npm run build` → `out/` 생성 확인 + **실화면서 `/inbox`·`/folder/{id}` 새로고침 정상 복원** 검증.
+>
+> **위험 + 회피**: 코어 라우팅 = blast radius 큼. **이 env preview는 route 검증 약함**(module-state라 eval 불가 — /inbox 헤맨 이유). → 사용자 실화면 검증 필수. 마라톤 끝 급조 금지(이번에 fresh로 미룬 이유).
+>
+> **참고 파일**: `docs/01-plan/features/desktop-local-first.spec.md`(SOT), `app/(app)/layout.tsx:96`(syncFromPathname effect), `lib/table-route.ts`(라우팅 모듈상태), `next.config.mjs`, `app/(app)/*/[id]/page.tsx`(4 동적 라우트).
+>
+> **머신**: 집(Windows). **현재 main HEAD**: 이 PR 머지 후(직전 `83c8ec9` #505). **branch worktree**: `claude/desktop-local-first`(데스크톱 이니셔티브 시작 브랜치) → 머지 후 main fresh.
+
+### 완료 (이 세션 — 계획만, 앱 코드 무변경)
+- **상용화 실측**: API route 0 / 인증·결제·DB·싱크 의존성 0 / 데이터=IndexedDB(`y-indexeddb`) 로컬 / 앱 테스트 ~12파일 / `name:"my-project"` version "0.1.0". → 디자인 상용급, 제품 인프라 미시작.
+- **데스크톱 feasibility (Phase 0 spike)**: `output:'export'` 빌드가 4 동적 라우트(generateStaticParams 필요)만 빼고 통과. 숨은 export 비호환 0. (next.config 원복함 — throwaway.)
+- **로드맵 spec 작성** + 라우팅 모델 결정(ⓑ).
+
+### 브레인스토밍 & 큰 결정 (영구)
+- **상용화 순서 = A(빠른 출시)**: 무료 데스크톱(IDB-on-desktop + export) → export/백업 → 유료 싱크+모바일. 데스크톱 IDB는 앱 디스크 영속(브라우저 eviction 없음)이라 "캐시 증발" 블로커 해소 → .md 소유(P2)는 v1.1로 미룸.
+- **저장 = 하이브리드(B)**: 본문 `.md`(사용자 소유, 어디서든 열림) + 부가데이터(books/SRS/온톨로지/saved view) `.plot/` 로컬 사이드카. = 옵시디언 자신의 방식(.md + .obsidian/). 우리 앱은 옵시디언보다 부자(관계형)라 순수 파일(A안)은 기능 타협.
+- **셸 = Tauri 우선**(경량 ~3-10MB·모바일까지, 렌더 스파이크 후 확정 / 쿼크 시 Electron 폴백).
+- **라우팅 = ⓑ 캐치올**: 정적 export 동적 라우트 처리 + **`/inbox` anomaly 동근 → 동시 해결**.
+- **클라우드 = 중계+백업**(데이터는 각 기기 로컬, 오프라인 동작. ≠ Notion 클라우드-퍼스트). Yjs CRDT 이미 깔려 싱크 토대 있음. 유료 정당성 = 싱크는 상시 서버 비용.
+
+### 기술 학습 (영구)
+- **상용화 ≠ 디자인**: 디자인 상용급이어도 백엔드/인증/싱크/결제/QA/법무가 제품 레이어. "메모리(RAM) vs 저장소(디스크)" — 데스크톱=데이터가 앱 디스크 폴더(AppData/Application Support), 브라우저 eviction 없음.
+- **`/inbox` anomaly = 정적 SPA 라우팅과 동근**: 라우팅이 activeRoute 모듈상태라 hard-load가 뷰 복원 못 함. 데스크톱 캐치올 라우팅이 둘 다 푼다(일석이조).
+
+### 환경 변경
+- **앱 코드/Store/빌드 무변경.** 신규 문서: `docs/01-plan/features/desktop-local-first.spec.md`.
+
+---
+
 ## 2026-05-31 (저녁, 집/Windows) — **온톨로지 정리 §13 (insights 해체→Dashboard+Inbox+그래프 rings) + 사이드바 헤더 행(닫힘 버튼 B) + /graph-insights 폐기 (1 PR, 19파일 +135/−758)**
 
 > 🎯 **다음 즉시 액션 hook**: **(검증 먼저) `/inbox` refresh→home anomaly** + **(메인) §13 남음 = `/insights`(notes) 통합 + 그래프=display mode(렌즈)**.

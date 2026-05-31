@@ -51,6 +51,20 @@
 
 ---
 
+## 📜 2026-05-31 (밤) — 상용화 전략: 무료 로컬-퍼스트 데스크톱 로드맵 (계획 세션, 앱 코드 무변경) ⭐⭐⭐⭐⭐
+
+**범위**: "상용화 가능?" 실측(백엔드 0/IDB 로컬/테스트~12/v0.1.0) = 디자인 상용급·인프라 0.1단계 → 무료 데스크톱 먼저 + 옵시디언급 소유 논의 → 로드맵 spec. SOT=`docs/01-plan/features/desktop-local-first.spec.md`.
+
+### 핵심 결정 (영구)
+- **순서 A(빠른 출시)**: 무료 데스크톱(IDB-on-desktop + export) → 백업 → 유료 싱크+모바일. (데스크톱=앱 디스크 영속 → "캐시 증발" 블로커 해소.)
+- **저장 하이브리드(B)**: 본문 `.md`(사용자 소유) + 부가데이터 `.plot/` 사이드카 = 옵시디언 방식.
+- **셸 Tauri**(스파이크 후 확정) / **라우팅 ⓑ 캐치올**(정적화 + `/inbox` anomaly 동시 해결) / **클라우드=중계+백업**(Yjs CRDT 토대 깔림).
+
+### 다음 우선순위 (P0)
+1. 데스크톱 P0 — 캐치올 라우팅(ⓑ, fresh 집중 세션). 2. Tauri 스파이크. 3. carry: §13 남음.
+
+---
+
 ## 📜 2026-05-31 (저녁) — 온톨로지 정리 §13 (insights 해체→Dashboard+Inbox+rings) + 사이드바 헤더(닫힘 B) + /graph-insights 폐기 ⭐⭐⭐⭐⭐
 
 **범위**: §13 = insights(발견)≠dashboard(분석) → 분석=Dashboard 통합 / 발견(Nudge)=Inbox detected / 그래프 고아 ring / insights 탭 해체. + 사이드바 닫힘 버튼 헤더화(Inbox 겹침 해소). + /graph-insights 폐기. build 0/tsc 0, Store 무변경.
