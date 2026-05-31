@@ -8,6 +8,32 @@
 
 ---
 
+## ✅ 2026-05-31 (밤 늦게) — 데이터 라이프사이클 감사 발견: re-seed 부활 버그 + 위키 blocks IDB orphan (전수 감사 다음 세션, 앱 코드 무변경) ⭐⭐⭐⭐⭐
+
+**범위**: 상용화 데이터 질문 3개(시드/영구삭제/OS휴지통) 실측 → **확정 버그 2개** 발견 + 데이터 라이프사이클 감사 spec 작성. **앱 코드 무변경.** SOT=`docs/01-plan/features/data-lifecycle-audit.spec.md`.
+
+### 핵심 결정 (영구)
+- **삭제 정확성 = 상용화 핵심**(신뢰/저장/GDPR): 데이터 부활 0·orphan 0·완전 삭제.
+- **"별도 IDB store" 엔티티 = 위험지대**: Zustand persist와 별개로 IDB에 본문/blocks 저장 → 영구삭제 시 둘 다 지워야. 노트=됨(`removeBody`), **위키=누락**(`deleteArticleBlocks` 미호출).
+- **시드 = 1회성이어야**: re-seed "비면 부활"(`index.ts:319`)은 버그. 신규 유저=빈 상태(or 웰컴 노트 1개).
+- **OS 휴지통(Q3)**: 지금/IDB ❌, P2(.md 파일) ✅(Tauri `trash`/Electron `shell.trashItem` = 옵시디언 방식).
+
+### 확정 버그 (수정 대상)
+1. 🔴 re-seed 부활: `index.ts:319` notes 비면 전 엔티티 부활 + 북 backfill(`:338`).
+2. 🔴 위키 blocks IDB orphan: `wiki-articles.ts:188 deleteWikiArticle`가 `deleteArticleBlocks` 미호출.
+
+### 기술 학습 (영구)
+- **삭제 감사 = array + 별도 IDB store + cascade + re-seed 전부** 봐야 "완전 삭제" 보장. 정리함수 *존재 ≠ 호출* — grep으로 삭제 액션이 실제 호출하는지 확인 필수.
+
+### 다음 우선순위 (P0)
+1. **데이터 라이프사이클 전수 감사 + 수정** (출시 전 필수, 사용자 명시 "다음 세션"). 엔티티×축 매트릭스, 병렬 workflow 권장.
+2. 데스크톱 캐치올 라우팅(ⓑ). 3. carry: §13 남음(notes /insights·그래프=lens).
+
+### Store version / HEAD
+**무변경**. main HEAD = 이 PR 머지 후(직전 `fb1c682` #506). worktree `claude/data-lifecycle-audit`. 머신=집/Windows.
+
+---
+
 ## ✅ 2026-05-31 (밤) — 상용화 전략 수립: 무료 로컬-퍼스트 데스크톱 로드맵 (계획 세션, 앱 코드 무변경) ⭐⭐⭐⭐⭐
 
 **범위**: "상용화 가능?" → 실측(백엔드 0/인증·결제 0/IDB 로컬/테스트~12/version 0.1.0) = 디자인 상용급·인프라 0.1단계 → 무료 데스크톱 먼저 전략 + 옵시디언급 데이터 소유 논의 → 로드맵 spec 작성. **앱 코드 무변경.** SOT=`docs/01-plan/features/desktop-local-first.spec.md`.
