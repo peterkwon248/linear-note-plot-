@@ -551,6 +551,7 @@ export interface PlotState {
   setWikiArticleParent: (articleId: string, parentId: string | null) => boolean
   toggleWikiArticlePin: (articleId: string) => void
   incrementWikiArticleReads: (articleId: string) => void
+  incrementBookReads: (bookId: string) => void
 
   // ── References ──
   createReference: (partial: { title: string; content: string; contentJson?: Record<string, unknown> | null; fields?: Array<{ key: string; value: string }>; tags?: string[] }) => string

@@ -54,7 +54,7 @@ import {
   verticalListSortingStrategy,
   sortableKeyboardCoordinates,
 } from "@dnd-kit/sortable"
-import { Library as Books } from "lucide-react"
+import { SPACE_ICONS } from "@/lib/entity-icons"
 import { BookKindIcon } from "@/components/property-chips"
 import { BookBreadcrumb } from "@/components/books/book-breadcrumb"
 import { getBookKind } from "@/lib/view-engine/use-books-view"
@@ -98,6 +98,7 @@ export function BookDetailPage({ bookId }: BookDetailPageProps) {
   const setSelectedNoteId = usePlotStore((s) => s.setSelectedNoteId)
   const openNote = usePlotStore((s) => s.openNote)
   const setBookContext = usePlotStore((s) => s.setBookContext)
+  const incrementBookReads = usePlotStore((s) => s.incrementBookReads)
 
   const notes = usePlotStore((s) => s.notes)
   const folders = usePlotStore((s) => s.folders)
@@ -185,6 +186,13 @@ export function BookDetailPage({ bookId }: BookDetailPageProps) {
   const [editingDesc, setEditingDesc] = useState(false)
   const [descDraft, setDescDraft] = useState(book?.description ?? "")
   const descInputRef = useRef<HTMLInputElement>(null)
+
+  // Increment reads counter once per book open (mirrors incrementWikiArticleReads in wiki-view).
+  useEffect(() => {
+    if (!bookId) return
+    incrementBookReads(bookId)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [bookId])
 
   useEffect(() => {
     setTitleDraft(book?.title ?? "")
@@ -361,11 +369,11 @@ export function BookDetailPage({ bookId }: BookDetailPageProps) {
     return (
       <div className="flex flex-1 flex-col overflow-hidden">
         <ViewHeader
-          icon={<Books size={20} strokeWidth={2} />}
+          icon={<SPACE_ICONS.books size={20} strokeWidth={2} />}
           title="Book not found"
         />
         <div className="flex flex-col items-center gap-3 px-6 pt-20">
-          <Books size={32} strokeWidth={2} className="text-muted-foreground/25" />
+          <SPACE_ICONS.books size={32} strokeWidth={2} className="text-muted-foreground/25" />
           <div className="text-center">
             <p className="text-sm font-medium text-foreground">This book no longer exists</p>
             <p className="mt-0.5 text-xs text-muted-foreground">
@@ -433,7 +441,6 @@ export function BookDetailPage({ bookId }: BookDetailPageProps) {
 
   // emoji 영구 폐기 (2026-05-12): heading icon = BookKindIcon (kind 표현)
   const headingIcon = <BookKindIcon kind={getBookKind(book)} size={20} />
-  void Books // legacy import — kept for unrelated callers in this file
 
   return (
     <div className="flex flex-1 flex-col overflow-hidden">
@@ -624,7 +631,7 @@ export function BookDetailPage({ bookId }: BookDetailPageProps) {
           {/* Items list */}
           {resolvedItems.length === 0 ? (
             <div className="flex flex-col items-center gap-3 py-12 border border-dashed border-border/60 rounded-lg">
-              <Books size={28} strokeWidth={2} className="text-muted-foreground/25" />
+              <SPACE_ICONS.books size={28} strokeWidth={2} className="text-muted-foreground/25" />
               <div className="text-center">
                 <p className="text-note font-medium text-foreground">
                   This book is empty

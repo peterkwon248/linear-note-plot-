@@ -2671,5 +2671,29 @@ export function migrate(persistedState: unknown): PlotState {
     }
   }
 
+  // v152 → v153: §11 IA 헌법 — Book/Wiki 워크플로 축 통일.
+  //   Book.status/priority/reads + WikiArticle.priority 신규 필드.
+  //   status/priority는 manual·hybrid 책에만 의미 (smart = 자동 큐레이션이라 N/A).
+  //   백필: 전 책 reads=0, 기존 manual/hybrid 책 status='backlog'. Idempotent.
+  //   priority(book·wiki)는 optional(undefined = none)이라 별도 백필 불필요.
+  if (Array.isArray(state.books)) {
+    let statusBackfilled = 0
+    for (const b of state.books as any[]) {
+      if (typeof b.reads !== "number") b.reads = 0
+      if (b.status == null) {
+        const hasSources = Array.isArray(b.smartSources) && b.smartSources.length > 0
+        const hasItems = Array.isArray(b.items) && b.items.length > 0
+        const isSmart = hasSources && !hasItems // smart = pure auto, no manual items
+        if (!isSmart) {
+          b.status = "backlog" // manual/hybrid → backlog; smart → leave N/A (undefined)
+          statusBackfilled += 1
+        }
+      }
+    }
+    if (statusBackfilled > 0) {
+      console.log(`[migrate] v152→v153: backfilled status='backlog' on ${statusBackfilled} manual/hybrid books`)
+    }
+  }
+
   return state as unknown as PlotState
 }

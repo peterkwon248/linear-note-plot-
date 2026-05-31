@@ -1,50 +1,39 @@
 "use client"
 
 import { useMemo } from "react"
+import { useRouter } from "next/navigation"
 import { usePlotStore } from "@/lib/store"
 import { useT } from "@/lib/i18n"
 import { setActiveRoute } from "@/lib/table-route"
+import { ENTITY_ICONS } from "@/lib/entity-icons"
 import { QuickCapture } from "@/components/home/quick-capture"
 import { StatsRow } from "@/components/home/stats-row"
-import { RecentCards } from "@/components/home/recent-cards"
 import { MixedQuicklinks } from "@/components/home/mixed-quicklinks"
 import {
-  Clock as PhClock,
-  Sparkles as Sparkle,
   TrendingUp as TrendUp,
-  ArrowRight,
   FileText,
+  type LucideIcon,
 } from "lucide-react"
-import { IconInbox, IconHome } from "@/components/plot-icons"
+import { IconHome } from "@/components/plot-icons"
 import { ViewHeader } from "@/components/view-header"
 import { useBacklinksIndex } from "@/lib/search/use-backlinks-index"
-import { useInbox, type InboxItem } from "@/lib/hooks/use-inbox"
-import { InboxSourceIcon } from "@/components/inbox/inbox-source-icon"
-import type { Note } from "@/lib/types"
-import type { InboxItemKind } from "@/lib/store/slices/inbox"
+import type { Book, Note } from "@/lib/types"
 
 /**
  * Home view — clean data dashboard (Wiki Dashboard style).
  */
 export function HomeView() {
   const t = useT()
+  const router = useRouter()
   const notes = usePlotStore((s) => s.notes)
+  const books = usePlotStore((s) => s.books)
   const openNote = usePlotStore((s) => s.openNote)
   const tags = usePlotStore((s) => s.tags)
   const backlinkCounts = useBacklinksIndex()
-  const inboxItems = useInbox()
 
   // Compute insights
   const insights = useMemo(() => {
     const liveNotes = notes.filter((n: Note) => !n.trashed)
-    const recentlyEdited = [...liveNotes]
-      .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
-      .slice(0, 5)
-
-    // Featured note: most recently edited non-backlog note
-    const featured = liveNotes
-      .filter((n: Note) => n.status !== "backlog")
-      .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())[0]
 
     // Most connected notes — out-degree (linksOut) + in-degree (backlinks via index)
     const withConnections = liveNotes
@@ -56,8 +45,26 @@ export function HomeView() {
       .sort((a, b) => b.count - a.count)
       .slice(0, 4)
 
-    return { recentlyEdited, featured, withConnections }
+    return { withConnections }
   }, [notes, backlinkCounts])
+
+  // Most Visited — top 5 cross-entity (Notes + Books) by `reads` desc.
+  // Excludes trashed + items with no reads. Mirrors `insights` store reads.
+  const mostVisited = useMemo(() => {
+    type Visited = { id: string; kind: "note" | "book"; title: string; reads: number }
+    const items: Visited[] = []
+    for (const n of notes as Note[]) {
+      const reads = n.reads ?? 0
+      if (n.trashed || reads <= 0) continue
+      items.push({ id: n.id, kind: "note", title: n.title || "Untitled", reads })
+    }
+    for (const b of books as Book[]) {
+      const reads = b.reads ?? 0
+      if (b.trashed || reads <= 0) continue
+      items.push({ id: b.id, kind: "book", title: b.title || "Untitled book", reads })
+    }
+    return items.sort((a, b) => b.reads - a.reads).slice(0, 5)
+  }, [notes, books])
 
   function jumpToOntologyInsights() {
     setActiveRoute("/ontology")
@@ -71,6 +78,12 @@ export function HomeView() {
   function handleOpenNote(noteId: string) {
     setActiveRoute("/notes")
     openNote(noteId)
+  }
+
+  // Mirror MixedQuicklinks' book-open path (components/home/mixed-quicklinks.tsx).
+  function handleOpenBook(bookId: string) {
+    setActiveRoute(`/books/${bookId}`)
+    router.push(`/books/${bookId}`)
   }
 
   return (
@@ -96,90 +109,8 @@ export function HomeView() {
           <StatsRow />
         </section>
 
-        {/* Featured Note */}
-        {insights.featured && (
-          <button
-            onClick={() => handleOpenNote(insights.featured!.id)}
-            className="group mb-6 flex w-full items-start gap-4 rounded-lg border border-border bg-card p-4 text-left transition-all duration-150 hover:border-accent/30 hover:bg-accent/[0.03] hover:shadow-sm"
-          >
-            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-accent/10">
-              <Sparkle className="text-accent" size={16} strokeWidth={2} />
-            </div>
-            <div className="min-w-0 flex-1">
-              <div className="mb-0.5 flex items-center gap-2">
-                <span className="text-2xs font-medium uppercase tracking-wide text-muted-foreground/60">{t("home.featured_note")}</span>
-              </div>
-              <h3 className="text-note font-semibold text-foreground group-hover:text-accent transition-colors">
-                {insights.featured.title || "Untitled"}
-              </h3>
-              <p className="mt-0.5 text-2xs text-muted-foreground line-clamp-1">
-                {insights.featured.preview || "No preview available"}
-              </p>
-            </div>
-            <ArrowRight className="mt-1 shrink-0 text-muted-foreground/60 transition-colors group-hover:text-accent" size={16} strokeWidth={2} />
-          </button>
-        )}
-
-        {/* Inbox card — action-based notification queue */}
-        {inboxItems.length > 0 && (
-          <section className="mb-6">
-            <ContentCard
-              title={t("home.inbox")}
-              icon={IconInbox}
-              iconColor="text-muted-foreground"
-              trailing={
-                <div className="flex items-center gap-2">
-                  <span className="rounded-full bg-muted px-1.5 py-0.5 text-2xs font-medium tabular-nums text-muted-foreground">
-                    {inboxItems.length}
-                  </span>
-                  <button
-                    onClick={() => setActiveRoute("/inbox")}
-                    className="text-2xs text-muted-foreground transition-colors hover:text-foreground"
-                  >
-                    {t("home.view_all")} <span aria-hidden>→</span>
-                  </button>
-                </div>
-              }
-            >
-              {inboxItems.slice(0, 5).map((item) => (
-                <InboxRow
-                  key={`${item.kind}:${item.sourceId}`}
-                  item={item}
-                  onClick={() => {
-                    if (item.kind === "wiki-redlink" || item.kind === "auto-enroll") {
-                      setActiveRoute("/wiki")
-                    } else {
-                      handleOpenNote(item.sourceId)
-                    }
-                  }}
-                />
-              ))}
-              {inboxItems.length > 5 && (
-                <button
-                  onClick={() => setActiveRoute("/inbox")}
-                  className="w-full px-2.5 py-1.5 text-left text-2xs text-muted-foreground/60 transition-colors hover:text-muted-foreground"
-                >
-                  +{inboxItems.length - 5} more
-                </button>
-              )}
-            </ContentCard>
-          </section>
-        )}
-
         {/* Two-column content */}
         <div className="mb-8 grid grid-cols-1 gap-5 min-[700px]:grid-cols-2">
-          {/* Recent Activity */}
-          <ContentCard title={t("home.recent_activity")} icon={PhClock}>
-            {insights.recentlyEdited.map((note) => (
-              <NoteItem
-                key={note.id}
-                title={note.title || "Untitled"}
-                meta={shortRelative(note.updatedAt)}
-                onClick={() => handleOpenNote(note.id)}
-              />
-            ))}
-          </ContentCard>
-
           {/* Most Connected */}
           {insights.withConnections.length > 0 && (
             <ContentCard title={t("home.most_connected")} icon={TrendUp}>
@@ -193,17 +124,25 @@ export function HomeView() {
               ))}
             </ContentCard>
           )}
-        </div>
 
-        {/* Recents (horizontal card gallery) */}
-        <section className="mb-8">
-          <header className="mb-3 flex items-center justify-between px-1">
-            <h3 className="text-2xs font-semibold uppercase tracking-wider text-muted-foreground">
-              {t("home.recent")}
-            </h3>
-          </header>
-          <RecentCards limit={4} />
-        </section>
+          {/* Most Visited — cross-entity (Notes + Books) by reads. Omitted when empty. */}
+          {mostVisited.length > 0 && (
+            <ContentCard title={t("home.most_visited")} icon={TrendUp}>
+              {mostVisited.map((item, i) => (
+                <RankedItem
+                  key={`${item.kind}:${item.id}`}
+                  rank={i + 1}
+                  icon={item.kind === "book" ? ENTITY_ICONS.books : ENTITY_ICONS.notes}
+                  title={item.title}
+                  count={item.reads}
+                  onClick={() =>
+                    item.kind === "book" ? handleOpenBook(item.id) : handleOpenNote(item.id)
+                  }
+                />
+              ))}
+            </ContentCard>
+          )}
+        </div>
 
         {/* Quicklinks (unified pinned hub) */}
         <section className="mb-6">
@@ -281,31 +220,34 @@ function NoteItem({
   )
 }
 
-function InboxRow({ item, onClick }: { item: InboxItem; onClick: () => void }) {
-  const isOverdue = item.action?.toLowerCase().includes("overdue") ?? false
+/**
+ * RankedItem — Most Visited row. Mirrors NoteItem's exact row vocabulary
+ * (group/flex/gap-2/rounded-md/px-2.5/py-2 + hover-bg, text-note title,
+ * text-2xs tabular-nums count) but prepends a subtle rank number and uses a
+ * per-entity glyph (ENTITY_ICONS.notes / .books) instead of a hardcoded icon.
+ */
+function RankedItem({
+  rank,
+  icon: Icon,
+  title,
+  count,
+  onClick,
+}: {
+  rank: number
+  icon: LucideIcon
+  title: string
+  count: number
+  onClick: () => void
+}) {
   return (
     <button
       onClick={onClick}
       className="group flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-left transition-colors duration-100 hover:bg-hover-bg"
     >
-      <InboxSourceIcon
-        kind={item.kind}
-        className="shrink-0 text-muted-foreground/50 transition-colors group-hover:text-muted-foreground/70"
-      />
-      <span className="min-w-0 flex-1 truncate text-note text-foreground">
-        {item.title}
-      </span>
-      {item.action && (
-        <span
-          className={`shrink-0 text-2xs tabular-nums ${
-            isOverdue
-              ? "text-amber-500 dark:text-amber-400"
-              : "text-muted-foreground"
-          }`}
-        >
-          {item.action}
-        </span>
-      )}
+      <span className="w-3.5 shrink-0 text-2xs tabular-nums text-muted-foreground/50">{rank}</span>
+      <Icon className="shrink-0 text-muted-foreground" size={14} strokeWidth={2.5} />
+      <span className="min-w-0 flex-1 truncate text-note text-foreground group-hover:text-foreground">{title}</span>
+      <span className="shrink-0 text-2xs tabular-nums text-muted-foreground">{count}</span>
     </button>
   )
 }

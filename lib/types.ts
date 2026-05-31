@@ -251,6 +251,15 @@ export interface Book {
   lastReadAt?: string | null
 
   /**
+   * §11 (IA 헌법) workflow 축 — Notes/Wiki/Books 3-entity 통일. status/priority는
+   * manual·hybrid 책에만 의미 (smart = 자동 큐레이션이라 N/A). v153 마이그가 기존
+   * manual/hybrid 책 status를 'backlog'로 백필. NoteStatus/NotePriority 재사용. */
+  status?: NoteStatus
+  priority?: NotePriority
+  /** 방문 카운트 — 책 열람 시 +1 (Note.reads / WikiArticle.reads 정합). v153 = 0 백필. */
+  reads?: number
+
+  /**
    * Folder membership — N:M (a book can live in any number of `kind="book"`
    * folders simultaneously). v149 migration initializes existing books with
    * an empty array. Empty = no folders. Parallel to Note.folderIds + WikiArticle.folderIds.
@@ -558,6 +567,8 @@ export interface WikiArticle {
   trashedAt?: string | null
   /** View count — incremented each time the article is opened. 0 by default. */
   reads?: number
+  /** §11 (IA 헌법) — Wiki priority 축 (Note/Book 정합). NotePriority 재사용. v153 신규. */
+  priority?: NotePriority
   /** 2026-05-18 — Wiki Template로부터 생성된 article의 origin template id.
    * "Used by N wiki articles" reverse-lookup용 (NoteTemplate 정합, PR #322).
    * slash insert는 article level이 아니라 inline block insert라 templateId 안 set. */
