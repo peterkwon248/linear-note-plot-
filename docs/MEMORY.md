@@ -8,6 +8,33 @@
 
 ---
 
+## ✅ 2026-05-31 (낮~오후) — §11 북·위키 status/priority 워크플로 완성 + 코멘트→Inbox + 북마크 capped + 셸 PanelsMenu/§10 Phase1 (4 P0, 1 PR) ⭐⭐⭐⭐⭐
+
+**범위**: before-work로 PR #501 이어받음 → P0 #0(코멘트→Inbox)·#0b(북마크 capped)·#1(§11 북·위키 status/priority) + 사용자 적발 셸 PanelsMenu 중복 버그 → §10 Phase 1까지. 4 P0를 1 PR로 한꺼번에 머지.
+
+### 핵심 결정 (영구)
+- **§11 북·위키 status·priority 워크플로 = 3-entity 통일 완성**: Books status 세터 = **detail panel(BookDetailPanel) + 보드 status 4컬럼 드래그 + list 인라인 StatusDropdown + 그리드/보드 배지**. Book·Wiki **priority 필터·배지·세터**. **status·priority = manual·hybrid만(smart = N/A)** — 세터/배지 전부 `kind!=='smart'` gate, 보드 status 그룹핑선 smart=backlog.
+- **Books도 detail panel 있음** (사용자 적발): `showDetailPanel:false`는 *list view* 한정 — 실제 = `sidePanelContext{type:"book"}`→`BookDetailPanel` + `/books/{id}` `BookDetailPage`. status 세터 proper home.
+- **HTML 중첩 제약**: 그리드/보드 카드=`<button>` → 인라인 피커(button) 중첩 불가 → **카드=배지(읽기전용), 인라인 피커는 BookTable 행(`<div>`)**.
+- **코멘트=task급 → Inbox `comment` kind**: `CommentStatus` todo/blocker → `do` 섹션(backlog/done 제외). 클릭=anchor(note/wiki) 네비. ("활동 위젯"은 메모리 drift였고 코멘트만 진짜 고아였음 — spec 실측 확인.)
+- **§10 패널토글 = 리니어식 분산** (중앙 햄버거 폐기 방향): 디테일=콘텐츠 우상단(Phase1✅, 이미 구현돼 있었음), 사이드바=엣지핸들(Phase2), 중앙 `PanelsMenu` 제거(Phase3). Notion식 중앙 체크리스트 ≠ Linear.
+
+### 기술 학습 (영구)
+- **adapter-equivalence.test.ts = 하드코딩 필터 카테고리 assertion**: `*_SCHEMA` 필터 prop 추가/이동 시 cluster/key 배열 갱신 필수. **PR #501이 books status 필터 추가하며 이 테스트 미갱신 → pre-existing 실패 1건**이었음(이번 정정 + wiki도 갱신, 24/24).
+- **displayOrder tie-break = 선언 인덱스**: 기존 값 안 건드리고 신규 prop을 displayOrder 0으로 두면 선언순 정렬.
+- **PanelsMenu 단일 mount(#120) drift**: view-header는 GlobalTopBar로 이관됐는데 note-editor(`:470`)/book-detail-page(`:792`) 헤더만 옛 패턴 잔존 → "에디터 햄버거 중복" 버그. (주석 "Mirrors view-header" stale.)
+- **preview**: store-eval로 데이터/배지/보드컬럼/패널 검증 OK. **route 전환(노트 에디터 mount) = module state라 eval 불가** → 셸/에디터 시각은 사용자 실화면.
+
+### 다음 우선순위 (P0)
+1. **셸 §10 Phase 2** — 사이드바 토글 분산(엣지핸들 + 헤더 토글, `linear-sidebar.tsx`). 이후 Phase 3(중앙 PanelsMenu 제거 + `⌘\` 충돌 + 단축키 정리).
+2. **온톨로지 정리**(§13: dashboard→insights, NUDGE→Inbox, 그래프=display mode).
+3. carry: Book kind 라벨 Auto/Manual/Mixed · noteType 데드코드 · 모션/A3.1 LCH · wiki status 세터화(현 read-only 배지).
+
+### Store version / HEAD
+**무변경**(status/priority/reads는 v153 기존, 이번 전부 UI). main HEAD = 이 PR 머지 후(직전 `e9a1e09` #502). worktree `claude/gracious-mclean-5045c6` → 머지 후 fresh. 머신=집/Windows.
+
+---
+
 ## ✅ 2026-05-31 (밤) — 아이콘 리니어화 + SPACE_ICONS SOT + Item C 인기순위/§11 북 status·reads(v153) + Home §13 슬림화 (PR #501, 2커밋) ⭐⭐⭐⭐⭐
 
 **범위**: before-work 시작 → 사용자 연쇄 §13 정합 지적(아이콘 drift→KB 3그룹화→inbox 중복)으로 확장. 아이콘 전면 SOT화 + Item C(인기순위 신규) + Home §13 슬림화. PR #501 머지.

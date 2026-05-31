@@ -18,7 +18,7 @@ import { FileText, Check as PhCheck, ChevronDown as CaretDown } from "lucide-rea
 import { cn } from "@/lib/utils"
 import { usePlotStore } from "@/lib/store"
 import { StatusShapeIcon } from "@/components/status-icon"
-import { STATUS_CONFIG } from "@/components/note-fields"
+import { STATUS_CONFIG, PriorityBadge } from "@/components/note-fields"
 import { useT } from "@/lib/i18n"
 import { WikiGroupHeaderIcon } from "@/components/views/wiki-shared"
 import {
@@ -300,6 +300,10 @@ function CardInner({
   // time. Status chip stays in the title row (visual anchor).
   const propertyChips = useMemo(() => {
     const out: React.ReactNode[] = []
+    // §11 — priority badge (mirrors Notes board). none → hidden.
+    if (isVisible("priority") && article.priority && article.priority !== "none") {
+      out.push(<PriorityBadge key="priority" priority={article.priority} />)
+    }
     // Categories — only when we're not already grouped by category (label).
     if (isVisible("tags") && groupBy !== "label" && categoryEntries.length > 0) {
       for (const c of categoryEntries) {
@@ -334,7 +338,7 @@ function CardInner({
     return out
   }, [
     visibleColumns, groupBy, categoryEntries, parentTitle, childrenCount,
-    backlinks, reads, aliases.length, article.updatedAt, article.createdAt,
+    backlinks, reads, aliases.length, article.updatedAt, article.createdAt, article.priority,
   ]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const visual = (

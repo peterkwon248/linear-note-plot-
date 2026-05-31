@@ -275,6 +275,7 @@ status=진척 도입 → Book이 **"결과물(원고)" 쪽으로 기움** (smart
 
 ### 관통 원칙: 액션은 Inbox로 단일화
 - Home 추천·Inbox 미리보기 → Inbox. 온톨로지 **NUDGE → Inbox `detected`**.
+- **코멘트(todo/blocker) → Inbox `comment` kind → `do` 섹션** (2026-05-31 구현). `CommentStatus`(backlog/todo/done/blocker) 중 actionable(todo/blocker)만 "내 미해결 코멘트 전부" 글로벌 큐로 승격 — backlog=parked·done=resolved는 제외. sourceId=comment.id, 클릭=anchor(note/wiki) 원문 네비. per-entity detail panel 코멘트는 유지(Inbox는 cross-cutting 뷰).
 
 ### 함께 가는 온톨로지 정리
 - **dashboard → insights 흡수** (Health/Coverage 중복) / `notes`·`ontology`·`graph` insights 3개 분산 통합 / **그래프 = display mode(렌즈)**.

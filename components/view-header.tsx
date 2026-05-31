@@ -6,7 +6,7 @@ import {
   X as PhX,
   Filter as FunnelSimple,
   SlidersHorizontal,
-  PanelLeft as SidebarSimple,
+  PanelRight as SidebarSimple,
   Plus,
 } from "lucide-react"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"

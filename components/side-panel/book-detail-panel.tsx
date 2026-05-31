@@ -43,12 +43,14 @@ import {
   Sticker as PhSticker,
   Play,
   BookOpen,
+  Circle,
+  Flag,
 } from "lucide-react"
 import { ENTITY_ICONS } from "@/lib/entity-icons"
 import { cn } from "@/lib/utils"
 import { SPACE_COLORS } from "@/lib/colors"
 import type { Book, AutoSourceKind } from "@/lib/types"
-import { TagPicker, LabelPicker } from "@/components/note-fields"
+import { TagPicker, LabelPicker, StatusDropdown, PriorityDropdown } from "@/components/note-fields"
 import { CategoryPicker } from "@/components/category-picker"
 
 function InspectorSection({
@@ -206,6 +208,30 @@ export function BookDetailPanel({ book }: { book: Book }) {
           />
         </button>
       </div>
+
+      {/* ── Status / Priority (workflow axis, §11) ───────────
+          Books share the Notes 4-stage status + 5-stage priority. Only
+          manual·hybrid books carry a workflow — smart books are auto-curated
+          (status/priority N/A), so the section is hidden for them. Setter
+          mirrors the Notes side panel (StatusDropdown/PriorityDropdown). */}
+      {kind !== "smart" && (
+        <>
+          <InspectorSection title="Status" icon={<Circle size={16} strokeWidth={2} />}>
+            <StatusDropdown
+              value={book.status ?? "backlog"}
+              onChange={(status) => updateBook(book.id, { status })}
+            />
+          </InspectorSection>
+          <div className="mx-4 border-b border-border" />
+          <InspectorSection title="Priority" icon={<Flag size={16} strokeWidth={2} />}>
+            <PriorityDropdown
+              value={book.priority ?? "none"}
+              onChange={(priority) => updateBook(book.id, { priority })}
+            />
+          </InspectorSection>
+          <div className="mx-4 border-b border-border" />
+        </>
+      )}
 
       {/* ── Description ──────────────────────────────────── */}
       {book.description && (

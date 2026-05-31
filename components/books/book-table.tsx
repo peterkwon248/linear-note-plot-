@@ -26,7 +26,7 @@
 import { useState, useEffect } from "react"
 import { usePlotStore } from "@/lib/store"
 import { useT } from "@/lib/i18n"
-import type { Book } from "@/lib/types"
+import type { Book, NoteStatus } from "@/lib/types"
 import type { SortField, SortDirection, GroupBy } from "@/lib/view-engine/types"
 import { getBookKind, type BookGroup } from "@/lib/view-engine/use-books-view"
 import {
@@ -35,6 +35,8 @@ import {
   BookKindIcon,
   BookSourceKindChip,
 } from "@/components/property-chips"
+import { StatusDropdown, PriorityBadge } from "@/components/note-fields"
+import { StatusShapeIcon } from "@/components/status-icon"
 import { shortRelative } from "@/lib/format-utils"
 import { cn } from "@/lib/utils"
 import {
@@ -68,6 +70,8 @@ interface BookColumnDef {
 
 const BOOK_COLUMNS: (BookColumnDef & { labelKey?: string })[] = [
   { id: "title",     label: "Name",     labelKey: "display.ordering.title",   width: "flex-1 min-w-[120px]", sortField: "title" },
+  { id: "status",    label: "Status",   labelKey: "display.property.status",  width: "w-[124px] shrink-0", align: "left" },
+  { id: "priority",  label: "Priority", labelKey: "filter.category.priority", width: "w-[84px] shrink-0",  align: "left" },
   { id: "kind",      label: "Kind",     labelKey: "books.prop.kind",          width: "w-[110px] shrink-0", align: "left" },
   { id: "itemCount", label: "Items",    labelKey: "books.prop.item_count",    width: "w-[96px] shrink-0",  align: "right", sortField: "itemCount" },
   { id: "sources",   label: "Sources",  labelKey: "books.prop.smart_sources", width: "w-[100px] shrink-0", align: "left" },
@@ -269,7 +273,10 @@ export function BookTable({
                 {group.key === "others" && (
                   <PushPinSlash size={12} strokeWidth={2} className="text-muted-foreground/60" />
                 )}
-                {!["smart", "manual", "hybrid", "pinned", "others"].includes(group.key) && <span />}
+                {["backlog", "todo", "in_progress", "done"].includes(group.key) && (
+                  <StatusShapeIcon status={group.key as NoteStatus} size={12} />
+                )}
+                {!["smart", "manual", "hybrid", "pinned", "others", "backlog", "todo", "in_progress", "done"].includes(group.key) && <span />}
                 <span className="a-tg__label">{group.label || "Untitled"}</span>
                 <span className="a-tg__count tabular-nums">{group.books.length}</span>
                 <div className="a-tg__line" />
@@ -552,6 +559,24 @@ function renderCell(
             <PushPin size={11} fill="currentColor" strokeWidth={2} className="ml-1 shrink-0 text-amber-500" />
           )}
         </>
+      )
+    case "status":
+      // §11 — inline status picker (manual·hybrid). smart = N/A → em dash.
+      return kind === "smart" ? (
+        <span className="text-2xs text-muted-foreground/40">—</span>
+      ) : (
+        <StatusDropdown
+          value={book.status ?? "backlog"}
+          onChange={(s) => usePlotStore.getState().updateBook(book.id, { status: s })}
+          variant="inline"
+        />
+      )
+    case "priority":
+      // §11 — priority badge (display). smart / none → em dash.
+      return kind !== "smart" && book.priority && book.priority !== "none" ? (
+        <PriorityBadge priority={book.priority} />
+      ) : (
+        <span className="text-2xs text-muted-foreground/40">—</span>
       )
     case "kind":
       return <BookKindChip kind={kind} />

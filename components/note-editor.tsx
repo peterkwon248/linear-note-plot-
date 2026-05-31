@@ -35,7 +35,6 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { cn } from "@/lib/utils"
 import { usePlotStore } from "@/lib/store"
 import { EditorBreadcrumb } from "@/components/editor-breadcrumb"
-import { PanelsMenu } from "@/components/panels-menu"
 import { useSettingsStore } from "@/lib/settings-store"
 import { NoteEditorAdapter } from "@/components/editor/NoteEditorAdapter"
 import { FixedToolbar } from "@/components/editor/FixedToolbar"
@@ -464,10 +463,9 @@ export function NoteEditor({ noteId: propNoteId, onClose, pane = 'primary', defa
         isActivePane && "bg-hover-bg"
       )}>
         <div className="flex items-center gap-2 min-w-0 flex-1">
-          {/* Panels toggle menu — same as ViewHeader so editor users can
-              hide/show activity bar / sidebar / detail panel without
-              leaving the note. (Mirrors view-header.tsx:181 pattern.) */}
-          {pane === 'primary' && <PanelsMenu />}
+          {/* Panel toggles live in the GlobalTopBar (single source, #120) — the
+              editor header no longer mounts its own PanelsMenu (§10: 상단바와
+              햄버거 중복 제거). Secondary pane keeps its back/forward nav. */}
           {pane === 'secondary' && (
             <div className="flex items-center gap-0 mr-1">
               <button

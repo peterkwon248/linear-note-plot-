@@ -3,31 +3,18 @@
 > 우선순위 기반 작업 목록. **P0 = 다음 세션 즉시 시작점** (NEXT-ACTION.md 폐지, 2026-05-12).
 > 완료 항목은 즉시 삭제. 자세한 history는 SESSION-LOG.md + MEMORY.md.
 
-**마지막 갱신**: 2026-05-31 (밤 after-work, 집/Windows) — 아이콘 리니어화 + SPACE_ICONS SOT + Item C 인기순위/§11 북 status·reads(v153) + Home §13 슬림화 (PR #501, 2커밋). 다음 P0 #0/#1 = **§13 활동 위젯**(코멘트/북마크/링크) + **§11 북 status 세터 UX**(사용자 명시, 다음 세션 첫 작업).
+**마지막 갱신**: 2026-05-31 (낮~오후 after-work, 집/Windows) — §11 북·위키 status/priority 워크플로 완성(detail panel·보드·인라인·배지·필터) + 코멘트→Inbox + 북마크 capped 버그 + 셸 PanelsMenu 중복제거/§10 Phase1 (4 P0, 1 PR). 다음 P0 = **셸 §10 Phase 2**(사이드바 토글 분산) + 온톨로지 정리·carries.
 
 ---
 
 ## 🟣 P0 — 즉시 (cross-machine 진입점, 2026-05-31 — IA 헌법 적용 단계)
 
+> ✅ **2026-05-31 낮~오후** (이 PR): §11 북·위키 status/priority 워크플로 완성 — Books status 세터 = **detail panel + 보드 status 4컬럼 드래그 + list 인라인 피커 + 그리드/보드 배지**, Book·Wiki **priority 필터·배지·세터**(manual·hybrid만). + **코멘트→Inbox**(`comment` kind, todo/blocker→do) + **북마크 퀵링크스 capped 버그** + **셸 PanelsMenu 중복 제거/§10 Phase1**(디테일 토글 우상단 정합 + 에디터 햄버거 중복 제거).
 > ✅ **2026-05-31 밤** (PR #501, 2커밋): 아이콘 리니어화(스티커 SVG·온톨로지 Waypoints·라벨 Ribbon) + **SPACE_ICONS SOT** + Item C 인기순위(Home·Wiki) + §11 북 status필터·reads(v153) + Home §13 슬림화(KB 3그룹 + 중복 4섹션 제거).
 > ✅ **2026-05-31 낮~저녁** (8커밋): 셸 §10 footer/레일(Trash 강등·Help·레일 절제) + 색·아이콘 시스템 정합 + IA 헌법 §13(Home 종합대시보드 A→C) + 지식베이스 9-entity + 엔티티 아이콘 SOT(`lib/entity-icons.tsx`).
 > ✅ **2026-05-30 심야 완료** (PR #497): **IA 헌법 수립**(14챕터) + **Inbox 전역 승격**.
 > ✅ **2026-05-30 밤** (PR #495+#496): A3.2 스키마 엔진 + 폰트 Pretendard + A3.3 필터 크롬 + 노트행 모션 + 셸 1차.
 > ✅ **2026-05-30 저녁/낮**: Track A 착수(A0~A2) PR #494 / 통합 정합성 8커밋 PR #493.
-
-### 0. **🔴 P0 #0 (최우선): 코멘트 → Inbox 통합** ⭐ 다음 세션 첫 작업 (정정 — "활동 위젯" 폐기)
-
-**파보니 §13 "활동 위젯(코멘트/북마크/링크)"은 메모리 drift였다** — spec(`linear-ia-constitution.spec.md:271`) §13 Home = 캡처+지식베이스+퀵링크스 **3위젯**, 활동위젯 없음. 코드 실측 결과: 북마크=퀵링크스(아래 0b), 링크=온톨로지, **코멘트만 진짜 고아**.
-
-코멘트는 `CommentStatus = backlog|todo|done|`**`blocker`** (Linear 스타일, `lib/types.ts:1194`) = **task급**인데 per-entity detail panel에만 있고 "내 미해결 코멘트 전부" 글로벌 뷰가 없음 → §13 "액션은 Inbox 단일화"의 정확한 적용 = **Inbox에 `comment` kind 추가** (미해결 todo/blocker → `do` 섹션, done → 사라짐). 파일: `lib/store/slices/inbox.ts`(InboxItemKind + "comment"), `lib/hooks/use-inbox.ts`(sectionFor case + open-comment 수집), `comments.ts`(getOpenComments selector), spec §Inbox에 comment source 추가.
-
-### 0.01. **🟡 P0 #0b: 북마크 퀵링크스 승급 (capped 버그)**
-
-`components/home/mixed-quicklinks.tsx`가 글로벌 북마크를 **sortKey 그룹 `5`(최하, :146/161) + 전체 `slice(0, limit)` limit 8(:172)** 으로 처리 → 핀(노트/위키/북/폴더/뷰)이 8개↑면 북마크 **0개 표시(증발)**. 북마크는 즐겨찾기 성격이라 집은 퀵링크스가 맞음 → **북마크 전용 limit/섹션**으로 안 잘리게 승급(별도 뷰는 과함).
-
-### 0.02. **🔴 P0 #1: §11 북 status 세터 UX + priority 표시** ⭐ 다음 세션 첫 작업 (사용자 명시)
-
-데이터모델(Book status/priority/reads)·status 필터·v153 마이그는 **완료(PR #501)**. 남은 = status를 *설정*하는 UI. **Books는 detail panel 없음(showDetailPanel:false)** → **보드 status 컬럼 드래그 vs 카드 인라인 피커 = 설계 결정 필요.** + 북/위키 **priority 필터·배지 표시**(현재 필드만, notes priority=board badge 패턴 미러) + 북 status 보드 그룹핑(현재 필터-only). 파일: `components/views/books-view.tsx`(보드/카드), `books.schema.tsx`(priority PropertyDef), `use-books-view.ts`.
 
 ### 0.03. **🟡 P0 #2: 온톨로지 정리 (§13)**
 
@@ -35,13 +22,11 @@ dashboard→insights 흡수(Health/Coverage 중복), NUDGE→Inbox `detected`, i
 
 ### 0.04. **🟡 P0 (carry): 셸 §10 패널토글 분산** (Track B 셸 리팩터)
 
-footer/레일(b/c/d)은 이 세션 완료. 남은 = 상단 `PanelsMenu` 완전제거 + 디테일토글=콘텐츠 우상단 + 엣지핸들 + `⌘\`(현 split view) 충돌 정리. `linear-sidebar.tsx`(2082줄) 분해와 함께 = 큰 리팩터.
-
-### 0.05. **🔴 P0 #1: Book 워크플로 축 (헌법 §11, ~25줄+version bump)**
-
-3-entity 워크플로 통일. Books에 **status(노트 4단계 재사용)+priority(노트 5단계)** 추가(**manual·hybrid만**, smart=N/A), **kind→classification 이동**. + **Wiki priority 추가**(현재 없음).
-- 파일: `lib/types.ts`(Book.status?/priority? + WikiArticle.priority?) / `lib/view-engine/schema/entities/books.schema.tsx`(status+priority PropertyDef, kind category→classification) + `wiki.schema.tsx`(priority) / `use-books-view.ts`(bookMatchesRule status/priority case) / **store version bump**(기존 manual/hybrid book status 기본값 backlog 마이그).
-- 크롬은 스키마엔진 자동(무변경). smart 가드: status/priority는 manual·hybrid에만.
+리니어 문법 = 중앙 햄버거 폐기 + 패널별 개별 토글 분산.
+- ✅ **에디터/북리더 PanelsMenu 중복 제거** — `note-editor.tsx`·`book-detail-page.tsx`가 자기 헤더에 PanelsMenu를 또 mount(#120 단일 mount 위반)하던 것 제거. GlobalTopBar 단일 source만 남김.
+- ✅ **Phase 1: 디테일 토글 = 콘텐츠 우상단** — view-header(`428`)·editor(`649`)에 이미 구현돼 있었음. view-header 아이콘 `PanelLeft`→`PanelRight` 정합(디테일=우측) + 중앙 햄버거 "Detail" 중복 row 제거.
+- 🟡 **Phase 2: 사이드바 토글** — 엣지핸들(사이드바 우경계 hover-reveal) + 헤더 토글(`PanelLeft`). `linear-sidebar.tsx`(2082줄) 분해와 묶임 = 큰 작업.
+- 🟡 **Phase 3: 중앙 `PanelsMenu` 햄버거 완전 제거** (Phase 2 후) + `⌘\`(현 split view) 충돌 + 단축키(⌘B/⌘⇧F/⌘⇧A) 개별 토글 매핑 정리. 아이콘 `ListIcon`→리니어 `PanelLeft/Right`.
 
 ### 0.06. **🟡 P0 #2: Book kind 라벨 변경 (헌법 §13, 가벼움)**
 

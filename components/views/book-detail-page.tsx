@@ -29,7 +29,6 @@ import { NoteEditor } from "@/components/note-editor"
 import { WikiArticleView } from "@/components/wiki-editor/wiki-article-view"
 import { BookContextNav } from "@/components/books/book-context-nav"
 import { useBookContextNav } from "@/hooks/use-book-context-nav"
-import { PanelsMenu } from "@/components/panels-menu"
 import { WikiLayoutToggle } from "@/components/wiki-editor/wiki-layout-toggle"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { CaseSensitive as TextAa } from "lucide-react"
@@ -789,7 +788,8 @@ function BookWikiReader({
   return (
     <div data-editor-scope="wiki" className="flex h-full w-full flex-1 flex-col">
       <header className="flex h-(--header-height) shrink-0 items-center gap-2 border-b border-border px-4">
-        <PanelsMenu />
+        {/* PanelsMenu removed (§10): panel toggles live in the GlobalTopBar
+            single source (#120). */}
         <div className="flex flex-1 items-center justify-between gap-2 min-w-0">
           <nav className="flex items-center gap-1 min-w-0">
             <button

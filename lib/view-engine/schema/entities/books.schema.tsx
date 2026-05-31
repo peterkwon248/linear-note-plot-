@@ -17,6 +17,12 @@ import {
   StatusTodoIcon,
   StatusInProgressIcon,
   StatusDoneIcon,
+  PriorityIcon,
+  PriorityUrgentIcon,
+  PriorityHighIcon,
+  PriorityMediumIcon,
+  PriorityLowIcon,
+  PriorityNoneIcon,
 } from "../icons"
 import { NOTE_STATUS_HEX } from "@/lib/colors"
 
@@ -72,7 +78,13 @@ const PROPERTIES: PropertyDef[] = [
     icon: StatusIcon,
     valueType: "enum",
     isFilterable: true,
+    isDisplayable: true,
+    isGroupable: true,
     filterLabelKey: "filter.category.status",
+    displayLabelKey: "display.property.status",
+    groupLabelKey: "display.property.status",
+    displayOrder: 0,
+    groupModes: ["list", "board", "grid"],
     options: {
       kind: "static",
       values: [
@@ -80,6 +92,34 @@ const PROPERTIES: PropertyDef[] = [
         { key: "todo", label: "Todo", labelKey: "status.todo", color: NOTE_STATUS_HEX.todo, icon: StatusTodoIcon },
         { key: "in_progress", label: "In Progress", labelKey: "status.in_progress", color: NOTE_STATUS_HEX.in_progress, icon: StatusInProgressIcon },
         { key: "done", label: "Done", labelKey: "status.done", color: NOTE_STATUS_HEX.done, icon: StatusDoneIcon },
+      ],
+    },
+  },
+
+  /* priority — filter / board-display (§11). Books share the Notes 5-stage
+   *    priority; manual·hybrid only (smart = N/A). Filterable + board badge.
+   *    bars-not-hue (urgent = colored glyph), mirrors note-fields PRIORITY_CONFIG.
+   *    displayOrder 0 (ties with status; declaration index keeps status→priority
+   *    →itemCount order). */
+  {
+    key: "priority",
+    category: "workflow",
+    label: "Priority",
+    icon: PriorityIcon,
+    valueType: "enum",
+    isFilterable: true,
+    isDisplayable: true,
+    filterLabelKey: "filter.category.priority",
+    displayOrder: 0,
+    displayModes: ["board"],
+    options: {
+      kind: "static",
+      values: [
+        { key: "urgent", label: "Urgent", color: "var(--chart-4)", icon: PriorityUrgentIcon },
+        { key: "high", label: "High", icon: PriorityHighIcon },
+        { key: "medium", label: "Medium", icon: PriorityMediumIcon },
+        { key: "low", label: "Low", icon: PriorityLowIcon },
+        { key: "none", label: "No priority", icon: PriorityNoneIcon },
       ],
     },
   },

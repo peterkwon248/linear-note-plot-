@@ -283,7 +283,7 @@ describe("A3.3-E1 — filter categories carry the 6-cluster `category`", () => {
   it("Wiki: workflow → classification → relations → time → content (wikiTier in relations)", () => {
     const cats = toFilterCategories(WIKI_SCHEMA).map((c) => c.category)
     expect(cats).toEqual([
-      "workflow",                       // status
+      "workflow", "workflow",           // status, priority (§11)
       "classification",                 // category
       "relations", "relations",         // links, wikiTier
       "time", "time",                   // updatedAt, createdAt
@@ -291,20 +291,20 @@ describe("A3.3-E1 — filter categories carry the 6-cluster `category`", () => {
     ])
     expectClustered(cats)
     expect(toFilterCategories(WIKI_SCHEMA).map((c) => c.key)).toEqual([
-      "status", "category", "links", "wikiTier", "updatedAt", "createdAt", "title",
+      "status", "priority", "category", "links", "wikiTier", "updatedAt", "createdAt", "title",
     ])
   })
 
-  it("Books: workflow → classification → time (pinned in workflow ahead of sourceType)", () => {
+  it("Books: workflow → classification → time (status·priority·pinned in workflow; §11)", () => {
     const cats = toFilterCategories(BOOKS_SCHEMA).map((c) => c.category)
     expect(cats).toEqual([
-      "workflow", "workflow",   // kind, pinned
-      "classification",         // sourceType
-      "time",                   // updatedAt
+      "workflow", "workflow", "workflow",   // status, priority, pinned
+      "classification", "classification",   // kind, sourceType
+      "time",                                // updatedAt
     ])
     expectClustered(cats)
     expect(toFilterCategories(BOOKS_SCHEMA).map((c) => c.key)).toEqual([
-      "kind", "pinned", "sourceType", "updatedAt",
+      "status", "priority", "pinned", "kind", "sourceType", "updatedAt",
     ])
   })
 })

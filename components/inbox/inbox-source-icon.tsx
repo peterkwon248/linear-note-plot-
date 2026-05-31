@@ -1,6 +1,6 @@
 "use client"
 
-import { Bell, Brain, Moon as MoonStars, Unlink as LinkBreak, Sparkles as Sparkle, Target, Square } from "lucide-react"
+import { Bell, Brain, Moon as MoonStars, Unlink as LinkBreak, Sparkles as Sparkle, Target, Square, MessageSquare } from "lucide-react"
 import type { InboxItemKind } from "@/lib/store/slices/inbox"
 
 export function InboxSourceIcon({ kind, className }: { kind: InboxItemKind; className?: string }) {
@@ -12,6 +12,7 @@ export function InboxSourceIcon({ kind, className }: { kind: InboxItemKind; clas
     case "auto-enroll":    return <Sparkle {...iconProps} />
     case "plan-due":       return <Target {...iconProps} />
     case "task":           return <Square {...iconProps} />
+    case "comment":        return <MessageSquare {...iconProps} />
     case "reminder":
     default:               return <Bell {...iconProps} />
   }

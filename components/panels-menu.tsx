@@ -19,12 +19,10 @@ export function PanelsMenu() {
   const setSidebarCollapsed = usePlotStore((s) => s.setSidebarCollapsed)
   const activitybarCollapsed = usePlotStore((s) => s.activitybarCollapsed)
   const setActivitybarCollapsed = usePlotStore((s) => s.setActivitybarCollapsed)
-  const sidePanelOpen = usePlotStore((s) => s.sidePanelOpen)
   const setSidePanelOpen = usePlotStore((s) => s.setSidePanelOpen)
 
   const actbarOpen = !activitybarCollapsed
   const sidebarOpen = !sidebarCollapsed
-  const detailOpen = sidePanelOpen
 
   const showAll = () => {
     setActivitybarCollapsed(false)
@@ -71,13 +69,9 @@ export function PanelsMenu() {
           onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
           shortcut="⌘⇧F"
         />
-        <PanelToggle
-          label="Detail"
-          panel="detail"
-          checked={detailOpen}
-          onClick={() => setSidePanelOpen(!sidePanelOpen)}
-          shortcut="⌘B"
-        />
+        {/* §10 Phase 1: Detail toggle removed here — it now lives ONLY at the
+            content top-right (view-header / editor header), Linear-style. The
+            "Show/Hide all" presets below still cover the detail panel. */}
         <div className="my-1 border-t border-border-subtle" />
         <button
           onClick={showAll}
