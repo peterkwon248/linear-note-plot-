@@ -8,6 +8,30 @@
 
 ---
 
+## ✅ 2026-05-31 (오후) — 셸 §10 Phase 2·3 완성 — 사이드바 hover 토글 + 햄버거 완전 제거 + 액티비티 바 토글 → 상단바 ⭐⭐⭐⭐⭐
+
+**범위**: before-work로 §10 Phase 2 시작 → Phase 3(햄버거 제거+액티비티 바 토글) + 사용자 요청으로 액티비티 바 토글 위치를 인-패널→상단바로 이전. tsc 0 / build 0. **Store version 무변경(전부 UI/shell).**
+
+### 핵심 결정 (영구)
+- **패널 토글 분산 완성**: 디테일=콘텐츠 우상단 / 사이드바=인-패널 hover(우상단 `PanelLeft`) / 액티비티 바=상단바 영속(`PanelLeftClose`/`PanelLeftOpen`). **비대칭 의도적** — 크롬 패널(좁은 레일, 모드 스위치) → 상단바; 콘텐츠 패널(폭, 맥락적) → 인-패널. 대칭(상단바 2개) = 펼쳐놓은 햄버거 재현 → 기각.
+- **사이드바 접힘 = 좌측 expand rail**(`w-3.5`, faint `›`, hover 강조). 사이드바 `return null` 아님.
+- **액티비티 바 접힘 = `return null` 유지** — 상단바 토글로 복귀. 인-패널 rail 없음(actbar+sidebar rail 2개 나란히 어색).
+- **PanelsMenu 완전 삭제** — `components/panels-menu.tsx` git rm. GlobalTopBar 단일 소비자였음. 햄버거 #120 LOCKED 패턴 폐기.
+
+### 기술 학습 (영구)
+- **`return null` collapsed 패턴** = 상단바 등 외부에 재-open 경로 필수. 없으면 키보드(⌘⇧A)만.
+- **dev bottom-left "N" = NEXTJS-PORTAL** — 인-패널 `mt-auto`(foot) 배치 시 겹침. 프로덕션 없음.
+- **상단바 버튼 순서**: [P @14] → [액티비티 바 토글 @68] → [시계 @97] → [‹ @127] → [› @157].
+
+### 다음 우선순위 (P0)
+1. **온톨로지 정리 (§13)** — dashboard→insights 흡수, NUDGE→Inbox `detected`, 그래프=display mode.
+2. carries: Book kind 라벨·noteType 데드코드·모션/A3.1 LCH·wiki status 세터화.
+
+### Store version / HEAD
+무변경. main HEAD = 이 PR 머지 후. 머신=집/Windows.
+
+---
+
 ## ✅ 2026-05-31 (낮~오후) — §11 북·위키 status/priority 워크플로 완성 + 코멘트→Inbox + 북마크 capped + 셸 PanelsMenu/§10 Phase1 (4 P0, 1 PR) ⭐⭐⭐⭐⭐
 
 **범위**: before-work로 PR #501 이어받음 → P0 #0(코멘트→Inbox)·#0b(북마크 capped)·#1(§11 북·위키 status/priority) + 사용자 적발 셸 PanelsMenu 중복 버그 → §10 Phase 1까지. 4 P0를 1 PR로 한꺼번에 머지.

@@ -6,6 +6,61 @@
 
 ---
 
+## 2026-05-31 (오후, 집/Windows) — **셸 §10 Phase 2·3 완성 — 사이드바 hover 토글 + 햄버거 완전 제거 + 액티비티 바 토글 → 상단바 이전**
+
+> 🎯 **다음 즉시 액션 hook**: **온톨로지 정리 (§13)** — `dashboard` 탭 → `insights`로 흡수(Health/Coverage 중복 제거), NUDGE → Inbox `detected` 이관, 그래프 = display mode 전환.
+>
+> **사용자 의도**: "inbox 관련 처리 안 해야 하나?" → 코드 실측 결과 코멘트→Inbox는 PR #503에서 완료. 남은 건 NUDGE→Inbox(`detected`) 이관인데, 이건 온톨로지 정리(§13)의 일부.
+>
+> **첫 스텝** (다른 머신에서 바로):
+> 1. `components/views/ontology-view.tsx` — 3-way 탭(graph/insights/dashboard) 구조 파악 (82-95줄). `dashboard` viewMode 존재.
+> 2. `components/ontology/ontology-dashboard-panel.tsx` — dashboard 패널 컴포넌트 read (stats raw).
+> 3. insights 탭에 dashboard 콘텐츠 흡수 설계 → `dashboard` 탭 제거.
+> 4. NUDGE 아이템들이 어디서 생성되는지 grep (`NUDGE|nudge`, `use-inbox.ts` `detected` 섹션).
+> 5. NUDGE → Inbox `detected` 이관: `lib/hooks/use-inbox.ts` detected 배열에 ontology nudge 추가.
+>
+> **컴포넌트 구조**: `OntologyView` → tab state(`graphViewState.viewMode`: "graph"/"insights"/"dashboard") → 각 탭 렌더. `OntologyDashboardPanel`(raw stats). `GraphInsightsView`(action prompts). NUDGE = 현재 온톨로지 뷰 내부 컴포넌트 추정 → Inbox `detected` 섹션으로 이관.
+>
+> **위험 + 회피**:
+> - `dashboard` viewMode를 store에 저장 중 → 제거 시 persisted state 처리 주의(migrate 또는 fallback `"graph"`).
+> - NUDGE 이관 후 온톨로지 뷰 내에서 중복 노출 금지.
+> - 그래프 = display mode 전환(렌즈 모델)은 크기가 클 수 있어 scope를 먼저 확인 후 결정.
+>
+> **참고 파일**:
+> - `components/views/ontology-view.tsx:82-95` (3-way 탭 + viewMode)
+> - `components/views/ontology-view.tsx:570` (dashboard 렌더 분기)
+> - `components/ontology/ontology-dashboard-panel.tsx` (dashboard 내용)
+> - `lib/hooks/use-inbox.ts:23,50` (detected 섹션 구조)
+> - `docs/01-plan/features/linear-ia-constitution.spec.md` (§13 온톨로지 정책)
+>
+> **머신**: 집(Windows). **현재 main HEAD**: PR #503 (`39bc1ab`). **branch worktree**: 이 PR 머지 후 main fresh.
+
+### 완료 (이 세션 — 1 PR)
+- **셸 §10 Phase 2 — 사이드바 토글 분산**: 사이드바 우상단 hover-reveal `PanelLeft` 접기 토글 (`group/sidebar`) + 우경계 seam 리사이즈 전용 복귀(seam 셰브론 제거) + 접힘 시 좌측 expand rail(`w-3.5`, faint `›`). 4가지 Polish(중복 정리·rail 슬림·아이콘 리니어 톤·모션 토큰 `--duration-fast`/`--ease-out`).
+- **셸 §10 Phase 3 — 햄버거 완전 제거 + 액티비티 바 토글 이전**: `panels-menu.tsx` 파일 삭제(`git rm`). GlobalTopBar `<PanelsMenu />` 제거. 액티비티 바 토글 = **상단바(시계 왼쪽)** 영속 버튼(`PanelLeftClose`/`PanelLeftOpen`, 상태별 방향 아이콘). 액티비티 바 collapsed=`return null` 유지(인-패널 토글/rail 제거).
+
+### 브레인스토밍 & 큰 결정 (영구)
+- **패널 토글 분산 완성**: 디테일=콘텐츠 우상단(Phase1) / 사이드바=인-패널 hover(Phase2) / 액티비티 바=상단바 영속(Phase3). **비대칭 의도적** — 크롬(액티비티 바)은 상단바에, 콘텐츠 패널(사이드바)은 인-패널에. 대칭(상단바 2개 나란히)은 "펼쳐놓은 햄버거" 재현이라 기각.
+- **액티비티 바 collapse = `return null` 유지**: 접으면 좌측 rail 없음 → 상단바 영속 토글로 복귀. rail을 두면 rail 2개(actbar+sidebar)가 나란히 생겨 어색.
+- **사이드바 비대칭 설계 근거**: 사이드바 = 콘텐츠 네비(폭 있음, 맥락적 제스처) → 인-패널. 액티비티 바 = 크롬 프리미티브(좁은 레일, 모드 스위치) → 상단바. 리니어 정통과 일치.
+
+### 기술 학습 (영구)
+- **`activity-bar.tsx` collapsed `return null`**: 햄버거 제거 후 재-open 경로를 **반드시 상단바 등 다른 곳에 확보**해야 함. `return null` 그대로 두면 키보드(⌘⇧A)로만 복귀 가능.
+- **dev bottom-left "N" = NEXTJS-PORTAL**: 좌하단 고정 dev 인디케이터. 프로덕션 없음. 인-패널 `mt-auto`(foot) 배치 시 dev에서 겹쳐 보임 → `mt-auto` 피할 것.
+- **상단바 버튼 순서(확인됨)**: [P 아바타 @14] → [액티비티 바 토글 @68] → [시계 @97] → [‹ @127] → [› @157].
+
+### Watch Out (다음 세션)
+- **`dashboard` viewMode persisted state**: store에 `graphViewState.viewMode:"dashboard"` 저장된 사용자는 온톨로지 정리 후 fallback 처리 필요(`"dashboard"`→`"graph"` 또는 `"insights"` 자동 전환 migrate/런타임 guard).
+- **셸 시각은 사용자 실화면 의존**: eval로 DOM/state 검증했으나 hover 느낌은 사용자가 직접 확인.
+
+### 환경 변경
+- **Store version: 무변경** (전부 UI/shell).
+- **삭제**: `components/panels-menu.tsx` (고아 — GlobalTopBar 단일 importer도 제거).
+- **신규**: 없음. 수정: `app/(app)/layout.tsx`, `components/activity-bar.tsx`, `components/global-top-bar.tsx`, `components/linear-sidebar.tsx`.
+- Tests: pre-existing 2건(date-grouping) 외 신규 실패 0. tsc 0 / build 0.
+
+---
+
 ## 2026-05-31 (낮~오후, 집/Windows — 직전 밤 #501에 이어) — **§11 북·위키 status/priority 워크플로 완성 + 코멘트→Inbox + 북마크 capped 버그 + 셸 PanelsMenu 중복제거/§10 Phase1 (4 P0, 1 PR)**
 
 > 🎯 **다음 즉시 액션 hook**: **셸 §10 Phase 2 — 사이드바 토글 분산**(리니어식). 이번에 Phase 1(디테일 토글=콘텐츠 우상단)까지 완료. 다음 = 사이드바 collapse 토글을 중앙 햄버거에서 빼서 (a) 사이드바 우경계 **엣지핸들**(hover-reveal ‹/›) + (b) 사이드바 헤더 토글 아이콘(`PanelLeft`)으로 분산. wire = `sidebarCollapsed`/`setSidebarCollapsed`. `⌘⇧F` 유지. **이후 Phase 3** = 중앙 `PanelsMenu` 햄버거 완전 제거(`global-top-bar.tsx:101`) + `⌘\`(split) 충돌 점검 + `ListIcon`→`PanelLeft/Right`. ⚠️ `linear-sidebar.tsx`(2082줄) 분해와 묶이면 큰 작업 — Phase 2만 먼저 떼도 OK.
