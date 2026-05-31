@@ -12,7 +12,13 @@ import {
   BookKindManualIcon,
   BookKindHybridIcon,
   SourceStickerIcon,
+  StatusIcon,
+  StatusBacklogIcon,
+  StatusTodoIcon,
+  StatusInProgressIcon,
+  StatusDoneIcon,
 } from "../icons"
+import { NOTE_STATUS_HEX } from "@/lib/colors"
 
 /**
  * A3.2 / M4 — Books EntitySchema (plan §2-C, D2). Single source for the Books
@@ -55,31 +61,25 @@ import {
  */
 
 const PROPERTIES: PropertyDef[] = [
-  /* ── workflow cluster (kind, pinned) ───────────────────────── */
+  /* ── workflow cluster (status, pinned) ─────────────────────── */
 
-  /* kind — filter / display / group. Smart / Manual / Hybrid. The Books
-   *    board + grouping spine (no status axis on Books). */
+  /* status — filter (§11 IA 헌법: Books도 노트 4단계 status 축 보유). manual·
+   *    hybrid 책에만 의미 (smart = 자동 큐레이션이라 N/A). 노트 status 4값/색 재사용. */
   {
-    key: "kind",
+    key: "status",
     category: "workflow",
-    label: "Kind",
-    icon: SortIcon,
+    label: "Status",
+    icon: StatusIcon,
     valueType: "enum",
     isFilterable: true,
-    isDisplayable: true,
-    isGroupable: true,
-    // Display + group surfaces carry the i18n key; the filter category label is
-    // the bare "Kind" string in the legacy config (no labelKey there).
-    displayLabelKey: "books.prop.kind",
-    groupLabelKey: "books.prop.kind",
-    displayOrder: 1,
-    displayIcon: SourceIcon, // display column uses SourceIcon, filter row SortIcon
+    filterLabelKey: "filter.category.status",
     options: {
       kind: "static",
       values: [
-        { key: "smart", label: "Smart", icon: BookKindSmartIcon },
-        { key: "manual", label: "Manual", icon: BookKindManualIcon },
-        { key: "hybrid", label: "Hybrid", icon: BookKindHybridIcon },
+        { key: "backlog", label: "Backlog", labelKey: "status.backlog", color: NOTE_STATUS_HEX.backlog, icon: StatusBacklogIcon },
+        { key: "todo", label: "Todo", labelKey: "status.todo", color: NOTE_STATUS_HEX.todo, icon: StatusTodoIcon },
+        { key: "in_progress", label: "In Progress", labelKey: "status.in_progress", color: NOTE_STATUS_HEX.in_progress, icon: StatusInProgressIcon },
+        { key: "done", label: "Done", labelKey: "status.done", color: NOTE_STATUS_HEX.done, icon: StatusDoneIcon },
       ],
     },
   },
@@ -108,7 +108,33 @@ const PROPERTIES: PropertyDef[] = [
     },
   },
 
-  /* ── classification cluster (sourceType) ───────────────────── */
+  /* ── classification cluster (kind, sourceType) ─────────────── */
+
+  /* kind — filter / display / group. Smart / Manual / Hybrid. §11: status
+   *    workflow 축 신설로 kind는 classification facet으로 이동 (board/group spine은
+   *    당분간 kind 유지 — smart 책은 status N/A라 status board 부적합). */
+  {
+    key: "kind",
+    category: "classification",
+    label: "Kind",
+    icon: SortIcon,
+    valueType: "enum",
+    isFilterable: true,
+    isDisplayable: true,
+    isGroupable: true,
+    displayLabelKey: "books.prop.kind",
+    groupLabelKey: "books.prop.kind",
+    displayOrder: 1,
+    displayIcon: SourceIcon, // display column uses SourceIcon, filter row SortIcon
+    options: {
+      kind: "static",
+      values: [
+        { key: "smart", label: "Smart", icon: BookKindSmartIcon },
+        { key: "manual", label: "Manual", icon: BookKindManualIcon },
+        { key: "hybrid", label: "Hybrid", icon: BookKindHybridIcon },
+      ],
+    },
+  },
 
   /* sourceType — filter only. Which smart source(s) are configured;
    *    "_none" surfaces pure-manual books. */

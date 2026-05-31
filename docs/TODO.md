@@ -3,24 +3,25 @@
 > 우선순위 기반 작업 목록. **P0 = 다음 세션 즉시 시작점** (NEXT-ACTION.md 폐지, 2026-05-12).
 > 완료 항목은 즉시 삭제. 자세한 history는 SESSION-LOG.md + MEMORY.md.
 
-**마지막 갱신**: 2026-05-31 (낮~저녁 after-work, 집/Windows) — 셸 §10 footer/레일 + 색·아이콘 정합 + IA 헌법 §13(Home 종합대시보드 A→C) + 지식베이스 9-entity + 엔티티 아이콘 SOT (8커밋). 다음 P0 #0 = **스티커 커스텀 SVG**(사용자 명시) → Home 종합 대시보드 구현 → 온톨로지 정리.
+**마지막 갱신**: 2026-05-31 (밤 after-work, 집/Windows) — 아이콘 리니어화 + SPACE_ICONS SOT + Item C 인기순위/§11 북 status·reads(v153) + Home §13 슬림화 (PR #501, 2커밋). 다음 P0 #0/#1 = **§13 활동 위젯**(코멘트/북마크/링크) + **§11 북 status 세터 UX**(사용자 명시, 다음 세션 첫 작업).
 
 ---
 
 ## 🟣 P0 — 즉시 (cross-machine 진입점, 2026-05-31 — IA 헌법 적용 단계)
 
-> ✅ **2026-05-31 낮~저녁** (이 세션 8커밋): 셸 §10 footer/레일(Trash 강등·Help·레일 절제) + 색·아이콘 시스템 정합 + IA 헌법 §13(Home 종합대시보드 A→C) + 지식베이스 9-entity + 엔티티 아이콘 SOT(`lib/entity-icons.tsx`).
+> ✅ **2026-05-31 밤** (PR #501, 2커밋): 아이콘 리니어화(스티커 SVG·온톨로지 Waypoints·라벨 Ribbon) + **SPACE_ICONS SOT** + Item C 인기순위(Home·Wiki) + §11 북 status필터·reads(v153) + Home §13 슬림화(KB 3그룹 + 중복 4섹션 제거).
+> ✅ **2026-05-31 낮~저녁** (8커밋): 셸 §10 footer/레일(Trash 강등·Help·레일 절제) + 색·아이콘 시스템 정합 + IA 헌법 §13(Home 종합대시보드 A→C) + 지식베이스 9-entity + 엔티티 아이콘 SOT(`lib/entity-icons.tsx`).
 > ✅ **2026-05-30 심야 완료** (PR #497): **IA 헌법 수립**(14챕터) + **Inbox 전역 승격**.
 > ✅ **2026-05-30 밤** (PR #495+#496): A3.2 스키마 엔진 + 폰트 Pretendard + A3.3 필터 크롬 + 노트행 모션 + 셸 1차.
 > ✅ **2026-05-30 저녁/낮**: Track A 착수(A0~A2) PR #494 / 통합 정합성 8커밋 PR #493.
 
-### 0. **🔴 P0 #0 (최우선): 스티커 접힌-모서리 커스텀 SVG** ⭐ 다음 세션 첫 작업 (사용자 명시)
+### 0. **🔴 P0 #0 (최우선): §13 Home 활동 위젯 신규 (코멘트/북마크/링크)** ⭐ 다음 세션 첫 작업 (사용자 명시)
 
-lucide `Sticker`(둥근사각+우상단 접힌 모서리)는 **웃는 표정**이 들어가 잡다함. 사용자 = 형태는 좋고 **표정만 싫음** → **커스텀 인라인 SVG**(둥근사각 + 우상단 dog-ear + 표정 없음). 위치 = `lib/entity-icons.tsx`의 `stickers`(현재 `StickyNote` 임시). 인라인 SVG 컴포넌트로 만들어 `ENTITY_ICONS.stickers` 교체 → SOT 한 곳이라 Home/자료실/detail panel/그래프 전 표면 자동 반영. lucide Sticker SVG path 참고하되 가운데 표정 곡선 제거.
+Home §13 슬림화(받은편지함·Featured·최근활동·Recents 제거 = PR #501 완료)로 비운 자리를 **활동 위젯**으로 채움 → §13 종합 대시보드 완성. 자산(지식베이스 3그룹=본체/분류/출처)은 완료(StatsRow), **활동 2단(시간성, "이번 주 +N")이 남음**. **데이터 소스(코멘트/북마크/링크 store) 확인 먼저** → `components/views/home-view.tsx`에 기존 ContentCard 패턴(Most Connected/Most Visited 재사용)으로 추가. cross-cutting only 원칙 유지.
 
-### 0.02. **🔴 P0 #1: Home 종합 대시보드 구현 (IA 헌법 §13 C안)**
+### 0.02. **🔴 P0 #1: §11 북 status 세터 UX + priority 표시** ⭐ 다음 세션 첫 작업 (사용자 명시)
 
-Home = **"개인 활동 종합 대시보드"**(폐지/슬림화 아님 — A→C 정정). **자산**(본체: 노트/위키/북 · 분류: 태그/카테고리/라벨/스티커 · 출처: 레퍼런스/파일) + **활동**(코멘트/북마크/링크 — **신규 위젯**), 2단(자산=정적 카운트 / 활동=시간성 "이번 주 +N"). 원칙 = **cross-cutting only** → Inbox미리보기/추천/최근활동 **제거**(본진 = Inbox / 상단바 recently-viewed). 지식베이스 9-card는 완료(StatsRow). 파일: `components/views/home-view.tsx`(재구성), 활동 위젯 신규.
+데이터모델(Book status/priority/reads)·status 필터·v153 마이그는 **완료(PR #501)**. 남은 = status를 *설정*하는 UI. **Books는 detail panel 없음(showDetailPanel:false)** → **보드 status 컬럼 드래그 vs 카드 인라인 피커 = 설계 결정 필요.** + 북/위키 **priority 필터·배지 표시**(현재 필드만, notes priority=board badge 패턴 미러) + 북 status 보드 그룹핑(현재 필터-only). 파일: `components/views/books-view.tsx`(보드/카드), `books.schema.tsx`(priority PropertyDef), `use-books-view.ts`.
 
 ### 0.03. **🟡 P0 #2: 온톨로지 정리 (§13)**
 

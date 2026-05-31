@@ -12,10 +12,10 @@ import { ENTITY_ICONS } from "@/lib/entity-icons"
 /**
  * Home > Stats card grid (Knowledge Base overview).
  *
- * 9 cards (2026-05-31, IA 헌법 §13 — 지식베이스 9 entity):
- *   destination: notes · wiki · books
- *   classify:    tags · categories · labels
- *   asset:       references · files · stickers
+ * 9 cards grouped by 자산 3분류 (2026-05-31, IA 헌법 §13):
+ *   본체(bodies):   notes · wiki · books
+ *   분류(classify): tags · categories · labels · stickers  (sticker = facet)
+ *   출처(source):   references · files
  * Each card: small uppercase label · large tabular value · tiny muted sub.
  * Colors from KNOWLEDGE_INDEX_COLORS (single source of truth, shared w/ Library).
  */
@@ -117,30 +117,50 @@ export function StatsRow() {
     { label: t("home.tile.stickers"),   value: stats.stickers,   sub: stats.stickersSub, route: "/stickers",           color: KNOWLEDGE_INDEX_COLORS.stickers.text,   bgColor: KNOWLEDGE_INDEX_COLORS.stickers.bg,   icon: <ENTITY_ICONS.stickers size={12} strokeWidth={2} /> },
   ]
 
+  // §13 — 자산 3분류로 섹션화: 본체(노트/위키/책) · 분류(태그/카테고리/라벨/스티커,
+  // 스티커=facet) · 출처(레퍼런스/파일). route로 items를 그룹에 매핑.
+  const groups: Array<{ key: string; label: string; routes: string[] }> = [
+    { key: "bodies",   label: t("home.kb.bodies"),   routes: ["/notes", "/wiki", "/books"] },
+    { key: "classify", label: t("home.kb.classify"), routes: ["/library/tags", "/library/categories", "/library/labels", "/stickers"] },
+    { key: "source",   label: t("home.kb.source"),   routes: ["/library/references", "/library/files"] },
+  ]
+
   return (
-    <div className="grid grid-cols-2 gap-3 min-[640px]:grid-cols-3">
-      {items.map((item) => (
-        <button
-          key={item.label}
-          type="button"
-          onClick={() => setActiveRoute(item.route)}
-          className="group flex flex-col items-start gap-2 rounded-lg border border-border bg-card px-3 py-4 text-left transition-all duration-150 hover:border-accent/30 hover:bg-accent/[0.03] hover:shadow-sm"
-        >
-          <div className="flex items-center gap-1.5 w-full">
-            <span className={`flex h-5 w-5 items-center justify-center rounded ${item.bgColor} ${item.color}`}>
-              {item.icon}
-            </span>
-            <span className="text-2xs font-medium uppercase text-muted-foreground truncate">
-              {item.label}
-            </span>
+    <div className="space-y-5">
+      {groups.map((group) => (
+        <div key={group.key}>
+          <h4 className="mb-2 text-2xs font-medium uppercase tracking-wide text-muted-foreground/60">
+            {group.label}
+          </h4>
+          <div className="grid grid-cols-2 gap-3 min-[640px]:grid-cols-3">
+            {group.routes
+              .map((r) => items.find((i) => i.route === r))
+              .filter((item): item is (typeof items)[number] => Boolean(item))
+              .map((item) => (
+                <button
+                  key={item.label}
+                  type="button"
+                  onClick={() => setActiveRoute(item.route)}
+                  className="group flex flex-col items-start gap-2 rounded-lg border border-border bg-card px-3 py-4 text-left transition-all duration-150 hover:border-accent/30 hover:bg-accent/[0.03] hover:shadow-sm"
+                >
+                  <div className="flex items-center gap-1.5 w-full">
+                    <span className={`flex h-5 w-5 items-center justify-center rounded ${item.bgColor} ${item.color}`}>
+                      {item.icon}
+                    </span>
+                    <span className="text-2xs font-medium uppercase text-muted-foreground truncate">
+                      {item.label}
+                    </span>
+                  </div>
+                  <span className={`text-2xl font-semibold tabular-nums leading-none ${item.color}`}>
+                    {item.value}
+                  </span>
+                  <span className="text-2xs text-muted-foreground tabular-nums">
+                    {item.sub || " "}
+                  </span>
+                </button>
+              ))}
           </div>
-          <span className={`text-2xl font-semibold tabular-nums leading-none ${item.color}`}>
-            {item.value}
-          </span>
-          <span className="text-2xs text-muted-foreground tabular-nums">
-            {item.sub || " "}
-          </span>
-        </button>
+        </div>
       ))}
     </div>
   )

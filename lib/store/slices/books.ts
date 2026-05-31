@@ -144,6 +144,9 @@ export interface BooksSlice {
    * normally cleared by deleting the book or completing reading).
    */
   setLastRead: (bookId: string, refId: string | null) => void
+
+  /** Increment view count (reads) by 1. Does NOT update updatedAt. */
+  incrementBookReads: (bookId: string) => void
 }
 
 export function createBooksSlice(set: Set, _get: Get, appendEvent: AppendEventFn): Omit<BooksSlice, "books"> {
@@ -484,6 +487,19 @@ export function createBooksSlice(set: Set, _get: Get, appendEvent: AppendEventFn
           }
         }),
       )
+    },
+
+    /** Increment view count (reads) by 1. Does NOT update updatedAt. */
+    incrementBookReads: (bookId: string) => {
+      set((state: any) => ({
+        books: ((state.books ?? []) as Book[]).map((b) =>
+          b.id === bookId
+            ? { ...b, reads: (b.reads ?? 0) + 1 }
+            : b
+        ),
+      }))
+      // entity event log
+      appendEvent({ kind: "book", id: bookId }, "opened")
     },
   }
 }

@@ -7,6 +7,7 @@ import { useT } from "@/lib/i18n"
 import type { Note, WikiArticle, WikiStatus } from "@/lib/types"
 import { STATUS_CONFIG } from "@/components/note-fields"
 import { StatusShapeIcon } from "@/components/status-icon"
+import { ENTITY_ICONS } from "@/lib/entity-icons"
 import { WIKI_STATUS_ORDER } from "@/lib/view-engine/wiki-list-pipeline"
 import { WikiInsightsChart } from "@/components/wiki-editor/wiki-insights-chart"
 import {
@@ -39,6 +40,8 @@ interface WikiDashboardProps {
   redLinks: { title: string; refCount: number }[]
   recentChanges: WikiArticle[]
   mostConnected: { note: WikiArticle; count: number }[]
+  /** Top articles by view count (`reads`), desc. Already trashed-filtered + reads>0. */
+  mostVisited: { note: WikiArticle; count: number }[]
   staleDocuments: { note: WikiArticle; daysAgo: number }[]
   categories: { items: { id: string; name: string; parentIds: string[]; count: number }[]; uncategorized: number }
 
@@ -72,6 +75,7 @@ export function WikiDashboard({
   redLinks,
   recentChanges,
   mostConnected,
+  mostVisited,
   staleDocuments,
   categories,
   searchQuery,
@@ -318,6 +322,21 @@ export function WikiDashboard({
 
           {/* Right Column */}
           <div className="space-y-5">
+            {/* Most Visited — top articles by reads. Omitted when none have reads>0. */}
+            {mostVisited.length > 0 && (
+              <ContentCard title={t("wiki.section.most_visited")} icon={TrendUp}>
+                {mostVisited.map(({ note, count }, i) => (
+                  <RankedArticleItem
+                    key={note.id}
+                    rank={i + 1}
+                    title={note.title || t("common.untitled")}
+                    count={count}
+                    onClick={() => onOpenWikiArticle?.(note.id)}
+                  />
+                ))}
+              </ContentCard>
+            )}
+
             {/* Stale Documents */}
             {staleDocuments.length > 0 && (
               <ContentCard title={t("wiki.section.needs_review")} icon={FileText}>
@@ -460,6 +479,36 @@ function ArticleItem({
     >
       <span className="min-w-0 flex-1 truncate text-note text-foreground group-hover:text-foreground">{title}</span>
       <span className="shrink-0 text-2xs tabular-nums text-muted-foreground">{meta}</span>
+    </button>
+  )
+}
+
+/**
+ * RankedArticleItem — Most Visited row. Mirrors ArticleItem's exact row
+ * vocabulary but prepends a subtle rank number + the wiki entity glyph
+ * (ENTITY_ICONS.wiki) and right-aligns the reads count.
+ */
+function RankedArticleItem({
+  rank,
+  title,
+  count,
+  onClick,
+}: {
+  rank: number
+  title: string
+  count: number
+  onClick: () => void
+}) {
+  const WikiIcon = ENTITY_ICONS.wiki
+  return (
+    <button
+      onClick={onClick}
+      className="group flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-left transition-colors duration-100 hover:bg-hover-bg"
+    >
+      <span className="w-3.5 shrink-0 text-2xs tabular-nums text-muted-foreground/50">{rank}</span>
+      <WikiIcon className="shrink-0 text-muted-foreground" size={14} strokeWidth={2.5} />
+      <span className="min-w-0 flex-1 truncate text-note text-foreground group-hover:text-foreground">{title}</span>
+      <span className="shrink-0 text-2xs tabular-nums text-muted-foreground">{count}</span>
     </button>
   )
 }

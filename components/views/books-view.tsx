@@ -41,7 +41,6 @@ import { shortRelative } from "@/lib/format-utils"
 import { toast } from "sonner"
 import { cn } from "@/lib/utils"
 import {
-  Library as Books,
   Pin as PushPin,
   PinOff as PushPinSlash,
   Trash2 as Trash,
@@ -51,6 +50,7 @@ import {
   FolderOpen,
   X,
 } from "lucide-react"
+import { SPACE_ICONS } from "@/lib/entity-icons"
 import {
   ContextMenu,
   ContextMenuContent,
@@ -231,7 +231,7 @@ function BooksGrid() {
   return (
     <div className="flex flex-1 flex-col overflow-hidden">
       <ViewHeader
-        icon={<Books size={20} strokeWidth={2} />}
+        icon={<SPACE_ICONS.books size={20} strokeWidth={2} />}
         title={t("books.title")}
         count={activeFolderId ? visibleBooks.length : liveCount > 0 ? liveCount : undefined}
         searchPlaceholder={t("books.search_books")}
@@ -465,7 +465,7 @@ function BooksGrid() {
 function EmptyBooks({ onCreate }: { onCreate: () => void }) {
   return (
     <div className="flex flex-col items-center gap-3 px-6 pt-20">
-      <Books size={32} strokeWidth={2} className="text-muted-foreground/25" />
+      <SPACE_ICONS.books size={32} strokeWidth={2} className="text-muted-foreground/25" />
       <div className="text-center">
         <p className="text-sm font-medium text-foreground">No books yet</p>
         <p className="mt-0.5 text-xs text-muted-foreground">

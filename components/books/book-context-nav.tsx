@@ -27,12 +27,12 @@ import {
   ChevronLeft as CaretLeft,
   ChevronRight as CaretRight,
   ChevronDown as CaretDown,
-  Library as Books,
   Check,
   Sparkles as Sparkle,
   StickyNote as Note,
   BookOpen,
 } from "lucide-react"
+import { SPACE_ICONS } from "@/lib/entity-icons"
 import { usePlotStore } from "@/lib/store"
 import { setActiveRoute } from "@/lib/table-route"
 import { KNOWLEDGE_INDEX_COLORS, SPACE_COLORS } from "@/lib/colors"
@@ -144,7 +144,7 @@ export function BookContextNav({
                 title="Open table of contents"
                 aria-label="Table of contents"
               >
-                <Books size={12} strokeWidth={2} className="text-muted-foreground/70 group-hover:text-foreground" />
+                <SPACE_ICONS.books size={12} strokeWidth={2} className="text-muted-foreground/70 group-hover:text-foreground" />
                 <span className="max-w-[140px] truncate font-medium">
                   {book.title || "Untitled book"}
                 </span>
@@ -231,7 +231,7 @@ export function BookContextNav({
             className="group flex items-center gap-1 rounded-md px-1 py-0.5 text-2xs text-muted-foreground transition-colors hover:bg-hover-bg hover:text-foreground"
             title={`Back to ${book.title || "book"}`}
           >
-            <Books size={12} strokeWidth={2} className="text-muted-foreground/70 group-hover:text-foreground" />
+            <SPACE_ICONS.books size={12} strokeWidth={2} className="text-muted-foreground/70 group-hover:text-foreground" />
             <span className="max-w-[140px] truncate font-medium">
               {book.title || "Untitled book"}
             </span>

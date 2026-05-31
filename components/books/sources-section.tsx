@@ -41,16 +41,13 @@ import {
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
 import {
   Folder as PhFolder,
-  BookOpen as PhBookOpen,
-  Hash as PhHash,
-  Tag as PhTag,
-  Sticker as PhSticker,
   Plus as PhPlus,
   X as PhX,
   Sparkles as Sparkle,
   RefreshCw as ArrowsClockwise,
   Check as PhCheck,
 } from "lucide-react"
+import { ENTITY_ICONS } from "@/lib/entity-icons"
 import { cn } from "@/lib/utils"
 import type { AutoSourceKind } from "@/lib/types"
 
@@ -387,10 +384,10 @@ export function SourcesSection({ bookId }: SourcesSectionProps) {
       case "folder":
         return <PhFolder size={14} strokeWidth={2} className="text-muted-foreground" />
       case "category":
-        return <PhBookOpen size={14} strokeWidth={2} style={{ color: e.color }} />
+        return <ENTITY_ICONS.wiki size={14} strokeWidth={2} style={{ color: e.color }} />
       case "tag":
         return (
-          <PhHash
+          <ENTITY_ICONS.tags
             size={14}
             strokeWidth={2}
             style={{ color: e.color ?? undefined }}
@@ -405,7 +402,7 @@ export function SourcesSection({ bookId }: SourcesSectionProps) {
           />
         )
       case "sticker":
-        return <PhSticker size={14} strokeWidth={2} style={{ color: e.color }} />
+        return <ENTITY_ICONS.stickers size={14} strokeWidth={2} style={{ color: e.color }} />
     }
   }
 
@@ -548,7 +545,7 @@ export function SourcesSection({ bookId }: SourcesSectionProps) {
                 )}
               </TabsTrigger>
               <TabsTrigger value="category" title={`Wiki category source — ${categoryCandidates.length} matches`}>
-                <PhBookOpen size={12} strokeWidth={2} />
+                <ENTITY_ICONS.wiki size={12} strokeWidth={2} />
                 {categoryCandidates.length > 0 && (
                   <span className="ml-1 text-2xs tabular-nums text-muted-foreground/70">
                     {categoryCandidates.length}
@@ -556,7 +553,7 @@ export function SourcesSection({ bookId }: SourcesSectionProps) {
                 )}
               </TabsTrigger>
               <TabsTrigger value="tag" title={`Tag source — ${tagCandidates.length} matches`}>
-                <PhHash size={12} strokeWidth={2} />
+                <ENTITY_ICONS.tags size={12} strokeWidth={2} />
                 {tagCandidates.length > 0 && (
                   <span className="ml-1 text-2xs tabular-nums text-muted-foreground/70">
                     {tagCandidates.length}
@@ -564,7 +561,7 @@ export function SourcesSection({ bookId }: SourcesSectionProps) {
                 )}
               </TabsTrigger>
               <TabsTrigger value="label" title={`Label source — ${labelCandidates.length} matches`}>
-                <PhTag size={12} strokeWidth={2} />
+                <ENTITY_ICONS.labels size={12} strokeWidth={2} />
                 {labelCandidates.length > 0 && (
                   <span className="ml-1 text-2xs tabular-nums text-muted-foreground/70">
                     {labelCandidates.length}
@@ -572,7 +569,7 @@ export function SourcesSection({ bookId }: SourcesSectionProps) {
                 )}
               </TabsTrigger>
               <TabsTrigger value="sticker" title={`Sticker source — ${stickerCandidates.length} matches`}>
-                <PhSticker size={12} strokeWidth={2} />
+                <ENTITY_ICONS.stickers size={12} strokeWidth={2} />
                 {stickerCandidates.length > 0 && (
                   <span className="ml-1 text-2xs tabular-nums text-muted-foreground/70">
                     {stickerCandidates.length}
@@ -644,7 +641,7 @@ export function SourcesSection({ bookId }: SourcesSectionProps) {
                         onSelect={() => bulkMode ? toggleBulk("tag", tag.id, tag.name) : handleAdd("tag", tag.id, tag.name)}
                         className="flex cursor-pointer items-center gap-2"
                       >
-                        <PhHash
+                        <ENTITY_ICONS.tags
                           size={14}
                           strokeWidth={2}
                           style={{ color: tag.color ?? undefined }}
@@ -700,7 +697,7 @@ export function SourcesSection({ bookId }: SourcesSectionProps) {
                         onSelect={() => bulkMode ? toggleBulk("sticker", sticker.id, sticker.name) : handleAdd("sticker", sticker.id, sticker.name)}
                         className="flex cursor-pointer items-center gap-2"
                       >
-                        <PhSticker size={14} strokeWidth={2} style={{ color: sticker.color }} />
+                        <ENTITY_ICONS.stickers size={14} strokeWidth={2} style={{ color: sticker.color }} />
                         <span className="flex-1 truncate">{sticker.name}</span>
                         <span className="text-2xs text-muted-foreground/60 tabular-nums">
                           {formatHint(total, inBook)}

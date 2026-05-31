@@ -11,7 +11,6 @@ import {
   Plus,
   X as PhX,
   Trash2 as Trash,
-  Library as Books,
   List as ListBullets,
   AlignLeft as TextAlignLeft,
   Globe,
@@ -23,6 +22,7 @@ import {
   Unlink as LinkBreak,
   Sparkles as Sparkle,
 } from "lucide-react"
+import { ENTITY_ICONS } from "@/lib/entity-icons"
 import { shortRelative } from "@/lib/format-utils"
 import { IconWiki } from "@/components/plot-icons"
 import { navigateToWikiArticle } from "@/lib/wiki-article-nav"
@@ -193,7 +193,7 @@ export function ReferenceDetailPanel({ referenceId }: { referenceId: string }) {
       {/* Type Badge */}
       <div className="flex flex-wrap items-center gap-2 px-4 py-3 border-b border-border">
         <span className="flex items-center gap-1 rounded-md bg-chart-3/10 px-2 py-0.5 text-2xs font-medium text-chart-3">
-          <Books size={14} strokeWidth={1.5} />
+          <ENTITY_ICONS.references size={14} strokeWidth={1.5} />
           Reference
         </span>
       </div>
@@ -327,7 +327,7 @@ export function ReferenceDetailPanel({ referenceId }: { referenceId: string }) {
       <div className="mx-4 border-b border-border" />
 
       {/* Usage — notes & wiki that reference this */}
-      <InspectorSection title="Usage" icon={<Books size={16} strokeWidth={2} />}>
+      <InspectorSection title="Usage" icon={<ENTITY_ICONS.references size={16} strokeWidth={2} />}>
         {referencingNotes.length === 0 && referencingArticles.length === 0 ? (
           <p className="text-2xs text-muted-foreground/70">No notes or wiki articles reference this yet</p>
         ) : (

@@ -6,6 +6,52 @@
 
 ---
 
+## 2026-05-31 (밤, 집/Windows) — **아이콘 리니어화 + SPACE_ICONS SOT + Item C 인기순위/§11 북 status·reads + Home §13 슬림화 (PR #501, 2커밋)**
+
+> 🎯 **다음 즉시 액션 hook** (사용자 명시 — 다음 세션 **첫 작업 2개**):
+> 1. **§13 Home 활동 위젯 신규 (코멘트/북마크/링크)** — Home 슬림화로 비운 자리를 cross-cutting "활동"(시간성, "이번 주 +N")으로 채움. 자산(지식베이스 3그룹=본체/분류/출처)은 완료, **활동 2단이 남음**. 파일 = `components/views/home-view.tsx` + 위젯 신규. **데이터 소스(코멘트/북마크/링크 store) 확인 먼저.**
+> 2. **§11 북 status 세터 UX + priority 표시** — 데이터모델(status/priority/reads)·필터·v153 마이그는 됐고, status를 *설정*하는 UI가 없음. **Books는 detail panel 없음(showDetailPanel:false) → 보드 status 컬럼 드래그 vs 카드 인라인 피커 = 설계 결정 필요.** + 북/위키 priority 필터·배지 표시(notes priority=board badge 패턴 미러).
+>
+> **세션 성격**: before-work 시작 → P0 #0(스티커)부터 했는데 사용자가 연쇄로 §13 Home 정합을 지적(아이콘 drift→KB 3그룹화→inbox 중복) → 아이콘 전면 SOT화 + Item C(인기순위 신규) + Home §13 슬림화로 확장. PR #501(2커밋) 머지.
+>
+> **위험 + 회피 (핵심 교훈)**:
+> - **delegated executor가 "completed"인데 깨진 상태 보고** (§13 cleanup): insights 데이터필드/import는 지우고 그 JSX는 안 지워 tsc 10에러로 깨진 채 완료 보고 → **executor 산출물은 항상 tsc 직접 검증**(보고 신뢰 금지), 고아 JSX 직접 제거 복구.
+> - **정렬 배열/nbsp Edit 매칭 실패**: stats-row 9-card column-align 공백 + `|| " "` nbsp로 old_string 매칭 반복 실패 → **Write 전체교체가 robust**. 큰 정렬 블록은 Edit보다 Write.
+> - **파일 겹침=비대화형 hunk 분리 불가** (book-detail-page=아이콘+reads / home-view=순위+§13 / i18n=둘 다) → `git add -p` 막힘이라 2커밋(아이콘 / 나머지)으로 타협.
+>
+> **참고 파일**: `lib/entity-icons.tsx`(ENTITY_ICONS + **SPACE_ICONS SOT**), `components/home/stats-row.tsx`(KB 3그룹), `components/views/home-view.tsx`(§13 슬림화 — **활동 위젯 추가 지점**), `components/home/mixed-quicklinks.tsx`(퀵링크), `lib/view-engine/schema/entities/books.schema.tsx`(북 status, priority 미추가)·`use-books-view.ts`(bookMatchesRule), `lib/store/migrate.ts`(v153), `wiki-dashboard.tsx`/`wiki-view.tsx`(위키 순위), `lib/store/slices/books.ts`(incrementBookReads).
+>
+> **머신**: 집(Windows). **현재 main HEAD**: PR #501 머지 후(직전 `47a4e93` #500). **branch worktree**: `claude/stupefied-swartz-285672` → 머지 후 main 기준 fresh.
+
+### 완료 (이 세션, PR #501 2커밋)
+- **아이콘 리니어화**: 스티커 dog-ear 커스텀 SVG(StickerPlain) / 온톨로지 Waypoints·캘린더 CalendarDays·자료실 Library·**라벨 Ribbon**(Badge→Milestone→Ribbon 반복 후 확정) / `Archive as Books` drift 박멸(books↔library 표면 뒤바뀜)·References→Quote.
+- **SPACE_ICONS SOT 신설**: 7공간 단일 정의 → 활동바·사이드바·뷰헤더 9파일 라우팅 + plot-icons 위임. 필터칩 Hash·Tag 오글리프 등 ENTITY_ICONS 정합.
+- **Item C 인기순위 + §11(부분)**: v153 마이그(Book.status/priority/reads + Wiki priority, manual/hybrid status backlog 백필) / 북 status **필터** 축 + kind→classification / 북 reads 증가(incrementBookReads) / 순위 UI Home(노트+북)·Wiki(위키) reads top5.
+- **Home §13 슬림화**: 지식베이스 3그룹화(본체/분류/출처) + 중복 4섹션 제거(받은편지함·Featured·최근활동·Recents — 본진=Inbox공간/상단바 recently-viewed).
+
+### 브레인스토밍 & 큰 결정 (영구)
+- **§13 Home = cross-cutting only**: 본진 있는 것(Inbox=전역공간, 최근=상단바 recently-viewed) 미리보기 제거. 자산(지식베이스 3그룹) + 활동(다음) 2단. "액션은 Inbox 단일화."
+- **라벨 = Ribbon 확정**(사용자: Badge·Milestone 기각, "리본 형태"). lucide Ribbon=award 메달느낌이나 사용자 선택.
+- **북 status는 데이터/필터까지만**; 세터 UX는 detail panel 없어 별도 설계. priority는 필드만(표시 미구현).
+- **공간 아이콘도 SOT 필요**(엔티티 ENTITY_ICONS처럼) — Archive가 books/library/references 혼용=표면 drift 증거.
+
+### 기술 학습 (영구)
+- **delegated executor 산출물 = tsc 직접 검증 필수**(깨진 채 "completed" 보고 사례).
+- **큰 정렬/특수문자(nbsp) 블록 = Edit보다 Write 전체교체**.
+- **파일 겹침 시 비대화형 hunk 분리 불가** → 논리 커밋은 파일 단위로만.
+- **preview route = module state**(HMR마다 /home 리셋). `window.__plotStore`+querySelector eval로 카드 렌더·reads 분포 검증.
+
+### Watch Out (다음 세션)
+- **활동 위젯 데이터 소스 확인 먼저**(코멘트/북마크/링크 store). **북 status 세터 = 설계 결정**(보드 드래그 vs 인라인). §11 priority(북/위키) 표시 + 북 status 보드 그룹핑 미구현(필터-only).
+- carry: 온톨로지 정리(§13), 셸 §10 패널토글, Book kind 라벨(Auto/Manual/Mixed), noteType 데드코드, **6-item Claude Design 사전정지 트랙**(layout/sidebar 분해→design-system→토큰).
+
+### 환경 변경
+- **Store version: 152 → 153** (Book.status/priority/reads + WikiArticle.priority 멱등 백필).
+- i18n: home.most_visited, wiki.section.most_visited, home.kb.bodies/classify/source 추가.
+- Tests: view-engine 59 pass / 2 fail(pre-existing date-grouping, 무관). **tsc 0 / npm run build 통과.**
+
+---
+
 ## 2026-05-31 (낮~저녁, 집/Windows) — **셸 §10 footer/레일 + 색·아이콘 시스템 정합 + IA 헌법 §13(Home 슬림화→종합 대시보드) + 지식베이스 9-entity + 엔티티 아이콘 SOT (8커밋)**
 
 > 🎯 **다음 즉시 액션 hook**:

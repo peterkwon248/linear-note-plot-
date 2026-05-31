@@ -8,6 +8,30 @@
 
 ---
 
+## ✅ 2026-05-31 (밤) — 아이콘 리니어화 + SPACE_ICONS SOT + Item C 인기순위/§11 북 status·reads(v153) + Home §13 슬림화 (PR #501, 2커밋) ⭐⭐⭐⭐⭐
+
+**범위**: before-work 시작 → 사용자 연쇄 §13 정합 지적(아이콘 drift→KB 3그룹화→inbox 중복)으로 확장. 아이콘 전면 SOT화 + Item C(인기순위 신규) + Home §13 슬림화. PR #501 머지.
+
+### 핵심 결정 (영구)
+- **SPACE_ICONS SOT 신설**(`lib/entity-icons.tsx`, 7공간) — 엔티티 ENTITY_ICONS처럼 공간 아이콘도 단일 정의. Archive가 books/library/references 혼용된 표면 drift 해소. 온톨로지 Waypoints·캘린더 CalendarDays·자료실 Library·**라벨 Ribbon 확정**.
+- **§13 Home = cross-cutting only**: 본진 있는 것(Inbox=전역공간 / 최근=상단바 recently-viewed) 미리보기 제거. 지식베이스 3그룹화(본체/분류/출처). "액션은 Inbox 단일화."
+- **§11 북 = 데이터/필터까지만**(status/priority/reads + v153 + status필터 + kind→classification). 세터 UX·priority 표시는 다음(Books detail panel 없어 설계 결정).
+- **인기 순위 = reads 기반**(Note/Wiki/Book.reads). Home(노트+북 cross-entity)·Wiki(위키) top5.
+
+### 기술 학습 (영구)
+- **delegated executor 산출물 = tsc 직접 검증 필수**("completed"인데 깨진 채 보고 사례 — JSX 안 지우고 데이터/import만 지움). 
+- **큰 정렬/nbsp 블록 = Edit보다 Write 전체교체**. **파일 겹침 = 비대화형 hunk 분리 불가**(2커밋 타협).
+
+### 다음 우선순위 (P0, 사용자 명시 — 다음 세션 첫 작업)
+1. **§13 Home 활동 위젯**(코멘트/북마크/링크) — 슬림화로 비운 자리. 데이터 소스 확인 먼저.
+2. **§11 북 status 세터 UX**(보드 드래그 vs 인라인 피커 설계) + priority 표시.
+3. carry: 온톨로지 정리·셸 §10·Book kind 라벨·noteType·**6-item Claude Design 사전정지 트랙**.
+
+### Store version / HEAD
+**v153**(Book.status/priority/reads + WikiArticle.priority 멱등 백필). main HEAD = PR #501 머지 후(직전 `47a4e93` #500). worktree `claude/stupefied-swartz-285672` → 머지 후 fresh. 머신=집/Windows.
+
+---
+
 ## ✅ 2026-05-31 (낮~저녁) — 셸 §10 footer/레일 + 색·아이콘 시스템 정합 + IA 헌법 §13(Home 종합대시보드 A→C) + 지식베이스 9-entity + 엔티티 아이콘 SOT (8커밋) ⭐⭐⭐⭐⭐
 
 **범위**: 헌법 §10 적용 시작(셸 footer/레일) → 사용자 "뒤죽박죽" 적발로 **색·아이콘 시스템 전면 정합** → IA 재논의(Home/Inbox/온톨로지) → **§13 Home 슬림화 A→C 정정**(Plane 반례·노트앱 진입 검증) → 지식베이스 9-entity + **엔티티 아이콘 SOT 신설**. 8커밋(origin/main `159ee1e` 기준 → 이 세션 PR/머지).

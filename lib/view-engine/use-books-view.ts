@@ -68,6 +68,11 @@ function bookMatchesRule(b: Book, rule: FilterRule): boolean {
     case "kind": {
       return eq(getBookKind(b), value)
     }
+    // §11 — Books status 축 (manual·hybrid). smart 책은 status N/A → migration이
+    // 백필 안 했으므로 undefined; 필터 목적상 "backlog"로 취급.
+    case "status": {
+      return eq(b.status ?? "backlog", value)
+    }
     // books-view-engine-2: which smart-source kinds are configured for this
     // book. value ∈ folder/category/tag/label/sticker. "_none" = manual-only
     // books (no smart sources).

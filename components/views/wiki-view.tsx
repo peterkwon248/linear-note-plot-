@@ -733,6 +733,16 @@ export function WikiView() {
       .slice(0, 5)
   }, [wikiNotes, backlinkCounts])
 
+  // Card data: most visited (by reads, desc). wikiNotes is already
+  // trashed-filtered; exclude articles with no reads. Mirrors mostConnected.
+  const mostVisited = useMemo(() => {
+    return [...wikiNotes]
+      .map((n) => ({ note: n, count: n.reads ?? 0 }))
+      .filter(({ count }) => count > 0)
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 5)
+  }, [wikiNotes])
+
   // Card data: categories (from WikiCategory entities via article.categoryIds)
   const categories = useMemo(() => {
     const catCounts = new Map<string, number>()
@@ -1267,6 +1277,7 @@ export function WikiView() {
             redLinks={redLinks}
             recentChanges={recentChanges}
             mostConnected={mostConnected}
+            mostVisited={mostVisited}
             staleDocuments={staleDocuments}
             categories={categories}
             searchQuery={searchQuery}
