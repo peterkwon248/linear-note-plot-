@@ -23,6 +23,7 @@ export type InboxItemKind =
   | "plan-due"        // wiki article plan hook (scheduled) due — Phase 1c
   | "task"            // incomplete checkbox in note body — Phase α-1 Inbox 흡수
   | "comment"         // open comment (status todo/blocker) — task급 액션, §13 Inbox 단일화
+  | "ontology-nudge"  // graph maintenance nudge (orphan/promote/unlinked/linked) — §13 발견→Inbox detected
 
 export interface InboxDismissed {
   kind: InboxItemKind

@@ -90,6 +90,17 @@ function InboxRowFull({
           onOpenNote(comment.anchor.noteId)
         }
       }
+    } else if (item.kind === "ontology-nudge") {
+      // §13 발견→Inbox: sourceId = "<nudgeKind>:<noteId>[:...]". 첫 토큰 뒤
+      // primary id가 항상 대상 노트 → open. orphan은 연결 패널 동반(원래 nudge 미러).
+      const [nudgeKind, primaryId] = item.sourceId.split(":")
+      if (primaryId) {
+        onOpenNote(primaryId)
+        if (nudgeKind === "orphan") {
+          usePlotStore.getState().setSidePanelOpen(true)
+          usePlotStore.setState({ sidePanelMode: "connections" })
+        }
+      }
     } else {
       onOpenNote(item.sourceId)
     }
@@ -142,6 +153,15 @@ function InboxRowFull({
                 navigateToWikiArticle(comment.anchor.articleId)
               } else {
                 onOpenNote(comment.anchor.noteId)
+              }
+            }
+          } else if (item.kind === "ontology-nudge") {
+            const [nudgeKind, primaryId] = item.sourceId.split(":")
+            if (primaryId) {
+              onOpenNote(primaryId)
+              if (nudgeKind === "orphan") {
+                usePlotStore.getState().setSidePanelOpen(true)
+                usePlotStore.setState({ sidePanelMode: "connections" })
               }
             }
           } else {

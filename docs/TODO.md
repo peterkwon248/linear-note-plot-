@@ -3,12 +3,13 @@
 > 우선순위 기반 작업 목록. **P0 = 다음 세션 즉시 시작점** (NEXT-ACTION.md 폐지, 2026-05-12).
 > 완료 항목은 즉시 삭제. 자세한 history는 SESSION-LOG.md + MEMORY.md.
 
-**마지막 갱신**: 2026-05-31 (오후 after-work, 집/Windows) — 셸 §10 Phase 2(사이드바 hover 토글 + expand rail) + Phase 3(햄버거 완전 제거 + 액티비티 바 토글→상단바). 다음 P0 = **온톨로지 정리 (§13)**.
+**마지막 갱신**: 2026-05-31 (저녁 after-work, 집/Windows) — 온톨로지 정리 §13(insights 해체→Dashboard+Inbox+그래프 rings) + 사이드바 헤더 행(닫힘 B) + /graph-insights 폐기. 다음 P0 = **(검증) /inbox refresh anomaly + §13 남음(notes /insights 통합 · 그래프=display mode)**.
 
 ---
 
 ## 🟣 P0 — 즉시 (cross-machine 진입점, 2026-05-31 — IA 헌법 적용 단계)
 
+> ✅ **2026-05-31 저녁** (이 PR): **온톨로지 정리 §13** — insights(발견) 탭 해체 → 분석=Dashboard 통합(Cohesion/Top Notes/Density) · 발견(Nudge)=Inbox `detected`(ontology-nudge) · 그래프 고아 ring · 사이드바 Insights nav 제거 + Home→Inbox. + **사이드바 헤더 행**(닫힘 버튼 B, Inbox 카운트 겹침 해소) + **/graph-insights 폐기**(고아·Dashboard 중복·stale). 19파일 +135/−758.
 > ✅ **2026-05-31 낮~오후** (이 PR): §11 북·위키 status/priority 워크플로 완성 — Books status 세터 = **detail panel + 보드 status 4컬럼 드래그 + list 인라인 피커 + 그리드/보드 배지**, Book·Wiki **priority 필터·배지·세터**(manual·hybrid만). + **코멘트→Inbox**(`comment` kind, todo/blocker→do) + **북마크 퀵링크스 capped 버그** + **셸 PanelsMenu 중복 제거/§10 Phase1**(디테일 토글 우상단 정합 + 에디터 햄버거 중복 제거).
 > ✅ **2026-05-31 밤** (PR #501, 2커밋): 아이콘 리니어화(스티커 SVG·온톨로지 Waypoints·라벨 Ribbon) + **SPACE_ICONS SOT** + Item C 인기순위(Home·Wiki) + §11 북 status필터·reads(v153) + Home §13 슬림화(KB 3그룹 + 중복 4섹션 제거).
 > ✅ **2026-05-31 낮~저녁** (8커밋): 셸 §10 footer/레일(Trash 강등·Help·레일 절제) + 색·아이콘 시스템 정합 + IA 헌법 §13(Home 종합대시보드 A→C) + 지식베이스 9-entity + 엔티티 아이콘 SOT(`lib/entity-icons.tsx`).
@@ -16,12 +17,17 @@
 > ✅ **2026-05-30 밤** (PR #495+#496): A3.2 스키마 엔진 + 폰트 Pretendard + A3.3 필터 크롬 + 노트행 모션 + 셸 1차.
 > ✅ **2026-05-30 저녁/낮**: Track A 착수(A0~A2) PR #494 / 통합 정합성 8커밋 PR #493.
 
-### 0.03. **🔴 P0 #1: 온톨로지 정리 (§13)** ← 다음 시작점
+### 0.03. **🔴 P0 #1: `/inbox` refresh→home anomaly 검증** ← 다음 시작점
 
-dashboard→insights 흡수(Health/Coverage 중복), NUDGE→Inbox `detected`, insights 3개 분산(notes/ontology/graph) 통합, 그래프=display mode(렌즈).
-- **첫 스텝**: `ontology-view.tsx:82-95` 탭 구조 + `ontology-dashboard-panel.tsx` read → dashboard 콘텐츠 insights 흡수 설계 → `dashboard` viewMode 제거(persisted state fallback 처리).
-- **NUDGE 이관**: `lib/hooks/use-inbox.ts` detected 배열에 ontology nudge 추가.
-- ⚠️ `graphViewState.viewMode:"dashboard"` persisted 사용자 → migrate/런타임 guard 필요.
+`/inbox` 진입 후 새로고침/URL 직접 진입 시 home으로 튕기는지 실화면 검증. **인앱 클릭은 정상**(받은편지함 뷰 뜸, data-active 확인). preview 아티팩트 가능성 vs 진짜 refresh 버그.
+- **첫 스텝**: 실화면 `/inbox`에서 F5 → home 뜨면 진짜 버그. `app/(app)/layout.tsx:96-98`(syncFromPathname, [pathname] deps) vs `:105-115`(start-view redirect, pathname==="/"에서만 fire). hard-load가 "/" 거쳐 /home redirect되는 경로 추적.
+- ⚠️ 이번 §13 변경과 무관(글로벌 Inbox 라우팅 미변경) — pre-existing.
+
+### 0.035. **🔴 P0 #2: §13 남음 — insights 분산 통합 + 그래프=display mode(렌즈)**
+
+ontology insights 탭은 이번에 해체(→Dashboard+Inbox+ring). 남은 것:
+- **notes `/insights` 통합**: `components/insights-view.tsx`(Notes)가 ontology Dashboard와 역할 겹치는지 → 통합/역할분리 결정.
+- **그래프 = display mode(렌즈)**: `ontology-graph-canvas`를 list/board처럼 어느 컬렉션서도 띄우는 큰 리팩터 — scope 먼저 확인.
 
 ### 0.04. **✅ 셸 §10 패널토글 분산 완료** (Track B 셸 리팩터)
 

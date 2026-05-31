@@ -1877,6 +1877,21 @@ export function OntologyGraphCanvas({
                   />
                 )}
 
+                {/* Orphan ring — §13: 발견(연결 0 노드)이 그래프에 시각적으로 잔존.
+                    Nudge를 Inbox로 옮긴 대신, 고아 노트/위키를 faint dashed ring으로
+                    가볍게 표시 (gentle, not alarming). 선택/dim/태그는 생략. */}
+                {node.connectionCount === 0 && nodeType !== "tag" && !dimmed && !isSelected && !isMultiSelected && (
+                  <circle
+                    cx={pos.x} cy={pos.y} r={r + 3}
+                    fill="none"
+                    stroke={fill}
+                    strokeWidth={1}
+                    strokeDasharray="2 2.5"
+                    opacity={0.3}
+                    style={{ pointerEvents: "none" }}
+                  />
+                )}
+
                 {/* ── Node shape — type-dependent per spec ──
                  * Theme-aware fill alpha: dark mode keeps a subtle ghost
                  * tint (alpha ~15/0x); light mode bumps to ~55 (≈33%) so the

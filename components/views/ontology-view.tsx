@@ -8,7 +8,6 @@ import { buildOntologyGraphData, type OntologyGraph, type OntologyNode } from "@
 import { OntologyGraphCanvas } from "@/components/ontology/ontology-graph-canvas"
 import { OntologyLegend } from "@/components/ontology/ontology-legend"
 // OntologyTabBar removed in Phase 7 — view mode lives in Display popover
-import { OntologyInsightsPanel } from "@/components/ontology/ontology-insights-panel"
 import { OntologyDashboardPanel } from "@/components/ontology/ontology-dashboard-panel"
 import { ontologyLayoutClient } from "@/lib/graph/ontology-layout-client"
 import type { Note } from "@/lib/types"
@@ -27,7 +26,6 @@ import {
   ChevronRight as CaretRight,
   BarChart3 as ChartBar,
 } from "lucide-react"
-import { IconInsight } from "@/components/plot-icons"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -79,20 +77,20 @@ export function OntologyView() {
   // Save view button (snapshot UX) for Ontology
   const { saveViewMode: graphSaveViewMode, onSaveView: onSaveGraphView } = useSaveViewProps("graph", "ontology")
 
-  // View mode: "graph" or "insights" (lives in graphViewState.viewMode).
-  // External event compatibility: legacy listeners that fire `plot:set-ontology-tab`
-  // (e.g. Home's "Improve your knowledge graph" link) are still honored.
-  // 3-way tab: graph (default), insights (action prompts), dashboard (raw stats).
+  // View mode: "graph" or "dashboard" (lives in graphViewState.viewMode).
+  // §13: insights(발견) 탭 해체 — 분석은 dashboard로, 발견(nudge)은 Inbox로.
+  // 레거시 persisted/event "insights"는 dashboard로 흡수(migrate 없이 런타임 가드).
   const tab = (
-    graphViewState.viewMode === "insights" ? "insights" :
-    graphViewState.viewMode === "dashboard" ? "dashboard" :
+    graphViewState.viewMode === "dashboard" || graphViewState.viewMode === "insights" ? "dashboard" :
     "graph"
-  ) as "graph" | "insights" | "dashboard"
+  ) as "graph" | "dashboard"
   useEffect(() => {
     function handler(e: Event) {
-      const detail = (e as CustomEvent<{ tab?: "graph" | "insights" | "dashboard" }>).detail
-      if (detail?.tab === "graph" || detail?.tab === "insights" || detail?.tab === "dashboard") {
-        updateGraphViewState({ viewMode: detail.tab })
+      const raw = (e as CustomEvent<{ tab?: "graph" | "insights" | "dashboard" }>).detail?.tab
+      // §13: 레거시 "insights" 이벤트(home/sidebar) → dashboard로 흡수.
+      const next = raw === "insights" ? "dashboard" : raw
+      if (next === "graph" || next === "dashboard") {
+        updateGraphViewState({ viewMode: next })
       }
     }
     window.addEventListener("plot:set-ontology-tab", handler)
@@ -373,13 +371,6 @@ export function OntologyView() {
                   {t("ontology.graph")}
                 </DropdownMenuItem>
                 <DropdownMenuItem
-                  onClick={() => updateGraphViewState({ viewMode: "insights" })}
-                  className={cn(tab === "insights" && "bg-accent/10 text-accent")}
-                >
-                  <IconInsight size={16} />
-                  {t("ontology.insights")}
-                </DropdownMenuItem>
-                <DropdownMenuItem
                   onClick={() => updateGraphViewState({ viewMode: "dashboard" })}
                   className={cn(tab === "dashboard" && "bg-accent/10 text-accent")}
                 >
@@ -388,7 +379,7 @@ export function OntologyView() {
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
-            <span>{tab === "graph" ? t("ontology.graph") : tab === "insights" ? t("ontology.insights") : t("ontology.dashboard")}</span>
+            <span>{tab === "graph" ? t("ontology.graph") : t("ontology.dashboard")}</span>
           </>
         }
         searchPlaceholder={t("ontology.search_nodes")}
@@ -556,17 +547,9 @@ export function OntologyView() {
         )}
       </div>
 
-      {/* Insights: mounted on demand. Heavy compute lives behind a useMemo
-          so re-mounting just re-reads the cached result. */}
-      {tab === "insights" && (
-        <div className="flex-1 min-h-0 overflow-y-auto">
-          <OntologyInsightsPanel />
-        </div>
-      )}
-
-      {/* Dashboard: pure stats, "sabermetrics for your knowledge base".
-          Distinct from Insights (which prompts actions) and from Home
-          (daily entry). Mounted on demand. */}
+      {/* Dashboard: the single analysis surface — "sabermetrics for your
+          knowledge base" (§13: insights 흡수; 발견은 Inbox/그래프 orphan ring).
+          Home은 daily entry. Mounted on demand. */}
       {tab === "dashboard" && (
         <div className="flex-1 min-h-0 overflow-y-auto">
           <OntologyDashboardPanel />

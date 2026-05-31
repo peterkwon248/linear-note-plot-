@@ -33,7 +33,6 @@ import { WikiView } from "@/components/views/wiki-view"
 import { WikiInsightsView } from "@/components/views/wiki-insights-view"
 import { CalendarView } from "@/components/calendar-view"
 import { SearchView } from "@/components/views/search-view"
-import { GraphInsightsView } from "@/components/views/graph-insights-view"
 import { HomeView } from "@/components/views/home-view"
 import { InboxView } from "@/components/views/inbox-view"
 import { LibraryView } from "@/components/views/library-view"
@@ -455,12 +454,6 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                 {(mountedViews.has("/calendar") || activeRoute === "/calendar") && (
                   <div className={activeRoute === "/calendar" ? "flex flex-1 overflow-hidden" : "hidden"}>
                     <CalendarView title="Calendar" />
-                  </div>
-                )}
-
-                {(mountedViews.has("/graph-insights") || activeRoute === "/graph-insights") && (
-                  <div className={activeRoute === "/graph-insights" ? "flex flex-1 overflow-hidden" : "hidden"}>
-                    <GraphInsightsView />
                   </div>
                 )}
 

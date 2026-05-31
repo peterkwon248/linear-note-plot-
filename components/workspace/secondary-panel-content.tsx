@@ -439,8 +439,7 @@ function SecondaryViewRouter({ route }: { route: string }) {
       case "/home": return <HomeView />
       case "/wiki": return <WikiView />
       case "/calendar": return <CalendarView title="Calendar" />
-      case "/ontology":
-      case "/graph-insights": return <OntologyView />
+      case "/ontology": return <OntologyView />
       case "/library":
       case "/library/references":
       case "/library/tags":

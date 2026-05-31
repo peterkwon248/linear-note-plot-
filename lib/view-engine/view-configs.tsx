@@ -394,6 +394,7 @@ export const INBOX_VIEW_CONFIG: ViewConfig = {
       { key: "wiki-redlink", label: "Wiki red links" },
       { key: "auto-enroll", label: "Auto-enroll suggestions" },
       { key: "comment", label: "Comments" },
+      { key: "ontology-nudge", label: "Graph nudges" },
     ]},
   ],
   quickFilters: [],

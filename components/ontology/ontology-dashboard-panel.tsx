@@ -34,6 +34,10 @@ import {
   TopHubsBar,
   CategoriesBar,
 } from "./dashboard-charts"
+// §13 ontology cleanup — analysis lives in the dashboard. These two
+// genuinely-unique analytics are absorbed from the (now-removed) Insights
+// surface; Tagged/Orphan donuts are dropped as duplicates of Health below.
+import { CohesionRadial, TopNotesBar } from "./insights-charts"
 
 export function OntologyDashboardPanel() {
   const t = useT()
@@ -46,6 +50,7 @@ export function OntologyDashboardPanel() {
   const wikiCategories = usePlotStore((s) => s.wikiCategories)
   const folders = usePlotStore((s) => s.folders)
   const books = usePlotStore((s) => s.books)
+  const openNote = usePlotStore((s) => s.openNote)
 
   // Note status distribution
   const statusCounts = useMemo(() => {
@@ -165,13 +170,23 @@ export function OntologyDashboardPanel() {
         <WikiStatusDonut articles={wikiStatusCounts.articles} stubs={wikiStatusCounts.stubs} />
         <TopHubsBar hubs={topHubs} />
         <CategoriesBar categories={categoryStats} />
+        <CohesionRadial cohesion={m.clusterCohesion} />
       </div>
+
+      {/* ── Top Notes — composite (WAR-like) score, absorbed from Insights (§13) ── */}
+      <section>
+        <TopNotesBar
+          entries={m.topByWAR.map((e) => ({ id: e.id, title: e.title, score: e.score }))}
+          onClick={openNote}
+        />
+      </section>
 
       {/* ── Connectivity ── */}
       <Section title={t("ontology.dashboard.section.connectivity")}>
         <Grid>
           <Stat label={t("ontology.dashboard.stat.total_edges")} value={m.totalEdges} />
           <Stat label={t("ontology.dashboard.stat.avg_links")} value={avgLinksPerNote} />
+          <Stat label={t("ontology.insights.stat.density")} value={m.linkDensity.toFixed(1)} />
           <Stat label={t("ontology.dashboard.stat.most_linked")}
             value={topHubs[0]?.title ?? "—"}
             sub={topHubs[0] ? t("ontology.dashboard.meta.connections").replace("{count}", String(topHubs[0].backlinks)) : ""} />
