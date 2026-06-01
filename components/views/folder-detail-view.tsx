@@ -1,44 +1,27 @@
 "use client"
 
 /**
- * Folder detail page — type-strict container view (v107 / PR folder-b).
+ * Folder detail view — type-strict container (v107 / PR folder-b).
  *
- * Folders are now type-strict (PR folder-a): a folder accepts notes XOR
- * wiki articles, never both. The PR #236 unified-folder model is
- * permanently retired — see `.omc/plans/folder-nm-migration.md`.
+ * Extracted from the former `app/(app)/folder/[id]/page.tsx` so the dynamic
+ * `/folder/[id]` route can fold into the static-export catch-all
+ * (`app/(app)/[...slug]/page.tsx`). Logic is unchanged — only the entry
+ * signature moved from `params: Promise<{id}>` to a plain `id` prop.
  *
- * This page branches on `folder.kind`:
- *   - `kind === "note"` → only the Notes section renders (+ "New note"
- *     in the Add popover; "Open in Notes view" link).
- *   - `kind === "wiki"` → only the Wiki section renders (+ "New wiki
- *     article" in the Add popover; no Notes view link).
+ * Folders are type-strict (PR folder-a): a folder accepts notes XOR wiki
+ * articles, never both. The PR #236 unified-folder model is permanently
+ * retired — see `.omc/plans/folder-nm-migration.md`.
  *
- * Header subtitle is a single metric matching the kind ("3 notes" or
- * "5 wikis"). The PR #236 dual subtitle ("3 notes · 5 wikis") would now
- * always show one half as zero, which would just be visual noise.
- *
- * Layout (note kind):
- *   ┌────────────────────────────────────────┐
- *   │ ● [Folder name]   3 notes   [+ Add] [Open in Notes view] │
- *   ├────────────────────────────────────────┤
- *   │ Notes (3)                              │
- *   │   ◯ Note 1                             │
- *   └────────────────────────────────────────┘
- *
- * Layout (wiki kind):
- *   ┌────────────────────────────────────────┐
- *   │ ● [Folder name]   5 wikis     [+ Add]  │
- *   ├────────────────────────────────────────┤
- *   │ Wiki Articles (5)                      │
- *   │   ⬡ Article 1                          │
- *   └────────────────────────────────────────┘
+ * Branches on `folder.kind`:
+ *   - "note" → Notes section (+ "New note"; "Open in Notes view")
+ *   - "wiki" → Wiki section (+ "New wiki article")
+ *   - "book" → Books section (+ "New book")
  */
 
-import { use, useState, useMemo, useEffect } from "react"
+import { useState, useMemo, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { usePlotStore } from "@/lib/store"
 import { setActiveFolderId, setActiveRoute } from "@/lib/table-route"
-import { TABLE_VIEW_ROUTES } from "@/lib/table-route"
 import { navigateToWikiArticle } from "@/lib/wiki-article-nav"
 import { FolderOpen } from "@phosphor-icons/react/dist/ssr/FolderOpen"
 import { Plus } from "@phosphor-icons/react/dist/ssr/Plus"
@@ -49,14 +32,14 @@ import { getEntityColor } from "@/lib/colors" // v109: opt-in color fallback
 import { BookKindIcon } from "@/components/property-chips"
 import { getBookKind } from "@/lib/view-engine/use-books-view"
 
-export default function FolderPage({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = use(params)
+export function FolderDetailView({ id }: { id: string }) {
   const router = useRouter()
 
   // The (app)/layout.tsx switches between view components based on
   // `activeRoute`. We need a value that's neither in TABLE_VIEW_ROUTES nor
-  // VIEW_ROUTES so layout falls through to render `children` (this page).
-  // Setting it to the actual /folder/<id> path is unique enough.
+  // VIEW_ROUTES so layout falls through to render `children` (the catch-all
+  // route that renders this view). Setting it to the actual /folder/<id>
+  // path is unique enough.
   useEffect(() => {
     // folder.kind → activity space (note|wiki|book). Direct URL / reload 시
     // 사이드바 context가 folder 종류와 정합하도록 spaceHint 전달.
