@@ -3,13 +3,16 @@
 > 우선순위 기반 작업 목록. **P0 = 다음 세션 즉시 시작점** (NEXT-ACTION.md 폐지, 2026-05-12).
 > 완료 항목은 즉시 삭제. 자세한 history는 SESSION-LOG.md + MEMORY.md.
 
-**마지막 갱신**: 2026-05-31 (밤늦게 after-work, 집/Windows) — 데이터 라이프사이클 감사 발견(re-seed 부활 버그 + 위키 blocks IDB orphan) + 감사 spec(`data-lifecycle-audit.spec.md`). 다음 P0 = **데이터 라이프사이클 전수 감사 + 수정** (출시 전 필수). 그 다음 = 데스크톱 캐치올 라우팅.
+**마지막 갱신**: 2026-06-01 (after-work, 집/Windows) — **데이터 라이프사이클 감사 완료** (PR1 cascade #508 / PR2 re-seed v154 #509 / PR3 trash 좀비 #510). 출시 블로커(삭제 부활) 0. **다음 P0 = 디자인 ③ 진단** (Linear 과한 절제 탈피, 목업 우선 — SESSION-LOG 2026-06-01 hook). 그 다음 = 데스크톱 캐치올 라우팅.
 
 ---
 
 ## 🟣 P0 — 즉시 (cross-machine 진입점, 2026-05-31 — IA 헌법 적용 단계)
 
-> ✅ **2026-05-31 밤늦게** (이 PR, 계획): **데이터 라이프사이클 감사 발견 + spec** (`data-lifecycle-audit.spec.md`) — re-seed 부활 버그(`index.ts:319` notes 비면 전 엔티티 부활) + 위키 blocks IDB orphan(`deleteArticleBlocks` 미호출) 확정. 전수 감사는 다음 세션. 앱 코드 무변경.
+> ✅ **2026-06-01** (PR #508): **데이터 라이프사이클 PR1 — 삭제 cascade 완전성**. `deleteNote`(attachment blob/comments/books.items) + `deleteWikiArticle`(자식 reparent/attachment/relations/comments/books.items/wikiCollections) + `permanentlyDeleteTag/Label/Reference` cross-entity dangling + `permanentlyDeleteBook` sticker. + books-slice.test tsc hotfix. 회귀 테스트 6.
+> ✅ **2026-06-01** (PR #509): **PR2 — re-seed 1회성 (store v153→v154)**. `hasSeeded` flag + onRehydrate dev(데모)/prod(웰컴노트 1개) 분기 + migrate id-dedup backfill 3곳 제거 + `WELCOME_NOTE`. 삭제 데이터 부활 0. 사용자 실화면 검증(보존+부활0).
+> ✅ **2026-06-01** (PR #510): **PR3 — trash UI 좀비 해소**. `permanentlyDeleteSmartBookPreset` 신설 + trash-all-view에 WikiTemplate/SmartBookPreset 섹션 노출 + i18n.
+> ✅ **2026-05-31 밤늦게** (이 PR, 계획): **데이터 라이프사이클 감사 발견 + spec** (`data-lifecycle-audit.spec.md`) — re-seed 부활 버그(`index.ts:319` notes 비면 전 엔티티 부활) + 위키 blocks IDB orphan(`deleteArticleBlocks` 미호출 — **후속 감사서 오류 판명, 실제 정상**) 확정. 전수 감사는 다음 세션. 앱 코드 무변경.
 > ✅ **2026-05-31 밤** (이 PR, 계획 세션): **상용화 전략 + 데스크톱 로드맵 spec** (`desktop-local-first.spec.md`) — 무료 로컬-퍼스트 데스크톱 먼저(A) / 하이브리드 저장(B: .md+.plot 사이드카) / Tauri / 캐치올 라우팅(ⓑ). 앱 코드 무변경.
 > ✅ **2026-05-31 저녁** (이 PR): **온톨로지 정리 §13** — insights(발견) 탭 해체 → 분석=Dashboard 통합(Cohesion/Top Notes/Density) · 발견(Nudge)=Inbox `detected`(ontology-nudge) · 그래프 고아 ring · 사이드바 Insights nav 제거 + Home→Inbox. + **사이드바 헤더 행**(닫힘 버튼 B, Inbox 카운트 겹침 해소) + **/graph-insights 폐기**(고아·Dashboard 중복·stale). 19파일 +135/−758.
 > ✅ **2026-05-31 낮~오후** (이 PR): §11 북·위키 status/priority 워크플로 완성 — Books status 세터 = **detail panel + 보드 status 4컬럼 드래그 + list 인라인 피커 + 그리드/보드 배지**, Book·Wiki **priority 필터·배지·세터**(manual·hybrid만). + **코멘트→Inbox**(`comment` kind, todo/blocker→do) + **북마크 퀵링크스 capped 버그** + **셸 PanelsMenu 중복 제거/§10 Phase1**(디테일 토글 우상단 정합 + 에디터 햄버거 중복 제거).
@@ -19,13 +22,18 @@
 > ✅ **2026-05-30 밤** (PR #495+#496): A3.2 스키마 엔진 + 폰트 Pretendard + A3.3 필터 크롬 + 노트행 모션 + 셸 1차.
 > ✅ **2026-05-30 저녁/낮**: Track A 착수(A0~A2) PR #494 / 통합 정합성 8커밋 PR #493.
 
-### 0.01. **🔴 P0 #1: 데이터 라이프사이클 전수 감사 + 수정 (출시 전 필수)** ← 다음 시작점
+### 0.01. **🔴 P0 #1: 디자인 ③ 진단 → ① 철학 재조정 (Linear 과한 절제 탈피)** ← 다음 시작점
 
-> SOT: `docs/01-plan/features/data-lifecycle-audit.spec.md`. 사용자 강조: "위키·북도 정말 신경 써야. 시드+삭제 문제." "다음 세션에서 전수 감사."
+> 사용자 결정(2026-06-01): "리니어에 너무 집착", "지나친 절제에 매몰". 노트앱=실용·심플·발견성. 기능 많은 Plot엔 Notion식 발견성/블록 유연성이 더 맞을 수 있음. SOT = memory `project_design_direction_reconsider.md` + SESSION-LOG 2026-06-01.
 
-**확정 버그 2개** (수정 대상): ① **re-seed 부활** — `index.ts:319` notes 비면 전 엔티티 부활(+북 backfill `:338`) → 신규 유저 데모 노출 + 삭제 데이터 부활. ② **위키 blocks IDB orphan** — `wiki-articles.ts:188 deleteWikiArticle`가 `deleteArticleBlocks` 미호출 → 영구삭제해도 blocks가 `wiki-block-meta-store`(IDB)에 잔존.
-- **첫 스텝**: spec read → 엔티티(notes/wiki/books/tags/labels/stickers/folders/references/attachments/comments)×축(시드/soft-trash/영구삭제완전성/**별도IDB store정리**/cascade/cross-entity) 매트릭스로 **전수 감사**(병렬 workflow 권장) → 구멍 목록 → 수정(re-seed 게이트 / IDB store 정리 wire / cascade 통일 / 회귀 테스트).
-- **핵심축**: "별도 IDB store"(노트본문 `note-body-store`·위키blocks `wiki-block-meta-store`·mention·첨부) 영구삭제 시 같이 지우는지. **정리함수 존재 ≠ 호출.**
+**접근 (순차, 위험 단계적 + 목업 우선)**: **③ 진단**(홈/사이드바/노트리스트/에디터/인사이트 "어디가 답답한지/발견성↓" 구체 점검 → ground truth) → **① 철학 재조정**(토큰·인프라 유지, 절제→실용·발견성, Notion 장점 선택 도입) → 필요시 **② 전면 재설계**.
+- **첫 스텝**: surface별 진단 — 각 화면 캡처/실측으로 "기능이 숨어 답답한" 지점 목록화. `linear-design-mirror` 스킬 + Notion/실사용 레퍼런스 비교. 목업 = Open Design 또는 HTML 프로토타입(코드 전 시각 검증).
+- **불변(코어)**: 지식 관계망(팔란티어×제텔카스텐)·NOTE_STATUS_HEX·"Gentle by default"(**gentle ≠ 절제**). Notion 약점(산만·느림) 답습 경계.
+- **데이터 감사 = 완료** (PR1/2/3 머지, 위 ✅). 출시 블로커 0.
+
+### 0.015. **🟡 P0 (감사 잔여, 별도 트랙): comments/folders soft-trash (PR4 후보)**
+
+감사 중 발견: `comments`(`deleteComment` hard)·`folders`(`deleteFolder` hard, cascade는 완벽)는 soft-trash 없음 → 실수 삭제 시 복구 불가. soft-trash(trashed 필드 + restore + trash UI 노출) 추가. **schema 변경 + store version bump 동반**이라 PR2급 신중 작업(데이터 모델 변경 분리 원칙).
 
 ### 0.02. **🔴 P0 #2: 데스크톱 P0 — 정적 SPA 캐치올 라우팅 (ⓑ)** (감사 후/병행)
 

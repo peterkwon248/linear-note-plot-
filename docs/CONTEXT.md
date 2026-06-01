@@ -51,6 +51,25 @@
 
 ---
 
+## 📜 2026-06-01 (집/Windows) — 데이터 라이프사이클 감사 완료 (PR1/2/3) + 디자인 방향 재고 합의 ⭐⭐⭐⭐⭐
+
+**범위**: 전수 감사(병렬 4-agent + 직접 검증) → 삭제/시드 정확성 3 PR. 출시 블로커(부활) 0. + 디자인 방향 재고.
+
+### 핵심 결정 (영구)
+- 삭제 정확성 = 출시 핵심(`deleteNote`=정통 패턴, 별도 IDB store 5개 정리, **정리함수 존재≠호출**). 시드 1회성(`hasSeeded`, 신규=웰컴노트 1개/dev=데모, 기존 보존). **spec 확정버그 #2(위키 blocks orphan)=오류**(실제 meta+body 정리 중).
+- **디자인 방향 재고**(사용자 주도): Linear 과한 절제 탈피 → ③진단→①철학재조정→②전면, 목업 우선. 코어 불변(지식 관계망·"Gentle by default", "gentle≠절제").
+
+### 완료
+- PR1 #508 cascade 완전성 / PR2 #509 re-seed store v154 / PR3 #510 trash 좀비.
+
+### 다음 (P0)
+1. 디자인 ③ 진단(목업 우선). 2. (별도) comments/folders soft-trash(PR4) · migrate-v107 7개 · turbopack worktree build.
+
+### Store version
+v153→**v154** (`hasSeeded` flag — re-seed 1회성).
+
+---
+
 ## 📜 2026-05-31 (밤 늦게) — 데이터 라이프사이클 감사 발견: re-seed 부활 + 위키 blocks orphan (전수 감사 다음 세션, 앱 코드 무변경) ⭐⭐⭐⭐⭐
 
 **범위**: 상용화 데이터 질문(시드/삭제/OS휴지통) 실측 → 확정 버그 2개 + 감사 spec. SOT=`docs/01-plan/features/data-lifecycle-audit.spec.md`.
