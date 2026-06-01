@@ -3,12 +3,15 @@
 > 우선순위 기반 작업 목록. **P0 = 다음 세션 즉시 시작점** (NEXT-ACTION.md 폐지, 2026-05-12).
 > 완료 항목은 즉시 삭제. 자세한 history는 SESSION-LOG.md + MEMORY.md.
 
-**마지막 갱신**: 2026-06-01 (after-work 오후, 집/Windows) — **리디자인 비파괴 프리뷰 스캐폴딩** (5 surface presentational+mock+preview, 라이브 0 touch, 23파일). **사용자 결정: 디자인 보류 → 상용화 우선.** **다음 P0 = 데스크톱 캐치올 라우팅 (ⓑ, fresh 세션)** — SESSION-LOG 2026-06-01 오후 hook. 디자인 ③ 진단은 보류(상용화 후 재개, 스캐폴딩 `/preview/redesign`).
+**마지막 갱신**: 2026-06-01 (after-work 저녁, 집/Windows) — **캐치올 라우팅(#513) + 디테일바 peek(#514) + 타임라인 막대 약화**. `output:export`(prod만) → `out/` 50p = 데스크톱 P0 완료. **다음 P0 = P1 Tauri 셸**(out/ 로드+SPA fallback) 또는 **폴더 필터 F5 URL화**(사이드바 폴더 클릭이 `router.push("/notes")`라 필터 URL 없음). 후속: start chip 색·grouping 비대칭·hydration mismatch. 디자인 ③ 진단 보류 유지.
 
 ---
 
 ## 🟣 P0 — 즉시 (cross-machine 진입점, 2026-05-31 — IA 헌법 적용 단계)
 
+> ✅ **2026-06-01 저녁** (PR #513): **캐치올 라우팅** — 동적 4개(folder/tag/label/books [id]) → 단일 클라이언트 캐치올 `app/(app)/[...slug]` + folder UI 추출(`folder-detail-view`) + `output:export`(prod만, env-gated) + `generateStaticParams` placeholder. **`out/` 50p+404.html+`_.html`.** tsc 0, dev catch-all 동적 렌더 검증.
+> ✅ **2026-06-01 저녁** (PR #514): **디테일바 peek** — `NotesTableView` onRowClick single click 시 `sidePanelOpen`이면 `sidePanelContext` 갱신(`handleRowPreview`). 디테일이 클릭 따라옴 + 폴더 전환 stale 해소.
+> ✅ **2026-06-01 저녁** (타임라인 PR): **타임라인 막대 약화** — `timeline-bar` opacity 0.45(인터랙션 0.95). status 막대 full color ↔ 이벤트 노드 구분(메모리 룰 "이벤트 칩 주인공").
 > ✅ **2026-06-01 오후** (이 PR): **리디자인 비파괴 프리뷰 스캐폴딩** — 5 surface(홈/사이드바/노트리스트/에디터/인사이트)를 라이브 0 touch로 순수 presentational+mock+view-model+preview 라우트 추출(`components/redesign/` + `app/preview/redesign/`, 23파일, 병렬 4-executor). Open Design 핸드오프용. tsc 0, 5라우트 렌더 검증, hydration 픽스(Date.now()→PREVIEW_NOW). **앱/Store 무변경(v154).** 디자인 보류·상용화 우선 결정.
 > ✅ **2026-06-01** (PR #508): **데이터 라이프사이클 PR1 — 삭제 cascade 완전성**. `deleteNote`(attachment blob/comments/books.items) + `deleteWikiArticle`(자식 reparent/attachment/relations/comments/books.items/wikiCollections) + `permanentlyDeleteTag/Label/Reference` cross-entity dangling + `permanentlyDeleteBook` sticker. + books-slice.test tsc hotfix. 회귀 테스트 6.
 > ✅ **2026-06-01** (PR #509): **PR2 — re-seed 1회성 (store v153→v154)**. `hasSeeded` flag + onRehydrate dev(데모)/prod(웰컴노트 1개) 분기 + migrate id-dedup backfill 3곳 제거 + `WELCOME_NOTE`. 삭제 데이터 부활 0. 사용자 실화면 검증(보존+부활0).
@@ -38,13 +41,21 @@
 
 감사 중 발견: `comments`(`deleteComment` hard)·`folders`(`deleteFolder` hard, cascade는 완벽)는 soft-trash 없음 → 실수 삭제 시 복구 불가. soft-trash(trashed 필드 + restore + trash UI 노출) 추가. **schema 변경 + store version bump 동반**이라 PR2급 신중 작업(데이터 모델 변경 분리 원칙).
 
-### 0.02. **🔴 P0 #1: 데스크톱 — 정적 SPA 캐치올 라우팅 (ⓑ)** ← 다음 시작점 (상용화 우선, fresh 세션 권장)
+### 0.02. **🔴 P0 #1: P1 데스크톱 셸 (Tauri 스파이크) + SPA fallback** ← 다음 시작점
 
-> SOT: `docs/01-plan/features/desktop-local-first.spec.md` (Risk #6 + "다음 액션"). 무료 데스크톱 출시의 첫 코드 작업.
+> SOT: `desktop-local-first.spec.md` Roadmap P1. **캐치올로 `output:export` + `out/` 생성 완료(#513, 2026-06-01 저녁).** 다음 = 데스크톱 셸.
 
-동적 라우트(`books/folder/tag/label [id]`)를 `[[...slug]]` 캐치올 **클라이언트** 라우트로 통합 + `next.config.mjs` `output:'export'` → `out/` 생성. **★ `/inbox` refresh→home anomaly와 같은 뿌리(activeRoute 모듈상태 hard-load 복원 실패)라 동시 해결.**
-- **첫 스텝**: 4개 `[id]/page.tsx` → `[[...slug]]` 캐치올. 로드 시 `window.location.pathname`→`syncFromPathname`(lib/table-route)→activeRoute 복원. build→`out/` 확인 + 실화면 `/inbox`·`/folder/{id}` F5 정상 복원 검증.
-- ⚠️ **코어 라우팅 = blast radius 큼 + 이 env preview route 검증 약함(module-state) → 사용자 실화면 검증 필수. fresh 집중 세션 권장.**
+- **Tauri 1일 스파이크**: `out/` 정적 서빙 + TipTap/d3 그래프 렌더 확인 → Tauri/Electron 확정 + 창/아이콘/앱명(`my-project`→Plot).
+- **SPA fallback**(미매치 경로 404→index rewrite): `/folder/{id}` 등 hard-load가 `out/`에 HTML 0이라 404 → 셸이 index로 fallback + `CatchAllRoute`가 `usePathname` 복원. (dev/현 서버는 catch-all 동적 처리, 정적 서빙만 fallback 필요.)
+
+### 0.025. **🟡 P0 (캐치올 후속): 폴더 필터 F5 URL화**
+
+사이드바 폴더/태그/라벨 클릭이 `router.push("/notes")` + `activeFolderId`(모듈상태, URL 없음) → F5 시 필터 리셋(All Notes). 캐치올(`/folder/{id}` URL 복원)과 **별개 layer**. 설계 결정: 사이드바 클릭 → `/folder/{id}` navigate(FolderDetailView) vs `/notes?folder=`(필터 유지). 사용자 적발(2026-06-01 저녁).
+
+### 0.026. **🟢 P0 (타임라인 후속, 디자인성): start chip 색 + grouping 비대칭 + hydration**
+- `EVENT_MARKER_CONFIG.created = NOTE_STATUS_HEX.done`(초록) → created≠done, done 막대와 색 충돌. 중립색/created 고유색 정정.
+- Notes 타임라인 grouping default 누락(→none) — Wiki는 `timeline: "wikiStatus"` 명시. 비대칭. no grouping 유지(타임라인=시간축이 주) 확정 또는 default 추가 결정.
+- hydration mismatch(radix `useId`·resize-handle id): prod export(SSG hydration) 영향 가능성, 상용화 전 점검.
 
 ### 0.035. **🔴 P0 #2: §13 남음 — insights 분산 통합 + 그래프=display mode(렌즈)**
 

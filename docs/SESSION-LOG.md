@@ -6,6 +6,44 @@
 
 ---
 
+## 2026-06-01 (집/Windows, 저녁) — **상용화 P0 캐치올 라우팅(#513) + 디테일바 peek(#514) + 타임라인 막대 약화**
+
+> 🎯 **다음 즉시 액션 hook**: **P1 데스크톱 셸 (Tauri 스파이크)**. 캐치올로 `output:export` 빌드 통과 + `out/` 생성 = **P0 완료**. 다음 = Tauri 창에 `out/` 로드 + TipTap/d3 렌더 확인 → Tauri/Electron 확정 + **SPA fallback**(미매치 경로 404→index rewrite)로 `/folder/{id}` hard-load 복원 완성. SOT = `desktop-local-first.spec.md` Roadmap P1. **(또는 먼저 "폴더 필터 F5 URL화"** — 사이드바 폴더/태그 클릭이 `router.push("/notes")`라 필터가 URL에 없어 F5 시 리셋, 캐치올과 별개 layer.)
+>
+> **첫 스텝**: Tauri 스파이크(`out/` 정적 서빙 + 창/아이콘) 또는 폴더 필터 URL화 설계(사이드바 클릭 → `/folder/{id}` navigate vs `/notes?folder=`).
+>
+> **⚠️ 잊지 말 것**: `output:export`는 동적 세그먼트에 `generateStaticParams` 필수 + **빈 배열도 거부**(placeholder 1개 필요) + **production만 적용**(dev에 적용 시 placeholder 외 경로 500). dev = 일반 서버라 catch-all이 임의 경로 동적 렌더. `useParams` X → `usePathname`(window.location)으로 복원.
+>
+> **머신**: 집(Windows). **main HEAD**: 이 세션 PR 머지 후(#513 캐치올, #514 디테일바, + 타임라인 PR).
+
+### 완료 (이 세션 — 3 PR)
+- **캐치올 라우팅 (#513)**: 동적 4개(`folder/tag/label/books [id]`) → 단일 클라이언트 캐치올 `app/(app)/[...slug]`. folder UI → `components/views/folder-detail-view.tsx` 추출(로직 0 변경). `next.config.mjs` `output:export`(production만, 환경 분기) + `generateStaticParams` placeholder. **production 빌드 통과 → `out/` 50페이지 + 404.html + placeholder `_.html`.** tsc 0, dev catch-all 동적 렌더 검증(`/folder/x` → FolderDetailView, 콘솔 0).
+- **디테일바 peek (#514)**: `NotesTableView` onRowClick single click 시 디테일 패널 열려있으면(`sidePanelOpen`) `sidePanelContext` 갱신(`handleRowPreview`). 기존엔 single=previewNoteId(하이라이트)만, 디테일은 double click/openNote만 → 디테일 안 따라옴 + 폴더 전환 stale. 사용자 적발, 캐치올과 무관 기존 버그(별도 PR).
+- **타임라인 막대 약화 (이 PR)**: `timeline-bar` opacity 0.45(인터랙션 0.95). status 막대 full color가 이벤트 노드(같은 NOTE_STATUS_HEX 팔레트, 중앙선 `EVENT_MARKER_Y_OFFSET=0` 겹침)와 충돌 → 막대를 status 트랙 힌트로 약화, 이벤트 칩 주인공.
+
+### 브레인스토밍 & 큰 결정 (영구)
+- **`output:export`는 production만**: dev에 적용하면 동적 경로(placeholder 외)가 500. dev = 일반 서버(catch-all 동적), production = 정적(placeholder). 데스크톱 셸은 export 번들 미매치 경로 SPA fallback(P1).
+- **캐치올 복원 = 클라이언트**: `CatchAllRoute`(usePathname 분기) + `FolderDetailView`(자체 useEffect로 setActive 복원). `syncFromPathname` 미변경(캐치올이 복원 담당).
+- **폴더 필터 F5는 별개 layer**: 사이드바 폴더 클릭 = `router.push("/notes")` + `activeFolderId`(URL에 없음) → F5 리셋. 캐치올(`/folder/{id}` URL 복원)과 무관. "필터 URL화"는 별도.
+
+### 기술 학습 (영구)
+- `output:export` + 동적: `generateStaticParams` 필수 + 빈 배열도 "missing"으로 거부 → placeholder 1개(`[{slug:["_"]}]`). `useParams`는 정적 export서 placeholder 값만 반환 → `usePathname`(window.location)으로 실제 경로 복원. `"use client"` + `generateStaticParams` 동시 불가 → server page + client child.
+- required `[...slug]`가 index `page.tsx`와 공존(optional `[[...slug]]`는 `/`까지 매치해 충돌 → required 채택).
+- 디테일 패널 = `sidePanelContext`(openNote/setSelectedNoteId 갱신). single click(onRowClick=setPreviewNoteId)은 안 건드림 → peek 원하면 onRowClick에서 sidePanelContext도 갱신.
+- PowerShell here-string 한글 커밋 메시지가 git `-m`에 깨짐(따옴표+줄바꿈 토큰화) → `-F` 파일.
+
+### 환경 변경
+- 신규: `app/(app)/[...slug]/page.tsx` + `components/views/catch-all-route.tsx` + `folder-detail-view.tsx`. 삭제: `{folder,tag,label,books}/[id]/page.tsx`. `next.config.mjs` output:export(env-gated). `.gitignore` out/. `notes-table-view`(peek) + `timeline-bar`(opacity). **앱 Store 무변경(v154).**
+
+### Watch Out
+- **후속(전부 별개 트랙)**: ① start chip 색(`EVENT_MARKER_CONFIG.created = NOTE_STATUS_HEX.done` 초록 → created≠done, 정정 후보) ② 타임라인 grouping 비대칭(Notes timeline default 누락 → none; Wiki=wikiStatus 명시) ③ 폴더 필터 F5 URL화 ④ hydration mismatch(radix `useId`, prod export 영향 가능) ⑤ 정적 서빙 SPA fallback(P1 셸).
+- 캐치올 정적 서빙 hard-load(`/folder/x`)는 `out/`에 HTML 0 → 404. SPA fallback(404→index)은 P1 Tauri 셸. dev/현 서버는 catch-all 동적 처리.
+
+### 머신
+집 (Windows)
+
+---
+
 ## 2026-06-01 (집/Windows, 오후) — **리디자인 비파괴 프리뷰 스캐폴딩 (5 surface 추출) + 상용화 우선 결정 (디자인 변경 보류)**
 
 > 🎯 **다음 즉시 액션 hook**: **상용화 P0 — 정적 SPA 캐치올 라우팅 (ⓑ)**. 사용자 결정(2026-06-01 오후) — 디자인 변경은 다음으로, **상용화 우선**. SOT = `docs/01-plan/features/desktop-local-first.spec.md` (Roadmap P0 + Risk #6 + "다음 액션"). 동적 라우트 4개(`app/(app)/{books,folder,tag,label}/[id]/page.tsx`)를 `[[...slug]]` 캐치올 **클라이언트** 라우트로 통합(로드 시 `syncFromPathname`→activeRoute 복원) + `next.config.mjs` `output:'export'` → `out/` 생성. ★ `/inbox` refresh→home anomaly 동시 해결(같은 뿌리).
