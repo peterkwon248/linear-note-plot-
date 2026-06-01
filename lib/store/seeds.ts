@@ -315,6 +315,47 @@ Maybe I should set a 7-day rule: if a fleeting note isn't promoted within a week
 
 /* ── Seed notes ─────────────────────────────────────── */
 
+// Welcome note — the single note a brand-new production user starts with
+// (Obsidian/Bear-style). NOT part of SEED_NOTES (that's the dev/demo set).
+// Seeded once via onRehydrateStorage when hasSeeded is false; never re-seeds
+// after the user deletes it (출시: 데이터 부활 0).
+const WELCOME_CONTENT = `# Welcome to Plot 👋
+
+Plot is a local-first knowledge app — your notes, wiki, and a knowledge graph in one place.
+
+## Quick start
+- **New note** — the + button or ⌘N
+- **Wiki** — structured articles your notes can link to with [[double brackets]]
+- **Graph** — see how your knowledge connects in the Ontology view
+- **Command palette** — ⌘K for everything
+
+Everything stays on your device. Delete this note whenever you're ready to start fresh.`
+
+export const WELCOME_NOTE: Note = {
+  id: "welcome-note",
+  title: "Welcome to Plot 👋",
+  content: WELCOME_CONTENT,
+  contentJson: null,
+  folderIds: [],
+  tags: [],
+  labelId: null,
+  status: "backlog",
+  priority: "none",
+  reads: 0,
+  pinned: true,
+  trashed: false,
+  createdAt: new Date().toISOString(),
+  updatedAt: new Date().toISOString(),
+  ...workflowDefaults("backlog"),
+  noteType: "note" as const,
+  summary: null,
+  preview: "Welcome to Plot — your notes, wiki, and a knowledge graph in one local-first app.",
+  linksOut: [],
+  aliases: [],
+  wikiInfobox: [],
+  referenceIds: [],
+}
+
 export const SEED_NOTES: Note[] = [
   {
     id: "note-1",

@@ -124,6 +124,12 @@ export interface DualSelection {
 }
 
 export interface PlotState {
+  // ── Seed bookkeeping ──
+  /** True once the one-time seed has run. Gates re-seeding so deleted data
+   *  never resurrects on reload (출시: 데이터 부활 0). migrate sets it true for
+   *  existing users; new users start false and get seeded once on first load. */
+  hasSeeded: boolean
+
   // ── Data ──
   notes: Note[]
   folders: Folder[]
