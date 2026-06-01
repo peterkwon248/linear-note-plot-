@@ -137,6 +137,7 @@ export function TimelineBar({
         height={BAR_HEIGHT}
         rx={BAR_RADIUS}
         fill={color}
+        opacity={isActive || isSelected || isHovered ? 0.95 : 0.45}
       />
 
       {/* B1: Hover ring */}
