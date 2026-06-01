@@ -57,8 +57,16 @@ export function createLabelsSlice(set: Set, appendEvent: AppendEventFn) {
         entityEvents: state.entityEvents.filter(
           (e: any) => !(e.entity?.kind === "label" && e.entity?.id === id),
         ),
+        // Cross-entity cleanup — labelId is shared by note/wiki/book (1:1).
+        // Previously only notes were cleared; wiki/book kept dangling labelIds.
         notes: state.notes.map((n: Note) =>
           n.labelId === id ? { ...n, labelId: null } : n
+        ),
+        wikiArticles: state.wikiArticles.map((w: any) =>
+          w.labelId === id ? { ...w, labelId: null } : w
+        ),
+        books: ((state.books ?? []) as any[]).map((b) =>
+          b.labelId === id ? { ...b, labelId: null } : b
         ),
       }))
     },

@@ -1,6 +1,6 @@
 import type { Note, NoteBody, ActiveView, WikiInfoboxEntry } from "../../types"
 import { extractPreview, extractLinksOut } from "../../body-helpers"
-import { genId, now, workflowDefaults, persistBody, removeBody, type AppendEventFn } from "../helpers"
+import { genId, now, workflowDefaults, persistBody, removeBody, removeAttachmentBlob, type AppendEventFn } from "../helpers"
 import { wouldCreateNoteCycle } from "../../note-hierarchy"
 
 type Set = (fn: ((state: any) => any) | any) => void
@@ -131,6 +131,11 @@ export function createNotesSlice(set: Set, get: Get, appendEvent: AppendEventFn)
     },
 
     deleteNote: (id: string) => {
+      // Collect note-origin attachment ids before the set so their IDB blobs
+      // can be purged after the array filter (mirrors removeBody for note body).
+      const orphanedAttachmentIds = (get().attachments as any[])
+        .filter((a) => a.originEntity?.kind === "note" && a.originEntity?.id === id)
+        .map((a) => a.id)
       set((state: any) => {
         const navigationHistory = (state.navigationHistory as string[]).filter((nId: string) => nId !== id)
         const navigationIndex = Math.min(state.navigationIndex as number, Math.max(0, navigationHistory.length - 1))
@@ -169,11 +174,27 @@ export function createNotesSlice(set: Set, get: Get, appendEvent: AppendEventFn)
           hooks: (state.hooks ?? []).filter(
             (h: any) => !(h.target?.kind === "note" && h.target?.id === id),
           ),
+          // Cascade comments anchored to this note (note / note-block anchors)
+          // so deleting a note doesn't leave orphan comment records persisted.
+          comments: Object.fromEntries(
+            Object.entries(state.comments ?? {}).filter(
+              ([, c]: [string, any]) =>
+                !((c.anchor?.kind === "note" || c.anchor?.kind === "note-block") && c.anchor?.noteId === id),
+            ),
+          ),
+          // Cascade book membership — drop {kind:"note", refId:id} from every
+          // book's items so deleted notes don't linger as dangling book entries.
+          books: ((state.books ?? []) as any[]).map((b) => {
+            const items = (b.items ?? []).filter((i: any) => !(i.kind === "note" && i.refId === id))
+            return items.length === (b.items ?? []).length ? b : { ...b, items }
+          }),
           navigationHistory,
           navigationIndex,
         }
       })
       removeBody(id)
+      // Purge IDB attachment blobs for note-origin attachments (array filtered above).
+      for (const aid of orphanedAttachmentIds) removeAttachmentBlob(aid)
     },
 
     duplicateNote: (id: string) => {

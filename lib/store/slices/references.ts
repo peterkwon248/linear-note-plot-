@@ -99,6 +99,18 @@ export function createReferencesSlice(set: Set, appendEvent: AppendEventFn) {
           entityEvents: state.entityEvents.filter(
             (e: any) => !(e.entity?.kind === "reference" && e.entity?.id === id),
           ),
+          // Cross-entity cleanup — strip the reference id from note/wiki
+          // referenceIds so badges/links don't dangle on a deleted reference.
+          notes: state.notes.map((n: any) =>
+            (n.referenceIds ?? []).includes(id)
+              ? { ...n, referenceIds: n.referenceIds.filter((r: string) => r !== id) }
+              : n,
+          ),
+          wikiArticles: state.wikiArticles.map((w: any) =>
+            (w.referenceIds ?? []).includes(id)
+              ? { ...w, referenceIds: w.referenceIds.filter((r: string) => r !== id) }
+              : w,
+          ),
         }
       })
     },

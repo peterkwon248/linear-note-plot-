@@ -64,6 +64,17 @@ export function createTagsSlice(set: Set, appendEvent: AppendEventFn) {
         entityEvents: state.entityEvents.filter(
           (e: any) => !(e.entity?.kind === "tag" && e.entity?.id === id),
         ),
+        // Cross-entity cleanup — strip the tag id from every note/wiki/book.tags
+        // so no entity keeps a dangling reference to the deleted tag.
+        notes: state.notes.map((n: Note) =>
+          n.tags.includes(id) ? { ...n, tags: n.tags.filter((t: string) => t !== id) } : n,
+        ),
+        wikiArticles: state.wikiArticles.map((w: any) =>
+          (w.tags ?? []).includes(id) ? { ...w, tags: w.tags.filter((t: string) => t !== id) } : w,
+        ),
+        books: ((state.books ?? []) as any[]).map((b) =>
+          (b.tags ?? []).includes(id) ? { ...b, tags: b.tags.filter((t: string) => t !== id) } : b,
+        ),
       }))
     },
 
