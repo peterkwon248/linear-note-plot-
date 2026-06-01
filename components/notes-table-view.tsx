@@ -79,6 +79,17 @@ export function NotesTableView() {
   )
   const viewMode = contextViewMode ?? settingsViewMode
 
+  // Single-click row preview. When the detail side panel is open, also drive
+  // sidePanelContext so the panel follows the highlighted row (Linear peek) —
+  // without this it keeps showing the previously-opened note (and goes stale
+  // after a folder/tag switch). The editor (selectedNoteId) is untouched and
+  // still needs a double-click.
+  const handleRowPreview = useCallback((noteId: string) => {
+    setPreviewNoteId(noteId)
+    const s = usePlotStore.getState()
+    if (s.sidePanelOpen) s.setSidePanelContext({ type: "note" as const, id: noteId })
+  }, [setPreviewNoteId])
+
   // ESC closes preview panel
   const handleKeyDown = useCallback(
     (e: KeyboardEvent) => {
@@ -134,7 +145,7 @@ export function NotesTableView() {
           folderId={activeFolderId ?? undefined}
           tagId={activeTagId ?? undefined}
           labelId={activeLabelId ?? undefined}
-          onRowClick={(noteId) => setPreviewNoteId(noteId)}
+          onRowClick={handleRowPreview}
           activePreviewId={previewNoteId}
         />
       </div>
@@ -158,7 +169,7 @@ export function NotesTableView() {
           folderId={activeFolderId ?? undefined}
           tagId={activeTagId ?? undefined}
           labelId={activeLabelId ?? undefined}
-          onRowClick={(noteId) => setPreviewNoteId(noteId)}
+          onRowClick={handleRowPreview}
           activePreviewId={previewNoteId}
         />
       </div>
