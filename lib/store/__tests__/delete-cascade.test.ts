@@ -5,6 +5,7 @@ import { createTagsSlice } from "../slices/tags"
 import { createLabelsSlice } from "../slices/labels"
 import { createReferencesSlice } from "../slices/references"
 import { createBooksSlice } from "../slices/books"
+import { createSmartBookPresetsSlice } from "../slices/smart-book-presets"
 
 /**
  * Data-lifecycle audit (출시 전 필수) — delete cascade contract tests.
@@ -39,6 +40,7 @@ function setupStore(initial: Record<string, unknown> = {}) {
     entityEvents: [],
     threads: [],
     wikiCollections: {},
+    smartBookPresets: [],
     navigationHistory: [],
     navigationIndex: 0,
     selectedNoteId: null,
@@ -56,6 +58,7 @@ function setupStore(initial: Record<string, unknown> = {}) {
     ...createLabelsSlice(set, noop),
     ...createReferencesSlice(set, noop),
     ...createBooksSlice(set, get, noop),
+    ...createSmartBookPresetsSlice(set, get),
   }
   return { get: () => state, ...actions }
 }
@@ -182,5 +185,20 @@ describe("delete cascade — cross-entity facets", () => {
     const s = env.get()
     expect(s.books).toHaveLength(0)
     expect(s.stickers[0].members).toEqual([{ kind: "note", id: "n1" }])
+  })
+})
+
+describe("delete — smart book preset (PR3 C1)", () => {
+  it("permanentlyDeleteSmartBookPreset removes the preset from the array", () => {
+    const env = setupStore({
+      smartBookPresets: [
+        { id: "sbp-1", name: "P1", sources: [], pinned: false, trashed: true, trashedAt: "t", createdAt: "t", updatedAt: "t" },
+        { id: "sbp-2", name: "P2", sources: [], pinned: false, trashed: false, trashedAt: null, createdAt: "t", updatedAt: "t" },
+      ],
+    })
+    env.permanentlyDeleteSmartBookPreset("sbp-1")
+    const s = env.get()
+    // hard delete = array filter only (preset = blueprint, no IDB / cross-entity)
+    expect(s.smartBookPresets.map((p: any) => p.id)).toEqual(["sbp-2"])
   })
 })

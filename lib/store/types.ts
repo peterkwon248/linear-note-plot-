@@ -622,6 +622,7 @@ export interface PlotState {
   updateSmartBookPreset: (id: string, patch: Partial<SmartBookPreset>) => void
   deleteSmartBookPreset: (id: string) => void
   restoreSmartBookPreset: (id: string) => void
+  permanentlyDeleteSmartBookPreset: (id: string) => void
   toggleSmartBookPresetPin: (id: string) => void
   /** Apply a preset → spawn a new Smart Book (reuses createBook/updateBook). Returns the new book id. */
   applySmartBookPreset: (presetId: string) => string

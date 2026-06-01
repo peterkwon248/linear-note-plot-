@@ -32,6 +32,9 @@ export interface SmartBookPresetsSlice {
   deleteSmartBookPreset: (id: string) => void
   /** Restore a soft-deleted preset. */
   restoreSmartBookPreset: (id: string) => void
+  /** Hard delete — removes the preset from the array entirely (trash 영구삭제).
+   *  Preset은 청사진뿐이라 별도 IDB/cross-entity 정리 불필요 — array filter만. */
+  permanentlyDeleteSmartBookPreset: (id: string) => void
   /** Toggle the pinned flag (sidebar / gallery surfacing). */
   toggleSmartBookPresetPin: (id: string) => void
 
@@ -103,6 +106,15 @@ export function createSmartBookPresetsSlice(
         smartBookPresets: ((state.smartBookPresets ?? []) as SmartBookPreset[]).map((p) =>
           p.id === id ? { ...p, trashed: false, trashedAt: null } : p,
         ),
+      }))
+    },
+
+    // Hard delete — array filter only. A preset is a reusable AutoSource
+    // blueprint with no separate IDB store and no reverse references, so
+    // there's nothing to cascade (unlike note/wiki/book).
+    permanentlyDeleteSmartBookPreset: (id) => {
+      set((state: any) => ({
+        smartBookPresets: ((state.smartBookPresets ?? []) as SmartBookPreset[]).filter((p) => p.id !== id),
       }))
     },
 
