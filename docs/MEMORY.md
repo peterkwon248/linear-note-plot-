@@ -8,6 +8,30 @@
 
 ---
 
+## ✅ 2026-06-01 (집/Windows, 저녁) — 상용화 P0 캐치올 라우팅(#513) + 디테일바 peek(#514) + 타임라인 막대 약화 ⭐⭐⭐⭐⭐
+
+**범위**: 무료 데스크톱 출시 첫 코드. 동적 4개 → 캐치올 `[...slug]` + `output:export`(prod만) → `out/` 50페이지. + 디테일바 peek + 타임라인 막대 약화(별개 버그/디자인).
+
+### 핵심 결정 (영구)
+- **`output:export` = production만**: dev 적용 시 placeholder 외 경로 500. dev=일반서버(catch-all 동적), prod=정적(placeholder). 미매치 경로 SPA fallback은 P1 셸.
+- **캐치올 복원=클라이언트**: `CatchAllRoute`(usePathname 분기) + `FolderDetailView`(자체 setActive). `syncFromPathname` 미변경.
+- **폴더 필터 F5 = 별개 layer**: 사이드바 폴더 클릭=`router.push("/notes")`+`activeFolderId`(URL 없음)→F5 리셋. 캐치올과 무관.
+
+### 완료 (3 PR)
+- **#513 캐치올**(동적4→`[...slug]`, folder UI 추출, output:export env-gated, placeholder, `out/` 50p+404+`_.html`) / **#514 디테일바 peek**(onRowClick→sidePanelContext) / **타임라인 막대 opacity 0.45**.
+
+### 기술 학습 (영구)
+- output:export 동적: `generateStaticParams` 필수 + 빈배열도 거부(placeholder 1개) + `usePathname`(`useParams` X). `"use client"`+generateStaticParams 불가→server+client child. required `[...slug]`가 index와 공존. PowerShell here-string 한글 git `-m` 깨짐→`-F` 파일.
+
+### 다음 우선순위 (P0)
+1. **P1 Tauri 셸**(`out/` 로드+SPA fallback) 또는 **폴더 필터 F5 URL화**.
+2. 후속(별개): start chip 색(created=done초록), 타임라인 grouping 비대칭(Notes timeline default 누락), hydration mismatch(radix useId).
+
+### Store version / HEAD
+**무변경(v154)**. main HEAD = 이 PR 머지 후. 머신=집/Windows.
+
+---
+
 ## ✅ 2026-06-01 (집/Windows, 오후) — 리디자인 비파괴 프리뷰 스캐폴딩 (5 surface) + 상용화 우선 결정 ⭐⭐⭐⭐
 
 **범위**: god 컴포넌트 라이브 0 touch로 5개 surface를 순수 presentational+mock+preview 라우트로 격리 추출(Open Design 핸드오프용). + 디자인 보류·상용화 우선 결정.

@@ -51,6 +51,24 @@
 
 ---
 
+## 📜 2026-06-01 (집/Windows, 저녁) — 상용화 P0 캐치올 라우팅(#513) + 디테일바 peek(#514) + 타임라인 막대 약화 ⭐⭐⭐⭐⭐
+
+**범위**: 데스크톱 출시 첫 코드. 동적 4개 → 캐치올 `[...slug]` + `output:export`(prod만) → `out/` 50p. + 디테일바 peek + 타임라인 막대 약화.
+
+### 핵심 결정 (영구)
+- **`output:export`=production만** (dev 적용 시 placeholder 외 500). **캐치올 복원=클라**(`CatchAllRoute`+`FolderDetailView`). **폴더 필터 F5=별개 layer**(사이드바 클릭 `router.push("/notes")`+activeFolderId, URL화 필요).
+
+### 완료
+- #513 캐치올(동적4→`[...slug]`, folder UI 추출, env-gated output:export, out/ 50p) / #514 디테일바 peek(onRowClick→sidePanelContext) / 타임라인 막대 opacity 0.45.
+
+### 다음 (P0)
+1. P1 Tauri 셸(SPA fallback) 또는 폴더 필터 URL화. 2. 후속: start chip 색, grouping 비대칭, hydration mismatch.
+
+### Store version
+무변경(v154).
+
+---
+
 ## 📜 2026-06-01 (집/Windows, 오후) — 리디자인 비파괴 프리뷰 스캐폴딩 (5 surface) + 상용화 우선 ⭐⭐⭐⭐
 
 **범위**: 5 surface를 라이브 0 touch로 presentational+mock+preview 추출(Open Design 핸드오프). 디자인 보류, 상용화 우선 결정.
