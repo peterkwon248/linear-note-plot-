@@ -5,7 +5,7 @@ import type { Attachment, CoOccurrence, RelationSuggestion } from "../types"
 import { buildDefaultViewStates } from "../view-engine/defaults"
 import { createIDBStorage } from "../idb-storage"
 import { createAppendEvent } from "./helpers"
-import { SEED_NOTES, SEED_FOLDERS, SEED_TAGS, SEED_LABELS, SEED_TEMPLATES, SEED_WIKI_ARTICLES, SEED_WIKI_CATEGORIES, SEED_WIKI_TEMPLATES, SEED_BOOKS, SEED_SMART_BOOK_PRESETS } from "./seeds"
+import { SEED_NOTES, SEED_FOLDERS, SEED_TAGS, SEED_LABELS, SEED_TEMPLATES, SEED_WIKI_ARTICLES, SEED_WIKI_CATEGORIES, SEED_WIKI_TEMPLATES, SEED_BOOKS, SEED_SMART_BOOK_PRESETS, WELCOME_NOTE } from "./seeds"
 import { persistBody, persistBlockBody } from "./helpers"
 import { isWikiStub } from "../wiki-utils"
 import { createNotesSlice } from "./slices/notes"
@@ -114,6 +114,10 @@ export const usePlotStore = create<PlotState>()(
         wikiTemplates: SEED_WIKI_TEMPLATES,
         // PR-D — user infobox presets pool (empty until user saves first preset).
         userInfoboxPresets: [] as import("../types").UserInfoboxPreset[],
+
+        // Seed bookkeeping — false until the one-time seed runs in onRehydrate.
+        // Gates re-seeding so deleted data never resurrects (출시: 부활 0).
+        hasSeeded: false,
 
         viewStateByContext: buildDefaultViewStates(),
         _viewStateHydrated: false,
@@ -273,7 +277,7 @@ export const usePlotStore = create<PlotState>()(
     },
     {
       name: "plot-store",
-      version: 153,
+      version: 154,
       storage: createIDBStorage<PlotState>(),
       partialize: (state) => {
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -316,52 +320,45 @@ export const usePlotStore = create<PlotState>()(
             state.dualRatio = Math.max(0.25, Math.min(0.65, state.dualRatio))
           }
 
-          // Force re-seed if notes are empty (user deleted all data)
-          if (state.notes.length === 0) {
-            state.notes = SEED_NOTES
-            state.wikiArticles = SEED_WIKI_ARTICLES
-            state.wikiCategories = SEED_WIKI_CATEGORIES
-            state.folders = SEED_FOLDERS
-            state.tags = SEED_TAGS
-            state.labels = SEED_LABELS
-            state.templates = SEED_TEMPLATES
-            // books seed shipped 2026-05-12 (books-view-engine demo set)
-            state.books = SEED_BOOKS
-            // smart book presets seed shipped v152 (Smart Book gallery demo set)
-            state.smartBookPresets = SEED_SMART_BOOK_PRESETS
+          // One-time seed (hasSeeded gate). 출시: 데이터 부활 0 — 사용자가
+          // 데이터를 모두 지우면 빈 앱이 유지되고 데모가 되살아나지 않는다.
+          // (기존 "notes 비면 재시드" + books/presets "비면 backfill" 버그 제거.)
+          if (!state.hasSeeded) {
+            if (process.env.NODE_ENV === "development") {
+              // Dev: rich demo set for QA / screenshots.
+              state.notes = SEED_NOTES
+              state.wikiArticles = SEED_WIKI_ARTICLES
+              state.wikiCategories = SEED_WIKI_CATEGORIES
+              state.folders = SEED_FOLDERS
+              state.tags = SEED_TAGS
+              state.labels = SEED_LABELS
+              state.templates = SEED_TEMPLATES
+              state.books = SEED_BOOKS
+              state.smartBookPresets = SEED_SMART_BOOK_PRESETS
+            } else {
+              // Prod new user: a single welcome note, everything else empty
+              // (Obsidian/Bear-style clean start).
+              state.notes = [{ ...WELCOME_NOTE }]
+              state.wikiArticles = []
+              state.wikiCategories = []
+              state.folders = []
+              state.tags = []
+              state.labels = []
+              state.templates = []
+              state.wikiTemplates = []
+              state.books = []
+              state.smartBookPresets = []
+            }
+            state.hasSeeded = true
           }
 
-          // Independent books backfill — existing users (notes already seeded)
-          // who never created a book still get the demo set so view-engine
-          // surfaces (board / gallery / kind icons) are exercise-able without
-          // hand-creating books. Idempotent: only seeds when array is empty.
-          if (!Array.isArray(state.books) || state.books.length === 0) {
-            state.books = SEED_BOOKS
-          }
-
-          // v152: smartBookPresets onRehydrate defense + independent backfill.
-          // Mirrors the books backfill above + the wikiTemplates array defense
-          // below: guards (a) the array-shape invariant (serialize round-trip
-          // can turn an array into an object) and (b) the empty-pool case so
-          // existing users (who never created a preset) still get the demo set,
-          // making the Smart Book gallery exercise-able without hand-seeding.
-          // Idempotent: only seeds when not a populated array.
-          if (!Array.isArray(state.smartBookPresets) || state.smartBookPresets.length === 0) {
-            state.smartBookPresets = SEED_SMART_BOOK_PRESETS
-          }
-
-          // 2026-05-18: wikiTemplates onRehydrate defense. v139 migration이
-          // 호출 안 되는 case (hot-reload IDB stale, version 같음) 또는
-          // serialize round-trip이 array를 object로 변형한 case 보호.
-          // 사용자 IDB 데이터 우선 보존 — array만 아니면 seed로 초기화.
-          if (!Array.isArray(state.wikiTemplates)) {
-            state.wikiTemplates = SEED_WIKI_TEMPLATES
-          }
-          // PR-D — same defense for userInfoboxPresets. Empty array is the
-          // safe default; user-saved presets are restored as-is when present.
-          if (!Array.isArray(state.userInfoboxPresets)) {
-            state.userInfoboxPresets = []
-          }
+          // Array-shape defense only — a serialize round-trip can turn [] into
+          // {}. This is NOT a re-seed: empty arrays are preserved so user
+          // deletions stick (no demo resurrection).
+          if (!Array.isArray(state.books)) state.books = []
+          if (!Array.isArray(state.smartBookPresets)) state.smartBookPresets = []
+          if (!Array.isArray(state.wikiTemplates)) state.wikiTemplates = []
+          if (!Array.isArray(state.userInfoboxPresets)) state.userInfoboxPresets = []
           state.previewNoteId = null
 
           // v65: Migrate IDB note bodies — convert title nodes to heading level 2
@@ -394,13 +391,17 @@ export const usePlotStore = create<PlotState>()(
             }
           }
 
-          // Persist seed note bodies to IDB (content is stripped during partialize)
-          // Only runs if seed notes exist and have empty content (just rehydrated)
-          for (const note of state.notes) {
-            const seed = SEED_NOTES.find((s) => s.id === note.id)
-            if (seed && seed.content && !note.content) {
-              note.content = seed.content
-              persistBody({ id: seed.id, content: seed.content, contentJson: null })
+          // Persist seed note bodies to IDB (content is stripped during partialize).
+          // Pool = dev demo (SEED_NOTES) or the prod welcome note, matching the
+          // seed branch above so the welcome note's body shows in the editor.
+          {
+            const seededPool = process.env.NODE_ENV === "development" ? SEED_NOTES : [WELCOME_NOTE]
+            for (const note of state.notes) {
+              const seed = seededPool.find((s) => s.id === note.id)
+              if (seed && seed.content && !note.content) {
+                note.content = seed.content
+                persistBody({ id: seed.id, content: seed.content, contentJson: null })
+              }
             }
           }
 

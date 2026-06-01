@@ -17,13 +17,15 @@ import type { AutoSource, Book, BookItem } from "../../types"
 
 type State = {
   books: Book[]
+  entityEvents?: unknown[]
+  stickers?: unknown[]
 }
 
 function setupSlice(initial: State = { books: [] }) {
   // permanentlyDeleteBook cascades entityEvents + sticker members, so the
   // mock state must carry those arrays or the action crashes on undefined
   // (PR 5b added the entityEvents cascade; this setup had not kept up).
-  let state: any = { entityEvents: [], stickers: [], ...initial }
+  let state: State = { entityEvents: [], stickers: [], ...initial }
   const set = (fn: ((s: any) => any) | any) => {
     if (typeof fn === "function") {
       const patch = fn(state)

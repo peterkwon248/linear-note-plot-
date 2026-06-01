@@ -4,7 +4,8 @@ import { extractPreview, extractLinksOut } from "../body-helpers"
 import { buildDefaultViewStates, normalizeViewStatesMap, buildViewStateForContext } from "../view-engine/defaults"
 import type { WorkspaceTab } from "../workspace/types"
 import type { PlotState } from "./types"
-import { SEED_TEMPLATES, SEED_BOOKS } from "./seeds"
+// NOTE: seed backfills (templates/books/presets) were removed in v154 to
+// guarantee deleted data never resurrects (출시: 부활 0). No seed imports needed.
 
 export function migrate(persistedState: unknown): PlotState {
   const state = persistedState as Record<string, unknown>
@@ -1502,20 +1503,13 @@ export function migrate(persistedState: unknown): PlotState {
     }
   }
 
-  // v106: Inject new seed templates added in PR d (4 → 13).
-  // Existing users (pre-PR d) only have the original 4 seeds (tmpl-meeting,
-  // tmpl-daily, tmpl-idea, tmpl-research). This block adds the 9 new seeds
-  // idempotently — if a template with the same id already exists, skip.
-  // New users get all 13 from SEED_TEMPLATES at store creation, so this is
-  // a no-op for them.
+  // v106 (was: seed-template backfill) — removed in v154. id-dedup append
+  // re-added templates the user had deleted on every version bump (부활 버그).
+  // Existing users already hold their templates in persisted state, so dropping
+  // the backfill loses no data and stops deleted seeds from coming back.
+  // Shape defense only.
   if (!Array.isArray(state.templates)) {
     state.templates = []
-  }
-  const existingTemplateIds = new Set((state.templates as Array<{ id: string }>).map((t) => t.id))
-  for (const seed of SEED_TEMPLATES) {
-    if (!existingTemplateIds.has(seed.id)) {
-      (state.templates as Array<unknown>).push(seed)
-    }
   }
 
   // v107: Folder type-strict + N:M membership migration.
@@ -1906,23 +1900,11 @@ export function migrate(persistedState: unknown): PlotState {
   // standard). No data migration.
   // Spec: `.omc/plans/books-view-engine-integration.md` §8 (PR 4).
 
-  // v127: SEED_BOOKS one-time backfill for existing users (idempotent
-  // id-dedup append). Manual-verify demo set ships now that the
-  // view-engine series is merged, but existing users with at least one
-  // book (e.g. the "1234" they created during testing) miss the
-  // onRehydrateStorage backfill which only triggers on empty arrays.
-  // This appends missing seed books while preserving everything the user
-  // created. Runs once per user — `migrate` is gated by persisted version.
+  // v127 (was: SEED_BOOKS id-dedup backfill) — removed in v154. The append
+  // re-added demo books the user had deleted on every version bump (부활 버그).
+  // Existing users keep their persisted books; deleted seeds stay deleted.
+  // Shape defense only.
   if (!Array.isArray(state.books)) state.books = []
-  {
-    const books = state.books as any[]
-    const existingBookIds = new Set(books.map((b: any) => b?.id))
-    for (const seed of SEED_BOOKS) {
-      if (!existingBookIds.has(seed.id)) {
-        books.push(seed)
-      }
-    }
-  }
 
   // v128: Books DisplayPanel polish (PR books-view-engine-6).
   // normalizeViewStatesMap (called above at v16 step) now rejects context-
@@ -2650,25 +2632,11 @@ export function migrate(persistedState: unknown): PlotState {
   //   Smart Book = Templates의 Books판 — 재사용 가능한 AutoSource 조합 청사진.
   //   wikiTemplates(v139) 패턴 정합: array 보장(직렬화 round-trip 방어) +
   //   id-dedup append(사용자 데이터 보존하며 fresh seed 보장). Idempotent.
-  {
-    const { SEED_SMART_BOOK_PRESETS } = require("./seeds")
-    if (!Array.isArray((state as Record<string, unknown>).smartBookPresets)) {
-      ;(state as Record<string, unknown>).smartBookPresets = [...SEED_SMART_BOOK_PRESETS]
-      console.log(`[migrate] v151→v152: initialized smartBookPresets (${SEED_SMART_BOOK_PRESETS.length} seeds)`)
-    } else {
-      const sbps = (state as Record<string, unknown>).smartBookPresets as any[]
-      const existingIds = new Set(sbps.map((p: any) => p.id))
-      let added = 0
-      for (const seed of SEED_SMART_BOOK_PRESETS) {
-        if (!existingIds.has(seed.id)) {
-          sbps.push(seed)
-          added += 1
-        }
-      }
-      if (added > 0) {
-        console.log(`[migrate] v151→v152: re-seeded smartBookPresets (${added} added)`)
-      }
-    }
+  // v151→v152 (was: smartBookPresets id-dedup backfill) — removed in v154.
+  // Re-seeded presets the user had deleted (부활 버그). Shape defense only;
+  // an absent/corrupt field becomes an empty array, never a re-seed.
+  if (!Array.isArray((state as Record<string, unknown>).smartBookPresets)) {
+    ;(state as Record<string, unknown>).smartBookPresets = []
   }
 
   // v152 → v153: §11 IA 헌법 — Book/Wiki 워크플로 축 통일.
@@ -2693,6 +2661,15 @@ export function migrate(persistedState: unknown): PlotState {
     if (statusBackfilled > 0) {
       console.log(`[migrate] v152→v153: backfilled status='backlog' on ${statusBackfilled} manual/hybrid books`)
     }
+  }
+
+  // v153 → v154: hasSeeded flag (one-time seed gate). Reaching migrate means
+  // this is a persisted/existing user who was already seeded once — mark
+  // hasSeeded=true so onRehydrate never re-seeds (deleted data stays deleted).
+  // New users have no persisted state, skip migrate, and start at initial
+  // hasSeeded=false → seeded exactly once on first load.
+  if (typeof (state as Record<string, unknown>).hasSeeded !== "boolean") {
+    ;(state as Record<string, unknown>).hasSeeded = true
   }
 
   return state as unknown as PlotState
