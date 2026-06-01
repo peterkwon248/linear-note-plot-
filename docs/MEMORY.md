@@ -8,6 +8,30 @@
 
 ---
 
+## ✅ 2026-06-01 (집/Windows, 오후) — 리디자인 비파괴 프리뷰 스캐폴딩 (5 surface) + 상용화 우선 결정 ⭐⭐⭐⭐
+
+**범위**: god 컴포넌트 라이브 0 touch로 5개 surface를 순수 presentational+mock+preview 라우트로 격리 추출(Open Design 핸드오프용). + 디자인 보류·상용화 우선 결정.
+
+### 핵심 결정 (영구)
+- **상용화 우선, 디자인 보류**(사용자 주도): 디자인 상용급·인프라 0.1단계 → 인프라 급선무. 리디자인 스캐폴딩 파킹(`/preview/redesign`, 폐기 아님).
+- **프리뷰-우선 비파괴 추출 = 정통**: 라이브 god 인플레이스 리팩터 X → 격리 presentational+mock → Open Design 핸드오프 → 확정 후 라이브 스왑. preview-first DNA(#138/#154) 정합.
+- **리디자인 단위 = surface(~25-30) ≠ 234 atomic 컴포넌트**: Open Design은 화면 단위. 콘텐츠 블록은 surface 일부.
+
+### 완료
+- 5 surface(홈/사이드바 2-of-7/노트리스트/에디터/인사이트) presentational+mock+route, 23 신규 파일. `components/redesign/` + `app/preview/redesign/`. tsc 0, 5라우트 렌더 검증, hydration 버그 픽스(`Date.now()`→`PREVIEW_NOW`). **앱/Store 무변경(v154)**.
+
+### 기술 학습 (영구)
+- 정적 mock SSR + `Date.now()` = hydration mismatch(라이브는 IDB client-only라 안 드러남). preview cross-origin(`localhost`↔`127.0.0.1`) 탭 꼬임 주의. `nextjs-portal` 존재≠에러.
+
+### 다음 우선순위 (P0)
+1. **상용화 P0 — 캐치올 라우팅(ⓑ)** (fresh 세션, `desktop-local-first.spec.md`). `/inbox` anomaly 동시 해결.
+2. 리디자인 재개(내부 콘텐츠+나머지 surface) = 상용화 후.
+
+### Store version / HEAD
+**무변경(v154)**. main HEAD = 이 PR 머지 후. 머신=집/Windows.
+
+---
+
 ## ✅ 2026-06-01 (집/Windows) — 데이터 라이프사이클 감사 완료 (PR1/2/3 머지) + 디자인 방향 재고 합의 ⭐⭐⭐⭐⭐
 
 **범위**: 전수 감사(병렬 4-agent + 직접 검증) → 삭제/시드 정확성 3 PR. 출시 블로커(삭제 데이터 부활) 0. + 디자인 방향 재고 합의(별도 트랙).

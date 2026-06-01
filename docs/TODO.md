@@ -3,12 +3,13 @@
 > 우선순위 기반 작업 목록. **P0 = 다음 세션 즉시 시작점** (NEXT-ACTION.md 폐지, 2026-05-12).
 > 완료 항목은 즉시 삭제. 자세한 history는 SESSION-LOG.md + MEMORY.md.
 
-**마지막 갱신**: 2026-06-01 (after-work, 집/Windows) — **데이터 라이프사이클 감사 완료** (PR1 cascade #508 / PR2 re-seed v154 #509 / PR3 trash 좀비 #510). 출시 블로커(삭제 부활) 0. **다음 P0 = 디자인 ③ 진단** (Linear 과한 절제 탈피, 목업 우선 — SESSION-LOG 2026-06-01 hook). 그 다음 = 데스크톱 캐치올 라우팅.
+**마지막 갱신**: 2026-06-01 (after-work 오후, 집/Windows) — **리디자인 비파괴 프리뷰 스캐폴딩** (5 surface presentational+mock+preview, 라이브 0 touch, 23파일). **사용자 결정: 디자인 보류 → 상용화 우선.** **다음 P0 = 데스크톱 캐치올 라우팅 (ⓑ, fresh 세션)** — SESSION-LOG 2026-06-01 오후 hook. 디자인 ③ 진단은 보류(상용화 후 재개, 스캐폴딩 `/preview/redesign`).
 
 ---
 
 ## 🟣 P0 — 즉시 (cross-machine 진입점, 2026-05-31 — IA 헌법 적용 단계)
 
+> ✅ **2026-06-01 오후** (이 PR): **리디자인 비파괴 프리뷰 스캐폴딩** — 5 surface(홈/사이드바/노트리스트/에디터/인사이트)를 라이브 0 touch로 순수 presentational+mock+view-model+preview 라우트 추출(`components/redesign/` + `app/preview/redesign/`, 23파일, 병렬 4-executor). Open Design 핸드오프용. tsc 0, 5라우트 렌더 검증, hydration 픽스(Date.now()→PREVIEW_NOW). **앱/Store 무변경(v154).** 디자인 보류·상용화 우선 결정.
 > ✅ **2026-06-01** (PR #508): **데이터 라이프사이클 PR1 — 삭제 cascade 완전성**. `deleteNote`(attachment blob/comments/books.items) + `deleteWikiArticle`(자식 reparent/attachment/relations/comments/books.items/wikiCollections) + `permanentlyDeleteTag/Label/Reference` cross-entity dangling + `permanentlyDeleteBook` sticker. + books-slice.test tsc hotfix. 회귀 테스트 6.
 > ✅ **2026-06-01** (PR #509): **PR2 — re-seed 1회성 (store v153→v154)**. `hasSeeded` flag + onRehydrate dev(데모)/prod(웰컴노트 1개) 분기 + migrate id-dedup backfill 3곳 제거 + `WELCOME_NOTE`. 삭제 데이터 부활 0. 사용자 실화면 검증(보존+부활0).
 > ✅ **2026-06-01** (PR #510): **PR3 — trash UI 좀비 해소**. `permanentlyDeleteSmartBookPreset` 신설 + trash-all-view에 WikiTemplate/SmartBookPreset 섹션 노출 + i18n.
@@ -22,7 +23,9 @@
 > ✅ **2026-05-30 밤** (PR #495+#496): A3.2 스키마 엔진 + 폰트 Pretendard + A3.3 필터 크롬 + 노트행 모션 + 셸 1차.
 > ✅ **2026-05-30 저녁/낮**: Track A 착수(A0~A2) PR #494 / 통합 정합성 8커밋 PR #493.
 
-### 0.01. **🔴 P0 #1: 디자인 ③ 진단 → ① 철학 재조정 (Linear 과한 절제 탈피)** ← 다음 시작점
+### 0.01. **🟡 보류: 디자인 ③ 진단 → ① 철학 재조정 (Linear 과한 절제 탈피)** (상용화 후 재개)
+
+> ⏸️ **보류(2026-06-01 오후)**: 사용자 결정 "디자인은 다음에, 상용화 우선". 리디자인 **비파괴 프리뷰 스캐폴딩 완료** → `/preview/redesign`에서 5 surface(홈/사이드바/노트리스트/에디터/인사이트) shell 확인 가능. 재개 시 = 내부 콘텐츠(에디터 실제 블록·사이드바 5/7 컨텍스트·노트 board/grid·인사이트 그래프) + 나머지 ~20 surface 추출 + Open Design 핸드오프. 컨벤션: `components/redesign/README.md`.
 
 > 사용자 결정(2026-06-01): "리니어에 너무 집착", "지나친 절제에 매몰". 노트앱=실용·심플·발견성. 기능 많은 Plot엔 Notion식 발견성/블록 유연성이 더 맞을 수 있음. SOT = memory `project_design_direction_reconsider.md` + SESSION-LOG 2026-06-01.
 
@@ -35,7 +38,7 @@
 
 감사 중 발견: `comments`(`deleteComment` hard)·`folders`(`deleteFolder` hard, cascade는 완벽)는 soft-trash 없음 → 실수 삭제 시 복구 불가. soft-trash(trashed 필드 + restore + trash UI 노출) 추가. **schema 변경 + store version bump 동반**이라 PR2급 신중 작업(데이터 모델 변경 분리 원칙).
 
-### 0.02. **🔴 P0 #2: 데스크톱 P0 — 정적 SPA 캐치올 라우팅 (ⓑ)** (감사 후/병행)
+### 0.02. **🔴 P0 #1: 데스크톱 — 정적 SPA 캐치올 라우팅 (ⓑ)** ← 다음 시작점 (상용화 우선, fresh 세션 권장)
 
 > SOT: `docs/01-plan/features/desktop-local-first.spec.md` (Risk #6 + "다음 액션"). 무료 데스크톱 출시의 첫 코드 작업.
 
