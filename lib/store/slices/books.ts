@@ -232,6 +232,13 @@ export function createBooksSlice(set: Set, _get: Get, appendEvent: AppendEventFn
         entityEvents: state.entityEvents.filter(
           (e: any) => !(e.entity?.kind === "book" && e.entity?.id === id),
         ),
+        // Sticker membership cascade — drop {kind:"book", id} refs from every
+        // Sticker.members[] (deleteNote/deleteWikiArticle 정합 — book만 누락이었음).
+        stickers: (state.stickers ?? []).map((s: any) => {
+          const members = s.members ?? []
+          const next = members.filter((m: any) => !(m.kind === "book" && m.id === id))
+          return next.length === members.length ? s : { ...s, members: next }
+        }),
       }))
     },
 

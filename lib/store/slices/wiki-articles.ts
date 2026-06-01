@@ -1,5 +1,5 @@
 import type { WikiArticle, WikiBlock, WikiMergeSnapshot, WikiStatus } from "../../types"
-import { genId, now, persistBlockBody, removeBlockBody, persistArticleBlocks, removeArticleBlocks, type AppendEventFn } from "../helpers"
+import { genId, now, persistBlockBody, removeBlockBody, persistArticleBlocks, removeArticleBlocks, removeAttachmentBlob, type AppendEventFn } from "../helpers"
 import { buildSectionIndex } from "../../wiki-section-index"
 import { extractLinksFromWikiBlocks } from "../../body-helpers"
 import { wouldCreateCycle } from "../../wiki-hierarchy"
@@ -195,6 +195,11 @@ export function createWikiArticlesSlice(set: Set, get: Get, appendEvent: AppendE
       }
       // Remove block metadata from IDB
       removeArticleBlocks(articleId)
+      // Collect wiki-origin attachment ids before the set so their IDB blobs
+      // can be purged after the array filter (mirrors deleteNote).
+      const orphanedAttachmentIds = (get().attachments as any[])
+        .filter((a) => a.originEntity?.kind === "wiki" && a.originEntity?.id === articleId)
+        .map((a) => a.id)
       // PR 5b: entity event log. Hard delete은 timeline에서도 사라지니
       // entityEvents의 해당 wiki events도 cascade 삭제 (Note delete 패턴 정합).
       set((state: any) => ({
@@ -203,7 +208,13 @@ export function createWikiArticlesSlice(set: Set, get: Get, appendEvent: AppendE
         ),
       }))
       set((state: any) => ({
-        wikiArticles: state.wikiArticles.filter((a: WikiArticle) => a.id !== articleId),
+        // Reparent orphaned children (parentArticleId) before removing — mirrors
+        // deleteNote's parentNoteId reparent so the hierarchy never dangles.
+        wikiArticles: state.wikiArticles
+          .map((a: WikiArticle) =>
+            a.parentArticleId === articleId ? { ...a, parentArticleId: null } : a,
+          )
+          .filter((a: WikiArticle) => a.id !== articleId),
         // Sticker membership cascade — drop {kind:"wiki", id} refs from
         // every Sticker.members[] (옵션 D2 — single forward reference).
         stickers: (state.stickers ?? []).map((s: any) => {
@@ -217,7 +228,36 @@ export function createWikiArticlesSlice(set: Set, get: Get, appendEvent: AppendE
         hooks: (state.hooks ?? []).filter(
           (h: any) => !(h.target?.kind === "wiki" && h.target?.id === articleId),
         ),
+        // Attachment cascade (array) — mirror deleteNote. Blob purge below.
+        attachments: state.attachments.filter(
+          (a: any) => !(a.originEntity?.kind === "wiki" && a.originEntity?.id === articleId),
+        ),
+        // Relation + suggestion cascade (deleteNote 정합 — wiki id도 source/target 가능).
+        relations: state.relations.filter(
+          (r: any) => r.sourceNoteId !== articleId && r.targetNoteId !== articleId,
+        ),
+        relationSuggestions: (state.relationSuggestions ?? []).filter(
+          (s: any) => s.sourceNoteId !== articleId && s.targetNoteId !== articleId,
+        ),
+        // Comment cascade (wiki / wiki-block anchors) — no orphan comment records.
+        comments: Object.fromEntries(
+          Object.entries(state.comments ?? {}).filter(
+            ([, c]: [string, any]) =>
+              !((c.anchor?.kind === "wiki" || c.anchor?.kind === "wiki-block") && c.anchor?.articleId === articleId),
+          ),
+        ),
+        // Book membership cascade — drop {kind:"wiki", refId} from book items.
+        books: ((state.books ?? []) as any[]).map((b) => {
+          const items = (b.items ?? []).filter((i: any) => !(i.kind === "wiki" && i.refId === articleId))
+          return items.length === (b.items ?? []).length ? b : { ...b, items }
+        }),
+        // Wiki collection cleanup — drop this article's collection bucket.
+        wikiCollections: Object.fromEntries(
+          Object.entries(state.wikiCollections ?? {}).filter(([k]) => k !== articleId),
+        ),
       }))
+      // Purge IDB attachment blobs for wiki-origin attachments (array filtered above).
+      for (const aid of orphanedAttachmentIds) removeAttachmentBlob(aid)
     },
 
     setWikiArticleInfobox: (articleId: string, infobox: WikiArticle["infobox"]) => {
