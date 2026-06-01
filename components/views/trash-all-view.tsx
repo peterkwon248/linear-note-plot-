@@ -21,6 +21,8 @@ import type {
   Attachment,
   NoteStatus,
   WikiStatus,
+  WikiTemplate,
+  SmartBookPreset,
 } from "@/lib/types"
 import {
   RotateCcw as ArrowCounterClockwise,
@@ -36,7 +38,7 @@ import {
   X as PhX,
 } from "lucide-react"
 
-type EntityKind = "note" | "wiki" | "book" | "tag" | "label" | "template" | "reference" | "attachment"
+type EntityKind = "note" | "wiki" | "book" | "tag" | "label" | "template" | "wikiTemplate" | "smartBookPreset" | "reference" | "attachment"
 
 const ENTITY_KIND_KEY: Record<EntityKind, string> = {
   note: "trash.kind.note",
@@ -45,6 +47,8 @@ const ENTITY_KIND_KEY: Record<EntityKind, string> = {
   tag: "trash.kind.tag",
   label: "trash.kind.label",
   template: "trash.kind.template",
+  wikiTemplate: "trash.kind.wikiTemplate",
+  smartBookPreset: "trash.kind.smartBookPreset",
   reference: "trash.kind.reference",
   attachment: "trash.kind.attachment",
 }
@@ -56,6 +60,8 @@ const SECTION_TITLE_KEY: Record<EntityKind, string> = {
   tag: "trash.section.tags",
   label: "trash.section.labels",
   template: "trash.section.templates",
+  wikiTemplate: "trash.section.wikiTemplates",
+  smartBookPreset: "trash.section.smartBookPresets",
   reference: "trash.section.references",
   attachment: "trash.section.attachments",
 }
@@ -85,6 +91,10 @@ function EntityKindIcon({
   if (kind === "book") {
     return <BookKindIcon kind={bookKind ?? "manual"} size={14} />
   }
+  if (kind === "smartBookPreset") {
+    // Smart Book 청사진 → smart kind icon (Books의 BookKindIcon 재사용).
+    return <BookKindIcon kind="smart" size={14} />
+  }
   if (kind === "tag" || kind === "label") {
     // Color dot (tag/label native pattern). color 없으면 muted dot.
     return (
@@ -97,6 +107,7 @@ function EntityKindIcon({
   const cls = "shrink-0 text-muted-foreground"
   switch (kind) {
     case "template": return <FileText size={14} strokeWidth={2} className={cls} />
+    case "wikiTemplate": return <FileText size={14} strokeWidth={2} className={cls} />
     case "reference": return <BookmarkSimple size={14} strokeWidth={2} className={cls} />
     case "attachment": return <Paperclip size={14} strokeWidth={2} className={cls} />
     default: return <FileText size={14} strokeWidth={2} className={cls} />
@@ -233,6 +244,8 @@ export function TrashAllView() {
   const tags = usePlotStore((s) => s.tags)
   const labels = usePlotStore((s) => s.labels)
   const storeTemplates = usePlotStore((s) => s.templates)
+  const storeWikiTemplates = usePlotStore((s) => s.wikiTemplates)
+  const storeSmartBookPresets = usePlotStore((s) => s.smartBookPresets)
   const storeReferences = usePlotStore((s) => s.references)
   const storeAttachments = usePlotStore((s) => s.attachments)
   // 2026-05-17 — Display panel grouping 설정 읽기. notes-table-view.tsx에서
@@ -255,6 +268,10 @@ export function TrashAllView() {
   const permanentlyDeleteLabel = usePlotStore((s) => s.permanentlyDeleteLabel)
   const restoreTemplate = usePlotStore((s) => s.restoreTemplate)
   const permanentlyDeleteTemplate = usePlotStore((s) => s.permanentlyDeleteTemplate)
+  const restoreWikiTemplate = usePlotStore((s) => s.restoreWikiTemplate)
+  const permanentlyDeleteWikiTemplate = usePlotStore((s) => s.permanentlyDeleteWikiTemplate)
+  const restoreSmartBookPreset = usePlotStore((s) => s.restoreSmartBookPreset)
+  const permanentlyDeleteSmartBookPreset = usePlotStore((s) => s.permanentlyDeleteSmartBookPreset)
   const restoreReference = usePlotStore((s) => s.restoreReference)
   const permanentlyDeleteReference = usePlotStore((s) => s.permanentlyDeleteReference)
   const restoreAttachment = usePlotStore((s) => s.restoreAttachment)
@@ -270,6 +287,8 @@ export function TrashAllView() {
     const trashedTags = tags.filter((t: Tag) => t.trashed)
     const trashedLabels = labels.filter((l: Label) => l.trashed)
     const trashedTemplates = storeTemplates.filter((t: NoteTemplate) => t.trashed)
+    const trashedWikiTemplates = (storeWikiTemplates || []).filter((t: WikiTemplate) => t.trashed)
+    const trashedSmartBookPresets = (storeSmartBookPresets || []).filter((p: SmartBookPreset) => p.trashed)
     const trashedRefs = Object.values(storeReferences || {}).filter((r: Reference) => r.trashed)
     const trashedFiles = (storeAttachments || []).filter((a: Attachment) => a.trashed)
 
@@ -329,6 +348,23 @@ export function TrashAllView() {
         })),
       },
       {
+        kind: "wikiTemplate",
+        items: trashedWikiTemplates.map((tpl) => ({
+          id: tpl.id,
+          label: tpl.name || untitled,
+          trashedAt: tpl.trashedAt ?? null,
+        })),
+      },
+      {
+        kind: "smartBookPreset",
+        items: trashedSmartBookPresets.map((p) => ({
+          id: p.id,
+          label: p.name || untitled,
+          trashedAt: p.trashedAt ?? null,
+          bookKind: "smart" as const,
+        })),
+      },
+      {
         kind: "reference",
         items: trashedRefs.map((r) => ({
           id: r.id,
@@ -346,7 +382,7 @@ export function TrashAllView() {
       },
     ]
     return list
-  }, [notes, wikiArticles, storeBooks, tags, labels, storeTemplates, storeReferences, storeAttachments, t])
+  }, [notes, wikiArticles, storeBooks, tags, labels, storeTemplates, storeWikiTemplates, storeSmartBookPresets, storeReferences, storeAttachments, t])
 
   const totalCount = sections.reduce((sum, s) => sum + s.items.length, 0)
 
@@ -359,6 +395,8 @@ export function TrashAllView() {
       case "tag": restoreTag(id); break
       case "label": restoreLabel(id); break
       case "template": restoreTemplate(id); break
+      case "wikiTemplate": restoreWikiTemplate(id); break
+      case "smartBookPreset": restoreSmartBookPreset(id); break
       case "reference": restoreReference(id); break
       case "attachment": restoreAttachment(id); break
     }
@@ -372,6 +410,8 @@ export function TrashAllView() {
       case "tag": permanentlyDeleteTag(id); break
       case "label": permanentlyDeleteLabel(id); break
       case "template": permanentlyDeleteTemplate(id); break
+      case "wikiTemplate": permanentlyDeleteWikiTemplate(id); break
+      case "smartBookPreset": permanentlyDeleteSmartBookPreset(id); break
       case "reference": permanentlyDeleteReference(id); break
       case "attachment": permanentlyDeleteAttachment(id); break
     }
