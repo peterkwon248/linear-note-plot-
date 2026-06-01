@@ -6,6 +6,46 @@
 
 ---
 
+## 2026-06-01 (집/Windows) — **데이터 라이프사이클 감사 완료 (PR1/2/3 머지) + 디자인 방향 재고 합의**
+
+> 🎯 **다음 즉시 액션 hook**: **디자인 ③ 진단**. 사용자 결정 — 그동안의 "Linear 200% 미러" 방향 재고("리니어 지나친 절제에 매몰"). 주요 surface(홈/사이드바/노트리스트/에디터/인사이트)를 돌며 **"어디가 답답한지/발견성이 떨어지는지"** 구체 진단 → ground truth 확보. 그 다음 **① 철학 재조정**(토큰·인프라 유지, "절제→실용·발견성", Notion 장점 선택 도입) → 필요시 **② 전면 재설계**. **목업 우선**(코드 전 시각 검증). SOT = local memory `project_design_direction_reconsider.md` + 본 entry.
+>
+> **첫 스텝**: surface별 진단 — 각 화면을 캡처/실측해 "기능이 숨어 답답한" 지점 목록화. `linear-design-mirror` 스킬 + Notion/실사용 레퍼런스 비교. 목업 = Open Design 또는 HTML 프로토타입.
+>
+> **잊지 말 것 (큰 방향, 영구)**: 문제는 "Linear 자체"가 아니라 **넓은 기능의 지식앱에 절제(숨김 미학)를 무비판 적용**한 것 → 발견성↓. **코어 불변**(지식 관계망·NOTE_STATUS_HEX·"Gentle by default"). "gentle"을 "절제"로 과해석한 게 문제. Notion 약점(산만·느림) 답습 경계. **③→①→② 순차 + 목업 우선 = 위험 단계적 확대**(대부분 ①에서 해소 기대).
+>
+> **데이터 감사 = 완료**: PR1 cascade(#508) / PR2 re-seed v154(#509) / PR3 trash 좀비(#510) 전부 머지. 출시 블로커였던 "삭제 데이터 부활" 0.
+>
+> **남은 별도 항목**: comments/folders soft-trash(PR4 후보, schema+version bump) · migrate-v107 7개 실패(기존 부채) · turbopack worktree build 불가(`--webpack` 우회).
+>
+> **머신**: 집(Windows). **main HEAD**: `6c8a011`(#510 PR3) + 이 after-work docs 커밋.
+
+### 완료 (이 세션 — 데이터 라이프사이클 감사 3 PR)
+- **전수 감사** (병렬 4-agent sweep + 직접 코드 검증): 엔티티 10+종 × 6축(시드/soft-trash/영구삭제/별도IDB store/cascade/cross-entity). **spec 확정버그 #2(위키 blocks orphan) = 오류 판명**(`deleteWikiArticle`이 meta+body 둘 다 정리 중). 대신 cascade 누락 11 + 부활 소스 4 + 좀비 2 발견.
+- **PR1 #508** 삭제 cascade 완전성: `deleteNote`(attachment blob/comments/books.items) + `deleteWikiArticle`(자식 reparent/attachment/relations/comments/books.items/wikiCollections) + `permanentlyDeleteTag/Label/Reference` cross-entity dangling 정리 + `permanentlyDeleteBook` sticker cascade + books-slice.test tsc hotfix(implicit-any, PR1 누락분).
+- **PR2 #509** re-seed 1회성(store v153→**v154**): `hasSeeded` flag + onRehydrate dev(데모)/prod(웰컴노트 1개) 분기 + migrate id-dedup backfill 3곳 제거 + `WELCOME_NOTE`. **사용자 실화면 검증**(기존 데이터 보존 + 부활 0).
+- **PR3 #510** trash UI 좀비: `permanentlyDeleteSmartBookPreset` 신설 + trash-all-view에 WikiTemplate/SmartBookPreset 섹션 노출 + i18n.
+
+### 브레인스토밍 & 큰 결정 (영구)
+- **디자인 방향 재고**(사용자 주도, ⭐): Linear 과한 절제 탈피, 노트앱=실용·심플·발견성. ③진단→①철학재조정→②전면, 목업 우선. → 다음 세션 P0. (memory `project_design_direction_reconsider.md`)
+- **삭제 정확성 = 출시 핵심**: 부활0·orphan0·완전삭제. `deleteNote`=정통(가장 완전) 패턴, 나머지 삭제 액션이 이를 불완전 복제했음.
+- **시드 1회성(hasSeeded)**: "비면 재시드"는 버그. 기존 유저는 migrate에서 hasSeeded=true로 100% 보존, 신규 유저만 1회 시드.
+- **migrate backfill 제거**: id-dedup append가 version bump마다 지운 시드를 부활시키던 소스 → 제거(부활 0).
+
+### 기술 학습 (영구)
+- **삭제 감사 = array + 별도 IDB store(5개: note-body/mention/attachment/wiki-block-meta/**wiki-block-body**) + cascade + re-seed 전부** 봐야 "완전 삭제" 보장. **정리함수 존재 ≠ 호출**(grep 검증 필수).
+- **`.test.ts` 수정 후 tsc 재검증 필수**: vitest 통과 ≠ tsc(implicit any). next build는 test 파일 타입체크 제외. 파이프 `head`/`tail`은 종료코드를 가림 → `; echo $?`로 분리. (PR1에서 books-slice tsc 에러 누락 → PR2에서 발각.)
+- **worktree+한글경로(`리니어 노트앱`)에서 `next build`(turbopack) 불가**: next.config `turbopack.root` 있어도 next 패키지 resolve 실패. `next build --webpack` 우회(dev가 이미 `--webpack`).
+- **마이그레이션 검증 = 사용자 실화면**: 이 env preview는 fresh IDB + store 검증 약함 → 기존 유저 데이터 보존은 본인 브라우저에서만 검증 가능.
+
+### 환경 변경
+- store **v153→v154** (`hasSeeded`). 신규 파일 0(기존 파일 수정 + `WELCOME_NOTE`/회귀 테스트). `data-lifecycle-audit.spec.md` 헤더 정정(확정버그 #2 오류 표시).
+
+### 머신
+집 (Windows)
+
+---
+
 ## 2026-05-31 (밤 늦게, 집/Windows) — **데이터 라이프사이클 감사 발견: re-seed 부활 버그 + 위키 blocks IDB orphan (전수 감사는 다음 세션, 앱 코드 무변경)**
 
 > 🎯 **다음 즉시 액션 hook**: **데이터 라이프사이클 전수 감사 + 수정** (출시 전 필수). 모든 엔티티(notes/wiki/books/tags/labels/stickers/folders/references/attachments/comments) × [시드/re-seed · soft-trash · 영구삭제 완전성 · **별도 IDB store 정리** · cascade · cross-entity] 매트릭스로 점검 → 구멍 목록 → 수정. **엔티티 多 × store 多라 병렬 멀티에이전트 sweep(workflow) 권장.** SOT=`docs/01-plan/features/data-lifecycle-audit.spec.md`.

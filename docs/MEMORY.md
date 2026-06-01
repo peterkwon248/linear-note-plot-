@@ -8,6 +8,31 @@
 
 ---
 
+## ✅ 2026-06-01 (집/Windows) — 데이터 라이프사이클 감사 완료 (PR1/2/3 머지) + 디자인 방향 재고 합의 ⭐⭐⭐⭐⭐
+
+**범위**: 전수 감사(병렬 4-agent + 직접 검증) → 삭제/시드 정확성 3 PR. 출시 블로커(삭제 데이터 부활) 0. + 디자인 방향 재고 합의(별도 트랙).
+
+### 핵심 결정 (영구)
+- **삭제 정확성 = 출시 핵심**: `deleteNote`=정통(가장 완전) 패턴, 나머지 삭제 액션이 불완전 복제였음. 별도 IDB store **5개**(note-body/mention/attachment/wiki-block-meta/**wiki-block-body**) 정리 필수. **정리함수 존재 ≠ 호출**.
+- **시드 1회성(`hasSeeded`)**: "비면 재시드"=버그. 신규=웰컴노트1개(prod)/데모(dev). migrate backfill 3곳 제거(version bump마다 지운 시드 부활). 기존 유저 migrate hasSeeded=true 보존.
+- **spec 확정버그 #2(위키 blocks orphan) = 오류**: `deleteWikiArticle`이 실제 meta+body 둘 다 정리 중.
+- **디자인 방향 재고**(사용자 주도): Linear 과한 절제 탈피 → ③진단→①철학재조정→②전면, 목업 우선. 코어 불변. → 다음 세션. (memory `project_design_direction_reconsider.md`)
+
+### 완료 (3 PR)
+- PR1 #508 삭제 cascade 완전성 / PR2 #509 re-seed v154(부활 0, 웰컴 노트) / PR3 #510 trash 좀비(SmartBookPreset/WikiTemplate).
+
+### 기술 학습 (영구)
+- `.test.ts` 수정 후 tsc 재검증 필수(vitest 통과 ≠ tsc implicit-any, build는 test 제외, 파이프 head/tail은 exit code 가림). worktree+한글경로 turbopack build 불가→`--webpack`. 마이그 검증=사용자 실화면(env preview store 약함).
+
+### 다음 우선순위 (P0)
+1. **디자인 ③ 진단** (홈/사이드바/노트리스트/에디터/인사이트 "어디 답답한지") → ① 재조정. 목업 우선.
+2. (별도) comments/folders soft-trash(PR4) · migrate-v107 7개(기존) · turbopack worktree build.
+
+### Store version / HEAD
+**v153→v154** (`hasSeeded`). main HEAD = PR3 머지 후(`6c8a011` #510) + after-work docs. 머신=집/Windows.
+
+---
+
 ## ✅ 2026-05-31 (밤 늦게) — 데이터 라이프사이클 감사 발견: re-seed 부활 버그 + 위키 blocks IDB orphan (전수 감사 다음 세션, 앱 코드 무변경) ⭐⭐⭐⭐⭐
 
 **범위**: 상용화 데이터 질문 3개(시드/영구삭제/OS휴지통) 실측 → **확정 버그 2개** 발견 + 데이터 라이프사이클 감사 spec 작성. **앱 코드 무변경.** SOT=`docs/01-plan/features/data-lifecycle-audit.spec.md`.

@@ -1,6 +1,6 @@
 # Plot — 데이터 라이프사이클 감사 + 수정 (SPEC) 🔴 출시 전 필수
 
-> 상태: **전수 감사 완료** (2026-06-01, 병렬 4-agent sweep + 직접 코드 검증). **PR1 = 삭제 cascade 완전성** 구현/검증 완료. **PR2 = re-seed 정책**(시드 1회성 flag), **PR3 = trash UI + soft-trash 개선** 대기.
+> 상태: **✅ 완료** (2026-06-01). PR1 삭제 cascade(#508) / PR2 re-seed 1회성 store v154(#509) / PR3 trash UI 좀비(#510) **전부 머지**. 출시 블로커(삭제 데이터 부활) 0. 남은 별도 = comments/folders soft-trash(PR4 후보, schema 변경) · migrate-v107 7개(기존 부채) · turbopack worktree build(`--webpack` 우회).
 > 왜 중요: 상용화 = 삭제 정확성(완전 삭제 · orphan 0 · 데이터 부활 0) + 시드 위생. 신뢰 / 저장공간 / GDPR "잊혀질 권리"의 핵심.
 > 사용자 강조: "노트뿐 아니라 위키·북도 정말 굉장히 많이 신경 써야 해. 시드데이터와 삭제 문제."
 
