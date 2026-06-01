@@ -51,6 +51,23 @@
 
 ---
 
+## 📜 2026-06-01 (집/Windows, 오후) — 리디자인 비파괴 프리뷰 스캐폴딩 (5 surface) + 상용화 우선 ⭐⭐⭐⭐
+
+**범위**: 5 surface를 라이브 0 touch로 presentational+mock+preview 추출(Open Design 핸드오프). 디자인 보류, 상용화 우선 결정.
+
+### 핵심 결정 (영구)
+- **상용화 우선·디자인 보류**(사용자). 리디자인 스캐폴딩 파킹(`/preview/redesign`).
+- **비파괴 프리뷰-우선 추출**: 라이브 god 0 touch → 격리 presentational → Open Design → 확정 후 스왑.
+- 리디자인 단위 = surface(~25-30) ≠ 234 atomic 컴포넌트.
+
+### 완료
+- 5 surface(홈/사이드바/노트리스트/에디터/인사이트) presentational+mock+route 23파일. tsc 0, 렌더 검증, hydration 픽스. 앱/Store 무변경(v154).
+
+### 다음 (P0)
+1. 상용화 캐치올 라우팅(ⓑ, fresh 세션). 2. 리디자인 재개(상용화 후).
+
+---
+
 ## 📜 2026-06-01 (집/Windows) — 데이터 라이프사이클 감사 완료 (PR1/2/3) + 디자인 방향 재고 합의 ⭐⭐⭐⭐⭐
 
 **범위**: 전수 감사(병렬 4-agent + 직접 검증) → 삭제/시드 정확성 3 PR. 출시 블로커(부활) 0. + 디자인 방향 재고.

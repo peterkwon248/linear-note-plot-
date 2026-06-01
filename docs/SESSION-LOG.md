@@ -6,6 +6,47 @@
 
 ---
 
+## 2026-06-01 (집/Windows, 오후) — **리디자인 비파괴 프리뷰 스캐폴딩 (5 surface 추출) + 상용화 우선 결정 (디자인 변경 보류)**
+
+> 🎯 **다음 즉시 액션 hook**: **상용화 P0 — 정적 SPA 캐치올 라우팅 (ⓑ)**. 사용자 결정(2026-06-01 오후) — 디자인 변경은 다음으로, **상용화 우선**. SOT = `docs/01-plan/features/desktop-local-first.spec.md` (Roadmap P0 + Risk #6 + "다음 액션"). 동적 라우트 4개(`app/(app)/{books,folder,tag,label}/[id]/page.tsx`)를 `[[...slug]]` 캐치올 **클라이언트** 라우트로 통합(로드 시 `syncFromPathname`→activeRoute 복원) + `next.config.mjs` `output:'export'` → `out/` 생성. ★ `/inbox` refresh→home anomaly 동시 해결(같은 뿌리).
+>
+> **첫 스텝**: 새 worktree(main 기준) → spec read(특히 Risk #6) → `lib/table-route.ts`·4개 `[id]/page.tsx`·`next.config.mjs` 읽기 → 캐치올 통합 → `npm run build`(`--webpack`)로 `out/` 생성 확인 → **사용자 실화면 F5 검증**(`/inbox`·`/folder/{id}` 새로고침 복원).
+>
+> **⚠️ 잊지 말 것**: 코어 라우팅 = blast radius 큼. **이 env preview는 라우팅 검증 약함(module-state)** — 이번 세션에 `/inbox`에서 직접 겪음(+`localhost`↔`127.0.0.1` cross-origin 탭 꼬임도). → **사용자 실화면 검증 필수, fresh 집중 세션 권장**(스펙이 직접 명시).
+>
+> **리디자인 = 보류(파킹, 폐기 아님)**: 비파괴 프리뷰 스캐폴딩 완료 → `/preview/redesign`에서 5 surface 확인. 디자인 재개 시 이어서. **234 컴포넌트 중 5 surface "shell"만 완료** — 내부 콘텐츠(에디터 실제 블록·사이드바 5/7 컨텍스트·노트 board/grid·인사이트 그래프) + 나머지 ~20 surface(위키/북/자료실/캘린더/…)는 미완.
+>
+> **머신**: 집(Windows). **main HEAD**: 이 PR 머지 후(직전 `70df9ef` #511).
+
+### 완료 (이 세션 — 리디자인 비파괴 프리뷰 스캐폴딩, 라이브 0 touch)
+- **before-work 동기화** (clean, 머신 무변경).
+- **프리뷰-우선 비파괴 리디자인 스캐폴딩** 확립: 라이브 god 0 touch, `components/redesign/<surface>/`에 순수 presentational + mock + view-model 타입 + `app/preview/redesign/<surface>/` 렌더 라우트. README = 컨벤션 + Open Design 핸드오프 가이드.
+- **5 surface 추출**: 홈(`home-view.tsx`) / 사이드바(Notes·Home 2/7 컨텍스트 + 스위처) / 노트리스트(테이블 12행 3그룹) / 에디터(크롬+FixedToolbar, 본문 정적 근사) / 인사이트(대시보드 — StatCard·차트·라이프사이클·InsightCard). 23 신규 파일. 병렬 4-executor.
+- **검증**: `tsc --noEmit` 0(전체) · 5 라우트 브라우저 렌더 확인(스크린샷) · **hydration 버그 1개 픽스**(notes-list mock `Date.now()` → 고정 `PREVIEW_NOW` anchor, SSR/client 불일치 해소).
+
+### 브레인스토밍 & 큰 결정 (영구)
+- **상용화 우선, 디자인 변경 보류** (사용자 주도). 디자인 상용급이나 제품 인프라 0.1단계 → 인프라 급선무. 디자인 스캐폴딩은 파킹(보존).
+- **리디자인 핸드오프 단위 = surface(~25-30) ≠ 234 atomic 컴포넌트**: Open Design은 화면 단위로 리디자인. 콘텐츠 블록은 surface 일부로 포함. "모든 컴포넌트 쪼개기"는 과한 프레이밍.
+- **프리뷰-우선 비파괴 = 정통 패턴**: 라이브 god 인플레이스 리팩터 X → 격리 presentational+mock 추출 → Open Design 핸드오프 → 확정 후 라이브 스왑. preview-first DNA(#138/#154) 정합.
+
+### 기술 학습 (영구)
+- **정적 mock SSR + `Date.now()` = hydration mismatch**: 라이브는 데이터가 IDB client-only라 안 드러나던 게 프리뷰 정적 mock SSR로 노출(title=ISO server≠client). → mock 날짜는 고정 기준시각 anchor.
+- **preview 라우트 cross-origin 주의**: 서버 `127.0.0.1` 바인딩 → `localhost`↔`127.0.0.1` 섞으면 탭 꼬여 `/home`으로 튐. 같은 origin 유지.
+- **`nextjs-portal` 존재 ≠ 에러**: dev 오버레이 컨테이너는 항상 존재. 에러 판정은 portal 내부 텍스트(Build Error 등) 또는 "N Issue" 인디케이터.
+
+### 환경 변경
+- 신규: `components/redesign/`(16: README + home/sidebar/notes-list/editor/insights 각 3) + `app/preview/redesign/`(7: layout + index + 5 surface page). **앱 코드/Store 무변경(v154)**.
+
+### Watch Out
+- **리디자인 미완 범위 명확히**: 5 surface "shell"만. 재개 시 내부 콘텐츠 + 나머지 surface(~20).
+- **라우팅 = fresh 세션 필수**: 이 env 검증 약함 + 코어. 미커밋 위에 쌓지 말 것(그래서 리디자인 먼저 PR).
+- `docs/.bkit-memory.json`·`.pdca-status.json` auto-modified 반복 — `.gitignore` 후보.
+
+### 머신
+집 (Windows)
+
+---
+
 ## 2026-06-01 (집/Windows) — **데이터 라이프사이클 감사 완료 (PR1/2/3 머지) + 디자인 방향 재고 합의**
 
 > 🎯 **다음 즉시 액션 hook**: **디자인 ③ 진단**. 사용자 결정 — 그동안의 "Linear 200% 미러" 방향 재고("리니어 지나친 절제에 매몰"). 주요 surface(홈/사이드바/노트리스트/에디터/인사이트)를 돌며 **"어디가 답답한지/발견성이 떨어지는지"** 구체 진단 → ground truth 확보. 그 다음 **① 철학 재조정**(토큰·인프라 유지, "절제→실용·발견성", Notion 장점 선택 도입) → 필요시 **② 전면 재설계**. **목업 우선**(코드 전 시각 검증). SOT = local memory `project_design_direction_reconsider.md` + 본 entry.
