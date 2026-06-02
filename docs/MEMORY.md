@@ -8,6 +8,31 @@
 
 ---
 
+## ✅ 2026-06-02 (집/Windows) — 상용화 P1 데스크톱 셸 (Tauri 확정) + Plot 아이콘 신규 ⭐⭐⭐⭐⭐
+
+**범위**: Tauri 2.0 셸 스파이크 → `out/` embed 정적 렌더 확인(WebView2) = **Tauri 확정**. + 지식 관계망 구 아이콘 신규.
+
+### 핵심 결정 (영구)
+- **Tauri 확정**(Electron 폴백 불필요): Windows WebView2=Chromium 렌더 통과. ⚠️ macOS WebKit 쿼크는 **Mac에서만 검증 가능**(미검증).
+- **Tauri debug=devUrl / release=frontendDist embed**. `devUrl` 제거 → debug도 out/ embed(초기 ERR_CONNECTION_REFUSED 함정).
+- **아이콘 = 지식 관계망 구**(사용자 직접 지정): brand mark "네트워크 X"(`project_brand_mark_pattern`) 결정 **갱신** — Plot 정체성(팔란티어×제텔카스텐) 적합. 색=다크 그레이+외곽선(Linear 정통, 라이트/다크 양쪽 대비; 순검정은 다크 배경 묻힘).
+- **SPA fallback 현재 불필요**(release F5 비활성 + index-start client-routing), deep-link 시 `lib.rs` custom protocol 후속.
+
+### 완료
+- `src-tauri/` scaffold(frontendDist=../out, com.plot.app, plot.exe, 창 1280×800) + out/ 빌드 검증(50p) + 기동(Home/사이드바/웰컴노트 렌더, WebView2) + 아이콘(app-icon.svg→tauri icon 전크기) + 라이트/다크 대비 합성 검증. `@tauri-apps/cli` devDep.
+
+### 기술 학습 (영구)
+- Tauri debug=devUrl/release=frontendDist embed. tauri icon=PNG/SVG(미디어쿼리 무시→고정색 source). 한글 경로 cargo OK. PS native stderr=NativeCommandError 래핑(exit 0=성공). output:export trailingSlash:false→`/route`=`route.html`.
+
+### 다음 우선순위 (P0)
+1. **release 빌드+번들(.msi/설치파일)+코드사이닝** 또는 **P3 export/백업+출시 전 안정화**.
+2. (별개 트랙) 폴더 필터 F5 URL화 / SPA fallback deep-link / macOS WebKit 검증.
+
+### Store version / HEAD
+**무변경(v154)**. main HEAD = 이 PR 머지 후. 머신=집/Windows.
+
+---
+
 ## ✅ 2026-06-01 (집/Windows, 저녁) — 상용화 P0 캐치올 라우팅(#513) + 디테일바 peek(#514) + 타임라인 막대 약화 ⭐⭐⭐⭐⭐
 
 **범위**: 무료 데스크톱 출시 첫 코드. 동적 4개 → 캐치올 `[...slug]` + `output:export`(prod만) → `out/` 50페이지. + 디테일바 peek + 타임라인 막대 약화(별개 버그/디자인).
