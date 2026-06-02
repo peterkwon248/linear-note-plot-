@@ -228,7 +228,7 @@ const EN = {
   "home.capture.placeholder.idea": "An idea…",
   "home.capture.placeholder.learning": "Something learned…",
   "home.capture.aria": "Quick capture — press Enter to add a note to your Inbox",
-  "home.capture.added_toast": "Added to Stone",
+  "home.capture.added_toast": "Added to Backlog",
 
   // Workflow status (4단계 완성도 축: Backlog → Todo → In Progress → Done).
   "status.backlog": "Backlog",
@@ -975,7 +975,7 @@ const EN = {
   "sidepanel.inspector.attachments.empty": "No attachments",
   // Side panel workflow actions / warnings
   "sidepanel.workflow.done": "Done",
-  "sidepanel.workflow.done_toast": "Done — moved to Brick",
+  "sidepanel.workflow.done_toast": "Done — moved to In Progress",
   "sidepanel.workflow.snooze": "Snooze",
   "sidepanel.workflow.snooze_toast": "Snoozed",
   "sidepanel.workflow.snooze.3h": "3 hours",
@@ -1257,7 +1257,7 @@ const KO: Partial<Record<DictKey, string>> = {
   "home.capture.placeholder.idea": "아이디어…",
   "home.capture.placeholder.learning": "배운 것…",
   "home.capture.aria": "빠른 캡처 — Enter를 누르면 받은편지함에 노트가 추가됩니다",
-  "home.capture.added_toast": "스톤에 추가됨",
+  "home.capture.added_toast": "대기에 추가됨",
 
   // 4단계 완성도 축 — Backlog → Todo → In Progress → Done.
   "status.backlog": "대기",
@@ -1999,7 +1999,7 @@ const KO: Partial<Record<DictKey, string>> = {
   "sidepanel.inspector.attachments.empty": "첨부 없음",
   // Workflow actions
   "sidepanel.workflow.done": "완료",
-  "sidepanel.workflow.done_toast": "완료 — 브릭으로 이동",
+  "sidepanel.workflow.done_toast": "완료 — 정리 중으로 이동",
   "sidepanel.workflow.snooze": "미루기",
   "sidepanel.workflow.snooze_toast": "미뤘어요",
   "sidepanel.workflow.snooze.3h": "3시간 후",
