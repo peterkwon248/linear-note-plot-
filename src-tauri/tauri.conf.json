@@ -2,7 +2,7 @@
   "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
   "productName": "Plot",
   "version": "0.1.0",
-  "identifier": "com.plot.app",
+  "identifier": "com.plot.desktop",
   "build": {
     "frontendDist": "../out",
     "beforeBuildCommand": "npx next build --webpack"
@@ -26,6 +26,7 @@
   "bundle": {
     "active": true,
     "targets": "all",
+    "publisher": "Plot",
     "icon": [
       "icons/32x32.png",
       "icons/128x128.png",
@@ -33,6 +34,11 @@
       "icons/icon.icns",
       "icons/icon.ico"
     ],
+    "windows": {
+      "nsis": {
+        "installMode": "currentUser"
+      }
+    },
     "android": {
       "debugApplicationIdSuffix": ".debug"
     }
