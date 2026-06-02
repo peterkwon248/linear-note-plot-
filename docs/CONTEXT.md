@@ -51,6 +51,25 @@
 
 ---
 
+## 📜 2026-06-02 (집/Windows, 정오) — 상용화 P1 release 빌드 + .msi/.exe 번들(무서명) + 출시 config 폴리시 ⭐⭐⭐⭐⭐
+
+**범위**: `npx tauri build` release + 양쪽 번들(무서명) 생성·검증 + 출시 config 폴리시. 코드사이닝 보류.
+
+### 핵심 결정 (영구)
+- **무서명 v0.1.0 합의**: Azure($9.99/월) 한국 자격 미달 공산, OV/EV 유저 0 과투자. 무서명=정상+SmartScreen 1회 클릭(macOS는 하드블록, Apple $99+공증 필수=Windows 한정 관용). MS Store MSIX=우회 후속.
+- **config**: publisher Plot / identifier com.plot.desktop(.app 제거) / NSIS installMode currentUser(per-user 무admin).
+
+### 완료
+- release 빌드(콜드 3.5분) + `.msi`(7.7MB)+`.exe`(6.6MB) + plot.exe 스모크(WebView2). NSIS flaky(`os error 5` 부분추출) 캐시 삭제 해결. Manufacturer Plot 검증. 앱/Store 무변경(v154).
+
+### 다음 (P0)
+1. P3 export/백업 점검 + 출시 전 안정화. 2. (별개) 폴더 필터 F5 / macOS 서명 / MS Store.
+
+### Store version
+무변경(v154).
+
+---
+
 ## 📜 2026-06-02 (집/Windows) — 상용화 P1 데스크톱 셸 (Tauri 확정) + Plot 아이콘 ⭐⭐⭐⭐⭐
 
 **범위**: Tauri 2.0 셸 스파이크 → `out/` embed 정적 렌더(WebView2) = Tauri 확정 + 관계망 구 아이콘.

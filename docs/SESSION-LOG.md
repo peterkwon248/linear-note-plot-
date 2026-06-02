@@ -6,6 +6,47 @@
 
 ---
 
+## 2026-06-02 (집/Windows, 정오) — **상용화 P1 release 빌드 + .msi/.exe 번들(무서명) + 출시 config 폴리시**
+
+> 🎯 **다음 즉시 액션 hook**: **P3 — export/import/백업(`app/(app)/settings/backup`) 점검 + 출시 전 안정화**(데드코드·스모크·QA). release 빌드 + 양쪽 번들(무서명) = 완료. 출시범위 A = P0+P1+**P3**가 마지막. 코드사이닝은 보류(무서명 v0.1.0 합의). SOT = `desktop-local-first.spec.md` Roadmap P3. **(별개 트랙: 폴더 필터 F5 URL화 / macOS WebKit·서명·공증 / Microsoft Store MSIX.)**
+>
+> **첫 스텝**: `settings/backup` + `restoreFromBackup`/Full Backup 라운드트립 점검 → export/import 동작 확인 → 출시 전 데드코드(noteType wiki·stone/brick) + 스모크.
+>
+> **⚠️ 잊지 말 것**: ① **NSIS 첫 추출 flaky** — `os error 5`(액세스 거부)는 AV 아님, NSIS zip **부분/손상 추출**(makensis.exe 2560B truncate). 해결 = `%LOCALAPPDATA%\tauri\nsis-3.11` 삭제 → 클린 재시도. CI/새 머신 재발 가능. ② **무서명 = SmartScreen 1회 클릭 마찰**(설치·작동 정상). macOS는 하드블록(Apple $99+공증 필수). ③ **fresh worktree = node_modules·target 없음** → `npm ci` 먼저, cargo 콜드 ~3.5분.
+>
+> **머신**: 집(Windows). **main HEAD**: 이 PR 머지 후.
+
+### 완료 (release 빌드 + 번들 + config)
+- **release 빌드 검증**: `npx tauri build` → next build(~2분, out/ 50p) → cargo release **3.5분**(콜드) → WiX `.msi` + NSIS `.exe` 양쪽 번들. `plot.exe` 스모크(MainWindowTitle "Plot", WebView2 활성, 크래시 0).
+- **무서명 번들 2종**: `Plot_0.1.0_x64_en-US.msi`(7.7MB) + `Plot_0.1.0_x64-setup.exe`(6.6MB). MSI 메타 검증(WindowsInstaller COM 읽기전용).
+- **NSIS flaky 해결**: 첫 빌드 NSIS `os error 5` → 캐시 삭제 후 클린 재추출 성공(부분 캐시가 원인, Defender 탐지 0 = AV 아님).
+- **출시 config 폴리시**(`tauri.conf.json`): `publisher:"Plot"`(Manufacturer plot→**Plot** 검증) + `identifier` com.plot.app→**com.plot.desktop**(.app 접미사=macOS 경고 해소, 유저 0 지금 변경) + NSIS `installMode:"currentUser"`(per-user 설치=관리자 불필요).
+
+### 브레인스토밍 & 큰 결정 (영구)
+- **무서명 v0.1.0 출시 합의**: Azure Trusted Signing($9.99/월)=한국 지역/법인 자격 미달 공산(대상 미국/캐나다/EU/영국 → 2025부터 미국/캐나다 3년+ 법인). OV($200+/년+토큰)·EV($300+/년)=유저 0 단계 과투자. 무서명=설치·작동 정상 + SmartScreen 1회 클릭. **평판은 인증서에 누적**(무서명은 버전마다 해시 리셋) → 매출/유저 후 서명 도입.
+- **Microsoft Store = 서명 우회 트랙**(Store가 신뢰 보증, 별도 인증서 불필요, MSIX 패키징·심사 필요) — 후속 옵션.
+- **macOS는 무서명 하드블록**(Gatekeeper): Apple Developer $99/년 + 공증 사실상 필수. "무서명 관용" = Windows 한정.
+- **identifier = com.plot.desktop**(임시 확정): 도메인/브랜드 확정값 있으면 출시 전 변경 가능 — 유저 0이라 무료.
+
+### 기술 학습 (영구)
+- **fresh worktree 빌드**: node_modules·target 없음 → `npm ci`(lockfile) 먼저. cargo release 콜드 = **3.5분**(예상보다 빠름), WiX/NSIS 첫 빌드 자동 다운로드(인터넷 필요).
+- **NSIS `os error 5` = 부분/손상 추출**(makensis.exe truncate), AV 아님(Defender 탐지 0). `tauri/nsis-3.11` 삭제 후 재시도 = 패턴.
+- **Tauri 2 config**: `bundle.publisher`(미설정 시 identifier 2번째 요소=소문자 manufacturer) / `bundle.windows.nsis.installMode`(currentUser=per-user 무admin) / **UpgradeCode=productName 파생**(identifier 바꿔도 불변 = 버전 업그레이드 안정).
+- **MSI 검증 = WindowsInstaller.Installer COM**(읽기전용 Property 테이블, 설치 없이 메타 확인).
+
+### 환경 변경
+- `src-tauri/tauri.conf.json` 3줄(publisher/identifier/nsis). **앱 코드/Store 무변경(v154)**. 번들 산출물 = gitignore(target/).
+
+### Watch Out
+- **release 번들 = 이번 검증 완료**(debug만이던 직전과 달리). 단 **무서명**(코드사이닝 보류). **설치 라운드트립(.msi/.exe 실제 설치→실행→제거)은 미검증** — 사용자 테스트 권장.
+- **NSIS installMode currentUser = 빌드 config만 검증**, 무admin 설치 동작은 실제 설치 시 확인.
+- identifier 변경 → 기존 com.plot.app 로컬 데이터 경로와 분리(유저 0이라 무관, re-seed).
+
+### 머신
+집 (Windows)
+
+---
+
 ## 2026-06-02 (집/Windows) — **상용화 P1 데스크톱 셸 (Tauri 확정) + Plot 아이콘 신규**
 
 > 🎯 **다음 즉시 액션 hook**: **release 빌드 + 번들(.msi/설치파일) + 코드사이닝** 또는 **P3 export/백업 + 출시 전 안정화**. P1 셸 = Tauri 확정(WebView2 렌더 OK) + out/ embed + 아이콘 완료. SOT = `desktop-local-first.spec.md` Roadmap **P1✅ → P3**(출시범위 A). **(별개 트랙: 폴더 필터 F5 URL화 / SPA fallback deep-link / macOS WebKit 검증.)**
