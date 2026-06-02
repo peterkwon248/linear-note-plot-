@@ -8,6 +8,25 @@
 
 ---
 
+## ✅ 2026-06-02 (집/Windows, 오후 #2~#3) — P3 안정화: 그린 스위트 (#519) + 죽은 auto-enroll 서브시스템 제거 (#520) ⭐⭐⭐⭐
+
+**범위**: 출시 전 안정화 — 테스트 그린화 + 데드코드 1차.
+
+### 핵심 결정/학습 (영구)
+- **#519 그린 스위트**: pipeline date grouping 2개=stale 수정(groupByDate는 빈 버킷 숨김+Yesterday 추가=구현이 옳음, 테스트 재작성). migrate-v107 7개=`describe.skip`(문서화). **vitest(ESM)은 source `require()` 못 풂**(`vi.mock`도 require 미가로챔) — migrate lazy `require("./seeds")`(eager seed 로드 회피 의도)가 풀-실행 테스트 막음, prod-critical이라 미수정. **그룹 빈-버킷 정책**: status/priority 고정 유지·date/createdAt 숨김(의도적 비대칭).
+- **#520 데드 서브시스템 제거**: `wiki-auto-enroll.ts` 삭제 + createWikiStub/convertToWiki/revertFromWiki. **"정의 존재≠호출"**(startAutoEnrollment 호출0=타이머 미시작). live wiki=createWikiArticle로 이미 이전, convertToWiki "삭제 예정" 실행. tsc dangling0=안전망. 순 −265줄.
+
+### 완료
+- #519: 318 passed/7 skipped/0 failed. #520: wiki-auto-enroll 삭제+3액션 제거, tsc0/test0/build0. 앱 Store 불변(v154, noteType FIELD 유지).
+
+### 다음 우선순위 (P0)
+1. **P3 데드코드 잔여**: noteType==="wiki" 체크 107곳(구식 persist 데이터 검증 먼저) + stone/brick/keystone 119곳(backward-compat 유지) + 스모크.
+
+### Store version / HEAD
+**무변경(v154)**. main HEAD=796f398. 머신=집/Windows.
+
+---
+
 ## ✅ 2026-06-02 (집/Windows, 오후) — P3 백업/복원 완전성 수정 (위키 블록 메타 유실 버그) ⭐⭐⭐⭐⭐
 
 **범위**: 전체 IDB 백업/복원 감사 → 출시 블로커 1건(위키 블록 메타 유실) 수정 + 파생 캐시 리셋 + 라운드트립 테스트.

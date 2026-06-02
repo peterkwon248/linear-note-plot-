@@ -51,6 +51,26 @@
 
 ---
 
+## 📜 2026-06-02 (집/Windows, 오후 #2~#3) — P3 안정화: 그린 스위트 (#519) + 죽은 auto-enroll 제거 (#520) ⭐⭐⭐⭐
+
+**범위**: 출시 전 안정화 — 테스트 그린화 + 데드코드 1차.
+
+### 핵심 결정 (영구)
+- **vitest(ESM)은 source `require()` 못 풂**(`vi.mock`도 require 미가로챔) → require 모듈 풀-실행 테스트 불가(static import or skip). migrate-v107 skip(문서화).
+- **그룹 빈-버킷**: status/priority 고정 유지, date/createdAt 숨김(의도적 비대칭).
+- **"정의 존재≠호출"**: 데드코드 판정=reachability 전수 grep. auto-enroll 타이머 미시작=죽음.
+
+### 완료
+- #519 그린 스위트(pipeline date stale 수정 + migrate-v107 skip, 318·0fail) / #520 죽은 auto-enroll/wiki-conversion 서브시스템 제거(−265줄, live wiki=createWikiArticle 이미 이전). 앱 Store 불변(v154).
+
+### 다음 (P0)
+1. P3 데드코드 잔여(noteType 체크 107곳·stone/brick 119곳·스모크).
+
+### Store version
+무변경(v154).
+
+---
+
 ## 📜 2026-06-02 (집/Windows, 오후) — P3 백업/복원 완전성 수정 (위키 블록 메타 유실 버그) ⭐⭐⭐⭐⭐
 
 **범위**: IDB 백업/복원 감사 → 출시 블로커 1건 수정 + 파생 캐시 리셋 + 라운드트립 테스트.
