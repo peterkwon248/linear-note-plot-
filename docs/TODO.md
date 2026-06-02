@@ -50,7 +50,8 @@
 - ✅ **2026-06-02 정오**: **release 빌드 + 양쪽 번들 완료(무서명)** — `npx tauri build` → `.msi`(7.7MB) + NSIS `.exe`(6.6MB) + plot.exe 스모크(WebView2 렌더). NSIS flaky(`os error 5`=부분추출, AV 아님) 해결=캐시 삭제 재시도. config 폴리시(publisher Plot/identifier com.plot.desktop/nsis currentUser). **무서명 v0.1.0 합의**(Azure $9.99/월=한국 지역 자격 미달 공산, OV/EV=유저 0 과투자). MSI 메타 검증.
 - ✅ **2026-06-02**: Tauri 2.0 스파이크 — scaffold + out/ embed 렌더 = Tauri 확정 + 관계망 구 아이콘.
 - ✅ **2026-06-02 오후**: **백업/복원 완전성 점검+수정** — `plot-wiki-block-meta`(out-of-line keyed) 백업 format "objects"→**"kv"**(articleId 키 유실+복원 DataError 버그) + openDbForRestore keyPath=format기반 + 복원 후 mention/search 캐시 리셋 + fake-indexeddb 라운드트립 테스트(신규). 5 store 중 1개 깨짐(수정), yjs=실험 OFF라 무관, note.content=meta 존재.
-- **P3 출시 전 안정화 (다음)**: ① **pre-existing 테스트 9개** — migrate-v107 7(기존 known) + pipeline date grouping 2(`applyGrouping([],'date')` 빈입력 4버킷 기대인데 [], **신규발견** — 앱 버그 vs stale 테스트 판정 필요) ② **데드코드** noteType==="wiki" 107곳/39파일 · status stone/brick/keystone 119곳/26파일(⚠️ migrate/seeds/tests backward-compat 유지) ③ 스모크.
+- ✅ **2026-06-02 오후#2**: **그린 테스트 스위트** — pipeline date grouping 2개 stale 수정(빈 버킷 숨김+Yesterday 반영, 구현이 옳음) + migrate-v107 7개 `describe.skip`(문서화: vitest ESM이 migrate lazy require 못 풂, frozen 마이그라 prod-critical migrate.ts 미수정). **318 passed/7 skipped/0 failed**, tsc 0.
+- **P3 출시 전 안정화 (다음)**: ① **데드코드** noteType==="wiki" 107곳/39파일 · status stone/brick/keystone 119곳/26파일(⚠️ migrate/seeds/tests backward-compat 유지, `wiki-auto-enroll.ts` convertToWiki 실동작 먼저 확인, 블라인드 replace 금지) ② 스모크. ③ (별개) migrate-v107 순수 헬퍼 추출 or 번들러 하니스로 테스트 재활성.
 - **코드사이닝 = 보류**(무서명 출시): 매출/유저 생기면 도입. macOS는 별도(Apple $99+공증 필수, 하드블록). **MS Store MSIX** = 서명 우회 트랙 후보.
 - **별개 트랙**: SPA fallback(deep-link 시 `lib.rs` custom protocol) / **macOS WebKit 렌더+서명 검증**(이번 Windows만) / 폴더 필터 F5 URL화(`router.push("/notes")`+activeFolderId).
 

@@ -808,25 +808,24 @@ describe('applyGrouping', () => {
   })
 
   describe('groupBy "date"', () => {
-    it('should return groups for Today, This Week, This Month, Older', () => {
-      const groups = applyGrouping([], 'date')
-      expect(groups).toHaveLength(4)
-      expect(groups.map(g => g.key)).toEqual([
-        'Today',
-        'This Week',
-        'This Month',
-        'Older',
-      ])
+    it('should hide empty date buckets (empty input → no groups)', () => {
+      // groupByDate intentionally filters out empty buckets to reduce UI
+      // noise (unlike status/priority, which keep all fixed columns).
+      expect(applyGrouping([], 'date')).toEqual([])
     })
 
-    it('should have correct labels for date groups', () => {
-      const groups = applyGrouping([], 'date')
-      expect(groups.map(g => g.label)).toEqual([
-        'Today',
-        'This Week',
-        'This Month',
-        'Older',
-      ])
+    it('should group notes into present date buckets, in order, empties hidden', () => {
+      const notes = [
+        makeNote({ id: 'today', updatedAt: new Date().toISOString() }),
+        makeNote({ id: 'old', updatedAt: '2020-01-01T00:00:00.000Z' }),
+      ]
+      const groups = applyGrouping(notes, 'date')
+      // Only the two non-empty buckets, ordered Today → Older (DATE_KEYS order;
+      // empty Yesterday / This Week / This Month are hidden).
+      expect(groups.map(g => g.key)).toEqual(['Today', 'Older'])
+      expect(groups.map(g => g.label)).toEqual(['Today', 'Older'])
+      expect(groups.find(g => g.key === 'Today')!.notes.map(n => n.id)).toEqual(['today'])
+      expect(groups.find(g => g.key === 'Older')!.notes.map(n => n.id)).toEqual(['old'])
     })
   })
 
