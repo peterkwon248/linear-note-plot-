@@ -51,6 +51,24 @@
 
 ---
 
+## 📜 2026-06-02 (집/Windows) — 상용화 P1 데스크톱 셸 (Tauri 확정) + Plot 아이콘 ⭐⭐⭐⭐⭐
+
+**범위**: Tauri 2.0 셸 스파이크 → `out/` embed 정적 렌더(WebView2) = Tauri 확정 + 관계망 구 아이콘.
+
+### 핵심 결정 (영구)
+- **Tauri 확정**(Electron 불필요, Windows WebView2=Chromium). macOS WebKit은 Mac서만 검증(미검증).
+- **debug=devUrl / release=frontendDist embed** (devUrl 제거 → debug도 out/ embed).
+- **아이콘 = 관계망 구**(사용자 지정, brand "네트워크 X" 결정 갱신). 색=다크 그레이+외곽선(라이트/다크 양쪽 대비).
+- **SPA fallback 현재 불필요**(release F5 비활성), deep-link 시 후속.
+
+### 완료
+- `src-tauri/` scaffold + out/ 검증(50p) + 기동 렌더 + 아이콘(app-icon.svg→tauri icon). 앱/Store 무변경(v154).
+
+### 다음 (P0)
+1. release 번들(.msi)+코드사이닝 / P3 export·백업+안정화. 2. (별개) 폴더 필터 F5 URL화 / macOS WebKit 검증.
+
+---
+
 ## 📜 2026-06-01 (집/Windows, 저녁) — 상용화 P0 캐치올 라우팅(#513) + 디테일바 peek(#514) + 타임라인 막대 약화 ⭐⭐⭐⭐⭐
 
 **범위**: 데스크톱 출시 첫 코드. 동적 4개 → 캐치올 `[...slug]` + `output:export`(prod만) → `out/` 50p. + 디테일바 peek + 타임라인 막대 약화.

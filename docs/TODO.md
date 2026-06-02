@@ -3,11 +3,13 @@
 > 우선순위 기반 작업 목록. **P0 = 다음 세션 즉시 시작점** (NEXT-ACTION.md 폐지, 2026-05-12).
 > 완료 항목은 즉시 삭제. 자세한 history는 SESSION-LOG.md + MEMORY.md.
 
-**마지막 갱신**: 2026-06-01 (after-work 저녁, 집/Windows) — **캐치올 라우팅(#513) + 디테일바 peek(#514) + 타임라인 막대 약화**. `output:export`(prod만) → `out/` 50p = 데스크톱 P0 완료. **다음 P0 = P1 Tauri 셸**(out/ 로드+SPA fallback) 또는 **폴더 필터 F5 URL화**(사이드바 폴더 클릭이 `router.push("/notes")`라 필터 URL 없음). 후속: start chip 색·grouping 비대칭·hydration mismatch. 디자인 ③ 진단 보류 유지.
+**마지막 갱신**: 2026-06-02 (after-work, 집/Windows) — **P1 데스크톱 셸 (Tauri 확정) + Plot 아이콘**. src-tauri scaffold + out/ embed 정적 렌더(WebView2) + 다크 그레이 관계망 구 아이콘. **다음 P0 = release 빌드+번들(.msi)+코드사이닝** 또는 **P3 export/백업+안정화**. 별개: 폴더 필터 F5 URL화 / SPA fallback deep-link / macOS WebKit 검증. 디자인 ③ 진단 보류 유지.
 
 ---
 
 ## 🟣 P0 — 즉시 (cross-machine 진입점, 2026-05-31 — IA 헌법 적용 단계)
+
+> ✅ **2026-06-02** (이 PR): **P1 데스크톱 셸 (Tauri 확정) + Plot 아이콘** — `src-tauri/` scaffold(Tauri 2.0, frontendDist=../out, `com.plot.app`, plot.exe, 창 1280×800) + `devUrl` 제거(debug도 out/ embed) + out/ 빌드 검증(50p) + 기동(WebView2 Chromium 147 렌더: Home/사이드바/웰컴노트) + 다크 그레이 관계망 구 아이콘(`app-icon.svg`→tauri icon, 라이트/다크 양쪽 대비). `@tauri-apps/cli` devDep. 앱/Store 무변경(v154). **Tauri 확정**(Electron 폴백 불필요).
 
 > ✅ **2026-06-01 저녁** (PR #513): **캐치올 라우팅** — 동적 4개(folder/tag/label/books [id]) → 단일 클라이언트 캐치올 `app/(app)/[...slug]` + folder UI 추출(`folder-detail-view`) + `output:export`(prod만, env-gated) + `generateStaticParams` placeholder. **`out/` 50p+404.html+`_.html`.** tsc 0, dev catch-all 동적 렌더 검증.
 > ✅ **2026-06-01 저녁** (PR #514): **디테일바 peek** — `NotesTableView` onRowClick single click 시 `sidePanelOpen`이면 `sidePanelContext` 갱신(`handleRowPreview`). 디테일이 클릭 따라옴 + 폴더 전환 stale 해소.
@@ -41,12 +43,15 @@
 
 감사 중 발견: `comments`(`deleteComment` hard)·`folders`(`deleteFolder` hard, cascade는 완벽)는 soft-trash 없음 → 실수 삭제 시 복구 불가. soft-trash(trashed 필드 + restore + trash UI 노출) 추가. **schema 변경 + store version bump 동반**이라 PR2급 신중 작업(데이터 모델 변경 분리 원칙).
 
-### 0.02. **🔴 P0 #1: P1 데스크톱 셸 (Tauri 스파이크) + SPA fallback** ← 다음 시작점
+### 0.02. **🔴 P0 #1: release 빌드 + 번들(.msi) + 코드사이닝** ← 다음 시작점
 
-> SOT: `desktop-local-first.spec.md` Roadmap P1. **캐치올로 `output:export` + `out/` 생성 완료(#513, 2026-06-01 저녁).** 다음 = 데스크톱 셸.
+> SOT: `desktop-local-first.spec.md` Roadmap **P1✅(2026-06-02 Tauri 확정)** → P3. **출시범위 A = P0+P1+P3**(P2 `.md` 저장은 v1.1).
 
-- **Tauri 1일 스파이크**: `out/` 정적 서빙 + TipTap/d3 그래프 렌더 확인 → Tauri/Electron 확정 + 창/아이콘/앱명(`my-project`→Plot).
-- **SPA fallback**(미매치 경로 404→index rewrite): `/folder/{id}` 등 hard-load가 `out/`에 HTML 0이라 404 → 셸이 index로 fallback + `CatchAllRoute`가 `usePathname` 복원. (dev/현 서버는 catch-all 동적 처리, 정적 서빙만 fallback 필요.)
+- ✅ **2026-06-02**: Tauri 2.0 스파이크 완료 — `src-tauri/` scaffold + out/ embed 정적 렌더(WebView2) = **Tauri 확정** + 다크 그레이 관계망 구 아이콘. (이번 세션 debug 빌드만.)
+- **release 빌드**: `npx tauri build`(release+번들) → `.msi`/`.exe` 설치파일 + 실행 검증.
+- **코드사이닝**(Win)/공증(Mac) + 자동업데이트 + 앱 메타.
+- **P3 후속**: export/import/백업(`settings/backup` 점검) + 출시 전 안정화(QA·데드코드·스모크).
+- **별개 트랙**: SPA fallback(deep-link 시 `lib.rs` custom protocol — release F5 비활성이라 현재 불필요) / **macOS WebKit 렌더 검증**(이번 Windows WebView2만) / 폴더 필터 F5 URL화(`router.push("/notes")`+activeFolderId).
 
 ### 0.025. **🟡 P0 (캐치올 후속): 폴더 필터 F5 URL화**
 

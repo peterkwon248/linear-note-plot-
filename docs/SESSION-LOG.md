@@ -6,6 +6,45 @@
 
 ---
 
+## 2026-06-02 (집/Windows) — **상용화 P1 데스크톱 셸 (Tauri 확정) + Plot 아이콘 신규**
+
+> 🎯 **다음 즉시 액션 hook**: **release 빌드 + 번들(.msi/설치파일) + 코드사이닝** 또는 **P3 export/백업 + 출시 전 안정화**. P1 셸 = Tauri 확정(WebView2 렌더 OK) + out/ embed + 아이콘 완료. SOT = `desktop-local-first.spec.md` Roadmap **P1✅ → P3**(출시범위 A). **(별개 트랙: 폴더 필터 F5 URL화 / SPA fallback deep-link / macOS WebKit 검증.)**
+>
+> **첫 스텝**: `npx tauri build`(release+번들) → `.msi`/`.exe` 설치파일 + 실행 검증. 또는 P3 백업(settings/backup) 점검.
+>
+> **⚠️ 잊지 말 것**: **Tauri debug=devUrl / release=frontendDist embed**. `devUrl` 제거해야 debug도 out/ embed(이번 함정 = 초기 ERR_CONNECTION_REFUSED). `cargo build` 직접 = debug 프로파일. 한글 경로(리니어 노트앱) cargo 빌드 OK. PowerShell native stderr가 NativeCommandError로 빨갛게 떠도 exit 0이면 성공.
+>
+> **머신**: 집(Windows). **main HEAD**: 이 PR 머지 후.
+
+### 완료 (Tauri P1 셸 + 아이콘)
+- **Tauri 2.0 scaffold** `src-tauri/`(Cargo.toml/tauri.conf.json/build.rs/main.rs/lib.rs/capabilities/icons) + `@tauri-apps/cli` devDep. `frontendDist=../out`, id `com.plot.app`, 창 1280×800, Cargo `[package] name` app→plot.
+- **out/ 검증**: `npx next build --webpack`(turbopack worktree 회피) → 50p + placeholder `_.html` + 404. `trailingSlash:false` → `/notes`=`out/notes.html`(파일).
+- **Tauri 기동 = 확정**: plot.exe → WebView2(Chromium 147)서 out/ embed 정적 SPA 렌더(Home 대시보드/사이드바/웰컴노트 1개=v154 prod seed, IDB origin 분리 확인). Electron 폴백 불필요.
+- **devUrl 함정 해결**: ERR_CONNECTION_REFUSED(debug가 devUrl localhost:3002 로드) → `devUrl`+`beforeDevCommand` 제거 → frontendDist(out/) embed.
+- **Plot 아이콘 신규**: 다크 그레이 그라데이션(#3A3A44→#1B1B22) + 미묘 외곽선(#54545F) + 흰 지식 관계망 구(노드-엣지 삼각망 + 강조 허브 링 3). `tauri icon src-tauri/app-icon.svg` → 전 크기+ico/icns+모바일. 라이트/다크 작업표시줄 양쪽 대비 합성 검증(System.Drawing).
+
+### 브레인스토밍 & 큰 결정 (영구)
+- **Tauri 확정**(Electron 폴백 불필요): Windows WebView2=Chromium이라 렌더 통과. ⚠️ 진짜 webview 리스크(macOS WebKit/WKWebView 쿼크)는 **Mac에서만 판가름** — 이 머신(Windows)선 검증 불가.
+- **아이콘 = 지식 관계망 구**(사용자 직접 지정): 메모리 "brand mark=글자 initials, 네트워크 X"([[project_brand_mark_pattern]]) 결정을 **갱신** — Plot 정체성(팔란티어×제텔카스텐)에 관계망 구가 적합. 작업원칙 #8(사용자 직관 우선).
+- **아이콘 색 = 다크 그레이**(Linear 정통 B안, 보라→파랑 brand 대신): 라이트/다크 양쪽 작업표시줄 대비. **순검정은 다크 배경 묻힘** → 짙은 그레이+외곽선(실제 Linear 아이콘 방식). 채도색(보라/청록)은 양쪽 색상대비 유리하나 사용자가 Linear 다크 선택.
+- **SPA fallback 현재 불필요**: release F5 비활성 + index-start client-routing이라 hard-load 진입점 없음. deep-link 기능 시 `lib.rs` custom protocol 후속.
+
+### 기술 학습 (영구)
+- **Tauri 2.0 debug=devUrl / release=frontendDist embed**(devUrl 제거 시 debug도 embed). **tauri icon**=PNG/SVG source(SVG `prefers-color-scheme` 미디어쿼리 무시→색 깨짐, 고정색 source 필요, 1024 권장). **한글 경로 cargo 빌드 OK**. PS native stderr=NativeCommandError 래핑(exit 0=성공). **System.Drawing**(PS5.1) 흰/검정 배경 합성 = 작업표시줄 대비 self-check. output:export `trailingSlash:false`→`/route`=`route.html`.
+
+### 환경 변경
+- 신규: `src-tauri/` 전체(target/ gitignore) + `src-tauri/app-icon.svg`(아이콘 source). `package.json`+`package-lock.json`(@tauri-apps/cli devDep). **앱 코드/Store 무변경(v154)**.
+
+### Watch Out
+- **release 번들 미검증**: 이번엔 debug 빌드만. `tauri build`(release) + `.msi`/설치파일 + 코드사이닝(Win)/공증(Mac)은 다음.
+- **macOS WebKit 렌더 미검증**(Windows 머신). Mac에서 TipTap/d3 쿼크 확인 필요.
+- **모바일 아이콘도 생성됨**(iOS/Android, P4용 — 작은 png라 둠).
+
+### 머신
+집 (Windows)
+
+---
+
 ## 2026-06-01 (집/Windows, 저녁) — **상용화 P0 캐치올 라우팅(#513) + 디테일바 peek(#514) + 타임라인 막대 약화**
 
 > 🎯 **다음 즉시 액션 hook**: **P1 데스크톱 셸 (Tauri 스파이크)**. 캐치올로 `output:export` 빌드 통과 + `out/` 생성 = **P0 완료**. 다음 = Tauri 창에 `out/` 로드 + TipTap/d3 렌더 확인 → Tauri/Electron 확정 + **SPA fallback**(미매치 경로 404→index rewrite)로 `/folder/{id}` hard-load 복원 완성. SOT = `desktop-local-first.spec.md` Roadmap P1. **(또는 먼저 "폴더 필터 F5 URL화"** — 사이드바 폴더/태그 클릭이 `router.push("/notes")`라 필터가 URL에 없어 F5 시 리셋, 캐치올과 별개 layer.)
