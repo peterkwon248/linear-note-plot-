@@ -127,8 +127,6 @@ export function NoteEditor({ noteId: propNoteId, onClose, pane = 'primary', defa
   const secondaryGoForward = usePlotStore((s) => s.secondaryGoForward)
   const secondaryHistoryIndex = usePlotStore((s) => s.secondaryHistoryIndex)
   const secondaryHistoryLen = usePlotStore((s) => s.secondaryHistory.length)
-  const convertToWiki = usePlotStore((s) => s.convertToWiki)
-  const revertFromWiki = usePlotStore((s) => s.revertFromWiki)
   const allTags = usePlotStore((s) => s.tags)
   const relations = usePlotStore((s) => s.relations)
   const isActivePane = useIsActivePane()

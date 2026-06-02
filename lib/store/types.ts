@@ -490,9 +490,6 @@ export interface PlotState {
   // Wiki
   setNoteAliases: (noteId: string, aliases: string[]) => void
   setWikiInfobox: (noteId: string, infobox: WikiInfoboxEntry[]) => void
-  createWikiStub: (title: string, aliases?: string[]) => string
-  convertToWiki: (noteId: string) => void
-  revertFromWiki: (noteId: string) => void
 
   // Wiki Collections
   addToCollection: (wikiNoteId: string, item: Omit<WikiCollectionItem, 'id' | 'addedAt'>) => void

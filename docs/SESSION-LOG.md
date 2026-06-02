@@ -6,6 +6,40 @@
 
 ---
 
+## 2026-06-02 (집/Windows, 오후 #3) — **P3 안정화: 죽은 auto-enroll/wiki-conversion 서브시스템 제거 (데드코드)**
+
+> 🎯 **다음 즉시 액션 hook**: **P3 데드코드 잔여** — ① **`noteType==="wiki"` 체크 107곳/39파일** 제거(이제 live setter 0이지만 ⚠️ 구식 persist 데이터에 noteType="wiki" 잔존 가능 → migrate가 normalize하는지/방어 체크 유지할지 검증 먼저) ② **status stone/brick/keystone 119곳/26파일** 코스메틱 rename(⚠️ migrate/seeds/tests backward-compat 문자열 유지, dnd id `col-stone` 등 비-load-bearing만) + 스모크. SOT=`desktop-local-first.spec.md` Roadmap P3.
+>
+> **첫 스텝**: noteType="wiki" — migrate.ts가 기존 wiki-typed 노트를 어떻게 처리하는지(normalize?/보존?) 확인 → 체크 제거 안전성 판정.
+>
+> **⚠️ 잊지 말 것**: ① **"정의 존재 ≠ 호출"** — startAutoEnrollment export됐지만 호출 0(타이머 앱서 시작 안 됨), note-editor가 convertToWiki/revertFromWiki 구독했지만 호출 0. **전수 grep 후 제거**. ② live wiki 생성 = `createWikiArticle`(wikiArticles 슬라이스), createWikiStub(noteType="wiki" 노트)는 레거시(이미 이전됨, MEMORY:6337). ③ 죽은 서브시스템 제거 = **tsc가 dangling 안전망**.
+>
+> **머신**: 집(Windows). **main HEAD**: 이 PR 머지 후.
+
+### 완료 (죽은 서브시스템 제거)
+- **`lib/wiki-auto-enroll.ts` 삭제**: detectEnrollmentCandidates/detectTagCandidates/runAutoEnrollment/startAutoEnrollment. **startAutoEnrollment 호출처 0**(전수 grep)=타이머 앱서 시작 안 됨=죽음. 아무것도 import 안 함.
+- **notes.ts 3액션 제거**: createWikiStub/convertToWiki/revertFromWiki. 참조=죽은 auto-enroll + 죽은 note-editor 구독뿐. live wiki 생성은 `createWikiArticle`로 이미 이전. convertToWiki="삭제 예정" 결정 실행.
+- **types.ts 선언 3개 + note-editor.tsx 죽은 구독 2줄**(130-131) 제거.
+
+### 감사 결과 (영구)
+- **noteType="wiki" live setter = 0** (제거 후). 단 noteType FIELD + 107곳 체크는 잔존 → PR-B(구식 persist 데이터 검증 후 제거).
+- **createWikiStub vs createWikiArticle**: WikiArticle=별도 entity(wikiArticles 슬라이스). createWikiStub=레거시 noteType="wiki" 노트. live wiki space는 wikiArticles만 표시.
+
+### 검증
+- tsc 0(**dangling 0=다른 참조 없음 확인**) / test 318 passed·7 skipped·0 failed / build 0.
+
+### 환경 변경
+- 삭제: `lib/wiki-auto-enroll.ts`. 수정: notes.ts(3액션)·types.ts(3선언)·note-editor.tsx(2구독). **noteType FIELD·Store version 불변(v154)**. ("wiki_converted" 이벤트 verb는 잔존=무해 데드 라벨.)
+
+### Watch Out
+- noteType="wiki" 체크 107곳 = PR-B (**구식 데이터 noteType="wiki" 잔존 가능 → 방어 체크 섣불리 제거 X**).
+- "wiki_converted" 이벤트 verb 잔존(EVENT_CONFIG 데드 라벨, 무해).
+
+### 머신
+집 (Windows)
+
+---
+
 ## 2026-06-02 (집/Windows, 오후 #2) — **P3 안정화: 그린 테스트 스위트 (pipeline date 수정 + migrate-v107 skip)**
 
 > 🎯 **다음 즉시 액션 hook**: **P3 안정화 잔여 — 데드코드 정리** (`noteType==="wiki"` 107곳/39파일 · status stone/brick/keystone 119곳/26파일, ⚠️ migrate/seeds/tests backward-compat 유지 + `wiki-auto-enroll.ts` convertToWiki 실동작 먼저 확인, 블라인드 replace 금지) + 스모크. 테스트 스위트=그린(318 passed/7 skipped/0 failed). SOT=`desktop-local-first.spec.md` Roadmap P3.
