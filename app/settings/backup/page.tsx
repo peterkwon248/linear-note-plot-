@@ -4,6 +4,8 @@ import { useRef, useState } from "react"
 import { usePlotStore } from "@/lib/store"
 import { useSettingsStore } from "@/lib/settings-store"
 import { downloadFullBackup, formatSize, restoreFromFile, type PlotBackup, type RestoreSummary } from "@/lib/idb-backup"
+import { clearMentionIndex } from "@/lib/mention-index-store"
+import { clearCache as clearSearchCache } from "@/lib/search/search-index-db"
 import { useT } from "@/lib/i18n"
 import {
   SettingsPageTitle,
@@ -82,6 +84,11 @@ export default function BackupPage() {
     setRestoreSummary(null)
     try {
       const summary = await restoreFromFile(file)
+      // The restored DBs replaced the source data, but the derived caches
+      // (backlink edges, search index) still reflect the PRE-restore state.
+      // Clear them so they rebuild from the restored data after reload.
+      await clearMentionIndex()
+      await clearSearchCache()
       setRestoreSummary(summary)
       setRestoreState("done")
       // Reload so the Zustand store re-hydrates from the freshly restored

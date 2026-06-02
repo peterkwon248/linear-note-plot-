@@ -12,8 +12,10 @@
  * - plot-wiki-block-meta (wiki block metadata)
  * - plot-attachments (attachment blobs — base64 encoded)
  *
- * Excluded:
- * - plot-search-cache (FlexSearch — regeneratable on demand)
+ * Excluded (regenerated on demand; reset after restore so they rebuild
+ * from the restored data instead of stale pre-restore state):
+ * - plot-search-cache (FlexSearch index)
+ * - plot-mention-index (backlink edges)
  */
 
 export type BackupFormat = "kv" | "objects" | "attachments"
@@ -166,7 +168,10 @@ const BACKUP_TARGETS: Array<{
   { dbName: "plot-zustand", storeName: "kv", format: "kv" },
   { dbName: "plot-note-bodies", storeName: "bodies", format: "objects" },
   { dbName: "plot-wiki-block-bodies", storeName: "bodies", format: "objects" },
-  { dbName: "plot-wiki-block-meta", storeName: "blocks", format: "objects" },
+  // wiki block metadata is keyed OUT-OF-LINE by articleId (value = WikiBlock[]),
+  // so it must use "kv" — "objects" would drop the articleId keys on dump and
+  // fail to re-key on restore (put without key on a keyless store).
+  { dbName: "plot-wiki-block-meta", storeName: "blocks", format: "kv" },
   { dbName: "plot-attachments", storeName: "blobs", format: "attachments" },
 ]
 
@@ -300,7 +305,7 @@ function base64ToArrayBuffer(b64: string): ArrayBuffer {
 /** Open the target DB for writing, creating the object store if missing.
  *  Tries a plain (versionless) open first; if the required store is absent,
  *  re-opens with version + 1 and runs an upgrade transaction. */
-function openDbForRestore(dbName: string, storeName: string): Promise<IDBDatabase> {
+function openDbForRestore(dbName: string, storeName: string, format: BackupFormat): Promise<IDBDatabase> {
   return new Promise((resolve, reject) => {
     const req = indexedDB.open(dbName)
     req.onerror = () => reject(req.error)
@@ -317,10 +322,11 @@ function openDbForRestore(dbName: string, storeName: string): Promise<IDBDatabas
       upgradeReq.onupgradeneeded = () => {
         const upgraded = upgradeReq.result
         if (!upgraded.objectStoreNames.contains(storeName)) {
-          // The "kv" store from `plot-zustand` is keyed externally;
-          // every other Plot store keys by an `id` property. Pick the
-          // shape from the backup target list.
-          const keyPath = storeName === "kv" ? undefined : "id"
+          // "kv" dumps are keyed out-of-line (the key is passed to put());
+          // every other format stores objects with an in-line "id" keyPath.
+          // Keyed by FORMAT, not store name — plot-wiki-block-meta's "blocks"
+          // store is also out-of-line (key = articleId), so it uses "kv" too.
+          const keyPath = format === "kv" ? undefined : "id"
           upgraded.createObjectStore(storeName, keyPath ? { keyPath } : undefined)
         }
       }
@@ -331,7 +337,7 @@ function openDbForRestore(dbName: string, storeName: string): Promise<IDBDatabas
 
 async function restoreDump(dump: BackupDBDump): Promise<{ written: number }> {
   if (dump.missing) return { written: 0 }
-  const db = await openDbForRestore(dump.dbName, dump.storeName)
+  const db = await openDbForRestore(dump.dbName, dump.storeName, dump.format)
   try {
     const tx = db.transaction(dump.storeName, "readwrite")
     const store = tx.objectStore(dump.storeName)
