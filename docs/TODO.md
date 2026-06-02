@@ -3,7 +3,7 @@
 > 우선순위 기반 작업 목록. **P0 = 다음 세션 즉시 시작점** (NEXT-ACTION.md 폐지, 2026-05-12).
 > 완료 항목은 즉시 삭제. 자세한 history는 SESSION-LOG.md + MEMORY.md.
 
-**마지막 갱신**: 2026-06-02 (after-work, 집/Windows, 정오) — **release 빌드 + .msi/.exe 번들(무서명) + 출시 config 폴리시**. `npx tauri build` → 양쪽 번들(`.msi` 7.7MB + NSIS `.exe` 6.6MB) + plot.exe 스모크. NSIS flaky(`os error 5` 부분추출) 해결=캐시 삭제 재시도. config: publisher Plot/identifier com.plot.desktop/nsis currentUser. **무서명 v0.1.0 합의**(Azure 지역 자격 미달). **다음 P0 = P3 export/백업 + 출시 전 안정화**. 별개: 폴더 필터 F5 URL화 / macOS 서명·공증 / MS Store MSIX. 디자인 ③ 진단 보류 유지.
+**마지막 갱신**: 2026-06-02 (after-work, 집/Windows, 오후) — **P3 백업/복원 완전성 수정** (위키 블록 메타 유실 버그). `plot-wiki-block-meta`(out-of-line keyed: key=articleId, value=WikiBlock[])가 백업 format "objects"라 articleId 키 유실+복원 실패 → "kv"로 수정 + openDbForRestore keyPath=format기반 + 복원 후 mention/search 캐시 리셋 + fake-indexeddb 라운드트립 테스트. tsc0/test(신규실패0)/빌드0. **다음 = P3 출시 전 안정화** (pre-existing 테스트 9개[migrate-v107 7 + pipeline date 2] + 데드코드 noteType/stone-brick + 스모크). 직전: release 빌드+번들(무서명). 디자인 ③ 보류 유지.
 
 ---
 
@@ -43,13 +43,14 @@
 
 감사 중 발견: `comments`(`deleteComment` hard)·`folders`(`deleteFolder` hard, cascade는 완벽)는 soft-trash 없음 → 실수 삭제 시 복구 불가. soft-trash(trashed 필드 + restore + trash UI 노출) 추가. **schema 변경 + store version bump 동반**이라 PR2급 신중 작업(데이터 모델 변경 분리 원칙).
 
-### 0.02. **🔴 P0 #1: P3 — export/import/백업 점검 + 출시 전 안정화** ← 다음 시작점
+### 0.02. **🔴 P0 #1: P3 — 출시 전 안정화 (백업/복원 완전성 점검+수정 ✅)** ← 다음 시작점
 
-> SOT: `desktop-local-first.spec.md` Roadmap **P1✅(2026-06-02 Tauri 확정 + release 번들)** → **P3**. **출시범위 A = P0+P1+P3**(P2 `.md` 저장은 v1.1).
+> SOT: `desktop-local-first.spec.md` Roadmap **P1✅(Tauri 확정+release 번들)** → **P3**(백업 완전성✅ → 안정화 잔여). **출시범위 A = P0+P1+P3**(P2 `.md` 저장은 v1.1).
 
 - ✅ **2026-06-02 정오**: **release 빌드 + 양쪽 번들 완료(무서명)** — `npx tauri build` → `.msi`(7.7MB) + NSIS `.exe`(6.6MB) + plot.exe 스모크(WebView2 렌더). NSIS flaky(`os error 5`=부분추출, AV 아님) 해결=캐시 삭제 재시도. config 폴리시(publisher Plot/identifier com.plot.desktop/nsis currentUser). **무서명 v0.1.0 합의**(Azure $9.99/월=한국 지역 자격 미달 공산, OV/EV=유저 0 과투자). MSI 메타 검증.
 - ✅ **2026-06-02**: Tauri 2.0 스파이크 — scaffold + out/ embed 렌더 = Tauri 확정 + 관계망 구 아이콘.
-- **P3 (다음)**: export/import/백업(`app/(app)/settings/backup` + `restoreFromBackup` 라운드트립 점검) + 출시 전 안정화(데드코드 noteType wiki·stone/brick / 스모크 / QA).
+- ✅ **2026-06-02 오후**: **백업/복원 완전성 점검+수정** — `plot-wiki-block-meta`(out-of-line keyed) 백업 format "objects"→**"kv"**(articleId 키 유실+복원 DataError 버그) + openDbForRestore keyPath=format기반 + 복원 후 mention/search 캐시 리셋 + fake-indexeddb 라운드트립 테스트(신규). 5 store 중 1개 깨짐(수정), yjs=실험 OFF라 무관, note.content=meta 존재.
+- **P3 출시 전 안정화 (다음)**: ① **pre-existing 테스트 9개** — migrate-v107 7(기존 known) + pipeline date grouping 2(`applyGrouping([],'date')` 빈입력 4버킷 기대인데 [], **신규발견** — 앱 버그 vs stale 테스트 판정 필요) ② **데드코드** noteType==="wiki" 107곳/39파일 · status stone/brick/keystone 119곳/26파일(⚠️ migrate/seeds/tests backward-compat 유지) ③ 스모크.
 - **코드사이닝 = 보류**(무서명 출시): 매출/유저 생기면 도입. macOS는 별도(Apple $99+공증 필수, 하드블록). **MS Store MSIX** = 서명 우회 트랙 후보.
 - **별개 트랙**: SPA fallback(deep-link 시 `lib.rs` custom protocol) / **macOS WebKit 렌더+서명 검증**(이번 Windows만) / 폴더 필터 F5 URL화(`router.push("/notes")`+activeFolderId).
 

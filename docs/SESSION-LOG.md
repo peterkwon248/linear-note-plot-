@@ -6,6 +6,48 @@
 
 ---
 
+## 2026-06-02 (집/Windows, 오후) — **P3 백업/복원 완전성 수정 (위키 블록 메타 유실 버그) + 라운드트립 테스트**
+
+> 🎯 **다음 즉시 액션 hook**: **P3 출시 전 안정화 잔여** — ① pre-existing 테스트 9개 정리(migrate-v107 7=기존 known, pipeline date grouping 2=`applyGrouping([],'date')` 빈입력 4버킷 기대인데 [] 반환=신규발견) ② 데드코드(noteType==="wiki" 107곳/39파일 · status stone/brick/keystone 119곳/26파일) ③ 스모크. **백업/복원 완전성=완료**. SOT=`desktop-local-first.spec.md` Roadmap P3. **(별개: 폴더 필터 F5 / macOS 서명·공증 / openDbForRestore 버전-bump latent.)**
+>
+> **첫 스텝**: pipeline date grouping 2개 — 실제 앱 버그(날짜 그룹 깨짐)인지 stale 테스트인지 `applyGrouping` date 로직 확인 → 수정 or 테스트 정정. 그 다음 데드코드.
+>
+> **⚠️ 잊지 말 것**: ① **IDB 백업 format = keyPath 유무** — out-of-line(keyless, `put(value,key)`)은 `"kv"`(키 보존), in-line(keyPath "id")은 `"objects"`. wiki-block-meta가 keyless인데 "objects"라 유실됐음. 새 IDB store 추가 시 백업 타겟 format 확인 의무. ② **파생 캐시(mention-index/search-cache/yjs)는 백업 제외 → 복원 시 리셋**(stale 방지). yjs=실험 OFF 기본이라 무관. ③ fake-indexeddb/auto로 node test env서 IDB 라운드트립 테스트 가능.
+>
+> **머신**: 집(Windows). **main HEAD**: 이 PR 머지 후.
+
+### 완료 (백업/복원 완전성)
+- **🔴 위키 블록 메타 유실 버그 수정** (`lib/idb-backup.ts`): `plot-wiki-block-meta`는 out-of-line 키(key=articleId, value=`WikiBlock[]`)인데 백업 format이 "objects"(keyPath "id" 가정)라 ① 백업 시 `getAll()`이 articleId 키 유실 ② 복원 시 `put(배열)` keyless store에서 DataError. → format "objects"→**"kv"**(getAllKeys+getAll). 위키 article 블록 구조가 백업→복원(특히 새 기기 이전)으로 유실되던 **출시 블로커**.
+- **openDbForRestore keyPath = format 기반**: `storeName==="kv"` → `format==="kv" ? undefined : "id"`. fresh 머신 복원 시 keyless store(wiki-block-meta) 올바르게 생성.
+- **복원 후 파생 index 리셋** (`backup/page.tsx`): `clearMentionIndex()` + `clearCache()`(search) 호출 → 백링크/검색이 복원 데이터로 재생성(기존엔 옛 노트 가리키는 stale).
+- **라운드트립 테스트** (`lib/__tests__/idb-backup.test.ts`, 신규): fake-indexeddb로 5 store 전부 backup→변조→restore→원본 검증. wiki-block-meta 키 보존 직접 검증.
+
+### 감사 결과 (영구)
+- **5 백업 타겟 중 4개 정상**(plot-zustand kv / note-bodies objects / wiki-block-bodies objects / attachments), **wiki-block-meta만 깨짐**(수정).
+- **파생/제외**: mention-index(백링크)·search-cache(FlexSearch)=재생성→복원 시 리셋. **yjs(`plot-yjs:*`)=실험 OFF 기본**(Collaboration이 `isYjsExperimentEnabled` gating, ydoc 없으면 미바인드)이라 기본 유저 콘텐츠 source=plot-note-bodies→백업 완전. 실험 켠 유저만 yjs 미백업(엣지).
+- **note.content는 store meta에 존재**(persistBody가 content+contentJson 둘 다) → "notes only" export 빈 게 아님.
+
+### 기술 학습 (영구)
+- **IDB 백업 format = keyPath 유무**: keyless(out-of-line)=`"kv"`, keyPath "id"(in-line)=`"objects"`. keyless인 store = plot-zustand·wiki-block-meta·mention-index·search-cache. 신규 store는 확인 후 타겟 추가.
+- **복원 = 5 target만 clear+write** → 파생 캐시(mention/search) 별도 리셋 필요(안 하면 stale). yjs는 experiment.
+- **fake-indexeddb/auto**(node test env): structuredClone(Node18+)·btoa/atob·Blob 글로벌 사용 가능. IDB 라운드트립 테스트.
+- **openDbForRestore latent**: store 없을 때 version+1 생성 → 앱이 더 낮은 DB_VERSION으로 열면 VersionError 가능(실제론 앱이 먼저 DB 생성하므로 미발생, 별도 트랙).
+
+### 환경 변경
+- `lib/idb-backup.ts`(format+keyPath) + `app/settings/backup/page.tsx`(파생 리셋) + `lib/__tests__/idb-backup.test.ts`(신규) + `package.json`(fake-indexeddb devDep). **앱 Store 무변경(v154).**
+
+### 검증
+- tsc 0 / 라운드트립 테스트 통과 / 전체 테스트 = **신규 실패 0**(기존 9개: migrate-v107 7 + pipeline date 2) / production 빌드(`--webpack`) exit 0.
+
+### Watch Out
+- **pre-existing 테스트 9개**: migrate-v107 7(TODO 기존 known) + pipeline date grouping 2(신규 발견). 안정화 트랙서 정리.
+- **openDbForRestore 버전 bump latent**(위) / yjs 실험 켠 유저 백업 미포함.
+
+### 머신
+집 (Windows)
+
+---
+
 ## 2026-06-02 (집/Windows, 정오) — **상용화 P1 release 빌드 + .msi/.exe 번들(무서명) + 출시 config 폴리시**
 
 > 🎯 **다음 즉시 액션 hook**: **P3 — export/import/백업(`app/(app)/settings/backup`) 점검 + 출시 전 안정화**(데드코드·스모크·QA). release 빌드 + 양쪽 번들(무서명) = 완료. 출시범위 A = P0+P1+**P3**가 마지막. 코드사이닝은 보류(무서명 v0.1.0 합의). SOT = `desktop-local-first.spec.md` Roadmap P3. **(별개 트랙: 폴더 필터 F5 URL화 / macOS WebKit·서명·공증 / Microsoft Store MSIX.)**

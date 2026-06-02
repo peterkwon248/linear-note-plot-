@@ -51,6 +51,26 @@
 
 ---
 
+## 📜 2026-06-02 (집/Windows, 오후) — P3 백업/복원 완전성 수정 (위키 블록 메타 유실 버그) ⭐⭐⭐⭐⭐
+
+**범위**: IDB 백업/복원 감사 → 출시 블로커 1건 수정 + 파생 캐시 리셋 + 라운드트립 테스트.
+
+### 핵심 결정 (영구)
+- **🔴 wiki-block-meta 유실 버그**: out-of-line 키(articleId)인데 백업 format "objects"라 키 유실+복원 DataError → **"kv"** + openDbForRestore keyPath=format기반.
+- **IDB 백업 format = keyPath 유무**: keyless=`"kv"`, keyPath "id"=`"objects"`. 신규 store 추가 시 확인.
+- **복원 후 파생 캐시 리셋**: mention-index+search-cache(`clearMentionIndex`/`clearCache`). yjs=실험 OFF 기본이라 무관.
+
+### 완료
+- 5 타겟 중 wiki-block-meta 수정 + 복원 리셋 + fake-indexeddb 라운드트립 테스트. 앱 Store 무변경(v154). tsc0/test/빌드0.
+
+### 다음 (P0)
+1. P3 안정화(테스트 9개 + 데드코드 + 스모크). 2. (별개) 폴더 필터 F5 / macOS 서명.
+
+### Store version
+무변경(v154).
+
+---
+
 ## 📜 2026-06-02 (집/Windows, 정오) — 상용화 P1 release 빌드 + .msi/.exe 번들(무서명) + 출시 config 폴리시 ⭐⭐⭐⭐⭐
 
 **범위**: `npx tauri build` release + 양쪽 번들(무서명) 생성·검증 + 출시 config 폴리시. 코드사이닝 보류.

@@ -8,6 +8,26 @@
 
 ---
 
+## ✅ 2026-06-02 (집/Windows, 오후) — P3 백업/복원 완전성 수정 (위키 블록 메타 유실 버그) ⭐⭐⭐⭐⭐
+
+**범위**: 전체 IDB 백업/복원 감사 → 출시 블로커 1건(위키 블록 메타 유실) 수정 + 파생 캐시 리셋 + 라운드트립 테스트.
+
+### 핵심 결정/발견 (영구)
+- **🔴 위키 블록 메타 유실 버그**: `plot-wiki-block-meta`는 out-of-line 키(key=articleId, value=`WikiBlock[]`)인데 백업 format이 "objects"(keyPath "id" 가정) → 백업 시 키 유실 + 복원 시 DataError. **format "objects"→"kv"** + openDbForRestore keyPath=format기반. 위키 블록 구조가 백업→복원(새 기기)으로 유실되던 출시 블로커.
+- **IDB 백업 format = keyPath 유무**(영구 규칙): keyless(out-of-line)=`"kv"`, keyPath "id"=`"objects"`. keyless = plot-zustand·wiki-block-meta·mention-index·search-cache. 신규 store 추가 시 확인 의무.
+- **복원 = 5 target만 clear+write → 파생 캐시 별도 리셋**: `clearMentionIndex()`+`clearCache()`(search). **yjs(`plot-yjs:*`)=실험 OFF 기본**(`isYjsExperimentEnabled` gating)이라 기본 유저 콘텐츠 source=plot-note-bodies, 무관.
+
+### 완료
+- 5 타겟 중 4 정상 / wiki-block-meta 수정 / 복원 후 mention·search 리셋 / fake-indexeddb 라운드트립 테스트(신규). `lib/idb-backup.ts`+`backup/page.tsx`+테스트+devDep. 앱 Store 무변경(v154). tsc0/test(신규실패0)/빌드0.
+
+### 다음 우선순위 (P0)
+1. **P3 출시 전 안정화**: pre-existing 테스트 9개(migrate-v107 7 기존 + pipeline date 2 신규) + 데드코드(noteType/stone-brick) + 스모크. 2. (별개) 폴더 필터 F5 / macOS 서명 / openDbForRestore 버전 latent.
+
+### Store version / HEAD
+**무변경(v154)**. main HEAD = 이 PR 머지 후. 머신=집/Windows.
+
+---
+
 ## ✅ 2026-06-02 (집/Windows, 정오) — 상용화 P1 release 빌드 + .msi/.exe 번들(무서명) + 출시 config 폴리시 ⭐⭐⭐⭐⭐
 
 **범위**: `npx tauri build` release + 양쪽 번들(무서명) 생성·검증 + 출시용 config 폴리시. 코드사이닝 보류 합의.
