@@ -79,15 +79,6 @@ function escapeFromInlineLink(editor: Editor): void {
   const resolvedPos = editor.state.doc.resolve($from.start() + newOffset)
   editor.commands.setTextSelection(resolvedPos.pos)
 }
-import type { Note, Relation, Tag } from "@/lib/types"
-import { WikiTOC } from "@/components/editor/wiki-toc"
-import { WikiInfobox } from "@/components/editor/wiki-infobox"
-import { INFOBOX_PRESETS } from "@/lib/wiki-infobox-presets"
-import { WikiCategories } from "@/components/editor/wiki-categories"
-import { WikiDisambig } from "@/components/editor/wiki-disambig"
-import { WikiRelatedDocs } from "@/components/editor/wiki-related-docs"
-import { useBacklinksFor } from "@/lib/search/use-backlinks-for"
-import { shortRelative } from "@/lib/format-utils"
 import { EditorContextMenu } from "@/components/editor/editor-context-menu"
 import { NotePickerDialog } from "@/components/note-picker-dialog"
 import { WikiPickerDialog } from "@/components/wiki-picker-dialog"
@@ -127,8 +118,6 @@ export function NoteEditor({ noteId: propNoteId, onClose, pane = 'primary', defa
   const secondaryGoForward = usePlotStore((s) => s.secondaryGoForward)
   const secondaryHistoryIndex = usePlotStore((s) => s.secondaryHistoryIndex)
   const secondaryHistoryLen = usePlotStore((s) => s.secondaryHistory.length)
-  const allTags = usePlotStore((s) => s.tags)
-  const relations = usePlotStore((s) => s.relations)
   const isActivePane = useIsActivePane()
 
   const note = notes.find((n) => n.id === activeNoteId) ?? null
@@ -691,28 +680,21 @@ export function NoteEditor({ noteId: propNoteId, onClose, pane = 'primary', defa
       </header>
 
       {/* Content Editor (title is now the first node inside TipTap) */}
-      {/* WikiReadLayout removed — wiki rendering now handled by WikiArticleView */}
-      {false ? (
-        null
-      ) : (
-        /* Normal note editor */
-        <EditorContextMenu editor={editorInstance}>
-          <div className="flex-1 min-h-0 min-w-0 overflow-y-auto flex flex-col">
-            {/* Infobox moved to WikiArticle view — disabled in note editor */}
-            <div
-              className="min-w-0 w-full flex-1 flex flex-col"
-              style={{
-                paddingLeft: "var(--editor-padding-x)",
-                paddingRight: "var(--editor-padding-x)",
-                paddingTop: "var(--editor-padding-y)",
-                paddingBottom: "var(--editor-padding-y)",
-              }}
-            >
-              <NoteEditorAdapter note={note} onEditorReady={handleEditorReady} editable={!isReadMode} />
-            </div>
+      <EditorContextMenu editor={editorInstance}>
+        <div className="flex-1 min-h-0 min-w-0 overflow-y-auto flex flex-col">
+          <div
+            className="min-w-0 w-full flex-1 flex flex-col"
+            style={{
+              paddingLeft: "var(--editor-padding-x)",
+              paddingRight: "var(--editor-padding-x)",
+              paddingTop: "var(--editor-padding-y)",
+              paddingBottom: "var(--editor-padding-y)",
+            }}
+          >
+            <NoteEditorAdapter note={note} onEditorReady={handleEditorReady} editable={!isReadMode} />
           </div>
-        </EditorContextMenu>
-      )}
+        </div>
+      </EditorContextMenu>
       </div>
 
       {/* FixedToolbar — outside SURFACE, full width (hidden in read mode) */}
@@ -752,123 +734,6 @@ export function NoteEditor({ noteId: propNoteId, onClose, pane = 'primary', defa
           setEmbedUrlDialogOpen(false)
         }}
       />
-    </div>
-  )
-}
-
-/* ── Wiki Read Mode: 3-column layout ──────────────────────── */
-
-function StatRow({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="flex items-center justify-between">
-      <span className="text-2xs text-muted-foreground">{label}</span>
-      <span className="text-2xs font-medium text-foreground">{value}</span>
-    </div>
-  )
-}
-
-function WikiReadLayout({
-  note,
-  allTags,
-  relations,
-  onEditorReady,
-}: {
-  note: Note
-  allTags: Tag[]
-  relations: Relation[]
-  onEditorReady: (editor: unknown) => void
-}) {
-  const backlinks = useBacklinksFor(note.id)
-
-  const backlinkCount = backlinks.length
-  const relationCount = relations.filter(
-    (r) => r.sourceNoteId === note.id || r.targetNoteId === note.id
-  ).length
-
-  return (
-    <div className="flex-1 min-h-0 min-w-0 overflow-hidden flex">
-      {/* Left: TOC sidebar */}
-      <aside className="w-[200px] shrink-0 overflow-y-auto border-r border-border p-4">
-        <div className="sticky top-0">
-          <WikiTOC content={note.content} className="w-full" />
-        </div>
-      </aside>
-
-      {/* Center: Article content */}
-      <div className="flex-1 overflow-y-auto">
-        <div className="wiki-read-content mx-auto px-8 py-6 max-w-5xl">
-          {/* Disambig banner */}
-          <WikiDisambig noteId={note.id} noteTitle={note.title} />
-
-          {/* Aliases as subtitle */}
-          {note.aliases && note.aliases.length > 0 && (
-            <p className="text-note text-muted-foreground mb-6">
-              {note.aliases.join(" · ")}
-            </p>
-          )}
-
-          {/* Article body */}
-          <NoteEditorAdapter note={note} onEditorReady={onEditorReady} editable={false} />
-
-          {/* Related wiki docs */}
-          <WikiRelatedDocs noteId={note.id} />
-
-        </div>
-      </div>
-
-      {/* Right: Infobox sidebar */}
-      <aside className="w-[260px] shrink-0 overflow-y-auto border-l border-border p-4 space-y-4">
-        {/* Infobox — cross-entity preset enabled (PR-B 후속).
-            Note도 Wiki Article과 동일한 builtin 16 preset (Person/Place/Album 등)
-            + 향후 user preset 사용 가능. 빈 상태에서도 empty-state placeholder를
-            노출하기 위해 length>0 조건 제거. */}
-        <WikiInfobox
-          noteId={note.id}
-          entries={note.wikiInfobox ?? []}
-          editable
-          kind="note"
-          preset={note.infoboxPreset ?? "custom"}
-          onPresetChange={(preset, seed, headerColor) => {
-            // PR-D — third arg covers both builtin + user presets.
-            const def = headerColor !== undefined
-              ? { defaultHeaderColor: headerColor }
-              : INFOBOX_PRESETS.find((p) => p.preset === preset)
-            usePlotStore.getState().updateNote(note.id, {
-              wikiInfobox: seed,
-              infoboxPreset: preset,
-              ...(preset !== "custom" && def?.defaultHeaderColor !== undefined
-                ? { infoboxHeaderColor: def.defaultHeaderColor }
-                : {}),
-            })
-          }}
-          headerColor={note.infoboxHeaderColor ?? null}
-          onHeaderColorChange={(color) =>
-            usePlotStore.getState().updateNote(note.id, { infoboxHeaderColor: color })
-          }
-          hero={note.wikiInfoboxHero ?? null}
-          onHeroChange={(hero) =>
-            usePlotStore.getState().updateNote(note.id, { wikiInfoboxHero: hero ?? undefined })
-          }
-          className="w-full"
-        />
-
-        {/* Categories as badges */}
-        {note.tags.length > 0 && (
-          <WikiCategories noteTagIds={note.tags} allTags={allTags} />
-        )}
-
-        {/* Activity stats */}
-        <div className="space-y-2">
-          <h4 className="text-2xs font-semibold uppercase tracking-wider text-muted-foreground">
-            Activity
-          </h4>
-          <div className="space-y-1.5">
-            <StatRow label="Connected notes" value={`${backlinkCount}`} />
-            <StatRow label="Ontology links" value={`${relationCount}`} />
-            <StatRow label="Last modified" value={shortRelative(note.updatedAt)} />
-          </div>
-        </div>
-      </aside>
     </div>
   )
 }
