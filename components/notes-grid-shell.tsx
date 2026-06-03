@@ -196,6 +196,32 @@ export function NotesGridShell({
     [viewState.filters, updateViewState],
   )
 
+  // ── Parent / Children lookups for the card property-chip row (board parity).
+  // Built from the full store `notes` so a ParentChip resolves even when the
+  // parent is filtered out of the visible grid. Computed lazily — only when the
+  // relevant chip column is enabled in Display Properties. Mirrors notes-board's
+  // notesByIdForParent / childrenCountByParent. */
+  const showParentChip = !viewState.visibleColumns || viewState.visibleColumns.includes("parent")
+  const showChildrenChip = !viewState.visibleColumns || viewState.visibleColumns.includes("children")
+
+  const notesById = useMemo(() => {
+    if (!showParentChip) return undefined
+    const m = new Map<string, Note>()
+    for (const n of notes) m.set(n.id, n)
+    return m
+  }, [notes, showParentChip])
+
+  const childrenCountByParent = useMemo(() => {
+    if (!showChildrenChip) return undefined
+    const m = new Map<string, number>()
+    for (const n of notes) {
+      if (n.parentNoteId && !n.trashed) {
+        m.set(n.parentNoteId, (m.get(n.parentNoteId) ?? 0) + 1)
+      }
+    }
+    return m
+  }, [notes, showChildrenChip])
+
   // Store-backed group fold state (shared with list via viewState.collapsedGroups).
   const collapsedGroups = useMemo(
     () => new Set(viewState.collapsedGroups ?? []),
@@ -305,6 +331,11 @@ export function NotesGridShell({
         onSelect={handleCardSelect}
         folders={folders}
         labels={labels}
+        tags={tags}
+        visibleColumns={viewState.visibleColumns}
+        backlinksMap={backlinksMap}
+        notesById={notesById}
+        childrenCountByParent={childrenCountByParent}
         collapsedGroups={collapsedGroups}
         onToggleGroup={handleToggleGroup}
       />

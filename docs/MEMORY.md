@@ -8,6 +8,30 @@
 
 ---
 
+## ✅ 2026-06-04 (집/Windows, 오후) — 뷰엔진 디스플레이 11버그: 보드/그리드/휴지통 7개 완료 + 타임라인 4개 WIP ⭐⭐⭐⭐
+
+**범위**: 노트/위키/북 3스페이스의 디스플레이 패널·뷰모드(보드/그리드/타임라인) 11버그. 사용자 "안 되는 것 11개" 정리 → 풀 패리티 요청.
+
+### 핵심 결정/학습 (영구)
+- **뷰엔진 칩 패턴 = `PropertyChipRow`(property-chips.tsx) + `isVisible(col)`(= !visibleColumns || visibleColumns.includes(col)) + 도메인별 칩**. 노트=완성형, 위키/북=부분 → 버그 원인. 보드/그리드/타임라인이 같은 패턴 공유해야 패리티.
+- **A1 — `PropertyChipRow` 오버플로 = HoverCard**: "+N more"가 카운트만 떴는데(공유 버그) HoverCard로 가려진 칩 내용 호버 표시. 모든 보드/그리드 칩 오버플로 일괄 해결.
+- **디스플레이 컨트롤 mode 게이팅**(display-panel.tsx isGroupingModeAllowed/isPropertyModeAllowed): grid/timeline이 **board 상속**(카드가 이제 칩 렌더). 그룹화는 timeline만(grid=flat).
+- **dev preview 불안정**: screenshot 30s 타임아웃 반복(타임라인 SVG repaint 의심)·HMR stale → UI 검증은 **빌드+사용자 화면**이 신뢰 게이트.
+
+### 완료 (7버그, build0)
+- #1/#5 보드 호버 오버플로(HoverCard) · #8 북 보드 visibleColumns 칩 · #3/#6/#9 그리드 칩+선택 체크박스(3스페이스) · #2 휴지통 배지(TrashedChip) · display-panel 게이팅. architect 전수매핑(Explore) → 3 executor 병렬.
+
+### WIP (타임라인 4버그)
+- #10 북 타임라인 캔버스 collapse(래퍼 수정했으나 미해결) · #11 북 그룹화 와이어링 · #4/#7 노트/위키 타임라인(컨트롤 게이팅 풀림, 재빌드 검증 대기).
+
+### 다음 우선순위 (P0)
+1. **타임라인 그룹 마무리** — 북 타임라인 #10/#11 + 노트/위키 #4/#7 검증(사용자 재빌드 피드백 받고).
+
+### Store version / HEAD
+**무변경(v154)**. main HEAD = 이 PR 머지 후. 머신=집/Windows.
+
+---
+
 ## ✅ 2026-06-04 (집/Windows) — 북 생성/열기 "홈 깜빡임" 수정 (위키식 쿼리스트링 라우팅) ⭐⭐⭐⭐
 
 **범위**: 정적 export(Tauri) 데스크톱서 책 생성/열기 시 "잠시 홈 갔다가" 깜빡임 버그. 생성=그자리 in-place, 열기=쿼리스트링 라우팅(11 파일).

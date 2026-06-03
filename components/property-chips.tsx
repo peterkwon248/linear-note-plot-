@@ -40,11 +40,13 @@ import {
   Blend as PhBlend,
   BookOpen as PhBookOpen,
   Sticker as PhSticker,
+  Trash2 as PhTrash,
 } from "lucide-react"
 import { StatusBadge, PriorityBadge } from "@/components/note-fields"
 import { shortRelative } from "@/lib/format-utils"
 import type { NoteStatus, NotePriority } from "@/lib/types"
 import { getEntityColor } from "@/lib/colors" // v109: opt-in color fallback
+import { HoverCard, HoverCardTrigger, HoverCardContent } from "@/components/ui/hover-card"
 
 /* ── Common chip skeleton ─────────────────────────────── */
 
@@ -339,6 +341,36 @@ export function PinnedChip() {
     <span title="Pinned" className="inline-flex items-center shrink-0">
       <PhPushPin className="text-accent" size={12} strokeWidth={2} />
     </span>
+  )
+}
+
+/* ── Trashed chip ─────────────────────────────────────── */
+
+/**
+ * State flag for soft-deleted (trashed) notes. Surfaced when the "Show
+ * trashed" toggle reveals trashed items in an otherwise-active view — the
+ * opacity dim alone wasn't a strong enough signal (2026-06-04 user report).
+ *
+ * Visual weight matches LabelChip/StatusChip (tinted bg + 1px border + icon
+ * + label) but uses the destructive/red ramp so a trashed item reads as a
+ * warning state, not an entity. Always rendered when `note.trashed` — it's a
+ * state flag, NOT a toggleable display property.
+ */
+export function TrashedChip() {
+  return (
+    <ChipShell
+      title="In trash"
+      style={{
+        backgroundColor: "color-mix(in srgb, var(--destructive) 14%, transparent)",
+        color: "var(--destructive)",
+        borderColor: "color-mix(in srgb, var(--destructive) 38%, transparent)",
+        borderWidth: "1px",
+        borderStyle: "solid",
+      }}
+    >
+      <PhTrash size={10} strokeWidth={2} />
+      Trashed
+    </ChipShell>
   )
 }
 
@@ -707,7 +739,7 @@ function PropertyChipRowInner({
   if (valid.length === 0) return null
 
   const visible = valid.slice(0, maxVisible)
-  const overflow = valid.length - visible.length
+  const hidden = valid.slice(maxVisible)
 
   return (
     <div className={`flex items-center gap-1 min-w-0 overflow-hidden ${className ?? ""}`}>
@@ -719,7 +751,38 @@ function PropertyChipRowInner({
           {c}
         </span>
       ))}
-      {overflow > 0 && <MoreChip count={overflow} />}
+      {/* Overflow: the "+N" chip is a hover-card trigger that reveals the
+          HIDDEN chips' actual content — not just a count. 2026-06-04 — 사용자
+          보고: 보드/그리드에서 "+N more"만 뜨고 가려진 프로퍼티 내용이 안 나옴. */}
+      {hidden.length > 0 && (
+        <HoverCard openDelay={80} closeDelay={60}>
+          <HoverCardTrigger asChild>
+            <button
+              type="button"
+              onClick={(e) => e.stopPropagation()}
+              className="flex items-center shrink-0 rounded-sm focus:outline-none"
+              aria-label={`Show ${hidden.length} more propert${hidden.length === 1 ? "y" : "ies"}`}
+            >
+              <MoreChip count={hidden.length} />
+            </button>
+          </HoverCardTrigger>
+          <HoverCardContent
+            align="start"
+            side="top"
+            className="w-auto max-w-[280px] p-2"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex flex-col items-start gap-1.5">
+              {hidden.map((c, i) => (
+                // eslint-disable-next-line react/no-array-index-key
+                <span key={i} className="flex items-center min-w-0">
+                  {c}
+                </span>
+              ))}
+            </div>
+          </HoverCardContent>
+        </HoverCard>
+      )}
     </div>
   )
 }

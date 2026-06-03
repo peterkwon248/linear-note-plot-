@@ -6,6 +6,54 @@
 
 ---
 
+## 2026-06-04 (집/Windows, 오후) — **뷰엔진 디스플레이 11버그: 보드/그리드/휴지통 7개 완료 + 타임라인 4개 WIP**
+
+> 🎯 **다음 즉시 액션**: **타임라인 그룹 마무리 (#10/#11 북 타임라인 + #4/#7 노트/위키 타임라인 검증)**. 사용자가 데스크톱 재빌드(`npx tauri build --no-bundle`)로 1~9번 테스트 중 — 그 피드백 받고 북 타임라인 캔버스 collapse(#10) 마저 잡기. **북 타임라인 캔버스가 0높이로 collapse**(TimelineControls는 뜨는데 그 아래 SVG 캔버스가 안 펴짐). books-view 래퍼를 notes-timeline-shell 패턴(`flex flex-1 overflow-hidden`)으로 맞췄으나 dev preview서 여전히 collapse(단 dev preview 자체가 불안정 — screenshot 타임아웃, HMR stale 의심). **reliable 검증 = 사용자 재빌드 화면.** #11(북 그룹화 작동) = bookGroups가 viewState.groupBy로 recompute되는지 와이어링 확인.
+>
+> **사용자 의도**: "디스플레이 안 되는 것 11개" 정리 보고 → 타임라인/그리드 **풀 패리티**(그룹화+서브그룹+디스플레이 프로퍼티스 추가, 깨짐 수정) + 그리드 디스플레이 프로퍼티스 칩 추가 선택. "완벽하게 after-work" 요청.
+>
+> **첫 스텝** (타임라인 마무리, 다른 머신서 바로):
+> 1. 사용자 재빌드 화면 피드백 확인 (1~9 OK인지 + 타임라인 상태).
+> 2. 북 타임라인 collapse: `components/views/books-timeline-view.tsx`(`flex h-full w-full flex-col`, 캔버스=line 314~404) vs `components/views/notes-timeline-view.tsx` 구조 비교 — height 체인 끊기는 지점 찾기. books-view inline 렌더 vs notes 전용 shell(`notes-timeline-shell.tsx:197 main flex h-full flex-1 flex-col` + `:278 flex flex-1 overflow-hidden`) 차이 의심.
+> 3. #11: `books-view.tsx`가 `bookGroups={groups}`(useBooksView 파생) 전달 → 패널서 groupBy 변경 시 groups recompute되는지. `defaultGroupByByMode.timeline="kind"`가 락 거는지 확인.
+> 4. 노트/위키 타임라인은 그룹화 지원(bookGroups/groupBoundaries/collapsed) — 컨트롤 게이팅 풀었으니 재빌드서 동작 확인.
+>
+> **위험 + 회피**: ① dev preview 불안정(screenshot 30s 타임아웃, HMR stale) — UI 검증은 빌드+사용자 화면이 신뢰 게이트. ② `npx tsc --noEmit` false-clean — `npm run build`로만 검증. ③ 데스크톱 plot.exe는 빌드시 out/ 임베드 → 코드 수정 후 반드시 `tauri build` 재빌드(실행중이면 파일 락 → 창 닫고). ④ 위키 서브그룹핑은 위키 전반 미지원(config.supportsSubGrouping false) — 타임라인만 추가 불가, 별도 기능.
+>
+> **참고 파일**: `components/display-panel.tsx`(:34 isGroupingModeAllowed/:39 isPropertyModeAllowed — grid/timeline이 board 상속하도록 수정함 / :207 grouping section / :413 display-props section), `components/property-chips.tsx`(:695 PropertyChipRow + A1 호버 오버플로), `lib/view-engine/schema/entities/{notes,wiki,books}.schema.tsx`(display props + grouping modes), `components/{notes-board,books/books-board,views/wiki-board}.tsx`(보드 카드 칩), `components/views/{notes,wiki,books}-grid*` (그리드 칩+체크박스), `*-timeline-view.tsx`(타임라인).
+>
+> **머신**: 집(Windows). **현재 main HEAD**: 이 PR 머지 후. **branch worktree**: 새 worktree.
+
+### 완료 (보드·그리드·휴지통 7버그 — build0)
+- **#1/#5 보드 "+N more" 내용**: `PropertyChipRow` 오버플로를 **HoverCard로** — "+N" 호버 시 가려진 칩 내용 표시(`property-chips.tsx`). dev 검증(15 트리거 "Show N more properties"). 공유 컴포넌트라 모든 보드/그리드 칩 오버플로 해결.
+- **#8 북 보드 6중 2**: `books-board.tsx` BookBoardCardInner가 `visibleColumns` 무시 → isVisible 기반 칩(status/priority/kind/itemCount/sources/pinned) + PropertyChipRow. visibleColumns/groupBy 4단계 prop 스레딩.
+- **#3 노트 그리드 / #6 위키 그리드 / #9 북 그리드**: 디스플레이 프로퍼티스 칩 + **선택 체크박스**(notes-grid 패턴) 추가. 위키=기존 `selectedArticleIds` 재사용, 북=신규 로컬 selection state.
+- **#2 휴지통 배지**: `TrashedChip` 신설(property-chips) + 보드/그리드/리스트서 `note.trashed` 시 무조건 표시.
+- **+ 디스플레이 패널 게이팅**: `display-panel.tsx` isGroupingModeAllowed/isPropertyModeAllowed가 **grid/timeline이 board 상속** → 타임라인에 그룹화/프로퍼티스, 그리드에 프로퍼티스 토글 노출(#3/#4/#7의 "컨트롤 없음" 절반 해결).
+
+### WIP (타임라인 4버그 — 컨트롤은 떴으나 뷰 미완)
+- **#10 북 타임라인 깨짐**: 캔버스 collapse. books-view 래퍼 `overflow-y-auto`→`flex overflow-hidden`(notes shell 패턴) 적용했으나 dev서 여전히 collapse. 더 깊은 height 체인 작업 필요.
+- **#11 북 타임라인 그룹화 작동 X**: 와이어링 검증 필요.
+- **#4/#7 노트/위키 타임라인**: 컨트롤 게이팅 풀림 → 뷰가 그룹화 지원하므로 재빌드 검증 대기.
+
+### 브레인스토밍 & 큰 결정 (영구)
+- **뷰엔진 칩 시스템 = `PropertyChipRow` + `isVisible(col)`(= !visibleColumns || visibleColumns.includes(col)) + 도메인별 칩 컴포넌트**(property-chips.tsx). 보드/그리드/타임라인이 같은 패턴 공유해야 패리티. 스페이스별 카드가 갈라져 있던 게 버그 원인(노트=완성형, 위키/북=부분).
+- **디스플레이 컨트롤 mode 게이팅**: grid/timeline이 board 상속(카드가 이제 칩 렌더하므로). 단 그룹화는 timeline만(grid는 flat).
+
+### 기술 학습 (영구)
+- **변수형 grep 함정 재확인**: `router.push(href)` 때처럼, 칩/체크박스도 스페이스별 카드가 따로라 grep만으론 다 못 잡음 — architect 전수 매핑(Explore agent) 후 스페이스별 병렬 executor가 효율적(이번에 3 executor 병렬).
+- **dev preview 불안정**: screenshot 30s 타임아웃 반복(타임라인 SVG 연속 repaint 의심), HMR stale → UI 검증은 빌드+사용자 화면. eval 측정도 layout 미settle 시 부정확.
+
+### 환경 변경
+- Store version: **무변경 (v154)**.
+- 빌드: `npm run build` exit 0 (전 변경 컴파일 통과).
+- 수정 파일(뷰엔진): `property-chips.tsx`, `display-panel.tsx`, `notes-board.tsx`, `notes-table.tsx`, `notes-grid-shell.tsx`, `views/notes-grid-view.tsx`, `views/wiki-grid-view.tsx`, `views/wiki-view.tsx`, `books/books-board.tsx`, `books/book-grid-card.tsx`, `views/books-view.tsx`(+timeline 래퍼).
+
+### 머신
+집 (Windows)
+
+---
+
 ## 2026-06-04 (집/Windows) — **북 생성/열기 "홈 깜빡임" 수정 (위키식 쿼리스트링 라우팅)**
 
 > 🎯 **다음 즉시 액션**: ① **데스크톱 앱 재빌드 후 실검증** — 지금 사용자 Tauri 앱은 수정 전 `out/` embed이라, 실화면 확인하려면 `npm run build`→tauri 재빌드 필요(쿼리스트링 방식은 dev=정적-export 동작 동일이라 dev 검증은 이미 완료). ② **(코딩) folder/tag/label 경로 동일 패턴 적용** — `/folder/{id}`·`/tag/{id}`·`/label/{id}`도 정적 export에서 path-param이라 책과 **똑같은 hard-nav→홈 깜빡임** 발생. 책에 쓴 `routeToUrl()`/쿼리스트링 패턴 확장. 기존 "폴더 필터 F5 URL화"(TODO 0.025) carry와 합류.

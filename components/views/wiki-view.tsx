@@ -1197,6 +1197,18 @@ export function WikiView() {
               articles={sortedFilteredWikiNotes}
               onOpen={openArticle}
               activeArticleId={selectedWikiArticleId}
+              visibleColumns={wikiViewState.visibleColumns}
+              wikiCategories={wikiCategories}
+              backlinkCounts={backlinkCounts}
+              selectedIds={selectedArticleIds}
+              onSelect={(id, e) => {
+                const idx = sortedFilteredWikiNotes.findIndex((n) => n.id === id)
+                handleArticleSelect(id, {
+                  multi: e.metaKey || e.ctrlKey,
+                  shift: e.shiftKey,
+                  index: idx >= 0 ? idx : undefined,
+                })
+              }}
             />
           ) : wikiViewState.viewMode === "board" ? (
             <WikiBoard
