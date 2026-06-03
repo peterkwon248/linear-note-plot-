@@ -56,14 +56,15 @@ export function WikiTemplatePicker({
 }: WikiTemplatePickerProps) {
   const wikiTemplates = usePlotStore((s) => Array.isArray(s.wikiTemplates) ? s.wikiTemplates : [])
   const createWikiArticleFromTemplate = usePlotStore((s) => s.createWikiArticleFromTemplate)
+  const createWikiArticle = usePlotStore((s) => s.createWikiArticle)
   const [search, setSearch] = useState("")
 
-  // Live templates only, Empty first then alphabetical.
+  // Live templates only, excluding the built-in "Empty" — it's covered by the
+  // always-present "Blank article" option below, which works even when there
+  // are zero templates (prod seed ships none — see index.ts onRehydrate).
   const sorted = useMemo(() => {
-    const live = wikiTemplates.filter((t) => !t.trashed)
+    const live = wikiTemplates.filter((t) => !t.trashed && t.id !== "wtmpl-empty")
     return [...live].sort((a, b) => {
-      if (a.id === "wtmpl-empty") return -1
-      if (b.id === "wtmpl-empty") return 1
       if (a.pinned !== b.pinned) return a.pinned ? -1 : 1
       return a.name.localeCompare(b.name)
     })
@@ -107,6 +108,18 @@ export function WikiTemplatePicker({
     [mode, createWikiArticleFromTemplate, onApplied, onTemplateChosen, onOpenChange]
   )
 
+  // Always-available blank path — independent of templates/search so a wiki can
+  // always be created from scratch (prod ships zero templates; this is the
+  // escape hatch that prevents "no templates → can't create" dead ends).
+  const handleBlank = useCallback(() => {
+    const articleId = createWikiArticle({ title: "Untitled", blocks: [] })
+    if (articleId) {
+      onApplied?.(articleId)
+      onOpenChange(false)
+      setSearch("")
+    }
+  }, [createWikiArticle, onApplied, onOpenChange])
+
   if (!open) return null
 
   return (
@@ -149,13 +162,29 @@ export function WikiTemplatePicker({
 
         {/* Grid */}
         <div className="flex-1 overflow-y-auto p-6">
-          {filtered.length === 0 ? (
-            <div className="flex h-full flex-col items-center justify-center gap-3 text-muted-foreground">
-              <IconTemplate size={32} />
-              <p className="text-ui">No templates match</p>
-            </div>
-          ) : (
+          {mode === "create" || filtered.length > 0 ? (
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              {/* Always-available "Blank article" (create mode) — escape hatch
+                  that works even with zero templates or no search match, so a
+                  wiki can always be created from scratch. */}
+              {mode === "create" && (
+                <button
+                  onClick={handleBlank}
+                  className={cn(
+                    "group flex flex-col gap-2 rounded-lg border border-dashed border-border bg-background p-4 text-left",
+                    "hover:border-accent hover:bg-accent/5 transition-colors"
+                  )}
+                >
+                  <div className="flex items-center gap-2 min-w-0">
+                    <IconTemplate size={14} />
+                    <span className="truncate text-ui font-medium text-foreground">Blank article</span>
+                  </div>
+                  <p className="text-2xs text-muted-foreground line-clamp-2">
+                    Start from scratch. No predefined structure.
+                  </p>
+                  <div className="text-2xs text-muted-foreground">Empty</div>
+                </button>
+              )}
               {filtered.map((t) => (
                 <button
                   key={t.id}
@@ -182,6 +211,11 @@ export function WikiTemplatePicker({
                   <div className="text-2xs text-muted-foreground">{summarize(t)}</div>
                 </button>
               ))}
+            </div>
+          ) : (
+            <div className="flex h-full flex-col items-center justify-center gap-3 text-muted-foreground">
+              <IconTemplate size={32} />
+              <p className="text-ui">No templates match</p>
             </div>
           )}
         </div>
