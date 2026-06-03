@@ -46,6 +46,7 @@ import {
   CheckSquare as CheckSquareIcon,
   CircleHelp,
 } from "lucide-react"
+import { SidebarUpdateIndicator } from "@/components/sidebar-update-indicator"
 import { ENTITY_ICONS, SPACE_ICONS } from "@/lib/entity-icons"
 import { setWikiCategoryFilter } from "@/lib/wiki-category-filter"
 import { getCurrentViewContextKey, getSavedViewSpaceForActivity } from "@/lib/view-engine/saved-view-context"
@@ -2087,6 +2088,7 @@ export function LinearSidebar() {
       {/* Footer — Help "?" + Trash. §10 shell: Help bottom-left (Linear),
        *  Trash demoted here from the workspace menu. Inbox is pinned to the
        *  sidebar top, so this footer anchors the secondary chrome at the bottom. */}
+      <SidebarUpdateIndicator />
       <div className="a-sb-foot">
         <button
           type="button"
