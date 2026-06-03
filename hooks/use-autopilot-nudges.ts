@@ -51,9 +51,13 @@ export function useAutopilotNudges(): void {
     firedRef.current = true
 
     const timer = setTimeout(() => {
-      // Backlog nudge
+      // Backlog nudge — the onboarding "welcome-note" (seeds.ts WELCOME_NOTE)
+      // is excluded so a brand-new user isn't nudged to "triage" the seeded
+      // welcome note on first launch (it's onboarding content, not a real
+      // untriaged note). Backlog is the default resting status, so a fresh
+      // install (welcome note only) should produce no nudge.
       const inboxCount = notes.filter(
-        (n) => n.status === "backlog" && !n.trashed
+        (n) => n.status === "backlog" && !n.trashed && n.id !== "welcome-note"
       ).length
 
       if (inboxCount > 0 && !isOnCooldown("backlog-waiting")) {
