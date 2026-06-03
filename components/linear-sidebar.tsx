@@ -51,7 +51,7 @@ import { ENTITY_ICONS, SPACE_ICONS } from "@/lib/entity-icons"
 import { setWikiCategoryFilter } from "@/lib/wiki-category-filter"
 import { getCurrentViewContextKey, getSavedViewSpaceForActivity } from "@/lib/view-engine/saved-view-context"
 import type { ViewContextKey } from "@/lib/view-engine/types"
-import { ALL_SIDEBAR_ROUTES, setActiveRoute, getActiveRoute, setActiveFolderId, setActiveTagId, setActiveLabelId, useActiveRoute, useActiveFolderId, useActiveTagId, useActiveLabelId, useActiveSpace, setActiveViewId, useActiveViewId } from "@/lib/table-route"
+import { ALL_SIDEBAR_ROUTES, setActiveRoute, getActiveRoute, setActiveFolderId, setActiveTagId, setActiveLabelId, useActiveRoute, useActiveFolderId, useActiveTagId, useActiveLabelId, useActiveSpace, setActiveViewId, useActiveViewId, routeToUrl } from "@/lib/table-route"
 import { navigateToWikiArticle } from "@/lib/wiki-article-nav"
 import type { Note, NoteStatus, ActivitySpace } from "@/lib/types"
 import { cn } from "@/lib/utils"
@@ -160,7 +160,7 @@ function NavLink({
           }
           const currentRoute = getActiveRoute()
           setActiveRoute(href)
-          if (currentRoute !== href) router.push(href)
+          if (currentRoute !== href) router.push(routeToUrl(href))
         }}
         className={className}
         data-active={dataActive}
@@ -1404,7 +1404,7 @@ export function LinearSidebar() {
                         const href = `/books/${item.id}`
                         setActiveRoute(href)
                         setSelectedNoteId(null)
-                        router.push(href)
+                        router.push(routeToUrl(href))
                       }
                     }}
                     className="a-sb-link"
@@ -1798,7 +1798,7 @@ export function LinearSidebar() {
                         onClick={() => {
                           setActiveRoute(href)
                           setSelectedNoteId(null)
-                          router.push(href)
+                          router.push(routeToUrl(href))
                         }}
                         className="a-sb-link"
                         data-active={activeRoute === href ? "true" : undefined}
@@ -1982,7 +1982,7 @@ export function LinearSidebar() {
                         onClick={() => {
                           setActiveRoute(href)
                           setSelectedNoteId(null)
-                          router.push(href)
+                          router.push(routeToUrl(href))
                         }}
                         className="a-sb-link"
                         data-active={activeRoute === href ? "true" : undefined}
@@ -2038,7 +2038,7 @@ export function LinearSidebar() {
                         const href = `/books/${item.id}`
                         setActiveRoute(href)
                         setSelectedNoteId(null)
-                        router.push(href)
+                        router.push(routeToUrl(href))
                       }
                     }}
                     className="a-sb-link"

@@ -4,7 +4,7 @@ import { useMemo } from "react"
 import { useRouter } from "next/navigation"
 import { usePlotStore } from "@/lib/store"
 import { useT } from "@/lib/i18n"
-import { setActiveRoute } from "@/lib/table-route"
+import { setActiveRoute, routeToUrl } from "@/lib/table-route"
 import { ENTITY_ICONS } from "@/lib/entity-icons"
 import { QuickCapture } from "@/components/home/quick-capture"
 import { StatsRow } from "@/components/home/stats-row"
@@ -82,7 +82,7 @@ export function HomeView() {
   // Mirror MixedQuicklinks' book-open path (components/home/mixed-quicklinks.tsx).
   function handleOpenBook(bookId: string) {
     setActiveRoute(`/books/${bookId}`)
-    router.push(`/books/${bookId}`)
+    router.push(routeToUrl(`/books/${bookId}`))
   }
 
   return (

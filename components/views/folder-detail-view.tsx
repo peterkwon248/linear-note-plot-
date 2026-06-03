@@ -21,7 +21,7 @@
 import { useState, useMemo, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { usePlotStore } from "@/lib/store"
-import { setActiveFolderId, setActiveRoute } from "@/lib/table-route"
+import { setActiveFolderId, setActiveRoute, routeToUrl } from "@/lib/table-route"
 import { navigateToWikiArticle } from "@/lib/wiki-article-nav"
 import { FolderOpen } from "@phosphor-icons/react/dist/ssr/FolderOpen"
 import { Plus } from "@phosphor-icons/react/dist/ssr/Plus"
@@ -157,7 +157,7 @@ export function FolderDetailView({ id }: { id: string }) {
                     const bookId = createBook("Untitled book")
                     setBookFolders(bookId, [id])
                     setActiveRoute(`/books/${bookId}`)
-                    router.push(`/books/${bookId}`)
+                    router.push(routeToUrl(`/books/${bookId}`))
                   }}
                   className="flex w-full items-center gap-2 rounded-md px-2.5 py-1.5 text-note text-left hover:bg-accent"
                 >
@@ -264,7 +264,7 @@ export function FolderDetailView({ id }: { id: string }) {
                     const bookId = createBook("Untitled book")
                     setBookFolders(bookId, [id])
                     setActiveRoute(`/books/${bookId}`)
-                    router.push(`/books/${bookId}`)
+                    router.push(routeToUrl(`/books/${bookId}`))
                   }}
                 />
               ) : (
@@ -273,7 +273,7 @@ export function FolderDetailView({ id }: { id: string }) {
                     <li key={b.id}>
                       <button
                         type="button"
-                        onClick={() => { setActiveRoute(`/books/${b.id}`); router.push(`/books/${b.id}`) }}
+                        onClick={() => { setActiveRoute(`/books/${b.id}`); router.push(routeToUrl(`/books/${b.id}`)) }}
                         className="flex w-full items-center gap-3 px-3 py-2 text-left bg-card hover:bg-hover-bg"
                       >
                         <span className="flex shrink-0 items-center justify-center w-4">

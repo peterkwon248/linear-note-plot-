@@ -51,6 +51,29 @@
 
 ---
 
+## 📜 2026-06-04 (집/Windows) — 북 생성/열기 "홈 깜빡임" 수정 (위키식 쿼리스트링 라우팅) ⭐⭐⭐⭐
+
+**범위**: 정적 export(Tauri) 데스크톱서 책 생성/열기 시 "잠시 홈 갔다가" 깜빡임. 생성=그자리 in-place, 열기=쿼리스트링.
+
+### 핵심 결정 (영구)
+- **정적 export(Tauri) deep-link 라우팅 헌법**: 프리렌더 안 된 **path-param 라우트(`/x/{id}`) 금지** — `router.push` 시 hard-nav(풀 리로드)→Tauri `get_asset`이 루트 `index.html` 빌트인 폴백→하이드레이션 pathname "/"→start-view(`layout.tsx:105`)가 `/home` 리다이렉트("홈 깜빡임"). **대신 프리렌더된 부모 + 쿼리스트링(`/x?id=`)** 사용(위키 `/wiki?article=` 패턴). 책=`routeToUrl()`(table-route.ts)로 `/books/{id}`↔`/books?book={id}` 매핑(렌더는 activeRoute 경로형 유지). **향후 신규 동적 라우트는 이 패턴 강제.** folder/tag/label도 동일 적용 대상(미해결).
+- **Tauri SPA fallback은 빌트인**(`get_asset` index.html 폴백) — 커스텀 `lib.rs` 프로토콜 불필요(과거 carry 오해 정정).
+
+### 재발 방지 (영구)
+- 2026-06-04 — **변수형 `router.push(href)`/`(route)` grep 누락**: 템플릿-리터럴 grep만으론 사이드바 책 링크 4곳 놓침(cross-space dev 테스트로 발견). **교훈: `/x/${` 구성 + `router.push\((href|route)\)` 양쪽 grep.**
+- 2026-06-04 — **`npx tsc --noEmit` false-clean**: incremental 캐시로 미import 6건 못 잡음. **교훈: 이 프로젝트는 `npm run build`가 유일 신뢰 타입체크 게이트.**
+
+### 완료
+- 11 파일(생성 in-place + 책 여는 11 콜사이트 routeToUrl + F5 `?book=` 복원 + `BookDetailPage key={detailId}`). build0, dev 전 시나리오(생성·열기[그리드+사이드바]·F5·복귀) 통과. Store 무변경(v154).
+
+### 다음 (P0)
+1. folder/tag/label 동일 hard-nav 수정(0.025) + 데스크톱 재빌드 실검증.
+
+### Store version
+무변경(v154).
+
+---
+
 ## 📜 2026-06-03 (집/Windows) — P3 안정화 마무리: Wiki Reader 클러스터 제거 + stone/brick 정리 + 스모크 ⭐⭐⭐⭐
 
 **범위**: 출시 전 데드코드 마무리 — architect 전수 분류로 진짜 데드만 제거.

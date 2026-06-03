@@ -8,6 +8,34 @@
 
 ---
 
+## ✅ 2026-06-04 (집/Windows) — 북 생성/열기 "홈 깜빡임" 수정 (위키식 쿼리스트링 라우팅) ⭐⭐⭐⭐
+
+**범위**: 정적 export(Tauri) 데스크톱서 책 생성/열기 시 "잠시 홈 갔다가" 깜빡임 버그. 생성=그자리 in-place, 열기=쿼리스트링 라우팅(11 파일).
+
+### 핵심 결정/학습 (영구)
+- **정적 export deep-link = path-param 금지 → 쿼리스트링**: 프리렌더 안 된 `/books/{id}`로 `router.push` → hard-nav(풀 리로드) → Tauri `get_asset`이 루트 `index.html` 빌트인 폴백 → 하이드레이션 pathname "/" → `app/(app)/layout.tsx:105` start-view 이펙트가 `/home` 리다이렉트 = "홈 깜빡임". 해결 = pathname을 프리렌더된 `/books`에 두고 id를 쿼리(`?book=`)로(= 위키 `/wiki?article=` 안 깜빡이는 바로 그 패턴). 렌더는 activeRoute 경로형 유지, `routeToUrl()`(table-route.ts)이 경로↔URL 매핑만 담당.
+- **Tauri SPA fallback은 빌트인** — 커스텀 `lib.rs` 프로토콜 불필요(carry 오해 정정). 깜빡임은 폴백 부재가 아니라 폴백된 루트 index.html이 start-view로 홈 리다이렉트라서.
+- **검증 함정 2개**: ① 변수형 `router.push(href)`/`(route)`는 템플릿-리터럴 grep에 안 걸림(사이드바 책 링크 4곳 1차 누락 → cross-space dev 테스트로 발견). `/books/${` + `router.push\((href|route)\)` 양쪽 grep 필수. ② `npx tsc --noEmit`가 incremental 캐시로 false-clean(미import 6건 못 잡음) → **`npm run build`가 유일 신뢰 게이트**.
+
+### 완료 (11 파일)
+- `books-view handleCreate` 네비 제거(in-place) + 책 여는 11 콜사이트 전부 `router.push(routeToUrl(...))`(그리드·사이드바 Recent/Pinned/혼합·breadcrumb·context-nav·home·search·tags·folder·smart-book·quicklinks) + `routeGoBack/Forward`·`syncFromPathname`(F5 `?book=` 복원) + `BookDetailPage key={detailId}`(책↔책 전환 reading 상태 리셋). build0, dev 전 시나리오 통과.
+
+### 다음 우선순위 (P0)
+1. **folder/tag/label 동일 hard-nav 수정**(같은 클래스 — `routeToUrl` 패턴 확장; folder는 자체 뷰라 `/notes?folder=` vs `/folder/{id}` 설계 결정 먼저) + 데스크톱 재빌드 실검증.
+
+### Store version / HEAD
+**무변경(v154)**. main HEAD = 이 PR 머지 후. 머신=집/Windows.
+
+---
+
+## ✅ 2026-06-03 (집/Windows) — 출시후 1차 릴리스 스프린트 #524~#528 (백필) ⭐⭐⭐
+
+**범위**: app v0.1.0→v0.1.2 출시후 스프린트. 당시 docs 미기록 → 2026-06-04 before-work서 git/docs 불일치 적발·백필(상세 lossy).
+- **#524** `ea63d1c` v0.1.0 first-launch 버그 2(위키 생성 블로커 + triage 토스트) · **#525** `f5c46ef` 프로덕션 온보딩 시드(빈 앱→풍부한 PKM 스타터, `store/index.ts` +29, v154 무변경) · **#526** `8115b8c` Tauri 자동 업데이트(updater+process 플러그인, 신규 `auto-updater.tsx`·`updater-store.ts`) · **#527** `74aed1f` 사이드바 업데이트 인디케이터(Linear-style, 신규 `sidebar-update-indicator.tsx`)+v0.1.1 · **#528** `59b3b57` v0.1.2 데모 릴리스.
+- **Store v154 무변경**. app version 0.1.0→0.1.2.
+
+---
+
 ## ✅ 2026-06-03 (집/Windows) — P3 안정화 마무리: 죽은 Wiki Reader 클러스터 제거 + stone/brick 정리 + 스모크 ⭐⭐⭐⭐
 
 **범위**: 출시 전 안정화 데드코드 마무리 — 2개 "정리 항목"을 architect 전수 분류로 검증 → 진짜 데드만 정밀 제거 + 사용자 노출 버그 발견.

@@ -3,7 +3,7 @@
 > 우선순위 기반 작업 목록. **P0 = 다음 세션 즉시 시작점** (NEXT-ACTION.md 폐지, 2026-05-12).
 > 완료 항목은 즉시 삭제. 자세한 history는 SESSION-LOG.md + MEMORY.md.
 
-**마지막 갱신**: 2026-06-03 (after-work, 집/Windows) — **P3 출시 전 안정화 마무리**: 죽은 Wiki Reader 클러스터 제거(~1036줄, 4파일 삭제 + note-editor/wiki-view 레거시 분기) + stone/brick 잔재 정리(i18n `added_toast` 버그 2건 + dead i18n키 6 + Icon별칭 3) + 스모크 QA(위키/노트/스페이스/백업 console 0). tsc0/build0. **핵심: "데드코드 107곳/119곳" 전제 틀림 — 대부분 backward-compat 보존, 진짜 작업은 Reader 클러스터 1 + 버그 2 + dead 9.** **다음 = 폴더 필터 F5 URL화**(0.025, 별도 트랙). 디자인 ③ 보류 유지.
+**마지막 갱신**: 2026-06-04 (after-work, 집/Windows) — **북 생성/열기 "홈 깜빡임" 수정**(위키식 쿼리스트링 라우팅, 11파일). 생성=그자리 in-place / 열기=`/books/{id}`→`/books?book={id}`(프리렌더 `/books`+쿼리로 hard-nav 제거). 근원=정적 export서 path-param→hard-nav→루트 index.html 폴백→start-view가 /home 리다이렉트. build0, dev 전 시나리오(생성·열기·F5·복귀) 통과. **+ docs 백필: 미기록 #524~#528(v0.1.0→v0.1.2 출시후 스프린트) 기록.** **다음 = folder/tag/label 동일 hard-nav 수정**(0.025와 합류) + 데스크톱 재빌드 실검증. 디자인 ③ 보류 유지.
 
 ---
 
@@ -53,13 +53,15 @@
 - ✅ **2026-06-02 오후#2**: **그린 테스트 스위트** — pipeline date grouping 2개 stale 수정(빈 버킷 숨김+Yesterday 반영, 구현이 옳음) + migrate-v107 7개 `describe.skip`(문서화: vitest ESM이 migrate lazy require 못 풂, frozen 마이그라 prod-critical migrate.ts 미수정). **318 passed/7 skipped/0 failed**, tsc 0.
 - ✅ **2026-06-02 오후#3**: **데드코드 — 죽은 auto-enroll/wiki-conversion 서브시스템 제거**. `wiki-auto-enroll.ts` 삭제(startAutoEnrollment 호출 0=타이머 미시작) + createWikiStub/convertToWiki/revertFromWiki 액션·타입·죽은 구독 제거(live wiki=createWikiArticle로 이미 이전, convertToWiki "삭제 예정" 결정 실행). tsc0/test0/build0. noteType live setter=0됨.
 - ✅ **2026-06-03**: **P3 안정화 마무리 — Wiki Reader 클러스터 제거 + stone/brick 정리 + 스모크**. ① **noteType="wiki"**: architect 전수 분류 → 107곳 대부분 **backward-compat 방어망(보존)**, 진짜 데드 = 레거시 Wiki Reader 클러스터 1개(4파일 삭제 + note-editor `WikiReadLayout` + wiki-view 레거시 분기, ~1036줄). ② **stone/brick**: 라우트는 이미 table-route.ts에서 rename됨, 119곳 대부분 보존(persist 식별자·migrate·목업) → 진짜 작업 = i18n `added_toast` 버그 2 + dead i18n키 6 + Icon별칭 3. ③ 스모크 QA(console 0). tsc0/build0.
+- ✅ **2026-06-03 (출시후 스프린트, #524~#528 — 백필)**: v0.1.0 first-launch 버그 2(#524) → 프로덕션 온보딩 시드(#525) → Tauri 자동 업데이트(#526) → 사이드바 업데이트 인디케이터+v0.1.1(#527) → v0.1.2(#528). 신규 `auto-updater.tsx`·`sidebar-update-indicator.tsx`·`updater-store.ts`. Store v154 무변경. (당시 docs 미기록 → 2026-06-04 before-work서 적발·백필.)
+- ✅ **2026-06-04**: **북 생성/열기 "홈 깜빡임" 수정** — 생성=그자리 in-place(`handleCreate` 네비 제거) + 열기=`/books/{id}`→`/books?book={id}`(위키식 쿼리스트링, 11파일, hard-nav 제거). 근원=정적 export서 path-param→hard-nav→루트 index.html 폴백→start-view `/home` 리다이렉트. build0, dev 전 시나리오(생성·열기[그리드+사이드바]·F5·복귀) 통과. **folder/tag/label 동일 클래스 미해결**(→0.025).
 - **P3 출시 전 안정화 = 완결**. (별개 부채) migrate-v107 7개 재활성 = 순수 헬퍼 추출 or 번들러 하니스.
 - **코드사이닝 = 보류**(무서명 출시): 매출/유저 생기면 도입. macOS는 별도(Apple $99+공증 필수, 하드블록). **MS Store MSIX** = 서명 우회 트랙 후보.
-- **별개 트랙**: SPA fallback(deep-link 시 `lib.rs` custom protocol) / **macOS WebKit 렌더+서명 검증**(이번 Windows만) / 폴더 필터 F5 URL화(`router.push("/notes")`+activeFolderId).
+- **별개 트랙**: ~~SPA fallback(lib.rs custom protocol)~~ **불필요 판명**(2026-06-04 — Tauri `get_asset`이 이미 index.html 빌트인 폴백; 깜빡임은 폴백 부재가 아니라 루트 index.html→start-view 리다이렉트라서, hard-nav 제거가 정답) / **macOS WebKit 렌더+서명 검증**(이번 Windows만) / folder·tag·label hard-nav+F5(→0.025로 승격).
 
-### 0.025. **🟡 P0 (캐치올 후속): 폴더 필터 F5 URL화**
+### 0.025. **🔴 P0 (북 수정 후속): folder/tag/label hard-nav "홈 깜빡임" + 필터 F5 URL화**
 
-사이드바 폴더/태그/라벨 클릭이 `router.push("/notes")` + `activeFolderId`(모듈상태, URL 없음) → F5 시 필터 리셋(All Notes). 캐치올(`/folder/{id}` URL 복원)과 **별개 layer**. 설계 결정: 사이드바 클릭 → `/folder/{id}` navigate(FolderDetailView) vs `/notes?folder=`(필터 유지). 사용자 적발(2026-06-01 저녁).
+**2026-06-04 북 수정으로 패턴 확립** — 정적 export(Tauri)서 path-param 라우트(`/folder/{id}`·`/tag/{id}`·`/label/{id}`)는 책과 동일하게 hard-nav→루트 index.html 폴백→start-view `/home` 리다이렉트(홈 깜빡임). 책은 `routeToUrl()`로 `/books?book=` 쿼리화해 해결 → folder/tag/label도 동일 적용. **단 흐름이 다름**: tag/label은 catch-all이 필터 설정 후 `/notes`(프리렌더)로 bounce → 실제 깜빡이는지 검증 먼저; folder는 자체 뷰(catch-all `FolderDetailView`)라 쿼리화에 **설계 결정 필요**(`/notes?folder=` 필터 유지·간단 vs `/folder/{id}` 유지). 추가로 사이드바 클릭이 `activeFolderId`(모듈상태)라 F5 리셋되는 것도 같이 해소. 사용자 적발(2026-06-01). 참고=`lib/table-route.ts routeToUrl`, `components/views/catch-all-route.tsx`, `components/linear-sidebar.tsx`.
 
 ### 0.026. **🟢 P0 (타임라인 후속, 디자인성): start chip 색 + grouping 비대칭 + hydration**
 - `EVENT_MARKER_CONFIG.created = NOTE_STATUS_HEX.done`(초록) → created≠done, done 막대와 색 충돌. 중립색/created 고유색 정정.
