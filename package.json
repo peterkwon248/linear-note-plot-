@@ -48,6 +48,8 @@
     "@remixicon/react": "^4.9.0",
     "@tabler/icons-react": "^3.40.0",
     "@tanstack/react-virtual": "^3.13.21",
+    "@tauri-apps/plugin-process": "^2.3.1",
+    "@tauri-apps/plugin-updater": "^2.10.1",
     "@tiptap/extension-audio": "^3.21.0",
     "@tiptap/extension-character-count": "^3.20.2",
     "@tiptap/extension-code-block-lowlight": "^3.20.2",

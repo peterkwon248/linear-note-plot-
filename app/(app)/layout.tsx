@@ -15,6 +15,7 @@ import { TooltipProvider } from "@/components/ui/tooltip"
 import { usePlotStore } from "@/lib/store"
 import { useGlobalShortcuts } from "@/hooks/use-global-shortcuts"
 import { useAutopilotNudges } from "@/hooks/use-autopilot-nudges"
+import { AutoUpdater } from "@/components/auto-updater"
 import { useCoOccurrences } from "@/hooks/use-co-occurrences"
 import { useRelationSuggestions } from "@/hooks/use-relation-suggestions"
 import { useClusterSuggestions } from "@/hooks/use-cluster-suggestions"
@@ -294,6 +295,8 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       <div className="flex h-screen flex-col overflow-hidden bg-background">
         {/* ── Global top bar — workspace chrome, survives all panel collapses ── */}
         <GlobalTopBar />
+        {/* Tauri desktop auto-update — no-op in web/dev */}
+        <AutoUpdater />
         {/* ── Body: Activity Bar + Sidebar + Content ── */}
         <div className="flex flex-1 overflow-hidden">
           {/* ── Activity Bar (always visible) ── */}
