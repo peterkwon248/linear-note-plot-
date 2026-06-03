@@ -3,7 +3,7 @@
 > 우선순위 기반 작업 목록. **P0 = 다음 세션 즉시 시작점** (NEXT-ACTION.md 폐지, 2026-05-12).
 > 완료 항목은 즉시 삭제. 자세한 history는 SESSION-LOG.md + MEMORY.md.
 
-**마지막 갱신**: 2026-06-02 (after-work, 집/Windows, 오후) — **P3 백업/복원 완전성 수정** (위키 블록 메타 유실 버그). `plot-wiki-block-meta`(out-of-line keyed: key=articleId, value=WikiBlock[])가 백업 format "objects"라 articleId 키 유실+복원 실패 → "kv"로 수정 + openDbForRestore keyPath=format기반 + 복원 후 mention/search 캐시 리셋 + fake-indexeddb 라운드트립 테스트. tsc0/test(신규실패0)/빌드0. **다음 = P3 출시 전 안정화** (pre-existing 테스트 9개[migrate-v107 7 + pipeline date 2] + 데드코드 noteType/stone-brick + 스모크). 직전: release 빌드+번들(무서명). 디자인 ③ 보류 유지.
+**마지막 갱신**: 2026-06-03 (after-work, 집/Windows) — **P3 출시 전 안정화 마무리**: 죽은 Wiki Reader 클러스터 제거(~1036줄, 4파일 삭제 + note-editor/wiki-view 레거시 분기) + stone/brick 잔재 정리(i18n `added_toast` 버그 2건 + dead i18n키 6 + Icon별칭 3) + 스모크 QA(위키/노트/스페이스/백업 console 0). tsc0/build0. **핵심: "데드코드 107곳/119곳" 전제 틀림 — 대부분 backward-compat 보존, 진짜 작업은 Reader 클러스터 1 + 버그 2 + dead 9.** **다음 = 폴더 필터 F5 URL화**(0.025, 별도 트랙). 디자인 ③ 보류 유지.
 
 ---
 
@@ -52,7 +52,8 @@
 - ✅ **2026-06-02 오후**: **백업/복원 완전성 점검+수정** — `plot-wiki-block-meta`(out-of-line keyed) 백업 format "objects"→**"kv"**(articleId 키 유실+복원 DataError 버그) + openDbForRestore keyPath=format기반 + 복원 후 mention/search 캐시 리셋 + fake-indexeddb 라운드트립 테스트(신규). 5 store 중 1개 깨짐(수정), yjs=실험 OFF라 무관, note.content=meta 존재.
 - ✅ **2026-06-02 오후#2**: **그린 테스트 스위트** — pipeline date grouping 2개 stale 수정(빈 버킷 숨김+Yesterday 반영, 구현이 옳음) + migrate-v107 7개 `describe.skip`(문서화: vitest ESM이 migrate lazy require 못 풂, frozen 마이그라 prod-critical migrate.ts 미수정). **318 passed/7 skipped/0 failed**, tsc 0.
 - ✅ **2026-06-02 오후#3**: **데드코드 — 죽은 auto-enroll/wiki-conversion 서브시스템 제거**. `wiki-auto-enroll.ts` 삭제(startAutoEnrollment 호출 0=타이머 미시작) + createWikiStub/convertToWiki/revertFromWiki 액션·타입·죽은 구독 제거(live wiki=createWikiArticle로 이미 이전, convertToWiki "삭제 예정" 결정 실행). tsc0/test0/build0. noteType live setter=0됨.
-- **P3 출시 전 안정화 (다음)**: ① **`noteType==="wiki"` 체크 107곳/39파일** 제거 (⚠️ 구식 persist 데이터 noteType="wiki" 잔존 가능 → migrate normalize 여부 검증 먼저, 방어 체크 섣불리 제거 X) ② **status stone/brick/keystone 119곳/26파일** 코스메틱 rename(⚠️ migrate/seeds/tests backward-compat 문자열 유지, dnd id `col-stone` 등 비-load-bearing만) ③ 스모크. ④ (별개) migrate-v107 순수 헬퍼 추출 or 번들러 하니스로 재활성.
+- ✅ **2026-06-03**: **P3 안정화 마무리 — Wiki Reader 클러스터 제거 + stone/brick 정리 + 스모크**. ① **noteType="wiki"**: architect 전수 분류 → 107곳 대부분 **backward-compat 방어망(보존)**, 진짜 데드 = 레거시 Wiki Reader 클러스터 1개(4파일 삭제 + note-editor `WikiReadLayout` + wiki-view 레거시 분기, ~1036줄). ② **stone/brick**: 라우트는 이미 table-route.ts에서 rename됨, 119곳 대부분 보존(persist 식별자·migrate·목업) → 진짜 작업 = i18n `added_toast` 버그 2 + dead i18n키 6 + Icon별칭 3. ③ 스모크 QA(console 0). tsc0/build0.
+- **P3 출시 전 안정화 = 완결**. (별개 부채) migrate-v107 7개 재활성 = 순수 헬퍼 추출 or 번들러 하니스.
 - **코드사이닝 = 보류**(무서명 출시): 매출/유저 생기면 도입. macOS는 별도(Apple $99+공증 필수, 하드블록). **MS Store MSIX** = 서명 우회 트랙 후보.
 - **별개 트랙**: SPA fallback(deep-link 시 `lib.rs` custom protocol) / **macOS WebKit 렌더+서명 검증**(이번 Windows만) / 폴더 필터 F5 URL화(`router.push("/notes")`+activeFolderId).
 
@@ -81,17 +82,17 @@ ontology insights 탭은 이번에 해체(→Dashboard+Inbox+ring). 남은 것:
 
 Smart/Manual/Hybrid → **Auto/Manual/Mixed**(자동/수동/혼합). **코드 키(`smart`/`manual`/`hybrid`) 불변**, 라벨+i18n만: `books.schema.tsx` values + `lib/i18n.ts`(en Auto/Manual/Mixed + ko 자동/수동/혼합). "스마트북" 단어 소멸.
 
-### 0.07. **🟡 P0 (hygiene): noteType==="wiki" 데드코드 정리** (chip 띄움)
+### 0.07. **✅ noteType==="wiki" — 분류 완료 (2026-06-03)**
 
-레거시 잔재 107곳/39파일. ⚠️ 보존: migrate.ts/seeds/types 필드. ⚠️ 확인: `wiki-auto-enroll.ts`(convertToWiki 살아있음 — 실동작 여부 먼저). 블라인드 replace 금지.
+107곳 대부분 **살아있는 backward-compat 방어망**(migrate 보존 + graph/side-panel/trash/search/calendar/insights/hover-preview/filter)으로 판명 → **보존 확정**. 진짜 데드 = 레거시 Wiki Reader 클러스터(제거 완료). noteType FIELD 유지. **추가 정리 불필요.**
 
 ### 0.1. **🟡 P0: 모션/색 전파 + A3.1 LCH 토큰** (carry)
 - 노트행 시드 토큰(`--row-hover-bg` oklch / `--duration-fast` / `--ease-out`, 커밋 `295be0a`)을 **사이드바 항목·버튼·드롭다운**에 전파(avatar 드롭다운은 이미 재활용).
 - **A3.1 LCH 토큰 전역화** — 노트행 oklch가 씨앗 → `lib/colors.ts` flat hex → OKLCH/LCH + paired `-bg/-fg` + `toneClassDual` (app-wide careful 패스).
 - **A4 priority 막대** (carry) — `note-fields.tsx` 화살표 → 리니어 3-막대 SVG (spec §3 geometry, `schema/icons.tsx`). A3.3 opacity 위계 클래스 뼈대의 0.9/0.7/0.5 최종값도 여기서.
 
-### 0.3. **🟡 P0 (병행 hygiene): 옛 status 코드명 정리 (stone/brick/keystone)**
-잔재 **119곳/26파일**. ⚠️ `migrate.ts`(26)·seeds·`__tests__`의 옛 enum 문자열 = 마이그 backward-compat **유지**. 나머지(변수명/CSS클래스/주석/dnd id `col-stone`)만 backlog/todo/in_progress/done로. **블라인드 find-replace 금지** — 파일별 검증 후 최소 diff.
+### 0.3. **✅ stone/brick/keystone — 분류 완료 (2026-06-03)**
+119곳 대부분 보존(migrate/seeds/tests/목업 격리 + autopilot/analysis rule id·settings `startView:"stone"` = persist 식별자 + 라우트는 이미 `lib/table-route.ts`에서 rename됨). 안전 작업 완료 = i18n `added_toast` 버그 2 + dead i18n키 6 + Icon별칭 3. **남은 cosmetic(cmdk 키·queries 주석/함수명)은 동작 정상이라 보류. AGENTS.md `/stone` 라우트 = stale 문서(정정 후보).**
 
 ### 0.5. **🔴 P0 #1: Phase C — 오버뷰 StatsCard 통일** (미시작, 통합 플랜 마지막 Phase)
 

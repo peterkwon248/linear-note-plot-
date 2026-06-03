@@ -6,7 +6,7 @@
  * Uses the same sub-components (timeline-bar / timeline-grid /
  * timeline-label-column / timeline-tooltip / timeline-controls /
  * timeline-axis) as WikiTimelineView, but supplies a Note adapter:
- *   - status icon set = IconStone / IconBrick / IconBlock
+ *   - status icon set = IconBacklog / IconInProgress / IconDone
  *   - status color   = NOTE_STATUS_HEX[status]
  *   - horizon        = updatedAt (notes have no plannedDate)
  *   - canEditHorizon = false (no drag — notes don't expose lifespan editing)

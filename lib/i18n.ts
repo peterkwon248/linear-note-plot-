@@ -190,10 +190,6 @@ const EN = {
   "sidebar.insights": "Insights",
   "sidebar.smartBook": "Smart Book",
   "sidebar.all_notes": "All Notes",
-  "sidebar.stone": "Backlog",
-  "sidebar.brick": "In Progress",
-  "sidebar.block": "Done",
-
   // Home view
   "home.title": "Home",
   "home.capture.placeholder": "Capture a thought…",
@@ -228,7 +224,7 @@ const EN = {
   "home.capture.placeholder.idea": "An idea…",
   "home.capture.placeholder.learning": "Something learned…",
   "home.capture.aria": "Quick capture — press Enter to add a note to your Inbox",
-  "home.capture.added_toast": "Added to Stone",
+  "home.capture.added_toast": "Added to Backlog",
 
   // Workflow status (4단계 완성도 축: Backlog → Todo → In Progress → Done).
   "status.backlog": "Backlog",
@@ -1219,10 +1215,6 @@ const KO: Partial<Record<DictKey, string>> = {
   "sidebar.insights": "인사이트",
   "sidebar.smartBook": "스마트 북",
   "sidebar.all_notes": "모든 노트",
-  "sidebar.stone": "대기",
-  "sidebar.brick": "정리 중",
-  "sidebar.block": "완성",
-
   // Home view
   "home.title": "홈",
   "home.capture.placeholder": "생각을 적어보세요…",
@@ -1257,7 +1249,7 @@ const KO: Partial<Record<DictKey, string>> = {
   "home.capture.placeholder.idea": "아이디어…",
   "home.capture.placeholder.learning": "배운 것…",
   "home.capture.aria": "빠른 캡처 — Enter를 누르면 받은편지함에 노트가 추가됩니다",
-  "home.capture.added_toast": "스톤에 추가됨",
+  "home.capture.added_toast": "대기에 추가됨",
 
   // 4단계 완성도 축 — Backlog → Todo → In Progress → Done.
   "status.backlog": "대기",

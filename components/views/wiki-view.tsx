@@ -58,7 +58,6 @@ import { useWikiViewMode, setWikiViewMode, setPendingMergeIds, useWikiStatusFilt
 import { ViewHeader } from "@/components/view-header"
 import { useBacklinksIndex } from "@/lib/search/use-backlinks-index"
 import { toast } from "sonner"
-import { WikiArticleReader } from "./wiki-article-reader"
 import { WikiDashboard } from "./wiki-dashboard"
 import { WikiList, WikiArticleMenuItems } from "./wiki-list"
 import {
@@ -190,10 +189,6 @@ export function WikiView() {
     updateWikiViewState({ filters: next })
   }, [wikiFilters, updateWikiViewState])
 
-  // Article reader state (Note-based legacy)
-  const [selectedArticleId, setSelectedArticleId] = useState<string | null>(null)
-  const [isEditingArticle, setIsEditingArticle] = useState(false)
-
   // WikiArticle viewer state (new Assembly Model)
   const [selectedWikiArticleId, setSelectedWikiArticleId] = useState<string | null>(null)
   const [isEditingWikiArticle, setIsEditingWikiArticle] = useState(false)
@@ -246,11 +241,6 @@ export function WikiView() {
     }
   }, [pendingArticleId])
 
-  // Reset edit mode whenever we navigate to a different article
-  useEffect(() => {
-    setIsEditingArticle(false)
-  }, [selectedArticleId])
-
   // Sync sidePanelContext when wiki article selection changes + auto-open side panel
   // Only primary pane sets sidePanelContext — secondary uses secondaryEntityContext instead
   // NOTE: Don't clear context when no article selected — let previous context persist
@@ -260,11 +250,8 @@ export function WikiView() {
     if (selectedWikiArticleId) {
       usePlotStore.getState().setSidePanelContext({ type: "wiki", id: selectedWikiArticleId })
       usePlotStore.getState().setSidePanelOpen(true)
-    } else if (selectedArticleId) {
-      usePlotStore.getState().setSidePanelContext({ type: "note", id: selectedArticleId })
-      usePlotStore.getState().setSidePanelOpen(true)
     }
-  }, [pane, selectedWikiArticleId, selectedArticleId])
+  }, [pane, selectedWikiArticleId])
 
   // Sync secondary pane entity context so the sidebar can follow wiki article selections
   useEffect(() => {
@@ -323,26 +310,7 @@ export function WikiView() {
         return
       }
     }
-    setSelectedArticleId(id)
   }, [notes, wikiArticles, clearArticleSelection, incrementWikiArticleReads])
-
-  // Smart navigation: wiki articles open in-view, non-wiki go to /notes
-  const handleNavigate = useCallback(
-    (noteId: string) => {
-      const target = notes.find((n) => n.id === noteId)
-      if (!target || target.trashed) return
-      // PhCheck if there's a matching WikiArticle
-      const matchingWiki = wikiArticles.find(
-        (a) => a.title.toLowerCase() === target.title.toLowerCase()
-      )
-      if (matchingWiki) {
-        setSelectedWikiArticleId(matchingWiki.id)
-      } else {
-        navigateToNote(noteId)
-      }
-    },
-    [notes, wikiArticles, navigateToNote]
-  )
 
   // 2026-05-18: Wiki article 생성 시 WikiTemplatePicker 다이얼로그를 띄움.
   // 사용자 "Empty" 선택 시 빈 article — 기존 behavior 정합. Picker는
@@ -365,19 +333,6 @@ export function WikiView() {
     },
     [createWikiArticle]
   )
-
-  const handleEditArticle = useCallback(() => {
-    setIsEditingArticle(true)
-  }, [])
-
-  const handleDoneEditing = useCallback(() => {
-    setIsEditingArticle(false)
-  }, [])
-
-  const handleBack = useCallback(() => {
-    setIsEditingArticle(false)
-    setSelectedArticleId(null)
-  }, [])
 
   // Wiki data comes from wikiArticles (separate entity since v47).
   // Exclude trashed articles (v90 dedupe migration soft-trashes duplicates).
@@ -512,7 +467,7 @@ export function WikiView() {
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       // Only when in list view mode (not dashboard, not viewing an article)
-      if (wikiViewMode !== "list" || selectedWikiArticleId || selectedArticleId) return
+      if (wikiViewMode !== "list" || selectedWikiArticleId) return
 
       if (e.key === "Escape") {
         if (selectedArticleIds.size > 0) {
@@ -530,7 +485,7 @@ export function WikiView() {
     }
     document.addEventListener("keydown", handleKeyDown)
     return () => document.removeEventListener("keydown", handleKeyDown)
-  }, [wikiViewMode, selectedWikiArticleId, selectedArticleId, selectedArticleIds, sortedFilteredWikiNotes, clearArticleSelection])
+  }, [wikiViewMode, selectedWikiArticleId, selectedArticleIds, sortedFilteredWikiNotes, clearArticleSelection])
 
   // Non-trashed notes available to import
   const importableNotes = useMemo(() => {
@@ -600,16 +555,6 @@ export function WikiView() {
     resetImport()
     if (articleId) setSelectedWikiArticleId(articleId)
   }, [importSelectedNoteId, notes, createWikiArticle, resetImport])
-
-  // Reset selectedArticleId if note was deleted
-  const selectedNote = selectedArticleId
-    ? notes.find((n) => n.id === selectedArticleId && !n.trashed)
-    : null
-  useEffect(() => {
-    if (selectedArticleId && !notes.find((n) => n.id === selectedArticleId && !n.trashed)) {
-      setSelectedArticleId(null)
-    }
-  }, [selectedArticleId, notes])
 
   // Red links: collect all [[link]] targets that don't have a matching wiki note
   const redLinks = useMemo(() => {
@@ -993,75 +938,6 @@ export function WikiView() {
             }}
           />
         )}
-      </div>
-    )
-  }
-
-  // ── Article Reader Mode (Legacy Note-based) ──
-  if (selectedArticleId && selectedNote) {
-    return (
-      <div className="flex flex-1 flex-col overflow-hidden">
-        <ViewHeader
-          icon={<BookOpen size={20} strokeWidth={2} />}
-          title={selectedNote.title || "Untitled"}
-          actions={
-            <div className="flex items-center gap-2">
-              <Popover>
-                <PopoverTrigger asChild>
-                  <button
-                    className="flex items-center justify-center h-7 w-7 rounded-md text-muted-foreground transition-colors duration-150 hover:bg-hover-bg hover:text-foreground"
-                    aria-label="More actions"
-                  >
-                    <DotsThree size={16} strokeWidth={2.5} />
-                  </button>
-                </PopoverTrigger>
-                <PopoverContent align="end" className="w-48 p-1">
-                  <button
-                    onClick={() => { toggleTrash(selectedArticleId); setSelectedArticleId(null) }}
-                    className="flex w-full items-center gap-2.5 rounded-md px-3 py-2 text-left text-note text-destructive transition-colors duration-150 hover:bg-destructive/10"
-                  >
-                    <Warning size={14} strokeWidth={2} />
-                    Move to Trash
-                  </button>
-                </PopoverContent>
-              </Popover>
-              {isEditingArticle ? (
-                <button
-                  onClick={handleDoneEditing}
-                  className="flex items-center gap-1.5 rounded-md bg-emerald-600 px-2.5 py-1 text-note font-medium text-white transition-colors duration-150 hover:bg-emerald-700"
-                >
-                  <PhCheck size={14} strokeWidth={2.5} />
-                  Done
-                </button>
-              ) : (
-                <button
-                  onClick={handleEditArticle}
-                  className="flex items-center gap-1.5 rounded-md bg-accent px-2.5 py-1 text-note font-medium text-accent-foreground transition-colors duration-150 hover:bg-accent/90"
-                >
-                  <PencilLine size={14} strokeWidth={2} />
-                  Edit
-                </button>
-              )}
-            </div>
-          }
-        >
-          {/* Back button row below ViewHeader */}
-          <div className="flex items-center gap-2 border-b border-border px-5 py-1.5">
-            <button
-              onClick={handleBack}
-              className="flex items-center gap-1.5 rounded-md px-2 py-1 text-note text-muted-foreground transition-colors duration-150 hover:bg-hover-bg hover:text-foreground"
-            >
-              <ArrowLeft size={14} strokeWidth={2} />
-              Back
-            </button>
-          </div>
-        </ViewHeader>
-
-        <WikiArticleReader
-          noteId={selectedArticleId}
-          onNavigate={handleNavigate}
-          isEditing={isEditingArticle}
-        />
       </div>
     )
   }

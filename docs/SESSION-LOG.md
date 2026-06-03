@@ -6,6 +6,56 @@
 
 ---
 
+## 2026-06-03 (집/Windows) — **P3 출시 전 안정화 마무리: 죽은 Wiki Reader 클러스터 제거 + stone/brick 잔재 정리 + 스모크 QA**
+
+> 🎯 **다음 즉시 액션**: **폴더 필터 F5 URL화** (TODO 0.025, 사용자 2026-06-01 직접 적발) — 사이드바 폴더/태그/라벨 클릭이 `router.push("/notes")` + `activeFolderId`(모듈상태, URL 없음) → F5 시 필터 리셋(All Notes 복귀). 캐치올(`/folder/{id}` URL 복원, #513)과 **별개 layer**.
+>
+> **사용자 의도**: 출시 전 안정화. "데드코드 정리"는 두 항목(noteType·stone/brick) 다 "대부분 backward-compat 보존, 진짜 작업은 소수"로 판명 — 무리한 일괄 정리보다 정확한 보존 판정 우선.
+>
+> **첫 스텝** (폴더 F5, 다른 머신에서 바로):
+> 1. **설계 결정 먼저 (사용자 합의)**: 사이드바 폴더 클릭 → `/folder/{id}` navigate(FolderDetailView, 캐치올 활용) vs `/notes?folder={id}`(쿼리스트링, 필터 유지). 후자가 F5 생존 + 간단.
+> 2. `components/linear-sidebar.tsx`에서 폴더/태그/라벨 onClick 핸들러 찾기 (현재 `router.push("/notes")` + setActiveFolderId 모듈상태).
+> 3. URL에 상태 반영(`?folder=`/`?tag=`/`?label=`) + 해당 뷰가 URL 읽어 필터 복원.
+>
+> **위험 + 회피**: 캐치올 라우팅(#513)과 UX 충돌 주의 — `/folder/{id}`(FolderDetailView 전용 화면)와 `/notes?folder=`(노트 리스트 필터)는 다른 경험. **어느 쪽인지 사용자 합의 먼저**. activeFolderId 모듈상태가 SOT면 URL과 동기화 필요.
+>
+> **참고 파일**: `components/linear-sidebar.tsx`(폴더/태그/라벨 nav), `app/(app)/[...slug]/`(캐치올 #513), `components/views/folder-detail-view.tsx`.
+>
+> **머신**: 집(Windows). **현재 main HEAD**: 이 PR 머지 후. **branch worktree**: 새 worktree 생성.
+
+### 완료 (P3 안정화 마무리, 2 작업 → 1 PR)
+- **🗑️ 죽은 레거시 Wiki Reader 클러스터 제거** (~1036줄): 4파일 삭제(`wiki-article-reader`/`wiki-disambig`/`wiki-related-docs`/`wiki-collection-sidebar`) + `note-editor.tsx`(죽은 `WikiReadLayout` 함수+동반 import/selector, dead 삼항 `{false?null:X}`→`X` unwrap) + `wiki-view.tsx`(레거시 "Article Reader Mode (Legacy Note-based)" 분기 + 단수 state `selectedArticleId` 정리). **modern 위키(wikiArticles + WikiArticleView)는 무변경.**
+- **🧹 stone/brick/keystone 잔재 정리**: i18n `added_toast` **사용자 노출 버그 2건**(en "Added to Stone"→"Added to Backlog", ko "스톤에 추가됨"→"대기에 추가됨"; quick-capture가 `status:"backlog"` 생성) + dead i18n 키 6개(en/ko `sidebar.stone/brick/block`) + dead Icon 별칭 3개(`IconStone/Brick/Block`) + stale 주석 2개.
+
+### 브레인스토밍 & 큰 결정 (영구)
+- **"데드코드 정리" 항목 ≠ 데드코드**: noteType==="wiki"(107곳)·stone/brick(119곳) 둘 다 TODO 전제와 달리 **대부분 살아있는 backward-compat/load-bearing**. 무리한 일괄 정리(블라인드 replace)는 구식 데이터 유저를 깨뜨림. **조사→architect 전수 분류→소수만 정밀 작업**이 정답(2회 성공 패턴).
+- **진짜 작업은 소수**: noteType→Wiki Reader 클러스터 1개(컴포넌트 통째 삭제). stone/brick→사용자 노출 버그 2건 + dead 9개. 나머지(migrate/seeds/tests/목업/persist 식별자/방어 체크)는 보존.
+
+### 기술 학습 (영구)
+- **레거시 분기 도달 불가 증명법 = state setter 전수 추적**: `wiki-view` 레거시 분기는 `selectedArticleId`(단수)가 non-null 돼야 도달. 유일 non-null setter(`openArticle` fallback `setSelectedArticleId(id)`)가 **모든 호출처에서 wikiArticles 파생 id만 받아** `directArticle` 분기 early-return → fallback 미도달 → state 영원히 null → 분기 죽음. **변수명 함정**: `sortedFilteredWikiNotes`/`wikiNotes`는 이름과 달리 `wikiArticles` 파생(v47부터 별도 엔티티). `selectedArticleId`(단수, 레거시) vs `selectedArticleIds`(복수 Set, modern 다중선택) 혼동 주의.
+- **noteType="wiki" 보존 이유**: migrate가 구식 wiki 노트를 normalize 안 함(v66 설정만, v89/v107 중복만 trash) → 구식 데이터에 잔존 가능 → graph/side-panel/trash/search/calendar/insights/hover-preview/filter의 noteType 체크 = 살아있는 방어망.
+- **stone/brick 라우트는 이미 rename됨**: `lib/table-route.ts`가 `/backlog`,`/todo`,`/in-progress`,`/done` 사용. queries/notes.ts 17곳=주석/문자열, 로직은 새 enum. AGENTS.md `/stone` 라우트=**stale 문서**(코드와 불일치). autopilot/analysis rule id + settings `startView:"stone"`=persist 식별자라 보존.
+- **i18n 키 삭제 신중**: 동적 키 조합(`t(\`sidebar.${...}\`)`) 가능성 → 정적+동적 grep 후 삭제.
+
+### Watch Out (다음 세션 주의사항)
+- **AGENTS.md stale**: `/stone`,`/brick`,`/keystone` 라우트 문서(L222-224,307 등)가 실제 코드(table-route.ts)와 불일치 → 별도 정정 후보.
+- **남은 cosmetic 보류**: `cmdk.cmd.go_to_stone` 등 i18n 키, queries/notes.ts 주석/함수명(`getInboxNotes` 등)은 동작 정상이라 이번 보류(이득 낮음). `getReviewQueue`는 live 호출처 0(dead 후보, 미처리).
+- **noteType 방어망 보존**: 향후 noteType 건드릴 때 backward-compat(구식 wiki 노트) 깨지 않게.
+- **dev preview 라우팅 한계**: 스페이스 nav는 작동(path 변함)하나 keep-mounted 구조라 헤딩 selector 부정확 → 사용자 실화면 F5 권장.
+
+### 환경 변경
+- Store version: **무변경 (v154)**.
+- Tests: 무변경 (318 passed/7 skipped/0 failed — 이번 변경은 컴포넌트 삭제 + i18n, 테스트 영향 없음).
+- 삭제 4파일: `components/editor/wiki-disambig.tsx`·`wiki-related-docs.tsx`·`wiki-collection-sidebar.tsx`·`components/views/wiki-article-reader.tsx`.
+- 수정 5파일: `note-editor.tsx`·`wiki-view.tsx`·`lib/i18n.ts`·`components/plot-icons.tsx`·`components/views/notes-timeline-view.tsx`.
+- 순 **-1050줄** (9 파일, +25/-1075).
+- 검증: tsc 0, build(webpack) exit 0 (50/50 페이지), 스모크 QA(위키 dashboard+modern article view·노트 에디터·책/달력/온톨로지/자료실 순회·백업) **console 에러 0**.
+
+### 머신
+집 (Windows)
+
+---
+
 ## 2026-06-02 (집/Windows, 오후 #3) — **P3 안정화: 죽은 auto-enroll/wiki-conversion 서브시스템 제거 (데드코드)**
 
 > 🎯 **다음 즉시 액션 hook**: **P3 데드코드 잔여** — ① **`noteType==="wiki"` 체크 107곳/39파일** 제거(이제 live setter 0이지만 ⚠️ 구식 persist 데이터에 noteType="wiki" 잔존 가능 → migrate가 normalize하는지/방어 체크 유지할지 검증 먼저) ② **status stone/brick/keystone 119곳/26파일** 코스메틱 rename(⚠️ migrate/seeds/tests backward-compat 문자열 유지, dnd id `col-stone` 등 비-load-bearing만) + 스모크. SOT=`desktop-local-first.spec.md` Roadmap P3.
