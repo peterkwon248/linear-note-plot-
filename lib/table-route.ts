@@ -70,9 +70,10 @@ export function routeGoBack(): boolean {
   _routeHistoryIndex--
   const route = _routeHistory[_routeHistoryIndex]
   setActiveRoute(route)
-  // Sync URL without triggering Next.js navigation
+  // Sync URL without triggering Next.js navigation (routeToUrl keeps book
+  // detail on the pre-rendered /books?book= URL so F5 doesn't hard-load).
   if (typeof window !== "undefined") {
-    window.history.replaceState(null, "", route)
+    window.history.replaceState(null, "", routeToUrl(route))
   }
   _isNavigatingHistory = false
   return true
@@ -85,7 +86,7 @@ export function routeGoForward(): boolean {
   const route = _routeHistory[_routeHistoryIndex]
   setActiveRoute(route)
   if (typeof window !== "undefined") {
-    window.history.replaceState(null, "", route)
+    window.history.replaceState(null, "", routeToUrl(route))
   }
   _isNavigatingHistory = false
   return true
@@ -223,11 +224,21 @@ export function subscribeActiveRoute(fn: () => void): () => void {
 
 /** Initialize from pathname (e.g., on page load or popstate). */
 export function syncFromPathname(pathname: string): void {
+  // Book detail deep-link / F5: the URL is `/books?book={id}` (a query on the
+  // pre-rendered /books page — see routeToUrl). Restore the detail route so a
+  // hard-load lands on the book, not the grid.
+  if (pathname === "/books" && typeof window !== "undefined") {
+    const bookId = new URLSearchParams(window.location.search).get("book")
+    if (bookId) {
+      setActiveRoute(`/books/${bookId}`)
+      return
+    }
+  }
   if (ALL_SIDEBAR_ROUTES.includes(pathname)) {
     setActiveRoute(pathname)
   } else if (pathname.startsWith("/books/")) {
-    // Dynamic book detail route /books/{id} — keep books-space mounted.
-    // Phase 3: BooksView branches internally on activeRoute (grid vs detail).
+    // Legacy path-form deep link (/books/{id}, pre-2026-06-03). Still resolved
+    // for backward compat; new navigations use the /books?book= query form.
     setActiveRoute(pathname)
   } else {
     setActiveRoute(null)
@@ -242,6 +253,31 @@ export function getBookIdFromRoute(route: string | null): string | null {
   if (!route || !route.startsWith("/books/")) return null
   const id = route.slice("/books/".length)
   return id.length > 0 ? id : null
+}
+
+/**
+ * Map an internal route to the address-bar URL. Book detail is represented as a
+ * query on the pre-rendered `/books` page (`/books?book={id}`) rather than a
+ * path param (`/books/{id}`).
+ *
+ * Why: the static-export desktop shell (Tauri) has no pre-rendered file for
+ * `/books/{id}`, so a real navigation there hard-loads → Tauri's asset handler
+ * falls back to the root `index.html` → the layout's start-view effect (which
+ * fires at pathname "/") redirects to `/home` = the "Home flash" users hit when
+ * opening a book (2026-06-03 report). Keeping the pathname on the pre-rendered
+ * `/books` avoids the hard-load entirely and makes F5 / deep-links resolve via
+ * syncFromPathname. Mirrors the wiki `/wiki?article=` pattern.
+ *
+ * Smart-Book (`/books/smart-books`) and Insights (`/books/insights`) are real
+ * pre-rendered routes — pass them, and every non-book route, through unchanged.
+ */
+export function routeToUrl(route: string | null): string {
+  if (!route) return "/"
+  const bookId = getBookIdFromRoute(route)
+  if (bookId && bookId !== "smart-books" && bookId !== "insights") {
+    return `/books?book=${bookId}`
+  }
+  return route
 }
 
 /* ── Pending Filters (one-shot injection from Home cards) ── */

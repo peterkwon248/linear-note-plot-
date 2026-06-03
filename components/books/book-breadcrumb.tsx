@@ -11,7 +11,7 @@
 import { useState, useMemo, useRef, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { usePlotStore } from "@/lib/store"
-import { setActiveRoute } from "@/lib/table-route"
+import { setActiveRoute, routeToUrl } from "@/lib/table-route"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { IconChevronRight } from "@/components/plot-icons"
 import { BookKindIcon } from "@/components/property-chips"
@@ -55,7 +55,7 @@ export function BookBreadcrumb({
 
   const navigateToBook = (id: string) => {
     setActiveRoute(`/books/${id}`)
-    router.push(`/books/${id}`)
+    router.push(routeToUrl(`/books/${id}`))
     setPickerOpen(false)
     setQuery("")
   }

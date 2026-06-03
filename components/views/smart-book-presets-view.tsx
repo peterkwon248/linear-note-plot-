@@ -22,7 +22,7 @@ import { useState, useMemo, useEffect, type ReactNode } from "react"
 import { useRouter } from "next/navigation"
 import { usePlotStore } from "@/lib/store"
 import { useT } from "@/lib/i18n"
-import { setActiveRoute } from "@/lib/table-route"
+import { setActiveRoute, routeToUrl } from "@/lib/table-route"
 import { toast } from "sonner"
 import { cn } from "@/lib/utils"
 import { shortRelative } from "@/lib/format-utils"
@@ -588,7 +588,7 @@ export function SmartBookPresetsView() {
     toast.success(t("smartBook.preset.applied").replace("{name}", preset?.name ?? ""))
     const href = `/books/${newId}`
     setActiveRoute(href)
-    router.push(href)
+    router.push(routeToUrl(href))
   }
 
   const handleCreateSubmit = (data: PresetFormData) => {

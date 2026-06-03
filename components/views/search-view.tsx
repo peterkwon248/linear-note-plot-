@@ -7,7 +7,7 @@ import { useSearch } from "@/lib/search/use-search"
 import { useBacklinksIndex } from "@/lib/search/use-backlinks-index"
 import { shortRelative } from "@/lib/format-utils"
 import { useT } from "@/lib/i18n"
-import { setActiveRoute, setActiveFolderId, setActiveTagId, setActiveLabelId } from "@/lib/table-route"
+import { setActiveRoute, setActiveFolderId, setActiveTagId, setActiveLabelId, routeToUrl } from "@/lib/table-route"
 import { navigateToWikiArticle } from "@/lib/wiki-article-nav"
 import {
   FileText,
@@ -310,8 +310,8 @@ export function SearchView() {
   }
 
   function handleBookSelect(bookId: string) {
-    setActiveRoute("/books")
-    router.push(`/books/${bookId}`)
+    setActiveRoute(`/books/${bookId}`)
+    router.push(routeToUrl(`/books/${bookId}`))
   }
 
   function handleCategorySelect() {

@@ -55,7 +55,7 @@ import { Filter as FunnelSimple } from "lucide-react"
 import { TagNoteCountChip } from "@/components/property-chips"
 import type { SortField, FilterRule, GroupBy } from "@/lib/view-engine/types"
 import { EntityNoteListRow } from "@/components/views/entity-note-list-row"
-import { setActiveRoute } from "@/lib/table-route"
+import { setActiveRoute, routeToUrl } from "@/lib/table-route"
 import { useRouter } from "next/navigation"
 import { shortRelative } from "@/lib/format-utils"
 import { StatusShapeIcon } from "@/components/status-icon"
@@ -224,7 +224,7 @@ export function TagsView() {
   const navigateToBook = useCallback((bookId: string) => {
     setSelectedTagId(null)
     setActiveRoute(`/books/${bookId}`)
-    router.push(`/books/${bookId}`)
+    router.push(routeToUrl(`/books/${bookId}`))
   }, [router])
 
   // View state

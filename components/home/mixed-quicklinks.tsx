@@ -3,7 +3,7 @@
 import { useMemo } from "react"
 import { useRouter } from "next/navigation"
 import { usePlotStore } from "@/lib/store"
-import { setActiveRoute } from "@/lib/table-route"
+import { setActiveRoute, routeToUrl } from "@/lib/table-route"
 import { navigateToWikiArticle } from "@/lib/wiki-article-nav"
 import { FileText, BookOpen, Folder as PhFolder, Filter as Funnel, Bookmark as BookmarkSimple } from "lucide-react"
 import { SPACE_ICONS } from "@/lib/entity-icons"
@@ -89,7 +89,7 @@ export function MixedQuicklinks({ limit = 8, bookmarkLimit = 8 }: { limit?: numb
         sortKey: `2.5-${b.updatedAt}`,
         onClick: () => {
           setActiveRoute(`/books/${b.id}`)
-          router.push(`/books/${b.id}`)
+          router.push(routeToUrl(`/books/${b.id}`))
         },
       })
     }

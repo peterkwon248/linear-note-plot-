@@ -34,7 +34,7 @@ import {
 } from "lucide-react"
 import { SPACE_ICONS } from "@/lib/entity-icons"
 import { usePlotStore } from "@/lib/store"
-import { setActiveRoute } from "@/lib/table-route"
+import { setActiveRoute, routeToUrl } from "@/lib/table-route"
 import { KNOWLEDGE_INDEX_COLORS, SPACE_COLORS } from "@/lib/colors"
 import { cn } from "@/lib/utils"
 import { StatusShapeIcon } from "@/components/status-icon"
@@ -125,7 +125,7 @@ export function BookContextNav({
   const handleBackToBook = () => {
     const route = `/books/${bookId}`
     setActiveRoute(route)
-    router.push(route)
+    router.push(routeToUrl(route))
   }
 
   // TOC dropdown is only available when the parent supplied items + jumpTo.

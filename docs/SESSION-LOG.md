@@ -6,6 +6,77 @@
 
 ---
 
+## 2026-06-04 (집/Windows) — **북 생성/열기 "홈 깜빡임" 수정 (위키식 쿼리스트링 라우팅)**
+
+> 🎯 **다음 즉시 액션**: ① **데스크톱 앱 재빌드 후 실검증** — 지금 사용자 Tauri 앱은 수정 전 `out/` embed이라, 실화면 확인하려면 `npm run build`→tauri 재빌드 필요(쿼리스트링 방식은 dev=정적-export 동작 동일이라 dev 검증은 이미 완료). ② **(코딩) folder/tag/label 경로 동일 패턴 적용** — `/folder/{id}`·`/tag/{id}`·`/label/{id}`도 정적 export에서 path-param이라 책과 **똑같은 hard-nav→홈 깜빡임** 발생. 책에 쓴 `routeToUrl()`/쿼리스트링 패턴 확장. 기존 "폴더 필터 F5 URL화"(TODO 0.025) carry와 합류.
+>
+> **사용자 의도**: "새 북 추가 시 잠시 홈 갔다가 생성됨 + 2번째 생성 안 됨 → 그 자리에서 즉시 생성돼야". 조사 중 "열기도 같은 깜빡임, 노트·위키도 그럴 것" → 근본 수정 요청. 사용자 최종 선택 = **위키식 쿼리스트링**(open+F5 둘 다 해결, dev 검증 가능).
+>
+> **첫 스텝** (folder/tag/label 확장, 다른 머신에서 바로):
+> 1. `lib/table-route.ts`의 `routeToUrl()` 참고 — 책은 `/books/{id}`→`/books?book={id}` 매핑(렌더는 activeRoute 경로형 유지, URL만 쿼리형).
+> 2. **주의: folder/tag/label은 흐름이 다름** — `app/(app)/[...slug]` catch-all이 처리(`components/views/catch-all-route.tsx`). tag/label은 필터 설정 후 `/notes`로 bounce(이미 프리렌더 라우트라 무해할 수도 — 검증 먼저), folder는 자체 뷰(FolderDetailView) 렌더라 쿼리화에 **설계 결정 필요**(`/notes?folder=` vs `/folder/{id}` 유지). 사용자 합의 먼저.
+> 3. 사이드바 folder/tag/label onClick = `components/linear-sidebar.tsx`.
+>
+> **핵심 메커니즘 (이번 세션 확립)**: 정적 export(Tauri)에서 **프리렌더 안 된 path-param 라우트로 `router.push` → hard-nav(풀 리로드) → Tauri `get_asset`이 루트 `index.html` 폴백(빌트인 SPA fallback 존재) → 하이드레이션이 pathname "/"로 잡혀 → `app/(app)/layout.tsx:105` start-view 이펙트가 `/home` 리다이렉트 = "홈 깜빡임"**. 해결 = pathname을 프리렌더된 부모(`/books`)에 두고 id는 쿼리(`?book=`)로 → hard-nav 자체 소멸. 위키(`/wiki?article=`)가 안 깜빡인 이유와 동일.
+>
+> **위험 + 회피**: ① **변수형 router.push 누락** — `router.push(href)`/`(route)`는 템플릿-리터럴 grep에 안 걸림. `/books/${` 구성 + `router.push\((href|route)\)` **양쪽 grep 필수**(이번에 사이드바 책 링크 4곳 1차 누락 → cross-space dev 테스트로 발견). ② **`npx tsc --noEmit` false-clean**(incremental 캐시 — 미import 6건 못 잡음) → **`npm run build`가 유일 신뢰 게이트**. ③ 책↔책 직접 전환 시 pathname 고정→layout pathname-keyed "clear selectedNote" 미발화 → `BookDetailPage key={detailId}` remount로 보강.
+>
+> **참고 파일**: `lib/table-route.ts`(routeToUrl/syncFromPathname/routeGoBack), `components/views/books-view.tsx`(openBook/handleCreate/key), `app/(app)/layout.tsx:96·105`(syncFromPathname 호출 + start-view 깜빡임 근원), `next.config.mjs:12`(output:export prod-only).
+>
+> **머신**: 집(Windows). **현재 main HEAD**: 이 PR 머지 후. **branch worktree**: 새 worktree 생성.
+
+### 완료 (북 라우팅 수정, 11 파일)
+- **생성 in-place**: `books-view.tsx handleCreate`에서 `setActiveRoute`+`router.push` 제거 → 그리드 그 자리 생성(네비 없음).
+- **열기 쿼리스트링**: 책 상세 URL `/books/{id}`→`/books?book={id}`. `routeToUrl()` 헬퍼(`table-route.ts`) + `syncFromPathname`(F5 시 `?book=` 복원) + `routeGoBack/Forward`(쿼리형 `replaceState`). 책 여는 **11개 콜사이트 전부** `router.push(routeToUrl(...))`: 그리드카드·**사이드바(Recent/Pinned/혼합 4곳)**·breadcrumb·context-nav·home·search·tags·folder(3)·smart-book·quicklinks.
+- **`BookDetailPage key={detailId}`** — 책↔책 전환 시 reading 상태 리셋 보강.
+- 검증: dev preview에서 생성(그자리)·열기(그리드카드+사이드바, `/books?book=`, 리로드0, 깜빡임0)·F5(상세 복원)·그리드복귀 전부 통과. **build exit 0(50p export)**.
+
+### 브레인스토밍 & 큰 결정 (영구)
+- **정적 export deep-link = path-param 금지, 쿼리스트링 사용**: 프리렌더 안 된 path-param(`/x/{id}`)은 Tauri서 hard-nav→홈 깜빡임. **프리렌더된 부모 + 쿼리(`/x?id=`)가 정답**(위키 패턴). 향후 신규 동적 라우트는 이 패턴 강제.
+- **Tauri SPA fallback은 이미 빌트인**(`get_asset` index.html 폴백) → 커스텀 Rust 프로토콜 불필요. 깜빡임은 "폴백 부재"가 아니라 "폴백된 루트 index.html이 start-view로 홈 리다이렉트"라서 → Rust 추가가 아니라 **프론트엔드 hard-nav 제거**가 정답.
+
+### 기술 학습 (영구)
+- **변수형 router.push 함정**: `router.push(href)` 변수형은 `push(\`/books/\$` grep에 안 잡힘 → `/books/${` 구성 + `router.push\((href|route)\)` 양쪽 grep 필수.
+- **`npx tsc --noEmit` 불신**: incremental 캐시로 미import를 false-clean. 이 프로젝트는 **`npm run build`가 유일 신뢰 타입체크 게이트**.
+- **쿼리스트링 라우팅 = dev/정적-export 동작 동일**: hard-nav(정적-export 전용)와 달리 쿼리 라우팅은 dev preview로 완전 검증 가능.
+
+### Watch Out (다음 세션 주의사항)
+- **folder/tag/label 동일 이슈 미해결**: `/folder/{id}`·`/tag/{id}`·`/label/{id}`도 path-param → 같은 홈 깜빡임 가능. folder는 자체 뷰(catch-all FolderDetailView)라 쿼리화에 설계 결정 필요.
+- **데스크톱 재빌드 전 미반영**: 사용자 Tauri 앱은 수정 전 `out/` embed.
+- 레거시 path-form deep-link(`/books/{id}`)는 syncFromPathname에 backward-compat 분기 유지(여전히 동작).
+
+### 환경 변경
+- Store version: **무변경 (v154)**. 빌드 exit 0(50p export).
+- 수정 11파일: `lib/table-route.ts` + `components/{views/books-view, books/book-breadcrumb, books/book-context-nav, home/mixed-quicklinks, views/home-view, views/search-view, views/tags-view, views/folder-detail-view, linear-sidebar, views/smart-book-presets-view}.tsx`.
+- package-lock.json: lockfile version 0.1.0→0.1.2 동기화(부수적, npm install).
+
+### 머신
+집 (Windows)
+
+---
+
+## 2026-06-03 (집/Windows) — **출시후 1차 릴리스 스프린트 #524~#528 (⚠️ 백필 — 당시 after-work 누락)**
+
+> 🎯 (백필 entry — 다음 액션은 위 2026-06-04 entry 참조)
+>
+> **백필 사유**: #524~#528이 2026-06-03 당일 #523 직후 머지됐으나 docs(SESSION-LOG/TODO/MEMORY)에 미기록. 2026-06-04 세션 before-work에서 git ground truth(main HEAD=`59b3b57`)와 docs(#523에서 멈춤) 불일치 발견 → commit message 기반 백필(상세는 lossy).
+
+### 완료 (app v0.1.0→v0.1.2 출시후 스프린트)
+- **#524** `ea63d1c`: v0.1.0 first-launch 버그 2건 (위키 생성 블로커 + triage 토스트).
+- **#525** `f5c46ef`: **프로덕션 온보딩 시드** — 빈 앱 대신 풍부한 PKM 스타터 세트. `lib/store/index.ts` +29 (store v154 무변경, seed 로직만).
+- **#526** `8115b8c`: **Tauri 자동 업데이트** — updater + process 플러그인. 신규 `components/auto-updater.tsx`·`lib/updater-store.ts`.
+- **#527** `74aed1f`: **사이드바 업데이트 인디케이터** (Linear-style) + v0.1.1. 신규 `components/sidebar-update-indicator.tsx`.
+- **#528** `59b3b57`: v0.1.2 데모 릴리스 (chore).
+
+### 환경 변경
+- Store version: **무변경 (v154)**. app version 0.1.0→0.1.2.
+- 신규 파일: `auto-updater.tsx`·`sidebar-update-indicator.tsx`·`updater-store.ts`.
+
+### 머신
+집 (Windows)
+
+---
+
 ## 2026-06-03 (집/Windows) — **P3 출시 전 안정화 마무리: 죽은 Wiki Reader 클러스터 제거 + stone/brick 잔재 정리 + 스모크 QA**
 
 > 🎯 **다음 즉시 액션**: **폴더 필터 F5 URL화** (TODO 0.025, 사용자 2026-06-01 직접 적발) — 사이드바 폴더/태그/라벨 클릭이 `router.push("/notes")` + `activeFolderId`(모듈상태, URL 없음) → F5 시 필터 리셋(All Notes 복귀). 캐치올(`/folder/{id}` URL 복원, #513)과 **별개 layer**.

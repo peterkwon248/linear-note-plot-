@@ -36,7 +36,7 @@ import { BookGridCard } from "@/components/books/book-grid-card"
 import { BooksBoard } from "@/components/books/books-board"
 import { BooksTimelineView } from "@/components/views/books-timeline-view"
 // 2026-05-24: BooksGalleryAdapter import removed — gallery mode deprecated
-import { setActiveRoute, setActiveFolderId, useActiveRoute, useActiveFolderId, useSecondaryRoute, getBookIdFromRoute } from "@/lib/table-route"
+import { setActiveRoute, setActiveFolderId, useActiveRoute, useActiveFolderId, useSecondaryRoute, getBookIdFromRoute, routeToUrl } from "@/lib/table-route"
 import { usePane } from "@/components/workspace/pane-context"
 import { shortRelative } from "@/lib/format-utils"
 import { toast } from "sonner"
@@ -75,7 +75,12 @@ export function BooksView() {
   const detailId = getBookIdFromRoute(route)
 
   if (detailId) {
-    return <BookDetailPage bookId={detailId} />
+    // key={detailId} → a fresh detail instance per book so per-book reading
+    // state resets on a direct book→book switch. Book nav now keeps the URL on
+    // /books?book= (see routeToUrl), so the layout's pathname-keyed "clear
+    // selected note" effect no longer fires between books; the remount's
+    // unmount-cleanup (setSelectedNoteId(null)) restores that behaviour.
+    return <BookDetailPage key={detailId} bookId={detailId} />
   }
 
   return <BooksGrid />
@@ -183,8 +188,13 @@ function BooksGrid() {
     setCreateTitle("")
     setCreateOpen(false)
     toast.success(t("books.toast.created").replace("{title}", title))
-    setActiveRoute(`/books/${id}`)
-    router.push(`/books/${id}`)
+    // 2026-06-03 — 사용자 보고: 북 생성 시 "잠시 홈으로 갔다가 북이 생성" + 2번째
+    // 생성 실패. 원인 = `router.push('/books/{id}')`가 정적-export(Tauri)에서
+    // 미프리렌더 라우트로 hard-nav → 루트 fallback → start-view 리다이렉트(=홈
+    // 깜빡임). 새 북은 그 자리(그리드)에 즉시 생성되어야 하므로(사용자 요청)
+    // detail로의 네비게이션을 제거 — 항상 마운트된 BooksGrid가 `books` 변경에
+    // 반응해 새 카드를 바로 보여준다. (열기=openBook은 별도 트랙: 동일 deep-link
+    // 이슈로 history-API 네비 전환 후속.)
   }
 
   const openBook = (id: string) => {
@@ -198,7 +208,7 @@ function BooksGrid() {
       sidePanelOpen: true,
     })
     setActiveRoute(`/books/${id}`)
-    router.push(`/books/${id}`)
+    router.push(routeToUrl(`/books/${id}`))
   }
 
   const handleTogglePin = (id: string, pinned: boolean | undefined) => {
