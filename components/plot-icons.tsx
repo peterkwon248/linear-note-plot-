@@ -2,11 +2,11 @@
  * Plot icon registry — lucide-react alias layer with Plot-friendly names
  * and default sizes preserved from the original mockup (plot-mockup-v3.jsx).
  *
- * User decision (2026-05-24): everything except brand status icons
- * (Stone/Brick/Block) unifies under lucide for visual consistency with the
- * PR-X5/X6 lucide migration. Custom mockup SVGs were removed in favor of
- * lucide equivalents — call sites unchanged because the `Icon*` aliases
- * (and their default `size` props) are preserved by thin wrappers.
+ * User decision (2026-05-24): all icons unify under lucide for visual
+ * consistency with the PR-X5/X6 lucide migration. Custom mockup SVGs were
+ * removed in favor of lucide equivalents — call sites unchanged because the
+ * `Icon*` aliases (and their default `size` props) are preserved by thin
+ * wrappers.
  *
  * Categories:
  *   1. Activity bar (Tier 1, 20px default)
@@ -244,9 +244,3 @@ export function IconDone({ size = 20, ...rest }: IconProps) {
   return <CheckCircle size={size} weight="regular" {...rest} />
 }
 
-/** @deprecated Legacy aliases (stone/brick/block → backlog/in_progress/done).
- *  Kept so existing call sites compile; new code should use the named exports
- *  above. The old architecture-metaphor building icons are retired. */
-export const IconStone = IconBacklog
-export const IconBrick = IconInProgress
-export const IconBlock = IconDone

@@ -8,6 +8,26 @@
 
 ---
 
+## ✅ 2026-06-03 (집/Windows) — P3 안정화 마무리: 죽은 Wiki Reader 클러스터 제거 + stone/brick 정리 + 스모크 ⭐⭐⭐⭐
+
+**범위**: 출시 전 안정화 데드코드 마무리 — 2개 "정리 항목"을 architect 전수 분류로 검증 → 진짜 데드만 정밀 제거 + 사용자 노출 버그 발견.
+
+### 핵심 결정/학습 (영구)
+- **"데드코드 정리" 항목 ≠ 데드코드**: noteType="wiki"(107곳)·stone/brick(119곳) 둘 다 TODO 전제와 달리 **대부분 살아있는 backward-compat/load-bearing**. 블라인드 일괄 정리는 구식 데이터 유저 깨뜨림. **조사→architect 전수 분류→소수만 정밀 작업**이 정답(2회 성공).
+- **noteType 진짜 데드 = 레거시 Wiki Reader 클러스터**: wiki-view 레거시 분기 도달 불가(`selectedArticleId` 단수 non-null setter = `openArticle` fallback, 모든 호출처가 wikiArticles 파생 id만 줘서 미도달 → 영원히 null). **변수명 함정**: `sortedFilteredWikiNotes`/`wikiNotes`는 이름과 달리 `wikiArticles` 파생(v47). noteType 체크는 migrate가 구식 wiki 노트를 normalize 안 해서 **살아있는 방어망**(graph/side-panel/trash/search/calendar/insights/hover-preview/filter).
+- **stone/brick 라우트 이미 rename됨**: `table-route.ts`가 `/backlog` 등 사용. queries/notes.ts 17곳=주석/문자열. AGENTS.md `/stone`=stale 문서. autopilot/analysis rule id + settings `startView:"stone"`=persist 식별자 보존. **발견: quick-capture `added_toast` 사용자 노출 버그**(폐기 "Stone"→Backlog/대기).
+
+### 완료
+- Wiki Reader 클러스터 제거(4파일 + note-editor `WikiReadLayout` + wiki-view 레거시 분기, ~1036줄) / stone-brick(`added_toast` 버그 2 + dead i18n키 6 + Icon별칭 3). 순 **-1050줄**. tsc0/build0/스모크 console0. **앱 Store 무변경(v154).**
+
+### 다음 우선순위 (P0)
+1. **폴더 필터 F5 URL화**(0.025, 사용자 적발) — 사이드바 폴더/태그/라벨 클릭이 모듈상태 `activeFolderId`→F5 리셋. `/folder/{id}` navigate vs `/notes?folder=` 설계 합의 먼저. 2. (별도 트랙) §13·Book kind 라벨·AGENTS.md stale 라우트 정정·migrate-v107 재활성.
+
+### Store version / HEAD
+**무변경(v154)**. main HEAD = 이 PR 머지 후. 머신=집/Windows.
+
+---
+
 ## ✅ 2026-06-02 (집/Windows, 오후 #2~#3) — P3 안정화: 그린 스위트 (#519) + 죽은 auto-enroll 서브시스템 제거 (#520) ⭐⭐⭐⭐
 
 **범위**: 출시 전 안정화 — 테스트 그린화 + 데드코드 1차.

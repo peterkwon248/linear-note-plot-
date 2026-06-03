@@ -51,6 +51,26 @@
 
 ---
 
+## 📜 2026-06-03 (집/Windows) — P3 안정화 마무리: Wiki Reader 클러스터 제거 + stone/brick 정리 + 스모크 ⭐⭐⭐⭐
+
+**범위**: 출시 전 데드코드 마무리 — architect 전수 분류로 진짜 데드만 제거.
+
+### 핵심 결정 (영구)
+- **"데드코드 정리" ≠ 데드코드**: noteType(107곳)·stone/brick(119곳) 대부분 backward-compat/load-bearing. 조사→architect 분류→소수만. 블라인드 replace 금지.
+- noteType 진짜 데드 = 레거시 Wiki Reader 클러스터(wiki-view 레거시 분기 도달 불가). noteType 체크는 살아있는 방어망(보존).
+- stone/brick 라우트는 이미 `table-route.ts`에서 rename됨. 발견: quick-capture `added_toast` 사용자 노출 버그(폐기 "Stone"→Backlog/대기).
+
+### 완료
+- Wiki Reader 클러스터 제거(~1036줄) / stone-brick(버그 2 + dead 9). 순 -1050줄. tsc0/build0/스모크 console0. Store 무변경(v154).
+
+### 다음 (P0)
+1. 폴더 필터 F5 URL화(0.025). 2. (별도) §13·Book kind 라벨·AGENTS.md stale 라우트 정정.
+
+### Store version
+무변경(v154).
+
+---
+
 ## 📜 2026-06-02 (집/Windows, 오후 #2~#3) — P3 안정화: 그린 스위트 (#519) + 죽은 auto-enroll 제거 (#520) ⭐⭐⭐⭐
 
 **범위**: 출시 전 안정화 — 테스트 그린화 + 데드코드 1차.
