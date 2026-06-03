@@ -336,18 +336,23 @@ export const usePlotStore = create<PlotState>()(
               state.books = SEED_BOOKS
               state.smartBookPresets = SEED_SMART_BOOK_PRESETS
             } else {
-              // Prod new user: a single welcome note, everything else empty
-              // (Obsidian/Bear-style clean start).
-              state.notes = [{ ...WELCOME_NOTE }]
-              state.wikiArticles = []
-              state.wikiCategories = []
-              state.folders = []
-              state.tags = []
-              state.labels = []
-              state.templates = []
-              state.wikiTemplates = []
-              state.books = []
-              state.smartBookPresets = []
+              // Prod new user: ship the full PKM starter set. Plot is a
+              // knowledge GRAPH — a rich, interconnected seed (notes ↔ wiki ↔
+              // books: ~9 notes / ~22 wiki articles / 8 books / 13 templates +
+              // categories/tags/labels) is the first impression that an empty
+              // app can't deliver. WELCOME_NOTE leads as a friendly pinned
+              // intro. The hasSeeded gate (above) means a user who clears it
+              // out never sees the demo resurrect (출시: 부활 0).
+              state.notes = [{ ...WELCOME_NOTE }, ...SEED_NOTES]
+              state.wikiArticles = SEED_WIKI_ARTICLES
+              state.wikiCategories = SEED_WIKI_CATEGORIES
+              state.folders = SEED_FOLDERS
+              state.tags = SEED_TAGS
+              state.labels = SEED_LABELS
+              state.templates = SEED_TEMPLATES
+              state.wikiTemplates = SEED_WIKI_TEMPLATES
+              state.books = SEED_BOOKS
+              state.smartBookPresets = SEED_SMART_BOOK_PRESETS
             }
             state.hasSeeded = true
           }
