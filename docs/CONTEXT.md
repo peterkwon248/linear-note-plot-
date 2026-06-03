@@ -51,6 +51,29 @@
 
 ---
 
+## 📜 2026-06-04 (집/Windows, 오후) — 뷰엔진 디스플레이 11버그 (보드/그리드/휴지통 7 완료 + 타임라인 4 WIP) ⭐⭐⭐⭐
+
+**범위**: 노트/위키/북 디스플레이 패널·뷰모드 11버그. 풀 패리티.
+
+### 핵심 결정 (영구)
+- **뷰엔진 칩 패턴 SOT**: `PropertyChipRow`(`components/property-chips.tsx`) + `isVisible(col)`(`!visibleColumns || visibleColumns.includes(col)`) + 도메인별 칩. 보드/그리드/타임라인 3모드 × 3스페이스가 같은 패턴 공유해야 패리티. 스페이스별 카드가 갈라진 게 버그 원인.
+- **오버플로 = HoverCard**: `PropertyChipRow`의 "+N more"는 호버 시 가려진 칩 내용을 HoverCard로 표시(카운트만 X).
+- **디스플레이 컨트롤 mode 게이팅**(`display-panel.tsx`): grid/timeline이 board 상속(카드가 칩 렌더하므로). 그룹화는 timeline만(grid=flat).
+
+### 재발 방지 (영구)
+- 2026-06-04 — **dev preview UI 검증 불가 케이스**: screenshot 30s 타임아웃 반복(복잡한 SVG/타임라인)·HMR stale. **교훈: 빌드 통과 + 데스크톱 재빌드 사용자 화면이 UI 신뢰 게이트. eval 측정도 layout 미settle 시 부정확.**
+
+### 완료/WIP
+- 완료 7: 보드 오버플로·북 보드 visibleColumns·그리드 칩+체크박스(3)·휴지통 배지·패널 게이팅. WIP 4: 타임라인(북 #10 캔버스 collapse·#11 그룹화·노트/위키 #4/#7 검증). build0. Store 무변경(v154).
+
+### 다음 (P0)
+1. 타임라인 그룹 마무리(0.005) — 사용자 재빌드 피드백 받고.
+
+### Store version
+무변경(v154).
+
+---
+
 ## 📜 2026-06-04 (집/Windows) — 북 생성/열기 "홈 깜빡임" 수정 (위키식 쿼리스트링 라우팅) ⭐⭐⭐⭐
 
 **범위**: 정적 export(Tauri) 데스크톱서 책 생성/열기 시 "잠시 홈 갔다가" 깜빡임. 생성=그자리 in-place, 열기=쿼리스트링.

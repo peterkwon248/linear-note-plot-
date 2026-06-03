@@ -19,14 +19,28 @@
  * the on-screen order.
  */
 
+import { useMemo } from "react"
 import { Pin as PushPin, Check as PhCheck, ChevronDown } from "lucide-react"
 import { StatusShapeIcon } from "@/components/status-icon"
 import { GroupHeaderIcon, resolveGroupLabel } from "@/components/group-header"
-import { shortRelative } from "@/lib/format-utils"
 import { cn } from "@/lib/utils"
 import { useListNavCapture } from "@/hooks/use-list-nav-capture"
 import { flattenNoteGroupIds, noteGroupsToListNav } from "@/lib/list-nav/flatten"
-import type { Note, Folder, Label } from "@/lib/types"
+import {
+  PriorityChip,
+  FolderChip,
+  LabelChip,
+  TagChip,
+  ParentChip,
+  ChildrenChip,
+  LinksChip,
+  WordsChip,
+  UpdatedChip,
+  CreatedChip,
+  TrashedChip,
+  PropertyChipRow,
+} from "@/components/property-chips"
+import type { Note, Folder, Label, Tag } from "@/lib/types"
 import type { NoteGroup, GroupBy } from "@/lib/view-engine/types"
 
 interface NotesGridViewProps {
@@ -48,6 +62,21 @@ interface NotesGridViewProps {
   /** Entity arrays for group-header identity (icon/label). */
   folders?: Folder[]
   labels?: Label[]
+  /** Tags — resolves note.tags[] → Tag entities for the property chip row. */
+  tags?: Tag[]
+  /** Display Properties — which meta chips to surface on each card. Mirrors
+   *  the board/list column visibility so the Display popover affects the
+   *  grid surface too. Undefined = show all. */
+  visibleColumns?: string[]
+  /** Backlink counts (noteId → count) for the LinksChip. */
+  backlinksMap?: Map<string, number>
+  /** Full note lookup (id → Note) for resolving ParentChip titles. Built from
+   *  the store's complete note set so a parent that's filtered out of the
+   *  visible grid still resolves. Board parity (notesByIdForParent). */
+  notesById?: Map<string, Note>
+  /** Direct-children counts (parentId → count) for ChildrenChip. Board parity
+   *  (childrenCountByParent). */
+  childrenCountByParent?: Map<string, number>
   /** Store-backed group fold state (viewState.collapsedGroups) — shared w/ list. */
   collapsedGroups?: Set<string>
   onToggleGroup?: (groupKey: string) => void
@@ -75,6 +104,13 @@ function NoteGridCard({
   note,
   isActive,
   isSelected,
+  folders,
+  labels,
+  tags,
+  links,
+  parentTitle,
+  childrenCount,
+  visibleColumns,
   onOpen,
   onDoubleClick,
   onSelect,
@@ -82,12 +118,88 @@ function NoteGridCard({
   note: Note
   isActive: boolean
   isSelected: boolean
+  folders: Folder[]
+  labels: Label[]
+  tags: Tag[]
+  links: number
+  parentTitle?: string
+  childrenCount?: number
+  visibleColumns?: string[]
   onOpen: () => void
   onDoubleClick?: () => void
   onSelect?: () => void
 }) {
   const preview = plaintextPreview(note.content)
   const words = wordCount(note.content)
+
+  // Honor Display Properties — mirrors notes-board's isVisible. Undefined =
+  // show all (back-compat). The TrashedChip is exempt (state flag, not column).
+  const isVisible = (key: string) => !visibleColumns || visibleColumns.includes(key)
+
+  // ── Resolve referenced entities for chip rendering (board parity) ──
+  const noteFolderObjs = useMemo(() => {
+    if (note.folderIds.length === 0) return []
+    return note.folderIds
+      .map((fid) => folders.find((f) => f.id === fid))
+      .filter((f): f is Folder => !!f)
+  }, [note.folderIds, folders])
+  const label = note.labelId ? labels.find((l) => l.id === note.labelId) : null
+  const noteTagObjs = useMemo(() => {
+    if (!note.tags || note.tags.length === 0) return []
+    return note.tags
+      .map((id) => tags.find((t) => t.id === id))
+      .filter((t): t is Tag => !!t)
+  }, [note.tags, tags])
+
+  // ── Build the property chip row (mirrors notes-board.tsx:510-590) ──
+  // Status lives in the card header (StatusShapeIcon) — not re-rendered here.
+  // Trashed is unconditional (a trashed item is always flagged).
+  const propertyChips = useMemo(() => {
+    const out: React.ReactNode[] = []
+    if (note.trashed) {
+      out.push(<TrashedChip key="trashed" />)
+    }
+    if (isVisible("priority") && note.priority !== "none") {
+      out.push(<PriorityChip key="priority" priority={note.priority} />)
+    }
+    if (isVisible("folder") && noteFolderObjs.length > 0) {
+      for (const f of noteFolderObjs) {
+        out.push(<FolderChip key={`folder-${f.id}`} folder={f} />)
+      }
+    }
+    if (label && isVisible("label")) {
+      out.push(<LabelChip key="label" label={label} />)
+    }
+    if (isVisible("tags") && noteTagObjs.length > 0) {
+      for (const t of noteTagObjs) {
+        out.push(<TagChip key={`tag-${t.id}`} tag={t} />)
+      }
+    }
+    if (parentTitle && isVisible("parent")) {
+      out.push(<ParentChip key="parent" title={parentTitle} />)
+    }
+    if (isVisible("children") && (childrenCount ?? 0) > 0) {
+      out.push(<ChildrenChip key="children" count={childrenCount!} />)
+    }
+    if (links > 0 && isVisible("links")) {
+      out.push(<LinksChip key="links" count={links} />)
+    }
+    if (words > 0 && isVisible("wordCount")) {
+      out.push(<WordsChip key="words" count={words} />)
+    }
+    if (isVisible("updatedAt")) {
+      out.push(<UpdatedChip key="updated" iso={note.updatedAt} />)
+    }
+    if (isVisible("createdAt")) {
+      out.push(<CreatedChip key="created" iso={note.createdAt} />)
+    }
+    return out
+  }, [
+    note.trashed, note.priority, note.updatedAt, note.createdAt,
+    noteFolderObjs, label, noteTagObjs, parentTitle, childrenCount,
+    links, words, visibleColumns,
+  ]) // eslint-disable-line react-hooks/exhaustive-deps
+
   return (
     <div
       data-note-id={note.id}
@@ -153,17 +265,14 @@ function NoteGridCard({
 
       <div className="flex-1" />
 
-      <div className="mt-1 flex items-center gap-2 text-2xs text-muted-foreground/70">
-        {words > 0 && (
-          <>
-            <span className="tabular-nums">
-              {words} word{words === 1 ? "" : "s"}
-            </span>
-            <span>·</span>
-          </>
-        )}
-        <span>{shortRelative(note.updatedAt)}</span>
-      </div>
+      {/* Property chip row — board/grid parity (mirrors notes-board card).
+          Single line, max 3 chips + "+N" overflow. Words/Updated/Created now
+          live here (driven by Display Properties) instead of a bespoke footer. */}
+      {propertyChips.length > 0 && (
+        <div className="mt-1 w-full">
+          <PropertyChipRow chips={propertyChips} maxVisible={3} />
+        </div>
+      )}
     </div>
   )
 }
@@ -182,6 +291,11 @@ export function NotesGridView({
   onSelect,
   folders,
   labels,
+  tags,
+  visibleColumns,
+  backlinksMap,
+  notesById,
+  childrenCountByParent,
   collapsedGroups,
   onToggleGroup,
 }: NotesGridViewProps) {
@@ -206,6 +320,15 @@ export function NotesGridView({
       note={note}
       isActive={activePreviewId === note.id}
       isSelected={selectedIds?.has(note.id) ?? false}
+      folders={folders ?? []}
+      labels={labels ?? []}
+      tags={tags ?? []}
+      links={backlinksMap?.get(note.id) ?? 0}
+      parentTitle={
+        note.parentNoteId ? notesById?.get(note.parentNoteId)?.title : undefined
+      }
+      childrenCount={childrenCountByParent?.get(note.id) ?? 0}
+      visibleColumns={visibleColumns}
       onSelect={onSelect ? () => onSelect(note.id) : undefined}
       onOpen={() => onRowClick?.(note.id)}
       onDoubleClick={

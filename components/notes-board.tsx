@@ -70,6 +70,7 @@ import {
   ParentChip,
   ChildrenChip,
   PinnedChip,
+  TrashedChip,
   PropertyChipRow,
 } from "@/components/property-chips"
 import { BoardWorkbench } from "@/components/board-workbench"
@@ -509,6 +510,12 @@ function BoardCardInner({
   // PropertyChipRow caps at 3 visible + "+N" overflow regardless.
   const propertyChips = useMemo(() => {
     const out: React.ReactNode[] = []
+    // Trashed is a state flag, not a toggleable display property — always
+    // surface it (when the Show-trashed toggle reveals a trashed card) so the
+    // user can tell it's in the trash beyond the opacity dim (2026-06-04).
+    if (note.trashed) {
+      out.push(<TrashedChip key="trashed" />)
+    }
     // Priority is not redundant when groupBy="priority" — column header
     // already shows the level — so suppress in that case (matches old
     // behaviour). Same for status (handled in title row).
@@ -584,7 +591,7 @@ function BoardCardInner({
     }
     return out
   }, [
-    note.priority, note.updatedAt, note.createdAt,
+    note.trashed, note.priority, note.updatedAt, note.createdAt,
     noteFolderObjs, label, noteTagObjs, parentTitle, childrenCount,
     links, wordCount, groupBy, groupKey, visibleColumns,
   ]) // eslint-disable-line react-hooks/exhaustive-deps
@@ -722,6 +729,9 @@ const BoardCard = memo(BoardCardInner, (prev, next) =>
   prev.note.labelId === next.note.labelId &&
   prev.note.tags === next.note.tags &&
   prev.note.pinned === next.note.pinned &&
+  // Trashed state drives the TrashedChip — re-render when it flips so a note
+  // trashed/restored while the card is mounted reflects immediately.
+  prev.note.trashed === next.note.trashed &&
   prev.note.parentNoteId === next.note.parentNoteId &&
   prev.note.title === next.note.title &&
   prev.note.preview === next.note.preview &&

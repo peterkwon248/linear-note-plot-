@@ -50,7 +50,9 @@ import {
   BookKindChip,
   BookKindIcon,
   BookSourceKindChip,
+  PinnedChip,
   PriorityChip,
+  PropertyChipRow,
 } from "@/components/property-chips"
 import { shortRelative } from "@/lib/format-utils"
 import { StatusShapeIcon } from "@/components/status-icon"
@@ -235,6 +237,7 @@ export function BooksBoard({
               key={group.key}
               group={group}
               groupBy={groupBy}
+              visibleColumns={viewState.visibleColumns}
               isDragDisabled={isDragDisabled}
               onOpen={onOpen}
               onRename={onRename}
@@ -250,7 +253,13 @@ export function BooksBoard({
       <DragOverlay>
         {activeBook ? (
           <div className="opacity-90">
-            <BookBoardCardInner book={activeBook} onOpen={() => {}} isDragging />
+            <BookBoardCardInner
+              book={activeBook}
+              groupBy={groupBy}
+              visibleColumns={viewState.visibleColumns}
+              onOpen={() => {}}
+              isDragging
+            />
           </div>
         ) : null}
       </DragOverlay>
@@ -263,6 +272,7 @@ export function BooksBoard({
 interface BookBoardColumnProps {
   group: BookGroup
   groupBy: GroupBy
+  visibleColumns: string[]
   isDragDisabled: boolean
   onOpen: (id: string) => void
   onRename: (id: string, currentTitle: string) => void
@@ -276,6 +286,7 @@ interface BookBoardColumnProps {
 function BookBoardColumn({
   group,
   groupBy,
+  visibleColumns,
   isDragDisabled,
   onOpen,
   onRename,
@@ -344,6 +355,8 @@ function BookBoardColumn({
           <BookBoardCard
             key={book.id}
             book={book}
+            groupBy={groupBy}
+            visibleColumns={visibleColumns}
             onOpen={onOpen}
             onRename={onRename}
             onTogglePin={onTogglePin}
@@ -361,6 +374,8 @@ function BookBoardColumn({
 
 function BookBoardCard({
   book,
+  groupBy,
+  visibleColumns,
   onOpen,
   onRename,
   onTogglePin,
@@ -369,6 +384,8 @@ function BookBoardCard({
   onPermanentDelete,
 }: {
   book: Book
+  groupBy: GroupBy
+  visibleColumns: string[]
   onOpen: (id: string) => void
   onRename: (id: string, currentTitle: string) => void
   onTogglePin: (id: string, pinned: boolean | undefined) => void
@@ -391,7 +408,13 @@ function BookBoardCard({
       <ContextMenu>
         <ContextMenuTrigger asChild>
           <div>
-            <BookBoardCardInner book={book} onOpen={onOpen} isDragging={false} />
+            <BookBoardCardInner
+              book={book}
+              groupBy={groupBy}
+              visibleColumns={visibleColumns}
+              onOpen={onOpen}
+              isDragging={false}
+            />
           </div>
         </ContextMenuTrigger>
         <ContextMenuContent className="w-44">
@@ -411,15 +434,45 @@ function BookBoardCard({
 
 function BookBoardCardInner({
   book,
+  groupBy,
+  visibleColumns,
   onOpen,
   isDragging,
 }: {
   book: Book
+  groupBy: GroupBy
+  visibleColumns?: string[]
   onOpen: (id: string) => void
   isDragging: boolean
 }) {
   const kind = getBookKind(book)
   const sourceKinds = Array.from(new Set((book.smartSources ?? []).map((s) => s.kind)))
+
+  // Honor Display Properties on the board card. Undefined = show all
+  // (mirrors notes-board BoardCardInner). The 6 displayable book props are
+  // status, priority, kind, itemCount, sources, pinned (books.schema).
+  const isVisible = (k: string) => !visibleColumns || visibleColumns.includes(k)
+
+  // Build the property chip row. Order mirrors the old hard-coded set:
+  // status → priority → kind → itemCount → sources → pinned. PropertyChipRow
+  // caps at 3 visible + a hover popover for the overflow.
+  const chips: React.ReactNode[] = [
+    // §11 — status/priority badges (manual·hybrid; smart = N/A).
+    isVisible("status") && kind !== "smart" && (
+      <StatusBadge key="status" status={book.status ?? "backlog"} />
+    ),
+    isVisible("priority") && kind !== "smart" && book.priority && book.priority !== "none" && (
+      <PriorityChip key="priority" priority={book.priority} />
+    ),
+    // kind chip is redundant when grouped by kind (column header shows it) —
+    // mirrors notes-board suppressing status when groupBy === "status".
+    isVisible("kind") && groupBy !== "kind" && <BookKindChip key="kind" kind={kind} />,
+    isVisible("itemCount") && <BookItemCountChip key="itemCount" count={book.items?.length ?? 0} />,
+    isVisible("sources") && sourceKinds.length > 0 && (
+      <BookSourceKindChip key="sources" kinds={sourceKinds} />
+    ),
+    isVisible("pinned") && book.pinned && <PinnedChip key="pinned" />,
+  ]
 
   return (
     <button
@@ -443,16 +496,7 @@ function BookBoardCardInner({
         )}
       </div>
 
-      <div className="flex flex-wrap items-center gap-1">
-        {/* §11 — status/priority badges (manual·hybrid; smart = N/A) */}
-        {kind !== "smart" && <StatusBadge status={book.status ?? "backlog"} />}
-        {kind !== "smart" && book.priority && book.priority !== "none" && (
-          <PriorityChip priority={book.priority} />
-        )}
-        <BookKindChip kind={kind} />
-        <BookItemCountChip count={book.items?.length ?? 0} />
-        <BookSourceKindChip kinds={sourceKinds} />
-      </div>
+      <PropertyChipRow chips={chips} maxVisible={3} />
 
       <span className="text-2xs text-muted-foreground/70 tabular-nums">
         {shortRelative(book.updatedAt)}

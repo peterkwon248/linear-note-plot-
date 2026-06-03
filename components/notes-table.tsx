@@ -51,6 +51,7 @@ import { useT } from "@/lib/i18n"
 import { StatusShapeIcon } from "@/components/status-icon"
 import { GroupHeaderIcon, resolveGroupLabel } from "@/components/group-header"
 import { StatusBadge } from "@/components/note-fields"
+import { TrashedChip } from "@/components/property-chips"
 import { NoteContextMenuItems } from "@/components/note-context-menu-items"
 import { setSplitTargetNoteId } from "@/lib/note-split-mode"
 import {
@@ -1907,6 +1908,10 @@ function NoteRowInner({
             return null
           })()}
           <SourceIcon source={note.source} />
+          {/* Trashed state flag — shown when "Show trashed" reveals a
+              soft-deleted row. Always-on when note.trashed (not a toggleable
+              column); flags the row beyond list styling (2026-06-04). */}
+          {note.trashed && <TrashedChip />}
         </div>
         {showCardPreview && note.preview && (
           <span className="text-2xs text-muted-foreground truncate pl-6 mt-0.5">{note.preview}</span>
@@ -2114,6 +2119,8 @@ const NoteRow = memo(NoteRowInner, (prev, next) =>
   prev.note.reads === next.note.reads &&
   prev.note.title === next.note.title &&
   prev.note.preview === next.note.preview &&
+  // Trashed flag drives the TrashedChip on the row — re-render when it flips.
+  prev.note.trashed === next.note.trashed &&
   prev.links === next.links &&
   prev.isActive === next.isActive &&
   prev.isSelected === next.isSelected &&

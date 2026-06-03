@@ -3,11 +3,21 @@
 > 우선순위 기반 작업 목록. **P0 = 다음 세션 즉시 시작점** (NEXT-ACTION.md 폐지, 2026-05-12).
 > 완료 항목은 즉시 삭제. 자세한 history는 SESSION-LOG.md + MEMORY.md.
 
-**마지막 갱신**: 2026-06-04 (after-work, 집/Windows) — **북 생성/열기 "홈 깜빡임" 수정**(위키식 쿼리스트링 라우팅, 11파일). 생성=그자리 in-place / 열기=`/books/{id}`→`/books?book={id}`(프리렌더 `/books`+쿼리로 hard-nav 제거). 근원=정적 export서 path-param→hard-nav→루트 index.html 폴백→start-view가 /home 리다이렉트. build0, dev 전 시나리오(생성·열기·F5·복귀) 통과. **+ docs 백필: 미기록 #524~#528(v0.1.0→v0.1.2 출시후 스프린트) 기록.** **다음 = folder/tag/label 동일 hard-nav 수정**(0.025와 합류) + 데스크톱 재빌드 실검증. 디자인 ③ 보류 유지.
+**마지막 갱신**: 2026-06-04 (after-work #2, 집/Windows) — **뷰엔진 디스플레이 11버그**: 보드/그리드/휴지통 **7개 완료**(보드 +N more 호버 카드·북 보드 visibleColumns·그리드 칩+선택 체크박스 3스페이스·휴지통 배지) + 디스플레이 패널 게이팅(grid/timeline이 board 상속). build0. **타임라인 4개 WIP**(#10 북 타임라인 캔버스 collapse·#11 그룹화 와이어링·#4/#7 노트/위키 타임라인 검증). 사용자 데스크톱 재빌드(plot.exe)로 1~9 테스트 중. **다음 = 타임라인 마무리**(0.005). 이전(after-work #1)=북 라우팅 홈깜빡임 수정 + #524~528 백필.
 
 ---
 
 ## 🟣 P0 — 즉시 (cross-machine 진입점, 2026-05-31 — IA 헌법 적용 단계)
+
+### 0.005. **🔴 P0 #1: 뷰엔진 타임라인 그룹 마무리 (#10/#11/#4/#7)** ← 다음 시작점
+
+> 2026-06-04 뷰엔진 11버그 중 보드/그리드/휴지통 7개 완료(아래 ✅), **타임라인 4개 WIP**. 사용자 데스크톱 재빌드(plot.exe)로 1~9 테스트 중 — 피드백 받고 진행.
+- **#10 북 타임라인 캔버스 collapse**: TimelineControls는 뜨나 그 아래 SVG 캔버스가 0높이. books-view 래퍼 `overflow-y-auto`→`flex overflow-hidden`(notes shell 패턴) 적용했으나 dev서 여전히 collapse. `books-timeline-view.tsx` height 체인 vs `notes-timeline-view.tsx`(전용 shell) 비교 필요.
+- **#11 북 타임라인 그룹화 작동 X**: `books-view.tsx bookGroups={groups}`가 패널 groupBy 변경에 recompute되는지 와이어링 확인. `defaultGroupByByMode.timeline="kind"` 락 의심.
+- **#4/#7 노트/위키 타임라인**: 컨트롤 게이팅 풀림(display-panel) → 뷰가 그룹화 지원하므로 재빌드 검증 대기. (위키 서브그룹핑은 위키 전반 미지원=별도.)
+- **검증**: dev preview 불안정(screenshot 타임아웃·HMR stale) → 빌드+사용자 화면이 신뢰 게이트.
+
+> ✅ **2026-06-04 (이 PR)**: **뷰엔진 디스플레이 7버그** — #1/#5 보드 "+N more"→HoverCard(가려진 칩 내용 표시, property-chips PropertyChipRow) · #8 북 보드 visibleColumns 기반 칩 · #3/#6/#9 노트/위키/북 그리드 디스플레이 프로퍼티스 칩 + 선택 체크박스 · #2 휴지통 배지(TrashedChip) · display-panel 게이팅(grid/timeline이 board 상속→타임라인 그룹화·프로퍼티스/그리드 프로퍼티스 토글 노출). architect 전수매핑 후 3 executor 병렬. build0.
 
 > ✅ **2026-06-02** (이 PR): **P1 데스크톱 셸 (Tauri 확정) + Plot 아이콘** — `src-tauri/` scaffold(Tauri 2.0, frontendDist=../out, `com.plot.app`, plot.exe, 창 1280×800) + `devUrl` 제거(debug도 out/ embed) + out/ 빌드 검증(50p) + 기동(WebView2 Chromium 147 렌더: Home/사이드바/웰컴노트) + 다크 그레이 관계망 구 아이콘(`app-icon.svg`→tauri icon, 라이트/다크 양쪽 대비). `@tauri-apps/cli` devDep. 앱/Store 무변경(v154). **Tauri 확정**(Electron 폴백 불필요).
 

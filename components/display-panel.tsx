@@ -31,16 +31,28 @@ export type { DisplayConfig, DisplayToggle, DisplayProperty }
  *  a property chip in those modes would do nothing. */
 const PROPERTY_DEFAULT_MODES: ViewMode[] = ["list", "board"]
 
+// 2026-06-04 — full parity (사용자 요청): grid/timeline cards now render the same
+// display-property chips as board, and the timeline views support grouping +
+// visibleColumns. So the DisplayPanel must surface those controls there too.
+//   - display properties: grid AND timeline inherit the "board" allowance.
+//   - grouping: timeline inherits board/list (grid stays flat — no grouping).
 function isGroupingModeAllowed(option: GroupingOption, mode: ViewMode): boolean {
   if (!option.modes || option.modes === "all") return true
+  if (mode === "timeline") {
+    return option.modes.includes("timeline") || option.modes.includes("board") || option.modes.includes("list")
+  }
   return option.modes.includes(mode)
 }
 
 function isPropertyModeAllowed(prop: DisplayProperty, mode: ViewMode): boolean {
-  // Back-compat: `boardOnly: true` is a synonym for `modes: ["board"]`.
-  if (prop.boardOnly) return mode === "board"
+  // Back-compat: `boardOnly: true` is a synonym for `modes: ["board"]`. grid/
+  // timeline render the same chips as board → inherit the board allowance.
+  if (prop.boardOnly) return mode === "board" || mode === "grid" || mode === "timeline"
   const modes: ModeList = prop.modes ?? PROPERTY_DEFAULT_MODES
   if (modes === "all") return true
+  if (mode === "grid" || mode === "timeline") {
+    return modes.includes(mode) || modes.includes("board")
+  }
   return modes.includes(mode)
 }
 

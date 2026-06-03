@@ -180,6 +180,26 @@ function BooksGrid() {
   const [renamingId, setRenamingId] = useState<string | null>(null)
   const [renameDraft, setRenameDraft] = useState("")
 
+  // Grid-mode multi-select (board/table parity). Minimal local state — Books
+  // had no selection infra before; this drives the hover checkbox on grid
+  // cards so users can mark/unmark books. `additive` (ctrl/meta/shift) keeps
+  // prior selections; a plain click toggles a single-selection set.
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(() => new Set())
+  const handleSelect = useCallback((id: string, additive: boolean) => {
+    setSelectedIds((prev) => {
+      const next = additive ? new Set(prev) : new Set<string>()
+      if (additive) {
+        if (next.has(id)) next.delete(id)
+        else next.add(id)
+      } else {
+        // Plain click: toggle this id as the sole selection.
+        if (prev.has(id) && prev.size === 1) next.delete(id)
+        else next.add(id)
+      }
+      return next
+    })
+  }, [])
+
   const handleCreate = () => {
     const title = createTitle.trim() || t("books.untitled")
     const id = createBook(title)
@@ -302,7 +322,11 @@ function BooksGrid() {
         </div>
       )}
 
-      <div className="flex-1 overflow-y-auto">
+      {/* Timeline manages its own internal scroll + measures viewport height
+          via ResizeObserver, so it needs a fixed-height overflow-hidden parent
+          (mirrors the notes/wiki timeline shells). The generic overflow-y-auto
+          wrapper broke the books timeline layout (2026-06-04 사용자 보고 #10). */}
+      <div className={cn("flex-1", isTimelineMode ? "flex overflow-hidden" : "overflow-y-auto")}>
         {liveCount === 0 ? (
           <EmptyBooks
             onCreate={() => {
@@ -366,6 +390,9 @@ function BooksGrid() {
               <BookGridCard
                 key={book.id}
                 book={book}
+                visibleColumns={viewState.visibleColumns}
+                selectedIds={selectedIds}
+                onSelect={handleSelect}
                 onOpen={openBook}
                 onRename={startRename}
                 onTogglePin={handleTogglePin}
