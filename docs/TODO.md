@@ -3,13 +3,19 @@
 > 우선순위 기반 작업 목록. **P0 = 다음 세션 즉시 시작점** (NEXT-ACTION.md 폐지, 2026-05-12).
 > 완료 항목은 즉시 삭제. 자세한 history는 SESSION-LOG.md + MEMORY.md.
 
-**마지막 갱신**: 2026-06-04 (밤, 집/Windows) — **랜딩 how-to/제텔카스텐 보강 + 번역투 정리 + 앱 토스트 i18n 버그 수정**. 랜딩(`site/`): How it works 3단계 walkthrough + 그래프 조작법 스트립 + "사용법" nav + KO 번역투 ~34곳 정리 + "제텔카스텐이 뭔가요?" 섹션 + 고아→고립(8). 앱: 넛지 토스트 3종(백로그·SRS·클러스터) 영어 하드코딩 → useT i18n(`use-autopilot-nudges.ts`+`lib/i18n.ts` nudge.* 10키). Store 무변경(v154), `npm run build` exit0. **다음 = 앱 영어 잔여 i18n 일괄 점검(sweep)**(아래 0.001, 사용자 지정).
+**마지막 갱신**: 2026-06-05 (집/Windows) — **로케일별 온보딩 시드**(브라우저 `navigator.language` 감지 → KO/EN 시드 분기). KO 온보딩 볼트 신설(`lib/store/seeds-ko.ts`: 노트8·위키4·북2·카테고리5 DAG·태그/라벨5·스티커1) + EN 보강(Organizing Tools 노트·스티커) + 시드 노트 body IDB 영속·Memo 라벨 로케일화. Store 무변경(v154), `npm run build` exit0, 헤드리스 KO 시드 노트/위키/북 육안 검증. (앞서 같은 worktree: 랜딩 GH Pages 배포 #533·다운로드 마무리 #535/#536.) **다음 = 트랙 선택**(모바일 / i18n sweep / KO 시드 다듬기 — 사용자 보류, SESSION-LOG hook 참조).
 
 ---
 
 ## 🟣 P0 — 즉시 (cross-machine 진입점, 2026-05-31 — IA 헌법 적용 단계)
 
-### 0.001. **🔴 P0 #1: 앱 영어 잔여 i18n 일괄 점검 (sweep)** (사용자 지정) ← 다음 시작점
+> ✅ **2026-06-05 (이 PR): 로케일별 온보딩 시드** — 브라우저 언어 감지(`settings-store.ts` detectInitialLanguage, SSR 가드) → KO 브라우저는 한국어 UI+한국어 시드, EN은 영어. KO 온보딩 볼트(`lib/store/seeds-ko.ts`): 노트 8(사용법·정리 도구 한눈에·제텔카스텐·영구/임시 노트·실전·복리·메모)+위키 4(note-ref 임베드·카테고리 DAG)+북 2(수동·스마트)+카테고리 5(DAG)+태그/라벨 5+스티커 1. EN 보강(`seeds.ts`: Organizing Tools 노트+SEED_STICKERS). onRehydrate 게이트 로케일 분기 + 전 시드 노트 body IDB 영속(리로드 유지) + 위키블록/Memo라벨 로케일 분기. build0. 헤드리스(`--lang=ko-KR`+새 프로필) 노트/위키/북 육안 검증. **신규 유저만 적용**(hasSeeded 게이트).
+
+### 0.0008. **🟡 P0 (사용자 관심, 2026-06-05): 모바일 대응 — 반응형 진단 → PWA/네이티브**
+
+> 사용자 "모바일 배포 가능?" 문의. 현 앱=데스크톱 UI(사이드바·다중 패널·호버) + 로컬퍼스트 **무싱크** → "바로"는 불가. **첫 스텝**=반응형 진단(폰 375px서 깨지는 곳 헤드리스 `--window-size=390,844` 캡처·목록화). 다음=PWA(정적 `out/`+manifest/SW→설치, GH Pages 가능) 또는 네이티브(Tauri 2 모바일, Xcode/Android Studio+스토어 계정 $99/$25·서명). **근본 제약=싱크 부재**(모바일=데이터 섬) → 클라우드 싱크(Yjs CRDT 로드맵)와 동반 필요. 랜딩은 이미 모바일 반응형+배포됨.
+
+### 0.001. **🔴 P0: 앱 영어 잔여 i18n 일괄 점검 (sweep)** (사용자 지정)
 
 > 2026-06-04 밤 넛지 토스트 3종(백로그·SRS·클러스터)이 `useT` 없이 영어 하드코딩된 것 사용자 적발·수정(이 PR). 적발식 대응(이전 온톨로지 포함)=whack-a-mole → **선제 일괄 sweep** 전환.
 - **색출**: 사용자 노출 문자열인데 `t(`/`useT` 안 거치는 것 — `toast("`+``toast(` `` 영문, JSX 텍스트 영문, `aria-label`/`placeholder` 영문. `hooks/`·`components/` 우선.

@@ -73,6 +73,16 @@ export interface SettingsState {
   setUserName: (v: string) => void
 }
 
+/** Detect initial UI language from the browser on first launch (no persisted
+ *  setting yet). Korean browsers start in Korean; everyone else in English.
+ *  SSR-guarded — navigator is undefined during static-export prerender, so
+ *  the prerendered HTML falls back to "en" and the client switches on mount. */
+function detectInitialLanguage(): string {
+  if (typeof navigator === "undefined") return "en"
+  const lang = (navigator.language || "").toLowerCase()
+  return lang.startsWith("ko") ? "ko" : "en"
+}
+
 export const useSettingsStore = create<SettingsState>()(
   persist(
     (set) => ({
@@ -91,7 +101,7 @@ export const useSettingsStore = create<SettingsState>()(
       density: "default",
 
       // Preferences defaults
-      language: "en",
+      language: detectInitialLanguage(),
       startView: "home",
       confirmDelete: true,
       viewMode: "list",
