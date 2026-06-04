@@ -1047,6 +1047,31 @@ const EN = {
   "books.prop.smart_sources": "Smart sources",
   "books.prop.pin": "Pin",
   "books.group.pin_status": "Pin status",
+
+  // Ontology graph — canvas hints + node context menu
+  "graph.hint.drag": "+ drag",
+  "graph.hint.click": "+ click",
+  "graph.hint.actions": "right-click for actions",
+  "graph.selected_count": "{count} selected",
+  "graph.menu.sticker": "Sticker",
+  "graph.menu.rename": "Rename",
+  "graph.menu.change_color": "Change color",
+  "graph.menu.delete_sticker": "Delete sticker",
+  "graph.menu.add_sticker": "Add sticker…",
+  "graph.menu.spread": "Spread these",
+  "graph.menu.cluster": "Cluster these",
+  "graph.menu.isolate": "Isolate",
+  "graph.menu.hide_connections": "Hide connections",
+  "graph.menu.show_all": "Show all",
+  "graph.menu.isolate_title": "Show only these nodes; dim everything else",
+  "graph.menu.hide_connections_title": "Hide all edges touching these nodes (visual only)",
+  "graph.menu.show_all_title": "Restore all hidden edges and clear isolation",
+  "graph.menu.search_sticker": "Search or create sticker…",
+  "graph.menu.no_stickers": "No stickers yet.",
+  "graph.menu.create": "Create",
+  "graph.menu.back": "← Back",
+  "graph.menu.apply_hint": "↵ to apply / create",
+  "graph.menu.pick_color_title": "Pick color for new sticker",
 }
 
 type DictKey = keyof typeof EN
@@ -2069,6 +2094,31 @@ const KO: Partial<Record<DictKey, string>> = {
   "books.prop.smart_sources": "스마트 소스",
   "books.prop.pin": "고정",
   "books.group.pin_status": "고정 상태",
+
+  // Ontology graph — 캔버스 힌트 + 노드 컨텍스트 메뉴
+  "graph.hint.drag": "+ 드래그",
+  "graph.hint.click": "+ 클릭",
+  "graph.hint.actions": "우클릭으로 작업",
+  "graph.selected_count": "{count}개 선택됨",
+  "graph.menu.sticker": "스티커",
+  "graph.menu.rename": "이름 변경",
+  "graph.menu.change_color": "색상 변경",
+  "graph.menu.delete_sticker": "스티커 삭제",
+  "graph.menu.add_sticker": "스티커 추가…",
+  "graph.menu.spread": "펼치기",
+  "graph.menu.cluster": "모으기",
+  "graph.menu.isolate": "격리",
+  "graph.menu.hide_connections": "연결 숨기기",
+  "graph.menu.show_all": "모두 표시",
+  "graph.menu.isolate_title": "선택한 노드만 표시하고 나머지는 흐리게",
+  "graph.menu.hide_connections_title": "선택한 노드에 닿는 모든 엣지 숨기기 (시각 전용)",
+  "graph.menu.show_all_title": "숨긴 엣지를 모두 복원하고 격리를 해제",
+  "graph.menu.search_sticker": "스티커 검색 또는 생성…",
+  "graph.menu.no_stickers": "아직 스티커가 없습니다.",
+  "graph.menu.create": "생성",
+  "graph.menu.back": "← 뒤로",
+  "graph.menu.apply_hint": "↵ 적용 / 생성",
+  "graph.menu.pick_color_title": "새 스티커 색상 선택",
 }
 
 const DICTIONARIES: Record<Locale, Partial<Record<DictKey, string>>> = {

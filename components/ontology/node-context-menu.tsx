@@ -24,6 +24,7 @@
 
 import { useState, useRef, useEffect } from "react"
 import { usePlotStore } from "@/lib/store"
+import { useT } from "@/lib/i18n"
 import { ColorPickerGrid } from "@/components/color-picker-grid"
 import {
   Plus,
@@ -84,6 +85,7 @@ export function NodeContextMenu({
   onShowAll,
   editingSticker,
 }: NodeContextMenuProps) {
+  const t = useT()
   const stickers = usePlotStore((s) => s.stickers)
   const createSticker = usePlotStore((s) => s.createSticker)
   const bulkAddSticker = usePlotStore((s) => s.bulkAddSticker)
@@ -183,14 +185,14 @@ export function NodeContextMenu({
       {view === "main" && (
         <div className="flex flex-col py-1 text-note">
           <div className="px-3 py-1.5 text-2xs text-muted-foreground border-b border-border-subtle">
-            {selectedIds.length} {selectedIds.length === 1 ? "node" : "nodes"} selected
+            {t("graph.selected_count").replace("{count}", String(selectedIds.length))}
           </div>
 
           {/* ── Sticker meta actions (only when right-clicking a sticker hull) ── */}
           {editingSticker && (
             <>
               <div className="px-3 py-1.5 border-b border-border-subtle bg-muted/30">
-                <div className="text-2xs text-muted-foreground mb-1">Sticker</div>
+                <div className="text-2xs text-muted-foreground mb-1">{t("graph.menu.sticker")}</div>
                 {hullStickerRenaming ? (
                   <input
                     ref={renameInputRef}
@@ -242,7 +244,7 @@ export function NodeContextMenu({
                     className="flex items-center gap-2 px-3 py-1.5 text-left hover:bg-accent"
                   >
                     <PencilSimple size={14} strokeWidth={2} />
-                    Rename
+                    {t("graph.menu.rename")}
                   </button>
                   <button
                     type="button"
@@ -250,7 +252,7 @@ export function NodeContextMenu({
                     className="flex items-center gap-2 px-3 py-1.5 text-left hover:bg-accent"
                   >
                     <Palette size={14} strokeWidth={2} />
-                    Change color
+                    {t("graph.menu.change_color")}
                   </button>
                   {hullStickerColorOpen && (
                     <div className="px-3 py-2 border-y border-border-subtle bg-muted/30">
@@ -274,7 +276,7 @@ export function NodeContextMenu({
                     className="flex items-center gap-2 px-3 py-1.5 text-left hover:bg-accent text-destructive"
                   >
                     <Trash size={14} strokeWidth={2} />
-                    Delete sticker
+                    {t("graph.menu.delete_sticker")}
                   </button>
                 </>
               )}
@@ -290,7 +292,7 @@ export function NodeContextMenu({
           >
             <span className="flex items-center gap-2">
               <StickerIcon size={14} strokeWidth={2} />
-              Add sticker…
+              {t("graph.menu.add_sticker")}
             </span>
             <CaretRight size={12} strokeWidth={2} className="opacity-50" />
           </button>
@@ -307,7 +309,7 @@ export function NodeContextMenu({
               className="flex items-center gap-2 px-3 py-1.5 text-left hover:bg-accent"
             >
               <ArrowsOutCardinal size={14} strokeWidth={2} />
-              Spread these
+              {t("graph.menu.spread")}
             </button>
           )}
           {onCluster && (
@@ -320,7 +322,7 @@ export function NodeContextMenu({
               className="flex items-center gap-2 px-3 py-1.5 text-left hover:bg-accent"
             >
               <ArrowsInCardinal size={14} strokeWidth={2} />
-              Cluster these
+              {t("graph.menu.cluster")}
             </button>
           )}
 
@@ -336,10 +338,10 @@ export function NodeContextMenu({
                 onClose()
               }}
               className="flex items-center gap-2 px-3 py-1.5 text-left hover:bg-accent"
-              title="Show only these nodes; dim everything else"
+              title={t("graph.menu.isolate_title")}
             >
               <span className="w-3.5 h-3.5 inline-flex items-center justify-center rounded-sm border border-current opacity-70">·</span>
-              Isolate
+              {t("graph.menu.isolate")}
             </button>
           )}
           {onHideConnections && (
@@ -350,10 +352,10 @@ export function NodeContextMenu({
                 onClose()
               }}
               className="flex items-center gap-2 px-3 py-1.5 text-left hover:bg-accent"
-              title="Hide all edges touching these nodes (visual only)"
+              title={t("graph.menu.hide_connections_title")}
             >
               <span className="w-3.5 h-3.5 inline-flex items-center justify-center text-xs">⌀</span>
-              Hide connections
+              {t("graph.menu.hide_connections")}
             </button>
           )}
           {hasHidden && onShowAll && (
@@ -364,10 +366,10 @@ export function NodeContextMenu({
                 onClose()
               }}
               className="flex items-center gap-2 px-3 py-1.5 text-left hover:bg-accent text-foreground/80"
-              title="Restore all hidden edges and clear isolation"
+              title={t("graph.menu.show_all_title")}
             >
               <span className="w-3.5 h-3.5 inline-flex items-center justify-center text-xs">↺</span>
-              Show all
+              {t("graph.menu.show_all")}
             </button>
           )}
         </div>
@@ -384,14 +386,14 @@ export function NodeContextMenu({
               value={stickerQuery}
               onChange={(e) => setStickerQuery(e.target.value)}
               onKeyDown={handleSubmenuKey}
-              placeholder="Search or create sticker…"
+              placeholder={t("graph.menu.search_sticker")}
               className="flex-1 bg-transparent text-note outline-none placeholder:text-muted-foreground"
             />
             {canCreate && (
               <button
                 type="button"
                 onClick={() => setColorEditingId(colorEditingId === "__new__" ? null : "__new__")}
-                title="Pick color for new sticker"
+                title={t("graph.menu.pick_color_title")}
                 className="h-4 w-4 rounded-full shrink-0 ring-1 ring-border hover:ring-2 hover:ring-foreground/40 transition"
                 style={{ backgroundColor: newColor }}
               />
@@ -417,7 +419,7 @@ export function NodeContextMenu({
           <div className="max-h-[240px] overflow-y-auto py-1">
             {visibleStickers.length === 0 && !canCreate && (
               <div className="px-3 py-2 text-2xs text-muted-foreground">
-                No stickers yet.
+                {t("graph.menu.no_stickers")}
               </div>
             )}
 
@@ -432,7 +434,7 @@ export function NodeContextMenu({
                       e.stopPropagation()
                       setColorEditingId(colorEditingId === sticker.id ? null : sticker.id)
                     }}
-                    title="Change color"
+                    title={t("graph.menu.change_color")}
                     className="h-2.5 w-2.5 rounded-full shrink-0 ring-1 ring-transparent group-hover:ring-foreground/30 hover:ring-foreground/60 transition"
                     style={{ backgroundColor: sticker.color }}
                   />
@@ -470,7 +472,7 @@ export function NodeContextMenu({
               >
                 <Plus size={14} strokeWidth={2.5} />
                 <span className="flex items-center gap-1.5">
-                  Create
+                  {t("graph.menu.create")}
                   <span className="h-2 w-2 rounded-full inline-block" style={{ backgroundColor: newColor }} />
                   &quot;<span className="font-medium">{trimmedQuery}</span>&quot;
                 </span>
@@ -484,9 +486,9 @@ export function NodeContextMenu({
               onClick={() => setView("main")}
               className="hover:text-foreground"
             >
-              ← Back
+              {t("graph.menu.back")}
             </button>
-            <span>↵ to apply / create</span>
+            <span>{t("graph.menu.apply_hint")}</span>
           </div>
         </div>
       )}

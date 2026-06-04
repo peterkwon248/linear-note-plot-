@@ -8,6 +8,28 @@
 
 ---
 
+## ✅ 2026-06-04 (집/Windows, 저녁) — 제품 랜딩 페이지 신설 (site/) + 북 디테일바 수정 + 온톨로지 그래프 한글화 ⭐⭐⭐⭐
+
+**범위**: Plot 제품 소개 **랜딩 페이지**(`site/`, 마케팅) 신설 + 사용자 적발 앱 버그 2건(북 디테일바 / 온톨로지 영어 잔여).
+
+### 핵심 결정/학습 (영구)
+- **랜딩 = 실제 코드 기반 강제**: 탐색 에이전트 3개가 파일:라인으로 검증한 기능/스택/팔레트만 사용(지어낸 것 0). 미구현 주장 금지(실시간 협업 X=Yjs 로컬전용 · 클라우드싱크/모바일 X=로드맵 · "8개 언어" X=EN+KO만). `lib/colors.ts` 실제 hex + Pretendard로 앱과 톤 일치.
+- **노트→위키 "승격" 실재 = promote 넛지(제안)+위키 import(note-ref 임베드)+assembly**. 옛 원클릭 convertToWiki는 데드 제거됨(노트가 *변신*하는 게 아니라 노트를 임베드한 새 위키가 생김). 카피 "노트가 위키로 자랍니다"(변신 오해 회피).
+- **헤드리스 Chrome = 이 환경 유일 신뢰 스샷**(preview MCP screenshot 타임아웃): `--headless=old`(new는 `--screenshot` 미지원) + `--user-data-dir`(SPA/IDB 시드 영속) + `--virtual-time-budget`. 앱 기본 로케일=en(사용자 수동 ko).
+- **2단 vs 1단 셸 IA(참고)**: 액티비티바+사이드바 2단=병렬 모드 다수(VS Code/Slack). Linear/Notion=1단. 트리코토미상 Calendar·Graph는 렌즈인데 destination 레일에 오배치 → 강등이 1단화 첫 수. (디자인 ③진단 재개 시.)
+- **React setState 업데이터 안에서 값 세팅→다음 줄 읽기 = 비신뢰**(렌더 페이즈 지연). 동기 핸들러 처리.
+
+### 완료
+- 랜딩(`site/index.html` 단일 정적, 9섹션, 실제 앱 스샷 5장 `site/shots/`, EN/KO 토글 KO기본 `data-i18n`+I18N 사전) / 북 디테일바(`books-view handleSelect` peek) / 온톨로지 한글화(`i18n.ts` +25키, node-context-menu·graph-canvas useT). tsc 내 변경 에러0.
+
+### 다음 (P0)
+1. 랜딩 섹션별 사용법+스샷 보강 브레인스토밍(사용자 지정, 0.001). 2. (carry) 뷰엔진 타임라인 #10/#11(0.005).
+
+### Store version / 검증
+**무변경(v154)**. `npm run build` 미실행(worktree Tauri 모듈 누락 → 다음 머신 `npm install` 후 빌드). 신규 `site/`=정적, 빌드 불필요.
+
+---
+
 ## ✅ 2026-06-04 (집/Windows, 오후) — 뷰엔진 디스플레이 11버그: 보드/그리드/휴지통 7개 완료 + 타임라인 4개 WIP ⭐⭐⭐⭐
 
 **범위**: 노트/위키/북 3스페이스의 디스플레이 패널·뷰모드(보드/그리드/타임라인) 11버그. 사용자 "안 되는 것 11개" 정리 → 풀 패리티 요청.

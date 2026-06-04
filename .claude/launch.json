@@ -14,6 +14,13 @@
       "runtimeArgs": ["serve", "docs/v3-mockup", "-l", "3003", "--no-clipboard"],
       "port": 3003,
       "autoPort": true
+    },
+    {
+      "name": "site",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["serve", "site", "-l", "4321", "--no-clipboard"],
+      "port": 4321,
+      "autoPort": true
     }
   ]
 }

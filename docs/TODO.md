@@ -3,13 +3,22 @@
 > 우선순위 기반 작업 목록. **P0 = 다음 세션 즉시 시작점** (NEXT-ACTION.md 폐지, 2026-05-12).
 > 완료 항목은 즉시 삭제. 자세한 history는 SESSION-LOG.md + MEMORY.md.
 
-**마지막 갱신**: 2026-06-04 (after-work #2, 집/Windows) — **뷰엔진 디스플레이 11버그**: 보드/그리드/휴지통 **7개 완료**(보드 +N more 호버 카드·북 보드 visibleColumns·그리드 칩+선택 체크박스 3스페이스·휴지통 배지) + 디스플레이 패널 게이팅(grid/timeline이 board 상속). build0. **타임라인 4개 WIP**(#10 북 타임라인 캔버스 collapse·#11 그룹화 와이어링·#4/#7 노트/위키 타임라인 검증). 사용자 데스크톱 재빌드(plot.exe)로 1~9 테스트 중. **다음 = 타임라인 마무리**(0.005). 이전(after-work #1)=북 라우팅 홈깜빡임 수정 + #524~528 백필.
+**마지막 갱신**: 2026-06-04 (저녁, 집/Windows) — **제품 랜딩 페이지 신설**(`site/`, 의존성0 단일 HTML, 실제 코드 검증 카피 + 실제 앱 스샷[헤드리스 Chrome] + EN/KO 토글 KO기본) + **북 디테일바 수정**(books-view `handleSelect` peek) + **온톨로지 그래프 한글화**(i18n +25키, node-context-menu·graph-canvas useT). Store 무변경(v154), tsc 내 변경 에러0. **다음 = 랜딩 섹션별 사용법+스샷 보강 브레인스토밍**(아래 0.001, 사용자 지정). 이전(오후)=뷰엔진 11버그 보드/그리드/휴지통 7완료 + 타임라인 4 WIP(미완 → 0.005 carry).
 
 ---
 
 ## 🟣 P0 — 즉시 (cross-machine 진입점, 2026-05-31 — IA 헌법 적용 단계)
 
-### 0.005. **🔴 P0 #1: 뷰엔진 타임라인 그룹 마무리 (#10/#11/#4/#7)** ← 다음 시작점
+### 0.001. **🔴 P0 #1: 랜딩 페이지 섹션별 사용법 + 스크린샷 보강** (사용자 지정) ← 다음 시작점
+
+> 2026-06-04 저녁 `site/index.html`(제품 랜딩) 신설 — 실제 코드 검증 카피 + 실제 앱 스샷(notes/graph) + EN/KO 토글(KO 기본). **사용자 평**: "무엇을 하는지는 말하는데 *어떻게 쓰는지*가 없어 부실." → 보강 브레인스토밍.
+- **각 기능 → 미니 how-to**: 노트→위키(promote 넛지 → 위키 import = note-ref 임베드) · 그래프(우클릭 묶기/격리) · 뷰엔진(필터/디스플레이/저장뷰) 등 "이렇게 작동" 안내.
+- **스샷 추가**: `site/shots/`에 home·wiki·books 3장 이미 있음(미사용) + 에디터·인박스·승격 플로우 추가 캡처. 헤드리스: `chrome --headless=old --screenshot --force-device-scale-factor=2 --user-data-dir=<temp> --virtual-time-budget=9000 "http://127.0.0.1:3002/<route>"` (앱 기본 로케일 en이라 영어 렌더 주의).
+- **구조 결정**: 기능 그리드 "기능명+1줄" → "스샷+단계 how-to" 확장 vs 별도 "How it works" 섹션.
+- **i18n 주의**: 신규 카피는 `<script>` 내 `I18N` 사전 **EN/KO 둘 다 + HTML 본문 둘 다**. `npx serve site -l 4321` → localhost:4321 확인.
+- **배포 미결**: Vercel / GitHub Pages 후보.
+
+### 0.005. **🟡 뷰엔진 타임라인 그룹 마무리 (#10/#11/#4/#7)** (carry — 랜딩 우선으로 후순위)
 
 > 2026-06-04 뷰엔진 11버그 중 보드/그리드/휴지통 7개 완료(아래 ✅), **타임라인 4개 WIP**. 사용자 데스크톱 재빌드(plot.exe)로 1~9 테스트 중 — 피드백 받고 진행.
 - **#10 북 타임라인 캔버스 collapse**: TimelineControls는 뜨나 그 아래 SVG 캔버스가 0높이. books-view 래퍼 `overflow-y-auto`→`flex overflow-hidden`(notes shell 패턴) 적용했으나 dev서 여전히 collapse. `books-timeline-view.tsx` height 체인 vs `notes-timeline-view.tsx`(전용 shell) 비교 필요.
