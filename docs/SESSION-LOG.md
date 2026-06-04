@@ -6,6 +6,60 @@
 
 ---
 
+## 2026-06-04 (집/Windows, 밤) — **랜딩 how-to/제텔카스텐 보강 + 번역투 정리 + 앱 토스트 i18n 버그 수정**
+
+> 🎯 **다음 즉시 액션**: **앱 영어 잔여 i18n 일괄 점검(sweep)** — 이번에 잡은 넛지 토스트처럼 `useT` 없이 영어 하드코딩된 컴포넌트를 전수 색출. 메모리상 "앱 기본 로케일 en + 사용자 적발식 대응 중"이라 선제 sweep이 고가치(whack-a-mole 종결).
+>
+> **사용자 의도**: 한국어 UI인데 영어로 뜨는 텍스트 = 버그. 적발식(찾을 때마다) 말고 한 번에 훑어서 잡고 싶음.
+>
+> **첫 스텝** (다른 머신에서 바로):
+> 1. 색출 grep — 사용자 노출 문자열인데 `t(`/`useT` 안 거치는 것: `toast("`+``toast(` `` 영문 리터럴, JSX 텍스트 노드 영문, `aria-label=`/`placeholder=` 영문. `hooks/`·`components/` 우선. 이번 `use-autopilot-nudges.ts`가 본보기.
+> 2. 각 컴포넌트: `useT()` 배선(없으면) + 영문 → `t("key")` + `lib/i18n.ts` EN/KO 키 추가. 보간은 `t(key).replace("{count}", String(n))`(앱 표준, 자동 아님).
+> 3. 우선순위: 토스트(sonner)·빈상태(empty state)·컨텍스트 메뉴·다이얼로그 버튼·aria-label. 온톨로지처럼 useT 미적용 클러스터가 또 있을 수 있음.
+> 4. 검증: `npm run build`(유일 신뢰 게이트, `npx tsc --noEmit`는 incremental false-clean). dev preview서 언어 ko 토글해 육안.
+>
+> **i18n 시스템 요약**: `lib/i18n.ts` — `const EN={}`(@20, **DictKey=keyof typeof EN**) / `const KO:Partial<Record<DictKey,string>>`(@1079) / `translate(key,locale)`(@2139) / `useT():(key)=>string`(@2149, `useSettingsStore.language` 구독). 신규 키는 EN(DictKey 소스)+KO 둘 다.
+>
+> **위험 + 회피**: ① `tsc --noEmit` false-clean → `npm run build`로만 검증. ② 토스트는 `useEffect` 빈 deps + firedRef 1회 발화 — `t`를 deps에 넣지 말 것(mount 시점 언어 캡처로 충분). ③ 앱 기본 locale=en → dev 헤드리스 스샷은 영어 렌더, ko 확인은 설정 토글. ④ 변수형(템플릿 리터럴) grep 누락 주의 — `toast("` + ``toast(` `` 양쪽.
+>
+> **참고 파일**: `lib/i18n.ts`(사전+useT), `hooks/use-autopilot-nudges.ts`(이번 수정=본보기), `components/ontology/node-context-menu.tsx`(이전 useT 배선 사례).
+>
+> **머신**: 집(Windows). **현재 main HEAD**: 이 PR 머지 후. **branch worktree**: 새 worktree 생성.
+
+### 완료 (이 PR)
+- **랜딩 "How it works" 섹션 신설** (`site/index.html`): FEATURES↔GRAPH 사이 3단계 교차 walkthrough — ① 노트→위키 컴파일(wiki.png) ② 뷰엔진으로 정리(books.png) ③ 인박스·홈으로 흐름 유지(home.png). **검증된 실제 플로우 기반**(탐색 에이전트 3개로 코드 확인: 어셈블리 다이얼로그 note-ref·넛지 조건[백링크3·200자]·뷰엔진 라벨·인박스 8신호). 미사용 스샷 3장 전부 소진(이제 5장 다 사용). + GRAPH "이렇게 조작하세요" 4칩 스트립(진입/선택/묶기/좁히기). + NAV·footer "사용법" 링크. + i18n ~40키 EN/KO.
+- **랜딩 번역투 정리** (~34 문자열): 페이지 전체 KO 설명 자연스러운 한국어로 재작성. `당신/당신의` 남발 제거(→생략 또는 1인칭 "나만의/내 것"), 영어 직역 관용구 한국어화("노트가 박스스코어를 받습니다"→"야구 기록 같은 점수가 붙습니다"·"상태는 상태"→"상태는 하나로 통합"·"당신 마음의 인박스"→"머릿속 인박스"). EN 불변.
+- **제텔카스텐 설명 섹션 신설**: 테제 다음 "제텔카스텐이 뭔가요?" — 루만 메모상자(9만장→70권) + 원칙 3카드(작게 쪼갠다·연결한다·자라난다) + "그 수고를 Plot이 덜어 줍니다" 연결고리(검증 기능 근거: 자동 백링크·고립 발견·그래프).
+- **"고아"→"고립" 용어 변경** (8곳, KO만): 고립 노트/고립 비율. EN "orphan" 유지.
+- **앱 토스트 i18n 버그 수정**: `hooks/use-autopilot-nudges.ts` 넛지 토스트 3종(백로그·SRS·클러스터)이 `useT` 없이 영어 하드코딩 → 한국어 UI에 영어 노출. `useT()` 배선 + `lib/i18n.ts` 키 10개 EN/KO 추가(`nudge.backlog/srs/cluster.*`). 기존 용어 재사용(대기·복습·분류·클러스터·위키). **사용자 적발.** build exit0.
+
+### 브레인스토밍 & 큰 결정 (영구)
+- **랜딩 how-to = 별도 "How it works" 섹션 (A안)**: 기능카드(=무엇을)와 분리해 워크플로우(=어떻게)를 스샷+번호단계로. Linear 랜딩 패턴. 카피는 코드 검증 강제(가짜 목업 금지 원칙 연장).
+- **랜딩 KO 톤 = 1인칭/중립, `당신` 지양**: 번역투 핵심 마커가 `당신의`. 생략 또는 "나만의/내 것". `~습니다` 격식 일관.
+- **앱 i18n 부채는 선제 sweep이 답**: 적발식 대응(이번 토스트, 이전 온톨로지)은 whack-a-mole. 다음 세션 일괄 점검 전환.
+
+### 기술 학습 (영구)
+- **앱 i18n 패턴**: `useT()` 훅 → `t(key)`, 보간 수동 `.replace("{count}", String(n))`. 신규 키 `lib/i18n.ts` EN(DictKey 소스)+KO 둘 다. 훅에서도 `useT()` 호출 가능. 토스트 1회 발화면 mount 시점 언어 캡처 충분 → `t`를 effect deps에 넣지 말 것.
+- **랜딩 i18n(`site/index.html`)**: 자체 `I18N` 사전 + `data-i18n` + applyLang(innerHTML 덮어쓰기). 표시값=사전(KO 기본)이라 같은 KO 문자열이 HTML 본문+사전 양쪽 존재 → `replace_all`(full KO string)로 한 번에 교체 가능, EN(영문)은 KO 교체에 안 걸림.
+- **검증 게이트**: 랜딩=`npx serve site -l 4321` + 브라우저(정적이라 스샷 안정). 앱=`npm run build` exit0(tsc incremental false-clean이라 build가 유일).
+
+### Watch Out (다음 세션 주의사항)
+- **랜딩 미배포**: 로컬 4321만. 배포(Vercel/GH Pages) 미결.
+- **랜딩 흐름01 스샷**: wiki.png=위키 *오버뷰*(라이브러리)지 note-ref 임베드된 *문서*가 아님 — 단계 텍스트=어셈블리 과정, 이미지=목적지(허용). 더 타이트하게는 위키 아티클/어셈블리 다이얼로그 헤드리스 캡처(선택).
+- **앱 토스트 EN 복수형**: `{count} notes` 고정(앱 관례) → EN 1개일 때 "1 notes". KO 무관. 거슬리면 단/복수 분리 키.
+- **사용자 데스크톱 앱**: 토스트 수정은 `npx tauri build` 재빌드해야 plot.exe 반영(현재 구 out/ embed).
+
+### 환경 변경
+- Store version: **무변경 (v154)**.
+- 빌드: `npm run build` exit 0.
+- 신규 파일: 없음(수정만 — `site/index.html`, `lib/i18n.ts`, `hooks/use-autopilot-nudges.ts`).
+- 신규 i18n 키: 랜딩 ~40(howto/zk/gh/nav.howto), 앱 10(nudge.*).
+
+### 머신
+집 (Windows)
+
+---
+
 ## 2026-06-04 (집/Windows, 저녁) — **제품 랜딩 페이지 신설 (site/) + 북 디테일바 수정 + 온톨로지 그래프 한글화**
 
 > 🎯 **다음 즉시 액션**: **랜딩 페이지 섹션별 "실제 사용법" 안내 + 스크린샷 보강 브레인스토밍** (사용자 지정). 현재 `site/index.html`은 *무엇을* 하는지는 말하지만 *어떻게 쓰는지*가 없어 부실 → 각 기능에 미니 how-to(노트→위키 import 플로우·그래프 우클릭 묶기/격리 등) + 실제 스샷(이미 뽑은 home/wiki/books 3장 + 에디터·인박스·승격 플로우 추가 캡처) 보강. **별개 미완 P0(이전, 미터치)**: 뷰엔진 타임라인 #10 북 캔버스 collapse / #11 그룹화 와이어링 — 랜딩으로 우선순위 전환됨.

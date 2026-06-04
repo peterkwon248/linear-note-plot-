@@ -51,6 +51,27 @@
 
 ---
 
+## 📜 2026-06-04 (집/Windows, 밤) — 랜딩 how-to/제텔카스텐 보강 + 번역투 정리 + 앱 토스트 i18n 버그 ⭐⭐⭐⭐
+
+**범위**: 랜딩(`site/`) 보강 + 사용자 적발 앱 i18n 버그.
+
+### 핵심 결정 (영구)
+- **랜딩 how-to = 별도 "How it works" 섹션**(기능카드=무엇을 / walkthrough=어떻게, Linear 패턴). 카피는 코드 검증 강제. 미사용 스샷 3장(wiki/books/home) 소진.
+- **랜딩 KO 톤**: `당신` 남발 제거(→생략·1인칭 "나만의/내 것"), 영어 직역 관용구 한국어화. EN 불변.
+- **앱 i18n**: `useT()`→`t(key)`, 보간 수동 `.replace("{count}",…)`. 신규 키 `lib/i18n.ts` EN(`DictKey=keyof typeof EN` 소스)+KO. 적발식 대응 → 선제 sweep 전환.
+
+### 완료
+- 랜딩: How it works 3단계 walkthrough(wiki/books/home.png) + 그래프 "이렇게 조작하세요" 4칩 + nav "사용법" + 번역투 ~34곳 정리 + "제텔카스텐이 뭔가요?" 섹션(루만+원칙3+Plot연결) + 고아→고립(8). 브라우저 검증(데스크톱/모바일/EN-KO/콘솔0).
+- 앱: 넛지 토스트 3종(백로그·SRS·클러스터) 영어 하드코딩 → useT(`hooks/use-autopilot-nudges.ts` + `lib/i18n.ts` `nudge.*` 10키 EN/KO). 사용자 적발. build exit0.
+
+### 다음 (P0)
+1. **앱 영어 잔여 i18n 일괄 점검(sweep)** — useT 누락 컴포넌트 전수 색출. 본보기=이번 토스트.
+
+### Store version
+무변경(v154).
+
+---
+
 ## 📜 2026-06-04 (집/Windows, 저녁) — 제품 랜딩 페이지 신설 (site/) + 북 디테일바 수정 + 온톨로지 그래프 한글화 ⭐⭐⭐⭐
 
 **범위**: Plot 소개 **랜딩 페이지**(`site/`, 마케팅) 신설 + 앱 버그 2건(사용자 적발).

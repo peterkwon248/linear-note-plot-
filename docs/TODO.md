@@ -3,20 +3,21 @@
 > 우선순위 기반 작업 목록. **P0 = 다음 세션 즉시 시작점** (NEXT-ACTION.md 폐지, 2026-05-12).
 > 완료 항목은 즉시 삭제. 자세한 history는 SESSION-LOG.md + MEMORY.md.
 
-**마지막 갱신**: 2026-06-04 (저녁, 집/Windows) — **제품 랜딩 페이지 신설**(`site/`, 의존성0 단일 HTML, 실제 코드 검증 카피 + 실제 앱 스샷[헤드리스 Chrome] + EN/KO 토글 KO기본) + **북 디테일바 수정**(books-view `handleSelect` peek) + **온톨로지 그래프 한글화**(i18n +25키, node-context-menu·graph-canvas useT). Store 무변경(v154), tsc 내 변경 에러0. **다음 = 랜딩 섹션별 사용법+스샷 보강 브레인스토밍**(아래 0.001, 사용자 지정). 이전(오후)=뷰엔진 11버그 보드/그리드/휴지통 7완료 + 타임라인 4 WIP(미완 → 0.005 carry).
+**마지막 갱신**: 2026-06-04 (밤, 집/Windows) — **랜딩 how-to/제텔카스텐 보강 + 번역투 정리 + 앱 토스트 i18n 버그 수정**. 랜딩(`site/`): How it works 3단계 walkthrough + 그래프 조작법 스트립 + "사용법" nav + KO 번역투 ~34곳 정리 + "제텔카스텐이 뭔가요?" 섹션 + 고아→고립(8). 앱: 넛지 토스트 3종(백로그·SRS·클러스터) 영어 하드코딩 → useT i18n(`use-autopilot-nudges.ts`+`lib/i18n.ts` nudge.* 10키). Store 무변경(v154), `npm run build` exit0. **다음 = 앱 영어 잔여 i18n 일괄 점검(sweep)**(아래 0.001, 사용자 지정).
 
 ---
 
 ## 🟣 P0 — 즉시 (cross-machine 진입점, 2026-05-31 — IA 헌법 적용 단계)
 
-### 0.001. **🔴 P0 #1: 랜딩 페이지 섹션별 사용법 + 스크린샷 보강** (사용자 지정) ← 다음 시작점
+### 0.001. **🔴 P0 #1: 앱 영어 잔여 i18n 일괄 점검 (sweep)** (사용자 지정) ← 다음 시작점
 
-> 2026-06-04 저녁 `site/index.html`(제품 랜딩) 신설 — 실제 코드 검증 카피 + 실제 앱 스샷(notes/graph) + EN/KO 토글(KO 기본). **사용자 평**: "무엇을 하는지는 말하는데 *어떻게 쓰는지*가 없어 부실." → 보강 브레인스토밍.
-- **각 기능 → 미니 how-to**: 노트→위키(promote 넛지 → 위키 import = note-ref 임베드) · 그래프(우클릭 묶기/격리) · 뷰엔진(필터/디스플레이/저장뷰) 등 "이렇게 작동" 안내.
-- **스샷 추가**: `site/shots/`에 home·wiki·books 3장 이미 있음(미사용) + 에디터·인박스·승격 플로우 추가 캡처. 헤드리스: `chrome --headless=old --screenshot --force-device-scale-factor=2 --user-data-dir=<temp> --virtual-time-budget=9000 "http://127.0.0.1:3002/<route>"` (앱 기본 로케일 en이라 영어 렌더 주의).
-- **구조 결정**: 기능 그리드 "기능명+1줄" → "스샷+단계 how-to" 확장 vs 별도 "How it works" 섹션.
-- **i18n 주의**: 신규 카피는 `<script>` 내 `I18N` 사전 **EN/KO 둘 다 + HTML 본문 둘 다**. `npx serve site -l 4321` → localhost:4321 확인.
-- **배포 미결**: Vercel / GitHub Pages 후보.
+> 2026-06-04 밤 넛지 토스트 3종(백로그·SRS·클러스터)이 `useT` 없이 영어 하드코딩된 것 사용자 적발·수정(이 PR). 적발식 대응(이전 온톨로지 포함)=whack-a-mole → **선제 일괄 sweep** 전환.
+- **색출**: 사용자 노출 문자열인데 `t(`/`useT` 안 거치는 것 — `toast("`+``toast(` `` 영문, JSX 텍스트 영문, `aria-label`/`placeholder` 영문. `hooks/`·`components/` 우선.
+- **수정 패턴**: `useT()` 배선 + 영문 리터럴 → `t("key")` + `lib/i18n.ts` EN/KO 키(보간 `.replace("{count}", String(n))`). 본보기=`hooks/use-autopilot-nudges.ts`(이 PR).
+- **i18n 시스템**: `lib/i18n.ts` — EN(@20, `DictKey=keyof typeof EN`) / KO Partial(@1079) / `useT`(@2149, `useSettingsStore.language`). 신규 키 EN+KO 둘 다.
+- **검증**: `npm run build`(유일 신뢰 게이트). dev서 언어 ko 토글 육안.
+
+> ✅ **2026-06-04 밤 (이 PR)**: **랜딩 보강 + 번역투 정리 + 제텔카스텐 섹션 + 앱 토스트 i18n** — ① 랜딩 "How it works" 3단계 walkthrough(wiki/books/home.png) + 그래프 조작법 스트립 + "사용법" nav(검증된 플로우 기반, 미사용 스샷 3장 소진) ② 랜딩 KO 번역투 ~34곳(당신 남발 제거·직역 관용구 한국어화) ③ "제텔카스텐이 뭔가요?" 설명 섹션(루만+원칙3+Plot연결) ④ 고아→고립(8곳) ⑤ **앱 넛지 토스트 3종 영어 하드코딩 → useT**(nudge.* 10키 EN/KO). build0. 랜딩=브라우저 검증(데스크톱/모바일/EN-KO/콘솔0).
 
 ### 0.005. **🟡 뷰엔진 타임라인 그룹 마무리 (#10/#11/#4/#7)** (carry — 랜딩 우선으로 후순위)
 
