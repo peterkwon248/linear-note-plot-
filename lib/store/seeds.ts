@@ -1,4 +1,4 @@
-import type { Note, Folder, Tag, Label, NoteTemplate, WikiArticle, WikiBlock, WikiCategory, WikiTemplate, Book, SmartBookPreset } from "../types"
+import type { Note, Folder, Tag, Label, NoteTemplate, WikiArticle, WikiBlock, WikiCategory, WikiTemplate, Book, SmartBookPreset, Sticker } from "../types"
 import { workflowDefaults } from "./helpers"
 import { buildSectionIndex } from "../wiki-section-index"
 
@@ -313,6 +313,33 @@ In [[wiki:Zettelkasten]], a [[wiki:Fleeting Note]] is meant to be temporary. But
 
 Maybe I should set a 7-day rule: if a fleeting note isn't promoted within a week, review and either promote or delete it.`
 
+const NOTE_10_CONTENT = `# Organizing Tools at a Glance
+
+Plot has several ways to organize. Once you know "when to use which," it's simple.
+
+## Folders
+One note, one place — a physical drawer. Like "Projects" or "Daily Log."
+
+## Tags
+Lightweight and many. Use them to cut across topics — a note can carry \`Knowledge Management\` and \`Reading\` at once.
+
+## Labels
+The **kind** of note, as a single color. Idea, Research, Memo, and so on.
+
+## Stickers
+Bundle **anything**, regardless of type — notes, wikis, books. Perfect for ad-hoc groups like "In Progress." They show up as colored hulls in the graph.
+
+## Categories (wiki)
+Organize wiki articles into a **multi-parent tree (DAG)** — like "Knowledge Management ▸ Zettelkasten ▸ Note Types."
+
+## Priority & Status
+- **Status** = how developed it is (Backlog · Todo · In Progress · Done)
+- **Priority** = how urgent it is (Urgent · High · Medium · Low)
+
+They're different axes — something can be "urgent but raw," or "not urgent but done."
+
+> In short: folder = drawer · tag = topic · label = kind · sticker = free bundle · category = wiki hierarchy`
+
 /* ── Seed notes ─────────────────────────────────────── */
 
 // Welcome note — the single note a brand-new production user starts with
@@ -572,6 +599,44 @@ export const SEED_NOTES: Note[] = [
     aliases: [],
     wikiInfobox: [],
     referenceIds: [],
+  },
+  {
+    id: "note-10",
+    title: "Organizing Tools at a Glance",
+    content: NOTE_10_CONTENT,
+    contentJson: null,
+    folderIds: [],
+    tags: ["tag-1"],
+    labelId: null,
+    status: "done",
+    priority: "high",
+    reads: 2,
+    pinned: false,
+    trashed: false,
+    createdAt: new Date(Date.now() - 3600000 * 4).toISOString(),
+    updatedAt: new Date(Date.now() - 3600000 * 4).toISOString(),
+    ...workflowDefaults("done"),
+    noteType: "note" as const,
+    summary: "When to use folders, tags, labels, stickers, categories, priority and status",
+    preview: "Organizing Tools at a Glance — Plot has several ways to organize. Once you know when to use which, it's simple.",
+    linksOut: [],
+    aliases: [],
+    wikiInfobox: [],
+    referenceIds: [],
+  },
+]
+
+export const SEED_STICKERS: Sticker[] = [
+  {
+    id: "sticker-1",
+    name: "In Progress",
+    color: "#f59e0b",
+    members: [
+      { kind: "note", id: "note-2" },
+      { kind: "note", id: "note-8" },
+      { kind: "wiki", id: "wiki-3" },
+    ],
+    createdAt: new Date(Date.now() - 3600000 * 5).toISOString(),
   },
 ]
 

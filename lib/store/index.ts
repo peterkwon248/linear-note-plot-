@@ -5,7 +5,9 @@ import type { Attachment, CoOccurrence, RelationSuggestion } from "../types"
 import { buildDefaultViewStates } from "../view-engine/defaults"
 import { createIDBStorage } from "../idb-storage"
 import { createAppendEvent } from "./helpers"
-import { SEED_NOTES, SEED_FOLDERS, SEED_TAGS, SEED_LABELS, SEED_TEMPLATES, SEED_WIKI_ARTICLES, SEED_WIKI_CATEGORIES, SEED_WIKI_TEMPLATES, SEED_BOOKS, SEED_SMART_BOOK_PRESETS, WELCOME_NOTE } from "./seeds"
+import { SEED_NOTES, SEED_FOLDERS, SEED_TAGS, SEED_LABELS, SEED_TEMPLATES, SEED_WIKI_ARTICLES, SEED_WIKI_CATEGORIES, SEED_WIKI_TEMPLATES, SEED_BOOKS, SEED_SMART_BOOK_PRESETS, SEED_STICKERS, WELCOME_NOTE } from "./seeds"
+import { KO_SEED_NOTES, KO_WELCOME_NOTE, KO_SEED_WIKI_ARTICLES, KO_SEED_WIKI_CATEGORIES, KO_SEED_FOLDERS, KO_SEED_TAGS, KO_SEED_LABELS, KO_SEED_BOOKS, KO_SEED_SMART_BOOK_PRESETS, KO_SEED_STICKERS } from "./seeds-ko"
+import { useSettingsStore } from "../settings-store"
 import { persistBody, persistBlockBody } from "./helpers"
 import { isWikiStub } from "../wiki-utils"
 import { createNotesSlice } from "./slices/notes"
@@ -296,6 +298,13 @@ export const usePlotStore = create<PlotState>()(
       onRehydrateStorage: () => (state) => {
         if (state) {
           state._viewStateHydrated = true
+          // Locale for the one-time seed + lazy seed-block fallback below.
+          // Browser-detected on first launch (settings-store default); persisted
+          // value for returning users. Returning users skip seeding (hasSeeded),
+          // so any rehydrate-timing nuance only affects brand-new installs.
+          const ko = (() => {
+            try { return useSettingsStore.getState().language === "ko" } catch { return false }
+          })()
           // Side panel should always start closed (not persisted)
           state.sidePanelOpen = false
           // Secondary panel navigation is session-only
@@ -324,35 +333,32 @@ export const usePlotStore = create<PlotState>()(
           // 데이터를 모두 지우면 빈 앱이 유지되고 데모가 되살아나지 않는다.
           // (기존 "notes 비면 재시드" + books/presets "비면 backfill" 버그 제거.)
           if (!state.hasSeeded) {
-            if (process.env.NODE_ENV === "development") {
-              // Dev: rich demo set for QA / screenshots.
-              state.notes = SEED_NOTES
-              state.wikiArticles = SEED_WIKI_ARTICLES
-              state.wikiCategories = SEED_WIKI_CATEGORIES
-              state.folders = SEED_FOLDERS
-              state.tags = SEED_TAGS
-              state.labels = SEED_LABELS
-              state.templates = SEED_TEMPLATES
-              state.books = SEED_BOOKS
-              state.smartBookPresets = SEED_SMART_BOOK_PRESETS
-            } else {
-              // Prod new user: ship the full PKM starter set. Plot is a
-              // knowledge GRAPH — a rich, interconnected seed (notes ↔ wiki ↔
-              // books: ~9 notes / ~22 wiki articles / 8 books / 13 templates +
-              // categories/tags/labels) is the first impression that an empty
-              // app can't deliver. WELCOME_NOTE leads as a friendly pinned
-              // intro. The hasSeeded gate (above) means a user who clears it
-              // out never sees the demo resurrect (출시: 부활 0).
-              state.notes = [{ ...WELCOME_NOTE }, ...SEED_NOTES]
-              state.wikiArticles = SEED_WIKI_ARTICLES
-              state.wikiCategories = SEED_WIKI_CATEGORIES
-              state.folders = SEED_FOLDERS
-              state.tags = SEED_TAGS
-              state.labels = SEED_LABELS
-              state.templates = SEED_TEMPLATES
-              state.wikiTemplates = SEED_WIKI_TEMPLATES
-              state.books = SEED_BOOKS
-              state.smartBookPresets = SEED_SMART_BOOK_PRESETS
+            const dev = process.env.NODE_ENV === "development"
+            // Locale-aware onboarding seed. Browser language (detected above in
+            // settings-store on first launch) picks KO vs EN content. Plot is a
+            // knowledge GRAPH, so a rich, interconnected seed (notes ↔ wiki ↔
+            // books + categories/tags/labels/stickers) is the first impression
+            // an empty app can't deliver. WELCOME_NOTE leads as a friendly
+            // pinned intro (prod). The hasSeeded gate means a user who clears it
+            // out never sees the demo resurrect (출시: 부활 0).
+            const baseNotes = ko ? KO_SEED_NOTES : SEED_NOTES
+            const welcome = ko ? KO_WELCOME_NOTE : WELCOME_NOTE
+            // Dev gets the demo set without the welcome note; prod leads with it.
+            state.notes = dev ? baseNotes : [{ ...welcome }, ...baseNotes]
+            state.wikiArticles = ko ? KO_SEED_WIKI_ARTICLES : SEED_WIKI_ARTICLES
+            state.wikiCategories = ko ? KO_SEED_WIKI_CATEGORIES : SEED_WIKI_CATEGORIES
+            state.folders = ko ? KO_SEED_FOLDERS : SEED_FOLDERS
+            state.tags = ko ? KO_SEED_TAGS : SEED_TAGS
+            state.labels = ko ? KO_SEED_LABELS : SEED_LABELS
+            state.templates = SEED_TEMPLATES
+            state.wikiTemplates = SEED_WIKI_TEMPLATES
+            state.books = ko ? KO_SEED_BOOKS : SEED_BOOKS
+            state.smartBookPresets = ko ? KO_SEED_SMART_BOOK_PRESETS : SEED_SMART_BOOK_PRESETS
+            state.stickers = ko ? KO_SEED_STICKERS : SEED_STICKERS
+            // Persist every seeded note body to IDB now (partialize strips note
+            // content), so ALL seed notes survive reload — not just welcome.
+            for (const n of state.notes) {
+              if (n.content) persistBody({ id: n.id, content: n.content, contentJson: null })
             }
             state.hasSeeded = true
           }
@@ -400,7 +406,9 @@ export const usePlotStore = create<PlotState>()(
           // Pool = dev demo (SEED_NOTES) or the prod welcome note, matching the
           // seed branch above so the welcome note's body shows in the editor.
           {
-            const seededPool = process.env.NODE_ENV === "development" ? SEED_NOTES : [WELCOME_NOTE]
+            const seededPool = ko
+              ? [KO_WELCOME_NOTE, ...KO_SEED_NOTES]
+              : process.env.NODE_ENV === "development" ? SEED_NOTES : [WELCOME_NOTE]
             for (const note of state.notes) {
               const seed = seededPool.find((s) => s.id === note.id)
               if (seed && seed.content && !note.content) {
@@ -410,11 +418,14 @@ export const usePlotStore = create<PlotState>()(
             }
           }
 
-          // Backfill "Memo" label for notes without a label
+          // Backfill a default label for notes without one. Locale-aware name —
+          // a Korean vault gets "메모", an English one "Memo" (reuses the seed
+          // label of the same name when present, so no duplicate is created).
           {
-            let memoLabel = state.labels.find((l: any) => l.name === "Memo" && !l.trashed)
+            const memoName = ko ? "메모" : "Memo"
+            let memoLabel = state.labels.find((l: any) => l.name === memoName && !l.trashed)
             if (!memoLabel) {
-              memoLabel = { id: "label-memo", name: "Memo", color: "#f5a623" }
+              memoLabel = { id: ko ? "klabel-memo" : "label-memo", name: memoName, color: "#f5a623" }
               state.labels = [...state.labels, memoLabel]
             }
             let changed = false
@@ -449,7 +460,7 @@ export const usePlotStore = create<PlotState>()(
                     return { ...a, blocks: result.blocks }
                   }
                   // Fallback: seed articles on first load (no IDB data yet)
-                  const seedArticle = SEED_WIKI_ARTICLES.find((s) => s.id === a.id)
+                  const seedArticle = (ko ? KO_SEED_WIKI_ARTICLES : SEED_WIKI_ARTICLES).find((s) => s.id === a.id)
                   if (seedArticle && a.blocks.length === 0) {
                     // Persist seed blocks to IDB for future loads
                     import("@/lib/wiki-block-meta-store").then(({ saveArticleBlocks }) => {

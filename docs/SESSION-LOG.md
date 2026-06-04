@@ -6,6 +6,56 @@
 
 ---
 
+## 2026-06-05 (집/Windows) — **로케일별 온보딩 시드 (브라우저 감지 + KO/EN 시드 분기) + 랜딩 배포/다운로드 마무리**
+
+> 🎯 **다음 즉시 액션**: **트랙 선택 (사용자가 보류)** — 아래 3 중 택1. 사용자 의도 = "after-work부터 완벽히, 다른 컴퓨터에서 로드". 가장 신선한 관심사는 **모바일**.
+>
+> **트랙 ① 모바일 대응 (사용자 2026-06-05 문의)**: 현 앱=데스크톱 UI(Linear식 사이드바·다중 패널·호버) + 로컬퍼스트 **무싱크**. "바로 배포"는 불가. **첫 스텝** = 반응형 진단 — 폰 375px에서 어디가 깨지는지(사이드바/패널/리스트 컬럼) 헤드리스(`--window-size=390,844`)로 캡처해 목록화. 그 다음 PWA(정적 `out/`+manifest/SW→홈화면 설치, GH Pages 가능) 또는 네이티브(Tauri 2 모바일, Xcode/Android Studio+스토어 계정 $99/$25+서명). **근본 제약=싱크 부재**(모바일=데이터 섬) → 클라우드 싱크(Yjs CRDT 로드맵)와 같이 가야 의미. 랜딩은 이미 모바일 반응형+배포됨.
+>
+> **트랙 ② 앱 영어 잔여 i18n sweep (직전 P0)**: useT 없이 영어 하드코딩된 컴포넌트 전수 색출. `toast("`/JSX 영문/aria-label grep(`hooks/`·`components/`). 본보기=`use-autopilot-nudges.ts`. 이번 세션에 토스트+Memo 라벨은 잡음. i18n: `lib/i18n.ts` EN@20·KO@1079·useT@2149.
+>
+> **트랙 ③ KO 시드 다듬기/확장**: 노트템플릿 13·위키템플릿 8 한국어화(현재 KO 시드도 EN 템플릿 재사용), KO 위키 추가, Book kind 라벨 "Manual/Smart" 한글화(코드키 불변·별 트랙).
+>
+> **위험 + 회피**: 시드 변경은 **hasSeeded=true인 기존 설치엔 미적용**(신규 유저만) — 검증은 **새 프로필**(헤드리스 `--user-data-dir=<신규> --lang=ko-KR`). store version bump 불필요(hasSeeded 게이트). `npm run build`가 유일 신뢰 게이트(dev 정지 후).
+>
+> **참고 파일**: `lib/store/seeds-ko.ts`(KO 시드 전체), `lib/store/seeds.ts`(EN), `lib/store/index.ts`(onRehydrate 시드 게이트 ~326), `lib/settings-store.ts`(브라우저 감지 detectInitialLanguage).
+>
+> **머신**: 집(Windows). **현재 main HEAD**: 이 PR 머지 후. **branch worktree**: 새 worktree 생성.
+
+### 완료 (이 PR)
+- **로케일별 온보딩 시드** — 첫 실행 시 `navigator.language` 감지(`settings-store.ts` `detectInitialLanguage`, SSR 가드) → KO 브라우저는 한국어 UI + **한국어 시드**, 그 외 영어. `onRehydrate` 시드 게이트(`index.ts` ~326)를 `ko ? KO_* : SEED_*`로 분기. 노트 body IDB 영속(`persistBody`)·위키블록 fallback·Memo 라벨 백필도 로케일 분기.
+- **KO 온보딩 볼트 신설** (`lib/store/seeds-ko.ts`): 노트 8(환영+Plot 사용법·정리 도구 한눈에[폴더/태그/라벨/스티커/카테고리/우선순위/상태]·제텔카스텐이란?·영구/임시 노트·실전·지식의 복리·빠른 메모) + 위키 4(제텔카스텐·영구/임시 노트·Plot 가이드, note-ref 임베드·인포박스·카테고리 DAG) + 북 2(시작 가이드 수동·제텔카스텐 허브 스마트) + 스마트프리셋 2 + 카테고리 5(DAG) + 태그 5·라벨 5 + 스티커 1("지금 작업 중", 노트·위키 크로스 묶음).
+- **EN 보강** (`seeds.ts`): "Organizing Tools at a Glance" 노트(note-10) + `SEED_STICKERS`("In Progress").
+- **검증**: `npm run build` exit0(2회). 헤드리스 Chrome(`--lang=ko-KR` + 새 프로필)으로 KO 시드 **노트/위키/북** 첫 화면 육안 — 한국어 UI+콘텐츠, 상태/폴더/우선순위/백링크/카테고리 DAG/스티커 전부 정상.
+- (이전, 같은 worktree) 랜딩 GitHub Pages 배포(#533) + docs 정정(#534) + 다운로드 크기 6.6→7.6MB(#535) + 다운로드 CTA 직접다운로드화(#536).
+
+### 브레인스토밍 & 큰 결정 (영구)
+- **로케일별 시드 = 브라우저 감지 필수**: 앱 언어 토글은 UI(i18n)만 번역하고 **시드 노트는 데이터라 i18n 안 됨**. 게다가 시드는 첫 실행(onRehydrate) 1회 — 그 시점 언어설정은 기본 en. 그래서 "설정 따라가기"가 시점상 불가 → **`navigator.language` 감지로 첫 로케일 결정** + 로케일별 시드가 정답. (덤: "한국 유저인데 EN 기본" 불편도 해결.)
+- **모바일 평가(영구 참고)**: 앱은 데스크톱 설계 + 무싱크라 "바로 모바일"은 X. PWA=빠르나 반응형 안 돼 cramped + 데이터 섬. 제대로=반응형 패스+싱크. 랜딩은 이미 모바일 OK.
+- **시드 노트 종류 ≠ 라벨**: KO 시드는 status/priority/folder/tag/label/sticker/category를 **실제로 다양하게 써서** 정리 개념을 *보여주고*, "정리 도구 한눈에" 노트가 *설명*함(보여주기+설명 둘 다).
+
+### 기술 학습 (영구)
+- **시드 영속 메커니즘**: partialize가 persist 시 노트 `content`·위키 `blocks`를 스트립 → IDB(note-body-store / wiki-block-meta-store)가 콘텐츠의 SoT. 그래서 시드 노트 body는 `persistBody`로 IDB에 써야 리로드 후 살아남음(기존 prod는 welcome만 → KO/EN 신규는 게이트서 **전 노트 body 영속** 추가). 위키 blocks는 onRehydrate fallback(`seedArticle.blocks` → `saveArticleBlocks`)이 IDB 시딩 — **로케일 풀 분기 필요**(`ko ? KO_SEED_WIKI_ARTICLES : SEED_WIKI_ARTICLES`).
+- **시드 추가 패턴**: `seeds.ts`/`seeds-ko.ts` 배열 + `onRehydrate` 배선. Note=`workflowDefaults(status)` 스프레드 + 명시 필드. Wiki=raw(`Omit<WikiArticle,"sectionIndex"|"status">`) → `.map`으로 status+`buildSectionIndex` 부여, 블록 id=`crypto.randomUUID()`. Book item order=fractional("a0","a1"). Sticker members=`EntityRef[]`({kind,id}). **store version bump 불필요**(hasSeeded 게이트, migrate는 시드 backfill 안 함).
+- **위키링크 표기**: 노트 content서 `[[제목]]`=노트, `[[wiki:제목]]`=위키(소문자 매칭). `linksOut`은 캐시(앱이 content서 재계산).
+- **브라우저 감지 SSR**: `typeof navigator === "undefined"` 가드 필수(static export 빌드 시 navigator 없음 → "en" 폴백, 클라가 마운트서 전환). 기존 유저는 persist된 language 유지(감지는 신규만).
+
+### Watch Out (다음 세션 주의사항)
+- **기존 설치엔 새 시드 미적용**(hasSeeded=true) — 사용자/QA가 새 시드 보려면 IDB 비운 새 프로필 필요. 데스크톱 앱은 `npx tauri build` 재빌드해야 반영(out/ embed).
+- **KO 시드도 노트/위키 템플릿은 EN 재사용**(13/8) — 트랙 ③서 한글화 가능.
+- **Book kind 라벨 "Manual/Smart/Hybrid"는 코드키라 EN 표시**(KO 책에도) — 별 트랙(메모리 carry).
+- 모바일 미구현(트랙 ①).
+
+### 환경 변경
+- Store version: **무변경 (v154)** — 시드는 데이터, 스키마 불변.
+- 빌드: `npm run build` exit 0.
+- 신규 파일: `lib/store/seeds-ko.ts`. 수정: `lib/store/seeds.ts`·`lib/store/index.ts`·`lib/settings-store.ts`.
+
+### 머신
+집 (Windows)
+
+---
+
 ## 2026-06-04 (집/Windows, 밤) — **랜딩 how-to/제텔카스텐 보강 + 번역투 정리 + 앱 토스트 i18n 버그 수정**
 
 > 🎯 **다음 즉시 액션**: **앱 영어 잔여 i18n 일괄 점검(sweep)** — 이번에 잡은 넛지 토스트처럼 `useT` 없이 영어 하드코딩된 컴포넌트를 전수 색출. 메모리상 "앱 기본 로케일 en + 사용자 적발식 대응 중"이라 선제 sweep이 고가치(whack-a-mole 종결).

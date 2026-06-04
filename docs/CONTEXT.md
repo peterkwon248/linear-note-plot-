@@ -51,6 +51,27 @@
 
 ---
 
+## 📜 2026-06-05 (집/Windows) — 로케일별 온보딩 시드 (브라우저 감지 + KO/EN 분기) ⭐⭐⭐⭐⭐
+
+**범위**: 처음 쓰는 유저용 온보딩 시드를 로케일별로(한국 브라우저=한국어 시드). Plot 사용법+제텔카스텐+정리 개념(폴더/태그/라벨/스티커/카테고리/우선순위/상태) 교육.
+
+### 핵심 결정 (영구)
+- **로케일별 시드 = 브라우저 감지**: 앱 언어 토글은 UI(i18n)만 번역, 시드 노트는 데이터라 i18n 안 됨 + 시드는 첫 실행 1회라 그 시점 언어=기본 en → `navigator.language` 감지(`settings-store.ts` detectInitialLanguage, SSR 가드)로 첫 로케일 결정 + 로케일별 시드.
+- **시드 영속**: partialize가 노트 content·위키 blocks 스트립 → IDB(note-body/wiki-block-meta)가 SoT. 시드 노트 body는 `persistBody`로 영속해야 리로드 유지. 위키 blocks는 onRehydrate fallback(로케일 풀 분기).
+- **버전 불필요**: hasSeeded 게이트(신규 유저만), migrate는 시드 backfill 안 함.
+- **모바일**: 데스크톱 UI+무싱크라 "바로 모바일"은 X. 반응형 패스+싱크(Yjs CRDT 로드맵) 필요. 랜딩은 이미 모바일 OK.
+
+### 완료
+- 로케일 감지 + onRehydrate 시드 게이트 로케일 분기 + 전 시드 노트 body IDB 영속 + KO 볼트(`seeds-ko.ts`: 노트8·위키4·북2·카테고리5 DAG·태그/라벨5·스티커1) + EN 보강(Organizing Tools 노트·SEED_STICKERS). build0, 헤드리스 KO 시드 노트/위키/북 육안.
+
+### 다음 (P0) — 사용자 보류, 트랙 택1
+1. 모바일 대응(반응형→PWA/네이티브) · 2. 앱 i18n sweep · 3. KO 시드 다듬기.
+
+### Store version
+무변경(v154). 신규 `lib/store/seeds-ko.ts`.
+
+---
+
 ## 📜 2026-06-04 (집/Windows, 밤) — 랜딩 how-to/제텔카스텐 보강 + 번역투 정리 + 앱 토스트 i18n 버그 ⭐⭐⭐⭐
 
 **범위**: 랜딩(`site/`) 보강 + 사용자 적발 앱 i18n 버그.

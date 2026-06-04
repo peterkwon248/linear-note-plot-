@@ -8,6 +8,29 @@
 
 ---
 
+## ✅ 2026-06-05 (집/Windows) — 로케일별 온보딩 시드 (브라우저 감지 + KO/EN 분기) ⭐⭐⭐⭐⭐
+
+**범위**: 처음 쓰는 유저용 온보딩 시드를 로케일별로 — 한국 브라우저는 한국어 시드, 그 외 영어. Plot 사용법 + 제텔카스텐 활용 + 정리 개념(폴더/태그/라벨/스티커/카테고리/우선순위/상태) 교육.
+
+### 핵심 결정/학습 (영구)
+- **로케일별 시드 = 브라우저 감지 필수**: 앱 언어 토글은 UI(i18n)만 번역, **시드 노트는 데이터라 i18n 안 됨**. 시드는 첫 실행(onRehydrate) 1회라 그 시점 언어설정=기본 en → "설정 따라가기" 시점상 불가. 정답 = `navigator.language` 감지(`settings-store.ts` detectInitialLanguage, SSR 가드)로 첫 로케일 결정 + 로케일별 시드. (덤: "한국 유저 EN 기본" 불편 해결.)
+- **시드 영속 메커니즘**: partialize가 persist 시 노트 content·위키 blocks 스트립 → IDB(note-body/wiki-block-meta-store)가 SoT. 시드 노트 body는 `persistBody`로 IDB 영속해야 리로드 유지(신규 KO/EN 게이트서 **전 노트 영속** 추가). 위키 blocks는 onRehydrate fallback이 IDB 시딩 — **로케일 풀 분기 필요**.
+- **시드 추가 패턴**: `seeds.ts`/`seeds-ko.ts` 배열 + `index.ts` onRehydrate 배선. **store version bump 불필요**(hasSeeded 게이트, migrate는 시드 backfill 안 함). 위키 raw→`.map`(status+buildSectionIndex), block id=crypto.randomUUID, book order=fractional, sticker members=EntityRef[].
+- **모바일(영구 참고)**: 앱=데스크톱 UI+무싱크 → "바로 모바일" X. PWA=빠르나 반응형 안 돼 cramped+데이터 섬. 제대로=반응형 패스+싱크(Yjs CRDT 로드맵). 랜딩은 이미 모바일 OK.
+
+### 완료 (이 PR)
+- 로케일 감지(`settings-store.ts`) + onRehydrate 시드 게이트 로케일 분기(`index.ts` ~326) + 스티커 배선 + 전 시드 노트 body IDB 영속 + 위키블록/Memo라벨 로케일 분기.
+- KO 온보딩 볼트 신설(`lib/store/seeds-ko.ts`): 노트 8·위키 4·북 2·스마트프리셋 2·카테고리 5(DAG)·태그 5·라벨 5·스티커 1. EN 보강(`seeds.ts`: Organizing Tools 노트+SEED_STICKERS).
+- 검증: build exit0(2회). 헤드리스(`--lang=ko-KR`+새 프로필) KO 시드 노트/위키/북 육안(한국어 UI+콘텐츠, 상태/폴더/우선순위/백링크/카테고리 DAG/스티커 정상).
+
+### 다음 (P0) — 사용자 보류, 트랙 택1
+1. **모바일 대응** (반응형 진단 → PWA/네이티브, 사용자 관심) · 2. **앱 영어 잔여 i18n sweep**(직전 P0) · 3. **KO 시드 다듬기**(템플릿 한글화 등). 상세=SESSION-LOG 2026-06-05 hook.
+
+### Store version / 검증
+**무변경(v154)**. 신규 `lib/store/seeds-ko.ts`. `npm run build` exit0. 머신=집/Windows. **신규 유저만 적용**(hasSeeded).
+
+---
+
 ## ✅ 2026-06-04 (집/Windows, 밤) — 랜딩 how-to/제텔카스텐 보강 + 번역투 정리 + 앱 토스트 i18n 버그 ⭐⭐⭐⭐
 
 **범위**: 랜딩(`site/`) 보강 + 사용자 적발 앱 i18n 버그.
