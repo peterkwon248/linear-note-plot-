@@ -8,6 +8,27 @@
 
 ---
 
+## ✅ 2026-06-04 (집/Windows, 밤) — 랜딩 how-to/제텔카스텐 보강 + 번역투 정리 + 앱 토스트 i18n 버그 ⭐⭐⭐⭐
+
+**범위**: 랜딩(`site/`) 보강 + 사용자 적발 앱 i18n 버그.
+
+### 핵심 결정/학습 (영구)
+- **랜딩 how-to = 별도 "How it works" 섹션**(기능카드=무엇을 / walkthrough=어떻게, Linear 패턴). 카피는 코드 검증 강제. 미사용 스샷 3장(wiki/books/home) 소진 → 5장 다 사용.
+- **랜딩 KO 번역투 정리**: `당신` 남발 제거(→생략·1인칭 "나만의/내 것"), 영어 직역 관용구 한국어화. EN 불변.
+- **앱 i18n 패턴**: `useT()` → `t(key)`, 보간 수동 `.replace("{count}",…)`. 신규 키 `lib/i18n.ts` EN(`DictKey=keyof typeof EN` 소스)+KO. 훅에서도 `useT()` 호출 가능. 적발식 대응 → **선제 sweep 전환** 결정.
+
+### 완료 (이 PR)
+- 랜딩(`site/index.html`): How it works 3단계 walkthrough(wiki/books/home.png) + 그래프 "이렇게 조작하세요" 4칩 + nav "사용법" + 번역투 ~34곳 정리 + "제텔카스텐이 뭔가요?" 설명 섹션(루만 9만장→70권 + 원칙3 + Plot 연결) + 고아→고립(8). 브라우저 검증(데스크톱/모바일/EN-KO/콘솔0).
+- 앱: 넛지 토스트 3종(백로그·SRS·클러스터) 영어 하드코딩 → useT(`hooks/use-autopilot-nudges.ts` + `lib/i18n.ts` `nudge.*` 10키 EN/KO). **사용자 적발.** `npm run build` exit0.
+
+### 다음 (P0)
+1. **앱 영어 잔여 i18n 일괄 점검(sweep)** (사용자 지정) — useT 누락 컴포넌트 전수 색출. 본보기=이번 토스트 수정. `hooks/`·`components/` 우선, `toast(` 영문/JSX 영문/aria-label 영문.
+
+### Store version / 검증
+**무변경(v154)**. `npm run build` exit0. 머신=집/Windows.
+
+---
+
 ## ✅ 2026-06-04 (집/Windows, 저녁) — 제품 랜딩 페이지 신설 (site/) + 북 디테일바 수정 + 온톨로지 그래프 한글화 ⭐⭐⭐⭐
 
 **범위**: Plot 제품 소개 **랜딩 페이지**(`site/`, 마케팅) 신설 + 사용자 적발 앱 버그 2건(북 디테일바 / 온톨로지 영어 잔여).

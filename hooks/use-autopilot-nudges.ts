@@ -6,6 +6,7 @@ import { toast } from "sonner"
 import { usePlotStore } from "@/lib/store"
 import { buildSRSMapFromHooks } from "@/lib/store/hook-selectors"
 import { setActiveRoute } from "@/lib/table-route"
+import { useT } from "@/lib/i18n"
 
 /* ── Cooldown helpers ──────────────────────────────────── */
 
@@ -45,6 +46,7 @@ export function useAutopilotNudges(): void {
   const setPendingWikiAssembly = usePlotStore((s) => s.setPendingWikiAssembly)
   const firedRef = useRef(false)
   const router = useRouter()
+  const t = useT()
 
   useEffect(() => {
     if (firedRef.current) return
@@ -62,10 +64,10 @@ export function useAutopilotNudges(): void {
 
       if (inboxCount > 0 && !isOnCooldown("backlog-waiting")) {
         setCooldown("backlog-waiting")
-        toast("Backlog needs attention", {
-          description: `${inboxCount} ${inboxCount === 1 ? "note" : "notes"} waiting for triage`,
+        toast(t("nudge.backlog.title"), {
+          description: t("nudge.backlog.desc").replace("{count}", String(inboxCount)),
           action: {
-            label: "Open Backlog",
+            label: t("nudge.backlog.action"),
             onClick: () => {
               setActiveRoute("/backlog")
               router.push("/backlog")
@@ -84,10 +86,10 @@ export function useAutopilotNudges(): void {
 
         if (dueCount > 0 && !isOnCooldown("srs-due")) {
           setCooldown("srs-due")
-          toast("SRS review due", {
-            description: `${dueCount} ${dueCount === 1 ? "note" : "notes"} ready for review`,
+          toast(t("nudge.srs.title"), {
+            description: t("nudge.srs.desc").replace("{count}", String(dueCount)),
             action: {
-              label: "Open Review",
+              label: t("nudge.srs.action"),
               onClick: () => {
                 router.push("/review")
               },
@@ -103,11 +105,11 @@ export function useAutopilotNudges(): void {
         if (pending.length > 0 && !isOnCooldown("wiki-cluster")) {
           const top = pending[0]
           setCooldown("wiki-cluster")
-          const conceptLabel = top.conceptTitles[0] ?? "related notes"
-          toast(`"${conceptLabel}" cluster detected`, {
-            description: `${top.noteIds.length} notes form a knowledge cluster`,
+          const conceptLabel = top.conceptTitles[0] ?? t("nudge.cluster.fallback")
+          toast(t("nudge.cluster.title").replace("{concept}", conceptLabel), {
+            description: t("nudge.cluster.desc").replace("{count}", String(top.noteIds.length)),
             action: {
-              label: "Create Wiki",
+              label: t("nudge.cluster.action"),
               onClick: () => {
                 setPendingWikiAssembly(top.noteIds)
               },

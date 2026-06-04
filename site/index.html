@@ -269,6 +269,58 @@
   .tech { font-size: 11px; color: var(--whisper); border: 1px solid var(--line); border-radius: 6px; padding: 3px 8px; }
   .copyright { margin-top: 44px; padding-top: 24px; border-top: 1px solid var(--line); font-size: 12.5px; color: var(--whisper); display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
 
+  /* ---------- how it works (walkthrough) ---------- */
+  .flow { margin-top: 60px; display: flex; flex-direction: column; gap: 26px; }
+  .flow-row {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 46px; align-items: center;
+    border: 1px solid var(--line); border-radius: 20px; padding: 36px;
+    background: linear-gradient(180deg, var(--card), var(--bg-2));
+    transition: border-color .25s var(--ease);
+  }
+  .flow-row:hover { border-color: var(--line-2); }
+  .flow-row.rev .flow-copy { order: 2; }
+  .flow-step { display: inline-flex; align-items: center; gap: 9px; font-size: 12px; font-weight: 700; color: var(--accent); letter-spacing: .08em; text-transform: uppercase; margin-bottom: 15px; font-family: "Geist Mono", ui-monospace, monospace; }
+  .flow-step .ln { width: 22px; height: 1px; background: var(--accent); opacity: .55; }
+  .flow-copy h3 { font-size: clamp(20px, 2.6vw, 25px); font-weight: 660; letter-spacing: -0.02em; line-height: 1.18; }
+  .flow-copy .lead { margin-top: 13px; color: var(--muted); font-size: 15px; line-height: 1.62; }
+  .flow-list { list-style: none; margin-top: 22px; display: flex; flex-direction: column; gap: 14px; }
+  .flow-list li { display: flex; gap: 13px; font-size: 14px; color: var(--soft); line-height: 1.55; }
+  .flow-list li .n {
+    flex: none; width: 22px; height: 22px; border-radius: 7px; display: grid; place-items: center;
+    font-size: 11.5px; font-weight: 700; color: var(--accent);
+    background: rgba(124,138,231,.1); border: 1px solid rgba(124,138,231,.25);
+    font-family: "Geist Mono", ui-monospace, monospace;
+  }
+  .flow-list li b { color: var(--fg); font-weight: 600; }
+  .flow-shot { border-radius: 12px; border: 1px solid var(--line-2); overflow: hidden; box-shadow: 0 30px 70px -42px rgba(0,0,0,.82); }
+  .flow-shot img { display: block; width: 100%; height: auto; }
+  .flow-cap { margin-top: 12px; font-size: 12px; color: var(--whisper); text-align: center; }
+  @media (max-width: 860px) {
+    .flow-row { grid-template-columns: 1fr; gap: 26px; padding: 26px; }
+    .flow-row.rev .flow-copy { order: 0; }
+  }
+
+  /* graph how-to strip */
+  .graph-howto { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+  @media (max-width: 760px) { .graph-howto { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 420px) { .graph-howto { grid-template-columns: 1fr; } }
+  .ghstep { border: 1px solid var(--line); border-radius: 12px; padding: 16px 16px 17px; background: var(--card); transition: border-color .25s var(--ease); }
+  .ghstep:hover { border-color: var(--line-2); }
+  .ghstep .gn { font-size: 11px; font-weight: 700; color: var(--ontology); letter-spacing: .06em; text-transform: uppercase; font-family: "Geist Mono", ui-monospace, monospace; }
+  .ghstep h4 { font-size: 14px; font-weight: 620; letter-spacing: -0.01em; margin: 9px 0 6px; }
+  .ghstep p { font-size: 12.5px; color: var(--muted); line-height: 1.5; }
+
+  /* zettelkasten explainer */
+  .zk-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 52px; }
+  @media (max-width: 760px) { .zk-grid { grid-template-columns: 1fr; } }
+  .zk-card { border: 1px solid var(--line); border-radius: var(--radius); padding: 26px 24px; background: linear-gradient(180deg, var(--card), var(--bg-2)); transition: border-color .25s var(--ease), transform .25s var(--ease); }
+  .zk-card:hover { border-color: var(--line-2); transform: translateY(-3px); }
+  .zk-n { font-family: "Geist Mono", ui-monospace, monospace; font-size: 13px; font-weight: 700; color: var(--accent); letter-spacing: .05em; }
+  .zk-term { font-size: 18px; font-weight: 650; letter-spacing: -0.02em; margin-top: 12px; }
+  .zk-card p { font-size: 14px; color: var(--muted); line-height: 1.62; margin-top: 11px; }
+  .zk-bridge { text-align: center; max-width: 58ch; margin: 42px auto 0; color: var(--muted); font-size: 16px; line-height: 1.62; }
+  .zk-bridge b { color: var(--fg); font-weight: 600; }
+
   /* reveal animation */
   .reveal { opacity: 0; transform: translateY(20px); transition: opacity .7s var(--ease), transform .7s var(--ease); }
   .reveal.in { opacity: 1; transform: none; }
@@ -285,6 +337,7 @@
     </a>
     <nav class="nav-links">
       <a href="#features" data-i18n="nav.features">기능</a>
+      <a href="#howto" data-i18n="nav.howto">사용법</a>
       <a href="#graph" data-i18n="nav.graph">지식 그래프</a>
       <a href="#workflow" data-i18n="nav.workflow">워크플로우</a>
       <a href="#privacy" data-i18n="nav.privacy">프라이버시</a>
@@ -310,9 +363,9 @@
 <section class="hero">
   <div class="wrap">
     <span class="eyebrow reveal" data-i18n="hero.eyebrow"><span class="dot"></span> 로컬 퍼스트 · 프라이버시 우선 · 무료</span>
-    <h1 class="reveal" data-i18n="hero.h1">당신의 노트가 <span class="grad">지식 그래프</span>가 됩니다.</h1>
+    <h1 class="reveal" data-i18n="hero.h1">노트가 <span class="grad">지식 그래프</span>가 됩니다.</h1>
     <p class="tagline reveal" data-i18n="hero.tagline">기본은 잔잔하게, 필요할 땐 강력하게.</p>
-    <p class="subcopy reveal" data-i18n="hero.subcopy">Plot은 노트, 개인 위키, 포스 기반 지식 그래프를 하나로 묶은 로컬 퍼스트 앱입니다. 겉은 애플 노트, 속은 제텔카스텐 — 당신의 사고를 위한 <strong style="color:var(--soft);font-weight:500">팔란티어 × 제텔카스텐</strong>.</p>
+    <p class="subcopy reveal" data-i18n="hero.subcopy">Plot은 노트와 개인 위키, 지식 그래프를 하나로 묶은 로컬 퍼스트 앱입니다. 겉은 애플 노트처럼 단순하고, 속은 제텔카스텐 — 생각을 잇는 <strong style="color:var(--soft);font-weight:500">팔란티어 × 제텔카스텐</strong>.</p>
     <div class="hero-cta reveal">
       <a class="btn btn-primary" href="#download">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
@@ -346,8 +399,37 @@
 <!-- ============ THESIS ============ -->
 <section class="thesis">
   <div class="wrap">
-    <p class="big reveal" data-i18n="thesis.big">당신은 노트만 씁니다. <b>제텔카스텐은 Plot이 대신합니다</b> — 연결하고, 고아 노트를 찾아내고, 자랄수록 <b>더</b> 유용해지는 그래프를 키웁니다.</p>
-    <p class="sub reveal" data-i18n="thesis.sub">복리처럼 — 노트 10개일 땐 연결할 게 별로 없지만, 100개가 되면 새 노트마다 기존 여러 개와 이어집니다. 시스템이 복리로 불어납니다.</p>
+    <p class="big reveal" data-i18n="thesis.big">쓰기만 하세요. <b>제텔카스텐은 Plot이 대신합니다</b> — 노트를 잇고, 고립 노트를 찾아내고, 자랄수록 <b>더</b> 쓸모 있어지는 그래프를 키웁니다.</p>
+    <p class="sub reveal" data-i18n="thesis.sub">복리처럼 불어납니다. 노트가 10개일 땐 이을 게 별로 없지만, 100개가 되면 새 노트 하나가 기존 여러 개와 맞물립니다.</p>
+  </div>
+</section>
+
+<!-- ============ ZETTELKASTEN ============ -->
+<section class="sec" id="zettelkasten" style="border-bottom:1px solid var(--line)">
+  <div class="wrap">
+    <div class="sec-head center">
+      <div class="kicker reveal" data-i18n="zk.kicker">방법론</div>
+      <h2 class="reveal" data-i18n="zk.h2">제텔카스텐이 뭔가요?</h2>
+      <p class="reveal" data-i18n="zk.intro">독일 사회학자 니클라스 루만이 쓰던 메모 상자(Zettelkasten)에서 온 방법입니다. 작은 노트를 서로 잇기만 했는데, 9만여 장이 모여 70권이 넘는 책이 됐습니다. 핵심은 단 셋입니다.</p>
+    </div>
+    <div class="zk-grid">
+      <div class="zk-card reveal">
+        <div class="zk-n">01</div>
+        <div class="zk-term" data-i18n="zk.1.term">작게 쪼갠다</div>
+        <p data-i18n="zk.1.desc">한 노트엔 하나의 생각만 담습니다. 작을수록 다시 꺼내 쓰고, 다른 노트와 잇기 쉽습니다.</p>
+      </div>
+      <div class="zk-card reveal">
+        <div class="zk-n">02</div>
+        <div class="zk-term" data-i18n="zk.2.term">연결한다</div>
+        <p data-i18n="zk.2.desc">노트를 폴더에 가두지 않고 노트끼리 잇습니다. 한 노트가 여러 맥락에 동시에 살아 있게 됩니다.</p>
+      </div>
+      <div class="zk-card reveal">
+        <div class="zk-n">03</div>
+        <div class="zk-term" data-i18n="zk.3.term">자라난다</div>
+        <p data-i18n="zk.3.desc">구조를 미리 짤 필요가 없습니다. 연결이 쌓이면 미처 몰랐던 생각의 갈래가 저절로 떠오릅니다.</p>
+      </div>
+    </div>
+    <p class="zk-bridge reveal" data-i18n="zk.bridge">문제는, 이걸 손으로 하면 고됩니다 — 링크를 일일이 걸고, 끊긴 노트를 찾아다니고, 전체 그림을 머릿속에 담아야 하니까요. <b>바로 그 수고를 Plot이 덜어 줍니다.</b></p>
   </div>
 </section>
 
@@ -355,46 +437,113 @@
 <section class="sec" id="features">
   <div class="wrap">
     <div class="sec-head center">
-      <div class="kicker reveal" data-i18n="feat.kicker">저장이 아니라 사고를 위해</div>
-      <h2 class="reveal" data-i18n="feat.h2">다른 어떤 노트앱도 함께 해내지 못하는 7가지</h2>
-      <p class="reveal" data-i18n="feat.intro">아래 기능은 전부 지금 앱에 들어 있습니다 — 로드맵이 아니라 소스로 검증된 것들.</p>
+      <div class="kicker reveal" data-i18n="feat.kicker">쌓아두기가 아니라, 생각하기 위해</div>
+      <h2 class="reveal" data-i18n="feat.h2">다른 노트앱은 한꺼번에 해내지 못하는 7가지</h2>
+      <p class="reveal" data-i18n="feat.intro">아래 기능은 전부 지금 앱에서 동작합니다 — 로드맵 속 약속이 아니라 코드로 검증된 것들입니다.</p>
     </div>
 
     <div class="fgrid">
       <div class="fcard reveal">
         <div class="ficon" style="color:var(--ontology);background:rgba(45,212,191,.08)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="4.5" r="2.5"/><circle cx="5" cy="19" r="2.5"/><circle cx="19" cy="19" r="2.5"/><path d="M10.5 6.5 6.5 17M13.5 6.5 17.5 17M7 19h10"/></svg></div>
         <h3 data-i18n="feat.1.title">세이버메트릭스가 있는 그래프 엔진</h3>
-        <p data-i18n="feat.1.desc">단순 백링크 패널이 아닙니다 — 포스 기반 그래프에 계산된 지표까지: Knowledge WAR, 2홉 Concept Reach, 클러스터 응집도, 고아 비율. 노트가 박스스코어를 받습니다.</p>
+        <p data-i18n="feat.1.desc">단순한 백링크 패널이 아닙니다. 노드가 서로 밀고 당기는 그래프 위에 지표까지 계산합니다 — Knowledge WAR, 2홉 Concept Reach, 클러스터 응집도, 고립 비율. 노트마다 야구 기록 같은 점수가 붙습니다.</p>
       </div>
       <div class="fcard reveal">
         <div class="ficon" style="color:var(--wiki);background:rgba(139,92,246,.08)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2Z"/></svg></div>
         <h3 data-i18n="feat.2.title">노트가 위키로 자랍니다</h3>
-        <p data-i18n="feat.2.desc">노트는 원재료, 위키 문서는 컴파일된 결과물입니다 — 인포박스·내비박스·백과사전식 레이아웃까지. Plot이 빽빽하게 잘 연결된 노트를 위키로 키우라고 권합니다.</p>
+        <p data-i18n="feat.2.desc">노트가 원재료라면 위키 문서는 잘 다듬은 완성본입니다 — 인포박스, 내비박스, 백과사전식 레이아웃까지. 촘촘히 연결된 노트는 Plot이 위키로 키우라고 먼저 권합니다.</p>
       </div>
       <div class="fcard reveal">
         <div class="ficon" style="color:var(--st-todo);background:rgba(59,130,246,.08)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></div>
         <h3 data-i18n="feat.3.title">모든 것에 하나의 워크플로우</h3>
-        <p data-i18n="feat.3.desc">4단계 상태(대기 → 준비 → 정리 중 → 완성)와 5단계 우선순위를 노트·위키·북에 똑같이 적용합니다. 지식을 위한 리니어급 프로젝트 흐름.</p>
+        <p data-i18n="feat.3.desc">4단계 상태(대기 → 준비 → 정리 중 → 완성)와 5단계 우선순위가 노트·위키·북에 똑같이 적용됩니다. 지식 관리에 그대로 옮겨 온 리니어식 프로젝트 흐름입니다.</p>
       </div>
       <div class="fcard reveal">
         <div class="ficon" style="color:var(--stickers);background:rgba(217,70,239,.08)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15.5 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h9l7-7V5a2 2 0 0 0-2-2Z"/><path d="M15 21v-5a1 1 0 0 1 1-1h5"/></svg></div>
         <h3 data-i18n="feat.4.title">모든 엔티티를 가로질러 정리</h3>
-        <p data-i18n="feat.4.desc">스티커는 어떤 엔티티든 함께 묶습니다. 북은 엔티티를 넘나드는 순서 있는 읽기 시퀀스입니다. 카테고리는 다중 부모 DAG를 이룹니다. 단일 부모 페이지나 평면 태그를 한참 넘어섭니다.</p>
+        <p data-i18n="feat.4.desc">스티커는 종류를 가리지 않고 묶고, 북은 엔티티를 넘나드는 순서 있는 읽기 묶음입니다. 카테고리는 부모를 여럿 둘 수 있는 DAG를 이룹니다. 부모 하나짜리 페이지나 밋밋한 태그와는 차원이 다릅니다.</p>
       </div>
       <div class="fcard reveal">
         <div class="ficon" style="color:var(--accent);background:rgba(124,138,231,.08)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg></div>
         <h3 data-i18n="feat.5.title">리니어급 뷰 엔진</h3>
-        <p data-i18n="feat.5.desc">리스트·보드·그리드·타임라인 — 약 25가지 그룹화, 3단계 다중 정렬, 그룹 접기 유지, 저장된 뷰, 승격 가능한 필터 칩까지. 태스크 DB가 아니라 모든 엔티티에서.</p>
+        <p data-i18n="feat.5.desc">리스트·보드·그리드·타임라인에 약 25가지 그룹화, 3단계 다중 정렬, 그룹 접기 기억, 저장된 뷰, 뷰로 굳힐 수 있는 필터 칩까지. 할 일 관리 도구가 아니라 모든 엔티티에서 씁니다.</p>
       </div>
       <div class="fcard reveal">
         <div class="ficon" style="color:var(--st-progress);background:rgba(245,158,11,.08)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-6l-2 3h-4l-2-3H2"/><path d="M5.5 5.5 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.5-6.5A2 2 0 0 0 16.8 4H7.2a2 2 0 0 0-1.7 1.5Z"/></svg></div>
         <h3 data-i18n="feat.6.title">모든 신호를 받는 하나의 인박스</h3>
-        <p data-i18n="feat.6.desc">리마인더, 간격 반복 복습, 위키 레드링크, 미연결 멘션 알림, 본문 태스크, 코멘트, 그래프 정비 제안 — 하나의 미루기/지우기 큐로 모입니다.</p>
+        <p data-i18n="feat.6.desc">리마인더, 간격 반복 복습, 위키 레드링크, 미연결 멘션, 본문 속 할 일, 코멘트, 그래프 정비 제안까지 — 미루거나 지우는 하나의 줄로 모입니다.</p>
       </div>
       <div class="fcard reveal">
         <div class="ficon" style="color:var(--categories);background:rgba(16,185,129,.08)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 13c0 5-3.5 7.5-7.7 8.9a1 1 0 0 1-.6 0C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.2-2.7a1 1 0 0 1 1.6 0C14.5 3.8 17 5 19 5a1 1 0 0 1 1 1Z"/><path d="m9 12 2 2 4-4"/></svg></div>
-        <h3 data-i18n="feat.7.title">영원히 비공개, 그리고 당신의 것</h3>
-        <p data-i18n="feat.7.desc">모든 데이터는 당신 기기의 IndexedDB에 있습니다. 백엔드도, 계정도, 텔레메트리도 없습니다. 전체 JSON 백업, 마크다운 내보내기, 암호 서명된 자동 업데이트.</p>
+        <h3 data-i18n="feat.7.title">영원히 비공개, 오롯이 내 것</h3>
+        <p data-i18n="feat.7.desc">모든 데이터는 기기 안 IndexedDB에 담깁니다. 백엔드도, 계정도, 몰래 수집하는 정보도 없습니다. 통째로 JSON 백업, 마크다운 내보내기, 서명된 자동 업데이트까지.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ HOW IT WORKS ============ -->
+<section class="sec" id="howto" style="border-top:1px solid var(--line)">
+  <div class="wrap">
+    <div class="sec-head center">
+      <div class="kicker reveal" data-i18n="howto.kicker">사용 흐름</div>
+      <h2 class="reveal" data-i18n="howto.h2">노트에서 지식까지, 실제 화면으로</h2>
+      <p class="reveal" data-i18n="howto.intro">Plot이 실제로 어떻게 굴러가는지, 핵심 흐름 셋.</p>
+    </div>
+
+    <div class="flow">
+      <!-- flow 1: note → wiki -->
+      <div class="flow-row reveal">
+        <div class="flow-copy">
+          <div class="flow-step"><span class="ln"></span><span data-i18n="howto.1.step">흐름 01</span></div>
+          <h3 data-i18n="howto.1.title">노트가 위키로 자랍니다</h3>
+          <p class="lead" data-i18n="howto.1.lead">흩어진 노트를 쓰고 [[위키링크]]로 잇다 보면, Plot이 위키로 키우라고 권합니다. 그때 노트 몇 개를 골라 한 편의 문서로 묶으면 됩니다.</p>
+          <ul class="flow-list">
+            <li><span class="n">1</span><span data-i18n="howto.1.s1">노트를 쓰고 <b>[[ ]]</b>로 서로 링크 — Plot이 백링크를 자동 추적합니다.</span></li>
+            <li><span class="n">2</span><span data-i18n="howto.1.s2">백링크 3개·200자가 넘으면 인박스 <b>발견</b>에 "위키로 키울까요?" 제안이 뜹니다.</span></li>
+            <li><span class="n">3</span><span data-i18n="howto.1.s3">노트 여러 개 선택 → 액션바의 <b>Wiki</b> → 노트가 참조 블록으로 박힌 새 문서. 원본은 그대로.</span></li>
+          </ul>
+        </div>
+        <div>
+          <div class="flow-shot"><img class="shot" src="shots/wiki.png" width="1440" height="900" loading="lazy" decoding="async" alt="Plot's Wiki space — compiled articles with status counts, a featured article, categories, and a growth chart." /></div>
+          <p class="flow-cap" data-i18n="howto.1.cap">위키 공간 — 컴파일된 문서, 카테고리, 성장 차트.</p>
+        </div>
+      </div>
+
+      <!-- flow 2: view engine -->
+      <div class="flow-row rev reveal">
+        <div class="flow-copy">
+          <div class="flow-step"><span class="ln"></span><span data-i18n="howto.2.step">흐름 02</span></div>
+          <h3 data-i18n="howto.2.title">무엇이든, 내 방식대로 봅니다</h3>
+          <p class="lead" data-i18n="howto.2.lead">노트도 위키도 북도, 모든 엔티티가 같은 뷰 엔진을 거칩니다. 네 가지 뷰 모드에 풍부한 그룹화·정렬·필터로 원하는 대로 펼쳐 봅니다.</p>
+          <ul class="flow-list">
+            <li><span class="n">1</span><span data-i18n="howto.2.s1"><b>리스트·보드·그리드·타임라인</b> — 디스플레이 패널에서 한 번에 전환.</span></li>
+            <li><span class="n">2</span><span data-i18n="howto.2.s2">약 <b>25가지 그룹화</b>와 3단계 다중 정렬, 보이는 속성 칩을 토글.</span></li>
+            <li><span class="n">3</span><span data-i18n="howto.2.s3">필터 칩으로 좁힌 화면을 <b>Save</b>로 저장된 뷰로 승격 — 다음에 그대로 복원.</span></li>
+          </ul>
+        </div>
+        <div>
+          <div class="flow-shot"><img class="shot" src="shots/books.png" width="1440" height="900" loading="lazy" decoding="async" alt="Plot's Books space in board view — view-mode toggles, cards with status and kind chips, and Smart, Manual and Hybrid books." /></div>
+          <p class="flow-cap" data-i18n="howto.2.cap">북 보드 뷰 — 뷰 모드 토글, 상태·종류 칩, Smart/Manual/Hybrid.</p>
+        </div>
+      </div>
+
+      <!-- flow 3: inbox & home -->
+      <div class="flow-row reveal">
+        <div class="flow-copy">
+          <div class="flow-step"><span class="ln"></span><span data-i18n="howto.3.step">흐름 03</span></div>
+          <h3 data-i18n="howto.3.title">흐름을 놓치지 않습니다</h3>
+          <p class="lead" data-i18n="howto.3.lead">여러 신호를 Plot이 하나의 인박스로 모아 주고, 홈은 지식 베이스 전체를 한눈에 보여줍니다.</p>
+          <ul class="flow-list">
+            <li><span class="n">1</span><span data-i18n="howto.3.s1">리마인더·복습(SRS)·위키 레드링크·고립 노트·본문 속 할 일·코멘트가 인박스로 모입니다.</span></li>
+            <li><span class="n">2</span><span data-i18n="howto.3.s2"><b>할 일·되새김·발견</b> 세 묶음으로 분류 — 미루기(1시간/내일/다음 주)나 지우기.</span></li>
+            <li><span class="n">3</span><span data-i18n="howto.3.s3">홈 대시보드에서 노트·위키·북 수와 가장 연결된·많이 본 항목을 한눈에.</span></li>
+          </ul>
+        </div>
+        <div>
+          <div class="flow-shot"><img class="shot" src="shots/home.png" width="1440" height="900" loading="lazy" decoding="async" alt="Plot's Home dashboard — knowledge-base counts for notes, wiki, books, tags and categories, plus most-connected and most-visited lists." /></div>
+          <p class="flow-cap" data-i18n="howto.3.cap">홈 — 지식 베이스 한눈에 보기.</p>
+        </div>
       </div>
     </div>
   </div>
@@ -405,17 +554,24 @@
   <div class="wrap">
     <div style="max-width:700px">
       <div class="kicker reveal" data-i18n="graph.kicker">지식 그래프</div>
-      <h2 class="reveal" data-i18n="graph.h2">당신의 사고가 어떻게 이어지는지 보세요.</h2>
-      <p class="reveal" data-i18n="graph.p" style="color:var(--muted);font-size:16.5px;margin-top:16px">모든 노트와 위키 문서의 진짜 포스 기반 그래프 — 위키링크·태그·관계가 엣지가 됩니다. 확대하고, 격리하고, 볼록 껍질로 묶으세요. 그리고 Plot이 세이버메트리션처럼 점수를 매깁니다.</p>
+      <h2 class="reveal" data-i18n="graph.h2">생각이 어떻게 이어지는지 눈으로 보세요.</h2>
+      <p class="reveal" data-i18n="graph.p" style="color:var(--muted);font-size:16.5px;margin-top:16px">노트와 위키 문서가 노드로, 위키링크·태그·관계가 엣지로 살아 있는 그래프입니다. 확대하고, 격리하고, 볼록 껍질로 묶어 보세요. 거기에 Plot이 야구 통계처럼 점수까지 매깁니다.</p>
     </div>
     <div class="shotframe reveal" style="margin-top:40px">
       <img class="shot" src="shots/graph.png" width="1440" height="900" loading="lazy" decoding="async" alt="Plot's Ontology graph — a force-directed view of every note (circles) and wiki article (hexagons), colored by status, with detected clusters, a legend, and a minimap." />
     </div>
     <div class="metric-row reveal" style="margin-top:26px">
-      <div class="metric"><div class="v" style="color:var(--st-done)">Knowledge WAR</div><div class="l" data-i18n="metric.war.l">노트별 대체 대비 기여(WAR)</div><div class="d" data-i18n="metric.war.d">백링크·아웃링크·태그·나이의 종합 — 가장 가치 있는 노트 순위.</div></div>
-      <div class="metric"><div class="v" style="color:var(--accent)">Concept Reach</div><div class="l" data-i18n="metric.reach.l">2홉 이웃 크기</div><div class="d" data-i18n="metric.reach.d">아이디어가 두 단계로 그래프에 얼마나 퍼지는지.</div></div>
-      <div class="metric"><div class="v" style="color:var(--st-progress)" data-i18n="metric.orphan.v">고아 비율</div><div class="l" data-i18n="metric.orphan.l">링크가 0인 노트</div><div class="d" data-i18n="metric.orphan.d">인박스에 원클릭 ‘연결’ 제안으로 떠오릅니다.</div></div>
-      <div class="metric"><div class="v" style="color:var(--ontology)" data-i18n="metric.cohesion.v">클러스터 응집도</div><div class="l" data-i18n="metric.cohesion.l">감지된 클러스터의 밀도</div><div class="d" data-i18n="metric.cohesion.d">촘촘한 클러스터는 위키 문서로 컴파일할 후보가 됩니다.</div></div>
+      <div class="metric"><div class="v" style="color:var(--st-done)">Knowledge WAR</div><div class="l" data-i18n="metric.war.l">노트별 대체 대비 기여(WAR)</div><div class="d" data-i18n="metric.war.d">백링크·아웃링크·태그·작성 시점을 종합해 매기는 노트 가치 순위.</div></div>
+      <div class="metric"><div class="v" style="color:var(--accent)">Concept Reach</div><div class="l" data-i18n="metric.reach.l">2홉 이웃 크기</div><div class="d" data-i18n="metric.reach.d">한 아이디어가 두 다리 건너 얼마나 멀리 퍼지는지.</div></div>
+      <div class="metric"><div class="v" style="color:var(--st-progress)" data-i18n="metric.orphan.v">고립 비율</div><div class="l" data-i18n="metric.orphan.l">링크가 0인 노트</div><div class="d" data-i18n="metric.orphan.d">인박스에 ‘연결’ 제안으로 바로 떠오릅니다.</div></div>
+      <div class="metric"><div class="v" style="color:var(--ontology)" data-i18n="metric.cohesion.v">클러스터 응집도</div><div class="l" data-i18n="metric.cohesion.l">감지된 클러스터의 밀도</div><div class="d" data-i18n="metric.cohesion.d">촘촘한 클러스터는 위키 문서로 묶을 후보입니다.</div></div>
+    </div>
+    <div class="kicker reveal" data-i18n="gh.kicker" style="margin-top:48px;color:var(--ontology)">이렇게 조작하세요</div>
+    <div class="graph-howto reveal">
+      <div class="ghstep"><div class="gn" data-i18n="gh.1.t">진입</div><h4 data-i18n="gh.1.h">활동바 → 온톨로지</h4><p data-i18n="gh.1.d">노트는 원, 위키는 육각형. 위키링크·태그·관계가 엣지가 됩니다.</p></div>
+      <div class="ghstep"><div class="gn" data-i18n="gh.2.t">선택</div><h4 data-i18n="gh.2.h">Shift+드래그 · 우클릭</h4><p data-i18n="gh.2.d">영역으로 여러 노드를 선택하고, 우클릭으로 작업 메뉴를 엽니다.</p></div>
+      <div class="ghstep"><div class="gn" data-i18n="gh.3.t">묶기</div><h4 data-i18n="gh.3.h">스티커 추가</h4><p data-i18n="gh.3.d">선택한 노드가 색깔 있는 볼록 껍질로 자동으로 묶입니다.</p></div>
+      <div class="ghstep"><div class="gn" data-i18n="gh.4.t">좁히기</div><h4 data-i18n="gh.4.h">격리 · 연결 숨기기</h4><p data-i18n="gh.4.d">선택만 강조하거나, 노드에 닿는 엣지를 감춰 시야를 좁힙니다.</p></div>
     </div>
   </div>
 </section>
@@ -426,27 +582,27 @@
     <div class="sec-head center">
       <div class="kicker reveal" data-i18n="wf.kicker">어디서나 하나의 상태</div>
       <h2 class="reveal" data-i18n="wf.h2">날것의 기록에서 결정화된 지식까지</h2>
-      <p class="reveal" data-i18n="wf.intro">같은 4단계 스펙트럼이 노트·위키·북을 움직입니다 — 어디에 있든 ‘상태는 상태’.</p>
+      <p class="reveal" data-i18n="wf.intro">같은 4단계가 노트·위키·북에 그대로 흐릅니다 — 어디에 있든 상태는 하나로 통합니다.</p>
     </div>
     <div class="spectrum">
       <div class="stage reveal">
         <div class="top"><span class="ring" style="border-color:var(--st-backlog)"></span><span class="nm" data-i18n="stage.backlog.nm">대기</span><span class="ko" data-i18n="stage.backlog.alt">Backlog</span></div>
-        <p data-i18n="stage.backlog.desc">포착된, 날것의, 미가공 — 당신 마음의 인박스.</p>
+        <p data-i18n="stage.backlog.desc">막 떠올라 아직 다듬지 않은 생각. 머릿속 인박스입니다.</p>
         <span class="bar" style="background:var(--st-backlog)"></span>
       </div>
       <div class="stage reveal">
         <div class="top"><span class="ring" style="border-color:var(--st-todo)"></span><span class="nm" data-i18n="stage.todo.nm">준비</span><span class="ko" data-i18n="stage.todo.alt">Todo</span></div>
-        <p data-i18n="stage.todo.desc">발전시킬 계획. 손볼 가치가 있다고 아는 것.</p>
+        <p data-i18n="stage.todo.desc">다듬어 볼 생각. 손댈 만하다고 점찍어 둔 것입니다.</p>
         <span class="bar" style="background:var(--st-todo)"></span>
       </div>
       <div class="stage reveal">
         <div class="top"><span class="ring" style="border-color:var(--st-progress)"></span><span class="nm" data-i18n="stage.progress.nm">정리 중</span><span class="ko" data-i18n="stage.progress.alt">In Progress</span></div>
-        <p data-i18n="stage.progress.desc">한창 다듬고, 연결하고, 정제하는 중.</p>
+        <p data-i18n="stage.progress.desc">한창 다듬고 잇고 벼리는 중입니다.</p>
         <span class="bar" style="background:var(--st-progress)"></span>
       </div>
       <div class="stage reveal">
         <div class="top"><span class="ring" style="border-color:var(--st-done)"></span><span class="nm" data-i18n="stage.done.nm">완성</span><span class="ko" data-i18n="stage.done.alt">Done</span></div>
-        <p data-i18n="stage.done.desc">결정화됨 — 연결할 준비가 된 영구 노트.</p>
+        <p data-i18n="stage.done.desc">단단히 굳은, 언제든 이어 붙일 영구 노트입니다.</p>
         <span class="bar" style="background:var(--st-done)"></span>
       </div>
     </div>
@@ -458,8 +614,8 @@
   <div class="wrap">
     <div class="privacy reveal">
       <div class="lock"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
-      <h2 data-i18n="privacy.h2">모든 것이 당신 기기에 머뭅니다.</h2>
-      <p data-i18n="privacy.p">Plot에는 백엔드도, 클라우드도, 계정도 없습니다. 노트·위키 블록·첨부·그래프까지 전체 지식 베이스가 당신 기기의 IndexedDB에 있습니다. 진짜로 소유하는 로컬 퍼스트 앱.</p>
+      <h2 data-i18n="privacy.h2">모든 게 기기 안에 머뭅니다.</h2>
+      <p data-i18n="privacy.p">Plot에는 백엔드도, 클라우드도, 계정도 없습니다. 노트와 위키 블록, 첨부, 그래프까지 지식 베이스 전체가 기기 안 IndexedDB에 담깁니다. 정말로 내 것이 되는 로컬 퍼스트 앱입니다.</p>
       <div class="pchips">
         <span class="pchip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 12 2 2 4-4"/><circle cx="12" cy="12" r="9"/></svg> <span data-i18n="privacy.chip1">텔레메트리 없음</span></span>
         <span class="pchip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> <span data-i18n="privacy.chip2">전체 JSON 백업</span></span>
@@ -475,7 +631,7 @@
   <div class="wrap">
     <div class="sec-head center" style="margin-bottom:36px">
       <h2 class="reveal" style="font-size:clamp(22px,3vw,30px)" data-i18n="stats.h2">조립이 아닌, 수작업</h2>
-      <p class="reveal" data-i18n="stats.sub">한 명의 개발자가 약 6개월 동안 완성도에 집착하며 작업했습니다.</p>
+      <p class="reveal" data-i18n="stats.sub">개발자 한 명이 약 6개월간 디테일에 매달려 만들었습니다.</p>
     </div>
     <div class="stats">
       <div class="stat reveal"><div class="v mono">154K+</div><div class="l" data-i18n="stat.lines">타입스크립트 줄</div></div>
@@ -492,7 +648,7 @@
 <section class="download" id="download">
   <div class="wrap">
     <div class="kicker reveal" style="justify-content:center" data-i18n="dl.kicker">무료 · 공개 개발</div>
-    <h2 class="reveal" data-i18n="dl.h2">당신의 지식 그래프를 만들기 시작하세요.</h2>
+    <h2 class="reveal" data-i18n="dl.h2">나만의 지식 그래프를 만들어 보세요.</h2>
     <div class="hero-cta reveal" style="margin-top:30px">
       <a class="btn btn-primary" href="https://github.com/peterkwon248/linear-note-plot-/releases/download/v0.1.2/Plot_0.1.2_x64-setup.exe">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
@@ -501,7 +657,7 @@
       <a class="btn btn-ghost" href="https://github.com/peterkwon248/linear-note-plot-/releases" target="_blank" rel="noopener" data-i18n="dl.cta.releases">전체 릴리스</a>
     </div>
     <p class="platforms mono reveal" data-i18n="dl.platforms">Windows 10/11 · v0.1.2 · 약 6.6 MB 설치파일</p>
-    <p class="note reveal" data-i18n="dl.note">Plot은 현재 무서명 배포라 Windows SmartScreen 경고가 뜰 수 있습니다 — <strong style="color:var(--soft)">추가 정보 → 실행</strong> 클릭. macOS·클라우드 싱크·모바일은 로드맵 단계로 아직 출시 전입니다.</p>
+    <p class="note reveal" data-i18n="dl.note">아직 서명 전이라 Windows SmartScreen 경고가 뜰 수 있습니다 — <strong style="color:var(--soft)">추가 정보 → 실행</strong>을 누르면 됩니다. macOS와 클라우드 싱크, 모바일은 로드맵에 있고 아직 출시 전입니다.</p>
   </div>
 </section>
 
@@ -520,6 +676,7 @@
       <div class="col">
         <h4 data-i18n="footer.product">제품</h4>
         <a href="#features" data-i18n="nav.features">기능</a>
+        <a href="#howto" data-i18n="nav.howto">사용법</a>
         <a href="#graph" data-i18n="nav.graph">지식 그래프</a>
         <a href="#workflow" data-i18n="nav.workflow">워크플로우</a>
         <a href="#download" data-i18n="nav.download">다운로드</a>
@@ -555,75 +712,130 @@
     "nav.download": { ko: `다운로드`, en: `Download` },
 
     "hero.eyebrow": { ko: `<span class="dot"></span> 로컬 퍼스트 · 프라이버시 우선 · 무료`, en: `<span class="dot"></span> Local-first · Private by design · Free` },
-    "hero.h1": { ko: `당신의 노트가 <span class="grad">지식 그래프</span>가 됩니다.`, en: `Your notes become a <span class="grad">knowledge graph.</span>` },
+    "hero.h1": { ko: `노트가 <span class="grad">지식 그래프</span>가 됩니다.`, en: `Your notes become a <span class="grad">knowledge graph.</span>` },
     "hero.tagline": { ko: `기본은 잔잔하게, 필요할 땐 강력하게.`, en: `Gentle by default, powerful when needed.` },
-    "hero.subcopy": { ko: `Plot은 노트, 개인 위키, 포스 기반 지식 그래프를 하나로 묶은 로컬 퍼스트 앱입니다. 겉은 애플 노트, 속은 제텔카스텐 — 당신의 사고를 위한 <strong style="color:var(--soft);font-weight:500">팔란티어 × 제텔카스텐</strong>.`, en: `Plot is a local-first app that fuses notes, a personal wiki, and a force-directed knowledge graph. On the surface it's Apple Notes — underneath, it's Zettelkasten. <strong style="color:var(--soft);font-weight:500">Palantir × Zettelkasten</strong> for your own mind.` },
+    "hero.subcopy": { ko: `Plot은 노트와 개인 위키, 지식 그래프를 하나로 묶은 로컬 퍼스트 앱입니다. 겉은 애플 노트처럼 단순하고, 속은 제텔카스텐 — 생각을 잇는 <strong style="color:var(--soft);font-weight:500">팔란티어 × 제텔카스텐</strong>.`, en: `Plot is a local-first app that fuses notes, a personal wiki, and a force-directed knowledge graph. On the surface it's Apple Notes — underneath, it's Zettelkasten. <strong style="color:var(--soft);font-weight:500">Palantir × Zettelkasten</strong> for your own mind.` },
     "hero.cta.download": { ko: `Windows용 다운로드`, en: `Download for Windows` },
     "hero.cta.source": { ko: `소스 보기`, en: `View source` },
     "hero.meta1": { ko: `Windows 데스크톱`, en: `Windows desktop` },
     "hero.meta2": { ko: `계정 불필요`, en: `No account` },
     "hero.meta4": { ko: `서명된 자동 업데이트`, en: `Signed auto-updates` },
 
-    "thesis.big": { ko: `당신은 노트만 씁니다. <b>제텔카스텐은 Plot이 대신합니다</b> — 연결하고, 고아 노트를 찾아내고, 자랄수록 <b>더</b> 유용해지는 그래프를 키웁니다.`, en: `You just write notes. <b>Plot does the Zettelkasten for you</b> — linking, surfacing orphans, and growing a graph that gets <b>more</b> useful as it grows, not less.` },
-    "thesis.sub": { ko: `복리처럼 — 노트 10개일 땐 연결할 게 별로 없지만, 100개가 되면 새 노트마다 기존 여러 개와 이어집니다. 시스템이 복리로 불어납니다.`, en: `Like compound interest: with 10 notes there's little to connect. With 100, every new note links to several existing ones. The system compounds.` },
+    "thesis.big": { ko: `쓰기만 하세요. <b>제텔카스텐은 Plot이 대신합니다</b> — 노트를 잇고, 고립 노트를 찾아내고, 자랄수록 <b>더</b> 쓸모 있어지는 그래프를 키웁니다.`, en: `You just write notes. <b>Plot does the Zettelkasten for you</b> — linking, surfacing orphans, and growing a graph that gets <b>more</b> useful as it grows, not less.` },
+    "thesis.sub": { ko: `복리처럼 불어납니다. 노트가 10개일 땐 이을 게 별로 없지만, 100개가 되면 새 노트 하나가 기존 여러 개와 맞물립니다.`, en: `Like compound interest: with 10 notes there's little to connect. With 100, every new note links to several existing ones. The system compounds.` },
 
-    "feat.kicker": { ko: `저장이 아니라 사고를 위해`, en: `Built for thinking, not just storing` },
-    "feat.h2": { ko: `다른 어떤 노트앱도 함께 해내지 못하는 7가지`, en: `Seven things no other notes app does together` },
-    "feat.intro": { ko: `아래 기능은 전부 지금 앱에 들어 있습니다 — 로드맵이 아니라 소스로 검증된 것들.`, en: `Every feature below is shipping in the app today — verified against the source, not a roadmap.` },
+    "zk.kicker": { ko: `방법론`, en: `The method` },
+    "zk.h2": { ko: `제텔카스텐이 뭔가요?`, en: `What is Zettelkasten?` },
+    "zk.intro": { ko: `독일 사회학자 니클라스 루만이 쓰던 메모 상자(Zettelkasten)에서 온 방법입니다. 작은 노트를 서로 잇기만 했는데, 9만여 장이 모여 70권이 넘는 책이 됐습니다. 핵심은 단 셋입니다.`, en: `It's the method behind sociologist Niklas Luhmann's famous slip-box — that's what Zettelkasten means in German. He mostly just linked small notes together, and 90,000 of them turned into 70-plus books. It comes down to three ideas.` },
+    "zk.1.term": { ko: `작게 쪼갠다`, en: `Keep notes atomic` },
+    "zk.1.desc": { ko: `한 노트엔 하나의 생각만 담습니다. 작을수록 다시 꺼내 쓰고, 다른 노트와 잇기 쉽습니다.`, en: `One idea per note. The smaller a note, the easier it is to reuse and link to others.` },
+    "zk.2.term": { ko: `연결한다`, en: `Link, don't file` },
+    "zk.2.desc": { ko: `노트를 폴더에 가두지 않고 노트끼리 잇습니다. 한 노트가 여러 맥락에 동시에 살아 있게 됩니다.`, en: `Don't bury notes in folders — link them to each other. One note can live in many contexts at once.` },
+    "zk.3.term": { ko: `자라난다`, en: `Let it emerge` },
+    "zk.3.desc": { ko: `구조를 미리 짤 필요가 없습니다. 연결이 쌓이면 미처 몰랐던 생각의 갈래가 저절로 떠오릅니다.`, en: `No need to plan the structure up front. As links pile up, ideas you never planned surface on their own.` },
+    "zk.bridge": { ko: `문제는, 이걸 손으로 하면 고됩니다 — 링크를 일일이 걸고, 끊긴 노트를 찾아다니고, 전체 그림을 머릿속에 담아야 하니까요. <b>바로 그 수고를 Plot이 덜어 줍니다.</b>`, en: `The catch: doing it by hand is tedious — wiring up every link, hunting down stray notes, holding the whole map in your head. <b>Plot takes that off your hands.</b>` },
+
+    "feat.kicker": { ko: `쌓아두기가 아니라, 생각하기 위해`, en: `Built for thinking, not just storing` },
+    "feat.h2": { ko: `다른 노트앱은 한꺼번에 해내지 못하는 7가지`, en: `Seven things no other notes app does together` },
+    "feat.intro": { ko: `아래 기능은 전부 지금 앱에서 동작합니다 — 로드맵 속 약속이 아니라 코드로 검증된 것들입니다.`, en: `Every feature below is shipping in the app today — verified against the source, not a roadmap.` },
     "feat.1.title": { ko: `세이버메트릭스가 있는 그래프 엔진`, en: `A graph engine with sabermetrics` },
-    "feat.1.desc": { ko: `단순 백링크 패널이 아닙니다 — 포스 기반 그래프에 계산된 지표까지: Knowledge WAR, 2홉 Concept Reach, 클러스터 응집도, 고아 비율. 노트가 박스스코어를 받습니다.`, en: `Not just a backlinks panel — a force-directed graph plus computed metrics: Knowledge WAR, 2-hop Concept Reach, cluster cohesion, orphan rate. Your notes get a box score.` },
+    "feat.1.desc": { ko: `단순한 백링크 패널이 아닙니다. 노드가 서로 밀고 당기는 그래프 위에 지표까지 계산합니다 — Knowledge WAR, 2홉 Concept Reach, 클러스터 응집도, 고립 비율. 노트마다 야구 기록 같은 점수가 붙습니다.`, en: `Not just a backlinks panel — a force-directed graph plus computed metrics: Knowledge WAR, 2-hop Concept Reach, cluster cohesion, orphan rate. Your notes get a box score.` },
     "feat.2.title": { ko: `노트가 위키로 자랍니다`, en: `Notes grow into wiki` },
-    "feat.2.desc": { ko: `노트는 원재료, 위키 문서는 컴파일된 결과물입니다 — 인포박스·내비박스·백과사전식 레이아웃까지. Plot이 빽빽하게 잘 연결된 노트를 위키로 키우라고 권합니다.`, en: `Raw notes are the material; wiki articles are the compiled product — with infoboxes, navboxes, and encyclopedia layout. Plot nudges you to promote dense, well-linked notes.` },
+    "feat.2.desc": { ko: `노트가 원재료라면 위키 문서는 잘 다듬은 완성본입니다 — 인포박스, 내비박스, 백과사전식 레이아웃까지. 촘촘히 연결된 노트는 Plot이 위키로 키우라고 먼저 권합니다.`, en: `Raw notes are the material; wiki articles are the compiled product — with infoboxes, navboxes, and encyclopedia layout. Plot nudges you to promote dense, well-linked notes.` },
     "feat.3.title": { ko: `모든 것에 하나의 워크플로우`, en: `One workflow across everything` },
-    "feat.3.desc": { ko: `4단계 상태(대기 → 준비 → 정리 중 → 완성)와 5단계 우선순위를 노트·위키·북에 똑같이 적용합니다. 지식을 위한 리니어급 프로젝트 흐름.`, en: `A 4-stage status (Backlog → Todo → In Progress → Done) plus 5-level priority — applied uniformly to notes, wiki, and books. Linear-grade project flow, for knowledge.` },
+    "feat.3.desc": { ko: `4단계 상태(대기 → 준비 → 정리 중 → 완성)와 5단계 우선순위가 노트·위키·북에 똑같이 적용됩니다. 지식 관리에 그대로 옮겨 온 리니어식 프로젝트 흐름입니다.`, en: `A 4-stage status (Backlog → Todo → In Progress → Done) plus 5-level priority — applied uniformly to notes, wiki, and books. Linear-grade project flow, for knowledge.` },
     "feat.4.title": { ko: `모든 엔티티를 가로질러 정리`, en: `Organize across every entity` },
-    "feat.4.desc": { ko: `스티커는 어떤 엔티티든 함께 묶습니다. 북은 엔티티를 넘나드는 순서 있는 읽기 시퀀스입니다. 카테고리는 다중 부모 DAG를 이룹니다. 단일 부모 페이지나 평면 태그를 한참 넘어섭니다.`, en: `Stickers bundle any entity together. Books are ordered cross-entity reading sequences. Categories form a multi-parent DAG. Far beyond single-parent pages or flat tags.` },
+    "feat.4.desc": { ko: `스티커는 종류를 가리지 않고 묶고, 북은 엔티티를 넘나드는 순서 있는 읽기 묶음입니다. 카테고리는 부모를 여럿 둘 수 있는 DAG를 이룹니다. 부모 하나짜리 페이지나 밋밋한 태그와는 차원이 다릅니다.`, en: `Stickers bundle any entity together. Books are ordered cross-entity reading sequences. Categories form a multi-parent DAG. Far beyond single-parent pages or flat tags.` },
     "feat.5.title": { ko: `리니어급 뷰 엔진`, en: `A Linear-class view engine` },
-    "feat.5.desc": { ko: `리스트·보드·그리드·타임라인 — 약 25가지 그룹화, 3단계 다중 정렬, 그룹 접기 유지, 저장된 뷰, 승격 가능한 필터 칩까지. 태스크 DB가 아니라 모든 엔티티에서.`, en: `List, board, grid, and timeline — with ~25 group-bys, 3-level multi-sort, persistent group collapse, saved views, and promotable filter chips. On every entity, not just a task DB.` },
+    "feat.5.desc": { ko: `리스트·보드·그리드·타임라인에 약 25가지 그룹화, 3단계 다중 정렬, 그룹 접기 기억, 저장된 뷰, 뷰로 굳힐 수 있는 필터 칩까지. 할 일 관리 도구가 아니라 모든 엔티티에서 씁니다.`, en: `List, board, grid, and timeline — with ~25 group-bys, 3-level multi-sort, persistent group collapse, saved views, and promotable filter chips. On every entity, not just a task DB.` },
     "feat.6.title": { ko: `모든 신호를 받는 하나의 인박스`, en: `One inbox for every signal` },
-    "feat.6.desc": { ko: `리마인더, 간격 반복 복습, 위키 레드링크, 미연결 멘션 알림, 본문 태스크, 코멘트, 그래프 정비 제안 — 하나의 미루기/지우기 큐로 모입니다.`, en: `Reminders, spaced-repetition reviews, wiki red-links, unlinked-mention nudges, in-body tasks, comments, and graph-maintenance suggestions — fused into one snooze/dismiss queue.` },
-    "feat.7.title": { ko: `영원히 비공개, 그리고 당신의 것`, en: `Private & yours, forever` },
-    "feat.7.desc": { ko: `모든 데이터는 당신 기기의 IndexedDB에 있습니다. 백엔드도, 계정도, 텔레메트리도 없습니다. 전체 JSON 백업, 마크다운 내보내기, 암호 서명된 자동 업데이트.`, en: `All data lives in IndexedDB on your device. No backend, no accounts, no telemetry. Full JSON backup, Markdown export, and cryptographically signed auto-updates.` },
+    "feat.6.desc": { ko: `리마인더, 간격 반복 복습, 위키 레드링크, 미연결 멘션, 본문 속 할 일, 코멘트, 그래프 정비 제안까지 — 미루거나 지우는 하나의 줄로 모입니다.`, en: `Reminders, spaced-repetition reviews, wiki red-links, unlinked-mention nudges, in-body tasks, comments, and graph-maintenance suggestions — fused into one snooze/dismiss queue.` },
+    "feat.7.title": { ko: `영원히 비공개, 오롯이 내 것`, en: `Private & yours, forever` },
+    "feat.7.desc": { ko: `모든 데이터는 기기 안 IndexedDB에 담깁니다. 백엔드도, 계정도, 몰래 수집하는 정보도 없습니다. 통째로 JSON 백업, 마크다운 내보내기, 서명된 자동 업데이트까지.`, en: `All data lives in IndexedDB on your device. No backend, no accounts, no telemetry. Full JSON backup, Markdown export, and cryptographically signed auto-updates.` },
+
+    "nav.howto": { ko: `사용법`, en: `How it works` },
+
+    "howto.kicker": { ko: `사용 흐름`, en: `How it works` },
+    "howto.h2": { ko: `노트에서 지식까지, 실제 화면으로`, en: `From capture to crystallized — in real screens` },
+    "howto.intro": { ko: `Plot이 실제로 어떻게 굴러가는지, 핵심 흐름 셋.`, en: `How Plot actually works — three core flows.` },
+
+    "howto.1.step": { ko: `흐름 01`, en: `Flow 01` },
+    "howto.1.title": { ko: `노트가 위키로 자랍니다`, en: `Notes grow into a wiki` },
+    "howto.1.lead": { ko: `흩어진 노트를 쓰고 [[위키링크]]로 잇다 보면, Plot이 위키로 키우라고 권합니다. 그때 노트 몇 개를 골라 한 편의 문서로 묶으면 됩니다.`, en: `Write loose notes and connect them with [[wiki-links]]. Once they're well-linked, Plot nudges you to compile a few into a single article.` },
+    "howto.1.s1": { ko: `노트를 쓰고 <b>[[ ]]</b>로 서로 링크 — Plot이 백링크를 자동 추적합니다.`, en: `Write notes and link them with <b>[[ ]]</b> — Plot tracks backlinks automatically.` },
+    "howto.1.s2": { ko: `백링크 3개·200자가 넘으면 인박스 <b>발견</b>에 "위키로 키울까요?" 제안이 뜹니다.`, en: `Past 3 backlinks and 200 characters, a "promote to wiki?" nudge appears in your inbox's <b>Detected</b> section.` },
+    "howto.1.s3": { ko: `노트 여러 개 선택 → 액션바의 <b>Wiki</b> → 노트가 참조 블록으로 박힌 새 문서. 원본은 그대로.`, en: `Select several notes → <b>Wiki</b> in the action bar → a new article with each note embedded as a reference block. Originals stay untouched.` },
+    "howto.1.cap": { ko: `위키 공간 — 컴파일된 문서, 카테고리, 성장 차트.`, en: `The Wiki space — compiled articles, categories, and a growth chart.` },
+
+    "howto.2.step": { ko: `흐름 02`, en: `Flow 02` },
+    "howto.2.title": { ko: `무엇이든, 내 방식대로 봅니다`, en: `See anything, your way` },
+    "howto.2.lead": { ko: `노트도 위키도 북도, 모든 엔티티가 같은 뷰 엔진을 거칩니다. 네 가지 뷰 모드에 풍부한 그룹화·정렬·필터로 원하는 대로 펼쳐 봅니다.`, en: `Notes, wiki, and books all run through one view engine. Four view modes plus rich grouping, sorting, and filtering let you look from any angle.` },
+    "howto.2.s1": { ko: `<b>리스트·보드·그리드·타임라인</b> — 디스플레이 패널에서 한 번에 전환.`, en: `<b>List, board, grid, timeline</b> — switch in the Display panel.` },
+    "howto.2.s2": { ko: `약 <b>25가지 그룹화</b>와 3단계 다중 정렬, 보이는 속성 칩을 토글.`, en: `About <b>25 group-bys</b>, 3-level multi-sort, and toggleable property chips.` },
+    "howto.2.s3": { ko: `필터 칩으로 좁힌 화면을 <b>Save</b>로 저장된 뷰로 승격 — 다음에 그대로 복원.`, en: `Narrow it with filter chips, then <b>Save</b> promotes the result into a saved view that restores next time.` },
+    "howto.2.cap": { ko: `북 보드 뷰 — 뷰 모드 토글, 상태·종류 칩, Smart/Manual/Hybrid.`, en: `Books in board view — view-mode toggles, status & kind chips, Smart/Manual/Hybrid.` },
+
+    "howto.3.step": { ko: `흐름 03`, en: `Flow 03` },
+    "howto.3.title": { ko: `흐름을 놓치지 않습니다`, en: `Never lose the thread` },
+    "howto.3.lead": { ko: `여러 신호를 Plot이 하나의 인박스로 모아 주고, 홈은 지식 베이스 전체를 한눈에 보여줍니다.`, en: `Plot funnels every signal into one inbox, and Home shows your whole knowledge base at a glance.` },
+    "howto.3.s1": { ko: `리마인더·복습(SRS)·위키 레드링크·고립 노트·본문 속 할 일·코멘트가 인박스로 모입니다.`, en: `Reminders, spaced-repetition reviews, wiki red-links, orphan notes, in-body tasks, and comments all collect in the inbox.` },
+    "howto.3.s2": { ko: `<b>할 일·되새김·발견</b> 세 묶음으로 분류 — 미루기(1시간/내일/다음 주)나 지우기.`, en: `Sorted into <b>Do, Review, and Detected</b> — snooze (1 hour / tomorrow / next week) or dismiss.` },
+    "howto.3.s3": { ko: `홈 대시보드에서 노트·위키·북 수와 가장 연결된·많이 본 항목을 한눈에.`, en: `The Home dashboard surfaces your note/wiki/book counts and your most-connected and most-visited items.` },
+    "howto.3.cap": { ko: `홈 — 지식 베이스 한눈에 보기.`, en: `Home — your knowledge base at a glance.` },
+
+    "gh.kicker": { ko: `이렇게 조작하세요`, en: `How to drive it` },
+    "gh.1.t": { ko: `진입`, en: `Open` },
+    "gh.1.h": { ko: `활동바 → 온톨로지`, en: `Activity bar → Ontology` },
+    "gh.1.d": { ko: `노트는 원, 위키는 육각형. 위키링크·태그·관계가 엣지가 됩니다.`, en: `Notes are circles, wiki articles are hexagons. Wiki-links, tags, and relations become edges.` },
+    "gh.2.t": { ko: `선택`, en: `Select` },
+    "gh.2.h": { ko: `Shift+드래그 · 우클릭`, en: `Shift-drag · right-click` },
+    "gh.2.d": { ko: `영역으로 여러 노드를 선택하고, 우클릭으로 작업 메뉴를 엽니다.`, en: `Marquee-select nodes, then right-click for the actions menu.` },
+    "gh.3.t": { ko: `묶기`, en: `Group` },
+    "gh.3.h": { ko: `스티커 추가`, en: `Add a sticker` },
+    "gh.3.d": { ko: `선택한 노드가 색깔 있는 볼록 껍질로 자동으로 묶입니다.`, en: `Selected nodes auto-wrap in a colored convex hull.` },
+    "gh.4.t": { ko: `좁히기`, en: `Focus` },
+    "gh.4.h": { ko: `격리 · 연결 숨기기`, en: `Isolate · Hide connections` },
+    "gh.4.d": { ko: `선택만 강조하거나, 노드에 닿는 엣지를 감춰 시야를 좁힙니다.`, en: `Spotlight just your selection, or mute the edges touching it.` },
 
     "graph.kicker": { ko: `지식 그래프`, en: `The knowledge graph` },
-    "graph.h2": { ko: `당신의 사고가 어떻게 이어지는지 보세요.`, en: `See how your thinking connects.` },
-    "graph.p": { ko: `모든 노트와 위키 문서의 진짜 포스 기반 그래프 — 위키링크·태그·관계가 엣지가 됩니다. 확대하고, 격리하고, 볼록 껍질로 묶으세요. 그리고 Plot이 세이버메트리션처럼 점수를 매깁니다.`, en: `A real force-directed graph of every note and wiki article — wiki-links, tags, and typed relations as edges. Zoom, isolate, and group by convex hulls. Then Plot scores it like a sabermetrician.` },
+    "graph.h2": { ko: `생각이 어떻게 이어지는지 눈으로 보세요.`, en: `See how your thinking connects.` },
+    "graph.p": { ko: `노트와 위키 문서가 노드로, 위키링크·태그·관계가 엣지로 살아 있는 그래프입니다. 확대하고, 격리하고, 볼록 껍질로 묶어 보세요. 거기에 Plot이 야구 통계처럼 점수까지 매깁니다.`, en: `A real force-directed graph of every note and wiki article — wiki-links, tags, and typed relations as edges. Zoom, isolate, and group by convex hulls. Then Plot scores it like a sabermetrician.` },
     "metric.war.l": { ko: `노트별 대체 대비 기여(WAR)`, en: `Wins Above Replacement, per note` },
-    "metric.war.d": { ko: `백링크·아웃링크·태그·나이의 종합 — 가장 가치 있는 노트 순위.`, en: `A composite of backlinks, outbound links, tags, and age — your most valuable notes, ranked.` },
+    "metric.war.d": { ko: `백링크·아웃링크·태그·작성 시점을 종합해 매기는 노트 가치 순위.`, en: `A composite of backlinks, outbound links, tags, and age — your most valuable notes, ranked.` },
     "metric.reach.l": { ko: `2홉 이웃 크기`, en: `2-hop neighborhood size` },
-    "metric.reach.d": { ko: `아이디어가 두 단계로 그래프에 얼마나 퍼지는지.`, en: `How far an idea ripples through your graph in two steps.` },
-    "metric.orphan.v": { ko: `고아 비율`, en: `Orphan rate` },
+    "metric.reach.d": { ko: `한 아이디어가 두 다리 건너 얼마나 멀리 퍼지는지.`, en: `How far an idea ripples through your graph in two steps.` },
+    "metric.orphan.v": { ko: `고립 비율`, en: `Orphan rate` },
     "metric.orphan.l": { ko: `링크가 0인 노트`, en: `Notes with zero links` },
-    "metric.orphan.d": { ko: `인박스에 원클릭 ‘연결’ 제안으로 떠오릅니다.`, en: `Surfaced as one-click "Connect" nudges in your inbox.` },
+    "metric.orphan.d": { ko: `인박스에 ‘연결’ 제안으로 바로 떠오릅니다.`, en: `Surfaced as one-click "Connect" nudges in your inbox.` },
     "metric.cohesion.v": { ko: `클러스터 응집도`, en: `Cluster cohesion` },
     "metric.cohesion.l": { ko: `감지된 클러스터의 밀도`, en: `Density of detected clusters` },
-    "metric.cohesion.d": { ko: `촘촘한 클러스터는 위키 문서로 컴파일할 후보가 됩니다.`, en: `Tight clusters become candidates to compile into a wiki article.` },
+    "metric.cohesion.d": { ko: `촘촘한 클러스터는 위키 문서로 묶을 후보입니다.`, en: `Tight clusters become candidates to compile into a wiki article.` },
 
     "wf.kicker": { ko: `어디서나 하나의 상태`, en: `One status, everywhere` },
     "wf.h2": { ko: `날것의 기록에서 결정화된 지식까지`, en: `From raw capture to crystallized knowledge` },
-    "wf.intro": { ko: `같은 4단계 스펙트럼이 노트·위키·북을 움직입니다 — 어디에 있든 ‘상태는 상태’.`, en: `The same four-stage spectrum drives notes, wiki articles, and books — so "status is status" no matter where you are.` },
+    "wf.intro": { ko: `같은 4단계가 노트·위키·북에 그대로 흐릅니다 — 어디에 있든 상태는 하나로 통합니다.`, en: `The same four-stage spectrum drives notes, wiki articles, and books — so "status is status" no matter where you are.` },
     "stage.backlog.nm": { ko: `대기`, en: `Backlog` },
     "stage.backlog.alt": { ko: `Backlog`, en: `대기` },
-    "stage.backlog.desc": { ko: `포착된, 날것의, 미가공 — 당신 마음의 인박스.`, en: `Captured, raw, unprocessed. The inbox of your mind.` },
+    "stage.backlog.desc": { ko: `막 떠올라 아직 다듬지 않은 생각. 머릿속 인박스입니다.`, en: `Captured, raw, unprocessed. The inbox of your mind.` },
     "stage.todo.nm": { ko: `준비`, en: `Todo` },
     "stage.todo.alt": { ko: `Todo`, en: `준비` },
-    "stage.todo.desc": { ko: `발전시킬 계획. 손볼 가치가 있다고 아는 것.`, en: `Planned to develop. You know it deserves work.` },
+    "stage.todo.desc": { ko: `다듬어 볼 생각. 손댈 만하다고 점찍어 둔 것입니다.`, en: `Planned to develop. You know it deserves work.` },
     "stage.progress.nm": { ko: `정리 중`, en: `In Progress` },
     "stage.progress.alt": { ko: `In Progress`, en: `정리 중` },
-    "stage.progress.desc": { ko: `한창 다듬고, 연결하고, 정제하는 중.`, en: `Actively being shaped, linked, and refined.` },
+    "stage.progress.desc": { ko: `한창 다듬고 잇고 벼리는 중입니다.`, en: `Actively being shaped, linked, and refined.` },
     "stage.done.nm": { ko: `완성`, en: `Done` },
     "stage.done.alt": { ko: `Done`, en: `완성` },
-    "stage.done.desc": { ko: `결정화됨 — 연결할 준비가 된 영구 노트.`, en: `Crystallized. A permanent note, ready to connect.` },
+    "stage.done.desc": { ko: `단단히 굳은, 언제든 이어 붙일 영구 노트입니다.`, en: `Crystallized. A permanent note, ready to connect.` },
 
-    "privacy.h2": { ko: `모든 것이 당신 기기에 머뭅니다.`, en: `Everything stays on your device.` },
-    "privacy.p": { ko: `Plot에는 백엔드도, 클라우드도, 계정도 없습니다. 노트·위키 블록·첨부·그래프까지 전체 지식 베이스가 당신 기기의 IndexedDB에 있습니다. 진짜로 소유하는 로컬 퍼스트 앱.`, en: `Plot has no backend, no cloud, and no account. Your entire knowledge base — notes, wiki blocks, attachments, the graph — lives in IndexedDB on your machine. A real local-first app you actually own.` },
+    "privacy.h2": { ko: `모든 게 기기 안에 머뭅니다.`, en: `Everything stays on your device.` },
+    "privacy.p": { ko: `Plot에는 백엔드도, 클라우드도, 계정도 없습니다. 노트와 위키 블록, 첨부, 그래프까지 지식 베이스 전체가 기기 안 IndexedDB에 담깁니다. 정말로 내 것이 되는 로컬 퍼스트 앱입니다.`, en: `Plot has no backend, no cloud, and no account. Your entire knowledge base — notes, wiki blocks, attachments, the graph — lives in IndexedDB on your machine. A real local-first app you actually own.` },
     "privacy.chip1": { ko: `텔레메트리 없음`, en: `No telemetry` },
     "privacy.chip2": { ko: `전체 JSON 백업`, en: `Full JSON backup` },
     "privacy.chip3": { ko: `마크다운 내보내기`, en: `Markdown export` },
     "privacy.chip4": { ko: `서명된 업데이트`, en: `Signed updates` },
 
     "stats.h2": { ko: `조립이 아닌, 수작업`, en: `Crafted, not assembled` },
-    "stats.sub": { ko: `한 명의 개발자가 약 6개월 동안 완성도에 집착하며 작업했습니다.`, en: `One solo developer, ~6 months, obsessed with polish.` },
+    "stats.sub": { ko: `개발자 한 명이 약 6개월간 디테일에 매달려 만들었습니다.`, en: `One solo developer, ~6 months, obsessed with polish.` },
     "stat.lines": { ko: `타입스크립트 줄`, en: `lines of TypeScript` },
     "stat.components": { ko: `React 컴포넌트`, en: `React components` },
     "stat.entities": { ko: `엔티티 유형`, en: `entity types` },
@@ -632,11 +844,11 @@
     "stat.local": { ko: `로컬 퍼스트`, en: `local-first` },
 
     "dl.kicker": { ko: `무료 · 공개 개발`, en: `Free · Open development` },
-    "dl.h2": { ko: `당신의 지식 그래프를 만들기 시작하세요.`, en: `Start building your knowledge graph.` },
+    "dl.h2": { ko: `나만의 지식 그래프를 만들어 보세요.`, en: `Start building your knowledge graph.` },
     "dl.cta.download": { ko: `Windows용 다운로드`, en: `Download for Windows` },
     "dl.cta.releases": { ko: `전체 릴리스`, en: `All releases` },
     "dl.platforms": { ko: `Windows 10/11 · v0.1.2 · 약 6.6 MB 설치파일`, en: `Windows 10/11 · v0.1.2 · ~6.6 MB installer` },
-    "dl.note": { ko: `Plot은 현재 무서명 배포라 Windows SmartScreen 경고가 뜰 수 있습니다 — <strong style="color:var(--soft)">추가 정보 → 실행</strong> 클릭. macOS·클라우드 싱크·모바일은 로드맵 단계로 아직 출시 전입니다.`, en: `Plot ships unsigned for now, so Windows SmartScreen may show a warning — click <strong style="color:var(--soft)">More info → Run anyway</strong>. macOS, cloud sync, and mobile are on the roadmap, not yet shipped.` },
+    "dl.note": { ko: `아직 서명 전이라 Windows SmartScreen 경고가 뜰 수 있습니다 — <strong style="color:var(--soft)">추가 정보 → 실행</strong>을 누르면 됩니다. macOS와 클라우드 싱크, 모바일은 로드맵에 있고 아직 출시 전입니다.`, en: `Plot ships unsigned for now, so Windows SmartScreen may show a warning — click <strong style="color:var(--soft)">More info → Run anyway</strong>. macOS, cloud sync, and mobile are on the roadmap, not yet shipped.` },
 
     "footer.tagline": { ko: `노트, 개인 위키, 지식 그래프를 하나의 로컬 퍼스트 앱에. 기본은 잔잔하게, 필요할 땐 강력하게.`, en: `Notes, a personal wiki, and a knowledge graph in one local-first app. Gentle by default, powerful when needed.` },
     "footer.product": { ko: `제품`, en: `Product` },
