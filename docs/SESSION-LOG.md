@@ -44,7 +44,7 @@
 - **검증 게이트**: 랜딩=`npx serve site -l 4321` + 브라우저(정적이라 스샷 안정). 앱=`npm run build` exit0(tsc incremental false-clean이라 build가 유일).
 
 ### Watch Out (다음 세션 주의사항)
-- **랜딩 미배포**: 로컬 4321만. 배포(Vercel/GH Pages) 미결.
+- **✅ 랜딩 배포 완료 (GitHub Pages, 후속 PR #533)**: https://peterkwon248.github.io/linear-note-plot-/ — `.github/workflows/deploy-site.yml`이 `site/`를 Pages로 자동배포(push to main 시). 무료(공개 레포)·HTTPS 강제. 상대경로라 서브패스 OK. Vercel은 이 환경에 토큰/인증 없어 보류(나중에 커스텀 도메인/이전 가능). Pages build_type=workflow.
 - **랜딩 흐름01 스샷**: wiki.png=위키 *오버뷰*(라이브러리)지 note-ref 임베드된 *문서*가 아님 — 단계 텍스트=어셈블리 과정, 이미지=목적지(허용). 더 타이트하게는 위키 아티클/어셈블리 다이얼로그 헤드리스 캡처(선택).
 - **앱 토스트 EN 복수형**: `{count} notes` 고정(앱 관례) → EN 1개일 때 "1 notes". KO 무관. 거슬리면 단/복수 분리 키.
 - **사용자 데스크톱 앱**: 토스트 수정은 `npx tauri build` 재빌드해야 plot.exe 반영(현재 구 out/ embed).

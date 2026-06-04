@@ -20,6 +20,7 @@
 ### 완료 (이 PR)
 - 랜딩(`site/index.html`): How it works 3단계 walkthrough(wiki/books/home.png) + 그래프 "이렇게 조작하세요" 4칩 + nav "사용법" + 번역투 ~34곳 정리 + "제텔카스텐이 뭔가요?" 설명 섹션(루만 9만장→70권 + 원칙3 + Plot 연결) + 고아→고립(8). 브라우저 검증(데스크톱/모바일/EN-KO/콘솔0).
 - 앱: 넛지 토스트 3종(백로그·SRS·클러스터) 영어 하드코딩 → useT(`hooks/use-autopilot-nudges.ts` + `lib/i18n.ts` `nudge.*` 10키 EN/KO). **사용자 적발.** `npm run build` exit0.
+- **배포(후속 PR #533)**: 랜딩 **GitHub Pages 배포 완료** → https://peterkwon248.github.io/linear-note-plot-/ (`.github/workflows/deploy-site.yml`로 `site/` 자동배포, 무료·HTTPS). Vercel은 환경에 토큰/인증 없어 보류 → GH Pages 선택. 커스텀 도메인/Vercel 이전은 나중에 가능.
 
 ### 다음 (P0)
 1. **앱 영어 잔여 i18n 일괄 점검(sweep)** (사용자 지정) — useT 누락 컴포넌트 전수 색출. 본보기=이번 토스트 수정. `hooks/`·`components/` 우선, `toast(` 영문/JSX 영문/aria-label 영문.
