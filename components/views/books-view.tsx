@@ -198,6 +198,17 @@ function BooksGrid() {
       }
       return next
     })
+    // Peek parity with notes (notes-table-view.tsx handleRowPreview): a plain
+    // (non-additive) click drives the detail panel to the clicked book when the
+    // panel is open, so the bar follows the card — fixes "디테일바가 안 바뀜"
+    // (2026-06-04 사용자 보고). Runs synchronously in the handler — NOT inside the
+    // setSelectedIds updater, whose execution timing isn't guaranteed (reading a
+    // value mutated there is why the panel stayed stale). additive (ctrl/shift
+    // multi-select) never peeks, matching notes.
+    if (!additive) {
+      const s = usePlotStore.getState()
+      if (s.sidePanelOpen) s.setSidePanelContext({ type: "book", id })
+    }
   }, [])
 
   const handleCreate = () => {

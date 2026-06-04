@@ -6,6 +6,43 @@
 
 ---
 
+## 2026-06-04 (집/Windows, 저녁) — **제품 랜딩 페이지 신설 (site/) + 북 디테일바 수정 + 온톨로지 그래프 한글화**
+
+> 🎯 **다음 즉시 액션**: **랜딩 페이지 섹션별 "실제 사용법" 안내 + 스크린샷 보강 브레인스토밍** (사용자 지정). 현재 `site/index.html`은 *무엇을* 하는지는 말하지만 *어떻게 쓰는지*가 없어 부실 → 각 기능에 미니 how-to(노트→위키 import 플로우·그래프 우클릭 묶기/격리 등) + 실제 스샷(이미 뽑은 home/wiki/books 3장 + 에디터·인박스·승격 플로우 추가 캡처) 보강. **별개 미완 P0(이전, 미터치)**: 뷰엔진 타임라인 #10 북 캔버스 collapse / #11 그룹화 와이어링 — 랜딩으로 우선순위 전환됨.
+>
+> **첫 스텝**: `npx serve site -l 4321` → localhost:4321 열고 기능 그리드를 "기능명+1줄"에서 "스샷+단계 how-to"로 확장할지 / 별도 "How it works" 섹션 추가할지 결정. 랜딩 i18n = `<script>` 내 `I18N` 사전(`data-i18n` 키) — 신규 카피는 **EN/KO 둘 다 + HTML 본문 둘 다** 갱신 필요. 헤드리스 캡처 재사용: `chrome --headless=old --screenshot --force-device-scale-factor=2 --user-data-dir=<temp> --virtual-time-budget=9000 "http://127.0.0.1:3002/<route>"` (앱 기본 로케일 en이라 헤드리스는 영어로 렌더 주의).
+>
+> **머신**: 집(Windows) → **다음 세션 다른 컴퓨터**. **현재 main HEAD**: 이 PR 머지 후.
+
+### 완료
+- **제품 랜딩 페이지 신설** (`site/index.html`, 의존성 0 단일 정적 파일): 탐색 에이전트 3개가 실제 코드에서 검증한 기능/스택/팔레트로만 작성(지어낸 것 0). Pretendard + `lib/colors.ts` 실제 hex(accent #5E6AD2 · grad #6366f1→#8b5cf6 · status spectrum slate→blue→amber→emerald). 섹션 9개(히어로·테제·기능7·그래프·워크플로우·프라이버시·스탯·다운로드·푸터).
+- **실제 앱 스크린샷**: 헤드리스 Chrome(`--headless=old --screenshot --force-device-scale-factor=2`)로 127.0.0.1:3002 캡처 → `site/shots/`(notes·graph·home·wiki·books 5장, 2x). 히어로=notes(윈도우 프레임), 그래프 섹션=graph 풀폭. CSS 가짜 목업 교체(사용자 "실제와 다르다" 지적 해소).
+- **EN/KO i18n 토글 + 한국어 기본**: `data-i18n` 키 + `I18N` 사전(80+ 문자열, grad/strong/b 인라인 마크업 보존) + localStorage + `<html lang="ko">`(Chrome 자동번역 차단). 네비 우측 KO|EN 토글.
+- **북 디테일바 버그 수정** (`books-view.tsx handleSelect`): 체크박스 단일선택 시 패널 열려있으면 `sidePanelContext` 갱신(노트 `handleRowPreview` peek 미러). 첫 시도 `willSelect`를 setState 업데이터 안에서 읽어 미발동(타이밍) → 핸들러 동기 호출로 수정. "선택카드 ≠ 디테일바" 해소.
+- **온톨로지 그래프 한글화** (`lib/i18n.ts` +25키 EN/KO, `node-context-menu.tsx`+`ontology-graph-canvas.tsx` useT 배선): 그래프 힌트(Shift+드래그·우클릭으로 작업)·노드 컨텍스트 메뉴(스티커 추가/펼치기/모으기/격리/연결 숨기기/이름변경/색상변경/삭제/모두표시/서브메뉴) 전부 `t()`.
+
+### 브레인스토밍 & 큰 결정 (영구)
+- **랜딩 = 실제 코드 기반 강제**: 마케팅 문구도 파일:라인 근거. 미구현 주장 금지(실시간 협업 X=Yjs 로컬전용 · 클라우드싱크/모바일 X=로드맵 · "8개 언어" X=EN+KO만 · Book kind=Smart/Manual/Hybrid). "노트→위키 승격" 실재 확인(promote 넛지=제안만+위키 import=note-ref 임베드+assembly; 옛 convertToWiki는 데드 제거) → "승격=변신" 오해 회피 위해 **"노트가 위키로 자랍니다"(대안 A)**로 정정.
+- **2단 vs 1단 셸 IA(영구 참고)**: 액티비티바+사이드바 2단 = "병렬 모드 많을 때" 패턴(VS Code/Slack/Discord). Linear/Notion=1단. **트리코토미상 Calendar·Ontology(Graph)는 display-mode/렌즈인데 destination 레일에 잘못 앉음** → 1단화 첫 수(Move 1=Calendar/Graph 강등)는 IA헌법이 이미 시킨 일. Graph는 차별점이라 렌즈여도 눈에 띄게. 디자인 ③진단 재개 시 참고.
+
+### 기술 학습 (영구)
+- **헤드리스 Chrome 스샷 = 이 환경 유일 신뢰 캡처**(preview MCP screenshot은 타임아웃으로 깨짐): `--headless=new`는 `--screenshot` CLI 미지원 → **`--headless=old` 필수**. SPA+IDB 시드는 `--user-data-dir`(영속) + `--virtual-time-budget=9000`로 안착. dev 모드=빈 프로필에 데모 자동 시드. **앱 기본 로케일=en**(사용자 수동 ko) → 헤드리스는 영어 렌더.
+- **React setState 업데이터 타이밍**: 업데이터 안에서 변수 세팅 후 다음 줄에서 읽기 = 비신뢰(렌더 페이즈 지연). 이벤트 핸들러에서 동기 처리해야.
+- **PS 안전가드 오탐**: `Remove-Item` + `C:\Program Files` 경로가 한 스크립트에 공존하면 차단 → 분리.
+
+### 환경 변경
+- Store **무변경(v154)**. 신규 `site/`(landing, 정적). 검증: `npx tsc --noEmit` = **내 변경 새 에러 0**(잔존 = `@tauri-apps/plugin-updater`/`plugin-process` 모듈 누락 = 이 worktree node_modules 불완전, 무관). **`npm run build` 미실행**(Tauri 모듈 누락으로 실패 가능 + dev 충돌 회피) → **다음 머신서 `npm install` 후 빌드 권장**.
+
+### Watch Out
+- **앱 기본 로케일 en**: 신규 UI 문자열 useT 의무(온톨로지처럼 useT 미사용 컴포넌트에 영어 잔여 흔함 — 사용자 적발식 대응 중).
+- **다른 컴퓨터 이동**: `site/`는 빌드 불필요(정적, `npx serve site` 또는 정적 호스팅). 앱은 `npm install`(Tauri 플러그인 포함) 후 `npm run build`로 정식 검증.
+- 랜딩 미배포(로컬 4321만). 배포는 Vercel/GitHub Pages 후보(미결).
+
+### 머신
+집 (Windows) → **다음 세션 다른 컴퓨터**
+
+---
+
 ## 2026-06-04 (집/Windows, 오후) — **뷰엔진 디스플레이 11버그: 보드/그리드/휴지통 7개 완료 + 타임라인 4개 WIP**
 
 > 🎯 **다음 즉시 액션**: **타임라인 그룹 마무리 (#10/#11 북 타임라인 + #4/#7 노트/위키 타임라인 검증)**. 사용자가 데스크톱 재빌드(`npx tauri build --no-bundle`)로 1~9번 테스트 중 — 그 피드백 받고 북 타임라인 캔버스 collapse(#10) 마저 잡기. **북 타임라인 캔버스가 0높이로 collapse**(TimelineControls는 뜨는데 그 아래 SVG 캔버스가 안 펴짐). books-view 래퍼를 notes-timeline-shell 패턴(`flex flex-1 overflow-hidden`)으로 맞췄으나 dev preview서 여전히 collapse(단 dev preview 자체가 불안정 — screenshot 타임아웃, HMR stale 의심). **reliable 검증 = 사용자 재빌드 화면.** #11(북 그룹화 작동) = bookGroups가 viewState.groupBy로 recompute되는지 와이어링 확인.

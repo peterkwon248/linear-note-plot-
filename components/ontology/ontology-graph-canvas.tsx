@@ -30,6 +30,7 @@ import type { GroupBy } from "@/lib/view-engine/types"
 import { GRAPH_NODE_HEX, GRAPH_CLUSTER_PALETTE } from "@/lib/colors"
 import { NodeContextMenu } from "@/components/ontology/node-context-menu"
 import { useTheme } from "next-themes"
+import { useT } from "@/lib/i18n"
 import { LOD, VIEWPORT, NODE_THEME, FIT_CONFIG, MAX_VISIBLE_NODES, FORCE_CONFIG, SIM_CONFIG, NODE_SIZE, EDGE_STYLE, HULL, MINIMAP, LABEL_CONFIG, TOOLTIP_CONFIG, SELECTION, classifyTier, nodeRadius as configNodeRadius, getNodeRenderProps, getHullRenderProps, fadeOpacity } from "@/lib/graph/ontology-graph-config"
 
 /* ── Types ─────────────────────────────────────────────── */
@@ -377,6 +378,7 @@ export function OntologyGraphCanvas({
   // at their drag-start positions while nodes move to new locations.
   const [renderTick, forceRender] = useReducer((c: number) => c + 1, 0)
   const { resolvedTheme } = useTheme()
+  const t = useT()
   const isDarkMode = resolvedTheme !== "light"
 
   /* ── Status color cache — reads CSS vars so dark/light mode resolves correctly.
@@ -2083,17 +2085,17 @@ export function OntologyGraphCanvas({
               className="px-2.5 py-1.5 rounded text-2xs text-foreground/85 font-medium bg-card/95 backdrop-blur-sm border border-border-subtle pointer-events-none select-none shadow-sm"
               style={{ fontVariantNumeric: "tabular-nums" }}
             >
-              <Kbd>Shift</Kbd> <span>+ drag</span>
+              <Kbd>Shift</Kbd> <span>{t("graph.hint.drag")}</span>
               <span className="text-foreground/30 mx-1.5">·</span>
               <Kbd>{typeof navigator !== "undefined" && /Mac/.test(navigator.platform) ? "⌘" : "Ctrl"}</Kbd>
-              <span> + click</span>
+              <span> {t("graph.hint.click")}</span>
               <span className="text-foreground/30 mx-1.5">·</span>
-              <span>right-click for actions</span>
+              <span>{t("graph.hint.actions")}</span>
             </div>
           ) : (
             <div className="flex items-center gap-2 px-2.5 py-1 rounded text-2xs bg-accent/90 backdrop-blur-sm border border-border-subtle select-none shadow-sm">
               <span className="text-foreground tabular-nums">
-                {multiSelectedIds.size} selected
+                {t("graph.selected_count").replace("{count}", String(multiSelectedIds.size))}
               </span>
               <button
                 type="button"
