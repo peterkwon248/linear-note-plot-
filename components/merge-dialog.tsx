@@ -2,6 +2,7 @@
 
 import { useState, useMemo, useCallback } from "react"
 import { usePlotStore } from "@/lib/store"
+import { useT } from "@/lib/i18n"
 import {
   Dialog,
   DialogContent,
@@ -43,6 +44,7 @@ export function MergeDialog({
   noteIds,
   onComplete,
 }: MergeDialogProps) {
+  const t = useT()
   const notes = usePlotStore((s) => s.notes)
   const mergeNotes = usePlotStore((s) => s.mergeNotes)
   const openNote = usePlotStore((s) => s.openNote)
@@ -66,7 +68,7 @@ export function MergeDialog({
   const sourceCount = noteIds.length - 1
   const targetNote = mergeNotesList.find((n) => n.id === resolvedTarget)
   const targetLabel = targetNote
-    ? (targetNote.title || "Untitled").slice(0, 30) + (targetNote.title.length > 30 ? "…" : "")
+    ? (targetNote.title || t("common.untitled")).slice(0, 30) + ((targetNote.title || "").length > 30 ? "…" : "")
     : "..."
 
   const handleMerge = useCallback(() => {
@@ -76,8 +78,8 @@ export function MergeDialog({
     onOpenChange(false)
     openNote(resolvedTarget)
     toast.success(
-      `Merged ${sourceIds.length} note${sourceIds.length > 1 ? "s" : ""} into "${targetLabel}"`,
-      { description: "Source notes have been trashed." }
+      t("dialog.merge.toast.success").replace("{count}", String(sourceIds.length)).replace("{name}", targetLabel),
+      { description: t("dialog.merge.toast.source_trashed") }
     )
     onComplete?.(resolvedTarget)
   }, [resolvedTarget, noteIds, mergeNotes, onOpenChange, openNote, targetLabel, onComplete])
@@ -90,10 +92,10 @@ export function MergeDialog({
         <DialogHeader className="px-5 pt-5 pb-3">
           <DialogTitle className="flex items-center gap-2 text-ui">
             <GitMerge size={16} strokeWidth={2} />
-            GitMerge Notes
+            {t("dialog.merge.title")}
           </DialogTitle>
           <DialogDescription className="text-note">
-            Select the target note. {sourceCount > 0 && `${sourceCount} source note${sourceCount > 1 ? "s" : ""} will be trashed.`}
+            {t("dialog.merge.description").replace("{count}", String(sourceCount))}
           </DialogDescription>
         </DialogHeader>
 
@@ -112,7 +114,7 @@ export function MergeDialog({
                 <RadioGroupItem value={note.id} />
                 <div className="flex-1 min-w-0">
                   <p className="truncate text-note text-foreground">
-                    {note.title || "Untitled"}
+                    {note.title || t("common.untitled")}
                   </p>
                 </div>
                 <span className="shrink-0 text-2xs text-muted-foreground/70">
@@ -127,7 +129,7 @@ export function MergeDialog({
         <div className="mx-5 mb-3 flex items-center gap-2 rounded-md bg-secondary/30 px-3 py-2">
           <Trash className="shrink-0 text-muted-foreground/60" size={14} strokeWidth={2} />
           <p className="text-2xs text-muted-foreground/70 leading-relaxed">
-            Source notes will be trashed. Content, tags, and reads will be merged into the target.
+            {t("dialog.merge.info")}
           </p>
         </div>
 
@@ -138,7 +140,7 @@ export function MergeDialog({
             onClick={() => onOpenChange(false)}
             className="text-note"
           >
-            Cancel
+            {t("common.cancel")}
           </Button>
           <Button
             size="sm"
@@ -146,7 +148,7 @@ export function MergeDialog({
             className="bg-accent text-accent-foreground hover:bg-accent/90"
           >
             <GitMerge size={14} strokeWidth={2} />
-            GitMerge into &ldquo;{targetLabel}&rdquo;
+            {t("dialog.merge.confirm").replace("{name}", targetLabel)}
           </Button>
         </DialogFooter>
       </DialogContent>

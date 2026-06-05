@@ -1522,6 +1522,91 @@ const EN = {
   "book.table.clear_selection": "Clear selection (Esc)",
   "book.table.selected_count": "{count} selected",
   "book.table.trash": "Trash",
+
+  // ── i18n sweep: 4 dialog files (note-picker / wiki-picker / merge / search) ──
+  // Priority value labels
+  "priority.urgent": "Urgent",
+  "priority.high": "High",
+  "priority.medium": "Medium",
+  "priority.low": "Low",
+  "priority.none": "No Priority",
+
+  // Picker chip helpers
+  "picker.chip.none": "None",
+  "picker.chip.all_except": "All except {name}",
+  "picker.chip.n_selected": "{count} selected",
+
+  // Picker filter bar controls
+  "picker.filter.select_all": "Select all",
+  "picker.filter.clear": "Clear",
+  "picker.filter.clear_all": "Clear all",
+  "picker.filter.clear_filters": "Clear filters",
+
+  // Picker add button
+  "picker.add.add": "Add",
+  "picker.add.n_items": "Add {count}",
+
+  // Note picker dialog
+  "dialog.notepicker.description": "Search and select a note",
+  "dialog.notepicker.placeholder": "Search notes...",
+  "dialog.notepicker.empty": "No notes found",
+  "dialog.notepicker.footer_hint": "Select notes to add",
+
+  // Wiki picker dialog
+  "dialog.wikipicker.description": "Search and select a wiki article",
+  "dialog.wikipicker.placeholder": "Search wiki articles...",
+  "dialog.wikipicker.empty": "No wiki articles found",
+  "dialog.wikipicker.footer_hint": "Select articles to add",
+
+  // Wiki filter
+  "wiki.filter.uncategorized": "Uncategorized",
+
+  // Panel — category (singular)
+  "panel.category": "Category",
+
+  // Merge dialog
+  "dialog.merge.title": "Merge Notes",
+  "dialog.merge.description": "Select the target note. {count} source note(s) will be trashed.",
+  "dialog.merge.info": "Source notes will be trashed. Content, tags, and reads will be merged into the target.",
+  "dialog.merge.confirm": "Merge into \"{name}\"",
+  "dialog.merge.toast.success": "Merged {count} note(s) into \"{name}\"",
+  "dialog.merge.toast.source_trashed": "Source notes have been trashed.",
+
+  // Search dialog title
+  "dialog.search.title": "Command Palette",
+
+  // Command palette — new group headings
+  "cmdk.group.backlog_actions": "Backlog Actions",
+  "cmdk.group.in_progress_actions": "In Progress Actions",
+  "cmdk.group.done_actions": "Done Actions",
+  "cmdk.group.links_select": "Select a note to link",
+
+  // Command palette — new command labels
+  "cmdk.cmd.keep": "Keep",
+  "cmdk.cmd.snooze_tomorrow": "Snooze until Tomorrow",
+  "cmdk.cmd.trash": "Trash",
+  "cmdk.cmd.promote_to_done": "Promote to Done",
+  "cmdk.cmd.back_to_backlog": "Back to Backlog",
+  "cmdk.cmd.demote_to_in_progress": "Demote to In Progress",
+
+  // Command palette — toast messages
+  "cmdk.toast.note_created": "Note created",
+  "cmdk.toast.thread_started": "Thread started",
+  "cmdk.toast.thread_ended": "Thread ended",
+  "cmdk.toast.pinned": "Pinned",
+  "cmdk.toast.unpinned": "Unpinned",
+  "cmdk.toast.trashed": "Trashed",
+  "cmdk.toast.promoted_to_done": "Promoted to Done",
+  "cmdk.toast.moved_back_to_backlog": "Moved back to Backlog",
+  "cmdk.toast.demoted_to_in_progress": "Demoted to In Progress",
+  "cmdk.toast.snoozed_tomorrow": "Snoozed until tomorrow",
+  "cmdk.toast.linked": "Linked to \"{name}\"",
+  "cmdk.toast.no_note_selected": "Select a note first to create a link",
+  "cmdk.toast.switched_mode": "Switched to {mode} mode",
+  "cmdk.toast.graph_focus": "Graph focus: depth {depth}",
+  "cmdk.toast.graph_focus_off": "Graph focus: off",
+  "cmdk.toast.thinking_step_added": "Thinking step added",
+  "cmdk.toast.kept_moved": "Kept - moved to In Progress",
 }
 
 type DictKey = keyof typeof EN
@@ -3005,6 +3090,91 @@ const KO: Partial<Record<DictKey, string>> = {
   "book.table.clear_selection": "선택 해제 (Esc)",
   "book.table.selected_count": "{count}개 선택됨",
   "book.table.trash": "휴지통",
+
+  // ── i18n sweep: 4 dialog files (note-picker / wiki-picker / merge / search) ──
+  // Priority value labels
+  "priority.urgent": "긴급",
+  "priority.high": "높음",
+  "priority.medium": "보통",
+  "priority.low": "낮음",
+  "priority.none": "우선순위 없음",
+
+  // Picker chip helpers
+  "picker.chip.none": "없음",
+  "picker.chip.all_except": "{name} 제외 전체",
+  "picker.chip.n_selected": "{count}개 선택",
+
+  // Picker filter bar controls
+  "picker.filter.select_all": "전체 선택",
+  "picker.filter.clear": "지우기",
+  "picker.filter.clear_all": "모두 지우기",
+  "picker.filter.clear_filters": "필터 지우기",
+
+  // Picker add button
+  "picker.add.add": "추가",
+  "picker.add.n_items": "{count}개 추가",
+
+  // Note picker dialog
+  "dialog.notepicker.description": "노트를 검색해 선택하세요",
+  "dialog.notepicker.placeholder": "노트 검색...",
+  "dialog.notepicker.empty": "노트 없음",
+  "dialog.notepicker.footer_hint": "추가할 노트를 선택하세요",
+
+  // Wiki picker dialog
+  "dialog.wikipicker.description": "위키 문서를 검색해 선택하세요",
+  "dialog.wikipicker.placeholder": "위키 문서 검색...",
+  "dialog.wikipicker.empty": "위키 문서 없음",
+  "dialog.wikipicker.footer_hint": "추가할 문서를 선택하세요",
+
+  // Wiki filter
+  "wiki.filter.uncategorized": "분류 없음",
+
+  // Panel — category (singular)
+  "panel.category": "분류",
+
+  // Merge dialog
+  "dialog.merge.title": "노트 병합",
+  "dialog.merge.description": "대상 노트를 선택하세요. {count}개의 소스 노트가 휴지통으로 이동합니다.",
+  "dialog.merge.info": "소스 노트는 휴지통으로 이동합니다. 내용, 태그, 읽기 기록이 대상 노트로 병합됩니다.",
+  "dialog.merge.confirm": "\"{name}\"(으)로 병합",
+  "dialog.merge.toast.success": "{count}개 노트를 \"{name}\"(으)로 병합했습니다",
+  "dialog.merge.toast.source_trashed": "소스 노트가 휴지통으로 이동했습니다.",
+
+  // Search dialog title
+  "dialog.search.title": "명령 팔레트",
+
+  // Command palette — new group headings
+  "cmdk.group.backlog_actions": "백로그 작업",
+  "cmdk.group.in_progress_actions": "진행 중 작업",
+  "cmdk.group.done_actions": "완료 작업",
+  "cmdk.group.links_select": "연결할 노트 선택",
+
+  // Command palette — new command labels
+  "cmdk.cmd.keep": "유지",
+  "cmdk.cmd.snooze_tomorrow": "내일까지 미루기",
+  "cmdk.cmd.trash": "휴지통",
+  "cmdk.cmd.promote_to_done": "완료로 승격",
+  "cmdk.cmd.back_to_backlog": "백로그로 돌아가기",
+  "cmdk.cmd.demote_to_in_progress": "진행 중으로 강등",
+
+  // Command palette — toast messages
+  "cmdk.toast.note_created": "노트 생성됨",
+  "cmdk.toast.thread_started": "스레드 시작됨",
+  "cmdk.toast.thread_ended": "스레드 종료됨",
+  "cmdk.toast.pinned": "고정됨",
+  "cmdk.toast.unpinned": "고정 해제됨",
+  "cmdk.toast.trashed": "휴지통으로 이동됨",
+  "cmdk.toast.promoted_to_done": "완료로 승격됨",
+  "cmdk.toast.moved_back_to_backlog": "백로그로 이동됨",
+  "cmdk.toast.demoted_to_in_progress": "진행 중으로 강등됨",
+  "cmdk.toast.snoozed_tomorrow": "내일까지 미뤄졌습니다",
+  "cmdk.toast.linked": "\"{name}\"에 연결됨",
+  "cmdk.toast.no_note_selected": "링크를 만들려면 먼저 노트를 선택하세요",
+  "cmdk.toast.switched_mode": "{mode} 모드로 전환됨",
+  "cmdk.toast.graph_focus": "그래프 포커스: 깊이 {depth}",
+  "cmdk.toast.graph_focus_off": "그래프 포커스 해제",
+  "cmdk.toast.thinking_step_added": "사고 단계 추가됨",
+  "cmdk.toast.kept_moved": "유지 — 진행 중으로 이동됨",
 }
 
 const DICTIONARIES: Record<Locale, Partial<Record<DictKey, string>>> = {
