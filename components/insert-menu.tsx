@@ -241,7 +241,7 @@ export function InsertMenu({ editor, noteId }: InsertMenuProps) {
                     className={ITEM_CLASS}
                   >
                     <Icon size={14} />
-                    <span className="flex-1">{entry.label}</span>
+                    <span className="flex-1">{t(`block.${entry.id}.label`)}</span>
                   </DropdownMenuItem>
                 )
               })}
