@@ -6,7 +6,7 @@
  * only need to call `createEditorExtensions(tier, options)`.
  */
 
-import { InputRule } from "@tiptap/core"
+import { InputRule, wrappingInputRule } from "@tiptap/core"
 import { translate, type Locale } from "@/lib/i18n"
 import { useSettingsStore } from "@/lib/settings-store"
 import StarterKit from "@tiptap/starter-kit"
@@ -67,6 +67,7 @@ import { ColumnsBlockNode, ColumnCellNode } from "@/components/editor/nodes/colu
 import { NoteEmbedNode } from "@/components/editor/nodes/note-embed-node"
 import { LinkCardNode } from "@/components/editor/nodes/link-card-node"
 import { isValidUrl, detectUrlType } from "@/lib/editor/url-detect"
+import { markdownToHtml } from "@/lib/editor/markdown"
 import { WikiEmbedNode } from "@/components/editor/nodes/wiki-embed-node"
 import { InfoboxBlockNode } from "@/components/editor/nodes/infobox-node"
 import { BannerBlockNode } from "@/components/editor/nodes/banner-block-node"
@@ -300,7 +301,13 @@ function createBaseExtensions(options?: EditorConfigOptions): Extension[] {
         return placeholderText
       },
     }),
-    TaskList,
+    TaskList.extend({
+      // Live `[ ] ` / `[x] ` typing → task list (UpNote/Obsidian parity).
+      // TipTap ships no checkbox input rule by default, so add one.
+      addInputRules() {
+        return [wrappingInputRule({ find: /^\s*\[[ xX]?\]\s$/, type: this.type })]
+      },
+    }),
     TaskItem.configure({ nested: true }),
     Highlight.configure({ multicolor: true }),
     Link.configure({ openOnClick: false }),
@@ -901,6 +908,17 @@ export function createEditorExtensions(
               }
 
               return false
+            },
+            // Paste from Markdown (UpNote mirror): explicit md→rich conversion.
+            // Normal paste (Ctrl+V) stays untouched — code/quotes remain literal.
+            "Mod-Alt-v": ({ editor: e }) => {
+              navigator.clipboard
+                .readText()
+                .then((text) => {
+                  if (text) e.chain().focus().insertContent(markdownToHtml(text)).run()
+                })
+                .catch(() => {})
+              return true
             },
           }
         },
