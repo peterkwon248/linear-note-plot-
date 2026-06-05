@@ -14,6 +14,7 @@
 import { useMemo } from "react"
 import { Library as BooksIcon } from "lucide-react"
 import { usePlotStore } from "@/lib/store"
+import { useT } from "@/lib/i18n"
 import { setActiveRoute } from "@/lib/table-route"
 import { booksContainingEntityResolved } from "@/lib/books/utils"
 import { navigateToWikiArticle } from "@/lib/wiki-article-nav"
@@ -24,6 +25,7 @@ interface InBooksSectionProps {
 }
 
 export function InBooksSection({ kind, refId }: InBooksSectionProps) {
+  const t = useT()
   const books = usePlotStore((s) => s.books)
   const notes = usePlotStore((s) => s.notes)
   const folders = usePlotStore((s) => s.folders)
@@ -57,7 +59,7 @@ export function InBooksSection({ kind, refId }: InBooksSectionProps) {
         <span className="text-muted-foreground">
           <BooksIcon size={16} strokeWidth={2} />
         </span>
-        <span className="text-2xs font-medium text-muted-foreground">In Books</span>
+        <span className="text-2xs font-medium text-muted-foreground">{t("book.in_books.heading")}</span>
       </div>
       <div className="space-y-px">
         {memberships.map(({ book, index, total }) => (
@@ -71,7 +73,7 @@ export function InBooksSection({ kind, refId }: InBooksSectionProps) {
               <BooksIcon size={14} strokeWidth={2} className="text-muted-foreground" />
             </span>
             <span className="flex-1 truncate text-note font-medium text-foreground">
-              {book.title || "Untitled book"}
+              {book.title || t("books.untitled")}
             </span>
             <span className="shrink-0 tabular-nums text-2xs text-muted-foreground/70">
               {index + 1}/{total}

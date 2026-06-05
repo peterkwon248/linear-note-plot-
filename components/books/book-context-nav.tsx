@@ -23,6 +23,7 @@
  */
 
 import { useRouter } from "next/navigation"
+import { useT } from "@/lib/i18n"
 import {
   ChevronLeft as CaretLeft,
   ChevronRight as CaretRight,
@@ -87,6 +88,7 @@ export function BookContextNav({
   showBreadcrumb = true,
   currentChapter,
 }: BookContextNavProps) {
+  const t = useT()
   const router = useRouter()
   const book = usePlotStore((s) => s.books.find((b) => b.id === bookId))
   const notes = usePlotStore((s) => s.notes)
@@ -141,12 +143,12 @@ export function BookContextNav({
               <button
                 type="button"
                 className="group flex items-center gap-1 rounded-md px-1 py-0.5 text-2xs text-muted-foreground transition-colors hover:bg-hover-bg hover:text-foreground"
-                title="Open table of contents"
-                aria-label="Table of contents"
+                title={t("book.context_nav.toc_title")}
+                aria-label={t("book.context_nav.toc_aria")}
               >
                 <SPACE_ICONS.books size={12} strokeWidth={2} className="text-muted-foreground/70 group-hover:text-foreground" />
                 <span className="max-w-[140px] truncate font-medium">
-                  {book.title || "Untitled book"}
+                  {book.title || t("books.untitled")}
                 </span>
                 <CaretDown size={10} strokeWidth={2.5} className="text-muted-foreground/50 group-hover:text-foreground/70" />
               </button>
@@ -154,7 +156,7 @@ export function BookContextNav({
             <DropdownMenuContent align="start" className="w-72 max-h-[60vh] overflow-y-auto">
               <DropdownMenuLabel className="text-2xs text-muted-foreground">
                 {book.title || "Untitled book"}
-                <span className="ml-1 text-muted-foreground/60">· {total} {total === 1 ? "page" : "pages"}</span>
+                <span className="ml-1 text-muted-foreground/60">· {t("book.context_nav.pages").replace("{count}", String(total))}</span>
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
               {items!.map((item, idx) => {
@@ -166,12 +168,12 @@ export function BookContextNav({
                 const article = item.kind === "wiki"
                   ? wikiArticles.find((w) => w.id === item.refId)
                   : null
-                const title = note?.title || article?.title || "Untitled"
+                const title = note?.title || article?.title || t("common.untitled")
                 const KindIcon = item.kind === "note" ? Note : BookOpen
                 const kindColor = item.kind === "note"
                   ? KNOWLEDGE_INDEX_COLORS.notes.text
                   : KNOWLEDGE_INDEX_COLORS.wiki.text
-                const kindLabel = item.kind === "note" ? "Note" : "Wiki article"
+                const kindLabel = item.kind === "note" ? t("book.context_nav.kind.note") : t("book.context_nav.kind.wiki")
                 return (
                   <DropdownMenuItem
                     key={item.id}
@@ -220,7 +222,7 @@ export function BookContextNav({
                 className="flex items-center gap-2 px-2 py-1.5 text-2xs text-muted-foreground cursor-pointer"
               >
                 <CaretLeft size={11} strokeWidth={2} />
-                Back to book overview
+                {t("book.context_nav.back_to_book")}
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -284,8 +286,8 @@ export function BookContextNav({
           type="button"
           onClick={canPrev ? onPrev : undefined}
           disabled={!canPrev}
-          aria-label="Previous in book"
-          title="Previous in book"
+          aria-label={t("book.context_nav.prev")}
+          title={t("book.context_nav.prev")}
           className={cn(
             "flex h-6 w-6 items-center justify-center rounded transition-colors",
             canPrev
@@ -299,8 +301,8 @@ export function BookContextNav({
           type="button"
           onClick={canNext ? onNext : undefined}
           disabled={!canNext}
-          aria-label="Next in book"
-          title="Next in book"
+          aria-label={t("book.context_nav.next")}
+          title={t("book.context_nav.next")}
           className={cn(
             "flex h-6 w-6 items-center justify-center rounded transition-colors",
             canNext

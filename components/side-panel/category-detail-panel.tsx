@@ -23,6 +23,7 @@
 
 import { useCallback, useMemo } from "react"
 import { useRouter } from "next/navigation"
+import { useT } from "@/lib/i18n"
 import { usePlotStore } from "@/lib/store"
 import { setActiveCategoryView } from "@/lib/wiki-view-mode"
 import { setActiveRoute } from "@/lib/table-route"
@@ -86,6 +87,7 @@ export function CategoryDetailPanel({
 }: {
   category: WikiCategory
 }) {
+  const t = useT()
   const router = useRouter()
   const categories = usePlotStore((s) => s.wikiCategories)
   const articles = usePlotStore((s) => s.wikiArticles)
@@ -135,7 +137,7 @@ export function CategoryDetailPanel({
         <div className="flex items-center gap-2 min-w-0">
           <span className="inline-flex items-center gap-1 rounded-md bg-secondary/40 px-1.5 py-0.5 text-2xs font-medium text-muted-foreground">
             <FolderSimple size={11} strokeWidth={2} />
-            Category
+            {t("entity.category")}
           </span>
           {category.color && (
             <span
@@ -164,43 +166,43 @@ export function CategoryDetailPanel({
 
       {/* ── Properties ─────────────────────────────────── */}
       <InspectorSection
-        title="Properties"
+        title={t("panel.properties")}
         icon={<FileText size={16} strokeWidth={2} />}
       >
         <div className="space-y-2">
           <div className="flex items-center justify-between">
-            <span className="text-note text-muted-foreground">Tier</span>
+            <span className="text-note text-muted-foreground">{t("panel.category.tier")}</span>
             <span className="text-note tabular-nums text-foreground">
               {tierLabel}
             </span>
           </div>
           <div className="flex items-center justify-between">
-            <span className="text-note text-muted-foreground">Parent</span>
+            <span className="text-note text-muted-foreground">{t("panel.category.parent")}</span>
             <span className="text-note text-foreground truncate ml-2">
               {parentCat?.name ?? (
-                <span className="text-muted-foreground/60">None (root)</span>
+                <span className="text-muted-foreground/60">{t("panel.category.none_root")}</span>
               )}
             </span>
           </div>
           <div className="flex items-center justify-between">
-            <span className="text-note text-muted-foreground">Subs</span>
+            <span className="text-note text-muted-foreground">{t("panel.category.subs")}</span>
             <span className="text-note tabular-nums text-foreground">
               {subcategories.length}
             </span>
           </div>
           <div className="flex items-center justify-between">
-            <span className="text-note text-muted-foreground">Articles</span>
+            <span className="text-note text-muted-foreground">{t("panel.category.articles")}</span>
             <span className="text-note tabular-nums text-foreground">
               {catArticles.length}
             </span>
           </div>
           <div className="flex items-center justify-between">
-            <span className="text-note text-muted-foreground">Color</span>
+            <span className="text-note text-muted-foreground">{t("panel.color")}</span>
             <Popover>
               <PopoverTrigger asChild>
                 <button
                   className="flex items-center gap-1.5 rounded-md px-1.5 py-0.5 hover:bg-hover-bg transition-colors"
-                  title="Change color"
+                  title={t("common.change_color")}
                 >
                   <span
                     className="h-2.5 w-2.5 rounded-full border border-border-subtle shrink-0"
@@ -222,13 +224,13 @@ export function CategoryDetailPanel({
             </Popover>
           </div>
           <div className="flex items-center justify-between">
-            <span className="text-note text-muted-foreground">Created</span>
+            <span className="text-note text-muted-foreground">{t("common.created")}</span>
             <span className="text-note tabular-nums text-foreground">
               {shortRelative(category.createdAt)} ago
             </span>
           </div>
           <div className="flex items-center justify-between">
-            <span className="text-note text-muted-foreground">Updated</span>
+            <span className="text-note text-muted-foreground">{t("common.updated")}</span>
             <span className="text-note tabular-nums text-foreground">
               {shortRelative(category.updatedAt ?? category.createdAt)} ago
             </span>
@@ -242,7 +244,7 @@ export function CategoryDetailPanel({
       {parentCat && (
         <>
           <InspectorSection
-            title="Parent Category"
+            title={t("panel.category.parent_category")}
             icon={<ArrowUp size={16} strokeWidth={2} />}
           >
             <button
@@ -269,12 +271,12 @@ export function CategoryDetailPanel({
 
       {/* ── Subcategories preview ───────────────────────── */}
       <InspectorSection
-        title={`Subcategories (${subcategories.length})`}
+        title={`${t("panel.category.subcategories")} (${subcategories.length})`}
         icon={<FolderOpen size={16} strokeWidth={2} />}
       >
         {subcategories.length === 0 ? (
           <p className="text-note text-muted-foreground/70 italic px-2">
-            No subcategories
+            {t("panel.category.no_subcategories")}
           </p>
         ) : (
           <div className="flex flex-col gap-0.5">
@@ -311,12 +313,12 @@ export function CategoryDetailPanel({
 
       {/* ── Articles preview ───────────────────────────── */}
       <InspectorSection
-        title={`Articles (${catArticles.length})`}
+        title={`${t("panel.category.articles")} (${catArticles.length})`}
         icon={<PhLink size={16} strokeWidth={2} />}
       >
         {catArticles.length === 0 ? (
           <p className="text-note text-muted-foreground/70 italic px-2">
-            No articles in this category
+            {t("panel.category.no_articles")}
           </p>
         ) : (
           <div className="flex flex-col gap-0.5">
@@ -336,7 +338,7 @@ export function CategoryDetailPanel({
                                    className="shrink-0 text-muted-foreground"
                 />
                 <span className="truncate flex-1">
-                  {a.title || "Untitled"}
+                  {a.title || t("common.untitled")}
                 </span>
               </button>
             ))}

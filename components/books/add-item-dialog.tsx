@@ -17,6 +17,7 @@
 
 import { useState, useMemo, useEffect } from "react"
 import { usePlotStore } from "@/lib/store"
+import { useT } from "@/lib/i18n"
 import { toast } from "sonner"
 import {
   Dialog,
@@ -56,6 +57,7 @@ export function AddItemDialog({
   const folders = usePlotStore((s) => s.folders)
   const addSmartSource = usePlotStore((s) => s.addSmartSource)
 
+  const t = useT()
   const book = books.find((b) => b.id === bookId)
 
   const [tab, setTab] = useState<Tab>(initialTab)
@@ -135,22 +137,22 @@ export function AddItemDialog({
 
   const handleAddNote = (noteId: string, title: string) => {
     addItemToBook(bookId, { kind: "note", refId: noteId })
-    toast.success(`Added "${title || "Untitled"}"`)
+    toast.success(t("book.add_item.toast_added").replace("{title}", title || t("common.untitled")))
     setSearch("")
   }
 
   const handleAddWiki = (articleId: string, title: string) => {
     addItemToBook(bookId, { kind: "wiki", refId: articleId })
-    toast.success(`Added "${title || "Untitled"}"`)
+    toast.success(t("book.add_item.toast_added").replace("{title}", title || t("common.untitled")))
     setSearch("")
   }
 
   const handleAddFolder = (folderId: string, folderName: string) => {
     const ok = addSmartSource(bookId, { kind: "folder", refId: folderId })
     if (ok) {
-      toast.success(`Added source: ${folderName}`)
+      toast.success(t("book.sources.toast_added").replace("{name}", folderName))
     } else {
-      toast("Already added", { duration: 1500 })
+      toast(t("book.sources.toast_already_added"), { duration: 1500 })
     }
     setSearch("")
   }
@@ -164,9 +166,9 @@ export function AddItemDialog({
         showCloseButton={false}
       >
         <DialogHeader className="sr-only">
-          <DialogTitle>Add to book</DialogTitle>
+          <DialogTitle>{t("book.add_item.dialog.title")}</DialogTitle>
           <DialogDescription>
-            Pick existing notes or wiki articles to add to this book.
+            {t("book.add_item.dialog.desc")}
           </DialogDescription>
         </DialogHeader>
 
@@ -174,21 +176,21 @@ export function AddItemDialog({
         <div className="flex border-b border-border">
           <TabButton active={tab === "notes"} onClick={() => setTab("notes")}>
             <FileText size={14} strokeWidth={2} />
-            Notes
+            {t("book.add_item.tab.notes")}
             <span className="text-2xs text-muted-foreground/70 tabular-nums">
               {noteCandidates.length}
             </span>
           </TabButton>
           <TabButton active={tab === "wiki"} onClick={() => setTab("wiki")}>
             <BookOpen size={14} strokeWidth={2} />
-            Wikis
+            {t("book.add_item.tab.wikis")}
             <span className="text-2xs text-muted-foreground/70 tabular-nums">
               {wikiCandidates.length}
             </span>
           </TabButton>
           <TabButton active={tab === "smart"} onClick={() => setTab("smart")}>
             <Sparkle size={14} strokeWidth={2} />
-            Smart
+            {t("book.add_item.tab.smart")}
             <span className="text-2xs text-muted-foreground/70 tabular-nums">
               {folderCandidates.length}
             </span>
@@ -199,7 +201,7 @@ export function AddItemDialog({
             onClick={() => onOpenChange(false)}
             className="px-3 text-2xs text-muted-foreground hover:text-foreground transition-colors"
           >
-            Done
+            {t("common.done")}
           </button>
         </div>
 
@@ -213,9 +215,9 @@ export function AddItemDialog({
         >
           <CommandInput
             placeholder={
-              tab === "notes" ? "Search notes..." :
-              tab === "wiki" ? "Search wiki articles..." :
-              "Search folders..."
+              tab === "notes" ? t("book.add_item.search.notes") :
+              tab === "wiki" ? t("book.add_item.search.wikis") :
+              t("book.add_item.search.folders")
             }
             value={search}
             onValueChange={setSearch}
@@ -229,8 +231,8 @@ export function AddItemDialog({
                     <FileText className="text-muted-foreground/60" size={28} strokeWidth={2} />
                     <p className="text-note text-muted-foreground">
                       {noteCandidates.length === 0
-                        ? "No notes available — every note is already in this book."
-                        : "No matching notes."}
+                        ? t("book.add_item.empty.notes_all_in")
+                        : t("book.add_item.empty.notes_no_match")}
                     </p>
                   </div>
                 </CommandEmpty>
@@ -245,7 +247,7 @@ export function AddItemDialog({
                       <StatusShapeIcon status={note.status} size={14} />
                       <div className="flex-1 min-w-0">
                         <span className="truncate text-note font-medium text-foreground block">
-                          {note.title || "Untitled"}
+                          {note.title || t("common.untitled")}
                         </span>
                         {note.preview && (
                           <p className="truncate text-2xs text-muted-foreground/70 mt-0.5">
@@ -267,8 +269,8 @@ export function AddItemDialog({
                     <BookOpen className="text-muted-foreground/60" size={28} strokeWidth={2} />
                     <p className="text-note text-muted-foreground">
                       {wikiCandidates.length === 0
-                        ? "No wiki articles available — every article is already in this book."
-                        : "No matching wiki articles."}
+                        ? t("book.add_item.empty.wikis_all_in")
+                        : t("book.add_item.empty.wikis_no_match")}
                     </p>
                   </div>
                 </CommandEmpty>
@@ -285,7 +287,7 @@ export function AddItemDialog({
                         <IconWiki size={14} style={{ color: SPACE_COLORS.wiki }} />
                         <div className="flex-1 min-w-0">
                           <span className="truncate text-note font-medium text-foreground block">
-                            {article.title || "Untitled"}
+                            {article.title || t("common.untitled")}
                           </span>
                           {article.aliases.length > 0 && (
                             <p className="truncate text-2xs text-muted-foreground/70 mt-0.5">
@@ -308,8 +310,8 @@ export function AddItemDialog({
                     <PhFolder className="text-muted-foreground/60" size={28} strokeWidth={2} />
                     <p className="text-note text-muted-foreground">
                       {folderCandidates.length === 0
-                        ? "No folders available — every note folder is already a source."
-                        : "No matching folders."}
+                        ? t("book.add_item.empty.folders_all_in")
+                        : t("book.add_item.empty.folders_no_match")}
                     </p>
                   </div>
                 </CommandEmpty>
@@ -318,12 +320,12 @@ export function AddItemDialog({
                     const newCount = total - inBook
                     const subtitle =
                       total === 0
-                        ? "Empty folder"
+                        ? t("book.add_item.folder.empty")
                         : inBook === 0
-                          ? `${total} note${total === 1 ? "" : "s"} will auto-fill`
+                          ? t("book.add_item.folder.will_fill").replace("{count}", String(total))
                           : newCount === 0
-                            ? `All ${total} note${total === 1 ? "" : "s"} already in book`
-                            : `${newCount} new · ${inBook} already in book`
+                            ? t("book.add_item.folder.all_in").replace("{count}", String(total))
+                            : t("book.add_item.folder.partial").replace("{new}", String(newCount)).replace("{in}", String(inBook))
                     return (
                       <CommandItem
                         key={folder.id}

@@ -109,6 +109,7 @@ function SuggestedTagChip({
   tagName: string
   noteId: string
 }) {
+  const t = useT()
   const addTagToNote = usePlotStore((s) => s.addTagToNote)
   const [added, setAdded] = useState(false)
 
@@ -130,7 +131,7 @@ function SuggestedTagChip({
           <PhPlus size={12} strokeWidth={2.5} />
         </button>
       ) : (
-        <span className="text-2xs text-muted-foreground">added</span>
+        <span className="text-2xs text-muted-foreground">{t("panel.conn.tag_added")}</span>
       )}
     </div>
   )
@@ -159,6 +160,7 @@ function NoteStatusBreakdown({
 }: {
   notes: { status?: NoteStatus | null }[]
 }) {
+  const t = useT()
   const counts = useMemo(() => {
     let backlog = 0,
       todo = 0,
@@ -177,10 +179,10 @@ function NoteStatusBreakdown({
   if (total === 0) return null
   return (
     <div className="flex items-center gap-2.5 px-2 pb-1 text-2xs text-muted-foreground/70">
-      {counts.backlog > 0 && <DotCount color="var(--status-backlog)" label="Backlog" count={counts.backlog} />}
-      {counts.todo > 0 && <DotCount color="var(--status-todo)" label="Todo" count={counts.todo} />}
-      {counts.in_progress > 0 && <DotCount color="var(--status-in_progress)" label="In Progress" count={counts.in_progress} />}
-      {counts.done > 0 && <DotCount color="var(--status-done)" label="Done" count={counts.done} />}
+      {counts.backlog > 0 && <DotCount color="var(--status-backlog)" label={t("status.backlog")} count={counts.backlog} />}
+      {counts.todo > 0 && <DotCount color="var(--status-todo)" label={t("status.todo")} count={counts.todo} />}
+      {counts.in_progress > 0 && <DotCount color="var(--status-in_progress)" label={t("status.in_progress")} count={counts.in_progress} />}
+      {counts.done > 0 && <DotCount color="var(--status-done)" label={t("status.done")} count={counts.done} />}
     </div>
   )
 }
@@ -324,7 +326,7 @@ function WikiArticleConnections() {
     return (
       <div className="flex flex-1 items-center justify-center p-8 text-center">
         <p className="text-note text-muted-foreground">
-          Select a wiki article to see connections
+          {t("panel.conn.select_wiki")}
         </p>
       </div>
     )
@@ -410,13 +412,13 @@ function WikiArticleConnections() {
       >
         {totalCount === 0 ? (
           <p className="text-note text-muted-foreground px-2">
-            No connections yet
+            {t("panel.conn.no_connections")}
           </p>
         ) : (
           <div className="space-y-3">
             {referencedNotes.length > 0 && (
               <div className="space-y-0.5">
-                <SubLabel>Referenced Notes</SubLabel>
+                <SubLabel>{t("panel.conn.referenced_notes")}</SubLabel>
                 {referencedNotes.map((n) => (
                   <button
                     key={n.id}
@@ -433,7 +435,7 @@ function WikiArticleConnections() {
 
             {referencedBy.length > 0 && (
               <div className="space-y-0.5">
-                <SubLabel>Referenced By (Wiki)</SubLabel>
+                <SubLabel>{t("panel.conn.referenced_by_wiki")}</SubLabel>
                 <WikiStatusBreakdown articles={referencedBy} />
                 {referencedBy.map((a) => (
                   <button
@@ -453,7 +455,7 @@ function WikiArticleConnections() {
               <div className="space-y-0.5">
                 <div className="flex items-center gap-1 px-2">
                   <DirArrow dir="in" />
-                  <SubLabel>Linked from Notes</SubLabel>
+                  <SubLabel>{t("panel.conn.linked_from_notes")}</SubLabel>
                 </div>
                 <NoteStatusBreakdown notes={linkingNotes} />
                 <div className="space-y-px">
@@ -486,7 +488,7 @@ function WikiArticleConnections() {
       <WikiPickerDialog
         open={parentPickerOpen}
         onOpenChange={setParentPickerOpen}
-        title="Select parent article"
+        title={t("panel.conn.select_parent_article")}
         excludeIds={parentPickerExcludeIds}
         onSelect={(selectedId) => {
           setWikiArticleParent(article.id, selectedId)
@@ -555,6 +557,7 @@ export function SidePanelConnections() {
 // Detail panel은 preview (slice). Connections는 full list.
 
 function CategoryConnections() {
+  const t = useT()
   const router = useRouter()
   const sidePanelContext = usePlotStore((s) => s.sidePanelContext)
   const wikiCategories = usePlotStore((s) => s.wikiCategories)
@@ -594,7 +597,7 @@ function CategoryConnections() {
   if (!category) {
     return (
       <div className="flex flex-1 items-center justify-center p-4 text-muted-foreground text-note">
-        Category not found
+        {t("panel.conn.category_not_found")}
       </div>
     )
   }
@@ -603,7 +606,7 @@ function CategoryConnections() {
     <div className="flex flex-col h-full overflow-y-auto">
       {parentCat && (
         <ConnectionSection
-          title="Parent"
+          title={t("panel.parent")}
           icon={<ArrowUp size={16} strokeWidth={2} />}
           count={1}
         >
@@ -630,13 +633,13 @@ function CategoryConnections() {
       )}
 
       <ConnectionSection
-        title="Subcategories"
+        title={t("panel.subcategories")}
         icon={<FolderOpen size={16} strokeWidth={2} />}
         count={subcategories.length}
       >
         {subcategories.length === 0 ? (
           <p className="text-note text-muted-foreground/70 italic px-2">
-            No subcategories
+            {t("panel.conn.no_subcategories")}
           </p>
         ) : (
           <div className="flex flex-col gap-0.5">
@@ -667,13 +670,13 @@ function CategoryConnections() {
       </ConnectionSection>
 
       <ConnectionSection
-        title="Articles"
+        title={t("panel.articles")}
         icon={<FileText size={16} strokeWidth={2} />}
         count={catArticles.length}
       >
         {catArticles.length === 0 ? (
           <p className="text-note text-muted-foreground/70 italic px-2">
-            No articles in this category
+            {t("panel.conn.no_articles_in_category")}
           </p>
         ) : (
           <div className="flex flex-col gap-0.5">
@@ -710,6 +713,7 @@ function CategoryConnections() {
 // (Note.labelId는 단일 id) — Tag와 다른 점은 한 노트에 하나 라벨만.
 
 function LabelConnections() {
+  const t = useT()
   const entity = useSidePanelEntity()
   const label = entity.type === "label" ? entity.label : null
   const notes = usePlotStore((s) => s.notes)
@@ -729,7 +733,7 @@ function LabelConnections() {
   if (!label) {
     return (
       <div className="flex flex-1 items-center justify-center p-8 text-center">
-        <p className="text-note text-muted-foreground">Select a label to see connections</p>
+        <p className="text-note text-muted-foreground">{t("panel.conn.select_label")}</p>
       </div>
     )
   }
@@ -739,26 +743,26 @@ function LabelConnections() {
   return (
     <div className="flex-1 overflow-y-auto">
       <ConnectionSection
-        title="Labeled notes"
+        title={t("panel.conn.labeled_notes")}
         icon={<LinkSimple size={14} strokeWidth={2} />}
         count={total}
         defaultOpen
       >
         {total === 0 ? (
           <p className="text-note text-muted-foreground px-2">
-            No notes carry this label yet
+            {t("panel.conn.no_labeled_notes")}
           </p>
         ) : (
           <div className="space-y-3">
             <div className="space-y-0.5">
-              <KindHeader label="By status" count={total} />
-              <StatusRow label="Backlog" count={labeled.byStatus.backlog} colorVar="var(--status-backlog)" />
-              <StatusRow label="Todo" count={labeled.byStatus.todo} colorVar="var(--status-todo)" />
-              <StatusRow label="In Progress" count={labeled.byStatus.in_progress} colorVar="var(--status-in_progress)" />
-              <StatusRow label="Done" count={labeled.byStatus.done} colorVar="var(--status-done)" />
+              <KindHeader label={t("panel.conn.by_status")} count={total} />
+              <StatusRow label={t("status.backlog")} count={labeled.byStatus.backlog} colorVar="var(--status-backlog)" />
+              <StatusRow label={t("status.todo")} count={labeled.byStatus.todo} colorVar="var(--status-todo)" />
+              <StatusRow label={t("status.in_progress")} count={labeled.byStatus.in_progress} colorVar="var(--status-in_progress)" />
+              <StatusRow label={t("status.done")} count={labeled.byStatus.done} colorVar="var(--status-done)" />
             </div>
             <div className="space-y-0.5">
-              <SubLabel>Recent</SubLabel>
+              <SubLabel>{t("panel.recent")}</SubLabel>
               {labeled.all.slice(0, 8).map((n) => (
                 <button
                   key={n.id}
@@ -766,12 +770,12 @@ function LabelConnections() {
                   className="flex w-full items-center gap-2 rounded-md px-2 py-0.5 text-left text-note text-foreground hover:bg-hover-bg transition-colors"
                 >
                   <FileText size={12} className="shrink-0 text-muted-foreground" strokeWidth={2} />
-                  <span className="truncate flex-1">{n.title || "Untitled"}</span>
+                  <span className="truncate flex-1">{n.title || t("common.untitled")}</span>
                 </button>
               ))}
               {labeled.all.length > 8 && (
                 <p className="px-2 py-1 text-2xs text-muted-foreground/70 italic">
-                  +{labeled.all.length - 8} more (see Detail tab for full list)
+                  {t("panel.conn.more_items").replace("{count}", String(labeled.all.length - 8))}
                 </p>
               )}
             </div>
@@ -787,6 +791,7 @@ function LabelConnections() {
 // 가진 notes의 status breakdown + 통계.
 
 function TagConnections() {
+  const t = useT()
   const entity = useSidePanelEntity()
   const tag = entity.type === "tag" ? entity.tag : null
   const notes = usePlotStore((s) => s.notes)
@@ -806,7 +811,7 @@ function TagConnections() {
   if (!tag) {
     return (
       <div className="flex flex-1 items-center justify-center p-8 text-center">
-        <p className="text-note text-muted-foreground">Select a tag to see connections</p>
+        <p className="text-note text-muted-foreground">{t("panel.conn.select_tag")}</p>
       </div>
     )
   }
@@ -816,28 +821,28 @@ function TagConnections() {
   return (
     <div className="flex-1 overflow-y-auto">
       <ConnectionSection
-        title="Tagged notes"
+        title={t("panel.conn.tagged_notes")}
         icon={<LinkSimple size={14} strokeWidth={2} />}
         count={total}
         defaultOpen
       >
         {total === 0 ? (
           <p className="text-note text-muted-foreground px-2">
-            No notes carry this tag yet
+            {t("panel.conn.no_tagged_notes")}
           </p>
         ) : (
           <div className="space-y-3">
             {/* Status breakdown */}
             <div className="space-y-0.5">
-              <KindHeader label="By status" count={total} />
-              <StatusRow label="Backlog" count={tagged.byStatus.backlog} colorVar="var(--status-backlog)" />
-              <StatusRow label="Todo" count={tagged.byStatus.todo} colorVar="var(--status-todo)" />
-              <StatusRow label="In Progress" count={tagged.byStatus.in_progress} colorVar="var(--status-in_progress)" />
-              <StatusRow label="Done" count={tagged.byStatus.done} colorVar="var(--status-done)" />
+              <KindHeader label={t("panel.conn.by_status")} count={total} />
+              <StatusRow label={t("status.backlog")} count={tagged.byStatus.backlog} colorVar="var(--status-backlog)" />
+              <StatusRow label={t("status.todo")} count={tagged.byStatus.todo} colorVar="var(--status-todo)" />
+              <StatusRow label={t("status.in_progress")} count={tagged.byStatus.in_progress} colorVar="var(--status-in_progress)" />
+              <StatusRow label={t("status.done")} count={tagged.byStatus.done} colorVar="var(--status-done)" />
             </div>
             {/* Recent notes list */}
             <div className="space-y-0.5">
-              <SubLabel>Recent</SubLabel>
+              <SubLabel>{t("panel.recent")}</SubLabel>
               {tagged.all.slice(0, 8).map((n) => (
                 <button
                   key={n.id}
@@ -845,12 +850,12 @@ function TagConnections() {
                   className="flex w-full items-center gap-2 rounded-md px-2 py-0.5 text-left text-note text-foreground hover:bg-hover-bg transition-colors"
                 >
                   <FileText size={12} className="shrink-0 text-muted-foreground" strokeWidth={2} />
-                  <span className="truncate flex-1">{n.title || "Untitled"}</span>
+                  <span className="truncate flex-1">{n.title || t("common.untitled")}</span>
                 </button>
               ))}
               {tagged.all.length > 8 && (
                 <p className="px-2 py-1 text-2xs text-muted-foreground/70 italic">
-                  +{tagged.all.length - 8} more (see Detail tab for full list)
+                  {t("panel.conn.more_items").replace("{count}", String(tagged.all.length - 8))}
                 </p>
               )}
             </div>
@@ -866,6 +871,7 @@ function TagConnections() {
 // 7 kinds 중 note/wiki만 status 분류 가능. 나머지 kinds는 count만.
 
 function StickerConnections() {
+  const t = useT()
   const entity = useSidePanelEntity()
   const sticker = entity.type === "sticker" ? entity.sticker : null
   const notes = usePlotStore((s) => s.notes)
@@ -901,7 +907,7 @@ function StickerConnections() {
   if (!sticker) {
     return (
       <div className="flex flex-1 items-center justify-center p-8 text-center">
-        <p className="text-note text-muted-foreground">Select a sticker to see connections</p>
+        <p className="text-note text-muted-foreground">{t("panel.conn.select_sticker")}</p>
       </div>
     )
   }
@@ -914,31 +920,31 @@ function StickerConnections() {
   return (
     <div className="flex-1 overflow-y-auto">
       <ConnectionSection
-        title="Members by kind & status"
+        title={t("panel.conn.members_by_kind_status")}
         icon={<LinkSimple size={14} strokeWidth={2} />}
         count={total}
         defaultOpen
       >
         {total === 0 ? (
-          <p className="text-note text-muted-foreground px-2">No members yet</p>
+          <p className="text-note text-muted-foreground px-2">{t("panel.conn.no_members")}</p>
         ) : (
           <div className="space-y-3">
             {totalNotes > 0 && (
               <div className="space-y-0.5">
-                <KindHeader label="Notes" count={totalNotes} />
-                <StatusRow label="Backlog" count={breakdown.noteStatus.backlog} colorVar="var(--status-backlog)" />
-                <StatusRow label="Todo" count={breakdown.noteStatus.todo} colorVar="var(--status-todo)" />
-                <StatusRow label="In Progress" count={breakdown.noteStatus.in_progress} colorVar="var(--status-in_progress)" />
-                <StatusRow label="Done" count={breakdown.noteStatus.done} colorVar="var(--status-done)" />
+                <KindHeader label={t("common.notes")} count={totalNotes} />
+                <StatusRow label={t("status.backlog")} count={breakdown.noteStatus.backlog} colorVar="var(--status-backlog)" />
+                <StatusRow label={t("status.todo")} count={breakdown.noteStatus.todo} colorVar="var(--status-todo)" />
+                <StatusRow label={t("status.in_progress")} count={breakdown.noteStatus.in_progress} colorVar="var(--status-in_progress)" />
+                <StatusRow label={t("status.done")} count={breakdown.noteStatus.done} colorVar="var(--status-done)" />
               </div>
             )}
             {totalWikis > 0 && (
               <div className="space-y-0.5">
-                <KindHeader label="Wikis" count={totalWikis} />
-                <StatusRow label="Backlog" count={breakdown.wikiStatus.backlog} colorVar="var(--status-backlog)" />
-                <StatusRow label="Todo" count={breakdown.wikiStatus.todo} colorVar="var(--status-todo)" />
-                <StatusRow label="In Progress" count={breakdown.wikiStatus.in_progress} colorVar="var(--status-in_progress)" />
-                <StatusRow label="Done" count={breakdown.wikiStatus.done} colorVar="var(--status-done)" />
+                <KindHeader label={t("common.wikis")} count={totalWikis} />
+                <StatusRow label={t("status.backlog")} count={breakdown.wikiStatus.backlog} colorVar="var(--status-backlog)" />
+                <StatusRow label={t("status.todo")} count={breakdown.wikiStatus.todo} colorVar="var(--status-todo)" />
+                <StatusRow label={t("status.in_progress")} count={breakdown.wikiStatus.in_progress} colorVar="var(--status-in_progress)" />
+                <StatusRow label={t("status.done")} count={breakdown.wikiStatus.done} colorVar="var(--status-done)" />
               </div>
             )}
             {(["tag", "label", "category", "file", "reference"] as const).map((k) => {
@@ -952,7 +958,7 @@ function StickerConnections() {
             })}
             {breakdown.noteRefs.length > 0 && (
               <div className="space-y-0.5">
-                <SubLabel>Recent notes</SubLabel>
+                <SubLabel>{t("panel.conn.recent_notes")}</SubLabel>
                 {breakdown.noteRefs.slice(0, 6).map((n) => (
                   <button
                     key={n.id}
@@ -978,6 +984,7 @@ function StickerConnections() {
 // Connections는 cross-entity graph 시각 — 명시적 source/used-in 분리.
 
 function FileConnections() {
+  const t = useT()
   const entity = useSidePanelEntity()
   const attachment = entity.type === "file" ? entity.attachment : null
   const notes = usePlotStore((s) => s.notes)
@@ -1014,7 +1021,7 @@ function FileConnections() {
   if (!attachment) {
     return (
       <div className="flex flex-1 items-center justify-center p-8 text-center">
-        <p className="text-note text-muted-foreground">Select a file to see connections</p>
+        <p className="text-note text-muted-foreground">{t("panel.conn.select_file")}</p>
       </div>
     )
   }
@@ -1024,20 +1031,20 @@ function FileConnections() {
   return (
     <div className="flex-1 overflow-y-auto">
       <ConnectionSection
-        title="Cross-entity"
+        title={t("panel.conn.cross_entity")}
         icon={<LinkSimple size={14} strokeWidth={2} />}
         count={total}
         defaultOpen
       >
         {total === 0 ? (
           <p className="text-note text-muted-foreground px-2">
-            File is not referenced anywhere
+            {t("panel.conn.file_not_referenced")}
           </p>
         ) : (
           <div className="space-y-3">
             {sourceNote && (
               <div className="space-y-0.5">
-                <SubLabel>Source note</SubLabel>
+                <SubLabel>{t("panel.conn.source_note")}</SubLabel>
                 <button
                   onClick={() => openInSecondary(sourceNote.id)}
                   className="flex w-full items-center gap-2 rounded-md px-2 py-0.5 text-left text-note text-foreground hover:bg-hover-bg transition-colors"
@@ -1049,7 +1056,7 @@ function FileConnections() {
             )}
             {usedInNotes.length > 0 && (
               <div className="space-y-0.5">
-                <SubLabel>Used in notes</SubLabel>
+                <SubLabel>{t("panel.conn.used_in_notes")}</SubLabel>
                 {usedInNotes.map((n) => (
                   <button
                     key={n.id}
@@ -1064,7 +1071,7 @@ function FileConnections() {
             )}
             {usedInWikis.length > 0 && (
               <div className="space-y-0.5">
-                <SubLabel>Used in wikis</SubLabel>
+                <SubLabel>{t("panel.conn.used_in_wikis")}</SubLabel>
                 {usedInWikis.map((a) => (
                   <button
                     key={a.id}
@@ -1090,6 +1097,7 @@ function FileConnections() {
 // 이 reference를 인용하는 entities 명시.
 
 function ReferenceConnections() {
+  const t = useT()
   const sidePanelContext = usePlotStore((s) => s.sidePanelContext)
   const referenceId = sidePanelContext?.type === "reference" ? sidePanelContext.id : null
   const notes = usePlotStore((s) => s.notes)
@@ -1116,7 +1124,7 @@ function ReferenceConnections() {
   if (!reference) {
     return (
       <div className="flex flex-1 items-center justify-center p-8 text-center">
-        <p className="text-note text-muted-foreground">Select a reference to see connections</p>
+        <p className="text-note text-muted-foreground">{t("panel.conn.select_reference")}</p>
       </div>
     )
   }
@@ -1126,20 +1134,20 @@ function ReferenceConnections() {
   return (
     <div className="flex-1 overflow-y-auto">
       <ConnectionSection
-        title="Cited by"
+        title={t("panel.conn.cited_by")}
         icon={<LinkSimple size={14} strokeWidth={2} />}
         count={total}
         defaultOpen
       >
         {total === 0 ? (
           <p className="text-note text-muted-foreground px-2">
-            No notes or wikis cite this reference yet
+            {t("panel.conn.no_citations")}
           </p>
         ) : (
           <div className="space-y-3">
             {citingNotes.length > 0 && (
               <div className="space-y-0.5">
-                <SubLabel>Notes</SubLabel>
+                <SubLabel>{t("common.notes")}</SubLabel>
                 {citingNotes.map((n) => (
                   <button
                     key={n.id}
@@ -1154,7 +1162,7 @@ function ReferenceConnections() {
             )}
             {citingWikis.length > 0 && (
               <div className="space-y-0.5">
-                <SubLabel>Wikis</SubLabel>
+                <SubLabel>{t("common.wikis")}</SubLabel>
                 {citingWikis.map((a) => (
                   <button
                     key={a.id}
@@ -1183,6 +1191,7 @@ function ReferenceConnections() {
 // it back to the source-kind labels for context.
 
 function BookConnections() {
+  const t = useT()
   const entity = useSidePanelEntity()
   const book = entity.type === "book" ? entity.book : null
   const notes = usePlotStore((s) => s.notes)
@@ -1265,7 +1274,7 @@ function BookConnections() {
     return (
       <div className="flex flex-1 items-center justify-center p-8 text-center">
         <p className="text-note text-muted-foreground">
-          Select a book to see connections
+          {t("panel.conn.select_book")}
         </p>
       </div>
     )
@@ -1279,41 +1288,41 @@ function BookConnections() {
     <div className="flex-1 overflow-y-auto">
       {/* Items by kind & status */}
       <ConnectionSection
-        title="Items"
+        title={t("panel.conn.items")}
         icon={<LinkSimple size={14} strokeWidth={2} />}
         count={itemsCount}
         defaultOpen
       >
         {itemsCount === 0 ? (
           <p className="text-note text-muted-foreground px-2">
-            No items in this book yet
+            {t("panel.conn.no_items_in_book")}
           </p>
         ) : (
           <div className="space-y-3">
             {/* Notes by status */}
             {totalNotes > 0 && (
               <div className="space-y-0.5">
-                <KindHeader label="Notes" count={totalNotes} />
-                <StatusRow label="Backlog" count={breakdown.noteStatus.backlog} colorVar="var(--status-backlog)" />
-                <StatusRow label="Todo" count={breakdown.noteStatus.todo} colorVar="var(--status-todo)" />
-                <StatusRow label="In Progress" count={breakdown.noteStatus.in_progress} colorVar="var(--status-in_progress)" />
-                <StatusRow label="Done" count={breakdown.noteStatus.done} colorVar="var(--status-done)" />
+                <KindHeader label={t("common.notes")} count={totalNotes} />
+                <StatusRow label={t("status.backlog")} count={breakdown.noteStatus.backlog} colorVar="var(--status-backlog)" />
+                <StatusRow label={t("status.todo")} count={breakdown.noteStatus.todo} colorVar="var(--status-todo)" />
+                <StatusRow label={t("status.in_progress")} count={breakdown.noteStatus.in_progress} colorVar="var(--status-in_progress)" />
+                <StatusRow label={t("status.done")} count={breakdown.noteStatus.done} colorVar="var(--status-done)" />
               </div>
             )}
             {/* Wikis by 4-stage status (v151, unified with Notes) */}
             {totalWikis > 0 && (
               <div className="space-y-0.5">
-                <KindHeader label="Wikis" count={totalWikis} />
-                <StatusRow label="Backlog" count={breakdown.wikiStatus.backlog} colorVar="var(--status-backlog)" />
-                <StatusRow label="Todo" count={breakdown.wikiStatus.todo} colorVar="var(--status-todo)" />
-                <StatusRow label="In Progress" count={breakdown.wikiStatus.in_progress} colorVar="var(--status-in_progress)" />
-                <StatusRow label="Done" count={breakdown.wikiStatus.done} colorVar="var(--status-done)" />
+                <KindHeader label={t("common.wikis")} count={totalWikis} />
+                <StatusRow label={t("status.backlog")} count={breakdown.wikiStatus.backlog} colorVar="var(--status-backlog)" />
+                <StatusRow label={t("status.todo")} count={breakdown.wikiStatus.todo} colorVar="var(--status-todo)" />
+                <StatusRow label={t("status.in_progress")} count={breakdown.wikiStatus.in_progress} colorVar="var(--status-in_progress)" />
+                <StatusRow label={t("status.done")} count={breakdown.wikiStatus.done} colorVar="var(--status-done)" />
               </div>
             )}
             {/* Chapters */}
             {breakdown.chaptersCount > 0 && (
               <div className="space-y-0.5">
-                <KindHeader label="Chapters" count={breakdown.chaptersCount} />
+                <KindHeader label={t("panel.conn.chapters")} count={breakdown.chaptersCount} />
               </div>
             )}
           </div>
@@ -1323,7 +1332,7 @@ function BookConnections() {
       {/* Smart Sources (Smart/Hybrid only) */}
       {smartSources.length > 0 && (
         <ConnectionSection
-          title="Smart sources"
+          title={t("panel.conn.smart_sources")}
           icon={<Compass size={14} strokeWidth={2} />}
           count={smartSources.length}
           defaultOpen={false}
@@ -1391,6 +1400,7 @@ function StatusRow({
 // `created` event for entity.kind="note" with `meta.templateId`).
 
 function TemplateConnections() {
+  const t = useT()
   const relative = useRelativeTime()
   const entity = useSidePanelEntity()
   const template = entity.type === "template" ? entity.template : null
@@ -1426,7 +1436,7 @@ function TemplateConnections() {
     return (
       <div className="flex flex-1 items-center justify-center p-8 text-center">
         <p className="text-note text-muted-foreground">
-          Select a template to see connections
+          {t("panel.conn.select_template")}
         </p>
       </div>
     )
@@ -1435,14 +1445,14 @@ function TemplateConnections() {
   return (
     <div className="flex-1 overflow-y-auto">
       <ConnectionSection
-        title="Used by"
+        title={t("panel.conn.used_by")}
         icon={<FileText size={14} strokeWidth={2} />}
         count={usedByNotes.length}
         defaultOpen
       >
         {usedByNotes.length === 0 ? (
           <p className="text-note text-muted-foreground px-2">
-            No notes use this template yet
+            {t("panel.conn.no_template_uses")}
           </p>
         ) : (
           <div className="space-y-0.5">
@@ -1768,7 +1778,7 @@ function NoteConnections() {
     return (
       <div className="flex flex-1 items-center justify-center p-8 text-center">
         <p className="text-note text-muted-foreground">
-          Select a note to see connections
+          {t("panel.conn.select_note")}
         </p>
       </div>
     )
@@ -1870,7 +1880,7 @@ function NoteConnections() {
       <NotePickerDialog
         open={parentPickerOpen}
         onOpenChange={setParentPickerOpen}
-        title="Select parent note"
+        title={t("panel.conn.select_parent_note")}
         excludeIds={parentPickerExcludeIds}
         onSelect={(selectedId) => {
           setNoteParent(note.id, selectedId)
@@ -1899,7 +1909,7 @@ function NoteConnections() {
       >
         {connectedCount === 0 ? (
           <p className="text-note text-muted-foreground px-2">
-            No connections yet
+            {t("panel.conn.no_connections")}
           </p>
         ) : (
           <div className="space-y-3">
@@ -1908,7 +1918,7 @@ function NoteConnections() {
               <div className="space-y-0.5">
                 <div className="flex items-center gap-1 px-2">
                   <DirArrow dir="in" />
-                  <SubLabel>Notes</SubLabel>
+                  <SubLabel>{t("common.notes")}</SubLabel>
                 </div>
                 <NoteStatusBreakdown notes={backlinkNotes} />
                 <div className="space-y-px">
@@ -1940,7 +1950,7 @@ function NoteConnections() {
               <div className="space-y-0.5">
                 <div className="flex items-center gap-1 px-2">
                   <DirArrow dir="in" />
-                  <SubLabel>Wiki</SubLabel>
+                  <SubLabel>{t("common.wiki")}</SubLabel>
                 </div>
                 <div className="space-y-px">
                   {inboundWiki.map((a) => {
@@ -1969,7 +1979,7 @@ function NoteConnections() {
             {/* → Notes */}
             {outboundNotes.length > 0 && (
               <div className="space-y-0.5">
-                <SubLabel>→ Notes</SubLabel>
+                <SubLabel>{t("panel.conn.outbound_notes")}</SubLabel>
                 <NoteStatusBreakdown
                   notes={outboundNotes.map((n) => ({
                     status: notes.find((nn) => nn.id === n.id)?.status ?? null,
@@ -1995,7 +2005,7 @@ function NoteConnections() {
             {/* → Wiki */}
             {outboundWiki.length > 0 && (
               <div className="space-y-0.5">
-                <SubLabel>→ Wiki</SubLabel>
+                <SubLabel>{t("panel.conn.outbound_wiki")}</SubLabel>
                 {outboundWiki.map((w) => (
                   <button
                     key={w.id}
@@ -2016,7 +2026,7 @@ function NoteConnections() {
             {/* Unlinked Mentions */}
             {unlinkedMentions.length > 0 && (
               <div className="space-y-0.5">
-                <SubLabel>Unlinked Mentions</SubLabel>
+                <SubLabel>{t("panel.conn.unlinked_mentions")}</SubLabel>
                 {unlinkedMentions.map((m) => (
                   <div
                     key={m.noteId + m.title}
@@ -2033,7 +2043,7 @@ function NoteConnections() {
                       onClick={() => addWikiLink(note.id, m.title)}
                       className="shrink-0 text-2xs text-accent opacity-0 group-hover:opacity-100 transition-opacity hover:underline"
                     >
-                      Link
+                      {t("panel.conn.link")}
                     </button>
                   </div>
                 ))}
@@ -2052,14 +2062,14 @@ function NoteConnections() {
       >
         {discoverCount === 0 ? (
           <p className="text-note text-muted-foreground px-2">
-            No suggestions yet
+            {t("panel.conn.no_suggestions")}
           </p>
         ) : (
           <div className="space-y-3">
             {/* Notes */}
             {suggestedNotes.length > 0 && (
               <div className="space-y-0.5">
-                <SubLabel>Notes</SubLabel>
+                <SubLabel>{t("common.notes")}</SubLabel>
                 {suggestedNotes.map((item) => {
                   const sNote = notes.find((n) => n.id === item.noteId)
                   if (!sNote) return null
@@ -2082,7 +2092,7 @@ function NoteConnections() {
                         onClick={() => addWikiLink(note.id, sNote.title)}
                         className="shrink-0 text-2xs text-accent opacity-0 group-hover:opacity-100 transition-opacity hover:underline"
                       >
-                        + Link
+                        {t("panel.conn.add_link")}
                       </button>
                     </div>
                   )
@@ -2093,7 +2103,7 @@ function NoteConnections() {
             {/* Wiki */}
             {suggestedWiki.length > 0 && (
               <div className="space-y-0.5">
-                <SubLabel>Wiki</SubLabel>
+                <SubLabel>{t("common.wiki")}</SubLabel>
                 {suggestedWiki.map((item) => {
                   const article = wikiArticles.find((a) => a.id === item.noteId)
                   const wNote = notes.find((n) => n.id === item.noteId)
@@ -2118,7 +2128,7 @@ function NoteConnections() {
                         onClick={() => addWikiLink(note.id, title)}
                         className="shrink-0 text-2xs text-accent opacity-0 group-hover:opacity-100 transition-opacity hover:underline"
                       >
-                        + Link
+                        {t("panel.conn.add_link")}
                       </button>
                     </div>
                   )
@@ -2129,7 +2139,7 @@ function NoteConnections() {
             {/* Tags */}
             {suggestedTags.length > 0 && (
               <div className="space-y-0.5">
-                <SubLabel>Tags</SubLabel>
+                <SubLabel>{t("common.tags")}</SubLabel>
                 <div className="flex flex-col gap-1.5 px-2">
                   {suggestedTags.map((tag) => (
                     <SuggestedTagChip

@@ -2,6 +2,7 @@
 
 import { useState, useCallback, useMemo } from "react"
 import { usePlotStore } from "@/lib/store"
+import { useT } from "@/lib/i18n"
 import { format, formatDistanceToNow } from "date-fns"
 import { useRelativeTime } from "@/lib/i18n-date"
 import {
@@ -51,6 +52,7 @@ function InspectorSection({
 }
 
 export function ReferenceDetailPanel({ referenceId }: { referenceId: string }) {
+  const t = useT()
   const relative = useRelativeTime()
   const reference = usePlotStore((s) => s.references[referenceId])
   const updateReference = usePlotStore((s) => s.updateReference)
@@ -182,7 +184,7 @@ export function ReferenceDetailPanel({ referenceId }: { referenceId: string }) {
     return (
       <div className="flex flex-1 flex-col items-center justify-center gap-3 text-muted-foreground px-4">
         <PhInfo size={24} strokeWidth={1.5} className="text-muted-foreground/70" />
-        <p className="text-note text-center">Reference not found</p>
+        <p className="text-note text-center">{t("panel.reference.not_found")}</p>
       </div>
     )
   }
@@ -194,17 +196,17 @@ export function ReferenceDetailPanel({ referenceId }: { referenceId: string }) {
       <div className="flex flex-wrap items-center gap-2 px-4 py-3 border-b border-border">
         <span className="flex items-center gap-1 rounded-md bg-chart-3/10 px-2 py-0.5 text-2xs font-medium text-chart-3">
           <ENTITY_ICONS.references size={14} strokeWidth={1.5} />
-          Reference
+          {t("entity.reference")}
         </span>
       </div>
 
       {/* Title (editable) */}
-      <InspectorSection title="Title" icon={<FileText size={16} strokeWidth={2} />}>
+      <InspectorSection title={t("panel.reference.title")} icon={<FileText size={16} strokeWidth={2} />}>
         <input
           type="text"
           defaultValue={reference.title}
           onBlur={handleTitleBlur}
-          placeholder="Untitled Reference"
+          placeholder={t("panel.reference.title_placeholder")}
           className="w-full rounded-md border border-border/50 bg-transparent px-2.5 py-1.5 text-note font-semibold text-foreground placeholder:text-muted-foreground/70 focus:border-accent/50 focus:outline-none transition-colors"
         />
       </InspectorSection>
@@ -212,7 +214,7 @@ export function ReferenceDetailPanel({ referenceId }: { referenceId: string }) {
       <div className="mx-4 border-b border-border" />
 
       {/* URL (dedicated field) */}
-      <InspectorSection title="URL" icon={<Globe size={16} strokeWidth={2} />}>
+      <InspectorSection title={t("panel.reference.url")} icon={<Globe size={16} strokeWidth={2} />}>
         <div className="flex items-center gap-1.5">
           <input
             type="url"
@@ -228,7 +230,7 @@ export function ReferenceDetailPanel({ referenceId }: { referenceId: string }) {
               target="_blank"
               rel="noopener noreferrer"
               className="shrink-0 rounded-md p-1.5 text-muted-foreground/60 transition-colors hover:bg-hover-bg hover:text-accent"
-              title="Open URL"
+              title={t("panel.reference.open_url")}
             >
               <ArrowSquareOut size={14} strokeWidth={2} />
             </a>
@@ -239,7 +241,7 @@ export function ReferenceDetailPanel({ referenceId }: { referenceId: string }) {
       <div className="mx-4 border-b border-border" />
 
       {/* Image URL */}
-      <InspectorSection title="Image URL" icon={<PhImage size={16} strokeWidth={2} />}>
+      <InspectorSection title={t("panel.reference.image_url")} icon={<PhImage size={16} strokeWidth={2} />}>
         <div className="space-y-2">
           <input
             type="text"
@@ -266,11 +268,11 @@ export function ReferenceDetailPanel({ referenceId }: { referenceId: string }) {
       <div className="mx-4 border-b border-border" />
 
       {/* Content (editable textarea) */}
-      <InspectorSection title="Content" icon={<TextAlignLeft size={16} strokeWidth={2} />}>
+      <InspectorSection title={t("panel.reference.content")} icon={<TextAlignLeft size={16} strokeWidth={2} />}>
         <textarea
           defaultValue={reference.content}
           onBlur={handleContentBlur}
-          placeholder="Add a description..."
+          placeholder={t("panel.reference.content_placeholder")}
           rows={3}
           className="w-full resize-none rounded-md border border-border/50 bg-transparent px-2.5 py-1.5 text-note text-foreground placeholder:text-muted-foreground/70 focus:border-accent/50 focus:outline-none transition-colors field-sizing-content"
         />
@@ -279,7 +281,7 @@ export function ReferenceDetailPanel({ referenceId }: { referenceId: string }) {
       <div className="mx-4 border-b border-border" />
 
       {/* Fields (key-value pairs) */}
-      <InspectorSection title="Fields" icon={<ListBullets size={16} strokeWidth={2} />}>
+      <InspectorSection title={t("panel.reference.fields")} icon={<ListBullets size={16} strokeWidth={2} />}>
         {reference.fields.filter((f) => f.key.toLowerCase() !== "url").length > 0 ? (
           <div className="space-y-1.5">
             {reference.fields.map((field, i) => {
@@ -291,20 +293,20 @@ export function ReferenceDetailPanel({ referenceId }: { referenceId: string }) {
                     type="text"
                     defaultValue={field.key}
                     onBlur={(e) => handleFieldKeyBlur(i, e.target.value)}
-                    placeholder="Key"
+                    placeholder={t("panel.reference.field_key_placeholder")}
                     className="w-[35%] shrink-0 rounded-md border border-border/50 bg-transparent px-2 py-1 text-2xs text-muted-foreground placeholder:text-muted-foreground/60 focus:border-accent/50 focus:outline-none transition-colors"
                   />
                   <input
                     type="text"
                     defaultValue={field.value}
                     onBlur={(e) => handleFieldValueBlur(i, e.target.value)}
-                    placeholder="Value"
+                    placeholder={t("panel.reference.field_value_placeholder")}
                     className="flex-1 rounded-md border border-border/50 bg-transparent px-2 py-1 text-2xs text-foreground placeholder:text-muted-foreground/60 focus:border-accent/50 focus:outline-none transition-colors"
                   />
                   <button
                     onClick={() => handleRemoveField(i)}
                     className="shrink-0 rounded-md p-0.5 text-muted-foreground/70 transition-colors hover:bg-hover-bg hover:text-destructive"
-                    title="Remove field"
+                    title={t("panel.reference.remove_field")}
                   >
                     <PhX size={12} strokeWidth={2.5} />
                   </button>
@@ -313,28 +315,28 @@ export function ReferenceDetailPanel({ referenceId }: { referenceId: string }) {
             })}
           </div>
         ) : (
-          <p className="text-2xs text-muted-foreground/70">No fields added</p>
+          <p className="text-2xs text-muted-foreground/70">{t("panel.reference.no_fields")}</p>
         )}
         <button
           onClick={handleAddField}
           className="mt-2 flex items-center gap-1 rounded-md px-2 py-1 text-2xs font-medium text-accent/80 transition-colors hover:bg-accent/8 hover:text-accent"
         >
           <Plus size={12} strokeWidth={2.5} />
-          Add field
+          {t("panel.reference.add_field")}
         </button>
       </InspectorSection>
 
       <div className="mx-4 border-b border-border" />
 
       {/* Usage — notes & wiki that reference this */}
-      <InspectorSection title="Usage" icon={<ENTITY_ICONS.references size={16} strokeWidth={2} />}>
+      <InspectorSection title={t("panel.usage")} icon={<ENTITY_ICONS.references size={16} strokeWidth={2} />}>
         {referencingNotes.length === 0 && referencingArticles.length === 0 ? (
-          <p className="text-2xs text-muted-foreground/70">No notes or wiki articles reference this yet</p>
+          <p className="text-2xs text-muted-foreground/70">{t("panel.reference.no_usage")}</p>
         ) : (
           <div className="space-y-1">
             {referencingNotes.length > 0 && (
               <>
-                <p className="text-2xs text-muted-foreground/70 font-medium uppercase tracking-wider">Notes</p>
+                <p className="text-2xs text-muted-foreground/70 font-medium uppercase tracking-wider">{t("panel.reference.notes_heading")}</p>
                 {referencingNotes.map(n => (
                   <button
                     key={n.id}
@@ -342,14 +344,14 @@ export function ReferenceDetailPanel({ referenceId }: { referenceId: string }) {
                     className="flex w-full items-center gap-2 rounded-md px-1.5 py-1 text-2xs text-muted-foreground hover:bg-hover-bg hover:text-foreground transition-colors"
                   >
                     <FileText size={14} strokeWidth={2} className="shrink-0 opacity-50" />
-                    <span className="truncate">{n.title || "Untitled"}</span>
+                    <span className="truncate">{n.title || t("common.untitled")}</span>
                   </button>
                 ))}
               </>
             )}
             {referencingArticles.length > 0 && (
               <>
-                <p className="text-2xs text-muted-foreground/70 font-medium uppercase tracking-wider mt-2">Wiki</p>
+                <p className="text-2xs text-muted-foreground/70 font-medium uppercase tracking-wider mt-2">{t("panel.reference.wiki_heading")}</p>
                 {referencingArticles.map(a => (
                   <button
                     key={a.id}
@@ -360,7 +362,7 @@ export function ReferenceDetailPanel({ referenceId }: { referenceId: string }) {
                     className="flex w-full items-center gap-2 rounded-md px-1.5 py-1 text-2xs text-muted-foreground hover:bg-hover-bg hover:text-foreground transition-colors"
                   >
                     <IconWiki size={14} className="shrink-0 opacity-50" />
-                    <span className="truncate">{a.title || "Untitled"}</span>
+                    <span className="truncate">{a.title || t("common.untitled")}</span>
                   </button>
                 ))}
               </>
@@ -372,16 +374,16 @@ export function ReferenceDetailPanel({ referenceId }: { referenceId: string }) {
       <div className="mx-4 border-b border-border" />
 
       {/* Dates */}
-      <InspectorSection title="Dates" icon={<CalendarBlank size={16} strokeWidth={2} />}>
+      <InspectorSection title={t("panel.dates")} icon={<CalendarBlank size={16} strokeWidth={2} />}>
         <div className="space-y-2">
           <div className="flex items-center justify-between">
-            <span className="text-note text-muted-foreground">Created</span>
+            <span className="text-note text-muted-foreground">{t("common.created")}</span>
             <span className="text-note text-foreground">
               {format(new Date(reference.createdAt), "MMM d, yyyy")}
             </span>
           </div>
           <div className="flex items-center justify-between">
-            <span className="text-note text-muted-foreground">Updated</span>
+            <span className="text-note text-muted-foreground">{t("common.updated")}</span>
             <span className="text-note text-foreground">
               {relative(reference.updatedAt)}
             </span>
@@ -393,7 +395,7 @@ export function ReferenceDetailPanel({ referenceId }: { referenceId: string }) {
 
       {/* History Timeline */}
       {reference.history && reference.history.length > 0 && (
-        <InspectorSection title="History" icon={<ClockCounterClockwise size={16} strokeWidth={2} />}>
+        <InspectorSection title={t("panel.reference.history")} icon={<ClockCounterClockwise size={16} strokeWidth={2} />}>
           <div className="space-y-1.5">
             {[...reference.history].reverse().slice(0, 10).map((entry, i) => (
               <div key={i} className="flex items-center gap-2 text-2xs">
@@ -420,18 +422,18 @@ export function ReferenceDetailPanel({ referenceId }: { referenceId: string }) {
       <div className="px-4 py-4">
         {confirmDelete ? (
           <div className="flex items-center gap-2">
-            <span className="text-2xs text-destructive">Delete this reference?</span>
+            <span className="text-2xs text-destructive">{t("panel.reference.delete_confirm")}</span>
             <button
               onClick={handleDelete}
               className="rounded-md px-2.5 py-1 text-2xs font-medium text-destructive bg-destructive/10 hover:bg-destructive/20 transition-colors"
             >
-              Confirm
+              {t("common.confirm")}
             </button>
             <button
               onClick={() => setConfirmDelete(false)}
               className="rounded-md px-2.5 py-1 text-2xs font-medium text-muted-foreground hover:bg-hover-bg transition-colors"
             >
-              Cancel
+              {t("common.cancel")}
             </button>
           </div>
         ) : (
@@ -440,7 +442,7 @@ export function ReferenceDetailPanel({ referenceId }: { referenceId: string }) {
             className="flex items-center gap-1.5 text-2xs font-medium text-destructive/70 transition-colors hover:text-destructive"
           >
             <Trash size={14} strokeWidth={2} />
-            Delete reference
+            {t("panel.reference.delete")}
           </button>
         )}
       </div>

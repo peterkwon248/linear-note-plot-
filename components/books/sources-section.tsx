@@ -20,6 +20,7 @@
 
 import { useState, useMemo, type ReactNode } from "react"
 import { usePlotStore } from "@/lib/store"
+import { useT } from "@/lib/i18n"
 import { toast } from "sonner"
 import { nanoid } from "nanoid"
 import { resolveBookItems } from "@/lib/books/resolver"
@@ -58,6 +59,7 @@ interface SourcesSectionProps {
 type TabKey = "folder" | "category" | "tag" | "label" | "sticker"
 
 export function SourcesSection({ bookId }: SourcesSectionProps) {
+  const t = useT()
   const books = usePlotStore((s) => s.books)
   const folders = usePlotStore((s) => s.folders)
   const notes = usePlotStore((s) => s.notes)
@@ -260,8 +262,8 @@ export function SourcesSection({ bookId }: SourcesSectionProps) {
 
   const handleAdd = (kind: AutoSourceKind, refId: string, name: string) => {
     const ok = addSmartSource(bookId, { kind, refId })
-    if (ok) toast.success(`Added source: ${name}`)
-    else toast("Already added", { duration: 1500 })
+    if (ok) toast.success(t("book.sources.toast_added").replace("{name}", name))
+    else toast(t("book.sources.toast_already_added"), { duration: 1500 })
     setSearch("")
     // Keep dialog open for multi-add
   }
@@ -284,7 +286,7 @@ export function SourcesSection({ bookId }: SourcesSectionProps) {
 
   const handleRemove = (kind: AutoSourceKind, refId: string, name: string) => {
     removeSmartSource(bookId, kind, refId)
-    toast(`Removed source: ${name}`)
+    toast(t("book.sources.toast_removed").replace("{name}", name))
   }
 
   // v2 Phase G: per-source "Auto-sort" button — clears all userOrder
@@ -338,12 +340,12 @@ export function SourcesSection({ bookId }: SourcesSectionProps) {
     })
     const autoItems = resolved.filter((r) => r.source === "auto")
     if (autoItems.length === 0) {
-      toast("No auto items to convert")
+      toast(t("book.sources.toast_no_auto"))
       return
     }
     if (
       !window.confirm(
-        `Convert ${autoItems.length} auto items to manual? Smart sources will be removed and the book becomes static.`,
+        t("book.sources.confirm_convert").replace("{count}", String(autoItems.length)),
       )
     )
       return
@@ -368,7 +370,7 @@ export function SourcesSection({ bookId }: SourcesSectionProps) {
       smartSources: [],
       excludeIds: [],
     })
-    toast.success(`Converted ${autoItems.length} items to manual`)
+    toast.success(t("book.sources.toast_converted").replace("{count}", String(autoItems.length)))
   }
 
   const formatHint = (total: number, inBook: number): string => {
@@ -412,7 +414,7 @@ export function SourcesSection({ bookId }: SourcesSectionProps) {
       <div className="flex items-center justify-between px-4 py-2.5">
         <div className="flex items-center gap-1.5 text-2xs font-semibold uppercase tracking-wide text-muted-foreground">
           <Sparkle size={12} strokeWidth={2} />
-          Smart sources
+          {t("book.sources.heading")}
         </div>
         <div className="flex items-center gap-1">
           {resolvedSources.length > 0 && (
@@ -420,19 +422,19 @@ export function SourcesSection({ bookId }: SourcesSectionProps) {
               type="button"
               onClick={handleConvertToManual}
               className="flex items-center gap-1 rounded-md px-2 py-0.5 text-2xs font-medium text-muted-foreground transition-colors hover:bg-hover-bg hover:text-foreground"
-              title="Pin every auto item into book.items and remove smart sources"
+              title={t("book.sources.convert_to_manual_title")}
             >
-              Convert to manual
+              {t("book.sources.convert_to_manual")}
             </button>
           )}
           <button
             type="button"
             onClick={() => setPickerOpen(true)}
             className="flex items-center gap-1 rounded-md px-2 py-0.5 text-2xs font-medium text-muted-foreground transition-colors hover:bg-hover-bg hover:text-foreground"
-            title="Add source"
+            title={t("book.sources.add_source")}
           >
             <PhPlus size={12} strokeWidth={2.5} />
-            Add source
+            {t("book.sources.add_source")}
           </button>
         </div>
       </div>
@@ -440,7 +442,7 @@ export function SourcesSection({ bookId }: SourcesSectionProps) {
       {/* Source list / empty state */}
       {resolvedSources.length === 0 ? (
         <div className="px-4 pb-3 pt-0 text-2xs text-muted-foreground/70">
-          No sources yet. Auto-fill this book from folders, categories, tags, labels, or stickers.
+          {t("book.sources.empty")}
         </div>
       ) : (
         <ul className="divide-y divide-border/30 border-t border-border/30">
@@ -464,15 +466,15 @@ export function SourcesSection({ bookId }: SourcesSectionProps) {
                     title="이 소스의 사용자 정렬 해제 → updatedAt desc로 복원"
                   >
                     <ArrowsClockwise size={11} strokeWidth={2} />
-                    Auto-sort
+                    {t("book.sources.auto_sort")}
                   </button>
                 )}
                 <button
                   type="button"
                   onClick={() => handleRemove(entry.kind, entry.refId, entry.name)}
                   className="flex h-5 w-5 items-center justify-center rounded text-muted-foreground/50 opacity-0 transition-all group-hover:opacity-100 hover:bg-destructive/10 hover:text-destructive"
-                  title={`Remove source: ${entry.name}`}
-                  aria-label={`Remove source: ${entry.name}`}
+                  title={t("book.sources.remove_source").replace("{name}", entry.name)}
+                  aria-label={t("book.sources.remove_source").replace("{name}", entry.name)}
                 >
                   <PhX size={12} strokeWidth={2} />
                 </button>
@@ -490,9 +492,9 @@ export function SourcesSection({ bookId }: SourcesSectionProps) {
         <DialogContent className="sm:max-w-lg gap-0 p-0">
           <DialogHeader className="flex flex-row items-start justify-between gap-2 px-4 pb-2 pt-4">
             <div className="min-w-0">
-              <DialogTitle className="text-sm">Add smart source</DialogTitle>
+              <DialogTitle className="text-sm">{t("book.sources.dialog.title")}</DialogTitle>
               <DialogDescription className="text-2xs">
-                Auto-fill this book from any of 5 source kinds. Notes / wikis only — source entities themselves are never added as pages.
+                {t("book.sources.dialog.desc")}
               </DialogDescription>
             </div>
             {/* v2 Phase K follow-up — Multi-select 토글. 활성 시
@@ -511,9 +513,9 @@ export function SourcesSection({ bookId }: SourcesSectionProps) {
                   ? "bg-accent/15 text-accent hover:bg-accent/25"
                   : "text-muted-foreground hover:bg-hover-bg hover:text-foreground",
               )}
-              title={bulkMode ? "Exit multi-select mode" : "Multi-select mode — add multiple sources at once"}
+              title={bulkMode ? t("book.sources.multiselect_exit") : t("book.sources.multiselect_hint")}
             >
-              {bulkMode ? "Multi-select ✓" : "Multi-select"}
+              {bulkMode ? `${t("book.sources.multiselect")} ✓` : t("book.sources.multiselect")}
             </button>
           </DialogHeader>
           {/* Unified search input — shared across all 5 tabs (Q11 LOCKED:
@@ -525,7 +527,7 @@ export function SourcesSection({ bookId }: SourcesSectionProps) {
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search across all source kinds…"
+              placeholder={t("book.sources.search_placeholder")}
               className="w-full bg-transparent text-note text-foreground placeholder:text-muted-foreground/60 focus:outline-none"
               autoFocus
             />
@@ -536,7 +538,7 @@ export function SourcesSection({ bookId }: SourcesSectionProps) {
             className="gap-0"
           >
             <TabsList className="mx-4 mt-1 grid grid-cols-5 gap-0.5">
-              <TabsTrigger value="folder" title={`Folder source — ${folderCandidates.length} matches`}>
+              <TabsTrigger value="folder" title={t("book.sources.tab.folder").replace("{count}", String(folderCandidates.length))}>
                 <PhFolder size={12} strokeWidth={2} />
                 {folderCandidates.length > 0 && (
                   <span className="ml-1 text-2xs tabular-nums text-muted-foreground/70">
@@ -544,7 +546,7 @@ export function SourcesSection({ bookId }: SourcesSectionProps) {
                   </span>
                 )}
               </TabsTrigger>
-              <TabsTrigger value="category" title={`Wiki category source — ${categoryCandidates.length} matches`}>
+              <TabsTrigger value="category" title={t("book.sources.tab.category").replace("{count}", String(categoryCandidates.length))}>
                 <ENTITY_ICONS.wiki size={12} strokeWidth={2} />
                 {categoryCandidates.length > 0 && (
                   <span className="ml-1 text-2xs tabular-nums text-muted-foreground/70">
@@ -552,7 +554,7 @@ export function SourcesSection({ bookId }: SourcesSectionProps) {
                   </span>
                 )}
               </TabsTrigger>
-              <TabsTrigger value="tag" title={`Tag source — ${tagCandidates.length} matches`}>
+              <TabsTrigger value="tag" title={t("book.sources.tab.tag").replace("{count}", String(tagCandidates.length))}>
                 <ENTITY_ICONS.tags size={12} strokeWidth={2} />
                 {tagCandidates.length > 0 && (
                   <span className="ml-1 text-2xs tabular-nums text-muted-foreground/70">
@@ -560,7 +562,7 @@ export function SourcesSection({ bookId }: SourcesSectionProps) {
                   </span>
                 )}
               </TabsTrigger>
-              <TabsTrigger value="label" title={`Label source — ${labelCandidates.length} matches`}>
+              <TabsTrigger value="label" title={t("book.sources.tab.label").replace("{count}", String(labelCandidates.length))}>
                 <ENTITY_ICONS.labels size={12} strokeWidth={2} />
                 {labelCandidates.length > 0 && (
                   <span className="ml-1 text-2xs tabular-nums text-muted-foreground/70">
@@ -568,7 +570,7 @@ export function SourcesSection({ bookId }: SourcesSectionProps) {
                   </span>
                 )}
               </TabsTrigger>
-              <TabsTrigger value="sticker" title={`Sticker source — ${stickerCandidates.length} matches`}>
+              <TabsTrigger value="sticker" title={t("book.sources.tab.sticker").replace("{count}", String(stickerCandidates.length))}>
                 <ENTITY_ICONS.stickers size={12} strokeWidth={2} />
                 {stickerCandidates.length > 0 && (
                   <span className="ml-1 text-2xs tabular-nums text-muted-foreground/70">
@@ -581,7 +583,7 @@ export function SourcesSection({ bookId }: SourcesSectionProps) {
             <TabsContent value="folder" className="mt-0">
               <Command shouldFilter={false}>
                 <CommandList className="max-h-72">
-                  <CommandEmpty>No matching folders</CommandEmpty>
+                  <CommandEmpty>{t("book.sources.no_matching_folders")}</CommandEmpty>
                   <CommandGroup>
                     {folderCandidates.map(({ folder, total, inBook }) => (
                       <CommandItem
@@ -605,7 +607,7 @@ export function SourcesSection({ bookId }: SourcesSectionProps) {
             <TabsContent value="category" className="mt-0">
               <Command shouldFilter={false}>
                 <CommandList className="max-h-72">
-                  <CommandEmpty>No matching categories</CommandEmpty>
+                  <CommandEmpty>{t("book.sources.no_matching_categories")}</CommandEmpty>
                   <CommandGroup>
                     {categoryCandidates.map(({ category, total, inBook }) => (
                       <CommandItem
@@ -632,7 +634,7 @@ export function SourcesSection({ bookId }: SourcesSectionProps) {
             <TabsContent value="tag" className="mt-0">
               <Command shouldFilter={false}>
                 <CommandList className="max-h-72">
-                  <CommandEmpty>No matching tags</CommandEmpty>
+                  <CommandEmpty>{t("book.sources.no_matching_tags")}</CommandEmpty>
                   <CommandGroup>
                     {tagCandidates.map(({ tag, total, inBook }) => (
                       <CommandItem
@@ -661,7 +663,7 @@ export function SourcesSection({ bookId }: SourcesSectionProps) {
             <TabsContent value="label" className="mt-0">
               <Command shouldFilter={false}>
                 <CommandList className="max-h-72">
-                  <CommandEmpty>No matching labels</CommandEmpty>
+                  <CommandEmpty>{t("book.sources.no_matching_labels")}</CommandEmpty>
                   <CommandGroup>
                     {labelCandidates.map(({ label, total, inBook }) => (
                       <CommandItem
@@ -688,7 +690,7 @@ export function SourcesSection({ bookId }: SourcesSectionProps) {
             <TabsContent value="sticker" className="mt-0">
               <Command shouldFilter={false}>
                 <CommandList className="max-h-72">
-                  <CommandEmpty>No matching stickers</CommandEmpty>
+                  <CommandEmpty>{t("book.sources.no_matching_stickers")}</CommandEmpty>
                   <CommandGroup>
                     {stickerCandidates.map(({ sticker, total, inBook }) => (
                       <CommandItem
@@ -715,8 +717,8 @@ export function SourcesSection({ bookId }: SourcesSectionProps) {
             <div className="flex items-center justify-between border-t border-border/40 px-4 py-2.5">
               <span className="text-2xs text-muted-foreground">
                 {bulkSelected.size > 0
-                  ? `${bulkSelected.size} selected`
-                  : "Click items to select"}
+                  ? t("book.sources.bulk_selected").replace("{count}", String(bulkSelected.size))
+                  : t("book.sources.bulk_hint")}
               </span>
               <div className="flex items-center gap-1.5">
                 {bulkSelected.size > 0 && (
@@ -725,7 +727,7 @@ export function SourcesSection({ bookId }: SourcesSectionProps) {
                     onClick={clearBulk}
                     className="rounded-md px-2 py-1 text-2xs text-muted-foreground hover:bg-hover-bg hover:text-foreground transition-colors"
                   >
-                    Clear
+                    {t("book.sources.bulk_clear")}
                   </button>
                 )}
                 <button
@@ -735,7 +737,9 @@ export function SourcesSection({ bookId }: SourcesSectionProps) {
                   className="flex items-center gap-1 rounded-md bg-accent px-2.5 py-1 text-2xs font-medium text-accent-foreground transition-opacity hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed"
                 >
                   <PhCheck size={11} strokeWidth={2.5} />
-                  Add {bulkSelected.size > 0 ? bulkSelected.size : ""} selected
+                  {bulkSelected.size > 0
+                    ? t("book.sources.bulk_add_n").replace("{count}", String(bulkSelected.size))
+                    : t("book.sources.bulk_add")}
                 </button>
               </div>
             </div>

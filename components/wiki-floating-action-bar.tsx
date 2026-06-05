@@ -197,7 +197,7 @@ export function WikiFloatingActionBar({
               title={count >= 2 ? "Open merge page with selected articles" : "Merge into another article"}
             >
               <GitMerge size={16} />
-              Merge
+              {t("floatingbar.merge")}
             </button>
             <Divider />
           </>
@@ -211,7 +211,7 @@ export function WikiFloatingActionBar({
               className="inline-flex items-center gap-1 rounded-md bg-secondary/60 px-3 py-2 text-2xs font-medium text-foreground/80 transition-colors hover:bg-hover-bg hover:text-foreground"
             >
               <Scissors size={16} />
-              Split
+              {t("floatingbar.split")}
             </button>
             <Divider />
           </>
@@ -223,7 +223,7 @@ export function WikiFloatingActionBar({
           className="inline-flex items-center gap-1 rounded-md bg-destructive/10 px-3 py-2 text-2xs font-medium text-destructive transition-colors hover:bg-destructive/20"
         >
           <Trash size={16} />
-          Delete
+          {t("common.delete")}
         </button>
       </div>
     </div>
@@ -241,6 +241,7 @@ function CategoryAddPopover({
   wikiCategories: { id: string; name: string; color: string }[]
   onApply: (categoryIds: string[]) => void
 }) {
+  const t = useT()
   const [open, setOpen] = useState(false)
   const [pending, setPending] = useState<Set<string>>(new Set())
 
@@ -266,13 +267,13 @@ function CategoryAddPopover({
           className="inline-flex items-center gap-1 rounded-md bg-secondary/60 px-3 py-2 text-2xs font-medium text-foreground/80 transition-colors hover:bg-hover-bg hover:text-foreground"
           title="Add selected articles to one or more categories"
         >
-          <PhTag size={16} /> Add to category
+          <PhTag size={16} /> {t("sidebar.add_to_category")}
         </button>
       </PopoverTrigger>
       <PopoverContent align="center" className="w-56 p-1">
         {wikiCategories.length === 0 ? (
           <div className="px-2.5 py-2 text-2xs italic text-muted-foreground/70">
-            No categories yet
+            {t("common.no_categories_yet")}
           </div>
         ) : (
           <>
@@ -320,7 +321,7 @@ function CategoryAddPopover({
                   : "bg-accent text-accent-foreground hover:bg-accent/90",
               )}
             >
-              Apply{pending.size > 0 ? ` (${pending.size})` : ""}
+              {t("common.apply")}{pending.size > 0 ? ` (${pending.size})` : ""}
             </button>
           </>
         )}

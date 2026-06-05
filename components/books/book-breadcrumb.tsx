@@ -11,6 +11,7 @@
 import { useState, useMemo, useRef, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { usePlotStore } from "@/lib/store"
+import { useT } from "@/lib/i18n"
 import { setActiveRoute, routeToUrl } from "@/lib/table-route"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { IconChevronRight } from "@/components/plot-icons"
@@ -27,6 +28,7 @@ export function BookBreadcrumb({
   /** Item count to show next to the book title (matches ViewHeader.count). */
   count?: number
 }) {
+  const t = useT()
   const router = useRouter()
   const [pickerOpen, setPickerOpen] = useState(false)
   const [query, setQuery] = useState("")
@@ -67,7 +69,7 @@ export function BookBreadcrumb({
         onClick={navigateToBooks}
         className="shrink-0 text-note font-medium text-muted-foreground transition-colors hover:text-foreground cursor-pointer"
       >
-        Books
+        {t("nav.space.books")}
       </button>
 
       {/* Chevron → book picker popover */}
@@ -88,7 +90,7 @@ export function BookBreadcrumb({
             ref={inputRef}
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search books..."
+            placeholder={t("books.search_books")}
             className="w-full px-3.5 py-2.5 text-note bg-transparent border-b border-border text-foreground outline-none placeholder:text-muted-foreground/70"
           />
           <div className="max-h-[360px] overflow-y-auto py-1">
@@ -100,13 +102,13 @@ export function BookBreadcrumb({
               >
                 <BookKindIcon kind={getBookKind(b)} size={14} />
                 <span className="truncate text-note font-medium flex-1">
-                  {b.title || "Untitled"}
+                  {b.title || t("books.untitled")}
                 </span>
               </button>
             ))}
             {filtered.length === 0 && (
               <div className="px-3.5 py-6 text-note text-muted-foreground/70 text-center">
-                {query ? "No books match" : "No other books"}
+                {query ? t("book.breadcrumb.no_match") : t("book.breadcrumb.no_other")}
               </div>
             )}
           </div>
@@ -115,7 +117,7 @@ export function BookBreadcrumb({
 
       {/* Current book crumb */}
       <span className={cn("flex items-center gap-1.5 min-w-0 text-note font-medium text-foreground")}>
-        <span className="truncate">{book.title || "Untitled book"}</span>
+        <span className="truncate">{book.title || t("books.untitled")}</span>
         {count !== undefined && (
           <span className="ml-0.5 text-note font-normal text-muted-foreground tabular-nums">
             {count}

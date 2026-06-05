@@ -14,6 +14,7 @@ import {
   Search as MagnifyingGlass,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { useT } from "@/lib/i18n"
 
 // ── Collapsible Section ──────────────────────────────────
 
@@ -131,6 +132,7 @@ function SuggestedTagChip({
   tagName: string
   noteId: string
 }) {
+  const t = useT()
   const addTagToNote = usePlotStore((s) => s.addTagToNote)
   const [added, setAdded] = useState(false)
 
@@ -151,7 +153,7 @@ function SuggestedTagChip({
           <PhPlus size={12} strokeWidth={2.5} />
         </button>
       ) : (
-        <span className="text-2xs text-muted-foreground">added</span>
+        <span className="text-2xs text-muted-foreground">{t("panel.conn.tag_added")}</span>
       )}
     </div>
   )
@@ -160,6 +162,7 @@ function SuggestedTagChip({
 // ── Main Component ───────────────────────────────────────
 
 export function SidePanelDiscover() {
+  const t = useT()
   const _selectedNoteId = usePlotStore((s) => s.selectedNoteId)
   const previewNoteId = usePlotStore((s) => s.previewNoteId)
   const selectedNoteId = _selectedNoteId || previewNoteId
@@ -242,7 +245,7 @@ export function SidePanelDiscover() {
       <div className="flex flex-1 flex-col items-center justify-center gap-2 px-6 text-center">
         <MagnifyingGlass size={32} className="text-muted-foreground/70" />
         <p className="text-note text-muted-foreground">
-          Select a note to discover related content
+          {t("panel.discover.select_note")}
         </p>
       </div>
     )
@@ -253,7 +256,7 @@ export function SidePanelDiscover() {
       <div className="flex flex-1 flex-col items-center justify-center gap-2 px-6 text-center">
         <MagnifyingGlass size={32} className="text-muted-foreground/70" />
         <p className="text-note text-muted-foreground">
-          No related content found
+          {t("panel.discover.no_related")}
         </p>
       </div>
     )
@@ -266,7 +269,7 @@ export function SidePanelDiscover() {
       {/* Related Notes */}
       {result.relatedNotes.length > 0 && (
         <DiscoverSection
-          title="Related Notes"
+          title={t("panel.discover.related_notes")}
           icon={<NotePencil size={14} />}
           count={result.relatedNotes.length}
         >
@@ -286,7 +289,7 @@ export function SidePanelDiscover() {
       {/* Related Wiki */}
       {result.relatedWiki.length > 0 && (
         <DiscoverSection
-          title="Related Wiki"
+          title={t("panel.discover.related_wiki")}
           icon={<BookOpen size={14} />}
           count={result.relatedWiki.length}
         >
@@ -306,7 +309,7 @@ export function SidePanelDiscover() {
       {/* Suggested Tags */}
       {result.suggestedTags.length > 0 && (
         <DiscoverSection
-          title="Suggested Tags"
+          title={t("panel.discover.suggested_tags")}
           icon={<PhTag size={14} />}
           count={result.suggestedTags.length}
         >
