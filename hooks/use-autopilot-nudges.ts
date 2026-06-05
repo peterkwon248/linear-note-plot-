@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 import { usePlotStore } from "@/lib/store"
 import { buildSRSMapFromHooks } from "@/lib/store/hook-selectors"
-import { setActiveRoute } from "@/lib/table-route"
 import { useT } from "@/lib/i18n"
 
 /* ── Cooldown helpers ──────────────────────────────────── */
@@ -38,7 +37,6 @@ function setCooldown(type: string): void {
 /* ── Hook ──────────────────────────────────────────────── */
 
 export function useAutopilotNudges(): void {
-  const notes = usePlotStore((s) => s.notes)
   // Phase 1b2: SRS due counter derives from the unified `hooks` slice.
   const hooks = usePlotStore((s) => s.hooks)
   const srsMap = buildSRSMapFromHooks(hooks)
@@ -53,31 +51,13 @@ export function useAutopilotNudges(): void {
     firedRef.current = true
 
     const timer = setTimeout(() => {
-      // Backlog nudge — the onboarding "welcome-note" (seeds.ts WELCOME_NOTE)
-      // is excluded so a brand-new user isn't nudged to "triage" the seeded
-      // welcome note on first launch (it's onboarding content, not a real
-      // untriaged note). Backlog is the default resting status, so a fresh
-      // install (welcome note only) should produce no nudge.
-      const inboxCount = notes.filter(
-        (n) => n.status === "backlog" && !n.trashed && n.id !== "welcome-note"
-      ).length
+      // (removed 2026-06-05) Backlog nudge — `backlog` is Plot's DEFAULT resting
+      // status, so "{n} notes waiting for triage" fired whenever any backlog note
+      // existed, i.e. on virtually every normal session. That made it triage spam
+      // rather than a signal. Removed. The SRS + cluster nudges below are genuine
+      // event-driven signals (something became due / a cluster formed) and stay.
 
-      if (inboxCount > 0 && !isOnCooldown("backlog-waiting")) {
-        setCooldown("backlog-waiting")
-        toast(t("nudge.backlog.title"), {
-          description: t("nudge.backlog.desc").replace("{count}", String(inboxCount)),
-          action: {
-            label: t("nudge.backlog.action"),
-            onClick: () => {
-              setActiveRoute("/backlog")
-              router.push("/backlog")
-            },
-          },
-          duration: 8000,
-        })
-      }
-
-      // SRS due nudge — slightly delayed to avoid toast stacking
+      // SRS due nudge
       setTimeout(() => {
         const now = Date.now()
         const dueCount = Object.values(srsMap).filter(

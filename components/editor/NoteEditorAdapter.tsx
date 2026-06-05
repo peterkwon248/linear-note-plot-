@@ -16,7 +16,6 @@ import {
   acquireYDoc,
   releaseYDoc,
   isYjsExperimentEnabled,
-  getRefCount,
   getIsFresh,
 } from "@/lib/y-doc-manager"
 
@@ -434,45 +433,11 @@ export function NoteEditorAdapter({ note, onEditorReady, editable = true }: Note
     }
   }, [onEditorReady, ydoc, initialContent, note.id])
 
-  // Always-visible diagnostic badge (dev PoC). Shows exactly what the
-  // runtime thinks about the Y.js experiment:
-  //   - gray  "yjs OFF"          → flag not active, std editor in use
-  //   - amber "yjs ON acquiring" → flag active but Y.Doc not yet attached
-  //   - blue  "yjs hydrating"    → Y.Doc attached, awaiting IDB load
-  //   - green "yjs ON ref=N"     → ready; ref=2 means both panes share it
-  const yjsEnabled = isYjsExperimentEnabled()
-  const refCount = ydoc ? getRefCount("note", note.id) : 0
-  const badgeState: "off" | "acquiring" | "hydrating" | "ready" = !yjsEnabled
-    ? "off"
-    : !ydoc
-      ? "acquiring"
-      : !ydocReady
-        ? "hydrating"
-        : "ready"
-  const badgeStyle: Record<typeof badgeState, { bg: string; fg: string; label: string }> = {
-    off: { bg: "rgba(148,163,184,0.18)", fg: "rgb(148,163,184)", label: "yjs OFF" },
-    acquiring: { bg: "rgba(245,158,11,0.18)", fg: "rgb(245,158,11)", label: "yjs ON acquiring…" },
-    hydrating: { bg: "rgba(59,130,246,0.18)", fg: "rgb(59,130,246)", label: "yjs hydrating…" },
-    ready: { bg: "rgba(34,197,94,0.18)", fg: "rgb(34,197,94)", label: `yjs ON ref=${refCount}` },
-  }
-
   return (
     <div className="relative min-w-0 flex-1 flex flex-col">
-      {/* Y.js experiment diagnostic badge — DEV ONLY. It must never appear in
-          the production/desktop build (it was leaking "yjs OFF" into the app). */}
-      {process.env.NODE_ENV === "development" && (
-        <div
-          className="absolute right-2 top-2 z-50 rounded-md px-2 py-0.5 font-mono text-2xs"
-          style={{
-            background: badgeStyle[badgeState].bg,
-            color: badgeStyle[badgeState].fg,
-            pointerEvents: "none",
-            border: "1px solid currentColor",
-          }}
-        >
-          {badgeStyle[badgeState].label}
-        </div>
-      )}
+      {/* (removed) Y.js experiment diagnostic badge — was a dev-only PoC that
+          showed "yjs OFF". Removed entirely; the yjs experiment is flag-gated
+          and the badge has no user-facing value. */}
       {/* Gate editor mount on hydration. Mounting before `whenReady` would
           let Collaboration bind to the empty fragment and emit a flood of
           empty onUpdate events, which the empty-content guard then has to

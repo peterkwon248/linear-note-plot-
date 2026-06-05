@@ -14,19 +14,52 @@
  */
 
 import { Extension } from "@tiptap/core"
-import { Plugin } from "@tiptap/pm/state"
+import { Plugin, PluginKey } from "@tiptap/pm/state"
+import type { Node as PMNode } from "@tiptap/pm/model"
 import { Decoration, DecorationSet } from "@tiptap/pm/view"
 import { useSettingsStore } from "@/lib/settings-store"
 import { translate, type Locale } from "@/lib/i18n"
+
+// Plugin state key — latches whether this editor session has ever held content.
+const emptyHintPluginKey = new PluginKey<{ dirtied: boolean }>("emptyHintPlaceholder")
+
+// True when any node in the doc holds content — the title heading (doc's first
+// block) OR any body block, text or otherwise.
+function docHasContent(doc: PMNode): boolean {
+  let has = false
+  doc.forEach((node) => {
+    if (node.content.size > 0) has = true
+  })
+  return has
+}
 
 export const EmptyHintPlaceholder = Extension.create({
   name: "emptyHintPlaceholder",
 
   addProseMirrorPlugins() {
     return [
-      new Plugin({
+      new Plugin<{ dirtied: boolean }>({
+        key: emptyHintPluginKey,
+        // UpNote behaviour: once the user types ANYTHING into this note the
+        // template hint is gone for good — even after the body is emptied again
+        // (typed-then-deleted). We latch `dirtied` the first time the doc holds
+        // content (and start latched when an existing note loads with content),
+        // then never show the hint again for the life of this editor instance.
+        state: {
+          init: (_config, state) => ({ dirtied: docHasContent(state.doc) }),
+          apply: (_tr, value, _oldState, newState) => {
+            if (value.dirtied) return value
+            return docHasContent(newState.doc) ? { dirtied: true } : value
+          },
+        },
         props: {
           decorations: (state) => {
+            // Hint is gone for good once the note has held content at any point
+            // in this editor session (typed-then-deleted, or an existing note
+            // that loaded with content). See the plugin `state` latch above.
+            if (emptyHintPluginKey.getState(state)?.dirtied) {
+              return DecorationSet.empty
+            }
             const { doc } = state
             // UpNote behaviour: the hint belongs only on a brand-new, totally
             // empty note and must vanish the moment the user writes ANYTHING,
