@@ -51,6 +51,25 @@
 
 ---
 
+## 📜 2026-06-05 (집/Windows, 저녁) — 에디터 버그픽스 3건 (PR #539) + 마크다운 D안 착수→롤백 ⭐⭐⭐⭐
+
+**범위**: 유저 적발 에디터 버그 3건 수정(머지) + 마크다운 템플릿 변환 D안 착수(버전 스큐로 롤백, 다음 세션 B방식).
+
+### 핵심 결정 (영구)
+- **마크다운 D안 = 명시적 변환 명령**(UpNote 미러, `Ctrl+Alt+V` "Paste from Markdown"). Plot=리치텍스트라 마크다운 파서 없음(`## `는 실시간 input rule만, 일괄삽입/템플릿은 raw). B방식(marked+generateJSON, core 무관)으로 구현 예정. 날짜치환은 `expandPlaceholders`로 이미 됨.
+- **🔴 @tiptap 부분 버전업 금지**: `@tiptap/markdown@3.25` core 3.25 exact peerDep → react@3.22 등과 스큐(`cancelPositionCheck` 없음) 빌드깨짐. 전체통일(NodeView[math/infobox/callout/columns/banner] 회귀위험) 아니면 core-독립.
+
+### 완료 (PR #539)
+- yjs OFF 배지 제거 / placeholder 힌트 영구 숨김 latch(`dirtied`) / backlog nudge 제거(backlog=기본 휴식 상태라 매 세션 triage spam이던 것; SRS·클러스터 유지). 클린빌드 50/50·tsc0.
+
+### 다음 (P0)
+- 마크다운 D안 B방식 구현(`lib/editor/markdown.ts`). SESSION-LOG 2026-06-05 저녁 hook.
+
+### Store version
+무변경(v154). @tiptap/markdown 롤백(순 신규 의존성 0).
+
+---
+
 ## 📜 2026-06-05 (집/Windows, 오후~저녁) — 대규모 i18n sweep (앱 절반 한글화) + 에디터 버그 2 + v139 부활 버그 (PR #538) ⭐⭐⭐⭐⭐
 
 **범위**: 사용자가 데스크톱 재빌드로 테스트하며 영어 노출을 연쇄 적발 → 전수 스캔(~400 발견)으로 "앱 절반 미번역" 진단 → 고가시성 ~250 일괄 처리. + 사용자 적발 버그들.
