@@ -5,6 +5,7 @@ import type { WikiArticle } from "@/lib/types"
 import { usePlotStore } from "@/lib/store"
 import { getBlockBody } from "@/lib/wiki-block-body-store"
 import { cn } from "@/lib/utils"
+import { useT } from "@/lib/i18n"
 
 interface FootnoteEntry {
   id: string
@@ -220,6 +221,7 @@ interface WikiReferencesSectionProps {
 }
 
 export function WikiReferencesSection({ article, editable = false }: WikiReferencesSectionProps) {
+  const t = useT()
   const references = usePlotStore((s) => s.references)
   const [refCollapsed, setRefCollapsed] = useState(false)
 
@@ -367,7 +369,7 @@ export function WikiReferencesSection({ article, editable = false }: WikiReferen
           "text-[10px] text-muted-foreground/60 transition-transform duration-150",
           !refCollapsed && "rotate-90"
         )}>▶</span>
-        <span className="text-[calc(1em*var(--scale-meta,1))] font-semibold uppercase tracking-[0.05em] text-muted-foreground/70">REFERENCES</span>
+        <span className="text-[calc(1em*var(--scale-meta,1))] font-semibold uppercase tracking-[0.05em] text-muted-foreground/70">{t("wiki.references.heading")}</span>
         <span className="text-[calc(0.875em*var(--scale-meta,1))] font-medium text-muted-foreground/80 bg-hover-bg rounded px-[5px] min-w-[18px] text-center tabular-nums">{linkedRefs.length}</span>
       </button>
 

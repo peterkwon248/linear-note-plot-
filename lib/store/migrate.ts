@@ -2203,28 +2203,18 @@ export function migrate(persistedState: unknown): PlotState {
   }
 
   // v139: WikiTemplate 시스템 신설 — 2026-05-18.
-  // state.wikiTemplates 신규 슬라이스 + SEED_WIKI_TEMPLATES 8개 inject.
-  // 기존 사용자 데이터 보존 — id-dedup append (Note seed migration v130 정합).
-  // 사용자가 시드를 삭제했더라도 v139 첫 진입 시 다시 들어옴 (idempotent 후속
-  // 동작이 사용자 데이터를 보존하면서 fresh start 보장).
+  // 신규 wikiTemplates 슬라이스를 *처음 도입*하는 사용자(pre-v139)에게만 시드를
+  // 1회 주입한다. 슬라이스가 이미 존재하면(=이미 한 번 시드된 사용자) 절대 손대지
+  // 않는다. 예전엔 else 분기에서 id-dedup append로 사용자가 삭제한 시드를 버전 업
+  // 때마다 되살렸는데(부활 버그), v154 "출시: 부활 0" 원칙에 맞춰 제거했다 —
+  // v106(템플릿)·v127(북)·v152(프리셋)와 동일한 정정. 빈 배열([])은 "사용자가
+  // 전부 삭제"를 뜻하므로 그대로 보존한다(Array.isArray([]) === true).
   {
-    const { SEED_WIKI_TEMPLATES } = require("./seeds")
-    if (!Array.isArray((state as Record<string, unknown>).wikiTemplates)) {
-      ;(state as Record<string, unknown>).wikiTemplates = [...SEED_WIKI_TEMPLATES]
+    const wtState = state as Record<string, unknown>
+    if (!Array.isArray(wtState.wikiTemplates)) {
+      const { SEED_WIKI_TEMPLATES } = require("./seeds")
+      wtState.wikiTemplates = [...SEED_WIKI_TEMPLATES]
       console.log(`[migrate] v138→v139: initialized wikiTemplates (${SEED_WIKI_TEMPLATES.length} seeds)`)
-    } else {
-      const wts = (state as Record<string, unknown>).wikiTemplates as any[]
-      const existingIds = new Set(wts.map((t: any) => t.id))
-      let added = 0
-      for (const seed of SEED_WIKI_TEMPLATES) {
-        if (!existingIds.has(seed.id)) {
-          wts.push(seed)
-          added += 1
-        }
-      }
-      if (added > 0) {
-        console.log(`[migrate] v138→v139: re-seeded wikiTemplates (${added} added)`)
-      }
     }
   }
 

@@ -16,6 +16,8 @@
 import { Extension } from "@tiptap/core"
 import { Plugin } from "@tiptap/pm/state"
 import { Decoration, DecorationSet } from "@tiptap/pm/view"
+import { useSettingsStore } from "@/lib/settings-store"
+import { translate, type Locale } from "@/lib/i18n"
 
 export const EmptyHintPlaceholder = Extension.create({
   name: "emptyHintPlaceholder",
@@ -26,21 +28,36 @@ export const EmptyHintPlaceholder = Extension.create({
         props: {
           decorations: (state) => {
             const { doc } = state
-            // Only show hint when the body has exactly ONE paragraph and it's empty.
-            // Heading (Untitled placeholder) is excluded from this count. Any body
-            // content (text typed, or a second paragraph from Enter) hides the hint
-            // so it doesn't ambush the user mid-edit.
-            let paraCount = 0
-            let paraHasText = false
+            // UpNote behaviour: the hint belongs only on a brand-new, totally
+            // empty note and must vanish the moment the user writes ANYTHING,
+            // ANYWHERE — the title heading (doc's first block) OR the body, text
+            // or any block. So we show it only when NO node has content and the
+            // body is a single empty paragraph (the line that hosts the hint).
+            // The previous check counted only top-level *paragraphs*, ignoring
+            // the title heading — so a typed title (or body content that wasn't a
+            // plain paragraph) left the hint stranded on the empty body line.
+            let anyContent = false
+            let emptyParas = 0
             doc.forEach((node) => {
-              if (node.type.name === "paragraph") {
-                paraCount += 1
-                if (node.content.size > 0) paraHasText = true
+              if (node.content.size > 0) {
+                anyContent = true
+              } else if (node.type.name === "paragraph") {
+                emptyParas += 1
               }
             })
-            if (paraHasText || paraCount !== 1) {
+            if (anyContent || emptyParas !== 1) {
               return DecorationSet.empty
             }
+            // Locale for the hint text — read synchronously from the settings
+            // store. This decoration runs outside React (on every editor
+            // transaction), so it always reflects the current language.
+            const lang = (() => {
+              try {
+                return useSettingsStore.getState().language as Locale
+              } catch {
+                return "en" as Locale
+              }
+            })()
             const decorations: Decoration[] = []
             let attached = false
 
@@ -70,7 +87,7 @@ export const EmptyHintPlaceholder = Extension.create({
 
                 const btn = document.createElement("button")
                 btn.type = "button"
-                btn.textContent = "Insert from a template"
+                btn.textContent = translate("editor.empty_hint.template", lang)
                 btn.style.cssText = [
                   "color: inherit",
                   "background: none",
@@ -96,7 +113,7 @@ export const EmptyHintPlaceholder = Extension.create({
                 })
 
                 widget.appendChild(btn)
-                widget.appendChild(document.createTextNode(" · or press / for menu"))
+                widget.appendChild(document.createTextNode(translate("editor.empty_hint.menu", lang)))
 
                 decorations.push(
                   Decoration.widget(pos + 1, widget, {

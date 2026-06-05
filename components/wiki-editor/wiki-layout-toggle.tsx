@@ -2,6 +2,7 @@
 
 import { usePlotStore } from "@/lib/store"
 import type { WikiLayout } from "@/lib/types"
+import { useT } from "@/lib/i18n"
 import { LayoutTemplate as Layout } from "lucide-react"
 import { cn } from "@/lib/utils"
 
@@ -13,6 +14,7 @@ interface WikiLayoutToggleProps {
 }
 
 export function WikiLayoutToggle({ articleId, layout, showIcon = true }: WikiLayoutToggleProps) {
+  const t = useT()
   const updateWikiArticle = usePlotStore((s) => s.updateWikiArticle)
 
   const isEncyclopedia = layout === "encyclopedia"
@@ -30,7 +32,7 @@ export function WikiLayoutToggle({ articleId, layout, showIcon = true }: WikiLay
       title={isEncyclopedia ? "Switch to default layout" : "Switch to encyclopedia layout"}
     >
       {showIcon && <Layout size={14} strokeWidth={2} />}
-      {isEncyclopedia ? "Encyclopedia" : "Default"}
+      {isEncyclopedia ? t("wiki.layout.encyclopedia") : t("wiki.layout.default")}
     </button>
   )
 }

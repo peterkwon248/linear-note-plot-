@@ -1,6 +1,7 @@
 "use client"
 
 import type { Tag } from "@/lib/types"
+import { useT } from "@/lib/i18n"
 
 interface WikiCategoriesProps {
   noteTagIds: string[]
@@ -8,6 +9,7 @@ interface WikiCategoriesProps {
 }
 
 export function WikiCategories({ noteTagIds, allTags }: WikiCategoriesProps) {
+  const t = useT()
   const resolved = noteTagIds
     .map((id) => allTags.find((t) => t.id === id))
     .filter(Boolean) as Tag[]
@@ -17,7 +19,7 @@ export function WikiCategories({ noteTagIds, allTags }: WikiCategoriesProps) {
   return (
     <div>
       <h4 className="text-2xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">
-        Categories
+        {t("wiki.categories")}
       </h4>
       <div className="flex flex-wrap gap-1.5">
         {resolved.map((tag) => (

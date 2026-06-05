@@ -1082,6 +1082,37 @@ const EN = {
   "graph.menu.back": "← Back",
   "graph.menu.apply_hint": "↵ to apply / create",
   "graph.menu.pick_color_title": "Pick color for new sticker",
+
+  // ── i18n sweep (2026-06-05): editor empty-hint + wiki UI ──
+  "editor.empty_hint.template": "Insert from a template",
+  "editor.empty_hint.menu": " · or press / for menu",
+  "common.done": "Done",
+  "common.back": "Back",
+  "wiki.layout.default": "Default",
+  "wiki.layout.encyclopedia": "Encyclopedia",
+  "wiki.toc.contents": "Contents",
+  "wiki.article.updated_ago": "Updated {time} ago",
+  "wiki.hatnote.add": "Add hatnote",
+  "wiki.hatnote.edit": "Edit hatnote",
+  "wiki.block.split": "Split wiki",
+  "wiki.categories": "Categories",
+  "wiki.categories.add": "Add",
+  "wiki.infobox.add": "Add infobox",
+  "wiki.infobox.add_hero": "Add hero image",
+  "wiki.infobox.blank": "Blank",
+  "wiki.block.text_placeholder": "Write something...",
+  "wiki.references.heading": "REFERENCES",
+  "wiki.template.blank": "Blank article",
+  "wiki.template.blank_desc": "Empty",
+
+  // View-header toolbar button tooltips
+  "viewheader.save_changes": "Save changes to this view",
+  "viewheader.save_view": "Save current view",
+  "viewheader.filter": "Filter",
+  "viewheader.display": "Display options",
+  "viewheader.detail_panel": "Detail panel",
+  "viewheader.split": "Split view",
+  "viewheader.new": "New {name}",
 }
 
 type DictKey = keyof typeof EN
@@ -2139,6 +2170,37 @@ const KO: Partial<Record<DictKey, string>> = {
   "graph.menu.back": "← 뒤로",
   "graph.menu.apply_hint": "↵ 적용 / 생성",
   "graph.menu.pick_color_title": "새 스티커 색상 선택",
+
+  // ── i18n sweep (2026-06-05): editor empty-hint + wiki UI ──
+  "editor.empty_hint.template": "템플릿에서 삽입",
+  "editor.empty_hint.menu": " · 또는 / 키로 메뉴 열기",
+  "common.done": "완료",
+  "common.back": "뒤로",
+  "wiki.layout.default": "기본",
+  "wiki.layout.encyclopedia": "백과사전",
+  "wiki.toc.contents": "목차",
+  "wiki.article.updated_ago": "{time} 전 수정",
+  "wiki.hatnote.add": "안내문 추가",
+  "wiki.hatnote.edit": "안내문 편집",
+  "wiki.block.split": "위키 분할",
+  "wiki.categories": "분류",
+  "wiki.categories.add": "추가",
+  "wiki.infobox.add": "정보상자 추가",
+  "wiki.infobox.add_hero": "대표 이미지 추가",
+  "wiki.infobox.blank": "빈 양식",
+  "wiki.block.text_placeholder": "내용을 입력하세요…",
+  "wiki.references.heading": "참고 문헌",
+  "wiki.template.blank": "빈 문서",
+  "wiki.template.blank_desc": "비어 있음",
+
+  // View-header toolbar button tooltips
+  "viewheader.save_changes": "이 뷰에 변경사항 저장",
+  "viewheader.save_view": "현재 뷰 저장",
+  "viewheader.filter": "필터",
+  "viewheader.display": "표시 옵션",
+  "viewheader.detail_panel": "상세 패널",
+  "viewheader.split": "분할 보기",
+  "viewheader.new": "새 {name}",
 }
 
 const DICTIONARIES: Record<Locale, Partial<Record<DictKey, string>>> = {

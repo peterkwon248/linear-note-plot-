@@ -13,6 +13,7 @@ import { INFOBOX_PRESETS } from "@/lib/wiki-infobox-presets"
 import { UrlInputDialog } from "@/components/editor/url-input-dialog"
 import { WikiFootnotesSection, WikiReferencesSection } from "./wiki-footnotes-section"
 import { cn } from "@/lib/utils"
+import { useT } from "@/lib/i18n"
 import { ChevronDown as CaretDown } from "lucide-react"
 import { computeSectionNumbers, getInitialContentJson, buildVisibleBlocks } from "@/lib/wiki-block-utils"
 import { useWikiBlockActions } from "@/hooks/use-wiki-block-actions"
@@ -39,6 +40,7 @@ function CollapsibleTOC({ sections, sectionNumbers }: {
   sectionNumbers: Map<string, string>
 }) {
   const [open, setOpen] = useState(true)
+  const t = useT()
 
   if (sections.length === 0) return null
 
@@ -48,7 +50,7 @@ function CollapsibleTOC({ sections, sectionNumbers }: {
         onClick={() => setOpen(!open)}
         className="flex items-center justify-between px-4 py-2.5 w-full text-left"
       >
-        <span className="text-[1.0625em] font-semibold text-foreground/90">Contents</span>
+        <span className="text-[1.0625em] font-semibold text-foreground/90">{t("wiki.toc.contents")}</span>
         <CaretDown
           size={14}
           strokeWidth={2.5}
@@ -101,6 +103,7 @@ interface WikiArticleEncyclopediaProps {
 }
 
 export function WikiArticleEncyclopedia({ article, isEditing, onBack, collapseAllCmd, onCollapseAllDone, onAllCollapsedChange, fontSize }: WikiArticleEncyclopediaProps) {
+  const t = useT()
   const updateWikiBlock = usePlotStore((s) => s.updateWikiBlock)
   const reorderWikiBlocks = usePlotStore((s) => s.reorderWikiBlocks)
 
@@ -239,7 +242,7 @@ export function WikiArticleEncyclopedia({ article, isEditing, onBack, collapseAl
         )}
         {/* Updated at */}
         <p className="mt-1 text-[12px] text-muted-foreground/70">
-          Updated {shortRelative(article.updatedAt)} ago
+          {t("wiki.article.updated_ago").replace("{time}", shortRelative(article.updatedAt))}
         </p>
         {isEditing ? (
           <input

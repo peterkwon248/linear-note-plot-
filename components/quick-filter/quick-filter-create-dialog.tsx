@@ -191,7 +191,7 @@ export function QuickFilterCreateDialog({
                       {t("filter.quick.create.add_rule")}
                     </button>
                   </PopoverTrigger>
-                  <PopoverContent align="end" className="w-72 p-0">
+                  <PopoverContent align="end" collisionPadding={12} className="w-72 p-0">
                     <FilterPanel
                       categories={filterCategories}
                       activeFilters={rules}

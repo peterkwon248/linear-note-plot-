@@ -62,6 +62,7 @@ import {
 } from "@/components/ui/alert-dialog"
 import { InfoboxColorPicker } from "./infobox-color-picker"
 import { useTintedBg, useTintedText } from "@/lib/tinted-bg"
+import { useT } from "@/lib/i18n"
 
 // ── Props ─────────────────────────────────────────────────────────────────────
 //
@@ -272,6 +273,7 @@ export function WikiInfobox({
   themeColor = null,
   onThemeColorChange,
 }: WikiInfoboxProps) {
+  const t = useT()
   const setWikiInfoboxNote = usePlotStore((s) => s.setWikiInfobox)
   const setWikiArticleInfobox = usePlotStore((s) => s.setWikiArticleInfobox)
   // PR-D — user preset store wires.
@@ -518,7 +520,7 @@ export function WikiInfobox({
             className="flex w-full items-center justify-center gap-1.5 border-b border-dashed border-border-subtle bg-secondary/20 px-3 py-2 text-[calc(0.75em*var(--scale-infobox,1))] text-muted-foreground hover:bg-secondary/40 hover:text-foreground transition-colors"
           >
             <PhImage size={14} />
-            Add hero image
+            {t("wiki.infobox.add_hero")}
           </button>
         )
       : null
@@ -580,7 +582,7 @@ export function WikiInfobox({
             className="flex items-center gap-1.5 text-[calc(0.875em*var(--scale-infobox,1))] text-muted-foreground hover:text-foreground transition-colors"
           >
             <PhPlus size={14} />
-            Add infobox
+            {t("wiki.infobox.add")}
           </button>
           {/* Preset dropdown also exposed when empty so user can pick a starting template */}
           {canChangePreset && (

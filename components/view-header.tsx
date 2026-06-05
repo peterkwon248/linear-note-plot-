@@ -36,14 +36,17 @@ function HBtn({
   children,
   active,
   onClick,
+  title,
 }: {
   children: ReactNode
   active?: boolean
   onClick?: () => void
+  title?: string
 }) {
   return (
     <button
       onClick={onClick}
+      title={title}
       className={`flex h-7 w-7 items-center justify-center rounded-md border-none transition-all duration-100 ${
         active
           ? "bg-active-bg text-foreground"
@@ -329,8 +332,8 @@ export function ViewHeader({
                 <button
                   onClick={() => onSaveView?.()}
                   className="inline-flex h-7 w-7 items-center justify-center rounded-md text-accent transition-colors hover:bg-accent/15"
-                  title="Save changes to this view"
-                  aria-label="Save changes"
+                  title={t("viewheader.save_changes")}
+                  aria-label={t("viewheader.save_changes")}
                 >
                   <FloppyDisk size={16} />
                 </button>
@@ -339,7 +342,7 @@ export function ViewHeader({
                   <Popover open={saveAsOpen} onOpenChange={(o) => { setSaveAsOpen(o); if (!o) setSaveAsName("") }}>
                     <PopoverTrigger asChild>
                       <div>
-                        <HBtn active={saveAsOpen}>
+                        <HBtn active={saveAsOpen} title={t("viewheader.save_view")}>
                           <FloppyDisk size={16} />
                         </HBtn>
                       </div>
@@ -366,8 +369,8 @@ export function ViewHeader({
                 ) : (
                   <button
                     className="inline-flex h-7 w-7 items-center justify-center rounded-md text-foreground/60"
-                    title="Save current view"
-                    aria-label="Save view"
+                    title={t("viewheader.save_view")}
+                    aria-label={t("viewheader.save_view")}
                   >
                     <FloppyDisk size={16} />
                   </button>
@@ -380,7 +383,7 @@ export function ViewHeader({
                 <Popover open={filterOpen} onOpenChange={setFilterOpen}>
                   <PopoverTrigger asChild>
                     <div>
-                      <HBtn active={filterOpen || hasActiveFilters}>
+                      <HBtn active={filterOpen || hasActiveFilters} title={t("viewheader.filter")}>
                         <FunnelSimple size={16} />
                       </HBtn>
                     </div>
@@ -394,7 +397,7 @@ export function ViewHeader({
                   </PopoverContent>
                 </Popover>
               ) : (
-                <HBtn active={hasActiveFilters}>
+                <HBtn active={hasActiveFilters} title={t("viewheader.filter")}>
                   <FunnelSimple size={16} />
                 </HBtn>
               )
@@ -405,7 +408,7 @@ export function ViewHeader({
                 <Popover open={displayOpen} onOpenChange={setDisplayOpen}>
                   <PopoverTrigger asChild>
                     <div>
-                      <HBtn active={displayOpen}>
+                      <HBtn active={displayOpen} title={t("viewheader.display")}>
                         <SlidersHorizontal size={16} />
                       </HBtn>
                     </div>
@@ -419,14 +422,14 @@ export function ViewHeader({
                   </PopoverContent>
                 </Popover>
               ) : (
-                <HBtn>
+                <HBtn title={t("viewheader.display")}>
                   <SlidersHorizontal size={16} />
                 </HBtn>
               )
             )}
 
             {resolvedShowDetailPanel && (
-              <HBtn active={resolvedDetailPanelOpen} onClick={resolvedOnDetailPanelToggle}>
+              <HBtn active={resolvedDetailPanelOpen} onClick={resolvedOnDetailPanelToggle} title={t("viewheader.detail_panel")}>
                 <SidebarSimple size={16} />
               </HBtn>
             )}
@@ -437,17 +440,17 @@ export function ViewHeader({
               hydrated ? (
                 <Popover>
                   <PopoverTrigger asChild>
-                    <div><HBtn><Plus size={16} /></HBtn></div>
+                    <div><HBtn title={t("viewheader.new").replace("{name}", title)}><Plus size={16} /></HBtn></div>
                   </PopoverTrigger>
                   <PopoverContent align="end" sideOffset={5} className="!w-auto !max-w-none rounded-lg border border-border-subtle bg-surface-overlay p-0 shadow-lg">
                     {createMenuContent}
                   </PopoverContent>
                 </Popover>
               ) : (
-                <HBtn><Plus size={16} /></HBtn>
+                <HBtn title={t("viewheader.new").replace("{name}", title)}><Plus size={16} /></HBtn>
               )
             ) : onCreateNew ? (
-              <HBtn onClick={onCreateNew}>
+              <HBtn onClick={onCreateNew} title={t("viewheader.new").replace("{name}", title)}>
                 <Plus size={16} />
               </HBtn>
             ) : null}
@@ -677,6 +680,7 @@ function SplitViewButton() {
   const selectedNoteId = usePlotStore((s) => s.selectedNoteId)
   const secondaryNoteId = usePlotStore((s) => s.secondaryNoteId)
   const closeSecondary = usePlotStore((s) => s.closeSecondary)
+  const t = useT()
 
   // Don't show in secondary pane
   if (pane === 'secondary') return null
@@ -686,6 +690,7 @@ function SplitViewButton() {
   return (
     <HBtn
       active={isSplitOpen}
+      title={t("viewheader.split")}
       onClick={() => {
         if (isSplitOpen) {
           closeSecondary()

@@ -30,6 +30,7 @@ import { WikiPickerDialog } from "@/components/wiki-picker-dialog"
 import { usePlotStore } from "@/lib/store"
 import type { Hatnote, HatnoteType } from "@/lib/types"
 import { X as PhX, BookOpen as PhBookOpen } from "lucide-react"
+import { useT } from "@/lib/i18n"
 
 interface HatnoteEditDialogProps {
   open: boolean
@@ -60,6 +61,7 @@ export function HatnoteEditDialog({
   existing,
   onSave,
 }: HatnoteEditDialogProps) {
+  const t = useT()
   const wikiArticles = usePlotStore((s) => s.wikiArticles)
   const [type, setType] = useState<HatnoteType>("main")
   const [text, setText] = useState("")
@@ -101,7 +103,7 @@ export function HatnoteEditDialog({
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent className="sm:max-w-[460px]">
           <DialogHeader>
-            <DialogTitle>{existing ? "Edit hatnote" : "Add hatnote"}</DialogTitle>
+            <DialogTitle>{existing ? t("wiki.hatnote.edit") : t("wiki.hatnote.add")}</DialogTitle>
             <DialogDescription>
               Small italic notice at the top of the article (Wikipedia style).
               Optionally links to another article.
@@ -204,7 +206,7 @@ export function HatnoteEditDialog({
               disabled={!canSubmit}
               className="rounded-md bg-accent px-3 py-1.5 text-sm font-medium text-accent-foreground transition-colors hover:bg-accent/90 disabled:cursor-not-allowed disabled:opacity-40"
             >
-              {existing ? "Save" : "Add hatnote"}
+              {existing ? "Save" : t("wiki.hatnote.add")}
             </button>
           </DialogFooter>
         </DialogContent>
