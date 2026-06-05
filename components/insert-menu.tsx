@@ -24,6 +24,7 @@ import {
 import { SelectFromTemplatesModal } from "@/components/editor/SelectFromTemplatesModal"
 import { FilePicker } from "@/components/file-picker"
 import type { Attachment } from "@/lib/types"
+import { useT } from "@/lib/i18n"
 
 interface InsertMenuProps {
   editor: Editor
@@ -52,6 +53,7 @@ function formatFileSize(bytes: number): string {
 }
 
 export function InsertMenu({ editor, noteId }: InsertMenuProps) {
+  const t = useT()
   const imageInputRef = useRef<HTMLInputElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const addAttachment = usePlotStore((s) => s.addAttachment)
@@ -179,11 +181,11 @@ export function InsertMenu({ editor, noteId }: InsertMenuProps) {
         <DropdownMenuTrigger asChild>
           <button
             onMouseDown={(e) => e.preventDefault()}
-            title="Insert"
+            title={t("editor.insert.button")}
             className="h-7 rounded-md flex items-center justify-center gap-1 shrink-0 cursor-pointer text-muted-foreground bg-transparent border-0 outline-none px-2 font-medium text-note hover:text-foreground hover:bg-hover-bg transition-colors duration-100"
           >
             <PhPlus size={14} />
-            <span>Insert</span>
+            <span>{t("editor.insert.button")}</span>
           </button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start" className="min-w-[180px] p-1">
@@ -191,11 +193,11 @@ export function InsertMenu({ editor, noteId }: InsertMenuProps) {
               need file-input refs and noteId that don't fit the registry shape. */}
           <DropdownMenuItem onSelect={handleImage} className={ITEM_CLASS}>
             <PhImage size={14} />
-            <span className="flex-1">Image</span>
+            <span className="flex-1">{t("editor.insert.image")}</span>
           </DropdownMenuItem>
           <DropdownMenuItem onSelect={handleFile} className={ITEM_CLASS}>
             <Paperclip size={14} />
-            <span className="flex-1">File</span>
+            <span className="flex-1">{t("editor.insert.file")}</span>
           </DropdownMenuItem>
           {/* file-entity-prd §4: reuse existing file from the library.
               Unlike the Templates… entry (which uses a Radix-portaled Dialog
@@ -207,7 +209,7 @@ export function InsertMenu({ editor, noteId }: InsertMenuProps) {
             className={ITEM_CLASS}
           >
             <FolderOpen size={14} strokeWidth={2} />
-            <span className="flex-1">From library…</span>
+            <span className="flex-1">{t("editor.insert.from_library")}</span>
           </DropdownMenuItem>
 
           {/* Templates — opens the UpNote-pattern picker modal. Hardcoded
@@ -223,7 +225,7 @@ export function InsertMenu({ editor, noteId }: InsertMenuProps) {
             className={ITEM_CLASS}
           >
             <PhLayout size={14} />
-            <span className="flex-1">Templates…</span>
+            <span className="flex-1">{t("editor.insert.templates")}</span>
           </DropdownMenuItem>
 
           {/* Registry-driven sections, grouped with separators between groups. */}

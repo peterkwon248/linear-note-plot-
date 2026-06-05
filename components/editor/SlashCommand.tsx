@@ -16,6 +16,8 @@ import {
   getBlocksForSurface,
   type BlockRegistryEntry,
 } from "./block-registry"
+import { translate, type Locale } from "@/lib/i18n"
+import { useSettingsStore } from "@/lib/settings-store"
 
 /** Slash-menu item: a registry entry, or a dynamically-generated template item
  *  that wears the same shape. */
@@ -153,11 +155,12 @@ export const SlashCommandExtension = Extension.create({
           const hasTemplates = (usePlotStore.getState().templates ?? []).some(
             (t: NoteTemplate) => !t.trashed,
           )
+          const locale = useSettingsStore.getState().language as Locale
           const templateEntry: SlashItem[] = hasTemplates
             ? [{
                 id: "template-picker",
-                label: "Insert template…",
-                description: "Browse and insert from your templates",
+                label: translate("editor.slash.insert_template", locale),
+                description: translate("editor.slash.insert_template_desc", locale),
                 icon: Layout,
                 surfaces: ["slash"],
                 group: "structure",

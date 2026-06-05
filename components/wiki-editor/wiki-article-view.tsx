@@ -1132,6 +1132,7 @@ export function InlineCategoryTags({
   categoryIds: string[]
   editable?: boolean
 }) {
+  const t = useT()
   const router = useRouter()
   const wikiCategories = usePlotStore((s) => s.wikiCategories)
   const setArticleCategories = usePlotStore((s) => s.setArticleCategories)
@@ -1236,7 +1237,7 @@ export function InlineCategoryTags({
                 className="inline-flex items-center gap-1 text-muted-foreground/60 hover:text-foreground transition-colors"
               >
                 <PhPlus size={11} strokeWidth={2} />
-                {assignedCategories.length === 0 ? "Add category" : "Add"}
+                {t("wiki.categories.add")}
               </button>
               {dropdownOpen && (
                 <div className="absolute left-0 top-full z-50 mt-1.5">
@@ -1286,6 +1287,7 @@ export function ArticleCategories({
   categoryIds: string[]
   editable: boolean
 }) {
+  const t = useT()
   const wikiCategories = usePlotStore((s) => s.wikiCategories)
   const setArticleCategories = usePlotStore((s) => s.setArticleCategories)
   const createWikiCategory = usePlotStore((s) => s.createWikiCategory)
@@ -1363,7 +1365,7 @@ export function ArticleCategories({
             className="flex items-center gap-1 rounded-md px-1.5 py-1 text-2xs font-medium text-muted-foreground/70 transition-colors hover:bg-hover-bg hover:text-foreground/70"
           >
             <PhPlus size={12} strokeWidth={2} />
-            Add category
+            {t("wiki.categories.add")}
           </button>
           {dropdownOpen && (
             <div className="absolute left-0 top-full z-50 mt-1 w-52 rounded-lg border border-border-subtle bg-surface-overlay p-1 shadow-lg">

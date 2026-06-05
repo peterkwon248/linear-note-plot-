@@ -19,6 +19,7 @@ import {
   ArrowRight,
   Rows,
 } from "@/lib/editor/editor-icons"
+import { useT } from "@/lib/i18n"
 
 const CELL_COLORS = [
   { label: "None", value: "" },
@@ -41,6 +42,7 @@ interface TableBubbleMenuProps {
 }
 
 export function TableBubbleMenu({ editor }: TableBubbleMenuProps) {
+  const t = useT()
   const [showColors, setShowColors] = useState(false)
 
   const state = useEditorState({
@@ -66,17 +68,17 @@ export function TableBubbleMenu({ editor }: TableBubbleMenuProps) {
     >
       <div className="flex items-center gap-0.5 rounded-lg border border-border bg-surface-overlay p-1 shadow-lg relative">
         {/* ── Row ── */}
-        <button type="button" className={`${btn} ${btnMuted}`} title="Add row above"
+        <button type="button" className={`${btn} ${btnMuted}`} title={t("editor.table.add_row_above")}
           onMouseDown={(e) => { e.preventDefault(); editor.chain().focus().addRowBefore().run() }}>
           <ArrowUp size={12} />
         </button>
-        <button type="button" className={`${btn} ${btnMuted}`} title="Add row below"
+        <button type="button" className={`${btn} ${btnMuted}`} title={t("editor.table.add_row_below")}
           onMouseDown={(e) => { e.preventDefault(); editor.chain().focus().addRowAfter().run() }}>
           <ArrowDown size={12} />
         </button>
         <button type="button"
           className={`${btn} ${state.isInHeaderRow ? btnDisabled : btnMuted}`}
-          title={state.isInHeaderRow ? "Cannot delete header row" : "Delete row"}
+          title={state.isInHeaderRow ? t("editor.table.cannot_delete_header") : t("editor.table.delete_row")}
           onMouseDown={(e) => { e.preventDefault(); if (!state.isInHeaderRow) editor.chain().focus().deleteRow().run() }}>
           <Minus size={12} />
         </button>
@@ -84,17 +86,17 @@ export function TableBubbleMenu({ editor }: TableBubbleMenuProps) {
         <div className={divider} />
 
         {/* ── Col ── */}
-        <button type="button" className={`${btn} ${btnMuted}`} title="Add column left"
+        <button type="button" className={`${btn} ${btnMuted}`} title={t("editor.table.add_col_left")}
           onMouseDown={(e) => { e.preventDefault(); editor.chain().focus().addColumnBefore().run() }}>
           <ArrowLeft size={12} />
         </button>
-        <button type="button" className={`${btn} ${btnMuted}`} title="Add column right"
+        <button type="button" className={`${btn} ${btnMuted}`} title={t("editor.table.add_col_right")}
           onMouseDown={(e) => { e.preventDefault(); editor.chain().focus().addColumnAfter().run() }}>
           <ArrowRight size={12} />
         </button>
         <button type="button"
           className={`${btn} ${!editor.can().deleteColumn() ? btnDisabled : btnMuted}`}
-          title="Delete column"
+          title={t("editor.table.delete_col")}
           onMouseDown={(e) => { e.preventDefault(); editor.chain().focus().deleteColumn().run() }}>
           <Minus size={12} />
         </button>
@@ -103,29 +105,29 @@ export function TableBubbleMenu({ editor }: TableBubbleMenuProps) {
 
         {/* ── Merge/Split ── */}
         {state.canMerge && (
-          <button type="button" className={`${btn} ${btnMuted} !w-auto px-2 text-2xs`} title="Merge cells"
+          <button type="button" className={`${btn} ${btnMuted} !w-auto px-2 text-2xs`} title={t("editor.table.merge_cells")}
             onMouseDown={(e) => { e.preventDefault(); editor.chain().focus().mergeCells().run() }}>
-            Merge
+            {t("editor.table.merge_cells")}
           </button>
         )}
         {state.canSplit && (
-          <button type="button" className={`${btn} ${btnMuted} !w-auto px-2 text-2xs`} title="Split cell"
+          <button type="button" className={`${btn} ${btnMuted} !w-auto px-2 text-2xs`} title={t("editor.table.split_cell")}
             onMouseDown={(e) => { e.preventDefault(); editor.chain().focus().splitCell().run() }}>
-            Split
+            {t("editor.table.split_cell")}
           </button>
         )}
         {(state.canMerge || state.canSplit) && <div className={divider} />}
 
         {/* ── Align ── */}
-        <button type="button" className={`${btn} ${state.alignLeft ? btnActive : btnMuted}`} title="Align left"
+        <button type="button" className={`${btn} ${state.alignLeft ? btnActive : btnMuted}`} title={t("editor.table.align_left")}
           onMouseDown={(e) => { e.preventDefault(); editor.chain().focus().setTextAlign("left").run() }}>
           <TextAlignLeft size={12} />
         </button>
-        <button type="button" className={`${btn} ${state.alignCenter ? btnActive : btnMuted}`} title="Align center"
+        <button type="button" className={`${btn} ${state.alignCenter ? btnActive : btnMuted}`} title={t("editor.table.align_center")}
           onMouseDown={(e) => { e.preventDefault(); editor.chain().focus().setTextAlign("center").run() }}>
           <TextAlignCenter size={12} />
         </button>
-        <button type="button" className={`${btn} ${state.alignRight ? btnActive : btnMuted}`} title="Align right"
+        <button type="button" className={`${btn} ${state.alignRight ? btnActive : btnMuted}`} title={t("editor.table.align_right")}
           onMouseDown={(e) => { e.preventDefault(); editor.chain().focus().setTextAlign("right").run() }}>
           <TextAlignRight size={12} />
         </button>
@@ -139,7 +141,7 @@ export function TableBubbleMenu({ editor }: TableBubbleMenuProps) {
         </button>
 
         {/* ── Cell color ── */}
-        <button type="button" className={`${btn} ${btnMuted}`} title="Cell background color"
+        <button type="button" className={`${btn} ${btnMuted}`} title={t("editor.table.cell_bg")}
           onMouseDown={(e) => { e.preventDefault(); setShowColors(!showColors) }}>
           <PaintBucket size={12} />
         </button>
@@ -147,7 +149,7 @@ export function TableBubbleMenu({ editor }: TableBubbleMenuProps) {
         {/* ── Header toggle ── */}
         <button type="button"
           className={`${btn} ${state.isInHeaderRow ? btnActive : btnMuted}`}
-          title="Toggle header row"
+          title={t("editor.table.toggle_header")}
           onMouseDown={(e) => { e.preventDefault(); editor.chain().focus().toggleHeaderRow().run() }}>
           <Rows size={12} />
         </button>
@@ -157,7 +159,7 @@ export function TableBubbleMenu({ editor }: TableBubbleMenuProps) {
         {/* ── Delete (smart) ── */}
         <button type="button"
           className={`${btn} text-destructive hover:bg-destructive/10`}
-          title={state.hasCellSelection ? "Delete selected" : "Delete table"}
+          title={state.hasCellSelection ? t("editor.table.delete_row") : t("editor.table.delete_table")}
           onMouseDown={(e) => {
             e.preventDefault()
             if (state.hasCellSelection) {

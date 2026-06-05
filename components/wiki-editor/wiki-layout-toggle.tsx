@@ -29,7 +29,7 @@ export function WikiLayoutToggle({ articleId, layout, showIcon = true }: WikiLay
           ? "bg-accent/15 text-accent hover:bg-accent/25"
           : "text-muted-foreground hover:bg-hover-bg hover:text-foreground"
       )}
-      title={isEncyclopedia ? "Switch to default layout" : "Switch to encyclopedia layout"}
+      title={isEncyclopedia ? t("wiki.layout.switch_default") : t("wiki.layout.switch_encyclopedia")}
     >
       {showIcon && <Layout size={14} strokeWidth={2} />}
       {isEncyclopedia ? t("wiki.layout.encyclopedia") : t("wiki.layout.default")}
