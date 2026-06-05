@@ -8,6 +8,24 @@
 
 ---
 
+## ✅ 2026-06-05 (집/Windows, 저녁) — 에디터 버그픽스 3건 (PR #539) + 마크다운 템플릿 D안 착수→롤백 ⭐⭐⭐⭐
+
+### 핵심 결정/학습 (영구)
+- **마크다운 D안 = 명시적 변환 명령 모델**(UpNote 미러): Plot은 마크다운 파서 없음(TipTap=리치텍스트). `## `는 실시간 타이핑 input rule로만 H2, 일괄삽입/템플릿은 raw(유저 "## Today raw" 버그의 정체). UpNote 조사(웹)=마크다운 변환을 `Ctrl+Alt+V` "Paste from Markdown" **명시적 명령**으로 분리(일반 붙여넣기·코드/인용 보존). 날짜치환(`{{YYYY}}-{{MM}}-{{DD}}`→오늘)은 `templates.ts expandPlaceholders`로 이미 됨(UpNote 호환).
+- **🔴 @tiptap 부분 버전업 금지 (영구)**: `@tiptap/markdown@3.25` peerDep=core 3.25 **exact** → 단독설치 시 react/kit(3.20~3.22)와 스큐(`cancelPositionCheck` export 없음) 빌드 4에러. 전체통일(NodeView[math/infobox/callout/columns/banner] 회귀위험) 아니면 **core-독립**(marked+generateJSON). → **B방식 확정·롤백**.
+- **computer-use 한계 (영구)**: 보조모니터(MT27F75W G1)+frontmost 뺏김(Chrome dev/데스크톱)으로 batch 불안정. 앱/디자인 조사는 Chrome MCP(웹 DOM/CSS 실값) 우월. Linear도 동일 방식 조사 가능(단 복제 경계 — "절제 매몰" 반성).
+
+### 완료 (PR #539)
+- yjs OFF 배지 제거(`NoteEditorAdapter`, dev PoC+dead import) · placeholder 힌트 영구 숨김 latch(`empty-hint-placeholder`, plugin state `dirtied` — 글자 넣었다 지워도 부활X) · backlog nudge 제거(`use-autopilot-nudges`+i18n, backlog=기본 휴식 상태라 매 세션 triage spam이던 것; SRS·클러스터 유지). 클린빌드 50/50·tsc0.
+
+### 다음 (P0)
+1. **마크다운 D안 B방식**: `marked`+`generateJSON` 격리 유틸(`lib/editor/markdown.ts`, core 무관) → `Ctrl+Alt+V` → 템플릿. SESSION-LOG 2026-06-05 저녁 hook.
+
+### Store version / 검증
+무변경(v154). @tiptap/markdown 설치→스큐→**롤백**(순 신규 의존성 0). #539 클린빌드 Compiled successfully·static 50/50·tsc0.
+
+---
+
 ## ✅ 2026-06-05 (집/Windows, 오후~저녁) — 대규모 i18n sweep (앱 절반 한글화) + 에디터 버그 2 + v139 부활 버그 (PR #538, 6커밋) ⭐⭐⭐⭐⭐
 
 ### 핵심 결정/학습 (영구)

@@ -3,11 +3,21 @@
 > 우선순위 기반 작업 목록. **P0 = 다음 세션 즉시 시작점** (NEXT-ACTION.md 폐지, 2026-05-12).
 > 완료 항목은 즉시 삭제. 자세한 history는 SESSION-LOG.md + MEMORY.md.
 
-**마지막 갱신**: 2026-06-05 (집/Windows, 오후~저녁) — **대규모 i18n sweep (앱 절반 한글화, PR #538 6커밋)**. 사용자가 데스크톱 재빌드 테스트로 영어 연쇄 적발 → 전수 스캔(~400 발견, "앱 절반 미번역" 진단) → 고가시성 ~250 처리(위키·에디터 툴바/표/메뉴/다이얼로그·인서트/슬래시 블록라벨·Books 전체·사이드패널·사이드바·헤더툴팁). + 필터 드롭다운 잘림 / placeholder 동작(업노트) / v139 위키템플릿 부활 버그 / 에디터 버그2(북마크 거터 opacity·yjs 배지 dev게이팅). Store 무변경(v154), 클린빌드 exit0·vitest 318·tsc0·참조키 전수검증. **다음 = 남은 영어 i18n 2차(~150)**: 설정 옵션·온톨로지 그래프·뷰 leftover·인포박스 프리셋 라벨(데이터 레이어). **🔴 교훈: 빌드 검증 `|tail` 금지(exit mask)+`.next` 클린 필수, tsc는 미존재 키 못잡음(grep 검증)** — SESSION-LOG hook 참조.
+**마지막 갱신**: 2026-06-05 (집/Windows, 저녁) — **에디터 버그픽스 3건 (PR #539) + 마크다운 템플릿 D안 착수→롤백**. yjs OFF 배지 제거 + placeholder 힌트 영구 숨김 latch + backlog nudge 제거(#539 머지, 클린빌드 50/50). 이어 마크다운 템플릿 변환(유저 "## Today raw" 버그) D안 착수 — UpNote 조사로 "명시적 변환 명령(Ctrl+Alt+V)" 모델 확정. `@tiptap/markdown@3.25` 공식확장은 core 3.25 exact peerDep → react@3.22 등과 버전스큐 빌드깨짐 → **롤백**. **다음 = B방식(marked+generateJSON 격리 유틸, core 무관)으로 재구현** — SESSION-LOG hook 참조. **🔴 교훈: @tiptap 부분 버전업 금지(스큐), computer-use 보조모니터 불안정.**
 
 ---
 
 ## 🟣 P0 — 즉시 (cross-machine 진입점, 2026-05-31 — IA 헌법 적용 단계)
+
+### 0.0003. **🔴 P0 (다음 세션 최우선): 마크다운 템플릿 변환 — D안 B방식 (marked + generateJSON)**
+
+> 유저 버그: 템플릿에 `## Today` 마크다운 넣으면 raw로 박힘(Plot=리치텍스트, 마크다운 파서 없음). `## `는 실시간 타이핑 input rule로만 H2 변환, 일괄삽입/템플릿은 raw. **D안 = UpNote식 명시적 변환 명령**(`Ctrl+Alt+V` "Paste from Markdown", 일반 붙여넣기·코드/인용은 안 건드림). 날짜치환(`{{YYYY}}-{{MM}}-{{DD}}`→오늘)은 이미 됨(`lib/store/slices/templates.ts` `expandPlaceholders`, UpNote 호환).
+> - **B방식 확정** (A=@tiptap 전체 3.25 통일은 NodeView[math/infobox/callout/columns/banner] 회귀위험으로 기각): `@tiptap/markdown@3.25`는 core 3.25 **exact** peerDep라 단독설치 시 react@3.22 등과 스큐(`cancelPositionCheck` 없음) 빌드깨짐 → **롤백 완료**. → **core-독립** = `marked`(md→HTML) + TipTap `generateJSON(html, createRenderExtensions())`(HTML→JSON) 격리 유틸.
+> - **첫 스텝**: `marked` 설치 확인(@tiptap/markdown 롤백으로 빠졌을 수 있음, 없으면 `npm i marked`) → `lib/editor/markdown.ts` 신규(`markdownToJson`/`jsonToMarkdown`, 메인 에디터 0터치) → vitest(`## Today`·리스트·bold·유저 멀티블록 템플릿) → 클린빌드.
+> - **그 다음**: ② `Ctrl+Alt+V` "마크다운으로 붙여넣기" 명령 ③ 템플릿 적용 시 마크다운 변환 + 템플릿 작성 "마크다운으로 입력" 옵션.
+> - SOT: SESSION-LOG 2026-06-05 저녁 hook.
+
+> ✅ **2026-06-05 저녁 (PR #539): 에디터 버그픽스 3건** — ① yjs OFF 배지 완전 제거(`NoteEditorAdapter`, dev PoC 진단배지+dead import `getRefCount`) ② placeholder 힌트 영구 숨김 latch(`empty-hint-placeholder`, plugin state `dirtied` — 글자 넣었다 지워도 부활X, 제목 heading도 내용판정) ③ backlog nudge 제거(`use-autopilot-nudges`+i18n, backlog=기본 휴식 상태라 노트1개만 있어도 매 세션 triage spam이던 것; SRS·클러스터 유지; dead i18n키 `nudge.backlog.*` EN/KO 정리). 클린빌드 50/50·tsc0. **데스크톱 plot.exe는 `npx tauri build` 재빌드해야 반영.**
 
 > ✅ **2026-06-05 오후~저녁 (PR #538, 6커밋): 대규모 i18n sweep + 버그픽스** — ① 필터 드롭다운 화면 잘림(FilterPanel 가용 뷰포트 높이 캡+collisionPadding) ② 에디터 placeholder 동작(제목/본문 어디든 쓰면 사라짐, top-level paragraph만 보던 버그) ③ v139 위키템플릿 부활 버그(migrate else 분기 제거, v106/v127/v152 동일 정정) ④ **i18n ~500+ 문자열**(위키·에디터 툴바/표/메뉴/다이얼로그·인서트/슬래시 블록라벨·Books 전체·사이드패널 connections~45/detail·사이드바 메뉴·헤더툴팁 +→"새 노트") ⑤ 에디터 버그2(블록 우측 북마크 □ opacity-20→0 호버노출·yjs 배지 dev게이팅). 전수 스캔(~400) 후 고가시성 ~250 처리. 검증: 클린빌드 exit0·vitest318·tsc0·참조키 grep 전수.
 

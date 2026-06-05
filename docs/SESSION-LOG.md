@@ -6,6 +6,40 @@
 
 ---
 
+## 2026-06-05 (집/Windows, 저녁) — **에디터 버그픽스 3건 (PR #539) + 마크다운 템플릿 D안 착수 (버전 스큐로 B방식 결정·롤백)**
+
+> 🎯 **다음 즉시 액션**: **마크다운 변환 D안 = B방식(marked + TipTap `generateJSON`)으로 구현**. `@tiptap/markdown@3.25` 공식 확장은 peerDep core 3.25 **exact**라 설치 시 core를 끌어올림 → `react@3.22` 등과 스큐(`cancelPositionCheck` export 없음) **빌드 4에러** → **롤백 완료**(uninstall + core 원복). **첫 스텝**: `marked` 설치 확인(@tiptap/markdown 롤백으로 빠졌을 수 있음, 없으면 `npm i marked`) → `lib/editor/markdown.ts` 신규 = `marked.parse(md)`(md→HTML) + `generateJSON(html, createRenderExtensions())`(HTML→ProseMirror JSON) **격리 유틸**(메인 에디터 0터치, core 버전 무관). vitest로 `## Today`·리스트·bold·유저 멀티블록 템플릿 검증. 그 다음 ② `Ctrl+Alt+V` "마크다운으로 붙여넣기" ③ 템플릿 적용 시 마크다운 변환 + 템플릿 작성 "마크다운으로 입력" 옵션.
+>
+> **핵심 결정 (영구)**: Plot은 마크다운 파서 없음(TipTap=리치텍스트). `## `는 **실시간 타이핑 input rule**로만 H2, 텍스트 일괄삽입/템플릿은 raw로 박힘(유저 "## Today raw" 버그의 정체). **UpNote 조사(웹) = 마크다운 변환을 명시적 명령(`Ctrl+Alt+V` "Paste from Markdown")으로 분리** — 일반 붙여넣기는 안 건드림(코드/인용 보존). 이게 D안. 날짜치환(`{{YYYY}}-{{MM}}-{{DD}}`→오늘)은 `lib/store/slices/templates.ts` `expandPlaceholders`로 이미 됨(UpNote 호환 + Plot legacy).
+>
+> **🔴 교훈 (영구)**: ① **@tiptap 부분 버전업 금지** — markdown@3.25가 core exact라 단독설치 시 react/kit(3.20~3.22)와 스큐 빌드깨짐. 전체통일 아니면 core-독립(marked+generateJSON). NodeView 많은 Plot(math/infobox/callout/columns/banner)은 core 마이너업도 회귀위험. ② **computer-use 불안정**: UpNote 보조모니터(MT27F75W G1)+frontmost 뺏김(Chrome dev/데스크톱)으로 batch 막힘. 앱/디자인 조사엔 Chrome MCP(웹앱 DOM/CSS 실값)가 우월.
+>
+> **머신**: 집(Windows). **main HEAD**: #539 머지(a563fa3) + 이 docs PR.
+
+### 완료 (PR #539, 1커밋)
+- **yjs OFF 배지 제거** (`NoteEditorAdapter`): dev 전용 PoC 진단 배지 완전 제거 + 변수/dead import(`getRefCount`) 정리.
+- **placeholder 힌트 영구 숨김 latch** (`empty-hint-placeholder`): "지금 비었나"만 보던 로직 → plugin state `dirtied` latch. 세션 중 내용 한 번이라도 있었으면(제목 heading 포함) 영구 숨김. 글자 넣었다 지워도 부활 X. (유저 보고 버그.)
+- **backlog nudge 제거** (`use-autopilot-nudges`+i18n): backlog=기본 휴식 상태라 노트 1개만 있어도 "정리하라" 토스트 매 세션=triage spam. SRS·클러스터 nudge 유지. dead 변수(notes/setActiveRoute)/i18n키(`nudge.backlog.*`) EN/KO 제거.
+
+### 브레인스토밍 & 큰 결정 (영구)
+- **마크다운 D안 = 명시적 변환 명령 모델**(UpNote 미러). 구현 B방식(marked+generateJSON, core 무관). 위 hook 참조.
+- **UpNote 마크다운**: 타이핑=실시간변환(Plot도 됨)/붙여넣기=별도 "Paste from Markdown"(Ctrl+Alt+V). 무조건변환 X.
+- **Linear 직접 조사 가능성**: computer-use/Chrome MCP로 Linear(설치됨) 관찰→Plot 구현 가능. 단 Linear 복제 경계(메모리 "절제 매몰" 반성). 디자인 실값은 Chrome MCP(웹) 우월.
+
+### Watch Out
+- **데스크톱 plot.exe = 옛 빌드**(yjs 배지·placeholder 옛 동작 남음). #538/#539 보려면 `npx tauri build` 재빌드.
+- 마크다운 B방식: `marked` 설치 확인 필수(롤백으로 빠졌을 수 있음).
+- 스페이스바(@멘션 `allowSpaces:true`) = 유저 "해결됐다"(데스크톱 옛빌드라 못 본 듯). 근본 allowSpaces 부작용은 잠복(별 트랙).
+
+### 환경 변경
+- Store 무변경(v154). @tiptap/markdown 설치→스큐→**롤백**(core 원복). 순 신규 의존성 0.
+- 검증: #539 클린빌드 Compiled successfully·static 50/50·tsc0. (마크다운 작업은 빌드 깨져 롤백, 다음 세션 B방식.)
+
+### 머신
+집 (Windows)
+
+---
+
 ## 2026-06-05 (집/Windows, 오후~저녁) — **대규모 i18n sweep (앱 절반 한글화) + 에디터 버그픽스 2 + v139 부활 버그 (PR #538, 6커밋)**
 
 > 🎯 **다음 즉시 액션**: **남은 영어 i18n 마저 (선제 sweep 2차, ~150개)** — 고가시성(Books·패널·다이얼로그·사이드바·에디터)은 완료. 전수 스캔으로 남은 표면 확정: ① 설정 옵션/동적 메시지(appearance/editor/preferences/backup/sync) ② 온톨로지 그래프 컨트롤(`ontology-graph-canvas.tsx` ~8 title)+탭바 ③ 뷰 leftover(library-view ~30·templates ~23·folder-detail ~16·inbox·home) ④ 인포박스 프리셋 라벨("Blank/Person…" = `lib/wiki-infobox-presets.ts` **데이터 레이어**, labelKey 추가 필요) ⑤ 슬래시 블록 *설명* sub-text. **첫 스텝**: 설정+뷰 leftover(가시성 높음). **패턴 확립**: 병렬 executor가 wiring+키맵 반환 → `git diff`로 EN 복원 → KO 일괄(용어 가이드) → 참조키 grep 전수검증 → 클린빌드.
