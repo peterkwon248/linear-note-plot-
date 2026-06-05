@@ -3,13 +3,26 @@
 > 우선순위 기반 작업 목록. **P0 = 다음 세션 즉시 시작점** (NEXT-ACTION.md 폐지, 2026-05-12).
 > 완료 항목은 즉시 삭제. 자세한 history는 SESSION-LOG.md + MEMORY.md.
 
-**마지막 갱신**: 2026-06-05 (집/Windows) — **로케일별 온보딩 시드**(브라우저 `navigator.language` 감지 → KO/EN 시드 분기). KO 온보딩 볼트 신설(`lib/store/seeds-ko.ts`: 노트8·위키4·북2·카테고리5 DAG·태그/라벨5·스티커1) + EN 보강(Organizing Tools 노트·스티커) + 시드 노트 body IDB 영속·Memo 라벨 로케일화. Store 무변경(v154), `npm run build` exit0, 헤드리스 KO 시드 노트/위키/북 육안 검증. (앞서 같은 worktree: 랜딩 GH Pages 배포 #533·다운로드 마무리 #535/#536.) **다음 = 트랙 선택**(모바일 / i18n sweep / KO 시드 다듬기 — 사용자 보류, SESSION-LOG hook 참조).
+**마지막 갱신**: 2026-06-05 (집/Windows, 오후~저녁) — **대규모 i18n sweep (앱 절반 한글화, PR #538 6커밋)**. 사용자가 데스크톱 재빌드 테스트로 영어 연쇄 적발 → 전수 스캔(~400 발견, "앱 절반 미번역" 진단) → 고가시성 ~250 처리(위키·에디터 툴바/표/메뉴/다이얼로그·인서트/슬래시 블록라벨·Books 전체·사이드패널·사이드바·헤더툴팁). + 필터 드롭다운 잘림 / placeholder 동작(업노트) / v139 위키템플릿 부활 버그 / 에디터 버그2(북마크 거터 opacity·yjs 배지 dev게이팅). Store 무변경(v154), 클린빌드 exit0·vitest 318·tsc0·참조키 전수검증. **다음 = 남은 영어 i18n 2차(~150)**: 설정 옵션·온톨로지 그래프·뷰 leftover·인포박스 프리셋 라벨(데이터 레이어). **🔴 교훈: 빌드 검증 `|tail` 금지(exit mask)+`.next` 클린 필수, tsc는 미존재 키 못잡음(grep 검증)** — SESSION-LOG hook 참조.
 
 ---
 
 ## 🟣 P0 — 즉시 (cross-machine 진입점, 2026-05-31 — IA 헌법 적용 단계)
 
-> ✅ **2026-06-05 (이 PR): 로케일별 온보딩 시드** — 브라우저 언어 감지(`settings-store.ts` detectInitialLanguage, SSR 가드) → KO 브라우저는 한국어 UI+한국어 시드, EN은 영어. KO 온보딩 볼트(`lib/store/seeds-ko.ts`): 노트 8(사용법·정리 도구 한눈에·제텔카스텐·영구/임시 노트·실전·복리·메모)+위키 4(note-ref 임베드·카테고리 DAG)+북 2(수동·스마트)+카테고리 5(DAG)+태그/라벨 5+스티커 1. EN 보강(`seeds.ts`: Organizing Tools 노트+SEED_STICKERS). onRehydrate 게이트 로케일 분기 + 전 시드 노트 body IDB 영속(리로드 유지) + 위키블록/Memo라벨 로케일 분기. build0. 헤드리스(`--lang=ko-KR`+새 프로필) 노트/위키/북 육안 검증. **신규 유저만 적용**(hasSeeded 게이트).
+> ✅ **2026-06-05 오후~저녁 (PR #538, 6커밋): 대규모 i18n sweep + 버그픽스** — ① 필터 드롭다운 화면 잘림(FilterPanel 가용 뷰포트 높이 캡+collisionPadding) ② 에디터 placeholder 동작(제목/본문 어디든 쓰면 사라짐, top-level paragraph만 보던 버그) ③ v139 위키템플릿 부활 버그(migrate else 분기 제거, v106/v127/v152 동일 정정) ④ **i18n ~500+ 문자열**(위키·에디터 툴바/표/메뉴/다이얼로그·인서트/슬래시 블록라벨·Books 전체·사이드패널 connections~45/detail·사이드바 메뉴·헤더툴팁 +→"새 노트") ⑤ 에디터 버그2(블록 우측 북마크 □ opacity-20→0 호버노출·yjs 배지 dev게이팅). 전수 스캔(~400) 후 고가시성 ~250 처리. 검증: 클린빌드 exit0·vitest318·tsc0·참조키 grep 전수.
+
+### 0.0005. **🔴 P0 (이번 직속 후속): 남은 영어 i18n 2차 sweep (~150개)**
+
+> 고가시성(Books·패널·다이얼로그·사이드바·에디터)은 PR #538서 완료. 전수 스캔으로 확정된 **남은 표면**:
+> - **설정**: appearance/editor/preferences/backup/sync 옵션 라벨 + 동적 메시지(백업/복원 토스트, relativePast 헬퍼 "Xm ago" 등) — `app/settings/**`
+> - **온톨로지**: `ontology-graph-canvas.tsx` 그래프 컨트롤 ~8 title(Cluster/Spread/Zoom/Reset/Clear selection 등) + `ontology-tab-bar.tsx` aria + `insights-charts.tsx`
+> - **뷰 leftover**: library-view ~30(References/필드 추가·View as·Sort by 등)·templates ~23·folder-detail ~16(섹션 헤딩·빈 상태, useT 없음)·inbox ~6·home 약간
+> - **인포박스 프리셋 라벨**("Blank/Person/Place…") = `lib/wiki-infobox-presets.ts` **데이터 레이어** → preset에 labelKey 추가 + 소비처 `t(labelKey)` (블록 라벨 패턴과 동일)
+> - **슬래시 블록 *설명* sub-text**(라벨은 했고 description만 영어 남음) + FixedToolbar 오버플로 그리드 단축 라벨
+> - **방법(확립됨)**: 병렬 executor wiring(하위 컴포넌트마다 useT)+키맵 → KO 일괄(용어 가이드, docs SESSION-LOG hook) → `git diff`로 EN 복원 → 참조키 grep 전수검증 → **`rm -rf .next && npm run build`(파이프 없이)**.
+> - **첫 스텝**: 설정 + 뷰 leftover(가시성 높음)부터.
+
+> ✅ **2026-06-05 (PR #537): 로케일별 온보딩 시드** — 브라우저 언어 감지(`settings-store.ts` detectInitialLanguage, SSR 가드) → KO 브라우저는 한국어 UI+한국어 시드, EN은 영어. KO 온보딩 볼트(`lib/store/seeds-ko.ts`): 노트 8(사용법·정리 도구 한눈에·제텔카스텐·영구/임시 노트·실전·복리·메모)+위키 4(note-ref 임베드·카테고리 DAG)+북 2(수동·스마트)+카테고리 5(DAG)+태그/라벨 5+스티커 1. EN 보강(`seeds.ts`: Organizing Tools 노트+SEED_STICKERS). onRehydrate 게이트 로케일 분기 + 전 시드 노트 body IDB 영속(리로드 유지) + 위키블록/Memo라벨 로케일 분기. build0. 헤드리스(`--lang=ko-KR`+새 프로필) 노트/위키/북 육안 검증. **신규 유저만 적용**(hasSeeded 게이트).
 
 ### 0.0008. **🟡 P0 (사용자 관심, 2026-06-05): 모바일 대응 — 반응형 진단 → PWA/네이티브**
 

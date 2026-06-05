@@ -6,6 +6,44 @@
 
 ---
 
+## 2026-06-05 (집/Windows, 오후~저녁) — **대규모 i18n sweep (앱 절반 한글화) + 에디터 버그픽스 2 + v139 부활 버그 (PR #538, 6커밋)**
+
+> 🎯 **다음 즉시 액션**: **남은 영어 i18n 마저 (선제 sweep 2차, ~150개)** — 고가시성(Books·패널·다이얼로그·사이드바·에디터)은 완료. 전수 스캔으로 남은 표면 확정: ① 설정 옵션/동적 메시지(appearance/editor/preferences/backup/sync) ② 온톨로지 그래프 컨트롤(`ontology-graph-canvas.tsx` ~8 title)+탭바 ③ 뷰 leftover(library-view ~30·templates ~23·folder-detail ~16·inbox·home) ④ 인포박스 프리셋 라벨("Blank/Person…" = `lib/wiki-infobox-presets.ts` **데이터 레이어**, labelKey 추가 필요) ⑤ 슬래시 블록 *설명* sub-text. **첫 스텝**: 설정+뷰 leftover(가시성 높음). **패턴 확립**: 병렬 executor가 wiring+키맵 반환 → `git diff`로 EN 복원 → KO 일괄(용어 가이드) → 참조키 grep 전수검증 → 클린빌드.
+>
+> **🔴 위험+회피 (이번에 데인 것 — 최대 교훈)**: ① **빌드 검증 절대 `npm run build 2>&1 | tail` 금지** — tail이 npm 실패 exit code를 0으로 가림 + incremental TS 캐시 false-clean까지 겹쳐 에러를 두 번 놓침(encyclopedia `t` scope). **반드시 `rm -rf .next && npm run build`(파이프 없이) + 출력서 "Failed to compile" 0 / route table 직접 확인.** ② **tsc는 미존재 i18n 키 못 잡음**(translate가 key로 fallback→UI에 키 문자열 노출) → wiring 후 참조 `t("...")` 키가 i18n.ts에 실제 존재하는지 grep 전수 검증(동적 `t(\`x.${v}\`)`는 prefix가 false-positive로 뜸). ③ **executor 통제**: "i18n.ts 건드리지 마"라 해도 일부가 키 추가함(tsc TS1117 중복 확인+KO 검토). "분석만 하고 편집 안 함"도 발생(tool_uses 비정상 적으면 의심)→diff로 실제 편집 확인. ④ **하위 컴포넌트 useT scope**: 문자열 든 함수마다 `const t=useT()`(부모 t 재사용=빌드 실패 "Cannot find name 't'").
+>
+> **참고**: `lib/i18n.ts`(EN@20·KO@~1089·useT, flat dotted key). ProseMirror/TipTap config=`translate(key, useSettingsStore.getState().language as Locale)`. 블록 라벨=`t(\`block.${id}.label\`)`(레지스트리 데이터 보존+소비처 렌더 분기). 공통=common.*/panel.*/status.*/priority.* 재사용.
+>
+> **머신**: 집(Windows). **main HEAD**: #538 squash 머지 후. branch worktree 머지로 소멸.
+
+### 완료 (PR #538, 6커밋)
+- **필터 드롭다운 화면 잘림**: FilterPanel 메인/서브패널 가용 뷰포트 높이 캡(`--radix-popover-content-available-height`) + 서브패널 뷰포트 클램프 + collisionPadding. (공유 컴포넌트라 17 필터 드롭다운 전부 개선.)
+- **에디터 placeholder 동작 (업노트)**: "템플릿에서 삽입" 힌트가 제목/본문 어디든 쓰면 사라지게(top-level paragraph만 보던 로직→전 노드 content 검사). + 그 string i18n(ProseMirror 데코=translate()). 사용자가 "삭제 안 됨"으로 신고한 게 이거였음(데이터 삭제 아님).
+- **v139 위키템플릿 부활 버그**: `migrate.ts`가 삭제된 SEED_WIKI_TEMPLATES를 hasSeeded 게이트 없이 재주입하던 else(id-dedup) 분기 제거 = v106/v127/v152 동일 정정("부활 0"). repro 확인 후 별개 잠복 버그로 수정.
+- **i18n 대규모 sweep ~500+ 문자열**: 위키 UI · 에디터 placeholder/툴바/표/메뉴/템플릿 다이얼로그 · 인서트/슬래시 **블록 라벨** · **Books 전체** · 사이드 패널(connections~45/discover/bookmarks/category·file·label·reference detail) · 사이드바 컨텍스트 메뉴 · 헤더 버튼 툴팁(+→"새 노트"). 전수 스캔 ~400 발견 → 고가시성 ~250 처리.
+- **에디터 버그 2 (사용자 적발)**: 블록 우측 북마크 □ 상시 노출(`opacity-20`→`opacity-0` 호버노출, 코멘트마커 패턴 통일) + yjs 진단 배지 프로덕션 노출(`NODE_ENV==="development"` 게이팅).
+
+### 브레인스토밍 & 큰 결정 (영구)
+- **앱 i18n 실태 진단**: 코어만 됐고 Books·사이드패널·다이얼로그는 통째 영어 = whack-a-mole이 아니라 앱 절반 미번역. 전수 스캔 후 고가시성 우선. 남은 ~150은 2차.
+- **i18n 패턴 확립** (위 다음 액션 참조): executor wiring+키맵→KO 일괄→diff로 EN 복원→grep 전수검증→클린빌드.
+- **데이터 라벨 i18n**: 블록 레지스트리/인포박스 프리셋처럼 label이 데이터인 건 `t(\`...${id}...\`)` 소비처 렌더 분기(데이터 보존+검색 fallback).
+- **거터 affordance=호버 노출 통일**(opacity-0 at rest), 실험 배지=dev 전용.
+
+### Watch Out
+- **빌드 검증 함정**(tail mask + incremental false-clean) = 이번 세션 최대 교훈. 위 위험 참조.
+- 남은 영어 ~150 (설정/온톨로지/뷰 leftover/인포박스 프리셋 데이터).
+- 데스크톱 앱 = `out/` embed라 변경 보려면 `npx tauri build` 재빌드.
+
+### 환경 변경
+- Store version: **무변경 (v154)** — 전부 UI/i18n + migrate 로직 정정(스키마 불변).
+- 검증: 클린 빌드 exit0(다회), vitest 318 passed/0 failed, tsc 0, 참조키 전수 존재.
+- i18n 키 대량 추가(common/panel/status/priority/entity/book/dialog/picker/cmdk/panel.conn/block.* 등).
+
+### 머신
+집 (Windows)
+
+---
+
 ## 2026-06-05 (집/Windows) — **로케일별 온보딩 시드 (브라우저 감지 + KO/EN 시드 분기) + 랜딩 배포/다운로드 마무리**
 
 > 🎯 **다음 즉시 액션**: **트랙 선택 (사용자가 보류)** — 아래 3 중 택1. 사용자 의도 = "after-work부터 완벽히, 다른 컴퓨터에서 로드". 가장 신선한 관심사는 **모바일**.

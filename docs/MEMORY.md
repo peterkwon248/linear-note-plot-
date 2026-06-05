@@ -8,6 +8,27 @@
 
 ---
 
+## ✅ 2026-06-05 (집/Windows, 오후~저녁) — 대규모 i18n sweep (앱 절반 한글화) + 에디터 버그 2 + v139 부활 버그 (PR #538, 6커밋) ⭐⭐⭐⭐⭐
+
+### 핵심 결정/학습 (영구)
+- **앱 i18n 실태**: 코어(노트뷰/필터/위키 일부)만 됐고 **Books·사이드패널·다이얼로그·에디터 툴바는 통째 영어**였음. 사용자 연쇄 적발 → 전수 스캔(~400) → "앱 절반 미번역" 진단 → 고가시성 우선. 남은 ~150은 2차(설정·온톨로지·뷰 leftover·인포박스 프리셋).
+- **i18n 패턴(영구)**: 병렬 executor wiring(**하위 컴포넌트마다 `const t=useT()`** — 부모 t 재사용 시 빌드 실패) + 키맵 반환 → KO 일괄(용어 일관) → `git diff`로 EN 복원 → 참조키 grep 전수검증. 데이터 라벨(블록 레지스트리/인포박스 프리셋)=`t(\`...${id}...\`)` 소비처 렌더 분기(데이터 보존+검색 fallback). ProseMirror/TipTap config=`translate(key, useSettingsStore.getState().language)`.
+- **🔴 빌드 검증 함정(영구, 최대 교훈)**: `npm run build 2>&1 | tail` **금지** — tail이 npm 실패 exit code를 0으로 가림 + incremental TS 캐시 false-clean까지 겹쳐 에러를 두 번 놓침. **반드시 `rm -rf .next && npm run build`(파이프 없이) + 출력서 "Failed to compile" 0 직접 확인.** tsc는 미존재 i18n 키 못 잡음(translate가 key fallback→UI에 키 노출)→grep 전수검증.
+- **placeholder 동작**: "Insert from a template" 힌트는 완전 빈 노트에서만(제목 heading도 doc 첫 블록이라 content 검사) — 사용자 "삭제 안 됨" 신고의 정체(데이터 삭제 아님).
+- **v139 부활 버그**: migrate가 삭제 시드를 hasSeeded 게이트 없이 재주입(else id-dedup) → 제거(v106/v127/v152 동일). migrate는 버전 업 1회 실행이라 신규 v154 유저는 무관(업그레이드 유저만).
+- **거터 affordance=호버 노출 통일**(opacity-0 at rest, 코멘트마커 패턴) / 실험 배지=dev 전용(`NODE_ENV`).
+
+### 완료 (PR #538)
+- 필터 드롭다운 잘림 / placeholder 동작 / v139 부활 버그 / i18n ~500+(위키·에디터·Books 전체·사이드패널·다이얼로그·사이드바·헤더툴팁·인서트/슬래시 블록라벨) / 에디터 버그2(북마크 거터·yjs 배지).
+
+### 다음 (P0)
+1. 남은 영어 i18n 2차(~150): 설정 옵션·온톨로지 그래프·뷰 leftover(library/templates/folder-detail/inbox/home)·인포박스 프리셋 라벨(데이터 레이어).
+
+### Store version / 검증
+무변경(v154, migrate 로직 정정=스키마 불변). 클린빌드 exit0(다회)·vitest 318 passed/0 failed·tsc0·참조키 전수.
+
+---
+
 ## ✅ 2026-06-05 (집/Windows) — 로케일별 온보딩 시드 (브라우저 감지 + KO/EN 분기) ⭐⭐⭐⭐⭐
 
 **범위**: 처음 쓰는 유저용 온보딩 시드를 로케일별로 — 한국 브라우저는 한국어 시드, 그 외 영어. Plot 사용법 + 제텔카스텐 활용 + 정리 개념(폴더/태그/라벨/스티커/카테고리/우선순위/상태) 교육.
