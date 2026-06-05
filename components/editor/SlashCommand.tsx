@@ -16,6 +16,8 @@ import {
   getBlocksForSurface,
   type BlockRegistryEntry,
 } from "./block-registry"
+import { translate, type Locale } from "@/lib/i18n"
+import { useSettingsStore } from "@/lib/settings-store"
 
 /** Slash-menu item: a registry entry, or a dynamically-generated template item
  *  that wears the same shape. */
@@ -141,9 +143,20 @@ export const SlashCommandExtension = Extension.create({
         },
         items: ({ query }: { query: string }) => {
           const q = query.toLowerCase()
-          const baseItems = getBlocksForSurface("slash").filter((item) =>
-            matchesQuery(item, q),
-          )
+          const locale = useSettingsStore.getState().language as Locale
+          // Display registry blocks with their localized label, while keeping
+          // the English label + aliases searchable too (so both "table" and
+          // "표" find the Table block).
+          const baseItems = getBlocksForSurface("slash")
+            .filter(
+              (item) =>
+                matchesQuery(item, q) ||
+                translate(`block.${item.id}.label`, locale).toLowerCase().includes(q),
+            )
+            .map((item) => ({
+              ...item,
+              label: translate(`block.${item.id}.label`, locale),
+            }))
 
           // 2026-05-13: 개별 templates는 dialog로 일원화 (UpNote 패턴).
           // slash 메뉴에는 단일 "Insert template…" entry만 — 클릭 시 custom
@@ -156,8 +169,8 @@ export const SlashCommandExtension = Extension.create({
           const templateEntry: SlashItem[] = hasTemplates
             ? [{
                 id: "template-picker",
-                label: "Insert template…",
-                description: "Browse and insert from your templates",
+                label: translate("editor.slash.insert_template", locale),
+                description: translate("editor.slash.insert_template_desc", locale),
                 icon: Layout,
                 surfaces: ["slash"],
                 group: "structure",

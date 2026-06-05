@@ -118,13 +118,13 @@ export function SidePanelBookmarks() {
         {totalCounts.all > 0 && (
           <div className="flex items-center gap-1 mb-2">
             <FilterChip active={filter === "all"} onClick={() => setFilter("all")} count={totalCounts.all}>
-              All
+              {t("common.all")}
             </FilterChip>
             <FilterChip active={filter === "note"} onClick={() => setFilter("note")} count={totalCounts.note}>
-              Notes
+              {t("common.notes")}
             </FilterChip>
             <FilterChip active={filter === "wiki"} onClick={() => setFilter("wiki")} count={totalCounts.wiki}>
-              Wiki
+              {t("common.wiki")}
             </FilterChip>
           </div>
         )}
@@ -141,14 +141,14 @@ export function SidePanelBookmarks() {
               type="text"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="Search bookmarks..."
+              placeholder={t("panel.bookmarks.search_placeholder")}
               className="w-full text-sm bg-secondary/30 border border-border-subtle rounded-md pl-9 pr-8 py-2 outline-none focus:ring-1 focus:ring-accent/40 focus:border-accent/50 placeholder:text-muted-foreground/70 text-foreground"
             />
             {query && (
               <button
                 onClick={() => setQuery("")}
                 className="absolute right-1 top-1/2 -translate-y-1/2 p-0.5 rounded hover:bg-hover-bg text-muted-foreground hover:text-foreground"
-                title="Clear"
+                title={t("common.clear")}
               >
                 <X size={10} />
               </button>
@@ -203,7 +203,7 @@ export function SidePanelBookmarks() {
                     >
                       {bm.label}
                       {isDeleted && (
-                        <span className="ml-1 text-2xs text-muted-foreground/70">(deleted)</span>
+                        <span className="ml-1 text-2xs text-muted-foreground/70">{t("panel.bookmarks.deleted")}</span>
                       )}
                     </span>
                     <span className="flex items-center gap-1 text-2xs text-muted-foreground">
@@ -216,7 +216,7 @@ export function SidePanelBookmarks() {
                       {!isDeleted && targetTitle && (
                         <>
                           <span className="text-muted-foreground/60">·</span>
-                          <span className="truncate">{targetTitle || "Untitled"}</span>
+                          <span className="truncate">{targetTitle || t("common.untitled")}</span>
                         </>
                       )}
                     </span>
@@ -227,7 +227,7 @@ export function SidePanelBookmarks() {
                       ev.stopPropagation()
                       unpinBookmark(bm.id)
                     }}
-                    title="Unpin"
+                    title={t("panel.bookmarks.unpin")}
                   >
                     <X size={11} strokeWidth={2} className="text-muted-foreground/60" />
                   </button>
@@ -321,11 +321,11 @@ export function SidePanelBookmarks() {
  * the entity-local section is empty.
  */
 function EntityAnchorPlaceholder({ label }: { label: string }) {
+  const t = useT()
   return (
     <div className="px-3 py-3 border-t border-border-subtle">
       <p className="text-2xs text-muted-foreground/70 italic">
-        {label} don&apos;t carry inline anchors. Bookmarks pinned from notes
-        or wiki articles still appear above.
+        {t("panel.bookmarks.no_anchors_for_entity").replace("{entity}", label)}
       </p>
     </div>
   )
@@ -389,6 +389,7 @@ function NoteLocalAnchors({
   onPin: (anchorId: string, label: string, anchorType: GlobalBookmark["anchorType"]) => void
   onUnpin: (bookmarkId: string) => void
 }) {
+  const t = useT()
   const localAnchors = useMemo(() => {
     if (!note?.contentJson) return []
     return extractAnchorsFromContentJson(note.contentJson)
@@ -417,7 +418,7 @@ function NoteLocalAnchors({
 
   return (
     <div className="p-3">
-      <SectionHeader icon={BookmarkSimple} label="ANCHORS IN NOTE" count={localAnchors.length} />
+      <SectionHeader icon={BookmarkSimple} label={t("panel.bookmarks.anchors_in_note")} count={localAnchors.length} />
       <ul className="space-y-0.5">
         {localAnchors.map((anchor) => {
           const key = `${note.id}:${anchor.id}`
@@ -445,7 +446,7 @@ function NoteLocalAnchors({
                     onPin(anchor.id, anchor.label, anchor.type)
                   }
                 }}
-                title={isPinned ? "Remove bookmark" : "Add bookmark"}
+                title={isPinned ? t("panel.bookmarks.remove_bookmark") : t("panel.bookmarks.add_bookmark")}
               >
                 <BookmarkSimple
                   size={12}
@@ -483,6 +484,7 @@ function WikiLocalAnchors({
   onPin: (anchorId: string, label: string, anchorType: GlobalBookmark["anchorType"]) => void
   onUnpin: (bookmarkId: string) => void
 }) {
+  const t = useT()
   const localAnchors = useMemo(
     () => extractAnchorsFromWikiBlocks(article.blocks),
     [article.blocks],
@@ -512,7 +514,7 @@ function WikiLocalAnchors({
 
   return (
     <div className="p-3">
-      <SectionHeader icon={BookmarkSimple} label="ANCHORS IN WIKI" count={localAnchors.length} />
+      <SectionHeader icon={BookmarkSimple} label={t("panel.bookmarks.anchors_in_wiki")} count={localAnchors.length} />
       <ul className="space-y-0.5">
         {localAnchors.map((anchor) => {
           const key = `${article.id}:${anchor.id}`
@@ -540,7 +542,7 @@ function WikiLocalAnchors({
                     onPin(anchor.id, anchor.label, anchor.type)
                   }
                 }}
-                title={isPinned ? "Remove bookmark" : "Add bookmark"}
+                title={isPinned ? t("panel.bookmarks.remove_bookmark") : t("panel.bookmarks.add_bookmark")}
               >
                 <BookmarkSimple
                   size={12}
@@ -587,6 +589,7 @@ function BookContextBookmarks({
   articlesById: Record<string, any>
   onNavigate: (bm: GlobalBookmark) => void
 }) {
+  const t = useT()
   const notes = usePlotStore((s) => s.notes)
   const folders = usePlotStore((s) => s.folders)
   const wikiArticles = usePlotStore((s) => s.wikiArticles)
@@ -627,14 +630,14 @@ function BookContextBookmarks({
 
   return (
     <div className="p-3 border-t border-border-subtle">
-      <SectionHeader icon={BooksIcon} label="IN THIS BOOK" count={inThisBook.length} />
+      <SectionHeader icon={BooksIcon} label={t("panel.bookmarks.in_this_book")} count={inThisBook.length} />
       {bookItemRefIds.size === 0 ? (
         <p className="text-2xs text-muted-foreground/70 italic px-1">
-          No items in this book yet
+          {t("panel.bookmarks.no_book_items")}
         </p>
       ) : inThisBook.length === 0 ? (
         <p className="text-2xs text-muted-foreground/70 italic px-1">
-          No bookmarks in this book&apos;s items yet
+          {t("panel.bookmarks.no_book_bookmarks")}
         </p>
       ) : (
         <ul className="space-y-0.5">
@@ -673,7 +676,7 @@ function BookContextBookmarks({
                   >
                     {bm.label}
                     {isDeleted && (
-                      <span className="ml-1 text-2xs text-muted-foreground/70">(deleted)</span>
+                      <span className="ml-1 text-2xs text-muted-foreground/70">{t("panel.bookmarks.deleted")}</span>
                     )}
                   </span>
                   <span className="flex items-center gap-1 text-2xs text-muted-foreground">

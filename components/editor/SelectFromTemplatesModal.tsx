@@ -18,6 +18,7 @@
 
 import { useMemo, useState } from "react"
 import type { Editor } from "@tiptap/core"
+import { useT } from "@/lib/i18n"
 import {
   CommandDialog,
   CommandEmpty,
@@ -40,6 +41,7 @@ type Props = {
 }
 
 export function SelectFromTemplatesModal({ open, onOpenChange, editor }: Props) {
+  const t = useT()
   const templates = usePlotStore((s) => s.templates ?? [])
   const [query, setQuery] = useState("")
 
@@ -64,19 +66,19 @@ export function SelectFromTemplatesModal({ open, onOpenChange, editor }: Props) 
     <CommandDialog
       open={open}
       onOpenChange={onOpenChange}
-      title="Select from templates"
-      description="Pick a template to insert at the cursor."
+      title={t("editor.template.title")}
+      description={t("editor.template.desc")}
     >
       <CommandInput
-        placeholder="Search templates..."
+        placeholder={t("editor.template.search")}
         value={query}
         onValueChange={setQuery}
       />
       <CommandList>
         <CommandEmpty>
           {templates.length === 0
-            ? "No templates yet. Create one in More → Templates."
-            : "No templates match this search."}
+            ? t("editor.template.empty")
+            : t("editor.template.no_results")}
         </CommandEmpty>
         {sortedTemplates.length > 0 && (
           <CommandGroup>

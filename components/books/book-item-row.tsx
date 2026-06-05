@@ -21,6 +21,7 @@ import { useState, useEffect, useMemo, useRef, type ReactNode } from "react"
 import { useSortable } from "@dnd-kit/sortable"
 import { CSS } from "@dnd-kit/utilities"
 import { usePlotStore } from "@/lib/store"
+import { useT } from "@/lib/i18n"
 import type { ResolvedBookItem } from "@/lib/books/resolver"
 import { Folder as PhFolder, BookOpen as PhBookOpen, Hash as PhHash, Sticker as PhSticker } from "lucide-react"
 import { toast } from "sonner"
@@ -54,6 +55,7 @@ export function BookItemRow({
   onMoveDown,
   onOpen,
 }: BookItemRowProps) {
+  const t = useT()
   const removeItemFromBook = usePlotStore((s) => s.removeItemFromBook)
   const updateChapterHeading = usePlotStore((s) => s.updateChapterHeading)
   const addExcludeId = usePlotStore((s) => s.addExcludeId)
@@ -110,7 +112,7 @@ export function BookItemRow({
     if (item.source === "auto") {
       if (item.kind === "note" || item.kind === "wiki") {
         addExcludeId(bookId, item.refId)
-        toast("Excluded from auto-fill", { duration: 1500 })
+        toast(t("book.item.excluded_toast"), { duration: 1500 })
       }
       // Auto chapter-heading: no-op (managed at SourcesSection level)
       return
@@ -171,7 +173,7 @@ export function BookItemRow({
         className="group flex items-center gap-2 rounded-md px-2 py-1.5 text-note text-muted-foreground/70"
       >
         <Warning size={14} className="shrink-0 text-amber-500" strokeWidth={2} />
-        <span className="flex-1 italic">Item no longer available</span>
+        <span className="flex-1 italic">{t("book.item.stale")}</span>
         <RemoveButton onClick={handleRemove} />
       </div>
     )
@@ -222,9 +224,9 @@ export function BookItemRow({
           {...attributes}
           {...(listeners as any)}
           type="button"
-          aria-label="Drag to reorder"
+          aria-label={t("book.item.drag_reorder")}
           className="flex h-6 w-5 items-center justify-center text-muted-foreground/40 opacity-0 transition-opacity group-hover:opacity-100 cursor-grab active:cursor-grabbing"
-          title={isAuto ? "같은 소스 안에서 옮기기" : "Drag to reorder"}
+          title={isAuto ? "같은 소스 안에서 옮기기" : t("book.item.drag_reorder")}
         >
           <DotsSixVertical size={14} strokeWidth={2.5} />
         </button>
@@ -242,21 +244,21 @@ export function BookItemRow({
       <div className="flex items-center">
         <button
           type="button"
-          aria-label="Move up"
+          aria-label={t("book.item.move_up")}
           onClick={onMoveUp}
           disabled={!canMoveUp || isAutoHeading}
           className="flex h-6 w-5 items-center justify-center rounded text-muted-foreground/60 hover:text-foreground hover:bg-hover-bg disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-          title={isAutoHeading ? "자동 챕터 헤딩은 옮길 수 없습니다" : "Move up"}
+          title={isAutoHeading ? "자동 챕터 헤딩은 옮길 수 없습니다" : t("book.item.move_up")}
         >
           <CaretUp size={11} strokeWidth={2.5} />
         </button>
         <button
           type="button"
-          aria-label="Move down"
+          aria-label={t("book.item.move_down")}
           onClick={onMoveDown}
           disabled={!canMoveDown || isAutoHeading}
           className="flex h-6 w-5 items-center justify-center rounded text-muted-foreground/60 hover:text-foreground hover:bg-hover-bg disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-          title={isAutoHeading ? "자동 챕터 헤딩은 옮길 수 없습니다" : "Move down"}
+          title={isAutoHeading ? "자동 챕터 헤딩은 옮길 수 없습니다" : t("book.item.move_down")}
         >
           <CaretDown size={11} strokeWidth={2.5} />
         </button>
@@ -297,7 +299,7 @@ export function BookItemRow({
 
       <RemoveButton
         onClick={handleRemove}
-        title={isAuto ? "Exclude from auto-fill" : "Remove from book"}
+        title={isAuto ? t("book.item.exclude") : t("book.item.remove")}
       />
     </div>
   )
@@ -334,6 +336,7 @@ function ChapterHeadingRow({
   nodeRef,
   isAuto = false,
 }: ChapterHeadingRowProps) {
+  const t = useT()
   const [editing, setEditing] = useState(false)
   const [draft, setDraft] = useState(title)
   const inputRef = useRef<HTMLInputElement>(null)
@@ -368,9 +371,9 @@ function ChapterHeadingRow({
             {...attributes}
             {...listeners}
             type="button"
-            aria-label="Drag heading"
+            aria-label={t("book.item.drag_heading")}
             className="flex h-6 w-5 items-center justify-center text-muted-foreground/40 opacity-0 transition-opacity group-hover:opacity-100 cursor-grab active:cursor-grabbing"
-            title="Drag to reorder"
+            title={t("book.item.drag_reorder")}
           >
             <DotsSixVertical size={14} strokeWidth={2.5} />
           </button>
@@ -383,21 +386,21 @@ function ChapterHeadingRow({
           <div className="flex items-center">
             <button
               type="button"
-              aria-label="Move heading up"
+              aria-label={t("book.item.move_heading_up")}
               onClick={onMoveUp}
               disabled={!canMoveUp}
               className="flex h-6 w-5 items-center justify-center rounded text-muted-foreground/60 hover:text-foreground hover:bg-hover-bg disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-              title="Move up"
+              title={t("book.item.move_up")}
             >
               <CaretUp size={11} strokeWidth={2.5} />
             </button>
             <button
               type="button"
-              aria-label="Move heading down"
+              aria-label={t("book.item.move_heading_down")}
               onClick={onMoveDown}
               disabled={!canMoveDown}
               className="flex h-6 w-5 items-center justify-center rounded text-muted-foreground/60 hover:text-foreground hover:bg-hover-bg disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-              title="Move down"
+              title={t("book.item.move_down")}
             >
               <CaretDown size={11} strokeWidth={2.5} />
             </button>
@@ -411,7 +414,7 @@ function ChapterHeadingRow({
           {isAuto ? (
             <span
               className="text-note font-semibold text-foreground/70 px-0.5 truncate text-left"
-              title="Auto-generated heading from smart source"
+              title={t("book.item.auto_heading_title")}
             >
               {title}
             </span>
@@ -431,7 +434,7 @@ function ChapterHeadingRow({
                   cancel()
                 }
               }}
-              placeholder="Heading"
+              placeholder={t("book.item.heading_placeholder")}
               className="text-note font-semibold text-foreground bg-transparent border-b border-accent/40 px-0.5 py-0.5 focus:outline-none focus:border-accent min-w-[120px] max-w-[280px]"
             />
           ) : (
@@ -439,11 +442,11 @@ function ChapterHeadingRow({
               type="button"
               onClick={() => setEditing(true)}
               className="text-note font-semibold text-foreground hover:text-accent transition-colors px-0.5 truncate text-left"
-              title="Click to edit heading"
+              title={t("book.item.click_edit_heading")}
             >
               {title || (
                 <span className="text-muted-foreground/60 italic font-normal">
-                  Untitled heading
+                  {t("book.untitled_heading")}
                 </span>
               )}
             </button>
@@ -460,13 +463,15 @@ function ChapterHeadingRow({
 
 /* ── Remove × button (shared) ─────────────────────────────── */
 
-function RemoveButton({ onClick, title = "Remove from book" }: { onClick: () => void; title?: string }) {
+function RemoveButton({ onClick, title }: { onClick: () => void; title?: string }) {
+  const t = useT()
+  const resolvedTitle = title ?? t("book.item.remove")
   return (
     <button
       type="button"
       onClick={onClick}
-      aria-label={title}
-      title={title}
+      aria-label={resolvedTitle}
+      title={resolvedTitle}
       className="flex h-6 w-6 shrink-0 items-center justify-center rounded text-muted-foreground/50 opacity-0 transition-all group-hover:opacity-100 hover:bg-destructive/10 hover:text-destructive"
     >
       <PhX size={12} strokeWidth={2.5} />

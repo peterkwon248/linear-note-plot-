@@ -20,6 +20,7 @@ import { X as PhX, Search as MagnifyingGlass } from "lucide-react"
 import { IconTemplate } from "@/components/plot-icons"
 import { cn } from "@/lib/utils"
 import type { WikiTemplate } from "@/lib/types"
+import { useT } from "@/lib/i18n"
 
 function summarize(t: WikiTemplate): string {
   const sectionCount = t.blocks.filter((b) => b.type === "section").length
@@ -54,6 +55,7 @@ export function WikiTemplatePicker({
   onApplied,
   onTemplateChosen,
 }: WikiTemplatePickerProps) {
+  const t = useT()
   const wikiTemplates = usePlotStore((s) => Array.isArray(s.wikiTemplates) ? s.wikiTemplates : [])
   const createWikiArticleFromTemplate = usePlotStore((s) => s.createWikiArticleFromTemplate)
   const createWikiArticle = usePlotStore((s) => s.createWikiArticle)
@@ -177,12 +179,12 @@ export function WikiTemplatePicker({
                 >
                   <div className="flex items-center gap-2 min-w-0">
                     <IconTemplate size={14} />
-                    <span className="truncate text-ui font-medium text-foreground">Blank article</span>
+                    <span className="truncate text-ui font-medium text-foreground">{t("wiki.template.blank")}</span>
                   </div>
                   <p className="text-2xs text-muted-foreground line-clamp-2">
                     Start from scratch. No predefined structure.
                   </p>
-                  <div className="text-2xs text-muted-foreground">Empty</div>
+                  <div className="text-2xs text-muted-foreground">{t("wiki.template.blank_desc")}</div>
                 </button>
               )}
               {filtered.map((t) => (

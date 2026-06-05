@@ -277,7 +277,7 @@ export function BookTable({
                   <StatusShapeIcon status={group.key as NoteStatus} size={12} />
                 )}
                 {!["smart", "manual", "hybrid", "pinned", "others", "backlog", "todo", "in_progress", "done"].includes(group.key) && <span />}
-                <span className="a-tg__label">{group.label || "Untitled"}</span>
+                <span className="a-tg__label">{group.label || t("common.untitled")}</span>
                 <span className="a-tg__count tabular-nums">{group.books.length}</span>
                 <div className="a-tg__line" />
               </div>
@@ -340,6 +340,7 @@ function BookFloatingBar({
   onTogglePin: (id: string, pinned: boolean | undefined) => void
   onDelete: (id: string, title: string) => void
 }) {
+  const t = useT()
   const selectedBooks = books.filter((b) => ids.has(b.id))
   const count = selectedBooks.length
   if (count === 0) return null
@@ -371,10 +372,10 @@ function BookFloatingBar({
           type="button"
           onClick={onClear}
           className="flex h-7 items-center gap-1 rounded-md px-2 text-2xs font-medium text-muted-foreground hover:bg-hover-bg hover:text-foreground transition-colors"
-          title="Clear selection (Esc)"
+          title={t("book.table.clear_selection")}
         >
           <PhX size={12} strokeWidth={2} />
-          <span className="tabular-nums">{count} selected</span>
+          <span className="tabular-nums">{t("book.table.selected_count").replace("{count}", String(count))}</span>
         </button>
         <div className="h-5 w-px bg-border mx-0.5" />
         <button
@@ -385,7 +386,7 @@ function BookFloatingBar({
           {allPinned
             ? <PushPinSlash size={13} strokeWidth={2} />
             : <PushPin size={13} strokeWidth={2} className="text-amber-500" />}
-          {allPinned ? "Unpin" : "Pin"}
+          {allPinned ? t("common.unpin") : t("common.pin")}
         </button>
         <button
           type="button"
@@ -393,7 +394,7 @@ function BookFloatingBar({
           className="flex h-7 items-center gap-1.5 rounded-md px-2 text-2xs font-medium text-destructive hover:bg-destructive/10 transition-colors"
         >
           <Trash size={13} strokeWidth={2} />
-          Trash
+          {t("book.table.trash")}
         </button>
       </div>
     </div>
@@ -466,6 +467,7 @@ function BookRow({
   onRestore: (id: string, title: string) => void
   onPermanentDelete: (id: string, title: string) => void
 }) {
+  const t = useT()
   const kind = getBookKind(book)
   const sourceKinds = Array.from(new Set((book.smartSources ?? []).map((s) => s.kind)))
 
@@ -515,7 +517,7 @@ function BookRow({
               // the kind icon vs. notes/wiki — user-flagged as "too wide".
               style={c.id === "title" ? { marginLeft: -8 } : undefined}
             >
-              {renderCell(c.id, book, kind, sourceKinds)}
+              {renderCell(c.id, book, kind, sourceKinds, t)}
             </div>
           ))}
         </div>
@@ -544,6 +546,7 @@ function renderCell(
   book: Book,
   kind: "smart" | "manual" | "hybrid",
   sourceKinds: Array<"folder" | "category" | "tag" | "label" | "sticker">,
+  t: (key: string) => string,
 ): React.ReactNode {
   switch (colId) {
     case "title":
@@ -553,7 +556,7 @@ function renderCell(
             <BookKindIcon kind={kind} size={14} />
           </span>
           <span className="min-w-0 truncate font-medium text-foreground pl-2">
-            {book.title || "Untitled book"}
+            {book.title || t("book.untitled")}
           </span>
           {book.pinned && (
             <PushPin size={11} fill="currentColor" strokeWidth={2} className="ml-1 shrink-0 text-amber-500" />

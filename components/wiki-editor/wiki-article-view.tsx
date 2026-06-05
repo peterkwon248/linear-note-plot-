@@ -16,6 +16,7 @@ import { WikiFootnotesSection, WikiReferencesSection } from "./wiki-footnotes-se
 import { WikiInfobox } from "@/components/editor/wiki-infobox"
 import { INFOBOX_PRESETS } from "@/lib/wiki-infobox-presets"
 import { cn } from "@/lib/utils"
+import { useT } from "@/lib/i18n"
 import { Virtuoso } from "react-virtuoso"
 import { toast } from "sonner"
 import { navigateToWikiArticle } from "@/lib/wiki-article-nav"
@@ -141,6 +142,7 @@ interface WikiArticleViewProps {
 }
 
 export function WikiArticleView({ articleId, editable = false, preview = false, onDelete, collapseAllCmd, onCollapseAllDone, onAllCollapsedChange, fontSize }: WikiArticleViewProps) {
+  const t = useT()
   const wikiArticles = usePlotStore((s) => s.wikiArticles)
   const notes = usePlotStore((s) => s.notes)
   const updateWikiBlock = usePlotStore((s) => s.updateWikiBlock)
@@ -583,7 +585,7 @@ export function WikiArticleView({ articleId, editable = false, preview = false, 
             className="text-foreground font-bold mb-2.5 pl-2"
             style={{ fontSize: emScale(1, "meta") }}
           >
-            Contents
+            {t("wiki.toc.contents")}
           </h4>
           {tocSections.length > 0 ? (
             <nav className="space-y-0">
@@ -669,7 +671,7 @@ export function WikiArticleView({ articleId, editable = false, preview = false, 
           )}
           {/* Updated at */}
           <p className="text-[12px] text-muted-foreground mb-1">
-            Updated {shortRelative(article.updatedAt)} ago
+            {t("wiki.article.updated_ago").replace("{time}", shortRelative(article.updatedAt))}
           </p>
           {/* Aliases (editable) */}
           {editable ? (
@@ -710,7 +712,7 @@ export function WikiArticleView({ articleId, editable = false, preview = false, 
                 className="flex items-center gap-1.5 rounded-md px-2 py-1 text-2xs text-muted-foreground/70 hover:text-foreground hover:bg-hover-bg transition-colors duration-100"
               >
                 <Scissors size={12} strokeWidth={2} />
-                Split wiki
+                {t("wiki.block.split")}
               </button>
             </div>
           )}
@@ -1130,6 +1132,7 @@ export function InlineCategoryTags({
   categoryIds: string[]
   editable?: boolean
 }) {
+  const t = useT()
   const router = useRouter()
   const wikiCategories = usePlotStore((s) => s.wikiCategories)
   const setArticleCategories = usePlotStore((s) => s.setArticleCategories)
@@ -1234,7 +1237,7 @@ export function InlineCategoryTags({
                 className="inline-flex items-center gap-1 text-muted-foreground/60 hover:text-foreground transition-colors"
               >
                 <PhPlus size={11} strokeWidth={2} />
-                {assignedCategories.length === 0 ? "Add category" : "Add"}
+                {t("wiki.categories.add")}
               </button>
               {dropdownOpen && (
                 <div className="absolute left-0 top-full z-50 mt-1.5">
@@ -1284,6 +1287,7 @@ export function ArticleCategories({
   categoryIds: string[]
   editable: boolean
 }) {
+  const t = useT()
   const wikiCategories = usePlotStore((s) => s.wikiCategories)
   const setArticleCategories = usePlotStore((s) => s.setArticleCategories)
   const createWikiCategory = usePlotStore((s) => s.createWikiCategory)
@@ -1361,7 +1365,7 @@ export function ArticleCategories({
             className="flex items-center gap-1 rounded-md px-1.5 py-1 text-2xs font-medium text-muted-foreground/70 transition-colors hover:bg-hover-bg hover:text-foreground/70"
           >
             <PhPlus size={12} strokeWidth={2} />
-            Add category
+            {t("wiki.categories.add")}
           </button>
           {dropdownOpen && (
             <div className="absolute left-0 top-full z-50 mt-1 w-52 rounded-lg border border-border-subtle bg-surface-overlay p-1 shadow-lg">

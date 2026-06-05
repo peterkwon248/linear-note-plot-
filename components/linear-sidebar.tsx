@@ -737,24 +737,24 @@ export function LinearSidebar() {
               </ContextMenuTrigger>
               <ContextMenuContent className="w-48">
                 <ContextMenuItem onClick={() => handleUpdateView(view.id)}>
-                  Update view
+                  {t("sidebar.view.update")}
                 </ContextMenuItem>
                 <ContextMenuItem onClick={() => handleResetView(view.id)}>
-                  Reset to saved
+                  {t("sidebar.view.reset_to_saved")}
                 </ContextMenuItem>
                 <ContextMenuSeparator />
                 <ContextMenuItem onClick={() => {
                   setRenamingItem({ id: view.id })
                   setRenameValue(view.name)
                 }}>
-                  Rename
+                  {t("common.rename")}
                 </ContextMenuItem>
                 <ContextMenuSeparator />
                 <ContextMenuItem
                   onClick={() => handleDeleteView(view.id)}
                   className="text-destructive focus:text-destructive"
                 >
-                  Delete
+                  {t("common.delete")}
                 </ContextMenuItem>
               </ContextMenuContent>
             </ContextMenu>
@@ -962,10 +962,10 @@ export function LinearSidebar() {
                         setRenamingItem({ id: folder.id })
                         setRenameValue(folder.name)
                       }}>
-                        Rename
+                        {t("common.rename")}
                       </ContextMenuItem>
                       <ContextMenuSub>
-                        <ContextMenuSubTrigger>Change color</ContextMenuSubTrigger>
+                        <ContextMenuSubTrigger>{t("common.change_color")}</ContextMenuSubTrigger>
                         <ContextMenuSubContent className="p-2">
                           <ColorPickerGrid
                             value={getEntityColor(folder.color)}
@@ -975,14 +975,14 @@ export function LinearSidebar() {
                       </ContextMenuSub>
                       {/* v109: opt-in color — Reset returns the folder to neutral gray. */}
                       <ContextMenuItem onClick={() => updateFolder(folder.id, { color: null })}>
-                        Reset color
+                        {t("common.reset_color")}
                       </ContextMenuItem>
                       <ContextMenuSeparator />
                       <ContextMenuItem
                         onClick={() => handleDeleteFolder(folder.id)}
                         className="text-destructive focus:text-destructive"
                       >
-                        Delete
+                        {t("common.delete")}
                       </ContextMenuItem>
                     </ContextMenuContent>
                   </ContextMenu>
@@ -993,7 +993,7 @@ export function LinearSidebar() {
                   onClick={() => setShowAllFolders(true)}
                   className="flex w-full items-center gap-2.5 rounded-md px-2.5 py-1.5 text-note text-sidebar-muted hover:text-sidebar-foreground transition-colors"
                 >
-                  {hiddenNoteFolders.length} more
+                  {t("common.show_more").replace("{count}", String(hiddenNoteFolders.length))}
                 </button>
               )}
               {showAllFolders && hiddenNoteFolders.length > 0 && (
@@ -1001,7 +1001,7 @@ export function LinearSidebar() {
                   onClick={() => setShowAllFolders(false)}
                   className="flex w-full items-center gap-2.5 rounded-md px-2.5 py-1.5 text-note text-sidebar-muted hover:text-sidebar-foreground transition-colors"
                 >
-                  Show less
+                  {t("common.show_less")}
                 </button>
               )}
             </Section>
@@ -1245,10 +1245,10 @@ export function LinearSidebar() {
                         setRenamingItem({ id: folder.id })
                         setRenameValue(folder.name)
                       }}>
-                        Rename
+                        {t("common.rename")}
                       </ContextMenuItem>
                       <ContextMenuSub>
-                        <ContextMenuSubTrigger>Change color</ContextMenuSubTrigger>
+                        <ContextMenuSubTrigger>{t("common.change_color")}</ContextMenuSubTrigger>
                         <ContextMenuSubContent className="p-2">
                           <ColorPickerGrid
                             value={getEntityColor(folder.color)}
@@ -1258,14 +1258,14 @@ export function LinearSidebar() {
                       </ContextMenuSub>
                       {/* v109: opt-in color — Reset returns the folder to neutral gray. */}
                       <ContextMenuItem onClick={() => updateFolder(folder.id, { color: null })}>
-                        Reset color
+                        {t("common.reset_color")}
                       </ContextMenuItem>
                       <ContextMenuSeparator />
                       <ContextMenuItem
                         onClick={() => handleDeleteFolder(folder.id)}
                         className="text-destructive focus:text-destructive"
                       >
-                        Delete
+                        {t("common.delete")}
                       </ContextMenuItem>
                     </ContextMenuContent>
                   </ContextMenu>
@@ -1276,7 +1276,7 @@ export function LinearSidebar() {
                   onClick={() => setShowAllFolders(true)}
                   className="flex w-full items-center gap-2.5 rounded-md px-2.5 py-1.5 text-note text-sidebar-muted hover:text-sidebar-foreground transition-colors"
                 >
-                  {hiddenWikiFolders.length} more
+                  {t("common.show_more").replace("{count}", String(hiddenWikiFolders.length))}
                 </button>
               )}
               {showAllFolders && hiddenWikiFolders.length > 0 && (
@@ -1284,7 +1284,7 @@ export function LinearSidebar() {
                   onClick={() => setShowAllFolders(false)}
                   className="flex w-full items-center gap-2.5 rounded-md px-2.5 py-1.5 text-note text-sidebar-muted hover:text-sidebar-foreground transition-colors"
                 >
-                  Show less
+                  {t("common.show_less")}
                 </button>
               )}
             </Section>
@@ -1900,10 +1900,10 @@ export function LinearSidebar() {
                         setRenamingItem({ id: folder.id })
                         setRenameValue(folder.name)
                       }}>
-                        Rename
+                        {t("common.rename")}
                       </ContextMenuItem>
                       <ContextMenuSub>
-                        <ContextMenuSubTrigger>Change color</ContextMenuSubTrigger>
+                        <ContextMenuSubTrigger>{t("common.change_color")}</ContextMenuSubTrigger>
                         <ContextMenuSubContent className="p-2">
                           <ColorPickerGrid
                             value={getEntityColor(folder.color)}
@@ -1913,14 +1913,14 @@ export function LinearSidebar() {
                       </ContextMenuSub>
                       {/* v109: opt-in color — Reset returns the folder to neutral gray. */}
                       <ContextMenuItem onClick={() => updateFolder(folder.id, { color: null })}>
-                        Reset color
+                        {t("common.reset_color")}
                       </ContextMenuItem>
                       <ContextMenuSeparator />
                       <ContextMenuItem
                         onClick={() => handleDeleteFolder(folder.id)}
                         className="text-destructive focus:text-destructive"
                       >
-                        Delete
+                        {t("common.delete")}
                       </ContextMenuItem>
                     </ContextMenuContent>
                   </ContextMenu>
@@ -1931,7 +1931,7 @@ export function LinearSidebar() {
                   onClick={() => setShowAllFolders(true)}
                   className="flex w-full items-center gap-2.5 rounded-md px-2.5 py-1.5 text-note text-sidebar-muted hover:text-sidebar-foreground transition-colors"
                 >
-                  {hiddenBookFolders.length} more
+                  {t("common.show_more").replace("{count}", String(hiddenBookFolders.length))}
                 </button>
               )}
               {showAllFolders && hiddenBookFolders.length > 0 && (
@@ -1939,7 +1939,7 @@ export function LinearSidebar() {
                   onClick={() => setShowAllFolders(false)}
                   className="flex w-full items-center gap-2.5 rounded-md px-2.5 py-1.5 text-note text-sidebar-muted hover:text-sidebar-foreground transition-colors"
                 >
-                  Show less
+                  {t("common.show_less")}
                 </button>
               )}
             </Section>

@@ -152,7 +152,10 @@ function NoteBlockBookmarkButton({ noteId, blockId }: { noteId: string; blockId:
         "p-1 rounded-md transition-all duration-100",
         bookmarked
           ? "text-accent opacity-100"
-          : "opacity-20 hover:opacity-100 text-muted-foreground hover:text-foreground hover:bg-hover-bg",
+          // Match BlockCommentMarker's empty state: hidden at rest, revealed on
+          // block hover (and full on its own hover). Avoids a faint bookmark
+          // glyph cluttering the right margin of every block.
+          : "opacity-0 group-hover/section:opacity-50 group-hover/text:opacity-50 group-hover/noteref:opacity-50 group-hover/image:opacity-50 group-hover/url:opacity-50 group-hover/table:opacity-50 hover:!opacity-100 text-muted-foreground hover:text-foreground hover:bg-hover-bg",
       )}
     >
       <BookmarkSimple size={13} fill={bookmarked ? "currentColor" : "none"} strokeWidth={2} />

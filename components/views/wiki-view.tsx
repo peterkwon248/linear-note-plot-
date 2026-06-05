@@ -871,7 +871,7 @@ export function WikiView() {
                   className="flex items-center gap-1.5 rounded-md bg-emerald-600 px-2.5 py-1 text-note font-medium text-white transition-colors duration-150 hover:bg-emerald-700"
                 >
                   <PhCheck size={14} strokeWidth={2.5} />
-                  Done
+                  {t("common.done")}
                 </button>
               ) : (
                 <button
@@ -879,7 +879,7 @@ export function WikiView() {
                   className="flex items-center gap-1.5 rounded-md bg-accent px-2.5 py-1 text-note font-medium text-accent-foreground transition-colors duration-150 hover:bg-accent/90"
                 >
                   <PencilLine size={14} strokeWidth={2} />
-                  Edit
+                  {t("common.edit")}
                 </button>
               )}
 
@@ -903,7 +903,7 @@ export function WikiView() {
               className="flex items-center gap-1.5 rounded-md px-2 py-1 text-note text-muted-foreground transition-colors duration-150 hover:bg-hover-bg hover:text-foreground"
             >
               <ArrowLeft size={14} strokeWidth={2} />
-              Back
+              {t("common.back")}
             </button>
             <WikiPickerChevron
               currentArticleId={selectedWikiArticleId}

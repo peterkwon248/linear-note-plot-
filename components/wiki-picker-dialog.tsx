@@ -4,6 +4,7 @@ import { useState, useMemo, useCallback, useEffect } from "react"
 import { usePlotStore } from "@/lib/store"
 import { formatDistanceToNow } from "date-fns"
 import { useRelativeTime } from "@/lib/i18n-date"
+import { useT } from "@/lib/i18n"
 import {
   CommandDialog,
   CommandInput,
@@ -30,11 +31,11 @@ interface FilterValue {
 
 /* ── Chip label helper ─────────────────────────── */
 
-function getChipSummary(values: FilterValue[], selected: Set<string>): string {
+function getChipSummary(values: FilterValue[], selected: Set<string>, t: (key: string) => string): string {
   const total = values.length
   const count = selected.size
-  if (count === 0) return "None"
-  if (count >= total) return "All"
+  if (count === 0) return t("picker.chip.none")
+  if (count >= total) return t("common.all")
   if (count <= 2) {
     return values
       .filter((v) => selected.has(v.value))
@@ -44,9 +45,9 @@ function getChipSummary(values: FilterValue[], selected: Set<string>): string {
   const deselectedCount = total - count
   if (deselectedCount === 1) {
     const deselected = values.find((v) => !selected.has(v.value))
-    return `All except ${deselected?.label ?? "?"}`
+    return t("picker.chip.all_except").replace("{name}", deselected?.label ?? "?")
   }
-  return `${count} selected`
+  return t("picker.chip.n_selected").replace("{count}", String(count))
 }
 
 /* ── Props ─────────────────────────────────────── */
@@ -73,6 +74,7 @@ export function WikiPickerDialog({
   onSelect,
   onSelectMulti,
 }: WikiPickerDialogProps & { multiSelect?: boolean; onSelect?: (articleId: string) => void; onSelectMulti?: (ids: string[]) => void }) {
+  const t = useT()
   const relative = useRelativeTime()
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
   const wikiArticles = usePlotStore((s) => s.wikiArticles)
@@ -94,10 +96,10 @@ export function WikiPickerDialog({
   // Build category filter values
   const categoryValues = useMemo<FilterValue[]>(() => {
     return [
-      { value: "_none", label: "Uncategorized" },
+      { value: "_none", label: t("wiki.filter.uncategorized") },
       ...wikiCategories.map((c) => ({ value: c.id, label: c.name })),
     ]
-  }, [wikiCategories])
+  }, [wikiCategories, t])
 
   // Deduplicate by title (keep most recently updated), then apply excludeIds
   const deduped = useMemo(() => {
@@ -214,12 +216,12 @@ export function WikiPickerDialog({
       open={open}
       onOpenChange={onOpenChange}
       title={title}
-      description="Search and select a wiki article"
+      description={t("dialog.wikipicker.description")}
       showCloseButton={false}
       filter={cmdkFilter}
       className="sm:max-w-[960px]"
     >
-      <CommandInput placeholder="Search wiki articles..." />
+      <CommandInput placeholder={t("dialog.wikipicker.placeholder")} />
 
       {/* ── Chip-based filter bar ── */}
       <div
@@ -232,9 +234,9 @@ export function WikiPickerDialog({
             <DropdownMenuTrigger asChild>
               <button className="shrink-0 inline-flex items-center gap-1 rounded-md border border-accent/25 bg-accent/5 px-1.5 py-0.5 text-2xs text-foreground transition-colors hover:bg-accent/10">
                 <FolderOpen className="h-3 w-3 text-accent/70" />
-                <span className="font-medium">Category:</span>
+                <span className="font-medium">{t("panel.category")}:</span>
                 <span className="max-w-[120px] truncate text-muted-foreground">
-                  {getChipSummary(categoryValues, activeFilter)}
+                  {getChipSummary(categoryValues, activeFilter, t)}
                 </span>
                 <CaretDown className="text-muted-foreground/70" size={10} />
               </button>
@@ -261,13 +263,13 @@ export function WikiPickerDialog({
                   onClick={selectAll}
                   className="text-2xs text-muted-foreground hover:text-foreground"
                 >
-                  Select all
+                  {t("picker.filter.select_all")}
                 </button>
                 <button
                   onClick={clearFilter}
                   className="text-2xs text-muted-foreground hover:text-foreground"
                 >
-                  Clear
+                  {t("picker.filter.clear")}
                 </button>
               </div>
             </DropdownMenuContent>
@@ -288,7 +290,7 @@ export function WikiPickerDialog({
             className="shrink-0 inline-flex items-center gap-1 rounded-md px-2 py-1 text-2xs font-medium text-muted-foreground transition-colors hover:bg-hover-bg hover:text-foreground"
           >
             <Plus size={12} />
-            Category
+            {t("panel.category")}
           </button>
         )}
 
@@ -302,7 +304,7 @@ export function WikiPickerDialog({
               onClick={clearFilter}
               className="text-2xs text-muted-foreground hover:text-foreground"
             >
-              Clear all
+              {t("picker.filter.clear_all")}
             </button>
           )}
         </div>
@@ -312,13 +314,13 @@ export function WikiPickerDialog({
         <CommandEmpty>
           <div className="flex flex-col items-center gap-1.5 py-2">
             <BookOpen className="text-muted-foreground/60" size={32} />
-            <p className="text-note text-muted-foreground">No wiki articles found</p>
+            <p className="text-note text-muted-foreground">{t("dialog.wikipicker.empty")}</p>
             {isFilterActive && (
               <button
                 onClick={clearFilter}
                 className="text-2xs text-accent hover:underline"
               >
-                Clear filters
+                {t("picker.filter.clear_filters")}
               </button>
             )}
           </div>
@@ -380,7 +382,7 @@ export function WikiPickerDialog({
       {multiSelect && (
         <div className="border-t border-border px-3 py-2.5 flex items-center justify-between">
           <span className="text-2xs text-muted-foreground">
-            {selectedIds.size > 0 ? `${selectedIds.size} selected` : "Select articles to add"}
+            {selectedIds.size > 0 ? t("picker.chip.n_selected").replace("{count}", String(selectedIds.size)) : t("dialog.wikipicker.footer_hint")}
           </span>
           <button
             onClick={handleConfirmMulti}
@@ -388,7 +390,7 @@ export function WikiPickerDialog({
             className="inline-flex items-center gap-1.5 rounded-md bg-accent px-3 py-1.5 text-2xs font-medium text-accent-foreground transition-opacity disabled:opacity-40 hover:opacity-90"
           >
             <Plus size={12} />
-            Add {selectedIds.size > 0 ? selectedIds.size : ""}
+            {selectedIds.size > 0 ? t("picker.add.n_items").replace("{count}", String(selectedIds.size)) : t("picker.add.add")}
           </button>
         </div>
       )}

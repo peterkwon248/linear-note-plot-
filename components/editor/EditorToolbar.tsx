@@ -19,6 +19,7 @@ import {
   X as PhX,
   FileArrowUp,
 } from "@/lib/editor/editor-icons"
+import { useT } from "@/lib/i18n"
 
 interface EditorToolbarProps {
   editor: Editor | null
@@ -85,6 +86,7 @@ function InlineColorPalette({ editor, mode, onClose }: { editor: Editor; mode: "
 }
 
 export function EditorToolbar({ editor }: EditorToolbarProps) {
+  const t = useT()
   const createNote = usePlotStore((s) => s.createNote)
   const menuRef = useRef<HTMLDivElement>(null)
   const [isVisible, setIsVisible] = useState(false)
@@ -187,37 +189,37 @@ export function EditorToolbar({ editor }: EditorToolbarProps) {
       >
         {activePanel === "none" ? (
           <>
-            <BubbleButton onClick={() => editor.chain().focus().toggleBold().run()} isActive={editorState.bold} title="Bold (Ctrl+B)">
+            <BubbleButton onClick={() => editor.chain().focus().toggleBold().run()} isActive={editorState.bold} title={t("editor.toolbar.bold")}>
               <TextB size={16} />
             </BubbleButton>
-            <BubbleButton onClick={() => editor.chain().focus().toggleItalic().run()} isActive={editorState.italic} title="Italic (Ctrl+I)">
+            <BubbleButton onClick={() => editor.chain().focus().toggleItalic().run()} isActive={editorState.italic} title={t("editor.toolbar.italic")}>
               <TextItalic size={16} />
             </BubbleButton>
-            <BubbleButton onClick={() => editor.chain().focus().toggleUnderline().run()} isActive={editorState.underline} title="Underline (Ctrl+U)">
+            <BubbleButton onClick={() => editor.chain().focus().toggleUnderline().run()} isActive={editorState.underline} title={t("editor.toolbar.underline")}>
               <UnderlineIcon size={16} />
             </BubbleButton>
-            <BubbleButton onClick={() => editor.chain().focus().toggleStrike().run()} isActive={editorState.strike} title="TextStrikethrough">
+            <BubbleButton onClick={() => editor.chain().focus().toggleStrike().run()} isActive={editorState.strike} title={t("editor.toolbar.strikethrough")}>
               <TextStrikethrough size={16} />
             </BubbleButton>
-            <BubbleButton onClick={() => editor.chain().focus().toggleCode().run()} isActive={editorState.code} title="Inline code">
+            <BubbleButton onClick={() => editor.chain().focus().toggleCode().run()} isActive={editorState.code} title={t("editor.toolbar.inline_code")}>
               <PhCode size={16} />
             </BubbleButton>
             <BubbleDivider />
-            <BubbleButton onClick={() => setActivePanel("textColor")} isActive={!!activeTextColor} title="Text color">
+            <BubbleButton onClick={() => setActivePanel("textColor")} isActive={!!activeTextColor} title={t("editor.toolbar.text_color")}>
               <div className="relative">
                 <TextT size={16} />
                 <div className="absolute -bottom-1 left-px right-px h-0.5 rounded-sm" style={{ backgroundColor: activeTextColor || "var(--muted-foreground)" }} />
               </div>
             </BubbleButton>
-            <BubbleButton onClick={() => setActivePanel("highlightColor")} isActive={editorState.highlight} title="Highlight">
+            <BubbleButton onClick={() => setActivePanel("highlightColor")} isActive={editorState.highlight} title={t("editor.toolbar.highlight")}>
               <HighlighterCircle size={16} />
             </BubbleButton>
             <BubbleDivider />
-            <BubbleButton onClick={handleSetLink} isActive={editorState.link} title={editorState.link ? "Remove link" : "Insert link"}>
+            <BubbleButton onClick={handleSetLink} isActive={editorState.link} title={editorState.link ? t("editor.toolbar.remove_link") : t("editor.toolbar.link")}>
               {editorState.link ? <LinkBreak size={16} /> : <PhLink size={16} />}
             </BubbleButton>
             <BubbleDivider />
-            <BubbleButton onClick={handleExtractAsNote} title="Extract as Note">
+            <BubbleButton onClick={handleExtractAsNote} title={t("editor.toolbar.extract_note")}>
               <FileArrowUp size={16} />
             </BubbleButton>
           </>

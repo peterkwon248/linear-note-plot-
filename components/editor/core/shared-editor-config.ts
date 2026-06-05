@@ -7,6 +7,8 @@
  */
 
 import { InputRule } from "@tiptap/core"
+import { translate, type Locale } from "@/lib/i18n"
+import { useSettingsStore } from "@/lib/settings-store"
 import StarterKit from "@tiptap/starter-kit"
 import Placeholder from "@tiptap/extension-placeholder"
 import { EmptyHintPlaceholder } from "@/components/editor/extensions/empty-hint-placeholder"
@@ -269,7 +271,7 @@ export interface EditorConfigOptions {
 // ── Factory ──────────────────────────────────────────────────────────
 
 function createBaseExtensions(options?: EditorConfigOptions): Extension[] {
-  const placeholderText = options?.placeholder ?? "Start writing..."
+  const placeholderText = options?.placeholder ?? translate("editor.placeholder.body", useSettingsStore.getState().language as Locale)
   const collaborative = options?.collaborative === true
 
   return [
@@ -293,8 +295,8 @@ function createBaseExtensions(options?: EditorConfigOptions): Extension[] {
     }),
     Placeholder.configure({
       placeholder: ({ node }: { node: { type: { name: string } } }) => {
-        if (node.type.name === "heading") return "Heading"
-        if (node.type.name === "codeBlock") return "Write code..."
+        if (node.type.name === "heading") return translate("editor.placeholder.heading", useSettingsStore.getState().language as Locale)
+        if (node.type.name === "codeBlock") return translate("editor.placeholder.code", useSettingsStore.getState().language as Locale)
         return placeholderText
       },
     }),
@@ -974,7 +976,7 @@ export function createEditorExtensions(
     }
 
     case "footnote": {
-      const placeholderText = options?.placeholder ?? "Add footnote content..."
+      const placeholderText = options?.placeholder ?? translate("editor.placeholder.footnote", useSettingsStore.getState().language as Locale)
       return [
         StarterKit.configure({
           heading: false,
@@ -998,7 +1000,7 @@ export function createEditorExtensions(
     case "comment": {
       // Lightweight tier for comment bodies — markdown-ish formatting + wikilinks.
       // Excludes headings, code blocks, horizontal rule, and full mention (kept simple).
-      const placeholderText = options?.placeholder ?? "Add comment…"
+      const placeholderText = options?.placeholder ?? translate("editor.placeholder.comment", useSettingsStore.getState().language as Locale)
       const commentExts: Extension[] = [
         StarterKit.configure({
           heading: false,

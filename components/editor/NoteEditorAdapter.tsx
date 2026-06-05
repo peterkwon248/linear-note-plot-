@@ -458,17 +458,21 @@ export function NoteEditorAdapter({ note, onEditorReady, editable = true }: Note
 
   return (
     <div className="relative min-w-0 flex-1 flex flex-col">
-      <div
-        className="absolute right-2 top-2 z-50 rounded-md px-2 py-0.5 font-mono text-2xs"
-        style={{
-          background: badgeStyle[badgeState].bg,
-          color: badgeStyle[badgeState].fg,
-          pointerEvents: "none",
-          border: "1px solid currentColor",
-        }}
-      >
-        {badgeStyle[badgeState].label}
-      </div>
+      {/* Y.js experiment diagnostic badge — DEV ONLY. It must never appear in
+          the production/desktop build (it was leaking "yjs OFF" into the app). */}
+      {process.env.NODE_ENV === "development" && (
+        <div
+          className="absolute right-2 top-2 z-50 rounded-md px-2 py-0.5 font-mono text-2xs"
+          style={{
+            background: badgeStyle[badgeState].bg,
+            color: badgeStyle[badgeState].fg,
+            pointerEvents: "none",
+            border: "1px solid currentColor",
+          }}
+        >
+          {badgeStyle[badgeState].label}
+        </div>
+      )}
       {/* Gate editor mount on hydration. Mounting before `whenReady` would
           let Collaboration bind to the empty fragment and emit a flood of
           empty onUpdate events, which the empty-content guard then has to

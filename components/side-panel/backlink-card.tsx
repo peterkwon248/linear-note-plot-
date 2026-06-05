@@ -2,6 +2,7 @@
 
 import { useCallback } from "react"
 import { FileText } from "lucide-react"
+import { useT } from "@/lib/i18n"
 import { IconWiki } from "@/components/plot-icons"
 import { showNotePreviewById, hideNotePreview } from "@/components/editor/note-hover-preview"
 import type { BacklinkSource } from "@/hooks/use-backlinks-with-context"
@@ -33,6 +34,7 @@ export function BacklinkCard({
   mutual?: boolean
   onClick: () => void
 }) {
+  const t = useT()
   const onMouseEnter = useCallback((e: React.MouseEvent<HTMLButtonElement>) => {
     showNotePreviewById(e.currentTarget, source.sourceId)
   }, [source.sourceId])
@@ -69,12 +71,12 @@ export function BacklinkCard({
           size={13}
         />
         <span className="truncate text-note text-muted-foreground group-hover:text-foreground transition-colors">
-          {source.sourceTitle || "Untitled"}
+          {source.sourceTitle || t("common.untitled")}
         </span>
         {mutual && (
           <span
             className="ml-auto shrink-0 text-2xs text-accent/60 font-medium"
-            title="Mutual link"
+            title={t("backlink.mutual_link")}
           >
             ↔
           </span>
@@ -84,7 +86,7 @@ export function BacklinkCard({
       {/* Context snippets (Obsidian-style italic muted) */}
       {source.loading ? (
         <p className="mt-0.5 ml-[18px] text-2xs italic text-muted-foreground/70">
-          Loading context…
+          {t("backlink.loading")}
         </p>
       ) : visibleContexts.length > 0 ? (
         <div className="mt-0.5 ml-[18px] space-y-0.5">
@@ -96,7 +98,7 @@ export function BacklinkCard({
                 "text-muted-foreground/70 group-hover:text-muted-foreground",
               )}
             >
-              {ctx.text || <span className="opacity-50">(empty block)</span>}
+              {ctx.text || <span className="opacity-50">{t("backlink.empty_block")}</span>}
             </p>
           ))}
           {remaining > 0 && (

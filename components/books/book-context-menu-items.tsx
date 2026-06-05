@@ -15,6 +15,7 @@
 
 import type { Book } from "@/lib/types"
 import { usePlotStore } from "@/lib/store"
+import { useT } from "@/lib/i18n"
 import {
   ContextMenuItem,
   ContextMenuSub,
@@ -56,6 +57,7 @@ export function BookContextMenuItems({
   // props from the table; books have three surfaces (grid/board/list) so we
   // read the store directly here to keep the helper drop-in. kind="book"
   // filter is enforced by useFolderPickerData + setBookFolders' safety net.
+  const t = useT()
   const { folders: bookFolders, createFolderInline } = useFolderPickerData("book")
   const setBookFolders = usePlotStore((s) => s.setBookFolders)
   // Single-replace helper: empty string = clear membership ("No folder").
@@ -70,7 +72,7 @@ export function BookContextMenuItems({
           className="text-note"
         >
           <ArrowCounterClockwise size={14} strokeWidth={2} className="mr-2 text-muted-foreground" />
-          Restore
+          {t("common.restore")}
         </ContextMenuItem>
         <ContextMenuSeparator />
         <ContextMenuItem
@@ -78,7 +80,7 @@ export function BookContextMenuItems({
           className="text-note text-destructive focus:text-destructive"
         >
           <Trash size={14} strokeWidth={2} className="mr-2" />
-          Delete forever
+          {t("common.delete_forever")}
         </ContextMenuItem>
       </>
     )
@@ -87,7 +89,7 @@ export function BookContextMenuItems({
     <>
       <ContextMenuItem onClick={() => onRename(book.id, book.title)} className="text-note">
         <PencilSimple size={14} strokeWidth={2} className="mr-2 text-muted-foreground" />
-        Rename
+        {t("common.rename")}
       </ContextMenuItem>
       <ContextMenuItem
         onClick={() => onTogglePin(book.id, book.pinned)}
@@ -96,12 +98,12 @@ export function BookContextMenuItems({
         {book.pinned ? (
           <>
             <PushPinSlash size={14} strokeWidth={2} className="mr-2 text-muted-foreground" />
-            Unpin
+            {t("common.unpin")}
           </>
         ) : (
           <>
             <PushPin size={14} strokeWidth={2} className="mr-2 text-muted-foreground" />
-            Pin to sidebar
+            {t("common.pin_sidebar")}
           </>
         )}
       </ContextMenuItem>
@@ -112,14 +114,14 @@ export function BookContextMenuItems({
       <ContextMenuSub>
         <ContextMenuSubTrigger className="text-note">
           <FolderOpen className="mr-2 text-muted-foreground" size={16} strokeWidth={2} />
-          Move to folder
+          {t("book.menu.move_to_folder")}
         </ContextMenuSubTrigger>
         <ContextMenuSubContent className="w-48">
           <ContextMenuItem
             onClick={() => setFolderSingle("")}
             className={`text-note ${book.folderIds.length === 0 ? "font-medium" : ""}`}
           >
-            <span className="text-muted-foreground">No folder</span>
+            <span className="text-muted-foreground">{t("common.none")}</span>
             {book.folderIds.length === 0 && <PhCheck className="ml-auto text-accent" size={14} strokeWidth={2.5} />}
           </ContextMenuItem>
           {bookFolders.length > 0 && <ContextMenuSeparator />}
@@ -140,7 +142,7 @@ export function BookContextMenuItems({
             className="text-note text-muted-foreground hover:text-foreground"
           >
             <PhPlus className="mr-2" size={14} strokeWidth={2.5} />
-            New folder…
+            {t("book.menu.new_folder")}
           </ContextMenuItem>
         </ContextMenuSubContent>
       </ContextMenuSub>
@@ -149,7 +151,7 @@ export function BookContextMenuItems({
       <ContextMenuSub>
         <ContextMenuSubTrigger className="text-note">
           <FolderOpen className="mr-2 text-muted-foreground" size={16} strokeWidth={2} />
-          Add to folders…
+          {t("book.menu.add_to_folders")}
         </ContextMenuSubTrigger>
         <ContextMenuSubContent className="w-56 p-1">
           <FolderPicker
@@ -167,7 +169,7 @@ export function BookContextMenuItems({
         className="text-note text-destructive focus:text-destructive"
       >
         <Trash size={14} strokeWidth={2} className="mr-2" />
-        Move to trash
+        {t("common.move_to_trash")}
       </ContextMenuItem>
     </>
   )

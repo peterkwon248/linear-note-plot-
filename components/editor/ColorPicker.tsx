@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect, useCallback } from "react"
 import { createPortal } from "react-dom"
 import { Editor } from "@tiptap/react"
+import { useT } from "@/lib/i18n"
 import { TEXT_COLORS, HIGHLIGHT_COLORS } from "@/lib/editor-colors"
 import { TextT, HighlighterCircle, X as PhX } from "@/lib/editor/editor-icons"
 
@@ -12,6 +13,7 @@ interface ColorPickerProps {
 }
 
 export function ColorPicker({ editor, mode }: ColorPickerProps) {
+  const t = useT()
   const [isOpen, setIsOpen] = useState(false)
   const buttonRef = useRef<HTMLButtonElement>(null)
   const dropdownRef = useRef<HTMLDivElement>(null)
@@ -93,7 +95,7 @@ export function ColorPicker({ editor, mode }: ColorPickerProps) {
       <button
         ref={buttonRef}
         onMouseDown={handleToggle}
-        title={mode === "text" ? "Text color" : "Highlight"}
+        title={mode === "text" ? t("editor.color.text") : t("editor.color.highlight")}
         className={`w-10 h-10 rounded-md flex items-center justify-center shrink-0 transition-all duration-100 ease-in-out cursor-pointer border-0 outline-none relative hover:text-foreground hover:bg-hover-bg ${
           isActive ? "text-foreground" : "text-muted-foreground"
         } ${
@@ -120,7 +122,7 @@ export function ColorPicker({ editor, mode }: ColorPickerProps) {
           >
             <div className="flex items-center justify-between mb-2 px-0.5">
               <span className="text-2xs font-semibold text-muted-foreground">
-                {mode === "text" ? "Text color" : "Highlight color"}
+                {mode === "text" ? t("editor.color.text") : t("editor.color.highlight")}
               </span>
               <button
                 onMouseDown={(e) => {

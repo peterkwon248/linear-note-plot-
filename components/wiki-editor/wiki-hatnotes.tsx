@@ -21,6 +21,7 @@ import { cn } from "@/lib/utils"
 import type { Hatnote, HatnoteType } from "@/lib/types"
 import { HatnoteEditDialog } from "./hatnote-edit-dialog"
 import { Plus as PhPlus, Pencil as PhPencilSimple, Trash2 as PhTrash } from "lucide-react"
+import { useT } from "@/lib/i18n"
 
 interface WikiHatnotesProps {
   articleId: string
@@ -43,6 +44,7 @@ export function WikiHatnotes({
   editable = false,
   className,
 }: WikiHatnotesProps) {
+  const t = useT()
   const wikiArticles = usePlotStore((s) => s.wikiArticles)
   const setWikiArticleHatnotes = usePlotStore((s) => s.setWikiArticleHatnotes)
   const [editing, setEditing] = useState<Hatnote | null>(null)
@@ -137,7 +139,7 @@ export function WikiHatnotes({
             className="flex items-center gap-1 rounded px-1 py-0.5 text-2xs text-muted-foreground/70 transition-colors hover:bg-hover-bg hover:text-foreground"
           >
             <PhPlus size={11} />
-            Add hatnote
+            {t("wiki.hatnote.add")}
           </button>
         )}
       </div>

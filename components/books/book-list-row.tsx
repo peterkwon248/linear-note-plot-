@@ -13,6 +13,7 @@
  */
 
 import type { Book } from "@/lib/types"
+import { useT } from "@/lib/i18n"
 import { getBookKind } from "@/lib/view-engine/use-books-view"
 import {
   BookItemCountChip,
@@ -50,6 +51,7 @@ export function BookListRow({
   onRestore,
   onPermanentDelete,
 }: BookListRowProps) {
+  const t = useT()
   const kind = getBookKind(book)
   const sourceKinds = Array.from(
     new Set(
@@ -79,7 +81,7 @@ export function BookListRow({
 
           {/* Title (flex-1 truncate) */}
           <span className="min-w-0 flex-1 truncate text-note text-foreground">
-            {book.title || "Untitled book"}
+            {book.title || t("book.untitled")}
           </span>
 
           {/* Chips */}
@@ -108,7 +110,7 @@ export function BookListRow({
               className="text-note"
             >
               <ArrowCounterClockwise size={14} strokeWidth={2} className="mr-2 text-muted-foreground" />
-              Restore
+              {t("common.restore")}
             </ContextMenuItem>
             <ContextMenuSeparator />
             <ContextMenuItem
@@ -116,14 +118,14 @@ export function BookListRow({
               className="text-note text-destructive focus:text-destructive"
             >
               <Trash size={14} strokeWidth={2} className="mr-2" />
-              Delete forever
+              {t("common.delete_forever")}
             </ContextMenuItem>
           </>
         ) : (
           <>
             <ContextMenuItem onClick={() => onRename(book.id, book.title)} className="text-note">
               <PencilSimple size={14} strokeWidth={2} className="mr-2 text-muted-foreground" />
-              Rename
+              {t("common.rename")}
             </ContextMenuItem>
             <ContextMenuItem
               onClick={() => onTogglePin(book.id, book.pinned)}
@@ -132,12 +134,12 @@ export function BookListRow({
               {book.pinned ? (
                 <>
                   <PushPinSlash size={14} strokeWidth={2} className="mr-2 text-muted-foreground" />
-                  Unpin
+                  {t("common.unpin")}
                 </>
               ) : (
                 <>
                   <PushPin size={14} strokeWidth={2} className="mr-2 text-muted-foreground" />
-                  Pin to sidebar
+                  {t("common.pin_sidebar")}
                 </>
               )}
             </ContextMenuItem>
@@ -147,7 +149,7 @@ export function BookListRow({
               className="text-note text-destructive focus:text-destructive"
             >
               <Trash size={14} strokeWidth={2} className="mr-2" />
-              Move to trash
+              {t("common.move_to_trash")}
             </ContextMenuItem>
           </>
         )}

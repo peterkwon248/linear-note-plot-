@@ -43,6 +43,8 @@ import {
 import { ArrowsIn } from "@/lib/editor/editor-icons"
 import { toast } from "sonner"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { useT, translate, type Locale } from "@/lib/i18n"
+import { useSettingsStore } from "@/lib/settings-store"
 
 /* ── Cached render-only extensions for generateHTML ── */
 
@@ -425,6 +427,7 @@ function countFootnoteRefsInJson(json: Record<string, unknown> | null | undefine
 }
 
 function TextBlock({ block, editable, onUpdate, onDelete, dragHandleProps, articleId, footnoteStartOffset, onFootnoteCount }: WikiBlockRendererProps) {
+  const t = useT()
   const { content, contentJson, loading } = useWikiBlockContentJson(block.id, block.content, block.contentJson)
   const [editing, setEditing] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
@@ -607,7 +610,7 @@ function TextBlock({ block, editable, onUpdate, onDelete, dragHandleProps, artic
               className="prose dark:prose-invert max-w-none leading-relaxed text-foreground/85 whitespace-pre-wrap"
               style={{ fontSize: emScale(1, "body") }}
             >
-              {content || <span className="text-muted-foreground/60 italic">Write something...</span>}
+              {content || <span className="text-muted-foreground/60 italic">{t("wiki.block.text_placeholder")}</span>}
             </div>
           )}
         </div>
@@ -686,7 +689,7 @@ function WikiTextEditor({
   const editor = useEditor({
     immediatelyRender: false,
     extensions: createEditorExtensions("wiki", {
-      placeholder: "Write something...",
+      placeholder: translate("wiki.block.text_placeholder", useSettingsStore.getState().language as Locale),
     }),
     content: content && Object.keys(content).length > 0 ? content : undefined,
     editable: true,

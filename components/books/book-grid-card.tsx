@@ -10,6 +10,7 @@
  */
 
 import type { Book } from "@/lib/types"
+import { useT } from "@/lib/i18n"
 import { getBookKind } from "@/lib/view-engine/use-books-view"
 import {
   BookKindIcon,
@@ -61,6 +62,7 @@ export function BookGridCard({
   onRestore,
   onPermanentDelete,
 }: BookGridCardProps) {
+  const t = useT()
   const kind = getBookKind(book)
   const sourceKinds = Array.from(new Set((book.smartSources ?? []).map((s) => s.kind)))
   const isSelected = selectedIds?.has(book.id) ?? false
@@ -141,7 +143,7 @@ export function BookGridCard({
 
           {/* Title */}
           <h3 className="text-note font-medium text-foreground line-clamp-2 leading-snug">
-            {book.title || "Untitled book"}
+            {book.title || t("book.untitled")}
           </h3>
 
           {/* Description (optional) */}

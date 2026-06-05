@@ -4,11 +4,13 @@ import { useState, useRef, useEffect, useCallback } from "react"
 import { createPortal } from "react-dom"
 import { Editor } from "@tiptap/react"
 import { Table as PhTable, Plus as PhPlus, Minus as PhMinus, Trash } from "@/lib/editor/editor-icons"
+import { useT } from "@/lib/i18n"
 interface TableMenuProps {
   editor: Editor
 }
 
 export function TableMenu({ editor }: TableMenuProps) {
+  const t = useT()
   const [isOpen, setIsOpen] = useState(false)
   const [hoverRow, setHoverRow] = useState(0)
   const [hoverCol, setHoverCol] = useState(0)
@@ -67,7 +69,7 @@ export function TableMenu({ editor }: TableMenuProps) {
       <button
         ref={buttonRef}
         onMouseDown={handleToggle}
-        title="Table"
+        title={t("editor.table.insert")}
         className={`w-10 h-10 rounded-md flex items-center justify-center shrink-0 transition-all duration-100 ease-in-out cursor-pointer border-0 outline-none hover:text-foreground hover:bg-hover-bg ${
           isInsideTable ? "text-foreground" : "text-muted-foreground"
         } ${
@@ -87,7 +89,7 @@ export function TableMenu({ editor }: TableMenuProps) {
             {!isInsideTable ? (
               <>
                 <div className="text-2xs font-semibold text-muted-foreground mb-2 px-0.5">
-                  Insert table
+                  {t("editor.table.insert")}
                 </div>
                 <div
                   className="grid gap-1 mb-2"
@@ -111,24 +113,24 @@ export function TableMenu({ editor }: TableMenuProps) {
                   })}
                 </div>
                 <div className="text-2xs text-muted-foreground text-center">
-                  {hoverRow > 0 && hoverCol > 0 ? `${hoverRow} x ${hoverCol}` : "Select size"}
+                  {hoverRow > 0 && hoverCol > 0 ? `${hoverRow} x ${hoverCol}` : t("editor.table.select_size")}
                 </div>
               </>
             ) : (
               <>
                 <div className="text-2xs font-semibold text-muted-foreground mb-2 px-0.5">
-                  Edit table
+                  {t("editor.table.edit")}
                 </div>
                 <div className="flex flex-col gap-0.5">
-                  <TableAction icon={<PhPlus size={12} />} label="Add row above" onClick={() => { editor.chain().focus().addRowBefore().run(); setIsOpen(false) }} />
-                  <TableAction icon={<PhPlus size={12} />} label="Add row below" onClick={() => { editor.chain().focus().addRowAfter().run(); setIsOpen(false) }} />
-                  <TableAction icon={<PhMinus size={12} />} label="Delete row" onClick={() => { editor.chain().focus().deleteRow().run(); setIsOpen(false) }} danger />
+                  <TableAction icon={<PhPlus size={12} />} label={t("editor.table.add_row_above")} onClick={() => { editor.chain().focus().addRowBefore().run(); setIsOpen(false) }} />
+                  <TableAction icon={<PhPlus size={12} />} label={t("editor.table.add_row_below")} onClick={() => { editor.chain().focus().addRowAfter().run(); setIsOpen(false) }} />
+                  <TableAction icon={<PhMinus size={12} />} label={t("editor.table.delete_row")} onClick={() => { editor.chain().focus().deleteRow().run(); setIsOpen(false) }} danger />
                   <div className="h-px bg-border my-1" />
-                  <TableAction icon={<PhPlus size={12} />} label="Add column left" onClick={() => { editor.chain().focus().addColumnBefore().run(); setIsOpen(false) }} />
-                  <TableAction icon={<PhPlus size={12} />} label="Add column right" onClick={() => { editor.chain().focus().addColumnAfter().run(); setIsOpen(false) }} />
-                  <TableAction icon={<PhMinus size={12} />} label="Delete column" onClick={() => { editor.chain().focus().deleteColumn().run(); setIsOpen(false) }} danger />
+                  <TableAction icon={<PhPlus size={12} />} label={t("editor.table.add_col_left")} onClick={() => { editor.chain().focus().addColumnBefore().run(); setIsOpen(false) }} />
+                  <TableAction icon={<PhPlus size={12} />} label={t("editor.table.add_col_right")} onClick={() => { editor.chain().focus().addColumnAfter().run(); setIsOpen(false) }} />
+                  <TableAction icon={<PhMinus size={12} />} label={t("editor.table.delete_col")} onClick={() => { editor.chain().focus().deleteColumn().run(); setIsOpen(false) }} danger />
                   <div className="h-px bg-border my-1" />
-                  <TableAction icon={<Trash size={12} />} label="Delete table" onClick={() => { editor.chain().focus().deleteTable().run(); setIsOpen(false) }} danger />
+                  <TableAction icon={<Trash size={12} />} label={t("editor.table.delete_table")} onClick={() => { editor.chain().focus().deleteTable().run(); setIsOpen(false) }} danger />
                 </div>
               </>
             )}

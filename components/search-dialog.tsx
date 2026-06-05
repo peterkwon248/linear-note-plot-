@@ -138,7 +138,7 @@ export function SearchDialog() {
         } else {
           // No selected note, can't link
           setQuery("")
-          toast.error("Select a note first to create a link")
+          toast.error(t("cmdk.toast.no_note_selected"))
         }
         return
       }
@@ -227,8 +227,8 @@ export function SearchDialog() {
 
   function handleLinkSelect(targetNote: { id: string; title: string }) {
     if (!selectedNoteId) return
-    addWikiLink(selectedNoteId, targetNote.title || "Untitled")
-    toast.success(`Linked to "${targetNote.title || "Untitled"}"`)
+    addWikiLink(selectedNoteId, targetNote.title || t("common.untitled"))
+    toast.success(t("cmdk.toast.linked").replace("{name}", targetNote.title || t("common.untitled")))
     closePalette()
   }
 
@@ -271,7 +271,7 @@ export function SearchDialog() {
         if (!open) closePalette()
         else setSearchOpen(true)
       }}
-      title="Command Palette"
+      title={t("dialog.search.title")}
       description={dialogDescription}
       filter={cmdkFilter}
     >
@@ -297,7 +297,7 @@ export function SearchDialog() {
                 if (e.key === "Enter" && thinkingStepText.trim() && activeChain) {
                   e.preventDefault()
                   addThreadStep(activeChain.id, thinkingStepText.trim())
-                  toast.success("Thinking step added")
+                  toast.success(t("cmdk.toast.thinking_step_added"))
                   closePalette()
                 }
                 if (e.key === "Escape") {
@@ -391,7 +391,7 @@ export function SearchDialog() {
                       const id = createNote()
                       setSelectedNoteId(id)
                       router.push("/notes")
-                    }, "Note created")
+                    }, t("cmdk.toast.note_created"))
                   }
                 >
                   <PhPlus size={16} />
@@ -409,7 +409,7 @@ export function SearchDialog() {
                   onSelect={() =>
                     execCommand(
                       () => setTheme(resolvedTheme === "dark" ? "light" : "dark"),
-                      `Switched to ${resolvedTheme === "dark" ? "light" : "dark"} mode`
+                      t("cmdk.toast.switched_mode").replace("{mode}", resolvedTheme === "dark" ? "light" : "dark")
                     )
                   }
                 >
@@ -428,28 +428,28 @@ export function SearchDialog() {
               <CommandGroup heading={t("cmdk.group.graph")}>
                 <CommandItem
                   value="graph-focus-depth-1"
-                  onSelect={() => execCommand(() => setGraphFocusDepth(1), "Graph focus: depth 1")}
+                  onSelect={() => execCommand(() => setGraphFocusDepth(1), t("cmdk.toast.graph_focus").replace("{depth}", "1"))}
                 >
                   <Crosshair size={16} />
                   <span>{t("cmdk.cmd.graph_focus_depth")} 1</span>
                 </CommandItem>
                 <CommandItem
                   value="graph-focus-depth-2"
-                  onSelect={() => execCommand(() => setGraphFocusDepth(2), "Graph focus: depth 2")}
+                  onSelect={() => execCommand(() => setGraphFocusDepth(2), t("cmdk.toast.graph_focus").replace("{depth}", "2"))}
                 >
                   <Crosshair size={16} />
                   <span>{t("cmdk.cmd.graph_focus_depth")} 2</span>
                 </CommandItem>
                 <CommandItem
                   value="graph-focus-depth-3"
-                  onSelect={() => execCommand(() => setGraphFocusDepth(3), "Graph focus: depth 3")}
+                  onSelect={() => execCommand(() => setGraphFocusDepth(3), t("cmdk.toast.graph_focus").replace("{depth}", "3"))}
                 >
                   <Crosshair size={16} />
                   <span>{t("cmdk.cmd.graph_focus_depth")} 3</span>
                 </CommandItem>
                 <CommandItem
                   value="graph-focus-off"
-                  onSelect={() => execCommand(() => setGraphFocusDepth(0), "Graph focus: off")}
+                  onSelect={() => execCommand(() => setGraphFocusDepth(0), t("cmdk.toast.graph_focus_off"))}
                 >
                   <Crosshair size={16} />
                   <span>{t("cmdk.cmd.graph_focus_off")}</span>
@@ -466,7 +466,7 @@ export function SearchDialog() {
                       onSelect={() =>
                         execCommand(
                           () => togglePin(selectedNote.id),
-                          selectedNote.pinned ? "Unpinned" : "Pinned"
+                          selectedNote.pinned ? t("cmdk.toast.unpinned") : t("cmdk.toast.pinned")
                         )
                       }
                     >
@@ -482,7 +482,7 @@ export function SearchDialog() {
                         onSelect={() =>
                           execCommand(
                             () => startThread(selectedNote.id),
-                            "Thread started"
+                            t("cmdk.toast.thread_started")
                           )
                         }
                       >
@@ -507,7 +507,7 @@ export function SearchDialog() {
                           onSelect={() =>
                             execCommand(
                               () => endThread(activeChain.id),
-                              "Thread ended"
+                              t("cmdk.toast.thread_ended")
                             )
                           }
                         >
@@ -548,15 +548,15 @@ export function SearchDialog() {
                   {selectedNote.status === "backlog" && (
                     <>
                       <CommandSeparator />
-                      <CommandGroup heading="Backlog Actions">
+                      <CommandGroup heading={t("cmdk.group.backlog_actions")}>
                         <CommandItem
                           value="triage-keep"
                           onSelect={() =>
-                            execCommand(() => triageKeep(selectedNote.id), "Kept - moved to In Progress")
+                            execCommand(() => triageKeep(selectedNote.id), t("cmdk.toast.kept_moved"))
                           }
                         >
                           <CheckCircle size={16} />
-                          <span>Keep</span>
+                          <span>{t("cmdk.cmd.keep")}</span>
                           <CommandShortcut>K</CommandShortcut>
                         </CommandItem>
                         <CommandItem
@@ -564,22 +564,22 @@ export function SearchDialog() {
                           onSelect={() =>
                             execCommand(
                               () => triageSnooze(selectedNote.id, getSnoozeTime("tomorrow")),
-                              "Snoozed until tomorrow"
+                              t("cmdk.toast.snoozed_tomorrow")
                             )
                           }
                         >
                           <PhClock size={16} />
-                          <span>Snooze until Tomorrow</span>
+                          <span>{t("cmdk.cmd.snooze_tomorrow")}</span>
                           <CommandShortcut>S</CommandShortcut>
                         </CommandItem>
                         <CommandItem
                           value="triage-trash"
                           onSelect={() =>
-                            execCommand(() => triageTrash(selectedNote.id), "Trashed")
+                            execCommand(() => triageTrash(selectedNote.id), t("cmdk.toast.trashed"))
                           }
                         >
                           <Trash size={16} />
-                          <span>Trash</span>
+                          <span>{t("cmdk.cmd.trash")}</span>
                           <CommandShortcut>T</CommandShortcut>
                         </CommandItem>
                       </CommandGroup>
@@ -589,18 +589,18 @@ export function SearchDialog() {
                   {selectedNote.status === "in_progress" && (
                     <>
                       <CommandSeparator />
-                      <CommandGroup heading="In Progress Actions">
+                      <CommandGroup heading={t("cmdk.group.in_progress_actions")}>
                         <CommandItem
                           value="promote-to-done"
                           onSelect={() =>
                             execCommand(
                               () => promoteToPermanent(selectedNote.id),
-                              "Promoted to Done"
+                              t("cmdk.toast.promoted_to_done")
                             )
                           }
                         >
                           <ArrowCircleUp size={16} />
-                          <span>Promote to Done</span>
+                          <span>{t("cmdk.cmd.promote_to_done")}</span>
                           <CommandShortcut>P</CommandShortcut>
                         </CommandItem>
                         <CommandItem
@@ -608,12 +608,12 @@ export function SearchDialog() {
                           onSelect={() =>
                             execCommand(
                               () => moveBackToInbox(selectedNote.id),
-                              "Moved back to Backlog"
+                              t("cmdk.toast.moved_back_to_backlog")
                             )
                           }
                         >
                           <Tray size={16} />
-                          <span>Back to Backlog</span>
+                          <span>{t("cmdk.cmd.back_to_backlog")}</span>
                           <CommandShortcut>B</CommandShortcut>
                         </CommandItem>
                       </CommandGroup>
@@ -623,18 +623,18 @@ export function SearchDialog() {
                   {selectedNote.status === "done" && (
                     <>
                       <CommandSeparator />
-                      <CommandGroup heading="Done Actions">
+                      <CommandGroup heading={t("cmdk.group.done_actions")}>
                         <CommandItem
                           value="demote-to-in-progress"
                           onSelect={() =>
                             execCommand(
                               () => undoPromote(selectedNote.id),
-                              "Demoted to In Progress"
+                              t("cmdk.toast.demoted_to_in_progress")
                             )
                           }
                         >
                           <ArrowCircleDown size={16} />
-                          <span>Demote to In Progress</span>
+                          <span>{t("cmdk.cmd.demote_to_in_progress")}</span>
                           <CommandShortcut>D</CommandShortcut>
                         </CommandItem>
                       </CommandGroup>
@@ -650,7 +650,7 @@ export function SearchDialog() {
             <>
               {/* Worker search results in Links mode */}
               {hasFuzzyQuery && workerResults.length > 0 && (
-                <CommandGroup heading="Select a note to link">
+                <CommandGroup heading={t("cmdk.group.links_select")}>
                   {workerResults
                     .filter((n) => n.id !== selectedNoteId)
                     .map((note) => (
@@ -662,7 +662,7 @@ export function SearchDialog() {
                         <PhLink className="shrink-0 self-start mt-0.5" size={16} />
                         <div className="flex-1 min-w-0">
                           <div className="truncate">
-                            {highlightQuery(note.title || "Untitled", query)}
+                            {highlightQuery(note.title || t("common.untitled"), query)}
                           </div>
                           <div className="truncate text-2xs text-muted-foreground leading-tight">
                             {noteSublabel(note)}
@@ -675,18 +675,18 @@ export function SearchDialog() {
 
               {/* Recent notes when no query in Links mode */}
               {!hasFuzzyQuery && (
-                <CommandGroup heading="Select a note to link">
+                <CommandGroup heading={t("cmdk.group.links_select")}>
                   {recentNotes
                     .filter((n) => n.id !== selectedNoteId)
                     .map((note) => (
                       <CommandItem
                         key={note.id}
-                        value={`link-${note.id}-${note.title || "Untitled"}`}
+                        value={`link-${note.id}-${note.title || t("common.untitled")}`}
                         onSelect={() => handleLinkSelect(note)}
                       >
                         <PhLink className="shrink-0 self-start mt-0.5" size={16} />
                         <div className="flex-1 min-w-0">
-                          <div className="truncate">{note.title || "Untitled"}</div>
+                          <div className="truncate">{note.title || t("common.untitled")}</div>
                           <div className="truncate text-2xs text-muted-foreground leading-tight">
                             {noteSublabel(note)}
                           </div>

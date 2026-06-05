@@ -13,6 +13,7 @@
 
 import { useMemo } from "react"
 import { usePlotStore } from "@/lib/store"
+import { useT } from "@/lib/i18n"
 import type { NoteTemplate } from "@/lib/types"
 import {
   CommandDialog,
@@ -35,6 +36,7 @@ export function TemplatesPickerDialog({
   onOpenChange,
   onSelect,
 }: TemplatesPickerDialogProps) {
+  const t = useT()
   const templates = usePlotStore((s) => s.templates) as NoteTemplate[]
 
   // Live (non-trashed) templates only. Pinned first, then by updatedAt desc
@@ -58,12 +60,12 @@ export function TemplatesPickerDialog({
     <CommandDialog
       open={open}
       onOpenChange={onOpenChange}
-      title="Select from Templates"
-      description="Pick a template to insert into the current note"
+      title={t("editor.template.title")}
+      description={t("editor.template.desc")}
     >
-      <CommandInput placeholder="Search templates…" />
+      <CommandInput placeholder={t("editor.template.search")} />
       <CommandList>
-        <CommandEmpty>No templates yet</CommandEmpty>
+        <CommandEmpty>{t("editor.template.empty")}</CommandEmpty>
         <CommandGroup>
           {liveTemplates.map((t) => (
             <CommandItem

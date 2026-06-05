@@ -25,6 +25,7 @@
 import { useMemo } from "react"
 import { format, formatDistanceToNow } from "date-fns"
 import { useRelativeTime } from "@/lib/i18n-date"
+import { useT } from "@/lib/i18n"
 import { usePlotStore } from "@/lib/store"
 import { resolveBookItems, type ResolvedBookItem } from "@/lib/books/resolver"
 import { getBookKind, type BookKind } from "@/lib/view-engine/use-books-view"
@@ -101,6 +102,7 @@ const SOURCE_KIND_ICON: Record<AutoSourceKind, React.ComponentType<{ size?: numb
 }
 
 export function BookDetailPanel({ book }: { book: Book }) {
+  const t = useT()
   const relative = useRelativeTime()
   const updateBook = usePlotStore((s) => s.updateBook)
   const deleteBook = usePlotStore((s) => s.deleteBook)
@@ -145,7 +147,7 @@ export function BookDetailPanel({ book }: { book: Book }) {
     () =>
       book.items
         .filter((i): i is Extract<typeof i, { kind: "chapter-heading" }> => i.kind === "chapter-heading")
-        .map((i, idx) => ({ id: i.id, title: i.title || "Untitled chapter", index: idx + 1 })),
+        .map((i, idx) => ({ id: i.id, title: i.title || t("book.untitled_chapter"), index: idx + 1 })),
     [book.items],
   )
 
@@ -186,19 +188,19 @@ export function BookDetailPanel({ book }: { book: Book }) {
             }}
           >
             <BooksIcon size={11} strokeWidth={2} />
-            Book
+            {t("book.badge")}
           </span>
           <KindBadge kind={kind} />
           {book.pinned && (
             <span className="inline-flex items-center gap-1 rounded-md bg-accent/10 px-1.5 py-0.5 text-2xs font-medium text-accent">
               <PushPin size={11} fill="currentColor" />
-              Pinned
+              {t("book.pinned_badge")}
             </span>
           )}
         </div>
         <button
           onClick={() => updateBook(book.id, { pinned: !book.pinned })}
-          title={book.pinned ? "Unpin book" : "Pin book"}
+          title={book.pinned ? t("common.unpin") : t("common.pin")}
           className="flex items-center justify-center h-7 w-7 rounded-md hover:bg-hover-bg text-muted-foreground hover:text-foreground transition-colors"
         >
           <PushPin
@@ -216,14 +218,14 @@ export function BookDetailPanel({ book }: { book: Book }) {
           mirrors the Notes side panel (StatusDropdown/PriorityDropdown). */}
       {kind !== "smart" && (
         <>
-          <InspectorSection title="Status" icon={<Circle size={16} strokeWidth={2} />}>
+          <InspectorSection title={t("panel.status")} icon={<Circle size={16} strokeWidth={2} />}>
             <StatusDropdown
               value={book.status ?? "backlog"}
               onChange={(status) => updateBook(book.id, { status })}
             />
           </InspectorSection>
           <div className="mx-4 border-b border-border" />
-          <InspectorSection title="Priority" icon={<Flag size={16} strokeWidth={2} />}>
+          <InspectorSection title={t("panel.priority")} icon={<Flag size={16} strokeWidth={2} />}>
             <PriorityDropdown
               value={book.priority ?? "none"}
               onChange={(priority) => updateBook(book.id, { priority })}
@@ -246,16 +248,16 @@ export function BookDetailPanel({ book }: { book: Book }) {
       )}
 
       {/* ── Dates ────────────────────────────────────────── */}
-      <InspectorSection title="Dates" icon={<CalendarBlank size={16} strokeWidth={2} />}>
+      <InspectorSection title={t("panel.dates")} icon={<CalendarBlank size={16} strokeWidth={2} />}>
         <div className="space-y-2">
           <div className="flex items-center justify-between">
-            <span className="text-note text-muted-foreground">Created</span>
+            <span className="text-note text-muted-foreground">{t("common.created")}</span>
             <span className="text-note text-foreground" title={book.createdAt}>
               {format(new Date(book.createdAt), "MMM d, yyyy")}
             </span>
           </div>
           <div className="flex items-center justify-between">
-            <span className="text-note text-muted-foreground">Updated</span>
+            <span className="text-note text-muted-foreground">{t("common.updated")}</span>
             <span className="text-note text-foreground" title={book.updatedAt}>
               {relative(book.updatedAt)}
             </span>
@@ -269,7 +271,7 @@ export function BookDetailPanel({ book }: { book: Book }) {
       {smartSources.length > 0 && (
         <>
           <InspectorSection
-            title="Smart sources"
+            title={t("book.detail.smart_sources")}
             icon={<Sparkle size={16} strokeWidth={2} />}
           >
             <div className="flex flex-col gap-1">
@@ -297,7 +299,7 @@ export function BookDetailPanel({ book }: { book: Book }) {
       {chapters.length > 0 && (
         <>
           <InspectorSection
-            title="Chapters"
+            title={t("book.detail.chapters")}
             icon={<TextAlignLeft size={16} strokeWidth={2} />}
           >
             <div className="space-y-1">
@@ -319,7 +321,7 @@ export function BookDetailPanel({ book }: { book: Book }) {
       )}
 
       {/* ── 2026-05-17 cross-entity Label / Category / Tag ── */}
-      <InspectorSection title="Label" icon={<ENTITY_ICONS.labels size={16} strokeWidth={2} />}>
+      <InspectorSection title={t("panel.label")} icon={<ENTITY_ICONS.labels size={16} strokeWidth={2} />}>
         <LabelPicker
           noteId={book.id}
           currentLabelId={book.labelId ?? null}
@@ -338,7 +340,7 @@ export function BookDetailPanel({ book }: { book: Book }) {
       </InspectorSection>
       <div className="mx-4 border-b border-border" />
 
-      <InspectorSection title="Categories" icon={<ENTITY_ICONS.categories size={16} strokeWidth={2} />}>
+      <InspectorSection title={t("panel.categories")} icon={<ENTITY_ICONS.categories size={16} strokeWidth={2} />}>
         <CategoryPicker
           entityId={book.id}
           selectedCategoryIds={book.categoryIds ?? []}
@@ -370,7 +372,7 @@ export function BookDetailPanel({ book }: { book: Book }) {
       </InspectorSection>
       <div className="mx-4 border-b border-border" />
 
-      <InspectorSection title="Tags" icon={<ENTITY_ICONS.tags size={16} strokeWidth={2} />}>
+      <InspectorSection title={t("panel.tags")} icon={<ENTITY_ICONS.tags size={16} strokeWidth={2} />}>
         <TagPicker
           noteId={book.id}
           selectedTagIds={book.tags ?? []}
@@ -398,14 +400,14 @@ export function BookDetailPanel({ book }: { book: Book }) {
       <div className="mx-4 border-b border-border" />
 
       {/* ── Properties (stats only) ──────────────────────── */}
-      <InspectorSection title="Properties" icon={<FileText size={16} strokeWidth={2} />}>
+      <InspectorSection title={t("panel.properties")} icon={<FileText size={16} strokeWidth={2} />}>
         <div className="space-y-2">
-          <Stat label="Total items" value={stats.totalItems} />
-          <Stat label="Notes" value={stats.notesCount} />
-          <Stat label="Wikis" value={stats.wikisCount} />
-          <Stat label="Chapters" value={stats.chaptersCount} />
-          {kind !== "manual" && <Stat label="Smart items" value={stats.smartCount} />}
-          {kind !== "smart" && <Stat label="Manual items" value={stats.manualCount} />}
+          <Stat label={t("book.stat.total_items")} value={stats.totalItems} />
+          <Stat label={t("common.notes")} value={stats.notesCount} />
+          <Stat label={t("common.wikis")} value={stats.wikisCount} />
+          <Stat label={t("book.detail.chapters")} value={stats.chaptersCount} />
+          {kind !== "manual" && <Stat label={t("book.stat.smart_items")} value={stats.smartCount} />}
+          {kind !== "smart" && <Stat label={t("book.stat.manual_items")} value={stats.manualCount} />}
         </div>
       </InspectorSection>
 
@@ -413,10 +415,10 @@ export function BookDetailPanel({ book }: { book: Book }) {
       {book.lastReadAt && book.lastReadItemId && (
         <>
           <div className="mx-4 border-b border-border" />
-          <InspectorSection title="Reading" icon={<BookOpen size={16} strokeWidth={2} />}>
+          <InspectorSection title={t("book.detail.reading")} icon={<BookOpen size={16} strokeWidth={2} />}>
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <span className="text-note text-muted-foreground">Last read</span>
+                <span className="text-note text-muted-foreground">{t("book.detail.last_read")}</span>
                 <span
                   className="text-note text-foreground"
                   title={book.lastReadAt ?? undefined}
@@ -429,7 +431,7 @@ export function BookDetailPanel({ book }: { book: Book }) {
                   to the lastReadItemId. Surfacing here would duplicate
                   navigation paths, so we just show a static cue. */}
               <p className="text-2xs text-muted-foreground/70 italic">
-                Use the &ldquo;Resume&rdquo; button in the book header to jump back.
+                {t("book.detail.resume_hint")}
               </p>
             </div>
           </InspectorSection>
@@ -439,7 +441,7 @@ export function BookDetailPanel({ book }: { book: Book }) {
       <div className="mx-4 border-b border-border" />
 
       {/* ── Actions ──────────────────────────────────────── */}
-      <InspectorSection title="Actions" icon={<Lightning size={16} strokeWidth={2} />}>
+      <InspectorSection title={t("panel.actions")} icon={<Lightning size={16} strokeWidth={2} />}>
         <div className="flex flex-col gap-2">
           <button
             onClick={() => {
@@ -450,7 +452,7 @@ export function BookDetailPanel({ book }: { book: Book }) {
             className="flex items-center justify-center gap-2 rounded-md border border-border px-3 py-2 text-note text-muted-foreground hover:bg-red-500/10 hover:text-red-500 hover:border-red-500/30 transition-colors"
           >
             <Trash size={14} strokeWidth={2} />
-            Delete book
+            {t("book.detail.delete_book")}
           </button>
         </div>
       </InspectorSection>

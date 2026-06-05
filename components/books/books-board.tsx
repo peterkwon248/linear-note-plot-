@@ -23,6 +23,7 @@
  */
 
 import { useCallback, useMemo, useState } from "react"
+import { useT } from "@/lib/i18n"
 import {
   DndContext,
   DragOverlay,
@@ -97,6 +98,7 @@ export function BooksBoard({
   onRestore,
   onPermanentDelete,
 }: BooksBoardProps) {
+  const t = useT()
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 4 } }),
     useSensor(KeyboardSensor),
@@ -190,7 +192,7 @@ export function BooksBoard({
         // pinned → others, or others → pinned: immediate toggle.
         const nextPinned = targetKey === "pinned"
         onTogglePin(book.id, !nextPinned)
-        toast.success(nextPinned ? "Pinned book" : "Unpinned book")
+        toast.success(nextPinned ? t("books.toast.pinned") : t("books.toast.unpinned"))
       } else if (groupBy === "kind") {
         const targetKind = targetKey as BookKind
         const currentKind = getBookKind(book)
@@ -198,14 +200,14 @@ export function BooksBoard({
           const count = book.smartSources?.length ?? 0
           // Confirmation required: smartSources removal is destructive.
           if (typeof window !== "undefined" && window.confirm(
-            `Convert "${book.title}" to a manual book? This will remove ${count} smart source${count === 1 ? "" : "s"}. Items already in the book are preserved.`,
+            t("book.board.confirm_convert").replace("{title}", book.title).replace("{count}", String(count)),
           )) {
             onConvertToManual(book.id, book.title)
-            toast.success(`Converted "${book.title}" to Manual`)
+            toast.success(t("book.board.toast_converted").replace("{title}", book.title))
           }
         } else if (targetKind === "smart" || targetKind === "hybrid") {
-          toast.info("Configure smart sources on the book detail page", {
-            description: "Drag works for Smart → Manual conversion only.",
+          toast.info(t("book.board.toast_configure_sources"), {
+            description: t("book.board.toast_configure_sources_desc"),
           })
         }
         // smart → hybrid / manual → smart etc. fall through (no-op + hint).
@@ -214,7 +216,7 @@ export function BooksBoard({
         // smart books carry status too (harmless; kind is derived, not status).
         const nextStatus = targetKey as NoteStatus
         onSetStatus(book.id, nextStatus)
-        toast.success(`Moved to ${STATUS_CONFIG[nextStatus]?.label ?? nextStatus}`)
+        toast.success(t("book.board.toast_status_moved").replace("{status}", STATUS_CONFIG[nextStatus]?.label ?? nextStatus))
       }
       // groupBy === "none" → no card drop targets (single column).
 
@@ -445,6 +447,7 @@ function BookBoardCardInner({
   onOpen: (id: string) => void
   isDragging: boolean
 }) {
+  const t = useT()
   const kind = getBookKind(book)
   const sourceKinds = Array.from(new Set((book.smartSources ?? []).map((s) => s.kind)))
 
@@ -489,7 +492,7 @@ function BookBoardCardInner({
           <BookKindIcon kind={kind} size={14} />
         </span>
         <span className="min-w-0 flex-1 text-note font-medium text-foreground line-clamp-2 leading-snug">
-          {book.title || "Untitled book"}
+          {book.title || t("books.untitled")}
         </span>
         {book.pinned && (
           <PushPin size={11} fill="currentColor" strokeWidth={2} className="shrink-0 text-amber-500" />

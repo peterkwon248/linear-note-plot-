@@ -22,6 +22,7 @@
 import { useMemo } from "react"
 import { format, formatDistanceToNow } from "date-fns"
 import { useRelativeTime } from "@/lib/i18n-date"
+import { useT } from "@/lib/i18n"
 import { usePlotStore } from "@/lib/store"
 import {
   Calendar as CalendarBlank,
@@ -71,6 +72,7 @@ function formatBytes(bytes: number): string {
 }
 
 export function FileDetailPanel({ attachment }: { attachment: Attachment }) {
+  const t = useT()
   const relative = useRelativeTime()
   const notes = usePlotStore((s) => s.notes)
   const wikiArticles = usePlotStore((s) => s.wikiArticles)
@@ -126,7 +128,7 @@ export function FileDetailPanel({ attachment }: { attachment: Attachment }) {
         <div className="flex items-center gap-2">
           <span className="inline-flex items-center gap-1 rounded-md bg-secondary/40 px-1.5 py-0.5 text-2xs font-medium text-muted-foreground">
             {isImage ? <PhImage size={11} /> : <Paperclip size={11} />}
-            File
+            {t("entity.file")}
           </span>
           <span className="inline-flex items-center gap-1 rounded-md bg-accent/10 px-1.5 py-0.5 text-2xs font-medium text-accent">
             {typeLabel}
@@ -153,16 +155,16 @@ export function FileDetailPanel({ attachment }: { attachment: Attachment }) {
       )}
 
       {/* ── Dates ────────────────────────────────────────── */}
-      <InspectorSection title="Dates" icon={<CalendarBlank size={16} />}>
+      <InspectorSection title={t("panel.dates")} icon={<CalendarBlank size={16} />}>
         <div className="space-y-2">
           <div className="flex items-center justify-between">
-            <span className="text-note text-muted-foreground">Uploaded</span>
+            <span className="text-note text-muted-foreground">{t("panel.file.uploaded")}</span>
             <span className="text-note text-foreground" title={attachment.createdAt}>
               {format(new Date(attachment.createdAt), "MMM d, yyyy")}
             </span>
           </div>
           <div className="flex items-center justify-between">
-            <span className="text-note text-muted-foreground">Age</span>
+            <span className="text-note text-muted-foreground">{t("panel.file.age")}</span>
             <span className="text-note text-muted-foreground/70">
               {relative(attachment.createdAt)}
             </span>
@@ -173,17 +175,17 @@ export function FileDetailPanel({ attachment }: { attachment: Attachment }) {
       <div className="mx-4 border-b border-border" />
 
       {/* ── Source (where it was uploaded) ───────────────── */}
-      <InspectorSection title="Source" icon={<FileText size={16} />}>
+      <InspectorSection title={t("panel.file.source")} icon={<FileText size={16} />}>
         {sourceNote ? (
           <button
             onClick={() => openNote(sourceNote.id)}
             className="flex w-full items-center gap-2 rounded-md px-2 py-1 text-left text-note text-foreground hover:bg-hover-bg transition-colors"
           >
             <FileText size={13} className="shrink-0 text-muted-foreground" />
-            <span className="truncate flex-1">{sourceNote.title || "Untitled"}</span>
+            <span className="truncate flex-1">{sourceNote.title || t("common.untitled")}</span>
           </button>
         ) : (
-          <p className="text-note text-muted-foreground italic px-2">Source unknown</p>
+          <p className="text-note text-muted-foreground italic px-2">{t("panel.file.source_unknown")}</p>
         )}
       </InspectorSection>
 
@@ -193,7 +195,7 @@ export function FileDetailPanel({ attachment }: { attachment: Attachment }) {
       {(usedInNotes.length + usedInWikis.length > 0) && (
         <>
           <InspectorSection
-            title={`Used in · ${usedInNotes.length + usedInWikis.length}`}
+            title={`${t("panel.file.used_in")} · ${usedInNotes.length + usedInWikis.length}`}
             icon={<PhLink size={16} />}
           >
             <div className="flex flex-col gap-0.5">
@@ -204,7 +206,7 @@ export function FileDetailPanel({ attachment }: { attachment: Attachment }) {
                   className="flex items-center gap-2 rounded-md px-2 py-1 text-left text-note text-foreground hover:bg-hover-bg transition-colors"
                 >
                   <FileText size={13} className="shrink-0 text-muted-foreground" />
-                  <span className="truncate">{n.title || "Untitled"}</span>
+                  <span className="truncate">{n.title || t("common.untitled")}</span>
                 </button>
               ))}
               {usedInWikis.map((a) => (
@@ -213,7 +215,7 @@ export function FileDetailPanel({ attachment }: { attachment: Attachment }) {
                   className="flex items-center gap-2 rounded-md px-2 py-1 text-note text-muted-foreground"
                 >
                   <IconWiki size={13} className="shrink-0" />
-                  <span className="truncate">{a.title || "Untitled"}</span>
+                  <span className="truncate">{a.title || t("common.untitled")}</span>
                 </div>
               ))}
             </div>
@@ -223,21 +225,21 @@ export function FileDetailPanel({ attachment }: { attachment: Attachment }) {
       )}
 
       {/* ── Properties (= stats only) ────────────────────── */}
-      <InspectorSection title="Properties" icon={<FileText size={16} />}>
+      <InspectorSection title={t("panel.properties")} icon={<FileText size={16} />}>
         <div className="space-y-2">
           <div className="flex items-center justify-between">
-            <span className="text-note text-muted-foreground">Size</span>
+            <span className="text-note text-muted-foreground">{t("panel.file.size")}</span>
             <span className="text-note tabular-nums text-foreground">
               {formatBytes(attachment.size)}
             </span>
           </div>
           <div className="flex items-center justify-between">
-            <span className="text-note text-muted-foreground">Type</span>
+            <span className="text-note text-muted-foreground">{t("panel.file.type")}</span>
             <span className="text-note text-foreground capitalize">{typeLabel}</span>
           </div>
           {attachment.mimeType && (
             <div className="flex items-center justify-between">
-              <span className="text-note text-muted-foreground">MIME</span>
+              <span className="text-note text-muted-foreground">{t("panel.file.mime")}</span>
               <span className="text-note text-muted-foreground/80 font-mono text-2xs truncate ml-2">
                 {attachment.mimeType}
               </span>
@@ -251,7 +253,7 @@ export function FileDetailPanel({ attachment }: { attachment: Attachment }) {
       {/* ── Actions ──────────────────────────────────────── */}
       {/* Delete action 미구현 — attachments slice에 deleteAttachment 액션 없음.
           별도 PR에서 trash flow 추가 시 활성화. 이번 PR은 Detail 정보 표시 한정. */}
-      <InspectorSection title="Actions" icon={<Lightning size={16} />}>
+      <InspectorSection title={t("panel.actions")} icon={<Lightning size={16} />}>
         <div className="flex flex-col gap-2">
           {attachment.url && (
             <a
@@ -261,7 +263,7 @@ export function FileDetailPanel({ attachment }: { attachment: Attachment }) {
               className="flex items-center justify-center gap-2 rounded-md border border-border px-3 py-2 text-note font-medium text-muted-foreground hover:bg-hover-bg hover:text-foreground transition-colors"
             >
               <ArrowSquareOut size={14} />
-              Open in new tab
+              {t("panel.file.open_new_tab")}
             </a>
           )}
         </div>

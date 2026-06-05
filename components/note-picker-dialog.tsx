@@ -4,6 +4,7 @@ import { useState, useMemo, useCallback, useEffect } from "react"
 import { usePlotStore } from "@/lib/store"
 import { formatDistanceToNow } from "date-fns"
 import { useRelativeTime } from "@/lib/i18n-date"
+import { useT } from "@/lib/i18n"
 import {
   CommandDialog,
   CommandInput,
@@ -81,11 +82,11 @@ const PRIORITY_GROUP: PickerFilterGroup = {
 
 /* ── Chip label helper ────────────────────────────────── */
 
-function getChipSummary(group: PickerFilterGroup, selected: Set<string>): string {
+function getChipSummary(group: PickerFilterGroup, selected: Set<string>, t: (key: string) => string): string {
   const total = group.values.length
   const count = selected.size
-  if (count === 0) return "None"
-  if (count >= total) return "All"
+  if (count === 0) return t("picker.chip.none")
+  if (count >= total) return t("common.all")
   // 1-2 selected: show comma-separated labels
   if (count <= 2) {
     return group.values
@@ -93,14 +94,14 @@ function getChipSummary(group: PickerFilterGroup, selected: Set<string>): string
       .map((v) => v.label)
       .join(", ")
   }
-  // If only 1 deselected, show "All except PhX"
+  // If only 1 deselected, show "All except X"
   const deselectedCount = total - count
   if (deselectedCount === 1) {
     const deselected = group.values.find((v) => !selected.has(v.value))
-    return `All except ${deselected?.label ?? "?"}`
+    return t("picker.chip.all_except").replace("{name}", deselected?.label ?? "?")
   }
   // Otherwise "N selected"
-  return `${count} selected`
+  return t("picker.chip.n_selected").replace("{count}", String(count))
 }
 
 /* ── Props ──────────────────────────────────────── */
@@ -127,6 +128,7 @@ export function NotePickerDialog({
   onSelect,
   onSelectMulti,
 }: NotePickerDialogProps & { multiSelect?: boolean; onSelect?: (noteId: string) => void; onSelectMulti?: (ids: string[]) => void }) {
+  const t = useT()
   const relative = useRelativeTime()
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
   const notes = usePlotStore((s) => s.notes)
@@ -148,14 +150,14 @@ export function NotePickerDialog({
   // Build dynamic groups from store data
   const tagsGroup: PickerFilterGroup = useMemo(() => ({
     key: "tags",
-    label: "Tags",
+    label: t("panel.tags"),
     icon: PhHash,
     field: "tags" as FilterField,
     values: [
-      { value: "_none", label: "No tags" },
-      ...tags.map((t) => ({ value: t.id, label: t.name })),
+      { value: "_none", label: t("common.none") },
+      ...tags.map((tag) => ({ value: tag.id, label: tag.name })),
     ],
-  }), [tags])
+  }), [tags, t])
 
   const allGroups = useMemo<PickerFilterGroup[]>(
     () => [STATUS_GROUP, PRIORITY_GROUP, tagsGroup],
@@ -285,12 +287,12 @@ export function NotePickerDialog({
       open={open}
       onOpenChange={onOpenChange}
       title={title}
-      description="Search and select a note"
+      description={t("dialog.notepicker.description")}
       showCloseButton={false}
       filter={cmdkFilter}
       className="sm:max-w-[960px]"
     >
-      <CommandInput placeholder="Search notes..." />
+      <CommandInput placeholder={t("dialog.notepicker.placeholder")} />
 
       {/* ── Chip-based filter bar ── */}
       <div
@@ -303,14 +305,15 @@ export function NotePickerDialog({
           if (!group) return null
           const selected = activeFilters[groupKey]
           const GroupIcon = group.icon
-          const summary = getChipSummary(group, selected)
+          const summary = getChipSummary(group, selected, t)
+          const groupDisplayLabel = groupKey === "status" ? t("panel.status") : groupKey === "priority" ? t("panel.priority") : t("panel.tags")
 
           return (
             <DropdownMenu key={groupKey}>
               <DropdownMenuTrigger asChild>
                 <button className="shrink-0 inline-flex items-center gap-1 rounded-md border border-accent/25 bg-accent/5 px-1.5 py-0.5 text-2xs text-foreground transition-colors hover:bg-accent/10">
                   <GroupIcon className="h-3 w-3 text-accent/70" />
-                  <span className="font-medium">{group.label}:</span>
+                  <span className="font-medium">{groupDisplayLabel}:</span>
                   <span className="max-w-[120px] truncate text-muted-foreground">{summary}</span>
                   <CaretDown className="text-muted-foreground/70" size={10} strokeWidth={2} />
                 </button>
@@ -327,7 +330,7 @@ export function NotePickerDialog({
                     ) : groupKey === "priority" ? (
                       <>
                         <PriorityBadge priority={value as NotePriority} />
-                        <span className="ml-1 text-note">{label}</span>
+                        <span className="ml-1 text-note">{t("priority." + value)}</span>
                       </>
                     ) : groupKey === "tags" && value !== "_none" ? (
                       <>
@@ -350,13 +353,13 @@ export function NotePickerDialog({
                     onClick={() => selectAllInGroup(groupKey)}
                     className="text-2xs text-muted-foreground hover:text-foreground"
                   >
-                    Select all
+                    {t("picker.filter.select_all")}
                   </button>
                   <button
                     onClick={() => clearGroup(groupKey)}
                     className="text-2xs text-muted-foreground hover:text-foreground"
                   >
-                    Clear
+                    {t("picker.filter.clear")}
                   </button>
                 </div>
               </DropdownMenuContent>
@@ -379,7 +382,7 @@ export function NotePickerDialog({
             className="shrink-0 inline-flex items-center gap-1 rounded-md px-2 py-1 text-2xs font-medium text-muted-foreground transition-colors hover:bg-hover-bg hover:text-foreground"
           >
             <PhPlus size={12} strokeWidth={2} />
-            {group.label}
+            {group.key === "status" ? t("panel.status") : group.key === "priority" ? t("panel.priority") : t("panel.tags")}
           </button>
         ))}
 
@@ -393,7 +396,7 @@ export function NotePickerDialog({
               onClick={() => setActiveFilters({})}
               className="text-2xs text-muted-foreground hover:text-foreground"
             >
-              Clear all
+              {t("picker.filter.clear_all")}
             </button>
           )}
         </div>
@@ -403,13 +406,13 @@ export function NotePickerDialog({
         <CommandEmpty>
           <div className="flex flex-col items-center gap-1.5 py-2">
             <FileText className="text-muted-foreground/60" size={32} strokeWidth={2} />
-            <p className="text-note text-muted-foreground">No notes found</p>
+            <p className="text-note text-muted-foreground">{t("dialog.notepicker.empty")}</p>
             {activeGroupKeys.length > 0 && (
               <button
                 onClick={() => setActiveFilters({})}
                 className="text-2xs text-accent hover:underline"
               >
-                Clear filters
+                {t("picker.filter.clear_filters")}
               </button>
             )}
           </div>
@@ -439,7 +442,7 @@ export function NotePickerDialog({
                 )}
                 <div className="flex-1 min-w-0">
                   <span className="truncate text-note font-medium text-foreground block">
-                    {note.title || "Untitled"}
+                    {note.title || t("common.untitled")}
                   </span>
                   {note.preview && (
                     <p className="truncate text-2xs text-muted-foreground/70 mt-0.5">
@@ -463,7 +466,7 @@ export function NotePickerDialog({
       {multiSelect && (
         <div className="border-t border-border px-3 py-2.5 flex items-center justify-between">
           <span className="text-2xs text-muted-foreground">
-            {selectedIds.size > 0 ? `${selectedIds.size} selected` : "Select notes to add"}
+            {selectedIds.size > 0 ? t("picker.chip.n_selected").replace("{count}", String(selectedIds.size)) : t("dialog.notepicker.footer_hint")}
           </span>
           <button
             onClick={handleConfirmMulti}
@@ -471,7 +474,7 @@ export function NotePickerDialog({
             className="inline-flex items-center gap-1.5 rounded-md bg-accent px-3 py-1.5 text-2xs font-medium text-accent-foreground transition-opacity disabled:opacity-40 hover:opacity-90"
           >
             <PhPlus size={12} strokeWidth={2.5} />
-            Add {selectedIds.size > 0 ? selectedIds.size : ""}
+            {selectedIds.size > 0 ? t("picker.add.n_items").replace("{count}", String(selectedIds.size)) : t("picker.add.add")}
           </button>
         </div>
       )}

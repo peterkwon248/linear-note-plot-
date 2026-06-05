@@ -121,6 +121,7 @@ export function FilterPanel({
   const t = useT()
   const [openCat, setOpenCat] = useState<string | null>(null)
   const [subPanelTop, setSubPanelTop] = useState(0)
+  const [subPanelMaxH, setSubPanelMaxH] = useState(400)
   const [searchQuery, setSearchQuery] = useState("")
   const [subSearch, setSubSearch] = useState("")
   const containerRef = useRef<HTMLDivElement>(null)
@@ -131,11 +132,21 @@ export function FilterPanel({
     if (containerRef.current) {
       const containerRect = containerRef.current.getBoundingClientRect()
       const rowRect = e.currentTarget.getBoundingClientRect()
-      const offset = rowRect.top - containerRect.top
-      setSubPanelTop(offset)
+      // Keep the value sub-panel inside the viewport. It opens at the hovered
+      // row's y and extends downward, so a low row (e.g. Date/Content) in a
+      // centered dialog would push it past the bottom edge and clip it. Cap
+      // its height to the visible band and shift the top up when needed.
+      const pad = 8
+      const vh = typeof window !== "undefined" ? window.innerHeight : 800
+      const cat = categories.find((c) => c.key === catKey)
+      const estHeight = Math.min(400, 44 + (cat?.values.length ?? 0) * 40)
+      const maxH = Math.min(estHeight, vh - 2 * pad)
+      const topVp = Math.min(Math.max(rowRect.top, pad), vh - pad - maxH)
+      setSubPanelTop(topVp - containerRect.top)
+      setSubPanelMaxH(maxH)
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [openCat])
+  }, [openCat, categories])
 
   const q = searchQuery.toLowerCase()
 
@@ -162,8 +173,8 @@ export function FilterPanel({
       {/* ── Sub Panel (values) — LEFT side, positioned at hovered row's y ── */}
       {activeCategory && activeCategory.values.length > 0 && (
         <div
-          className="absolute right-full w-[220px] max-h-[400px] overflow-y-auto border border-border-subtle bg-surface-overlay rounded-lg py-1 shrink-0 shadow-lg z-10 -mr-px"
-          style={{ top: subPanelTop }}
+          className="absolute right-full w-[220px] overflow-y-auto border border-border-subtle bg-surface-overlay rounded-lg py-1 shrink-0 shadow-lg z-10 -mr-px"
+          style={{ top: subPanelTop, maxHeight: subPanelMaxH }}
         >
           <div className="px-2 pb-1">
             <input
@@ -234,7 +245,14 @@ export function FilterPanel({
       )}
 
       {/* ── Main Panel (categories) — RIGHT side, always visible ── */}
-      <div className="w-[260px] max-h-[560px] overflow-y-auto py-1 shrink-0">
+      {/* Cap height to the space Radix measured between the popover and the
+          viewport edge (--radix-popover-content-available-height) so the list
+          scrolls instead of spilling off-screen; falls back to 560px when not
+          rendered inside a Radix popover. */}
+      <div
+        className="w-[260px] overflow-y-auto py-1 shrink-0"
+        style={{ maxHeight: "min(560px, var(--radix-popover-content-available-height, 560px))" }}
+      >
         {/* Search input */}
         <div className="px-2 pb-1.5" onMouseEnter={() => setOpenCat(null)}>
           <input
