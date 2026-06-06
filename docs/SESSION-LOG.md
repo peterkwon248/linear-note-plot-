@@ -6,6 +6,50 @@
 
 ---
 
+## 2026-06-06 (집/Windows) — **마크다운 변환 완결: 기능(PR #541) + 시드/레거시 리치 렌더(PR #542) + UpNote 실앱 검증**
+
+> 🎯 **다음 즉시 액션**: 마크다운 트랙 **완결**. 다음 후보 = **앱 영어 잔여 i18n 2차 sweep (~150 + 이번 신규 문자열)** [TODO 0.0005] 또는 사용자 관심(모바일). i18n 2차엔 **이번에 추가된 영어 UI**도 포함: `markdown-input-dialog.tsx`(전체: "Input as Markdown"/설명/"Insert"/"Cancel"/"⌘ Enter…"), `editor-context-menu.tsx`("Paste from Markdown"), `template-edit-page.tsx`("Input as Markdown" 버튼/title). 방법(확립)=하위 컴포넌트마다 `const t=useT()`+키맵 → KO 일괄 → git diff EN 복원 → 참조키 grep → `rm -rf .next && npm run build`(파이프 없이).
+>
+> **사용자 의도**: "마크다운은 `#`/`[` 단축키로 손쉽게 쓰는 게 미덕 아니냐, 우리는 왜 어렵냐, `{{YYYY}}` 되냐" → 조사 결과 **Plot 라이브 타이핑은 이미 UpNote 동등**(input rule), **`[ ]`만 갭**(추가함), `{{YYYY}}-{{MM}}-{{DD}}`는 원래 됨(+2자리/월이름/요일 추가). "어려워 보인" 진짜 원인=시드 콘텐츠가 raw 마크다운 → 에디터-레이어 변환으로 해결.
+>
+> **마크다운 후속 후보 (작음)**: ① `[[wiki:…]]`가 변환 마크다운서 리터럴 잔존 → `markdownBodyToDoc`/`markdownToHtml` 후처리로 wikilink 노드화(시드에 `[[wiki:Zettelkasten]]` 다수) ② `[ ]` input rule이 `[x]`도 unchecked 생성(checked 미반영) → 커스텀 InputRule로 checked attr ③ Copy as Markdown(Alt+Ctrl+C) 역방향 `jsonToMarkdown`(turndown 필요) ④ 시드 데이터 자체 리치 사전변환(현재 렌더만 리치) ⑤ note-1식 손상(content=""+빈 contentJson)은 fallback 미적용(contentJson non-null)—엣지/프리뷰 아티팩트.
+>
+> **위험 + 회피**: i18n — tsc는 미존재 키 못 잡음(grep 전수) + `rm -rf .next && npm run build` + 하위 컴포넌트마다 useT(부모 t 재사용=빌드실패). 컨텍스트 메뉴/다이얼로그는 현재 영어(시블링 정합)—일괄 번역 시 일관.
+>
+> **참고 파일**: `components/editor/markdown-input-dialog.tsx`(신규·전부 영어) · `components/editor/editor-context-menu.tsx:364`(Paste from Markdown) · `components/views/template-edit-page.tsx`(Input as Markdown 버튼) · `lib/i18n.ts`(EN@20·KO·useT) · `lib/editor/markdown.ts`(변환 유틸) · `components/editor/core/shared-editor-config.ts`(`markdownBodyToDoc`·`[ ]` input rule).
+>
+> **머신**: 집(Windows). **현재 main HEAD**: #542 머지(7cfc0f2) + 이 docs PR. **branch worktree**: nice-moore-644ba4(PR A/B 머지됨 — 새 작업은 새 worktree 권장).
+
+### 완료
+- **PR #541** (78a310b): 마크다운 → 리치 변환 **기능** — `lib/editor/markdown.ts`(`markdownToHtml` marked+GFM / `markdownToJson` generateJSON, 격리·core무관, GFM task list 렌더러 변환) + **Ctrl+Alt+V "Paste from Markdown"**(단축키+컨텍스트메뉴) + 템플릿 **"Input as Markdown" 다이얼로그** + **`[ ]`/`[x]` 라이브 체크박스 input rule**(note+wiki) + **플레이스홀더 확장**(`{{YY}}`·`{{MMMM}}`·`{{MMM}}`·`{{dddd}}`·`{{ddd}}`). vitest markdown 13 + 플레이스홀더 10.
+- **PR #542** (7cfc0f2): **시드/레거시 마크다운 본문 리치 렌더** — `markdownBodyToDoc`(shared-editor-config, createRenderExtensions 캐시) + NoteEditorAdapter/TemplateEditorAdapter fallback이 contentJson null이면 markdown→리치. **신규+기존 유저 동시 해결**(마이그레이션·version bump 불필요). 라이브 실앱서 시드 노트 H1/H2/H3·블록쿼트·볼드 렌더, raw 마커 0 검증.
+
+### 브레인스토밍 & 큰 결정 (영구)
+- **Plot 라이브 마크다운 타이핑은 이미 UpNote 동등**: StarterKit input rule로 `#`~`######`·`-`/`*`/`1.`·`>`·코드펜스·`**`/`*`/`` ` ``/`~~`·`---` 다 됨. **유일 갭이던 `[ ]` 체크박스 input rule 추가**(TipTap 기본 미지원, wrappingInputRule). **Ctrl+Alt+V는 붙여넣기/일괄삽입 전용**(타이핑은 input rule이 처리).
+- **UpNote 템플릿 = 리치 사전저장 모델**(자동변환 X). 라이브 에디터 작성→리치 저장→적용 시 리치 삽입.
+- **시드 콘텐츠 전체(노트8+템플릿13)가 raw 마크다운 문자열 + contentJson null**이 "어려워 보인" 근본원인. **에디터-레이어 변환**(fallback이 markdownBodyToDoc)이 데이터 변경/마이그레이션 없이 신규+기존 동시 해결. 시드 데이터는 markdown 유지(렌더만 리치, 첫 편집 시 리치 영속).
+- **PR 분리**: 기능(feature) ↔ 시드/렌더(데이터-인접) 별개 PR.
+
+### 기술 학습 (영구)
+- **격리 원칙**: `lib/editor/markdown.ts`는 editor-config 무import 유지. createRenderExtensions 필요한 헬퍼(`markdownBodyToDoc`)는 shared-editor-config에 둠.
+- **markdownToJson(content, extensions)** = `marked.parse`(GFM) → `@tiptap/html generateJSON`. extensions 주입으로 격리. generateJSON은 **DOM 필요**(브라우저/테스트는 happy-dom — 단 프로젝트 컨벤션상 DOM 테스트 안 함, 순수 markdownToHtml만 node 테스트).
+- **GFM task list 변환**: marked 기본 `<li><input checkbox>`은 TipTap이 일반 불릿으로 봄 → 렌더러 override로 `<ul data-type="taskList"><li data-type="taskItem" data-checked>`(중첩/loose 보존, baseListitem 위임+input strip).
+- **PowerShell 데스크톱 computer-use = 이 머신 정답**(UpNote 실앱 조사·검증): `CopyFromScreen`+`mouse_event`/`keybd_event`+`Set-Clipboard`, frontmost 안 뺏김. 컨텍스트 메뉴는 **열기+캡처 한 스크립트로**(새 PS프로세스가 포커스 뺏어 닫힘). dev preview는 클립보드("Document not focused")·synthetic 키 input rule 안 먹음 → 실브라우저 또는 마운트/렌더만 검증.
+- **에디터 fallback 변환**: NoteEditorAdapter는 IIFE 유지(useMemo 안 씀=hooks순서 위험회피; TipTap 타이핑은 어댑터 리렌더 안 해 변환은 마운트 ~1회). 노트=첫 블록 heading이면 그대로, 아니면 제목 prepend(시드는 `# 제목` 첫줄 중복).
+
+### Watch Out
+- **이번 추가 영어 UI**(markdown-input-dialog 전체·"Paste from Markdown"·"Input as Markdown") → i18n 2차 sweep 대상.
+- **데스크톱 plot.exe = 옛 빌드**: #541/#542 보려면 `npx tauri build` 재빌드.
+- **note-1식 손상 노트**(content=""+빈 contentJson): 프리뷰 프로필 아티팩트(이전 세션 상호작용). fallback 미적용(contentJson non-null). 실유저 영향 미미.
+
+### 환경 변경
+- Store version: **v154 (무변경)**.
+- Tests: **341 passed / 7 skipped** (markdown 13 + 플레이스홀더 10 신규).
+- 신규 파일: `lib/editor/markdown.ts`, `lib/editor/__tests__/markdown.test.ts`, `components/editor/markdown-input-dialog.tsx`, `lib/store/slices/__tests__/templates.test.ts`.
+- 신규 의존성: `marked`.
+
+---
+
 ## 2026-06-05 (집/Windows, 저녁) — **에디터 버그픽스 3건 (PR #539) + 마크다운 템플릿 D안 착수 (버전 스큐로 B방식 결정·롤백)**
 
 > 🎯 **다음 즉시 액션**: **마크다운 변환 D안 = B방식(marked + TipTap `generateJSON`)으로 구현**. `@tiptap/markdown@3.25` 공식 확장은 peerDep core 3.25 **exact**라 설치 시 core를 끌어올림 → `react@3.22` 등과 스큐(`cancelPositionCheck` export 없음) **빌드 4에러** → **롤백 완료**(uninstall + core 원복). **첫 스텝**: `marked` 설치 확인(@tiptap/markdown 롤백으로 빠졌을 수 있음, 없으면 `npm i marked`) → `lib/editor/markdown.ts` 신규 = `marked.parse(md)`(md→HTML) + `generateJSON(html, createRenderExtensions())`(HTML→ProseMirror JSON) **격리 유틸**(메인 에디터 0터치, core 버전 무관). vitest로 `## Today`·리스트·bold·유저 멀티블록 템플릿 검증. 그 다음 ② `Ctrl+Alt+V` "마크다운으로 붙여넣기" ③ 템플릿 적용 시 마크다운 변환 + 템플릿 작성 "마크다운으로 입력" 옵션.

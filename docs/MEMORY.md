@@ -8,6 +8,27 @@
 
 ---
 
+## ✅ 2026-06-06 (집/Windows) — 마크다운 변환 완결: 기능(PR #541) + 시드/레거시 리치 렌더(PR #542) ⭐⭐⭐⭐⭐
+
+### 핵심 결정/학습 (영구)
+- **Plot 라이브 마크다운 타이핑은 이미 UpNote 동등** (StarterKit input rule: `#`~`######`·리스트·`>`·코드펜스·`**`/`*`/`` ` ``/`~~`·`---`). **유일 갭이던 `[ ]` 체크박스 input rule 추가**(TipTap 기본 미지원, `wrappingInputRule`, note+wiki). **Ctrl+Alt+V "Paste from Markdown"은 붙여넣기/일괄삽입 전용** — 타이핑은 input rule이 처리(UpNote와 동일 모델, 무조건변환 X).
+- **시드 콘텐츠 전체(노트8+템플릿13)가 raw 마크다운 문자열 + contentJson null**이 "마크다운이 어렵다"의 근본원인. **해결=에디터-레이어 변환**: NoteEditorAdapter/TemplateEditorAdapter fallback이 contentJson null이면 `markdownBodyToDoc`(marked+generateJSON, createRenderExtensions 스키마 캐시)로 리치 변환. **신규+기존 유저 동시·마이그레이션/version bump 불필요**. 시드 데이터는 markdown 유지(렌더만 리치, 첫 편집 시 리치 영속). 노트=첫 블록 heading이면 그대로/아니면 제목 prepend(시드는 `# 제목` 첫줄 중복).
+- **격리 원칙**: `lib/editor/markdown.ts`(`markdownToHtml`/`markdownToJson`)는 editor-config 무import. createRenderExtensions 필요한 `markdownBodyToDoc`는 shared-editor-config에. generateJSON은 DOM 필요(테스트는 순수 markdownToHtml만 node).
+- **GFM task list 변환**: marked 기본 `<li><input checkbox>` → 렌더러 override로 `<ul data-type="taskList"><li data-type="taskItem" data-checked>`(baseListitem 위임+input strip, 중첩/loose 보존).
+- **UpNote 템플릿 = 리치 사전저장 모델**(자동변환 X). **PowerShell 데스크톱 computer-use**(`CopyFromScreen`+`keybd_event`/`mouse_event`+`Set-Clipboard`, frontmost 안 뺏김)가 이 머신 실앱 조사·검증 정답. dev preview는 클립보드("Document not focused")·synthetic 키로 input rule/붙여넣기 검증 불가 → 실브라우저 or 마운트/렌더만.
+
+### 완료
+- **PR #541** (78a310b): `markdown.ts` 격리 유틸 + Ctrl+Alt+V "Paste from Markdown"(단축키+컨텍스트메뉴) + 템플릿 "Input as Markdown" 다이얼로그 + `[ ]`/`[x]` input rule + 플레이스홀더 확장(`{{YY}}`·`{{MMMM}}`·`{{MMM}}`·`{{dddd}}`·`{{ddd}}`). vitest 13+10.
+- **PR #542** (7cfc0f2): `markdownBodyToDoc` + 어댑터 fallback 리치 렌더. 라이브 실앱 시드 노트 검증(헤딩6·블록쿼트·볼드·raw마커0).
+
+### 다음 (P0)
+1. **i18n 2차 sweep**(~150 + 신규 마크다운 영어 UI: markdown-input-dialog 전체·"Paste from Markdown"·"Input as Markdown"). 2. **모바일 대응**. 후속(작음): `[[wiki:]]` 노드화·`[x]` checked attr·Copy as Markdown 역방향(jsonToMarkdown)·시드 데이터 리치 사전변환.
+
+### Store version / 검증
+**무변경(v154)**. 신규 의존성 `marked`. 신규파일 `markdown.ts`·`markdown-input-dialog.tsx`·테스트2. 클린빌드 exit0·**341 passed**.
+
+---
+
 ## ✅ 2026-06-05 (집/Windows, 저녁) — 에디터 버그픽스 3건 (PR #539) + 마크다운 템플릿 D안 착수→롤백 ⭐⭐⭐⭐
 
 ### 핵심 결정/학습 (영구)
