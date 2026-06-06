@@ -11,7 +11,7 @@
  * store in SlashCommand.tsx. Registry is only for static/built-in blocks.
  */
 
-import { format } from "date-fns"
+import { format, addDays } from "date-fns"
 import { nanoid } from "nanoid"
 import {
   TextHOne,
@@ -471,14 +471,28 @@ export const BLOCK_REGISTRY: readonly BlockRegistryEntry[] = [
     id: "date",
     label: "Date",
     description: "Insert today's date",
-    aliases: ["today"],
+    aliases: ["today", "날짜", "오늘"],
     icon: CalendarDots,
-    surfaces: ["insertMenu"],
+    surfaces: ["slash", "insertMenu"],
     group: "field",
     tier: "base",
     execute: ({ editor, range }) =>
       chainWithRange(editor, range)
         .insertContent(format(new Date(), "yyyy-MM-dd"))
+        .run(),
+  },
+  {
+    id: "date-tomorrow",
+    label: "Tomorrow",
+    description: "Insert tomorrow's date",
+    aliases: ["tomorrow", "내일"],
+    icon: CalendarDots,
+    surfaces: ["slash", "insertMenu"],
+    group: "field",
+    tier: "base",
+    execute: ({ editor, range }) =>
+      chainWithRange(editor, range)
+        .insertContent(format(addDays(new Date(), 1), "yyyy-MM-dd"))
         .run(),
   },
   {

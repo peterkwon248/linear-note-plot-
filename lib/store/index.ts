@@ -6,7 +6,7 @@ import { buildDefaultViewStates } from "../view-engine/defaults"
 import { createIDBStorage } from "../idb-storage"
 import { createAppendEvent } from "./helpers"
 import { SEED_NOTES, SEED_FOLDERS, SEED_TAGS, SEED_LABELS, SEED_TEMPLATES, SEED_WIKI_ARTICLES, SEED_WIKI_CATEGORIES, SEED_WIKI_TEMPLATES, SEED_BOOKS, SEED_SMART_BOOK_PRESETS, SEED_STICKERS, WELCOME_NOTE } from "./seeds"
-import { KO_SEED_NOTES, KO_WELCOME_NOTE, KO_SEED_WIKI_ARTICLES, KO_SEED_WIKI_CATEGORIES, KO_SEED_FOLDERS, KO_SEED_TAGS, KO_SEED_LABELS, KO_SEED_BOOKS, KO_SEED_SMART_BOOK_PRESETS, KO_SEED_STICKERS } from "./seeds-ko"
+import { KO_SEED_NOTES, KO_WELCOME_NOTE, KO_SEED_WIKI_ARTICLES, KO_SEED_WIKI_CATEGORIES, KO_SEED_FOLDERS, KO_SEED_TAGS, KO_SEED_LABELS, KO_SEED_TEMPLATES, KO_SEED_BOOKS, KO_SEED_SMART_BOOK_PRESETS, KO_SEED_STICKERS } from "./seeds-ko"
 import { useSettingsStore } from "../settings-store"
 import { persistBody, persistBlockBody } from "./helpers"
 import { isWikiStub } from "../wiki-utils"
@@ -279,7 +279,7 @@ export const usePlotStore = create<PlotState>()(
     },
     {
       name: "plot-store",
-      version: 154,
+      version: 155,
       storage: createIDBStorage<PlotState>(),
       partialize: (state) => {
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -350,7 +350,7 @@ export const usePlotStore = create<PlotState>()(
             state.folders = ko ? KO_SEED_FOLDERS : SEED_FOLDERS
             state.tags = ko ? KO_SEED_TAGS : SEED_TAGS
             state.labels = ko ? KO_SEED_LABELS : SEED_LABELS
-            state.templates = SEED_TEMPLATES
+            state.templates = ko ? KO_SEED_TEMPLATES : SEED_TEMPLATES
             state.wikiTemplates = SEED_WIKI_TEMPLATES
             state.books = ko ? KO_SEED_BOOKS : SEED_BOOKS
             state.smartBookPresets = ko ? KO_SEED_SMART_BOOK_PRESETS : SEED_SMART_BOOK_PRESETS

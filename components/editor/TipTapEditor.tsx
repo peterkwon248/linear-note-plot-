@@ -11,6 +11,7 @@ import { BlockDragOverlay } from "./dnd/block-drag-overlay"
 import { NoteCommentMarkerLayer } from "./note-comment-marker-layer"
 import { FloatingToc } from "./floating-toc"
 import { useSettingsStore } from "@/lib/settings-store"
+import { useT } from "@/lib/i18n"
 import { usePlotStore } from "@/lib/store"
 import { createEditorExtensions } from "./core/shared-editor-config"
 import { setEntityContext } from "@/lib/editor/entity-context"
@@ -203,6 +204,7 @@ export function TipTapEditor({
     editor.setEditable(editable)
   }
 
+  const t = useT()
   const counts = useEditorState({
     editor,
     selector: ({ editor: e }) => {
@@ -254,8 +256,8 @@ export function TipTapEditor({
             marginTop: "auto",
           }}
         >
-          <span>{counts?.words ?? 0} words</span>
-          <span>{counts?.chars ?? 0} chars</span>
+          <span>{counts?.words ?? 0} {t("editor.count.words")}</span>
+          <span>{counts?.chars ?? 0} {t("editor.count.chars")}</span>
         </div>
       )}
     </div>

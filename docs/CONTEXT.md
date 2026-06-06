@@ -51,6 +51,20 @@
 
 ---
 
+## 📜 2026-06-06 (집/Windows, 오후) — 템플릿 날짜 토큰 대확장 + KO 시드 로케일 분기 + 발견성 + 프롬프트/커서 + i18n ⭐⭐⭐⭐⭐
+
+**범위**: 유저 "## Today raw 왜?" → 템플릿 영어/날짜 오해 발견 → "시드 전부 삭제하고 새로" → 업계 조사(리서처 3 병렬) 후 "풀 패키지"(프롬프트/커서까지). + 마크다운 발견성("일반인은 `#`/`[`/`{{` 모름").
+
+### 핵심 결정 (영구)
+- **KO 유저 영어 템플릿 = 로케일 분기 누락**(`index.ts`에서 notes/tags/labels/books는 `ko?KO:EN`인데 templates/wikiTemplates만 SEED 고정, PR #537 누락). → KO_SEED_TEMPLATES 13 + 분기 + migration v155(존재 id만 교체·삭제분/사용자생성 보존). 데이터 멀쩡, 배선 갭.
+- **"Today"=단어, 날짜 토큰 아님**. 날짜 자동=`{{date}}`/`{{YY}}` 토큰. **일반인 마크다운 발견성=슬래시/툴바**(date 블록 슬래시 노출이 핵심 — surfaces에 slash 없던 것). **업계=생성 시점 정적 치환 표준**(Templater 오프셋/prompt/cursor가 Plot 갭이던 것 → 추가).
+- 🔴 **dev 켜진 채 prod build 금지**(.next 충돌 → Internal Server Error, 빌드 전 `preview_stop`). `.map(fn)` 시그니처 확장 시 index 인자 함정 → 명시 콜백.
+
+### 완료
+- `expandPlaceholders` 대확장(오프셋 `{{date+1}}`·한국어 월/요일·포맷 `{{date:…}}`·`{{prompt}}`·`{{cursor}}`) + KO 시드 13 + v155 + 슬래시 날짜 노출(`/날짜`·`/내일`) + `PromptInputDialog`(신규) + i18n(마크다운 다이얼로그·워드카운트 단어/글자). store v154→v155, 테스트 353.
+
+---
+
 ## 📜 2026-06-06 (집/Windows) — 마크다운 변환 완결 (기능 PR #541 + 시드/레거시 리치 렌더 PR #542) ⭐⭐⭐⭐⭐
 
 **범위**: 유저 "마크다운 `#`/`[` 단축키로 쉽게 쓰는 게 미덕 아니냐, 왜 어렵냐, `{{YYYY}}` 되냐" → 조사+구현. UpNote 실앱 검증(PowerShell computer-use).

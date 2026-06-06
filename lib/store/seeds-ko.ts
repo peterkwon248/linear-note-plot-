@@ -11,7 +11,7 @@
  * (폴더/태그/라벨/스티커/카테고리/우선순위/상태) 소개.
  * ════════════════════════════════════════════════════════════════ */
 
-import type { Note, Folder, Tag, Label, WikiArticle, WikiCategory, Book, SmartBookPreset, Sticker, NoteStatus, NotePriority } from "../types"
+import type { Note, Folder, Tag, Label, WikiArticle, WikiCategory, Book, SmartBookPreset, Sticker, NoteStatus, NotePriority, NoteTemplate } from "../types"
 import { workflowDefaults } from "./helpers"
 import { buildSectionIndex } from "../wiki-section-index"
 
@@ -41,6 +41,189 @@ export const KO_SEED_LABELS: Label[] = [
   { id: "klabel-3", name: "메모", color: "#f5a623" },
   { id: "klabel-4", name: "일기", color: "#ec4899" },
   { id: "klabel-5", name: "회의", color: "#34d399" },
+]
+
+/* ── Note Templates (한국어) ───────────────────────────
+ * EN seeds.ts(SEED_TEMPLATES)와 동일한 tmpl-* id를 재사용한다. 신규 유저는
+ * 로케일별로 둘 중 하나만 주입받고(onRehydrate 분기), 기존 유저는 migration
+ * v155가 같은 id를 찾아 로케일에 맞는 버전으로 교체한다(사용자 생성분 보존).
+ * 날짜 토큰: {{date}}=오늘, {{dddd}}=한국어 요일, {{YYYY}}-{{MM}}=연-월,
+ * {{date+7}}=일주일 후(오프셋). */
+export const KO_SEED_TEMPLATES: NoteTemplate[] = [
+  // ── 데일리 / 주기 ──
+  {
+    id: "tmpl-daily",
+    name: "데일리 로그",
+    title: "데일리 {{date}}",
+    content: "# {{date}} {{dddd}}\n\n## 오늘 할 일\n\n- [ ] \n\n## 진행 중\n\n- \n\n## 메모\n\n- ",
+    contentJson: null,
+    labelId: "klabel-3",
+    tags: [],
+    folderId: "kfolder-2",
+    pinned: true,
+    createdAt: daysAgoIso(3),
+    updatedAt: daysAgoIso(3),
+  },
+  {
+    id: "tmpl-weekly",
+    name: "주간 회고",
+    title: "주간 회고 {{date}}",
+    content: "## 이번 주 하이라이트\n\n- \n\n## 잘한 것\n\n- \n\n## 아쉬운 것\n\n- \n\n## 다음 주 계획\n\n- [ ] ",
+    contentJson: null,
+    labelId: "klabel-3",
+    tags: [],
+    folderId: "kfolder-2",
+    pinned: true,
+    createdAt: daysAgoIso(3),
+    updatedAt: daysAgoIso(3),
+  },
+  {
+    id: "tmpl-monthly",
+    name: "월간 회고",
+    title: "월간 회고 {{YYYY}}-{{MM}}",
+    content: "## 이번 달 목표\n\n- \n\n## 진행 상황\n\n- \n\n## 배운 점\n\n- \n\n## 다음 달 계획\n\n- [ ] ",
+    contentJson: null,
+    labelId: "klabel-3",
+    tags: [],
+    folderId: null,
+    pinned: false,
+    createdAt: daysAgoIso(3),
+    updatedAt: daysAgoIso(3),
+  },
+  // ── 회의 ──
+  {
+    id: "tmpl-meeting",
+    name: "회의록",
+    title: "회의록 {{date}}",
+    content: "## 참석자\n\n- \n\n## 안건\n\n1. \n\n## 결정 사항\n\n- \n\n## 액션 아이템\n\n- [ ] ",
+    contentJson: null,
+    labelId: "klabel-5",
+    tags: [],
+    folderId: null,
+    pinned: true,
+    createdAt: daysAgoIso(3),
+    updatedAt: daysAgoIso(3),
+  },
+  {
+    id: "tmpl-1on1",
+    name: "1:1 미팅",
+    title: "1:1 {{date}}",
+    content: "## 업데이트\n\n- \n\n## 블로커\n\n- \n\n## 피드백\n\n- \n\n## 액션 아이템\n\n- [ ] ",
+    contentJson: null,
+    labelId: "klabel-5",
+    tags: [],
+    folderId: null,
+    pinned: false,
+    createdAt: daysAgoIso(3),
+    updatedAt: daysAgoIso(3),
+  },
+  {
+    id: "tmpl-standup",
+    name: "스탠드업",
+    title: "스탠드업 {{date}} {{dddd}}",
+    content: "## 어제 한 일\n\n- \n\n## 오늘 할 일\n\n- \n\n## 블로커\n\n- ",
+    contentJson: null,
+    labelId: "klabel-5",
+    tags: [],
+    folderId: null,
+    pinned: false,
+    createdAt: daysAgoIso(3),
+    updatedAt: daysAgoIso(3),
+  },
+  // ── 지식 작업 ──
+  {
+    id: "tmpl-idea",
+    name: "아이디어",
+    title: "",
+    content: "## 아이디어\n\n\n\n## 왜?\n\n\n\n## 다음 단계\n\n- ",
+    contentJson: null,
+    labelId: "klabel-1",
+    tags: [],
+    folderId: null,
+    pinned: false,
+    createdAt: daysAgoIso(3),
+    updatedAt: daysAgoIso(3),
+  },
+  {
+    id: "tmpl-research",
+    name: "리서치",
+    title: "",
+    content: "## 주제\n\n\n\n## 핵심 발견\n\n\n\n## 출처\n\n- \n\n## 인사이트\n\n",
+    contentJson: null,
+    labelId: "klabel-2",
+    tags: [],
+    folderId: null,
+    pinned: false,
+    createdAt: daysAgoIso(3),
+    updatedAt: daysAgoIso(3),
+  },
+  {
+    id: "tmpl-reading",
+    name: "독서 노트",
+    title: "",
+    content: "## 책 / 출처\n\n\n\n## 인상 깊은 구절\n\n> \n\n## 내 생각\n\n\n\n## 액션 아이템\n\n- [ ] ",
+    contentJson: null,
+    labelId: "klabel-2",
+    tags: ["ktag-4"],
+    folderId: null,
+    pinned: false,
+    createdAt: daysAgoIso(3),
+    updatedAt: daysAgoIso(3),
+  },
+  // ── 개인 ──
+  {
+    id: "tmpl-diary",
+    name: "일기",
+    title: "일기 {{date}} {{dddd}}",
+    content: "## 오늘의 기분\n\n\n\n## 있었던 일\n\n\n\n## 감사한 일\n\n- ",
+    contentJson: null,
+    labelId: "klabel-4",
+    tags: [],
+    folderId: null,
+    pinned: false,
+    createdAt: daysAgoIso(3),
+    updatedAt: daysAgoIso(3),
+  },
+  {
+    id: "tmpl-goal",
+    name: "목표 설정",
+    title: "",
+    content: "## 목표\n\n\n\n## 이유\n\n\n\n## 단계\n\n- [ ] \n\n## 마감일\n\n{{date+7}}",
+    contentJson: null,
+    labelId: "klabel-1",
+    tags: [],
+    folderId: null,
+    pinned: false,
+    createdAt: daysAgoIso(3),
+    updatedAt: daysAgoIso(3),
+  },
+  // ── 의사결정 / 프로젝트 ──
+  {
+    id: "tmpl-decision",
+    name: "의사결정 로그",
+    title: "의사결정 {{date}}",
+    content: "## 배경\n\n\n\n## 선택지\n\n1. \n2. \n\n## 결정\n\n\n\n## 근거\n\n\n\n## 되돌릴 수 있는가\n\n",
+    contentJson: null,
+    labelId: null,
+    tags: [],
+    folderId: null,
+    pinned: false,
+    createdAt: daysAgoIso(3),
+    updatedAt: daysAgoIso(3),
+  },
+  {
+    id: "tmpl-project",
+    name: "프로젝트 킥오프",
+    title: "",
+    content: "## 프로젝트 목표\n\n\n\n## 이해관계자\n\n- \n\n## 마일스톤\n\n- [ ] \n\n## 리스크\n\n- ",
+    contentJson: null,
+    labelId: null,
+    tags: [],
+    folderId: "kfolder-1",
+    pinned: false,
+    createdAt: daysAgoIso(3),
+    updatedAt: daysAgoIso(3),
+  },
 ]
 
 /* ── Wiki categories (다중 부모 DAG demo) ─────────────── */

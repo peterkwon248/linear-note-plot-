@@ -4,8 +4,13 @@ import { extractPreview, extractLinksOut } from "../body-helpers"
 import { buildDefaultViewStates, normalizeViewStatesMap, buildViewStateForContext } from "../view-engine/defaults"
 import type { WorkspaceTab } from "../workspace/types"
 import type { PlotState } from "./types"
-// NOTE: seed backfills (templates/books/presets) were removed in v154 to
-// guarantee deleted data never resurrects (출시: 부활 0). No seed imports needed.
+import type { NoteTemplate } from "../types"
+import { SEED_TEMPLATES } from "./seeds"
+import { KO_SEED_TEMPLATES } from "./seeds-ko"
+import { useSettingsStore } from "../settings-store"
+// NOTE: v154 removed seed *backfills* (the id-dedup append that resurrected
+// deleted data). v155 re-introduces seed imports for a one-time *replacement*
+// of seed templates — existing ids only, user deletions preserved (no revival).
 
 export function migrate(persistedState: unknown): PlotState {
   const state = persistedState as Record<string, unknown>
@@ -2660,6 +2665,39 @@ export function migrate(persistedState: unknown): PlotState {
   // hasSeeded=false → seeded exactly once on first load.
   if (typeof (state as Record<string, unknown>).hasSeeded !== "boolean") {
     ;(state as Record<string, unknown>).hasSeeded = true
+  }
+
+  // v154 → v155: replace seed note templates with locale-aware refreshed
+  // versions. The old template seeds were missing the locale branch (index.ts),
+  // so Korean users received English templates, and the bodies used raw "Today"
+  // plain text instead of date tokens. The new versions use ko/en text + date
+  // tokens ({{date}} · {{dddd}} · {{date+7}} offset). Only EXISTING seed ids are
+  // replaced — deleted seeds are NOT resurrected (v154 "부활 0" principle), and
+  // user-created templates (non-seed ids) are preserved untouched.
+  {
+    const koLocale = (() => {
+      try {
+        const lang = useSettingsStore.getState().language
+        if (lang) return lang === "ko"
+      } catch {
+        /* settings store not hydrated yet — fall through to navigator */
+      }
+      if (typeof navigator !== "undefined") {
+        return (navigator.language || "").toLowerCase().startsWith("ko")
+      }
+      return false
+    })()
+    const freshById = new Map(
+      (koLocale ? KO_SEED_TEMPLATES : SEED_TEMPLATES).map((t) => [t.id, t]),
+    )
+    if (Array.isArray(state.templates)) {
+      state.templates = (state.templates as NoteTemplate[]).map((t) => {
+        const replacement = freshById.get(t.id)
+        if (!replacement) return t // user-created template — preserve
+        if (t.trashed) return t // user deleted this seed — never resurrect
+        return { ...replacement, createdAt: t.createdAt } // refresh body, keep age
+      })
+    }
   }
 
   return state as unknown as PlotState

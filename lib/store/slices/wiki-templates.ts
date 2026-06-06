@@ -122,7 +122,7 @@ export function createWikiTemplatesSlice(set: Set, get: Get, appendEvent: Append
         // Freshly created from a template — starts at "backlog" (manual
         // 4-stage status, v151). User advances as the article fills out.
         status: "backlog",
-        aliases: (template.aliases ?? []).map(expandPlaceholders),
+        aliases: (template.aliases ?? []).map((a) => expandPlaceholders(a)),
         infobox: cloneAndExpandInfobox(template.infobox),
         infoboxPreset: template.infoboxPreset,
         infoboxHeaderColor: template.infoboxHeaderColor,

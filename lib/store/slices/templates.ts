@@ -1,6 +1,8 @@
 import type { Note, NoteTemplate } from "../../types"
 import { genId, now, workflowDefaults, persistBody, type AppendEventFn } from "../helpers"
 import { extractPreview, extractLinksOut } from "../../body-helpers"
+import { addDays, addWeeks, addMonths, addYears } from "date-fns"
+import { useSettingsStore } from "../../settings-store"
 
 type Set = (fn: ((state: any) => any) | any) => void
 type Get = () => any
@@ -33,18 +35,18 @@ type Get = () => any
  * metadata fields are passed through verbatim to avoid clobbering
  * URL params, IDs, etc. that may legitimately contain `{...}`.
  */
-export function expandPlaceholdersInJson<T>(node: T): T {
+export function expandPlaceholdersInJson<T>(node: T, promptValues?: Record<string, string>): T {
   if (node === null || node === undefined) return node
   if (Array.isArray(node)) {
-    return node.map(expandPlaceholdersInJson) as unknown as T
+    return node.map((n) => expandPlaceholdersInJson(n, promptValues)) as unknown as T
   }
   if (typeof node === "object") {
     const result: Record<string, unknown> = {}
     for (const [k, v] of Object.entries(node as Record<string, unknown>)) {
       if (k === "text" && typeof v === "string") {
-        result[k] = expandPlaceholders(v)
+        result[k] = expandPlaceholders(v, promptValues)
       } else {
-        result[k] = expandPlaceholdersInJson(v)
+        result[k] = expandPlaceholdersInJson(v, promptValues)
       }
     }
     return result as unknown as T
@@ -59,7 +61,7 @@ export function expandPlaceholdersInJson<T>(node: T): T {
  * substitutes — never a stat that lies about behavior.
  */
 const PLACEHOLDER_PATTERN =
-  /\{\{(?:YYYY|YY|MMMM|MMM|MM|DD|dddd|ddd|HH|mm|date|time)\}\}|\{(?:date|time|datetime|year|month|day)\}/g
+  /\{\{prompt:[^}]*\}\}|\{\{date(?:[+-]\d+)?[dwmy]?(?::[^}]+)?\}\}|\{\{(?:YYYY|YY|MMMM|MMM|MM|DD|dddd|ddd|HH|mm|time|datetime|tomorrow|yesterday)\}\}|\{(?:date|time|datetime|year|month|day)\}/g
 
 /**
  * Count placeholder tokens in a template body. ContentJson takes
@@ -99,41 +101,121 @@ export function countPlaceholders(
   return matches ? matches.length : 0
 }
 
-export function expandPlaceholders(template: string): string {
-  const d = new Date()
-  const yyyy = String(d.getFullYear())
-  const yy = yyyy.slice(2)
-  const mm = String(d.getMonth() + 1).padStart(2, "0")
-  const dd = String(d.getDate()).padStart(2, "0")
-  const hh = String(d.getHours()).padStart(2, "0")
-  const min = String(d.getMinutes()).padStart(2, "0")
-  const monthLong = d.toLocaleString("en-US", { month: "long" })
-  const monthShort = d.toLocaleString("en-US", { month: "short" })
-  const weekdayLong = d.toLocaleString("en-US", { weekday: "long" })
-  const weekdayShort = d.toLocaleString("en-US", { weekday: "short" })
-  const isoDate = d.toISOString().split("T")[0]
-  const isoTime = d.toTimeString().split(" ")[0].slice(0, 5)
+/**
+ * Resolve the active UI locale for date formatting (month/weekday names).
+ * Korean users get "토요일" / "6월"; everyone else "Saturday" / "June".
+ * Wrapped in try/catch so SSR / tests without a live settings store fall back to EN.
+ */
+function placeholderLocale(): string {
+  try {
+    return useSettingsStore.getState().language === "ko" ? "ko-KR" : "en-US"
+  } catch {
+    return "en-US"
+  }
+}
+
+const pad2 = (n: number) => String(n).padStart(2, "0")
+const isoDateOf = (d: Date) => `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`
+const isoTimeOf = (d: Date) => `${pad2(d.getHours())}:${pad2(d.getMinutes())}`
+
+/**
+ * Format a date against a Moment-style token string with locale-aware month /
+ * weekday names. Shared by bare tokens ({{YYYY}}) and the format parameter
+ * ({{date:YYYY/MM/DD}}). Longest variants first so MM never eats MMMM.
+ */
+function formatWithTokens(d: Date, fmt: string, intlLocale: string): string {
+  return fmt
+    .replace(/YYYY/g, String(d.getFullYear()))
+    .replace(/MMMM/g, d.toLocaleString(intlLocale, { month: "long" }))
+    .replace(/MMM/g, d.toLocaleString(intlLocale, { month: "short" }))
+    .replace(/dddd/g, d.toLocaleString(intlLocale, { weekday: "long" }))
+    .replace(/ddd/g, d.toLocaleString(intlLocale, { weekday: "short" }))
+    .replace(/YY/g, String(d.getFullYear()).slice(2))
+    .replace(/MM/g, pad2(d.getMonth() + 1))
+    .replace(/DD/g, pad2(d.getDate()))
+    .replace(/HH/g, pad2(d.getHours()))
+    .replace(/mm/g, pad2(d.getMinutes()))
+}
+
+/** Apply a +N / -N offset in days (d) / weeks (w) / months (m) / years (y, default d). */
+function applyDateOffset(base: Date, sign: string | undefined, unit: string | undefined): Date {
+  if (!sign) return base
+  const n = parseInt(sign, 10)
+  switch (unit || "d") {
+    case "w": return addWeeks(base, n)
+    case "m": return addMonths(base, n)
+    case "y": return addYears(base, n)
+    default: return addDays(base, n)
+  }
+}
+
+/**
+ * Expand template placeholders into concrete values at note-creation time
+ * (industry-standard static substitution — UpNote / Obsidian / Logseq all do
+ * this once at insert, not live).
+ *
+ * Supported (additive — `{{` and `{` prefixes never collide):
+ *   - **Date with offset + format**: `{{date}}` `{{date+1}}` (tomorrow)
+ *     `{{date-7}}` (a week ago) `{{date+1w}}` `{{date-1m}}` `{{date+1y}}`,
+ *     plus an optional `:format` → `{{date:YYYY/MM/DD}}` `{{date+1:dddd}}`.
+ *   - **Named relative**: `{{tomorrow}}` `{{yesterday}}`.
+ *   - **Bare Moment-style tokens** (locale-aware month/weekday names):
+ *     `{{YYYY}}` `{{YY}}` `{{MMMM}}` `{{MMM}}` `{{MM}}` `{{DD}}`
+ *     `{{dddd}}` `{{ddd}}` `{{HH}}` `{{mm}}` `{{time}}` `{{datetime}}`.
+ *   - **Plot legacy single-brace**: `{date}` `{time}` `{datetime}`
+ *     `{year}` `{month}` `{day}`.
+ *
+ * Month/weekday names follow the active UI language (`ko` → 한국어).
+ */
+export function expandPlaceholders(template: string, promptValues?: Record<string, string>): string {
+  const today = new Date()
+  const intlLocale = placeholderLocale()
+
   return template
-    // UpNote double-brace tokens (must run first; longest month/weekday variants first)
-    .replace(/\{\{YYYY\}\}/g, yyyy)
-    .replace(/\{\{YY\}\}/g, yy)
-    .replace(/\{\{MMMM\}\}/g, monthLong)
-    .replace(/\{\{MMM\}\}/g, monthShort)
-    .replace(/\{\{MM\}\}/g, mm)
-    .replace(/\{\{DD\}\}/g, dd)
-    .replace(/\{\{dddd\}\}/g, weekdayLong)
-    .replace(/\{\{ddd\}\}/g, weekdayShort)
-    .replace(/\{\{HH\}\}/g, hh)
-    .replace(/\{\{mm\}\}/g, min)
-    .replace(/\{\{date\}\}/g, isoDate)
-    .replace(/\{\{time\}\}/g, isoTime)
+    // user prompt inputs ({{prompt:Label}}) — resolved value, or "" when unanswered
+    .replace(/\{\{prompt:([^}]*)\}\}/g, (_m, label) => promptValues?.[String(label).trim()] ?? "")
+    // datetime / time first so the {{date…}} matcher can't partially swallow them
+    .replace(/\{\{datetime\}\}/g, `${isoDateOf(today)} ${isoTimeOf(today)}`)
+    .replace(/\{\{time\}\}/g, isoTimeOf(today))
+    // {{date}} with optional ±N offset (unit d|w|m|y, default d) and :format
+    .replace(
+      /\{\{date([+-]\d+)?([dwmy])?(?::([^}]+))?\}\}/g,
+      (_m, sign, unit, fmt) => {
+        const d = applyDateOffset(today, sign, unit)
+        return fmt ? formatWithTokens(d, fmt, intlLocale) : isoDateOf(d)
+      },
+    )
+    // named relative dates
+    .replace(/\{\{tomorrow\}\}/g, isoDateOf(addDays(today, 1)))
+    .replace(/\{\{yesterday\}\}/g, isoDateOf(addDays(today, -1)))
+    // bare Moment-style tokens (locale-aware)
+    .replace(
+      /\{\{(YYYY|YY|MMMM|MMM|MM|DD|dddd|ddd|HH|mm)\}\}/g,
+      (_m, tok) => formatWithTokens(today, tok, intlLocale),
+    )
     // Plot legacy single-brace tokens
-    .replace(/\{date\}/g, isoDate)
-    .replace(/\{time\}/g, isoTime)
-    .replace(/\{datetime\}/g, `${isoDate} ${isoTime}`)
-    .replace(/\{year\}/g, yyyy)
-    .replace(/\{month\}/g, mm)
-    .replace(/\{day\}/g, dd)
+    .replace(/\{date\}/g, isoDateOf(today))
+    .replace(/\{time\}/g, isoTimeOf(today))
+    .replace(/\{datetime\}/g, `${isoDateOf(today)} ${isoTimeOf(today)}`)
+    .replace(/\{year\}/g, String(today.getFullYear()))
+    .replace(/\{month\}/g, pad2(today.getMonth() + 1))
+    .replace(/\{day\}/g, pad2(today.getDate()))
+}
+
+/**
+ * Extract distinct {{prompt:Label}} labels from a template string, in first-seen
+ * order. The template-apply flow shows one input field per label, then passes the
+ * answers back to expandPlaceholders as `promptValues`.
+ */
+export function extractPrompts(text: string): string[] {
+  const labels: string[] = []
+  const re = /\{\{prompt:([^}]*)\}\}/g
+  let m: RegExpExecArray | null
+  while ((m = re.exec(text)) !== null) {
+    const label = m[1].trim()
+    if (label && !labels.includes(label)) labels.push(label)
+  }
+  return labels
 }
 
 export function createTemplatesSlice(set: Set, get: Get, appendEvent: AppendEventFn) {
@@ -197,18 +279,18 @@ export function createTemplatesSlice(set: Set, get: Get, appendEvent: AppendEven
       }))
     },
 
-    createNoteFromTemplate: (templateId: string) => {
+    createNoteFromTemplate: (templateId: string, promptValues?: Record<string, string>) => {
       const state = get()
       const template = (state.templates as NoteTemplate[]).find((t) => t.id === templateId)
       if (!template) return ""
 
       const id = genId()
-      const title = expandPlaceholders(template.title)
-      const content = expandPlaceholders(template.content)
+      const title = expandPlaceholders(template.title, promptValues)
+      const content = expandPlaceholders(template.content, promptValues)
       // 2026-05-13: contentJson도 placeholder expand. TipTap editor가
       // contentJson 우선 사용하므로 expand 누락 시 `{{YYYY}}` 등이 그대로 남음.
       const contentJson = template.contentJson
-        ? expandPlaceholdersInJson(template.contentJson)
+        ? expandPlaceholdersInJson(template.contentJson, promptValues)
         : null
       const activeView = state.activeView
 

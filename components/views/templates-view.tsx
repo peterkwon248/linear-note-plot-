@@ -19,6 +19,8 @@
 
 import { useState, useMemo, useRef, useEffect, useCallback } from "react"
 import { usePlotStore } from "@/lib/store"
+import { extractPrompts } from "@/lib/store/slices/templates"
+import { PromptInputDialog } from "@/components/editor/prompt-input-dialog"
 import {
   ContextMenu,
   ContextMenuContent,
@@ -316,7 +318,7 @@ export function TemplatesView() {
   const createTemplate = usePlotStore((s) => s.createTemplate) as (t: Omit<NoteTemplate, "id" | "createdAt" | "updatedAt">) => string
   const deleteTemplate = usePlotStore((s) => s.deleteTemplate) as (id: string) => void
   const toggleTemplatePin = usePlotStore((s) => s.toggleTemplatePin) as (id: string) => void
-  const createNoteFromTemplate = usePlotStore((s) => s.createNoteFromTemplate) as (id: string) => string
+  const createNoteFromTemplate = usePlotStore((s) => s.createNoteFromTemplate) as (id: string, promptValues?: Record<string, string>) => string
   const openNote = usePlotStore((s) => s.openNote)
   const sidePanelOpen = usePlotStore((s) => s.sidePanelOpen)
 
@@ -457,9 +459,18 @@ export function TemplatesView() {
     setSelectedTemplateId(newId)
   }
 
-  const handleUseTemplate = (templateId: string) => {
-    const noteId = createNoteFromTemplate(templateId)
+  const [promptState, setPromptState] = useState<{ labels: string[]; templateId: string } | null>(null)
+
+  const applyWithValues = (templateId: string, promptValues?: Record<string, string>) => {
+    const noteId = createNoteFromTemplate(templateId, promptValues)
     if (noteId) openNote(noteId)
+  }
+
+  const handleUseTemplate = (templateId: string) => {
+    const tmpl = allTemplates.find((t) => t.id === templateId)
+    const labels = tmpl ? extractPrompts(`${tmpl.title || ""}\n${tmpl.content || ""}`) : []
+    if (labels.length > 0) setPromptState({ labels, templateId })
+    else applyWithValues(templateId)
   }
 
   const handleDelete = (id: string) => {
@@ -642,6 +653,15 @@ export function TemplatesView() {
           onClearSelection={() => setSelectedIds(new Set())}
         />
       )}
+      <PromptInputDialog
+        open={!!promptState}
+        labels={promptState?.labels ?? []}
+        onCancel={() => setPromptState(null)}
+        onSubmit={(values) => {
+          if (promptState) applyWithValues(promptState.templateId, values)
+          setPromptState(null)
+        }}
+      />
     </div>
   )
 }
