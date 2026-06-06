@@ -28,6 +28,7 @@ import { FootnotesFooter } from "@/components/editor/footnotes-footer"
 import { FixedToolbar } from "@/components/editor/FixedToolbar"
 import { MarkdownInputDialog } from "@/components/editor/markdown-input-dialog"
 import { usePlotStore } from "@/lib/store"
+import { useT } from "@/lib/i18n"
 import { markdownToHtml } from "@/lib/editor/markdown"
 import { markdownBodyToDoc } from "@/components/editor/core/shared-editor-config"
 import { LayoutGrid as Layout, Code } from "lucide-react"
@@ -105,6 +106,7 @@ function TitlePatternBar({
  *   - key={template.id} remount on switch
  */
 function TemplateEditorAdapter({ template }: { template: NoteTemplate }) {
+  const t = useT()
   const updateTemplate = usePlotStore((s) => s.updateTemplate)
   const [editorInstance, setEditorInstance] = useState<Editor | null>(null)
   const [mdDialogOpen, setMdDialogOpen] = useState(false)
@@ -196,11 +198,11 @@ function TemplateEditorAdapter({ template }: { template: NoteTemplate }) {
       <div className="flex items-center justify-end border-b border-border/60 px-6 py-1.5 shrink-0">
         <button
           onClick={() => setMdDialogOpen(true)}
-          title="Convert Markdown to rich content (Ctrl+Alt+V works in the editor too)"
+          title={t("markdown.button.title")}
           className="flex items-center gap-1.5 rounded-md px-2 py-1 text-2xs font-medium text-muted-foreground hover:bg-hover-bg hover:text-foreground transition-colors"
         >
           <Code size={13} strokeWidth={2} />
-          Input as Markdown
+          {t("markdown.input.title")}
         </button>
       </div>
       {/* 2026-05-13: scroll container에 `flex flex-col` 추가 — TipTapEditor의

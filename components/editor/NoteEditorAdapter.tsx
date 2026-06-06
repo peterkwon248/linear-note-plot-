@@ -12,7 +12,8 @@ import { FootnotesFooter } from "./footnotes-footer"
 import { extractHashtags } from "@/lib/body-helpers"
 import { pickColor } from "@/components/note-fields"
 import { TemplatesPickerDialog } from "./templates-picker-dialog"
-import { expandPlaceholders, expandPlaceholdersInJson } from "@/lib/store/slices/templates"
+import { PromptInputDialog } from "./prompt-input-dialog"
+import { expandPlaceholders, expandPlaceholdersInJson, extractPrompts } from "@/lib/store/slices/templates"
 import {
   acquireYDoc,
   releaseYDoc,
@@ -35,6 +36,8 @@ export function NoteEditorAdapter({ note, onEditorReady, editable = true }: Note
   const [editorInstance, setEditorInstance] = useState<any>(null)
   // UpNote 패턴 (2026-05-13): 빈 노트일 때 inline CTA + Templates dialog.
   const [templatesPickerOpen, setTemplatesPickerOpen] = useState(false)
+  // {{prompt:Label}} answers collected before a template is applied.
+  const [promptState, setPromptState] = useState<{ labels: string[]; template: NoteTemplate } | null>(null)
   // EmptyHintPlaceholder extension의 inline 버튼, slash 메뉴의
   // "Insert template…" entry 모두 이 custom event를 dispatch한다.
   useEffect(() => {
@@ -43,26 +46,51 @@ export function NoteEditorAdapter({ note, onEditorReady, editable = true }: Note
     window.addEventListener("plot:open-templates-picker", handler)
     return () => window.removeEventListener("plot:open-templates-picker", handler)
   }, [editable])
-  const handleTemplateSelect = useCallback(
-    (template: NoteTemplate) => {
+  // Apply a template into the editor, with prompt answers already resolved.
+  // {{cursor}} (plain-text path) repositions the caret after insertion.
+  const applyTemplate = useCallback(
+    (template: NoteTemplate, promptValues?: Record<string, string>) => {
       if (!editorInstance) return
       const chain = editorInstance.chain().focus()
       const hasJson =
         template.contentJson &&
         Object.keys(template.contentJson as Record<string, unknown>).length > 0
       if (hasJson) {
-        const expanded = expandPlaceholdersInJson(template.contentJson)
+        const expanded = expandPlaceholdersInJson(template.contentJson, promptValues)
         if (editorInstance.isEmpty) {
           chain.setContent(expanded as Record<string, unknown>).run()
         } else {
           chain.insertContent(expanded as Record<string, unknown>).run()
         }
       } else {
-        const expanded = expandPlaceholders(template.content || "")
-        chain.insertContent(expanded).run()
+        const expanded = expandPlaceholders(template.content || "", promptValues)
+        const cursorIdx = expanded.indexOf("{{cursor}}")
+        if (cursorIdx >= 0) {
+          const clean = expanded.replace(/\{\{cursor\}\}/g, "")
+          const from = editorInstance.state.selection.from
+          chain.insertContent(clean).run()
+          // Place the caret where {{cursor}} was (plain-text offset ≈ PM pos).
+          editorInstance.commands.setTextSelection(from + cursorIdx)
+        } else {
+          chain.insertContent(expanded).run()
+        }
       }
     },
     [editorInstance],
+  )
+
+  // Template selected (picker / empty-hint / slash). Collect any
+  // {{prompt:Label}} answers via modal first, then apply.
+  const handleTemplateSelect = useCallback(
+    (template: NoteTemplate) => {
+      const labels = extractPrompts(`${template.title || ""}\n${template.content || ""}`)
+      if (labels.length > 0) {
+        setPromptState({ labels, template })
+      } else {
+        applyTemplate(template)
+      }
+    },
+    [applyTemplate],
   )
 
   // ── Experimental Y.Doc split-view sync (gated by ?yjs=1) ──
@@ -472,6 +500,15 @@ export function NoteEditorAdapter({ note, onEditorReady, editable = true }: Note
         open={templatesPickerOpen}
         onOpenChange={setTemplatesPickerOpen}
         onSelect={handleTemplateSelect}
+      />
+      <PromptInputDialog
+        open={!!promptState}
+        labels={promptState?.labels ?? []}
+        onCancel={() => setPromptState(null)}
+        onSubmit={(values) => {
+          if (promptState) applyTemplate(promptState.template, values)
+          setPromptState(null)
+        }}
       />
     </div>
   )

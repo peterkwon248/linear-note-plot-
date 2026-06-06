@@ -6,6 +6,58 @@
 
 ---
 
+## 2026-06-06 (집/Windows, 오후) — **템플릿 날짜 토큰 대확장 + KO 시드 로케일 분기 버그 + 발견성(슬래시 날짜) + 프롬프트/커서 + i18n(마크다운 다이얼로그·워드카운트)**
+
+> 🎯 **다음 즉시 액션**: 이번 템플릿 트랙 후속 또는 **i18n 2차 sweep**(원래 P0, TODO 0.0005). 후속 후보 ① **EN 시드 템플릿 개선**(`seeds.ts SEED_TEMPLATES`도 KO처럼 날짜 헤딩+새 토큰 — 현재 EN은 옛 "## Today" 평문 그대로, migration v155가 EN 유저를 옛 SEED로 교체=무변화) ② **prompt/cursor 시드 데모** 1~2개(현재 기능만, 시드엔 토큰 없음) ③ **슬래시 블록 description i18n**(라벨은 했고 `description`만 영어 — `SlashCommand.tsx:107`이 description을 translate 안 함, 전체 블록 `block.{id}.description` 키 추가 필요).
+>
+> **사용자 의도(이번 세션)**: "## Today raw 왜?"→템플릿 영어/날짜 오해 발견→"시드 전부 삭제하고 새로 만들어라"→업계 조사 후 "풀 패키지"(프롬프트/커서까지). + 마크다운 발견성("일반인은 `#`/`[`/`{{` 모름, 어떻게 돕지").
+>
+> **핵심 발견(영구)**: 한국어 유저가 영어 템플릿 받던 **진짜 원인 = 로케일 분기 누락**(`index.ts` onRehydrate에서 notes/tags/labels/books는 `ko?KO:EN`인데 **templates/wikiTemplates만 SEED_TEMPLATES 고정**). PR #537 로케일 시드 때 템플릿 누락. → KO_SEED_TEMPLATES 13개 신설 + 분기 배선 + migration v155로 기존 유저 교체.
+>
+> **위험+회피(이번 교훈)**: 🔴 **dev 켜진 채 prod build 금지** — `rm -rf .next && npm run build`가 dev의 `.next/dev`를 날려 "Internal Server Error"(ENOENT routes-manifest). 빌드 전 `preview_stop`. · **`.map(expandPlaceholders)` 시그니처 함정** — 2번째 인자(promptValues) 추가 시 map의 index가 들어가 타입에러 → `.map((a)=>expandPlaceholders(a))`(wiki-templates.ts). · **로케일 테스트 deterministic** — expandPlaceholders 월/요일이 settings.language 따르니 테스트 beforeEach로 "en" 고정(이 머신 ko-KR).
+>
+> **참고 파일**: `lib/store/slices/templates.ts`(expandPlaceholders 토큰 엔진 + extractPrompts) · `lib/store/seeds-ko.ts`(KO_SEED_TEMPLATES 13) · `lib/store/index.ts:353`(로케일 분기) · `lib/store/migrate.ts`(v155) · `components/editor/prompt-input-dialog.tsx`(신규 모달) · `components/editor/block-registry/registry.ts:471`(date 슬래시) · `components/editor/NoteEditorAdapter.tsx:46`(applyTemplate+prompt/cursor).
+>
+> **머신**: 집(Windows). **현재 main HEAD**: 이 세션 PR(머지 후). **branch worktree**: agitated-mendel-5778a6.
+
+### 완료 (이 세션 PR)
+- **템플릿 토큰 엔진 대확장** (`templates.ts expandPlaceholders` 재작성): 날짜 오프셋 `{{date+1}}`·`{{date-7}}`·`{{date+1w/m/y}}` · 한국어 월/요일 로케일(`placeholderLocale`, `toLocaleString(ko-KR)`) · 포맷 파라미터 `{{date:YYYY/MM/DD}}`·`{{date+1:dddd}}` · named `{{tomorrow}}`/`{{yesterday}}` · prompt `{{prompt:라벨}}`(promptValues 인자) + `extractPrompts` 헬퍼. date-fns addDays/Weeks/Months/Years.
+- **KO 시드 템플릿 13개** (`seeds-ko.ts KO_SEED_TEMPLATES`, EN과 동일 tmpl-* id) + **로케일 분기 배선**(`index.ts:115,353` `ko?KO_SEED_TEMPLATES:SEED_TEMPLATES`) — **누락 버그 수정**.
+- **migration v155** (`migrate.ts`, v154→155): 존재하는 시드 템플릿 id만 로케일 버전 교체(삭제분 부활X·사용자생성 보존·trashed 보존). settings/navigator 로케일 판단.
+- **발견성**: date 블록 슬래시 노출(`registry.ts` surfaces `["insertMenu"]`→`["slash","insertMenu"]` + aliases `날짜/오늘`) + `/내일`(date-tomorrow) 블록. (라벨 `block.date.label` KO "날짜" 이미 있었음 / 빈에디터 `/` 힌트도 empty-hint에 이미 있었음.)
+- **프롬프트/커서**: `PromptInputDialog`(신규) + 3 적용경로 wiring(`NoteEditorAdapter.handleTemplateSelect`/`applyTemplate` + `templates-view.handleUseTemplate` + `template-detail-panel.handleUseTemplate`) + `createNoteFromTemplate(id, promptValues?)` 시그니처(types.ts). `{{cursor}}` 커서 이동(plain content 경로, `setTextSelection(from+cursorIdx)`).
+- **i18n**: "마크다운으로 입력" 다이얼로그·버튼 한글화(`markdown-input-dialog.tsx`·`template-edit-page.tsx`, `markdown.input.*`·`markdown.button.title`) + 워드카운트 `words/chars`→`단어/글자`(`TipTapEditor.tsx`, `editor.count.*`) + `block.date-tomorrow.label`·`prompt.dialog.*` EN/KO.
+
+### 브레인스토밍 & 큰 결정 (영구)
+- **템플릿 로케일 분기 누락 = "영어 템플릿" 진짜 원인** (위 hook). 데이터가 "잘못된" 게 아니라 분기 배선 갭(PR #537 누락).
+- **"Today"는 단어지 날짜 토큰 아님** — 날짜 자동은 `{{date}}`/`{{YY}}-{{MM}}-{{DD}}` 토큰. 제목 `Daily - {date}`는 치환되지만 본문 "Today"는 그대로(사용자 오해 흔함).
+- **일반인 마크다운 발견성 = 슬래시 메뉴/툴바가 답**(마크다운 GUI 대체), `#`/`[`/`{{`/`***`는 파워유저 가속. "마크다운으로 입력" 다이얼로그는 일반인 타겟 아님(외부 md 붙여넣기용). date 블록이 슬래시에 없던 게(surfaces insertMenu만) 핵심 갭→노출.
+- **업계 조사**(UpNote/Obsidian코어·Templater/Logseq/Notion/Roam/Hugo/Jekyll, 리서처 3 병렬): **생성 시점 정적 치환이 업계 표준**(Plot 방식 맞음, 라이브 렌더 아님). UpNote=Day.js 토큰 위임(Plot 동일). **Templater 최강**(오프셋 `tp.date.now(fmt,-7)`·`weekday()`·파일제목 기준날짜·`tp.system.prompt`/`suggester`·`tp.file.cursor`). Plot 갭이던 오프셋·prompt·cursor 이번 추가. 미추가: 자연어날짜·날짜백링크(`[[2026-06-06]]`→데일리노트)·suggester·파일제목 기준 상대날짜.
+
+### 기술 학습 (영구)
+- 🔴 **dev 켜진 채 prod build 금지**: `rm -rf .next && npm run build`가 dev `.next/dev` 날려 ENOENT(routes-manifest)→"Internal Server Error". 빌드 전 `preview_stop`, 빌드 후 재시작. (이 머신 dev↔prod build .next 공유.)
+- **`.map(fn)` 시그니처 확장 함정**: 순수함수에 optional 2번째 인자 추가 시 array.map 콜백(value,**index**,array)서 index가 그 인자로 → 타입에러. 명시적 콜백 `.map((x)=>fn(x))`. grep `\.map\(fn\)` 전수.
+- **로케일 의존 함수 테스트**: 출력이 settings.language 따르면 테스트 `beforeEach`로 언어 고정(이 머신 ko-KR이라 안 하면 영어기대 테스트 깨짐). expandPlaceholders 월/요일.
+- **블록 i18n 패턴**: `SlashCommand.tsx`가 `translate(block.{id}.label)`로 **라벨만** 렌더(`description`은 raw → 영어 잔존). 슬래시 description i18n=전체 블록 `block.{id}.description` 키 필요.
+
+### Watch Out
+- prompt/cursor 토큰 **시드엔 미포함**(매번 모달 번거로움)—기능만. 데모 원하면 추가.
+- `{{cursor}}`는 **plain content 경로만**(contentJson 리치는 토큰 제거만, 위치추적X). 위치 plain-text offset≈PM pos 근사(정확도 추후).
+- **EN 시드(SEED_TEMPLATES) 미개선**(옛 "## Today" 평문)—migration v155가 EN 유저를 옛 SEED로 교체=무변화. EN 유저 새 토큰 원하면 SEED_TEMPLATES도 KO처럼 개선(보너스).
+- 슬래시 블록 description 여전히 영어(date/tomorrow 포함)—i18n 2차 sweep.
+- 데스크톱 plot.exe=옛 빌드, `npx tauri build` 재빌드해야 반영.
+
+### 환경 변경
+- Store version: **v154 → v155** (시드 템플릿 로케일 교체 migration).
+- Tests: **353 passed / 7 skipped** (templates 22 = 기존+offset/locale/format/prompt 신규).
+- 신규 파일: `components/editor/prompt-input-dialog.tsx`.
+- 신규 의존성: 0 (date-fns·marked 기존).
+
+### 머신
+집 (Windows)
+
+---
+
 ## 2026-06-06 (집/Windows) — **마크다운 변환 완결: 기능(PR #541) + 시드/레거시 리치 렌더(PR #542) + UpNote 실앱 검증**
 
 > 🎯 **다음 즉시 액션**: 마크다운 트랙 **완결**. 다음 후보 = **앱 영어 잔여 i18n 2차 sweep (~150 + 이번 신규 문자열)** [TODO 0.0005] 또는 사용자 관심(모바일). i18n 2차엔 **이번에 추가된 영어 UI**도 포함: `markdown-input-dialog.tsx`(전체: "Input as Markdown"/설명/"Insert"/"Cancel"/"⌘ Enter…"), `editor-context-menu.tsx`("Paste from Markdown"), `template-edit-page.tsx`("Input as Markdown" 버튼/title). 방법(확립)=하위 컴포넌트마다 `const t=useT()`+키맵 → KO 일괄 → git diff EN 복원 → 참조키 grep → `rm -rf .next && npm run build`(파이프 없이).

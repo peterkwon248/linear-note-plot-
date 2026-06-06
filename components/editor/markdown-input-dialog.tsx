@@ -10,6 +10,7 @@
 
 import { useState, useEffect, useRef } from "react"
 import { createPortal } from "react-dom"
+import { useT } from "@/lib/i18n"
 
 interface MarkdownInputDialogProps {
   open: boolean
@@ -18,6 +19,7 @@ interface MarkdownInputDialogProps {
 }
 
 export function MarkdownInputDialog({ open, onClose, onSubmit }: MarkdownInputDialogProps) {
+  const t = useT()
   const [md, setMd] = useState("")
   const ref = useRef<HTMLTextAreaElement>(null)
 
@@ -53,11 +55,8 @@ export function MarkdownInputDialog({ open, onClose, onSubmit }: MarkdownInputDi
       <div className="absolute inset-0 bg-black/50" />
       {/* Dialog */}
       <div className="relative w-[560px] max-w-[90vw] rounded-xl border border-border bg-surface-overlay shadow-2xl p-6 flex flex-col gap-4">
-        <div className="text-base font-semibold text-foreground">Input as Markdown</div>
-        <div className="text-sm text-muted-foreground">
-          Paste or type Markdown — it&apos;s converted to rich content and inserted at the cursor
-          (headings, lists, checklists, tables, code, and more).
-        </div>
+        <div className="text-base font-semibold text-foreground">{t("markdown.input.title")}</div>
+        <div className="text-sm text-muted-foreground">{t("markdown.input.desc")}</div>
         <textarea
           ref={ref}
           value={md}
@@ -70,13 +69,13 @@ export function MarkdownInputDialog({ open, onClose, onSubmit }: MarkdownInputDi
           className="w-full resize-y rounded-lg border border-border bg-background px-4 py-3 font-mono text-note text-foreground outline-none placeholder:text-muted-foreground/70 focus:ring-1 focus:ring-accent transition-shadow"
         />
         <div className="flex items-center justify-between gap-2 pt-1">
-          <span className="text-2xs text-muted-foreground/70">⌘/Ctrl + Enter to insert</span>
+          <span className="text-2xs text-muted-foreground/70">{t("markdown.input.hint")}</span>
           <div className="flex items-center gap-2">
             <button
               onClick={onClose}
               className="rounded-lg px-4 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-hover-bg transition-colors"
             >
-              Cancel
+              {t("common.cancel")}
             </button>
             <button
               onClick={() => {
@@ -85,7 +84,7 @@ export function MarkdownInputDialog({ open, onClose, onSubmit }: MarkdownInputDi
               disabled={!valid}
               className="rounded-lg bg-accent px-5 py-2 text-sm font-medium text-white disabled:opacity-40 hover:brightness-110 transition-all"
             >
-              Insert
+              {t("editor.insert.button")}
             </button>
           </div>
         </div>

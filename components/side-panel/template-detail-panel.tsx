@@ -31,11 +31,12 @@
  *     substitute when the template is used.
  */
 
-import { useMemo } from "react"
+import { useMemo, useState } from "react"
 import { format, formatDistanceToNow } from "date-fns"
 import { useRelativeTime } from "@/lib/i18n-date"
 import { usePlotStore } from "@/lib/store"
-import { countPlaceholders } from "@/lib/store/slices/templates"
+import { countPlaceholders, extractPrompts } from "@/lib/store/slices/templates"
+import { PromptInputDialog } from "@/components/editor/prompt-input-dialog"
 import { extractOutlineFromContentJson, type OutlineResult } from "@/lib/anchor-utils"
 import {
   Calendar as CalendarBlank,
@@ -100,9 +101,17 @@ export function TemplateDetailPanel({ template }: { template: NoteTemplate }) {
     return { words, characters, headings, placeholders }
   }, [template.content, template.contentJson, outline.items])
 
-  const handleUseTemplate = () => {
-    const newId = createNoteFromTemplate(template.id)
+  const [promptState, setPromptState] = useState<string[] | null>(null)
+
+  const applyWithValues = (promptValues?: Record<string, string>) => {
+    const newId = createNoteFromTemplate(template.id, promptValues)
     if (newId) openNote(newId)
+  }
+
+  const handleUseTemplate = () => {
+    const labels = extractPrompts(`${template.title || ""}\n${template.content || ""}`)
+    if (labels.length > 0) setPromptState(labels)
+    else applyWithValues()
   }
 
   return (
@@ -235,6 +244,15 @@ export function TemplateDetailPanel({ template }: { template: NoteTemplate }) {
           </button>
         </div>
       </InspectorSection>
+      <PromptInputDialog
+        open={!!promptState}
+        labels={promptState ?? []}
+        onCancel={() => setPromptState(null)}
+        onSubmit={(values) => {
+          applyWithValues(values)
+          setPromptState(null)
+        }}
+      />
     </div>
   )
 }

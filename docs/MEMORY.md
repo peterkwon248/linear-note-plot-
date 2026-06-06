@@ -8,6 +8,31 @@
 
 ---
 
+## ✅ 2026-06-06 (집/Windows, 오후) — 템플릿 날짜 토큰 대확장 + KO 시드 로케일 분기 버그 + 발견성 + 프롬프트/커서 + i18n ⭐⭐⭐⭐⭐
+
+### 핵심 결정/학습 (영구)
+- **KO 유저가 영어 템플릿 받던 진짜 원인 = 로케일 분기 누락**: `index.ts` onRehydrate에서 notes/tags/labels/books는 `ko?KO:EN`인데 **templates/wikiTemplates만 SEED_TEMPLATES 고정**(PR #537 로케일 시드 때 누락). → `KO_SEED_TEMPLATES` 13개(`seeds-ko.ts`) + 분기 배선(`index.ts:115,353`) + **migration v155**(기존 유저 시드 교체: 존재 id만·삭제분 부활X·사용자생성/trashed 보존). 데이터가 "잘못된" 게 아니라 배선 갭.
+- **"Today"는 단어지 날짜 토큰 아님**: 날짜 자동은 `{{date}}`/`{{YY}}-{{MM}}-{{DD}}` 토큰만. 제목 `Daily - {date}`는 치환되지만 본문 "Today"는 그대로(사용자 오해 흔함).
+- **일반인 마크다운 발견성 = 슬래시 메뉴/툴바가 답**(마크다운 GUI 대체), `#`/`[`/`{{`/`***`는 파워유저 가속. "마크다운으로 입력" 다이얼로그는 일반인 타겟 아님(외부 md 붙여넣기용). date 블록이 슬래시에 없던 게(surfaces `["insertMenu"]`) 핵심 갭 → `["slash","insertMenu"]` 노출.
+- **업계 조사(UpNote/Obsidian Templater/Logseq/Notion/Roam, 리서처 3 병렬)**: 생성 시점 정적 치환=업계 표준(Plot 방식 맞음, 라이브 렌더 아님). UpNote=Day.js 토큰 위임(Plot 동일). Templater 최강(오프셋 `tp.date.now(fmt,-7)`·`weekday()`·파일제목 기준날짜·`tp.system.prompt`/`suggester`·`tp.file.cursor`). Plot 갭이던 오프셋·prompt·cursor 추가. 미추가: 자연어날짜·날짜백링크(`[[2026-06-06]]`)·suggester·파일제목 기준.
+- 🔴 **dev 켜진 채 prod build 금지**: `rm -rf .next && npm run build`가 dev `.next/dev` 날려 ENOENT(routes-manifest)→"Internal Server Error". 빌드 전 `preview_stop`, 후 재시작. (이 머신 dev↔prod build .next 공유.)
+- **`.map(fn)` 시그니처 확장 함정**: 순수함수에 optional 2번째 인자 추가 시 array.map 콜백 index가 그 인자로 → 타입에러. `.map((x)=>fn(x))`. **로케일 의존 함수 테스트**: settings.language 따르면 `beforeEach`로 언어 고정(이 머신 ko-KR이라 안 하면 영어기대 테스트 깨짐).
+
+### 완료
+- **템플릿 토큰 엔진**(`templates.ts expandPlaceholders` 재작성): 오프셋 `{{date±N[dwmy]}}`·한국어 월/요일(`placeholderLocale`)·포맷 `{{date:…}}`·`{{tomorrow}}`/`{{yesterday}}`·`{{prompt:라벨}}`+`extractPrompts`(date-fns).
+- **KO 시드 13**(`seeds-ko.ts`)+분기(`index.ts`)+v155 migration. **발견성**: date 슬래시 노출+`/내일`. **프롬프트/커서**: `PromptInputDialog`(신규)+3경로 wiring+`{{cursor}}`(plain). **i18n**: 마크다운 다이얼로그·버튼·워드카운트 단어/글자.
+
+### 다음 (P0)
+1. **i18n 2차 sweep**(0.0005) 또는 이번 후속(**EN 시드 개선**=SEED_TEMPLATES도 새 토큰[migration v155가 EN 유저 옛 SEED로 교체=무변화]·**prompt/cursor 시드 데모**·**슬래시 블록 description i18n**[`SlashCommand.tsx:107` raw, 전체 `block.{id}.description` 키 필요]). 2. 모바일.
+
+### Store version / 검증
+**v154 → v155**. 테스트 **353 passed / 7 skip**. 신규 `prompt-input-dialog.tsx`. 신규 의존성 0.
+
+### Watch Out
+- prompt/cursor 토큰 시드 미포함(기능만). `{{cursor}}` plain content만(contentJson 위치추적X). EN 시드 미개선(옛 "## Today"). 슬래시 description 영어.
+
+---
+
 ## ✅ 2026-06-06 (집/Windows) — 마크다운 변환 완결: 기능(PR #541) + 시드/레거시 리치 렌더(PR #542) ⭐⭐⭐⭐⭐
 
 ### 핵심 결정/학습 (영구)

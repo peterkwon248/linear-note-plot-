@@ -343,7 +343,7 @@ export interface PlotState {
   restoreTemplate: (id: string) => void
   permanentlyDeleteTemplate: (id: string) => void
   toggleTemplatePin: (id: string) => void
-  createNoteFromTemplate: (templateId: string) => string
+  createNoteFromTemplate: (templateId: string, promptValues?: Record<string, string>) => string
 
   // ── Wiki Templates (NoteTemplate 정합) ──
   createWikiTemplate: (template: Omit<WikiTemplate, "id" | "createdAt" | "updatedAt">) => string

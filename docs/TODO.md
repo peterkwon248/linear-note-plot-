@@ -3,11 +3,19 @@
 > 우선순위 기반 작업 목록. **P0 = 다음 세션 즉시 시작점** (NEXT-ACTION.md 폐지, 2026-05-12).
 > 완료 항목은 즉시 삭제. 자세한 history는 SESSION-LOG.md + MEMORY.md.
 
-**마지막 갱신**: 2026-06-06 (집/Windows) — **마크다운 변환 완결**: PR #541(기능: `lib/editor/markdown.ts` 격리 유틸 + Ctrl+Alt+V "Paste from Markdown" + 템플릿 "Input as Markdown" 다이얼로그 + `[ ]` 라이브 체크박스 input rule + 플레이스홀더 `{{YY}}`/월이름/요일) + PR #542(시드/레거시 raw 마크다운 → 에디터-레이어 리치 렌더, 신규+기존 유저 동시·마이그레이션 불필요). 둘 다 머지(main 7cfc0f2). **핵심: Plot 라이브 타이핑은 이미 UpNote 동등(input rule), `[ ]`만 갭이라 추가.** **다음 P0 = i18n 2차 sweep(~150 + 신규 마크다운 영어 UI) 또는 모바일.** SESSION-LOG 2026-06-06 hook 참조.
+**마지막 갱신**: 2026-06-06 오후 (집/Windows) — **템플릿 날짜 토큰 대확장 + KO 시드 로케일 분기 버그 수정 + 발견성(슬래시 날짜) + 프롬프트/커서 + i18n(마크다운 다이얼로그·워드카운트)**. store **v154→v155**(시드 템플릿 로케일 교체 migration). KO 유저가 영어 템플릿 받던 진짜 원인=`index.ts` templates/wikiTemplates 로케일 분기 누락(PR #537 누락) → KO_SEED_TEMPLATES 13 + 분기 + v155. expandPlaceholders 대확장(오프셋 `{{date+1}}`·한국어 월/요일·포맷 `{{date:…}}`·`{{prompt:…}}`·`{{cursor}}`). 테스트 353. **다음 P0 = i18n 2차 sweep(0.0005) 또는 이번 후속(EN 시드 개선·prompt 데모·슬래시 description i18n).** SESSION-LOG 2026-06-06 오후 hook 참조.
 
 ---
 
 ## 🟣 P0 — 즉시 (cross-machine 진입점, 2026-05-31 — IA 헌법 적용 단계)
+
+### 0.0002. ✅ **완료 (2026-06-06 오후, 이 세션 PR): 템플릿 날짜 토큰 대확장 + KO 시드 로케일 분기 + 발견성 + 프롬프트/커서 + i18n**
+
+> ✅ **템플릿 토큰 엔진** (`templates.ts expandPlaceholders` 재작성): 날짜 오프셋 `{{date+1}}`·`{{date-7}}`·`{{date+1w/m/y}}` · 한국어 월/요일(`placeholderLocale`) · 포맷 `{{date:YYYY/MM/DD}}` · `{{tomorrow}}`/`{{yesterday}}` · `{{prompt:라벨}}`+`extractPrompts`. (date-fns)
+> ✅ **KO 시드 13개**(`seeds-ko.ts KO_SEED_TEMPLATES`) + **로케일 분기**(`index.ts:353` — notes/tags는 분기됐는데 templates/wikiTemplates만 누락됐던 버그, **KO 유저가 영어 템플릿 받던 진짜 원인**) + **migration v155**(기존 유저 시드 교체, 존재 id만·삭제분 부활X·사용자생성 보존·trashed 보존).
+> ✅ **발견성**: date 블록 슬래시 노출(`registry.ts` surfaces+slash·aliases 날짜/오늘) + `/내일`(date-tomorrow). **프롬프트/커서**: `PromptInputDialog`(신규) + 3 적용경로 wiring + `{{cursor}}`(plain content). **i18n**: "마크다운으로 입력" 다이얼로그·버튼 한글화 + 워드카운트 `words/chars`→`단어/글자`.
+> **핵심 학습**: 템플릿 영어=로케일 분기 누락(데이터 멀쩡). "Today"는 단어지 날짜 토큰 아님. 일반인 마크다운 발견성=슬래시/툴바(date 블록 슬래시 노출). 업계=정적 치환 표준(Templater 오프셋/prompt/cursor가 Plot 갭이던 것). 🔴 dev 켜진 채 prod build 금지(.next 충돌→Internal Server Error). store v154→v155, 테스트 353, 신규 `prompt-input-dialog.tsx`. SOT: SESSION-LOG 2026-06-06 오후.
+> **후속(작음)**: EN 시드 개선(SEED_TEMPLATES도 새 토큰)·prompt/cursor 시드 데모·슬래시 블록 description i18n → 0.0005(i18n 2차)에 흡수 가능.
 
 ### 0.0003. ✅ **완료 (2026-06-06, PR #541 + #542): 마크다운 변환 — D안 B방식**
 
