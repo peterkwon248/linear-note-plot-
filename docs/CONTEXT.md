@@ -51,6 +51,26 @@
 
 ---
 
+## 📜 2026-06-06 (집/Windows) — 마크다운 변환 완결 (기능 PR #541 + 시드/레거시 리치 렌더 PR #542) ⭐⭐⭐⭐⭐
+
+**범위**: 유저 "마크다운 `#`/`[` 단축키로 쉽게 쓰는 게 미덕 아니냐, 왜 어렵냐, `{{YYYY}}` 되냐" → 조사+구현. UpNote 실앱 검증(PowerShell computer-use).
+
+### 핵심 결정 (영구)
+- **Plot 라이브 타이핑은 이미 UpNote 동등**(StarterKit input rule). 유일 갭 `[ ]` 체크박스 input rule 추가. **Ctrl+Alt+V는 붙여넣기/일괄삽입 전용**(타이핑은 input rule).
+- **시드 콘텐츠 raw 마크다운**(노트8+템플릿13, contentJson null)이 "어렵다"의 근본원인 → **에디터-레이어 변환**(어댑터 fallback `markdownBodyToDoc`)으로 신규+기존 유저 동시 해결(마이그레이션·version bump 불필요, 첫 편집 시 리치 영속).
+- **격리**: `markdown.ts`(util)는 editor-config-free, `markdownBodyToDoc`는 shared-editor-config. UpNote 템플릿=리치 사전저장 모델.
+
+### 완료
+- PR #541(기능: markdown.ts + Ctrl+Alt+V + 템플릿 "Input as Markdown" 다이얼로그 + `[ ]` input rule + 플레이스홀더 `{{YY}}`/월이름/요일) / PR #542(시드·레거시 리치 렌더). vitest 341, 빌드0, 라이브 시드 노트 리치 렌더 검증.
+
+### 다음 (P0)
+1. i18n 2차 sweep(신규 영어 UI 포함). 2. 모바일 대응.
+
+### Store version
+**무변경(v154)**. 신규 의존성 `marked`.
+
+---
+
 ## 📜 2026-06-05 (집/Windows, 저녁) — 에디터 버그픽스 3건 (PR #539) + 마크다운 D안 착수→롤백 ⭐⭐⭐⭐
 
 **범위**: 유저 적발 에디터 버그 3건 수정(머지) + 마크다운 템플릿 변환 D안 착수(버전 스큐로 롤백, 다음 세션 B방식).
