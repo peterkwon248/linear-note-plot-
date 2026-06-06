@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from "react"
 import type * as Y from "yjs"
 import { TipTapEditor } from "./TipTapEditor"
+import { markdownBodyToDoc } from "./core/shared-editor-config"
 import { usePlotStore } from "@/lib/store"
 import type { Note, NoteTemplate } from "@/lib/types"
 import { suggestLinks } from "@/lib/queries/notes"
@@ -379,13 +380,13 @@ export function NoteEditorAdapter({ note, onEditorReady, editable = true }: Note
     }
 
     if (note.content) {
-      return {
-        type: "doc",
-        content: [
-          headingNode,
-          { type: "paragraph", content: [{ type: "text", text: note.content }] },
-        ],
-      }
+      // Markdown body (seeds + legacy) → rich. Seed bodies start with the title
+      // as a heading (first block = title); use the converted doc as-is, else
+      // prepend the title heading. Avoids raw `## Today` etc.
+      const doc = markdownBodyToDoc(note.content) as { content?: Array<{ type?: string }> }
+      const blocks = doc.content ?? []
+      if (blocks[0]?.type === "heading") return doc
+      return { type: "doc", content: [headingNode, ...blocks] }
     }
 
     return {

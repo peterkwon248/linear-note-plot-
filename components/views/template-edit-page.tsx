@@ -29,6 +29,7 @@ import { FixedToolbar } from "@/components/editor/FixedToolbar"
 import { MarkdownInputDialog } from "@/components/editor/markdown-input-dialog"
 import { usePlotStore } from "@/lib/store"
 import { markdownToHtml } from "@/lib/editor/markdown"
+import { markdownBodyToDoc } from "@/components/editor/core/shared-editor-config"
 import { LayoutGrid as Layout, Code } from "lucide-react"
 import type { NoteTemplate } from "@/lib/types"
 
@@ -128,13 +129,10 @@ function TemplateEditorAdapter({ template }: { template: NoteTemplate }) {
       content: template.name ? [{ type: "text", text: template.name }] : [],
     }
     if (template.content) {
-      return {
-        type: "doc",
-        content: [
-          headingNode,
-          { type: "paragraph", content: [{ type: "text", text: template.content }] },
-        ],
-      }
+      // Markdown body → rich (D안). Template name stays the first heading;
+      // converted markdown blocks follow.
+      const doc = markdownBodyToDoc(template.content) as { content?: unknown[] }
+      return { type: "doc", content: [headingNode, ...(doc.content ?? [])] }
     }
     return { type: "doc", content: [headingNode, { type: "paragraph" }] }
   }, [template.contentJson, template.name, template.content])
