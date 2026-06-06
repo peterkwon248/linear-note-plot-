@@ -67,7 +67,7 @@ import { ColumnsBlockNode, ColumnCellNode } from "@/components/editor/nodes/colu
 import { NoteEmbedNode } from "@/components/editor/nodes/note-embed-node"
 import { LinkCardNode } from "@/components/editor/nodes/link-card-node"
 import { isValidUrl, detectUrlType } from "@/lib/editor/url-detect"
-import { markdownToHtml } from "@/lib/editor/markdown"
+import { markdownToHtml, markdownToJson } from "@/lib/editor/markdown"
 import { WikiEmbedNode } from "@/components/editor/nodes/wiki-embed-node"
 import { InfoboxBlockNode } from "@/components/editor/nodes/infobox-node"
 import { BannerBlockNode } from "@/components/editor/nodes/banner-block-node"
@@ -1134,6 +1134,18 @@ export function createRenderExtensions(): Extension[] {
     FootnoteRefExtension,
     ReferenceLinkNode,
   ] as Extension[]
+}
+
+let _mdDocExts: Extension[] | null = null
+/**
+ * Markdown body string → ProseMirror JSON, reusing the render schema (cached).
+ * For `contentJson`-null bodies (seeds + legacy/unedited notes) so the editor
+ * renders rich content instead of raw markdown (`## Today` etc.). Lives here,
+ * not in `lib/editor/markdown.ts`, to keep that util editor-config-free.
+ */
+export function markdownBodyToDoc(markdown: string): Record<string, unknown> {
+  if (!_mdDocExts) _mdDocExts = createRenderExtensions()
+  return markdownToJson(markdown, _mdDocExts) as Record<string, unknown>
 }
 
 export { TypewriterExtension }
