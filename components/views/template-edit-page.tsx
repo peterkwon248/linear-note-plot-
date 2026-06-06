@@ -26,8 +26,10 @@ import type { Editor } from "@tiptap/core"
 import { TipTapEditor } from "@/components/editor/TipTapEditor"
 import { FootnotesFooter } from "@/components/editor/footnotes-footer"
 import { FixedToolbar } from "@/components/editor/FixedToolbar"
+import { MarkdownInputDialog } from "@/components/editor/markdown-input-dialog"
 import { usePlotStore } from "@/lib/store"
-import { LayoutGrid as Layout } from "lucide-react"
+import { markdownToHtml } from "@/lib/editor/markdown"
+import { LayoutGrid as Layout, Code } from "lucide-react"
 import type { NoteTemplate } from "@/lib/types"
 
 /**
@@ -104,6 +106,7 @@ function TitlePatternBar({
 function TemplateEditorAdapter({ template }: { template: NoteTemplate }) {
   const updateTemplate = usePlotStore((s) => s.updateTemplate)
   const [editorInstance, setEditorInstance] = useState<Editor | null>(null)
+  const [mdDialogOpen, setMdDialogOpen] = useState(false)
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const pendingRef = useRef<{ name: string; content: string; contentJson: Record<string, unknown> } | null>(null)
   // Track current template id so the debounced flush always writes to the
@@ -178,8 +181,30 @@ function TemplateEditorAdapter({ template }: { template: NoteTemplate }) {
     }
   }, [template.id, updateTemplate])
 
+  // "Input as Markdown" (D안 B방식): convert md → rich and insert at cursor.
+  const handleMdInsert = useCallback(
+    (md: string) => {
+      if (editorInstance) {
+        editorInstance.chain().focus().insertContent(markdownToHtml(md)).run()
+      }
+      setMdDialogOpen(false)
+    },
+    [editorInstance],
+  )
+
   return (
     <div className="flex flex-1 min-h-0 flex-col overflow-hidden">
+      {/* Markdown input affordance — convert md → rich into the editor. */}
+      <div className="flex items-center justify-end border-b border-border/60 px-6 py-1.5 shrink-0">
+        <button
+          onClick={() => setMdDialogOpen(true)}
+          title="Convert Markdown to rich content (Ctrl+Alt+V works in the editor too)"
+          className="flex items-center gap-1.5 rounded-md px-2 py-1 text-2xs font-medium text-muted-foreground hover:bg-hover-bg hover:text-foreground transition-colors"
+        >
+          <Code size={13} strokeWidth={2} />
+          Input as Markdown
+        </button>
+      </div>
       {/* 2026-05-13: scroll container에 `flex flex-col` 추가 — TipTapEditor의
           flex-1이 늘어나 counts row가 자연스럽게 toolbar 위에 위치 (Notes 패턴
           정합). 이전엔 scroll 안 자식이 자연 height라 content 짧으면 counts가
@@ -196,6 +221,11 @@ function TemplateEditorAdapter({ template }: { template: NoteTemplate }) {
         <FootnotesFooter editor={editorInstance} editable={true} />
       </div>
       <FixedToolbar editor={editorInstance} />
+      <MarkdownInputDialog
+        open={mdDialogOpen}
+        onClose={() => setMdDialogOpen(false)}
+        onSubmit={handleMdInsert}
+      />
     </div>
   )
 }

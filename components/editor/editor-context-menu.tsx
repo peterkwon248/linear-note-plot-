@@ -5,6 +5,7 @@ import * as ContextMenu from "@radix-ui/react-context-menu"
 import { UrlInputDialog } from "@/components/editor/url-input-dialog"
 import type { Editor } from "@tiptap/react"
 import { usePlotStore } from "@/lib/store"
+import { markdownToHtml } from "@/lib/editor/markdown"
 import {
   indentCommand,
   outdentCommand,
@@ -159,6 +160,17 @@ export function EditorContextMenu({ editor, children }: EditorContextMenuProps) 
       editor?.chain().focus().insertContent(text).run()
     } catch {
       document.execCommand("paste")
+    }
+  }
+
+  // Paste from Markdown (UpNote mirror): convert clipboard markdown → rich content.
+  async function pasteFromMarkdown() {
+    try {
+      const text = await navigator.clipboard.readText()
+      if (!text) return
+      editor?.chain().focus().insertContent(markdownToHtml(text)).run()
+    } catch {
+      /* clipboard unavailable */
     }
   }
 
@@ -365,6 +377,11 @@ export function EditorContextMenu({ editor, children }: EditorContextMenuProps) 
             <ClipboardText size={14} />
             Paste
             <Shortcut keys="Ctrl+V" />
+          </ContextMenu.Item>
+          <ContextMenu.Item className={itemCls} onSelect={pasteFromMarkdown}>
+            <ClipboardText size={14} />
+            Paste from Markdown
+            <Shortcut keys="Ctrl+Alt+V" />
           </ContextMenu.Item>
           <ContextMenu.Item className={itemCls} onSelect={selectAll}>
             <SelectionAll size={14} />

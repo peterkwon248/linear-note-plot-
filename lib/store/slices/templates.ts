@@ -59,7 +59,7 @@ export function expandPlaceholdersInJson<T>(node: T): T {
  * substitutes — never a stat that lies about behavior.
  */
 const PLACEHOLDER_PATTERN =
-  /\{\{(?:YYYY|MM|DD|HH|mm|date|time)\}\}|\{(?:date|time|datetime|year|month|day)\}/g
+  /\{\{(?:YYYY|YY|MMMM|MMM|MM|DD|dddd|ddd|HH|mm|date|time)\}\}|\{(?:date|time|datetime|year|month|day)\}/g
 
 /**
  * Count placeholder tokens in a template body. ContentJson takes
@@ -102,17 +102,27 @@ export function countPlaceholders(
 export function expandPlaceholders(template: string): string {
   const d = new Date()
   const yyyy = String(d.getFullYear())
+  const yy = yyyy.slice(2)
   const mm = String(d.getMonth() + 1).padStart(2, "0")
   const dd = String(d.getDate()).padStart(2, "0")
   const hh = String(d.getHours()).padStart(2, "0")
   const min = String(d.getMinutes()).padStart(2, "0")
+  const monthLong = d.toLocaleString("en-US", { month: "long" })
+  const monthShort = d.toLocaleString("en-US", { month: "short" })
+  const weekdayLong = d.toLocaleString("en-US", { weekday: "long" })
+  const weekdayShort = d.toLocaleString("en-US", { weekday: "short" })
   const isoDate = d.toISOString().split("T")[0]
   const isoTime = d.toTimeString().split(" ")[0].slice(0, 5)
   return template
-    // UpNote double-brace tokens (must run first)
+    // UpNote double-brace tokens (must run first; longest month/weekday variants first)
     .replace(/\{\{YYYY\}\}/g, yyyy)
+    .replace(/\{\{YY\}\}/g, yy)
+    .replace(/\{\{MMMM\}\}/g, monthLong)
+    .replace(/\{\{MMM\}\}/g, monthShort)
     .replace(/\{\{MM\}\}/g, mm)
     .replace(/\{\{DD\}\}/g, dd)
+    .replace(/\{\{dddd\}\}/g, weekdayLong)
+    .replace(/\{\{ddd\}\}/g, weekdayShort)
     .replace(/\{\{HH\}\}/g, hh)
     .replace(/\{\{mm\}\}/g, min)
     .replace(/\{\{date\}\}/g, isoDate)
