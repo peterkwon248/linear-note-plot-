@@ -985,7 +985,7 @@ const EN = {
   "sidepanel.inspector.attachments.empty": "No attachments",
   // Side panel workflow actions / warnings
   "sidepanel.workflow.done": "Done",
-  "sidepanel.workflow.done_toast": "Done — moved to Brick",
+  "sidepanel.workflow.done_toast": "Done — moved to In Progress",
   "sidepanel.workflow.snooze": "Snooze",
   "sidepanel.workflow.snooze_toast": "Snoozed",
   "sidepanel.workflow.snooze.3h": "3 hours",
@@ -2647,7 +2647,7 @@ const KO: Partial<Record<DictKey, string>> = {
   "sidepanel.inspector.attachments.empty": "첨부 없음",
   // Workflow actions
   "sidepanel.workflow.done": "완료",
-  "sidepanel.workflow.done_toast": "완료 — 브릭으로 이동",
+  "sidepanel.workflow.done_toast": "완료 — 정리 중으로 이동",
   "sidepanel.workflow.snooze": "미루기",
   "sidepanel.workflow.snooze_toast": "미뤘어요",
   "sidepanel.workflow.snooze.3h": "3시간 후",
